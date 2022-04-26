@@ -1865,6 +1865,7 @@ public struct _FormatRules {
         Add `@available(*, unavailable)` attribute to required `init(coder:)` when
         it hasn't been implemented.
         """,
+        disabledByDefault: true, // superceeded by `unavailableMethod` rule
         options: [],
         sharedOptions: ["linebreaks"]
     ) { formatter in
@@ -1895,6 +1896,38 @@ public struct _FormatRules {
             if formatter.modifiersForDeclaration(at: i, contains: "@available") { return }
 
             let startIndex = formatter.startOfModifiers(at: i, includingAttributes: true)
+            formatter.insert(.space(formatter.indentForLine(at: startIndex)), at: startIndex)
+            formatter.insertLinebreak(at: startIndex)
+            formatter.insert(unavailableTokens, at: startIndex)
+        }
+    }
+
+    // Add @available(*, unavailable) to methods that unconditionally call fatalError
+    public let unavailableMethod = FormatRule(
+        help: """
+        Add `@available(*, unavailable)` attribute to methods that
+        unconditionally call `fataError(...)`.
+        """,
+        options: [],
+        sharedOptions: ["linebreaks"]
+    ) { formatter in
+        let unavailableTokens = tokenize("@available(*, unavailable)")
+
+        formatter.forEach(.keyword) { keywordIndex, _ in
+            guard
+                formatter.token(at: keywordIndex) == .keyword("func")
+                || formatter.token(at: keywordIndex) == .keyword("init"),
+                let openParenIndex = formatter.index(of: .startOfScope("("), after: keywordIndex),
+                let endParenIndex = formatter.endOfScope(at: openParenIndex),
+                let openBraceIndex = formatter.index(of: .startOfScope("{"), after: endParenIndex),
+                let firstBodyToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: openBraceIndex),
+                firstBodyToken == .identifier("fatalError")
+            else { return }
+
+            // avoid adding attribute if it's already there
+            if formatter.modifiersForDeclaration(at: keywordIndex, contains: "@available") { return }
+
+            let startIndex = formatter.startOfModifiers(at: keywordIndex, includingAttributes: true)
             formatter.insert(.space(formatter.indentForLine(at: startIndex)), at: startIndex)
             formatter.insertLinebreak(at: startIndex)
             formatter.insert(unavailableTokens, at: startIndex)

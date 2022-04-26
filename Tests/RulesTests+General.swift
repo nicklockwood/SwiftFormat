@@ -117,6 +117,108 @@ class GeneralTests: RulesTests {
                        exclude: ["modifierOrder", "specifiers"])
     }
 
+    // MARK: - unavailableMethod
+
+    func testFatalErrorMethodMarkedAsUnavailable() {
+        let input = """
+        public class Foo {
+            public func bar() {
+                fatalError()
+            }
+        }
+        """
+        let output = """
+        public class Foo {
+            @available(*, unavailable)
+            public func bar() {
+                fatalError()
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.unavailableMethod)
+    }
+
+    func testFatalErrorMethodWithParamsMarkedAsUnavailable() {
+        let input = """
+        func bar(baaz _: Int, quuz _: String) {
+            fatalError()
+        }
+        """
+        let output = """
+        @available(*, unavailable)
+        func bar(baaz _: Int, quuz _: String) {
+            fatalError()
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.unavailableMethod)
+    }
+
+    func testMethodWithAttributeMarkedAsUnavailable() {
+        let input = """
+        @objc
+        func bar() {
+            fatalError()
+        }
+        """
+        let output = """
+        @available(*, unavailable)
+        @objc
+        func bar() {
+            fatalError()
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.unavailableMethod)
+    }
+
+    func testMethodWithFatalErrorClosureParamNotMarkedAsUnavailable() {
+        let input = """
+        public func bar(closure: () -> Int = { fatalError() }) -> Int {
+            closure()
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unavailableMethod)
+    }
+
+    func testInitializerMarkedAsUnavailable() {
+        let input = """
+        class Foo {
+            init() {
+                fatalError()
+            }
+        }
+        """
+
+        let output = """
+        class Foo {
+            @available(*, unavailable)
+            init() {
+                fatalError()
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.unavailableMethod)
+    }
+
+    func testUnavailableMethodRuleMarksInitCoderUnavailable() {
+        let input = """
+        class FooView: UIView {
+            required init?(coder _: NSCoder) {
+                fatalError()
+            }
+        }
+        """
+        let output = """
+        class FooView: UIView {
+            @available(*, unavailable)
+            required init?(coder _: NSCoder) {
+                fatalError()
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.unavailableMethod,
+                       exclude: ["initCoderUnavailable"])
+    }
+
     // MARK: - trailingCommas
 
     func testCommaAddedToSingleItem() {

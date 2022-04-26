@@ -399,6 +399,20 @@ private struct Examples {
     ```
     """
 
+    let unavailableMethod = """
+    ```diff
+    + @available(*, unavailable)
+      func foo() {
+        fatalError()
+      }
+
+    + @available(*, unavailable)
+      required init() {
+        fatalError()
+      }
+    ```
+    """
+
     let numberFormatting = """
     ```diff
     - let color = 0xFF77A5

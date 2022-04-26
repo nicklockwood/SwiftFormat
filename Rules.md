@@ -18,7 +18,6 @@
 * [fileHeader](#fileHeader)
 * [hoistPatternLet](#hoistPatternLet)
 * [indent](#indent)
-* [initCoderUnavailable](#initCoderUnavailable)
 * [leadingDelimiters](#leadingDelimiters)
 * [linebreakAtEndOfFile](#linebreakAtEndOfFile)
 * [linebreaks](#linebreaks)
@@ -65,6 +64,7 @@
 * [trailingCommas](#trailingCommas)
 * [trailingSpace](#trailingSpace)
 * [typeSugar](#typeSugar)
+* [unavailableMethod](#unavailableMethod)
 * [unusedArguments](#unusedArguments)
 * [void](#void)
 * [wrap](#wrap)
@@ -79,6 +79,7 @@
 * [blankLinesBetweenImports](#blankLinesBetweenImports)
 * [blockComments](#blockComments)
 * [closureImplicitSelf](#closureImplicitSelf)
+* [initCoderUnavailable](#initCoderUnavailable)
 * [isEmpty](#isEmpty)
 * [markTypes](#markTypes)
 * [organizeDeclarations](#organizeDeclarations)
@@ -1925,6 +1926,29 @@ Option | Description
 ```diff
 - var foo: Optional<(Int) -> Void>
 + var foo: ((Int) -> Void)?
+```
+
+</details>
+<br/>
+
+## unavailableMethod
+
+Add `@available(*, unavailable)` attribute to methods that
+unconditionally call `fataError(...)`.
+
+<details>
+<summary>Examples</summary>
+
+```diff
++ @available(*, unavailable)
+  func foo() {
+    fatalError()
+  }
+
++ @available(*, unavailable)
+  required init() {
+    fatalError()
+  }
 ```
 
 </details>

@@ -75,6 +75,7 @@
 # Opt-in Rules (disabled by default)
 
 * [acronyms](#acronyms)
+* [blankLineAfterImports](#blankLineAfterImports)
 * [blankLinesBetweenImports](#blankLinesBetweenImports)
 * [blockComments](#blockComments)
 * [isEmpty](#isEmpty)
@@ -188,6 +189,26 @@ and precondition(false, ...) to preconditionFailure(...).
 ```diff
 - precondition(false, "message", 2, 1)
 + preconditionFailure("message", 2, 1)
+```
+
+</details>
+<br/>
+
+## blankLineAfterImports
+
+Insert blank line After Imports declarations.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  import A
+  import B
+  @testable import D
++
+  class Foo {
+    // foo
+  }
 ```
 
 </details>

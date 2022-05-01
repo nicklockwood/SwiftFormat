@@ -73,7 +73,7 @@ public struct FormatString {
             }
         }
 
-        fileprivate init?(_ input: inout String.UnicodeScalarView.SubSequence, _ index: inout UInt) throws {
+        fileprivate init?(_ input: inout String.UnicodeScalarView.SubSequence, _: inout UInt) throws {
             if input.readCharacter("*") {
                 if let index = try input.readPositiveInt() {
                     guard input.readCharacter("$") else {

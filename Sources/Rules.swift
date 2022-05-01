@@ -3663,12 +3663,12 @@ public struct _FormatRules {
         guard !formatter.options.fragment else { return }
 
         func removeUsed<T>(from argNames: inout [String], with associatedData: inout [T],
-                           in range: CountableRange<Int>)
+                           locals: Set<String> = [], in range: CountableRange<Int>)
         {
             var isDeclaration = false
             var wasDeclaration = false
             var isConditional = false
-            var locals = Set<String>()
+            var locals = locals
             var tempLocals = Set<String>()
             func pushLocals() {
                 if isDeclaration, isConditional {
@@ -3721,12 +3721,15 @@ public struct _FormatRules {
                         }
                     }
                 case .startOfScope("{"):
-                    pushLocals()
+                    if !formatter.isStartOfClosure(at: i) {
+                        pushLocals()
+                    }
                     guard let endIndex = formatter.endOfScope(at: i) else {
                         argNames.removeAll()
                         return
                     }
-                    removeUsed(from: &argNames, with: &associatedData, in: i + 1 ..< endIndex)
+                    removeUsed(from: &argNames, with: &associatedData,
+                               locals: locals, in: i + 1 ..< endIndex)
                     i = endIndex
                 case .endOfScope("case"), .endOfScope("default"):
                     pushLocals()
@@ -3736,7 +3739,8 @@ public struct _FormatRules {
                         argNames.removeAll()
                         return
                     }
-                    removeUsed(from: &argNames, with: &associatedData, in: i + 1 ..< endIndex)
+                    removeUsed(from: &argNames, with: &associatedData,
+                               locals: locals, in: i + 1 ..< endIndex)
                     i = endIndex
                 case .operator("=", .infix), .delimiter(":"), .startOfScope(":"),
                      .keyword("in"), .keyword("where"):

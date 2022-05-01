@@ -5132,6 +5132,24 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.unusedArguments)
     }
 
+    func testConditionalIfLetMarkedAsUnused() {
+        let input = """
+        func foo(bar: UIViewController) {
+            if let bar = baz {
+                bar.loadViewIfNeeded()
+            }
+        }
+        """
+        let output = """
+        func foo(bar _: UIViewController) {
+            if let bar = baz {
+                bar.loadViewIfNeeded()
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+    }
+
     func testConditionAfterIfCaseHoistedLetNotMarkedUnused() {
         let input = """
         func isLoadingFirst(for tabID: String) -> Bool {
@@ -5269,6 +5287,39 @@ class RedundancyTests: RulesTests {
         let output = """
         func method(_: Int?, _: Int?) {
             var foo, bar: Int?
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+    }
+
+    func testShadowedClosureNotMarkedUnused() {
+        let input = """
+        func foo(bar: () -> Void) {
+            let bar = {
+                print("log")
+                bar()
+            }
+            bar()
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
+    func testShadowedClosureMarkedUnused() {
+        let input = """
+        func foo(bar: () -> Void) {
+            let bar = {
+                print("log")
+            }
+            bar()
+        }
+        """
+        let output = """
+        func foo(bar _: () -> Void) {
+            let bar = {
+                print("log")
+            }
+            bar()
         }
         """
         testFormatting(for: input, output, rule: FormatRules.unusedArguments)

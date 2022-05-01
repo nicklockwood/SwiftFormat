@@ -441,7 +441,7 @@ extension UITabBarController {
         }
     }
 
-    open override func willRemoveChildNode(_ node: LayoutNode, at index: Int) {
+    open override func willRemoveChildNode(_ node: LayoutNode, at _: Int) {
         if let viewController = node.viewController,
            var viewControllers = viewControllers,
            let index = viewControllers.index(of: viewController)
@@ -644,7 +644,7 @@ extension UINavigationController {
         }
     }
 
-    open override func willRemoveChildNode(_ node: LayoutNode, at index: Int) {
+    open override func willRemoveChildNode(_ node: LayoutNode, at _: Int) {
         var viewControllers = self.viewControllers
         if let viewController = node.viewController,
            let index = viewControllers.index(of: viewController)

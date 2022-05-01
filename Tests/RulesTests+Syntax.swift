@@ -677,13 +677,15 @@ class SyntaxTests: RulesTests {
     // breaking the `testNoOverHoistSwitchCaseWithNestedParens` case
     func testHoistSwitchCaseWithNestedParens() {
         let input = "import Foo\nswitch (foo, bar) {\ncase (.baz(let quux), Foo.bar): break\n}"
-        testFormatting(for: input, rule: FormatRules.hoistPatternLet)
+        testFormatting(for: input, rule: FormatRules.hoistPatternLet,
+                       exclude: ["blankLineAfterImports"])
     }
 
     // TODO: this could actually hoist the let by one level, but that's tricky to implement
     func testNoOverHoistSwitchCaseWithNestedParens() {
         let input = "import Foo\nswitch (foo, bar) {\ncase (.baz(let quux), bar): break\n}"
-        testFormatting(for: input, rule: FormatRules.hoistPatternLet)
+        testFormatting(for: input, rule: FormatRules.hoistPatternLet,
+                       exclude: ["blankLineAfterImports"])
     }
 
     func testNoHoistLetWithEmptArg() {
@@ -1763,7 +1765,8 @@ class SyntaxTests: RulesTests {
         let input = "import Foundation\nprotocol Foo: class {}"
         let output = "import Foundation\nprotocol Foo: AnyObject {}"
         let options = FormatOptions(swiftVersion: "4.1")
-        testFormatting(for: input, output, rule: FormatRules.anyObjectProtocol, options: options)
+        testFormatting(for: input, output, rule: FormatRules.anyObjectProtocol, options: options,
+                       exclude: ["blankLineAfterImports"])
     }
 
     func testClassDeclarationNotReplacedByAnyObject() {

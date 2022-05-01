@@ -133,7 +133,7 @@ private struct Examples {
       import E
     ```
     """
-    
+
     let blankLineAfterImports = """
     ```diff
       import A

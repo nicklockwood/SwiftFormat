@@ -2447,13 +2447,15 @@ class OrganizationTests: RulesTests {
     func testSortedImportsKeepsPreviousCommentWithImport() {
         let input = "import Foo\n// important comment\n// (very important)\nimport Bar"
         let output = "// important comment\n// (very important)\nimport Bar\nimport Foo"
-        testFormatting(for: input, output, rule: FormatRules.sortedImports)
+        testFormatting(for: input, output, rule: FormatRules.sortedImports,
+                       exclude: ["blankLineAfterImports"])
     }
 
     func testSortedImportsKeepsPreviousCommentWithImport2() {
         let input = "// important comment\n// (very important)\nimport Foo\nimport Bar"
         let output = "import Bar\n// important comment\n// (very important)\nimport Foo"
-        testFormatting(for: input, output, rule: FormatRules.sortedImports)
+        testFormatting(for: input, output, rule: FormatRules.sortedImports,
+                       exclude: ["blankLineAfterImports"])
     }
 
     func testSortedImportsDoesntMoveHeaderComment() {
@@ -2465,7 +2467,8 @@ class OrganizationTests: RulesTests {
     func testSortedImportsDoesntMoveHeaderCommentFollowedByImportComment() {
         let input = "// header comment\n\n// important comment\nimport Foo\nimport Bar"
         let output = "// header comment\n\nimport Bar\n// important comment\nimport Foo"
-        testFormatting(for: input, output, rule: FormatRules.sortedImports)
+        testFormatting(for: input, output, rule: FormatRules.sortedImports,
+                       exclude: ["blankLineAfterImports"])
     }
 
     func testSortedImportsOnSameLine() {
@@ -2550,13 +2553,15 @@ class OrganizationTests: RulesTests {
 
     func testNoDeleteCodeBetweenImports() {
         let input = "import Foo\nfunc bar() {}\nimport Bar"
-        testFormatting(for: input, rule: FormatRules.sortedImports)
+        testFormatting(for: input, rule: FormatRules.sortedImports,
+                       exclude: ["blankLineAfterImports"])
     }
 
     func testNoDeleteCodeBetweenImports2() {
         let input = "import Foo\nimport Bar\nfoo = bar\nimport Bar"
         let output = "import Bar\nimport Foo\nfoo = bar\nimport Bar"
-        testFormatting(for: input, output, rule: FormatRules.sortedImports)
+        testFormatting(for: input, output, rule: FormatRules.sortedImports,
+                       exclude: ["blankLineAfterImports"])
     }
 
     func testNoDeleteCodeBetweenImports3() {
@@ -2577,7 +2582,8 @@ class OrganizationTests: RulesTests {
     func testSortContiguousImports() {
         let input = "import Foo\nimport Bar\nfunc bar() {}\nimport Quux\nimport Baz"
         let output = "import Bar\nimport Foo\nfunc bar() {}\nimport Baz\nimport Quux"
-        testFormatting(for: input, output, rule: FormatRules.sortedImports)
+        testFormatting(for: input, output, rule: FormatRules.sortedImports,
+                       exclude: ["blankLineAfterImports"])
     }
 
     func testNoMangleImportsPrecededByComment() {

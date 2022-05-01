@@ -252,6 +252,31 @@ class LinebreakTests: RulesTests {
     }
 
     // MARK: - blankLinesBetweenScopes
+    func testBlankLineAfterImport() {
+        let input = """
+        import ModuleA
+        @testable import ModuleB
+        import ModuleC
+        @testable import ModuleD
+        @testable import ModuleE
+        @testable import ModuleF
+        class foo {
+        }
+        """
+        let output = """
+        import ModuleA
+        @testable import ModuleB
+        import ModuleC
+        @testable import ModuleD
+        @testable import ModuleE
+        @testable import ModuleF
+        
+        class foo {
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.blankLineAfterImports,
+                       exclude: ["emptyBraces"])
+    }
 
     func testBlankLineBetweenFunctions() {
         let input = "func foo() {\n}\nfunc bar() {\n}"

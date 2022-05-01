@@ -3728,6 +3728,16 @@ public struct _FormatRules {
                     }
                     removeUsed(from: &argNames, with: &associatedData, in: i + 1 ..< endIndex)
                     i = endIndex
+                case .endOfScope("case"), .endOfScope("default"):
+                    pushLocals()
+                    guard let colonIndex = formatter.index(of: .startOfScope(":"), after: i),
+                          let endIndex = formatter.endOfScope(at: colonIndex)
+                    else {
+                        argNames.removeAll()
+                        return
+                    }
+                    removeUsed(from: &argNames, with: &associatedData, in: i + 1 ..< endIndex)
+                    i = endIndex
                 case .operator("=", .infix), .delimiter(":"), .startOfScope(":"),
                      .keyword("in"), .keyword("where"):
                     wasDeclaration = isDeclaration

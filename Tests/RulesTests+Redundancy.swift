@@ -4942,6 +4942,19 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.unusedArguments)
     }
 
+    func testParameterUsedInSwitchCaseAfterShadowing() {
+        let input = """
+        func issue(name: String) -> String {
+            switch self {
+            case .b(let name): return name
+            case .a: return name
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedArguments,
+                       exclude: ["hoistPatternLet"])
+    }
+
     // functions
 
     func testMarkUnusedFunctionArgument() {

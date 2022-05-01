@@ -197,7 +197,7 @@ and precondition(false, ...) to preconditionFailure(...).
 
 ## blankLineAfterImports
 
-Insert blank line After Imports declarations.
+Insert blank line after import statements.
 
 <details>
 <summary>Examples</summary>

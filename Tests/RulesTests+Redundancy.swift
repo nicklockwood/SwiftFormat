@@ -3838,7 +3838,8 @@ class RedundancyTests: RulesTests {
     func testNoInsertSelfInFuncAfterImportedClass() {
         let input = "import class Foo.Bar\nfunc foo() {\n    var bar = 5\n    if true {\n        bar = 6\n    }\n}"
         let options = FormatOptions(explicitSelf: .insert)
-        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options,
+                       exclude: ["blankLineAfterImports"])
     }
 
     func testNoInsertSelfForSubscriptGetSet() {

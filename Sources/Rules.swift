@@ -1052,29 +1052,37 @@ public struct _FormatRules {
             formatter.replaceTokens(in: endOfLine ..< nextImportIndex, with: formatter.linebreakToken(for: currentImportIndex + 1))
         }
     }
-    ///
+
+    /// Insert blank line after import statements
     public let blankLineAfterImports = FormatRule(
         help: """
-        Insert blank line After Imports declarations.
+        Insert blank line after import statements.
         """,
         disabledByDefault: true,
         sharedOptions: ["linebreaks"]
     ) { formatter in
-        formatter.forEach(.keyword("import")) { currentImportIndex, token in
-            
+        formatter.forEach(.keyword("import")) { currentImportIndex, _ in
             guard let endOfLine = formatter.index(of: .linebreak, after: currentImportIndex),
-                  let nextlineIndex = formatter.index(after: endOfLine, where: {_ in true})
+                  var nextIndex = formatter.index(of: .nonSpace, after: endOfLine)
             else {
                 return
             }
-            print(formatter.tokens[nextlineIndex])
-            switch formatter.tokens[nextlineIndex] {
-                case .linebreak: break
-                case .keyword("import"), .keyword("@testable"):break
-                default:
-                    formatter.insertLinebreak(at: nextlineIndex-1)
+            if formatter.tokens[nextIndex] == .startOfScope("#if") {
+                var keyword = "#if"
+                while keyword == "#if",
+                      let index = formatter.index(of: .keyword, after: nextIndex)
+                {
+                    nextIndex = index
+                    keyword = formatter.tokens[nextIndex].string
+                }
             }
-            
+            switch formatter.tokens[nextIndex] {
+            case .linebreak, .keyword("import"), .keyword("@testable"),
+                 .keyword("#else"), .keyword("#elseif"), .endOfScope("#endif"):
+                break
+            default:
+                formatter.insertLinebreak(at: endOfLine)
+            }
         }
     }
 

@@ -251,7 +251,8 @@ class LinebreakTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.blankLinesBetweenImports)
     }
 
-    // MARK: - blankLinesBetweenScopes
+    // MARK: - blankLineAfterImports
+
     func testBlankLineAfterImport() {
         let input = """
         import ModuleA
@@ -260,8 +261,7 @@ class LinebreakTests: RulesTests {
         @testable import ModuleD
         @testable import ModuleE
         @testable import ModuleF
-        class foo {
-        }
+        class foo {}
         """
         let output = """
         import ModuleA
@@ -270,13 +270,65 @@ class LinebreakTests: RulesTests {
         @testable import ModuleD
         @testable import ModuleE
         @testable import ModuleF
-        
-        class foo {
-        }
+
+        class foo {}
         """
-        testFormatting(for: input, output, rule: FormatRules.blankLineAfterImports,
-                       exclude: ["emptyBraces"])
+        testFormatting(for: input, output, rule: FormatRules.blankLineAfterImports)
     }
+
+    func testBlankLinesBetweenConditionalImports() {
+        let input = """
+        #if foo
+            import ModuleA
+        #else
+            import ModuleB
+        #endif
+        import ModuleC
+        func foo() {}
+        """
+        let output = """
+        #if foo
+            import ModuleA
+        #else
+            import ModuleB
+        #endif
+        import ModuleC
+
+        func foo() {}
+        """
+        testFormatting(for: input, output, rule: FormatRules.blankLineAfterImports)
+    }
+
+    func testBlankLinesBetweenNestedConditionalImports() {
+        let input = """
+        #if foo
+            import ModuleA
+            #if bar
+                import ModuleB
+            #endif
+        #else
+            import ModuleC
+        #endif
+        import ModuleD
+        func foo() {}
+        """
+        let output = """
+        #if foo
+            import ModuleA
+            #if bar
+                import ModuleB
+            #endif
+        #else
+            import ModuleC
+        #endif
+        import ModuleD
+
+        func foo() {}
+        """
+        testFormatting(for: input, output, rule: FormatRules.blankLineAfterImports)
+    }
+
+    // MARK: - blankLinesBetweenScopes
 
     func testBlankLineBetweenFunctions() {
         let input = "func foo() {\n}\nfunc bar() {\n}"

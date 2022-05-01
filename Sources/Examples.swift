@@ -133,6 +133,18 @@ private struct Examples {
       import E
     ```
     """
+    
+    let blankLineAfterImports = """
+    ```diff
+      import A
+      import B
+      @testable import D
+    +
+      class Foo {
+        // foo
+      }
+    ```
+    """
 
     let blankLinesBetweenScopes = """
     ```diff

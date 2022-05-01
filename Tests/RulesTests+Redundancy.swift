@@ -762,6 +762,33 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantInit)
     }
 
+    func testNoRemoveInitForLowercaseType() {
+        let input = """
+        let foo = bar.init()
+        """
+        testFormatting(for: input, rule: FormatRules.redundantInit)
+    }
+
+    func testNoRemoveInitForLocalLetType() {
+        let input = """
+        let Foo = Foo.self
+        let foo = Foo.init()
+        """
+        testFormatting(for: input, rule: FormatRules.redundantInit)
+    }
+
+    func testNoRemoveInitForLocalLetType2() {
+        let input = """
+        let Foo = Foo.self
+        if x {
+            return Foo.init(x)
+        } else {
+            return Foo.init(y)
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantInit)
+    }
+
     // MARK: - redundantLetError
 
     func testCatchLetError() {

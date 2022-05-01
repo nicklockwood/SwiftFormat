@@ -4632,7 +4632,21 @@ public struct _FormatRules {
             firstChar != "$", String(firstChar).uppercased() == String(firstChar) else {
                 return
             }
-
+            var j = dotIndex
+            while let prevIndex = formatter.index(
+                of: prevToken, before: j
+            ) ?? formatter.index(
+                of: .startOfScope, before: j
+            ) {
+                j = prevIndex
+                if prevToken == formatter.tokens[prevIndex],
+                   let prevPrevToken = formatter.last(
+                       .nonSpaceOrCommentOrLinebreak, before: prevIndex
+                   ), [.keyword("let"), .keyword("var")].contains(prevPrevToken)
+                {
+                    return
+                }
+            }
             formatter.removeTokens(in: i + 1 ..< openParenIndex)
             formatter.removeTokens(in: dotIndex ... i)
         }

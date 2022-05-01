@@ -1012,6 +1012,31 @@ public struct _FormatRules {
             formatter.replaceTokens(in: endOfLine ..< nextImportIndex, with: formatter.linebreakToken(for: currentImportIndex + 1))
         }
     }
+    ///
+    public let blankLineAfterImports = FormatRule(
+        help: """
+        Insert blank line After Imports declarations.
+        """,
+        disabledByDefault: true,
+        sharedOptions: ["linebreaks"]
+    ) { formatter in
+        formatter.forEach(.keyword("import")) { currentImportIndex, token in
+            
+            guard let endOfLine = formatter.index(of: .linebreak, after: currentImportIndex),
+                  let nextlineIndex = formatter.index(after: endOfLine, where: {_ in true})
+            else {
+                return
+            }
+            print(formatter.tokens[nextlineIndex])
+            switch formatter.tokens[nextlineIndex] {
+                case .linebreak: break
+                case .keyword("import"), .keyword("@testable"):break
+                default:
+                    formatter.insertLinebreak(at: nextlineIndex-1)
+            }
+            
+        }
+    }
 
     /// Adds a blank line immediately after a closing brace, unless followed by another closing brace
     public let blankLinesBetweenScopes = FormatRule(

@@ -2866,10 +2866,17 @@ public struct _FormatRules {
         options: ["closurevoid"]
     ) { formatter in
         formatter.forEach(.operator("->", .infix)) { i, _ in
-            guard var endIndex = formatter.index(of: .nonSpace, after: i) else { return }
+            guard var endIndex = formatter.index(of: .nonSpaceOrLinebreak, after: i) else { return }
             switch formatter.tokens[endIndex] {
             case .identifier("Void"):
                 break
+            case .identifier("Swift"):
+                guard let dotIndex = formatter.index(of: .nonSpaceOrLinebreak, after: endIndex, if: {
+                    $0 == .operator(".", .infix)
+                }), let voidIndex = formatter.index(of: .nonSpace, after: dotIndex, if: {
+                    $0 == .identifier("Void")
+                }) else { return }
+                endIndex = voidIndex
             case .startOfScope("("):
                 guard let nextIndex = formatter.index(of: .nonSpace, after: endIndex) else { return }
                 switch formatter.tokens[nextIndex] {

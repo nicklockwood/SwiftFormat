@@ -1671,6 +1671,24 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantVoidReturnType)
     }
 
+    func testRemoveRedundantVoidReturnType2() {
+        let input = "func foo() ->\n    Void {}"
+        let output = "func foo() {}"
+        testFormatting(for: input, output, rule: FormatRules.redundantVoidReturnType)
+    }
+
+    func testRemoveRedundantSwiftDotVoidReturnType() {
+        let input = "func foo() -> Swift.Void {}"
+        let output = "func foo() {}"
+        testFormatting(for: input, output, rule: FormatRules.redundantVoidReturnType)
+    }
+
+    func testRemoveRedundantSwiftDotVoidReturnType2() {
+        let input = "func foo() -> Swift\n    .Void {}"
+        let output = "func foo() {}"
+        testFormatting(for: input, output, rule: FormatRules.redundantVoidReturnType)
+    }
+
     func testRemoveRedundantEmptyReturnType() {
         let input = "func foo() -> () {}"
         let output = "func foo() {}"
@@ -1707,6 +1725,12 @@ class RedundancyTests: RulesTests {
 
     func testRemoveRedundantVoidInClosureArguments2() {
         let input = "methodWithTrailingClosure { foo -> Void in foo() }"
+        let output = "methodWithTrailingClosure { foo in foo() }"
+        testFormatting(for: input, output, rule: FormatRules.redundantVoidReturnType)
+    }
+
+    func testRemoveRedundantSwiftDotVoidInClosureArguments2() {
+        let input = "methodWithTrailingClosure { foo -> Swift.Void in foo() }"
         let output = "methodWithTrailingClosure { foo in foo() }"
         testFormatting(for: input, output, rule: FormatRules.redundantVoidReturnType)
     }

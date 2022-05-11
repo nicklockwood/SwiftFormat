@@ -332,6 +332,8 @@ extension Formatter {
                         return nil
                     }
                     isType = type.isType
+                case .operator("=", .infix):
+                    isType = lastSignificantKeyword(at: prevIndex) == "typealias"
                 default:
                     break
                 }

@@ -319,6 +319,15 @@ class GeneralTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.trailingCommas)
     }
 
+    func testTrailingCommaNotAddedToTypealias() {
+        let input = """
+        typealias Foo = [
+            Int
+        ]
+        """
+        testFormatting(for: input, rule: FormatRules.trailingCommas)
+    }
+
     func testTrailingCommaNotAddedToCaptureList() {
         let input = """
         let foo = { [

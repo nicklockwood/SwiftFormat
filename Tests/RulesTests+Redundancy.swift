@@ -5161,6 +5161,18 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.unusedArguments)
     }
 
+    func testShadowedUsedArguments4() {
+        let input = """
+        func foo(bar: Int) {
+            if let bar = baz {
+                return
+            }
+            print(bar)
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
     func testTryArgumentNotMarkedUnused() {
         let input = """
         func foo(bar: String) throws -> String? {

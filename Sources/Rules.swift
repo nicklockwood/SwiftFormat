@@ -3675,6 +3675,7 @@ public struct _FormatRules {
             var isDeclaration = false
             var wasDeclaration = false
             var isConditional = false
+            var isGuard = false
             var locals = locals
             var tempLocals = Set<String>()
             func pushLocals() {
@@ -3701,6 +3702,8 @@ public struct _FormatRules {
                 }
                 let token = formatter.tokens[i]
                 switch token {
+                case .keyword("guard"):
+                    isGuard = true
                 case .keyword("let"), .keyword("var"), .keyword("func"), .keyword("for"):
                     isDeclaration = true
                     var i = i
@@ -3728,15 +3731,26 @@ public struct _FormatRules {
                         }
                     }
                 case .startOfScope("{"):
-                    if !formatter.isStartOfClosure(at: i) {
-                        pushLocals()
-                    }
                     guard let endIndex = formatter.endOfScope(at: i) else {
                         argNames.removeAll()
                         return
                     }
-                    removeUsed(from: &argNames, with: &associatedData,
-                               locals: locals, in: i + 1 ..< endIndex)
+                    if formatter.isStartOfClosure(at: i) {
+                        removeUsed(from: &argNames, with: &associatedData,
+                                   locals: locals, in: i + 1 ..< endIndex)
+                    } else if isGuard {
+                        removeUsed(from: &argNames, with: &associatedData,
+                                   locals: locals, in: i + 1 ..< endIndex)
+                        pushLocals()
+                    } else {
+                        let prevLocals = locals
+                        pushLocals()
+                        removeUsed(from: &argNames, with: &associatedData,
+                                   locals: locals, in: i + 1 ..< endIndex)
+                        locals = prevLocals
+                    }
+
+                    isGuard = false
                     i = endIndex
                 case .endOfScope("case"), .endOfScope("default"):
                     pushLocals()

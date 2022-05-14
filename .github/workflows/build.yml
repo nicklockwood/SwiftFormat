@@ -9,7 +9,6 @@ jobs:
       fail-fast: false
       matrix:
         macos:
-          - 10.14
           - 10.15
           - 11
         xcode:

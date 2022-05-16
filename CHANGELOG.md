@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.49.9](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.49.9) (2022-05-16)
+
+- Fixed bug where trailing comma was incorrectly added inside collection types
+- Fixed some cases where `redundantVoidReturnType` failed to remove `Void`
+- Fixed `unusedArguments` regression introduced in 0.49.8
+
 ## [0.49.8](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.49.8) (2022-05-03)
 
 - Fixed `redundantInit` rule removing required init when instantiating type variables

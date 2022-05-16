@@ -291,7 +291,7 @@ public struct _FormatRules {
     public let spaceAroundBrackets = FormatRule(
         help: "Add or remove space around square brackets."
     ) { formatter in
-        formatter.forEach(.startOfScope("[")) { i, token in
+        formatter.forEach(.startOfScope("[")) { i, _ in
             guard let prevToken = formatter.token(at: i - 1) else {
                 return
             }

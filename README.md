@@ -781,6 +781,8 @@ Known issues
 
 * When using the Xcode Source Editor Extension, the SwiftFormat menu sometimes disappears from Xcode. If this happens, try moving or renaming Xcode temporarily and then changing it back. Failing that, the suggestions in [this thread](https://github.com/nicklockwood/SwiftFormat/issues/494) may help.
 
+* The `redundantVoidReturnType` rule can inadvertently alter the type signature for closures, for example in cases where the closure calls a `@discardableResult` function. To solve this you can either fix it on a per-case basis by adding a `// swiftformat:disable:next redundantVoidReturnType` comment directive to disable the rule for a specific call site, or you can add `--closurevoid preserve` to your [configuration](#configuration) to disable the rule completely for closures (regular functions or methods aren't affected).
+
 * The `redundantType` rule can introduce ambiguous code in certain cases when using the default mode of `--redundanttype inferred`. This can be worked around by by using `--redundanttype explicit`, or by manually removing the redundant type reference on the affected line, or by using the `// swiftformat:disable:next redundantType` comment directive to disable the rule at the call site (or just disable the `redundantType` rule completely).
 
 * If a type initializer or factory method returns an implicitly unwrapped optional value then the `redundantType` rule may remove the explicit type in a situation where it's actually required. To work around this you can either use `--redundanttype explicit`, or use the `// swiftformat:disable:next redundantType` comment directive to disable the rule at the call site (or just disable the `redundantType` rule completely).

@@ -1190,7 +1190,7 @@ public struct _FormatRules {
     /// indenting can be configured with the `options` parameter of the formatter.
     public let indent = FormatRule(
         help: "Indent code in accordance with the scope level.",
-        orderAfter: ["trailingSpace", "wrap", "wrapArguments"],
+        orderAfter: ["trailingSpace", "wrap", "wrapArguments", "wrapMultilineStatementBraces"],
         options: ["indent", "tabwidth", "smarttabs", "indentcase", "ifdef", "xcodeindentation", "indentstrings"],
         sharedOptions: ["trimwhitespace", "allman", "wrapconditions", "wrapternary"]
     ) { formatter in
@@ -2002,14 +2002,26 @@ public struct _FormatRules {
 
                 // Avoid conflicts with wrapMultilineStatementBraces
                 let ruleName = FormatRules.wrapMultilineStatementBraces.name
-                if formatter.options.enabledRules.contains(ruleName), let keywordIndex =
-                    formatter.indexOfLastSignificantKeyword(at: prevIndex + 1, excluding: ["where"]),
-                    case let .keyword(keyword) = formatter.tokens[keywordIndex],
+                if formatter.options.enabledRules.contains(ruleName) {
+                    let startIndex: Int
+                    if formatter.token(at: prevIndex) == .endOfScope(")"),
+                       let index = formatter.index(of: .startOfScope("("), before: prevIndex)
+                    {
+                        startIndex = index
+                    } else if let keywordIndex = formatter.indexOfLastSignificantKeyword(
+                        at: prevIndex + 1,
+                        excluding: ["where"]
+                    ), case let .keyword(keyword) = formatter.tokens[keywordIndex],
                     ["if", "for", "guard", "while", "switch", "func", "init", "subscript",
-                     "extension", "class", "actor", "struct", "enum", "protocol"].contains(keyword),
-                    formatter.indentForLine(at: prevIndex) > formatter.indentForLine(at: keywordIndex)
-                {
-                    return
+                     "extension", "class", "actor", "struct", "enum", "protocol"].contains(keyword)
+                    {
+                        startIndex = keywordIndex
+                    } else {
+                        startIndex = prevIndex
+                    }
+                    if formatter.indentForLine(at: prevIndex) > formatter.indentForLine(at: startIndex) {
+                        return
+                    }
                 }
                 formatter.replaceTokens(in: prevIndex + 1 ..< i, with: .space(" "))
             }
@@ -4195,7 +4207,7 @@ public struct _FormatRules {
 
     public let wrapMultilineStatementBraces = FormatRule(
         help: "Wrap the opening brace of multiline statements.",
-        orderAfter: ["indent", "braces", "wrapArguments"],
+        orderAfter: ["braces", "wrapArguments"],
         sharedOptions: ["linebreaks", "wraparguments"]
     ) { formatter in
 
@@ -4248,9 +4260,7 @@ public struct _FormatRules {
                formatter.tokens[indexBeforeOpenBrace] == .endOfScope(")"),
                let startOfMethodParameters = formatter.index(of: .startOfScope("("), before: indexBeforeOpenBrace),
                let indexBeforeStartOfParameters = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startOfMethodParameters),
-               let indexTwoBeforeStartOfParameters = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: indexBeforeStartOfParameters),
-               formatter.tokens[indexBeforeStartOfParameters].isIdentifier && formatter.tokens[indexTwoBeforeStartOfParameters].string == "."
-               || formatter.tokens[indexBeforeStartOfParameters].string == "="
+               formatter.tokens[indexBeforeStartOfParameters].isIdentifier
             {
                 wrapBraceIfNecessary(at: index, startOfMultilineStatement: startOfMethodParameters)
             }

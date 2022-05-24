@@ -3044,6 +3044,36 @@ class WrappingTests: RulesTests {
                        options: options, exclude: ["indent"])
     }
 
+    func testMultilineBraceAppliedToTrailingClosure2_wrapBeforeFirst() {
+        let input = """
+        moveGradient(
+            to: defaultPosition,
+            isTouchDown: false,
+            animated: animated) {
+            self.isTouchDown = false
+        }
+        """
+
+        let output = """
+        moveGradient(
+            to: defaultPosition,
+            isTouchDown: false,
+            animated: animated)
+        {
+            self.isTouchDown = false
+        }
+        """
+
+        let options = FormatOptions(
+            wrapArguments: .beforeFirst,
+            closingParenOnSameLine: true
+        )
+        testFormatting(for: input, [output], rules: [
+            FormatRules.wrapMultilineStatementBraces,
+            FormatRules.indent, FormatRules.braces,
+        ], options: options)
+    }
+
     func testMultilineBraceAppliedToGetterBody_wrapBeforeFirst() {
         let input = """
         var items: Adaptive<CGFloat> = .adaptive(

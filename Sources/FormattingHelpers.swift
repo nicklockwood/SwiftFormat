@@ -11,6 +11,32 @@ import Foundation
 // MARK: shared helper methods
 
 extension Formatter {
+    // should brace be wrapped according to `wrapMultilineStatementBraces` rule?
+    func shouldWrapMultilineStatementBrace(at index: Int) -> Bool {
+        assert(tokens[index] == .startOfScope("{"))
+        guard let endIndex = endOfScope(at: index),
+              tokens[index + 1 ..< endIndex].contains(where: { $0.isLinebreak }),
+              let prevIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: index),
+              let prevToken = token(at: prevIndex), !prevToken.isStartOfScope,
+              !prevToken.isDelimiter
+        else {
+            return false
+        }
+        let indent = indentForLine(at: prevIndex)
+        guard isStartOfClosure(at: index) else {
+            return indent > indentForLine(at: endIndex)
+        }
+        if prevToken == .endOfScope(")"),
+           !tokens[startOfLine(at: prevIndex, excludingIndent: true)].is(.endOfScope),
+           let startIndex = self.index(of: .startOfScope("("), before: prevIndex),
+           next(.nonSpaceOrComment, after: startIndex)?.isLinebreak == true,
+           indentForLine(at: startIndex) < indent
+        {
+            return true
+        }
+        return false
+    }
+
     // remove self if possible
     func removeSelf(at i: Int, exclude: Set<String>, include: Set<String>? = nil) -> Bool {
         assert(tokens[i] == .identifier("self"))

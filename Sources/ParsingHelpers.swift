@@ -631,7 +631,7 @@ extension Formatter {
     /// If the token at the specified index is part of a conditional statement, returns the index of the first
     /// token in the statement (e.g. `if`, `guard`, `while`, etc.), otherwise returns nil
     func startOfConditionalStatement(at i: Int) -> Int? {
-        guard var index = indexOfLastSignificantKeyword(at: i) else {
+        guard var index = indexOfLastSignificantKeyword(at: i, excluding: ["else"]) else {
             return nil
         }
 

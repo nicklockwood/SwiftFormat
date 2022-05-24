@@ -3044,6 +3044,36 @@ class WrappingTests: RulesTests {
                        options: options, exclude: ["indent"])
     }
 
+    func testMultilineBraceAppliedToTrailingClosure2_wrapBeforeFirst() {
+        let input = """
+        moveGradient(
+            to: defaultPosition,
+            isTouchDown: false,
+            animated: animated) {
+                self.isTouchDown = false
+            }
+        """
+
+        let output = """
+        moveGradient(
+            to: defaultPosition,
+            isTouchDown: false,
+            animated: animated)
+        {
+            self.isTouchDown = false
+        }
+        """
+
+        let options = FormatOptions(
+            wrapArguments: .beforeFirst,
+            closingParenOnSameLine: true
+        )
+        testFormatting(for: input, [output], rules: [
+            FormatRules.wrapMultilineStatementBraces,
+            FormatRules.indent, FormatRules.braces,
+        ], options: options)
+    }
+
     func testMultilineBraceAppliedToGetterBody_wrapBeforeFirst() {
         let input = """
         var items: Adaptive<CGFloat> = .adaptive(
@@ -3088,10 +3118,11 @@ class WrappingTests: RulesTests {
                        options: options, exclude: ["indent"])
     }
 
-    func testMultilineBraceNotAppliedToGetterBody_wrapAfterFirst() {
+    func testMultilineBraceAppliedToGetterBody_wrapAfterFirst() {
         let input = """
         var items: Adaptive<CGFloat> = .adaptive(compact: Sizes.horizontalPaddingTiny_8,
-                                                 regular: Sizes.horizontalPaddingLarge_64) {
+                                                 regular: Sizes.horizontalPaddingLarge_64)
+        {
             didSet { updateAccessoryViewSpacing() }
         }
         """
@@ -3104,6 +3135,24 @@ class WrappingTests: RulesTests {
             FormatRules.wrapMultilineStatementBraces,
             FormatRules.wrapArguments,
         ], options: options)
+    }
+
+    func testMultilineBraceAppliedToSubscriptBody() {
+        let input = """
+        public subscript(
+            key: Foo)
+            -> ServerDrivenLayoutContentPresenter<Feature>?
+        {
+            get { foo[key] }
+            set { foo[key] = newValue }
+        }
+        """
+        let options = FormatOptions(
+            wrapArguments: .beforeFirst,
+            closingParenOnSameLine: true
+        )
+        testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces,
+                       options: options, exclude: ["trailingClosures"])
     }
 
     func testWrapsMultilineStatementConsistently() {
@@ -3213,6 +3262,40 @@ class WrappingTests: RulesTests {
             FormatRules.wrapMultilineStatementBraces,
             FormatRules.wrapArguments,
         ], options: options)
+    }
+
+    func testWrapMultilineStatementConsistently5() {
+        let input = """
+        foo(
+            one: 1,
+            two: 2).bar({ _ in
+            "one"
+        })
+        """
+        let options = FormatOptions(
+            wrapArguments: .beforeFirst,
+            closingParenOnSameLine: true
+        )
+        testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces,
+                       options: options, exclude: ["trailingClosures"])
+    }
+
+    func testOpenBraceAfterEqualsInGuardNotWrapped() {
+        let input = """
+        guard
+            let foo = foo,
+            let bar: String = {
+                nil
+            }()
+        else { return }
+        """
+
+        let options = FormatOptions(
+            wrapArguments: .beforeFirst,
+            closingParenOnSameLine: true
+        )
+        testFormatting(for: input, rules: [FormatRules.wrapMultilineStatementBraces, FormatRules.wrap],
+                       options: options, exclude: ["indent", "redundantClosure", "wrapConditionalBodies"])
     }
 
     // MARK: wrapConditions before-first

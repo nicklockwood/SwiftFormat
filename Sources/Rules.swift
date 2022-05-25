@@ -935,7 +935,8 @@ public struct _FormatRules {
 
             // Consumers can choose whether or not this rule should apply to type bodies
             if !formatter.options.removeStartOrEndBlankLinesFromTypes,
-               ["class", "struct", "enum", "actor", "extension"].contains(formatter.lastSignificantKeyword(at: i))
+               ["class", "struct", "enum", "actor", "protocol", "extension"].contains(
+                   formatter.lastSignificantKeyword(at: i, excluding: ["where"]))
             {
                 return
             }
@@ -979,7 +980,8 @@ public struct _FormatRules {
 
             // Consumers can choose whether or not this rule should apply to type bodies
             if !formatter.options.removeStartOrEndBlankLinesFromTypes,
-               ["class", "struct", "enum", "actor", "extension"].contains(formatter.lastSignificantKeyword(at: startOfScopeIndex))
+               ["class", "struct", "enum", "actor", "protocol", "extension"].contains(
+                   formatter.lastSignificantKeyword(at: startOfScopeIndex, excluding: ["where"]))
             {
                 return
             }

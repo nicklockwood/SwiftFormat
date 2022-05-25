@@ -197,9 +197,14 @@ class LinebreakTests: RulesTests {
             func fooMethod() {}
         }
 
-        extension Foo {
+        protocol FooProtocol {
 
-            func testfooMethodFoo() {}
+            func fooMethod()
+        }
+
+        extension Array where Element == Foo {
+
+            func fooMethod() {}
         }
         """
         testFormatting(for: input, rule: FormatRules.blankLinesAtStartOfScope, options: .init(removeStartOrEndBlankLinesFromTypes: false))
@@ -290,8 +295,12 @@ class LinebreakTests: RulesTests {
 
         }
 
-        extension Foo {
-            func testfooMethodFoo() {}
+        protocol FooProtocol {
+            func fooMethod()
+        }
+
+        extension Array where Element == Foo {
+            func fooMethod() {}
 
         }
         """

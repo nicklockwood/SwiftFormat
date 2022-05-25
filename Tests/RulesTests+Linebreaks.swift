@@ -159,6 +159,72 @@ class LinebreakTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.blankLinesAtStartOfScope, exclude: ["wrapArguments"])
     }
 
+    func testBlankLineRemovedFromStartOfTypeByDefault() {
+        let input = """
+        class FooTests {
+
+            func testFoo() {}
+        }
+        """
+
+        let output = """
+        class FooTests {
+            func testFoo() {}
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.blankLinesAtStartOfScope)
+    }
+
+    func testBlankLinesNotRemovedFromStartOfTypeWithOptionEnabled() {
+        let input = """
+        class FooClass {
+
+            func fooMethod() {}
+        }
+
+        struct FooStruct {
+
+            func fooMethod() {}
+        }
+
+        enum FooEnum {
+
+            func fooMethod() {}
+        }
+
+        actor FooActor {
+
+            func fooMethod() {}
+        }
+
+        extension Foo {
+
+            func testfooMethodFoo() {}
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.blankLinesAtStartOfScope, options: .init(removeStartOrEndBlankLinesFromTypes: false))
+    }
+
+    func testBlankLineAtStartOfScopeRemovedFromMethodInType() {
+        let input = """
+        class Foo {
+            func bar() {
+
+                print("hello world")
+            }
+        }
+        """
+
+        let output = """
+        class Foo {
+            func bar() {
+                print("hello world")
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.blankLinesAtStartOfScope, options: .init(removeStartOrEndBlankLinesFromTypes: false))
+    }
+
     // MARK: - blankLinesAtEndOfScope
 
     func testBlankLinesRemovedAtEndOfFunction() {
@@ -184,6 +250,72 @@ class LinebreakTests: RulesTests {
         let output = "if x {\n\n    // do something\n\n} else if y {\n\n    // do something else\n}"
         testFormatting(for: input, output, rule: FormatRules.blankLinesAtEndOfScope,
                        exclude: ["blankLinesAtStartOfScope"])
+    }
+
+    func testBlankLineRemovedFromEndOfTypeByDefault() {
+        let input = """
+        class FooTests {
+            func testFoo() {}
+
+        }
+        """
+
+        let output = """
+        class FooTests {
+            func testFoo() {}
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.blankLinesAtEndOfScope)
+    }
+
+    func testBlankLinesNotRemovedFromEndOfTypeWithOptionEnabled() {
+        let input = """
+        class FooClass {
+            func fooMethod() {}
+
+        }
+
+        struct FooStruct {
+            func fooMethod() {}
+
+        }
+
+        enum FooEnum {
+            func fooMethod() {}
+
+        }
+
+        actor FooActor {
+            func fooMethod() {}
+
+        }
+
+        extension Foo {
+            func testfooMethodFoo() {}
+
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.blankLinesAtEndOfScope, options: .init(removeStartOrEndBlankLinesFromTypes: false))
+    }
+
+    func testBlankLineAtEndOfScopeRemovedFromMethodInType() {
+        let input = """
+        class Foo {
+            func bar() {
+                print("hello world")
+
+            }
+        }
+        """
+
+        let output = """
+        class Foo {
+            func bar() {
+                print("hello world")
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.blankLinesAtEndOfScope, options: .init(removeStartOrEndBlankLinesFromTypes: false))
     }
 
     // MARK: - blankLinesBetweenImports

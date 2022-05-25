@@ -290,6 +290,10 @@ Remove trailing blank line at the end of a scope.
 
 Remove leading blank line at the start of a scope.
 
+Option | Description
+--- | ---
+`--typeblanklines` | "remove" (default) or "preserve" blank lines from types
+
 <details>
 <summary>Examples</summary>
 

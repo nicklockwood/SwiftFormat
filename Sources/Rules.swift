@@ -1190,7 +1190,7 @@ public struct _FormatRules {
     /// indenting can be configured with the `options` parameter of the formatter.
     public let indent = FormatRule(
         help: "Indent code in accordance with the scope level.",
-        orderAfter: ["trailingSpace", "wrap", "wrapArguments", "wrapMultilineStatementBraces"],
+        orderAfter: ["trailingSpace", "wrap", "wrapArguments"],
         options: ["indent", "tabwidth", "smarttabs", "indentcase", "ifdef", "xcodeindentation", "indentstrings"],
         sharedOptions: ["trimwhitespace", "allman", "wrapconditions", "wrapternary"]
     ) { formatter in
@@ -2002,26 +2002,10 @@ public struct _FormatRules {
 
                 // Avoid conflicts with wrapMultilineStatementBraces
                 let ruleName = FormatRules.wrapMultilineStatementBraces.name
-                if formatter.options.enabledRules.contains(ruleName) {
-                    let startIndex: Int
-                    if formatter.token(at: prevIndex) == .endOfScope(")"),
-                       let index = formatter.index(of: .startOfScope("("), before: prevIndex)
-                    {
-                        startIndex = index
-                    } else if let keywordIndex = formatter.indexOfLastSignificantKeyword(
-                        at: prevIndex + 1,
-                        excluding: ["where"]
-                    ), case let .keyword(keyword) = formatter.tokens[keywordIndex],
-                    ["if", "for", "guard", "while", "switch", "func", "init", "subscript",
-                     "extension", "class", "actor", "struct", "enum", "protocol"].contains(keyword)
-                    {
-                        startIndex = keywordIndex
-                    } else {
-                        startIndex = prevIndex
-                    }
-                    if formatter.indentForLine(at: prevIndex) > formatter.indentForLine(at: startIndex) {
-                        return
-                    }
+                if formatter.options.enabledRules.contains(ruleName),
+                   formatter.shouldWrapMultilineStatementBrace(at: i)
+                {
+                    return
                 }
                 formatter.replaceTokens(in: prevIndex + 1 ..< i, with: .space(" "))
             }
@@ -4207,64 +4191,81 @@ public struct _FormatRules {
 
     public let wrapMultilineStatementBraces = FormatRule(
         help: "Wrap the opening brace of multiline statements.",
-        orderAfter: ["braces", "wrapArguments"],
-        sharedOptions: ["linebreaks", "wraparguments"]
+        orderAfter: ["braces", "indent", "wrapArguments"],
+        sharedOptions: ["linebreaks"]
     ) { formatter in
-
-        func wrapBraceIfNecessary(at openBraceIndex: Int, startOfMultilineStatement: Int) {
-            let startOfLine = formatter.startOfLine(at: openBraceIndex)
-            // Make sure the brace is on a separate line from the if / guard
-            guard startOfMultilineStatement < startOfLine,
-                  // If token before the brace isn't a newline or guard else then insert a newline
-                  let prevIndex = formatter.index(of: .nonSpace, before: openBraceIndex),
-                  let prevToken = formatter.token(at: prevIndex),
-                  !prevToken.isLinebreak, !(prevToken == .keyword("else") &&
-                      prevIndex == formatter.index(of: .nonSpace, after: startOfLine)),
-                  // Only wrap when the brace's line is more indented than the if / guard
-                  formatter.indentForLine(at: startOfMultilineStatement) < formatter.indentForLine(at: openBraceIndex),
-                  // And only when closing brace is not on same line
-                  let closingIndex = formatter.endOfScope(at: openBraceIndex),
-                  formatter.tokens[openBraceIndex ..< closingIndex].contains(where: { $0.isLinebreak })
+        formatter.forEach(.startOfScope("{")) { i, _ in
+            guard formatter.last(.nonSpaceOrComment, before: i)?.isLinebreak == false,
+                  formatter.shouldWrapMultilineStatementBrace(at: i),
+                  let endIndex = formatter.endOfScope(at: i)
             else {
                 return
             }
-            formatter.insertLinebreak(at: openBraceIndex)
-
-            // Insert a space to align the opening brace with the if / guard keyword
-            let indentation = formatter.indentForLine(at: startOfMultilineStatement)
-            formatter.insertSpace(indentation, at: openBraceIndex + 1)
-
-            // If we left behind a trailing space on the previous line, clean it up
-            let previousTokenIndex = openBraceIndex - 1
-            if formatter.tokens[previousTokenIndex].isSpace {
-                formatter.removeToken(at: previousTokenIndex)
+            let indent = formatter.indentForLine(at: endIndex)
+            // Insert linebreak
+            formatter.insertLinebreak(at: i)
+            // Align the opening brace with closing brace
+            formatter.insertSpace(indent, at: i + 1)
+            // Clean up trailing space on the previous line
+            if case .space? = formatter.token(at: i - 1) {
+                formatter.removeToken(at: i - 1)
             }
         }
 
-        formatter.forEachToken { index, token in
-            // First, wrap any open braces following keywords that can have multiline statements
-            if case let .keyword(keyword) = token, [
-                "if", "for", "guard", "while", "switch", "func", "init", "subscript",
-                "extension", "class", "actor", "struct", "enum", "protocol",
-            ].contains(keyword),
-                let openBraceIndex = formatter.index(of: .startOfScope("{"), after: index)
-            {
-                wrapBraceIfNecessary(at: openBraceIndex, startOfMultilineStatement: index)
-            }
-
-            // Then attempt to wrap braces following a method call (like trailing closures, or getter bodies)
-            //  - We only do this for before-first wrapping, since it's less necessary for after-first wrapping
-            if formatter.options.wrapArguments != .afterFirst,
-               token == .startOfScope("{"),
-               let indexBeforeOpenBrace = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: index),
-               formatter.tokens[indexBeforeOpenBrace] == .endOfScope(")"),
-               let startOfMethodParameters = formatter.index(of: .startOfScope("("), before: indexBeforeOpenBrace),
-               let indexBeforeStartOfParameters = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startOfMethodParameters),
-               formatter.tokens[indexBeforeStartOfParameters].isIdentifier
-            {
-                wrapBraceIfNecessary(at: index, startOfMultilineStatement: startOfMethodParameters)
-            }
-        }
+//        func wrapBraceIfNecessary(at openBraceIndex: Int, startOfMultilineStatement: Int) {
+//            let startOfLine = formatter.startOfLine(at: openBraceIndex)
+//            // Make sure the brace is on a separate line from the if / guard
+//            guard startOfMultilineStatement < startOfLine,
+//                  // If token before the brace isn't a newline or guard else then insert a newline
+//                  let prevIndex = formatter.index(of: .nonSpace, before: openBraceIndex),
+//                  let prevToken = formatter.token(at: prevIndex),
+//                  !prevToken.isLinebreak, !(prevToken == .keyword("else") &&
+//                      prevIndex == formatter.index(of: .nonSpace, after: startOfLine)),
+//                  // Only wrap when the brace's line is more indented than the if / guard
+//                  formatter.indentForLine(at: startOfMultilineStatement) < formatter.indentForLine(at: openBraceIndex),
+//                  // And only when closing brace is not on same line
+//                  let closingIndex = formatter.endOfScope(at: openBraceIndex),
+//                  formatter.tokens[openBraceIndex ..< closingIndex].contains(where: { $0.isLinebreak })
+//            else {
+//                return
+//            }
+//            formatter.insertLinebreak(at: openBraceIndex)
+//
+//            // Insert a space to align the opening brace with the if / guard keyword
+//            let indentation = formatter.indentForLine(at: startOfMultilineStatement)
+//            formatter.insertSpace(indentation, at: openBraceIndex + 1)
+//
+//            // If we left behind a trailing space on the previous line, clean it up
+//            let previousTokenIndex = openBraceIndex - 1
+//            if formatter.tokens[previousTokenIndex].isSpace {
+//                formatter.removeToken(at: previousTokenIndex)
+//            }
+//        }
+//
+//        formatter.forEachToken { index, token in
+//            // First, wrap any open braces following keywords that can have multiline statements
+//            if case let .keyword(keyword) = token, [
+//                "if", "for", "guard", "while", "switch", "func", "init", "subscript",
+//                "extension", "class", "actor", "struct", "enum", "protocol",
+//            ].contains(keyword),
+//                let openBraceIndex = formatter.index(of: .startOfScope("{"), after: index)
+//            {
+//                wrapBraceIfNecessary(at: openBraceIndex, startOfMultilineStatement: index)
+//            }
+//
+//            // Then attempt to wrap braces following a method call (like trailing closures, or getter bodies)
+//            //  - We only do this for before-first wrapping, since it's less necessary for after-first wrapping
+//            if formatter.options.wrapArguments != .afterFirst,
+//               token == .startOfScope("{"),
+//               let indexBeforeOpenBrace = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: index),
+//               formatter.tokens[indexBeforeOpenBrace] == .endOfScope(")"),
+//               let startOfMethodParameters = formatter.index(of: .startOfScope("("), before: indexBeforeOpenBrace),
+//               let indexBeforeStartOfParameters = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startOfMethodParameters),
+//               formatter.tokens[indexBeforeStartOfParameters].isIdentifier
+//            {
+//                wrapBraceIfNecessary(at: index, startOfMultilineStatement: startOfMethodParameters)
+//            }
+//        }
     }
 
     /// Formats enum cases declaration into one case per line

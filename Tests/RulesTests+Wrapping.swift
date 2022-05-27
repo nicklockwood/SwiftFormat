@@ -3050,8 +3050,8 @@ class WrappingTests: RulesTests {
             to: defaultPosition,
             isTouchDown: false,
             animated: animated) {
-            self.isTouchDown = false
-        }
+                self.isTouchDown = false
+            }
         """
 
         let output = """

@@ -1341,7 +1341,8 @@ class IndentTests: RulesTests {
     func testIndentInsideWrappedVarStatement() {
         let input = "var Foo:\nBar {\nreturn 5\n}"
         let output = "var Foo:\n    Bar {\n    return 5\n}"
-        testFormatting(for: input, output, rule: FormatRules.indent)
+        testFormatting(for: input, output, rule: FormatRules.indent,
+                       exclude: ["wrapMultilineStatementBraces"])
     }
 
     func testNoIndentAfterOperatorDeclaration() {
@@ -1480,7 +1481,7 @@ class IndentTests: RulesTests {
         """
         let options = FormatOptions(wrapArguments: .disabled, closingParenOnSameLine: true)
         testFormatting(for: input, rule: FormatRules.indent, options: options,
-                       exclude: ["wrapConditionalBodies"])
+                       exclude: ["wrapConditionalBodies", "wrapMultilineStatementBraces"])
     }
 
     func testDoubleIndentTrailingClosureBody2() {

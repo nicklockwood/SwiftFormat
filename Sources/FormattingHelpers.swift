@@ -11,6 +11,39 @@ import Foundation
 // MARK: shared helper methods
 
 extension Formatter {
+    // should brace be wrapped according to `wrapMultilineStatementBraces` rule?
+    func shouldWrapMultilineStatementBrace(at index: Int) -> Bool {
+        assert(tokens[index] == .startOfScope("{"))
+        guard let endIndex = endOfScope(at: index),
+              tokens[index + 1 ..< endIndex].contains(where: { $0.isLinebreak }),
+              let prevIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: index)
+        else {
+            return false
+        }
+        let indent = indentForLine(at: prevIndex)
+        let endIndent = indentForLine(at: endIndex)
+        let isWrappedBeforeFirst: Bool
+        if tokens[prevIndex] == .endOfScope(")"),
+           !tokens[startOfLine(at: prevIndex, excludingIndent: true)].is(.endOfScope),
+           let startIndex = self.index(of: .startOfScope("("), before: prevIndex),
+           next(.nonSpaceOrComment, after: startIndex)?.isLinebreak == true,
+           indentForLine(at: startIndex) < indent
+        {
+            isWrappedBeforeFirst = true
+        } else {
+            isWrappedBeforeFirst = false
+        }
+        if isStartOfClosure(at: index) {
+            return isWrappedBeforeFirst || indent == endIndent + options.indent
+        }
+        if self.index(of: .nonSpaceOrCommentOrLinebreak, after: index).map({
+            isAccessorKeyword(at: $0)
+        }) == true {
+            return isWrappedBeforeFirst && indent > endIndent
+        }
+        return indent > endIndent
+    }
+
     // remove self if possible
     func removeSelf(at i: Int, exclude: Set<String>, include: Set<String>? = nil) -> Bool {
         assert(tokens[i] == .identifier("self"))

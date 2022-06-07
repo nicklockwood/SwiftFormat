@@ -418,7 +418,7 @@ public extension Token {
     var isStringDelimiter: Bool {
         switch self {
         case let .startOfScope(string), let .endOfScope(string):
-            return string.contains("\"")
+            return string.contains("\"") || string.contains("/")
         default:
             return false
         }
@@ -1087,14 +1087,6 @@ public func tokenize(_ source: String) -> [Token] {
     var characters = UnicodeScalarView(source.unicodeScalars)
     var closedGenericScopeIndexes: [Int] = []
     var lineNumber = 1
-
-    func readHashes(upTo max: Int) -> Int {
-        var count = 0
-        while count < max, characters.read("#") {
-            count += 1
-        }
-        return count
-    }
 
     func processStringBody(hashCount: Int) {
         var string = ""

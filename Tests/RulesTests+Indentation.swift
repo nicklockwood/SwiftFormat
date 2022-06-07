@@ -2427,6 +2427,19 @@ class IndentTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.indent)
     }
 
+    // indent multiline regex literals
+
+    func testIndentMultilineRegularExpression() {
+        let input = """
+        let regex = #/
+            (foo+)
+            [bar]*
+            (baz?)
+        /#
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
     // indent #if/#else/#elseif/#endif (mode: indent)
 
     func testIfEndifIndenting() {

@@ -103,6 +103,19 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testForwardBackslashOperator() {
+        let input = "infix operator /\\"
+        let output: [Token] = [
+            .identifier("infix"),
+            .space(" "),
+            .keyword("operator"),
+            .space(" "),
+            .operator("/", .none),
+            .operator("\\", .none),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     // MARK: Hashbang
 
     func testHashbangOnItsOwnInFile() {
@@ -694,6 +707,159 @@ class TokenizerTests: XCTestCase {
             .linebreak("\n", 2),
             .space("    "),
             .endOfScope("\"\"\"##"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    // MARK: Regex literals
+
+    func testSingleLineRegexLiteral() {
+        let input = "let regex = /(\\w+)\\s\\s+(\\S+)\\s\\s+((?:(?!\\s\\s).)*)\\s\\s+(.*)/"
+        let output: [Token] = [
+            .keyword("let"),
+            .space(" "),
+            .identifier("regex"),
+            .space(" "),
+            .operator("=", .infix),
+            .space(" "),
+            .startOfScope("/"),
+            .stringBody("(\\w+)\\s\\s+(\\S+)\\s\\s+((?:(?!\\s\\s).)*)\\s\\s+(.*)"),
+            .endOfScope("/"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testSingleLineRegexLiteralStartingWithEscapeSequence() {
+        let input = "let regex = /\\w+/"
+        let output: [Token] = [
+            .keyword("let"),
+            .space(" "),
+            .identifier("regex"),
+            .space(" "),
+            .operator("=", .infix),
+            .space(" "),
+            .startOfScope("/"),
+            .stringBody("\\w+"),
+            .endOfScope("/"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testSingleLineRegexLiteralWithEscapedParens() {
+        let input = "let regex = /\\(foo\\)/"
+        let output: [Token] = [
+            .keyword("let"),
+            .space(" "),
+            .identifier("regex"),
+            .space(" "),
+            .operator("=", .infix),
+            .space(" "),
+            .startOfScope("/"),
+            .stringBody("\\(foo\\)"),
+            .endOfScope("/"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testRegexLiteralInArray() {
+        let input = "[/foo/]"
+        let output: [Token] = [
+            .startOfScope("["),
+            .startOfScope("/"),
+            .stringBody("foo"),
+            .endOfScope("/"),
+            .endOfScope("]"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testHashedSingleLineRegexLiteral() {
+        let input = "let regex = #/foo/bar/#"
+        let output: [Token] = [
+            .keyword("let"),
+            .space(" "),
+            .identifier("regex"),
+            .space(" "),
+            .operator("=", .infix),
+            .space(" "),
+            .startOfScope("#/"),
+            .stringBody("foo/bar"),
+            .endOfScope("/#"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testMultilineRegexLiteral() {
+        let input = """
+        let regex = #/
+        foo
+        /#
+        """
+        let output: [Token] = [
+            .keyword("let"),
+            .space(" "),
+            .identifier("regex"),
+            .space(" "),
+            .operator("=", .infix),
+            .space(" "),
+            .startOfScope("#/"),
+            .linebreak("\n", 1),
+            .stringBody("foo"),
+            .linebreak("\n", 2),
+            .endOfScope("/#"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testMultilineRegexLiteral2() {
+        let input = """
+        let regex = ##/
+        foo
+        bar
+        /##
+        """
+        let output: [Token] = [
+            .keyword("let"),
+            .space(" "),
+            .identifier("regex"),
+            .space(" "),
+            .operator("=", .infix),
+            .space(" "),
+            .startOfScope("##/"),
+            .linebreak("\n", 1),
+            .stringBody("foo"),
+            .linebreak("\n", 2),
+            .stringBody("bar"),
+            .linebreak("\n", 3),
+            .endOfScope("/##"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testPrefixPostfixSlashOperatorNotPermitted() {
+        let input = "let x = /0; let y = 1/"
+        let output: [Token] = [
+            .keyword("let"),
+            .space(" "),
+            .identifier("x"),
+            .space(" "),
+            .operator("=", .infix),
+            .space(" "),
+            .startOfScope("/"),
+            .stringBody("0; let y = 1"),
+            .endOfScope("/"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testInlineSlashPairTreatedAsOperators() {
+        let input = "x+/y/+z"
+        let output: [Token] = [
+            .identifier("x"),
+            .operator("+/", .infix),
+            .identifier("y"),
+            .operator("/+", .infix),
+            .identifier("z"),
         ]
         XCTAssertEqual(tokenize(input), output)
     }

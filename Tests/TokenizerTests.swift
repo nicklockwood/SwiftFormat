@@ -270,6 +270,41 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testUnterminatedString() {
+        let input = "\"foo"
+        let output: [Token] = [
+            .startOfScope("\""),
+            .stringBody("foo"),
+            .error(""),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testUnterminatedString2() {
+        let input = "\"foo\nbar"
+        let output: [Token] = [
+            .startOfScope("\""),
+            .stringBody("foo"),
+            .error(""),
+            .linebreak("\n", 1),
+            .identifier("bar"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testUnterminatedString3() {
+        let input = "\"foo\n\""
+        let output: [Token] = [
+            .startOfScope("\""),
+            .stringBody("foo"),
+            .error(""),
+            .linebreak("\n", 1),
+            .startOfScope("\""),
+            .error(""),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     // MARK: Multiline strings
 
     func testSimpleMultilineString() {

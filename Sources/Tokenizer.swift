@@ -1112,6 +1112,19 @@ public func tokenize(_ source: String) -> [Token] {
                 scopeIndexStack.append(tokens.count)
                 tokens.append(.startOfScope("("))
                 return
+            case "\r", "\n":
+                if string != "" {
+                    tokens.append(.stringBody(string))
+                }
+                tokens.append(.error(""))
+                if c == "\r", characters.read("\n") {
+                    tokens.append(.linebreak("\r\n", lineNumber))
+                } else {
+                    tokens.append(.linebreak(String(c), lineNumber))
+                }
+                lineNumber += 1
+                scopeIndexStack.removeLast()
+                return
             default:
                 escaped = false
             }

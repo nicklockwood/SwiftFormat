@@ -261,6 +261,35 @@ public struct _FormatRules {
         }
     }
 
+    /// Add space inside parens
+    public let addSpaceInsideParens = FormatRule(
+        help: "Add space inside parentheses."
+    )
+    { formatter in
+        formatter.forEach( .startOfScope( "(" ) )
+        { i, _ in
+            if let nextToken = formatter.token( at: i + 1 )
+            {
+                if !nextToken.isSpaceOrLinebreak,
+                   ![ .endOfScope( ")" ) ].contains( nextToken )
+                {
+                    formatter.insert( .space( " " ), at: i + 1 )
+                }
+            }
+        }
+        formatter.forEach( .endOfScope( ")" ) )
+        { i, _ in
+            if let prevToken = formatter.token( at: i - 1 )
+            {
+                if !prevToken.isSpaceOrLinebreak,
+                   ![ .startOfScope( "(" ) ].contains( prevToken )
+                {
+                    formatter.insert( .space( " " ), at: i )
+                }
+            }
+        }
+    }
+
     /// Remove space immediately inside parens
     public let spaceInsideParens = FormatRule(
         help: "Remove space inside parentheses."
@@ -332,6 +361,35 @@ public struct _FormatRules {
         }
     }
 
+    /// Add space inside square brackets
+    public let addSpaceInsideBrackets = FormatRule(
+        help: "Add space inside square brackets."
+    )
+    { formatter in
+        formatter.forEach( .startOfScope( "[" ) )
+        { i, _ in
+            if let nextToken = formatter.token( at: i + 1 )
+            {
+                if !nextToken.isSpaceOrLinebreak,
+                   ![ .endOfScope( "]" ) ].contains( nextToken )
+                {
+                    formatter.insert( .space( " " ), at: i + 1 )
+                }
+            }
+        }
+        formatter.forEach( .endOfScope( "]" ) )
+        { i, _ in
+            if let prevToken = formatter.token( at: i - 1 )
+            {
+                if !prevToken.isSpaceOrLinebreak,
+                   ![ .startOfScope( "[" ) ].contains( prevToken )
+                {
+                    formatter.insert( .space( " " ), at: i )
+                }
+            }
+        }
+    }
+	
     /// Remove space immediately inside square brackets
     public let spaceInsideBrackets = FormatRule(
         help: "Remove space inside square brackets."

@@ -4030,4 +4030,105 @@ class TokenizerTests: XCTestCase {
         ]
         XCTAssertEqual(tokenize(input), output)
     }
+
+    // MARK: some / any
+
+    func testSomeView() {
+        let input = "var body: some View {}"
+        let output: [Token] = [
+            .keyword("var"),
+            .space(" "),
+            .identifier("body"),
+            .delimiter(":"),
+            .space(" "),
+            .identifier("some"),
+            .space(" "),
+            .identifier("View"),
+            .space(" "),
+            .startOfScope("{"),
+            .endOfScope("}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testAnyView() {
+        let input = "var body: any View {}"
+        let output: [Token] = [
+            .keyword("var"),
+            .space(" "),
+            .identifier("body"),
+            .delimiter(":"),
+            .space(" "),
+            .identifier("any"),
+            .space(" "),
+            .identifier("View"),
+            .space(" "),
+            .startOfScope("{"),
+            .endOfScope("}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testSomeAnimal() {
+        let input = "func feed(_ animal: some Animal) {}"
+        let output: [Token] = [
+            .keyword("func"),
+            .space(" "),
+            .identifier("feed"),
+            .startOfScope("("),
+            .identifier("_"),
+            .space(" "),
+            .identifier("animal"),
+            .delimiter(":"),
+            .space(" "),
+            .identifier("some"),
+            .space(" "),
+            .identifier("Animal"),
+            .endOfScope(")"),
+            .space(" "),
+            .startOfScope("{"),
+            .endOfScope("}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testAnyAnimal() {
+        let input = "func feed(_ animal: any Animal) {}"
+        let output: [Token] = [
+            .keyword("func"),
+            .space(" "),
+            .identifier("feed"),
+            .startOfScope("("),
+            .identifier("_"),
+            .space(" "),
+            .identifier("animal"),
+            .delimiter(":"),
+            .space(" "),
+            .identifier("any"),
+            .space(" "),
+            .identifier("Animal"),
+            .endOfScope(")"),
+            .space(" "),
+            .startOfScope("{"),
+            .endOfScope("}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testAnyAnimalArray() {
+        let input = "let animals: [any Animal]"
+        let output: [Token] = [
+            .keyword("let"),
+            .space(" "),
+            .identifier("animals"),
+            .delimiter(":"),
+            .space(" "),
+            .startOfScope("["),
+            .identifier("any"),
+            .space(" "),
+            .identifier("Animal"),
+            .endOfScope("]"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
 }

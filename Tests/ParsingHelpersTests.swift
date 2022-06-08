@@ -173,6 +173,11 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertFalse(formatter.isStartOfClosure(at: 12))
     }
 
+    func testFunctionWithOpaqueReturnTypeNotTreatedAsClosure() {
+        let formatter = Formatter(tokenize("func foo() -> any Bar {}"))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 12))
+    }
+
     func testThrowingFunctionWithGenericReturnTypeNotTreatedAsClosure() {
         let formatter = Formatter(tokenize("func foo<Baz>() throws -> Bar<Baz> {}"))
         XCTAssertFalse(formatter.isStartOfClosure(at: 18))

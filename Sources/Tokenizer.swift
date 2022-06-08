@@ -1088,6 +1088,16 @@ public func tokenize(_ source: String) -> [Token] {
     var closedGenericScopeIndexes: [Int] = []
     var lineNumber = 1
 
+    func processLinebreak(_ char: UnicodeScalar) {
+        if char == "\r", characters.read("\n") {
+            tokens.append(.linebreak("\r\n", lineNumber))
+        } else {
+            assert(char == "\n")
+            tokens.append(.linebreak("\n", lineNumber))
+        }
+        lineNumber += 1
+    }
+
     func processStringBody(hashCount: Int) {
         var string = ""
         var escaped = false
@@ -1117,12 +1127,7 @@ public func tokenize(_ source: String) -> [Token] {
                     tokens.append(.stringBody(string))
                 }
                 tokens.append(.error(""))
-                if c == "\r", characters.read("\n") {
-                    tokens.append(.linebreak("\r\n", lineNumber))
-                } else {
-                    tokens.append(.linebreak(String(c), lineNumber))
-                }
-                lineNumber += 1
+                processLinebreak(c)
                 scopeIndexStack.removeLast()
                 return
             default:
@@ -1200,12 +1205,7 @@ public func tokenize(_ source: String) -> [Token] {
                     tokens.append(.stringBody(string))
                     string = ""
                 }
-                if c == "\r", characters.read("\n") {
-                    tokens.append(.linebreak("\r\n", lineNumber))
-                } else {
-                    tokens.append(.linebreak(String(c), lineNumber))
-                }
-                lineNumber += 1
+                processLinebreak(c)
                 if let space = characters.parseSpace() {
                     tokens.append(space)
                 }
@@ -1311,14 +1311,9 @@ public func tokenize(_ source: String) -> [Token] {
                     return
                 }
                 continue
-            case "\n", "\r":
+            case "\r", "\n":
                 flushCommentBodyTokens()
-                if c == "\r", characters.read("\n") {
-                    tokens.append(.linebreak("\r\n", lineNumber))
-                } else {
-                    tokens.append(.linebreak(String(c), lineNumber))
-                }
-                lineNumber += 1
+                processLinebreak(c)
                 continue
             default:
                 if c.isSpace {

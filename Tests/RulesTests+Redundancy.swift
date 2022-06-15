@@ -4947,6 +4947,15 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.unusedArguments)
     }
 
+    func testUnusedPropertyWrapperArgument() {
+        let input = """
+        ForEach($list.notes) { $note in
+            Text(note.foobar)
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
     // init
 
     func testParameterUsedInInit() {

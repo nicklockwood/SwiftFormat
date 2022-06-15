@@ -244,7 +244,7 @@ public extension Token {
     /// Returns the unescaped token string
     func unescaped() -> String {
         switch self {
-        case .stringBody:
+        case let .stringBody(string):
             var input = UnicodeScalarView(string.unicodeScalars)
             var output = String.UnicodeScalarView()
             while let c = input.popFirst() {
@@ -290,16 +290,19 @@ public extension Token {
                 }
             }
             return String(output)
-        case .identifier:
+        case let .identifier(string):
+            if string.hasPrefix("$") {
+                return String(string.dropFirst())
+            }
             return string.replacingOccurrences(of: "`", with: "")
-        case .number(_, .integer), .number(_, .decimal):
+        case let .number(string, .integer), let .number(string, .decimal):
             return string.replacingOccurrences(of: "_", with: "")
-        case .number(_, .binary), .number(_, .octal), .number(_, .hex):
-            var characters = UnicodeScalarView(string.unicodeScalars)
+        case let .number(s, .binary), let .number(s, .octal), let .number(s, .hex):
+            var characters = UnicodeScalarView(s.unicodeScalars)
             guard characters.read("0"), characters.readCharacter(where: {
                 "oxb".unicodeScalars.contains($0)
             }) != nil else {
-                return string.replacingOccurrences(of: "_", with: "")
+                return s.replacingOccurrences(of: "_", with: "")
             }
             return String(characters).replacingOccurrences(of: "_", with: "")
         default:

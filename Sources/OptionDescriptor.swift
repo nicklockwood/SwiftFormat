@@ -874,6 +874,14 @@ struct _Descriptors {
         help: "Threshold for when to prefer [self] capture. Defaults to 2.",
         keyPath: \.explicitSelfCount
     )
+    let removeStartOrEndBlankLinesFromTypes = OptionDescriptor(
+        argumentName: "typeblanklines",
+        displayName: "Remove blank lines from types",
+        help: "\"remove\" (default) or \"preserve\" blank lines from types",
+        keyPath: \.removeStartOrEndBlankLinesFromTypes,
+        trueValues: ["remove"],
+        falseValues: ["preserve"]
+    )
 
     // MARK: - Internal
 

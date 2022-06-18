@@ -856,7 +856,8 @@ public struct _FormatRules {
         formatter.forEachToken(where: { [.keyword("class"), .keyword("struct")].contains($0) }) { i, _ in
             guard formatter.last(.keyword, before: i) != .keyword("import"),
                   // exit if class is a type modifier
-                  let next = formatter.next(.nonSpaceOrCommentOrLinebreak, after: i), !next.isKeyword,
+                  let next = formatter.next(.nonSpaceOrCommentOrLinebreak, after: i),
+                  !(next.isKeyword || next.isModifierKeyword),
                   // exit for class as protocol conformance
                   formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .delimiter(":"),
                   let braceIndex = formatter.index(after: i, where: { $0 == .startOfScope("{") }),

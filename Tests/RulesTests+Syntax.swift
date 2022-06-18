@@ -1244,6 +1244,18 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.enumNamespaces)
     }
 
+    func testClassFuncNotReplacedByEnum() {
+        let input = """
+        class Foo {
+            class override func foo() {
+                Bar.bar()
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.enumNamespaces,
+                       exclude: ["modifierOrder", "specifiers"])
+    }
+
     // MARK: - numberFormatting
 
     // hex case

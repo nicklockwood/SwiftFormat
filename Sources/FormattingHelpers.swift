@@ -1221,14 +1221,14 @@ extension Formatter {
             let declarationParser = Formatter(tokens)
             let declarationTypeToken = declarationParser.tokens[declarationTypeTokenIndex]
 
-            let isStaticDeclaration = declarationParser.lastToken(
-                before: declarationTypeTokenIndex,
-                where: { $0 == .keyword("static") }
+            let isStaticDeclaration = declarationParser.index(
+                of: .keyword("static"),
+                before: declarationTypeTokenIndex
             ) != nil
 
-            let isClassDeclaration = declarationParser.lastToken(
-                before: declarationTypeTokenIndex,
-                where: { $0 == .keyword("class") }
+            let isClassDeclaration = declarationParser.index(
+                of: .keyword("class"),
+                before: declarationTypeTokenIndex
             ) != nil
 
             switch declarationTypeToken {

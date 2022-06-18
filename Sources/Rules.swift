@@ -801,7 +801,7 @@ public struct _FormatRules {
             var j = range.startIndex
             while j < range.endIndex, let token = formatter.token(at: j) {
                 if token == .startOfScope("{"),
-                   let skip = formatter.index(of: .endOfScope, after: j, if: { $0 == .endOfScope("}") })
+                   let skip = formatter.index(of: .endOfScope("}"), after: j)
                 {
                     j = skip
                     continue
@@ -860,10 +860,10 @@ public struct _FormatRules {
                   !(next.isKeyword || next.isModifierKeyword),
                   // exit for class as protocol conformance
                   formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .delimiter(":"),
-                  let braceIndex = formatter.index(after: i, where: { $0 == .startOfScope("{") }),
+                  let braceIndex = formatter.index(of: .startOfScope("{"), after: i),
                   // exit if type is conforming any types
                   !formatter.tokens[i ... braceIndex].contains(.delimiter(":")),
-                  let endIndex = formatter.index(after: braceIndex, where: { $0 == .endOfScope("}") }),
+                  let endIndex = formatter.index(of: .endOfScope("}"), after: braceIndex),
                   case let .identifier(name)? = formatter.next(.identifier, after: i + 1)
             else {
                 return
@@ -4692,13 +4692,9 @@ public struct _FormatRules {
     ) { formatter in
 
         formatter.forEach(.endOfScope("case")) { i, _ in
-            guard let endIndex = formatter.index(
-                after: i,
-                where: { $0 == .startOfScope(":") }
-            )
-            else { return }
+            guard let endIndex = formatter.index(of: .startOfScope(":"), after: i) else { return }
 
-            var nextDelimiterIndex = formatter.index(in: i + 1 ..< endIndex, where: { $0 == .delimiter(",") })
+            var nextDelimiterIndex = formatter.index(of: .delimiter(","), in: i + 1 ..< endIndex)
             var nextStartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i)
             var enums: [Range<Int>] = []
 
@@ -4706,18 +4702,23 @@ public struct _FormatRules {
                   let delimiterIndex = nextDelimiterIndex,
                   delimiterIndex < endIndex,
                   startIndex < endIndex,
-                  let end = formatter.lastIndex(of: .nonSpaceOrCommentOrLinebreak,
-                                                in: Range(uncheckedBounds: (lower: startIndex, upper: delimiterIndex)))
+                  let end = formatter.lastIndex(
+                      of: .nonSpaceOrCommentOrLinebreak,
+                      in: startIndex ..< delimiterIndex
+                  )
             {
                 enums.append(Range(startIndex ... end))
                 nextStartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak,
                                                  after: delimiterIndex) ?? endIndex
-                nextDelimiterIndex = formatter.index(after: delimiterIndex, where: { $0 == .delimiter(",") })
+                nextDelimiterIndex = formatter.index(of: .delimiter(","), after: delimiterIndex)
             }
 
             // last one from the cases list
             if let nextStart = nextStartIndex,
-               let nextEnd = formatter.lastIndex(of: .nonSpaceOrCommentOrLinebreak, in: nextStart ..< endIndex),
+               let nextEnd = formatter.lastIndex(
+                   of: .nonSpaceOrCommentOrLinebreak,
+                   in: nextStart ..< endIndex
+               ),
                nextStart <= nextEnd
             {
                 enums.append(Range(nextStart ... nextEnd))

@@ -5737,6 +5737,11 @@ public struct _FormatRules {
             else {
                 return
             }
+            if let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: endIndex),
+               formatter.isLabel(at: nextIndex)
+            {
+                return
+            }
             if name == "contains" {
                 if label != "where" {
                     return

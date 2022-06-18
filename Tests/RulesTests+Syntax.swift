@@ -2076,6 +2076,12 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.preferKeyPath, options: options)
     }
 
+    func testMultipleTrailingClosuresNotConvertedToKeyPath() {
+        let input = "foo.map { $0.bar } reverse: { $0.bar }"
+        let options = FormatOptions(swiftVersion: "5.2")
+        testFormatting(for: input, rule: FormatRules.preferKeyPath, options: options)
+    }
+
     // MARK: - assertionFailures
 
     func testAssertionFailuresForAssertFalse() {

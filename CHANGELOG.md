@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.49.10](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.49.10) (2022-06-18)
+
+- Added preliminary support for Swift 5.7 regular expression literals
+- Fixed conflict between `wrapMultilineStatementBraces` and `indent` rules
+- Fixed bug where arguments referenced using `$` prefix were incorrectly marked as unused
+- Fixed `enumNamespaces` bug where `class` modifiers were mistakenly converted to `enum`
+- Fixed bug where `preferKeyPath` mangled functions using multiple trailing closure syntax
+- Unterminated string literals are now treated as an error
+
 ## [0.49.9](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.49.9) (2022-05-16)
 
 - Fixed bug where trailing comma was incorrectly added inside collection types

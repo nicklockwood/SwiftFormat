@@ -29,10 +29,13 @@ extension Formatter {
         if prevToken == .endOfScope(")"),
            !tokens[startOfLine(at: prevIndex, excludingIndent: true)].is(.endOfScope),
            let startIndex = self.index(of: .startOfScope("("), before: prevIndex),
-           !onSameLine(startIndex, prevIndex),
            indentForLine(at: startIndex) < indent
         {
-            return true
+            if options.wrapArguments == .beforeFirst {
+                return !onSameLine(startIndex, prevIndex)
+            } else {
+                return next(.nonSpaceOrComment, after: startIndex)?.isLinebreak == true
+            }
         }
         return false
     }

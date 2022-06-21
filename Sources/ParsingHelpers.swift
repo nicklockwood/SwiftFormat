@@ -671,10 +671,10 @@ extension Formatter {
                 return nil
             }
             switch tokens[prevIndex] {
-            case .delimiter(","):
-                return prevIndex
             case let .keyword(name) where
                 ["if", "guard", "while", "for", "case", "catch"].contains(name):
+                fallthrough
+            case .delimiter(","):
                 return isAfterBrace(prevIndex, i) ? nil : prevIndex
             default:
                 return nil

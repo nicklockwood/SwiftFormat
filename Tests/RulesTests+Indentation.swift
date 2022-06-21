@@ -1576,6 +1576,34 @@ class IndentTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.indent)
     }
 
+    func testNoUnindentTrailingClosure() {
+        let input = """
+        private final class Foo {
+            func animateTransition() {
+                guard let fromVC = transitionContext.viewController(forKey: .from),
+                      let toVC = transitionContext.viewController(forKey: .to) else {
+                    return
+                }
+
+                UIView.transition(
+                    with: transitionContext.containerView,
+                    duration: transitionDuration(using: transitionContext),
+                    options: []) {
+                        fromVC.view.alpha = 0
+                        transitionContext.containerView.addSubview(toVC.view)
+                        toVC.view.frame = transitionContext.finalFrame(for: toVC)
+                        toVC.view.alpha = 1
+                    } completion: { _ in
+                        transitionContext.completeTransition(true)
+                        fromVC.view.removeFromSuperview()
+                    }
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.indent,
+                       exclude: ["wrapArguments", "wrapMultilineStatementBraces"])
+    }
+
     func testIndentChainedPropertiesAfterFunctionCall() {
         let input = """
         let foo = Foo(

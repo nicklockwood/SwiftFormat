@@ -1504,8 +1504,7 @@ public func tokenize(_ source: String) -> [Token] {
                        .delimiter(":"), .delimiter(","),
                    ].contains(prevToken)
                 {
-                    type = .prefix
-                    break
+                    tokens[i] = .startOfScope("/")
                 }
                 return
             }
@@ -1523,14 +1522,8 @@ public func tokenize(_ source: String) -> [Token] {
                 return
             }
         }
-        if type == .prefix {
-            if string == "/" {
-                tokens[i] = .startOfScope("/")
-                return
-            }
-            if prevNonSpaceToken == .endOfScope(">") {
-                convertClosingChevronToOperator(at: prevNonSpaceIndex, andOpeningChevron: true)
-            }
+        if type == .prefix, prevNonSpaceToken == .endOfScope(">") {
+            convertClosingChevronToOperator(at: prevNonSpaceIndex, andOpeningChevron: true)
         }
         tokens[i] = .operator(string, type)
     }
@@ -1803,10 +1796,19 @@ public func tokenize(_ source: String) -> [Token] {
         // Either there's no scope, or token didn't close it
         count = tokens.count
         token = tokens[count - 1]
-        switch tokens[count - 1] {
+        switch token {
         case .startOfScope("/"):
             scopeIndexStack.append(count - 1)
+            let start = characters
             processStringBody(regex: true, hashCount: 0)
+            if scopeIndexStack.last == count - 1 {
+                characters = start
+                scopeIndexStack.removeLast()
+                tokens.removeLast(tokens.count - count)
+                token = .operator("/", .prefix)
+                tokens[count - 1] = token
+                return
+            }
         case let .startOfScope(string):
             scopeIndexStack.append(count - 1)
             switch string {

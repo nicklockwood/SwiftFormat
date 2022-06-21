@@ -2440,6 +2440,16 @@ class IndentTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.indent)
     }
 
+    func testNoMisindentCasePath() {
+        let input = """
+        reducer.pullback(
+            casePath: /Action.action,
+            environment: {}
+        )
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
     // indent #if/#else/#elseif/#endif (mode: indent)
 
     func testIfEndifIndenting() {

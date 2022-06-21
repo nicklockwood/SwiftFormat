@@ -864,6 +864,37 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testCasePathTreatedAsOperator() {
+        let input = "let foo = /Foo.bar"
+        let output: [Token] = [
+            .keyword("let"),
+            .space(" "),
+            .identifier("foo"),
+            .space(" "),
+            .operator("=", .infix),
+            .space(" "),
+            .operator("/", .prefix),
+            .identifier("Foo"),
+            .operator(".", .infix),
+            .identifier("bar"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testCasePathInParenthesesTreatedAsOperator() {
+        let input = "foo(/Foo.bar)"
+        let output: [Token] = [
+            .identifier("foo"),
+            .startOfScope("("),
+            .operator("/", .prefix),
+            .identifier("Foo"),
+            .operator(".", .infix),
+            .identifier("bar"),
+            .endOfScope(")"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     // MARK: Single-line comments
 
     func testSingleLineComment() {

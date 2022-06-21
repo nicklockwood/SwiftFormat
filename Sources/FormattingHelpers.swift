@@ -29,7 +29,7 @@ extension Formatter {
         if prevToken == .endOfScope(")"),
            !tokens[startOfLine(at: prevIndex, excludingIndent: true)].is(.endOfScope),
            let startIndex = self.index(of: .startOfScope("("), before: prevIndex),
-           next(.nonSpaceOrComment, after: startIndex)?.isLinebreak == true,
+           !onSameLine(startIndex, prevIndex),
            indentForLine(at: startIndex) < indent
         {
             return true

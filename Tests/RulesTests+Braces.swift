@@ -499,4 +499,35 @@ class BracesTests: RulesTests {
             FormatRules.braces, FormatRules.emptyBraces, FormatRules.elseOnSameLine,
         ], options: options)
     }
+
+    func testTrailingClosureWrappingAfterSingleParamMethodCall() {
+        let input = """
+        func build() -> StateStore {
+            StateStore(initial: State(
+                foo: foo,
+                bar: bar))
+            {
+                ActionHandler()
+            }
+        }
+        """
+
+        let options = FormatOptions(closingParenOnSameLine: true)
+        testFormatting(for: input, rules: [FormatRules.braces, FormatRules.wrapMultilineStatementBraces], options: options)
+    }
+
+    func testTrailingClosureWrappingAfterMethodWithPartialWrappingAndClosures() {
+        let input = """
+        Picker("Language", selection: .init(
+            get: { self.store.state.language },
+            set: { self.store.handle(.setLanguage($0)) }))
+        {
+            Text("English").tag(Language.english)
+            Text("German").tag(Language.german)
+        }
+        """
+
+        let options = FormatOptions(closingParenOnSameLine: true)
+        testFormatting(for: input, rules: [FormatRules.braces, FormatRules.wrapMultilineStatementBraces], options: options)
+    }
 }

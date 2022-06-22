@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.49.11](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.49.11) (2022-06-22)
+
+- Fixed parsing of prefix `/` operator (as used in CasePath library)
+- Fixed bug with indenting of trailing closures after a conditional statement
+- Fixed bug with `wrapMultilineStatementBraces` rule
+- Added Swift 5.6 and 5.7 to supported versions
+
 ## [0.49.10](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.49.10) (2022-06-18)
 
 - Added preliminary support for Swift 5.7 regular expression literals

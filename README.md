@@ -45,6 +45,7 @@ SwiftFormat is a code library and command-line tool for reformatting Swift code 
 
 SwiftFormat goes above and beyond what you might expect from a code formatter. In addition to adjusting white space it can insert or remove implicit `self`, remove redundant parentheses, and correct many other deviations from the standard Swift idioms.
 
+
 Why would I want to do that?
 -----------------------------
 
@@ -73,7 +74,7 @@ Command-line tool
 
 **Installation:**
 
-You can install the `swiftformat` command-line tool on macOS using [Homebrew](http://brew.sh/). Assuming you already have Homebrew installed, just type:
+You can install the `swiftformat` command-line tool on macOS or Linux using [Homebrew](http://brew.sh/). Assuming you already have Homebrew installed, just type:
 
 ```bash
 $ brew install swiftformat

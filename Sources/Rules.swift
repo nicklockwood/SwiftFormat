@@ -6818,4 +6818,137 @@ public struct _FormatRules {
             }
         }
     }
+
+    public let opaqueGenericParameters = FormatRule(
+        help: """
+        Use opaque generic parameters (`some Protocol`) instead of expanded generic
+        signatures (`<T: Protocol> (T)`) where equivalent.
+        """,
+        options: []
+    ) { formatter in
+        formatter.forEach(.keyword("func")) { funcIndex, _ in
+            guard
+                // Opaque generic parameter syntax is only supported in Swift 5.7+
+                formatter.options.swiftVersion >= "5.7",
+                // Validate that this is a generic method using angle bracket syntax,
+                // and find the indices for all of the key tokens
+                let genericSignatureStartIndex = formatter.index(of: .startOfScope("<"), after: funcIndex),
+                let genericSignatureEndIndex = formatter.endOfScope(at: genericSignatureStartIndex),
+                let paramListStartIndex = formatter.index(of: .startOfScope("("), after: genericSignatureEndIndex),
+                let paramListEndIndex = formatter.endOfScope(at: paramListStartIndex),
+                let openBraceIndex = formatter.index(of: .startOfScope("{"), after: paramListEndIndex)
+            else { return }
+
+            class GenericType {
+                let name: String
+                var conformances: [(name: String, sourceRange: ClosedRange<Int>)]
+                var eligbleToRemove = true
+
+                init(name: String) {
+                    self.name = name
+                    conformances = []
+                }
+
+                var asOpaqueParameter: [Token] {
+                    if conformances.isEmpty {
+                        return tokenize("some Any")
+                    } else {
+                        return tokenize("some \(conformances.map { $0.name }.joined(separator: " & "))")
+                    }
+                }
+            }
+
+            // Parse the generic signature between the angle brackets so we know all of the generic types
+            var genericTypes = [GenericType]()
+
+            var currentIndex = genericSignatureStartIndex
+
+            while currentIndex < genericSignatureEndIndex - 1 {
+                guard let genericTypeNameIndex = formatter.index(of: .identifier, after: currentIndex) else {
+                    break
+                }
+
+                let genericType = GenericType(name: formatter.tokens[genericTypeNameIndex].string)
+
+                let typeEndIndex: Int
+                let nextCommaIndex = formatter.index(of: .delimiter(","), after: genericTypeNameIndex)
+                if let nextCommaIndex = nextCommaIndex, nextCommaIndex < genericSignatureEndIndex {
+                    typeEndIndex = nextCommaIndex
+                } else {
+                    typeEndIndex = genericSignatureEndIndex
+                }
+
+                // If there's a colon after the type, it has an inline conformance listed
+                if let colonIndex = formatter.index(of: .delimiter(":"), after: genericTypeNameIndex) {
+                    let conformance = formatter.tokens[(colonIndex + 1) ..< typeEndIndex]
+                        .map { $0.string }.joined().trimmingCharacters(in: .whitespacesAndNewlines)
+
+                    // TODO: We have to reject conformances that include a comment using `//` or `///`,
+                    // since we can't move that code around as easily without accidentally turning
+                    // other code into a comment
+
+                    genericType.conformances.append((
+                        name: conformance,
+                        sourceRange: genericTypeNameIndex ... typeEndIndex
+                    ))
+                }
+
+                genericTypes.append(genericType)
+                currentIndex = typeEndIndex
+            }
+
+            // TODO: handle `where` clauses that add additional conformances
+
+            // TODO: Handle cases where a type appears multiple times in the parameter list
+            let parameterListRange = (paramListStartIndex + 1) ..< paramListEndIndex
+            let parameterListTokens = formatter.tokens[parameterListRange]
+
+            // If the generic type occurs multiple times in the parameter list,
+            // it isnt eligible to be removed. For example `(T, T) where T: Foo`
+            // requires the two params to be the same underlying type, but
+            // `(some Foo, some Foo)` does not.
+            for genericType in genericTypes {
+                let occurenceCount = parameterListTokens.filter { $0.string == genericType.name }.count
+                if occurenceCount > 1 {
+                    genericType.eligbleToRemove = false
+                }
+            }
+
+            let genericsEligibleToRemove = genericTypes.filter { $0.eligbleToRemove }
+
+            // TODO: We have to remove content from the where clause here,
+            // before we modify the parameter list, so our indicies aren't invalidated
+
+            // Replace all of the uses of generic types that are elible to remove
+            // with the corresponding opaque parameter declaration
+            for index in parameterListRange.reversed() {
+                if let matchingGenericType = genericsEligibleToRemove.first(where: {
+                    $0.name == formatter.tokens[index].string
+                }) {
+                    formatter.replaceToken(at: index, with: matchingGenericType.asOpaqueParameter)
+                }
+            }
+
+            // If we removed all of the types, we can just trivially remove the whole generic signature
+            if genericTypes.allSatisfy({ $0.eligbleToRemove }) {
+                formatter.removeTokens(in: genericSignatureStartIndex ... genericSignatureEndIndex)
+            }
+
+            // If we didn't remove any types, there's nothing else to do
+            else if genericsEligibleToRemove.isEmpty {
+                return
+            }
+
+            // Otherwise we just remove the ones that were eligible for removal
+            else {
+                let rangesToRemove = genericsEligibleToRemove
+                    .flatMap { $0.conformances.map { $0.sourceRange } }
+                    .sorted(by: { $0.startIndex < $1.startIndex })
+
+                for rangeToRemove in rangesToRemove.reversed() {
+                    formatter.removeTokens(in: rangeToRemove)
+                }
+            }
+        }
+    }
 }

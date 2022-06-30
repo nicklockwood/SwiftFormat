@@ -2595,15 +2595,47 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.opaqueGenericParameters, options: options)
     }
 
-    func testOpaqueGenericParameterCanRemoveOneButNotOther() {
+    func testOpaqueGenericParameterCanRemoveOneButNotOthers_onOneLine() {
         let input = """
-        func foo<T: Fooable, U: Barable>(_ foo: T, bar1: U, bar2: U) where T: Quuxable, U: Qaaxable {
+        func foo<S: Baazable, T: Fooable, U: Barable>(_ foo: T, bar1: U, bar2: U) where S.AssociatedType == Baaz, T: Quuxable, U: Qaaxable {
             print(foo, bar1, bar2)
         }
         """
 
         let output = """
-        func foo<U: Barable>(_ foo: some Fooable & Quuxable, bar1: U, bar2: U) where U: Qaaxable {
+        func foo<S: Baazable, U: Barable>(_ foo: some Fooable & Quuxable, bar1: U, bar2: U) where S.AssociatedType == Baaz, U: Qaaxable {
+            print(foo, bar1, bar2)
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, output, rule: FormatRules.opaqueGenericParameters, options: options)
+    }
+
+    func testOpaqueGenericParameterCanRemoveOneButNotOthers_onMultipleLines() {
+        let input = """
+        func foo<
+            S: Baazable,
+            T: Fooable,
+            U: Barable
+        >(_ foo: T, bar1: U, bar2: U) where
+            S.AssociatedType == Baaz,
+            T: Quuxable,
+            U: Qaaxable
+        {
+            print(foo, bar1, bar2)
+        }
+        """
+
+        let output = """
+        func foo<
+            S: Baazable,
+            T: Fooable,
+            U: Barable
+        >(_ foo: some Fooable & Quuxable, bar1: U, bar2: U) where
+            S.AssociatedType == Baaz,
+            U: Qaaxable
+        {
             print(foo, bar1, bar2)
         }
         """
@@ -2628,6 +2660,18 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.opaqueGenericParameters, options: options)
     }
 
+    func testOpaqueGenericParameterWithAssociatedTypeConformance() {
+        // There is no opaque generic parameter syntax that supports this type of constraint
+        let input = """
+        func foo<T: Fooable>(_ value: T) where T.AssociatedType: Bar {
+            print(value)
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, rule: FormatRules.opaqueGenericParameters, options: options)
+    }
+
     func testOpaqueGenericParameterWithKnownAssociatedTypeConstraint() {
         // For known types (like those in the standard library),
         // we are able to know their primary associated types
@@ -2638,7 +2682,7 @@ class SyntaxTests: RulesTests {
         """
 
         let output = """
-        func foo(_ value: some Collection<Foo>) where T.Element == Foo {
+        func foo(_ value: some Collection<Foo>) {
             print(value)
         }
         """

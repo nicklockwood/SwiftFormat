@@ -178,7 +178,7 @@ class IndentTests: RulesTests {
             self.bar()
         })
         """
-        testFormatting(for: input, output, rule: FormatRules.indent, exclude: ["closureImplicitSelf"])
+        testFormatting(for: input, output, rule: FormatRules.indent)
     }
 
     func testIndentDoubleParenthesizedClosures() {
@@ -189,7 +189,7 @@ class IndentTests: RulesTests {
             self.baz()
         }))
         """
-        testFormatting(for: input, rule: FormatRules.indent, exclude: ["closureImplicitSelf"])
+        testFormatting(for: input, rule: FormatRules.indent)
     }
 
     func testIndentUnbalancedBraces() {

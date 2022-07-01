@@ -6821,8 +6821,10 @@ public struct _FormatRules {
 
     public let opaqueGenericParameters = FormatRule(
         help: """
-        Use opaque generic parameters (`some Protocol`) instead of expanded generic
-        signatures (`<T: Protocol> (T)`) where equivalent.
+        Use opaque generic parameters (`some Protocol`) instead of generic parameters
+        with constraints (`T where T: Protocol`, etc) where equivalent. Also supports
+        primary associated types for common standard library types, so definitions like
+        `T where T: Collection, T.Element == Foo` are upated to `some Collection<Foo>`.
         """,
         options: []
     ) { formatter in

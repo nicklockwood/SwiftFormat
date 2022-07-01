@@ -2580,14 +2580,14 @@ class SyntaxTests: RulesTests {
 
     func testOpaqueGenericParameterWithConstraintsInWhereClause() {
         let input = """
-        func foo<T>(_ value: T) where T: Fooable, T: Barable {
-            print(value)
+        func foo<T, U>(_ t: T, _ u: U) where T: Fooable, T: Barable, U: Baazable {
+            print(t, u)
         }
         """
 
         let output = """
-        func foo(_ value: some Fooable & Barable) {
-            print(value)
+        func foo(_ t: some Fooable & Barable, _ u: some Baazable) {
+            print(t, u)
         }
         """
 
@@ -2630,7 +2630,6 @@ class SyntaxTests: RulesTests {
         let output = """
         func foo<
             S: Baazable,
-            T: Fooable,
             U: Barable
         >(_ foo: some Fooable & Quuxable, bar1: U, bar2: U) where
             S.AssociatedType == Baaz,

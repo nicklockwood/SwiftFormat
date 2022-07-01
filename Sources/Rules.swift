@@ -6841,8 +6841,13 @@ public struct _FormatRules {
 
             /// A generic type parameter for a method
             class GenericType {
+                /// The name of the generic parameter. For example with `<T: Fooable>` the generic parameter `name` is `T`.
                 let name: String
+                /// The source range within angle brackets where the generic parameter is defined
+                let definitionSourceRange: ClosedRange<Int>
+                /// Conformances and constraints applied to this generic parameter
                 var conformances: [GenericConformance]
+                /// Whether or not this generic parameter can be removed and replaced with an opaque generic parameter
                 var eligbleToRemove = true
 
                 /// A constraint or conformance that applies to a generic type
@@ -6854,14 +6859,22 @@ public struct _FormatRules {
                         case conceteType
                     }
 
+                    /// The name of the type being used in the constraint. For example with `T: Fooable`
+                    /// the constraint name is `Fooable`
                     let name: String
+                    /// The name of the type being constrained. For example with `T: Fooable` the
+                    /// `typeName` is `T`. This can correspond exactly to the `name` of a `GenericType`,
+                    /// but can also be something like `T.AssociatedType` where `T` is the `name` of a `GenericType`.
                     let typeName: String
+                    /// The type of conformance or constraint represented by this value.
                     let type: ConformanceType
+                    /// The source range in the angle brackets or where clause where this conformance is defined.
                     let sourceRange: ClosedRange<Int>
                 }
 
-                init(name: String) {
+                init(name: String, definitionSourceRange: ClosedRange<Int>) {
                     self.name = name
+                    self.definitionSourceRange = definitionSourceRange
                     conformances = []
                 }
 
@@ -6943,6 +6956,23 @@ public struct _FormatRules {
                         break
                     }
 
+                    let typeEndIndex: Int
+                    let nextCommaIndex = formatter.index(of: .delimiter(","), after: genericTypeNameIndex)
+                    if let nextCommaIndex = nextCommaIndex, nextCommaIndex < genericSignatureEndIndex {
+                        typeEndIndex = nextCommaIndex
+                    } else {
+                        typeEndIndex = genericSignatureEndIndex - 1
+                    }
+
+                    // Include all whitespace and comments in the conformance's source range,
+                    // so if we remove it later all of the extra whitespace will get cleaned up
+                    let sourceRangeEnd: Int
+                    if let nextTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: typeEndIndex) {
+                        sourceRangeEnd = nextTokenIndex - 1
+                    } else {
+                        sourceRangeEnd = typeEndIndex
+                    }
+
                     // The generic constraint could have syntax like `Foo`, `Foo: Fooable`,
                     // `Foo.Element == Fooable`, etc. Create a reference to this specific
                     // generic parameter (`Foo` in all of these examples) that can store
@@ -6954,16 +6984,11 @@ public struct _FormatRules {
                     if let existingType = genericTypes.first(where: { $0.name == baseGenericTypeName }) {
                         genericType = existingType
                     } else {
-                        genericType = GenericType(name: baseGenericTypeName)
+                        genericType = GenericType(
+                            name: baseGenericTypeName,
+                            definitionSourceRange: genericTypeNameIndex ... sourceRangeEnd
+                        )
                         genericTypes.append(genericType)
-                    }
-
-                    let typeEndIndex: Int
-                    let nextCommaIndex = formatter.index(of: .delimiter(","), after: genericTypeNameIndex)
-                    if let nextCommaIndex = nextCommaIndex, nextCommaIndex < genericSignatureEndIndex {
-                        typeEndIndex = nextCommaIndex
-                    } else {
-                        typeEndIndex = genericSignatureEndIndex - 1
                     }
 
                     // Parse the constraint after the type name if present
@@ -7001,7 +7026,7 @@ public struct _FormatRules {
                             name: conformanceName,
                             typeName: constrainedTypeName,
                             type: conformanceType,
-                            sourceRange: genericTypeNameIndex ... typeEndIndex
+                            sourceRange: genericTypeNameIndex ... sourceRangeEnd
                         ))
                     }
 
@@ -7035,7 +7060,9 @@ public struct _FormatRules {
             }
 
             let genericsEligibleToRemove = genericTypes.filter { $0.eligbleToRemove }
-            let conformancesToRemove = genericsEligibleToRemove.flatMap { $0.conformances }
+            let sourceRangesToRemove = Set(genericsEligibleToRemove.flatMap { type in
+                [type.definitionSourceRange] + type.conformances.map { $0.sourceRange }
+            })
 
             // We perform modifications to the function signature in reverse order
             // so we don't invalidate any of the indices we've recorded. So first
@@ -7043,8 +7070,8 @@ public struct _FormatRules {
             if let whereIndex = formatter.index(of: .keyword("where"), after: paramListEndIndex),
                whereIndex < openBraceIndex
             {
-                let whereClauseConformancesToRemove = conformancesToRemove.filter { $0.sourceRange.lowerBound > whereIndex }
-                formatter.removeTokens(in: whereClauseConformancesToRemove.map { $0.sourceRange })
+                let whereClauseSourceRanges = sourceRangesToRemove.filter { $0.lowerBound > whereIndex }
+                formatter.removeTokens(in: Array(whereClauseSourceRanges))
 
                 // if the where clause is completely empty now, we need to the where token as well
                 if let newOpenBraceIndex = formatter.index(of: .nonSpaceOrLinebreak, after: whereIndex),
@@ -7066,8 +7093,8 @@ public struct _FormatRules {
             }
 
             // Remove types from the generic paremeter list
-            let genericParameterListConformances = conformancesToRemove.filter { $0.sourceRange.lowerBound < genericSignatureEndIndex }
-            formatter.removeTokens(in: genericParameterListConformances.map { $0.sourceRange })
+            let genericParameterListSourceRanges = sourceRangesToRemove.filter { $0.lowerBound < genericSignatureEndIndex }
+            formatter.removeTokens(in: Array(genericParameterListSourceRanges))
 
             // If we removed all of the generic types, we also have to remove the angle brackets
             if let newGenericSignatureEndIndex = formatter.index(of: .nonSpaceOrLinebreak, after: genericSignatureStartIndex),

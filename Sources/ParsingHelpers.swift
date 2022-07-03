@@ -1327,6 +1327,11 @@ extension Formatter {
             }
         }
 
+        /// Whether or not this declaration defines a type (a class, enum, etc, but not an extension)
+        var definesType: Bool {
+            ["class", "actor", "enum", "protocol", "struct", "typealias"].contains(keyword)
+        }
+
         /// The name of this type or variable
         var name: String? {
             let parser = Formatter(openTokens)

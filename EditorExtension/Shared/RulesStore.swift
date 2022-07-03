@@ -47,8 +47,24 @@ struct Rule {
 }
 
 extension Rule: Comparable {
+    /// Looks up and returns a format rule, if found.
+    var formatRule: FormatRule? {
+        FormatRules.byName[name]
+    }
+
     var isDeprecated: Bool {
-        return FormatRules.byName[name]?.isDeprecated == true
+        formatRule?.isDeprecated == true
+    }
+
+    /// Space-separated, lowercased text terms that this rule might by found by.
+    var searchableText: String {
+        var items = [name]
+        if let formatRule = formatRule {
+            items.append(formatRule.help)
+            items.append(formatRule.options.joined(separator: " "))
+            items.append(formatRule.sharedOptions.joined(separator: " "))
+        }
+        return items.joined(separator: " ").lowercased()
     }
 
     static func < (lhs: Rule, rhs: Rule) -> Bool {
@@ -86,7 +102,7 @@ struct RulesStore {
     }
 
     var rules: [Rule] {
-        return load()
+        load()
             .map { Rule($0) }
             .filter { !$0.isDeprecated }
     }

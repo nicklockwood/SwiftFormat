@@ -33,7 +33,7 @@ import Cocoa
 
 extension FormatRule {
     var toolTip: String {
-        return stripMarkdown(help)
+        stripMarkdown(help)
     }
 }
 
@@ -43,7 +43,7 @@ extension OptionDescriptor {
     // https://bugs.swift.org/browse/SR-631
 
     var toolTip: String {
-        return stripMarkdown(help) + "."
+        stripMarkdown(help) + "."
     }
 }
 
@@ -103,15 +103,16 @@ final class RulesViewController: NSViewController {
         let optionsByName = Dictionary(uniqueKeysWithValues: optionStore
             .options
             .map { ($0.descriptor.argumentName, $0) })
-        let filterText = searchField.stringValue.trimmingCharacters(in: CharacterSet.alphanumerics.inverted).lowercased()
+        let filterText = searchField.stringValue.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+            .lowercased()
 
         var results = [UserSelectionType]()
         ruleStore
             .rules
-            .filter { filterText.isEmpty || $0.name.lowercased().contains(filterText) }
+            .filter { filterText.isEmpty || $0.searchableText.contains(filterText) }
             .sorted()
             .forEach { rule in
-                guard let formatRule = FormatRules.byName[rule.name] else { return }
+                guard let formatRule = rule.formatRule else { return }
 
                 let associatedOptions = formatRule
                     .options
@@ -193,7 +194,7 @@ final class RulesViewController: NSViewController {
     }
 
     func model(forRow row: Int) -> UserSelectionType {
-        return viewModels[row]
+        viewModels[row]
     }
 }
 
@@ -212,11 +213,11 @@ extension RulesViewController: NSSearchFieldDelegate {
 
 extension RulesViewController: NSTableViewDataSource {
     func numberOfRows(in _: NSTableView) -> Int {
-        return viewModels.count
+        viewModels.count
     }
 
     func tableView(_: NSTableView, objectValueFor _: NSTableColumn?, row: Int) -> Any? {
-        return model(forRow: row).associatedValue()
+        model(forRow: row).associatedValue()
     }
 }
 
@@ -224,7 +225,7 @@ extension RulesViewController: NSTableViewDataSource {
 
 extension RulesViewController: NSTableViewDelegate {
     func tableView(_ tableView: NSTableView, viewFor _: NSTableColumn?, row: Int) -> NSView? {
-        let model = self.model(forRow: row)
+        let model = model(forRow: row)
         let id: NSUserInterfaceItemIdentifier
         switch model {
         case .binary:

@@ -6086,12 +6086,12 @@ public struct _FormatRules {
 
                 // Build the types expected mark comment by replacing `%t`s with the type name
                 // and `%c`s with the list of conformances added in the extension (if applicable)
-                var expectedComment: String?
+                var markForType: String?
 
                 if !commentTemplate.contains("%c") {
-                    expectedComment = commentTemplate.replacingOccurrences(of: "%t", with: typeName)
+                    markForType = commentTemplate.replacingOccurrences(of: "%t", with: typeName)
                 } else if commentTemplate.contains("%c"), let conformanceNames = conformanceNames {
-                    expectedComment = commentTemplate
+                    markForType = commentTemplate
                         .replacingOccurrences(of: "%t", with: typeName)
                         .replacingOccurrences(of: "%c", with: conformanceNames)
                 }
@@ -6128,16 +6128,16 @@ public struct _FormatRules {
                         let fullyQualifiedName = "\(extensionNames).\(nestedTypeName)"
 
                         if isGroupedExtension {
-                            expectedComment = "// \(formatter.options.groupedExtensionMarkComment)"
+                            markForType = "// \(formatter.options.groupedExtensionMarkComment)"
                                 .replacingOccurrences(of: "%c", with: fullyQualifiedName)
                         } else {
-                            expectedComment = "// \(formatter.options.typeMarkComment)"
+                            markForType = "// \(formatter.options.typeMarkComment)"
                                 .replacingOccurrences(of: "%t", with: fullyQualifiedName)
                         }
                     }
                 }
 
-                guard let expectedComment = expectedComment else {
+                guard let expectedComment = markForType else {
                     return openingFormatter.tokens
                 }
 

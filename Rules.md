@@ -24,6 +24,7 @@
 * [linebreaks](#linebreaks)
 * [modifierOrder](#modifierOrder)
 * [numberFormatting](#numberFormatting)
+* [opaqueGenericParameters](#opaqueGenericParameters)
 * [preferKeyPath](#preferKeyPath)
 * [redundantBackticks](#redundantBackticks)
 * [redundantBreak](#redundantBreak)
@@ -898,6 +899,36 @@ Option | Description
 ```diff
 - let big = 123456.123
 + let big = 123_456.123
+```
+
+</details>
+<br/>
+
+## opaqueGenericParameters
+
+Use opaque generic parameters (`some Protocol`) instead of generic parameters
+with constraints (`T where T: Protocol`, etc) where equivalent. Also supports
+primary associated types for common standard library types, so definitions like
+`T where T: Collection, T.Element == Foo` are upated to `some Collection<Foo>`.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- func handle<T: Fooable>(_ value: T) {
++ func handle(_ value: some Fooable) {
+      print(value)
+  }
+
+- func handle<T>(_ value: T) where T: Fooable, T: Barable {
++ func handle(_ value: some Fooable & Barable) {
+      print(value)
+  }
+
+- func handle<T: Collection>(_ value: T) where T.Element == Foo {
++ func handle(_ value: some Collection<Foo>) {
+      print(value)
+  }
 ```
 
 </details>

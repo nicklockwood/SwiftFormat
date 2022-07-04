@@ -322,6 +322,19 @@ public extension Formatter {
         removeTokens(in: range.lowerBound ..< range.upperBound + 1)
     }
 
+    /// Removes the tokens in the specified set of ranges, that must not overlay
+    func removeTokens(in rangesToRemove: [ClosedRange<Int>]) {
+        // We remove the ranges in reverse order, so that removing
+        // one range doesn't invalidate the existings of the other ranges
+        let rangeRemovalOrder = rangesToRemove
+            .sorted(by: { $0.startIndex < $1.startIndex })
+            .reversed()
+
+        for rangeToRemove in rangeRemovalOrder {
+            removeTokens(in: rangeToRemove)
+        }
+    }
+
     /// Removes the last token
     func removeLastToken() {
         trackChange(at: tokens.endIndex - 1)

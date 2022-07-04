@@ -80,6 +80,7 @@
 * [blankLineAfterImports](#blankLineAfterImports)
 * [blankLinesBetweenImports](#blankLinesBetweenImports)
 * [blockComments](#blockComments)
+* [closureImplicitSelf](#closureImplicitSelf)
 * [isEmpty](#isEmpty)
 * [markTypes](#markTypes)
 * [organizeDeclarations](#organizeDeclarations)
@@ -436,6 +437,32 @@ Option | Description
   }
 + else {
     // bar
+  }
+```
+
+</details>
+<br/>
+
+## closureImplicitSelf
+
+Capture self explicitly to enable implicit self in the closure body.
+
+Option | Description
+--- | ---
+`--selfcount` | Threshold for when to prefer [self] capture. Defaults to 2.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- DispatchQueue.main.async {
+-     self.performFoo()
+-     self.performBar()
+-     self.performBaaz()
++ DispatchQueue.main.async { [self] in
++     performFoo()
++     performBar()
++     performBaaz()
   }
 ```
 

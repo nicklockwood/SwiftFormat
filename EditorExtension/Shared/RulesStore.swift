@@ -30,6 +30,7 @@
 //
 
 import Foundation
+import NaturalLanguage
 
 extension UserDefaults {
     static let groupDomain = "com.charcoaldesign.SwiftFormat"
@@ -47,8 +48,24 @@ struct Rule {
 }
 
 extension Rule: Comparable {
+    /// Looks up and returns a format rule, if found.
+    var formatRule: FormatRule? {
+        FormatRules.byName[name]
+    }
+
     var isDeprecated: Bool {
-        return FormatRules.byName[name]?.isDeprecated == true
+        formatRule?.isDeprecated == true
+    }
+
+    /// Space-separated, lowercased text terms that this rule might by found by.
+    var searchableText: String {
+        var items = [name]
+        if let formatRule = formatRule {
+            items.append(formatRule.help.keywords.joined(separator: " "))
+            items.append(formatRule.options.joined(separator: " "))
+            items.append(formatRule.sharedOptions.joined(separator: " "))
+        }
+        return items.joined(separator: " ").lowercased()
     }
 
     static func < (lhs: Rule, rhs: Rule) -> Bool {
@@ -86,7 +103,7 @@ struct RulesStore {
     }
 
     var rules: [Rule] {
-        return load()
+        load()
             .map { Rule($0) }
             .filter { !$0.isDeprecated }
     }
@@ -182,5 +199,21 @@ extension RulesStore {
     /// Will replace the rules with the param
     private func save(_ rules: RulesRepresentation) {
         store.set(rules, forKey: rulesKey)
+    }
+}
+
+private extension String {
+    /// Returns search-relevant keywords, ignoring prepositions, conjunctions, etc.
+    var keywords: [String] {
+        let tagger = NLTagger(tagSchemes: [.lexicalClass])
+        tagger.string = self
+        var results = [String]()
+        tagger.enumerateTags(in: startIndex..<endIndex, unit: .word, scheme: .lexicalClass) { tag, range in
+            if [.verb, .noun, .adjective, .adverb, .otherWord].contains(tag) {
+                results.append(String(self[range]))
+            }
+            return true
+        }
+        return results
     }
 }

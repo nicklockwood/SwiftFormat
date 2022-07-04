@@ -3114,7 +3114,7 @@ class RedundancyTests: RulesTests {
             }
         }
         """
-        testFormatting(for: input, rule: FormatRules.redundantSelf)
+        testFormatting(for: input, rule: FormatRules.redundantSelf, exclude: ["closureImplicitSelf"])
     }
 
     func testSelfNotRemovedWhenPropertyIsKeyword() {

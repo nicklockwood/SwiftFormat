@@ -6545,24 +6545,6 @@ public struct _FormatRules {
                // because removing them could break the build.
                formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closureStartIndex) != closureEndIndex
             {
-                // Whether this is within the closure, but not within a child closure of the main closure
-                func indexIsWithinMainClosure(_ index: Int) -> Bool {
-                    let startOfScopeAtIndex: Int
-                    if formatter.token(at: index)?.isStartOfScope == true {
-                        startOfScopeAtIndex = index
-                    } else {
-                        startOfScopeAtIndex = formatter.index(of: .startOfScope, before: index) ?? closureStartIndex
-                    }
-
-                    if formatter.isStartOfClosure(at: startOfScopeAtIndex) {
-                        return startOfScopeAtIndex == closureStartIndex
-                    } else if formatter.token(at: startOfScopeAtIndex)?.isStartOfScope == true {
-                        return indexIsWithinMainClosure(startOfScopeAtIndex - 1)
-                    } else {
-                        return false
-                    }
-                }
-
                 // Some heuristics to determine if this is a multi-statement closure:
 
                 // (1) any statement-forming scope (mostly just { and #if)
@@ -6576,7 +6558,7 @@ public struct _FormatRules {
                     if startOfScope != .startOfScope("("), // Method calls / other parents are fine
                        startOfScope != .startOfScope("\""), // Strings are fine
                        startOfScope != .startOfScope("\"\"\""), // Strings are fine
-                       indexIsWithinMainClosure(startOfScopeIndex),
+                       formatter.isInMainClosureBody(index: startOfScopeIndex, closureStartIndex: closureStartIndex),
                        !formatter.isStartOfClosure(at: startOfScopeIndex)
                     {
                         return
@@ -6590,7 +6572,7 @@ public struct _FormatRules {
                 {
                     let isAtStartOfClosure = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: returnIndex) == closureStartIndex
 
-                    if indexIsWithinMainClosure(returnIndex),
+                    if formatter.isInMainClosureBody(index: returnIndex, closureStartIndex: closureStartIndex),
                        !isAtStartOfClosure
                     {
                         return
@@ -6605,7 +6587,7 @@ public struct _FormatRules {
                     let nextTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: semicolonIndex) ?? semicolonIndex
                     let isAtEndOfLine = formatter.startOfLine(at: semicolonIndex) != formatter.startOfLine(at: nextTokenIndex)
 
-                    if indexIsWithinMainClosure(semicolonIndex), !isAtEndOfLine {
+                    if formatter.isInMainClosureBody(index: semicolonIndex, closureStartIndex: closureStartIndex), !isAtEndOfLine {
                         return
                     }
                 }
@@ -6614,7 +6596,7 @@ public struct _FormatRules {
                 for equalsIndex in closureStartIndex ... closureEndIndex
                     where formatter.token(at: equalsIndex)?.string == "="
                 {
-                    if indexIsWithinMainClosure(equalsIndex) {
+                    if formatter.isInMainClosureBody(index: equalsIndex, closureStartIndex: closureStartIndex) {
                         return
                     }
                 }
@@ -6630,7 +6612,7 @@ public struct _FormatRules {
                 for closingParenIndex in closureStartIndex ... closureEndIndex
                     where formatter.token(at: closingParenIndex)?.string == ")"
                 {
-                    if indexIsWithinMainClosure(closingParenIndex),
+                    if formatter.isInMainClosureBody(index: closingParenIndex, closureStartIndex: closureStartIndex),
                        let nextNonWhitespace = formatter.index(
                            of: .nonSpaceOrCommentOrLinebreak,
                            after: closingParenIndex
@@ -6649,7 +6631,7 @@ public struct _FormatRules {
                 for inIndex in closureStartIndex ... closureEndIndex
                     where formatter.token(at: inIndex) == .keyword("in")
                 {
-                    if indexIsWithinMainClosure(inIndex) {
+                    if formatter.isInMainClosureBody(index: inIndex, closureStartIndex: closureStartIndex) {
                         return
                     }
                 }
@@ -6661,7 +6643,7 @@ public struct _FormatRules {
                 for i in closureStartIndex ... closureEndIndex {
                     switch formatter.tokens[i] {
                     case .identifier("fatalError"), .identifier("preconditionFailure"), .keyword("throw"):
-                        if indexIsWithinMainClosure(i) {
+                        if formatter.isInMainClosureBody(index: i, closureStartIndex: closureStartIndex) {
                             return
                         }
                     default:

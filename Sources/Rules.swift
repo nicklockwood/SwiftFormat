@@ -6013,12 +6013,13 @@ public struct _FormatRules {
         for (index, declaration) in declarations.enumerated() {
             guard case let .type(kind, open, body, close) = declaration else { continue }
 
-            guard let typeName = declaration.name else {
+            guard var typeName = declaration.name else {
                 continue
             }
 
             let markMode: MarkMode
             let commentTemplate: String
+            let isGroupedExtension: Bool
             switch declaration.keyword {
             case "extension":
                 markMode = formatter.options.markExtensions
@@ -6033,8 +6034,7 @@ public struct _FormatRules {
                 //
                 let isGroupedWithExtendingType: Bool
                 if let indexOfExtendingType = declarations[..<index].lastIndex(where: {
-                    $0.name == typeName && ["class", "actor", "enum", "protocol", "struct",
-                                            "typealias"].contains($0.keyword)
+                    $0.name == typeName && $0.definesType
                 }) {
                     let declarationsBetweenTypeAndExtension = declarations[indexOfExtendingType + 1 ..< index]
                     isGroupedWithExtendingType = declarationsBetweenTypeAndExtension.allSatisfy {
@@ -6055,12 +6055,15 @@ public struct _FormatRules {
 
                 if isGroupedWithExtendingType {
                     commentTemplate = "// \(formatter.options.groupedExtensionMarkComment)"
+                    isGroupedExtension = true
                 } else {
                     commentTemplate = "// \(formatter.options.extensionMarkComment)"
+                    isGroupedExtension = false
                 }
             default:
                 markMode = formatter.options.markTypes
                 commentTemplate = "// \(formatter.options.typeMarkComment)"
+                isGroupedExtension = false
             }
 
             switch markMode {
@@ -6081,14 +6084,13 @@ public struct _FormatRules {
                     $0.string == declaration.keyword
                 }) else { return openingTokens }
 
-                let conformanceNames: String?
-                if declaration.keyword == "extension" {
+                // If this declaration is extension, check if it has any conformances
+                var conformanceNames: String?
+                if
+                    declaration.keyword == "extension",
+                    var conformanceSearchIndex = openingFormatter.index(of: .delimiter(":"), after: keywordIndex)
+                {
                     var conformances = [String]()
-
-                    guard var conformanceSearchIndex = openingFormatter.index(
-                        of: .delimiter(":"),
-                        after: keywordIndex
-                    ) else { return openingFormatter.tokens }
 
                     let endOfConformances = openingFormatter.index(of: .keyword("where"), after: keywordIndex)
                         ?? openingFormatter.index(of: .startOfScope("{"), after: keywordIndex)
@@ -6106,18 +6108,67 @@ public struct _FormatRules {
                         conformanceSearchIndex += 1
                     }
 
-                    guard !conformances.isEmpty else {
-                        return openingFormatter.tokens
+                    if !conformances.isEmpty {
+                        conformanceNames = conformances.joined(separator: ", ")
                     }
-
-                    conformanceNames = conformances.joined(separator: ", ")
-                } else {
-                    conformanceNames = nil
                 }
 
-                let expectedComment = commentTemplate
-                    .replacingOccurrences(of: "%t", with: typeName)
-                    .replacingOccurrences(of: "%c", with: conformanceNames ?? "")
+                // Build the types expected mark comment by replacing `%t`s with the type name
+                // and `%c`s with the list of conformances added in the extension (if applicable)
+                var markForType: String?
+
+                if !commentTemplate.contains("%c") {
+                    markForType = commentTemplate.replacingOccurrences(of: "%t", with: typeName)
+                } else if commentTemplate.contains("%c"), let conformanceNames = conformanceNames {
+                    markForType = commentTemplate
+                        .replacingOccurrences(of: "%t", with: typeName)
+                        .replacingOccurrences(of: "%c", with: conformanceNames)
+                }
+
+                // If this is an extension without any conformances, but contains exactly
+                // one body declaration (a type), we can mark the extension with the nested type's name
+                // (e.g. `// MARK: Foo.Bar`).
+                if
+                    declaration.keyword == "extension",
+                    conformanceNames == nil
+                {
+                    // Find all of the nested extensions, so we can form the fully qualified
+                    // name of the inner-most type (e.g. `Foo.Bar.Baaz.Quux`).
+                    var extensions = [declaration]
+
+                    while
+                        let innerExtension = extensions.last,
+                        let extensionBody = innerExtension.body,
+                        extensionBody.count == 1,
+                        extensionBody[0].keyword == "extension"
+                    {
+                        extensions.append(extensionBody[0])
+                    }
+
+                    let innermostExtension = extensions.last!
+                    let extensionNames = extensions.compactMap { $0.name }.joined(separator: ".")
+
+                    if let extensionBody = innermostExtension.body,
+                       extensionBody.count == 1,
+                       let nestedType = extensionBody.first,
+                       nestedType.definesType,
+                       let nestedTypeName = nestedType.name
+                    {
+                        let fullyQualifiedName = "\(extensionNames).\(nestedTypeName)"
+
+                        if isGroupedExtension {
+                            markForType = "// \(formatter.options.groupedExtensionMarkComment)"
+                                .replacingOccurrences(of: "%c", with: fullyQualifiedName)
+                        } else {
+                            markForType = "// \(formatter.options.typeMarkComment)"
+                                .replacingOccurrences(of: "%t", with: fullyQualifiedName)
+                        }
+                    }
+                }
+
+                guard let expectedComment = markForType else {
+                    return openingFormatter.tokens
+                }
 
                 // Remove any lines that have the same prefix as the comment template
                 //  - We can't really do exact matches here like we do for `organizeDeclaration`

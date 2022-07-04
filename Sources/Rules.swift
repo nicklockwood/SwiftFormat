@@ -6773,99 +6773,290 @@ public struct _FormatRules {
         }
     }
 
-    public let closureImplicitSelf = FormatRule(
+    public let opaqueGenericParameters = FormatRule(
         help: """
-        Capture self explicitly to enable implicit self in the closure body.
+        Use opaque generic parameters (`some Protocol`) instead of generic parameters
+        with constraints (`T where T: Protocol`, etc) where equivalent. Also supports
+        primary associated types for common standard library types, so definitions like
+        `T where T: Collection, T.Element == Foo` are upated to `some Collection<Foo>`.
         """,
-        disabledByDefault: true,
-        options: ["selfcount"]
+        options: []
     ) { formatter in
-        formatter.forEach(.startOfScope("{")) { closureStartIndex, _ in
+        formatter.forEach(.keyword("func")) { funcIndex, _ in
             guard
-                formatter.options.swiftVersion >= "5.3",
-                formatter.isStartOfClosure(at: closureStartIndex),
-                let closureEndIndex = formatter.endOfScope(at: closureStartIndex)
+                // Opaque generic parameter syntax is only supported in Swift 5.7+
+                formatter.options.swiftVersion >= "5.7",
+                // Validate that this is a generic method using angle bracket syntax,
+                // and find the indices for all of the key tokens
+                let genericSignatureStartIndex = formatter.index(of: .startOfScope("<"), after: funcIndex),
+                let genericSignatureEndIndex = formatter.endOfScope(at: genericSignatureStartIndex),
+                let paramListStartIndex = formatter.index(of: .startOfScope("("), after: genericSignatureEndIndex),
+                let paramListEndIndex = formatter.endOfScope(at: paramListStartIndex),
+                let openBraceIndex = formatter.index(of: .startOfScope("{"), after: paramListEndIndex)
             else { return }
 
-            // Check whether or not there's already a self capture in the capture list
-            var alreadyHasSelfCapture = false
+            /// A generic type parameter for a method
+            class GenericType {
+                /// The name of the generic parameter. For example with `<T: Fooable>` the generic parameter `name` is `T`.
+                let name: String
+                /// The source range within angle brackets where the generic parameter is defined
+                let definitionSourceRange: ClosedRange<Int>
+                /// Conformances and constraints applied to this generic parameter
+                var conformances: [GenericConformance]
+                /// Whether or not this generic parameter can be removed and replaced with an opaque generic parameter
+                var eligbleToRemove = true
 
-            if let startOfCaptureList = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closureStartIndex),
-               formatter.token(at: startOfCaptureList) == .startOfScope("["),
-               let endOfCaptureList = formatter.endOfScope(at: startOfCaptureList),
-               let selfCaptureIndex = formatter.index(of: .identifier("self"), after: startOfCaptureList),
-               selfCaptureIndex < endOfCaptureList
-            {
-                if formatter.last(.nonSpaceOrCommentOrLinebreak, before: selfCaptureIndex)?.string == "weak" {
-                    // weak self captures don't enable implicit self, so if the closure
-                    // is already using `weak self` then there's nothing to do here.
-                    // Maybe one day...... https://github.com/apple/swift-evolution/pull/1506
-                    return
-                } else {
-                    alreadyHasSelfCapture = true
+                /// A constraint or conformance that applies to a generic type
+                struct GenericConformance: Hashable {
+                    enum ConformanceType {
+                        /// A protocol constraint like `T: Fooable`
+                        case protocolConstraint
+                        /// A concrete type like `T == Foo`
+                        case conceteType
+                    }
+
+                    /// The name of the type being used in the constraint. For example with `T: Fooable`
+                    /// the constraint name is `Fooable`
+                    let name: String
+                    /// The name of the type being constrained. For example with `T: Fooable` the
+                    /// `typeName` is `T`. This can correspond exactly to the `name` of a `GenericType`,
+                    /// but can also be something like `T.AssociatedType` where `T` is the `name` of a `GenericType`.
+                    let typeName: String
+                    /// The type of conformance or constraint represented by this value.
+                    let type: ConformanceType
+                    /// The source range in the angle brackets or where clause where this conformance is defined.
+                    let sourceRange: ClosedRange<Int>
+                }
+
+                init(name: String, definitionSourceRange: ClosedRange<Int>) {
+                    self.name = name
+                    self.definitionSourceRange = definitionSourceRange
+                    conformances = []
+                }
+
+                // The opaque parameter syntax that represents this generic type,
+                // if the constraints can be expressed using this syntax
+                var asOpaqueParameter: [Token]? {
+                    if conformances.isEmpty {
+                        return tokenize("some Any")
+                    }
+
+                    // Protocols with primary associated types that can be used with
+                    // opaque parameter syntax. In the future we could make this extensible
+                    // so users can add their own types here.
+                    let knownProtocolsWithAssociatedTypes: [(name: String, primaryAssociatedType: String)] = [
+                        (name: "Collection", primaryAssociatedType: "Element"),
+                        (name: "Sequence", primaryAssociatedType: "Element"),
+                    ]
+
+                    let constraints = conformances.filter { $0.type == .protocolConstraint }
+                    var primaryAssociatedTypes = [GenericConformance: GenericConformance]()
+
+                    // Validate that all of the conformances can be represented using this syntax
+                    for conformance in conformances {
+                        if conformance.typeName.contains(".") {
+                            switch conformance.type {
+                            case .protocolConstraint:
+                                // Constraints like `Foo.Bar: Barable` cannot be represented using
+                                // opaque generic parameter syntax
+                                return nil
+
+                            case .conceteType:
+                                // Concrete type constraints like `Foo.Element == Bar` can be
+                                // represented using opaque generic parameter syntax if we know
+                                // that it's using a primary associated type of the base protocol
+                                // (e.g. if `Foo` is a `Collection` or `Sequence`)
+                                let typeElements = conformance.typeName.components(separatedBy: ".")
+                                guard typeElements.count == 2 else { return nil }
+
+                                let associatedTypeName = typeElements[1]
+
+                                // Look up if the generic param conforms to any of the protocols
+                                // with a primary associated type matching the one we found
+                                let matchingProtocolWithAssociatedType = constraints.first(where: { genericConstraint in
+                                    let knownProtocol = knownProtocolsWithAssociatedTypes.first(where: { $0.name == genericConstraint.name })
+                                    return knownProtocol?.primaryAssociatedType == associatedTypeName
+                                })
+
+                                if let matchingProtocolWithAssociatedType = matchingProtocolWithAssociatedType {
+                                    primaryAssociatedTypes[matchingProtocolWithAssociatedType] = conformance
+                                } else {
+                                    // If this isn't the primary associated type of a protocol constraint, then we can't use it
+                                    return nil
+                                }
+                            }
+                        }
+                    }
+
+                    let constraintRepresentations = constraints.map { constraint -> String in
+                        if let primaryAssociatedType = primaryAssociatedTypes[constraint] {
+                            return "\(constraint.name)<\(primaryAssociatedType.name)>"
+                        } else {
+                            return constraint.name
+                        }
+                    }
+
+                    return tokenize("some \(constraintRepresentations.joined(separator: " & "))")
                 }
             }
 
-            // Find instances of `self.` in the closure body
-            var explicitSelfIndices = [(selfKeyword: Int, dot: Int)]()
-            for explicitSelfIndex in closureStartIndex ... closureEndIndex {
+            // Parse the generic signature between the angle brackets so we know all of the generic types
+            var genericTypes = [GenericType]()
+
+            /// Parses generic types between the angle brackets of a function declaration, and in its where clause
+            func parseGenericTypes(from genericSignatureStartIndex: Int, to genericSignatureEndIndex: Int) {
+                var currentIndex = genericSignatureStartIndex
+
+                while currentIndex < genericSignatureEndIndex - 1 {
+                    guard let genericTypeNameIndex = formatter.index(of: .identifier, after: currentIndex) else {
+                        break
+                    }
+
+                    let typeEndIndex: Int
+                    let nextCommaIndex = formatter.index(of: .delimiter(","), after: genericTypeNameIndex)
+                    if let nextCommaIndex = nextCommaIndex, nextCommaIndex < genericSignatureEndIndex {
+                        typeEndIndex = nextCommaIndex
+                    } else {
+                        typeEndIndex = genericSignatureEndIndex - 1
+                    }
+
+                    // Include all whitespace and comments in the conformance's source range,
+                    // so if we remove it later all of the extra whitespace will get cleaned up
+                    let sourceRangeEnd: Int
+                    if let nextTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: typeEndIndex) {
+                        sourceRangeEnd = nextTokenIndex - 1
+                    } else {
+                        sourceRangeEnd = typeEndIndex
+                    }
+
+                    // The generic constraint could have syntax like `Foo`, `Foo: Fooable`,
+                    // `Foo.Element == Fooable`, etc. Create a reference to this specific
+                    // generic parameter (`Foo` in all of these examples) that can store
+                    // the constraints and conformances that we encounter later.
+                    let fullGenericTypeName = formatter.tokens[genericTypeNameIndex].string
+                    let baseGenericTypeName = fullGenericTypeName.components(separatedBy: ".")[0]
+
+                    let genericType: GenericType
+                    if let existingType = genericTypes.first(where: { $0.name == baseGenericTypeName }) {
+                        genericType = existingType
+                    } else {
+                        genericType = GenericType(
+                            name: baseGenericTypeName,
+                            definitionSourceRange: genericTypeNameIndex ... sourceRangeEnd
+                        )
+                        genericTypes.append(genericType)
+                    }
+
+                    // Parse the constraint after the type name if present
+                    var delineatorIndex: Int?
+                    var conformanceType: GenericType.GenericConformance.ConformanceType?
+
+                    // This can either be a protocol constraint of the form `T: Fooable`
+                    if let colonIndex = formatter.index(of: .delimiter(":"), after: genericTypeNameIndex),
+                       colonIndex < typeEndIndex
+                    {
+                        delineatorIndex = colonIndex
+                        conformanceType = .protocolConstraint
+                    }
+
+                    // or a concrete type of the form `T == Foo`
+                    else if let equalsIndex = formatter.index(of: .operator("==", .infix), after: genericTypeNameIndex),
+                            equalsIndex < typeEndIndex
+                    {
+                        delineatorIndex = equalsIndex
+                        conformanceType = .conceteType
+                    }
+
+                    if let delineatorIndex = delineatorIndex, let conformanceType = conformanceType {
+                        let constrainedTypeName = formatter.tokens[genericTypeNameIndex ..< delineatorIndex]
+                            .map { $0.string }
+                            .joined()
+                            .trimmingCharacters(in: .init(charactersIn: " \n,<>{}"))
+
+                        let conformanceName = formatter.tokens[(delineatorIndex + 1) ... typeEndIndex]
+                            .map { $0.string }
+                            .joined()
+                            .trimmingCharacters(in: .init(charactersIn: " \n,<>{}"))
+
+                        genericType.conformances.append(.init(
+                            name: conformanceName,
+                            typeName: constrainedTypeName,
+                            type: conformanceType,
+                            sourceRange: genericTypeNameIndex ... sourceRangeEnd
+                        ))
+                    }
+
+                    currentIndex = typeEndIndex
+                }
+            }
+
+            // Parse the generics in the angle brackets (e.g. `<T, U: Fooable>`)
+            parseGenericTypes(from: genericSignatureStartIndex, to: genericSignatureEndIndex)
+
+            // Parse additional conformances and constraints after the `where` keyword if present
+            // (e.g. `where Foo: Fooable, Foo.Bar: Barable, Foo.Baaz == Baazable`)
+            if let whereIndex = formatter.index(of: .keyword("where"), after: paramListEndIndex),
+               whereIndex < openBraceIndex
+            {
+                parseGenericTypes(from: whereIndex, to: openBraceIndex)
+            }
+
+            let parameterListRange = (paramListStartIndex + 1) ..< paramListEndIndex
+            let parameterListTokens = formatter.tokens[parameterListRange]
+
+            // If the generic type occurs multiple times in the parameter list,
+            // it isnt eligible to be removed. For example `(T, T) where T: Foo`
+            // requires the two params to be the same underlying type, but
+            // `(some Foo, some Foo)` does not.
+            for genericType in genericTypes {
+                let occurenceCount = parameterListTokens.filter { $0.string == genericType.name }.count
+                if occurenceCount > 1 || genericType.asOpaqueParameter == nil {
+                    genericType.eligbleToRemove = false
+                }
+            }
+
+            let genericsEligibleToRemove = genericTypes.filter { $0.eligbleToRemove }
+            let sourceRangesToRemove = Set(genericsEligibleToRemove.flatMap { type in
+                [type.definitionSourceRange] + type.conformances.map { $0.sourceRange }
+            })
+
+            // We perform modifications to the function signature in reverse order
+            // so we don't invalidate any of the indices we've recorded. So first
+            // we remove components of the where clause.
+            if let whereIndex = formatter.index(of: .keyword("where"), after: paramListEndIndex),
+               whereIndex < openBraceIndex
+            {
+                let whereClauseSourceRanges = sourceRangesToRemove.filter { $0.lowerBound > whereIndex }
+                formatter.removeTokens(in: Array(whereClauseSourceRanges))
+
+                // if the where clause is completely empty now, we need to the where token as well
+                if let newOpenBraceIndex = formatter.index(of: .nonSpaceOrLinebreak, after: whereIndex),
+                   formatter.token(at: newOpenBraceIndex) == .startOfScope("{")
+                {
+                    formatter.removeTokens(in: whereIndex ..< newOpenBraceIndex)
+                }
+            }
+
+            // Replace all of the uses of generic types that are elible to remove
+            // with the corresponding opaque parameter declaration
+            for index in parameterListRange.reversed() {
                 if
-                    formatter.token(at: explicitSelfIndex)?.string == "self",
-                    formatter.isInMainClosureBody(index: explicitSelfIndex, closureStartIndex: closureStartIndex),
-                    let dotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: explicitSelfIndex),
-                    formatter.token(at: dotIndex)?.string == "."
+                    let matchingGenericType = genericsEligibleToRemove.first(where: { $0.name == formatter.tokens[index].string }),
+                    let opaqueParameter = matchingGenericType.asOpaqueParameter
                 {
-                    explicitSelfIndices.append((explicitSelfIndex, dotIndex))
+                    formatter.replaceToken(at: index, with: opaqueParameter)
                 }
             }
 
-            guard
-                !explicitSelfIndices.isEmpty,
-                // By default we only add an explicit self capture
-                // if there are multiple `self.`s in the closure body
-                explicitSelfIndices.count >= formatter.options.explicitSelfCount
-            else { return }
+            // Remove types from the generic paremeter list
+            let genericParameterListSourceRanges = sourceRangesToRemove.filter { $0.lowerBound < genericSignatureEndIndex }
+            formatter.removeTokens(in: Array(genericParameterListSourceRanges))
 
-            // remove all of the `self.`s
-            for (explicitSelfIndex, dotIndex) in explicitSelfIndices.reversed() {
-                formatter.removeToken(at: dotIndex)
-                formatter.removeToken(at: explicitSelfIndex)
-            }
-
-            /// If the closure already has a self capture that enables implicit self,
-            /// then there's no more work to do
-            if alreadyHasSelfCapture {
-                return
-            }
-
-            // If the closure already has a capture list, add self to it
-            if let startOfCaptureList = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closureStartIndex),
-               formatter.token(at: startOfCaptureList) == .startOfScope("[")
+            // If we removed all of the generic types, we also have to remove the angle brackets
+            if let newGenericSignatureEndIndex = formatter.index(of: .nonSpaceOrLinebreak, after: genericSignatureStartIndex),
+               formatter.token(at: newGenericSignatureEndIndex) == .endOfScope(">")
             {
-                let closureImplicitSelf = tokenize("self, ")
-                formatter.insert(closureImplicitSelf, at: startOfCaptureList + 1)
-                return
-            }
-
-            // Otherwise we have to add a capture list.
-            // If the closure doesn't have any arguments (and doesn't have an `in` keyword yet),
-            // then we also have to add that.
-            var closureHasInKeyword = false
-            for inIndex in closureStartIndex ... closureEndIndex {
-                if formatter.token(at: inIndex) == .keyword("in"),
-                   formatter.isInMainClosureBody(index: inIndex, closureStartIndex: closureStartIndex)
-                {
-                    closureHasInKeyword = true
-                    break
-                }
-            }
-
-            if closureHasInKeyword {
-                let captureList = tokenize(" [self]")
-                formatter.insert(captureList, at: closureStartIndex + 1)
-            } else {
-                let captureList = tokenize(" [self] in")
-                formatter.insert(captureList, at: closureStartIndex + 1)
+                formatter.removeTokens(in: genericSignatureStartIndex ... newGenericSignatureEndIndex)
             }
         }
     }

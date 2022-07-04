@@ -868,6 +868,14 @@ struct _Descriptors {
         help: "Closure void returns: \"remove\" (default) or \"preserve\"",
         keyPath: \.closureVoidReturn
     )
+    let removeStartOrEndBlankLinesFromTypes = OptionDescriptor(
+        argumentName: "typeblanklines",
+        displayName: "Remove blank lines from types",
+        help: "\"remove\" (default) or \"preserve\" blank lines from types",
+        keyPath: \.removeStartOrEndBlankLinesFromTypes,
+        trueValues: ["remove"],
+        falseValues: ["preserve"]
+    )
 
     // MARK: - Internal
 

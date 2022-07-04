@@ -924,7 +924,8 @@ public struct _FormatRules {
     /// Remove blank lines immediately after an opening brace, bracket, paren or chevron
     public let blankLinesAtStartOfScope = FormatRule(
         help: "Remove leading blank line at the start of a scope.",
-        orderAfter: ["organizeDeclarations"]
+        orderAfter: ["organizeDeclarations"],
+        options: ["typeblanklines"]
     ) { formatter in
         formatter.forEach(.startOfScope) { i, token in
             guard ["{", "(", "[", "<"].contains(token.string),
@@ -932,6 +933,15 @@ public struct _FormatRules {
                   // If there is extra code on the same line, ignore it
                   formatter.tokens[indexOfFirstLineBreak].isLinebreak
             else { return }
+
+            // Consumers can choose whether or not this rule should apply to type bodies
+            if !formatter.options.removeStartOrEndBlankLinesFromTypes,
+               ["class", "struct", "enum", "actor", "protocol", "extension"].contains(
+                   formatter.lastSignificantKeyword(at: i, excluding: ["where"]))
+            {
+                return
+            }
+
             // Find next non-space token
             var index = indexOfFirstLineBreak + 1
             var indexOfLastLineBreak = indexOfFirstLineBreak
@@ -957,15 +967,28 @@ public struct _FormatRules {
     /// unless it's followed by more code on the same line (e.g. } else { )
     public let blankLinesAtEndOfScope = FormatRule(
         help: "Remove trailing blank line at the end of a scope.",
-        orderAfter: ["organizeDeclarations"]
+        orderAfter: ["organizeDeclarations"],
+        sharedOptions: ["typeblanklines"]
     ) { formatter in
-        formatter.forEach(.endOfScope) { i, token in
-            guard ["}", ")", "]", ">"].contains(token.string),
+        formatter.forEach(.startOfScope) { startOfScopeIndex, _ in
+            guard let endOfScopeIndex = formatter.endOfScope(at: startOfScopeIndex) else { return }
+            let endOfScope = formatter.tokens[endOfScopeIndex]
+
+            guard ["}", ")", "]", ">"].contains(endOfScope.string),
                   // If there is extra code after the closing scope on the same line, ignore it
-                  (formatter.next(.nonSpaceOrComment, after: i).map { $0.isLinebreak }) ?? true
+                  (formatter.next(.nonSpaceOrComment, after: endOfScopeIndex).map { $0.isLinebreak }) ?? true
             else { return }
+
+            // Consumers can choose whether or not this rule should apply to type bodies
+            if !formatter.options.removeStartOrEndBlankLinesFromTypes,
+               ["class", "struct", "enum", "actor", "protocol", "extension"].contains(
+                   formatter.lastSignificantKeyword(at: startOfScopeIndex, excluding: ["where"]))
+            {
+                return
+            }
+
             // Find previous non-space token
-            var index = i - 1
+            var index = endOfScopeIndex - 1
             var indexOfFirstLineBreak: Int?
             var indexOfLastLineBreak: Int?
             loop: while let token = formatter.token(at: index) {

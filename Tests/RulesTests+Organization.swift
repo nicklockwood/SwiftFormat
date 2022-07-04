@@ -2436,6 +2436,138 @@ class OrganizationTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.markTypes, options: options)
     }
 
+    func testAddsMarkForTypeInExtension() {
+        let input = """
+        enum Foo {}
+
+        extension Foo {
+            struct Bar {
+                let baaz: Baaz
+            }
+        }
+        """
+
+        let output = """
+        // MARK: - Foo
+
+        enum Foo {}
+
+        // MARK: Foo.Bar
+
+        extension Foo {
+            struct Bar {
+                let baaz: Baaz
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.markTypes)
+    }
+
+    func testDoesntAddsMarkForMultipleTypesInExtension() {
+        let input = """
+        enum Foo {}
+
+        extension Foo {
+            struct Bar {
+                let baaz: Baaz
+            }
+
+            struct Quux {
+                let baaz: Baaz
+            }
+        }
+        """
+
+        let output = """
+        // MARK: - Foo
+
+        enum Foo {}
+
+        extension Foo {
+            struct Bar {
+                let baaz: Baaz
+            }
+
+            struct Quux {
+                let baaz: Baaz
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.markTypes)
+    }
+
+    func testAddsMarkForTypeInExtensionNotFollowingTypeBeingExtended() {
+        let input = """
+        struct Baaz {}
+
+        extension Foo {
+            struct Bar {
+                let baaz: Baaz
+            }
+        }
+        """
+
+        let output = """
+        // MARK: - Baaz
+
+        struct Baaz {}
+
+        // MARK: - Foo.Bar
+
+        extension Foo {
+            struct Bar {
+                let baaz: Baaz
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.markTypes)
+    }
+
+    func testHandlesMultipleLayersOfExtensionNesting() {
+        let input = """
+        enum Foo {}
+
+        extension Foo {
+            enum Bar {}
+        }
+
+        extension Foo {
+            extension Bar {
+                struct Baaz {
+                    let quux: Quux
+                }
+            }
+        }
+        """
+
+        let output = """
+        // MARK: - Foo
+
+        enum Foo {}
+
+        // MARK: Foo.Bar
+
+        extension Foo {
+            enum Bar {}
+        }
+
+        // MARK: Foo.Bar.Baaz
+
+        extension Foo {
+            extension Bar {
+                struct Baaz {
+                    let quux: Quux
+                }
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.markTypes)
+    }
+
     // MARK: - sortedImports
 
     func testSortedImportsSimpleCase() {

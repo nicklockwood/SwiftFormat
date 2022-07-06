@@ -881,6 +881,25 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testCasePathTreatedAsOperator2() {
+        let input = "let foo = /Foo.bar\nbaz"
+        let output: [Token] = [
+            .keyword("let"),
+            .space(" "),
+            .identifier("foo"),
+            .space(" "),
+            .operator("=", .infix),
+            .space(" "),
+            .operator("/", .prefix),
+            .identifier("Foo"),
+            .operator(".", .infix),
+            .identifier("bar"),
+            .linebreak("\n", 2),
+            .identifier("baz"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     func testCasePathInParenthesesTreatedAsOperator() {
         let input = "foo(/Foo.bar)"
         let output: [Token] = [
@@ -891,6 +910,19 @@ class TokenizerTests: XCTestCase {
             .operator(".", .infix),
             .identifier("bar"),
             .endOfScope(")"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testDivideOperatorInParenthesesTreatedAsOperator() {
+        let input = "return (/)\n"
+        let output: [Token] = [
+            .keyword("return"),
+            .space(" "),
+            .startOfScope("("),
+            .operator("/", .none),
+            .endOfScope(")"),
+            .linebreak("\n", 2),
         ]
         XCTAssertEqual(tokenize(input), output)
     }

@@ -1158,7 +1158,9 @@ public func tokenize(_ source: String) -> [Token] {
                 }
                 tokens.append(.error(""))
                 processLinebreak(c)
-                scopeIndexStack.removeLast()
+                if !regex {
+                    scopeIndexStack.removeLast()
+                }
                 return
             default:
                 escaped = false
@@ -1805,7 +1807,7 @@ public func tokenize(_ source: String) -> [Token] {
                 characters = start
                 scopeIndexStack.removeLast()
                 tokens.removeLast(tokens.count - count)
-                token = .operator("/", .prefix)
+                token = .operator("/", .none)
                 tokens[count - 1] = token
                 return
             }

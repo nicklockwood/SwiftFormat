@@ -207,6 +207,7 @@ class OptionDescriptor {
         }
     }
 
+    @_disfavoredOverload
     convenience init<T: RawRepresentable>(
         argumentName: String,
         displayName: String,

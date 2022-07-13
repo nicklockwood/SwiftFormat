@@ -92,12 +92,6 @@ Alternatively, you can install the tool on macOS or Linux by using [Mint](https:
 $ mint install nicklockwood/SwiftFormat
 ```
 
-And then run it using:
-
-```bash
-$ mint run swiftformat
-```
-
 Or if you prefer, you can check out and build SwiftFormat manually on macOS, Linux or Windows as follows:
 
 ```bash
@@ -107,6 +101,16 @@ $ swift build -c release
 ```
 
 If you are installing SwiftFormat into your project directory, you can use [CocoaPods](https://cocoapods.org/) on macOS to automatically install the swiftformat binary along with your other pods - see the Xcode build phase instructions below for details.
+
+Another option is to include the binary artifactbundle in your `Package.swift`:
+
+```swift
+.binaryTarget(
+    name: "SwiftFormat",
+    url: "https://github.com/nicklockwood/SwiftFormat/releases/download/0.49.12/swiftformat-macos.artifactbundle.zip",
+    checksum: "CHECKSUM"
+),
+``` 
 
 If you would prefer not to use a package manager, you can build the command-line app manually:
 

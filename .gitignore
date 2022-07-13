@@ -22,6 +22,7 @@ DerivedData
 .swiftpm
 
 /Snapshots/Private
+swiftformat.artifactbundle.zip
 
 # AppCode
 .idea

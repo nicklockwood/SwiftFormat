@@ -1407,18 +1407,16 @@ public struct _FormatRules {
                 let stringIndent = stringBodyIndentStack.last!
                 i += formatter.insertSpaceIfEnabled(stringIndent + indent, at: start)
             case .keyword("in") where scopeStack.last == .startOfScope("{"):
-                guard let startIndex = formatter.index(of: .startOfScope, before: i),
-                      !formatter.tokens[startIndex ..< i].contains(.keyword("for")),
-                      let scopeEnd = formatter.lastIndex(in: startIndex ..< i, where: {
-                          [.endOfScope(")"), .endOfScope("]")].contains($0)
-                      }),
-                      formatter.tokens[startIndex ..< scopeEnd].contains(where: {
-                          if case .linebreak = $0 { return true } else { return false }
-                      })
-                else {
-                    break
+                if let startIndex = formatter.index(of: .startOfScope("{"), before: i),
+                   let paramsIndex = formatter.index(of: .startOfScope, in: startIndex + 1 ..< i),
+                   !formatter.tokens[startIndex + 1 ..< paramsIndex].contains(where: {
+                       $0.isLinebreak
+                   }), formatter.tokens[paramsIndex + 1 ..< i].contains(where: {
+                       $0.isLinebreak
+                   })
+                {
+                    indentStack[indentStack.count - 1] += formatter.options.indent
                 }
-                indentStack[indentStack.count - 1] += formatter.options.indent
             default:
                 // Handle end of scope
                 if let scope = scopeStack.last, token.isEndOfScope(scope) {

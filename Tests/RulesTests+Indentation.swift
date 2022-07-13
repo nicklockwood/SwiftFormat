@@ -1576,6 +1576,26 @@ class IndentTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.indent)
     }
 
+    func testNoDoubleIndentInInsideClosure3() {
+        let input = """
+        foo {
+            [weak self] _ in
+            self?.bar()
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
+    func testNoDoubleIndentInInsideClosure4() {
+        let input = """
+        foo {
+            (baz: Int) in
+            self?.bar(baz)
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
     func testNoUnindentTrailingClosure() {
         let input = """
         private final class Foo {

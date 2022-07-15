@@ -1408,6 +1408,7 @@ public struct _FormatRules {
                 i += formatter.insertSpaceIfEnabled(stringIndent + indent, at: start)
             case .keyword("in") where scopeStack.last == .startOfScope("{"):
                 if let startIndex = formatter.index(of: .startOfScope("{"), before: i),
+                   formatter.index(of: .keyword("for"), in: startIndex + 1 ..< i) == nil,
                    let paramsIndex = formatter.index(of: .startOfScope, in: startIndex + 1 ..< i),
                    !formatter.tokens[startIndex + 1 ..< paramsIndex].contains(where: {
                        $0.isLinebreak

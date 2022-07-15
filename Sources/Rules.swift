@@ -189,7 +189,8 @@ public struct _FormatRules {
         func spaceAfter(_ keyword: String, index: Int) -> Bool {
             switch keyword {
             case "@autoclosure":
-                if let nextIndex = formatter.index(of: .nonSpaceOrLinebreak, after: index),
+                if formatter.options.swiftVersion < "3",
+                   let nextIndex = formatter.index(of: .nonSpaceOrLinebreak, after: index),
                    formatter.next(.nonSpaceOrCommentOrLinebreak, after: nextIndex) == .identifier("escaping")
                 {
                     assert(formatter.tokens[nextIndex] == .startOfScope("("))
@@ -198,6 +199,11 @@ public struct _FormatRules {
                 return true
             case "@escaping", "@noescape", "@Sendable":
                 return true
+            case _ where keyword.hasPrefix("@"):
+                if let i = formatter.index(of: .startOfScope("("), after: index) {
+                    return formatter.isParameterList(at: i)
+                }
+                return false
             case "private", "fileprivate", "internal",
                  "init", "subscript":
                 return false

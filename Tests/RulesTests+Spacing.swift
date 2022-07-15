@@ -42,6 +42,26 @@ class SpacingTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.spaceAroundParens)
     }
 
+    func testAddSpaceBetweenSendableAndBlock() {
+        let input = "@Sendable (Action) -> Void"
+        testFormatting(for: input, rule: FormatRules.spaceAroundParens)
+    }
+
+    func testAddSpaceBetweenMainActorAndBlock() {
+        let input = "@MainActor (Action) -> Void"
+        testFormatting(for: input, rule: FormatRules.spaceAroundParens)
+    }
+
+    func testAddSpaceBetweenMainActorAndBlock2() {
+        let input = "@MainActor (@MainActor (Action) -> Void) async -> Void"
+        testFormatting(for: input, rule: FormatRules.spaceAroundParens)
+    }
+
+    func testAddSpaceBetweenMainActorAndClosureParams() {
+        let input = "{ @MainActor (foo: Int) in foo }"
+        testFormatting(for: input, rule: FormatRules.spaceAroundParens)
+    }
+
     func testSpaceBetweenParenAndAs() {
         let input = "(foo.bar) as? String"
         testFormatting(for: input, rule: FormatRules.spaceAroundParens, exclude: ["redundantParens"])
@@ -147,19 +167,19 @@ class SpacingTests: RulesTests {
     }
 
     func testAddSpaceBetweenCaptureListAndArguments4() {
-        let input = "{ [weak self](foo: @escaping (Bar?) -> Void) -> Baz? in foo }"
+        let input = "{ [weak self](foo: @escaping(Bar?) -> Void) -> Baz? in foo }"
         let output = "{ [weak self] (foo: @escaping (Bar?) -> Void) -> Baz? in foo }"
         testFormatting(for: input, output, rule: FormatRules.spaceAroundParens)
     }
 
     func testAddSpaceBetweenCaptureListAndArguments5() {
-        let input = "{ [weak self](foo: @autoclosure () -> String) -> Baz? in foo() }"
+        let input = "{ [weak self](foo: @autoclosure() -> String) -> Baz? in foo() }"
         let output = "{ [weak self] (foo: @autoclosure () -> String) -> Baz? in foo() }"
         testFormatting(for: input, output, rule: FormatRules.spaceAroundParens)
     }
 
     func testAddSpaceBetweenCaptureListAndArguments6() {
-        let input = "{ [weak self](foo: @Sendable () -> String) -> Baz? in foo() }"
+        let input = "{ [weak self](foo: @Sendable() -> String) -> Baz? in foo() }"
         let output = "{ [weak self] (foo: @Sendable () -> String) -> Baz? in foo() }"
         testFormatting(for: input, output, rule: FormatRules.spaceAroundParens)
     }
@@ -168,6 +188,18 @@ class SpacingTests: RulesTests {
         let input = "Foo<Bar>(0) { [weak self]() -> Void in }"
         let output = "Foo<Bar>(0) { [weak self] () -> Void in }"
         testFormatting(for: input, output, rule: FormatRules.spaceAroundParens, exclude: ["redundantVoidReturnType"])
+    }
+
+    func testAddSpaceBetweenEscapingAndParenthesizedClosure() {
+        let input = "@escaping(() -> Void)"
+        let output = "@escaping (() -> Void)"
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundParens)
+    }
+
+    func testAddSpaceBetweenAutoclosureAndParenthesizedClosure() {
+        let input = "@autoclosure(() -> String)"
+        let output = "@autoclosure (() -> String)"
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundParens)
     }
 
     func testSpaceBetweenClosingParenAndOpenBrace() {

@@ -1096,6 +1096,8 @@ extension Formatter {
         switch tokens[nextIndex] {
         case .operator("->", .infix), .keyword("throws"), .keyword("rethrows"), .keyword("async"):
             return true
+        case .keyword("in"):
+            return last(.nonSpaceOrLinebreak, before: i) != .keyword("for")
         case .identifier("async"):
             if let nextToken = next(.nonSpaceOrCommentOrLinebreak, after: nextIndex),
                [.operator("->", .infix), .keyword("throws"), .keyword("rethrows")].contains(nextToken)

@@ -1,12 +1,17 @@
 # Change Log
 
+## [0.49.13](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.49.13) (2022-07-15)
+
+- Fix `for...in` mistaken for closure `in` in indent rule
+- Fix incorrect spacing around `@MainActor`
+
 ## [0.49.12](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.49.12) (2022-07-13)
 
-- Fix bug with parsing ternary chains containing chevron
-- Add another fix for `/` operator
-- Fix indent after wrapped closure `in`
-- Improve rule search in SwiftFormat for Xcode app
-- Fix enum popups in SwiftFormat for Xcode options
+- Fixed bug with parsing ternary chains containing chevron
+- Added another fix for `/` operator
+- Fixed indent after wrapped closure `in`
+- Improved rule search in SwiftFormat for Xcode app
+- Fixed enum popups in SwiftFormat for Xcode options
 - Added prebuilt SPM binary target
 
 ## [0.49.11](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.49.11) (2022-06-22)

@@ -404,6 +404,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var indentStrings: Bool
     public var closureVoidReturn: ClosureVoidReturn
     public var removeStartOrEndBlankLinesFromTypes: Bool
+    public var genericTypes: String
 
     // Deprecated
     public var indentComments: Bool
@@ -495,6 +496,7 @@ public struct FormatOptions: CustomStringConvertible {
                 indentStrings: Bool = false,
                 closureVoidReturn: ClosureVoidReturn = .remove,
                 removeStartOrEndBlankLinesFromTypes: Bool = true,
+                genericTypes: String = "",
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -577,6 +579,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.indentStrings = indentStrings
         self.closureVoidReturn = closureVoidReturn
         self.removeStartOrEndBlankLinesFromTypes = removeStartOrEndBlankLinesFromTypes
+        self.genericTypes = genericTypes
         // Doesn't really belong here, but hard to put elsewhere
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

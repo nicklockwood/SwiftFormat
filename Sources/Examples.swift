@@ -1427,4 +1427,34 @@ private struct Examples {
       }
     ```
     """
+
+    let genericExtensions = """
+    ```diff
+    - extension Array where Element == Foo {}
+    - extension Optional where Wrapped == Foo {}
+    - extension Dictionary where Key == Foo, Value == Bar {}
+    - extension Collection where Element == Foo {}
+    + extension Array<Foo> {}
+    + extension Optional<Foo> {}
+    + extension Dictionary<Key, Value> {}
+    + extension Collection<Foo> {}
+
+    // With `typeSugar` also enabled:
+    - extension Array where Element == Foo {}
+    - extension Optional where Wrapped == Foo {}
+    - extension Dictionary where Key == Foo, Value == Bar {}
+    + extension [Foo] {}
+    + extension Foo? {}
+    + extension [Key: Value] {}
+
+    // Also supports user-defined types!
+    - extension LinkedList where Element == Foo {}
+    - extension Reducer where
+    -     State == FooState,
+    -     Action == FooAction,
+    -     Environment == FooEnvironment {}
+    + extension LinkedList<Foo> {}
+    + extension Reducer<FooState, FooAction, FooEnvironment> {}
+    ```
+    """
 }

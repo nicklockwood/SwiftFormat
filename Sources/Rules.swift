@@ -7017,22 +7017,51 @@ public struct _FormatRules {
 
             // Parse additional conformances and constraints after the `where` keyword if present
             // (e.g. `where Foo: Fooable, Foo.Bar: Barable, Foo.Baaz == Baazable`)
+            var whereTokenIndex: Int?
             if let whereIndex = formatter.index(of: .keyword("where"), after: paramListEndIndex),
                whereIndex < openBraceIndex
             {
+                whereTokenIndex = whereIndex
                 parseGenericTypes(from: whereIndex, to: openBraceIndex)
+            }
+
+            // Parse the return type if present
+            var returnTypeTokens: [Token]?
+            if let returnIndex = formatter.index(of: .operator("->", .infix), after: paramListEndIndex),
+               returnIndex < openBraceIndex
+            {
+                let returnTypeRange = (returnIndex + 1) ..< (whereTokenIndex ?? openBraceIndex)
+                returnTypeTokens = Array(formatter.tokens[returnTypeRange])
             }
 
             let parameterListRange = (paramListStartIndex + 1) ..< paramListEndIndex
             let parameterListTokens = formatter.tokens[parameterListRange]
 
-            // If the generic type occurs multiple times in the parameter list,
-            // it isnt eligible to be removed. For example `(T, T) where T: Foo`
-            // requires the two params to be the same underlying type, but
-            // `(some Foo, some Foo)` does not.
             for genericType in genericTypes {
-                let occurenceCount = parameterListTokens.filter { $0.string == genericType.name }.count
-                if occurenceCount > 1 || genericType.asOpaqueParameter == nil {
+                // If the generic type occurs multiple times in the parameter list,
+                // it isnt eligible to be removed. For example `(T, T) where T: Foo`
+                // requires the two params to be the same underlying type, but
+                // `(some Foo, some Foo)` does not.
+                let countInParameterList = parameterListTokens.filter { $0.string == genericType.name }.count
+                if countInParameterList > 1 {
+                    genericType.eligbleToRemove = false
+                }
+
+                // A generic used as a return type is different from an opaque result type (SE-244).
+                // For example in `-> T where T: Fooable`, the generic type is caller-specified,
+                // but with `-> some Fooable` the generic type is specified by the function implementation.
+                // Because those represent different concepts, we can't convert between them,
+                // so have to mark the generic type as ineligible if it appears in the return type.
+                if let returnTypeTokens = returnTypeTokens,
+                   returnTypeTokens.contains(where: { $0.string == genericType.name })
+                {
+                    genericType.eligbleToRemove = false
+                }
+
+                // If the method that generates the opaque parameter syntax doesn't succeed,
+                // then this type is ineligible (because it used a generic constraint that
+                // can't be represented using this syntax).
+                if genericType.asOpaqueParameter == nil {
                     genericType.eligbleToRemove = false
                 }
             }

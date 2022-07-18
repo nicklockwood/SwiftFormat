@@ -1692,3 +1692,202 @@ extension Formatter {
         }
     }
 }
+
+extension Formatter {
+    /// A generic type parameter for a method
+    class GenericType {
+        /// The name of the generic parameter. For example with `<T: Fooable>` the generic parameter `name` is `T`.
+        let name: String
+        /// The source range within angle brackets where the generic parameter is defined
+        let definitionSourceRange: ClosedRange<Int>
+        /// Conformances and constraints applied to this generic parameter
+        var conformances: [GenericConformance]
+        /// Whether or not this generic parameter can be removed and replaced with an opaque generic parameter
+        var eligbleToRemove = true
+
+        /// A constraint or conformance that applies to a generic type
+        struct GenericConformance: Hashable {
+            enum ConformanceType {
+                /// A protocol constraint like `T: Fooable`
+                case protocolConstraint
+                /// A concrete type like `T == Foo`
+                case conceteType
+            }
+
+            /// The name of the type being used in the constraint. For example with `T: Fooable`
+            /// the constraint name is `Fooable`
+            let name: String
+            /// The name of the type being constrained. For example with `T: Fooable` the
+            /// `typeName` is `T`. This can correspond exactly to the `name` of a `GenericType`,
+            /// but can also be something like `T.AssociatedType` where `T` is the `name` of a `GenericType`.
+            let typeName: String
+            /// The type of conformance or constraint represented by this value.
+            let type: ConformanceType
+            /// The source range in the angle brackets or where clause where this conformance is defined.
+            let sourceRange: ClosedRange<Int>
+        }
+
+        init(name: String, definitionSourceRange: ClosedRange<Int>, conformances: [GenericConformance] = []) {
+            self.name = name
+            self.definitionSourceRange = definitionSourceRange
+            self.conformances = conformances
+        }
+
+        // The opaque parameter syntax that represents this generic type,
+        // if the constraints can be expressed using this syntax
+        var asOpaqueParameter: [Token]? {
+            if conformances.isEmpty {
+                return tokenize("some Any")
+            }
+
+            // Protocols with primary associated types that can be used with
+            // opaque parameter syntax. In the future we could make this extensible
+            // so users can add their own types here.
+            let knownProtocolsWithAssociatedTypes: [(name: String, primaryAssociatedType: String)] = [
+                (name: "Collection", primaryAssociatedType: "Element"),
+                (name: "Sequence", primaryAssociatedType: "Element"),
+            ]
+
+            let constraints = conformances.filter { $0.type == .protocolConstraint }
+            var primaryAssociatedTypes = [GenericConformance: GenericConformance]()
+
+            // Validate that all of the conformances can be represented using this syntax
+            for conformance in conformances {
+                if conformance.typeName.contains(".") {
+                    switch conformance.type {
+                    case .protocolConstraint:
+                        // Constraints like `Foo.Bar: Barable` cannot be represented using
+                        // opaque generic parameter syntax
+                        return nil
+
+                    case .conceteType:
+                        // Concrete type constraints like `Foo.Element == Bar` can be
+                        // represented using opaque generic parameter syntax if we know
+                        // that it's using a primary associated type of the base protocol
+                        // (e.g. if `Foo` is a `Collection` or `Sequence`)
+                        let typeElements = conformance.typeName.components(separatedBy: ".")
+                        guard typeElements.count == 2 else { return nil }
+
+                        let associatedTypeName = typeElements[1]
+
+                        // Look up if the generic param conforms to any of the protocols
+                        // with a primary associated type matching the one we found
+                        let matchingProtocolWithAssociatedType = constraints.first(where: { genericConstraint in
+                            let knownProtocol = knownProtocolsWithAssociatedTypes.first(where: { $0.name == genericConstraint.name })
+                            return knownProtocol?.primaryAssociatedType == associatedTypeName
+                        })
+
+                        if let matchingProtocolWithAssociatedType = matchingProtocolWithAssociatedType {
+                            primaryAssociatedTypes[matchingProtocolWithAssociatedType] = conformance
+                        } else {
+                            // If this isn't the primary associated type of a protocol constraint, then we can't use it
+                            return nil
+                        }
+                    }
+                }
+            }
+
+            let constraintRepresentations = constraints.map { constraint -> String in
+                if let primaryAssociatedType = primaryAssociatedTypes[constraint] {
+                    return "\(constraint.name)<\(primaryAssociatedType.name)>"
+                } else {
+                    return constraint.name
+                }
+            }
+
+            return tokenize("some \(constraintRepresentations.joined(separator: " & "))")
+        }
+    }
+
+    /// Parses generic types between the angle brackets of a function declaration, or in a where clause
+    func parseGenericTypes(
+        from genericSignatureStartIndex: Int,
+        to genericSignatureEndIndex: Int,
+        into genericTypes: inout [GenericType],
+        qualifyGenericTypeName: (String) -> String = { $0 }
+    ) {
+        var currentIndex = genericSignatureStartIndex
+
+        while currentIndex < genericSignatureEndIndex - 1 {
+            guard let genericTypeNameIndex = index(of: .identifier, after: currentIndex) else {
+                break
+            }
+
+            let typeEndIndex: Int
+            let nextCommaIndex = index(of: .delimiter(","), after: genericTypeNameIndex)
+            if let nextCommaIndex = nextCommaIndex, nextCommaIndex < genericSignatureEndIndex {
+                typeEndIndex = nextCommaIndex
+            } else {
+                typeEndIndex = genericSignatureEndIndex - 1
+            }
+
+            // Include all whitespace and comments in the conformance's source range,
+            // so if we remove it later all of the extra whitespace will get cleaned up
+            let sourceRangeEnd: Int
+            if let nextTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: typeEndIndex) {
+                sourceRangeEnd = nextTokenIndex - 1
+            } else {
+                sourceRangeEnd = typeEndIndex
+            }
+
+            // The generic constraint could have syntax like `Foo`, `Foo: Fooable`,
+            // `Foo.Element == Fooable`, etc. Create a reference to this specific
+            // generic parameter (`Foo` in all of these examples) that can store
+            // the constraints and conformances that we encounter later.
+            let fullGenericTypeName = qualifyGenericTypeName(tokens[genericTypeNameIndex].string)
+            let baseGenericTypeName = fullGenericTypeName.components(separatedBy: ".")[0]
+
+            let genericType: GenericType
+            if let existingType = genericTypes.first(where: { $0.name == baseGenericTypeName }) {
+                genericType = existingType
+            } else {
+                genericType = GenericType(
+                    name: baseGenericTypeName,
+                    definitionSourceRange: genericTypeNameIndex ... sourceRangeEnd
+                )
+                genericTypes.append(genericType)
+            }
+
+            // Parse the constraint after the type name if present
+            var delineatorIndex: Int?
+            var conformanceType: GenericType.GenericConformance.ConformanceType?
+
+            // This can either be a protocol constraint of the form `T: Fooable`
+            if let colonIndex = index(of: .delimiter(":"), after: genericTypeNameIndex),
+               colonIndex < typeEndIndex
+            {
+                delineatorIndex = colonIndex
+                conformanceType = .protocolConstraint
+            }
+
+            // or a concrete type of the form `T == Foo`
+            else if let equalsIndex = index(of: .operator("==", .infix), after: genericTypeNameIndex),
+                    equalsIndex < typeEndIndex
+            {
+                delineatorIndex = equalsIndex
+                conformanceType = .conceteType
+            }
+
+            if let delineatorIndex = delineatorIndex, let conformanceType = conformanceType {
+                let constrainedTypeName = tokens[genericTypeNameIndex ..< delineatorIndex]
+                    .map { $0.string }
+                    .joined()
+                    .trimmingCharacters(in: .init(charactersIn: " \n,<>{}"))
+
+                let conformanceName = tokens[(delineatorIndex + 1) ... typeEndIndex]
+                    .map { $0.string }
+                    .joined()
+                    .trimmingCharacters(in: .init(charactersIn: " \n,<>{}"))
+
+                genericType.conformances.append(.init(
+                    name: conformanceName,
+                    typeName: qualifyGenericTypeName(constrainedTypeName),
+                    type: conformanceType,
+                    sourceRange: genericTypeNameIndex ... sourceRangeEnd
+                ))
+            }
+
+            currentIndex = typeEndIndex
+        }
+    }
+}

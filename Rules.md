@@ -16,6 +16,7 @@
 * [enumNamespaces](#enumNamespaces)
 * [extensionAccessControl](#extensionAccessControl)
 * [fileHeader](#fileHeader)
+* [genericExtensions](#genericExtensions)
 * [hoistPatternLet](#hoistPatternLet)
 * [indent](#indent)
 * [initCoderUnavailable](#initCoderUnavailable)
@@ -645,6 +646,52 @@ Use specified source file header template for all files.
 Option | Description
 --- | ---
 `--header` | Header comments: "strip", "ignore", or the text you wish use
+
+## genericExtensions
+
+When extending generic types, use angle brackets (`extension Array<Foo>`)
+instead of generic type constraints (`extension Array where Element == Foo`).
+
+Option | Description
+--- | ---
+`--generictypes` | Additional generic type definitions used by `genericExtensions`
+A semicolon-separated list of generic types and their generic
+parameters. For example:
+"LinkedList<Element>;Reducer<State, Action, Environment>"
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- extension Array where Element == Foo {}
+- extension Optional where Wrapped == Foo {}
+- extension Dictionary where Key == Foo, Value == Bar {}
+- extension Collection where Element == Foo {}
++ extension Array<Foo> {}
++ extension Optional<Foo> {}
++ extension Dictionary<Key, Value> {}
++ extension Collection<Foo> {}
+
+// With `typeSugar` also enabled:
+- extension Array where Element == Foo {}
+- extension Optional where Wrapped == Foo {}
+- extension Dictionary where Key == Foo, Value == Bar {}
++ extension [Foo] {}
++ extension Foo? {}
++ extension [Key: Value] {}
+
+// Also supports user-defined types!
+- extension LinkedList where Element == Foo {}
+- extension Reducer where
+-     State == FooState,
+-     Action == FooAction,
+-     Environment == FooEnvironment {}
++ extension LinkedList<Foo> {}
++ extension Reducer<FooState, FooAction, FooEnvironment> {}
+```
+
+</details>
+<br/>
 
 ## hoistPatternLet
 

@@ -6858,203 +6858,14 @@ public struct _FormatRules {
                 let closeBraceIndex = formatter.endOfScope(at: openBraceIndex)
             else { return }
 
-            /// A generic type parameter for a method
-            class GenericType {
-                /// The name of the generic parameter. For example with `<T: Fooable>` the generic parameter `name` is `T`.
-                let name: String
-                /// The source range within angle brackets where the generic parameter is defined
-                let definitionSourceRange: ClosedRange<Int>
-                /// Conformances and constraints applied to this generic parameter
-                var conformances: [GenericConformance]
-                /// Whether or not this generic parameter can be removed and replaced with an opaque generic parameter
-                var eligbleToRemove = true
-
-                /// A constraint or conformance that applies to a generic type
-                struct GenericConformance: Hashable {
-                    enum ConformanceType {
-                        /// A protocol constraint like `T: Fooable`
-                        case protocolConstraint
-                        /// A concrete type like `T == Foo`
-                        case conceteType
-                    }
-
-                    /// The name of the type being used in the constraint. For example with `T: Fooable`
-                    /// the constraint name is `Fooable`
-                    let name: String
-                    /// The name of the type being constrained. For example with `T: Fooable` the
-                    /// `typeName` is `T`. This can correspond exactly to the `name` of a `GenericType`,
-                    /// but can also be something like `T.AssociatedType` where `T` is the `name` of a `GenericType`.
-                    let typeName: String
-                    /// The type of conformance or constraint represented by this value.
-                    let type: ConformanceType
-                    /// The source range in the angle brackets or where clause where this conformance is defined.
-                    let sourceRange: ClosedRange<Int>
-                }
-
-                init(name: String, definitionSourceRange: ClosedRange<Int>) {
-                    self.name = name
-                    self.definitionSourceRange = definitionSourceRange
-                    conformances = []
-                }
-
-                // The opaque parameter syntax that represents this generic type,
-                // if the constraints can be expressed using this syntax
-                var asOpaqueParameter: [Token]? {
-                    if conformances.isEmpty {
-                        return tokenize("some Any")
-                    }
-
-                    // Protocols with primary associated types that can be used with
-                    // opaque parameter syntax. In the future we could make this extensible
-                    // so users can add their own types here.
-                    let knownProtocolsWithAssociatedTypes: [(name: String, primaryAssociatedType: String)] = [
-                        (name: "Collection", primaryAssociatedType: "Element"),
-                        (name: "Sequence", primaryAssociatedType: "Element"),
-                    ]
-
-                    let constraints = conformances.filter { $0.type == .protocolConstraint }
-                    var primaryAssociatedTypes = [GenericConformance: GenericConformance]()
-
-                    // Validate that all of the conformances can be represented using this syntax
-                    for conformance in conformances {
-                        if conformance.typeName.contains(".") {
-                            switch conformance.type {
-                            case .protocolConstraint:
-                                // Constraints like `Foo.Bar: Barable` cannot be represented using
-                                // opaque generic parameter syntax
-                                return nil
-
-                            case .conceteType:
-                                // Concrete type constraints like `Foo.Element == Bar` can be
-                                // represented using opaque generic parameter syntax if we know
-                                // that it's using a primary associated type of the base protocol
-                                // (e.g. if `Foo` is a `Collection` or `Sequence`)
-                                let typeElements = conformance.typeName.components(separatedBy: ".")
-                                guard typeElements.count == 2 else { return nil }
-
-                                let associatedTypeName = typeElements[1]
-
-                                // Look up if the generic param conforms to any of the protocols
-                                // with a primary associated type matching the one we found
-                                let matchingProtocolWithAssociatedType = constraints.first(where: { genericConstraint in
-                                    let knownProtocol = knownProtocolsWithAssociatedTypes.first(where: { $0.name == genericConstraint.name })
-                                    return knownProtocol?.primaryAssociatedType == associatedTypeName
-                                })
-
-                                if let matchingProtocolWithAssociatedType = matchingProtocolWithAssociatedType {
-                                    primaryAssociatedTypes[matchingProtocolWithAssociatedType] = conformance
-                                } else {
-                                    // If this isn't the primary associated type of a protocol constraint, then we can't use it
-                                    return nil
-                                }
-                            }
-                        }
-                    }
-
-                    let constraintRepresentations = constraints.map { constraint -> String in
-                        if let primaryAssociatedType = primaryAssociatedTypes[constraint] {
-                            return "\(constraint.name)<\(primaryAssociatedType.name)>"
-                        } else {
-                            return constraint.name
-                        }
-                    }
-
-                    return tokenize("some \(constraintRepresentations.joined(separator: " & "))")
-                }
-            }
-
-            // Parse the generic signature between the angle brackets so we know all of the generic types
-            var genericTypes = [GenericType]()
-
-            /// Parses generic types between the angle brackets of a function declaration, and in its where clause
-            func parseGenericTypes(from genericSignatureStartIndex: Int, to genericSignatureEndIndex: Int) {
-                var currentIndex = genericSignatureStartIndex
-
-                while currentIndex < genericSignatureEndIndex - 1 {
-                    guard let genericTypeNameIndex = formatter.index(of: .identifier, after: currentIndex) else {
-                        break
-                    }
-
-                    let typeEndIndex: Int
-                    let nextCommaIndex = formatter.index(of: .delimiter(","), after: genericTypeNameIndex)
-                    if let nextCommaIndex = nextCommaIndex, nextCommaIndex < genericSignatureEndIndex {
-                        typeEndIndex = nextCommaIndex
-                    } else {
-                        typeEndIndex = genericSignatureEndIndex - 1
-                    }
-
-                    // Include all whitespace and comments in the conformance's source range,
-                    // so if we remove it later all of the extra whitespace will get cleaned up
-                    let sourceRangeEnd: Int
-                    if let nextTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: typeEndIndex) {
-                        sourceRangeEnd = nextTokenIndex - 1
-                    } else {
-                        sourceRangeEnd = typeEndIndex
-                    }
-
-                    // The generic constraint could have syntax like `Foo`, `Foo: Fooable`,
-                    // `Foo.Element == Fooable`, etc. Create a reference to this specific
-                    // generic parameter (`Foo` in all of these examples) that can store
-                    // the constraints and conformances that we encounter later.
-                    let fullGenericTypeName = formatter.tokens[genericTypeNameIndex].string
-                    let baseGenericTypeName = fullGenericTypeName.components(separatedBy: ".")[0]
-
-                    let genericType: GenericType
-                    if let existingType = genericTypes.first(where: { $0.name == baseGenericTypeName }) {
-                        genericType = existingType
-                    } else {
-                        genericType = GenericType(
-                            name: baseGenericTypeName,
-                            definitionSourceRange: genericTypeNameIndex ... sourceRangeEnd
-                        )
-                        genericTypes.append(genericType)
-                    }
-
-                    // Parse the constraint after the type name if present
-                    var delineatorIndex: Int?
-                    var conformanceType: GenericType.GenericConformance.ConformanceType?
-
-                    // This can either be a protocol constraint of the form `T: Fooable`
-                    if let colonIndex = formatter.index(of: .delimiter(":"), after: genericTypeNameIndex),
-                       colonIndex < typeEndIndex
-                    {
-                        delineatorIndex = colonIndex
-                        conformanceType = .protocolConstraint
-                    }
-
-                    // or a concrete type of the form `T == Foo`
-                    else if let equalsIndex = formatter.index(of: .operator("==", .infix), after: genericTypeNameIndex),
-                            equalsIndex < typeEndIndex
-                    {
-                        delineatorIndex = equalsIndex
-                        conformanceType = .conceteType
-                    }
-
-                    if let delineatorIndex = delineatorIndex, let conformanceType = conformanceType {
-                        let constrainedTypeName = formatter.tokens[genericTypeNameIndex ..< delineatorIndex]
-                            .map { $0.string }
-                            .joined()
-                            .trimmingCharacters(in: .init(charactersIn: " \n,<>{}"))
-
-                        let conformanceName = formatter.tokens[(delineatorIndex + 1) ... typeEndIndex]
-                            .map { $0.string }
-                            .joined()
-                            .trimmingCharacters(in: .init(charactersIn: " \n,<>{}"))
-
-                        genericType.conformances.append(.init(
-                            name: conformanceName,
-                            typeName: constrainedTypeName,
-                            type: conformanceType,
-                            sourceRange: genericTypeNameIndex ... sourceRangeEnd
-                        ))
-                    }
-
-                    currentIndex = typeEndIndex
-                }
-            }
+            var genericTypes = [Formatter.GenericType]()
 
             // Parse the generics in the angle brackets (e.g. `<T, U: Fooable>`)
-            parseGenericTypes(from: genericSignatureStartIndex, to: genericSignatureEndIndex)
+            formatter.parseGenericTypes(
+                from: genericSignatureStartIndex,
+                to: genericSignatureEndIndex,
+                into: &genericTypes
+            )
 
             // Parse additional conformances and constraints after the `where` keyword if present
             // (e.g. `where Foo: Fooable, Foo.Bar: Barable, Foo.Baaz == Baazable`)
@@ -7063,7 +6874,7 @@ public struct _FormatRules {
                whereIndex < openBraceIndex
             {
                 whereTokenIndex = whereIndex
-                parseGenericTypes(from: whereIndex, to: openBraceIndex)
+                formatter.parseGenericTypes(from: whereIndex, to: openBraceIndex, into: &genericTypes)
             }
 
             // Parse the return type if present
@@ -7227,6 +7038,123 @@ public struct _FormatRules {
             {
                 formatter.removeTokens(in: genericSignatureStartIndex ... newGenericSignatureEndIndex)
             }
+        }
+    }
+
+    public let genericExtensions = FormatRule(
+        help: """
+        When extending generic types, use angle brackets (`extension Array<Foo>`)
+        instead of generic type constraints (`extension Array where Element == Foo`).
+        """,
+        options: ["generictypes"]
+    ) { formatter in
+        formatter.forEach(.keyword("extension")) { extensionIndex, _ in
+            guard
+                // Angle brackets syntax in extensions is only supported in Swift 5.7+
+                formatter.options.swiftVersion >= "5.7",
+                let typeNameIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: extensionIndex),
+                let extendedType = formatter.token(at: typeNameIndex)?.string,
+                // If there's already an open angle bracket after the generic type name
+                // then the extension is already using the target syntax, so there's
+                // no work to do
+                formatter.next(.nonSpaceOrCommentOrLinebreak, after: typeNameIndex) != .startOfScope("<"),
+                let openBraceIndex = formatter.index(of: .startOfScope("{"), after: typeNameIndex),
+                let whereIndex = formatter.index(of: .keyword("where"), after: typeNameIndex),
+                whereIndex < openBraceIndex
+            else { return }
+
+            // Prepopulate a `Self` generic type, which is implicitly present in extension definitions
+            let selfType = Formatter.GenericType(
+                name: "Self",
+                definitionSourceRange: typeNameIndex ... typeNameIndex,
+                conformances: [
+                    Formatter.GenericType.GenericConformance(
+                        name: extendedType,
+                        typeName: "Self",
+                        type: .conceteType,
+                        sourceRange: typeNameIndex ... typeNameIndex
+                    ),
+                ]
+            )
+
+            var genericTypes = [selfType]
+
+            // Parse the generic constraints in the where clause
+            formatter.parseGenericTypes(
+                from: whereIndex,
+                to: openBraceIndex,
+                into: &genericTypes,
+                qualifyGenericTypeName: { genericTypeName in
+                    // In an extension all types implicitly refer to `Self`.
+                    // For example, `Element == Foo` is actually fully-qualified as
+                    // `Self.Element == Foo`. Using the fully-qualified `Self.Element` name
+                    // here makes it so the generic constraint is populated as a child
+                    // of `selfType`.
+                    if !genericTypeName.hasPrefix("Self.") {
+                        return "Self." + genericTypeName
+                    } else {
+                        return genericTypeName
+                    }
+                }
+            )
+
+            var knownGenericTypes: [(name: String, genericTypes: [String])] = [
+                (name: "Collection", genericTypes: ["Element"]),
+                (name: "Sequence", genericTypes: ["Element"]),
+                (name: "Array", genericTypes: ["Element"]),
+                (name: "Set", genericTypes: ["Element"]),
+                (name: "Dictionary", genericTypes: ["Key", "Value"]),
+                (name: "Optional", genericTypes: ["Wrapped"]),
+            ]
+
+            // Users can provide additional generic types via the `generictypes` option
+            for userProvidedType in formatter.options.genericTypes.components(separatedBy: ";") {
+                guard let openAngleBracket = userProvidedType.firstIndex(of: "<"),
+                      let closeAngleBracket = userProvidedType.firstIndex(of: ">")
+                else { continue }
+
+                let typeName = String(userProvidedType[..<openAngleBracket])
+                let genericParameters = String(userProvidedType[userProvidedType.index(after: openAngleBracket) ..< closeAngleBracket])
+                    .components(separatedBy: ",")
+                    .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+
+                knownGenericTypes.append((
+                    name: typeName,
+                    genericTypes: genericParameters
+                ))
+            }
+
+            guard let requiredGenericTypes = knownGenericTypes.first(where: { $0.name == extendedType })?.genericTypes else {
+                return
+            }
+
+            // Verify that a concrete type was provided for each of the generic subtypes
+            // of the type being extended
+            let providedGenericTypes = requiredGenericTypes.compactMap { requiredTypeName in
+                selfType.conformances.first(where: { conformance in
+                    conformance.type == .conceteType && conformance.typeName == "Self.\(requiredTypeName)"
+                })
+            }
+
+            guard providedGenericTypes.count == requiredGenericTypes.count else {
+                return
+            }
+
+            // Remove the now-unnecessary generic constraints from the where clause
+            let sourceRangesToRemove = providedGenericTypes.map { $0.sourceRange }
+            formatter.removeTokens(in: sourceRangesToRemove)
+
+            // if the where clause is completely empty now, we need to the where token as well
+            if let newOpenBraceIndex = formatter.index(of: .nonSpaceOrLinebreak, after: whereIndex),
+               formatter.token(at: newOpenBraceIndex) == .startOfScope("{")
+            {
+                formatter.removeTokens(in: whereIndex ..< newOpenBraceIndex)
+            }
+
+            // Replace the extension typename with the fully-qualified generic angle bracket syntax
+            let genericSubtypes = providedGenericTypes.map { $0.name }.joined(separator: ", ")
+            let fullGenericType = "\(extendedType)<\(genericSubtypes)>"
+            formatter.replaceToken(at: typeNameIndex, with: tokenize(fullGenericType))
         }
     }
 }

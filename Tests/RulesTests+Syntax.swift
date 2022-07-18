@@ -1837,6 +1837,23 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.typeSugar)
     }
 
+    func testExtensionTypeSugar() {
+        let input = """
+        extension Array<Foo> {}
+        extension Optional<Foo> {}
+        extension Dictionary<Foo, Bar> {}
+        extension Optional<Array<Dictionary<Foo, Array<Bar>>>> {}
+        """
+
+        let output = """
+        extension [Foo] {}
+        extension Foo? {}
+        extension [Foo: Bar] {}
+        extension [[Foo: [Bar]]]? {}
+        """
+        testFormatting(for: input, output, rule: FormatRules.typeSugar)
+    }
+
     // dictionaries
 
     func testDictionaryTypeConvertedToSugar() {

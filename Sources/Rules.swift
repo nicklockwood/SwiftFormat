@@ -3229,7 +3229,7 @@ public struct _FormatRules {
                     guard let nameToken = formatter.next(.identifier, after: index),
                           case let .identifier(name) = nameToken
                     else {
-                        return formatter.fatalError("Expected identifier", at: index)
+                        return
                     }
                     var usingDynamicLookup = formatter.modifiersForDeclaration(
                         at: index,

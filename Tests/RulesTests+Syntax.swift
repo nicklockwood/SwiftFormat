@@ -2591,13 +2591,13 @@ class SyntaxTests: RulesTests {
 
     func testOpaqueGenericParameterWithConstraintInBracket() {
         let input = """
-        func foo<T: Fooable, U: Barable>(_ fooable: T, barable: U) {
+        func foo<T: Fooable, U: Barable>(_ fooable: T, barable: U) -> Baaz {
             print(fooable, barable)
         }
         """
 
         let output = """
-        func foo(_ fooable: some Fooable, barable: some Barable) {
+        func foo(_ fooable: some Fooable, barable: some Barable) -> Baaz {
             print(fooable, barable)
         }
         """
@@ -2608,13 +2608,13 @@ class SyntaxTests: RulesTests {
 
     func testOpaqueGenericParameterWithConstraintsInWhereClause() {
         let input = """
-        func foo<T, U>(_ t: T, _ u: U) where T: Fooable, T: Barable, U: Baazable {
+        func foo<T, U>(_ t: T, _ u: U) -> Baaz where T: Fooable, T: Barable, U: Baazable {
             print(t, u)
         }
         """
 
         let output = """
-        func foo(_ t: some Fooable & Barable, _ u: some Baazable) {
+        func foo(_ t: some Fooable & Barable, _ u: some Baazable) -> Baaz {
             print(t, u)
         }
         """
@@ -2750,6 +2750,45 @@ class SyntaxTests: RulesTests {
         let input = """
         func foo<T: Fooable>(_ closure: (T) -> T) {
             closure(foo)
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, rule: FormatRules.opaqueGenericParameters, options: options)
+    }
+
+    func testGenericTypeUsedAsReturnType() {
+        // A generic used as a return type is different from an opaque result type (SE-244).
+        // In `-> T where T: Fooable`, the generic type is caller-specified, but with
+        // `-> some Fooable` the generic type is specified by the function implementation.
+        // Because those represent different concepts, we can't convert between them.
+        let input = """
+        func foo<T: Fooable>() -> T {
+            // ...
+        }
+
+        func bar<T>() -> T where T: Barable {
+            // ...
+        }
+
+        func baaz<T: Baazable>() -> Set<SomeComplicatedNestedGeneric<T, Bar>> {
+            // ...
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, rule: FormatRules.opaqueGenericParameters, options: options)
+    }
+
+    func testGenericTypeUsedAsReturnTypeAndParameter() {
+        // Since we can't change the return value, we can't change any of the use cases of T
+        let input = """
+        func foo<T: Fooable>(_ value: T) -> T {
+            value
+        }
+
+        func bar<T>(_ value: T) -> T where T: Barable {
+            value
         }
         """
 

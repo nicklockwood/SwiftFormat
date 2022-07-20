@@ -912,7 +912,11 @@ struct _Descriptors {
     let swiftVersion = OptionDescriptor(
         argumentName: "swiftversion",
         displayName: "Swift Version",
-        help: "The version of Swift used in the files being formatted",
+        help: """
+        The version of Swift used in the files being formatted.
+        Can be a verison number (e.g. "5.6") or "latest" to use
+        the most recent Swift language version.
+        """,
         keyPath: \.swiftVersion
     )
 

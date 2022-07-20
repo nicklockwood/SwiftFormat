@@ -162,6 +162,12 @@ public struct Version: RawRepresentable, Comparable, ExpressibleByStringLiteral,
 
     public init?(rawValue: String) {
         let rawValue = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if rawValue == "latest" {
+            self.rawValue = latestSwiftVersion
+            return
+        }
+
         guard CharacterSet.decimalDigits.contains(rawValue.unicodeScalars.first ?? " ") else {
             return nil
         }

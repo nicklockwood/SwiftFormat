@@ -524,6 +524,8 @@ The `.swift-version` file applies hierarchically; If you have submodules in your
 
 The other option to specify the Swift version using the `--swiftversion` command line argument. Note that this will be overridden by any `.swift-version` files encountered while processing.
 
+When specifying a Swift version, you can use a version number (e.g. `5.6`), or use `latest` to always automatically use the most recently released Swift version supported by SwiftFormat.   
+
 
 Config file
 -----------

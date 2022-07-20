@@ -57,4 +57,15 @@ class VersionTests: XCTestCase {
         XCTAssertLessThan(version ?? "0", "4.0")
         XCTAssertGreaterThan(version ?? "0", "2.0")
     }
+
+    func testLatestSwiftVersion() throws {
+        let version = Version(rawValue: "latest")
+        let latestVersion = Version(rawValue: latestSwiftVersion)
+        XCTAssertEqual(version, latestVersion)
+    }
+
+    func testSpecifyLatestSwiftVersion() throws {
+        let options = FormatOptions(swiftVersion: "latest")
+        XCTAssertEqual(options.swiftVersion, Version(rawValue: latestSwiftVersion))
+    }
 }

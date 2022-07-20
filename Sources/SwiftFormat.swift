@@ -47,6 +47,10 @@ public let swiftVersions = [
     "5.0", "5.1", "5.2", "5.3", "5.4", "5.5", "5.6", "5.7",
 ]
 
+/// The Swift Version to use if the user specifies `--swiftversion latest`.
+/// This should be the most recent production release of Swift.
+public let latestSwiftVersion = "5.6"
+
 /// An enumeration of the types of error that may be thrown by SwiftFormat
 public enum FormatError: Error, CustomStringConvertible, LocalizedError, CustomNSError {
     case reading(String)

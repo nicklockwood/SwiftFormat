@@ -659,6 +659,7 @@ let commandLineArguments = [
     // Input options
     "filelist",
     "stdinpath",
+    "scriptinput",
     "config",
     "inferoptions",
     "linerange",

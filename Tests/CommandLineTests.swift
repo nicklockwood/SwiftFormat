@@ -412,38 +412,19 @@ class CommandLineTests: XCTestCase {
 
     // MARK: script input files
 
-    func testScriptInput() throws {
-        var readCount = 0
-        CLI.readLine = {
-            readCount += 1
-            switch readCount {
-            case 1:
-                return "// File1"
-            case 2:
-                return "// File2"
-            default:
-                return nil
-            }
-        }
-
-        try withTmpFiles(
+    func testParseScriptInput() throws {
+        let result = try parseScriptInput(from: [
+            "SCRIPT_INPUT_FILE_COUNT": "2",
+            "SCRIPT_INPUT_FILE_0": "\(projectDirectory.path)/File1.swift",
+            "SCRIPT_INPUT_FILE_1": "\(projectDirectory.path)/File2.swift",
+        ])
+        XCTAssertEqual(
+            result,
             [
-                "File1.swift": "// File1",
-                "File2.swift": "// File2",
+                URL(fileURLWithPath: "\(projectDirectory.path)/File1.swift"),
+                URL(fileURLWithPath: "\(projectDirectory.path)/File2.swift"),
             ]
-        ) { _ in
-            _ = processArguments(
-                ["scriptinput"],
-                environment: [
-                    "SCRIPT_INPUT_FILE_COUNT": "2",
-                    "SCRIPT_INPUT_FILE_0": "File1.swift",
-                    "SCRIPT_INPUT_FILE_1": "File2.swift",
-                ],
-                in: ""
-            )
-        }
-
-        XCTAssertEqual(readCount, 2)
+        )
     }
 
     // MARK: config

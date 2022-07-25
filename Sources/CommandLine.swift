@@ -447,18 +447,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
             options.formatOptions = formatOptions
         }
         if args["scriptinput"] != nil {
-            guard let countString = environment["SCRIPT_INPUT_FILE_COUNT"],
-                  let count = Int(countString)
-            else {
-                throw FormatError.options("--scriptinput requires a configured SCRIPT_INPUT_FILE_COUNT integer variable")
-            }
-
-            inputURLs += try (0 ..< count).map { index in
-                guard let file = environment["SCRIPT_INPUT_FILE_\(index)"] else {
-                    throw FormatError.options("Input file count is \(count), but SCRIPT_INPUT_FILE_\(index) is not present")
-                }
-                return URL(fileURLWithPath: file)
-            }
+            inputURLs += try parseScriptInput(from: environment)
         }
 
         // Treat values for arguments that do not take a value as input paths
@@ -777,6 +766,21 @@ func parseFileList(_ source: String, in directory: String) throws -> [URL] {
         .components(separatedBy: .newlines)
         .map { $0.components(separatedBy: "#")[0].trimmingCharacters(in: .whitespaces) }
         .flatMap { try parsePaths($0, in: directory) }
+}
+
+func parseScriptInput(from environment: [String: String]) throws -> [URL] {
+    guard let countString = environment["SCRIPT_INPUT_FILE_COUNT"],
+          let count = Int(countString)
+    else {
+        throw FormatError.options("--scriptinput requires a configured SCRIPT_INPUT_FILE_COUNT integer variable")
+    }
+
+    return try (0 ..< count).map { index in
+        guard let file = environment["SCRIPT_INPUT_FILE_\(index)"] else {
+            throw FormatError.options("Input file count is \(count), but SCRIPT_INPUT_FILE_\(index) is not present")
+        }
+        return URL(fileURLWithPath: file)
+    }
 }
 
 func printResult(_ dryrun: Bool, _ lint: Bool, _ lenient: Bool, _ flags: OutputFlags) -> ExitCode {

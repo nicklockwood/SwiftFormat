@@ -5745,6 +5745,7 @@ public struct _FormatRules {
                 if let nextIndex = formatter.index(of: .nonSpaceOrComment, after: endIndex),
                    formatter.token(at: nextIndex)?.isLinebreak != true
                 {
+                    formatter.insertSpace(formatter.indentForLine(at: i), at: nextIndex)
                     formatter.insertLinebreak(at: nextIndex)
                     // Remove any trailing whitespace left on the line with the attributes
                     if let prevToken = formatter.token(at: nextIndex - 1), prevToken.isSpace {

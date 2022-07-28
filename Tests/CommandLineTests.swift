@@ -410,6 +410,23 @@ class CommandLineTests: XCTestCase {
         ])
     }
 
+    // MARK: script input files
+
+    func testParseScriptInput() throws {
+        let result = try parseScriptInput(from: [
+            "SCRIPT_INPUT_FILE_COUNT": "2",
+            "SCRIPT_INPUT_FILE_0": "\(projectDirectory.path)/File1.swift",
+            "SCRIPT_INPUT_FILE_1": "\(projectDirectory.path)/File2.swift",
+        ])
+        XCTAssertEqual(
+            result,
+            [
+                URL(fileURLWithPath: "\(projectDirectory.path)/File1.swift"),
+                URL(fileURLWithPath: "\(projectDirectory.path)/File2.swift"),
+            ]
+        )
+    }
+
     // MARK: config
 
     func testBadConfigFails() {

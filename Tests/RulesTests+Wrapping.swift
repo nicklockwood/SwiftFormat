@@ -3719,6 +3719,22 @@ class WrappingTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
     }
 
+    func testWrapAttributesIndentsLineCorrectly() {
+        let input = """
+        class Foo {
+            @objc var foo = Foo()
+        }
+        """
+        let output = """
+        class Foo {
+            @objc
+            var foo = Foo()
+        }
+        """
+        let options = FormatOptions(varAttributes: .prevLine)
+        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
+    }
+
     // MARK: wrapEnumCases
 
     func testMultilineEnumCases() {

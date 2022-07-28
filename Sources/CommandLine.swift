@@ -58,7 +58,7 @@ public extension CLI {
 
     /// Run the CLI with the specified input arguments
     static func run(in directory: String, with args: [String] = CommandLine.arguments) -> ExitCode {
-        return processArguments(args, in: directory)
+        return processArguments(args, environment: ProcessInfo.processInfo.environment, in: directory)
     }
 
     /// Run the CLI with the specified input string (this will be parsed into multiple arguments)
@@ -182,6 +182,7 @@ func printHelp(as type: CLI.OutputType) {
 
     --filelist         Path to a file with names of files to process, one per line
     --stdinpath        Path to stdin source file (used for generating header)
+    --scriptinput      Read Xcode SCRIPT_INPUT_FILE* environment variables as files
     --config           Path to a configuration file containing rules and options
     --inferoptions     Instead of formatting input, use it to infer format options
     --output           Output path for formatted file(s) (defaults to input path)
@@ -256,7 +257,7 @@ typealias OutputFlags = (
     filesFailed: Int
 )
 
-func processArguments(_ args: [String], in directory: String) -> ExitCode {
+func processArguments(_ args: [String], environment: [String: String] = [:], in directory: String) -> ExitCode {
     var errors = [Error]()
     var verbose = false
     var lenient = false
@@ -444,6 +445,9 @@ func processArguments(_ args: [String], in directory: String) -> ExitCode {
                 creationDate: resourceValues.creationDate
             )
             options.formatOptions = formatOptions
+        }
+        if args["scriptinput"] != nil {
+            inputURLs += try parseScriptInput(from: environment)
         }
 
         // Treat values for arguments that do not take a value as input paths
@@ -762,6 +766,23 @@ func parseFileList(_ source: String, in directory: String) throws -> [URL] {
         .components(separatedBy: .newlines)
         .map { $0.components(separatedBy: "#")[0].trimmingCharacters(in: .whitespaces) }
         .flatMap { try parsePaths($0, in: directory) }
+}
+
+func parseScriptInput(from environment: [String: String]) throws -> [URL] {
+    guard let countString = environment["SCRIPT_INPUT_FILE_COUNT"],
+          let count = Int(countString)
+    else {
+        throw FormatError
+            .options("--scriptinput requires a configured SCRIPT_INPUT_FILE_COUNT integer variable")
+    }
+
+    return try (0 ..< count).map { index in
+        guard let file = environment["SCRIPT_INPUT_FILE_\(index)"] else {
+            throw FormatError
+                .options("Input file count is \(count), but SCRIPT_INPUT_FILE_\(index) is not present")
+        }
+        return URL(fileURLWithPath: file)
+    }
 }
 
 func printResult(_ dryrun: Bool, _ lint: Bool, _ lenient: Bool, _ flags: OutputFlags) -> ExitCode {

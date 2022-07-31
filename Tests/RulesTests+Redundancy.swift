@@ -4967,6 +4967,76 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.unusedArguments)
     }
 
+    func testUnusedTrailingAsyncClosureArgument() {
+        let input = """
+        app.get { foo async in
+            print("No foo")
+        }
+        """
+        let output = """
+        app.get { _ async in
+            print("No foo")
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+    }
+
+    func testUnusedTrailingAsyncClosureArgument2() {
+        let input = """
+        app.get { foo async -> String in
+            "No foo"
+        }
+        """
+        let output = """
+        app.get { _ async -> String in
+            "No foo"
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+    }
+
+    func testUnusedTrailingAsyncClosureArgument3() {
+        let input = """
+        app.get { (foo: String) async -> String in
+            "No foo"
+        }
+        """
+        let output = """
+        app.get { (_: String) async -> String in
+            "No foo"
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+    }
+
+    func testUsedTrailingAsyncClosureArgument() {
+        let input = """
+        app.get { foo async -> String in
+            "\\(foo)"
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
+    func testTrailingAsyncClosureArgumentAlreadyMarkedUnused() {
+        let input = "app.get { _ async in 5 }"
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
+    func testUnusedTrailingClosureArgumentCalledAsync() {
+        let input = """
+        app.get { async -> String in
+            "No async"
+        }
+        """
+        let output = """
+        app.get { _ -> String in
+            "No async"
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+    }
+
     // init
 
     func testParameterUsedInInit() {

@@ -385,6 +385,11 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssert(formatter.isStartOfClosure(at: 0))
     }
 
+    func testAsyncClosure2() {
+        let formatter = Formatter(tokenize("{ foo async in foo }"))
+        XCTAssert(formatter.isStartOfClosure(at: 0))
+    }
+
     func testFunctionNamedAsync() {
         let formatter = Formatter(tokenize("foo = async { bar }"))
         XCTAssert(formatter.isStartOfClosure(at: 6))

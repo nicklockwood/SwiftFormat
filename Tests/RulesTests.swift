@@ -47,6 +47,11 @@ class RulesTests: XCTestCase {
                         options: FormatOptions = .default, exclude: [String] = [],
                         file: StaticString = #file, line: UInt = #line)
     {
+        var options = options
+        if options.timeout == FormatOptions.default.timeout {
+            // Make breakpoint debugging easier by increasing timeout
+            options.timeout = 30
+        }
         // The `name` property on individual rules is not populated until the first call into `rulesByName`,
         // so we have to make sure to trigger this before checking the names of the given rules.
         if rules.contains(where: { $0.name.isEmpty }) {

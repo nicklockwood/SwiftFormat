@@ -6732,6 +6732,22 @@ public struct _FormatRules {
                     }
                 }
 
+                // If the closure is a property with an explicit `Void` type,
+                // we can't remove the closure since the build would break
+                // if the method is `@discardableResult`
+                // https://github.com/nicklockwood/SwiftFormat/issues/1236
+                if let equalsSignIndex = formatter.index(of: .nonSpaceOrLinebreak, before: closureStartIndex),
+                   formatter.token(at: equalsSignIndex) == .operator("=", .infix),
+                   let explicitTypeIndex = formatter.index(of: .nonSpaceOrLinebreak, before: equalsSignIndex),
+                   let explicitTypeToken = formatter.token(at: explicitTypeIndex),
+                   explicitTypeToken.isIdentifier,
+                   let colonIndex = formatter.index(of: .nonSpaceOrLinebreak, before: explicitTypeIndex),
+                   formatter.token(at: colonIndex) == .delimiter(":"),
+                   explicitTypeToken.string == "Void"
+                {
+                    return
+                }
+
                 // First we remove the spaces and linebreaks between the { } and the remainder of the closure body
                 //  - This requires a bit of bookkeeping, but makes sure we don't remove any
                 //    whitespace characters outside of the closure itself

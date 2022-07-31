@@ -3856,8 +3856,6 @@ public struct _FormatRules {
                 while index > start {
                     let token = formatter.tokens[index]
                     switch token {
-                    case let .keyword(name) where !token.isAttribute && !name.hasPrefix("#") && name != "inout":
-                        return
                     case .endOfScope("}"), .startOfScope("{"):
                         return
                     case .endOfScope("]"):
@@ -3869,11 +3867,14 @@ public struct _FormatRules {
                         argCountStack.removeLast()
                     case .delimiter(","):
                         argCountStack[argCountStack.count - 1] = argNames.count
-                    case .operator("->", .infix):
+                    case .operator("->", .infix), .keyword("throws"):
                         // Everything after this was part of return value
                         let count = argCountStack.last ?? 0
                         argNames.removeSubrange(count ..< argNames.count)
                         nameIndexPairs.removeSubrange(count ..< nameIndexPairs.count)
+                    case let .keyword(name) where
+                        !token.isAttribute && !name.hasPrefix("#") && name != "inout":
+                        return
                     case .identifier:
                         guard argCountStack.count < 3,
                               let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index), [

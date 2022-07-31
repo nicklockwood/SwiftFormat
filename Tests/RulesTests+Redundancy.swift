@@ -4957,6 +4957,17 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.unusedArguments)
     }
 
+    func testUnusedThrowingClosureArgument() {
+        let input = "foo = { bar throws in \"\" }"
+        let output = "foo = { _ throws in \"\" }"
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+    }
+
+    func testUsedThrowingClosureArgument() {
+        let input = "let foo = { bar throws in bar + \"\" }"
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
     // init
 
     func testParameterUsedInInit() {

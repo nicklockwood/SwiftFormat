@@ -3850,58 +3850,63 @@ public struct _FormatRules {
         formatter.forEach(.keyword("in")) { i, _ in
             var argNames = [String]()
             var nameIndexPairs = [(Int, Int)]()
-            if let start = formatter.index(of: .startOfScope("{"), before: i) {
-                var index = i - 1
-                var argCountStack = [0]
-                while index > start {
-                    let token = formatter.tokens[index]
-                    switch token {
-                    case .endOfScope("}"), .startOfScope("{"):
-                        return
-                    case .endOfScope("]"):
-                        // TODO: handle unused capture list arguments
-                        index = formatter.index(of: .startOfScope("["), before: index) ?? index
-                    case .endOfScope(")"):
-                        argCountStack.append(argNames.count)
-                    case .startOfScope("("):
-                        argCountStack.removeLast()
-                    case .delimiter(","):
-                        argCountStack[argCountStack.count - 1] = argNames.count
-                    case .operator("->", .infix), .keyword("throws"):
-                        // Everything after this was part of return value
-                        let count = argCountStack.last ?? 0
-                        argNames.removeSubrange(count ..< argNames.count)
-                        nameIndexPairs.removeSubrange(count ..< nameIndexPairs.count)
-                    case let .keyword(name) where
-                        !token.isAttribute && !name.hasPrefix("#") && name != "inout":
-                        return
-                    case .identifier:
-                        guard argCountStack.count < 3,
-                              let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index), [
-                                  .delimiter(","), .startOfScope("("), .startOfScope("{"), .endOfScope("]"),
-                              ].contains(prevToken), let scopeStart = formatter.index(of: .startOfScope, before: index),
-                              ![.startOfScope("["), .startOfScope("<")].contains(formatter.tokens[scopeStart])
-                        else {
-                            break
-                        }
-                        let name = token.unescaped()
-                        if let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index),
-                           let nextToken = formatter.token(at: nextIndex), case .identifier = nextToken
-                        {
-                            let internalName = nextToken.unescaped()
-                            if internalName != "_" {
-                                argNames.append(internalName)
-                                nameIndexPairs.append((index, nextIndex))
-                            }
-                        } else if name != "_" {
-                            argNames.append(name)
-                            nameIndexPairs.append((index, index))
-                        }
-                    default:
+            guard let start = formatter.index(of: .startOfScope("{"), before: i) else {
+                return
+            }
+            var index = i - 1
+            var argCountStack = [0]
+            while index > start {
+                let token = formatter.tokens[index]
+                switch token {
+                case .endOfScope("}"):
+                    return
+                case .endOfScope("]"):
+                    // TODO: handle unused capture list arguments
+                    index = formatter.index(of: .startOfScope("["), before: index) ?? index
+                case .endOfScope(")"):
+                    argCountStack.append(argNames.count)
+                case .startOfScope("("):
+                    argCountStack.removeLast()
+                case .delimiter(","):
+                    argCountStack[argCountStack.count - 1] = argNames.count
+                case .identifier("async") where
+                    formatter.last(.nonSpaceOrLinebreak, before: index)?.isIdentifier == true:
+                    fallthrough
+                case .operator("->", .infix), .keyword("throws"), .keyword("async"):
+                    // Everything after this was part of return value
+                    let count = argCountStack.last ?? 0
+                    argNames.removeSubrange(count ..< argNames.count)
+                    nameIndexPairs.removeSubrange(count ..< nameIndexPairs.count)
+                case let .keyword(name) where
+                    !token.isAttribute && !name.hasPrefix("#") && name != "inout":
+                    return
+                case .identifier:
+                    guard argCountStack.count < 3,
+                          let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index), [
+                              .delimiter(","), .startOfScope("("), .startOfScope("{"), .endOfScope("]"),
+                          ].contains(prevToken), let scopeStart = formatter.index(of: .startOfScope, before: index),
+                          ![.startOfScope("["), .startOfScope("<")].contains(formatter.tokens[scopeStart])
+                    else {
                         break
                     }
-                    index -= 1
+                    let name = token.unescaped()
+                    if let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index),
+                       let nextToken = formatter.token(at: nextIndex), case .identifier = nextToken,
+                       formatter.next(.nonSpaceOrCommentOrLinebreak, after: nextIndex) == .delimiter(":")
+                    {
+                        let internalName = nextToken.unescaped()
+                        if internalName != "_" {
+                            argNames.append(internalName)
+                            nameIndexPairs.append((index, nextIndex))
+                        }
+                    } else if name != "_" {
+                        argNames.append(name)
+                        nameIndexPairs.append((index, index))
+                    }
+                default:
+                    break
                 }
+                index -= 1
             }
             guard !argNames.isEmpty, let bodyEndIndex = formatter.index(of: .endOfScope("}"), after: i) else {
                 return

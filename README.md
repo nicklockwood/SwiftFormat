@@ -236,7 +236,7 @@ Alternatively, you might want to consider running SwiftFormat in [lint](#linting
 
 To set up SwiftFormat as an Xcode build phase, do the following:
 
-#### 1) Create a BuildTools folder & Package.swift
+#### 1) Create a BuildTools folder and Package.swift
 
 1. Create a folder called `BuildTools` in the same folder as your xcodeproj file
 2. In this folder, create a file called `Package.swift`, with the following contents:
@@ -255,7 +255,7 @@ let package = Package(
 ```
 3. If you are running Xcode 11.4 or later, in the `BuildTools` folder create a file called `Empty.swift` with nothing in it. This is to satisfy a change in Swift Package Manager.
 
-#### 2) Add a Build phases to your app target
+#### 2) Add a Build phase to your app target
 
 1. Click on your project in the file list, choose your target under `TARGETS`, click the `Build Phases` tab
 2. Add a `New Run Script Phase` by clicking the little plus icon in the top left

@@ -421,6 +421,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var ignoreConflictMarkers: Bool
     public var swiftVersion: Version
     public var fileInfo: FileInfo
+    public var timeout: TimeInterval
 
     // Enabled rules
     var enabledRules: Set<String> = []
@@ -509,7 +510,8 @@ public struct FormatOptions: CustomStringConvertible {
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
                 swiftVersion: Version = .undefined,
-                fileInfo: FileInfo = FileInfo())
+                fileInfo: FileInfo = FileInfo(),
+                timeout: TimeInterval = 1)
     {
         self.lineAfterMarks = lineAfterMarks
         self.indent = indent
@@ -594,6 +596,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.ignoreConflictMarkers = ignoreConflictMarkers
         self.swiftVersion = swiftVersion
         self.fileInfo = fileInfo
+        self.timeout = timeout
     }
 
     public var useTabs: Bool {
@@ -608,8 +611,9 @@ public struct FormatOptions: CustomStringConvertible {
     public var allOptions: [String: Any] {
         let pairs = Mirror(reflecting: self).children.map { ($0!, $1) }
         var options = Dictionary(pairs, uniquingKeysWith: { $1 })
-        options["fileInfo"] = nil // Special case
-        options["enabledRules"] = nil // Special case
+        for key in ["fileInfo", "enabledRules", "timeout"] { // Special cases
+            options[key] = nil
+        }
         return options
     }
 

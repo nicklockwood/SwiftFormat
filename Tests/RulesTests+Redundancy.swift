@@ -5872,4 +5872,16 @@ class RedundancyTests: RulesTests {
         let input = "let foo = try bar ?? { throw NSError() }()"
         testFormatting(for: input, rule: FormatRules.redundantClosure)
     }
+
+    func testKeepsDiscardableResultClosure() {
+        let input = """
+        @discardableResult
+        func discardableResult() -> String { "hello world" }
+
+        // We can't remove this closure, since the method called inline
+        // would return a String instead.
+        let void: Void = { discardableResult() }()
+        """
+        testFormatting(for: input, rule: FormatRules.redundantClosure)
+    }
 }

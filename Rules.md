@@ -36,6 +36,7 @@
 * [redundantLetError](#redundantLetError)
 * [redundantNilInit](#redundantNilInit)
 * [redundantObjc](#redundantObjc)
+* [redundantOptionalBinding](#redundantOptionalBinding)
 * [redundantParens](#redundantParens)
 * [redundantPattern](#redundantPattern)
 * [redundantRawValues](#redundantRawValues)
@@ -1201,6 +1202,28 @@ Remove redundant `@objc` annotations.
 ```diff
 - @objc @NSManaged private var foo: String?
 + @NSManaged private var foo: String?
+```
+
+</details>
+<br/>
+
+## redundantOptionalBinding
+
+Removes redundant identifiers in optional binding conditions.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- if let foo = foo {
++ if let foo {
+      print(foo)
+  }
+
+- guard let self = self else {
++ guard let self else {
+      return
+  }
 ```
 
 </details>

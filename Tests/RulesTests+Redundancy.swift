@@ -1723,6 +1723,12 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantVoidReturnType)
     }
 
+    func testRemoveRedundantEmptyReturnTypeInClosureArguments() {
+        let input = "{ (foo: Bar) -> () in foo() }"
+        let output = "{ (foo: Bar) in foo() }"
+        testFormatting(for: input, output, rule: FormatRules.redundantVoidReturnType)
+    }
+
     func testRemoveRedundantVoidInClosureArguments2() {
         let input = "methodWithTrailingClosure { foo -> Void in foo() }"
         let output = "methodWithTrailingClosure { foo in foo() }"
@@ -5881,6 +5887,18 @@ class RedundancyTests: RulesTests {
         // We can't remove this closure, since the method called inline
         // would return a String instead.
         let void: Void = { discardableResult() }()
+        """
+        testFormatting(for: input, rule: FormatRules.redundantClosure)
+    }
+
+    func testKeepsDiscardableResultClosure2() {
+        let input = """
+        @discardableResult
+        func discardableResult() -> String { "hello world" }
+
+        // We can't remove this closure, since the method called inline
+        // would return a String instead.
+        let void: () = { discardableResult() }()
         """
         testFormatting(for: input, rule: FormatRules.redundantClosure)
     }

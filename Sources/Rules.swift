@@ -2868,30 +2868,9 @@ public struct _FormatRules {
         options: ["closurevoid"]
     ) { formatter in
         formatter.forEach(.operator("->", .infix)) { i, _ in
-            guard var endIndex = formatter.index(of: .nonSpaceOrLinebreak, after: i) else { return }
-            switch formatter.tokens[endIndex] {
-            case .identifier("Void"):
-                break
-            case .identifier("Swift"):
-                guard let dotIndex = formatter.index(of: .nonSpaceOrLinebreak, after: endIndex, if: {
-                    $0 == .operator(".", .infix)
-                }), let voidIndex = formatter.index(of: .nonSpace, after: dotIndex, if: {
-                    $0 == .identifier("Void")
-                }) else { return }
-                endIndex = voidIndex
-            case .startOfScope("("):
-                guard let nextIndex = formatter.index(of: .nonSpace, after: endIndex) else { return }
-                switch formatter.tokens[nextIndex] {
-                case .endOfScope(")"):
-                    endIndex = nextIndex
-                case .identifier("Void"):
-                    guard let nextIndex = formatter.index(of: .nonSpace, after: nextIndex),
-                          case .endOfScope(")") = formatter.tokens[nextIndex] else { return }
-                    endIndex = nextIndex
-                default:
-                    return
-                }
-            default:
+            guard let startIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i),
+                  let endIndex = formatter.endOfVoidType(at: startIndex)
+            else {
                 return
             }
 
@@ -2909,8 +2888,8 @@ public struct _FormatRules {
             else { return }
 
             guard let prevIndex = formatter.index(of: .endOfScope(")"), before: i),
-                  let startIndex = formatter.index(of: .startOfScope("("), before: prevIndex),
-                  let startToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: startIndex),
+                  let parenIndex = formatter.index(of: .startOfScope("("), before: prevIndex),
+                  let startToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: parenIndex),
                   startToken.isIdentifier || [.startOfScope("{"), .endOfScope("]")].contains(startToken)
             else {
                 return
@@ -6629,14 +6608,11 @@ public struct _FormatRules {
                 // we can't remove the closure since the build would break
                 // if the method is `@discardableResult`
                 // https://github.com/nicklockwood/SwiftFormat/issues/1236
-                if let equalsSignIndex = formatter.index(of: .nonSpaceOrLinebreak, before: closureStartIndex),
-                   formatter.token(at: equalsSignIndex) == .operator("=", .infix),
-                   let explicitTypeIndex = formatter.index(of: .nonSpaceOrLinebreak, before: equalsSignIndex),
-                   let explicitTypeToken = formatter.token(at: explicitTypeIndex),
-                   explicitTypeToken.isIdentifier,
-                   let colonIndex = formatter.index(of: .nonSpaceOrLinebreak, before: explicitTypeIndex),
-                   formatter.token(at: colonIndex) == .delimiter(":"),
-                   explicitTypeToken.string == "Void"
+                if let equalsIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: closureStartIndex),
+                   formatter.token(at: equalsIndex) == .operator("=", .infix),
+                   let colonIndex = formatter.index(of: .delimiter(":"), before: equalsIndex),
+                   let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: colonIndex),
+                   formatter.endOfVoidType(at: nextIndex) != nil
                 {
                     return
                 }

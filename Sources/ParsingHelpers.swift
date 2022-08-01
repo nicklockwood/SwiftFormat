@@ -1779,6 +1779,40 @@ extension Formatter {
             return token.isStringDelimiter ? .identifier("String") : token
         }
     }
+
+    /// Returns end of last index of Void type declaration starting at specified index, or nil if not Void
+    func endOfVoidType(at index: Int) -> Int? {
+        switch tokens[index] {
+        case .identifier("Void"):
+            return index
+        case .identifier("Swift"):
+            guard let dotIndex = self.index(of: .nonSpaceOrLinebreak, after: index, if: {
+                $0 == .operator(".", .infix)
+            }), let voidIndex = self.index(of: .nonSpace, after: dotIndex, if: {
+                $0 == .identifier("Void")
+            }) else { return nil }
+            return voidIndex
+        case .startOfScope("("):
+            guard let nextIndex = self.index(of: .nonSpace, after: index) else {
+                return nil
+            }
+            switch tokens[nextIndex] {
+            case .endOfScope(")"):
+                return nextIndex
+            case .identifier("Void"):
+                guard let nextIndex = self.index(of: .nonSpace, after: nextIndex),
+                      case .endOfScope(")") = tokens[nextIndex]
+                else {
+                    return nil
+                }
+                return nextIndex
+            default:
+                return nil
+            }
+        default:
+            return nil
+        }
+    }
 }
 
 extension _FormatRules {

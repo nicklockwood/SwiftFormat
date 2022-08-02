@@ -1,9 +1,20 @@
 # Change Log
 
+## [0.49.14](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.49.14) (2022-08-02)
+
+- Fixed `unusedArguments` rule incorrectly removing `async` keyword from closure arguments
+- Fixed `unusedArguments` not being applied correctly to throwing closures
+- Fixed assertion failure when parsing `@unchecked Sendable` enum
+- Fixed assertion failure after applying typeSugar rule to array/dictionary extensions
+- Fixed line indent after `wrapAttributes` rule is applied
+- Fixed issue where redundantClosure would break build for Void closures calling @discardableResult functions
+- Added `--typeblankline` option for `blankLinesAtStartOfScope` and `blankLinesAtEndOfScope` rules
+- Added support for Xcode `SCRIPT_INPUT_FILE` arguments
+
 ## [0.49.13](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.49.13) (2022-07-15)
 
-- Fix `for...in` mistaken for closure `in` in indent rule
-- Fix incorrect spacing around `@MainActor`
+- Fixed `for...in` mistaken for closure `in` in indent rule
+- Fixed incorrect spacing around `@MainActor`
 
 ## [0.49.12](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.49.12) (2022-07-13)
 

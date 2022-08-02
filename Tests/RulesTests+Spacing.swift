@@ -62,6 +62,15 @@ class SpacingTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.spaceAroundParens)
     }
 
+    func testSpaceBetweenUncheckedAndSendable() {
+        let input = """
+        enum Foo: @unchecked Sendable {
+            case bar
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.spaceAroundParens)
+    }
+
     func testSpaceBetweenParenAndAs() {
         let input = "(foo.bar) as? String"
         testFormatting(for: input, rule: FormatRules.spaceAroundParens, exclude: ["redundantParens"])

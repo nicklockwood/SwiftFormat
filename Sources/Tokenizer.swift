@@ -1756,7 +1756,12 @@ public func tokenize(_ source: String) -> [Token] {
                     case "case":
                         if let keywordIndex = index(of: .keyword, before: scopeIndex) {
                             var keyword = tokens[keywordIndex]
-                            if case .keyword("where") = keyword,
+                            if keyword == .keyword("where"),
+                               let keywordIndex = index(of: .keyword, before: keywordIndex)
+                            {
+                                keyword = tokens[keywordIndex]
+                            }
+                            if keyword.isAttribute,
                                let keywordIndex = index(of: .keyword, before: keywordIndex)
                             {
                                 keyword = tokens[keywordIndex]

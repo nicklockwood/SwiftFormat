@@ -3935,6 +3935,29 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testUncheckedSendableEnum() {
+        let input = "enum Foo: @unchecked Sendable { case bar }"
+        let output: [Token] = [
+            .keyword("enum"),
+            .space(" "),
+            .identifier("Foo"),
+            .delimiter(":"),
+            .space(" "),
+            .keyword("@unchecked"),
+            .space(" "),
+            .identifier("Sendable"),
+            .space(" "),
+            .startOfScope("{"),
+            .space(" "),
+            .keyword("case"),
+            .space(" "),
+            .identifier("bar"),
+            .space(" "),
+            .endOfScope("}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     // MARK: dot prefix
 
     func testEnumValueInDictionaryLiteral() {

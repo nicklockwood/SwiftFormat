@@ -1776,6 +1776,7 @@ public func tokenize(_ source: String) -> [Token] {
                                  .keyword("guard"),
                                  .keyword("while"),
                                  .keyword("for"),
+                                 .keyword("await"),
                                  .delimiter(","):
                                 break
                             default:

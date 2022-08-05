@@ -3958,6 +3958,60 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testForCaseLetPreceededByAwait() {
+        let input = "func forGroup(_ group: TaskGroup<String?>) async { for await case let value? in group { print(value.description) } }"
+        let output: [Token] = [
+            .keyword("func"),
+            .space(" "),
+            .identifier("forGroup"),
+            .startOfScope("("),
+            .identifier("_"),
+            .space(" "),
+            .identifier("group"),
+            .delimiter(":"),
+            .space(" "),
+            .identifier("TaskGroup"),
+            .startOfScope("<"),
+            .identifier("String"),
+            .operator("?", .postfix),
+            .endOfScope(">"),
+            .endOfScope(")"),
+            .space(" "),
+            .identifier("async"),
+            .space(" "),
+            .startOfScope("{"),
+            .space(" "),
+            .keyword("for"),
+            .space(" "),
+            .keyword("await"),
+            .space(" "),
+            .keyword("case"),
+            .space(" "),
+            .keyword("let"),
+            .space(" "),
+            .identifier("value"),
+            .operator("?", .postfix),
+            .space(" "),
+            .keyword("in"),
+            .space(" "),
+            .identifier("group"),
+            .space(" "),
+            .startOfScope("{"),
+            .space(" "),
+            .identifier("print"),
+            .startOfScope("("),
+            .identifier("value"),
+            .operator(".", .infix),
+            .identifier("description"),
+            .endOfScope(")"),
+            .space(" "),
+            .endOfScope("}"),
+            .space(" "),
+            .endOfScope("}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     // MARK: dot prefix
 
     func testEnumValueInDictionaryLiteral() {

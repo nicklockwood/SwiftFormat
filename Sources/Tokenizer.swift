@@ -38,7 +38,7 @@ import Foundation
 // Used to speed up matching
 // Note: Any, Self, self, super, nil, true and false have been omitted deliberately, as they
 // behave like identifiers. So too have context-specific keywords such as the following:
-// any, associativity, convenience, didSet, dynamic, final, get, indirect, infix, lazy,
+// any, associativity, async, convenience, didSet, dynamic, final, get, indirect, infix, lazy,
 // left, mutating, none, nonmutating, open, optional, override, postfix, precedence,
 // prefix, Protocol, required, right, set, some, any, Type, unowned, weak, willSet
 private let swiftKeywords = Set([

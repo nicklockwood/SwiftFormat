@@ -3232,4 +3232,16 @@ class IndentTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.indent, options: options,
                        exclude: ["consecutiveBlankLines", "wrapConditionalBodies"])
     }
+
+    func testAsyncThrowsNotUnindented() {
+        let input = """
+        func multilineFunction(
+            foo _: String,
+            bar _: String)
+            async throws -> String {}
+        """
+
+        let options = FormatOptions(closingParenOnSameLine: true)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
 }

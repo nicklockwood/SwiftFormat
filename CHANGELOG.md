@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.49.15](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.49.15) (2022-08-11)
+
+- Fixed illegal wrapping of ternary expressions inside single-line string interpolation
+- Fixed bug where `await case` was incorrectly interpreted as ending the current scope
+- Fixed issue where `async throws` was indented incorrectly
+- Fixed bug where a pair of less-than, greater-than operators could be interpreted as generics
+- Fixed case where `andOperator` rule could introduce parser ambiguity
+
 ## [0.49.14](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.49.14) (2022-08-02)
 
 - Fixed `unusedArguments` rule incorrectly removing `async` keyword from closure arguments

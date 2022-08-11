@@ -10,12 +10,9 @@ jobs:
       matrix:
         macos:
           - 10.15
-          - 11
+          - 12
         xcode:
           - latest-stable
-        include:
-          - macos: 11
-            xcode: latest
     runs-on: macos-${{ matrix.macos }}
     steps:
       - name: Select Xcode version
@@ -40,10 +37,7 @@ jobs:
       matrix:
         swiftver:
           - swift:5.2
-          - swift:5.3
-          - swift:5.4
-          - swift:5.5
-          - swiftlang/swift:nightly-main
+          - swift:5.6
         swiftos:
           - focal
     runs-on: ubuntu-latest
@@ -59,7 +53,7 @@ jobs:
         run: |
           llvm-cov export -format lcov \
             --ignore-filename-regex='/(\.build|Tests|Sources|Snapshots|PerformanceTests)/' \
-            -instr-profile=$(dirname $(swift test --show-codecov-path))/default.profdata \
+            -instr-profile=$(dirname $(swift test --enable-code-coverage --show-codecov-path))/default.profdata \
             $(swift build --show-bin-path)/SwiftFormatPackageTests.xctest \
             >SwiftFormat.lcov
       - name: Codecov

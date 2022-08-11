@@ -1376,8 +1376,8 @@ public func tokenize(_ source: String) -> [Token] {
 
     func convertOpeningChevronToOperator(at index: Int) {
         assert(tokens[index] == .startOfScope("<"))
-        if scopeIndexStack.last == index {
-            scopeIndexStack.removeLast()
+        if let stackIndex = scopeIndexStack.lastIndex(of: index) {
+            scopeIndexStack.remove(at: stackIndex)
         }
         tokens[index] = .operator("<", .none)
         stitchOperators(at: index)
@@ -1692,7 +1692,9 @@ public func tokenize(_ source: String) -> [Token] {
                     closedGenericScopeIndexes.removeAll()
                 }
                 return
-            } else if scope == .startOfScope("<") {
+            } else if let scopeIndex = scopeIndexStack.last(where: {
+                tokens[$0] == .startOfScope("<")
+            }) {
                 // We think it's a generic at this point, but could be wrong
                 switch token {
                 case let .operator(string, _):

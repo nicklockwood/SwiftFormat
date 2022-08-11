@@ -3009,6 +3009,42 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testIfLessThanGreaterThanExpression() {
+        let input = "if x < (y + z), y > (z * w) {}"
+        let output: [Token] = [
+            .keyword("if"),
+            .space(" "),
+            .identifier("x"),
+            .space(" "),
+            .operator("<", .infix),
+            .space(" "),
+            .startOfScope("("),
+            .identifier("y"),
+            .space(" "),
+            .operator("+", .infix),
+            .space(" "),
+            .identifier("z"),
+            .endOfScope(")"),
+            .delimiter(","),
+            .space(" "),
+            .identifier("y"),
+            .space(" "),
+            .operator(">", .infix),
+            .space(" "),
+            .startOfScope("("),
+            .identifier("z"),
+            .space(" "),
+            .operator("*", .infix),
+            .space(" "),
+            .identifier("w"),
+            .endOfScope(")"),
+            .space(" "),
+            .startOfScope("{"),
+            .endOfScope("}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     func testIfLessThanIfGreaterThan() {
         let input = "if x < 0 {}\nif y > (0) {}"
         let output: [Token] = [

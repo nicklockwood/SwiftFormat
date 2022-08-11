@@ -88,6 +88,7 @@
 * [sortedSwitchCases](#sortedSwitchCases)
 * [wrapConditionalBodies](#wrapConditionalBodies)
 * [wrapEnumCases](#wrapEnumCases)
+* [wrapSingleLineComments](#wrapSingleLineComments)
 * [wrapSwitchCases](#wrapSwitchCases)
 
 # Deprecated Rules (do not use)
@@ -2339,6 +2340,10 @@ Wrap the opening brace of multiline statements.
 
 </details>
 <br/>
+
+## wrapSingleLineComments
+
+Wraps single line `//` comments that don't fit specified `--maxwidth` option.
 
 ## wrapSwitchCases
 

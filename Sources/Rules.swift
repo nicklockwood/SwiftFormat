@@ -4917,6 +4917,7 @@ public struct _FormatRules {
                 }
             }
             var index = i + 1
+            var chevronIndex: Int?
             outer: while index < endIndex {
                 switch formatter.tokens[index] {
                 case .operator("&&", .infix):
@@ -4928,6 +4929,18 @@ public struct _FormatRules {
                             continue outer
                         }
                         nextOpIndex = next
+                    }
+                    if let chevronIndex = chevronIndex,
+                       formatter.index(of: .operator(">", .infix), in: index ..< endIndex) != nil
+                    {
+                        // Check if this would cause ambiguity for chevrons
+                        var tokens = Array(formatter.tokens[i ... endIndex])
+                        tokens[index] = .delimiter(",")
+                        tokens.append(.endOfScope("}"))
+                        let reparsed = tokenize(sourceCode(for: tokens))
+                        if reparsed[chevronIndex] == .startOfScope("<") {
+                            return
+                        }
                     }
                     formatter.replaceToken(at: index, with: .delimiter(","))
                     if formatter.tokens[index - 1] == .space(" ") {
@@ -4945,6 +4958,8 @@ public struct _FormatRules {
                             endIndex -= 1
                         }
                     }
+                case .operator("<", .infix):
+                    chevronIndex = index
                 case .operator("||", .infix), .operator("=", .infix), .keyword("try"):
                     index = formatter.index(of: .delimiter(","), after: index) ?? endIndex
                 case .startOfScope:

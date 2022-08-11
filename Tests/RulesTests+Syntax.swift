@@ -1545,6 +1545,17 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.andOperator, exclude: ["indent"])
     }
 
+    func testNoReplaceAndOperatorWhereGenericsAmbiguous() {
+        let input = "if x < y && z > (a * b) {}"
+        testFormatting(for: input, rule: FormatRules.andOperator)
+    }
+
+    func testNoReplaceAndOperatorWhereGenericsAmbiguous2() {
+        let input = "if x < y && z && w > (a * b) {}"
+        let output = "if x < y, z && w > (a * b) {}"
+        testFormatting(for: input, output, rule: FormatRules.andOperator)
+    }
+
     func testNoReplaceAndInViewBuilder() {
         let input = """
         SomeView {

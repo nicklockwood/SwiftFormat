@@ -3479,6 +3479,7 @@ class WrappingTests: RulesTests {
     }
 
     // MARK: conditionsWrap auto
+
     func testConditionsWrapAutoForLongGuard() {
         let input = """
         guard let foo = foo, let bar = bar, let third = third else {}
@@ -3736,7 +3737,7 @@ class WrappingTests: RulesTests {
     }
 
     // MARK: conditionsWrap always
-    
+
     func testConditionWrapAlwaysOptionForLongGuard() {
         let input = """
         guard let foo = foo, let bar = bar, let third = third else {}

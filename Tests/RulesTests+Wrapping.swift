@@ -995,6 +995,8 @@ class WrappingTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.wrap, options: options)
     }
 
+    // ternary expressions
+
     func testWrapSimpleTernaryOperator() {
         let input = """
         let foo = fooCondition ? longValueThatContainsFoo : longValueThatContainsBar
@@ -1156,6 +1158,31 @@ class WrappingTests: RulesTests {
 
         let options = FormatOptions(wrapTernaryOperators: .beforeOperators, maxWidth: 0)
         testFormatting(for: input, rule: FormatRules.wrap, options: options)
+    }
+
+    func testNoWrapTernaryInsideStringLiteral() {
+        let input = """
+        "\\(true ? "Some string literal" : "Some other string")"
+        """
+        let options = FormatOptions(wrapTernaryOperators: .beforeOperators, maxWidth: 50)
+        testFormatting(for: input, rule: FormatRules.wrap, options: options)
+    }
+
+    func testWrapTernaryInsideMultilineStringLiteral() {
+        let input = """
+        let foo = \"""
+        \\(true ? "Some string literal" : "Some other string")"
+        \"""
+        """
+        let output = """
+        let foo = \"""
+        \\(true
+            ? "Some string literal"
+            : "Some other string")"
+        \"""
+        """
+        let options = FormatOptions(wrapTernaryOperators: .beforeOperators, maxWidth: 50)
+        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
     }
 
     // MARK: - wrapArguments

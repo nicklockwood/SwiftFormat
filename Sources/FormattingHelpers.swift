@@ -791,7 +791,8 @@ extension Formatter {
         forEach(.operator("?", .infix)) { conditionIndex, _ in
             guard
                 options.wrapTernaryOperators != .default,
-                let expressionStartIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: conditionIndex)
+                let expressionStartIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: conditionIndex),
+                !isInSingleLineStringLiteral(at: conditionIndex)
             else { return }
 
             // Find the : operator that separates the true and false branches

@@ -4306,7 +4306,7 @@ public struct _FormatRules {
     public let wrapSingleLineComments = FormatRule(
         help: "Wraps single line `//` comments that don't fit specified `--maxwidth` option.",
         disabledByDefault: true,
-        sharedOptions: ["maxwidth"]
+        sharedOptions: ["maxwidth", "indent", "linebreaks", "tabwidth", "assetliterals"]
     ) { formatter in
         let delimiterLength = "//".count
         var maxWidth = formatter.options.maxWidth
@@ -4327,7 +4327,7 @@ public struct _FormatRules {
                 linebreak = lb
                 originalLine = line
             } else {
-                linebreak = ""
+                linebreak = formatter.options.linebreak
                 originalLine = 0
             }
 
@@ -4340,13 +4340,20 @@ public struct _FormatRules {
             var currentPosition = i
 
             var comment = ""
-            while currentPosition < endOfLine, let nextToken = formatter.nextToken(after: currentPosition) {
+            while
+                currentPosition < endOfLine,
+                    let nextToken = formatter.nextToken(after: currentPosition),
+                    nextToken.string != linebreak
+            {
                 comment.append(nextToken.string)
                 currentPosition += 1
             }
 
+            guard !comment.contains("swiftformat:") && !comment.contains("swiftlint:") else { return }
+
             for word in comment.split(separator: " ", omittingEmptySubsequences: false) {
                 commentWords.append(word)
+
                 if indentation.count + delimiterLength + commentWords.joined(separator: " ").count > maxWidth {
                     commentWords.removeLast()
                     commentLines.append(commentWords.joined(separator: " "))
@@ -4358,13 +4365,29 @@ public struct _FormatRules {
                 commentLines.append(commentWords.joined(separator: " "))
             }
 
-            formatter.replaceTokens(in: i ... currentPosition, with: Array(commentLines.map {
-                [
-                    .space(indentation),
-                    .startOfScope("//"),
-                    .commentBody($0),
-                ]
-            }.joined(separator: [.linebreak(linebreak, originalLine)])))
+            formatter.replaceTokens(
+                in: i ... currentPosition,
+                with: Array(commentLines.map { commentLine -> [Token] in
+                    // Avoid adding `.space(" ")` to comment lines that already start with a whitespace.
+                    if commentLine.hasPrefix(" ") {
+                        return [
+                            .space(indentation),
+                            .startOfScope("//"),
+                            .commentBody(commentLine),
+                        ]
+                    } else {
+                        return [
+                            .space(indentation),
+                            .startOfScope("//"),
+                            .space(" "),
+                            .commentBody(commentLine),
+                        ]
+                    }
+                }
+                .joined(separator: [.linebreak(linebreak, originalLine)])
+                // Remove first `.space(indentation)` to avoid double indentation for the first comment line.
+                .dropFirst())
+            )
         }
     }
 

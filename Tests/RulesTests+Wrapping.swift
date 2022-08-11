@@ -3917,19 +3917,19 @@ class WrappingTests: RulesTests {
     func testWrapSingleLineCommentsIndentation() {
         let input = """
         func f() {
-          // a b cde fgh
-          let x = 1
+            // a b cde fgh
+            let x = 1
         }
         """
         let output = """
         func f() {
-          // a b
-          // cde
-          // fgh
-          let x = 1
+            // a b
+            // cde
+            // fgh
+            let x = 1
         }
         """
 
-        testFormatting(for: input, output, rule: FormatRules.wrapSingleLineComments, options: FormatOptions(maxWidth: 6))
+        testFormatting(for: input, output, rule: FormatRules.wrapSingleLineComments, options: FormatOptions(maxWidth: 13))
     }
 }

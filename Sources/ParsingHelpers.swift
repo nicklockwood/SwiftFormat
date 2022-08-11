@@ -852,8 +852,10 @@ extension Formatter {
         guard let token = token(at: i) else { return true }
         switch token {
         case let .keyword(string) where [
-            "where", "dynamicType", "rethrows", "throws", "async",
+            "where", "dynamicType", "rethrows", "throws",
         ].contains(string):
+            return false
+        case .identifier("async"):
             return false
         case .keyword("as"):
             // For case statements, we already indent

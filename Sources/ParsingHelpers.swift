@@ -967,21 +967,6 @@ extension Formatter {
         }
     }
 
-    /// Detect if the token at specified index is part of a string literal
-    func isStringLiteral(at index: Int) -> Bool {
-        for token in tokens[..<index].reversed() {
-            switch token {
-            case .stringBody:
-                return true
-            case .endOfScope where token.isStringDelimiter, .linebreak:
-                return false
-            default:
-                continue
-            }
-        }
-        return false
-    }
-
     /// Returns true if the token at the specified index is inside a single-line string literal (including inside an interpolation)
     func isInSingleLineStringLiteral(at i: Int) -> Bool {
         var i = i

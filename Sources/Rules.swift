@@ -4359,6 +4359,95 @@ public struct _FormatRules {
         }
     }
 
+    /// Wraps single-line comments that exceed given `FormatOptions.maxWidth` setting.
+    public let wrapSingleLineComments = FormatRule(
+        help: "Wraps single line `//` comments that don't fit specified `--maxwidth` option.",
+        disabledByDefault: true,
+        sharedOptions: ["maxwidth", "indent", "linebreaks", "tabwidth", "assetliterals"]
+    ) { formatter in
+        let delimiterLength = "//".count
+        var maxWidth = formatter.options.maxWidth
+        guard maxWidth > 3 else {
+            return
+        }
+
+        formatter.forEach(.startOfScope("//")) { i, _ in
+            // Check that unwrapping wouldn't exceed line length
+            let startOfLine = formatter.startOfLine(at: i)
+            let endOfLine = formatter.endOfLine(at: i)
+
+            let length = formatter.lineLength(from: startOfLine, upTo: endOfLine)
+
+            let linebreak: String
+            let originalLine: Int
+            if case let .linebreak(lb, line) = formatter.tokens[startOfLine] {
+                linebreak = lb
+                originalLine = line
+            } else {
+                linebreak = formatter.options.linebreak
+                originalLine = 0
+            }
+
+            guard length > maxWidth else { return }
+
+            let indentation = formatter.indentForLine(at: i)
+
+            var commentLines = [String]()
+            var commentWords = [Substring]()
+            var currentPosition = i
+
+            var comment = ""
+            while
+                currentPosition < endOfLine,
+                let nextToken = formatter.nextToken(after: currentPosition),
+                nextToken.string != linebreak
+            {
+                comment.append(nextToken.string)
+                currentPosition += 1
+            }
+
+            guard !comment.contains("swiftformat:"), !comment.contains("swiftlint:") else { return }
+
+            for word in comment.split(separator: " ", omittingEmptySubsequences: false) {
+                commentWords.append(word)
+
+                if indentation.count + delimiterLength + commentWords.joined(separator: " ").count > maxWidth {
+                    commentWords.removeLast()
+                    commentLines.append(commentWords.joined(separator: " "))
+                    commentWords = [word]
+                }
+            }
+
+            if !commentWords.isEmpty {
+                commentLines.append(commentWords.joined(separator: " "))
+            }
+
+            formatter.replaceTokens(
+                in: i ... currentPosition,
+                with: Array(commentLines.map { commentLine -> [Token] in
+                    // Avoid adding `.space(" ")` to comment lines that already start with a whitespace.
+                    if commentLine.hasPrefix(" ") {
+                        return [
+                            .space(indentation),
+                            .startOfScope("//"),
+                            .commentBody(commentLine),
+                        ]
+                    } else {
+                        return [
+                            .space(indentation),
+                            .startOfScope("//"),
+                            .space(" "),
+                            .commentBody(commentLine),
+                        ]
+                    }
+                }
+                .joined(separator: [.linebreak(linebreak, originalLine)])
+                // Remove first `.space(indentation)` to avoid double indentation for the first comment line.
+                .dropFirst())
+            )
+        }
+    }
+
     /// Writes one switch case per line
     public let wrapSwitchCases = FormatRule(
         help: "Writes one switch case per line.",

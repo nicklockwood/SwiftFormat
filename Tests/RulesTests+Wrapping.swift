@@ -995,6 +995,31 @@ class WrappingTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.wrap, options: options)
     }
 
+    func testNoWrapBeforeFirstArgumentInSingleLineStringInterpolation() {
+        let input = """
+        "a very long string literal with \\(interpolation) inside"
+        """
+        let options = FormatOptions(maxWidth: 40)
+        testFormatting(for: input, rule: FormatRules.wrap, options: options)
+    }
+
+    func testWrapBeforeFirstArgumentInMultineStringInterpolation() {
+        let input = """
+        \"""
+        a very long string literal with \\(interpolation) inside
+        \"""
+        """
+        let output = """
+        \"""
+        a very long string literal with \\(
+            interpolation
+        ) inside
+        \"""
+        """
+        let options = FormatOptions(maxWidth: 40)
+        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+    }
+
     // ternary expressions
 
     func testWrapSimpleTernaryOperator() {

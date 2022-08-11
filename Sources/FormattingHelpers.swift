@@ -502,7 +502,7 @@ extension Formatter {
             }
             guard mode != .disabled, let firstIdentifierIndex =
                 index(of: .nonSpaceOrCommentOrLinebreak, after: i),
-                !isStringLiteral(at: i)
+                !isInSingleLineStringLiteral(at: i)
             else {
                 lastIndex = i
                 return

@@ -3233,6 +3233,8 @@ class IndentTests: RulesTests {
                        exclude: ["consecutiveBlankLines", "wrapConditionalBodies"])
     }
 
+    // async
+
     func testAsyncThrowsNotUnindented() {
         let input = """
         func multilineFunction(
@@ -3240,8 +3242,46 @@ class IndentTests: RulesTests {
             bar _: String)
             async throws -> String {}
         """
-
         let options = FormatOptions(closingParenOnSameLine: true)
         testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
+    func testIndentAsyncLet() {
+        let input = """
+        func foo() async {
+                async let bar = baz()
+        async let baz = quux()
+        }
+        """
+        let output = """
+        func foo() async {
+            async let bar = baz()
+            async let baz = quux()
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.indent)
+    }
+
+    func testIndentAsyncLetAfterLet() {
+        let input = """
+        func myFunc() {
+            let x = 1
+            async let foo = bar()
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
+    func testIndentAsyncLetAfterBrace() {
+        let input = """
+        func myFunc() {
+            let x = 1
+            enum Baz {
+                case foo
+            }
+            async let foo = bar()
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
     }
 }

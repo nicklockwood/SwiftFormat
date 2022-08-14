@@ -1584,4 +1584,38 @@ class ParsingHelpersTests: XCTestCase {
             XCTAssertNil(formatter.startOfConditionalStatement(at: i))
         }
     }
+
+    // MARK: isStartOfStatement
+
+    func testAsyncAfterFuncNotTreatedAsStartOfStatement() {
+        let formatter = Formatter(tokenize("""
+        func foo()
+            async
+        """))
+        XCTAssertFalse(formatter.isStartOfStatement(at: 7))
+    }
+
+    func testAsyncLetTreatedAsStartOfStatement() {
+        let formatter = Formatter(tokenize("""
+        async let foo = bar()
+        """))
+        XCTAssert(formatter.isStartOfStatement(at: 0))
+    }
+
+    func testAsyncIdentifierTreatedAsStartOfStatement() {
+        let formatter = Formatter(tokenize("""
+        func async() {}
+        async()
+        """))
+        XCTAssert(formatter.isStartOfStatement(at: 9))
+    }
+
+    func testAsyncIdentifierNotTreatedAsStartOfStatement() {
+        let formatter = Formatter(tokenize("""
+        func async() {}
+        let foo =
+            async()
+        """))
+        XCTAssertFalse(formatter.isStartOfStatement(at: 16))
+    }
 }

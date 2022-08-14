@@ -855,8 +855,6 @@ extension Formatter {
             "where", "dynamicType", "rethrows", "throws",
         ].contains(string):
             return false
-        case .identifier("async"):
-            return false
         case .keyword("as"):
             // For case statements, we already indent
             return (scope ?? currentScope(at: i))?.string == "case"
@@ -890,6 +888,16 @@ extension Formatter {
                 return false
             }
             return true
+        case .identifier("async"):
+            if next(.nonSpaceOrCommentOrLinebreak, after: i) == .keyword("let") {
+                return true
+            }
+            if last(.nonSpaceOrCommentOrLinebreak, before: i) == .endOfScope(")"),
+               lastSignificantKeyword(at: i) == "func"
+            {
+                return false
+            }
+            fallthrough
         case .identifier:
             if isTrailingClosureLabel(at: i) {
                 return false

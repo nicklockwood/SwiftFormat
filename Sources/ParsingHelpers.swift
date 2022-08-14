@@ -463,7 +463,7 @@ extension Formatter {
             return true
         case .operator(_, .none),
              .keyword("deinit"), .keyword("catch"), .keyword("else"), .keyword("repeat"),
-             .keyword("throws"), .keyword("rethrows"), .keyword("async"):
+             .keyword("throws"), .keyword("rethrows"):
             return false
         case .endOfScope("}"):
             guard let startOfScope = index(of: .startOfScope("{"), before: prevIndex) else {
@@ -572,7 +572,7 @@ extension Formatter {
         var i = i
         while let token = token(at: i) {
             switch token {
-            case .keyword("in"), .keyword("throws"), .keyword("rethrows"), .keyword("async"):
+            case .keyword("in"), .keyword("throws"), .keyword("rethrows"):
                 guard let scopeIndex = index(of: .startOfScope, before: i, if: {
                     $0 == .startOfScope("{")
                 }) else {
@@ -1108,7 +1108,7 @@ extension Formatter {
               let nextIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: endIndex)
         else { return false }
         switch tokens[nextIndex] {
-        case .operator("->", .infix), .keyword("throws"), .keyword("rethrows"), .keyword("async"):
+        case .operator("->", .infix), .keyword("throws"), .keyword("rethrows"):
             return true
         case .keyword("in"):
             return last(.nonSpaceOrLinebreak, before: i) != .keyword("for")

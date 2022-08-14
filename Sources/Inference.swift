@@ -598,7 +598,6 @@ private struct Inference {
                     return true
                 case .keyword("throws"),
                      .keyword("rethrows"),
-                     .keyword("async"),
                      .keyword("where"),
                      .keyword("is"):
                     return false // Keep looking
@@ -1177,7 +1176,6 @@ private struct Inference {
                     return true
                 case .keyword("throws"),
                      .keyword("rethrows"),
-                     .keyword("async"),
                      .keyword("where"),
                      .keyword("is"):
                     return false // Keep looking

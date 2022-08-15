@@ -38,7 +38,7 @@ while true {
                     variables[name] = try evaluate(parsed)
                 case let .function(name, _):
                     let expression = AnyExpression(parsed, constants: variables)
-                    variables[name] = { (args: [Any]) throws -> Any in
+                    variables[name] = { (_: [Any]) throws -> Any in
                         try expression.evaluate()
                     }
                 default:

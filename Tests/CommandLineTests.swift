@@ -470,6 +470,16 @@ class CommandLineTests: XCTestCase {
             Swift.print(message)
         }
         // NOTE: to update regression suite, run again without `--lint` argument
-        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "Snapshots/Issues/1212.swift --unexclude Snapshots --symlinks follow --cache ignore --lint"), .ok)
+        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "Snapshots --unexclude Snapshots --symlinks follow --cache ignore --lint"), .ok)
+    }
+
+    func testRegressionSuiteNotDisabled() throws {
+        let commandLineTests = try String(contentsOf: URL(fileURLWithPath: #file))
+        let range = try XCTUnwrap(
+            commandLineTests.range(of: "testRegressionSuiteNotDisabled()")
+        )
+        XCTAssert(commandLineTests[..<range.lowerBound].contains("""
+        with: "Snapshots --unexclude Snapshots --symlinks follow --cache ignore --lint")
+        """))
     }
 }

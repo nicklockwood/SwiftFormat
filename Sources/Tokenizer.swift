@@ -1421,8 +1421,8 @@ public func tokenize(_ source: String) -> [Token] {
                 scopeIndexStack.removeLast()
             }
             string += nextString
-            tokens[index] = .operator(string, .none)
-            tokens.remove(at: index + 1)
+            tokens[index ... index + 1] = [.operator(string, .none)]
+            scopeIndexStack = scopeIndexStack.map { $0 > index ? $0 - 1 : $0 }
         }
         var index = index
         while let prevToken: Token = index > 0 ? tokens[index - 1] : nil,
@@ -1434,8 +1434,8 @@ public func tokenize(_ source: String) -> [Token] {
                 scopeIndexStack.removeLast()
             }
             string = prevString + string
-            tokens[index - 1] = .operator(string, .none)
-            tokens.remove(at: index)
+            tokens[index - 1 ... index] = [.operator(string, .none)]
+            scopeIndexStack = scopeIndexStack.map { $0 > index ? $0 - 1 : $0 }
             index -= 1
         }
         setOperatorType(at: index)

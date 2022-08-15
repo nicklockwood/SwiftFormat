@@ -3284,4 +3284,15 @@ class IndentTests: RulesTests {
         """
         testFormatting(for: input, rule: FormatRules.indent)
     }
+
+    func testAsyncFunctionArgumentLabelNotIndented() {
+        let input = """
+        func multilineFunction(
+            foo _: String,
+            async _: String)
+            -> String {}
+        """
+        let options = FormatOptions(closingParenOnSameLine: true)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
 }

@@ -22,6 +22,7 @@ Table of Contents
     - [Git pre-commit hook](#git-pre-commit-hook)
     - [On CI using Danger](#on-ci-using-danger)
     - [Bazel build](#bazel-build)
+    - [Docker](#docker)
 - [Configuration](#configuration)
     - [Options](#options)
     - [Rules](#rules)
@@ -388,6 +389,39 @@ Bazel Build
 
 If you use [Bazel](https://bazel.build/) to build your Swift projects and want to ensure that only properly formatted code is merged to your main branch, try [rules_swiftformat](https://github.com/cgrindel/rules_swiftformat). The repository contains Bazel rules and macros that format Swift source files using SwiftFormat, test that the formatted files exist in the workspace directory, and copy the formatted files to the workspace directory.
 
+
+Docker
+-----------
+
+SwiftFormat publishes releases into [GitHub Packages](https://github.com/features/packages) Docker registry. To pull the image call:
+
+```bash
+$ docker pull ghcr.io/nicklockwood/swiftformat:latest
+```
+
+By default, the container runs `swiftformat .` Therefore, you need to provide a path either via an argument:
+
+```bash
+docker run --rm -v /local/source/path:/work ghcr.io/nicklockwood/swiftformat:latest /work
+```
+
+or by changing the working dir:
+
+```bash
+docker run --rm -v /local/source/path:/work -w /work ghcr.io/nicklockwood/swiftformat:latest
+```
+
+To check the installed SwiftFormat version:
+
+```bash
+docker run --rm ghcr.io/nicklockwood/swiftformat:latest --version
+```
+
+Linting example:
+
+```bash
+docker run --rm -v /local/source/path:/work ghcr.io/nicklockwood/swiftformat:latest /work --lint
+```
 
 Configuration
 -------------

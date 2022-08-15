@@ -2506,6 +2506,38 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testChevronOperatorDoesntBreakScopeStack() {
+        let input = "if a << b != 0 { let foo = bar() }"
+        let output: [Token] = [
+            .keyword("if"),
+            .space(" "),
+            .identifier("a"),
+            .space(" "),
+            .operator("<<", .infix),
+            .space(" "),
+            .identifier("b"),
+            .space(" "),
+            .operator("!=", .infix),
+            .space(" "),
+            .number("0", .integer),
+            .space(" "),
+            .startOfScope("{"),
+            .space(" "),
+            .keyword("let"),
+            .space(" "),
+            .identifier("foo"),
+            .space(" "),
+            .operator("=", .infix),
+            .space(" "),
+            .identifier("bar"),
+            .startOfScope("("),
+            .endOfScope(")"),
+            .space(" "),
+            .endOfScope("}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     func testGenericAsFunctionType() {
         let input = "Foo<Bar,Baz>->Void"
         let output: [Token] = [

@@ -287,6 +287,7 @@ private func processDirectory(_ inputURL: URL, with options: inout Options, logg
         let versionString = try String(contentsOf: versionFile, encoding: .utf8)
             .trimmingCharacters(in: .whitespacesAndNewlines)
         if Version(rawValue: versionString) != nil {
+            logger?("Reading swift-version file at \(versionFile.path) (version \(versionString))")
             args["swiftversion"] = versionString
         } else {
             // Don't treat as error, per: https://github.com/nicklockwood/SwiftFormat/issues/639

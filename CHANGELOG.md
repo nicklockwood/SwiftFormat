@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.49.16](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.49.16) (2022-08-15)
+
+- Fixed `async let` indenting regression (broken in 0.49.15)
+
 ## [0.49.15](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.49.15) (2022-08-11)
 
 - Fixed illegal wrapping of ternary expressions inside single-line string interpolation

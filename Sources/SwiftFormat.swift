@@ -286,7 +286,9 @@ private func processDirectory(_ inputURL: URL, with options: inout Options, logg
     if manager.fileExists(atPath: versionFile.path) {
         let versionString = try String(contentsOf: versionFile, encoding: .utf8)
             .trimmingCharacters(in: .whitespacesAndNewlines)
-        if Version(rawValue: versionString) != nil {
+        if args["swiftversion"] != nil {
+            logger?("Ignoring swift-version file at \(versionFile.path)")
+        } else if Version(rawValue: versionString) != nil {
             logger?("Reading swift-version file at \(versionFile.path) (version \(versionString))")
             args["swiftversion"] = versionString
         } else {

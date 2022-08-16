@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.49.17](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.49.17) (2022-08-16)
+
+- Fixed unexpected token error occurring at end of scope after a `<<` operator
+- Fixed bug where function arguments named `async:` would expectedly be indented
+- SwiftFormat command-line tool now logs the location and version of .swift-version files it encounters
+- Added Docker image (thanks to Arthur Semenyutin for the script, see README for details)
+
 ## [0.49.16](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.49.16) (2022-08-15)
 
 - Fixed `async let` indenting regression (broken in 0.49.15)
@@ -384,7 +391,7 @@
 ## [0.47.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.47.3) (2020-11-09)
 
 - Fixed bug with `extensionAccessControl` increasing extension access level beyond extended type
-- Fixed regression with non-standard `.swift-version` contents being flagged as an error
+- Fixed regression with non-standard .swift-version contents being flagged as an error
 - Fixed bug in `hoistPatternLet` rule when using `--patternlet inline`
 - Fixed case where `enumNamespaces` was incorrectly applied
 - Fixed indenting of wrapped line starting with a closing paren or brace
@@ -395,7 +402,7 @@
 ## [0.47.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.47.2) (2020-10-30)
 
 - The `markTypes`, `organizeDeclarations` and`extensionAccessControl` rules now respect comment directives
-- Errors in `.swiftformat` config files no longer fail silently
+- Errors in .swiftformat config files no longer fail silently
 - Fixed bug in `--modifierorder` config and added support for SwiftLint modifierorder syntax
 - Fixed issue where `hoistPatternLet` breaks compilation due to a quirk in Swift parser
 - Fixed bug in `hoistPatternLet` when expression is wrapped or contains spaces
@@ -471,7 +478,7 @@
 
 ## [0.45.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.45.5) (2020-08-09)
 
-- Fixed `.swiftformat` configuration file processing when using `--stdinpath` option
+- Fixed .swiftformat configuration file processing when using `--stdinpath` option
 - Fixed bug where conditional imports could be mangled by `sortedImports` rule
 - Fixed indenting of braces after throwing function with wrapped return type
 - Fixed indenting of wrapped `in` keyword inside closure
@@ -887,7 +894,7 @@
 - Relative indentation is now preserved inside multiline comment blocks
 - Fixed indenting of `switch` cases using Swift 5's new `@unknown` attribute 
 - Fixed some errors in documentation and warning messages
-- The `.swift-version` file parser now permits cases like `3.0-PREVIEW-4`
+- The .swift-version file parser now permits cases like `3.0-PREVIEW-4`
 - Fixed the performance test target, which was broken in Xcode 10.1
 
 ## [0.39.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.39.4) (2019-03-03)
@@ -902,7 +909,7 @@
 
 - Fixed a bug with `hoistPatternLet` rule for switch cases without a space
 - Fixed a bug in the `typeSugar` rule when referencing nested types
-- The `.swiftformat` configuration file type is now associated with the SwiftFormat for Xcode app
+- The .swiftformat configuration file type is now associated with the SwiftFormat for Xcode app
 
 ## [0.39.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.39.2) (2019-02-14)
 

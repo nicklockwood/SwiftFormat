@@ -1580,7 +1580,7 @@ public struct _FormatRules {
                             .endOfScope("}"), .endOfScope("]"), .endOfScope(")"),
                         ].contains(formatter.tokens[nextTokenIndex!]) ||
                             formatter.isStartOfStatement(at: nextTokenIndex!, in: scopeStack.last) || (
-                                ((formatter.tokens[nextTokenIndex!].isIdentifier && formatter.tokens[nextTokenIndex!] != .identifier("async")) || [
+                                ((formatter.tokens[nextTokenIndex!].isIdentifier && !(formatter.tokens[nextTokenIndex!] == .identifier("async") && formatter.currentScope(at: nextTokenIndex!) != .startOfScope("("))) || [
                                     .keyword("try"), .keyword("await"),
                                 ].contains(formatter.tokens[nextTokenIndex!])) &&
                                     formatter.last(.nonSpaceOrCommentOrLinebreak, before: nextTokenIndex!).map {

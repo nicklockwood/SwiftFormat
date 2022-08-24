@@ -1790,6 +1790,20 @@ class IndentTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.indent, options: options)
     }
 
+    func testCommentSeparatedChainedFunctionAfterBraceWithXcodeIndentation() {
+        let input = """
+        func foo() {
+            bar {
+                doSomething()
+            }
+            // baz
+            .baz()
+        }
+        """
+        let options = FormatOptions(xcodeIndentation: true)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
     func testChainedFunctionsInPropertySetterOnNewLineWithXcodeIndentation() {
         let input = """
         private let foo =

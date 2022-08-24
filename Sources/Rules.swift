@@ -1635,10 +1635,24 @@ public struct _FormatRules {
                         linewrapStack[linewrapStack.count - 1] = false
                         indent = indentStack.last!
                     } else {
-                        let shouldIndentLeadingDotStatement = formatter.options.xcodeIndentation
-                            || (formatter.startOfConditionalStatement(at: i) != nil
-                                && formatter.options.wrapConditions == .beforeFirst)
-
+                        let shouldIndentLeadingDotStatement: Bool
+                        if formatter.options.xcodeIndentation {
+                            if let prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i),
+                               formatter.token(at: formatter.startOfLine(
+                                   at: prevIndex, excludingIndent: true
+                               )) == .endOfScope("}"),
+                               formatter.index(of: .linebreak, in: prevIndex + 1 ..< i) != nil
+                            {
+                                shouldIndentLeadingDotStatement = false
+                            } else {
+                                shouldIndentLeadingDotStatement = true
+                            }
+                        } else {
+                            shouldIndentLeadingDotStatement = (
+                                formatter.startOfConditionalStatement(at: i) != nil
+                                    && formatter.options.wrapConditions == .beforeFirst
+                            )
+                        }
                         if shouldIndentLeadingDotStatement,
                            formatter.next(.nonSpace, after: i) == .operator(".", .infix),
                            let prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i),

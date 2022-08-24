@@ -2770,7 +2770,7 @@ public struct _FormatRules {
             }
             if let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: prevIndex) {
                 switch prevToken {
-                case .keyword("if"), .keyword("guard"), .keyword("while"),
+                case .keyword("if"), .keyword("guard"), .keyword("while"), .identifier("async"),
                      .delimiter(",") where formatter.currentScope(at: i) != .startOfScope("("):
                     return
                 default:

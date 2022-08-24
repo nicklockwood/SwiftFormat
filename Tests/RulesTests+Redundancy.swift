@@ -1596,6 +1596,11 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantLet)
     }
 
+    func testNoRemoveAsyncLet() {
+        let input = "async let _ = foo()"
+        testFormatting(for: input, rule: FormatRules.redundantLet)
+    }
+
     // MARK: - redundantPattern
 
     func testRemoveRedundantPatternInIfCase() {

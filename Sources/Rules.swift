@@ -7080,7 +7080,7 @@ public struct _FormatRules {
                 }
             }
 
-            // Replace all of the uses of generic types that are elible to remove
+            // Replace all of the uses of generic types that are eligible to remove
             // with the corresponding opaque parameter declaration
             for index in parameterListRange.reversed() {
                 if
@@ -7094,6 +7094,14 @@ public struct _FormatRules {
             // Remove types from the generic parameter list
             let genericParameterListSourceRanges = sourceRangesToRemove.filter { $0.lowerBound < genericSignatureEndIndex }
             formatter.removeTokens(in: Array(genericParameterListSourceRanges))
+
+            // If we left a dangling comma at the end of the generic parameter list, we need to clean it up
+            if let newGenericSignatureEndIndex = formatter.endOfScope(at: genericSignatureStartIndex),
+               let trailingCommaIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: newGenericSignatureEndIndex),
+               formatter.tokens[trailingCommaIndex] == .delimiter(",")
+            {
+                formatter.removeTokens(in: trailingCommaIndex ..< newGenericSignatureEndIndex)
+            }
 
             // If we removed all of the generic types, we also have to remove the angle brackets
             if let newGenericSignatureEndIndex = formatter.index(of: .nonSpaceOrLinebreak, after: genericSignatureStartIndex),

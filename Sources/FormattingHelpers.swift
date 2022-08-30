@@ -1970,12 +1970,12 @@ extension Formatter {
                 let constrainedTypeName = tokens[genericTypeNameIndex ..< delineatorIndex]
                     .map { $0.string }
                     .joined()
-                    .trimmingCharacters(in: .init(charactersIn: " \n,<>{}"))
+                    .trimmingCharacters(in: .init(charactersIn: " \n,{}"))
 
                 let conformanceName = tokens[(delineatorIndex + 1) ... typeEndIndex]
                     .map { $0.string }
                     .joined()
-                    .trimmingCharacters(in: .init(charactersIn: " \n,<>{}"))
+                    .trimmingCharacters(in: .init(charactersIn: " \n,{}"))
 
                 genericType.conformances.append(.init(
                     name: conformanceName,

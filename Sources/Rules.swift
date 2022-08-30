@@ -7020,6 +7020,15 @@ public struct _FormatRules {
                     }
                 }
 
+                // In some weird cases you can also have a generic constraint that references a generic
+                // type from the parent context with the same name. We can't change these, since it
+                // can cause the build to break
+                for conformance in genericType.conformances {
+                    if tokenize(conformance.name).contains(where: { $0.string == genericType.name }) {
+                        genericType.eligbleToRemove = false
+                    }
+                }
+
                 // A generic used as a return type is different from an opaque result type (SE-244).
                 // For example in `-> T where T: Fooable`, the generic type is caller-specified,
                 // but with `-> some Fooable` the generic type is specified by the function implementation.

@@ -2815,6 +2815,28 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.opaqueGenericParameters, options: options)
     }
 
+    func testOpaqueGenericParametersRuleSuccessfullyTerminatesInSampleCode() {
+        let input = """
+        class Service {
+            public func run() {}
+            private let foo: Foo<Void, Void>
+
+            private func a() -> Eventual<Void> {}
+            private func b() -> Eventual<Void> {}
+            private func c() -> Eventual<Void> {}
+            private func d() -> Eventual<Void> {}
+            private func e() -> Eventual<Void> {}
+            private func f() -> Eventual<Void> {}
+            private func g() -> Eventual<Void> {}
+            private func h() -> Eventual<Void> {}
+            private func i() {}
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, rule: FormatRules.opaqueGenericParameters, options: options)
+    }
+
     // MARK: - genericExtensions
 
     func testGenericExtensionNotModifiedBeforeSwift5_7() {

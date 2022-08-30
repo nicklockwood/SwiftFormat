@@ -2837,7 +2837,7 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.opaqueGenericParameters, options: options)
     }
 
-    func testReturnedTupleUsingTypeAlsoUsedInParams() {
+    func testGenericParameterUsedInConstraintOfOtherTypeNotChanged() {
         let input = """
         func combineResults<ASuccess, AFailure, BSuccess, BFailure>(
             _: Potential<ASuccess, AFailure>,
@@ -2846,6 +2846,19 @@ class SyntaxTests: RulesTests {
             Success == (Result<ASuccess, AFailure>, Result<BSuccess, BFailure>),
             Failure == Never
         {}
+        """
+
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, rule: FormatRules.opaqueGenericParameters, options: options)
+    }
+
+    func testGenericParameterInheritedFromContextNotRemoved() {
+        let input = """
+        func assign<Target>(
+            on _: DispatchQueue,
+            to _: AssignTarget<Target>,
+            at _: ReferenceWritableKeyPath<Target, Value>
+        ) where Value: Equatable {}
         """
 
         let options = FormatOptions(swiftVersion: "5.7")

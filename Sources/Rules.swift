@@ -6974,19 +6974,26 @@ public struct _FormatRules {
                 returnTypeTokens = Array(formatter.tokens[returnTypeRange])
             }
 
+            let genericParameterListRange = (genericSignatureStartIndex + 1) ..< genericSignatureEndIndex
+            let genericParameterListTokens = formatter.tokens[genericParameterListRange]
+
             let parameterListRange = (paramListStartIndex + 1) ..< paramListEndIndex
             let parameterListTokens = formatter.tokens[parameterListRange]
 
             for genericType in genericTypes {
+                // If the generic type doesn't occur in the generic parameter list (<...>),
+                // then we inherited it from the generic context and can't replace the type
+                // with an opaque parameter.
+                if !genericParameterListTokens.contains(where: { $0.string == genericType.name }) {
+                    genericType.eligbleToRemove = false
+                }
+
                 // If the generic type occurs multiple times in the parameter list,
                 // it isn't eligible to be removed. For example `(T, T) where T: Foo`
                 // requires the two params to be the same underlying type, but
                 // `(some Foo, some Foo)` does not.
-                //  - Additionally, if the generic type _doesn't_ occur in the parameter list
-                //    then we inherited it from the generic context and can't replace the type
-                //    with a opaque parameter.
                 let countInParameterList = parameterListTokens.filter { $0.string == genericType.name }.count
-                if countInParameterList != 1 {
+                if countInParameterList > 1 {
                     genericType.eligbleToRemove = false
                 }
 

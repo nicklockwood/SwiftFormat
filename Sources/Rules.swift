@@ -6937,10 +6937,12 @@ public struct _FormatRules {
                 formatter.options.swiftVersion >= "5.7",
                 // Validate that this is a generic method using angle bracket syntax,
                 // and find the indices for all of the key tokens
+                let paramListStartIndex = formatter.index(of: .startOfScope("("), after: funcIndex),
+                let paramListEndIndex = formatter.endOfScope(at: paramListStartIndex),
                 let genericSignatureStartIndex = formatter.index(of: .startOfScope("<"), after: funcIndex),
                 let genericSignatureEndIndex = formatter.endOfScope(at: genericSignatureStartIndex),
-                let paramListStartIndex = formatter.index(of: .startOfScope("("), after: genericSignatureEndIndex),
-                let paramListEndIndex = formatter.endOfScope(at: paramListStartIndex),
+                genericSignatureStartIndex < paramListStartIndex,
+                genericSignatureEndIndex < paramListStartIndex,
                 let openBraceIndex = formatter.index(of: .startOfScope("{"), after: paramListEndIndex)
             else { return }
 
@@ -7037,7 +7039,7 @@ public struct _FormatRules {
                 }
             }
 
-            // Remove types from the generic paremeter list
+            // Remove types from the generic parameter list
             let genericParameterListSourceRanges = sourceRangesToRemove.filter { $0.lowerBound < genericSignatureEndIndex }
             formatter.removeTokens(in: Array(genericParameterListSourceRanges))
 

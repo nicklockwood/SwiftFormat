@@ -2943,6 +2943,19 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.opaqueGenericParameters, options: options)
     }
 
+    func testDoesntChangeTypeWithConstraintThatReferencesItself() {
+        // This is a weird one but in the actual code this comes from `ViewModelContext` is both defined
+        // on the parent type of this declaration (where it has additional important constraints),
+        // and again in the method itself. Changing this to an opaque parameter breaks the build, because
+        // it loses the generic constraints applied by the parent type.
+        let input = """
+        func makeSections<ViewModelContext: RoutingBehaviors<ViewModelContext.Dependencies>>(_: ViewModelContext) {}
+        """
+
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, rule: FormatRules.opaqueGenericParameters, options: options)
+    }
+
     // MARK: - genericExtensions
 
     func testGenericExtensionNotModifiedBeforeSwift5_7() {

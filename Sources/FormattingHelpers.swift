@@ -1882,7 +1882,18 @@ extension Formatter {
                 }
             }
 
-            return tokenize("some \(constraintRepresentations.joined(separator: " & "))")
+            if !constraintRepresentations.isEmpty {
+                return tokenize("some \(constraintRepresentations.joined(separator: " & "))")
+            }
+
+            // If there aren't any constraints but we have exactly one concrete type,
+            // we can just use that concrete type directly
+            let concreteTypes = conformances.filter { $0.type == .conceteType }
+            if concreteTypes.count == 1 {
+                return tokenize(concreteTypes[0].name)
+            }
+
+            return nil
         }
     }
 

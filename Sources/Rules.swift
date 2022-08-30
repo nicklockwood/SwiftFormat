@@ -3781,7 +3781,7 @@ public struct _FormatRules {
                     }
                     removeUsed(from: &argNames, with: &associatedData,
                                locals: locals, in: i + 1 ..< endIndex)
-                    i = endIndex
+                    i = endIndex - 1
                 case .operator("=", .infix), .delimiter(":"), .startOfScope(":"),
                      .keyword("in"), .keyword("where"):
                     wasDeclaration = isDeclaration

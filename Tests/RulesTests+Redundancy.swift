@@ -5274,6 +5274,24 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.unusedArguments)
     }
 
+    func testShadowedUsedArgumentInSwitchCase() {
+        let input = """
+        func foo(bar baz: Foo) -> Foo? {
+            switch (a, b) {
+            case (0, _),
+                 (_, nil):
+                return .none
+            case let (1, baz?):
+                return .bar(baz)
+            default:
+                return baz
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedArguments,
+                       exclude: ["sortedSwitchCases"])
+    }
+
     func testTryArgumentNotMarkedUnused() {
         let input = """
         func foo(bar: String) throws -> String? {

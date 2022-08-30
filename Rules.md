@@ -571,6 +571,10 @@ Option | Description
 Converts types used for hosting only static members into enums (an empty enum is
 the canonical way to create a namespace in Swift as it can't be instantiated).
 
+Option | Description
+--- | ---
+`--enumnamespaces` | Change type to enum: "always" (default) or "structs-only"
+
 ## extensionAccessControl
 
 Configure the placement of an extension's access control keyword.

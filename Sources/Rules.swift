@@ -796,7 +796,8 @@ public struct _FormatRules {
         help: """
         Converts types used for hosting only static members into enums (an empty enum is
         the canonical way to create a namespace in Swift as it can't be instantiated).
-        """
+        """,
+        options: ["enumnamespaces"]
     ) { formatter in
         func rangeHostsOnlyStaticMembersAtTopLevel(_ range: Range<Int>) -> Bool {
             // exit for empty declarations
@@ -859,7 +860,10 @@ public struct _FormatRules {
             return false
         }
 
-        formatter.forEachToken(where: { [.keyword("class"), .keyword("struct")].contains($0) }) { i, _ in
+        formatter.forEachToken(where: { [
+            .keyword("class"),
+            .keyword("struct"),
+        ].contains($0) }) { i, token in
             guard formatter.last(.keyword, before: i) != .keyword("import"),
                   // exit if class is a type modifier
                   let next = formatter.next(.nonSpaceOrCommentOrLinebreak, after: i),
@@ -876,7 +880,12 @@ public struct _FormatRules {
             else {
                 return
             }
-
+            switch formatter.options.enumNamespaces {
+            case .structsOnly where token == .keyword("struct"), .always:
+                break
+            case .structsOnly:
+                return
+            }
             let range = braceIndex + 1 ..< endIndex
             if rangeHostsOnlyStaticMembersAtTopLevel(range),
                !rangeContainsTypeInit(name, in: range), !rangeContainsSelfAssignment(range)

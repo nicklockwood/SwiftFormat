@@ -870,7 +870,9 @@ public struct _FormatRules {
                   // exit if type is conforming any types
                   !formatter.tokens[i ... braceIndex].contains(.delimiter(":")),
                   let endIndex = formatter.index(of: .endOfScope("}"), after: braceIndex),
-                  case let .identifier(name)? = formatter.next(.identifier, after: i + 1)
+                  case let .identifier(name)? = formatter.next(.identifier, after: i + 1),
+                  // exit if open for extension
+                  !formatter.modifiersForDeclaration(at: i, contains: "open")
             else {
                 return
             }

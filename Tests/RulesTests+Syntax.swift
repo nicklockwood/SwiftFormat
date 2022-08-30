@@ -1256,6 +1256,15 @@ class SyntaxTests: RulesTests {
                        exclude: ["modifierOrder", "specifiers"])
     }
 
+    func testOpenClassNotReplacedByEnum() {
+        let input = """
+        open class Foo {
+            public static let bar = "bar"
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.enumNamespaces)
+    }
+
     // MARK: - numberFormatting
 
     // hex case

@@ -2894,6 +2894,19 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.opaqueGenericParameters, options: options)
     }
 
+    func testAddsParensAroundTypeIfNecessary() {
+        let input = """
+        func foo<Foo>(_: Foo.Type) {}
+        """
+
+        let output = """
+        func foo(_: (some Any).Type) {}
+        """
+
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, output, rule: FormatRules.opaqueGenericParameters, options: options)
+    }
+
     // MARK: - genericExtensions
 
     func testGenericExtensionNotModifiedBeforeSwift5_7() {

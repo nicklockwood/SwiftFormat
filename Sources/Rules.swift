@@ -7085,8 +7085,15 @@ public struct _FormatRules {
             for index in parameterListRange.reversed() {
                 if
                     let matchingGenericType = genericsEligibleToRemove.first(where: { $0.name == formatter.tokens[index].string }),
-                    let opaqueParameter = matchingGenericType.asOpaqueParameter
+                    var opaqueParameter = matchingGenericType.asOpaqueParameter
                 {
+                    // If this instance of the type is followed by a `.` then we have to wrap the new type in parens
+                    // (e.g. changing `Foo.Type` to `some Any.Type` breaks the build, it needs to be `(some Any).Type`)
+                    if formatter.next(.nonSpaceOrCommentOrLinebreak, after: index) == .operator(".", .infix) {
+                        opaqueParameter.insert(.startOfScope("("), at: 0)
+                        opaqueParameter.append(.endOfScope(")"))
+                    }
+
                     formatter.replaceToken(at: index, with: opaqueParameter)
                 }
             }

@@ -2909,6 +2909,19 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.opaqueGenericParameters, options: options)
     }
 
+    func testHandlesSingleExactTypeGenericConstraint() {
+        let input = """
+        func foo<T>(with _: T) -> Foo where T == Dependencies {}
+        """
+
+        let output = """
+        func foo(with _: Dependencies) -> Foo {}
+        """
+
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, output, rule: FormatRules.opaqueGenericParameters, options: options)
+    }
+
     // MARK: - genericExtensions
 
     func testGenericExtensionNotModifiedBeforeSwift5_7() {

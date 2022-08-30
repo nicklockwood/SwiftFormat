@@ -6943,7 +6943,8 @@ public struct _FormatRules {
                 let genericSignatureEndIndex = formatter.endOfScope(at: genericSignatureStartIndex),
                 genericSignatureStartIndex < paramListStartIndex,
                 genericSignatureEndIndex < paramListStartIndex,
-                let openBraceIndex = formatter.index(of: .startOfScope("{"), after: paramListEndIndex)
+                let openBraceIndex = formatter.index(of: .startOfScope("{"), after: paramListEndIndex),
+                let closeBraceIndex = formatter.endOfScope(at: openBraceIndex)
             else { return }
 
             var genericTypes = [Formatter.GenericType]()
@@ -6980,12 +6981,16 @@ public struct _FormatRules {
             let parameterListRange = (paramListStartIndex + 1) ..< paramListEndIndex
             let parameterListTokens = formatter.tokens[parameterListRange]
 
+            let bodyRange = (openBraceIndex + 1) ..< closeBraceIndex
+            let bodyTokens = formatter.tokens[bodyRange]
+
             for genericType in genericTypes {
                 // If the generic type doesn't occur in the generic parameter list (<...>),
                 // then we inherited it from the generic context and can't replace the type
                 // with an opaque parameter.
                 if !genericParameterListTokens.contains(where: { $0.string == genericType.name }) {
                     genericType.eligbleToRemove = false
+                    continue
                 }
 
                 // If the generic type occurs multiple times in the parameter list,
@@ -6995,6 +7000,13 @@ public struct _FormatRules {
                 let countInParameterList = parameterListTokens.filter { $0.string == genericType.name }.count
                 if countInParameterList > 1 {
                     genericType.eligbleToRemove = false
+                    continue
+                }
+
+                // If the generic type occurs in the body of the function, then it can't be removed
+                if bodyTokens.contains(where: { $0.string == genericType.name }) {
+                    genericType.eligbleToRemove = false
+                    continue
                 }
 
                 // If the generic type is used in a constraint of any other generic type, then the type
@@ -7017,6 +7029,7 @@ public struct _FormatRules {
                    returnTypeTokens.contains(where: { $0.string == genericType.name })
                 {
                     genericType.eligbleToRemove = false
+                    continue
                 }
 
                 // If the method that generates the opaque parameter syntax doesn't succeed,
@@ -7024,6 +7037,7 @@ public struct _FormatRules {
                 // can't be represented using this syntax).
                 if genericType.asOpaqueParameter == nil {
                     genericType.eligbleToRemove = false
+                    continue
                 }
             }
 

@@ -2875,6 +2875,25 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.opaqueGenericParameters, options: options)
     }
 
+    func testFinalGenericParamRemovedProperlyWithoutHangingComma() {
+        let input = """
+        func foo<Bar, Baaz>(
+            bar _: (Bar) -> Void,
+            baaz _: Baaz
+        ) {}
+        """
+
+        let output = """
+        func foo<Bar>(
+            bar _: (Bar) -> Void,
+            baaz _: some Any
+        ) {}
+        """
+
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, output, rule: FormatRules.opaqueGenericParameters, options: options)
+    }
+
     // MARK: - genericExtensions
 
     func testGenericExtensionNotModifiedBeforeSwift5_7() {

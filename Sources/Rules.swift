@@ -6979,12 +6979,26 @@ public struct _FormatRules {
 
             for genericType in genericTypes {
                 // If the generic type occurs multiple times in the parameter list,
-                // it isnt eligible to be removed. For example `(T, T) where T: Foo`
+                // it isn't eligible to be removed. For example `(T, T) where T: Foo`
                 // requires the two params to be the same underlying type, but
                 // `(some Foo, some Foo)` does not.
+                //  - Additionally, if the generic type _doesn't_ occur in the parameter list
+                //    then we inherited it from the generic context and can't replace the type
+                //    with a opaque parameter.
                 let countInParameterList = parameterListTokens.filter { $0.string == genericType.name }.count
-                if countInParameterList > 1 {
+                if countInParameterList != 1 {
                     genericType.eligbleToRemove = false
+                }
+
+                // If the generic type is used in a constraint of any other generic type, then the type
+                // cant be removed without breaking that other type
+                let otherGenericTypes = genericTypes.filter { $0.name != genericType.name }
+                let otherTypeConformances = otherGenericTypes.flatMap { $0.conformances }
+                for otherTypeConformance in otherTypeConformances {
+                    let conformanceTokens = formatter.tokens[otherTypeConformance.sourceRange]
+                    if conformanceTokens.contains(where: { $0.string == genericType.name }) {
+                        genericType.eligbleToRemove = false
+                    }
                 }
 
                 // A generic used as a return type is different from an opaque result type (SE-244).

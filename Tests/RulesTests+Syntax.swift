@@ -2837,6 +2837,21 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.opaqueGenericParameters, options: options)
     }
 
+    func testReturnedTupleUsingTypeAlsoUsedInParams() {
+        let input = """
+        func combineResults<ASuccess, AFailure, BSuccess, BFailure>(
+            _: Potential<ASuccess, AFailure>,
+            _: Potential<BSuccess, BFailure>
+        ) -> Potential<Success, Never> where
+            Success == (Result<ASuccess, AFailure>, Result<BSuccess, BFailure>),
+            Failure == Never
+        {}
+        """
+
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, rule: FormatRules.opaqueGenericParameters, options: options)
+    }
+
     // MARK: - genericExtensions
 
     func testGenericExtensionNotModifiedBeforeSwift5_7() {

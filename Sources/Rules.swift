@@ -7039,6 +7039,21 @@ public struct _FormatRules {
                     genericType.eligbleToRemove = false
                     continue
                 }
+
+                // If the generic type is used as a closure type parameter, it can't be removed or the compiler
+                // will emit a "'some' cannot appear in parameter position in parameter type <closure type>" error
+                for tokenIndex in funcIndex ... closeBraceIndex {
+                    if
+                        formatter.tokens[tokenIndex].string == genericType.name,
+                        let closureTypeEndParenIndex = formatter.endOfScope(at: tokenIndex),
+                        formatter.token(at: closureTypeEndParenIndex) == .endOfScope(")"),
+                        closureTypeEndParenIndex != paramListEndIndex,
+                        let tokenAfterClosingParen = formatter.next(.nonSpaceOrCommentOrLinebreak, after: closureTypeEndParenIndex),
+                        [.operator("->", .infix), .keyword("throws"), .identifier("async")].contains(tokenAfterClosingParen)
+                    {
+                        genericType.eligbleToRemove = false
+                    }
+                }
             }
 
             let genericsEligibleToRemove = genericTypes.filter { $0.eligbleToRemove }

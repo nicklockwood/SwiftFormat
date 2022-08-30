@@ -2748,23 +2748,6 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.opaqueGenericParameters, options: options)
     }
 
-    func testGenericTypeUsedInClosure() {
-        let input = """
-        func foo<T: Fooable>(_ closure: (T) -> Void) {
-            closure(foo)
-        }
-        """
-
-        let output = """
-        func foo(_ closure: (some Fooable) -> Void) {
-            closure(foo)
-        }
-        """
-
-        let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, output, rule: FormatRules.opaqueGenericParameters, options: options)
-    }
-
     func testGenericTypeUsedInClosureMultipleTimes() {
         let input = """
         func foo<T: Fooable>(_ closure: (T) -> T) {
@@ -2872,6 +2855,18 @@ class SyntaxTests: RulesTests {
             let casted = value as TTT
             print(casted)
         }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, rule: FormatRules.opaqueGenericParameters, options: options)
+    }
+
+    func testGenericParameterUsedAsClosureParameterNotRemoved() {
+        let input = """
+        func foo<Foo>(_: (Foo) -> Void) {}
+        func bar<Foo>(_: (Foo) throws -> Void) {}
+        func baaz<Foo>(_: (Foo) async -> Void) {}
+        func quux<Foo>(_: (Foo) async throws -> Void) {}
         """
 
         let options = FormatOptions(swiftVersion: "5.7")

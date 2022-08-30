@@ -1265,6 +1265,16 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.enumNamespaces)
     }
 
+    func testClassNotReplacedByEnum() {
+        let input = """
+        class Foo {
+            public static let bar = "bar"
+        }
+        """
+        let options = FormatOptions(enumNamespaces: .structsOnly)
+        testFormatting(for: input, rule: FormatRules.enumNamespaces, options: options)
+    }
+
     // MARK: - numberFormatting
 
     // hex case

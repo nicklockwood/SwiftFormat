@@ -869,6 +869,12 @@ struct _Descriptors {
         help: "Closure void returns: \"remove\" (default) or \"preserve\"",
         keyPath: \.closureVoidReturn
     )
+    let enumNamespaces = OptionDescriptor(
+        argumentName: "enumnamespaces",
+        displayName: "Convert namespaces types to enum",
+        help: "Change type to enum: \"always\" (default) or \"structs-only\"",
+        keyPath: \.enumNamespaces
+    )
     let removeStartOrEndBlankLinesFromTypes = OptionDescriptor(
         argumentName: "typeblanklines",
         displayName: "Remove blank lines from types",

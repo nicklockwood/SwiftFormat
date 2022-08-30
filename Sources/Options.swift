@@ -326,6 +326,12 @@ public enum MarkMode: String, CaseIterable {
     case ifNotEmpty = "if-not-empty"
 }
 
+/// Whether to convert types to enum
+public enum EnumNamespacesMode: String, CaseIterable {
+    case always
+    case structsOnly = "structs-only"
+}
+
 /// Configuration options for formatting. These aren't actually used by the
 /// Formatter class itself, but it makes them available to the format rules.
 public struct FormatOptions: CustomStringConvertible {
@@ -403,6 +409,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var acronyms: Set<String>
     public var indentStrings: Bool
     public var closureVoidReturn: ClosureVoidReturn
+    public var enumNamespaces: EnumNamespacesMode
     public var removeStartOrEndBlankLinesFromTypes: Bool
 
     // Deprecated
@@ -494,6 +501,7 @@ public struct FormatOptions: CustomStringConvertible {
                 acronyms: Set<String> = ["ID", "URL", "UUID"],
                 indentStrings: Bool = false,
                 closureVoidReturn: ClosureVoidReturn = .remove,
+                enumNamespaces: EnumNamespacesMode = .always,
                 removeStartOrEndBlankLinesFromTypes: Bool = true,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
@@ -576,6 +584,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.acronyms = acronyms
         self.indentStrings = indentStrings
         self.closureVoidReturn = closureVoidReturn
+        self.enumNamespaces = enumNamespaces
         self.removeStartOrEndBlankLinesFromTypes = removeStartOrEndBlankLinesFromTypes
         // Doesn't really belong here, but hard to put elsewhere
         self.fragment = fragment

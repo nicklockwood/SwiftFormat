@@ -7044,12 +7044,14 @@ public struct _FormatRules {
                 // will emit a "'some' cannot appear in parameter position in parameter type <closure type>" error
                 for tokenIndex in funcIndex ... closeBraceIndex {
                     if
-                        formatter.tokens[tokenIndex].string == genericType.name,
-                        let closureTypeEndParenIndex = formatter.endOfScope(at: tokenIndex),
-                        formatter.token(at: closureTypeEndParenIndex) == .endOfScope(")"),
-                        closureTypeEndParenIndex != paramListEndIndex,
-                        let tokenAfterClosingParen = formatter.next(.nonSpaceOrCommentOrLinebreak, after: closureTypeEndParenIndex),
-                        [.operator("->", .infix), .keyword("throws"), .identifier("async")].contains(tokenAfterClosingParen)
+                        // Check if this is the start of a closure
+                        formatter.tokens[tokenIndex] == .startOfScope("("),
+                        tokenIndex != paramListStartIndex,
+                        let endOfScope = formatter.endOfScope(at: tokenIndex),
+                        let tokenAfterParen = formatter.next(.nonSpaceOrCommentOrLinebreak, after: endOfScope),
+                        [.operator("->", .infix), .keyword("throws"), .identifier("async")].contains(tokenAfterParen),
+                        // Check if the closure type parameters contains this generic type
+                        formatter.tokens[tokenIndex ... endOfScope].contains(where: { $0.string == genericType.name })
                     {
                         genericType.eligbleToRemove = false
                     }

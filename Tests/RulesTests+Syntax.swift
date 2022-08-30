@@ -2867,6 +2867,8 @@ class SyntaxTests: RulesTests {
         func bar<Foo>(_: (Foo) throws -> Void) {}
         func baaz<Foo>(_: (Foo) async -> Void) {}
         func quux<Foo>(_: (Foo) async throws -> Void) {}
+        func qaax<Foo>(_: ([Foo]) -> Void) {}
+        func qaax<Foo>(_: ((Foo, Bar)) -> Void) {}
         """
 
         let options = FormatOptions(swiftVersion: "5.7")

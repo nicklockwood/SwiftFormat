@@ -2922,6 +2922,27 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.opaqueGenericParameters, options: options)
     }
 
+    func testGenericConstraintThatIsGeneric() {
+        let input = """
+        class Foo<Bar, Baaz> {}
+        func foo<T: Foo<String, String>>(_: T) {}
+
+        class Bar<Baaz> {}
+        func bar<T: Bar<String>>(_: T) {}
+        """
+
+        let output = """
+        class Foo<Bar, Baaz> {}
+        func foo(_: some Foo<String, String>) {}
+
+        class Bar<Baaz> {}
+        func bar(_: some Bar<String>) {}
+        """
+
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, output, rule: FormatRules.opaqueGenericParameters, options: options)
+    }
+
     // MARK: - genericExtensions
 
     func testGenericExtensionNotModifiedBeforeSwift5_7() {

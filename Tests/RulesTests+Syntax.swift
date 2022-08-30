@@ -2897,10 +2897,12 @@ class SyntaxTests: RulesTests {
     func testAddsParensAroundTypeIfNecessary() {
         let input = """
         func foo<Foo>(_: Foo.Type) {}
+        func bar<Foo>(_: Foo?) {}
         """
 
         let output = """
         func foo(_: (some Any).Type) {}
+        func bar(_: (some Any)?) {}
         """
 
         let options = FormatOptions(swiftVersion: "5.7")

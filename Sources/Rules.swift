@@ -7087,9 +7087,11 @@ public struct _FormatRules {
                     let matchingGenericType = genericsEligibleToRemove.first(where: { $0.name == formatter.tokens[index].string }),
                     var opaqueParameter = matchingGenericType.asOpaqueParameter
                 {
-                    // If this instance of the type is followed by a `.` then we have to wrap the new type in parens
+                    // If this instance of the type is followed by a `.` or `?` then we have to wrap the new type in parens
                     // (e.g. changing `Foo.Type` to `some Any.Type` breaks the build, it needs to be `(some Any).Type`)
-                    if formatter.next(.nonSpaceOrCommentOrLinebreak, after: index) == .operator(".", .infix) {
+                    if let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: index),
+                       [.operator(".", .infix), .operator("?", .postfix)].contains(nextToken)
+                    {
                         opaqueParameter.insert(.startOfScope("("), at: 0)
                         opaqueParameter.append(.endOfScope(")"))
                     }

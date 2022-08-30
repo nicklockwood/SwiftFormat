@@ -2865,6 +2865,19 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.opaqueGenericParameters, options: options)
     }
 
+    func testGenericParameterUsedInBodyNotRemoved() {
+        let input = """
+        func foo<T>(_ value: T) {
+            typealias TTT = T
+            let casted = value as TTT
+            print(casted)
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, rule: FormatRules.opaqueGenericParameters, options: options)
+    }
+
     // MARK: - genericExtensions
 
     func testGenericExtensionNotModifiedBeforeSwift5_7() {

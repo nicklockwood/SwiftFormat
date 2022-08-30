@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.49.18](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.49.18) (2022-08-30)
+
+- Fixed bug in `unusedArguments` when argument is shadowed in a `switch` case statement
+- Fixed `enumNamespaces` rule breaking `open` class declarations
+- Fixed `redundantLet` removing `let` incorrectly in `async let` statement
+- Fixed indent regression when using `--xcodeindentation` option
+
 ## [0.49.17](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.49.17) (2022-08-16)
 
 - Fixed unexpected token error occurring at end of scope after a `<<` operator

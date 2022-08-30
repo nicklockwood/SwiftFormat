@@ -1796,7 +1796,18 @@ extension Formatter {
                 }
             }
 
-            return tokenize("some \(constraintRepresentations.joined(separator: " & "))")
+            if !constraintRepresentations.isEmpty {
+                return tokenize("some \(constraintRepresentations.joined(separator: " & "))")
+            }
+
+            // If there aren't any constraints but we have exactly one concrete type,
+            // we can just use that concrete type directly
+            let concreteTypes = conformances.filter { $0.type == .conceteType }
+            if concreteTypes.count == 1 {
+                return tokenize(concreteTypes[0].name)
+            }
+
+            return nil
         }
     }
 
@@ -1873,12 +1884,12 @@ extension Formatter {
                 let constrainedTypeName = tokens[genericTypeNameIndex ..< delineatorIndex]
                     .map { $0.string }
                     .joined()
-                    .trimmingCharacters(in: .init(charactersIn: " \n,<>{}"))
+                    .trimmingCharacters(in: .init(charactersIn: " \n,{}"))
 
                 let conformanceName = tokens[(delineatorIndex + 1) ... typeEndIndex]
                     .map { $0.string }
                     .joined()
-                    .trimmingCharacters(in: .init(charactersIn: " \n,<>{}"))
+                    .trimmingCharacters(in: .init(charactersIn: " \n,{}"))
 
                 genericType.conformances.append(.init(
                     name: conformanceName,

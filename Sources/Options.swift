@@ -419,6 +419,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var enumNamespaces: EnumNamespacesMode
     public var removeStartOrEndBlankLinesFromTypes: Bool
     public var genericTypes: String
+    public var useSomeAny: Bool
 
     // Deprecated
     public var indentComments: Bool
@@ -514,6 +515,7 @@ public struct FormatOptions: CustomStringConvertible {
                 enumNamespaces: EnumNamespacesMode = .always,
                 removeStartOrEndBlankLinesFromTypes: Bool = true,
                 genericTypes: String = "",
+                useSomeAny: Bool = true,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -600,6 +602,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.enumNamespaces = enumNamespaces
         self.removeStartOrEndBlankLinesFromTypes = removeStartOrEndBlankLinesFromTypes
         self.genericTypes = genericTypes
+        self.useSomeAny = useSomeAny
         // Doesn't really belong here, but hard to put elsewhere
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

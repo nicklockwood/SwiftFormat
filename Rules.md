@@ -963,6 +963,10 @@ with constraints (`T where T: Protocol`, etc) where equivalent. Also supports
 primary associated types for common standard library types, so definitions like
 `T where T: Collection, T.Element == Foo` are upated to `some Collection<Foo>`.
 
+Option | Description
+--- | ---
+`--someAny` | Use `some Any` types: "true" (default) or "false"
+
 <details>
 <summary>Examples</summary>
 
@@ -979,6 +983,12 @@ primary associated types for common standard library types, so definitions like
 
 - func handle<T: Collection>(_ value: T) where T.Element == Foo {
 + func handle(_ value: some Collection<Foo>) {
+      print(value)
+  }
+
+// With `--someAny enabled` (the default)
+- func handle<T>(_ value: T) {
++ func handle(_ value: some Any) {
       print(value)
   }
 ```

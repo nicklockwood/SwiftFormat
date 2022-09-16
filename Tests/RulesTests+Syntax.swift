@@ -2608,6 +2608,17 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.opaqueGenericParameters, options: options)
     }
 
+    func testDisableSomeAnyGenericType() {
+        let input = """
+        func foo<T>(_ value: T) {
+            print(value)
+        }
+        """
+
+        let options = FormatOptions(useSomeAny: false, swiftVersion: "5.7")
+        testFormatting(for: input, rule: FormatRules.opaqueGenericParameters, options: options)
+    }
+
     func testOpaqueGenericParameterWithConstraintInBracket() {
         let input = """
         func foo<T: Fooable, U: Barable>(_ fooable: T, barable: U) -> Baaz {

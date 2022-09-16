@@ -1822,8 +1822,9 @@ extension Formatter {
 
         // The opaque parameter syntax that represents this generic type,
         // if the constraints can be expressed using this syntax
-        var asOpaqueParameter: [Token]? {
+        func asOpaqueParameter(useSomeAny: Bool) -> [Token]? {
             if conformances.isEmpty {
+                guard useSomeAny else { return nil }
                 return tokenize("some Any")
             }
 

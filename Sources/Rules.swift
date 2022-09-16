@@ -6896,7 +6896,7 @@ public struct _FormatRules {
         primary associated types for common standard library types, so definitions like
         `T where T: Collection, T.Element == Foo` are upated to `some Collection<Foo>`.
         """,
-        options: []
+        options: ["someAny"]
     ) { formatter in
         formatter.forEach(.keyword("func")) { funcIndex, _ in
             guard
@@ -7011,7 +7011,7 @@ public struct _FormatRules {
                 // If the method that generates the opaque parameter syntax doesn't succeed,
                 // then this type is ineligible (because it used a generic constraint that
                 // can't be represented using this syntax).
-                if genericType.asOpaqueParameter == nil {
+                if genericType.asOpaqueParameter(useSomeAny: formatter.options.useSomeAny) == nil {
                     genericType.eligbleToRemove = false
                     continue
                 }
@@ -7061,7 +7061,7 @@ public struct _FormatRules {
             for index in parameterListRange.reversed() {
                 if
                     let matchingGenericType = genericsEligibleToRemove.first(where: { $0.name == formatter.tokens[index].string }),
-                    var opaqueParameter = matchingGenericType.asOpaqueParameter
+                    var opaqueParameter = matchingGenericType.asOpaqueParameter(useSomeAny: formatter.options.useSomeAny)
                 {
                     // If this instance of the type is followed by a `.` or `?` then we have to wrap the new type in parens
                     // (e.g. changing `Foo.Type` to `some Any.Type` breaks the build, it needs to be `(some Any).Type`)

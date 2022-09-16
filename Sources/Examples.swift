@@ -1425,6 +1425,12 @@ private struct Examples {
     + func handle(_ value: some Collection<Foo>) {
           print(value)
       }
+
+    // With `--someAny enabled` (the default)
+    - func handle<T>(_ value: T) {
+    + func handle(_ value: some Any) {
+          print(value)
+      }
     ```
     """
 

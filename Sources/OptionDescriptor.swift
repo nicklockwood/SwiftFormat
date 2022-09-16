@@ -896,6 +896,14 @@ struct _Descriptors {
         fromArgument: { $0 },
         toArgument: { $0 }
     )
+    let useSomeAny = OptionDescriptor(
+        argumentName: "someAny",
+        displayName: "Use `some Any`",
+        help: "Use `some Any` types: \"true\" (default) or \"false\"",
+        keyPath: \.useSomeAny,
+        trueValues: ["true", "enabled"],
+        falseValues: ["false", "disabled"]
+    )
 
     // MARK: - Internal
 

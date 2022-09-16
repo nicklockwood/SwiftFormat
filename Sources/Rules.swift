@@ -6935,11 +6935,14 @@ public struct _FormatRules {
                 formatter.options.swiftVersion >= "5.7",
                 // Validate that this is a generic method using angle bracket syntax,
                 // and find the indices for all of the key tokens
+                let paramListStartIndex = formatter.index(of: .startOfScope("("), after: funcIndex),
+                let paramListEndIndex = formatter.endOfScope(at: paramListStartIndex),
                 let genericSignatureStartIndex = formatter.index(of: .startOfScope("<"), after: funcIndex),
                 let genericSignatureEndIndex = formatter.endOfScope(at: genericSignatureStartIndex),
-                let paramListStartIndex = formatter.index(of: .startOfScope("("), after: genericSignatureEndIndex),
-                let paramListEndIndex = formatter.endOfScope(at: paramListStartIndex),
-                let openBraceIndex = formatter.index(of: .startOfScope("{"), after: paramListEndIndex)
+                genericSignatureStartIndex < paramListStartIndex,
+                genericSignatureEndIndex < paramListStartIndex,
+                let openBraceIndex = formatter.index(of: .startOfScope("{"), after: paramListEndIndex),
+                let closeBraceIndex = formatter.endOfScope(at: openBraceIndex)
             else { return }
 
             var genericTypes = [Formatter.GenericType]()
@@ -6970,17 +6973,58 @@ public struct _FormatRules {
                 returnTypeTokens = Array(formatter.tokens[returnTypeRange])
             }
 
+            let genericParameterListRange = (genericSignatureStartIndex + 1) ..< genericSignatureEndIndex
+            let genericParameterListTokens = formatter.tokens[genericParameterListRange]
+
             let parameterListRange = (paramListStartIndex + 1) ..< paramListEndIndex
             let parameterListTokens = formatter.tokens[parameterListRange]
 
+            let bodyRange = (openBraceIndex + 1) ..< closeBraceIndex
+            let bodyTokens = formatter.tokens[bodyRange]
+
             for genericType in genericTypes {
+                // If the generic type doesn't occur in the generic parameter list (<...>),
+                // then we inherited it from the generic context and can't replace the type
+                // with an opaque parameter.
+                if !genericParameterListTokens.contains(where: { $0.string == genericType.name }) {
+                    genericType.eligbleToRemove = false
+                    continue
+                }
+
                 // If the generic type occurs multiple times in the parameter list,
-                // it isnt eligible to be removed. For example `(T, T) where T: Foo`
+                // it isn't eligible to be removed. For example `(T, T) where T: Foo`
                 // requires the two params to be the same underlying type, but
                 // `(some Foo, some Foo)` does not.
                 let countInParameterList = parameterListTokens.filter { $0.string == genericType.name }.count
                 if countInParameterList > 1 {
                     genericType.eligbleToRemove = false
+                    continue
+                }
+
+                // If the generic type occurs in the body of the function, then it can't be removed
+                if bodyTokens.contains(where: { $0.string == genericType.name }) {
+                    genericType.eligbleToRemove = false
+                    continue
+                }
+
+                // If the generic type is used in a constraint of any other generic type, then the type
+                // cant be removed without breaking that other type
+                let otherGenericTypes = genericTypes.filter { $0.name != genericType.name }
+                let otherTypeConformances = otherGenericTypes.flatMap { $0.conformances }
+                for otherTypeConformance in otherTypeConformances {
+                    let conformanceTokens = formatter.tokens[otherTypeConformance.sourceRange]
+                    if conformanceTokens.contains(where: { $0.string == genericType.name }) {
+                        genericType.eligbleToRemove = false
+                    }
+                }
+
+                // In some weird cases you can also have a generic constraint that references a generic
+                // type from the parent context with the same name. We can't change these, since it
+                // can cause the build to break
+                for conformance in genericType.conformances {
+                    if tokenize(conformance.name).contains(where: { $0.string == genericType.name }) {
+                        genericType.eligbleToRemove = false
+                    }
                 }
 
                 // A generic used as a return type is different from an opaque result type (SE-244).
@@ -6992,6 +7036,7 @@ public struct _FormatRules {
                    returnTypeTokens.contains(where: { $0.string == genericType.name })
                 {
                     genericType.eligbleToRemove = false
+                    continue
                 }
 
                 // If the method that generates the opaque parameter syntax doesn't succeed,
@@ -6999,6 +7044,24 @@ public struct _FormatRules {
                 // can't be represented using this syntax).
                 if genericType.asOpaqueParameter(useSomeAny: formatter.options.useSomeAny) == nil {
                     genericType.eligbleToRemove = false
+                    continue
+                }
+
+                // If the generic type is used as a closure type parameter, it can't be removed or the compiler
+                // will emit a "'some' cannot appear in parameter position in parameter type <closure type>" error
+                for tokenIndex in funcIndex ... closeBraceIndex {
+                    if
+                        // Check if this is the start of a closure
+                        formatter.tokens[tokenIndex] == .startOfScope("("),
+                        tokenIndex != paramListStartIndex,
+                        let endOfScope = formatter.endOfScope(at: tokenIndex),
+                        let tokenAfterParen = formatter.next(.nonSpaceOrCommentOrLinebreak, after: endOfScope),
+                        [.operator("->", .infix), .keyword("throws"), .identifier("async")].contains(tokenAfterParen),
+                        // Check if the closure type parameters contains this generic type
+                        formatter.tokens[tokenIndex ... endOfScope].contains(where: { $0.string == genericType.name })
+                    {
+                        genericType.eligbleToRemove = false
+                    }
                 }
             }
 
@@ -7024,20 +7087,37 @@ public struct _FormatRules {
                 }
             }
 
-            // Replace all of the uses of generic types that are elible to remove
+            // Replace all of the uses of generic types that are eligible to remove
             // with the corresponding opaque parameter declaration
             for index in parameterListRange.reversed() {
                 if
                     let matchingGenericType = genericsEligibleToRemove.first(where: { $0.name == formatter.tokens[index].string }),
-                    let opaqueParameter = matchingGenericType.asOpaqueParameter(useSomeAny: formatter.options.useSomeAny)
+                    var opaqueParameter = matchingGenericType.asOpaqueParameter(useSomeAny: formatter.options.useSomeAny)
                 {
+                    // If this instance of the type is followed by a `.` or `?` then we have to wrap the new type in parens
+                    // (e.g. changing `Foo.Type` to `some Any.Type` breaks the build, it needs to be `(some Any).Type`)
+                    if let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: index),
+                       [.operator(".", .infix), .operator("?", .postfix)].contains(nextToken)
+                    {
+                        opaqueParameter.insert(.startOfScope("("), at: 0)
+                        opaqueParameter.append(.endOfScope(")"))
+                    }
+
                     formatter.replaceToken(at: index, with: opaqueParameter)
                 }
             }
 
-            // Remove types from the generic paremeter list
+            // Remove types from the generic parameter list
             let genericParameterListSourceRanges = sourceRangesToRemove.filter { $0.lowerBound < genericSignatureEndIndex }
             formatter.removeTokens(in: Array(genericParameterListSourceRanges))
+
+            // If we left a dangling comma at the end of the generic parameter list, we need to clean it up
+            if let newGenericSignatureEndIndex = formatter.endOfScope(at: genericSignatureStartIndex),
+               let trailingCommaIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: newGenericSignatureEndIndex),
+               formatter.tokens[trailingCommaIndex] == .delimiter(",")
+            {
+                formatter.removeTokens(in: trailingCommaIndex ..< newGenericSignatureEndIndex)
+            }
 
             // If we removed all of the generic types, we also have to remove the angle brackets
             if let newGenericSignatureEndIndex = formatter.index(of: .nonSpaceOrLinebreak, after: genericSignatureStartIndex),

@@ -3076,4 +3076,108 @@ class SyntaxTests: RulesTests {
         )
         testFormatting(for: input, output, rule: FormatRules.genericExtensions, options: options)
     }
+
+    // MARK: docComments
+
+    func testConvertCommentsToDocComments() {
+        let input = """
+
+        // Multi-line comment before class with
+        // attribute between comment and declaration
+        @objc
+        class Foo {
+            // Single line comment before property
+            let foo = Foo()
+
+            // Single line comment before property with property wrapper
+            @State
+            let bar = Bar()
+
+            // Single line comment
+            func foo() {}
+
+            /* Single line block comment before method */
+            func baaz() {}
+
+            /*
+               Multi-line block comment before method with attribute.
+
+               This comment has a blank line in it.
+             */
+            @nonobjc
+            func baaz() {}
+        }
+        """
+
+        let output = """
+
+        /// Multi-line comment before class with
+        /// attribute between comment and declaration
+        @objc
+        class Foo {
+            /// Single line comment before property
+            let foo = Foo()
+
+            /// Single line comment before property with property wrapper
+            @State
+            let bar = Bar()
+
+            /// Single line comment
+            func foo() {}
+
+            /** Single line block comment before method */
+            func baaz() {}
+
+            /**
+               Multi-line block comment before method with attribute.
+
+               This comment has a blank line in it.
+             */
+            @nonobjc
+            func baaz() {}
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.docComments, exclude: ["spaceInsideComments"])
+    }
+
+    func testConvertDocCommentsToComments() {
+        let input = """
+        /// Comment not associated with class
+
+        class Foo {
+            /** Comment not associated with function */
+
+            func bar() {
+                /// Comment inside function declaration.
+                /// This one is multi-line.
+
+                /// This comment is inside a function but proceeds a declaration,
+                /// so is still a doc comment.
+                let bar = Bar()
+                print(bar)
+            }
+        }
+        """
+
+        let output = """
+        // Comment not associated with class
+
+        class Foo {
+            /* Comment not associated with function */
+
+            func bar() {
+                // Comment inside function declaration.
+                // This one is multi-line.
+
+                /// This comment is inside a function but proceeds a declaration,
+                /// so is still a doc comment.
+                let bar = Bar()
+                print(bar)
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.docComments, exclude: ["spaceInsideComments"])
+    }
 }

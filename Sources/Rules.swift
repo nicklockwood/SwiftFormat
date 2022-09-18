@@ -7244,4 +7244,58 @@ public struct _FormatRules {
             formatter.replaceToken(at: typeNameIndex, with: tokenize(fullGenericType))
         }
     }
+
+    public let docComments = FormatRule(
+        help: "Use doc comments for comments preceding declarations"
+    ) { formatter in
+        formatter.forEach(.startOfScope) { index, token in
+            guard
+                ["//", "/*"].contains(token.string),
+                let endOfComment = formatter.endOfScope(at: index),
+                let nextDeclarationIndex = formatter.index(after: endOfComment, where: \.isDeclarationTypeKeyword)
+            else { return }
+
+            // If there aren't any blank lines between the comment and declaration,
+            // this comment is associated with that declaration
+            let trailingTokens = formatter.tokens[(endOfComment - 1) ... nextDeclarationIndex]
+            let lines = trailingTokens.split(omittingEmptySubsequences: false, whereSeparator: \.isLinebreak)
+            let blankLineBeforeDeclaration = lines.contains(where: { line in
+                line.isEmpty || line.allSatisfy(\.isSpace)
+            })
+
+            let shouldBeDocComment = !blankLineBeforeDeclaration
+
+            // Doc comment tokens like `///` and `/**` aren't parsed as a
+            // single `.startOfScope` token -- they're parsed as:
+            // `.startOfScope("//"), .commentBody("/ ...")` or
+            // `.startOfScope("/*"), .commentBody("* ...")`
+            let startOfDocCommentBody: String
+            switch token.string {
+            case "//":
+                startOfDocCommentBody = "/"
+            case "/*":
+                startOfDocCommentBody = "*"
+            default:
+                return
+            }
+
+            if
+                let commentBody = formatter.token(at: index + 1),
+                case .commentBody = commentBody
+            {
+                if shouldBeDocComment, !commentBody.string.hasPrefix(startOfDocCommentBody) {
+                    let updatedCommentBody = startOfDocCommentBody + commentBody.string
+                    formatter.replaceToken(at: index + 1, with: .commentBody(updatedCommentBody))
+                } else if !shouldBeDocComment, commentBody.string.hasPrefix(startOfDocCommentBody) {
+                    var updatedCommentBody = commentBody.string
+                    while updatedCommentBody.hasPrefix(startOfDocCommentBody) {
+                        updatedCommentBody.removeFirst()
+                    }
+                    formatter.replaceToken(at: index + 1, with: .commentBody(updatedCommentBody))
+                }
+            } else if shouldBeDocComment {
+                formatter.insert(.commentBody(startOfDocCommentBody), at: index + 1)
+            }
+        }
+    }
 }

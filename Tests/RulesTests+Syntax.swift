@@ -62,7 +62,7 @@ class SyntaxTests: RulesTests {
         /// TODO: foo
         /// Some more docs
         """
-        testFormatting(for: input, rule: FormatRules.todos)
+        testFormatting(for: input, rule: FormatRules.todos, exclude: ["docComments"])
     }
 
     func testTodoNotReplacedAtStartOfDocBlock() {
@@ -70,7 +70,7 @@ class SyntaxTests: RulesTests {
         /// TODO: foo
         /// Some docs
         """
-        testFormatting(for: input, rule: FormatRules.todos)
+        testFormatting(for: input, rule: FormatRules.todos, exclude: ["docComments"])
     }
 
     func testTodoNotReplacedAtEndOfDocBlock() {
@@ -78,7 +78,7 @@ class SyntaxTests: RulesTests {
         /// Some docs
         /// TODO: foo
         """
-        testFormatting(for: input, rule: FormatRules.todos)
+        testFormatting(for: input, rule: FormatRules.todos, exclude: ["docComments"])
     }
 
     func testMarkWithNoSpaceAfterColon() {
@@ -2363,7 +2363,7 @@ class SyntaxTests: RulesTests {
         /// This is a documentation comment,
         /// not a standard comment.
         """
-        testFormatting(for: input, output, rule: FormatRules.blockComments)
+        testFormatting(for: input, output, rule: FormatRules.blockComments, exclude: ["docComments"])
     }
 
     func testBlockDocCommentsWithoutAsterisksOnEachLine() {
@@ -2377,7 +2377,7 @@ class SyntaxTests: RulesTests {
         /// This is a documentation comment,
         /// not a standard comment.
         """
-        testFormatting(for: input, output, rule: FormatRules.blockComments)
+        testFormatting(for: input, output, rule: FormatRules.blockComments, exclude: ["docComments"])
     }
 
     func testBlockCommentWithBulletPoints() {
@@ -2477,7 +2477,7 @@ class SyntaxTests: RulesTests {
             /// bar.
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.blockComments)
+        testFormatting(for: input, output, rule: FormatRules.blockComments, exclude: ["docComments"])
     }
 
     func testLongBlockCommentsWithoutPerLineMarkersFullyConverted() {
@@ -2541,7 +2541,7 @@ class SyntaxTests: RulesTests {
         /// Line 3.
         foo(bar)
         """
-        testFormatting(for: input, output, rule: FormatRules.blockComments)
+        testFormatting(for: input, output, rule: FormatRules.blockComments, exclude: ["docComments"])
     }
 
     func testBlockCommentImmediatelyFollowedByCode3() {
@@ -2555,7 +2555,7 @@ class SyntaxTests: RulesTests {
         // bar
         func foo() {}
         """
-        testFormatting(for: input, output, rule: FormatRules.blockComments)
+        testFormatting(for: input, output, rule: FormatRules.blockComments, exclude: ["docComments"])
     }
 
     func testBlockCommentFollowedByBlankLine() {
@@ -2575,7 +2575,7 @@ class SyntaxTests: RulesTests {
 
         func foo() {}
         """
-        testFormatting(for: input, output, rule: FormatRules.blockComments)
+        testFormatting(for: input, output, rule: FormatRules.blockComments, exclude: ["docComments"])
     }
 
     // MARK: - opaqueGenericParameters
@@ -3081,7 +3081,6 @@ class SyntaxTests: RulesTests {
 
     func testConvertCommentsToDocComments() {
         let input = """
-
         // Multi-line comment before class with
         // attribute between comment and declaration
         @objc
@@ -3107,10 +3106,22 @@ class SyntaxTests: RulesTests {
             @nonobjc
             func baaz() {}
         }
+
+        // Enum with a case
+        enum Quux {
+            // Documentation on an enum case
+            case quux
+        }
+
+        extension Collection where Element: Foo {
+            // Property in extension with where clause
+            var foo: Foo {
+                first!
+            }
+        }
         """
 
         let output = """
-
         /// Multi-line comment before class with
         /// attribute between comment and declaration
         @objc
@@ -3136,6 +3147,19 @@ class SyntaxTests: RulesTests {
             @nonobjc
             func baaz() {}
         }
+
+        /// Enum with a case
+        enum Quux {
+            /// Documentation on an enum case
+            case quux
+        }
+
+        extension Collection where Element: Foo {
+            /// Property in extension with where clause
+            var foo: Foo {
+                first!
+            }
+        }
         """
 
         testFormatting(for: input, output, rule: FormatRules.docComments, exclude: ["spaceInsideComments"])
@@ -3152,10 +3176,27 @@ class SyntaxTests: RulesTests {
                 /// Comment inside function declaration.
                 /// This one is multi-line.
 
-                /// This comment is inside a function but proceeds a declaration,
-                /// so is still a doc comment.
-                let bar = Bar()
+                /// This comment is inside a function and precedes a declaration,
+                /// but we don't want to use doc comments inside property or function
+                /// scopes since users typically don't think of these as doc comments,
+                /// and this also breaks a common pattern where comments introduce
+                /// an entire following block of code (not just the property)
+                let bar: Bar? = Bar()
                 print(bar)
+            }
+
+            var baaz: Baaz {
+                /// Comment inside property getter
+                let baazImpl = Baaz()
+                return baazImpl
+            }
+
+            var quux: Quux {
+                didSet {
+                    /// Comment inside didSet
+                    let newQuux = Quux()
+                    print(newQuux)
+                }
             }
         }
         """
@@ -3170,10 +3211,27 @@ class SyntaxTests: RulesTests {
                 // Comment inside function declaration.
                 // This one is multi-line.
 
-                /// This comment is inside a function but proceeds a declaration,
-                /// so is still a doc comment.
-                let bar = Bar()
+                // This comment is inside a function and precedes a declaration,
+                // but we don't want to use doc comments inside property or function
+                // scopes since users typically don't think of these as doc comments,
+                // and this also breaks a common pattern where comments introduce
+                // an entire following block of code (not just the property)
+                let bar: Bar? = Bar()
                 print(bar)
+            }
+
+            var baaz: Baaz {
+                // Comment inside property getter
+                let baazImpl = Baaz()
+                return baazImpl
+            }
+
+            var quux: Quux {
+                didSet {
+                    // Comment inside didSet
+                    let newQuux = Quux()
+                    print(newQuux)
+                }
             }
         }
         """

@@ -1474,7 +1474,7 @@ private struct Examples {
     + extension Reducer<FooState, FooAction, FooEnvironment> {}
     ```
     """
-    
+
     let docComments = """
     ```diff
     - // A placeholder type used to demonstrate syntax rules

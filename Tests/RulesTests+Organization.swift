@@ -22,8 +22,8 @@ class OrganizationTests: RulesTests {
             open var quack = 2
             var quux = 2
 
-            // `open` is the only visibility keyword that
-            // can also be used as an identifier.
+            /// `open` is the only visibility keyword that
+            /// can also be used as an identifier.
             var open = 10
 
             /*
@@ -63,8 +63,8 @@ class OrganizationTests: RulesTests {
 
             var quux = 2
 
-            // `open` is the only visibility keyword that
-            // can also be used as an identifier.
+            /// `open` is the only visibility keyword that
+            /// can also be used as an identifier.
             var open = 10
 
             // MARK: Private
@@ -661,7 +661,7 @@ class OrganizationTests: RulesTests {
             // MARK: Private
 
             @annotation // Private
-            // Private
+            /// Private
             private var foo: [String] = []
 
             private func bar() {
@@ -3062,7 +3062,7 @@ class OrganizationTests: RulesTests {
                 barConfiguration: Bar
             )
             case barFeature // Trailing comment -- bar feature
-            // Leading comment -- upsell A
+            /// Leading comment -- upsell A
             case upsellA(
                 fooConfiguration: Foo,
                 barConfiguration: Bar
@@ -3083,7 +3083,7 @@ class OrganizationTests: RulesTests {
                 fooConfiguration: Foo,
                 barConfiguration: Bar
             )
-            // Leading comment -- upsell A
+            /// Leading comment -- upsell A
             case upsellA(
                 fooConfiguration: Foo,
                 barConfiguration: Bar

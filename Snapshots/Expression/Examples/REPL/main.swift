@@ -8,12 +8,12 @@
 
 import Foundation
 
-// Prevent control characters confusing expression
+/// Prevent control characters confusing expression
 private let start = UnicodeScalar(63232)!
 private let end = UnicodeScalar(63235)!
 private let cursorCharacters = CharacterSet(charactersIn: start ... end)
 
-// Previously defined variables
+/// Previously defined variables
 private var variables = [String: Any]()
 
 func evaluate(_ parsed: ParsedExpression) throws -> Any {

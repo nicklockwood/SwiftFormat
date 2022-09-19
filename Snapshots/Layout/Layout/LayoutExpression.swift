@@ -983,7 +983,7 @@ struct LayoutExpression {
                         self.init(evaluate: { color }, symbols: [], isConstant: true)
                         return
                     }
-                    // Attempt to interpret as a color expression
+                    /// Attempt to interpret as a color expression
                     guard let _parsedExpression = try? parseExpression(name) else {
                         throw Expression.Error.message("Invalid color name '\(name)'")
                     }
@@ -1054,7 +1054,7 @@ struct LayoutExpression {
                         self.init(evaluate: { image }, symbols: [], isConstant: true)
                         return
                     }
-                    // Attempt to interpret as an image expression
+                    /// Attempt to interpret as an image expression
                     guard let _parsedExpression = try? parseExpression(name) else {
                         throw Expression.Error.message("Invalid image name '\(name)'")
                     }
@@ -1224,7 +1224,7 @@ struct LayoutExpression {
 
     init?(outletExpression: String, for node: LayoutNode) {
         #if arch(i386) || arch(x86_64)
-            // Pre-validate expression so we can produce more useful errors
+            /// Pre-validate expression so we can produce more useful errors
             if let parts = try? parseStringExpression(outletExpression) {
                 for part in parts {
                     switch part {

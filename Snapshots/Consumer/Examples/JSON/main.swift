@@ -8,7 +8,7 @@
 
 import Foundation
 
-// Example input
+/// Example input
 let input = """
 {
     "foo": true,
@@ -41,7 +41,7 @@ time { print("handwritten:", try parseJSON2(input)) }
 // Evaluate json using compiled parser
 time { print("compiled:", try parseJSON3(input)!) }
 
-// Update compiled parser
+/// Update compiled parser
 print("Recompiling parser...")
 let compiledSwiftFile = URL(fileURLWithPath: #file)
     .deletingLastPathComponent().appendingPathComponent("compiled.swift")

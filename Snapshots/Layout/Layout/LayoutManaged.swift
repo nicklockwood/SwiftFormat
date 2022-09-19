@@ -25,10 +25,10 @@ import Foundation
     /// Empty value string indicates no replacement available
     @objc static var deprecatedSymbols: [String: String] { get }
 
-    // Set expression value
+    /// Set expression value
     @objc func setValue(_ value: Any, forExpression name: String) throws
 
-    // Set expression value with animation (if applicable)
+    /// Set expression value with animation (if applicable)
     @objc func setAnimatedValue(_ value: Any, forExpression name: String) throws
 
     /// Get symbol value
@@ -42,7 +42,7 @@ import Foundation
     @objc func didInsertChildNode(_ node: LayoutNode, at index: Int)
 
     /// Called immediately before a child node is removed
-    // TODO: remove index argument as it isn't used
+    /// TODO: remove index argument as it isn't used
     @objc func willRemoveChildNode(_ node: LayoutNode, at index: Int)
 
     /// Called immediately after layout has been updated

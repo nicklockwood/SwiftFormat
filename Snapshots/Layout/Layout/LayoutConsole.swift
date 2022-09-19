@@ -30,7 +30,7 @@ public enum LayoutConsole {
         }
     }
 
-    // Displays a warning
+    /// Displays a warning
     public static func showWarning(_ message: String) {
         guard isEnabled else {
             print("Layout warning: \(message)")

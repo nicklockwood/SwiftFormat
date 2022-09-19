@@ -214,7 +214,7 @@ func parseLayoutXML(_ fileURL: URL) throws -> [XMLNode]? {
     return try parseLayoutXML(data, for: fileURL)
 }
 
-// Currently only used for testing
+/// Currently only used for testing
 func parseXML(_ xml: String) throws -> [XMLNode] {
     guard let data = xml.data(using: .utf8, allowLossyConversion: true) else {
         throw FormatError.parsing("Invalid xml string")
@@ -242,7 +242,7 @@ func list(_ files: [String]) -> [FormatError] {
     return errors.map(FormatError.init)
 }
 
-// Determines if given type should be treated as a string expression
+/// Determines if given type should be treated as a string expression
 func isStringType(_ name: String) -> Bool {
     return [
         "String", "NSString",
@@ -255,7 +255,7 @@ func isStringType(_ name: String) -> Bool {
     ].contains(name)
 }
 
-// Returns the type name of an attribute in a node, or nil if uncertain
+/// Returns the type name of an attribute in a node, or nil if uncertain
 func typeOfAttribute(_ key: String, inNode node: XMLNode) -> String? {
     func typeForClass(_ className: String) -> String? {
         switch key {
@@ -270,7 +270,7 @@ func typeOfAttribute(_ key: String, inNode node: XMLNode) -> String? {
         case _ where layoutSymbols.contains(key):
             return "CGFloat"
         default:
-            // Look up the type
+            /// Look up the type
             if let props = UIKitSymbols[className] {
                 if let type = props[key] {
                     return type
@@ -322,8 +322,8 @@ func typeOfAttribute(_ key: String, inNode node: XMLNode) -> String? {
     return typeForClass(className)
 }
 
-// Determines if given attribute should be treated as a string expression
-// Returns true or false if reasonably certain, otherwise returns nil
+/// Determines if given attribute should be treated as a string expression
+/// Returns true or false if reasonably certain, otherwise returns nil
 func attributeIsString(_ key: String, inNode node: XMLNode) -> Bool? {
     guard let type = typeOfAttribute(key, inNode: node) else {
         return nil
@@ -342,7 +342,7 @@ func attributeIsString(_ key: String, inNode node: XMLNode) -> Bool? {
     }
 }
 
-// Check that the expression symbols are valid (or at least plausible)
+/// Check that the expression symbols are valid (or at least plausible)
 func validateLayoutExpression(_ parsedExpression: ParsedLayoutExpression) throws {
     if let error = parsedExpression.error, error != .unexpectedToken("") {
         throw error

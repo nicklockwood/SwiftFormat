@@ -2,7 +2,7 @@
 
 import UIKit
 
-// Flatten an array of dictionaries
+/// Flatten an array of dictionaries
 func merge(_ dictionaries: [[String: Any]]) -> [String: Any] {
     var result = [String: Any]()
     for dict in dictionaries {
@@ -16,12 +16,12 @@ func merge(_ dictionaries: [[String: Any]]) -> [String: Any] {
 private let classPrefix = (Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String ?? "")
     .replacingOccurrences(of: "[^a-zA-Z0-9_]", with: "_", options: .regularExpression)
 
-// Get a class by name, adding project prefix if needed
+/// Get a class by name, adding project prefix if needed
 func classFromString(_ name: String) -> AnyClass? {
     return NSClassFromString(name) ?? NSClassFromString("\(classPrefix).\(name)")
 }
 
-// Get the name of a class, without project prefix
+/// Get the name of a class, without project prefix
 func nameOfClass(_ name: AnyClass) -> String {
     let name = NSStringFromClass(name)
     let prefix = "\(classPrefix)."
@@ -31,12 +31,12 @@ func nameOfClass(_ name: AnyClass) -> String {
     return name
 }
 
-// Get a protocol by name
+/// Get a protocol by name
 func protocolFromString(_ name: String) -> Protocol? {
     return NSProtocolFromString(name) ?? NSProtocolFromString("\(classPrefix).\(name)")
 }
 
-// Internal API for converting a path to a full URL
+/// Internal API for converting a path to a full URL
 func urlFromString(_ path: String, relativeTo baseURL: URL? = nil) -> URL {
     if path.hasPrefix("~") {
         let path = path.removingPercentEncoding ?? path
@@ -61,7 +61,7 @@ func urlFromString(_ path: String, relativeTo baseURL: URL? = nil) -> URL {
     }
 }
 
-// Internal API for overriding built-in methods
+/// Internal API for overriding built-in methods
 func replace(_ sela: Selector, of cls: AnyClass, with selb: Selector) {
     let swizzledMethod = class_getInstanceMethod(cls, selb)!
     let originalMethod = class_getInstanceMethod(cls, sela)!

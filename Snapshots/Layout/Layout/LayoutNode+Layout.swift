@@ -83,8 +83,8 @@ extension LayoutNode {
 }
 
 extension Layout {
-    // Experimental - extracts a layout template from an existing node
-    // TODO: this isn't a lossless conversion - find a better approach
+    /// Experimental - extracts a layout template from an existing node
+    /// TODO: this isn't a lossless conversion - find a better approach
     init(_ node: LayoutNode) {
         self.init(
             className: nameOfClass(node._class),

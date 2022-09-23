@@ -138,7 +138,7 @@ public extension Path {
     /// Get vertices suitable for constructing a polygon from the path
     /// vertices include normals and uv coordinates normalized to the
     /// bounding rectangle of the path. Returns nil if path has subpaths
-    // TODO: should this be facePolygons instead, to handle non-planar shapes?
+    /// TODO: should this be facePolygons instead, to handle non-planar shapes?
     var faceVertices: [Vertex]? {
         guard isClosed, let normal = plane?.normal, subpaths.count <= 1 else {
             return nil
@@ -283,14 +283,14 @@ internal extension Path {
         }
     }
 
-    // Convenience initializer
+    /// Convenience initializer
     init(unchecked points: [PathPoint]) {
         self.init(unchecked: points, plane: nil, subpathIndices: nil)
     }
 
-    // Test if path is self-intersecting
-    // TODO: extend this to work in 3D
-    // TODO: optimize by using http://www.webcitation.org/6ahkPQIsN
+    /// Test if path is self-intersecting
+    /// TODO: extend this to work in 3D
+    /// TODO: optimize by using http://www.webcitation.org/6ahkPQIsN
     var isSimple: Bool {
         let points = flattened().points.map { $0.position }
         for i in 0 ..< points.count - 2 {
@@ -313,8 +313,8 @@ internal extension Path {
         return true
     }
 
-    // flattens z-axis
-    // TODO: this is a hack and should be replaced by a better solution
+    /// flattens z-axis
+    /// TODO: this is a hack and should be replaced by a better solution
     func flattened() -> Path {
         if bounds.min.z == 0, bounds.max.z == 0 {
             return self
@@ -400,9 +400,9 @@ internal extension Path {
 
 // MARK: Private utility functions
 
-// Get the intersection point between two lines
-// TODO: extend this to work in 3D
-// TODO: improve this using https://en.wikipedia.org/wiki/Line–line_intersection
+/// Get the intersection point between two lines
+/// TODO: extend this to work in 3D
+/// TODO: improve this using https://en.wikipedia.org/wiki/Line–line_intersection
 private func lineIntersection(_ p0: Vector, _ p1: Vector,
                               _ p2: Vector, _ p3: Vector) -> Vector?
 {
@@ -433,7 +433,7 @@ private func lineIntersection(_ p0: Vector, _ p1: Vector,
     return Vector(ix, iy)
 }
 
-// TODO: extend this to work in 3D
+/// TODO: extend this to work in 3D
 private func lineSegmentsIntersect(_ p0: Vector, _ p1: Vector,
                                    _ p2: Vector, _ p3: Vector) -> Bool
 {

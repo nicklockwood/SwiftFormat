@@ -8,12 +8,12 @@
 
 import Foundation
 
-// Prevent control characters confusing parser
+/// Prevent control characters confusing parser
 private let start = UnicodeScalar(63232)!
 private let end = UnicodeScalar(63235)!
 private let cursorCharacters = CharacterSet(charactersIn: start ... end)
 
-// Persistent state
+/// Persistent state
 private let state = State()
 
 while true {

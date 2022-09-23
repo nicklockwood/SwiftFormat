@@ -4263,6 +4263,6 @@ class WrappingTests: RulesTests {
         """
 
         testFormatting(for: input, output, rule: FormatRules.wrapSingleLineComments,
-                       options: FormatOptions(maxWidth: 13))
+                       options: FormatOptions(maxWidth: 13), exclude: ["docComments"])
     }
 }

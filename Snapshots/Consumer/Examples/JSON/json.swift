@@ -17,7 +17,7 @@ public func compileJSONParser() -> String {
     return json.compile("parseJSON3", transformFunction: "jsonTransform")
 }
 
-// JSON grammar
+/// JSON grammar
 private let space: Consumer<JSONLabel> = .discard(.zeroOrMore(.character(in: " \t\n\r")))
 private let null: Consumer<JSONLabel> = .label(.null, "null")
 private let boolean: Consumer<JSONLabel> = .label(.boolean, "true" | "false")

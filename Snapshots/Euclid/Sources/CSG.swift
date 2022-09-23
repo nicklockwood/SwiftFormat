@@ -207,7 +207,7 @@ private func boundsTest(
     }
 }
 
-// Merge all the meshes into a single mesh using fn
+/// Merge all the meshes into a single mesh using fn
 private func multimerge(_ meshes: [Mesh], using fn: (Mesh, Mesh) -> Mesh) -> Mesh {
     var mesh = Mesh([])
     var meshesAndBounds = meshes.map { ($0, $0.bounds) }
@@ -220,7 +220,7 @@ private func multimerge(_ meshes: [Mesh], using fn: (Mesh, Mesh) -> Mesh) -> Mes
     return mesh
 }
 
-// Merge each intersecting mesh after i into the mesh at index i using fn
+/// Merge each intersecting mesh after i into the mesh at index i using fn
 private func reduce(_ meshes: [Mesh], using fn: (Mesh, Mesh) -> Mesh) -> Mesh {
     var meshesAndBounds = meshes.map { ($0, $0.bounds) }
     return reduce(&meshesAndBounds, at: 0, using: fn)

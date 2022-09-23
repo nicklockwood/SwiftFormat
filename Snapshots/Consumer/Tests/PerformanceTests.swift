@@ -103,7 +103,7 @@ class PerformanceTests: XCTestCase {
     }
 }
 
-// http://json.org/example.html
+/// http://json.org/example.html
 private let json = """
 {"web-app": {
   "servlet": [

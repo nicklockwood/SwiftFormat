@@ -1474,4 +1474,19 @@ private struct Examples {
     + extension Reducer<FooState, FooAction, FooEnvironment> {}
     ```
     """
+
+    let docComments = """
+    ```diff
+    - // A placeholder type used to demonstrate syntax rules
+    + /// A placeholder type used to demonstrate syntax rules
+      class Foo {
+    -     // This function doesn't really do anything
+    +     /// This function doesn't really do anything
+          func bar() {
+    -         /// TODO: implement Foo.bar() algorithm
+    +         // TODO: implement Foo.bar() algorithm
+          }
+      }
+    ```
+    """
 }

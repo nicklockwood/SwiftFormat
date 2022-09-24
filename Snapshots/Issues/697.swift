@@ -1032,7 +1032,8 @@ extension _FirestoreDecoder {
       // We are willing to return a Float by losing precision:
       // * If the original value was integral,
       //   * and the integral value was > Float.greatestFiniteMagnitude, we will fail
-      //   * and the integral value was <= Float.greatestFiniteMagnitude, we are willing to lose precision past 2^24
+      //   * and the integral value was <= Float.greatestFiniteMagnitude, we are willing to lose
+      //   precision past 2^24
       // * If it was a Float, you will get back the precise value
       // * If it was a Double or Decimal, you will get back the nearest approximation if it will fit
       let double = number.doubleValue
@@ -1054,7 +1055,8 @@ extension _FirestoreDecoder {
 
     if let number = value as? NSNumber, number !== kCFBooleanTrue, number !== kCFBooleanFalse {
       // We are always willing to return the number as a Double:
-      // * If the original value was integral, it is guaranteed to fit in a Double; we are willing to lose precision past 2^53 if you encoded a UInt64 but requested a Double
+      // * If the original value was integral, it is guaranteed to fit in a Double; we are willing to
+      // lose precision past 2^53 if you encoded a UInt64 but requested a Double
       // * If it was a Float or Double, you will get back the precise value
       // * If it was Decimal, you will get back the nearest approximation
       return number.doubleValue

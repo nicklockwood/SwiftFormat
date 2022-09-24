@@ -3938,7 +3938,8 @@ class WrappingTests: RulesTests {
         // fgh
         """
 
-        testFormatting(for: input, output, rule: FormatRules.wrapSingleLineComments, options: FormatOptions(maxWidth: 6))
+        testFormatting(for: input, output, rule: FormatRules.wrapSingleLineComments,
+                       options: FormatOptions(maxWidth: 6))
     }
 
     func testWrapSingleLineCommentsIndentation() {
@@ -3950,13 +3951,13 @@ class WrappingTests: RulesTests {
         """
         let output = """
         func f() {
-            // a b
-            // cde
+            // a b cde
             // fgh
             let x = 1
         }
         """
 
-        testFormatting(for: input, output, rule: FormatRules.wrapSingleLineComments, options: FormatOptions(maxWidth: 13))
+        testFormatting(for: input, output, rule: FormatRules.wrapSingleLineComments,
+                       options: FormatOptions(maxWidth: 13))
     }
 }

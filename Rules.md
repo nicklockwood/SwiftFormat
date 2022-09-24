@@ -73,6 +73,7 @@
 * [wrapArguments](#wrapArguments)
 * [wrapAttributes](#wrapAttributes)
 * [wrapMultilineStatementBraces](#wrapMultilineStatementBraces)
+* [wrapSingleLineComments](#wrapSingleLineComments)
 * [yodaConditions](#yodaConditions)
 
 # Opt-in Rules (disabled by default)
@@ -88,7 +89,6 @@
 * [sortedSwitchCases](#sortedSwitchCases)
 * [wrapConditionalBodies](#wrapConditionalBodies)
 * [wrapEnumCases](#wrapEnumCases)
-* [wrapSingleLineComments](#wrapSingleLineComments)
 * [wrapSwitchCases](#wrapSwitchCases)
 
 # Deprecated Rules (do not use)

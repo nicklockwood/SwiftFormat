@@ -6723,29 +6723,29 @@ public struct _FormatRules {
         // but only if `redundantSelf` can first remove the `self.`.
         orderAfter: ["redundantSelf"]
     ) { formatter in
-        formatter.forEachToken { i, introducer in
-            guard
-                // `if let foo` conditions were added in Swift 5.7 (SE-0345)
-                formatter.options.swiftVersion >= "5.7",
+        formatter.forEachToken { i, token in
+            // `if let foo` conditions were added in Swift 5.7 (SE-0345)
+            if formatter.options.swiftVersion >= "5.7",
 
-                introducer == .keyword("let") || introducer == .keyword("var"),
-                formatter.isConditionalStatement(at: i),
+               [.keyword("let"), .keyword("var")].contains(token),
+               formatter.isConditionalStatement(at: i),
 
-                let identiferIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i),
-                let identifier = formatter.token(at: identiferIndex),
+               let identiferIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i),
+               let identifier = formatter.token(at: identiferIndex),
 
-                let equalsIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: identiferIndex),
-                formatter.token(at: equalsIndex) == .operator("=", .infix),
+               let equalsIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: identiferIndex, if: {
+                   $0 == .operator("=", .infix)
+               }),
 
-                let unwrappedIdentifierIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
-                let unwrappedIdentifier = formatter.token(at: unwrappedIdentifierIndex),
-                identifier.string == unwrappedIdentifier.string,
+               let nextIdentifierIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex, if: {
+                   $0 == identifier
+               }),
 
-                let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: unwrappedIdentifierIndex),
-                nextToken == .startOfScope("{") || nextToken == .delimiter(",") || nextToken == .keyword("else")
-            else { return }
-
-            formatter.removeTokens(in: identiferIndex + 1 ... unwrappedIdentifierIndex)
+               let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: nextIdentifierIndex),
+               [.startOfScope("{"), .delimiter(","), .keyword("else")].contains(nextToken)
+            {
+                formatter.removeTokens(in: identiferIndex + 1 ... nextIdentifierIndex)
+            }
         }
     }
 }

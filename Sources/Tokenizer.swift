@@ -62,12 +62,13 @@ public extension String {
         return tokens.count == 1 && tokens[0].isOperator
     }
 
-    /// Is this string a formatting directive?
-    var isFormattingDirective: Bool {
-        let lowercased = self.lowercased()
-        return ["swiftformat:", "swiftlint:"].contains(where: {
-            lowercased.hasPrefix($0)
-        })
+    /// Is this string a comment directive (MARK:, TODO:, swiftlint:, etc)?
+    var isCommentDirective: Bool {
+        let parts = split(separator: ":")
+        guard parts.count > 1 else {
+            return false
+        }
+        return !parts[0].contains(" ")
     }
 }
 

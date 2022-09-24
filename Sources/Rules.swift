@@ -4639,7 +4639,7 @@ public struct _FormatRules {
                         body.hasPrefix("swift-tools-version")
                     {
                         return
-                    } else if body.isFormattingDirective {
+                    } else if body.isCommentDirective {
                         break
                     }
                 }
@@ -4648,7 +4648,7 @@ public struct _FormatRules {
                     switch formatter.token(at: index + 1) ?? .space("") {
                     case .startOfScope("//"):
                         if case let .commentBody(body)? = formatter.next(.nonSpace, after: index + 1),
-                           body.isFormattingDirective
+                           body.isCommentDirective
                         {
                             break
                         }
@@ -4668,7 +4668,7 @@ public struct _FormatRules {
                     formatter.processCommentBody(body, at: startIndex)
                     if !formatter.isEnabled || (body.hasPrefix("*") && !body.hasPrefix("**")) {
                         return
-                    } else if body.isFormattingDirective {
+                    } else if body.isCommentDirective {
                         break
                     }
                 }

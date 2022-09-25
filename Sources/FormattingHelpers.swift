@@ -650,13 +650,8 @@ extension Formatter {
                     removeToken(at: linebreakIndex)
                 }
 
-                // Make sure there is still exactly one space after the control flow keyword
-                if let space = self.token(at: index + 1),
-                   space.isSpace,
-                   space.string.count != 1
-                {
-                    self.replaceToken(at: index + 1, with: .space(" "))
-                }
+                // Make sure there is exactly one space after control flow keyword
+                insertSpace(" ", at: index + 1)
             }
         }
 

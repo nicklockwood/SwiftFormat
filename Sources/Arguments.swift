@@ -319,16 +319,8 @@ func mergeArguments(_ args: [String: String], into config: [String: String]) thr
         }
     }
     // Merge other arguments
-    for (key, inValue) in input {
-        guard let outValue = output[key] else {
-            output[key] = inValue
-            continue
-        }
-        if Descriptors.all.contains(where: { $0.argumentName == key && $0.isSetType }) {
-            let inOptions = parseCommaDelimitedList(inValue)
-            let outOptions = parseCommaDelimitedList(outValue)
-            output[key] = Set(inOptions).union(outOptions).sorted().joined(separator: ",")
-        }
+    for (key, inValue) in input where output[key] == nil {
+        output[key] = inValue
     }
     return output
 }

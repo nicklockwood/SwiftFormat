@@ -603,7 +603,15 @@ class ArgumentsTests: XCTestCase {
         let config = ["selfrequired": "expect"]
         let result = try mergeArguments(args, into: config)
         let selfRequired = parseCommaDelimitedList(result["selfrequired"]!)
-        XCTAssertEqual(selfRequired, ["assert", "expect", "log"])
+        XCTAssertEqual(selfRequired, ["log", "assert"])
+    }
+
+    func testMergeAcronyms() throws {
+        let args = ["acronyms": "url"]
+        let config = ["acronyms": "id,uuid"]
+        let result = try mergeArguments(args, into: config)
+        let acronyms = parseCommaDelimitedList(result["acronyms"]!)
+        XCTAssertEqual(acronyms, ["url"])
     }
 
     // MARK: add arguments

@@ -53,7 +53,7 @@ private let swiftKeywords = Set([
 public extension String {
     /// Is this string a reserved keyword in Swift?
     var isSwiftKeyword: Bool {
-        return swiftKeywords.contains(self)
+        swiftKeywords.contains(self)
     }
 
     /// Is this string a valid operator?
@@ -363,25 +363,25 @@ public extension Token {
         }
     }
 
-    var isAttribute: Bool { return isKeyword && string.hasPrefix("@") }
-    var isDelimiter: Bool { return hasType(of: .delimiter("")) }
-    var isOperator: Bool { return hasType(of: .operator("", .none)) }
-    var isUnwrapOperator: Bool { return isOperator("?", .postfix) || isOperator("!", .postfix) }
-    var isRangeOperator: Bool { return isOperator("...") || isOperator("..<") }
-    var isNumber: Bool { return hasType(of: .number("", .integer)) }
-    var isError: Bool { return hasType(of: .error("")) }
-    var isStartOfScope: Bool { return hasType(of: .startOfScope("")) }
-    var isEndOfScope: Bool { return hasType(of: .endOfScope("")) }
-    var isKeyword: Bool { return hasType(of: .keyword("")) }
-    var isIdentifier: Bool { return hasType(of: .identifier("")) }
-    var isIdentifierOrKeyword: Bool { return isIdentifier || isKeyword }
-    var isSpace: Bool { return hasType(of: .space("")) }
-    var isLinebreak: Bool { return hasType(of: .linebreak("", 0)) }
-    var isEndOfStatement: Bool { return self == .delimiter(";") || isLinebreak }
-    var isSpaceOrLinebreak: Bool { return isSpace || isLinebreak }
-    var isSpaceOrComment: Bool { return isSpace || isComment }
-    var isSpaceOrCommentOrLinebreak: Bool { return isSpaceOrComment || isLinebreak }
-    var isCommentOrLinebreak: Bool { return isComment || isLinebreak }
+    var isAttribute: Bool { isKeyword && string.hasPrefix("@") }
+    var isDelimiter: Bool { hasType(of: .delimiter("")) }
+    var isOperator: Bool { hasType(of: .operator("", .none)) }
+    var isUnwrapOperator: Bool { isOperator("?", .postfix) || isOperator("!", .postfix) }
+    var isRangeOperator: Bool { isOperator("...") || isOperator("..<") }
+    var isNumber: Bool { hasType(of: .number("", .integer)) }
+    var isError: Bool { hasType(of: .error("")) }
+    var isStartOfScope: Bool { hasType(of: .startOfScope("")) }
+    var isEndOfScope: Bool { hasType(of: .endOfScope("")) }
+    var isKeyword: Bool { hasType(of: .keyword("")) }
+    var isIdentifier: Bool { hasType(of: .identifier("")) }
+    var isIdentifierOrKeyword: Bool { isIdentifier || isKeyword }
+    var isSpace: Bool { hasType(of: .space("")) }
+    var isLinebreak: Bool { hasType(of: .linebreak("", 0)) }
+    var isEndOfStatement: Bool { self == .delimiter(";") || isLinebreak }
+    var isSpaceOrLinebreak: Bool { isSpace || isLinebreak }
+    var isSpaceOrComment: Bool { isSpace || isComment }
+    var isSpaceOrCommentOrLinebreak: Bool { isSpaceOrComment || isLinebreak }
+    var isCommentOrLinebreak: Bool { isComment || isLinebreak }
 
     func isOperator(_ string: String) -> Bool {
         if case .operator(string, _) = self {
@@ -436,7 +436,7 @@ public extension Token {
     }
 
     var isMultilineStringDelimiter: Bool {
-        return stringDelimiterType?.isMultiline == true
+        stringDelimiterType?.isMultiline == true
     }
 
     func isEndOfScope(_ token: Token) -> Bool {
@@ -525,8 +525,8 @@ extension Token {
 }
 
 extension UnicodeScalar {
-    var isDigit: Bool { return isdigit(Int32(value)) > 0 }
-    var isHexDigit: Bool { return isxdigit(Int32(value)) > 0 }
+    var isDigit: Bool { isdigit(Int32(value)) > 0 }
+    var isHexDigit: Bool { isxdigit(Int32(value)) > 0 }
     var isSpace: Bool {
         switch value {
         case 0x0009, 0x0011, 0x0012, 0x0020,
@@ -563,24 +563,24 @@ private struct UnicodeScalarView {
     }
 
     public var first: UnicodeScalar? {
-        return isEmpty ? nil : characters[startIndex]
+        isEmpty ? nil : characters[startIndex]
     }
 
     @available(*, deprecated, message: "Really hurts performance - use a different approach")
     public var count: Int {
-        return characters.distance(from: startIndex, to: endIndex)
+        characters.distance(from: startIndex, to: endIndex)
     }
 
     public var isEmpty: Bool {
-        return startIndex >= endIndex
+        startIndex >= endIndex
     }
 
     public subscript(_ index: Index) -> UnicodeScalar {
-        return characters[index]
+        characters[index]
     }
 
     public func index(after index: Index) -> Index {
-        return characters.index(after: index)
+        characters.index(after: index)
     }
 
     public func prefix(upTo index: Index) -> UnicodeScalarView {
@@ -628,7 +628,7 @@ private struct UnicodeScalarView {
 
     /// Returns the remaining characters
     fileprivate var unicodeScalars: String.UnicodeScalarView.SubSequence {
-        return characters[startIndex ..< endIndex]
+        characters[startIndex ..< endIndex]
     }
 }
 
@@ -714,13 +714,13 @@ private extension UnicodeScalarView {
     }
 
     mutating func readToEndOfToken() -> String {
-        return readCharacters { !$0.isSpace && !"\n\r".unicodeScalars.contains($0) } ?? ""
+        readCharacters { !$0.isSpace && !"\n\r".unicodeScalars.contains($0) } ?? ""
     }
 }
 
 private extension UnicodeScalarView {
     mutating func parseSpace() -> Token? {
-        return readCharacters(where: { $0.isSpace }).map { .space($0) }
+        readCharacters(where: { $0.isSpace }).map { .space($0) }
     }
 
     mutating func parseLineBreak() -> Token? {
@@ -734,7 +734,7 @@ private extension UnicodeScalarView {
     }
 
     mutating func parseDelimiter() -> Token? {
-        return readCharacter(where: {
+        readCharacter(where: {
             ":;,".unicodeScalars.contains($0)
         }).map { .delimiter(String($0)) }
     }
@@ -754,13 +754,13 @@ private extension UnicodeScalarView {
     }
 
     mutating func parseStartOfScope() -> Token? {
-        return parseStartOfString() ?? readCharacter(where: {
+        parseStartOfString() ?? readCharacter(where: {
             "<([{".unicodeScalars.contains($0)
         }).map { .startOfScope(String($0)) }
     }
 
     mutating func parseEndOfScope() -> Token? {
-        return readCharacter(where: {
+        readCharacter(where: {
             "}])>".unicodeScalars.contains($0)
         }).map { .endOfScope(String($0)) }
     }
@@ -929,7 +929,7 @@ private extension UnicodeScalarView {
         }
 
         func readIdentifier() -> String? {
-            return read(head: isHead, tail: isTail)
+            read(head: isHead, tail: isTail)
         }
 
         let start = self
@@ -994,19 +994,19 @@ private extension UnicodeScalarView {
 
     mutating func parseNumber() -> Token? {
         func readNumber(where head: @escaping (UnicodeScalar) -> Bool) -> String? {
-            return read(head: head, tail: { head($0) || $0 == "_" })
+            read(head: head, tail: { head($0) || $0 == "_" })
         }
 
         func readInteger() -> String? {
-            return readNumber(where: { $0.isDigit })
+            readNumber(where: { $0.isDigit })
         }
 
         func readHex() -> String? {
-            return readNumber(where: { $0.isHexDigit })
+            readNumber(where: { $0.isHexDigit })
         }
 
         func readSign() -> String {
-            return readCharacter(where: { "-+".unicodeScalars.contains($0) }).map { String($0) } ?? ""
+            readCharacter(where: { "-+".unicodeScalars.contains($0) }).map { String($0) } ?? ""
         }
 
         guard let integer = readInteger() else {

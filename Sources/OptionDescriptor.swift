@@ -52,17 +52,17 @@ class OptionDescriptor {
     private(set) var type: ArgumentType
 
     var isDeprecated: Bool {
-        return deprecationMessage != nil
+        deprecationMessage != nil
     }
 
     var isRenamed: Bool {
-        return isDeprecated && Descriptors.all.contains(where: {
+        isDeprecated && Descriptors.all.contains(where: {
             $0.propertyName == propertyName && $0.argumentName != argumentName
         })
     }
 
     var defaultArgument: String {
-        return fromOptions(FormatOptions.default)
+        fromOptions(FormatOptions.default)
     }
 
     func validateArgument(_ arg: String) -> Bool {
@@ -140,7 +140,7 @@ class OptionDescriptor {
                      help: String,
                      deprecationMessage: String? = nil,
                      keyPath: WritableKeyPath<FormatOptions, String>,
-                     options: DictionaryLiteral<String, String>)
+                     options: KeyValuePairs<String, String>)
     {
         let map: [String: String] = Dictionary(options.map { ($0, $1) }, uniquingKeysWith: { $1 })
         let keys = Array(map.keys).sorted()
@@ -319,11 +319,11 @@ private let _formattingDescriptors: [OptionDescriptor] = {
 
 extension _Descriptors {
     var formatting: [OptionDescriptor] {
-        return _formattingDescriptors
+        _formattingDescriptors
     }
 
     var `internal`: [OptionDescriptor] {
-        return [
+        [
             experimentalRules,
             fragment,
             ignoreConflictMarkers,
@@ -332,11 +332,11 @@ extension _Descriptors {
     }
 
     /// An Array of all descriptors
-    var all: [OptionDescriptor] { return _allDescriptors }
+    var all: [OptionDescriptor] { _allDescriptors }
 
     /// A Dictionary of descriptors by name
     var byName: [String: OptionDescriptor] {
-        return _descriptorsByName
+        _descriptorsByName
     }
 }
 

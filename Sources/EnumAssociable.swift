@@ -54,7 +54,7 @@ extension EnumAssociable {
     }
 
     func associatedValue<T>() -> T {
-        return _associatedValue as! T
+        _associatedValue as! T
     }
 }
 
@@ -63,5 +63,5 @@ protocol _Optional {
 }
 
 extension Optional: _Optional {
-    static var _none: Optional { return none }
+    static var _none: Optional { none }
 }

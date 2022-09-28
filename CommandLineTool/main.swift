@@ -44,10 +44,10 @@ import Foundation
 #endif
 
 extension String {
-    var inDefault: String { return "\u{001B}[39m\(self)" }
-    var inRed: String { return "\u{001B}[31m\(self)\u{001B}[0m" }
-    var inGreen: String { return "\u{001B}[32m\(self)\u{001B}[0m" }
-    var inYellow: String { return "\u{001B}[33m\(self)\u{001B}[0m" }
+    var inDefault: String { "\u{001B}[39m\(self)" }
+    var inRed: String { "\u{001B}[31m\(self)\u{001B}[0m" }
+    var inGreen: String { "\u{001B}[32m\(self)\u{001B}[0m" }
+    var inYellow: String { "\u{001B}[33m\(self)\u{001B}[0m" }
 }
 
 extension FileHandle: TextOutputStream {

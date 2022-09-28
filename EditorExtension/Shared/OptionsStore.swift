@@ -36,7 +36,7 @@ struct SavedOption {
     let descriptor: OptionDescriptor
 
     var isDeprecated: Bool {
-        return descriptor.isDeprecated
+        descriptor.isDeprecated
     }
 }
 
@@ -90,18 +90,18 @@ struct OptionsStore {
     }
 
     var formatOptions: FormatOptions {
-        return try! FormatOptions(load())
+        try! FormatOptions(load())
     }
 
     var inferOptions: Bool {
-        get { return (store.object(forKey: inferOptionsKey) as? NSNumber)?.boolValue ?? true }
+        get { (store.object(forKey: inferOptionsKey) as? NSNumber)?.boolValue ?? true }
         nonmutating set {
             store.set(NSNumber(booleanLiteral: newValue), forKey: inferOptionsKey)
         }
     }
 
     var options: [SavedOption] {
-        return try! load().map { try SavedOption((id: $0, arg: $1)) }
+        try! load().map { try SavedOption((id: $0, arg: $1)) }
     }
 
     func save(_ option: SavedOption) {

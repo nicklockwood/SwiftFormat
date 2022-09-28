@@ -169,7 +169,7 @@ public struct Version: RawRepresentable, Comparable, ExpressibleByStringLiteral,
     }
 
     public static func < (lhs: Version, rhs: Version) -> Bool {
-        return lhs.rawValue.compare(
+        lhs.rawValue.compare(
             rhs.rawValue,
             options: .numeric,
             locale: Locale(identifier: "en_US")
@@ -177,7 +177,7 @@ public struct Version: RawRepresentable, Comparable, ExpressibleByStringLiteral,
     }
 
     public var description: String {
-        return rawValue
+        rawValue
     }
 }
 
@@ -231,7 +231,7 @@ public struct FileInfo: Equatable, CustomStringConvertible {
     var creationDate: Date?
 
     var fileName: String? {
-        return filePath.map { URL(fileURLWithPath: $0).lastPathComponent }
+        filePath.map { URL(fileURLWithPath: $0).lastPathComponent }
     }
 
     public init(filePath: String? = nil, creationDate: Date? = nil) {
@@ -240,7 +240,7 @@ public struct FileInfo: Equatable, CustomStringConvertible {
     }
 
     public var description: String {
-        return "\(fileName ?? "");\(creationDate.map { "\($0)" } ?? "")"
+        "\(fileName ?? "");\(creationDate.map { "\($0)" } ?? "")"
     }
 }
 
@@ -282,7 +282,7 @@ public enum Grouping: Equatable, RawRepresentable, CustomStringConvertible {
     }
 
     public var description: String {
-        return rawValue
+        rawValue
     }
 }
 
@@ -603,7 +603,7 @@ public struct FormatOptions: CustomStringConvertible {
     }
 
     public var useTabs: Bool {
-        return indent.first == "\t"
+        indent.first == "\t"
     }
 
     public var requiresFileInfo: Bool {
@@ -695,6 +695,6 @@ public struct Options {
     }
 
     public func shouldSkipFile(_ inputURL: URL) -> Bool {
-        return fileOptions?.shouldSkipFile(inputURL) ?? false
+        fileOptions?.shouldSkipFile(inputURL) ?? false
     }
 }

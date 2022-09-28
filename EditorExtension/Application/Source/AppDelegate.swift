@@ -34,7 +34,7 @@ import Cocoa
 @NSApplicationMain
 class AppDelegate: NSObject, NSApplicationDelegate {
     var window: NSWindow? {
-        return NSApp.mainWindow
+        NSApp.mainWindow
     }
 
     func loadConfiguration(_ url: URL) -> Bool {
@@ -148,13 +148,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_: NSApplication) -> Bool {
-        return true
+        true
     }
 }
 
 extension AppDelegate: NSOpenSavePanelDelegate {
     func panel(_: Any, shouldEnable url: URL) -> Bool {
-        return url.hasDirectoryPath ||
+        url.hasDirectoryPath ||
             url.pathExtension == swiftFormatConfigurationFile.dropFirst() ||
             url.lastPathComponent == swiftFormatConfigurationFile
     }

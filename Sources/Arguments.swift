@@ -205,7 +205,7 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
 
 // Parse a comma-delimited list of items
 func parseCommaDelimitedList(_ string: String) -> [String] {
-    return string.components(separatedBy: ",").compactMap {
+    string.components(separatedBy: ",").compactMap {
         let item = $0.trimmingCharacters(in: .whitespacesAndNewlines)
         return item.isEmpty ? nil : item
     }
@@ -214,7 +214,7 @@ func parseCommaDelimitedList(_ string: String) -> [String] {
 // Parse a comma-delimited string into an array of rules
 let allRules = Set(FormatRules.byName.keys)
 func parseRules(_ rules: String) throws -> [String] {
-    return try parseCommaDelimitedList(rules).flatMap { proposedName -> [String] in
+    try parseCommaDelimitedList(rules).flatMap { proposedName -> [String] in
         let lowercaseName = proposedName.lowercased()
         if let name = allRules.first(where: { $0.lowercased() == lowercaseName }) {
             return [name]
@@ -252,7 +252,7 @@ func parsePath(_ path: String, for argument: String, in directory: String) throw
 
 // Parse one or more comma-delimited file paths, expanding globs as required
 func parsePaths(_ paths: String, in directory: String) throws -> [URL] {
-    return try matchGlobs(expandGlobs(paths, in: directory), in: directory)
+    try matchGlobs(expandGlobs(paths, in: directory), in: directory)
 }
 
 // Merge two dictionaries of arguments
@@ -371,7 +371,7 @@ private func cumulate(successiveLines: [String]) throws -> [String] {
 }
 
 private func effectiveContent(of line: String) -> String {
-    return line
+    line
         .prefix { $0 != "#" }
         .trimmingCharacters(in: .whitespaces)
 }
@@ -414,7 +414,7 @@ func serialize(options: Options,
 func serialize(arguments: [String: String],
                separator: String = "\n") -> String
 {
-    return arguments.map {
+    arguments.map {
         var value = $1
         if value.contains(" ") {
             value = "\"\(value.replacingOccurrences(of: "\"", with: "\\\""))\""

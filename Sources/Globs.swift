@@ -9,7 +9,7 @@
 import Foundation
 
 func pathContainsGlobSyntax(_ path: String) -> Bool {
-    return "*?[{".contains(where: { path.contains($0) })
+    "*?[{".contains(where: { path.contains($0) })
 }
 
 /// Glob type represents either an exact path or wildcard

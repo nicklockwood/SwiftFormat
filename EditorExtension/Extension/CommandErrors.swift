@@ -61,6 +61,6 @@ enum FormatCommandError: Error, LocalizedError, CustomNSError {
     }
 
     var errorUserInfo: [String: Any] {
-        return [NSLocalizedDescriptionKey: localizedDescription]
+        [NSLocalizedDescriptionKey: localizedDescription]
     }
 }

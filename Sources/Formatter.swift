@@ -174,11 +174,11 @@ public class Formatter: NSObject {
         public let filePath: String?
 
         public var help: String {
-            return stripMarkdown(rule.help).replacingOccurrences(of: "\n", with: " ")
+            stripMarkdown(rule.help).replacingOccurrences(of: "\n", with: " ")
         }
 
         public var description: String {
-            return "\(filePath ?? ""):\(line):1: warning: (\(rule.name)) \(help)"
+            "\(filePath ?? ""):\(line):1: warning: (\(rule.name)) \(help)"
         }
     }
 
@@ -220,7 +220,7 @@ public extension Formatter {
 
     /// Returns the token at the specified index, or nil if index is invalid
     func token(at index: Int) -> Token? {
-        return tokens.indices.contains(index) ? tokens[index] : nil
+        tokens.indices.contains(index) ? tokens[index] : nil
     }
 
     /// Replaces the token at the specified index with one or more new tokens
@@ -264,7 +264,7 @@ public extension Formatter {
     /// Replaces the tokens in the specified range with new tokens
     @discardableResult
     func replaceTokens(in range: Range<Int>, with tokens: [Token]) -> Int {
-        return replaceTokens(in: range, with: ArraySlice(tokens))
+        replaceTokens(in: range, with: ArraySlice(tokens))
     }
 
     /// Replaces the tokens in the specified range with a new token
@@ -285,19 +285,19 @@ public extension Formatter {
     /// Replaces the tokens in the specified range with new tokens
     @discardableResult
     func replaceTokens(in range: ClosedRange<Int>, with tokens: ArraySlice<Token>) -> Int {
-        return replaceTokens(in: range.lowerBound ..< range.upperBound + 1, with: tokens)
+        replaceTokens(in: range.lowerBound ..< range.upperBound + 1, with: tokens)
     }
 
     /// Replaces the tokens in the specified closed range with new tokens
     @discardableResult
     func replaceTokens(in range: ClosedRange<Int>, with tokens: [Token]) -> Int {
-        return replaceTokens(in: range.lowerBound ..< range.upperBound + 1, with: tokens)
+        replaceTokens(in: range.lowerBound ..< range.upperBound + 1, with: tokens)
     }
 
     /// Replaces the tokens in the specified closed range with a new token
     @discardableResult
     func replaceTokens(in range: ClosedRange<Int>, with token: Token) -> Int {
-        return replaceTokens(in: range.lowerBound ..< range.upperBound + 1, with: token)
+        replaceTokens(in: range.lowerBound ..< range.upperBound + 1, with: token)
     }
 
     /// Removes the token at the specified index
@@ -459,37 +459,37 @@ public extension Formatter {
 
     /// Returns the index of the next matching token in the specified range
     func index(of token: Token, in range: CountableRange<Int>) -> Int? {
-        return index(in: range, where: { $0 == token })
+        index(in: range, where: { $0 == token })
     }
 
     /// Returns the index of the next matching token at the current scope
     func index(of token: Token, after index: Int) -> Int? {
-        return self.index(after: index, where: { $0 == token })
+        self.index(after: index, where: { $0 == token })
     }
 
     /// Returns the index of the next token in the specified range of the specified type
     func index(of type: TokenType, in range: CountableRange<Int>, if matches: (Token) -> Bool = { _ in true }) -> Int? {
-        return index(in: range, where: { $0.is(type) }).flatMap { matches(tokens[$0]) ? $0 : nil }
+        index(in: range, where: { $0.is(type) }).flatMap { matches(tokens[$0]) ? $0 : nil }
     }
 
     /// Returns the index of the next token at the current scope of the specified type
     func index(of type: TokenType, after index: Int, if matches: (Token) -> Bool = { _ in true }) -> Int? {
-        return self.index(after: index, where: { $0.is(type) }).flatMap { matches(tokens[$0]) ? $0 : nil }
+        self.index(after: index, where: { $0.is(type) }).flatMap { matches(tokens[$0]) ? $0 : nil }
     }
 
     /// Returns the next token at the current scope that matches the block
     func nextToken(after index: Int, where matches: (Token) -> Bool = { _ in true }) -> Token? {
-        return self.index(after: index, where: matches).map { tokens[$0] }
+        self.index(after: index, where: matches).map { tokens[$0] }
     }
 
     /// Returns the next token at the current scope of the specified type
     func next(_ type: TokenType, after index: Int, if matches: (Token) -> Bool = { _ in true }) -> Token? {
-        return self.index(of: type, after: index, if: matches).map { tokens[$0] }
+        self.index(of: type, after: index, if: matches).map { tokens[$0] }
     }
 
     /// Returns the next token in the specified range of the specified type
     func next(_ type: TokenType, in range: CountableRange<Int>, if matches: (Token) -> Bool = { _ in true }) -> Token? {
-        return index(of: type, in: range, if: matches).map { tokens[$0] }
+        index(of: type, in: range, if: matches).map { tokens[$0] }
     }
 
     /// Returns the index of the last token in the specified range that matches the block
@@ -530,37 +530,37 @@ public extension Formatter {
 
     /// Returns the index of the last matching token in the specified range
     func lastIndex(of token: Token, in range: CountableRange<Int>) -> Int? {
-        return lastIndex(in: range, where: { $0 == token })
+        lastIndex(in: range, where: { $0 == token })
     }
 
     /// Returns the index of the previous matching token at the current scope
     func index(of token: Token, before index: Int) -> Int? {
-        return self.index(before: index, where: { $0 == token })
+        self.index(before: index, where: { $0 == token })
     }
 
     /// Returns the index of the last token in the specified range of the specified type
     func lastIndex(of type: TokenType, in range: CountableRange<Int>, if matches: (Token) -> Bool = { _ in true }) -> Int? {
-        return lastIndex(in: range, where: { $0.is(type) }).flatMap { matches(tokens[$0]) ? $0 : nil }
+        lastIndex(in: range, where: { $0.is(type) }).flatMap { matches(tokens[$0]) ? $0 : nil }
     }
 
     /// Returns the index of the previous token at the current scope of the specified type
     func index(of type: TokenType, before index: Int, if matches: (Token) -> Bool = { _ in true }) -> Int? {
-        return self.index(before: index, where: { $0.is(type) }).flatMap { matches(tokens[$0]) ? $0 : nil }
+        self.index(before: index, where: { $0.is(type) }).flatMap { matches(tokens[$0]) ? $0 : nil }
     }
 
     /// Returns the previous token at the current scope that matches the block
     func lastToken(before index: Int, where matches: (Token) -> Bool) -> Token? {
-        return self.index(before: index, where: matches).map { tokens[$0] }
+        self.index(before: index, where: matches).map { tokens[$0] }
     }
 
     /// Returns the previous token at the current scope of the specified type
     func last(_ type: TokenType, before index: Int, if matches: (Token) -> Bool = { _ in true }) -> Token? {
-        return self.index(of: type, before: index, if: matches).map { tokens[$0] }
+        self.index(of: type, before: index, if: matches).map { tokens[$0] }
     }
 
     /// Returns the previous token in the specified range of the specified type
     func last(_ type: TokenType, in range: CountableRange<Int>, if matches: (Token) -> Bool = { _ in true }) -> Token? {
-        return lastIndex(of: type, in: range, if: matches).map { tokens[$0] }
+        lastIndex(of: type, in: range, if: matches).map { tokens[$0] }
     }
 
     /// Inserts a linebreak at the specified index
@@ -589,7 +589,7 @@ public extension Formatter {
     // As above, but only if formatting is enabled
     @discardableResult
     internal func insertSpaceIfEnabled(_ space: String, at index: Int) -> Int {
-        return isEnabled ? insertSpace(space, at: index) : 0
+        isEnabled ? insertSpace(space, at: index) : 0
     }
 
     /// Returns the original line number at the specified index
@@ -632,11 +632,11 @@ extension String {
 #if !swift(>=5.0)
     extension Character {
         var isUppercase: Bool {
-            return String(self).uppercased() == String(self)
+            String(self).uppercased() == String(self)
         }
 
         var isWhitespace: Bool {
-            return String(self).trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            String(self).trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }
     }
 #endif

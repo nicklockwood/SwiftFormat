@@ -65,11 +65,11 @@ public enum FormatError: Error, CustomStringConvertible, LocalizedError, CustomN
     }
 
     public var localizedDescription: String {
-        return "Error: \(description)."
+        "Error: \(description)."
     }
 
     public var errorUserInfo: [String: Any] {
-        return [NSLocalizedDescriptionKey: localizedDescription]
+        [NSLocalizedDescriptionKey: localizedDescription]
     }
 }
 
@@ -315,7 +315,7 @@ public struct SourceOffset: Equatable, CustomStringConvertible {
     }
 
     public var description: String {
-        return "\(line):\(column)"
+        "\(line):\(column)"
     }
 }
 
@@ -360,7 +360,7 @@ public func tokenIndex(for offset: SourceOffset, in tokens: [Token], tabWidth: I
 /// Deprecated
 @available(*, deprecated, message: "Use tokenIndex(for:) instead")
 public func tokenIndexForOffset(_ offset: SourceOffset, in tokens: [Token], tabWidth: Int) -> Int {
-    return tokenIndex(for: offset, in: tokens, tabWidth: tabWidth)
+    tokenIndex(for: offset, in: tokens, tabWidth: tabWidth)
 }
 
 /// Get token index range for line range
@@ -399,7 +399,7 @@ public func newOffset(for offset: SourceOffset, in tokens: [Token], tabWidth: In
 
 /// Process parsing errors
 public func parsingError(for tokens: [Token], options: FormatOptions) -> FormatError? {
-    guard let index = tokens.index(where: {
+    guard let index = tokens.firstIndex(where: {
         guard options.fragment || !$0.isError else { return true }
         guard !options.ignoreConflictMarkers, case let .operator(string, _) = $0 else { return false }
         return string.hasPrefix("<<<<<") || string.hasPrefix("=====") || string.hasPrefix(">>>>>")
@@ -427,7 +427,7 @@ public func parsingError(for tokens: [Token], options: FormatOptions) -> FormatE
 
 /// Convert a token array back into a string
 public func sourceCode(for tokens: [Token]?) -> String {
-    return (tokens ?? []).map { $0.string }.joined()
+    (tokens ?? []).map { $0.string }.joined()
 }
 
 /// Apply specified rules to a token array and optionally capture list of changes
@@ -570,7 +570,7 @@ public func format(
     _ tokens: [Token], rules: [FormatRule] = FormatRules.default,
     options: FormatOptions = .default, range: Range<Int>? = nil
 ) throws -> [Token] {
-    return try applyRules(rules, to: tokens, with: options, trackChanges: false, range: range).tokens
+    try applyRules(rules, to: tokens, with: options, trackChanges: false, range: range).tokens
 }
 
 /// Format code with specified rules and options
@@ -589,7 +589,7 @@ public func lint(
     _ tokens: [Token], rules: [FormatRule] = FormatRules.default,
     options: FormatOptions = .default, range: Range<Int>? = nil
 ) throws -> [Formatter.Change] {
-    return try applyRules(rules, to: tokens, with: options, trackChanges: true, range: range).changes
+    try applyRules(rules, to: tokens, with: options, trackChanges: true, range: range).changes
 }
 
 /// Lint code with specified rules and options

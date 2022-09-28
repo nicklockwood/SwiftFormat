@@ -110,7 +110,7 @@ final class UserSelectionFreeText: UserSelection {
     }
 
     var isValid: Bool {
-        return validationStrategy(selection)
+        validationStrategy(selection)
     }
 
     private let validationStrategy: (String) -> Bool

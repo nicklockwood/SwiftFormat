@@ -40,7 +40,7 @@ public extension Formatter {
 
     /// Whether or not the two indices represent tokens on the same line
     func onSameLine(_ lhs: Int, _ rhs: Int) -> Bool {
-        return startOfLine(at: lhs) == startOfLine(at: rhs)
+        startOfLine(at: lhs) == startOfLine(at: rhs)
     }
 
     /// Returns the space at the start of the line containing the specified index
@@ -59,12 +59,12 @@ public extension Formatter {
 
     /// Returns the length (in characters) of the line at the specified index
     func lineLength(at index: Int) -> Int {
-        return lineLength(upTo: endOfLine(at: index))
+        lineLength(upTo: endOfLine(at: index))
     }
 
     /// Returns the length (in characters) up to (but not including) the specified token index
     func lineLength(upTo index: Int) -> Int {
-        return lineLength(from: startOfLine(at: index), upTo: index)
+        lineLength(from: startOfLine(at: index), upTo: index)
     }
 
     /// Returns the length (in characters) of the specified token range
@@ -136,7 +136,7 @@ public extension Formatter {
 
     /// Returns the starting token for the containing scope at the specified index
     func currentScope(at index: Int) -> Token? {
-        return last(.startOfScope, before: index)
+        last(.startOfScope, before: index)
     }
 
     /// Returns the index of the ending token for the current scope
@@ -388,7 +388,7 @@ extension Formatter {
     /// Returns true if the modifiers list for the given declaration contain the
     /// specified modifier
     func modifiersForDeclaration(at index: Int, contains: String) -> Bool {
-        return modifiersForDeclaration(at: index, contains: { $1 == contains })
+        modifiersForDeclaration(at: index, contains: { $1 == contains })
     }
 
     /// Returns the index of the specified modifier for a given declaration, or
@@ -422,7 +422,7 @@ extension Formatter {
 
     /// Returns true if token is inside the return type of a function or subscript
     func isInReturnType(at i: Int) -> Bool {
-        return startOfReturnType(at: i) != nil
+        startOfReturnType(at: i) != nil
     }
 
     /// Returns the index of the `->` operator for the current return type declaration if
@@ -625,7 +625,7 @@ extension Formatter {
 
     /// Returns true if the token at the specified index is part of a conditional statement
     func isConditionalStatement(at i: Int) -> Bool {
-        return startOfConditionalStatement(at: i) != nil
+        startOfConditionalStatement(at: i) != nil
     }
 
     /// If the token at the specified index is part of a conditional statement, returns the index of the first
@@ -730,7 +730,7 @@ extension Formatter {
 
     /// Returns true if the token at the specified index is part of an @attribute
     func isAttribute(at i: Int) -> Bool {
-        return startOfAttribute(at: i) != nil
+        startOfAttribute(at: i) != nil
     }
 
     /// If the token at the specified index is part of an @attribute, returns the index of the first
@@ -1623,7 +1623,7 @@ extension Formatter {
     /// - Note: This checks the entire line from the start of the line, the linebreak may be an index preceding the
     ///         `index` passed to the function.
     func indexWhereLineShouldWrapInLine(at index: Int) -> Int? {
-        return indexWhereLineShouldWrap(from: startOfLine(at: index, excludingIndent: true))
+        indexWhereLineShouldWrap(from: startOfLine(at: index, excludingIndent: true))
     }
 
     func indexWhereLineShouldWrap(from index: Int) -> Int? {
@@ -1878,7 +1878,7 @@ extension _FormatRules {
             if allModifiers.contains(input) {
                 return [input]
             }
-            guard let index = input.index(of: "(") else {
+            guard let index = input.firstIndex(of: "(") else {
                 return nil
             }
             let input = String(input[..<index])

@@ -58,12 +58,12 @@ public extension CLI {
 
     /// Run the CLI with the specified input arguments
     static func run(in directory: String, with args: [String] = CommandLine.arguments) -> ExitCode {
-        return processArguments(args, environment: ProcessInfo.processInfo.environment, in: directory)
+        processArguments(args, environment: ProcessInfo.processInfo.environment, in: directory)
     }
 
     /// Run the CLI with the specified input string (this will be parsed into multiple arguments)
     static func run(in directory: String, with argumentString: String) -> ExitCode {
-        return run(in: directory, with: parseArguments(argumentString))
+        run(in: directory, with: parseArguments(argumentString))
     }
 }
 
@@ -762,7 +762,7 @@ func write(_ output: String, to file: URL) throws {
 }
 
 func parseFileList(_ source: String, in directory: String) throws -> [URL] {
-    return try source
+    try source
         .components(separatedBy: .newlines)
         .map { $0.components(separatedBy: "#")[0].trimmingCharacters(in: .whitespaces) }
         .flatMap { try parsePaths($0, in: directory) }

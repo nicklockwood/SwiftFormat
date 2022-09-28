@@ -44,7 +44,7 @@ public final class FormatRule: Equatable, Comparable {
     let deprecationMessage: String?
 
     var isDeprecated: Bool {
-        return deprecationMessage != nil
+        deprecationMessage != nil
     }
 
     fileprivate init(help: String,
@@ -73,11 +73,11 @@ public final class FormatRule: Equatable, Comparable {
     }
 
     public static func == (lhs: FormatRule, rhs: FormatRule) -> Bool {
-        return lhs === rhs
+        lhs === rhs
     }
 
     public static func < (lhs: FormatRule, rhs: FormatRule) -> Bool {
-        return lhs.index < rhs.index
+        lhs.index < rhs.index
     }
 }
 
@@ -127,25 +127,25 @@ private let _defaultRules = allRules(except: _disabledByDefault)
 
 public extension _FormatRules {
     /// A Dictionary of rules by name
-    var byName: [String: FormatRule] { return rulesByName }
+    var byName: [String: FormatRule] { rulesByName }
 
     /// All rules
-    var all: [FormatRule] { return _allRules }
+    var all: [FormatRule] { _allRules }
 
     /// Default active rules
-    var `default`: [FormatRule] { return _defaultRules }
+    var `default`: [FormatRule] { _defaultRules }
 
     /// Rules that are disabled by default
-    var disabledByDefault: [String] { return _disabledByDefault }
+    var disabledByDefault: [String] { _disabledByDefault }
 
     /// Just the specified rules
     func named(_ names: [String]) -> [FormatRule] {
-        return Array(names.sorted().compactMap { rulesByName[$0] })
+        Array(names.sorted().compactMap { rulesByName[$0] })
     }
 
     /// All rules except those specified
     func all(except rules: [String]) -> [FormatRule] {
-        return allRules(except: rules)
+        allRules(except: rules)
     }
 }
 
@@ -2589,7 +2589,7 @@ public struct _FormatRules {
                 {
                     return
                 }
-                if let index = formatter.tokens[i + 1 ..< closingIndex].index(of: .identifier("_")),
+                if let index = formatter.tokens[i + 1 ..< closingIndex].firstIndex(of: .identifier("_")),
                    formatter.next(.nonSpaceOrComment, after: index)?.isIdentifier == true
                 {
                     return
@@ -3742,7 +3742,7 @@ public struct _FormatRules {
             func pushLocals() {
                 if isDeclaration, isConditional {
                     for name in tempLocals {
-                        if let index = argNames.index(of: name),
+                        if let index = argNames.firstIndex(of: name),
                            !locals.contains(name)
                         {
                             argNames.remove(at: index)
@@ -3774,7 +3774,7 @@ public struct _FormatRules {
                     isConditional = formatter.isConditionalStatement(at: i)
                 case .identifier:
                     let name = token.unescaped()
-                    guard let index = argNames.index(of: name), !locals.contains(name) else {
+                    guard let index = argNames.firstIndex(of: name), !locals.contains(name) else {
                         break
                     }
                     if formatter.last(.nonSpaceOrCommentOrLinebreak, before: i)?.isOperator(".") == false,
@@ -5730,7 +5730,7 @@ public struct _FormatRules {
 
         formatter.forEachToken { i, token in
             guard case let .operator(op, .infix) = token,
-                  let opIndex = ["==", "!=", "<", "<=", ">", ">="].index(of: op),
+                  let opIndex = ["==", "!=", "<", "<=", ">", ">="].firstIndex(of: op),
                   let prevIndex = formatter.index(of: .nonSpace, before: i),
                   isConstant(at: prevIndex), let startIndex = startOfValue(at: prevIndex),
                   !isOperator(at: formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startIndex)),
@@ -5963,8 +5963,8 @@ public struct _FormatRules {
             // place it on the extension itself.
             case .onExtension:
                 if extensionVisibility == nil,
-                   let delimiterIndex = declaration.openTokens.index(of: .delimiter(":")),
-                   declaration.openTokens.index(of: .keyword("where")).map({ $0 > delimiterIndex }) ?? true
+                   let delimiterIndex = declaration.openTokens.firstIndex(of: .delimiter(":")),
+                   declaration.openTokens.firstIndex(of: .keyword("where")).map({ $0 > delimiterIndex }) ?? true
                 {
                     // Extension adds protocol conformance so can't have visibility modifier
                     return declaration
@@ -6232,7 +6232,7 @@ public struct _FormatRules {
                 //    that a user could use the the type name (orphaned renames, etc.)
                 var commentPrefixes = Set(["// MARK: ", "// MARK: - "])
 
-                if let typeNameSymbolIndex = commentTemplate.index(of: "%") {
+                if let typeNameSymbolIndex = commentTemplate.firstIndex(of: "%") {
                     commentPrefixes.insert(String(commentTemplate.prefix(upTo: typeNameSymbolIndex)))
                 }
 

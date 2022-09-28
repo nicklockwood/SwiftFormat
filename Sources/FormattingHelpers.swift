@@ -537,7 +537,7 @@ extension Formatter {
 
             } else if maxWidth > 0, hasMultipleArguments || wrapSingleArguments {
                 func willWrapAtStartOfReturnType(maxWidth: Int) -> Bool {
-                    return isInReturnType(at: i) && maxWidth < lineLength(at: i)
+                    isInReturnType(at: i) && maxWidth < lineLength(at: i)
                 }
 
                 func startOfNextScopeNotInReturnType() -> Int? {
@@ -902,7 +902,7 @@ extension Formatter {
         _ declarations: [Declaration], in stack: [Declaration] = [],
         with transform: (Declaration, _ stack: [Declaration]) -> Declaration
     ) -> [Declaration] {
-        return declarations.map { declaration in
+        declarations.map { declaration in
             let mapped = transform(declaration, stack)
             switch mapped {
             case let .type(kind, open, body, close):
@@ -959,7 +959,7 @@ extension Formatter {
         _ body: [Declaration],
         with transform: (Declaration) -> Declaration
     ) -> [Declaration] {
-        return body.map { bodyDeclaration in
+        body.map { bodyDeclaration in
             // Apply `mapBodyDeclaration` to each declaration in the body
             switch bodyDeclaration {
             case .declaration, .type:
@@ -980,7 +980,7 @@ extension Formatter {
         _ declarations: [Declaration],
         with transform: (Declaration) -> T
     ) -> [T] {
-        return declarations.flatMap { declaration -> [T] in
+        declarations.flatMap { declaration -> [T] in
             switch declaration {
             case .declaration, .type:
                 return [transform(declaration)]
@@ -1101,7 +1101,7 @@ extension Formatter {
         case `private`
 
         static func < (lhs: Visibility, rhs: Visibility) -> Bool {
-            return allCases.index(of: lhs)! > allCases.index(of: rhs)!
+            allCases.firstIndex(of: lhs)! > allCases.firstIndex(of: rhs)!
         }
     }
 
@@ -1469,15 +1469,15 @@ extension Formatter {
             byCategory sortByCategory: Bool,
             byType sortByType: Bool
         ) -> CategorizedDeclarations {
-            return declarations.enumerated()
+            declarations.enumerated()
                 .sorted(by: { lhs, rhs in
                     let (lhsOriginalIndex, lhs) = lhs
                     let (rhsOriginalIndex, rhs) = rhs
 
                     // Sort primarily by category
                     if sortByCategory,
-                       let lhsCategorySortOrder = Formatter.categoryOrdering.index(of: lhs.category),
-                       let rhsCategorySortOrder = Formatter.categoryOrdering.index(of: rhs.category),
+                       let lhsCategorySortOrder = Formatter.categoryOrdering.firstIndex(of: lhs.category),
+                       let rhsCategorySortOrder = Formatter.categoryOrdering.firstIndex(of: rhs.category),
                        lhsCategorySortOrder != rhsCategorySortOrder
                     {
                         return lhsCategorySortOrder < rhsCategorySortOrder
@@ -1489,8 +1489,8 @@ extension Formatter {
                        rhs.category != .beforeMarks,
                        let lhsType = lhs.type,
                        let rhsType = rhs.type,
-                       let lhsTypeSortOrder = Formatter.categorySubordering.index(of: lhsType),
-                       let rhsTypeSortOrder = Formatter.categorySubordering.index(of: rhsType),
+                       let lhsTypeSortOrder = Formatter.categorySubordering.firstIndex(of: lhsType),
+                       let rhsTypeSortOrder = Formatter.categorySubordering.firstIndex(of: rhsType),
                        lhsTypeSortOrder != rhsTypeSortOrder
                     {
                         return lhsTypeSortOrder < rhsTypeSortOrder
@@ -1645,8 +1645,10 @@ extension Formatter {
 
     /// Removes the given visibility keyword from the given declaration
     func remove(_ visibilityKeyword: Visibility, from declaration: Declaration) -> Declaration {
-        return mapOpeningTokens(in: declaration) { openTokens in
-            guard let visibilityKeywordIndex = openTokens.index(of: .keyword(visibilityKeyword.rawValue)) else {
+        mapOpeningTokens(in: declaration) { openTokens in
+            guard let visibilityKeywordIndex = openTokens
+                .firstIndex(of: .keyword(visibilityKeyword.rawValue))
+            else {
                 return openTokens
             }
 
@@ -1671,7 +1673,9 @@ extension Formatter {
         }
 
         return mapOpeningTokens(in: declaration) { openTokens in
-            guard let indexOfKeyword = openTokens.index(of: .keyword(declaration.keyword)) else {
+            guard let indexOfKeyword = openTokens
+                .firstIndex(of: .keyword(declaration.keyword))
+            else {
                 return openTokens
             }
 

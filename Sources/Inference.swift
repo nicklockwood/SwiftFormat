@@ -534,7 +534,7 @@ private struct Inference {
         func removeUsed<T>(from argNames: inout [String], with associatedData: inout [T], in range: CountableRange<Int>) {
             for i in range {
                 let token = formatter.tokens[i]
-                if case .identifier = token, let index = argNames.index(of: token.unescaped()),
+                if case .identifier = token, let index = argNames.firstIndex(of: token.unescaped()),
                    formatter.last(.nonSpaceOrCommentOrLinebreak, before: i)?.isOperator(".") == false,
                    formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) != .delimiter(":") ||
                    formatter.currentScope(at: i) == .startOfScope("[")
@@ -1366,10 +1366,10 @@ private extension Formatter {
             case .binary, .octal:
                 digits = String(number[prefix.endIndex...])
             case .hex:
-                let endIndex = number.index { [".", "p", "P"].contains($0) } ?? number.endIndex
+                let endIndex = number.firstIndex { [".", "p", "P"].contains($0) } ?? number.endIndex
                 digits = String(number[prefix.endIndex ..< endIndex])
             case .decimal:
-                let endIndex = number.index { [".", "e", "E"].contains($0) } ?? number.endIndex
+                let endIndex = number.firstIndex { [".", "e", "E"].contains($0) } ?? number.endIndex
                 digits = String(number[..<endIndex])
             }
             // Get the group for this number

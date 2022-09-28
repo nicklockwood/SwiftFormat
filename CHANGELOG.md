@@ -1,5 +1,19 @@
 # Change Log
 
+## [0.50.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.50.0) (2022-09-28)
+
+- Added `genericExtensions` rule for simplifying conditional type extensions in Swift 5.7
+- Added `markTypes` support for type definitions in extensions
+- Added `opaqueGenericParameters` rule  to use opaque generic parameter syntax where equivalent
+- Added `blankLineAfterImports` rule
+- Added `redundantOptionalBinding` rule for simplifying `if let` expressions in Swift 5.7
+- Added `--enumnamespaces structs-only` option
+- Added `wrapSingleLineComments` rule
+- A `--swiftversion` in the `.swiftformat` config now takes precedence over `.swift-version` file
+- Multiline string interpolations can now wrap inside parenthesized expression
+- Comma-delimited options in descendent `.swiftformat` config files are no longer merged
+- SwiftFormat now requires a minimum of Swift 5.1 to build
+
 ## [0.49.18](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.49.18) (2022-08-30)
 
 - Fixed bug in `unusedArguments` when argument is shadowed in a `switch` case statement

@@ -7267,21 +7267,11 @@ public struct _FormatRules {
                 {
                     let commentBody = commentBodyToken.string.trimmingCharacters(in: .whitespaces)
 
-                    // SwiftFormat directive comments like `// swiftformat:disable rule`
-                    // shouldn't be converted to doc comments, since these don't provide
-                    // documentation (and changing them causes a bunch of test failures)
-                    for directive in formatter.directives
-                        where commentBody.hasPrefix("swiftformat:\(directive)")
-                    {
-                        return false
-                    }
-
-                    // Mark comments like `// MARK: Foo` can't be updated to doc comments
-                    // because this breaks the Xcode navigator. We also don't modify
-                    // `sourcery` comments, since that breaks some test cases and possibly
-                    // breaks real-world use cases.
-                    for knownTag in ["MARK", "SOURCERY"]
-                        where commentBody.uppercased().hasPrefix(knownTag)
+                    // Don't modify directive comments like `// MARK: Section title`
+                    // or `// swiftformat:disable rule`, since those tools expect
+                    // regular comments and not doc comments.
+                    for knownTag in ["mark", "swiftformat", "sourcery", "swiftlint"]
+                        where commentBody.lowercased().hasPrefix(knownTag + ":")
                     {
                         return false
                     }

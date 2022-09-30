@@ -3080,4 +3080,19 @@ class SyntaxTests: RulesTests {
 
         testFormatting(for: input, output, rule: FormatRules.docComments, exclude: ["spaceInsideComments"])
     }
+
+    func testDoesntConvertAnnotationCommentsToDocComments() {
+        let input = """
+        // swiftformat:disable some_swift_format_rule
+        let testSwiftLint: Foo
+
+        // swiftlint:disable some_swift_lint_rule
+        let testSwiftLint: Foo
+
+        // sourcery:directive
+        let testSourcery: Foo
+        """
+
+        testFormatting(for: input, rule: FormatRules.docComments)
+    }
 }

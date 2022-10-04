@@ -445,7 +445,7 @@ public final class Expression: CustomStringConvertible {
     private static var cache = [String: Subexpression]()
     private static let queue = DispatchQueue(label: "com.Expression")
 
-    // For testing
+    /// For testing
     static func isCached(_ expression: String) -> Bool {
         return queue.sync { cache[expression] != nil }
     }
@@ -598,7 +598,7 @@ public final class Expression: CustomStringConvertible {
 // MARK: Internal API
 
 extension Expression {
-    // Fallback evaluator for when symbol is not found
+    /// Fallback evaluator for when symbol is not found
     static func errorEvaluator(for symbol: Symbol) -> SymbolEvaluator {
         switch symbol {
         case .infix(","),
@@ -628,7 +628,7 @@ private extension Expression {
         return "\(number)"
     }
 
-    // https://github.com/apple/swift-evolution/blob/master/proposals/0077-operator-precedence.md
+    /// https://github.com/apple/swift-evolution/blob/master/proposals/0077-operator-precedence.md
     static let operatorPrecedence: [String: (precedence: Int, isRightAssociative: Bool)] = {
         var precedences = [
             "[]": 100,
@@ -803,7 +803,7 @@ public struct ParsedExpression: CustomStringConvertible {
     }
 }
 
-// The internal expression implementation
+/// The internal expression implementation
 private enum Subexpression: CustomStringConvertible {
     case literal(Double)
     case symbol(Expression.Symbol, [Subexpression], Expression.SymbolEvaluator?)
@@ -972,7 +972,7 @@ private enum Subexpression: CustomStringConvertible {
 
 // MARK: Expression parsing
 
-// Workaround for horribly slow Substring.UnicodeScalarView perf
+/// Workaround for horribly slow Substring.UnicodeScalarView perf
 private struct UnicodeScalarView {
     public typealias Index = String.UnicodeScalarView.Index
 
@@ -1258,8 +1258,8 @@ private extension UnicodeScalarView {
         return .symbol(.variable(identifier), [], nil)
     }
 
-    // Note: this is not actually part of the parser, but is colocated
-    // with `parseEscapedIdentifier()` because they should be updated together
+    /// Note: this is not actually part of the parser, but is colocated
+    /// with `parseEscapedIdentifier()` because they should be updated together
     func escapedIdentifier() -> String {
         guard let delimiter = first, "`'\"".unicodeScalars.contains(delimiter) else {
             return String(self)

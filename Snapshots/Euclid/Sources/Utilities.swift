@@ -29,10 +29,10 @@
 //  SOFTWARE.
 //
 
-// Tolerance used for calculating approximate equality
+/// Tolerance used for calculating approximate equality
 let epsilon = 1e-6
 
-// Round-off floating point values to simplify equality checks
+/// Round-off floating point values to simplify equality checks
 func quantize(_ value: Double) -> Double {
     let precision = 1e-8 * 1e-3
     return (value / precision).rounded() * precision
@@ -158,7 +158,7 @@ func faceNormalForConvexPoints(_ points: [Vector]) -> Vector {
     }
 }
 
-// https://stackoverflow.com/questions/1165647/how-to-determine-if-a-list-of-polygon-points-are-in-clockwise-order#1165943
+/// https://stackoverflow.com/questions/1165647/how-to-determine-if-a-list-of-polygon-points-are-in-clockwise-order#1165943
 func flattenedPointsAreClockwise(_ points: [Vector]) -> Bool {
     assert(!points.contains(where: { $0.z != 0 }))
     let points = (points.first == points.last) ? points.dropLast() : [Vector].SubSequence(points)

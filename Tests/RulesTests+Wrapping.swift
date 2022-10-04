@@ -3980,7 +3980,7 @@ class WrappingTests: RulesTests {
         """
 
         testFormatting(for: input, output, rule: FormatRules.wrapSingleLineComments,
-                       options: FormatOptions(maxWidth: 7))
+                       options: FormatOptions(maxWidth: 7), exclude: ["docComments"])
     }
 
     func testWrapSingleLineCommentWithIndent() {
@@ -3999,7 +3999,7 @@ class WrappingTests: RulesTests {
         """
 
         testFormatting(for: input, output, rule: FormatRules.wrapSingleLineComments,
-                       options: FormatOptions(maxWidth: 14))
+                       options: FormatOptions(maxWidth: 14), exclude: ["docComments"])
     }
 
     func testWrapSingleLineCommentAfterCode() {

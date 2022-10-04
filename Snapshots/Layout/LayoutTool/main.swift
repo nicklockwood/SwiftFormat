@@ -125,6 +125,6 @@ func processArguments(_ args: [String]) -> ExitResult {
     }
 }
 
-// Pass in arguments and exit
+/// Pass in arguments and exit
 let result = processArguments(CommandLine.arguments)
 exit(result.rawValue)

@@ -484,8 +484,8 @@ class LinebreakTests: RulesTests {
     }
 
     func testBlankLineBetweenFunctionsIsBeforeComment() {
-        let input = "func foo() {\n}\n// headerdoc\nfunc bar() {\n}"
-        let output = "func foo() {\n}\n\n// headerdoc\nfunc bar() {\n}"
+        let input = "func foo() {\n}\n/// headerdoc\nfunc bar() {\n}"
+        let output = "func foo() {\n}\n\n/// headerdoc\nfunc bar() {\n}"
         testFormatting(for: input, output, rule: FormatRules.blankLinesBetweenScopes,
                        exclude: ["emptyBraces"])
     }

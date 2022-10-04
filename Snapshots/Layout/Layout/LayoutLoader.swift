@@ -8,7 +8,7 @@ func clearLayoutLoaderCache() {
     cache.removeAll()
 }
 
-// Cache for previously loaded layouts
+/// Cache for previously loaded layouts
 private var cache = [URL: Layout]()
 private let queue = DispatchQueue(label: "com.Layout.LayoutLoader")
 private var reloadLock = 0
@@ -54,7 +54,7 @@ private extension Layout {
         return insertChildren(layout.children, into: result)
     }
 
-    // Insert children into hierarchy
+    /// Insert children into hierarchy
     private func insertChildren(_ children: [Layout], into layout: Layout) -> Layout {
         func _insertChildren(_ children: [Layout], into layout: inout Layout) -> Bool {
             if let index = layout.childrenTagIndex {
@@ -120,7 +120,7 @@ private extension Layout {
     }
 }
 
-// API for loading a layout XML file
+/// API for loading a layout XML file
 class LayoutLoader {
     private var _originalURL: URL!
     private var _xmlURL: URL!

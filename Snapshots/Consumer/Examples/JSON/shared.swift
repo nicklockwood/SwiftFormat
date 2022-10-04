@@ -6,7 +6,7 @@
 //  Copyright © 2018 Nick Lockwood. All rights reserved.
 //
 
-/// This code is shared between the interpreted and compiled versions of the JSON parser
+// This code is shared between the interpreted and compiled versions of the JSON parser
 
 /// JSON parsing errors
 enum JSONError: Swift.Error {
@@ -24,7 +24,7 @@ enum JSONLabel: String {
     case array
     case object
 
-    // Internal types
+    /// Internal types
     case unichar
     case keyValue
 }

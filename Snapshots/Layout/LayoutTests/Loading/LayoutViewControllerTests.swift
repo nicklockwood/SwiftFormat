@@ -13,7 +13,7 @@ private func url(forXml name: String) throws -> URL {
 }
 
 class LayoutViewControllerTests: XCTestCase {
-    // Test class which overrides layoutDidLoad(_:)
+    /// Test class which overrides layoutDidLoad(_:)
     private class TestLayoutViewController: UIViewController, LayoutLoading {
         var layoutDidLoadLayoutNode: LayoutNode?
         var layoutDidLoadLayoutNodeCallCount = 0

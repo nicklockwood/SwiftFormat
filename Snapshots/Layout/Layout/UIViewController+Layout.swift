@@ -257,7 +257,7 @@ extension UIViewController: LayoutManaged {
         return [:]
     }
 
-    // Set expression value
+    /// Set expression value
     @objc open func setValue(_ value: Any, forExpression name: String) throws {
         switch name {
         case "tabBarItem.title":
@@ -301,7 +301,7 @@ extension UIViewController: LayoutManaged {
         }
     }
 
-    // Set expression value with animation (if applicable)
+    /// Set expression value with animation (if applicable)
     @objc open func setAnimatedValue(_ value: Any, forExpression name: String) throws {
         let type = Swift.type(of: self).cachedExpressionTypes[name]
         if try !_setValue(value, ofType: type, forKey: name, animated: true) {
@@ -657,7 +657,7 @@ extension UINavigationController {
     }
 }
 
-// TODO: better support for alert actions and text fields
+/// TODO: better support for alert actions and text fields
 extension UIAlertController {
     open override class var expressionTypes: [String: RuntimeType] {
         var types = super.expressionTypes

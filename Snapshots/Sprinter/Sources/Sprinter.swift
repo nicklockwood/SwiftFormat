@@ -106,7 +106,7 @@ public struct FormatString {
         case size = "z"
         case ptrdiff = "t"
         case longDouble = "L"
-        // Apple-specific
+        /// Apple-specific
         case quadword = "q" // equivalent to ll
 
         fileprivate init?(_ input: inout String.UnicodeScalarView.SubSequence) {
@@ -161,7 +161,7 @@ public struct FormatString {
         case wideChar = "C" // equivalent to lc
         case wideString = "S" // equivalent to ls
         case percentChar = "%"
-        // Apple-specific
+        /// Apple-specific
         case uppercaseDecimal = "D" // equivalent to d
         case uppercaseOctal = "O" // equivalent to o
         case uppercaseUnsigned = "U" // equivalent to u
@@ -582,11 +582,11 @@ public struct FormatString {
         }
     }
 
-    // Internal representation
+    /// Internal representation
     let locale: Locale?
     let tokens: [Token]
 
-    // Just the placeholder values - useful for testing
+    /// Just the placeholder values - useful for testing
     var placeholders: [Placeholder] {
         return tokens.flatMap { (token: Token) -> [Placeholder] in
             if case let .placeholder(placeholder) = token {

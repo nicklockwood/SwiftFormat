@@ -2353,7 +2353,7 @@ Wrap the opening brace of multiline statements.
 
 ## wrapSingleLineComments
 
-Wraps single line `//` comments that don't fit specified `--maxwidth` option.
+Wrap single line `//` comments that exceed the specified `--maxwidth`.
 
 ## wrapSwitchCases
 

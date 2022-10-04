@@ -4359,9 +4359,9 @@ public struct _FormatRules {
         }
     }
 
-    /// Wraps single-line comments that exceed given `FormatOptions.maxWidth` setting.
+    /// Wrap single-line comments that exceed given `FormatOptions.maxWidth` setting.
     public let wrapSingleLineComments = FormatRule(
-        help: "Wraps single line `//` comments that don't fit specified `--maxwidth` option.",
+        help: "Wrap single line `//` comments that exceed the specified `--maxwidth`.",
         sharedOptions: ["maxwidth", "indent", "tabwidth", "assetliterals"]
     ) { formatter in
         let delimiterLength = "//".count

@@ -1577,6 +1577,24 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.andOperator)
     }
 
+    func testAndOperatorCrash() {
+        let input = """
+        DragGesture().onChanged { gesture in
+            if gesture.translation.width < 50 && gesture.translation.height > 50 {
+                offset = gesture.translation
+            }
+        }
+        """
+        let output = """
+        DragGesture().onChanged { gesture in
+            if gesture.translation.width < 50, gesture.translation.height > 50 {
+                offset = gesture.translation
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.andOperator)
+    }
+
     func testNoReplaceAndInViewBuilder() {
         let input = """
         SomeView {

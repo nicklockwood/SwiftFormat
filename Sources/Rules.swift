@@ -5047,10 +5047,10 @@ public struct _FormatRules {
                     {
                         // Check if this would cause ambiguity for chevrons
                         var tokens = Array(formatter.tokens[i ... endIndex])
-                        tokens[index] = .delimiter(",")
+                        tokens[index - i] = .delimiter(",")
                         tokens.append(.endOfScope("}"))
                         let reparsed = tokenize(sourceCode(for: tokens))
-                        if reparsed[chevronIndex] == .startOfScope("<") {
+                        if reparsed[chevronIndex - i] == .startOfScope("<") {
                             return
                         }
                     }

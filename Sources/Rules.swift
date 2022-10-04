@@ -6885,7 +6885,7 @@ public struct _FormatRules {
         Use opaque generic parameters (`some Protocol`) instead of generic parameters
         with constraints (`T where T: Protocol`, etc) where equivalent. Also supports
         primary associated types for common standard library types, so definitions like
-        `T where T: Collection, T.Element == Foo` are upated to `some Collection<Foo>`.
+        `T where T: Collection, T.Element == Foo` are updated to `some Collection<Foo>`.
         """,
         options: ["someAny"]
     ) { formatter in
@@ -6968,7 +6968,7 @@ public struct _FormatRules {
                 }
 
                 // If the generic type is used in a constraint of any other generic type, then the type
-                // cant be removed without breaking that other type
+                // can't be removed without breaking that other type
                 let otherGenericTypes = genericTypes.filter { $0.name != genericType.name }
                 let otherTypeConformances = otherGenericTypes.flatMap { $0.conformances }
                 for otherTypeConformance in otherTypeConformances {

@@ -31,7 +31,7 @@
 
 import Foundation
 
-// a rotation matrix
+/// a rotation matrix
 public struct Rotation: Hashable {
     var m11: Double
     var m12: Double
@@ -112,7 +112,7 @@ public extension Rotation {
     }
 
     /// Define a rotation from Euler angles
-    // http://planning.cs.uiuc.edu/node102.html
+    /// http://planning.cs.uiuc.edu/node102.html
     init(pitch: Double, yaw: Double = 0, roll: Double = 0) {
         self = .pitch(pitch)
         if yaw != 0 {
@@ -143,7 +143,7 @@ public extension Rotation {
         }
     }
 
-    // http://planning.cs.uiuc.edu/node103.html
+    /// http://planning.cs.uiuc.edu/node103.html
     var pitch: Double {
         return atan2(m32, m33)
     }
@@ -191,7 +191,7 @@ public extension Rotation {
 }
 
 internal extension Rotation {
-    // http://www.euclideanspace.com/maths/geometry/rotations/conversions/angleToMatrix/
+    /// http://www.euclideanspace.com/maths/geometry/rotations/conversions/angleToMatrix/
     init(unchecked axis: Vector, radians: Double) {
         assert(axis.isNormalized)
         let c = cos(radians)
@@ -382,7 +382,7 @@ public extension Vertex {
 }
 
 public extension Vector {
-    /// NOTE: no need for a translated() function because of the + operator
+    // NOTE: no need for a translated() function because of the + operator
 
     func rotated(by m: Rotation) -> Vector {
         return Vector(

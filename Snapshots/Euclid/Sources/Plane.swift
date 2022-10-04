@@ -115,14 +115,14 @@ internal extension Plane {
         self.init(unchecked: normal, pointOnPlane: points[0])
     }
 
-    // Approximate equality
+    /// Approximate equality
     func isEqual(to other: Plane, withPrecision p: Double = epsilon) -> Bool {
         return abs(w - other.w) < p && normal.isEqual(to: other.normal, withPrecision: p)
     }
 }
 
-// An enum of planes along the X, Y and Z axes
-// Used internally for flattening 3D paths and polygons
+/// An enum of planes along the X, Y and Z axes
+/// Used internally for flattening 3D paths and polygons
 enum FlatteningPlane: RawRepresentable {
     case xy
     case xz

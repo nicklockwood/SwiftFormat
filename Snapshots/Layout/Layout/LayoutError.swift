@@ -148,8 +148,8 @@ public enum LayoutError: Error, Hashable, CustomStringConvertible {
         }
     }
 
-    // Returns true if the error can be cleared, or false if the
-    // error is fundamental, and requires a code change + reload to fix it
+    /// Returns true if the error can be cleared, or false if the
+    /// error is fundamental, and requires a code change + reload to fix it
     public var isTransient: Bool {
         switch self {
         case let .generic(error, _),

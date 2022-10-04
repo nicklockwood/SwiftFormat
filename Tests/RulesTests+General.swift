@@ -364,27 +364,27 @@ class GeneralTests: RulesTests {
     // MARK: - fileHeader
 
     func testStripHeader() {
-        let input = "//\n//  test.swift\n//  SwiftFormat\n//\n//  Created by Nick Lockwood on 08/11/2016.\n//  Copyright © 2016 Nick Lockwood. All rights reserved.\n//\n\n// func\nfunc foo() {}"
-        let output = "// func\nfunc foo() {}"
+        let input = "//\n//  test.swift\n//  SwiftFormat\n//\n//  Created by Nick Lockwood on 08/11/2016.\n//  Copyright © 2016 Nick Lockwood. All rights reserved.\n//\n\n/// func\nfunc foo() {}"
+        let output = "/// func\nfunc foo() {}"
         let options = FormatOptions(fileHeader: "")
         testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
     }
 
     func testMultilineCommentHeader() {
-        let input = "/****************************/\n/* Created by Nick Lockwood */\n/****************************/\n\n\n// func\nfunc foo() {}"
-        let output = "// func\nfunc foo() {}"
+        let input = "/****************************/\n/* Created by Nick Lockwood */\n/****************************/\n\n\n/// func\nfunc foo() {}"
+        let output = "/// func\nfunc foo() {}"
         let options = FormatOptions(fileHeader: "")
         testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
     }
 
     func testNoStripHeaderWhenDisabled() {
-        let input = "//\n//  test.swift\n//  SwiftFormat\n//\n//  Created by Nick Lockwood on 08/11/2016.\n//  Copyright © 2016 Nick Lockwood. All rights reserved.\n//\n\n// func\nfunc foo() {}"
+        let input = "//\n//  test.swift\n//  SwiftFormat\n//\n//  Created by Nick Lockwood on 08/11/2016.\n//  Copyright © 2016 Nick Lockwood. All rights reserved.\n//\n\n/// func\nfunc foo() {}"
         let options = FormatOptions(fileHeader: .ignore)
         testFormatting(for: input, rule: FormatRules.fileHeader, options: options)
     }
 
     func testNoStripComment() {
-        let input = "\n// func\nfunc foo() {}"
+        let input = "\n/// func\nfunc foo() {}"
         let options = FormatOptions(fileHeader: "")
         testFormatting(for: input, rule: FormatRules.fileHeader, options: options)
     }
@@ -415,22 +415,22 @@ class GeneralTests: RulesTests {
     }
 
     func testSetSingleLineHeader() {
-        let input = "//\n//  test.swift\n//  SwiftFormat\n//\n//  Created by Nick Lockwood on 08/11/2016.\n//  Copyright © 2016 Nick Lockwood. All rights reserved.\n//\n\n// func\nfunc foo() {}"
-        let output = "// Hello World\n\n// func\nfunc foo() {}"
+        let input = "//\n//  test.swift\n//  SwiftFormat\n//\n//  Created by Nick Lockwood on 08/11/2016.\n//  Copyright © 2016 Nick Lockwood. All rights reserved.\n//\n\n/// func\nfunc foo() {}"
+        let output = "// Hello World\n\n/// func\nfunc foo() {}"
         let options = FormatOptions(fileHeader: "// Hello World")
         testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
     }
 
     func testSetMultilineHeader() {
-        let input = "//\n//  test.swift\n//  SwiftFormat\n//\n//  Created by Nick Lockwood on 08/11/2016.\n//  Copyright © 2016 Nick Lockwood. All rights reserved.\n//\n\n// func\nfunc foo() {}"
-        let output = "// Hello\n// World\n\n// func\nfunc foo() {}"
+        let input = "//\n//  test.swift\n//  SwiftFormat\n//\n//  Created by Nick Lockwood on 08/11/2016.\n//  Copyright © 2016 Nick Lockwood. All rights reserved.\n//\n\n/// func\nfunc foo() {}"
+        let output = "// Hello\n// World\n\n/// func\nfunc foo() {}"
         let options = FormatOptions(fileHeader: "// Hello\n// World")
         testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
     }
 
     func testSetMultilineHeaderWithMarkup() {
-        let input = "//\n//  test.swift\n//  SwiftFormat\n//\n//  Created by Nick Lockwood on 08/11/2016.\n//  Copyright © 2016 Nick Lockwood. All rights reserved.\n//\n\n// func\nfunc foo() {}"
-        let output = "/*--- Hello ---*/\n/*--- World ---*/\n\n// func\nfunc foo() {}"
+        let input = "//\n//  test.swift\n//  SwiftFormat\n//\n//  Created by Nick Lockwood on 08/11/2016.\n//  Copyright © 2016 Nick Lockwood. All rights reserved.\n//\n\n/// func\nfunc foo() {}"
+        let output = "/*--- Hello ---*/\n/*--- World ---*/\n\n/// func\nfunc foo() {}"
         let options = FormatOptions(fileHeader: "/*--- Hello ---*/\n/*--- World ---*/")
         testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
     }
@@ -450,7 +450,7 @@ class GeneralTests: RulesTests {
     func testNoStripHeaderDocWithNewlineBeforeCode() {
         let input = "/// Header doc\n\nclass Foo {}"
         let options = FormatOptions(fileHeader: "")
-        testFormatting(for: input, rule: FormatRules.fileHeader, options: options)
+        testFormatting(for: input, rule: FormatRules.fileHeader, options: options, exclude: ["docComments"])
     }
 
     func testNoDuplicateHeaderIfMissingTrailingBlankLine() {

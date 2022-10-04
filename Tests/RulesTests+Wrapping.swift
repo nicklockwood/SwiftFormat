@@ -3953,7 +3953,9 @@ class WrappingTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.wrapSwitchCases)
     }
 
-    func testWrapSingleLineComments() {
+    // MARK: wrapSingleLineComments
+
+    func testWrapSingleLineComment() {
         let input = """
         // a b cde fgh
         """
@@ -3967,7 +3969,7 @@ class WrappingTests: RulesTests {
                        options: FormatOptions(maxWidth: 6))
     }
 
-    func testWrapSingleLineCommentsIndentation() {
+    func testWrapSingleLineCommentWithIndent() {
         let input = """
         func f() {
             // a b cde fgh

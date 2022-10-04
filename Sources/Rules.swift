@@ -4397,10 +4397,11 @@ public struct _FormatRules {
             if let token = formatter.token(at: startOfLine), case .space = token {
                 prefix.insert(token, at: prefix.startIndex)
             }
+            let commentPrefix = ["/ ", "/"].first(where: comment.hasPrefix) ?? ""
             formatter.replaceTokens(in: startIndex ..< endOfLine, with: [
                 .commentBody(comment), formatter.linebreakToken(for: startIndex),
             ] + prefix + [
-                .commentBody(words.joined(separator: " ")),
+                .commentBody(commentPrefix + words.joined(separator: " ")),
             ])
         }
     }

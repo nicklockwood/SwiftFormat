@@ -4362,7 +4362,7 @@ public struct _FormatRules {
     /// Wrap single-line comments that exceed given `FormatOptions.maxWidth` setting.
     public let wrapSingleLineComments = FormatRule(
         help: "Wrap single line `//` comments that exceed the specified `--maxwidth`.",
-        sharedOptions: ["maxwidth", "indent", "tabwidth", "assetliterals"]
+        sharedOptions: ["maxwidth", "indent", "tabwidth", "assetliterals", "linebreaks"]
     ) { formatter in
         let delimiterLength = "//".count
         var maxWidth = formatter.options.maxWidth
@@ -4385,33 +4385,23 @@ public struct _FormatRules {
                 return
             }
 
-            let prefix = formatter.tokens[startOfLine ..< startIndex]
-            let prefixLength = formatter.lineLength(upTo: startIndex)
-            var length = prefixLength
             var words = comment.components(separatedBy: " ")
-            var tokens = [Token]()
-            guard case var .linebreak(linebreak, lineNumber) = formatter
-                .linebreakToken(for: startIndex)
-            else {
-                assertionFailure()
-                return
+            comment = words.removeFirst()
+            var length = formatter.lineLength(upTo: startIndex) + comment.count
+            while let next = words.first, length + next.count < maxWidth {
+                comment += " \(next)"
+                length += next.count + 1
+                words.removeFirst()
             }
-            while !words.isEmpty {
-                if !tokens.isEmpty {
-                    tokens.append(.linebreak(linebreak, lineNumber))
-                    tokens += prefix
-                    lineNumber += 1
-                }
-                comment = words.removeFirst()
-                while let next = words.first, length + next.count < maxWidth {
-                    comment += " \(next)"
-                    length += next.count + 1
-                    words.removeFirst()
-                }
-                tokens.append(.commentBody(comment))
-                length = prefixLength
+            var prefix = formatter.tokens[i ..< startIndex]
+            if let token = formatter.token(at: startOfLine), case .space = token {
+                prefix.insert(token, at: prefix.startIndex)
             }
-            formatter.replaceTokens(in: startIndex ..< endOfLine, with: tokens)
+            formatter.replaceTokens(in: startIndex ..< endOfLine, with: [
+                .commentBody(comment), formatter.linebreakToken(for: startIndex),
+            ] + prefix + [
+                .commentBody(words.joined(separator: " ")),
+            ])
         }
     }
 

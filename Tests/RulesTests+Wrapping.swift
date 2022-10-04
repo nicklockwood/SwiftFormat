@@ -3985,6 +3985,24 @@ class WrappingTests: RulesTests {
         """
 
         testFormatting(for: input, output, rule: FormatRules.wrapSingleLineComments,
-                       options: FormatOptions(maxWidth: 13))
+                       options: FormatOptions(maxWidth: 14))
+    }
+
+    func testWrapSingleLineCommentAfterCode() {
+        let input = """
+        func f() {
+            foo.bar() // this comment is much much much too long
+        }
+        """
+        let output = """
+        func f() {
+            foo.bar() // this comment
+            // is much much much too
+            // long
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.wrapSingleLineComments,
+                       options: FormatOptions(maxWidth: 29), exclude: ["wrap"])
     }
 }

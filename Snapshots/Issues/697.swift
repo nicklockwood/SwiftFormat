@@ -1055,8 +1055,8 @@ extension _FirestoreDecoder {
 
     if let number = value as? NSNumber, number !== kCFBooleanTrue, number !== kCFBooleanFalse {
       // We are always willing to return the number as a Double:
-      // * If the original value was integral, it is guaranteed to fit in a Double; we are willing to
-      // lose precision past 2^53 if you encoded a UInt64 but requested a Double
+      // * If the original value was integral, it is guaranteed to fit in a Double; we are willing
+      // to lose precision past 2^53 if you encoded a UInt64 but requested a Double
       // * If it was a Float or Double, you will get back the precise value
       // * If it was Decimal, you will get back the nearest approximation
       return number.doubleValue
@@ -1077,7 +1077,8 @@ extension _FirestoreDecoder {
 
   func unbox(_ value: Any, as type: Date.Type) throws -> Date? {
     guard !(value is NSNull) else { return nil }
-    // Firestore returns all dates as Timestamp, converting it to Date so it can be used in custom objects.
+    // Firestore returns all dates as Timestamp, converting it to Date so it can be used in custom
+    // objects.
     if let timestamp = value as? Timestamp {
       return timestamp.dateValue()
     }

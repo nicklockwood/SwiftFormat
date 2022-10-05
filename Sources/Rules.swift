@@ -6947,7 +6947,7 @@ public struct _FormatRules {
                 // then we inherited it from the generic context and can't replace the type
                 // with an opaque parameter.
                 if !genericParameterListTokens.contains(where: { $0.string == genericType.name }) {
-                    genericType.eligbleToRemove = false
+                    genericType.eligibleToRemove = false
                     continue
                 }
 
@@ -6957,13 +6957,13 @@ public struct _FormatRules {
                 // `(some Foo, some Foo)` does not.
                 let countInParameterList = parameterListTokens.filter { $0.string == genericType.name }.count
                 if countInParameterList > 1 {
-                    genericType.eligbleToRemove = false
+                    genericType.eligibleToRemove = false
                     continue
                 }
 
                 // If the generic type occurs in the body of the function, then it can't be removed
                 if bodyTokens.contains(where: { $0.string == genericType.name }) {
-                    genericType.eligbleToRemove = false
+                    genericType.eligibleToRemove = false
                     continue
                 }
 
@@ -6974,7 +6974,7 @@ public struct _FormatRules {
                 for otherTypeConformance in otherTypeConformances {
                     let conformanceTokens = formatter.tokens[otherTypeConformance.sourceRange]
                     if conformanceTokens.contains(where: { $0.string == genericType.name }) {
-                        genericType.eligbleToRemove = false
+                        genericType.eligibleToRemove = false
                     }
                 }
 
@@ -6983,7 +6983,7 @@ public struct _FormatRules {
                 // can cause the build to break
                 for conformance in genericType.conformances {
                     if tokenize(conformance.name).contains(where: { $0.string == genericType.name }) {
-                        genericType.eligbleToRemove = false
+                        genericType.eligibleToRemove = false
                     }
                 }
 
@@ -6995,7 +6995,7 @@ public struct _FormatRules {
                 if let returnTypeTokens = returnTypeTokens,
                    returnTypeTokens.contains(where: { $0.string == genericType.name })
                 {
-                    genericType.eligbleToRemove = false
+                    genericType.eligibleToRemove = false
                     continue
                 }
 
@@ -7003,7 +7003,7 @@ public struct _FormatRules {
                 // then this type is ineligible (because it used a generic constraint that
                 // can't be represented using this syntax).
                 if genericType.asOpaqueParameter(useSomeAny: formatter.options.useSomeAny) == nil {
-                    genericType.eligbleToRemove = false
+                    genericType.eligibleToRemove = false
                     continue
                 }
 
@@ -7020,12 +7020,12 @@ public struct _FormatRules {
                         // Check if the closure type parameters contains this generic type
                         formatter.tokens[tokenIndex ... endOfScope].contains(where: { $0.string == genericType.name })
                     {
-                        genericType.eligbleToRemove = false
+                        genericType.eligibleToRemove = false
                     }
                 }
             }
 
-            let genericsEligibleToRemove = genericTypes.filter { $0.eligbleToRemove }
+            let genericsEligibleToRemove = genericTypes.filter { $0.eligibleToRemove }
             let sourceRangesToRemove = Set(genericsEligibleToRemove.flatMap { type in
                 [type.definitionSourceRange] + type.conformances.map { $0.sourceRange }
             })
@@ -7118,7 +7118,7 @@ public struct _FormatRules {
                     Formatter.GenericType.GenericConformance(
                         name: extendedType,
                         typeName: "Self",
-                        type: .conceteType,
+                        type: .concreteType,
                         sourceRange: typeNameIndex ... typeNameIndex
                     ),
                 ]
@@ -7179,7 +7179,7 @@ public struct _FormatRules {
             // of the type being extended
             let providedGenericTypes = requiredGenericTypes.compactMap { requiredTypeName in
                 selfType.conformances.first(where: { conformance in
-                    conformance.type == .conceteType && conformance.typeName == "Self.\(requiredTypeName)"
+                    conformance.type == .concreteType && conformance.typeName == "Self.\(requiredTypeName)"
                 })
             }
 

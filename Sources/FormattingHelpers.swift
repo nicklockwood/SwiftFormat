@@ -1703,7 +1703,7 @@ extension Formatter {
         /// Conformances and constraints applied to this generic parameter
         var conformances: [GenericConformance]
         /// Whether or not this generic parameter can be removed and replaced with an opaque generic parameter
-        var eligbleToRemove = true
+        var eligibleToRemove = true
 
         /// A constraint or conformance that applies to a generic type
         struct GenericConformance: Hashable {
@@ -1711,7 +1711,7 @@ extension Formatter {
                 /// A protocol constraint like `T: Fooable`
                 case protocolConstraint
                 /// A concrete type like `T == Foo`
-                case conceteType
+                case concreteType
             }
 
             /// The name of the type being used in the constraint. For example with `T: Fooable`
@@ -1761,7 +1761,7 @@ extension Formatter {
                         // opaque generic parameter syntax
                         return nil
 
-                    case .conceteType:
+                    case .concreteType:
                         // Concrete type constraints like `Foo.Element == Bar` can be
                         // represented using opaque generic parameter syntax if we know
                         // that it's using a primary associated type of the base protocol
@@ -1866,19 +1866,19 @@ extension Formatter {
                     equalsIndex < typeEndIndex
             {
                 delineatorIndex = equalsIndex
-                conformanceType = .conceteType
+                conformanceType = .concreteType
             }
 
             if let delineatorIndex = delineatorIndex, let conformanceType = conformanceType {
                 let constrainedTypeName = tokens[genericTypeNameIndex ..< delineatorIndex]
                     .map { $0.string }
                     .joined()
-                    .trimmingCharacters(in: .init(charactersIn: " \n,<>{}"))
+                    .trimmingCharacters(in: .init(charactersIn: " \n\r,<>{}"))
 
                 let conformanceName = tokens[(delineatorIndex + 1) ... typeEndIndex]
                     .map { $0.string }
                     .joined()
-                    .trimmingCharacters(in: .init(charactersIn: " \n,<>{}"))
+                    .trimmingCharacters(in: .init(charactersIn: " \n\r,<>{}"))
 
                 genericType.conformances.append(.init(
                     name: conformanceName,

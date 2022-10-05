@@ -2897,6 +2897,47 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.opaqueGenericParameters, options: options)
     }
 
+    func testVariadicParameterNotConvertedToOpaqueGeneric() {
+        let input = """
+        func variadic<T>(_ t: T...) {
+            print(t)
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, rule: FormatRules.opaqueGenericParameters, options: options)
+    }
+
+    func testNonGenericVariadicParametersDoesntPreventUsingOpaqueGenerics() {
+        let input = """
+        func variadic<U>(t: Any..., u: U, v: Any...) {
+            print(t, u, v)
+        }
+        """
+
+        let output = """
+        func variadic(t: Any..., u: some Any, v: Any...) {
+            print(t, u, v)
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, output, rule: FormatRules.opaqueGenericParameters, options: options)
+    }
+
+    func testIssue1275() {
+        let input = """
+        func loggedKeypath<T: CustomStringConvertible>(
+            by _: KeyPath<T, Element>...,
+            actionKeyword _: UserActionKeyword,
+            identifier _: String
+        ) {}
+        """
+
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, rule: FormatRules.opaqueGenericParameters, options: options)
+    }
+
     // MARK: - genericExtensions
 
     func testGenericExtensionNotModifiedBeforeSwift5_7() {

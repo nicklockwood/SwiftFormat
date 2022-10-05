@@ -7023,6 +7023,33 @@ public struct _FormatRules {
                         genericType.eligibleToRemove = false
                     }
                 }
+
+                // Extract the comma-separated list of function parameters,
+                // so we can check conditions on the individual parameters
+                let parameterListTokenIndices = (paramListStartIndex + 1) ..< paramListEndIndex
+
+                // Split the parameter list at each comma that's directly within the paren list scope
+                let parameters = parameterListTokenIndices
+                    .split(whereSeparator: { index in
+                        let token = formatter.tokens[index]
+                        return token == .delimiter(",")
+                            && formatter.endOfScope(at: index) == paramListEndIndex
+                    })
+                    .map { parameterIndices in
+                        parameterIndices.map { index in
+                            formatter.tokens[index]
+                        }
+                    }
+
+                for parameterTokens in parameters {
+                    // Variadic parameters don't support opaque generic syntax, so we have to check
+                    // if any use cases of this type in the parameter list are variadic
+                    if parameterTokens.contains(.operator("...", .postfix)),
+                       parameterTokens.contains(.identifier(genericType.name))
+                    {
+                        genericType.eligibleToRemove = false
+                    }
+                }
             }
 
             let genericsEligibleToRemove = genericTypes.filter { $0.eligibleToRemove }

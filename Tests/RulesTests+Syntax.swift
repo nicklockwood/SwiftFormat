@@ -2827,6 +2827,17 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.opaqueGenericParameters, options: options)
     }
 
+    func testGenericTypeWithClosureInWhereClauseDoesntCrash() {
+        let input = """
+        struct Foo<U> {
+            func bar<V>(_ value: V) where U == @Sendable (V) -> Int {}
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, rule: FormatRules.opaqueGenericParameters, options: options)
+    }
+
     // MARK: - genericExtensions
 
     func testGenericExtensionNotModifiedBeforeSwift5_7() {

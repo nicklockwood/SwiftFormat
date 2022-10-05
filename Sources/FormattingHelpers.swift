@@ -1736,11 +1736,6 @@ extension Formatter {
         // The opaque parameter syntax that represents this generic type,
         // if the constraints can be expressed using this syntax
         func asOpaqueParameter(useSomeAny: Bool) -> [Token]? {
-            if conformances.isEmpty {
-                guard useSomeAny else { return nil }
-                return tokenize("some Any")
-            }
-
             // Protocols with primary associated types that can be used with
             // opaque parameter syntax. In the future we could make this extensible
             // so users can add their own types here.
@@ -1750,6 +1745,31 @@ extension Formatter {
             ]
 
             let constraints = conformances.filter { $0.type == .protocolConstraint }
+            let concreteTypes = conformances.filter { $0.type == .concreteType }
+
+            // If we have no type requirements at all, this is an
+            // unconstrained generic and is equivalent to `some Any`
+            if constraints.isEmpty, concreteTypes.isEmpty {
+                guard useSomeAny else { return nil }
+                return tokenize("some Any")
+            }
+
+            if constraints.isEmpty {
+                // If we have no constraints but exactly one concrete type (e.g. `== String`)
+                // then we can just substitute for that type. This sort of generic same-type
+                // requirement (`func foo<T>(_ t: T) where T == Foo`) is actually no longer
+                // allowed in Swift 6, since it's redundant.
+                if concreteTypes.count == 1 {
+                    return tokenize(concreteTypes[0].name)
+                }
+
+                // If there are multiple same-type type requirements,
+                // the code should fail to compile
+                else {
+                    return nil
+                }
+            }
+
             var primaryAssociatedTypes = [GenericConformance: GenericConformance]()
 
             // Validate that all of the conformances can be represented using this syntax
@@ -1862,8 +1882,9 @@ extension Formatter {
             }
 
             // or a concrete type of the form `T == Foo`
-            else if let equalsIndex = index(of: .operator("==", .infix), after: genericTypeNameIndex),
-                    equalsIndex < typeEndIndex
+            else if let equalsIndex = index(of: .operator("==", .infix), after: genericTypeNameIndex)
+                ?? index(of: .operator("==", .none), after: genericTypeNameIndex),
+                equalsIndex < typeEndIndex
             {
                 delineatorIndex = equalsIndex
                 conformanceType = .concreteType

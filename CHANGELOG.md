@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.50.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.50.1) (2022-10-05)
+
+- Fixed bug in `opaqueGenericParameters` where type constraint depended on another type parameter
+- Fixed crash in `opaqueGenericParameters` rule where type constraint contained closure type
+- Fixed bug where `opaqueGenericParameters` broke variadic parameter expressions
+- Fixed several bugs in `wrapSingleLineComments` rule
+- Fixed crash in `andOperator` rule
+
 ## [0.50.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.50.0) (2022-09-28)
 
 - Added `genericExtensions` rule for simplifying conditional type extensions in Swift 5.7

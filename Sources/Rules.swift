@@ -6927,7 +6927,7 @@ public struct _FormatRules {
             // Parse the return type if present
             var returnTypeTokens: [Token]?
             if let returnIndex = formatter.index(of: .operator("->", .infix), after: paramListEndIndex),
-               returnIndex < openBraceIndex
+               returnIndex < openBraceIndex, returnIndex < whereTokenIndex ?? openBraceIndex
             {
                 let returnTypeRange = (returnIndex + 1) ..< (whereTokenIndex ?? openBraceIndex)
                 returnTypeTokens = Array(formatter.tokens[returnTypeRange])

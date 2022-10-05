@@ -2838,6 +2838,65 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.opaqueGenericParameters, options: options)
     }
 
+    func testGenericExtensionSameTypeConstraint() {
+        let input = """
+        func foo<U>(_ u: U) where U == String {
+            print(u)
+        }
+        """
+
+        let output = """
+        func foo(_ u: String) {
+            print(u)
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, output, rule: FormatRules.opaqueGenericParameters, options: options)
+    }
+
+    func testGenericExtensionSameTypeGenericConstraint() {
+        let input = """
+        func foo<U, V>(_ u: U, _ v: V) where U == V {
+            print(u, v)
+        }
+
+        func foo<U, V>(_ u: U, _ v: V) where V == U {
+            print(u, v)
+        }
+        """
+
+        let output = """
+        func foo<V>(_ u: V, _ v: V) {
+            print(u, v)
+        }
+
+        func foo<U>(_ u: U, _ v: U) {
+            print(u, v)
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, output, rule: FormatRules.opaqueGenericParameters, options: options)
+    }
+
+    func testIssue1269() {
+        let input = """
+        func bar<V, R>(
+            _ value: V,
+            _ work: () -> R
+        ) -> R
+            where Value == @Sendable () -> V,
+            V: Sendable
+        {
+            work()
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, rule: FormatRules.opaqueGenericParameters, options: options)
+    }
+
     // MARK: - genericExtensions
 
     func testGenericExtensionNotModifiedBeforeSwift5_7() {

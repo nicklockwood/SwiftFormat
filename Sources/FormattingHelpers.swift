@@ -1916,9 +1916,10 @@ extension Formatter {
         var currentIndex = genericSignatureStartIndex
 
         while currentIndex < genericSignatureEndIndex - 1 {
-            guard let genericTypeNameIndex = index(of: .identifier, after: currentIndex) else {
-                break
-            }
+            guard
+                let genericTypeNameIndex = index(of: .identifier, after: currentIndex),
+                genericTypeNameIndex < genericSignatureEndIndex
+            else { break }
 
             let typeEndIndex: Int
             let nextCommaIndex = index(of: .delimiter(","), after: genericTypeNameIndex)
@@ -1968,9 +1969,8 @@ extension Formatter {
             }
 
             // or a concrete type of the form `T == Foo`
-            else if let equalsIndex = index(of: .operator("==", .infix), after: genericTypeNameIndex)
-                ?? index(of: .operator("==", .none), after: genericTypeNameIndex),
-                equalsIndex < typeEndIndex
+            else if let equalsIndex = index(after: genericTypeNameIndex, where: { $0.isOperator("==") }),
+                    equalsIndex < typeEndIndex
             {
                 delineatorIndex = equalsIndex
                 conformanceType = .concreteType

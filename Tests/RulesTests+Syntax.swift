@@ -2938,6 +2938,30 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.opaqueGenericParameters, options: options)
     }
 
+    func testIssue1278() {
+        let input = """
+        public struct Foo<Value> {
+            public func withValue<V, R>(
+                _: V,
+                operation _: () throws -> R
+            ) rethrows -> R
+                where Value == @Sendable () -> V,
+                V: Sendable
+            {}
+
+            public func withValue<V, R>(
+                _: V,
+                operation _: () async throws -> R
+            ) async rethrows -> R
+                where Value == () -> V
+            {}
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, rule: FormatRules.opaqueGenericParameters, options: options)
+    }
+
     // MARK: - genericExtensions
 
     func testGenericExtensionNotModifiedBeforeSwift5_7() {

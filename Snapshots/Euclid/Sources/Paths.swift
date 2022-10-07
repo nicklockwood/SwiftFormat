@@ -433,7 +433,7 @@ private func lineIntersection(_ p0: Vector, _ p1: Vector,
     return Vector(ix, iy)
 }
 
-/// TODO: extend this to work in 3D
+// TODO: extend this to work in 3D
 private func lineSegmentsIntersect(_ p0: Vector, _ p1: Vector,
                                    _ p2: Vector, _ p3: Vector) -> Bool
 {

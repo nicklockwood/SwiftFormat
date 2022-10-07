@@ -559,12 +559,12 @@ public struct AnyExpression: CustomStringConvertible {
                 return (AnyExpression.cast(AnyExpression.stringify(anyValue)) as T?)!
             case is Bool.Type,
                  is Bool?.Type:
-                /// TODO: should we boolify numeric types like this?
+                // TODO: should we boolify numeric types like this?
                 if let value = AnyExpression.cast(anyValue) as Double? {
                     return (value != 0) as! T
                 }
             default:
-                /// TODO: should we numberify Bool values like this?
+                // TODO: should we numberify Bool values like this?
                 if let boolValue = anyValue as? Bool,
                    let value: T = AnyExpression.cast(boolValue ? 1 : 0)
                 {

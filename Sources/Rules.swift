@@ -7234,6 +7234,7 @@ public struct _FormatRules {
 
     public let docComments = FormatRule(
         help: "Use doc comments for comments preceding declarations.",
+        disabledByDefault: true,
         orderAfter: ["fileHeader"]
     ) { formatter in
         formatter.forEach(.startOfScope) { index, token in

@@ -2,7 +2,7 @@
 //  Formatter.swift
 //  SwiftFormat
 //
-//  Version 0.50.1
+//  Version 0.50.2
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Nick Lockwood
@@ -627,16 +627,3 @@ extension String {
         return result
     }
 }
-
-// `Swift.Character.isUppercase` isn't available until Swift 5.0+ / Xcode 10.2+
-#if !swift(>=5.0)
-    extension Character {
-        var isUppercase: Bool {
-            String(self).uppercased() == String(self)
-        }
-
-        var isWhitespace: Bool {
-            String(self).trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        }
-    }
-#endif

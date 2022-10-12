@@ -1,9 +1,12 @@
 name: Create and publish a Docker image
 
 on:
-  push:
-    tags:
-      - "*"
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Ref to build (branch, tag or SHA)'
+        required: false
+        default: 'master'
 
 env:
   REGISTRY: ghcr.io

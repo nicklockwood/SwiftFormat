@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.50.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.50.2) (2022-10-12)
+
+- Fixed `redundantImports` dropping `@_implementationOnly` or `@_exported` annotations
+- Fixed `blankLineAfterImports` bug affecting `@_implementationOnly` or `@_exported` imports
+- Fixed case where regex literals were incorrectly interpreted as division operators
+- Fixed bug with `genericExtensions` and nested generics
+- Fixed crash in `opaqueGenericParameters` rule
+
 ## [0.50.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.50.1) (2022-10-05)
 
 - Fixed bug in `opaqueGenericParameters` where type constraint depended on another type parameter

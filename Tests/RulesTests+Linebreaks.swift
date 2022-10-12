@@ -400,8 +400,8 @@ class LinebreakTests: RulesTests {
         @testable import ModuleB
         import ModuleC
         @testable import ModuleD
-        @testable import ModuleE
-        @testable import ModuleF
+        @_exported import ModuleE
+        @_implementationOnly import ModuleF
         class foo {}
         """
         let output = """
@@ -409,8 +409,8 @@ class LinebreakTests: RulesTests {
         @testable import ModuleB
         import ModuleC
         @testable import ModuleD
-        @testable import ModuleE
-        @testable import ModuleF
+        @_exported import ModuleE
+        @_implementationOnly import ModuleF
 
         class foo {}
         """

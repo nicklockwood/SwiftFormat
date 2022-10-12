@@ -773,6 +773,22 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testRegexLiteralAfterLabel() {
+        let input = "foo(of: /http|https/)"
+        let output: [Token] = [
+            .identifier("foo"),
+            .startOfScope("("),
+            .identifier("of"),
+            .delimiter(":"),
+            .space(" "),
+            .startOfScope("/"),
+            .stringBody("http|https"),
+            .endOfScope("/"),
+            .endOfScope(")"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     func testHashedSingleLineRegexLiteral() {
         let input = "let regex = #/foo/bar/#"
         let output: [Token] = [

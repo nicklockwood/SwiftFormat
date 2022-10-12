@@ -1505,7 +1505,7 @@ public func tokenize(_ source: String) -> [Token] {
                    prevNonSpaceToken.isOperator(ofType: .infix) || [
                        .startOfScope("("), .startOfScope("["),
                        .delimiter(":"), .delimiter(","),
-                   ].contains(prevToken)
+                   ].contains(prevNonSpaceToken)
                 {
                     tokens[i] = .startOfScope("/")
                 }

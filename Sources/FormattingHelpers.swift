@@ -1894,12 +1894,12 @@ extension Formatter {
                 let constrainedTypeName = tokens[genericTypeNameIndex ..< delineatorIndex]
                     .map { $0.string }
                     .joined()
-                    .trimmingCharacters(in: .init(charactersIn: " \n\r,<>{}"))
+                    .trimmingCharacters(in: .init(charactersIn: " \n\r,{}"))
 
                 let conformanceName = tokens[(delineatorIndex + 1) ... typeEndIndex]
                     .map { $0.string }
                     .joined()
-                    .trimmingCharacters(in: .init(charactersIn: " \n\r,<>{}"))
+                    .trimmingCharacters(in: .init(charactersIn: " \n\r,{}"))
 
                 genericType.conformances.append(.init(
                     name: conformanceName,

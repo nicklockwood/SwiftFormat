@@ -4780,6 +4780,18 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.duplicateImports)
     }
 
+    func testNoRemoveExportedDuplicateImport() {
+        let input = "import Foo\n@_exported import Foo"
+        let output = "\n@_exported import Foo"
+        testFormatting(for: input, output, rule: FormatRules.duplicateImports)
+    }
+
+    func testNoRemoveExportedDuplicateImport2() {
+        let input = "@_exported import Foo\nimport Foo"
+        let output = "@_exported import Foo"
+        testFormatting(for: input, output, rule: FormatRules.duplicateImports)
+    }
+
     // MARK: - unusedArguments
 
     // closures

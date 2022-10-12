@@ -4887,6 +4887,7 @@ public struct _FormatRules {
                 return ranges.sorted { $0.module.count < $1.module.count }
             }
             // Group @testable imports at the top or bottom
+            // TODO: need more general solution for handling other import attributes
             return ranges.sorted {
                 // If both have a @testable keyword, or neither has one, just sort alphabetically
                 guard $0.isTestable != $1.isTestable else {
@@ -4927,7 +4928,7 @@ public struct _FormatRules {
                     continue
                 }
                 let range2 = importRanges[j]
-                if !range.isTestable || range2.isTestable {
+                if Set(range.attributes).isSubset(of: range2.attributes) {
                     formatter.removeTokens(in: range.range)
                     continue
                 }

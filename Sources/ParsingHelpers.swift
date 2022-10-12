@@ -1136,7 +1136,11 @@ extension Formatter {
     struct ImportRange: Comparable {
         var module: String
         var range: Range<Int>
-        var isTestable: Bool
+        var attributes: [String]
+
+        var isTestable: Bool {
+            attributes.contains("@testable")
+        }
 
         static func < (lhs: ImportRange, rhs: ImportRange) -> Bool {
             let la = lhs.module.lowercased()
@@ -1218,7 +1222,7 @@ extension Formatter {
                 importRanges.append(ImportRange(
                     module: name,
                     range: range,
-                    isTestable: tokens[range].contains(.keyword("@testable"))
+                    attributes: tokens[range].compactMap { $0.isAttribute ? $0.string : nil }
                 ))
             } else {
                 // Error

@@ -16,6 +16,7 @@ Table of Contents
     - [Command-line tool](#command-line-tool)
     - [Xcode source editor extension](#xcode-source-editor-extension)
     - [Xcode build phase](#xcode-build-phase)
+    - [Swift Package Manager plugin](#swift-package-manager-plugin)
     - [Via Applescript](#via-applescript)
     - [VSCode plugin](#vscode-plugin)
     - [Sublime Text plugin](#sublime-text-plugin)
@@ -311,6 +312,47 @@ fi
 
 This is not recommended for shared projects however, as different team members using different versions of SwiftFormat may result in noise in the commit history as code gets reformatted inconsistently.
 
+Swift Package Manager plugin
+-----------------------------
+
+You can use `SwiftFormat` as a SwiftPM command plugin.
+
+**NOTE:** Swift 5.6 or higher is required. Add the package to your dependencies in your `Package.swift` file.
+
+```swift
+dependencies: [
+    // ...
+    .package(url: "https://github.com/nicklockwood/SwiftFormat", from: "0.50.4"),
+]
+```
+
+The plugin will find an existing `.swiftformat` in your package root folder and honor it automatically.
+
+### Trigger Plugin From Command-Line
+
+```bash
+swift package plugin --allow-writing-to-package-directory swiftformat
+```
+
+You can limit the formatting to a particular target with `--target` option.
+
+You can also specify `SwiftFormat` arguments, e.g. `--swiftversion`.
+
+Example
+
+```bash
+swift package plugin --allow-writing-to-package-directory swiftformat --target MyLibrary --swiftversion 5.6 --verbose
+```
+
+### Trigger Plugin From Xcode
+
+In Xcode 14 you can trigger the command plugin execution for a Swift package or an Xcode project.
+
+For an Xcode project the project's main directory will be processed and the `--target` option will be ignored.
+
+You can also specify `SwiftFormat` arguments, e.g. `--swiftversion`.
+
+![Run plugin in Xcode 14](https://user-images.githubusercontent.com/4176826/179352584-db7f7f42-452c-4a42-a329-01b115a237a7.gif)
 
 Via AppleScript
 ----------------
@@ -885,6 +927,7 @@ Credits
 * [Daniele Formichelli](https://github.com/danyf90) - JSON reporter
 * [Mahdi Bchatnia](https://github.com/inket) - Linux build workflow
 * [Arthur Semenyutin](https://github.com/vox-humana) - Docker image
+* [Marco Eidinger](https://github.com/MarcoEidinger) - Swift Package Manager plugin
 * [Nick Lockwood](https://github.com/nicklockwood) - Everything else
 
 ([Full list of contributors](https://github.com/nicklockwood/SwiftFormat/graphs/contributors))

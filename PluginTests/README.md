@@ -1,0 +1,1 @@
+Run `test.sh` which fails if triggering Swift package plugin does not format `Sources/PackageUsingPlugin/NotFormattedFile.swift` as expected.

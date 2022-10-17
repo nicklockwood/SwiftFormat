@@ -2614,10 +2614,18 @@ class SyntaxTests: RulesTests {
         func foo<T>(_ value: T) {
             print(value)
         }
+
+        init<T>(_ value: T) {
+            print(value)
+        }
         """
 
         let output = """
         func foo(_ value: some Any) {
+            print(value)
+        }
+
+        init(_ value: some Any) {
             print(value)
         }
         """
@@ -2642,10 +2650,18 @@ class SyntaxTests: RulesTests {
         func foo<T: Fooable, U: Barable>(_ fooable: T, barable: U) -> Baaz {
             print(fooable, barable)
         }
+
+        init<T: Fooable, U: Barable>(_ fooable: T, barable: U) {
+            print(fooable, barable)
+        }
         """
 
         let output = """
         func foo(_ fooable: some Fooable, barable: some Barable) -> Baaz {
+            print(fooable, barable)
+        }
+
+        init(_ fooable: some Fooable, barable: some Barable) {
             print(fooable, barable)
         }
         """
@@ -2659,10 +2675,18 @@ class SyntaxTests: RulesTests {
         func foo<T, U>(_ t: T, _ u: U) -> Baaz where T: Fooable, T: Barable, U: Baazable {
             print(t, u)
         }
+
+        init<T, U>(_ t: T, _ u: U) where T: Fooable, T: Barable, U: Baazable {
+            print(t, u)
+        }
         """
 
         let output = """
         func foo(_ t: some Fooable & Barable, _ u: some Baazable) -> Baaz {
+            print(t, u)
+        }
+
+        init(_ t: some Fooable & Barable, _ u: some Baazable) {
             print(t, u)
         }
         """

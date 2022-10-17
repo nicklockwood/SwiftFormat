@@ -6898,15 +6898,17 @@ public struct _FormatRules {
         """,
         options: ["someAny"]
     ) { formatter in
-        formatter.forEach(.keyword("func")) { funcIndex, _ in
+        formatter.forEach(.keyword) { keywordIndex, keyword in
             guard
+                // Apply this rule to functions and initializers
+                ["func", "init"].contains(keyword.string),
                 // Opaque generic parameter syntax is only supported in Swift 5.7+
                 formatter.options.swiftVersion >= "5.7",
                 // Validate that this is a generic method using angle bracket syntax,
                 // and find the indices for all of the key tokens
-                let paramListStartIndex = formatter.index(of: .startOfScope("("), after: funcIndex),
+                let paramListStartIndex = formatter.index(of: .startOfScope("("), after: keywordIndex),
                 let paramListEndIndex = formatter.endOfScope(at: paramListStartIndex),
-                let genericSignatureStartIndex = formatter.index(of: .startOfScope("<"), after: funcIndex),
+                let genericSignatureStartIndex = formatter.index(of: .startOfScope("<"), after: keywordIndex),
                 let genericSignatureEndIndex = formatter.endOfScope(at: genericSignatureStartIndex),
                 genericSignatureStartIndex < paramListStartIndex,
                 genericSignatureEndIndex < paramListStartIndex,
@@ -7018,7 +7020,7 @@ public struct _FormatRules {
 
                 // If the generic type is used as a closure type parameter, it can't be removed or the compiler
                 // will emit a "'some' cannot appear in parameter position in parameter type <closure type>" error
-                for tokenIndex in funcIndex ... closeBraceIndex {
+                for tokenIndex in keywordIndex ... closeBraceIndex {
                     if
                         // Check if this is the start of a closure
                         formatter.tokens[tokenIndex] == .startOfScope("("),

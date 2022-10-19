@@ -4372,7 +4372,6 @@ public struct _FormatRules {
         }
 
         formatter.forEach(.startOfScope("//")) { i, _ in
-            // Check that unwrapping wouldn't exceed line length
             let startOfLine = formatter.startOfLine(at: i)
             let endOfLine = formatter.endOfLine(at: i)
             guard formatter.lineLength(from: startOfLine, upTo: endOfLine) > maxWidth else {
@@ -4394,11 +4393,14 @@ public struct _FormatRules {
                 length += next.count + 1
                 words.removeFirst()
             }
+            let commentPrefix = ["/ ", "/"].first(where: comment.hasPrefix) ?? ""
+            if words.isEmpty || comment == commentPrefix {
+                return
+            }
             var prefix = formatter.tokens[i ..< startIndex]
             if let token = formatter.token(at: startOfLine), case .space = token {
                 prefix.insert(token, at: prefix.startIndex)
             }
-            let commentPrefix = ["/ ", "/"].first(where: comment.hasPrefix) ?? ""
             formatter.replaceTokens(in: startIndex ..< endOfLine, with: [
                 .commentBody(comment), formatter.linebreakToken(for: startIndex),
             ] + prefix + [

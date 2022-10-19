@@ -632,6 +632,39 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantFileprivate, options: options)
     }
 
+    func testFileprivateInArrayExtensionNotChangedToPrivateWhenAccessedInFile() {
+        let input = """
+        extension [String] {
+            fileprivate func fileprivateMember() {}
+        }
+
+        extension Namespace {
+            func testCanAccessFileprivateMember() {
+                ["string", "array"].fileprivateMember()
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "4")
+        testFormatting(for: input, rule: FormatRules.redundantFileprivate, options: options)
+    }
+
+    func testFileprivateInArrayExtensionNotChangedToPrivateWhenAccessedInFile2() {
+        let input = """
+        extension Array<String> {
+            fileprivate func fileprivateMember() {}
+        }
+
+        extension Namespace {
+            func testCanAccessFileprivateMember() {
+                ["string", "array"].fileprivateMember()
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "4")
+        testFormatting(for: input, rule: FormatRules.redundantFileprivate,
+                       options: options, exclude: ["typeSugar"])
+    }
+
     // MARK: - redundantGet
 
     func testRemoveSingleLineIsolatedGet() {

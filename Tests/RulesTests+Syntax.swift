@@ -2618,6 +2618,19 @@ class SyntaxTests: RulesTests {
         init<T>(_ value: T) {
             print(value)
         }
+
+        subscript<T>(_ value: T) -> Foo {
+            Foo(value)
+        }
+
+        subscript<T>(_ value: T) -> Foo {
+            get {
+                Foo(value)
+            }
+            set {
+                print(newValue)
+            }
+        }
         """
 
         let output = """
@@ -2627,6 +2640,19 @@ class SyntaxTests: RulesTests {
 
         init(_ value: some Any) {
             print(value)
+        }
+
+        subscript(_ value: some Any) -> Foo {
+            Foo(value)
+        }
+
+        subscript(_ value: some Any) -> Foo {
+            get {
+                Foo(value)
+            }
+            set {
+                print(newValue)
+            }
         }
         """
 
@@ -2654,6 +2680,10 @@ class SyntaxTests: RulesTests {
         init<T: Fooable, U: Barable>(_ fooable: T, barable: U) {
             print(fooable, barable)
         }
+
+        subscript<T: Fooable, U: Barable>(_ fooable: T, barable: U) -> Any {
+            (fooable, barable)
+        }
         """
 
         let output = """
@@ -2663,6 +2693,10 @@ class SyntaxTests: RulesTests {
 
         init(_ fooable: some Fooable, barable: some Barable) {
             print(fooable, barable)
+        }
+
+        subscript(_ fooable: some Fooable, barable: some Barable) -> Any {
+            (fooable, barable)
         }
         """
 

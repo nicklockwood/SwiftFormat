@@ -558,7 +558,7 @@ public class RuntimeType: NSObject {
     }
 }
 
-// Return the human-readable name, without braces or underscores, etc
+/// Return the human-readable name, without braces or underscores, etc
 private func sanitizedStructName(_ objCType: String) -> String {
     guard let equalRange = objCType.range(of: "="),
           let braceRange = objCType.range(of: "{")
@@ -574,7 +574,7 @@ private func sanitizedStructName(_ objCType: String) -> String {
     }
 }
 
-// Converts type name to appropriate selector for lookup on RuntimeType
+/// Converts type name to appropriate selector for lookup on RuntimeType
 func sanitizedTypeName(_ typeName: String) -> String {
     var tail = Substring(typeName)
     var head = tail.popFirst().map { String($0.lowercased()) } ?? ""

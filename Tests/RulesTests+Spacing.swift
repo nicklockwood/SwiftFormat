@@ -1221,7 +1221,7 @@ class SpacingTests: RulesTests {
     func testSpaceInsideMultilineHeaderdocComment() {
         let input = "/**foo\n bar*/"
         let output = "/** foo\n bar */"
-        testFormatting(for: input, output, rule: FormatRules.spaceInsideComments)
+        testFormatting(for: input, output, rule: FormatRules.spaceInsideComments, exclude: ["docComments"])
     }
 
     func testSpaceInsideMultilineHeaderdocCommentType2() {
@@ -1238,7 +1238,7 @@ class SpacingTests: RulesTests {
 
     func testNoExtraSpaceInsideMultilineHeaderdocComment() {
         let input = "/** foo\n bar */"
-        testFormatting(for: input, rule: FormatRules.spaceInsideComments)
+        testFormatting(for: input, rule: FormatRules.spaceInsideComments, exclude: ["docComments"])
     }
 
     func testNoExtraSpaceInsideMultilineHeaderdocCommentType2() {
@@ -1281,7 +1281,7 @@ class SpacingTests: RulesTests {
 
     func testNoSpaceAddedToFirstLineOfDocComment() {
         let input = "/**\n Comment\n */"
-        testFormatting(for: input, rule: FormatRules.spaceInsideComments)
+        testFormatting(for: input, rule: FormatRules.spaceInsideComments, exclude: ["docComments"])
     }
 
     func testNoSpaceAddedToEmptyDocComment() {

@@ -49,8 +49,8 @@ public class LayoutNode: NSObject {
     /// Constants that can be referenced by expressions in the node and its children
     public internal(set) var constants: [String: Any]
 
-    // The delegate used for handling errors
-    // Normally this is the same as the owner, but it can be overridden in special cases
+    /// The delegate used for handling errors
+    /// Normally this is the same as the owner, but it can be overridden in special cases
     private weak var _delegate: LayoutDelegate?
     weak var delegate: LayoutDelegate? {
         get {
@@ -74,7 +74,7 @@ public class LayoutNode: NSObject {
     /// Global legacy rendering mode toggle - affects all LayoutNodes created after setting
     public static var useLegacyLayoutMode: Bool?
 
-    // For internal use
+    /// For internal use
     private(set) var _class: LayoutManaged.Type
     @objc var _view: UIView?
     private(set) var _viewController: UIViewController?
@@ -85,7 +85,7 @@ public class LayoutNode: NSObject {
     var _macros: [String: String]
     var rootURL: URL?
 
-    // Same as viewControllers, but won't instantiate uninitialized controllers
+    /// Same as viewControllers, but won't instantiate uninitialized controllers
     private var _viewControllers: [UIViewController] {
         guard let viewController = _viewController else {
             return children.flatMap { $0._viewControllers }
@@ -113,7 +113,7 @@ public class LayoutNode: NSObject {
     // once these are set up, they won't be reset by a cleanUp(), so anything that
     // may effect them (such as adding children), must be done again
 
-    // Note: Thrown error is always a LayoutError
+    /// Note: Thrown error is always a LayoutError
     private var _setupComplete = false
     private func completeSetup() throws {
         guard !_setupComplete else { return }
@@ -211,7 +211,7 @@ public class LayoutNode: NSObject {
         _stopObservingFrame()
     }
 
-    // Depends on presence of parent - must be called again if parent is added or removed
+    /// Depends on presence of parent - must be called again if parent is added or removed
     private func updateObservers() {
         if parent != nil {
             _stopObservingContentSizeCategory()
@@ -258,7 +258,7 @@ public class LayoutNode: NSObject {
         }
     }
 
-    // called by UITableView/UICollectionView as cells are loaded
+    /// called by UITableView/UICollectionView as cells are loaded
     private var _anyExpressionDependsOnContentSize: Bool?
     internal func contentSizeChanged() {
         if _anyExpressionDependsOnContentSize == nil {
@@ -299,8 +299,8 @@ public class LayoutNode: NSObject {
         update()
     }
 
-    // Create the node using a UIView or UIViewController subclass
-    // TODO: is there any reason not to make this public?
+    /// Create the node using a UIView or UIViewController subclass
+    /// TODO: is there any reason not to make this public?
     init(
         class: AnyClass,
         id: String? = nil,
@@ -576,7 +576,7 @@ public class LayoutNode: NSObject {
         return errors
     }
 
-    // Find an the appropriate target object for a given selector
+    /// Find an the appropriate target object for a given selector
     private func target(for selector: Selector) -> LayoutDelegate? {
         var delegate = self.delegate
         var responder = delegate as? UIResponder
@@ -640,7 +640,7 @@ public class LayoutNode: NSObject {
         delegate.layoutError(error)
     }
 
-    // Attempt a throwing operation but catch the error and bubble it up the Layout hierarchy
+    /// Attempt a throwing operation but catch the error and bubble it up the Layout hierarchy
     func attempt<T>(_ closure: () throws -> T) -> T? {
         do {
             return try closure()
@@ -782,7 +782,7 @@ public class LayoutNode: NSObject {
         return next
     }
 
-    // Find a node by id, starting with the children and then progressing to siblings and parents
+    /// Find a node by id, starting with the children and then progressing to siblings and parents
     func node(withID id: String, excluding: LayoutNode? = nil) -> LayoutNode? {
         attempt(completeSetup)
         if self.id == id {
@@ -863,7 +863,7 @@ public class LayoutNode: NSObject {
         }
     }
 
-    // Experimental - used for nested XML reference loading
+    /// Experimental - used for nested XML reference loading
     internal func update(with layout: Layout) throws {
         let _newClass: AnyClass = try layout.getClass()
         let oldClass = _class
@@ -964,7 +964,7 @@ public class LayoutNode: NSObject {
 
     // MARK: expressions
 
-    // Depends on presence of parent - must be called again if parent is added or removed
+    /// Depends on presence of parent - must be called again if parent is added or removed
     private func overrideExpressions() {
         assert(_setupComplete && !_expressionsSetUp && _view != nil)
         expressions = _originalExpressions
@@ -1070,14 +1070,14 @@ public class LayoutNode: NSObject {
     private var _valueClearers = [() -> Void]()
     private var _valueHasChanged = [String: () -> Bool]()
 
-    // Note: thrown error is always a SymbolError
+    /// Note: thrown error is always a SymbolError
     private var _updateExpressionValues: (_ animated: Bool) throws -> Void = { _ in }
 
     private lazy var constructorArgumentTypes: [String: RuntimeType] =
         self.viewControllerClass?.parameterTypes ?? self.viewClass.parameterTypes
 
-    // Returns all expressions that can be set on the node
-    // Used for generating error suggestions
+    /// Returns all expressions that can be set on the node
+    /// Used for generating error suggestions
     lazy var availableExpressions: Set<String> = {
         var expressions = layoutSymbols
         expressions.formUnion(["outlet", "id", "xml", "template"])
@@ -1106,7 +1106,7 @@ public class LayoutNode: NSObject {
         return matches
     }
 
-    // Returns all symbols that can be referenced in an expression
+    /// Returns all symbols that can be referenced in an expression
     func availableSymbols(forExpression name: String) -> Set<String> {
         var symbols = Set(layoutSymbols)
         let type: RuntimeType
@@ -1164,7 +1164,7 @@ public class LayoutNode: NSObject {
         return symbols
     }
 
-    // Note: thrown error is always a SymbolError
+    /// Note: thrown error is always a SymbolError
     private func setUpExpression(for symbol: String) throws {
         guard _getters[symbol] == nil, let string = expressions[symbol], !_evaluating.contains(symbol) else {
             return
@@ -1264,7 +1264,7 @@ public class LayoutNode: NSObject {
                     case "contentSize.height":
                         expression = LayoutExpression(contentHeightExpression: string, for: self)
                     default:
-                        // Allow use of % in any vertical/horizontal property expression
+                        /// Allow use of % in any vertical/horizontal property expression
                         let parts = symbol.components(separatedBy: ".")
                         if ["left", "right", "x", "width"].contains(parts.last!) {
                             expression = LayoutExpression(xExpression: string, for: self)
@@ -1363,7 +1363,7 @@ public class LayoutNode: NSObject {
         return keys
     }
 
-    // Note: thrown error is always a LayoutError
+    /// Note: thrown error is always a LayoutError
     private var _settingUpExpressions = false
     private var _expressionsSetUp = false
     private func setUpExpressions() throws {
@@ -1450,7 +1450,7 @@ public class LayoutNode: NSObject {
         return string
     }
 
-    // Note: thrown error is always a SymbolError
+    /// Note: thrown error is always a SymbolError
     private func value(forParameter name: String) throws -> Any? {
         guard _parameters[name] != nil else {
             return nil
@@ -1500,7 +1500,7 @@ public class LayoutNode: NSObject {
         return nil
     }
 
-    // Used by LayoutExpression
+    /// Used by LayoutExpression
     func constantValue(forSymbol symbol: String) throws -> Any? {
         if symbolIsConstant(symbol) {
             guard !_evaluating.contains(symbol) else {
@@ -1535,7 +1535,7 @@ public class LayoutNode: NSObject {
         return true
     }
 
-    // Returns true if symbol is a constant, false if it's a variable, otherwise nil
+    /// Returns true if symbol is a constant, false if it's a variable, otherwise nil
     private func valueIsConstant(_ symbol: String) -> Bool? {
         attempt(completeSetup)
         do {
@@ -1593,7 +1593,7 @@ public class LayoutNode: NSObject {
         return false
     }
 
-    // Doesn't look up params defined directly on the callee, only its parents
+    /// Doesn't look up params defined directly on the callee, only its parents
     private func value(forVariableOrConstantOrParentParameter name: String) throws -> Any? {
         assert(_setupComplete)
         return try value(forKeyPath: name, in: _variables) ??
@@ -1686,8 +1686,8 @@ public class LayoutNode: NSObject {
         return false
     }
 
-    // Used by LayoutExpression and for unit tests
-    // Note: thrown error is always a SymbolError
+    /// Used by LayoutExpression and for unit tests
+    /// Note: thrown error is always a SymbolError
     func doubleValue(forSymbol symbol: String) throws -> Double {
         let anyValue = try value(forSymbol: symbol)
         if let doubleValue = anyValue as? Double {
@@ -1702,7 +1702,7 @@ public class LayoutNode: NSObject {
         throw SymbolError("\(symbol) is not a number", for: symbol)
     }
 
-    // Note: thrown error is always a SymbolError
+    /// Note: thrown error is always a SymbolError
     private func cgFloatValue(forSymbol symbol: String) throws -> CGFloat {
         let anyValue = try value(forSymbol: symbol)
         if let cgFloatValue = anyValue as? CGFloat {
@@ -1728,8 +1728,8 @@ public class LayoutNode: NSObject {
         return nil
     }
 
-    // Used by LayoutExpression and for unit tests
-    // Note: thrown error is always a SymbolError
+    /// Used by LayoutExpression and for unit tests
+    /// Note: thrown error is always a SymbolError
     func value(forSymbol symbol: String) throws -> Any {
         if let getter = _getters[symbol] {
             return try getter()
@@ -2292,7 +2292,7 @@ public class LayoutNode: NSObject {
     }
 
     /// The anticipated frame for the view, based on the current state
-    // TODO: should this be public?
+    /// TODO: should this be public?
     public var frame: CGRect {
         return attempt {
             CGRect(
@@ -2724,13 +2724,13 @@ public class LayoutNode: NSObject {
         )
     }
 
-    // AutoLayout support
+    /// AutoLayout support
     private var _topConstraint: NSLayoutConstraint?
     private var _leftConstraint: NSLayoutConstraint?
     private var _widthConstraint: NSLayoutConstraint?
     private var _heightConstraint: NSLayoutConstraint?
 
-    // Depends on parent view - must be called again if parent view changes
+    /// Depends on parent view - must be called again if parent view changes
     private func setUpPositionConstraints() {
         assert(_topConstraint == nil)
         if let parentView = parent?._view, !(parentView is UIStackView) {
@@ -2741,7 +2741,7 @@ public class LayoutNode: NSObject {
         }
     }
 
-    // Prevent `update()` from being called when making changes to view properties, etc
+    /// Prevent `update()` from being called when making changes to view properties, etc
     private var _updateLock = 0
     func performWithoutUpdate(_ block: () throws -> Void) rethrows {
         defer { _updateLock -= 1 }
@@ -2749,7 +2749,7 @@ public class LayoutNode: NSObject {
         try block()
     }
 
-    // Note: thrown error is always a LayoutError
+    /// Note: thrown error is always a LayoutError
     private func updateValues(animated: Bool) throws {
         guard _updateLock == 0 else { return }
         defer { _updateLock -= 1 }
@@ -2764,7 +2764,7 @@ public class LayoutNode: NSObject {
         }, for: self)
     }
 
-    // Note: thrown error is always a LayoutError
+    /// Note: thrown error is always a LayoutError
     private func updateFrame() throws {
         guard _updateLock == 0, let _view = _view, !(_view is UITabBar) else { return }
         let frame: CGRect
@@ -2956,7 +2956,7 @@ public class LayoutNode: NSObject {
 
             let viewsAndOutlets = viewsAndOutlets ?? NSMutableSet()
 
-            // Check if this view controller instance has already been used
+            /// Check if this view controller instance has already been used
             if let controller = viewController {
                 if viewsAndOutlets.contains(controller) {
                     throw LayoutError("Duplicate \(controller.classForCoder) instance in Layout hierarchy", for: self)
@@ -2972,7 +2972,7 @@ public class LayoutNode: NSObject {
                 viewsAndOutlets.add(view)
             }
 
-            // Check if an outlet with this name has already been bound
+            /// Check if an outlet with this name has already been bound
             if let outlet = outlet {
                 if viewsAndOutlets.contains(outlet) {
                     throw LayoutError("Duplicate outlet reference '\(outlet)'", for: self)
@@ -3130,7 +3130,7 @@ private extension UIView {
         viewSwizzled = true
     }
 
-    // Swizzled layoutSubviews implementation
+    /// Swizzled layoutSubviews implementation
     @objc private func layout_layoutSubviews() {
         layout_layoutSubviews()
         _layoutNode?.updateLayout()

@@ -2,7 +2,7 @@
 
 import Foundation
 
-// Standard library symbols
+/// Standard library symbols
 let standardSymbols = Set(Expression.mathSymbols.keys).union(Expression.boolSymbols.keys).union([
     .infix("??"),
     .postfix("%"),
@@ -63,7 +63,7 @@ extension Array where Element == ParsedExpressionPart {
     }
 }
 
-// NOTE: it is not safe to access this concurrently from multiple threads due to cache
+/// NOTE: it is not safe to access this concurrently from multiple threads due to cache
 private var _expressionCache = [String: ParsedLayoutExpression]()
 func parseExpression(_ expression: String) throws -> ParsedLayoutExpression {
     if let parsedExpression = _expressionCache[expression] {
@@ -101,7 +101,7 @@ func parseExpression(_ expression: String) throws -> ParsedLayoutExpression {
     return parsedLayoutExpression
 }
 
-// NOTE: it is not safe to access this concurrently from multiple threads due to cache
+/// NOTE: it is not safe to access this concurrently from multiple threads due to cache
 private var _stringExpressionCache = [String: [ParsedExpressionPart]]()
 func parseStringExpression(_ expression: String) throws -> [ParsedExpressionPart] {
     if let parts = _stringExpressionCache[expression] {

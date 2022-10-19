@@ -120,7 +120,7 @@ extension Collection where Iterator.Element == XMLNode {
     }
 }
 
-// Threshold for min number of attributes to begin linewrapping
+/// Threshold for min number of attributes to begin linewrapping
 private let attributeWrap = 2
 
 extension XMLNode {

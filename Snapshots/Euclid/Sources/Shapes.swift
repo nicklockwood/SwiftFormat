@@ -489,8 +489,8 @@ public extension Mesh {
         case .frontAndBack:
             return Mesh(polygons + polygons.map { $0.inverted() })
         case .default:
-            // seal loose ends
-            // TODO: improve this by not adding backfaces inside closed subsectors
+            /// seal loose ends
+            /// TODO: improve this by not adding backfaces inside closed subsectors
             if let first = vertices.first?.position,
                let last = vertices.last?.position,
                first != last, first.x != 0 || last.x != 0

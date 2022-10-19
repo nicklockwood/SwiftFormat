@@ -10,7 +10,7 @@ class ReloadManager {
         weak var observer: LayoutLoading?
     }
 
-    // Useful for testing
+    /// Useful for testing
     static var observers: [LayoutLoading] {
         return boxes.compactMap { $0.observer }
     }

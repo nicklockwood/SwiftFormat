@@ -69,6 +69,9 @@ public class Formatter: NSObject {
         return true
     }
 
+    /// Directives that can be used in comments, e.g. `// swiftformat:disable rule`
+    let directives = ["disable", "enable", "options", "sort"]
+
     // Process a comment token (which may contain directives)
     func processCommentBody(_ comment: String, at index: Int) {
         var prefix = "swiftformat:"
@@ -76,7 +79,7 @@ public class Formatter: NSObject {
             return
         }
         let comment = String(comment[range.upperBound...])
-        guard let directive = ["disable", "enable", "options", "sort"].first(where: {
+        guard let directive = directives.first(where: {
             comment.hasPrefix($0)
         }) else {
             let parts = comment.components(separatedBy: ":")

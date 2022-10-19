@@ -31,17 +31,17 @@
 
 import Foundation
 
-/// Compiles the consumer into the source code for a Swift function.
-/// Currently only works if the `Label` type is `String` or `RawRepresentable<String>`
+// Compiles the consumer into the source code for a Swift function.
+// Currently only works if the `Label` type is `String` or `RawRepresentable<String>`
 
-/// The optional `functionName` argument specifies a name for the compiled transform function.
+// The optional `functionName` argument specifies a name for the compiled transform function.
 
-/// The optional `transformFunction` argument is the name of a function that will be
-/// called by the parser to transform the generic AST into an app-specific data structure.
+// The optional `transformFunction` argument is the name of a function that will be
+// called by the parser to transform the generic AST into an app-specific data structure.
 
-/// The `transformFunction` should have the same signature as the `Consumer<Label>.Transform` callback.
-/// If `transformFunction` is omitted, the function will generate a `Consumer<Label>.Match`,
-/// and the resultant function will require the target application to include the Consumer framework.
+// The `transformFunction` should have the same signature as the `Consumer<Label>.Transform` callback.
+// If `transformFunction` is omitted, the function will generate a `Consumer<Label>.Match`,
+// and the resultant function will require the target application to include the Consumer framework.
 
 public extension Consumer where Label: RawRepresentable, Label.RawValue == String {
     func compile(_ functionName: String = "parse", transformFunction: String? = nil) -> String {
@@ -1229,7 +1229,7 @@ private extension Consumer {
         return result
     }
 
-    // Source-safe string
+    /// Source-safe string
     func escapeString<T: StringProtocol>(_ string: T) -> String {
         var result = "\""
         for char in string.unicodeScalars {

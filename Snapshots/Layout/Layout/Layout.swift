@@ -2,8 +2,8 @@
 
 import Foundation
 
-// Internal struct used to store
-// serialized layouts
+/// Internal struct used to store
+/// serialized layouts
 public struct Layout {
     var className: String
     var id: String?

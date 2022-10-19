@@ -197,13 +197,13 @@ extension NSObject {
         return allProperties
     }
 
-    // Safe version of `setValue(forKeyPath:)`
-    // Checks that the property exists, and is settable, but doesn't validate the type
+    /// Safe version of `setValue(forKeyPath:)`
+    /// Checks that the property exists, and is settable, but doesn't validate the type
     func _setValue(_ value: Any, ofType type: RuntimeType?, forKey key: String) throws {
         _ = try _setValue(value, ofType: type, forKey: key, animated: false)
     }
 
-    // Animated version of `_setValue(_:ofType:forKey:)`
+    /// Animated version of `_setValue(_:ofType:forKey:)`
     func _setValue(_ value: Any, ofType type: RuntimeType?, forKey key: String, animated: Bool) throws -> Bool {
         if let setter = type?.setter {
             try setter(self, key, value)
@@ -306,8 +306,8 @@ extension NSObject {
         return true
     }
 
-    // Safe version of setValue(forKeyPath:)
-    // Checks that the property exists, and is settable, but doesn't validate the type
+    /// Safe version of setValue(forKeyPath:)
+    /// Checks that the property exists, and is settable, but doesn't validate the type
     func _setValue(_ value: Any, ofType type: RuntimeType?, forKeyPath name: String) throws {
         guard let range = name.range(of: ".", options: .backwards) else {
             try _setValue(value, ofType: type, forKey: name)

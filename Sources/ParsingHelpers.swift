@@ -1919,14 +1919,31 @@ extension Token {
     ///  - Notable exceptions are `class func` and symbol imports (like `import class Module.Type`)
     ///    which will include two of these keywords.
     var isDeclarationTypeKeyword: Bool {
+        isDeclarationTypeKeyword(excluding: [])
+    }
+
+    /// Whether or not this token "defines" the specific type of declaration
+    ///  - A valid declaration will usually include exactly one of these keywords in its outermost scope.
+    ///  - Notable exceptions are `class func` and symbol imports (like `import class Module.Type`)
+    ///    which will include two of these keywords.
+    func isDeclarationTypeKeyword(excluding keywordsToExclude: [String]) -> Bool {
         guard case let .keyword(keyword) = self else {
             return false
         }
+
         // All of the keywords that map to individual Declaration grammars
         // https://docs.swift.org/swift-book/ReferenceManual/Declarations.html#grammar_declaration
-        return ["import", "let", "var", "typealias", "func", "enum", "case",
-                "struct", "class", "actor", "protocol", "init", "deinit",
-                "extension", "subscript", "operator", "precedencegroup"].contains(keyword)
+        var declarationTypeKeywords = Set<String>([
+            "import", "let", "var", "typealias", "func", "enum", "case",
+            "struct", "class", "actor", "protocol", "init", "deinit",
+            "extension", "subscript", "operator", "precedencegroup",
+        ])
+
+        for keywordToExclude in keywordsToExclude {
+            declarationTypeKeywords.remove(keywordToExclude)
+        }
+
+        return declarationTypeKeywords.contains(keyword)
     }
 
     var isModifierKeyword: Bool {

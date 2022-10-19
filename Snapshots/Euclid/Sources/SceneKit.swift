@@ -347,7 +347,7 @@ public extension SCNGeometry {
         )
     }
 
-    // Creates a line-segment SCNGeometry from a Path
+    /// Creates a line-segment SCNGeometry from a Path
     convenience init(_ path: Path) {
         var indexData = Data()
         var vertexData = Data()
@@ -389,7 +389,7 @@ public extension SCNGeometry {
         )
     }
 
-    // Creates a line-segment bounding-box SCNGeometry from a Bounds
+    /// Creates a line-segment bounding-box SCNGeometry from a Bounds
     convenience init(bounds: Bounds) {
         var vertexData = Data()
         for point in bounds.corners {

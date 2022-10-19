@@ -851,8 +851,8 @@ class RedundancyTests: RulesTests {
     }
 
     func testRedundantObjcCommentNotRemoved() {
-        let input = "@objc // an outlet\n@IBOutlet var label: UILabel!"
-        let output = "// an outlet\n@IBOutlet var label: UILabel!"
+        let input = "@objc /// an outlet\n@IBOutlet var label: UILabel!"
+        let output = "/// an outlet\n@IBOutlet var label: UILabel!"
         testFormatting(for: input, output, rule: FormatRules.redundantObjc)
     }
 
@@ -6010,8 +6010,8 @@ class RedundancyTests: RulesTests {
         @discardableResult
         func discardableResult() -> String { "hello world" }
 
-        // We can't remove this closure, since the method called inline
-        // would return a String instead.
+        /// We can't remove this closure, since the method called inline
+        /// would return a String instead.
         let void: Void = { discardableResult() }()
         """
         testFormatting(for: input, rule: FormatRules.redundantClosure)
@@ -6022,8 +6022,8 @@ class RedundancyTests: RulesTests {
         @discardableResult
         func discardableResult() -> String { "hello world" }
 
-        // We can't remove this closure, since the method called inline
-        // would return a String instead.
+        /// We can't remove this closure, since the method called inline
+        /// would return a String instead.
         let void: () = { discardableResult() }()
         """
         testFormatting(for: input, rule: FormatRules.redundantClosure)

@@ -7245,4 +7245,125 @@ public struct _FormatRules {
             formatter.replaceToken(at: typeNameIndex, with: tokenize(fullGenericType))
         }
     }
+
+    public let docComments = FormatRule(
+        help: "Use doc comments for comments preceding declarations.",
+        disabledByDefault: true,
+        orderAfter: ["fileHeader"]
+    ) { formatter in
+        formatter.forEach(.startOfScope) { index, token in
+            guard
+                ["//", "/*"].contains(token.string),
+                let endOfComment = formatter.endOfScope(at: index)
+            else { return }
+
+            let shouldBeDocComment: Bool = {
+                guard let nextDeclarationIndex = formatter.index(
+                    after: endOfComment,
+                    where: { token in
+                        // Check if this token defines a declaration that supports doc comments
+                        token.isDeclarationTypeKeyword(excluding: ["import"])
+                    }
+                ) else { return false }
+
+                // Only use doc comments on declarations in type bodies, or top-level declarations
+                if let startOfEnclosingScope = formatter.index(of: .startOfScope("{"), before: index) {
+                    guard let scopeKeyword = formatter.lastSignificantKeyword(at: startOfEnclosingScope, excluding: ["where"]) else {
+                        return false
+                    }
+
+                    if !["class", "struct", "enum", "actor", "protocol", "extension"].contains(scopeKeyword) {
+                        return false
+                    }
+                }
+
+                // If there aren't any blank lines between the comment and declaration,
+                // this comment is associated with that declaration
+                let trailingTokens = formatter.tokens[(endOfComment - 1) ... nextDeclarationIndex]
+                let lines = trailingTokens.split(omittingEmptySubsequences: false, whereSeparator: \.isLinebreak)
+                let blankLineBeforeDeclaration = lines.contains(where: { line in
+                    line.isEmpty || line.allSatisfy(\.isSpace)
+                })
+
+                if blankLineBeforeDeclaration {
+                    return false
+                }
+
+                // Check if this is a special type of comment that isn't documentation
+                if
+                    let commentBodyIndex = formatter.index(after: index, where: { token in
+                        if case .commentBody = token { return true }
+                        else { return false }
+                    }),
+                    commentBodyIndex < endOfComment,
+                    let commentBodyToken = formatter.token(at: commentBodyIndex)
+                {
+                    let commentBody = commentBodyToken.string.trimmingCharacters(in: .whitespaces)
+
+                    // Don't modify directive comments like `// MARK: Section title`
+                    // or `// swiftformat:disable rule`, since those tools expect
+                    // regular comments and not doc comments.
+                    for knownTag in ["mark", "swiftformat", "sourcery", "swiftlint"]
+                        where commentBody.lowercased().hasPrefix(knownTag + ":")
+                    {
+                        return false
+                    }
+                }
+
+                // Only comments at the start of a line can be doc comments
+                if let previousToken = formatter.index(of: .nonSpaceOrLinebreak, before: index) {
+                    let commentLine = formatter.startOfLine(at: index)
+                    let previousTokenLine = formatter.startOfLine(at: previousToken)
+
+                    if commentLine == previousTokenLine {
+                        return false
+                    }
+                }
+
+                return true
+            }()
+
+            // Doc comment tokens like `///` and `/**` aren't parsed as a
+            // single `.startOfScope` token -- they're parsed as:
+            // `.startOfScope("//"), .commentBody("/ ...")` or
+            // `.startOfScope("/*"), .commentBody("* ...")`
+            let startOfDocCommentBody: String
+            switch token.string {
+            case "//":
+                startOfDocCommentBody = "/"
+            case "/*":
+                startOfDocCommentBody = "*"
+            default:
+                return
+            }
+
+            if
+                let commentBody = formatter.token(at: index + 1),
+                case .commentBody = commentBody
+            {
+                if shouldBeDocComment, !commentBody.string.hasPrefix(startOfDocCommentBody) {
+                    let updatedCommentBody = "\(startOfDocCommentBody)\(commentBody.string)"
+                    formatter.replaceToken(at: index + 1, with: .commentBody(updatedCommentBody))
+                } else if !shouldBeDocComment, commentBody.string.hasPrefix(startOfDocCommentBody) {
+                    let prefix = commentBody.string.prefix(while: { String($0) == startOfDocCommentBody })
+
+                    // Do nothing if this is a unusual comment like `//////////////////`
+                    // or `/****************`. We can't just remove one of the tokens, because
+                    // that would make this rule have a different output each time, but we
+                    // shouldn't remove all of them since that would be unexpected.
+                    if prefix.count > 1 {
+                        return
+                    }
+
+                    formatter.replaceToken(
+                        at: index + 1,
+                        with: .commentBody(String(commentBody.string.dropFirst()))
+                    )
+                }
+
+            } else if shouldBeDocComment {
+                formatter.insert(.commentBody(startOfDocCommentBody), at: index + 1)
+            }
+        }
+    }
 }

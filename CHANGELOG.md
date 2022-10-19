@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.50.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.50.3) (2022-10-19)
+
+- Fixed bug where `redundantFileprivate` rule could break Array extensions using type sugar
+- Fixed bug and crash in `wrapSingleLineComments` rule relating to long URLs
+- Improved `wrapSingleLineComments` handling of comments containing long URLs
+- The `opaqueGenericParameters` rule is now correctly applied to initializers and subscripts
+- Added some known issues for `opaqueGenericParameters` and `genericExtensions` to README
+
 ## [0.50.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.50.2) (2022-10-12)
 
 - Fixed `redundantImports` dropping `@_implementationOnly` or `@_exported` annotations

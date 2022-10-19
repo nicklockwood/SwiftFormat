@@ -84,17 +84,17 @@ private enum Label: String {
     case command
 }
 
-// boolean
+/// boolean
 private let bool: Consumer<Label> = .label(.bool, "true" | "false")
 
-// number
+/// number
 private let zeroToNine: Consumer<Label> = .character(in: "0" ... "9")
 private let oneToNine: Consumer<Label> = .character(in: "1" ... "9")
 private let integer: Consumer<Label> = "0" | [oneToNine, .zeroOrMore(zeroToNine)]
 private let decimal: Consumer<Label> = [integer, .optional([".", .oneOrMore(zeroToNine)])]
 private let number: Consumer<Label> = .label(.number, .flatten(decimal))
 
-// string
+/// string
 private let string: Consumer<Label> = .label(.string, .flatten([
     .discard("\""),
     .zeroOrMore(.any([
@@ -109,12 +109,12 @@ private let string: Consumer<Label> = .label(.string, .flatten([
     .discard("\""),
 ]))
 
-// identifier
+/// identifier
 private let alpha: Consumer<Label> = .character(in: .letters)
 private let alphanumeric: Consumer<Label> = .character(in: .alphanumerics)
 private let identifier: Consumer<Label> = .flatten([alpha, .zeroOrMore(alphanumeric)])
 
-// rvalues
+/// rvalues
 private let literal: Consumer<Label> = number | bool | string
 private let variable: Consumer<Label> = .label(.variable, identifier)
 private let subexpression: Consumer<Label> = [
@@ -130,17 +130,17 @@ private let expression: Consumer<Label> = .label(.expression, [
     term, .optional(["+" | "-", .reference(.expression)]),
 ])
 
-// assignment
+/// assignment
 private let assignment: Consumer<Label> = .label(.assignment, [
     identifier, .discard("="), expression,
 ])
 
-// comments and white space
+/// comments and white space
 private let space: Consumer<Label> = .character(in: .whitespacesAndNewlines)
 private let comment1: Consumer<Label> = ["//", .zeroOrMore(.anyCharacter(except: "\r", "\n"))]
 private let comment2: Consumer<Label> = ["/*", .zeroOrMore([.not("*/"), .anyCharacter()]), "*/"]
 private let spaceOrComment: Consumer<Label> = .discard(.zeroOrMore(space | comment1 | comment2))
 
-// root
+/// root
 private let command: Consumer<Label> =
     .label(.command, .ignore(spaceOrComment, in: assignment | expression))

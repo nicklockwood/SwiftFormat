@@ -37,7 +37,7 @@ public struct Polygon: Hashable {
     public let isConvex: Bool
     public var material: Material
 
-    // Used to track split/join
+    /// Used to track split/join
     var id = 0
 }
 
@@ -58,7 +58,7 @@ public extension Polygon {
     }
 
     /// Test if point lies inside the polygon
-    // https://stackoverflow.com/questions/217578/how-can-i-determine-whether-a-2d-point-is-within-a-polygon#218081
+    /// https://stackoverflow.com/questions/217578/how-can-i-determine-whether-a-2d-point-is-within-a-polygon#218081
     func containsPoint(_ p: Vector) -> Bool {
         guard plane.containsPoint(p), bounds.containsPoint(p) else {
             return false
@@ -207,8 +207,8 @@ public extension Polygon {
 }
 
 internal extension Polygon {
-    // Create polygon from vertices and face normal without performing validation
-    // Vertices may be convex or concave, but are assumed to describe a non-degenerate polygon
+    /// Create polygon from vertices and face normal without performing validation
+    /// Vertices may be convex or concave, but are assumed to describe a non-degenerate polygon
     init(
         unchecked vertices: [Vertex],
         normal: Vector,
@@ -225,9 +225,9 @@ internal extension Polygon {
         )
     }
 
-    // Create polygon from vertices and plane without performing validation
-    // Vertices may be convex or concave, but are assumed to describe a non-degenerate polygon
-    // Vertices are assumed to be in anticlockwise order for the purpose of deriving the plane
+    /// Create polygon from vertices and plane without performing validation
+    /// Vertices may be convex or concave, but are assumed to describe a non-degenerate polygon
+    /// Vertices are assumed to be in anticlockwise order for the purpose of deriving the plane
     init(
         unchecked vertices: [Vertex],
         plane: Plane? = nil,
@@ -249,7 +249,7 @@ internal extension Polygon {
         self.id = id
     }
 
-    // Join touching polygons (without checking they are coplanar or share the same material)
+    /// Join touching polygons (without checking they are coplanar or share the same material)
     func join(unchecked other: Polygon) -> Polygon? {
         assert(material == other.material)
         assert(plane.isEqual(to: other.plane))

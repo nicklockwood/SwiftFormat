@@ -1126,7 +1126,7 @@ class IndentTests: RulesTests {
     }
 
     func testNoIndentAfterDefaultAsIdentifier() {
-        let input = "let foo = FileManager.default\n// Comment\nlet bar = 0"
+        let input = "let foo = FileManager.default\n/// Comment\nlet bar = 0"
         testFormatting(for: input, rule: FormatRules.indent)
     }
 
@@ -2189,7 +2189,7 @@ class IndentTests: RulesTests {
 
     func testNestedCommentIndenting2() {
         let input = """
-        /**
+        /*
         Some description;
         ```
         func foo() {
@@ -2199,7 +2199,7 @@ class IndentTests: RulesTests {
         */
         """
         let output = """
-        /**
+        /*
          Some description;
          ```
          func foo() {

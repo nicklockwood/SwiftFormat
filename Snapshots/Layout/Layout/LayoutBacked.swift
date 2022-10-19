@@ -5,7 +5,7 @@ import Foundation
 /// Protocol for views or controllers that are backed by a LayoutNode
 /// Exposes the node reference so that the view can update itself
 public protocol LayoutBacked: class {
-    /* weak */ var layoutNode: LayoutNode? { get }
+    /** weak */ var layoutNode: LayoutNode? { get }
 }
 
 public extension LayoutBacked where Self: NSObject {

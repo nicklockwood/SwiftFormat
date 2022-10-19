@@ -190,7 +190,7 @@ extension UIView: LayoutManaged {
         return [:]
     }
 
-    // Return the best available VC for computing the layout guide
+    /// Return the best available VC for computing the layout guide
     var _layoutGuideController: UIViewController? {
         let viewController = self.viewController
         return viewController?.navigationController?.topViewController ??
@@ -223,7 +223,7 @@ extension UIView: LayoutManaged {
         }
     }
 
-    // Set expression value
+    /// Set expression value
     @objc open func setValue(_ value: Any, forExpression name: String) throws {
         if #available(iOS 11.0, *) {} else {
             let ltr = (_effectiveUserInterfaceLayoutDirection == .leftToRight)
@@ -271,7 +271,7 @@ extension UIView: LayoutManaged {
         }
     }
 
-    // Set expression value with animation (if applicable)
+    /// Set expression value with animation (if applicable)
     @objc open func setAnimatedValue(_ value: Any, forExpression name: String) throws {
         let type = Swift.type(of: self).cachedExpressionTypes[name]
         if try !_setValue(value, ofType: type, forKey: name, animated: true) {
@@ -354,7 +354,7 @@ extension UIView: LayoutManaged {
     }
 
     /// Called immediately before a child node is removed
-    // TODO: remove index argument as it isn't used
+    /// TODO: remove index argument as it isn't used
     @objc open func willRemoveChildNode(_ node: LayoutNode, at _: Int) {
         if node._view == nil { return }
         for controller in node.viewControllers {

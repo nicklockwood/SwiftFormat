@@ -6900,8 +6900,8 @@ public struct _FormatRules {
     ) { formatter in
         formatter.forEach(.keyword) { keywordIndex, keyword in
             guard
-                // Apply this rule to functions and initializers
-                ["func", "init"].contains(keyword.string),
+                // Apply this rule to any function-like declaration
+                ["func", "init", "subscript"].contains(keyword.string),
                 // Opaque generic parameter syntax is only supported in Swift 5.7+
                 formatter.options.swiftVersion >= "5.7",
                 // Validate that this is a generic method using angle bracket syntax,

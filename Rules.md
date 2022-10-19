@@ -82,6 +82,7 @@
 * [blankLineAfterImports](#blankLineAfterImports)
 * [blankLinesBetweenImports](#blankLinesBetweenImports)
 * [blockComments](#blockComments)
+* [docComments](#docComments)
 * [isEmpty](#isEmpty)
 * [markTypes](#markTypes)
 * [organizeDeclarations](#organizeDeclarations)
@@ -479,6 +480,29 @@ Replace consecutive spaces with a single space.
 ```diff
 - let     foo = 5
 + let foo = 5
+```
+
+</details>
+<br/>
+
+## docComments
+
+Use doc comments for comments preceding declarations.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- // A placeholder type used to demonstrate syntax rules
++ /// A placeholder type used to demonstrate syntax rules
+  class Foo {
+-     // This function doesn't really do anything
++     /// This function doesn't really do anything
+      func bar() {
+-         /// TODO: implement Foo.bar() algorithm
++         // TODO: implement Foo.bar() algorithm
+      }
+  }
 ```
 
 </details>

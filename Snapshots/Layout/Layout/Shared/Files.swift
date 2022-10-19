@@ -2,7 +2,7 @@
 
 import Foundation
 
-// An error relating to files or file parsing
+/// An error relating to files or file parsing
 struct FileError: Error, CustomStringConvertible {
     let message: String
     let file: URL
@@ -35,10 +35,10 @@ struct FileError: Error, CustomStringConvertible {
     }
 }
 
-// Name of the Layout ignore file
+/// Name of the Layout ignore file
 let layoutIgnoreFile = ".layout-ignore"
 
-// Parses a `.layout-ignore` file and returns the paths as URLs
+/// Parses a `.layout-ignore` file and returns the paths as URLs
 func parseIgnoreFile(_ file: URL) throws -> [URL] {
     let data = try FileError.wrap({ try Data(contentsOf: file) }, for: file)
     guard let string = String(data: data, encoding: .utf8) else {

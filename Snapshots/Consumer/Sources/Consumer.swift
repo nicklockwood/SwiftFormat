@@ -651,12 +651,12 @@ extension Consumer.Location: CustomStringConvertible {
         return lhs.range == rhs.range
     }
 
-    // Convenience constructor, used by compiled parsers
+    /// Convenience constructor, used by compiled parsers
     public static func at(_ range: Range<String.Index>, in source: String.UnicodeScalarView) -> Consumer.Location {
         return Consumer.Location(source: source, range: range)
     }
 
-    // Convenience constructor, used for testing
+    /// Convenience constructor, used for testing
     public static func at(_ range: CountableRange<Int>) -> Consumer.Location {
         let source = String(repeating: " ", count: range.upperBound).unicodeScalars
         let range = source.index(source.startIndex, offsetBy: range.lowerBound) ..< source.endIndex
@@ -688,7 +688,7 @@ private extension Consumer.Location {
 // MARK: Charset implementation
 
 public extension Consumer.Charset {
-    // Note: this can be expensive to calculate
+    /// Note: this can be expensive to calculate
     var ranges: [CountableClosedRange<UInt32>] {
         var ranges = [CountableClosedRange<UInt32>]()
         let bitmap: Data = characterSet.bitmapRepresentation
@@ -862,7 +862,7 @@ private extension Consumer.Error {
     }
 }
 
-// Human-readable character
+/// Human-readable character
 private func escapeCodePoint(_ codePoint: UInt32, inString _: Bool = false) -> String {
     guard let char = UnicodeScalar(codePoint), [0, 9, 10, 13].contains(codePoint) ||
         !CharacterSet.controlCharacters.contains(char)
@@ -873,7 +873,7 @@ private func escapeCodePoint(_ codePoint: UInt32, inString _: Bool = false) -> S
     return escapeString(String(char))
 }
 
-// Human-readable string
+/// Human-readable string
 private func escapeString<T: StringProtocol>(_ string: T) -> String {
     var result = "'"
     for char in string.unicodeScalars {

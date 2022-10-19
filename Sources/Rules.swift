@@ -5564,7 +5564,7 @@ public struct _FormatRules {
                       $0 == .startOfScope("{")
                   }), let typeIndex = formatter.index(of: .keyword, before: scopeIndex, if: {
                       ["class", "actor", "struct", "enum", "extension"].contains($0.string)
-                  }), let nameIndex = formatter.index(of: .identifier, after: typeIndex),
+                  }), let nameIndex = formatter.index(of: .identifier, in: typeIndex ..< scopeIndex),
                   formatter.next(.nonSpaceOrCommentOrLinebreak, after: nameIndex)?.isOperator(".") == false,
                   case let .identifier(typeName) = formatter.tokens[nameIndex],
                   let endIndex = formatter.index(of: .endOfScope, after: scopeIndex),

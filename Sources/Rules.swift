@@ -4387,13 +4387,18 @@ public struct _FormatRules {
 
             var words = comment.components(separatedBy: " ")
             comment = words.removeFirst()
-            var length = formatter.lineLength(upTo: startIndex) + comment.count
-            while let next = words.first, length + next.count < maxWidth {
+            let commentPrefix = comment == "/" ? "/ " : comment.hasPrefix("/") ? "/" : ""
+            let prefixLength = formatter.lineLength(upTo: startIndex)
+            var length = prefixLength + comment.count
+            while length <= maxWidth, let next = words.first,
+                  length + next.count < maxWidth ||
+                  // Don't wrap if next word won't fit on a line by itself anyway
+                  prefixLength + commentPrefix.count + next.count > maxWidth
+            {
                 comment += " \(next)"
                 length += next.count + 1
                 words.removeFirst()
             }
-            let commentPrefix = ["/ ", "/"].first(where: comment.hasPrefix) ?? ""
             if words.isEmpty || comment == commentPrefix {
                 return
             }

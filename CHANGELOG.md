@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.51.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.51.0)
+
+- Removed `preferDouble` rule as it could introduce subtle bugs and compiler errors when used with system APIs
+
 ## [0.50.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.50.3) (2022-10-19)
 
 - Fixed bug where `redundantFileprivate` rule could break Array extensions using type sugar

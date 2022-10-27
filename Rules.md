@@ -85,7 +85,6 @@
 * [isEmpty](#isEmpty)
 * [markTypes](#markTypes)
 * [organizeDeclarations](#organizeDeclarations)
-* [preferDouble](#preferDouble)
 * [sortedSwitchCases](#sortedSwitchCases)
 * [wrapConditionalBodies](#wrapConditionalBodies)
 * [wrapEnumCases](#wrapEnumCases)
@@ -1056,28 +1055,6 @@ Option | Description
 +     private let g: Int = 2
 +
  }
-```
-
-</details>
-<br/>
-
-## preferDouble
-
-Replaces occurrences of CGFloat with Double when targeting Swift 5.5 and above.
-
-## preferKeyPath
-
-Convert trivial `map { $0.foo }` closures to keyPath-based syntax.
-
-<details>
-<summary>Examples</summary>
-
-```diff
-- let barArray = fooArray.map { $0.bar }
-+ let barArray = fooArray.map(\.bar)
-
-- let barArray = fooArray.compactMap { $0.optionalBar }
-+ let barArray = fooArray.compactMap(\.optionalBar)
 ```
 
 </details>

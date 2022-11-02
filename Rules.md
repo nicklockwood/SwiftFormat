@@ -2153,6 +2153,7 @@ Option | Description
 `--wrapconditions` | Wrap conditions: "before-first", "after-first", "preserve"
 `--wraptypealiases` | Wrap typealiases: "before-first", "after-first", "preserve"
 `--conditionswrap` | Wrap conditions as Xcode 12:"auto", "always", "disabled"
+`--effectsposition` | Effects position: "wrap", "with-closing-paren", "preserve"
 
 <details>
 <summary>Examples</summary>

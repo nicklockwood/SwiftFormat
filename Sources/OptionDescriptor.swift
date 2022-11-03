@@ -474,7 +474,7 @@ struct _Descriptors {
         argumentName: "effectsposition",
         displayName: "Wrap Function Effects (throws, async)",
         help: "Effects position: \"wrap\", \"with-closing-paren\", \"preserve\"",
-        keyPath: \.wrapReturnType
+        keyPath: \.effectsPosition
     )
     let wrapConditions = OptionDescriptor(
         argumentName: "wrapconditions",

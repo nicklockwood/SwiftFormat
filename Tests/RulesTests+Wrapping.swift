@@ -2730,6 +2730,31 @@ class WrappingTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
     }
 
+    func testWrapEffectOnMultilineFunctionDeclaration() {
+        let input = """
+        func multilineFunction(
+            foo _: String,
+            bar _: String) async throws
+            -> String {}
+        """
+
+        let output = """
+        func multilineFunction(
+            foo _: String,
+            bar _: String)
+            async throws -> String {}
+        """
+
+        let options = FormatOptions(
+            wrapArguments: .beforeFirst,
+            closingParenOnSameLine: true,
+            wrapReturnType: .ifMultiline,
+            effectsPosition: .wrap
+        )
+
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+    }
+
     func testUnwrapEffectOnMultilineFunctionDeclaration() {
         let input = """
         func multilineFunction(

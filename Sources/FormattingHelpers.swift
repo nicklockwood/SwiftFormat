@@ -319,6 +319,16 @@ extension Formatter {
                     // If the effect is on the same line as the closing paren, wrap it
                     if startOfLine(at: endOfFunctionScope) == startOfLine(at: effectIndex) {
                         wrap(before: effectIndex)
+
+                        // When wrapping the effect, we should also un-wrap any return type
+                        if
+                            let returnArrowIndex = index(of: .operator("->", .infix), after: endOfFunctionScope),
+                            returnArrowIndex < openBracket,
+                            let tokenBeforeArrowIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: returnArrowIndex),
+                            startOfLine(at: tokenBeforeArrowIndex) != startOfLine(at: returnArrowIndex)
+                        {
+                            replaceTokens(in: endOfLine(at: tokenBeforeArrowIndex) ..< returnArrowIndex, with: [.space(" ")])
+                        }
                     }
                 case .withClosingParen:
                     if startOfLine(at: endOfFunctionScope) != startOfLine(at: effectIndex) {

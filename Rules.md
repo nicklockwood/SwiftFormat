@@ -88,7 +88,6 @@
 * [isEmpty](#isEmpty)
 * [markTypes](#markTypes)
 * [organizeDeclarations](#organizeDeclarations)
-* [preferDouble](#preferDouble)
 * [sortedSwitchCases](#sortedSwitchCases)
 * [wrapConditionalBodies](#wrapConditionalBodies)
 * [wrapEnumCases](#wrapEnumCases)
@@ -1166,10 +1165,6 @@ Option | Description
 
 </details>
 <br/>
-
-## preferDouble
-
-Replaces occurrences of CGFloat with Double when targeting Swift 5.5 and above.
 
 ## preferKeyPath
 

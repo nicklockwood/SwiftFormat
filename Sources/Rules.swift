@@ -6830,19 +6830,6 @@ public struct _FormatRules {
         }
     }
 
-    public let preferDouble = FormatRule(
-        help: """
-        Replaces occurrences of CGFloat with Double when targeting Swift 5.5 and above.
-        """,
-        disabledByDefault: true
-    ) { formatter in
-        guard formatter.options.swiftVersion >= "5.5" else { return }
-
-        formatter.forEach(.identifier("CGFloat")) { index, _ in
-            formatter.replaceToken(at: index, with: .identifier("Double"))
-        }
-    }
-
     public let blockComments = FormatRule(
         help: "Changes block comments to single line comments.",
         disabledByDefault: true

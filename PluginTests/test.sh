@@ -1,4 +1,4 @@
-swift package plugin --allow-writing-to-package-directory format-source-code --unexclude .
+swift package plugin --allow-writing-to-package-directory swiftformat --unexclude .
 if [[ `git status --porcelain` ]]; then
     # Expected changes
     git restore Sources/PackageUsingPlugin/NotFormattedFile.swift

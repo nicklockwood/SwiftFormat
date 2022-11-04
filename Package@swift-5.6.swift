@@ -14,7 +14,7 @@ let package = Package(
         .testTarget(name: "SwiftFormatTests", dependencies: ["SwiftFormat"], path: "Tests"),
         .plugin(name: "SwiftFormatPlugin",
                 capability: .command(
-                    intent: .sourceCodeFormatting(),
+                    intent: .custom(verb: "swiftformat", description: "Formats Swift source files using SwiftFormat"),
                     permissions: [
                         .writeToPackageDirectory(reason: "This command reformats source files"),
                     ]

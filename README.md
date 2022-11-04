@@ -328,7 +328,7 @@ dependencies: [
 ### Trigger Plugin From Command-Line
 
 ```bash
-swift package plugin --allow-writing-to-package-directory format-source-code
+swift package plugin --allow-writing-to-package-directory swiftformat
 ```
 
 You can limit the formatting to a particular target with `--target` option.
@@ -338,7 +338,7 @@ You can also specify `SwiftFormat` arguments, e.g. `--swiftversion`.
 Example
 
 ```bash
-swift package plugin --allow-writing-to-package-directory format-source-code --target MyLibrary --swiftversion 5.6 --verbose
+swift package plugin --allow-writing-to-package-directory swiftformat --target MyLibrary --swiftversion 5.6 --verbose
 ```
 
 ### Trigger Plugin From Xcode

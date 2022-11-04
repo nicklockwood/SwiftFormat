@@ -2724,10 +2724,25 @@ class WrappingTests: RulesTests {
             wrapArguments: .beforeFirst,
             closingParenOnSameLine: true,
             wrapReturnType: .ifMultiline,
-            effectsPosition: .wrap
+            wrapEffects: .ifMultiline
         )
 
         testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+    }
+
+    func testDoesntWrapReturnAndEffectOnSingleLineFunctionDeclaration() {
+        let input = """
+        func singleLineFunction() async throws -> String {}
+        """
+
+        let options = FormatOptions(
+            wrapArguments: .beforeFirst,
+            closingParenOnSameLine: true,
+            wrapReturnType: .ifMultiline,
+            wrapEffects: .ifMultiline
+        )
+
+        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
     }
 
     func testWrapEffectOnMultilineFunctionDeclaration() {
@@ -2749,7 +2764,7 @@ class WrappingTests: RulesTests {
             wrapArguments: .beforeFirst,
             closingParenOnSameLine: true,
             wrapReturnType: .ifMultiline,
-            effectsPosition: .wrap
+            wrapEffects: .ifMultiline
         )
 
         testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
@@ -2774,7 +2789,7 @@ class WrappingTests: RulesTests {
             wrapArguments: .beforeFirst,
             closingParenOnSameLine: true,
             wrapReturnType: .ifMultiline,
-            effectsPosition: .withClosingParen
+            wrapEffects: .never
         )
 
         testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
@@ -2844,7 +2859,7 @@ class WrappingTests: RulesTests {
             wrapArguments: .afterFirst,
             closingParenOnSameLine: true,
             wrapReturnType: .ifMultiline,
-            effectsPosition: .wrap
+            wrapEffects: .ifMultiline
         )
 
         testFormatting(
@@ -3385,7 +3400,7 @@ class WrappingTests: RulesTests {
         let options = FormatOptions(
             wrapArguments: .beforeFirst,
             closingParenOnSameLine: false,
-            effectsPosition: .withClosingParen
+            wrapEffects: .never
         )
         testFormatting(for: input, [output], rules: [
             FormatRules.wrapMultilineStatementBraces,

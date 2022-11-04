@@ -178,7 +178,7 @@ class MetadataTests: XCTestCase {
                         Descriptors.wrapArguments, Descriptors.wrapParameters, Descriptors.wrapCollections,
                         Descriptors.closingParenOnSameLine, Descriptors.linebreak, Descriptors.truncateBlankLines,
                         Descriptors.indent, Descriptors.tabWidth, Descriptors.smartTabs,
-                        Descriptors.maxWidth, Descriptors.assetLiteralWidth, Descriptors.wrapReturnType, Descriptors.effectsPosition,
+                        Descriptors.maxWidth, Descriptors.assetLiteralWidth, Descriptors.wrapReturnType, Descriptors.wrapEffects,
                         Descriptors.wrapConditions, Descriptors.wrapTypealiases, Descriptors.wrapTernaryOperators, Descriptors.conditionsWrap,
                     ]
                 case .identifier("indexWhereLineShouldWrapInLine"), .identifier("indexWhereLineShouldWrap"):

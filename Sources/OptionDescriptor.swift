@@ -470,11 +470,11 @@ struct _Descriptors {
         help: "Wrap return type: \"if-multiline\", \"preserve\" (default)",
         keyPath: \.wrapReturnType
     )
-    let effectsPosition = OptionDescriptor(
-        argumentName: "effectsposition",
+    let wrapEffects = OptionDescriptor(
+        argumentName: "wrapeffects",
         displayName: "Wrap Function Effects (throws, async)",
-        help: "Effects position: \"wrap\", \"with-closing-paren\", \"preserve\"",
-        keyPath: \.effectsPosition
+        help: "Wrap effects: \"if-multiline\", \"never\", \"preserve\"",
+        keyPath: \.wrapEffects
     )
     let wrapConditions = OptionDescriptor(
         argumentName: "wrapconditions",

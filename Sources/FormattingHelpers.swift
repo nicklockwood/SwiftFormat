@@ -312,10 +312,10 @@ extension Formatter {
             if let effectIndex = index(after: endOfFunctionScope, where: { $0.string == "throws" || $0.string == "async" }),
                effectIndex < openBracket
             {
-                switch options.effectsPosition {
+                switch options.wrapEffects {
                 case .preserve:
                     break
-                case .wrap:
+                case .ifMultiline:
                     // If the effect is on the same line as the closing paren, wrap it
                     if startOfLine(at: endOfFunctionScope) == startOfLine(at: effectIndex) {
                         wrap(before: effectIndex)
@@ -330,7 +330,7 @@ extension Formatter {
                             replaceTokens(in: endOfLine(at: tokenBeforeArrowIndex) ..< returnArrowIndex, with: [.space(" ")])
                         }
                     }
-                case .withClosingParen:
+                case .never:
                     if startOfLine(at: endOfFunctionScope) != startOfLine(at: effectIndex) {
                         replaceTokens(in: endOfLine(at: endOfFunctionScope) ..< effectIndex, with: [.space(" ")])
                     }

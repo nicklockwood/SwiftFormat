@@ -116,13 +116,14 @@ public enum WrapReturnType: String, CaseIterable {
     case preserve
 }
 
-/// Wrapping behavior for effects (`async`, `throws`) in multi-line methods
-public enum EffectsPosition: String, CaseIterable {
+/// Wrapping behavior for effects (`async`, `throws`)
+public enum WrapEffects: String, CaseIterable {
     case preserve
     /// `async` and `throws` are wrapped to the line after the closing paren
-    case wrap
-    /// `async` and `throws` are included on the same line as the closing paren
-    case withClosingParen = "with-closing-paren"
+    /// if the function spans multiple lines
+    case ifMultiline = "if-multiline"
+    /// `async` and `throws` are never wrapped, and are always included on the same line as the closing paren
+    case never
 }
 
 /// Annotation which should be kept when removing a redundant type
@@ -429,7 +430,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var removeStartOrEndBlankLinesFromTypes: Bool
     public var genericTypes: String
     public var useSomeAny: Bool
-    public var effectsPosition: EffectsPosition
+    public var wrapEffects: WrapEffects
 
     // Deprecated
     public var indentComments: Bool
@@ -526,7 +527,7 @@ public struct FormatOptions: CustomStringConvertible {
                 removeStartOrEndBlankLinesFromTypes: Bool = true,
                 genericTypes: String = "",
                 useSomeAny: Bool = true,
-                effectsPosition: EffectsPosition = .preserve,
+                wrapEffects: WrapEffects = .preserve,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -614,7 +615,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.removeStartOrEndBlankLinesFromTypes = removeStartOrEndBlankLinesFromTypes
         self.genericTypes = genericTypes
         self.useSomeAny = useSomeAny
-        self.effectsPosition = effectsPosition
+        self.wrapEffects = wrapEffects
         // Doesn't really belong here, but hard to put elsewhere
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

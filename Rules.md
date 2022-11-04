@@ -2177,6 +2177,7 @@ Option | Description
 `--wrapreturntype` | Wrap return type: "if-multiline", "preserve" (default)
 `--wrapconditions` | Wrap conditions: "before-first", "after-first", "preserve"
 `--wraptypealiases` | Wrap typealiases: "before-first", "after-first", "preserve"
+`--wrapeffects` | Wrap effects: "if-multiline", "never", "preserve"
 
 <details>
 <summary>Examples</summary>

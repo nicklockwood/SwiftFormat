@@ -290,29 +290,64 @@ extension Formatter {
             }
         }
 
-        func wrapReturnIfNecessary(
+        func wrapReturnAndEffectsIfNecessary(
             startOfScope: Int,
             endOfFunctionScope: Int
         ) {
-            switch options.wrapReturnType {
-            case .preserve:
-                break
-            case .ifMultiline:
-                guard token(at: startOfScope) == .startOfScope("("),
-                      let openBracket = index(of: .startOfScope, after: endOfFunctionScope),
-                      token(at: openBracket) == .startOfScope("{"),
-                      let returnArrowIndex = index(of: .operator("->", .infix), after: endOfFunctionScope),
-                      returnArrowIndex < openBracket
-                else { return }
+            guard token(at: startOfScope) == .startOfScope("("),
+                  let openBracket = index(of: .startOfScope, after: endOfFunctionScope),
+                  token(at: openBracket) == .startOfScope("{")
+            else { return }
 
-                // If the return arrow is on the same line as the closing paren, wrap it
-                if startOfLine(at: endOfFunctionScope) == startOfLine(at: returnArrowIndex) {
-                    insertSpace(indentForLine(at: returnArrowIndex), at: returnArrowIndex)
-                    insertLinebreak(at: returnArrowIndex)
+            func wrap(before index: Int) {
+                insertSpace(indentForLine(at: index), at: index)
+                insertLinebreak(at: index)
 
-                    // Remove any trailing whitespace that is now orphaned on the previous line
-                    if tokens[returnArrowIndex - 1].is(.space) {
-                        removeToken(at: returnArrowIndex - 1)
+                // Remove any trailing whitespace that is now orphaned on the previous line
+                if tokens[index - 1].is(.space) {
+                    removeToken(at: index - 1)
+                }
+            }
+
+            if let effectIndex = index(after: endOfFunctionScope, where: { $0.string == "throws" || $0.string == "async" }),
+               effectIndex < openBracket
+            {
+                switch options.wrapEffects {
+                case .preserve:
+                    break
+                case .ifMultiline:
+                    // If the effect is on the same line as the closing paren, wrap it
+                    if startOfLine(at: endOfFunctionScope) == startOfLine(at: effectIndex) {
+                        wrap(before: effectIndex)
+
+                        // When wrapping the effect, we should also un-wrap any return type
+                        if
+                            let returnArrowIndex = index(of: .operator("->", .infix), after: endOfFunctionScope),
+                            returnArrowIndex < openBracket,
+                            let tokenBeforeArrowIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: returnArrowIndex),
+                            startOfLine(at: tokenBeforeArrowIndex) != startOfLine(at: returnArrowIndex)
+                        {
+                            replaceTokens(in: endOfLine(at: tokenBeforeArrowIndex) ..< returnArrowIndex, with: [.space(" ")])
+                        }
+                    }
+                case .never:
+                    if startOfLine(at: endOfFunctionScope) != startOfLine(at: effectIndex) {
+                        replaceTokens(in: endOfLine(at: endOfFunctionScope) ..< effectIndex, with: [.space(" ")])
+                    }
+                }
+            }
+
+            if
+                let returnArrowIndex = index(of: .operator("->", .infix), after: endOfFunctionScope),
+                returnArrowIndex < openBracket
+            {
+                switch options.wrapReturnType {
+                case .preserve:
+                    break
+                case .ifMultiline:
+                    // If the return arrow is on the same line as the closing paren, wrap it
+                    if startOfLine(at: endOfFunctionScope) == startOfLine(at: returnArrowIndex) {
+                        wrap(before: returnArrowIndex)
                     }
                 }
             }
@@ -384,7 +419,7 @@ extension Formatter {
                 }
             }
 
-            wrapReturnIfNecessary(
+            wrapReturnAndEffectsIfNecessary(
                 startOfScope: i,
                 endOfFunctionScope: endOfScope
             )
@@ -439,7 +474,7 @@ extension Formatter {
                 insertLinebreak(at: breakIndex)
             }
 
-            wrapReturnIfNecessary(
+            wrapReturnAndEffectsIfNecessary(
                 startOfScope: i,
                 endOfFunctionScope: endOfScope
             )

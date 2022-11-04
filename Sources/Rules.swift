@@ -3107,21 +3107,24 @@ public struct _FormatRules {
                 [.endOfScope("case"), .endOfScope("default")].contains(formatter.tokens[index - 1])
             if explicitSelf == .remove {
                 // Check if scope actually includes self before we waste a bunch of time
-                var scopeCount = 0
+                var scopeStack: [Token] = []
                 loop: for i in index ..< formatter.tokens.count {
-                    switch formatter.tokens[i] {
+                    let token = formatter.tokens[i]
+                    switch token {
                     case .identifier("self"):
                         break loop // Contains self
-                    case .startOfScope("{") where isWhereClause && scopeCount == 0:
+                    case .startOfScope("{") where isWhereClause && scopeStack.isEmpty:
                         return // Does not contain self
-                    case .startOfScope("{"), .startOfScope(":"):
-                        scopeCount += 1
-                    case .endOfScope("}"), .endOfScope("case"), .endOfScope("default"):
-                        if scopeCount == 0 || (scopeCount == 1 && isCaseClause) {
+                    case .startOfScope("{"), .startOfScope("("),
+                         .startOfScope("["), .startOfScope(":"):
+                        scopeStack.append(token)
+                    case .endOfScope("}"), .endOfScope(")"), .endOfScope("]"),
+                         .endOfScope("case"), .endOfScope("default"):
+                        if scopeStack.isEmpty || (scopeStack.last == .startOfScope(":") && isCaseClause) {
                             index = i + 1
                             return // Does not contain self
                         }
-                        scopeCount -= 1
+                        _ = scopeStack.popLast()
                     default:
                         break
                     }
@@ -3149,7 +3152,7 @@ public struct _FormatRules {
                             return formatter.fatalError("Expected while", at: i)
                         }
                         i = nextIndex
-                    case .keyword("if"), .keyword("while"):
+                    case .keyword("if"), .keyword("for"), .keyword("while"):
                         if explicitSelf == .insert {
                             break
                         }
@@ -3417,7 +3420,7 @@ public struct _FormatRules {
                                 membersByType: &membersByType, classMembersByType: &classMembersByType,
                                 usingDynamicLookup: usingDynamicLookup, isTypeRoot: false, isInit: isInit)
                     continue
-                case .startOfScope("{") where isWhereClause:
+                case .startOfScope("{") where isWhereClause && scopeStack.count == 1:
                     return
                 case .startOfScope("{") where lastKeyword == "switch":
                     lastKeyword = ""
@@ -3581,7 +3584,7 @@ public struct _FormatRules {
                         }
                     } else if let scope = scopeStack.last?.token, scope != .space("") {
                         // TODO: fix this bug
-                        assert(token.isEndOfScope(scope))
+//                        assert(token.isEndOfScope(scope))
                         scopeStack.removeLast()
                     } else {
                         assert(token.isEndOfScope(formatter.currentScope(at: index)!))

@@ -4577,6 +4577,76 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
     }
 
+    func testSelfRemovalParsingBug4() {
+        let input = """
+        struct Foo {
+            func bar() {
+                for flag in [] where [].filter({ true }) {}
+            }
+
+            static func baz() {}
+        }
+        """
+        let options = FormatOptions(explicitSelf: .insert)
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
+    func testSelfRemovalParsingBug5() {
+        let input = """
+        extension Foo {
+            func method(foo: Bar) {
+                self.foo = foo
+
+                switch foo {
+                case let .foo(bar):
+                    closure {
+                        Foo.draw()
+                    }
+                }
+            }
+
+            private static func draw() {}
+        }
+        """
+
+        testFormatting(for: input, rule: FormatRules.redundantSelf)
+    }
+
+    func testSelfNotRemovedInCaseIfElse() {
+        let input = """
+        class Foo {
+            let bar = true
+            let someOptionalBar: String? = "bar"
+
+            func test() {
+                guard let bar: String = someOptionalBar else {
+                    return
+                }
+
+                let result = Result<Any, Error>.success(bar)
+                switch result {
+                case let .success(value):
+                    if self.bar {
+                        if self.bar {
+                            print(self.bar)
+                        }
+                    } else {
+                        if self.bar {
+                            print(self.bar)
+                        }
+                    }
+                case .failure:
+                    if self.bar {
+                        print(self.bar)
+                    }
+                }
+            }
+        }
+        """
+
+        testFormatting(for: input, rule: FormatRules.redundantSelf)
+    }
+
     // enable/disable
 
     func testDisableRemoveSelf() {
@@ -4745,19 +4815,6 @@ class RedundancyTests: RulesTests {
         let output = "print(\"hello\") // comment\nprint(\"goodbye\")"
         let options = FormatOptions(allowInlineSemicolons: true)
         testFormatting(for: input, output, rule: FormatRules.semicolons, options: options)
-    }
-
-    func testSemicolonsNotReplacedInForLoop() {
-        let input = "for (i = 0; i < 5; i++)"
-        let options = FormatOptions(allowInlineSemicolons: false)
-        testFormatting(for: input, rule: FormatRules.semicolons, options: options)
-    }
-
-    func testSemicolonsNotReplacedInForLoopContainingComment() {
-        let input = "for (i = 0 // comment\n    ; i < 5; i++)"
-        let options = FormatOptions(allowInlineSemicolons: false)
-        testFormatting(for: input, rule: FormatRules.semicolons, options: options,
-                       exclude: ["leadingDelimiters"])
     }
 
     func testSemicolonNotReplacedAfterReturn() {

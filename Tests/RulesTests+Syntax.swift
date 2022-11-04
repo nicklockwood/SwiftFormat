@@ -2460,44 +2460,6 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.acronyms)
     }
 
-    // MARK: - preferDouble
-
-    func testCGFloatsReplacedByDoubleOnSwift5_5() {
-        let input = """
-        let foo: CGFloat
-        let bar: CGFloat = 5
-        let baz: [CGFloat] = []
-
-        func foo(value: CGFloat) -> CGFloat { value }
-
-        extension CGFloat: Foopable {}
-        """
-        let output = """
-        let foo: Double
-        let bar: Double = 5
-        let baz: [Double] = []
-
-        func foo(value: Double) -> Double { value }
-
-        extension Double: Foopable {}
-        """
-        let options = FormatOptions(swiftVersion: "5.5")
-        testFormatting(for: input, output, rule: FormatRules.preferDouble, options: options)
-    }
-
-    func testCGFloatsNotReplacedByDoubleIfLessThanSwift5_5() {
-        let input = """
-        let foo: CGFloat
-        let bar: CGFloat = 5
-        let baz: [CGFloat] = []
-
-        func foo(value: CGFloat) -> CGFloat { value }
-
-        extension CGFloat: Foopable {}
-        """
-        testFormatting(for: input, rule: FormatRules.preferDouble)
-    }
-
     // MARK: - blockComments
 
     func testBlockCommentsOneLine() {

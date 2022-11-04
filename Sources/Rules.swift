@@ -3114,9 +3114,11 @@ public struct _FormatRules {
                         break loop // Contains self
                     case .startOfScope("{") where isWhereClause && scopeCount == 0:
                         return // Does not contain self
-                    case .startOfScope("{"), .startOfScope(":"):
+                    case .startOfScope("{"), .startOfScope("("),
+                         .startOfScope("["), .startOfScope(":"):
                         scopeCount += 1
-                    case .endOfScope("}"), .endOfScope("case"), .endOfScope("default"):
+                    case .endOfScope("}"), .endOfScope(")"), .endOfScope("]"),
+                         .endOfScope("case"), .endOfScope("default"):
                         if scopeCount == 0 || (scopeCount == 1 && isCaseClause) {
                             index = i + 1
                             return // Does not contain self
@@ -3149,7 +3151,7 @@ public struct _FormatRules {
                             return formatter.fatalError("Expected while", at: i)
                         }
                         i = nextIndex
-                    case .keyword("if"), .keyword("while"):
+                    case .keyword("if"), .keyword("for"), .keyword("while"):
                         if explicitSelf == .insert {
                             break
                         }
@@ -3417,7 +3419,7 @@ public struct _FormatRules {
                                 membersByType: &membersByType, classMembersByType: &classMembersByType,
                                 usingDynamicLookup: usingDynamicLookup, isTypeRoot: false, isInit: isInit)
                     continue
-                case .startOfScope("{") where isWhereClause:
+                case .startOfScope("{") where isWhereClause && scopeStack.count == 1:
                     return
                 case .startOfScope("{") where lastKeyword == "switch":
                     lastKeyword = ""

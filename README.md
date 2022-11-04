@@ -325,6 +325,9 @@ dependencies: [
     .package(url: "https://github.com/nicklockwood/SwiftFormat", from: "0.50.4"),
 ]
 ```
+
+The plugin will find an existing `.swiftformat` in your package root folder and honor it automatically.
+
 ### Trigger Plugin From Command-Line
 
 ```bash

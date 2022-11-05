@@ -118,7 +118,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
 
     let queue = concurrent ? DispatchQueue.global(qos: .userInitiated) : completionQueue
 
-    func resolveInputURL(_ inputURL: URL, options: Options) -> (URL, ResourceValues, Options)? {
+    func resolveInputURL(_ inputURL: URL, options: Options) -> (URL, URLResourceValues, Options)? {
         let fileOptions = options.fileOptions ?? .default
         let inputURL = inputURL.standardizedFileURL
         if options.shouldSkipFile(inputURL) {
@@ -614,48 +614,13 @@ public func expandPath(_ path: String, in directory: String) -> URL {
     return URL(fileURLWithPath: directory).appendingPathComponent(path).standardized
 }
 
-struct ResourceValues {
-    let isRegularFile: Bool?
-    let isDirectory: Bool?
-    let isAliasFile: Bool?
-    let isSymbolicLink: Bool?
-    let creationDate: Date?
-    let path: String?
-}
-
-func getResourceValues(for url: URL, keys: [URLResourceKey]) throws -> ResourceValues {
-    let manager = FileManager.default
-    #if os(macOS)
-        if let resourceValues = try? url.resourceValues(forKeys: Set(keys)) {
-            return ResourceValues(
-                isRegularFile: resourceValues.isRegularFile,
-                isDirectory: resourceValues.isDirectory,
-                isAliasFile: resourceValues.isAliasFile,
-                isSymbolicLink: resourceValues.isSymbolicLink,
-                creationDate: resourceValues.creationDate,
-                path: resourceValues.path
-            )
-        }
-        if manager.fileExists(atPath: url.path) {
-            throw FormatError.reading("Failed to read attributes for \(url.path)")
-        }
-    #else
-        var isDirectory: ObjCBool = false
-        if manager.fileExists(atPath: url.path, isDirectory: &isDirectory) {
-            guard let attributes = try? manager.attributesOfItem(atPath: url.path) else {
-                throw FormatError.reading("Failed to read attributes for \(url.path)")
-            }
-            let isSymbolicLink = url.resolvingSymlinksInPath() != url
-            return ResourceValues(
-                isRegularFile: !isDirectory.boolValue && !isSymbolicLink,
-                isDirectory: isDirectory.boolValue,
-                isAliasFile: false,
-                isSymbolicLink: isSymbolicLink,
-                creationDate: attributes[.creationDate] as? Date,
-                path: url.path
-            )
-        }
-    #endif
+func getResourceValues(for url: URL, keys: [URLResourceKey]) throws -> URLResourceValues {
+    if let resourceValues = try? url.resourceValues(forKeys: Set(keys)) {
+        return resourceValues
+    }
+    if FileManager.default.fileExists(atPath: url.path) {
+        throw FormatError.reading("Failed to read attributes for \(url.path)")
+    }
     throw FormatError.options("File not found at \(url.path)")
 }
 

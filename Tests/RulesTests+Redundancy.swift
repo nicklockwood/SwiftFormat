@@ -3063,6 +3063,267 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantSelf)
     }
 
+    func testRedundantSelfPreservesSelfInClosureWithExplicitStrongCaptureBefore5_3() {
+        let input = """
+        class Foo {
+            let bar: Int
+
+            func baaz() {
+                closure { [self] in
+                    print(self.bar)
+                }
+            }
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.2")
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
+    func testRedundantSelfRemovesSelfInClosureWithExplicitStrongCapture() {
+        let input = """
+        class Foo {
+            let bar: Int
+
+            func baaz() {
+                closure { [self] in
+                    print(self.bar)
+                }
+            }
+        }
+        """
+
+        let output = """
+        class Foo {
+            let bar: Int
+
+            func baaz() {
+                closure { [self] in
+                    print(bar)
+                }
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.3")
+        testFormatting(for: input, output, rule: FormatRules.redundantSelf, options: options)
+    }
+
+    func testRedundantSelfRemovesSelfInClosureWithNestedExplicitStrongCapture() {
+        let input = """
+        class Foo {
+            let bar: Int
+
+            func baaz() {
+                closure {
+                    print(self.bar)
+                    closure { [self] in
+                        print(self.bar)
+                    }
+                    print(self.bar)
+                }
+            }
+        }
+        """
+
+        let output = """
+        class Foo {
+            let bar: Int
+
+            func baaz() {
+                closure {
+                    print(self.bar)
+                    closure { [self] in
+                        print(bar)
+                    }
+                    print(self.bar)
+                }
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.3")
+        testFormatting(for: input, output, rule: FormatRules.redundantSelf, options: options)
+    }
+
+    func testRedundantSelfKeelsSelfInNestedClosureWithNoExplicitStrongCapture() {
+        let input = """
+        class Foo {
+            let bar: Int
+            let baaz: Int?
+
+            func baaz() {
+                closure { [self] in
+                    print(self.bar)
+                    closure {
+                        print(self.bar)
+                        if let baaz = self.baaz {
+                            print(baaz)
+                        }
+                    }
+                    print(self.bar)
+                    if let baaz = self.baaz {
+                        print(baaz)
+                    }
+                }
+            }
+        }
+        """
+
+        let output = """
+        class Foo {
+            let bar: Int
+            let baaz: Int?
+
+            func baaz() {
+                closure { [self] in
+                    print(bar)
+                    closure {
+                        print(self.bar)
+                        if let baaz = self.baaz {
+                            print(baaz)
+                        }
+                    }
+                    print(bar)
+                    if let baaz = baaz {
+                        print(baaz)
+                    }
+                }
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.3")
+        testFormatting(for: input, output, rule: FormatRules.redundantSelf, options: options)
+    }
+
+    func testRedundantSelfRemovesSelfInClosureCapturingStruct() {
+        let input = """
+        struct Foo {
+            let bar: Int
+
+            func baaz() {
+                closure {
+                    print(self.bar)
+                }
+            }
+        }
+        """
+
+        let output = """
+        struct Foo {
+            let bar: Int
+
+            func baaz() {
+                closure {
+                    print(bar)
+                }
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.3")
+        testFormatting(for: input, output, rule: FormatRules.redundantSelf, options: options)
+    }
+
+    func testRedundantSelfRemovesSelfInClosureCapturingSelfWeakly() {
+        let input = """
+        class Foo {
+            let bar: Int
+
+            func baaz() {
+                closure { [weak self] in
+                    print(self?.bar)
+                    guard let self else {
+                        return
+                    }
+                    print(self.bar)
+                    closure {
+                        print(self.bar)
+                    }
+                    closure { [self] in
+                        print(self.bar)
+                    }
+                    print(self.bar)
+                }
+
+                closure { [weak self] in
+                    guard let self = self else {
+                        return
+                    }
+
+                    print(self.bar)
+                }
+
+                closure { [weak self] in
+                    guard let self = self ?? somethingElse else {
+                        return
+                    }
+
+                    print(self.bar)
+                }
+            }
+        }
+        """
+
+        let output = """
+        class Foo {
+            let bar: Int
+
+            func baaz() {
+                closure { [weak self] in
+                    print(self?.bar)
+                    guard let self else {
+                        return
+                    }
+                    print(bar)
+                    closure {
+                        print(self.bar)
+                    }
+                    closure { [self] in
+                        print(bar)
+                    }
+                    print(bar)
+                }
+
+                closure { [weak self] in
+                    guard let self = self else {
+                        return
+                    }
+
+                    print(bar)
+                }
+
+                closure { [weak self] in
+                    guard let self = self ?? somethingElse else {
+                        return
+                    }
+
+                    print(self.bar)
+                }
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.8")
+        testFormatting(for: input, output, rule: FormatRules.redundantSelf, options: options, exclude: ["redundantOptionalBinding"])
+    }
+
+    func testRedundantSelfKeepsSelfInClosureCapturingSelfWeaklyBefore5_8() {
+        let input = """
+        class Foo {
+            let bar: Int
+
+            func baaz() {
+                closure { [weak self] in
+                    print(self?.bar)
+                    guard let self else {
+                        return
+                    }
+                    print(self.bar)
+                }
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
     func testNonRedundantSelfNotRemovedAfterConditionalLet() {
         let input = """
         class Foo {

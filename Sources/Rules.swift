@@ -3494,20 +3494,23 @@ public struct _FormatRules {
                     }
                     continue
                 case .startOfScope("{") where formatter.isStartOfClosure(at: index):
-                    /// The `self` capture in this closure's capture list, if present
-                    func selfCaptureType() -> String? {
-                        guard let captureListStartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index),
-                              formatter.tokens[captureListStartIndex] == .startOfScope("["),
-                              let captureListEndIndex = formatter.endOfScope(at: captureListStartIndex),
-                              let inIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: captureListEndIndex),
-                              formatter.tokens[inIndex] == .keyword("in")
-                        else { return nil }
+                    var closureLocalNames = localNames
+                    var selfCapture: String?
 
+                    // Parse the capture list and arguments list,
+                    // and record the type of `self` capture used in the closure
+                    if let captureListStartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index),
+                       formatter.tokens[captureListStartIndex] == .startOfScope("["),
+                       let captureListEndIndex = formatter.endOfScope(at: captureListStartIndex),
+                       let inIndex = formatter.index(of: .keyword("in"), after: captureListEndIndex)
+                    {
                         let captureList = formatter.tokens[(captureListStartIndex + 1) ..< captureListEndIndex]
-                        let captureListEntires = captureList.split(separator: .delimiter(","))
-                            .map { $0.map { $0.string }.joined().trimmingCharacters(in: .whitespacesAndNewlines) }
+                        var captureListEntires = captureList.split(separator: .delimiter(","), omittingEmptySubsequences: true)
 
-                        let supportedCaptures = Set([
+                        let parameterList = formatter.tokens[(captureListEndIndex + 1) ..< inIndex]
+                        let parameterListEntries = parameterList.split(separator: .delimiter(","), omittingEmptySubsequences: true)
+
+                        let supportedSelfCaptures = Set([
                             "self",
                             "unowned self",
                             "unowned(safe) self",
@@ -3515,10 +3518,36 @@ public struct _FormatRules {
                             "weak self",
                         ])
 
-                        return captureListEntires.first(where: { supportedCaptures.contains($0) })
-                    }
+                        let captureEntryStrings = captureListEntires.map { captureListEntry in
+                            captureListEntry
+                                .map { $0.string }
+                                .joined()
+                                .trimmingCharacters(in: .whitespacesAndNewlines)
+                        }
 
-                    let selfCapture = selfCaptureType()
+                        selfCapture = captureEntryStrings.first(where: {
+                            supportedSelfCaptures.contains($0)
+                        })
+
+                        captureListEntires.removeAll(where: { captureListEntry in
+                            let text = captureListEntry
+                                .map { $0.string }
+                                .joined()
+                                .trimmingCharacters(in: .whitespacesAndNewlines)
+
+                            return text == selfCapture
+                        })
+
+                        let localDefiningDeclarations = captureListEntires + parameterListEntries
+
+                        for tokens in localDefiningDeclarations {
+                            guard let localIdentifier = tokens.first(where: { $0.isIdentifier }) else {
+                                continue
+                            }
+
+                            closureLocalNames.insert(localIdentifier.string)
+                        }
+                    }
 
                     /// Whether or not the closure at the current index permits implicit self.
                     ///
@@ -3569,7 +3598,7 @@ public struct _FormatRules {
 
                     closureStack.append((allowsImplicitSelf: closureAllowsImplicitSelf(), selfCapture: selfCapture))
                     index += 1
-                    processBody(at: &index, localNames: localNames, members: members, typeStack: &typeStack, closureStack: &closureStack,
+                    processBody(at: &index, localNames: closureLocalNames, members: members, typeStack: &typeStack, closureStack: &closureStack,
                                 membersByType: &membersByType, classMembersByType: &classMembersByType,
                                 usingDynamicLookup: usingDynamicLookup, isTypeRoot: false, isInit: isInit)
                     index -= 1

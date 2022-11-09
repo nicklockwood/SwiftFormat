@@ -3083,11 +3083,11 @@ class RedundancyTests: RulesTests {
     func testRedundantSelfRemovesSelfInClosureWithExplicitStrongCapture() {
         let input = """
         class Foo {
-            let bar: Int
+            let foo: Int
 
             func baaz() {
-                closure { [self] in
-                    print(self.bar)
+                closure { [self, bar] baaz, quux in
+                    print(self.foo)
                 }
             }
         }
@@ -3095,17 +3095,17 @@ class RedundancyTests: RulesTests {
 
         let output = """
         class Foo {
-            let bar: Int
+            let foo: Int
 
             func baaz() {
-                closure { [self] in
-                    print(bar)
+                closure { [self, bar] baaz, quux in
+                    print(foo)
                 }
             }
         }
         """
         let options = FormatOptions(swiftVersion: "5.3")
-        testFormatting(for: input, output, rule: FormatRules.redundantSelf, options: options)
+        testFormatting(for: input, output, rule: FormatRules.redundantSelf, options: options, exclude: ["unusedArguments"])
     }
 
     func testRedundantSelfRemovesSelfInClosureWithNestedExplicitStrongCapture() {
@@ -3144,7 +3144,7 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantSelf, options: options)
     }
 
-    func testRedundantSelfKeelsSelfInNestedClosureWithNoExplicitStrongCapture() {
+    func testRedundantSelfKeepsSelfInNestedClosureWithNoExplicitStrongCapture() {
         let input = """
         class Foo {
             let bar: Int
@@ -3302,6 +3302,42 @@ class RedundancyTests: RulesTests {
         """
         let options = FormatOptions(swiftVersion: "5.8")
         testFormatting(for: input, output, rule: FormatRules.redundantSelf, options: options, exclude: ["redundantOptionalBinding"])
+    }
+
+    func testClosureParameterListShadowingPropertyOnSelf() {
+        let input = """
+        class Foo {
+            var bar = "bar"
+
+            func method() {
+                closure { [self] bar in
+                    self.bar = bar
+                }
+            }
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.3")
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
+    func testClosureCaptureListShadowingPropertyOnSelf() {
+        let input = """
+        class Foo {
+            var bar = "bar"
+            var baaz = "baaz"
+
+            func method() {
+                closure { [self, bar, baaz = bar] in
+                    self.bar = bar
+                    self.baaz = baaz
+                }
+            }
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.3")
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
     }
 
     func testRedundantSelfKeepsSelfInClosureCapturingSelfWeaklyBefore5_8() {

@@ -3321,6 +3321,23 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
     }
 
+    func testClosureParameterListShadowingPropertyOnSelfInStruct() {
+        let input = """
+        struct Foo {
+            var bar = "bar"
+
+            func method() {
+                closure { bar in
+                    self.bar = bar
+                }
+            }
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.3")
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
     func testClosureCaptureListShadowingPropertyOnSelf() {
         let input = """
         class Foo {

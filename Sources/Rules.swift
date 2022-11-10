@@ -3495,59 +3495,71 @@ public struct _FormatRules {
                     }
                     continue
                 case .startOfScope("{") where formatter.isStartOfClosure(at: index):
-                    var closureLocalNames = localNames
-                    var selfCapture: String?
-
                     // Parse the capture list and arguments list,
                     // and record the type of `self` capture used in the closure
+                    var captureList: [Token]?
+                    var parameterList: [Token]?
+
+                    // Handle a capture list followed by an optional parameter list:
+                    // `{ [self, foo] bar in` or `{ [self, foo] in` etc.
                     if let captureListStartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index),
                        formatter.tokens[captureListStartIndex] == .startOfScope("["),
                        let captureListEndIndex = formatter.endOfScope(at: captureListStartIndex),
                        let inIndex = formatter.index(of: .keyword("in"), after: captureListEndIndex)
                     {
-                        let captureList = formatter.tokens[(captureListStartIndex + 1) ..< captureListEndIndex]
-                        var captureListEntires = captureList.split(separator: .delimiter(","), omittingEmptySubsequences: true)
+                        captureList = Array(formatter.tokens[(captureListStartIndex + 1) ..< captureListEndIndex])
+                        parameterList = Array(formatter.tokens[(captureListEndIndex + 1) ..< inIndex])
+                    }
 
-                        let parameterList = formatter.tokens[(captureListEndIndex + 1) ..< inIndex]
-                        let parameterListEntries = parameterList.split(separator: .delimiter(","), omittingEmptySubsequences: true)
+                    // Handle a parameter list if present without a capture list
+                    // e.g. `{ foo, bar in`
+                    else if let firstTokenInClosure = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index),
+                            formatter.isInClosureArguments(at: firstTokenInClosure),
+                            let inIndex = formatter.index(of: .keyword("in"), after: index)
+                    {
+                        parameterList = Array(formatter.tokens[firstTokenInClosure ..< inIndex])
+                    }
 
-                        let supportedSelfCaptures = Set([
-                            "self",
-                            "unowned self",
-                            "unowned(safe) self",
-                            "unowned(unsafe) self",
-                            "weak self",
-                        ])
+                    var captureListEntires = (captureList ?? []).split(separator: .delimiter(","), omittingEmptySubsequences: true)
+                    let parameterListEntries = (parameterList ?? []).split(separator: .delimiter(","), omittingEmptySubsequences: true)
 
-                        let captureEntryStrings = captureListEntires.map { captureListEntry in
-                            captureListEntry
-                                .map { $0.string }
-                                .joined()
-                                .trimmingCharacters(in: .whitespacesAndNewlines)
+                    let supportedSelfCaptures = Set([
+                        "self",
+                        "unowned self",
+                        "unowned(safe) self",
+                        "unowned(unsafe) self",
+                        "weak self",
+                    ])
+
+                    let captureEntryStrings = captureListEntires.map { captureListEntry in
+                        captureListEntry
+                            .map { $0.string }
+                            .joined()
+                            .trimmingCharacters(in: .whitespacesAndNewlines)
+                    }
+
+                    let selfCapture = captureEntryStrings.first(where: {
+                        supportedSelfCaptures.contains($0)
+                    })
+
+                    captureListEntires.removeAll(where: { captureListEntry in
+                        let text = captureListEntry
+                            .map { $0.string }
+                            .joined()
+                            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+                        return text == selfCapture
+                    })
+
+                    let localDefiningDeclarations = captureListEntires + parameterListEntries
+                    var closureLocalNames = localNames
+
+                    for tokens in localDefiningDeclarations {
+                        guard let localIdentifier = tokens.first(where: { $0.isIdentifier }) else {
+                            continue
                         }
 
-                        selfCapture = captureEntryStrings.first(where: {
-                            supportedSelfCaptures.contains($0)
-                        })
-
-                        captureListEntires.removeAll(where: { captureListEntry in
-                            let text = captureListEntry
-                                .map { $0.string }
-                                .joined()
-                                .trimmingCharacters(in: .whitespacesAndNewlines)
-
-                            return text == selfCapture
-                        })
-
-                        let localDefiningDeclarations = captureListEntires + parameterListEntries
-
-                        for tokens in localDefiningDeclarations {
-                            guard let localIdentifier = tokens.first(where: { $0.isIdentifier }) else {
-                                continue
-                            }
-
-                            closureLocalNames.insert(localIdentifier.string)
-                        }
+                        closureLocalNames.insert(localIdentifier.string)
                     }
 
                     /// Whether or not the closure at the current index permits implicit self.

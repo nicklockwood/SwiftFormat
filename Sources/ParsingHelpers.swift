@@ -421,7 +421,7 @@ extension Formatter {
     /// Gather declared variable names, starting at index after let/var keyword
     func processDeclaredVariables(at index: inout Int, names: inout Set<String>) {
         processDeclaredVariables(at: &index, names: &names, removeSelf: false,
-                                 onlyLocal: false)
+                                 onlyLocal: false, scopeAllowsImplicitSelfRebinding: false)
     }
 
     /// Returns true if token is inside the return type of a function or subscript

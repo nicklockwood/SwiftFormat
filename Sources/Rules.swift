@@ -3099,7 +3099,8 @@ public struct _FormatRules {
         func processBody(at index: inout Int,
                          localNames: Set<String>,
                          members: Set<String>,
-                         typeStack: inout [String],
+                         typeStack: inout [(name: String, keyword: String)],
+                         closureStack: inout [(allowsImplicitSelf: Bool, selfCapture: String?)],
                          membersByType: inout [String: Set<String>],
                          classMembersByType: inout [String: Set<String>],
                          usingDynamicLookup: Bool,
@@ -3138,10 +3139,17 @@ public struct _FormatRules {
                     }
                 }
             }
+            let inClosureDisallowingImplicitSelf = closureStack.last?.allowsImplicitSelf == false
+            /// Starting in Swift 5.8, self can be rebound using a `let self = self` unwrap condition
+            /// within a weak self closure. This is the only place where defining a property
+            /// named self affects the behavior of implicit self.
+            let scopeAllowsImplicitSelfRebinding = formatter.options.swiftVersion >= "5.8"
+                && closureStack.last?.selfCapture == "weak self"
+
             // Gather members & local variables
             let type = (isTypeRoot && typeStack.count == 1) ? typeStack.first : nil
-            var members = type.flatMap { membersByType[$0] } ?? members
-            var classMembers = type.flatMap { classMembersByType[$0] } ?? Set<String>()
+            var members = (type?.name).flatMap { membersByType[$0] } ?? members
+            var classMembers = (type?.name).flatMap { classMembersByType[$0] } ?? Set<String>()
             var localNames = localNames
             if !isTypeRoot || explicitSelf != .remove {
                 var i = index
@@ -3196,11 +3204,13 @@ public struct _FormatRules {
                                 formatter.processDeclaredVariables(at: &i, names: &members)
                             }
                         } else {
-                            let removeSelf = explicitSelf != .insert && !usingDynamicLookup
+                            let removeSelf = explicitSelf != .insert && !usingDynamicLookup && !inClosureDisallowingImplicitSelf
                             let onlyLocal = formatter.options.swiftVersion < "5"
+
                             formatter.processDeclaredVariables(at: &i, names: &localNames,
                                                                removeSelf: removeSelf,
-                                                               onlyLocal: onlyLocal)
+                                                               onlyLocal: onlyLocal,
+                                                               scopeAllowsImplicitSelfRebinding: scopeAllowsImplicitSelfRebinding)
                         }
                     case .keyword("func"):
                         guard let nameToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) else {
@@ -3240,8 +3250,8 @@ public struct _FormatRules {
                 }
             }
             if let type = type {
-                membersByType[type] = members
-                classMembersByType[type] = classMembers
+                membersByType[type.name] = members
+                classMembersByType[type.name] = classMembers
             }
             // Remove or add `self`
             var lastKeyword = ""
@@ -3251,6 +3261,7 @@ public struct _FormatRules {
                 token: Token.space(""),
                 dynamicMemberTypes: Set<String>()
             )]
+
             while let token = formatter.token(at: index) {
                 switch token {
                 case .keyword("is"), .keyword("as"), .keyword("try"), .keyword("await"):
@@ -3260,13 +3271,13 @@ public struct _FormatRules {
                     lastKeyword = ""
                     if classOrStatic {
                         processFunction(at: &index, localNames: localNames, members: classMembers,
-                                        typeStack: &typeStack, membersByType: &membersByType,
+                                        typeStack: &typeStack, closureStack: &closureStack, membersByType: &membersByType,
                                         classMembersByType: &classMembersByType,
                                         usingDynamicLookup: usingDynamicLookup)
                         classOrStatic = false
                     } else {
                         processFunction(at: &index, localNames: localNames, members: members,
-                                        typeStack: &typeStack, membersByType: &membersByType,
+                                        typeStack: &typeStack, closureStack: &closureStack, membersByType: &membersByType,
                                         classMembersByType: &classMembersByType,
                                         usingDynamicLookup: usingDynamicLookup)
                     }
@@ -3293,6 +3304,7 @@ public struct _FormatRules {
                     }
                 case .keyword("extension"), .keyword("struct"), .keyword("enum"), .keyword("class"), .keyword("actor"),
                      .keyword("where") where ["extension", "struct", "enum", "class", "actor"].contains(lastKeyword):
+                    let keyword = formatter.tokens[index].string
                     guard formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) != .keyword("import"),
                           let scopeStart = formatter.index(of: .startOfScope("{"), after: index)
                     else {
@@ -3315,9 +3327,9 @@ public struct _FormatRules {
                         usingDynamicLookup = true
                     }
                     index = scopeStart + 1
-                    typeStack.append(name)
+                    typeStack.append((name: name, keyword: keyword))
                     processBody(at: &index, localNames: ["init"], members: [], typeStack: &typeStack,
-                                membersByType: &membersByType, classMembersByType: &classMembersByType,
+                                closureStack: &closureStack, membersByType: &membersByType, classMembersByType: &classMembersByType,
                                 usingDynamicLookup: usingDynamicLookup, isTypeRoot: true, isInit: false)
                     typeStack.removeLast()
                 case .keyword("var"), .keyword("let"):
@@ -3344,8 +3356,9 @@ public struct _FormatRules {
                         var scopedNames = localNames
                         formatter.processDeclaredVariables(
                             at: &index, names: &scopedNames,
-                            removeSelf: explicitSelf != .insert,
-                            onlyLocal: false
+                            removeSelf: explicitSelf != .insert && !inClosureDisallowingImplicitSelf,
+                            onlyLocal: false,
+                            scopeAllowsImplicitSelfRebinding: scopeAllowsImplicitSelfRebinding
                         )
                         while let scope = formatter.currentScope(at: index) ?? formatter.token(at: index),
                               [.startOfScope("["), .startOfScope("(")].contains(scope),
@@ -3373,7 +3386,7 @@ public struct _FormatRules {
                         }
                         index = startIndex + 1
                         processBody(at: &index, localNames: scopedNames, members: members, typeStack: &typeStack,
-                                    membersByType: &membersByType, classMembersByType: &classMembersByType,
+                                    closureStack: &closureStack, membersByType: &membersByType, classMembersByType: &classMembersByType,
                                     usingDynamicLookup: usingDynamicLookup, isTypeRoot: false, isInit: isInit)
                         lastKeyword = ""
                     case "case" where ["if", "while", "guard", "for"].contains(lastKeyword):
@@ -3398,7 +3411,7 @@ public struct _FormatRules {
                     }
                     index += 1
                     processBody(at: &index, localNames: localNames, members: members, typeStack: &typeStack,
-                                membersByType: &membersByType, classMembersByType: &classMembersByType,
+                                closureStack: &closureStack, membersByType: &membersByType, classMembersByType: &classMembersByType,
                                 usingDynamicLookup: usingDynamicLookup, isTypeRoot: false, isInit: isInit)
                     continue
                 case .keyword("while") where lastKeyword == "repeat":
@@ -3425,7 +3438,7 @@ public struct _FormatRules {
                     localNames.insert("error") // Implicit error argument
                     index += 1
                     processBody(at: &index, localNames: localNames, members: members, typeStack: &typeStack,
-                                membersByType: &membersByType, classMembersByType: &classMembersByType,
+                                closureStack: &closureStack, membersByType: &membersByType, classMembersByType: &classMembersByType,
                                 usingDynamicLookup: usingDynamicLookup, isTypeRoot: false, isInit: isInit)
                     continue
                 case .startOfScope("{") where isWhereClause && scopeStack.count == 1:
@@ -3438,7 +3451,7 @@ public struct _FormatRules {
                         switch token {
                         case .endOfScope("case"), .endOfScope("default"):
                             let localNames = localNames
-                            processBody(at: &index, localNames: localNames, members: members, typeStack: &typeStack,
+                            processBody(at: &index, localNames: localNames, members: members, typeStack: &typeStack, closureStack: &closureStack,
                                         membersByType: &membersByType, classMembersByType: &classMembersByType,
                                         usingDynamicLookup: usingDynamicLookup, isTypeRoot: false, isInit: isInit)
                             index -= 1
@@ -3458,7 +3471,7 @@ public struct _FormatRules {
                 case .startOfScope("{") where lastKeyword == "repeat":
                     index += 1
                     processBody(at: &index, localNames: localNames, members: members, typeStack: &typeStack,
-                                membersByType: &membersByType, classMembersByType: &classMembersByType,
+                                closureStack: &closureStack, membersByType: &membersByType, classMembersByType: &classMembersByType,
                                 usingDynamicLookup: usingDynamicLookup, isTypeRoot: false, isInit: isInit)
                     continue
                 case .startOfScope("{") where lastKeyword == "var":
@@ -3484,11 +3497,133 @@ public struct _FormatRules {
                     if let name = name {
                         processAccessors(["get", "set", "willSet", "didSet"], for: name,
                                          at: &index, localNames: localNames, members: members,
-                                         typeStack: &typeStack, membersByType: &membersByType,
+                                         typeStack: &typeStack, closureStack: &closureStack, membersByType: &membersByType,
                                          classMembersByType: &classMembersByType,
                                          usingDynamicLookup: usingDynamicLookup)
                     }
                     continue
+                case .startOfScope("{") where formatter.isStartOfClosure(at: index):
+                    // Parse the capture list and arguments list,
+                    // and record the type of `self` capture used in the closure
+                    var captureList: [Token]?
+                    var parameterList: [Token]?
+
+                    // Handle a capture list followed by an optional parameter list:
+                    // `{ [self, foo] bar in` or `{ [self, foo] in` etc.
+                    if let captureListStartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index),
+                       formatter.tokens[captureListStartIndex] == .startOfScope("["),
+                       let captureListEndIndex = formatter.endOfScope(at: captureListStartIndex),
+                       let inIndex = formatter.index(of: .keyword("in"), after: captureListEndIndex)
+                    {
+                        captureList = Array(formatter.tokens[(captureListStartIndex + 1) ..< captureListEndIndex])
+                        parameterList = Array(formatter.tokens[(captureListEndIndex + 1) ..< inIndex])
+                    }
+
+                    // Handle a parameter list if present without a capture list
+                    // e.g. `{ foo, bar in`
+                    else if let firstTokenInClosure = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index),
+                            formatter.isInClosureArguments(at: firstTokenInClosure),
+                            let inIndex = formatter.index(of: .keyword("in"), after: index)
+                    {
+                        parameterList = Array(formatter.tokens[firstTokenInClosure ..< inIndex])
+                    }
+
+                    var captureListEntires = (captureList ?? []).split(separator: .delimiter(","), omittingEmptySubsequences: true)
+                    let parameterListEntries = (parameterList ?? []).split(separator: .delimiter(","), omittingEmptySubsequences: true)
+
+                    let supportedSelfCaptures = Set([
+                        "self",
+                        "unowned self",
+                        "unowned(safe) self",
+                        "unowned(unsafe) self",
+                        "weak self",
+                    ])
+
+                    let captureEntryStrings = captureListEntires.map { captureListEntry in
+                        captureListEntry
+                            .map { $0.string }
+                            .joined()
+                            .trimmingCharacters(in: .whitespacesAndNewlines)
+                    }
+
+                    let selfCapture = captureEntryStrings.first(where: {
+                        supportedSelfCaptures.contains($0)
+                    })
+
+                    captureListEntires.removeAll(where: { captureListEntry in
+                        let text = captureListEntry
+                            .map { $0.string }
+                            .joined()
+                            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+                        return text == selfCapture
+                    })
+
+                    let localDefiningDeclarations = captureListEntires + parameterListEntries
+                    var closureLocalNames = localNames
+
+                    for tokens in localDefiningDeclarations {
+                        guard let localIdentifier = tokens.first(where: { $0.isIdentifier }) else {
+                            continue
+                        }
+
+                        closureLocalNames.insert(localIdentifier.string)
+                    }
+
+                    /// Whether or not the closure at the current index permits implicit self.
+                    ///
+                    /// SE-0269 (in Swift 5.3) allows implicit self when:
+                    ///  - the closure captures self explicitly using [self] or [unowned self]
+                    ///  - self is not a reference type
+                    ///
+                    /// SE-0365 (in Swift 5.8) additionally allows implicit self using
+                    /// [weak self] captures after self has been unwrapped.
+                    func closureAllowsImplicitSelf() -> Bool {
+                        guard formatter.options.swiftVersion >= "5.3" else {
+                            return false
+                        }
+
+                        // If self is a reference type, capturing it won't create a retain cycle,
+                        // so the compiler lets us use implicit self
+                        if let enclosingTypeKeyword = typeStack.last?.keyword,
+                           enclosingTypeKeyword == "struct" || enclosingTypeKeyword == "enum"
+                        {
+                            return true
+                        }
+
+                        guard let selfCapture = selfCapture else {
+                            return false
+                        }
+
+                        // If self is captured strongly, or using `unowned`, then the compiler
+                        // lets us use implicit self since it's already clear that this closure
+                        // captures self strongly
+                        if selfCapture == "self"
+                            || selfCapture == "unowned self"
+                            || selfCapture == "unowned(safe) self"
+                            || selfCapture == "unowned(unsafe) self"
+                        {
+                            return true
+                        }
+
+                        // This is also supported for `weak self` captures, but only
+                        // in Swift 5.8 or later
+                        if selfCapture == "weak self",
+                           formatter.options.swiftVersion >= "5.8"
+                        {
+                            return true
+                        }
+
+                        return false
+                    }
+
+                    closureStack.append((allowsImplicitSelf: closureAllowsImplicitSelf(), selfCapture: selfCapture))
+                    index += 1
+                    processBody(at: &index, localNames: closureLocalNames, members: members, typeStack: &typeStack, closureStack: &closureStack,
+                                membersByType: &membersByType, classMembersByType: &classMembersByType,
+                                usingDynamicLookup: usingDynamicLookup, isTypeRoot: false, isInit: isInit)
+                    index -= 1
+                    closureStack.removeLast()
                 case .startOfScope:
                     index = formatter.endOfScope(at: index) ?? (formatter.tokens.count - 1)
                 case .identifier("self"):
@@ -3510,6 +3645,9 @@ public struct _FormatRules {
                         {
                             break
                         }
+                    }
+                    if let closure = closureStack.last, !closure.allowsImplicitSelf {
+                        break
                     }
                     _ = formatter.removeSelf(at: index, exclude: localNames)
                 case .identifier("type"): // Special case for type(of:)
@@ -3609,7 +3747,8 @@ public struct _FormatRules {
         }
         func processAccessors(_ names: [String], for name: String, at index: inout Int,
                               localNames: Set<String>, members: Set<String>,
-                              typeStack: inout [String],
+                              typeStack: inout [(name: String, keyword: String)],
+                              closureStack: inout [(allowsImplicitSelf: Bool, selfCapture: String?)],
                               membersByType: inout [String: Set<String>],
                               classMembersByType: inout [String: Set<String>],
                               usingDynamicLookup: Bool)
@@ -3642,7 +3781,7 @@ public struct _FormatRules {
                     }
                 }
                 processBody(at: &index, localNames: localNames, members: members, typeStack: &typeStack,
-                            membersByType: &membersByType, classMembersByType: &classMembersByType,
+                            closureStack: &closureStack, membersByType: &membersByType, classMembersByType: &classMembersByType,
                             usingDynamicLookup: usingDynamicLookup, isTypeRoot: false, isInit: false)
             }
             if foundAccessors {
@@ -3652,12 +3791,13 @@ public struct _FormatRules {
                 index += 1
                 localNames.insert(name)
                 processBody(at: &index, localNames: localNames, members: members, typeStack: &typeStack,
-                            membersByType: &membersByType, classMembersByType: &classMembersByType,
+                            closureStack: &closureStack, membersByType: &membersByType, classMembersByType: &classMembersByType,
                             usingDynamicLookup: usingDynamicLookup, isTypeRoot: false, isInit: false)
             }
         }
         func processFunction(at index: inout Int, localNames: Set<String>, members: Set<String>,
-                             typeStack: inout [String],
+                             typeStack: inout [(name: String, keyword: String)],
+                             closureStack: inout [(allowsImplicitSelf: Bool, selfCapture: String?)],
                              membersByType: inout [String: Set<String>],
                              classMembersByType: inout [String: Set<String>],
                              usingDynamicLookup: Bool)
@@ -3710,7 +3850,7 @@ public struct _FormatRules {
             if startToken == .keyword("subscript") {
                 index = bodyStartIndex
                 processAccessors(["get", "set"], for: "", at: &index, localNames: localNames,
-                                 members: members, typeStack: &typeStack, membersByType: &membersByType,
+                                 members: members, typeStack: &typeStack, closureStack: &closureStack, membersByType: &membersByType,
                                  classMembersByType: &classMembersByType,
                                  usingDynamicLookup: usingDynamicLookup)
             } else {
@@ -3719,6 +3859,7 @@ public struct _FormatRules {
                             localNames: localNames,
                             members: members,
                             typeStack: &typeStack,
+                            closureStack: &closureStack,
                             membersByType: &membersByType,
                             classMembersByType: &classMembersByType,
                             usingDynamicLookup: usingDynamicLookup,
@@ -3726,12 +3867,13 @@ public struct _FormatRules {
                             isInit: startToken == .keyword("init"))
             }
         }
-        var typeStack = [String]()
+        var typeStack = [(name: String, keyword: String)]()
+        var closureStack = [(allowsImplicitSelf: Bool, selfCapture: String?)]()
         var membersByType = [String: Set<String>]()
         var classMembersByType = [String: Set<String>]()
         var index = 0
         processBody(at: &index, localNames: [], members: [], typeStack: &typeStack,
-                    membersByType: &membersByType, classMembersByType: &classMembersByType,
+                    closureStack: &closureStack, membersByType: &membersByType, classMembersByType: &classMembersByType,
                     usingDynamicLookup: false, isTypeRoot: false, isInit: false)
     }
 

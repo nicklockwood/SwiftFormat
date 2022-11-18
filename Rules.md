@@ -1591,7 +1591,7 @@ and declarations between // swiftformat:sort:begin and
 -         barConfiguration: Bar)
 +     case barFeature
 +     case fooFeature
-+     case upsellA
++     case upsellA(
 +         fooConfiguration: Foo,
 +         barConfiguration: Bar)
 +     case upsellB
@@ -1607,7 +1607,7 @@ and declarations between // swiftformat:sort:begin and
 -         barConfiguration: Bar)
 +     case barFeature
 +     case fooFeature
-+     case upsellA
++     case upsellA(
 +         fooConfiguration: Foo,
 +         barConfiguration: Bar)
 +     case upsellB

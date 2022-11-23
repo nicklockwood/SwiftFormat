@@ -4464,6 +4464,20 @@ public struct _FormatRules {
             }
         }
 
+        let hasLocalVoid: Bool = {
+            for (i, token) in formatter.tokens.enumerated() where token == .identifier("Void") {
+                if let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) {
+                    switch prevToken {
+                    case .keyword("typealias"), .keyword("struct"), .keyword("class"), .keyword("enum"):
+                        return true
+                    default:
+                        break
+                    }
+                }
+            }
+            return false
+        }()
+
         formatter.forEach(.identifier("Void")) { i, _ in
             if let nextIndex = formatter.index(of: .nonSpaceOrLinebreak, after: i, if: {
                 $0 == .endOfScope(")")
@@ -4484,7 +4498,7 @@ public struct _FormatRules {
                     .nonSpaceOrLinebreak,
                     before: prevIndex
                 )?.isIdentifier == true {
-                    if !formatter.options.useVoid {
+                    if !formatter.options.useVoid, !hasLocalVoid {
                         // Convert to parens
                         formatter.replaceToken(at: i, with: .endOfScope(")"))
                         formatter.insert(.startOfScope("("), at: i)
@@ -4506,15 +4520,13 @@ public struct _FormatRules {
                 .operator(".", .infix)
             {
                 return
-            } else {
-                if formatter.next(.nonSpace, after: i) == .startOfScope("(") {
+            } else if formatter.next(.nonSpace, after: i) == .startOfScope("(") {
+                if !hasLocalVoid {
                     formatter.removeToken(at: i)
-                    return
                 }
-                if !formatter.options.useVoid || isArgumentToken(at: i) {
-                    // Convert to parens
-                    formatter.replaceToken(at: i, with: [.startOfScope("("), .endOfScope(")")])
-                }
+            } else if !formatter.options.useVoid || isArgumentToken(at: i), !hasLocalVoid {
+                // Convert to parens
+                formatter.replaceToken(at: i, with: [.startOfScope("("), .endOfScope(")")])
             }
         }
         guard formatter.options.useVoid else {
@@ -4528,9 +4540,12 @@ public struct _FormatRules {
                 return
             }
             if formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) == .operator("->", .infix) {
-                formatter.replaceTokens(in: i ... endIndex, with: .identifier("Void"))
+                if !hasLocalVoid {
+                    formatter.replaceTokens(in: i ... endIndex, with: .identifier("Void"))
+                }
             } else if prevToken == .startOfScope("<") ||
-                (prevToken == .delimiter(",") && formatter.currentScope(at: i) == .startOfScope("<"))
+                (prevToken == .delimiter(",") && formatter.currentScope(at: i) == .startOfScope("<")),
+                !hasLocalVoid
             {
                 formatter.replaceTokens(in: i ... endIndex, with: .identifier("Void"))
             }

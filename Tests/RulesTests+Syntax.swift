@@ -169,6 +169,15 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.void)
     }
 
+    func testParensNotConvertedToVoidIfLocalOverrideExists() {
+        let input = """
+        struct Void {}
+        let foo = () -> ()
+        print(foo)
+        """
+        testFormatting(for: input, rule: FormatRules.void)
+    }
+
     func testParensRemovedAroundVoid() {
         let input = "() -> (Void)"
         let output = "() -> Void"
@@ -272,6 +281,7 @@ class SyntaxTests: RulesTests {
     }
 
     func testNamespacedVoidLiteralNotConverted() {
+        // TODO: it should actually be safe to convert Swift.Void - only unsafe for other namespaces
         let input = "let foo = Swift.Void()"
         testFormatting(for: input, rule: FormatRules.void)
     }
@@ -289,6 +299,42 @@ class SyntaxTests: RulesTests {
 
     func testCaseVoidNotUnwrapped() {
         let input = "case some(Void)"
+        testFormatting(for: input, rule: FormatRules.void)
+    }
+
+    func testLocalVoidTypeNotConverted() {
+        let input = """
+        struct Void {}
+        let foo = Void()
+        print(foo)
+        """
+        testFormatting(for: input, rule: FormatRules.void)
+    }
+
+    func testLocalVoidTypeForwardReferenceNotConverted() {
+        let input = """
+        let foo = Void()
+        print(foo)
+        struct Void {}
+        """
+        testFormatting(for: input, rule: FormatRules.void)
+    }
+
+    func testLocalVoidTypealiasNotConverted() {
+        let input = """
+        typealias Void = MyVoid
+        let foo = Void()
+        print(foo)
+        """
+        testFormatting(for: input, rule: FormatRules.void)
+    }
+
+    func testLocalVoidTypealiasForwardReferenceNotConverted() {
+        let input = """
+        let foo = Void()
+        print(foo)
+        typealias Void = MyVoid
+        """
         testFormatting(for: input, rule: FormatRules.void)
     }
 

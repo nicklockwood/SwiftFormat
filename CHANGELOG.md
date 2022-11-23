@@ -1,5 +1,15 @@
 # Change Log
 
+## [0.50.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.50.4) (2022-11-23)
+
+- Added Swift package command plugin
+- Added `docComments` rule to convert between regular and documentation comments
+- Fixed `redundantLet` rule incorrectly stripping `let` inside Result Builders
+- Fixed `void` rule in cases where `Void` has been locally shadowed
+- Fixed `fileHeader` rule when file only contains header comment
+- Fixed unexpected indent and spurious `wrap` warning for blank lines
+- Fixed parsing bug in `redundantSelf` rule
+
 ## [0.50.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.50.3) (2022-10-19)
 
 - Fixed bug where `redundantFileprivate` rule could break Array extensions using type sugar

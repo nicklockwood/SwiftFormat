@@ -1366,7 +1366,7 @@ private struct Examples {
     -         barConfiguration: Bar)
     +     case barFeature
     +     case fooFeature
-    +     case upsellA
+    +     case upsellA(
     +         fooConfiguration: Foo,
     +         barConfiguration: Bar)
     +     case upsellB
@@ -1382,7 +1382,7 @@ private struct Examples {
     -         barConfiguration: Bar)
     +     case barFeature
     +     case fooFeature
-    +     case upsellA
+    +     case upsellA(
     +         fooConfiguration: Foo,
     +         barConfiguration: Bar)
     +     case upsellB

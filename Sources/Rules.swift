@@ -4767,10 +4767,14 @@ public struct _FormatRules {
         let headerLinebreaks = headerTokens.reduce(0) { result, token -> Int in
             result + (token.isLinebreak ? 1 : 0)
         }
-        headerTokens += [
-            .linebreak(formatter.options.linebreak, headerLinebreaks + 1),
-            .linebreak(formatter.options.linebreak, headerLinebreaks + 2),
-        ]
+        if lastHeaderTokenIndex < formatter.tokens.count - 1 {
+            headerTokens.append(.linebreak(formatter.options.linebreak, headerLinebreaks + 1))
+            if lastHeaderTokenIndex < formatter.tokens.count - 2,
+               !formatter.tokens[lastHeaderTokenIndex + 2].isLinebreak
+            {
+                headerTokens.append(.linebreak(formatter.options.linebreak, headerLinebreaks + 2))
+            }
+        }
         if let index = formatter.index(of: .nonSpace, after: lastHeaderTokenIndex, if: {
             $0.isLinebreak
         }) {

@@ -370,6 +370,19 @@ class GeneralTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
     }
 
+    func testReplaceHeaderWhenFileContainsNoCode() {
+        let input = "// foobar"
+        let options = FormatOptions(fileHeader: "// foobar")
+        testFormatting(for: input, rule: FormatRules.fileHeader, options: options,
+                       exclude: ["linebreakAtEndOfFile"])
+    }
+
+    func testReplaceHeaderWhenFileContainsNoCode2() {
+        let input = "// foobar\n"
+        let options = FormatOptions(fileHeader: "// foobar")
+        testFormatting(for: input, rule: FormatRules.fileHeader, options: options)
+    }
+
     func testMultilineCommentHeader() {
         let input = "/****************************/\n/* Created by Nick Lockwood */\n/****************************/\n\n\n/// func\nfunc foo() {}"
         let output = "/// func\nfunc foo() {}"

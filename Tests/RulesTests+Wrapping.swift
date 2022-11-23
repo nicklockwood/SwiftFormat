@@ -1210,6 +1210,19 @@ class WrappingTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
     }
 
+    func testErrorNotReportedOnBlankLineAfterWrap() throws {
+        let input = """
+        [
+            abagdiasiudbaisndoanosdasdasdasdasdnaosnooanso(),
+
+            bar(),
+        ]
+        """
+        let options = FormatOptions(truncateBlankLines: false, maxWidth: 40)
+        let changes = try lint(input, rules: [FormatRules.wrap, FormatRules.indent], options: options)
+        XCTAssertEqual(changes, [.init(line: 2, rule: FormatRules.wrap, filePath: nil)])
+    }
+
     // MARK: - wrapArguments
 
     func testIndentFirstElementWhenApplyingWrap() {

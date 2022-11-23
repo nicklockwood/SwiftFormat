@@ -355,8 +355,8 @@ extension Formatter {
                     linebreakIndex = index + 1
                 }
                 if !isCommentedCode(at: linebreakIndex + 1) {
-                    if tokens[linebreakIndex].isLinebreak, !options.truncateBlankLines ||
-                        next(.nonSpace, after: linebreakIndex).map({ !$0.isLinebreak }) ?? false
+                    if tokens[linebreakIndex].isLinebreak,
+                       next(.nonSpace, after: linebreakIndex).map({ !$0.isLinebreak }) ?? false
                     {
                         insertSpace(indent + options.indent, at: linebreakIndex + 1)
                     } else if !allowGrouping || (maxWidth > 0 &&

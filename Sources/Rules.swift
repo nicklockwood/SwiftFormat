@@ -2837,20 +2837,8 @@ public struct _FormatRules {
                 }
             }
             // Crude check for Result Builder
-            var i = i
-            while let startIndex = formatter.index(of: .startOfScope("{"), before: i) {
-                guard let prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak,
-                                                      before: startIndex)
-                else {
-                    break
-                }
-                if case let .identifier(name) = formatter.tokens[prevIndex],
-                   let firstChar = name.first.map(String.init),
-                   firstChar == firstChar.uppercased()
-                {
-                    return
-                }
-                i = prevIndex
+            if formatter.isInResultBuilder(at: i) {
+                return
             }
             formatter.removeTokens(in: prevIndex ..< nextNonSpaceIndex)
         }
@@ -5020,16 +5008,8 @@ public struct _FormatRules {
             guard var endIndex = formatter.index(of: .startOfScope("{"), after: i) else {
                 return
             }
-            if formatter.options.swiftVersion < "5.3" {
-                // Crude check for Result Builder
-                if let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: endIndex),
-                   case let .identifier(name) = nextToken, let firstChar = name.first.map(String.init),
-                   firstChar == firstChar.uppercased()
-                {
-                    return
-                } else if formatter.isInViewBuilder(at: i) {
-                    return
-                }
+            if formatter.options.swiftVersion < "5.3", formatter.isInResultBuilder(at: i) {
+                return
             }
             var index = i + 1
             var chevronIndex: Int?

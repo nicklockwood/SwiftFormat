@@ -979,17 +979,17 @@ extension Formatter {
         return false
     }
 
-    /// Detect if code is inside a ViewBuilder
-    func isInViewBuilder(at i: Int) -> Bool {
+    /// Crude check to detect if code is inside a Result Builder
+    /// Note: this will produce false positives for any init that takes a closure
+    func isInResultBuilder(at i: Int) -> Bool {
         var i = i
         while let startIndex = index(of: .startOfScope("{"), before: i) {
-            guard let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: startIndex) else {
+            guard let prevIndex = index(before: startIndex, where: {
+                !$0.isSpaceOrCommentOrLinebreak && !$0.isEndOfScope
+            }) else {
                 return false
             }
-            if tokens[prevIndex] == .identifier("View"),
-               let prevToken = last(.nonSpaceOrCommentOrLinebreak, before: prevIndex),
-               [.delimiter(":"), .identifier("some")].contains(prevToken)
-            {
+            if case let .identifier(name) = tokens[prevIndex], name.first?.isUppercase == true {
                 return true
             }
             i = prevIndex

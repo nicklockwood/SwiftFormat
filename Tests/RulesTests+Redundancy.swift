@@ -1629,6 +1629,17 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantLet)
     }
 
+    func testNoRemoveLetNestedInViewBuilder() {
+        let input = """
+        VStack {
+            if visible == "YES" {
+                let _ = print("")
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantLet)
+    }
+
     func testNoRemoveAsyncLet() {
         let input = "async let _ = foo()"
         testFormatting(for: input, rule: FormatRules.redundantLet)

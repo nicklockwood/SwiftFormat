@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.50.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.50.5) (2022-11-29)
+
+- Fixed incorrect macOS command line binary that accidentally shipped with 0.50.4
+
 ## [0.50.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.50.4) (2022-11-23)
 
 - Added Swift package command plugin

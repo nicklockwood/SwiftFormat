@@ -250,6 +250,15 @@ class CommandLineTests: XCTestCase {
 
     // MARK: help
 
+    func testOptionsHelpText() {
+        for option in Descriptors.all {
+            XCTAssertFalse(
+                option.help.contains("\n"),
+                "Help for option --\(option.argumentName) contains linebreak"
+            )
+        }
+    }
+
     func testHelpLineLength() {
         CLI.print = { message, _ in
             message.components(separatedBy: "\n").forEach { line in

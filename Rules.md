@@ -683,10 +683,7 @@ instead of generic type constraints (`extension Array where Element == Foo`).
 
 Option | Description
 --- | ---
-`--generictypes` | Additional generic type definitions used by `genericExtensions`
-A semicolon-separated list of generic types and their generic
-parameters. For example:
-"LinkedList<Element>;Reducer<State, Action, Environment>"
+`--generictypes` | Semicolon-delimited list of generic types and type parameters
 
 <details>
 <summary>Examples</summary>

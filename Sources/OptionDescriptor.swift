@@ -886,12 +886,7 @@ struct _Descriptors {
     let genericTypes = OptionDescriptor(
         argumentName: "generictypes",
         displayName: "Additional generic types",
-        help: """
-        Additional generic type definitions used by `genericExtensions`
-        A semicolon-separated list of generic types and their generic
-        parameters. For example:
-        "LinkedList<Element>;Reducer<State, Action, Environment>"
-        """,
+        help: "Semicolon-delimited list of generic types and type parameters",
         keyPath: \.genericTypes,
         fromArgument: { $0 },
         toArgument: { $0 }

@@ -1,4 +1,4 @@
-// switformat:options --swiftversion 5.7
+// swiftformat:options --swiftversion 5.7
 
 struct Foo<Value> {
     func bar<V, R>(

@@ -812,12 +812,8 @@ private extension UnicodeScalarView {
         var start = self
         if var tail = readCharacter(where: isHead) {
             switch tail {
-            case "?", "!", "\\":
+            case "/" where !["*", "/"].contains(first), "?", "!", "\\":
                 return .operator(String(tail), .none)
-            case "/":
-                if first == "\\" {
-                    return .operator("/", .none)
-                }
             default:
                 start = self
             }

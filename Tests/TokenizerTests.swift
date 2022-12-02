@@ -729,6 +729,22 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testAnchoredSingleLineRegexLiteral() {
+        let input = "let _ = /^foo$/"
+        let output: [Token] = [
+            .keyword("let"),
+            .space(" "),
+            .identifier("_"),
+            .space(" "),
+            .operator("=", .infix),
+            .space(" "),
+            .startOfScope("/"),
+            .stringBody("^foo$"),
+            .endOfScope("/"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     func testSingleLineRegexLiteralStartingWithEscapeSequence() {
         let input = "let regex = /\\w+/"
         let output: [Token] = [
@@ -939,6 +955,36 @@ class TokenizerTests: XCTestCase {
             .operator("/", .none),
             .endOfScope(")"),
             .linebreak("\n", 2),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testPrefixSlashCaretOperator() {
+        let input = "let _ = /^foo"
+        let output: [Token] = [
+            .keyword("let"),
+            .space(" "),
+            .identifier("_"),
+            .space(" "),
+            .operator("=", .infix),
+            .space(" "),
+            .operator("/^", .prefix),
+            .identifier("foo"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testPrefixSlashQueryOperator() {
+        let input = "let _ = /?foo"
+        let output: [Token] = [
+            .keyword("let"),
+            .space(" "),
+            .identifier("_"),
+            .space(" "),
+            .operator("=", .infix),
+            .space(" "),
+            .operator("/?", .prefix),
+            .identifier("foo"),
         ]
         XCTAssertEqual(tokenize(input), output)
     }

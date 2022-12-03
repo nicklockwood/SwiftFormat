@@ -13,7 +13,7 @@ jobs:
     name: Build SwiftFormat for Linux
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           ref: ${{ github.event.inputs.ref }}
       - name: Build it
@@ -22,7 +22,7 @@ jobs:
           SWIFTFORMAT_BIN_PATH=`swift build --configuration release --show-bin-path`
           mv $SWIFTFORMAT_BIN_PATH/swiftformat "${HOME}/swiftformat_linux"
       - name: 'Upload Artifact'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: swiftformat_linux
           path: ~/swiftformat_linux

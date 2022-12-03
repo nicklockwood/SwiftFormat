@@ -4770,7 +4770,9 @@ public struct _FormatRules {
         if lastHeaderTokenIndex < formatter.tokens.count - 1 {
             headerTokens.append(.linebreak(formatter.options.linebreak, headerLinebreaks + 1))
             if lastHeaderTokenIndex < formatter.tokens.count - 2,
-               !formatter.tokens[lastHeaderTokenIndex + 2].isLinebreak
+               !formatter.tokens[lastHeaderTokenIndex + 1 ... lastHeaderTokenIndex + 2].allSatisfy({
+                   $0.isLinebreak
+               })
             {
                 headerTokens.append(.linebreak(formatter.options.linebreak, headerLinebreaks + 2))
             }

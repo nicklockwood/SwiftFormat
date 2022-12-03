@@ -538,6 +538,32 @@ class GeneralTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
     }
 
+    func testFileHeaderBlankLineNotRemovedBeforeFollowingComment() {
+        let input = """
+        //
+        // Header
+        //
+
+        // Something else...
+        """
+        let options = FormatOptions(fileHeader: "//\n// Header\n//")
+        testFormatting(for: input, rule: FormatRules.fileHeader, options: options)
+    }
+
+    func testFileHeaderBlankLineNotRemovedBeforeFollowingComment2() {
+        let input = """
+        //
+        // Header
+        //
+
+        //
+        // Something else...
+        //
+        """
+        let options = FormatOptions(fileHeader: "//\n// Header\n//")
+        testFormatting(for: input, rule: FormatRules.fileHeader, options: options)
+    }
+
     func testFileHeaderRemovedAfterHashbang() {
         let input = """
         #!/usr/bin/swift

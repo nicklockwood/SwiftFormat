@@ -301,7 +301,7 @@ private func processDirectory(_ inputURL: URL, with options: inout Options, logg
         configCache[inputURL] = args
     }
     assert(options.formatOptions != nil)
-    try options.addArguments(args, in: inputURL.path)
+    try options.addArguments(args, in: inputURL.standardizedFileURL.path)
 }
 
 /// Line and column offset in source

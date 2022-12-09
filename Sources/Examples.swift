@@ -1478,4 +1478,28 @@ private struct Examples {
       }
     ```
     """
+
+    let fileHeader = """
+    You can use the following tokens in the text:
+
+    Token | Description
+    --- | ---
+    `{file}` | File name
+    `{year}` | Current year
+    `{created}` | File creation date
+    `{created.year}` | File creation year
+
+    **Example**:
+
+    `--header \\n {file}\\n\\n Copyright © {created.year} CompanyName.\\n`
+
+    ```diff
+    - // SomeFile.swift
+
+    + //
+    + //  SomeFile.swift
+    + //  Copyright © 2023 CompanyName.
+    + //
+    ```
+    """
 }

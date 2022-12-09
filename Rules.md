@@ -676,6 +676,34 @@ Option | Description
 --- | ---
 `--header` | Header comments: "strip", "ignore", or the text you wish use
 
+<details>
+<summary>Examples</summary>
+
+You can use the following tokens in the text:
+
+Token | Description
+--- | ---
+`{file}` | File name
+`{year}` | Current year
+`{created}` | File creation date
+`{created.year}` | File creation year
+
+**Example**:
+
+`--header \n {file}\n\n Copyright © {created.year} CompanyName.\n`
+
+```diff
+- // SomeFile.swift
+
++ //
++ //  SomeFile.swift
++ //  Copyright © 2023 CompanyName.
++ //
+```
+
+</details>
+<br/>
+
 ## genericExtensions
 
 When extending generic types, use angle brackets (`extension Array<Foo>`)

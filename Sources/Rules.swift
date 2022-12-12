@@ -2882,9 +2882,22 @@ public struct _FormatRules {
             if let prevIndex = prevIndex, formatter.tokens[prevIndex].isIdentifier,
                formatter.last(.nonSpaceOrComment, before: prevIndex)?.string == "."
             {
-                // Was an enum case
+                // Is an enum case
+                if let endOfScopeIndex = formatter.index(
+                    before: prevIndex,
+                    where: { tkn in tkn == .endOfScope("case") || tkn == .keyword("case") }
+                ),
+                    let varOrLetIndex = formatter.index(after: endOfScopeIndex, where: { tkn in
+                        tkn == .keyword("let") || tkn == .keyword("var")
+                    }),
+                    let operatorIndex = formatter.index(of: .operator, before: prevIndex),
+                    varOrLetIndex < operatorIndex
+                {
+                    formatter.removeTokens(in: varOrLetIndex ..< operatorIndex)
+                }
                 return
             }
+
             // Was an assignment
             formatter.insert(.identifier("_"), at: i)
             if formatter.token(at: i - 1).map({ $0.isSpaceOrLinebreak }) != true {

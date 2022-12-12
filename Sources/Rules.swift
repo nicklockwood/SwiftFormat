@@ -2882,7 +2882,6 @@ public struct _FormatRules {
             if let prevIndex = prevIndex, formatter.tokens[prevIndex].isIdentifier,
                formatter.last(.nonSpaceOrComment, before: prevIndex)?.string == "."
             {
-                // Is an enum case
                 if let endOfScopeIndex = formatter.index(
                     before: prevIndex,
                     where: { tkn in tkn == .endOfScope("case") || tkn == .keyword("case") }

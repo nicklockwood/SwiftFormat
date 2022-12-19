@@ -1648,7 +1648,7 @@ class RedundancyTests: RulesTests {
     // MARK: - redundantPattern
 
     func testRemoveRedundantPatternInIfCase() {
-        let input = "if case .foo(_, _) = bar {}"
+        let input = "if case let .foo(_, _) = bar {}"
         let output = "if case .foo = bar {}"
         testFormatting(for: input, output, rule: FormatRules.redundantPattern)
     }
@@ -1659,9 +1659,14 @@ class RedundancyTests: RulesTests {
     }
 
     func testRemoveRedundantPatternInSwitchCase() {
-        let input = "switch foo {\ncase .bar(_, _): break\ndefault: break\n}"
+        let input = "switch foo {\ncase let .bar(_, _): break\ndefault: break\n}"
         let output = "switch foo {\ncase .bar: break\ndefault: break\n}"
         testFormatting(for: input, output, rule: FormatRules.redundantPattern)
+    }
+
+    func testRemoveRedundantPatternNoRemoveLetInSwitchCase() {
+        let input = "switch foo {\ncase let .bar(_, a): break\ndefault: break\n}"
+        testFormatting(for: input, rule: FormatRules.redundantPattern)
     }
 
     func testNoRemoveRequiredPatternInSwitchCase() {

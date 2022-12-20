@@ -777,6 +777,43 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testSingleLineRegexLiteralPrecededByTry() {
+        let input = "let regex = try /foo/"
+        let output: [Token] = [
+            .keyword("let"),
+            .space(" "),
+            .identifier("regex"),
+            .space(" "),
+            .operator("=", .infix),
+            .space(" "),
+            .keyword("try"),
+            .space(" "),
+            .startOfScope("/"),
+            .stringBody("foo"),
+            .endOfScope("/"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testSingleLineRegexLiteralPrecededByOptionalTry() {
+        let input = "let regex = try? /foo/"
+        let output: [Token] = [
+            .keyword("let"),
+            .space(" "),
+            .identifier("regex"),
+            .space(" "),
+            .operator("=", .infix),
+            .space(" "),
+            .keyword("try"),
+            .operator("?", .postfix),
+            .space(" "),
+            .startOfScope("/"),
+            .stringBody("foo"),
+            .endOfScope("/"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     func testRegexLiteralInArray() {
         let input = "[/foo/]"
         let output: [Token] = [

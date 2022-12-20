@@ -1498,9 +1498,14 @@ public func tokenize(_ source: String) -> [Token] {
                     break
                 }
                 if token == .operator("/", .none),
-                   prevNonSpaceToken.isOperator(ofType: .infix) || [
+                   prevNonSpaceToken.isOperator(ofType: .infix) || (
+                       prevNonSpaceToken.isUnwrapOperator &&
+                           prevNonSpaceIndex > 0 &&
+                           tokens[prevNonSpaceIndex - 1] == .keyword("try")
+                   ) || [
                        .startOfScope("("), .startOfScope("["),
                        .delimiter(":"), .delimiter(","),
+                       .keyword("try"), .keyword("await"),
                    ].contains(prevNonSpaceToken)
                 {
                     tokens[i] = .startOfScope("/")

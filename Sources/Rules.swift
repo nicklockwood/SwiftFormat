@@ -2689,7 +2689,7 @@ public struct _FormatRules {
                       formatter.index(in: i + 1 ..< closingIndex, where: {
                           switch $0 {
                           case .operator(_, .infix), .identifier("any"), .identifier("some"),
-                               .keyword("as"), .keyword("is"), .keyword("try"):
+                               .keyword("as"), .keyword("is"), .keyword("try"), .keyword("await"):
                               switch prevToken {
                               // TODO: add option to always strip parens in this case (or only for boolean operators?)
                               case .operator("=", .infix) where $0 == .operator("->", .infix):

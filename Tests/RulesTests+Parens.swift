@@ -225,6 +225,11 @@ class ParensTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantParens)
     }
 
+    func testMeaningfulParensAroundAwaitExpressionNotRemoved() {
+        let input = "if !(await isSomething()) {}"
+        testFormatting(for: input, rule: FormatRules.redundantParens)
+    }
+
     // around conditions
 
     func testRedundantParensRemovedInIf() {

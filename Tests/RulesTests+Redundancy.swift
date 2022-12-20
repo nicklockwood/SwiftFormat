@@ -5680,6 +5680,35 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.unusedArguments)
     }
 
+    func testViewBuilderAnnotationDoesntBreakUnusedArgDetection() {
+        let input = """
+        struct Foo {
+            let content: View
+
+            public init(
+                responsibleFileID: StaticString = #fileID,
+                @ViewBuilder content: () -> View)
+            {
+                self.content = content()
+            }
+        }
+        """
+        let output = """
+        struct Foo {
+            let content: View
+
+            public init(
+                responsibleFileID _: StaticString = #fileID,
+                @ViewBuilder content: () -> View)
+            {
+                self.content = content()
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments,
+                       exclude: ["braces", "wrapArguments"])
+    }
+
     // functions (closure-only)
 
     func testNoMarkFunctionArgument() {

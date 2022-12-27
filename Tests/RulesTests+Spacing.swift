@@ -1167,6 +1167,63 @@ class SpacingTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.spaceAroundOperators, options: options)
     }
 
+    func testSpaceAroundDataTypeDelimiterLeadingAdded() {
+        let input = "class Implementation: ImplementationProtocol {}"
+        let output = "class Implementation : ImplementationProtocol {}"
+        let options = FormatOptions(spaceAroundDelimiter: .leadingTrailing)
+        testFormatting(
+            for: input,
+            output,
+            rule: FormatRules.spaceAroundOperators,
+            options: options
+        )
+    }
+
+    func testSpaceAroundDataTypeDelimiterLeadingTrailingAdded() {
+        let input = "class Implementation:ImplementationProtocol {}"
+        let output = "class Implementation : ImplementationProtocol {}"
+        let options = FormatOptions(spaceAroundDelimiter: .leadingTrailing)
+        testFormatting(
+            for: input,
+            output,
+            rule: FormatRules.spaceAroundOperators,
+            options: options
+        )
+    }
+
+    func testSpaceAroundDataTypeDelimiterLeadingTrailingNotModified() {
+        let input = "class Implementation : ImplementationProtocol {}"
+        let options = FormatOptions(spaceAroundDelimiter: .leadingTrailing)
+        testFormatting(
+            for: input,
+            rule: FormatRules.spaceAroundOperators,
+            options: options
+        )
+    }
+
+    func testSpaceAroundDataTypeDelimiterTrailingAdded() {
+        let input = "class Implementation:ImplementationProtocol {}"
+        let output = "class Implementation: ImplementationProtocol {}"
+
+        let options = FormatOptions(spaceAroundDelimiter: .trailing)
+        testFormatting(
+            for: input,
+            output,
+            rule: FormatRules.spaceAroundOperators,
+            options: options
+        )
+    }
+
+    func testSpaceAroundDataTypeDelimiterLeadingNotAdded() {
+        let input = "class Implementation: ImplementationProtocol {}"
+        let options = FormatOptions(spaceAroundDelimiter: .trailing)
+        testFormatting(
+            for: input,
+            rule: FormatRules.spaceAroundOperators,
+            options: options
+        )
+    }
+
     // MARK: - spaceAroundComments
 
     func testSpaceAroundCommentInParens() {

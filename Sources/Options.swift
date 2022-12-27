@@ -354,6 +354,12 @@ public enum EnumNamespacesMode: String, CaseIterable {
     case structsOnly = "structs-only"
 }
 
+/// Whether or not to add spacing around data type delimiter
+public enum SpaceAroundDelimiter: String, CaseIterable {
+    case trailing
+    case leadingTrailing = "leading-trailing"
+}
+
 /// Configuration options for formatting. These aren't actually used by the
 /// Formatter class itself, but it makes them available to the format rules.
 public struct FormatOptions: CustomStringConvertible {
@@ -438,6 +444,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var genericTypes: String
     public var useSomeAny: Bool
     public var wrapEffects: WrapEffects
+    public var spaceAroundDelimiter: SpaceAroundDelimiter
 
     // Deprecated
     public var indentComments: Bool
@@ -541,7 +548,8 @@ public struct FormatOptions: CustomStringConvertible {
                 ignoreConflictMarkers: Bool = false,
                 swiftVersion: Version = .undefined,
                 fileInfo: FileInfo = FileInfo(),
-                timeout: TimeInterval = 1)
+                timeout: TimeInterval = 1,
+                spaceAroundDelimiter: SpaceAroundDelimiter = .trailing)
     {
         self.lineAfterMarks = lineAfterMarks
         self.indent = indent
@@ -625,6 +633,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.genericTypes = genericTypes
         self.useSomeAny = useSomeAny
         self.wrapEffects = wrapEffects
+        self.spaceAroundDelimiter = spaceAroundDelimiter
         // Doesn't really belong here, but hard to put elsewhere
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

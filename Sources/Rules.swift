@@ -477,7 +477,7 @@ public struct _FormatRules {
     ///   preceded by a space, unless it appears at the beginning of a line.
     public let spaceAroundOperators = FormatRule(
         help: "Add or remove space around operators or delimiters.",
-        options: ["operatorfunc", "nospaceoperators", "ranges"]
+        options: ["operatorfunc", "nospaceoperators", "ranges", "typedelimiter"]
     ) { formatter in
         formatter.forEachToken { i, token in
             switch token {
@@ -584,11 +584,15 @@ public struct _FormatRules {
                     // Ensure there is a space after the token
                     formatter.insert(.space(" "), at: i + 1)
                 }
-                if formatter.token(at: i - 1)?.isSpace == true,
-                   formatter.token(at: i - 2)?.isLinebreak == false
-                {
+
+                let spaceBeforeToken = formatter.token(at: i - 1)?.isSpace == true
+                    && formatter.token(at: i - 2)?.isLinebreak == false
+
+                if spaceBeforeToken, formatter.options.spaceAroundDelimiter == .trailing {
                     // Remove space before the token
                     formatter.removeToken(at: i - 1)
+                } else if !spaceBeforeToken, formatter.options.spaceAroundDelimiter == .leadingTrailing {
+                    formatter.insertSpace(" ", at: i)
                 }
             default:
                 break

@@ -2057,6 +2057,7 @@ Option | Description
 `--operatorfunc` | Spacing for operator funcs: "spaced" (default) or "no-space"
 `--nospaceoperators` | Comma-delimited list of operators without surrounding space
 `--ranges` | Spacing for ranges: "spaced" (default) or "no-space"
+`--typedelimiter` | "trailing" (default) or "leading-trailing"
 
 <details>
 <summary>Examples</summary>

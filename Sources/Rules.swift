@@ -1426,7 +1426,8 @@ public struct _FormatRules {
                     }
                     let start = formatter.startOfLine(at: i)
                     // Align indent with previous value
-                    indentCount = 1
+                    indentCount = indentCounts.last ?? 0
+                    indentCounts[indentCounts.count - 1] = 1
                     indent = formatter.spaceEquivalentToTokens(from: start, upTo: nextIndex)
                 default:
                     let stringIndent = stringBodyIndent(at: i)

@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.50.7](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.50.7) (2022-12-27)
+
+- Fixed parsing of regex literals preceded by `try` or `await`
+- Fixed required parens being removed around `await` keyword
+- Fixed indent for nested, wrapped parameters
+
 ## [0.50.6](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.50.6) (2022-12-03)
 
 - Fixed regression in `fileHeader` rule where blank lines were removed after header

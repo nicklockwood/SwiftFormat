@@ -4975,51 +4975,75 @@ public struct _FormatRules {
         }
     }
 
+    struct CaseRange {
+        let beforeDelimiterRange: Range<Int>
+        let delimiterToken: Token
+        let afterDelimiterRange: Range<Int>
+
+        var endsInNewLine: Bool = false
+        var hasComments: Bool = false
+        var indentAtLine: String = ""
+    }
+
     /// Sorts switch cases alphabetically
     public let sortedSwitchCases = FormatRule(
-        help: "Sorts switch cases alphabetically.",
-        disabledByDefault: true // TODO: fix bugs with comments, then this can be enabled by default
+        help: "Sorts switch cases alphabetically."
     ) { formatter in
-
         formatter.forEach(.endOfScope("case")) { i, _ in
-            guard let endIndex = formatter.index(of: .startOfScope(":"), after: i) else { return }
+            guard let lastDelimiterIndex = formatter.index(of: .startOfScope(":"), after: i),
+                  let endIndex = formatter.index(after: lastDelimiterIndex, where: { $0.isLinebreak }) else { return }
 
-            var nextDelimiterIndex = formatter.index(of: .delimiter(","), in: i + 1 ..< endIndex)
-            var nextStartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i)
-            var enums: [Range<Int>] = []
+            var caseRanges: [CaseRange] = []
 
-            while let startIndex = nextStartIndex,
-                  let delimiterIndex = nextDelimiterIndex,
-                  delimiterIndex < endIndex,
-                  startIndex < endIndex,
-                  let end = formatter.lastIndex(
+            var idx = i
+            while let startIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: idx),
+                  let delimiterIndex = formatter.index(after: idx, where: {
+                      $0 == .delimiter(",") || $0 == .startOfScope(":")
+                  }),
+                  let delimiterToken = formatter.token(at: delimiterIndex),
+                  let endOfCaseIndex = formatter.lastIndex(
                       of: .nonSpaceOrCommentOrLinebreak,
                       in: startIndex ..< delimiterIndex
-                  )
+                  ),
+                  let startOfCommentIdx = formatter.index(of: .spaceOrCommentOrLinebreak, after: delimiterIndex),
+                  let nextNonSpaceOrComment = formatter.index(of: .nonSpaceOrComment, after: startOfCommentIdx),
+                  delimiterIndex < nextNonSpaceOrComment,
+                  startIndex < delimiterIndex
             {
-                enums.append(Range(startIndex ... end))
-                nextStartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak,
-                                                 after: delimiterIndex) ?? endIndex
-                nextDelimiterIndex = formatter.index(of: .delimiter(","), after: delimiterIndex)
+                let afterDelimiterRange: Range<Int>
+
+                if formatter.token(at: startOfCommentIdx)?.isLinebreak == true {
+                    afterDelimiterRange = startOfCommentIdx ..< (startOfCommentIdx + 1)
+                } else if formatter.token(at: nextNonSpaceOrComment)?.isOperator == true {
+                    afterDelimiterRange = startOfCommentIdx ..< (startOfCommentIdx + 1)
+                } else if endIndex > startOfCommentIdx {
+                    afterDelimiterRange = startOfCommentIdx ..< (nextNonSpaceOrComment + 1)
+                } else {
+                    afterDelimiterRange = endIndex ..< (endIndex + 1)
+                }
+
+                var caseRange = CaseRange(
+                    beforeDelimiterRange: Range(startIndex ... endOfCaseIndex),
+                    delimiterToken: delimiterToken,
+                    afterDelimiterRange: afterDelimiterRange
+                )
+
+                caseRange.indentAtLine = formatter.indentForLine(at: startIndex)
+                caseRange.endsInNewLine = formatter.token(at: nextNonSpaceOrComment)?.isLinebreak ?? false
+                caseRange.hasComments = formatter.tokens[caseRange.afterDelimiterRange]
+                    .first(where: { $0.isComment }) != nil
+
+                caseRanges.append(caseRange)
+                idx = afterDelimiterRange.count > 1 ? afterDelimiterRange.upperBound : afterDelimiterRange.lowerBound
             }
 
-            // last one from the cases list
-            if let nextStart = nextStartIndex,
-               let nextEnd = formatter.lastIndex(
-                   of: .nonSpaceOrCommentOrLinebreak,
-                   in: nextStart ..< endIndex
-               ),
-               nextStart <= nextEnd
-            {
-                enums.append(Range(nextStart ... nextEnd))
-            }
+            guard caseRanges.count > 1,
+                  let firstCaseIndex = caseRanges.first?.beforeDelimiterRange.lowerBound else { return } // nothing to sort
 
-            guard enums.count > 1 else { return } // nothing to sort
-
-            let sorted: [Range<Int>] = enums.sorted { range1, range2 -> Bool in
-                let lhs = formatter.tokens[range1]
+            let sorted: [CaseRange] = caseRanges.sorted { case1, case2 -> Bool in
+                let lhs = formatter.tokens[case1.beforeDelimiterRange]
                     .compactMap { $0.isIdentifier || $0.isStringBody || $0.isNumber ? $0.string : nil }
-                let rhs = formatter.tokens[range2]
+                let rhs = formatter.tokens[case2.beforeDelimiterRange]
                     .compactMap { $0.isIdentifier || $0.isStringBody || $0.isNumber ? $0.string : nil }
                 for (lhs, rhs) in zip(lhs, rhs) {
                     switch lhs.localizedStandardCompare(rhs) {
@@ -5034,15 +5058,29 @@ public struct _FormatRules {
                 return lhs.count < rhs.count
             }
 
-            let sortedTokens = sorted.map { formatter.tokens[$0] }
+            let sortedTokens = sorted.map { formatter.tokens[$0.beforeDelimiterRange] }
+            let sortedComments = sorted.map { formatter.tokens[$0.afterDelimiterRange] }
 
             // ignore if there's a where keyword and it is not in the last place.
             let firstWhereIndex = sortedTokens.firstIndex(where: { slice in slice.contains(.keyword("where")) })
             guard firstWhereIndex == nil || firstWhereIndex == sortedTokens.count - 1 else { return }
 
-            for switchCase in enums.enumerated().reversed() {
+            for switchCase in caseRanges.enumerated().reversed() {
                 let newTokens = Array(sortedTokens[switchCase.offset])
-                formatter.replaceTokens(in: enums[switchCase.offset], with: newTokens)
+                let newComments = Array(sortedComments[switchCase.offset])
+                let oldCommentsRange = sorted[caseRanges.count - switchCase.offset - 1].afterDelimiterRange
+
+                let oldComments = formatter.tokens[oldCommentsRange]
+
+                var shouldInsertBreakLine = sortedComments[caseRanges.count - switchCase.offset - 1].first?.isLinebreak == true
+
+                if newComments.count > 1 {
+                    formatter.replaceTokens(in: caseRanges[switchCase.offset].afterDelimiterRange, with: newComments)
+                } else if newComments.count == 1, newComments.first?.isLinebreak == true, oldComments.last?.isLinebreak == true {
+                    formatter.replaceTokens(in: caseRanges[switchCase.offset].afterDelimiterRange, with: newComments)
+                }
+
+                formatter.replaceTokens(in: caseRanges[switchCase.offset].beforeDelimiterRange, with: newTokens)
             }
         }
     }

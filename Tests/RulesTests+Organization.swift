@@ -2774,7 +2774,7 @@ class OrganizationTests: RulesTests {
 
     // MARK: - sortedSwitchCases
 
-    func testSortedSwitchCaseMultilineWithComments() {
+    func testSortedSwitchCaseMultilineWithOneComment() {
         let input = """
         switch self {
         case let .type, // something
@@ -2784,12 +2784,30 @@ class OrganizationTests: RulesTests {
         """
         let output = """
         switch self {
-        case let .conditionalCompilation, // something
-             let .type:
+        case let .conditionalCompilation,
+             let .type: // something
             break
         }
         """
         testFormatting(for: input, output, rule: FormatRules.sortedSwitchCases)
+    }
+
+    func testSortedSwitchCaseMultilineWithComments() {
+        let input = """
+        switch self {
+        case let .type, // typeComment
+             let .conditionalCompilation: // conditionalCompilationComment
+            break
+        }
+        """
+        let output = """
+        switch self {
+        case let .conditionalCompilation, // conditionalCompilationComment
+             let .type: // typeComment
+            break
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.sortedSwitchCases, exclude: ["indent"])
     }
 
     func testSortedSwitchCaseMultiline() {

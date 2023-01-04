@@ -5014,7 +5014,7 @@ public struct _FormatRules {
 
                 if formatter.token(at: startOfCommentIdx)?.isLinebreak == true {
                     afterDelimiterRange = startOfCommentIdx ..< (startOfCommentIdx + 1)
-                } else if formatter.token(at: nextNonSpaceOrComment)?.isOperator == true {
+                } else if formatter.token(at: nextNonSpaceOrComment)?.isSpaceOrCommentOrLinebreak == false {
                     afterDelimiterRange = startOfCommentIdx ..< (startOfCommentIdx + 1)
                 } else if endIndex > startOfCommentIdx {
                     afterDelimiterRange = startOfCommentIdx ..< (nextNonSpaceOrComment + 1)

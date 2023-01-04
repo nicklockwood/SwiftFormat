@@ -4979,10 +4979,6 @@ public struct _FormatRules {
         let beforeDelimiterRange: Range<Int>
         let delimiterToken: Token
         let afterDelimiterRange: Range<Int>
-
-        var endsInNewLine: Bool = false
-        var hasComments: Bool = false
-        var indentAtLine: String = ""
     }
 
     /// Sorts switch cases alphabetically
@@ -5004,22 +5000,26 @@ public struct _FormatRules {
                   let endOfCaseIndex = formatter.lastIndex(
                       of: .nonSpaceOrCommentOrLinebreak,
                       in: startIndex ..< delimiterIndex
-                  ),
-                  let startOfCommentIdx = formatter.index(of: .spaceOrCommentOrLinebreak, after: delimiterIndex),
-                  let nextNonSpaceOrComment = formatter.index(of: .nonSpaceOrComment, after: startOfCommentIdx),
-                  delimiterIndex < nextNonSpaceOrComment,
-                  startIndex < delimiterIndex
+                  )
             {
                 let afterDelimiterRange: Range<Int>
 
-                if formatter.token(at: startOfCommentIdx)?.isLinebreak == true {
-                    afterDelimiterRange = startOfCommentIdx ..< (startOfCommentIdx + 1)
-                } else if formatter.token(at: nextNonSpaceOrComment)?.isSpaceOrCommentOrLinebreak == false {
-                    afterDelimiterRange = startOfCommentIdx ..< (startOfCommentIdx + 1)
-                } else if endIndex > startOfCommentIdx {
-                    afterDelimiterRange = startOfCommentIdx ..< (nextNonSpaceOrComment + 1)
+                let startOfCommentIdx = delimiterIndex + 1
+                if startOfCommentIdx <= endIndex,
+                   formatter.token(at: startOfCommentIdx)?.isSpaceOrCommentOrLinebreak == true,
+                   let nextNonSpaceOrComment = formatter.index(of: .nonSpaceOrComment, after: startOfCommentIdx)
+                {
+                    if formatter.token(at: startOfCommentIdx)?.isLinebreak == true {
+                        afterDelimiterRange = startOfCommentIdx ..< (startOfCommentIdx + 1)
+                    } else if formatter.token(at: nextNonSpaceOrComment)?.isSpaceOrCommentOrLinebreak == false {
+                        afterDelimiterRange = startOfCommentIdx ..< (startOfCommentIdx + 1)
+                    } else if endIndex > startOfCommentIdx {
+                        afterDelimiterRange = startOfCommentIdx ..< (nextNonSpaceOrComment + 1)
+                    } else {
+                        afterDelimiterRange = endIndex ..< (endIndex + 1)
+                    }
                 } else {
-                    afterDelimiterRange = endIndex ..< (endIndex + 1)
+                    afterDelimiterRange = 0 ..< 0 // empty range
                 }
 
                 var caseRange = CaseRange(
@@ -5028,13 +5028,15 @@ public struct _FormatRules {
                     afterDelimiterRange: afterDelimiterRange
                 )
 
-                caseRange.indentAtLine = formatter.indentForLine(at: startIndex)
-                caseRange.endsInNewLine = formatter.token(at: nextNonSpaceOrComment)?.isLinebreak ?? false
-                caseRange.hasComments = formatter.tokens[caseRange.afterDelimiterRange]
-                    .first(where: { $0.isComment }) != nil
-
                 caseRanges.append(caseRange)
-                idx = afterDelimiterRange.count > 1 ? afterDelimiterRange.upperBound : afterDelimiterRange.lowerBound
+
+                if afterDelimiterRange.isEmpty {
+                    idx = delimiterIndex
+                } else if afterDelimiterRange.count > 1 {
+                    idx = afterDelimiterRange.upperBound
+                } else {
+                    idx = afterDelimiterRange.lowerBound
+                }
             }
 
             guard caseRanges.count > 1,
@@ -5067,16 +5069,14 @@ public struct _FormatRules {
 
             for switchCase in caseRanges.enumerated().reversed() {
                 let newTokens = Array(sortedTokens[switchCase.offset])
-                let newComments = Array(sortedComments[switchCase.offset])
+                var newComments = Array(sortedComments[switchCase.offset])
                 let oldCommentsRange = sorted[caseRanges.count - switchCase.offset - 1].afterDelimiterRange
 
                 let oldComments = formatter.tokens[oldCommentsRange]
 
                 var shouldInsertBreakLine = sortedComments[caseRanges.count - switchCase.offset - 1].first?.isLinebreak == true
 
-                if newComments.count > 1 {
-                    formatter.replaceTokens(in: caseRanges[switchCase.offset].afterDelimiterRange, with: newComments)
-                } else if newComments.count == 1, newComments.first?.isLinebreak == true, oldComments.last?.isLinebreak == true {
+                if newComments.count > 1 || (newComments.last?.isLinebreak == oldComments.last?.isLinebreak) {
                     formatter.replaceTokens(in: caseRanges[switchCase.offset].afterDelimiterRange, with: newComments)
                 }
 

@@ -49,7 +49,6 @@
 * [semicolons](#semicolons)
 * [sortDeclarations](#sortDeclarations)
 * [sortedImports](#sortedImports)
-* [sortedSwitchCases](#sortedSwitchCases)
 * [spaceAroundBraces](#spaceAroundBraces)
 * [spaceAroundBrackets](#spaceAroundBrackets)
 * [spaceAroundComments](#spaceAroundComments)
@@ -87,6 +86,7 @@
 * [isEmpty](#isEmpty)
 * [markTypes](#markTypes)
 * [organizeDeclarations](#organizeDeclarations)
+* [sortedSwitchCases](#sortedSwitchCases)
 * [wrapConditionalBodies](#wrapConditionalBodies)
 * [wrapEnumCases](#wrapEnumCases)
 * [wrapSwitchCases](#wrapSwitchCases)
@@ -174,7 +174,7 @@ swift version is set to 4.1 or above.
 
 ## assertionFailures
 
-Changes all instances of assert(false, ...) to assertionFailure(...) 
+Changes all instances of assert(false, ...) to assertionFailure(...)
 and precondition(false, ...) to preconditionFailure(...).
 
 <details>

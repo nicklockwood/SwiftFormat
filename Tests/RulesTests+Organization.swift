@@ -2774,6 +2774,28 @@ class OrganizationTests: RulesTests {
 
     // MARK: - sortedSwitchCases
 
+    func testSortedSwitchCaseNestedSwitchOneCaseDoesNothing() {
+        let input = """
+        switch result {
+        case let .success(value):
+            switch result {
+            case .success:
+                print("success")
+            case .value:
+                print("value")
+            }
+        case .failure:
+            guard self.bar else {
+                print(self.bar)
+                return
+            }
+            print(self.bar)
+        }
+        """
+
+        testFormatting(for: input, rule: FormatRules.sortedSwitchCases)
+    }
+
     func testSortedSwitchCaseMultilineWithOneComment() {
         let input = """
         switch self {

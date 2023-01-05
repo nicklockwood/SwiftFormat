@@ -4396,60 +4396,60 @@ public struct _FormatRules {
             }
         }
 
-//        func wrapBraceIfNecessary(at openBraceIndex: Int, startOfMultilineStatement: Int) {
-//            let startOfLine = formatter.startOfLine(at: openBraceIndex)
-//            // Make sure the brace is on a separate line from the if / guard
-//            guard startOfMultilineStatement < startOfLine,
-//                  // If token before the brace isn't a newline or guard else then insert a newline
-//                  let prevIndex = formatter.index(of: .nonSpace, before: openBraceIndex),
-//                  let prevToken = formatter.token(at: prevIndex),
-//                  !prevToken.isLinebreak, !(prevToken == .keyword("else") &&
-//                      prevIndex == formatter.index(of: .nonSpace, after: startOfLine)),
-//                  // Only wrap when the brace's line is more indented than the if / guard
-//                  formatter.indentForLine(at: startOfMultilineStatement) < formatter.indentForLine(at: openBraceIndex),
-//                  // And only when closing brace is not on same line
-//                  let closingIndex = formatter.endOfScope(at: openBraceIndex),
-//                  formatter.tokens[openBraceIndex ..< closingIndex].contains(where: { $0.isLinebreak })
-//            else {
-//                return
-//            }
-//            formatter.insertLinebreak(at: openBraceIndex)
-//
-//            // Insert a space to align the opening brace with the if / guard keyword
-//            let indentation = formatter.indentForLine(at: startOfMultilineStatement)
-//            formatter.insertSpace(indentation, at: openBraceIndex + 1)
-//
-//            // If we left behind a trailing space on the previous line, clean it up
-//            let previousTokenIndex = openBraceIndex - 1
-//            if formatter.tokens[previousTokenIndex].isSpace {
-//                formatter.removeToken(at: previousTokenIndex)
-//            }
-//        }
-//
-//        formatter.forEachToken { index, token in
-//            // First, wrap any open braces following keywords that can have multiline statements
-//            if case let .keyword(keyword) = token, [
-//                "if", "for", "guard", "while", "switch", "func", "init", "subscript",
-//                "extension", "class", "actor", "struct", "enum", "protocol",
-//            ].contains(keyword),
-//                let openBraceIndex = formatter.index(of: .startOfScope("{"), after: index)
-//            {
-//                wrapBraceIfNecessary(at: openBraceIndex, startOfMultilineStatement: index)
-//            }
-//
-//            // Then attempt to wrap braces following a method call (like trailing closures, or getter bodies)
-//            //  - We only do this for before-first wrapping, since it's less necessary for after-first wrapping
-//            if formatter.options.wrapArguments != .afterFirst,
-//               token == .startOfScope("{"),
-//               let indexBeforeOpenBrace = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: index),
-//               formatter.tokens[indexBeforeOpenBrace] == .endOfScope(")"),
-//               let startOfMethodParameters = formatter.index(of: .startOfScope("("), before: indexBeforeOpenBrace),
-//               let indexBeforeStartOfParameters = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startOfMethodParameters),
-//               formatter.tokens[indexBeforeStartOfParameters].isIdentifier
-//            {
-//                wrapBraceIfNecessary(at: index, startOfMultilineStatement: startOfMethodParameters)
-//            }
-//        }
+        //        func wrapBraceIfNecessary(at openBraceIndex: Int, startOfMultilineStatement: Int) {
+        //            let startOfLine = formatter.startOfLine(at: openBraceIndex)
+        //            // Make sure the brace is on a separate line from the if / guard
+        //            guard startOfMultilineStatement < startOfLine,
+        //                  // If token before the brace isn't a newline or guard else then insert a newline
+        //                  let prevIndex = formatter.index(of: .nonSpace, before: openBraceIndex),
+        //                  let prevToken = formatter.token(at: prevIndex),
+        //                  !prevToken.isLinebreak, !(prevToken == .keyword("else") &&
+        //                      prevIndex == formatter.index(of: .nonSpace, after: startOfLine)),
+        //                  // Only wrap when the brace's line is more indented than the if / guard
+        //                  formatter.indentForLine(at: startOfMultilineStatement) < formatter.indentForLine(at: openBraceIndex),
+        //                  // And only when closing brace is not on same line
+        //                  let closingIndex = formatter.endOfScope(at: openBraceIndex),
+        //                  formatter.tokens[openBraceIndex ..< closingIndex].contains(where: { $0.isLinebreak })
+        //            else {
+        //                return
+        //            }
+        //            formatter.insertLinebreak(at: openBraceIndex)
+        //
+        //            // Insert a space to align the opening brace with the if / guard keyword
+        //            let indentation = formatter.indentForLine(at: startOfMultilineStatement)
+        //            formatter.insertSpace(indentation, at: openBraceIndex + 1)
+        //
+        //            // If we left behind a trailing space on the previous line, clean it up
+        //            let previousTokenIndex = openBraceIndex - 1
+        //            if formatter.tokens[previousTokenIndex].isSpace {
+        //                formatter.removeToken(at: previousTokenIndex)
+        //            }
+        //        }
+        //
+        //        formatter.forEachToken { index, token in
+        //            // First, wrap any open braces following keywords that can have multiline statements
+        //            if case let .keyword(keyword) = token, [
+        //                "if", "for", "guard", "while", "switch", "func", "init", "subscript",
+        //                "extension", "class", "actor", "struct", "enum", "protocol",
+        //            ].contains(keyword),
+        //                let openBraceIndex = formatter.index(of: .startOfScope("{"), after: index)
+        //            {
+        //                wrapBraceIfNecessary(at: openBraceIndex, startOfMultilineStatement: index)
+        //            }
+        //
+        //            // Then attempt to wrap braces following a method call (like trailing closures, or getter bodies)
+        //            //  - We only do this for before-first wrapping, since it's less necessary for after-first wrapping
+        //            if formatter.options.wrapArguments != .afterFirst,
+        //               token == .startOfScope("{"),
+        //               let indexBeforeOpenBrace = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: index),
+        //               formatter.tokens[indexBeforeOpenBrace] == .endOfScope(")"),
+        //               let startOfMethodParameters = formatter.index(of: .startOfScope("("), before: indexBeforeOpenBrace),
+        //               let indexBeforeStartOfParameters = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startOfMethodParameters),
+        //               formatter.tokens[indexBeforeStartOfParameters].isIdentifier
+        //            {
+        //                wrapBraceIfNecessary(at: index, startOfMultilineStatement: startOfMethodParameters)
+        //            }
+        //        }
     }
 
     /// Formats enum cases declaration into one case per line
@@ -4975,74 +4975,19 @@ public struct _FormatRules {
         }
     }
 
-    struct CaseRange {
-        let beforeDelimiterRange: Range<Int>
-        let delimiterToken: Token
-        let afterDelimiterRange: Range<Int>
-    }
-
     /// Sorts switch cases alphabetically
     public let sortedSwitchCases = FormatRule(
-        help: "Sorts switch cases alphabetically."
+        help: "Sorts switch cases alphabetically.",
+        disabledByDefault: true
     ) { formatter in
-        formatter.forEach(.endOfScope("case")) { i, _ in
-            guard let lastDelimiterIndex = formatter.index(of: .startOfScope(":"), after: i),
-                  let endIndex = formatter.index(after: lastDelimiterIndex, where: { $0.isLinebreak }) else { return }
-
-            var caseRanges: [CaseRange] = []
-
-            var idx = i
-            while let startIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: idx),
-                  let delimiterIndex = formatter.index(after: idx, where: {
-                      $0 == .delimiter(",") || $0 == .startOfScope(":")
-                  }),
-                  let delimiterToken = formatter.token(at: delimiterIndex),
-                  let endOfCaseIndex = formatter.lastIndex(
-                      of: .nonSpaceOrCommentOrLinebreak,
-                      in: startIndex ..< delimiterIndex
-                  )
-            {
-                let afterDelimiterRange: Range<Int>
-
-                let startOfCommentIdx = delimiterIndex + 1
-                if startOfCommentIdx <= endIndex,
-                   formatter.token(at: startOfCommentIdx)?.isSpaceOrCommentOrLinebreak == true,
-                   let nextNonSpaceOrComment = formatter.index(of: .nonSpaceOrComment, after: startOfCommentIdx)
-                {
-                    if formatter.token(at: startOfCommentIdx)?.isLinebreak == true {
-                        afterDelimiterRange = startOfCommentIdx ..< (startOfCommentIdx + 1)
-                    } else if formatter.token(at: nextNonSpaceOrComment)?.isSpaceOrCommentOrLinebreak == false {
-                        afterDelimiterRange = startOfCommentIdx ..< (startOfCommentIdx + 1)
-                    } else if endIndex > startOfCommentIdx {
-                        afterDelimiterRange = startOfCommentIdx ..< (nextNonSpaceOrComment + 1)
-                    } else {
-                        afterDelimiterRange = endIndex ..< (endIndex + 1)
-                    }
-                } else {
-                    afterDelimiterRange = 0 ..< 0 // empty range
-                }
-
-                var caseRange = CaseRange(
-                    beforeDelimiterRange: Range(startIndex ... endOfCaseIndex),
-                    delimiterToken: delimiterToken,
-                    afterDelimiterRange: afterDelimiterRange
-                )
-
-                caseRanges.append(caseRange)
-
-                if afterDelimiterRange.isEmpty {
-                    idx = delimiterIndex
-                } else if afterDelimiterRange.count > 1 {
-                    idx = afterDelimiterRange.upperBound
-                } else {
-                    idx = afterDelimiterRange.lowerBound
-                }
-            }
-
+        formatter.parseCaseRanges().forEach { caseRanges in
             guard caseRanges.count > 1,
                   let firstCaseIndex = caseRanges.first?.beforeDelimiterRange.lowerBound else { return } // nothing to sort
 
-            let sorted: [CaseRange] = caseRanges.sorted { case1, case2 -> Bool in
+            let indentCounts = caseRanges.map { formatter.indentForLine(at: $0.beforeDelimiterRange.lowerBound).count }
+            let maxIndentCount = indentCounts.max() ?? 0
+
+            let sorted = caseRanges.sorted { case1, case2 -> Bool in
                 let lhs = formatter.tokens[case1.beforeDelimiterRange]
                     .compactMap { $0.isIdentifier || $0.isStringBody || $0.isNumber ? $0.string : nil }
                 let rhs = formatter.tokens[case2.beforeDelimiterRange]
@@ -5076,7 +5021,13 @@ public struct _FormatRules {
 
                 var shouldInsertBreakLine = sortedComments[caseRanges.count - switchCase.offset - 1].first?.isLinebreak == true
 
-                if newComments.count > 1 || (newComments.last?.isLinebreak == oldComments.last?.isLinebreak) {
+                if newComments.last?.isLinebreak == oldComments.last?.isLinebreak {
+                    formatter.replaceTokens(in: caseRanges[switchCase.offset].afterDelimiterRange, with: newComments)
+                } else if newComments.count > 1,
+                          newComments.last?.isLinebreak == true, oldComments.last?.isLinebreak == false
+                {
+                    // indent the new content
+                    newComments.append(.space(String(repeating: " ", count: maxIndentCount)))
                     formatter.replaceTokens(in: caseRanges[switchCase.offset].afterDelimiterRange, with: newComments)
                 }
 
@@ -6622,7 +6573,7 @@ public struct _FormatRules {
 
     public let assertionFailures = FormatRule(
         help: """
-        Changes all instances of assert(false, ...) to assertionFailure(...) 
+        Changes all instances of assert(false, ...) to assertionFailure(...)
         and precondition(false, ...) to preconditionFailure(...).
         """
     ) { formatter in

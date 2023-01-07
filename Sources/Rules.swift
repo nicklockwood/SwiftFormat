@@ -4980,14 +4980,14 @@ public struct _FormatRules {
         help: "Sorts switch cases alphabetically.",
         disabledByDefault: true
     ) { formatter in
-        formatter.parseCaseRanges().forEach { caseRanges in
-            guard caseRanges.count > 1,
-                  let firstCaseIndex = caseRanges.first?.beforeDelimiterRange.lowerBound else { return } // nothing to sort
+        formatter.parseSwitchCaseRanges().forEach { switchCaseRanges in
+            guard switchCaseRanges.count > 1,
+                  let firstCaseIndex = switchCaseRanges.first?.beforeDelimiterRange.lowerBound else { return } // nothing to sort
 
-            let indentCounts = caseRanges.map { formatter.indentForLine(at: $0.beforeDelimiterRange.lowerBound).count }
+            let indentCounts = switchCaseRanges.map { formatter.indentForLine(at: $0.beforeDelimiterRange.lowerBound).count }
             let maxIndentCount = indentCounts.max() ?? 0
 
-            let sorted = caseRanges.sorted { case1, case2 -> Bool in
+            let sorted = switchCaseRanges.sorted { case1, case2 -> Bool in
                 let lhs = formatter.tokens[case1.beforeDelimiterRange]
                     .compactMap { $0.isIdentifier || $0.isStringBody || $0.isNumber ? $0.string : nil }
                 let rhs = formatter.tokens[case2.beforeDelimiterRange]
@@ -5012,26 +5012,26 @@ public struct _FormatRules {
             let firstWhereIndex = sortedTokens.firstIndex(where: { slice in slice.contains(.keyword("where")) })
             guard firstWhereIndex == nil || firstWhereIndex == sortedTokens.count - 1 else { return }
 
-            for switchCase in caseRanges.enumerated().reversed() {
+            for switchCase in switchCaseRanges.enumerated().reversed() {
                 let newTokens = Array(sortedTokens[switchCase.offset])
                 var newComments = Array(sortedComments[switchCase.offset])
-                let oldCommentsRange = sorted[caseRanges.count - switchCase.offset - 1].afterDelimiterRange
+                let oldCommentsRange = sorted[switchCaseRanges.count - switchCase.offset - 1].afterDelimiterRange
 
                 let oldComments = formatter.tokens[oldCommentsRange]
 
-                var shouldInsertBreakLine = sortedComments[caseRanges.count - switchCase.offset - 1].first?.isLinebreak == true
+                var shouldInsertBreakLine = sortedComments[switchCaseRanges.count - switchCase.offset - 1].first?.isLinebreak == true
 
                 if newComments.last?.isLinebreak == oldComments.last?.isLinebreak {
-                    formatter.replaceTokens(in: caseRanges[switchCase.offset].afterDelimiterRange, with: newComments)
+                    formatter.replaceTokens(in: switchCaseRanges[switchCase.offset].afterDelimiterRange, with: newComments)
                 } else if newComments.count > 1,
                           newComments.last?.isLinebreak == true, oldComments.last?.isLinebreak == false
                 {
                     // indent the new content
                     newComments.append(.space(String(repeating: " ", count: maxIndentCount)))
-                    formatter.replaceTokens(in: caseRanges[switchCase.offset].afterDelimiterRange, with: newComments)
+                    formatter.replaceTokens(in: switchCaseRanges[switchCase.offset].afterDelimiterRange, with: newComments)
                 }
 
-                formatter.replaceTokens(in: caseRanges[switchCase.offset].beforeDelimiterRange, with: newTokens)
+                formatter.replaceTokens(in: switchCaseRanges[switchCase.offset].beforeDelimiterRange, with: newTokens)
             }
         }
     }

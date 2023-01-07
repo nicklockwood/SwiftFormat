@@ -2793,7 +2793,7 @@ class OrganizationTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, rule: FormatRules.sortedSwitchCases)
+        testFormatting(for: input, rule: FormatRules.sortedSwitchCases, exclude: ["redundantSelf"])
     }
 
     func testSortedSwitchCaseMultilineWithOneComment() {

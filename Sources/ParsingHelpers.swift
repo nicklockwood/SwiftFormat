@@ -1830,29 +1830,30 @@ extension Formatter {
         }
     }
 
-    struct CaseRange {
+    struct SwitchCaseRange {
         let beforeDelimiterRange: Range<Int>
         let delimiterToken: Token
         let afterDelimiterRange: Range<Int>
     }
 
-    func parseCaseRanges() -> [[CaseRange]] {
-        // TODO: this needs to support nested cases
-        var result: [[CaseRange]] = []
+    func parseSwitchCaseRanges() -> [[SwitchCaseRange]] {
+        var result: [[SwitchCaseRange]] = []
+
         forEach(.endOfScope("case")) { i, _ in
-            var caseRanges: [CaseRange] = []
+            var switchCaseRanges: [SwitchCaseRange] = []
             guard let lastDelimiterIndex = index(of: .startOfScope(":"), after: i),
                   let endIndex = index(after: lastDelimiterIndex, where: { $0.isLinebreak }) else { return }
 
             var idx = i
-            while let startIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: idx),
+            while idx < endIndex,
+                  let startOfCaseIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: idx),
                   let delimiterIndex = index(after: idx, where: {
                       $0 == .delimiter(",") || $0 == .startOfScope(":")
                   }),
                   let delimiterToken = token(at: delimiterIndex),
                   let endOfCaseIndex = lastIndex(
                       of: .nonSpaceOrCommentOrLinebreak,
-                      in: startIndex ..< delimiterIndex
+                      in: startOfCaseIndex ..< delimiterIndex
                   )
             {
                 let afterDelimiterRange: Range<Int>
@@ -1862,9 +1863,9 @@ extension Formatter {
                    token(at: startOfCommentIdx)?.isSpaceOrCommentOrLinebreak == true,
                    let nextNonSpaceOrComment = index(of: .nonSpaceOrComment, after: startOfCommentIdx)
                 {
-                    if token(at: startOfCommentIdx)?.isLinebreak == true {
-                        afterDelimiterRange = startOfCommentIdx ..< (startOfCommentIdx + 1)
-                    } else if token(at: nextNonSpaceOrComment)?.isSpaceOrCommentOrLinebreak == false {
+                    if token(at: startOfCommentIdx)?.isLinebreak == true
+                        || token(at: nextNonSpaceOrComment)?.isSpaceOrCommentOrLinebreak == false
+                    {
                         afterDelimiterRange = startOfCommentIdx ..< (startOfCommentIdx + 1)
                     } else if endIndex > startOfCommentIdx {
                         afterDelimiterRange = startOfCommentIdx ..< (nextNonSpaceOrComment + 1)
@@ -1872,16 +1873,16 @@ extension Formatter {
                         afterDelimiterRange = endIndex ..< (endIndex + 1)
                     }
                 } else {
-                    afterDelimiterRange = 0 ..< 0 // empty range
+                    afterDelimiterRange = Range.empty
                 }
 
-                let caseRange = CaseRange(
-                    beforeDelimiterRange: Range(startIndex ... endOfCaseIndex),
+                let switchCaseRange = SwitchCaseRange(
+                    beforeDelimiterRange: Range(startOfCaseIndex ... endOfCaseIndex),
                     delimiterToken: delimiterToken,
                     afterDelimiterRange: afterDelimiterRange
                 )
 
-                caseRanges.append(caseRange)
+                switchCaseRanges.append(switchCaseRange)
 
                 if afterDelimiterRange.isEmpty {
                     idx = delimiterIndex
@@ -1891,7 +1892,7 @@ extension Formatter {
                     idx = afterDelimiterRange.lowerBound
                 }
             }
-            result.append(caseRanges)
+            result.append(switchCaseRanges)
         }
         return result
     }
@@ -2019,5 +2020,11 @@ extension Token {
         default:
             return false
         }
+    }
+}
+
+extension Range where Bound == Int {
+    static var empty: Range<Int> {
+        0 ..< 0
     }
 }

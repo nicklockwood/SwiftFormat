@@ -81,4 +81,6 @@ CLI.print = { message, type in
     }
 }
 
-exit(CLI.run(in: FileManager.default.currentDirectoryPath).rawValue)
+let currentDirectory = URL(fileURLWithPath: FileManager.default.currentDirectoryPath).standardizedFileURL
+
+exit(CLI.run(in: currentDirectory.path).rawValue)

@@ -80,6 +80,17 @@ class IndentTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.indent)
     }
 
+    func testIndentPreservedForNestedWrappedParameters() {
+        let input = """
+        let loginResponse = LoginResponse(status: .success(.init(accessToken: session,
+                                                                 status: .enabled)),
+                                          invoicingURL: .invoicing,
+                                          paymentFormURL: .paymentForm)
+        """
+        let options = FormatOptions(wrapParameters: .preserve)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
     func testIndentImbalancedNestedClosingParens() {
         let input = """
         Foo(bar:

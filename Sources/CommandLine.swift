@@ -721,7 +721,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
                                                   cacheURL: cacheURL,
                                                   reporter: reporter)
             errors += _errors
-        })
+            })
 
         if printWarnings(errors) {
             return .error

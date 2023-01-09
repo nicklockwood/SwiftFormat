@@ -580,9 +580,9 @@ struct LayoutExpression {
                 switch symbol {
                 case _ where ignoredSymbols.contains(symbol):
                     return []
-                case let .variable(name),
-                     let .array(name),
-                     let .function(name, _):
+                case let .array(name),
+                     let .function(name, _),
+                     let .variable(name):
                     if let symbols = macroSymbols[name] {
                         return Array(symbols)
                     }
@@ -841,11 +841,11 @@ struct LayoutExpression {
                 return UIFontDescriptor.SymbolicTraits.traitMonoSpace
             case "system":
                 return UIFont.systemFont(ofSize: UIFont.defaultSize)
-            case "systembold",
-                 "system-bold":
+            case "system-bold",
+                 "systembold":
                 return UIFont.boldSystemFont(ofSize: UIFont.defaultSize)
-            case "systemitalic",
-                 "system-italic":
+            case "system-italic",
+                 "systemitalic":
                 return UIFont.italicSystemFont(ofSize: UIFont.defaultSize)
             case "ultralight": // Helper, since the real attribute is mixed case
                 return UIFont.Weight.ultraLight
@@ -1242,14 +1242,14 @@ struct LayoutExpression {
                                 switch type.kind {
                                 case let .any(subtype):
                                     switch subtype {
-                                    case is String.Type,
+                                    case is Bool.Type,
                                          is Int.Type,
                                          is Int32.Type,
                                          is Int64.Type,
+                                         is String.Type,
                                          is UInt.Type,
                                          is UInt32.Type,
-                                         is UInt64.Type,
-                                         is Bool.Type:
+                                         is UInt64.Type:
                                         break
                                     default:
                                         invalidType = type
@@ -1270,8 +1270,8 @@ struct LayoutExpression {
                             )
                             return
                         }
-                    case .string,
-                         .comment:
+                    case .comment,
+                         .string:
                         continue
                     }
                 }
@@ -1300,8 +1300,8 @@ struct LayoutExpression {
         switch type.kind {
         case let .any(subtype):
             switch subtype {
-            case is String.Type,
-                 is NSString.Type:
+            case is NSString.Type,
+                 is String.Type:
                 self.init(stringExpression: expression, for: node)
             case is Selector.Type:
                 self.init(selectorExpression: expression, for: node)
@@ -1313,11 +1313,11 @@ struct LayoutExpression {
                 self.init(imageExpression: expression, type: type, for: node)
             case is UIFont.Type:
                 self.init(fontExpression: expression, for: node)
-            case is URL.Type,
-                 is NSURL.Type:
+            case is NSURL.Type,
+                 is URL.Type:
                 self.init(urlExpression: expression, for: node)
-            case is URLRequest.Type,
-                 is NSURLRequest.Type:
+            case is NSURLRequest.Type,
+                 is URLRequest.Type:
                 self.init(urlRequestExpression: expression, for: node)
             case is UIVisualEffect.Type:
                 self.init(visualEffectExpression: expression, for: node)
@@ -1326,16 +1326,16 @@ struct LayoutExpression {
             }
         case let .class(subtype):
             self.init(classExpression: expression, class: subtype, for: node)
-        case .struct,
-             .options:
+        case .options,
+             .struct:
             self.init(anyExpression: expression, type: type, nullable: false, for: node)
         case .pointer("CGColor"):
             self.init(colorExpression: expression, type: type, for: node)
         case .pointer("CGImage"):
             self.init(imageExpression: expression, type: type, for: node)
-        case .pointer,
-             .protocol,
-             .array:
+        case .array,
+             .pointer,
+             .protocol:
             self.init(anyExpression: expression, type: type, nullable: true, for: node)
         }
     }

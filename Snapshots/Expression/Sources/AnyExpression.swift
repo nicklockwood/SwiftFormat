@@ -162,8 +162,8 @@ public struct AnyExpression: CustomStringConvertible {
             switch (AnyExpression.unwrap(box.load(lhs)), AnyExpression.unwrap(box.load(rhs))) {
             case (nil, nil):
                 return true
-            case (nil, _),
-                 (_, nil):
+            case (_, nil),
+                 (nil, _):
                 return false
             case let (lhs as Double, rhs as Double):
                 return lhs == rhs
@@ -430,8 +430,8 @@ public struct AnyExpression: CustomStringConvertible {
                     return { try box.store(fn($0.map(box.load))) }
                 } else if let fn = pureSymbols(symbol) {
                     switch symbol {
-                    case .variable,
-                         .function(_, arity: 0):
+                    case .function(_, arity: 0),
+                         .variable:
                         do {
                             let value = try box.store(fn([]))
                             _pureSymbols[symbol] = { _ in value }
@@ -609,8 +609,8 @@ extension AnyExpression.Error {
             return .message("Attempted to subscript \(symbol.escapedName) with incompatible index type \(types.last!)")
         case .infix("()") where !types.isEmpty:
             switch type(of: args[0]) {
-            case is Expression.SymbolEvaluator.Type,
-                 is AnyExpression.SymbolEvaluator.Type:
+            case is AnyExpression.SymbolEvaluator.Type,
+                 is Expression.SymbolEvaluator.Type:
                 return .message("Attempted to call function with incompatible arguments (\(types.dropFirst().joined(separator: ", ")))")
             case _ where types[0].contains("->"):
                 return .message("Attempted to call non SymbolEvaluator function type \(types[0])")
@@ -689,8 +689,8 @@ extension AnyExpression {
         case let number as NSNumber:
             /// https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/ObjCRuntimeGuide/Articles/ocrtTypeEncodings.html
             switch UnicodeScalar(UInt8(number.objCType.pointee)) {
-            case "c",
-                 "B":
+            case "B",
+                 "c":
                 return number == 0 ? "false" : "true"
             default:
                 break
@@ -791,8 +791,8 @@ private extension AnyExpression {
             case let floatValue as Float:
                 return Double(floatValue)
             case is Int,
-                 is UInt,
                  is Int32,
+                 is UInt,
                  is UInt32:
                 return Double(truncating: value as! NSNumber)
             case let uintValue as UInt64:

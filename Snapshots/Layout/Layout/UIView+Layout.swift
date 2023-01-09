@@ -394,8 +394,8 @@ extension UIImageView {
                 startAnimating()
             case (false, true):
                 stopAnimating()
-            case (true, true),
-                 (false, false):
+            case (false, false),
+                 (true, true):
                 break
             }
         default:
@@ -775,8 +775,8 @@ extension UITextField {
                 smartInsertDeleteType = value as! UITextSmartInsertDeleteType
             }
         case "textDragDelegate",
-             "textDropDelegate",
-             "textDragOptions":
+             "textDragOptions",
+             "textDropDelegate":
             // Does nothing on iOS 10 and earlier
             if #available(iOS 11.0, *) {
                 fallthrough
@@ -849,8 +849,8 @@ extension UITextView {
                 smartInsertDeleteType = value as! UITextSmartInsertDeleteType
             }
         case "textDragDelegate",
-             "textDropDelegate",
-             "textDragOptions":
+             "textDragOptions",
+             "textDropDelegate":
             // Does nothing on iOS 10 and earlier
             if #available(iOS 11.0, *) {
                 fallthrough
@@ -1187,8 +1187,8 @@ extension UIActivityIndicatorView {
                 startAnimating()
             case (false, true):
                 stopAnimating()
-            case (true, true),
-                 (false, false):
+            case (false, false),
+                 (true, true):
                 break
             }
         default:
@@ -1370,8 +1370,8 @@ extension UIRefreshControl {
                 beginRefreshing()
             case (false, true):
                 endRefreshing()
-            case (true, true),
-                 (false, false):
+            case (false, false),
+                 (true, true):
                 break
             }
         default:
@@ -1555,8 +1555,8 @@ extension WKWebView {
         case "uiDelegate":
             uiDelegate = value as? WKUIDelegate
         case "configuration.dataDetectorTypes",
-             "configuration.mediaTypesRequiringUserActionForPlayback",
-             "configuration.ignoresViewportScaleLimits":
+             "configuration.ignoresViewportScaleLimits",
+             "configuration.mediaTypesRequiringUserActionForPlayback":
             // Does nothing on iOS 10 and earlier
             if #available(iOS 10, *) {
                 fallthrough

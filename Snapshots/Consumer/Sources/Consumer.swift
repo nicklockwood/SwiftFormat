@@ -268,13 +268,13 @@ extension Consumer: CustomStringConvertible {
                 }
             }
             return Consumer.any(options).description
-        case let .optional(consumer),
-             let .oneOrMore(consumer):
+        case let .oneOrMore(consumer),
+             let .optional(consumer):
             return consumer.description
         case let .not(consumer):
             return "not \(consumer)"
-        case let .flatten(consumer),
-             let .discard(consumer),
+        case let .discard(consumer),
+             let .flatten(consumer),
              let .replace(consumer, _):
             return consumer.description
         }
@@ -292,17 +292,17 @@ private extension Consumer {
             return consumer._isOptional
         case .not(""):
             return false
-        case .optional, .string(""), .not:
+        case .not, .optional, .string(""):
             return true
-        case .string, .charset:
+        case .charset, .string:
             return false
         case let .any(consumers):
             return consumers.isEmpty || consumers.contains { $0._isOptional }
         case let .sequence(consumers):
             return consumers.isEmpty || !consumers.contains { !$0._isOptional }
-        case let .oneOrMore(consumer),
+        case let .discard(consumer),
              let .flatten(consumer),
-             let .discard(consumer),
+             let .oneOrMore(consumer),
              let .replace(consumer, _):
             return consumer._isOptional
         }
@@ -400,8 +400,8 @@ private extension Consumer {
                     return false
                 }
                 return true
-            case let .flatten(consumer),
-                 let .discard(consumer),
+            case let .discard(consumer),
+                 let .flatten(consumer),
                  let .replace(consumer, _):
                 return _skip(consumer)
             }
@@ -608,8 +608,7 @@ private extension Consumer {
 
     func _ignoring(_ ignored: Consumer) -> Consumer {
         switch self {
-        case .string, .charset, .flatten, .reference:
-            return self
+        case .charset, .flatten, .reference, .string: return self
         case let .optional(consumer):
             return .optional(consumer._ignoring(ignored))
         case let .discard(consumer):
@@ -673,7 +672,7 @@ private extension Consumer.Location {
             switch c {
             case "\n" where wasReturn:
                 continue
-            case "\r", "\n":
+            case "\n", "\r":
                 line += 1
                 column = 1
             default:
@@ -730,7 +729,7 @@ private extension Consumer.Charset {
         let inverted: Bool
         let set: CharacterSet
         switch (self.inverted, other.inverted) {
-        case (true, true), (false, false):
+        case (false, false), (true, true):
             inverted = self.inverted
             set = characterSet.union(other.characterSet)
         case (true, false):

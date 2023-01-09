@@ -133,8 +133,8 @@ extension XMLNode {
                 let parts = try parseStringExpression(value)
                 for part in parts {
                     switch part {
-                    case .string,
-                         .comment:
+                    case .comment,
+                         .string:
                         break
                     case let .expression(expression):
                         try validateLayoutExpression(expression)

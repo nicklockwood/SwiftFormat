@@ -497,8 +497,8 @@ private extension Consumer {
                 """) + "()"
             case let .not(consumer):
                 return _compileSkipNot(consumer)
-            case let .flatten(consumer),
-                 let .discard(consumer),
+            case let .discard(consumer),
+                 let .flatten(consumer),
                  let .replace(consumer, _):
                 return _compileSkip(consumer)
             }
@@ -506,14 +506,13 @@ private extension Consumer {
 
         func _isContiguous(_ consumer: Consumer) -> Bool {
             switch consumer {
-            case .string, .charset, .not:
-                return true
+            case .charset, .not, .string: return true
             case let .any(consumers),
                  let .sequence(consumers):
                 return !consumers.contains { !_isContiguous($0) }
-            case let .optional(consumer),
+            case let .flatten(consumer),
                  let .oneOrMore(consumer),
-                 let .flatten(consumer):
+                 let .optional(consumer):
                 return _isContiguous(consumer)
             case .discard, .replace:
                 return false

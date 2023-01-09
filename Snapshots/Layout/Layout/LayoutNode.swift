@@ -471,19 +471,19 @@ public class LayoutNode: NSObject {
         _ name: String, for viewOrViewControllerClass: AnyClass
     ) -> Bool {
         switch name {
-        case "top",
-             "left",
-             "leading",
-             "trailing",
-             "bottom",
-             "right",
-             "width",
-             "height",
+        case "bottom",
              "center.x",
              "center.y",
              "firstBaseline",
+             "height",
              "lastBaseline",
-             "outlet":
+             "leading",
+             "left",
+             "outlet",
+             "right",
+             "top",
+             "trailing",
+             "width":
             return true
         default:
             guard let cls = viewOrViewControllerClass as? LayoutManaged.Type else {
@@ -1111,17 +1111,17 @@ public class LayoutNode: NSObject {
         var symbols = Set(layoutSymbols)
         let type: RuntimeType
         switch name {
-        case "outlet",
-             "id",
-             "xml",
-             "template":
+        case "id",
+             "outlet",
+             "template",
+             "xml":
             type = .string
         case "center":
             type = .cgPoint
-        case "width",
-             "height",
+        case "contentSize.height",
              "contentSize.width",
-             "contentSize.height":
+             "height",
+             "width":
             symbols.insert("auto")
             fallthrough
         case _ where layoutSymbols.contains(name):
@@ -1182,17 +1182,17 @@ public class LayoutNode: NSObject {
             _evaluating.append(symbol)
             defer { _evaluating.removeLast() }
             switch symbol {
-            case "left",
-                 "right",
+            case "center.x",
                  "leading",
-                 "trailing",
-                 "center.x":
+                 "left",
+                 "right",
+                 "trailing":
                 expression = LayoutExpression(xExpression: string, for: self)
-            case "top",
-                 "bottom",
+            case "bottom",
                  "center.y",
                  "firstBaseline",
-                 "lastBaseline":
+                 "lastBaseline",
+                 "top":
                 expression = LayoutExpression(yExpression: string, for: self)
             case "width":
                 expression = LayoutExpression(widthExpression: string, for: self)
@@ -1570,14 +1570,14 @@ public class LayoutNode: NSObject {
             switch symbol[symbol.startIndex ..< range.lowerBound] {
             case "parent":
                 switch tail {
-                case "top",
-                     "left":
+                case "left",
+                     "top":
                     return true // Always zero
                 default:
                     return parent?.symbolIsConstant(tail) ?? false
                 }
-            case "previous",
-                 "next":
+            case "next",
+                 "previous":
                 return false // TODO: if previous/next isHidden is constant, we could still get a constant value here
             case "strings":
                 return true // Localizable strings are always constant
@@ -1863,13 +1863,13 @@ public class LayoutNode: NSObject {
             getter = { [unowned self] in
                 try self.inferContentSize()
             }
-        case "inferredContentSize.width",
-             "contentSize.width":
+        case "contentSize.width",
+             "inferredContentSize.width":
             getter = { [unowned self] in
                 try self.inferContentSize().width
             }
-        case "inferredContentSize.height",
-             "contentSize.height":
+        case "contentSize.height",
+             "inferredContentSize.height":
             getter = { [unowned self] in
                 try self.inferContentSize().height
             }
@@ -1929,8 +1929,8 @@ public class LayoutNode: NSObject {
                 switch symbol[symbol.startIndex ..< range.lowerBound] {
                 case "parent":
                     switch tail {
-                    case "top",
-                         "left":
+                    case "left",
+                         "top":
                         getter = { 0 }
                     case "center.x":
                         getter = { [unowned self] in
@@ -2256,20 +2256,20 @@ public class LayoutNode: NSObject {
                             throw SymbolError("Could not find node with id \(id)", for: symbol)
                         }
                     }
-                case "top",
-                     "left",
-                     "bottom",
-                     "right",
-                     "width",
-                     "height",
-                     "firstBaseline",
-                     "lastBaseline",
-                     "firstBaselineOffset",
-                     "lastBaselineOffset",
+                case "bottom",
                      "containerSize",
-                     "inferredSize",
                      "contentSize",
-                     "inferredContentSize":
+                     "firstBaseline",
+                     "firstBaselineOffset",
+                     "height",
+                     "inferredContentSize",
+                     "inferredSize",
+                     "lastBaseline",
+                     "lastBaselineOffset",
+                     "left",
+                     "right",
+                     "top",
+                     "width":
                     getter = {
                         throw SymbolError("Unknown property \(symbol)", for: symbol)
                     }

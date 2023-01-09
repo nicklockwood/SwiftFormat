@@ -76,8 +76,8 @@ extension Expression {
             switch (value1, value2) {
             case (.number(let lhs), .number(let rhs)):
                 return .number(lhs + rhs)
-            case (.string, _),
-                 (_, .string):
+            case (_, .string),
+                 (.string, _):
                 return .string("\(value1)\(value2)")
             }
         }

@@ -4,11 +4,11 @@ import Foundation
 
 private func stringify(_ error: Error) -> String {
     switch error {
-    case is SymbolError,
-         is LayoutError,
+    case is Expression.Error,
          is FileError,
-         is XMLParser.Error,
-         is Expression.Error:
+         is LayoutError,
+         is SymbolError,
+         is XMLParser.Error:
         return "\(error)"
     default:
         return error.localizedDescription
@@ -153,8 +153,8 @@ public enum LayoutError: Error, Hashable, CustomStringConvertible {
     public var isTransient: Bool {
         switch self {
         case let .generic(error, _),
-             let .unknownSymbol(error, _),
-             let .unknownExpression(error, _):
+             let .unknownExpression(error, _),
+             let .unknownSymbol(error, _):
             if let error = error as? LayoutError {
                 return error.isTransient
             }

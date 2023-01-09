@@ -193,12 +193,12 @@ public struct FormatString {
         func getSwiftType() throws -> Any.Type? {
             switch specifier {
             case .decimal,
-                 .uppercaseDecimal,
+                 .hex,
                  .int,
                  .octal,
-                 .uppercaseOctal,
-                 .hex,
-                 .uppercaseHex:
+                 .uppercaseDecimal,
+                 .uppercaseHex,
+                 .uppercaseOctal:
                 guard let modifier = modifier else { return Int.self } // spec says Int32
                 switch modifier {
                 case .char: return CChar.self
@@ -225,14 +225,14 @@ public struct FormatString {
                 case .ptrdiff: return UInt.self
                 case .longDouble: throw Error.modifierMismatch(modifier.rawValue, Character(specifier.rawValue))
                 }
-            case .float,
-                 .uppercaseFloat,
-                 .variablePrecisionFloat,
-                 .uppercasevariablePrecisionFloat,
-                 .exponential,
-                 .uppercaseExponential,
+            case .exponential,
+                 .float,
                  .hexFloat,
-                 .uppercaseHexFloat:
+                 .uppercaseExponential,
+                 .uppercaseFloat,
+                 .uppercaseHexFloat,
+                 .uppercasevariablePrecisionFloat,
+                 .variablePrecisionFloat:
                 guard let modifier = modifier else { return Double.self }
                 switch modifier {
                 case .longDouble:
@@ -283,8 +283,8 @@ public struct FormatString {
                 format += "\(modifier.rawValue)\(specifier.rawValue)"
             } else {
                 switch specifier {
-                case .int,
-                     .decimal:
+                case .decimal,
+                     .int:
                     format += "zd"
                 case .uppercaseDecimal:
                     format += "zD"
@@ -337,9 +337,9 @@ public struct FormatString {
             let formatter: NumberFormatter
             switch specifier {
             case .decimal,
-                 .uppercaseDecimal,
                  .int,
                  .unsigned,
+                 .uppercaseDecimal,
                  .uppercaseUnsigned:
                 if !flags.contains(.groupThousands) {
                     return nil // Prefer `String(format:)` for performance
@@ -357,8 +357,8 @@ public struct FormatString {
                 formatter.minimumFractionDigits = precision ?? 6
                 formatter.maximumFractionDigits = precision ?? 6
                 formatter.alwaysShowsDecimalSeparator = flags.contains(.alternativeForm)
-            case .variablePrecisionFloat,
-                 .uppercasevariablePrecisionFloat:
+            case .uppercasevariablePrecisionFloat,
+                 .variablePrecisionFloat:
                 if !flags.contains(.groupThousands) {
                     return nil // Prefer `String(format:)` for performance
                 }
@@ -370,22 +370,22 @@ public struct FormatString {
                 } else {
                     formatter.maximumSignificantDigits = precision ?? 6
                 }
-            case .octal,
-                 .uppercaseOctal,
-                 .hex,
-                 .uppercaseHex,
-                 .exponential,
-                 .uppercaseExponential,
-                 .hexFloat,
-                 .uppercaseHexFloat,
+            case .bytesWritten,
                  .char,
-                 .string,
-                 .wideChar,
-                 .wideString,
-                 .pointer,
-                 .bytesWritten,
+                 .exponential,
+                 .hex,
+                 .hexFloat,
+                 .object,
+                 .octal,
                  .percentChar,
-                 .object:
+                 .pointer,
+                 .string,
+                 .uppercaseExponential,
+                 .uppercaseHex,
+                 .uppercaseHexFloat,
+                 .uppercaseOctal,
+                 .wideChar,
+                 .wideString:
                 return nil // Not handled by NumberFormatter
             }
             formatter.locale = locale
@@ -418,13 +418,13 @@ public struct FormatString {
             }
             switch specifier {
             case .decimal,
-                 .uppercaseDecimal,
+                 .hex,
                  .int,
                  .octal,
-                 .uppercaseOctal,
-                 .hex,
-                 .uppercaseHex,
                  .unsigned,
+                 .uppercaseDecimal,
+                 .uppercaseHex,
+                 .uppercaseOctal,
                  .uppercaseUnsigned:
                 let value = Int(truncating: value as! NSNumber)
                 if let fieldWidth = fieldWidth, let precision = precision {
@@ -433,14 +433,14 @@ public struct FormatString {
                     return String(format: formatString, locale: locale, width, value)
                 }
                 return String(format: formatString, locale: locale, value)
-            case .float,
-                 .uppercaseFloat,
-                 .variablePrecisionFloat,
-                 .uppercasevariablePrecisionFloat,
-                 .exponential,
-                 .uppercaseExponential,
+            case .exponential,
+                 .float,
                  .hexFloat,
-                 .uppercaseHexFloat:
+                 .uppercaseExponential,
+                 .uppercaseFloat,
+                 .uppercaseHexFloat,
+                 .uppercasevariablePrecisionFloat,
+                 .variablePrecisionFloat:
                 #if os(macOS)
                 if let value = value as? Float80 {
                     return "\(value)" // TODO: respect formatting options
@@ -455,12 +455,12 @@ public struct FormatString {
             case .pointer:
                 return String(format: formatString, locale: locale, (value as AnyObject).hash)
             case .bytesWritten,
-                 .percentChar, // Shouldn't actually happen
+                 .char, // Shouldn't actually happen
                  .object,
+                 .percentChar, // Shouldn't actually happen
                  .string,
-                 .wideString,
-                 .char,
-                 .wideChar:
+                 .wideChar,
+                 .wideString:
                 return "\(value)"
             }
         }
@@ -556,27 +556,27 @@ public struct FormatString {
             switch (lhs, rhs) {
             case (.unexpectedEndOfString, .unexpectedEndOfString):
                 return true
-            case let (.unexpectedToken(lhs), .unexpectedToken(rhs)),
-                 let (.duplicateFlag(lhs), .duplicateFlag(rhs)),
+            case let (.duplicateFlag(lhs), .duplicateFlag(rhs)),
+                 let (.unexpectedToken(lhs), .unexpectedToken(rhs)),
                  let (.unsupportedFlag(lhs), .unsupportedFlag(rhs)),
                  let (.unsupportedSpecifier(lhs), .unsupportedSpecifier(rhs)):
                 return lhs == rhs
             case let (.modifierMismatch(lmodifier, lspecifier), .modifierMismatch(rmodifier, rspecifier)):
                 return lmodifier == rmodifier && lspecifier == rspecifier
-            case let (.typeMismatch(lindex, ltype1, ltype2), .typeMismatch(rindex, rtype1, rtype2)),
-                 let (.argumentMismatch(lindex, ltype1, ltype2), .argumentMismatch(rindex, rtype1, rtype2)):
+            case let (.argumentMismatch(lindex, ltype1, ltype2), .argumentMismatch(rindex, rtype1, rtype2)),
+                 let (.typeMismatch(lindex, ltype1, ltype2), .typeMismatch(rindex, rtype1, rtype2)):
                 return lindex == rindex && ltype1 == rtype1 && ltype2 == rtype2
             case let (.missingArgument(lindex), .missingArgument(rindex)):
                 return lindex == rindex
-            case (.unexpectedEndOfString, _),
-                 (.unexpectedToken, _),
+            case (.argumentMismatch, _),
                  (.duplicateFlag, _),
-                 (.unsupportedFlag, _),
-                 (.unsupportedSpecifier, _),
+                 (.missingArgument, _),
                  (.modifierMismatch, _),
                  (.typeMismatch, _),
-                 (.argumentMismatch, _),
-                 (.missingArgument, _):
+                 (.unexpectedEndOfString, _),
+                 (.unexpectedToken, _),
+                 (.unsupportedFlag, _),
+                 (.unsupportedSpecifier, _):
                 return false
             }
         }

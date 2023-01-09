@@ -136,8 +136,8 @@ extension UICollectionView: LayoutBacked {
 
     open override func setValue(_ value: Any, forExpression name: String) throws {
         switch name {
-        case "reorderingCadence",
-             "collectionViewLayout.sectionInsetReference":
+        case "collectionViewLayout.sectionInsetReference",
+             "reorderingCadence":
             // Does nothing on iOS 10 and earlier
             if #available(iOS 11.0, *) {
                 fallthrough

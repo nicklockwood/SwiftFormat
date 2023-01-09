@@ -23,11 +23,11 @@ enum FormatError: Error, CustomStringConvertible {
 
     public var description: String {
         switch self {
-        case let .reading(string),
-             let .writing(string),
-             let .parsing(string),
+        case let .generic(string),
              let .options(string),
-             let .generic(string):
+             let .parsing(string),
+             let .reading(string),
+             let .writing(string):
             return string
         }
     }
@@ -259,11 +259,11 @@ func isStringType(_ name: String) -> Bool {
 func typeOfAttribute(_ key: String, inNode node: XMLNode) -> String? {
     func typeForClass(_ className: String) -> String? {
         switch key {
-        case "outlet",
-             "id":
+        case "id",
+             "outlet":
             return "String"
-        case "xml",
-             "template":
+        case "template",
+             "xml":
             return "URL"
         case "center":
             return "CGPoint"
@@ -286,14 +286,14 @@ func typeOfAttribute(_ key: String, inNode node: XMLNode) -> String? {
             }
             // Guess the type from the name
             switch key.components(separatedBy: ".").last! {
-            case "left",
+            case "bottom",
+                 "height",
+                 "left",
                  "right",
-                 "x",
-                 "width",
                  "top",
-                 "bottom",
-                 "y",
-                 "height":
+                 "width",
+                 "x",
+                 "y":
                 return "CGFloat"
             case _ where key.hasPrefix("is") || key.hasPrefix("has"):
                 return "Bool"
@@ -329,8 +329,8 @@ func attributeIsString(_ key: String, inNode node: XMLNode) -> Bool? {
         return nil
     }
     switch type {
-    case "UIColor",
-         "CGColor":
+    case "CGColor",
+         "UIColor":
         if let expression = node.attributes[key], !expression.contains("{"),
            expression.contains("rgb(") || expression.contains("rgba(")
         {
@@ -349,12 +349,12 @@ func validateLayoutExpression(_ parsedExpression: ParsedLayoutExpression) throws
     }
     for symbol in parsedExpression.symbols {
         switch symbol {
-        case .variable,
-             .array:
+        case .array,
+             .variable:
             break
-        case .prefix,
-             .infix,
-             .postfix:
+        case .infix,
+             .postfix,
+             .prefix:
             guard standardSymbols.contains(symbol) else {
                 throw Expression.Error.undefinedSymbol(symbol)
             }

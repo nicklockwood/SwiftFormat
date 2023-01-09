@@ -35,8 +35,8 @@ public class RuntimeType: NSObject {
                 return "\(type)"
             case let .class(type):
                 return "\(type).Type"
-            case let .struct(type),
-                 let .pointer(type):
+            case let .pointer(type),
+                 let .struct(type):
                 return type
             case let .protocol(proto):
                 return "<\(NSStringFromProtocol(proto))>"
@@ -69,8 +69,8 @@ public class RuntimeType: NSObject {
             return type
         case let .class(cls):
             return Swift.type(of: cls)
-        case let .struct(name),
-             let .pointer(name):
+        case let .pointer(name),
+             let .struct(name):
             // TODO: find a general solution
             switch name {
             case "CGImage":
@@ -194,11 +194,11 @@ public class RuntimeType: NSObject {
         case let .options(_, values):
             return values
         case .any,
+             .array,
              .class,
-             .struct,
              .pointer,
              .protocol,
-             .array:
+             .struct:
             return [:]
         }
     }
@@ -268,20 +268,20 @@ public class RuntimeType: NSObject {
         }
         let type: Kind
         switch first {
-        case "c" where objCBoolIsChar,
-             "B":
+        case "B",
+             "c" where objCBoolIsChar:
             type = .any(Bool.self)
         case "c",
              "i",
-             "s",
              "l",
-             "q":
+             "q",
+             "s":
             type = .any(Int.self)
         case "C",
              "I",
-             "S",
              "L",
-             "Q":
+             "Q",
+             "S":
             type = .any(UInt.self)
         case "f":
             type = .any(Float.self)
@@ -472,8 +472,8 @@ public class RuntimeType: NSObject {
                 return value as? Bool ??
                     (value as? Double).map { $0 != 0 } ??
                     (value as? NSNumber).map { $0 != 0 }
-            case is String.Type,
-                 is NSString.Type:
+            case is NSString.Type,
+                 is String.Type:
                 return value as? String ?? "\(value)"
             case is NSAttributedString.Type:
                 return value as? NSAttributedString ?? NSAttributedString(string: "\(value)")

@@ -77,8 +77,8 @@ public final class Expression: CustomStringConvertible {
         /// This allows foo(x) to match foo(...) in a symbols dictionary
         public static func == (lhs: Arity, rhs: Arity) -> Bool {
             switch (lhs, rhs) {
-            case let (.exactly(lhs), .exactly(rhs)),
-                 let (.atLeast(lhs), .atLeast(rhs)):
+            case let (.atLeast(lhs), .atLeast(rhs)),
+                 let (.exactly(lhs), .exactly(rhs)):
                 return lhs == rhs
             case let (.atLeast(min), .exactly(value)),
                  let (.exactly(value), .atLeast(min)):
@@ -110,12 +110,12 @@ public final class Expression: CustomStringConvertible {
         /// The symbol name
         public var name: String {
             switch self {
-            case let .variable(name),
-                 let .infix(name),
-                 let .prefix(name),
-                 let .postfix(name),
+            case let .array(name),
                  let .function(name, _),
-                 let .array(name):
+                 let .infix(name),
+                 let .postfix(name),
+                 let .prefix(name),
+                 let .variable(name):
                 return name
             }
         }
@@ -157,20 +157,20 @@ public final class Expression: CustomStringConvertible {
         /// Equatable implementation
         public static func == (lhs: Symbol, rhs: Symbol) -> Bool {
             switch (lhs, rhs) {
-            case let (.variable(lhs), .variable(rhs)),
+            case let (.array(lhs), .array(rhs)),
                  let (.infix(lhs), .infix(rhs)),
-                 let (.prefix(lhs), .prefix(rhs)),
                  let (.postfix(lhs), .postfix(rhs)),
-                 let (.array(lhs), .array(rhs)):
+                 let (.prefix(lhs), .prefix(rhs)),
+                 let (.variable(lhs), .variable(rhs)):
                 return lhs == rhs
             case let (.function(lhs), .function(rhs)):
                 return lhs == rhs
-            case (.variable, _),
-                 (.infix, _),
-                 (.prefix, _),
-                 (.postfix, _),
+            case (.array, _),
                  (.function, _),
-                 (.array, _):
+                 (.infix, _),
+                 (.postfix, _),
+                 (.prefix, _),
+                 (.variable, _):
                 return false
             }
         }
@@ -243,20 +243,20 @@ public final class Expression: CustomStringConvertible {
         public static func == (lhs: Error, rhs: Error) -> Bool {
             switch (lhs, rhs) {
             case let (.message(lhs), .message(rhs)),
-                 let (.unexpectedToken(lhs), .unexpectedToken(rhs)),
-                 let (.missingDelimiter(lhs), .missingDelimiter(rhs)):
+                 let (.missingDelimiter(lhs), .missingDelimiter(rhs)),
+                 let (.unexpectedToken(lhs), .unexpectedToken(rhs)):
                 return lhs == rhs
-            case let (.undefinedSymbol(lhs), .undefinedSymbol(rhs)),
-                 let (.arityMismatch(lhs), .arityMismatch(rhs)):
+            case let (.arityMismatch(lhs), .arityMismatch(rhs)),
+                 let (.undefinedSymbol(lhs), .undefinedSymbol(rhs)):
                 return lhs == rhs
             case let (.arrayBounds(lhs), .arrayBounds(rhs)):
                 return lhs == rhs
-            case (.message, _),
-                 (.unexpectedToken, _),
+            case (.arityMismatch, _),
+                 (.arrayBounds, _),
+                 (.message, _),
                  (.missingDelimiter, _),
                  (.undefinedSymbol, _),
-                 (.arityMismatch, _),
-                 (.arrayBounds, _):
+                 (.unexpectedToken, _):
                 return false
             }
         }
@@ -601,10 +601,10 @@ extension Expression {
     /// Fallback evaluator for when symbol is not found
     static func errorEvaluator(for symbol: Symbol) -> SymbolEvaluator {
         switch symbol {
-        case .infix(","),
-             .infix("[]"),
-             .function("[]", _),
-             .infix("()"):
+        case .function("[]", _),
+             .infix(","),
+             .infix("()"),
+             .infix("[]"):
             return { _ in throw Error.unexpectedToken(String(symbol.name.prefix(1))) }
         case let .function(called, arity):
             let keys = Set(mathSymbols.keys).union(boolSymbols.keys)
@@ -689,6 +689,7 @@ private extension Expression {
              0x00BF,
              0x00D7,
              0x00F7,
+             0x2E00 ... 0x2E7F,
              0x2016 ... 0x2017,
              0x2020 ... 0x2027,
              0x2030 ... 0x203E,
@@ -697,7 +698,6 @@ private extension Expression {
              0x2190 ... 0x23FF,
              0x2500 ... 0x2775,
              0x2794 ... 0x2BFF,
-             0x2E00 ... 0x2E7F,
              0x3001 ... 0x3003,
              0x3008 ... 0x3030:
             return true
@@ -708,47 +708,42 @@ private extension Expression {
 
     static func isIdentifierHead(_ c: UnicodeScalar) -> Bool {
         switch c.value {
-        case 0x5F,
+        case 0x00A8,
+             0x00AA,
+             0x00AD,
+             0x00AF, // _ # $ @
+             0x00B2 ... 0x00B5, // A-Z
+             0x00B7 ... 0x00BA, // a-z
+             0x00BC ... 0x00BE,
+             0x00C0 ... 0x00D6,
+             0x00D8 ... 0x00F6,
+             0x00F8 ... 0x00FF,
+             0x1E00 ... 0x1FFF,
+             0x2C00 ... 0x2DFF,
+             0x2E80 ... 0x2FFF,
+             0x5F,
              0x23,
              0x24,
              0x40, // _ # $ @
              0x41 ... 0x5A, // A-Z
              0x61 ... 0x7A, // a-z
-             0x00A8,
-             0x00AA,
-             0x00AD,
-             0x00AF,
-             0x00B2 ... 0x00B5,
-             0x00B7 ... 0x00BA,
-             0x00BC ... 0x00BE,
-             0x00C0 ... 0x00D6,
-             0x00D8 ... 0x00F6,
-             0x00F8 ... 0x00FF,
              0x0100 ... 0x02FF,
-             0x0370 ... 0x167F,
-             0x1681 ... 0x180D,
              0x180F ... 0x1DBF,
-             0x1E00 ... 0x1FFF,
              0x200B ... 0x200D,
              0x202A ... 0x202E,
              0x203F ... 0x2040,
+             0x0370 ... 0x167F,
+             0x1681 ... 0x180D,
              0x2054,
              0x2060 ... 0x206F,
              0x2070 ... 0x20CF,
              0x2100 ... 0x218F,
              0x2460 ... 0x24FF,
              0x2776 ... 0x2793,
-             0x2C00 ... 0x2DFF,
-             0x2E80 ... 0x2FFF,
              0x3004 ... 0x3007,
              0x3021 ... 0x302F,
              0x3031 ... 0x303F,
              0x3040 ... 0xD7FF,
-             0xF900 ... 0xFD3D,
-             0xFD40 ... 0xFDCF,
-             0xFDF0 ... 0xFE1F,
-             0xFE30 ... 0xFE44,
-             0xFE47 ... 0xFFFD,
              0x10000 ... 0x1FFFD,
              0x20000 ... 0x2FFFD,
              0x30000 ... 0x3FFFD,
@@ -762,7 +757,12 @@ private extension Expression {
              0xB0000 ... 0xBFFFD,
              0xC0000 ... 0xCFFFD,
              0xD0000 ... 0xDFFFD,
-             0xE0000 ... 0xEFFFD:
+             0xE0000 ... 0xEFFFD,
+             0xF900 ... 0xFD3D,
+             0xFD40 ... 0xFDCF,
+             0xFDF0 ... 0xFE1F,
+             0xFE30 ... 0xFE44,
+             0xFE47 ... 0xFFFD:
             return true
         default:
             return false
@@ -771,10 +771,10 @@ private extension Expression {
 
     static func isIdentifier(_ c: UnicodeScalar) -> Bool {
         switch c.value {
-        case 0x30 ... 0x39, // 0-9
-             0x0300 ... 0x036F,
-             0x1DC0 ... 0x1DFF,
+        case 0x1DC0 ... 0x1DFF, // 0-9
              0x20D0 ... 0x20FF,
+             0x30 ... 0x39, // 0-9
+             0x0300 ... 0x036F,
              0xFE20 ... 0xFE2F:
             return true
         default:
@@ -814,14 +814,14 @@ private enum Subexpression: CustomStringConvertible {
         case let .symbol(symbol, args, _) where args.isEmpty:
             switch symbol {
             case .infix,
-                 .prefix,
-                 .postfix:
+                 .postfix,
+                 .prefix:
                 return false
             default:
                 return true
             }
-        case .symbol,
-             .literal:
+        case .literal,
+             .symbol:
             return true
         case .error:
             return false
@@ -871,8 +871,8 @@ private enum Subexpression: CustomStringConvertible {
                      .error,
                      .symbol where needsSeparation(name, description):
                     return "\(symbol.escapedName)(\(description))" // Parens required
-                case .symbol,
-                     .literal:
+                case .literal,
+                     .symbol:
                     return "\(symbol.escapedName)\(description)" // No parens needed
                 }
             case let .postfix(name):
@@ -884,8 +884,8 @@ private enum Subexpression: CustomStringConvertible {
                      .error,
                      .symbol where needsSeparation(description, name):
                     return "(\(description))\(symbol.escapedName)" // Parens required
-                case .symbol,
-                     .literal:
+                case .literal,
+                     .symbol:
                     return "\(description)\(symbol.escapedName)" // No parens needed
                 }
             case .infix(","):
@@ -930,8 +930,8 @@ private enum Subexpression: CustomStringConvertible {
 
     var symbols: Set<Expression.Symbol> {
         switch self {
-        case .literal,
-             .error:
+        case .error,
+             .literal:
             return []
         case let .symbol(symbol, subexpressions, _):
             var symbols = Set([symbol])
@@ -1085,9 +1085,9 @@ private extension UnicodeScalarView {
         return scanCharacters {
             switch $0 {
             case " ",
-                 "\t",
                  "\n",
-                 "\r":
+                 "\r",
+                 "\t":
                 return false
             default:
                 return true
@@ -1099,9 +1099,9 @@ private extension UnicodeScalarView {
         if let _ = scanCharacters({
             switch $0 {
             case " ",
-                 "\t",
                  "\n",
-                 "\r":
+                 "\r",
+                 "\t":
                 return true
             default:
                 return false
@@ -1141,8 +1141,8 @@ private extension UnicodeScalarView {
             return scanCharacters {
                 switch $0 {
                 case "0" ... "9",
-                     "A" ... "F",
-                     "a" ... "f":
+                     "a" ... "f",
+                     "A" ... "F":
                     return true
                 default:
                     return false
@@ -1310,8 +1310,8 @@ private extension UnicodeScalarView {
                     let hex = scanCharacters {
                         switch $0 {
                         case "0" ... "9",
-                             "A" ... "F",
-                             "a" ... "f":
+                             "a" ... "f",
+                             "A" ... "F":
                             return true
                         default:
                             return false
@@ -1377,8 +1377,8 @@ private extension UnicodeScalarView {
                             if stack.count > i + 3 {
                                 switch stack[i + 3] {
                                 case let .symbol(.infix(op2), _, _),
-                                     let .symbol(.prefix(op2), _, _),
-                                     let .symbol(.postfix(op2), _, _):
+                                     let .symbol(.postfix(op2), _, _),
+                                     let .symbol(.prefix(op2), _, _):
                                     if !Expression.operator(symbol.name, takesPrecedenceOver: op2) {
                                         fallthrough
                                     }
@@ -1509,8 +1509,8 @@ private extension UnicodeScalarView {
                     followedByWhitespace = skipWhitespace()
                 default:
                     switch (precededByWhitespace, followedByWhitespace) {
-                    case (true, true),
-                         (false, false):
+                    case (false, false),
+                         (true, true):
                         stack.append(expression)
                     case (true, false):
                         stack.append(.symbol(.prefix(name), [], nil))

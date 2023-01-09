@@ -34,7 +34,7 @@ public func evaluate(_ input: String, state: State) throws -> Any? {
                 return -value
             }
             return values[0]
-        case .term, .expression:
+        case .expression, .term:
             if values.count == 1 {
                 return values[0]
             }

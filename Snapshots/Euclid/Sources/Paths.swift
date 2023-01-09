@@ -179,8 +179,8 @@ public extension Path {
         // get path length
         var totalLength: Double = 0
         switch wrapMode {
-        case .shrink,
-             .default:
+        case .default,
+             .shrink:
             var prev = points[0].position
             for point in points {
                 let length = (point.position - prev).length
@@ -223,8 +223,8 @@ public extension Path {
             n1 = p1p2.cross(faceNormal).normalized()
             let uv = Vector(0, v, 0)
             switch wrapMode {
-            case .shrink,
-                 .default:
+            case .default,
+                 .shrink:
                 v += p1p2.length / totalLength
             case .tube:
                 v += abs(p1p2.y) / totalLength

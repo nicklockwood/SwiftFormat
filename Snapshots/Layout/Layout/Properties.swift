@@ -666,8 +666,8 @@ extension NSObject {
                 switch key {
                 case "origin.x",
                      "origin.y",
-                     "size.width",
-                     "size.height":
+                     "size.height",
+                     "size.width":
                     return prevTarget.value(forKeyPath: "\(prevKey).\(key)")
                 default:
                     break

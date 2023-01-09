@@ -99,21 +99,21 @@ class EditViewController: UIViewController, UITextFieldDelegate {
                 return nil
             }
             switch type.swiftType {
-            case is CGFloat.Type,
+            case is Bool.Type,
+                 is CGColor.Type,
+                 is CGFloat.Type,
+                 is CGImage.Type,
                  is Double.Type,
                  is Float.Type,
                  is Int.Type,
-                 is NSNumber.Type,
-                 is Bool.Type,
-                 is String.Type,
-                 is NSString.Type,
                  is NSAttributedString.Type,
+                 is NSNumber.Type,
+                 is NSString.Type,
+                 is String.Type,
+                 is [String].Type,
                  is UIColor.Type,
-                 is UIImage.Type,
                  is UIFont.Type,
-                 is CGImage.Type,
-                 is CGColor.Type,
-                 is [String].Type:
+                 is UIImage.Type:
                 return key
             default:
                 return type.values.isEmpty ? nil : key
@@ -123,8 +123,8 @@ class EditViewController: UIViewController, UITextFieldDelegate {
         fieldNames.append(contentsOf: node.viewControllerExpressionTypes.compactMap(filterType).sorted())
         fieldNames.append(contentsOf: node.viewExpressionTypes.compactMap(filterType).sorted {
             switch ($0.hasPrefix("layer."), $1.hasPrefix("layer.")) {
-            case (true, true),
-                 (false, false):
+            case (false, false),
+                 (true, true):
                 return $0 < $1
             case (true, false):
                 return false

@@ -944,4 +944,16 @@ class ParensTests: RulesTests {
         let output = "a ... -b"
         testFormatting(for: input, output, rule: FormatRules.redundantParens)
     }
+
+    // around ternaries
+
+    func testParensNotRemovedAroundTernaryCondition() {
+        let input = "let a = (b == c) ? d : e"
+        testFormatting(for: input, rule: FormatRules.redundantParens)
+    }
+
+    func testRequiredParensNotRemovedAroundTernaryAssignment() {
+        let input = "a ? (b = c) : (b = d)"
+        testFormatting(for: input, rule: FormatRules.redundantParens)
+    }
 }

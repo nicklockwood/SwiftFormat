@@ -2774,7 +2774,29 @@ class OrganizationTests: RulesTests {
 
     // MARK: - sortedSwitchCases
 
-    func testSortedSwitchCaseMultilineWithComments() {
+    func testSortedSwitchCaseNestedSwitchOneCaseDoesNothing() {
+        let input = """
+        switch result {
+        case let .success(value):
+            switch result {
+            case .success:
+                print("success")
+            case .value:
+                print("value")
+            }
+        case .failure:
+            guard self.bar else {
+                print(self.bar)
+                return
+            }
+            print(self.bar)
+        }
+        """
+
+        testFormatting(for: input, rule: FormatRules.sortedSwitchCases, exclude: ["redundantSelf"])
+    }
+
+    func testSortedSwitchCaseMultilineWithOneComment() {
         let input = """
         switch self {
         case let .type, // something
@@ -2784,8 +2806,47 @@ class OrganizationTests: RulesTests {
         """
         let output = """
         switch self {
-        case let .conditionalCompilation, // something
-             let .type:
+        case let .conditionalCompilation,
+             let .type: // something
+            break
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.sortedSwitchCases)
+    }
+
+    func testSortedSwitchCaseMultilineWithComments() {
+        let input = """
+        switch self {
+        case let .type, // typeComment
+             let .conditionalCompilation: // conditionalCompilationComment
+            break
+        }
+        """
+        let output = """
+        switch self {
+        case let .conditionalCompilation, // conditionalCompilationComment
+             let .type: // typeComment
+            break
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.sortedSwitchCases, exclude: ["indent"])
+    }
+
+    func testSortedSwitchCaseMultilineWithCommentsAndMoreThanOneCasePerLine() {
+        let input = """
+        switch self {
+        case let .type, // typeComment
+             let .type1, .type2,
+             let .conditionalCompilation: // conditionalCompilationComment
+            break
+        }
+        """
+        let output = """
+        switch self {
+        case let .conditionalCompilation, // conditionalCompilationComment
+             let .type, // typeComment
+             let .type1,
+             .type2:
             break
         }
         """
@@ -2825,6 +2886,23 @@ class OrganizationTests: RulesTests {
         """
         testFormatting(for: input, output, rule: FormatRules.sortedSwitchCases,
                        exclude: ["wrapSwitchCases"])
+    }
+
+    func testSortedSwitchCaseOneLineWithoutSpaces() {
+        let input = """
+        switch self {
+        case .b,.a:
+            break
+        }
+        """
+        let output = """
+        switch self {
+        case .a,.b:
+            break
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.sortedSwitchCases,
+                       exclude: ["wrapSwitchCases", "spaceAroundOperators"])
     }
 
     func testSortedSwitchCaseLet() {

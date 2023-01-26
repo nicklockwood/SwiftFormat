@@ -1075,4 +1075,26 @@ class GeneralTests: RulesTests {
         """
         testFormatting(for: input, output, rule: FormatRules.leadingDelimiters)
     }
+
+    // MARK: - docComments
+
+    func testDocCommentsAssociatedTypeNotReplaced() {
+        let input = """
+        /// An interesting comment about Foo.
+        associatedtype Foo
+        """
+        testFormatting(for: input, rule: FormatRules.docComments)
+    }
+
+    func testNonDocCommentsAssociatedTypeReplaced() {
+        let input = """
+        // An interesting comment about Foo.
+        associatedtype Foo
+        """
+        let output = """
+        /// An interesting comment about Foo.
+        associatedtype Foo
+        """
+        testFormatting(for: input, output, rule: FormatRules.docComments)
+    }
 }

@@ -1937,6 +1937,7 @@ extension Token {
             "import", "let", "var", "typealias", "func", "enum", "case",
             "struct", "class", "actor", "protocol", "init", "deinit",
             "extension", "subscript", "operator", "precedencegroup",
+            "associatedtype",
         ])
 
         for keywordToExclude in keywordsToExclude {

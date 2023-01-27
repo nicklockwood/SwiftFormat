@@ -4839,11 +4839,33 @@ public struct _FormatRules {
                 let indentCounts = switchCaseRanges.map { formatter.indentForLine(at: $0.beforeDelimiterRange.lowerBound).count }
                 let maxIndentCount = indentCounts.max() ?? 0
 
+                func sortableValue(for token: Token) -> String? {
+                    switch token {
+                    case let .identifier(name):
+                        return name
+                    case let .stringBody(body):
+                        return body
+                    case let .number(value, .hex):
+                        return Int(value.dropFirst(2), radix: 16)
+                            .map(String.init) ?? value
+                    case let .number(value, .octal):
+                        return Int(value.dropFirst(2), radix: 8)
+                            .map(String.init) ?? value
+                    case let .number(value, .binary):
+                        return Int(value.dropFirst(2), radix: 2)
+                            .map(String.init) ?? value
+                    case let .number(value, _):
+                        return value
+                    default:
+                        return nil
+                    }
+                }
+
                 let sorted = switchCaseRanges.sorted { case1, case2 -> Bool in
                     let lhs = formatter.tokens[case1.beforeDelimiterRange]
-                        .compactMap { $0.isIdentifier || $0.isStringBody || $0.isNumber ? $0.string : nil }
+                        .compactMap(sortableValue)
                     let rhs = formatter.tokens[case2.beforeDelimiterRange]
-                        .compactMap { $0.isIdentifier || $0.isStringBody || $0.isNumber ? $0.string : nil }
+                        .compactMap(sortableValue)
                     for (lhs, rhs) in zip(lhs, rhs) {
                         switch lhs.localizedStandardCompare(rhs) {
                         case .orderedAscending:

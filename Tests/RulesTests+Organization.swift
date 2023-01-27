@@ -3053,6 +3053,37 @@ class OrganizationTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.sortedSwitchCases)
     }
 
+    func testSortHexLiteralCasesInAscendingOrder() {
+        let input = """
+        switch value {
+        case 0x30 ... 0x39, // 0-9
+             0x0300 ... 0x036F,
+             0x1DC0 ... 0x1DFF,
+             0x20D0 ... 0x20FF,
+             0xFE20 ... 0xFE2F:
+            return true
+        default:
+            return false
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.sortedSwitchCases)
+    }
+
+    func testMixedOctalHexIntAndBinaryLiteralCasesInAscendingOrder() {
+        let input = """
+        switch value {
+        case 0o3,
+             0x20,
+             110,
+             0b1111110:
+            return true
+        default:
+            return false
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.sortedSwitchCases)
+    }
+
     // MARK: - modifierOrder
 
     func testVarModifiersCorrected() {

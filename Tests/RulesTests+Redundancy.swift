@@ -2327,6 +2327,20 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantBackticks)
     }
 
+    func testNoRemoveBackticksAroundShadowedSelf() {
+        let input = """
+        struct Foo {
+            let `self`: URL
+
+            func printURL() {
+                print("My URL is \\(self.`self`)")
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "4.1")
+        testFormatting(for: input, rule: FormatRules.redundantBackticks, options: options)
+    }
+
     // MARK: - redundantSelf
 
     // explicitSelf = .remove

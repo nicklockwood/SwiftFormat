@@ -1007,7 +1007,12 @@ extension Formatter {
             switch unescaped {
             case "_":
                 return true
-            case "super", "self", "nil", "true", "false":
+            case "self":
+                if last(.nonSpaceOrCommentOrLinebreak, before: i)?.isOperator(".") == true {
+                    return true
+                }
+                fallthrough
+            case "super", "nil", "true", "false":
                 if options.swiftVersion < "4" {
                     return true
                 }

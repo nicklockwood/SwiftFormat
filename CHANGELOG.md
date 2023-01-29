@@ -1,5 +1,15 @@
 # Change Log
 
+## [0.50.8](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.50.8) (2022-01-29)
+
+- The `redundantBackticks` rule no longer removes required comments around `self`
+- Associated type headerdoc comments are now handles correctly by the `docComments` rule
+- Fixed mangled comments when using the `sortedSwitchCases` rule
+- Hex, octal or binary literals are now sorted correctly in `sortedSwitchCases` rule
+- Fixed regression in closed brace indentation (introduced in 0.50.7)
+- Fixed unsafe semicolon removal after inferred `var` properties
+- Added fileHeader placeholder documentation
+
 ## [0.50.7](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.50.7) (2022-12-27)
 
 - Fixed parsing of regex literals preceded by `try` or `await`

@@ -4912,6 +4912,16 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.semicolons)
     }
 
+    func testRequiredSemicolonNotRemovedAfterInferredVar() {
+        let input = """
+        func foo() {
+            @Environment(\\.colorScheme) var colorScheme;
+            print(colorScheme)
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.semicolons)
+    }
+
     // MARK: - duplicateImports
 
     func testRemoveDuplicateImport() {

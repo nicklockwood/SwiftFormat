@@ -2363,7 +2363,8 @@ public struct _FormatRules {
     ) { formatter in
         formatter.forEach(.delimiter(";")) { i, _ in
             if let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) {
-                let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: i)
+                let prevTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i)
+                let prevToken = prevTokenIndex.map { formatter.tokens[$0] }
                 if prevToken == nil || nextToken == .endOfScope("}") {
                     // Safe to remove
                     formatter.removeToken(at: i)
@@ -2372,6 +2373,10 @@ public struct _FormatRules {
                         // Might be a traditional for loop (not supported in Swift 3 and above)
                         formatter.currentScope(at: i) == .startOfScope("(")
                 ) {
+                    // Not safe to remove or replace
+                } else if case .identifier? = prevToken, formatter.last(
+                    .nonSpaceOrCommentOrLinebreak, before: prevTokenIndex!
+                ) == .keyword("var") {
                     // Not safe to remove or replace
                 } else if formatter.next(.nonSpaceOrComment, after: i)?.isLinebreak == true {
                     // Safe to remove

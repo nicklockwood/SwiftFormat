@@ -214,7 +214,7 @@ To update to the latest version once installed use:
 $ brew upgrade --cask swiftformat-for-xcode
 ```
 
-Alternatively, if you prefer not to use Homebrew, you'll find the latest version of the SwiftFormat for Xcode application inside the EditorExtension folder included in the SwiftFormat repository. Download and unpack the zip archive, then drag `SwiftFormat for Xcode.app` into your `Applications` folder.
+Alternatively, if you prefer not to use Homebrew, you'll find the latest version of the SwiftFormat for Xcode application on the [GitHub Releases](https://github.com/nicklockwood/SwiftFormat/releases) page. Download and unpack the zip archive, then drag `SwiftFormat for Xcode.app` into your `Applications` folder.
 
 **Usage:**
 
@@ -844,7 +844,7 @@ Q. I don't want to be surprised by new rules added when I upgrade SwiftFormat. H
 
 *Q. After applying SwiftFormat, my code won't compile. Is that a bug?*
 
-> A. SwiftFormat should ideally never break your code. Check the [known issues](#known-issues), and if it's not already listed there, or the suggested workaround doesn't solve your problem, please [open an issue on Github](https://github.com/nicklockwood/SwiftFormat/issues).
+> A. SwiftFormat should ideally never break your code. Check the [known issues](#known-issues), and if it's not already listed there, or the suggested workaround doesn't solve your problem, please [open an issue on GitHub](https://github.com/nicklockwood/SwiftFormat/issues).
 
 
 *Q. Can I use SwiftFormat to lint my code without changing it?*

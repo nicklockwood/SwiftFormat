@@ -692,11 +692,11 @@
                                 <textFieldCell key="cell" sendsActionOnEndEditing="YES" id="9no-dM-Qlu">
                                     <font key="font" metaFont="system"/>
                                     <string key="title">1. Open System Preferences
-2. Click on "Privacy &amp; Security"
-3. Click on "Extensions"
-4. Select "Xcode Source Editor"
-5. Ensure the checkbox next to "SwiftFormat" is checked
-6. Relaunch Xcode</string>
+(1.5. Click on "Privacy &amp; Security") - Ventura or later
+2. Click on "Extensions"
+3. Select "Xcode Source Editor"
+4. Ensure the checkbox next to "SwiftFormat" is checked
+5. Relaunch Xcode</string>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>

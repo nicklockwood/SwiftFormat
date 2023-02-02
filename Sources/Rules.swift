@@ -4414,53 +4414,54 @@ public struct _FormatRules {
     public let wrapEnumCases = FormatRule(
         help: "Writes one enum case per line.",
         disabledByDefault: true,
+        options: ["wrapEnumCases"],
         sharedOptions: ["linebreaks"]
     ) { formatter in
-        formatter.forEach(.keyword("case")) { i, _ in
-            guard formatter.isEnumCase(at: i), var end = formatter.index(after: i, where: {
-                $0.isKeyword || $0 == .endOfScope("}")
-            }), formatter.last(.nonSpaceOrComment, before: i)?.isLinebreak == true else {
-                return
-            }
-            var index = i
-            let indent = formatter.indentForLine(at: i)
-            while let commaIndex = formatter.index(of: .delimiter(","), in: (index + 1) ..< end),
-                  var nextIndex = formatter.index(of: .nonSpace, after: commaIndex)
-            {
-                var delta = 0
-                if formatter.tokens[nextIndex] == .startOfScope("//") {
-                    formatter.removeToken(at: commaIndex)
-                    delta -= 1
-                    if formatter.token(at: commaIndex)?.isSpace == true,
-                       formatter.token(at: commaIndex - 1)?.isSpace == true
-                    {
-                        formatter.removeToken(at: commaIndex - 1)
-                        delta -= 1
-                    }
-                    guard let index = formatter
-                        .index(of: .linebreak, after: commaIndex - 1)
-                    else {
-                        return
-                    }
-                    nextIndex = index
-                } else {
-                    let range = commaIndex ..< nextIndex
-                    formatter.removeTokens(in: range)
-                    nextIndex -= range.count
-                    delta -= range.count
-                }
-                if !formatter.tokens[nextIndex].isLinebreak {
-                    formatter.insertLinebreak(at: nextIndex)
-                    delta += 1
-                }
-                delta += formatter.insertSpace(indent, at: nextIndex + 1)
-                formatter.insert([.keyword("case")], at: nextIndex + 2)
-                delta += 1
-                delta += formatter.insertSpace(" ", at: nextIndex + 3)
-                index = nextIndex + 3
-                end += delta
-            }
+
+        func shouldWrapCaseRangeGroup(_ caseRangeGroup: [Formatter.EnumCaseRange]) -> Bool {
+            formatter.options.wrapEnumCases == .always
+                || caseRangeGroup
+                .first(
+                    where: { formatter.tokens[$0.value].contains { token in
+                        token == .startOfScope("(") || token == .operator("=", .infix)
+                    }}
+                ) != nil
         }
+
+        formatter.parseEnumCaseRanges()
+            .filter(shouldWrapCaseRangeGroup)
+            .flatMap { $0 }
+            .filter { $0.endOfCaseRangeToken == .delimiter(",") }
+            .sorted()
+            .reversed()
+            .forEach { enumCase in
+                guard var nextNonSpaceIndex = formatter.index(of: .nonSpace, after: enumCase.value.upperBound) else {
+                    return
+                }
+                let caseIndex = formatter.lastIndex(of: .keyword("case"), in: 0 ..< enumCase.value.lowerBound)
+                let indent = formatter.indentForLine(at: caseIndex ?? enumCase.value.lowerBound)
+
+                if formatter.tokens[nextNonSpaceIndex] == .startOfScope("//") {
+                    formatter.removeToken(at: enumCase.value.upperBound)
+                    if formatter.token(at: enumCase.value.upperBound)?.isSpace == true,
+                       formatter.token(at: enumCase.value.upperBound - 1)?.isSpace == true
+                    {
+                        formatter.removeToken(at: enumCase.value.upperBound - 1)
+                    }
+                    nextNonSpaceIndex = formatter.index(of: .linebreak, after: enumCase.value.upperBound) ?? nextNonSpaceIndex
+                } else {
+                    formatter.removeTokens(in: enumCase.value.upperBound ..< nextNonSpaceIndex)
+                    nextNonSpaceIndex = enumCase.value.upperBound
+                }
+
+                if !formatter.tokens[nextNonSpaceIndex].isLinebreak {
+                    formatter.insertLinebreak(at: nextNonSpaceIndex)
+                }
+
+                formatter.insertSpace(indent, at: nextNonSpaceIndex + 1)
+                formatter.insert([.keyword("case")], at: nextNonSpaceIndex + 2)
+                formatter.insertSpace(" ", at: nextNonSpaceIndex + 3)
+            }
     }
 
     /// Wrap single-line comments that exceed given `FormatOptions.maxWidth` setting.

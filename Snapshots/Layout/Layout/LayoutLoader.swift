@@ -420,9 +420,7 @@ class LayoutLoader {
         }
     }
 
-    private var _sourcePaths: [String: String] = {
-        layoutSettings["sourcePaths"] as? [String: String] ?? [:]
-    }()
+    private var _sourcePaths: [String: String] = layoutSettings["sourcePaths"] as? [String: String] ?? [:]
 
     private var sourcePaths: [String: String] {
         get { return _sourcePaths }

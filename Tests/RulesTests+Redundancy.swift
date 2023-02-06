@@ -2162,9 +2162,59 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantReturn)
     }
 
+    func testNonRedundantIfStatementReturnSwift5_7() {
+        let input = """
+        func foo(condition: Bool) -> String {
+            if condition {
+                return "foo"
+            } else if !condition {
+                return "bar"
+            }
+            return "baaz"
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.8")
+        testFormatting(for: input, rule: FormatRules.redundantReturn, options: options)
+    }
+
     func testRedundantIfStatementReturnInFunction() {
         let input = """
         func foo(condition: Bool) -> String {
+            if condition {
+                return "foo"
+            } else if otherCondition {
+                if anotherCondition {
+                    return "bar"
+                } else {
+                    return "baaz"
+                }
+            } else {
+                return "quux"
+            }
+        }
+        """
+        let output = """
+        func foo(condition: Bool) -> String {
+            if condition {
+                "foo"
+            } else if otherCondition {
+                if anotherCondition {
+                    "bar"
+                } else {
+                    "baaz"
+                }
+            } else {
+                "quux"
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.8")
+        testFormatting(for: input, output, rule: FormatRules.redundantReturn, options: options)
+    }
+
+    func testRedundantIfStatementReturnInClosure() {
+        let input = """
+        let closure: (Bool) -> String = { condition in
             if condition {
                 return "foo"
             } else {
@@ -2173,7 +2223,7 @@ class RedundancyTests: RulesTests {
         }
         """
         let output = """
-        func foo(condition: Bool) -> String {
+        let closure: (Bool) -> String = { condition in
             if condition {
                 "foo"
             } else {
@@ -2185,22 +2235,88 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantReturn, options: options)
     }
 
-    func testRedundantIfStatementReturnInClosure() {
+    func testRedundantIfStatementReturnInRedundantClosure() {
         let input = """
-        let closure: (Bool) -> String { condition in
+        let value = {
             if condition {
                 return "foo"
             } else {
                 return "bar"
             }
+        }()
+        """
+        let output = """
+        let value = if condition {
+            "foo"
+        } else {
+            "bar"
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.8")
+        testFormatting(for: input, [output], rules: [FormatRules.redundantReturn, FormatRules.redundantClosure, FormatRules.indent], options: options)
+    }
+
+    func testRedundantSwitchStatementReturnInFunction() {
+        let input = """
+        func foo(condition: Bool) -> String {
+            switch condition {
+            case true:
+                return "foo"
+            case false:
+                return "bar"
+            }
         }
         """
         let output = """
-        let closure: (Bool) -> String { condition in
-            if condition {
+        func foo(condition: Bool) -> String {
+            switch condition {
+            case true:
                 "foo"
-            } else {
+            case false:
                 "bar"
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.8")
+        testFormatting(for: input, output, rule: FormatRules.redundantReturn, options: options)
+    }
+
+    func testRedundantNestedSwitchStatementReturnInFunction() {
+        let input = """
+        func foo(condition: Bool) -> String {
+            switch condition {
+            case true:
+                switch condition {
+                case true:
+                    return "foo"
+                case false:
+                    if condition {
+                        return "bar"
+                    } else {
+                        return "baaz"
+                    }
+                }
+            case false:
+                return "quux"
+            }
+        }
+        """
+        let output = """
+        func foo(condition: Bool) -> String {
+            switch condition {
+            case true:
+                switch condition {
+                case true:
+                    "foo"
+                case false:
+                    if condition {
+                        "bar"
+                    } else {
+                        "baaz"
+                    }
+                }
+            case false:
+                "quux"
             }
         }
         """

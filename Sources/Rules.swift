@@ -3037,16 +3037,39 @@ public struct _FormatRules {
                 formatter.blockBodyHasSingleStatement(atStartOfScope: startOfScopeIndex)
             else { return }
 
-            // If so, find and remove any return token at the start of the scope
-            guard
-                let endOfScopeIndex = formatter.endOfScope(at: startOfScopeIndex),
-                formatter.token(at: endOfScopeIndex) == .endOfScope("}"),
-                let returnIndex = formatter.index(of: .keyword("return"), after: startOfScopeIndex),
-                returnIndex < endOfScopeIndex,
-                let tokenIndexAfterReturn = formatter.index(of: .nonSpaceOrLinebreak, after: returnIndex)
-            else { return }
+            /// Removes return statements in the given single-statement scope
+            func removeReturn(atStartOfScope startOfScopeIndex: Int) {
+                // If this scope is a single-statement if or switch statement then we have to recursively
+                // remove the return from each branch of the if statement
+                let startOfBody = formatter.startOfBody(atStartOfScope: startOfScopeIndex)
+                let firstTokenInBody = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: startOfBody)
 
-            formatter.removeTokens(in: returnIndex ..< tokenIndexAfterReturn)
+                if let firstTokenInBody = firstTokenInBody,
+                   ["if", "switch"].contains(formatter.tokens[firstTokenInBody].string)
+                {
+                    if formatter.tokens[firstTokenInBody] == .keyword("if") {
+                        for branch in formatter.ifStatementBranches(at: firstTokenInBody) {
+                            removeReturn(atStartOfScope: branch.startOfBranch)
+                        }
+                    } else if formatter.tokens[firstTokenInBody] == .keyword("switch") {
+                        for branch in formatter.switchStatementBranches(at: firstTokenInBody) {
+                            removeReturn(atStartOfScope: branch.startOfBranch)
+                        }
+                    }
+                }
+
+                // Otherwise this is a simple case with a single return at the start of the scope
+                else if
+                    let endOfScopeIndex = formatter.endOfScope(at: startOfScopeIndex),
+                    let returnIndex = formatter.index(of: .keyword("return"), after: startOfScopeIndex),
+                    returnIndex < endOfScopeIndex,
+                    let tokenIndexAfterReturn = formatter.index(of: .nonSpaceOrLinebreak, after: returnIndex)
+                {
+                    formatter.removeTokens(in: returnIndex ..< tokenIndexAfterReturn)
+                }
+            }
+
+            removeReturn(atStartOfScope: startOfScopeIndex)
         }
 
         // Also handle redundant void returns in void functions, which can always be removed.
@@ -6837,7 +6860,8 @@ public struct _FormatRules {
         Removes redundant closures bodies, containing a single statement,
         which are called immediately.
         """,
-        disabledByDefault: false
+        disabledByDefault: false,
+        orderAfter: ["redundantReturn"]
     ) { formatter in
         formatter.forEach(.startOfScope("{")) { closureStartIndex, _ in
             if formatter.isStartOfClosure(at: closureStartIndex),

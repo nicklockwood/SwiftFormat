@@ -2147,6 +2147,65 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantReturn)
     }
 
+    func testRedundantIfStatementReturnSwift5_7() {
+        let input = """
+        func foo(condition: Bool) -> String {
+            if condition {
+                return "foo"
+            } else {
+                return "bar"
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantReturn)
+    }
+
+    func testRedundantIfStatementReturnInFunction() {
+        let input = """
+        func foo(condition: Bool) -> String {
+            if condition {
+                return "foo"
+            } else {
+                return "bar"
+            }
+        }
+        """
+        let output = """
+        func foo(condition: Bool) -> String {
+            if condition {
+                "foo"
+            } else {
+                "bar"
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.8")
+        testFormatting(for: input, output, rule: FormatRules.redundantReturn, options: options)
+    }
+
+    func testRedundantIfStatementReturnInClosure() {
+        let input = """
+        let closure: (Bool) -> String { condition in
+            if condition {
+                return "foo"
+            } else {
+                return "bar"
+            }
+        }
+        """
+        let output = """
+        let closure: (Bool) -> String { condition in
+            if condition {
+                "foo"
+            } else {
+                "bar"
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.8")
+        testFormatting(for: input, output, rule: FormatRules.redundantReturn, options: options)
+    }
+
     // MARK: - redundantBackticks
 
     func testRemoveRedundantBackticksInLet() {

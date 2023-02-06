@@ -6797,6 +6797,10 @@ public struct _FormatRules {
                // because removing them could break the build.
                formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closureStartIndex) != closureEndIndex
             {
+                guard formatter.blockBodyHasSingleStatement(atStartOfScope: closureStartIndex) else {
+                    return
+                }
+
                 // Whether this is within the closure, but not within a child closure of the main closure
                 func indexIsWithinMainClosure(_ index: Int) -> Bool {
                     let startOfScopeAtIndex: Int
@@ -6812,84 +6816,6 @@ public struct _FormatRules {
                         return indexIsWithinMainClosure(startOfScopeAtIndex - 1)
                     } else {
                         return false
-                    }
-                }
-
-                // Some heuristics to determine if this is a multi-statement closure:
-
-                // (1) any statement-forming scope (mostly just { and #if)
-                //     within the main closure, that isn't itself a closure
-                for startOfScopeIndex in closureStartIndex ... closureEndIndex
-                    where formatter.token(at: startOfScopeIndex)?.isStartOfScope == true
-                    && formatter.token(at: startOfScopeIndex) != .startOfScope("(")
-                {
-                    let startOfScope = formatter.tokens[startOfScopeIndex]
-
-                    if startOfScope != .startOfScope("("), // Method calls / other parents are fine
-                       startOfScope != .startOfScope("\""), // Strings are fine
-                       startOfScope != .startOfScope("\"\"\""), // Strings are fine
-                       indexIsWithinMainClosure(startOfScopeIndex),
-                       !formatter.isStartOfClosure(at: startOfScopeIndex)
-                    {
-                        return
-                    }
-                }
-
-                // (2) any return statement within the main closure body
-                //     that isn't at the very beginning of the closure body
-                for returnIndex in closureStartIndex ... closureEndIndex
-                    where formatter.token(at: returnIndex)?.string == "return"
-                {
-                    let isAtStartOfClosure = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: returnIndex) == closureStartIndex
-
-                    if indexIsWithinMainClosure(returnIndex),
-                       !isAtStartOfClosure
-                    {
-                        return
-                    }
-                }
-
-                // (3) if there are any semicolons within the closure scope
-                //     but not at the end of a line
-                for semicolonIndex in closureStartIndex ... closureEndIndex
-                    where formatter.token(at: semicolonIndex)?.string == ";"
-                {
-                    let nextTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: semicolonIndex) ?? semicolonIndex
-                    let isAtEndOfLine = formatter.startOfLine(at: semicolonIndex) != formatter.startOfLine(at: nextTokenIndex)
-
-                    if indexIsWithinMainClosure(semicolonIndex), !isAtEndOfLine {
-                        return
-                    }
-                }
-
-                // (4) if there are equals operators within the closure scope
-                for equalsIndex in closureStartIndex ... closureEndIndex
-                    where formatter.token(at: equalsIndex)?.string == "="
-                {
-                    if indexIsWithinMainClosure(equalsIndex) {
-                        return
-                    }
-                }
-
-                // (5) if there is a method call immediately followed an identifier, as in:
-                //
-                //   method()
-                //   otherMethod()
-                //
-                // This can only be an issue in Void closures, because any non-Void closure
-                // would have to have a `return` statement following one of these method calls,
-                // which would be covered by heuristic #2 above.
-                for closingParenIndex in closureStartIndex ... closureEndIndex
-                    where formatter.token(at: closingParenIndex)?.string == ")"
-                {
-                    if indexIsWithinMainClosure(closingParenIndex),
-                       let nextNonWhitespace = formatter.index(
-                           of: .nonSpaceOrCommentOrLinebreak,
-                           after: closingParenIndex
-                       ),
-                       formatter.token(at: nextNonWhitespace)?.isIdentifier == true
-                    {
-                        return
                     }
                 }
 

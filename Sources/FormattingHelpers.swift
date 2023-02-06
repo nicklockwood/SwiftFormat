@@ -1031,6 +1031,111 @@ extension Formatter {
             }
         }
     }
+
+    /// Whether or not the code block starting at the given `.startOfScope("{")` token
+    /// has a single statement. This makes it eligible to be used with implicit return.
+    func blockBodyHasSingleStatement(atStartOfScope startOfScopeIndex: Int) -> Bool {
+        guard
+            let endOfScopeIndex = endOfScope(at: startOfScopeIndex),
+            token(at: startOfScopeIndex) == .startOfScope("{"),
+            token(at: endOfScopeIndex) == .endOfScope("}")
+        else { return false }
+
+        // Whether this index is within a closure nested within this block
+        func indexIsWithinNestedClosure(_ index: Int) -> Bool {
+            let startOfScopeAtIndex: Int
+            if token(at: index)?.isStartOfScope == true {
+                startOfScopeAtIndex = index
+            } else {
+                startOfScopeAtIndex = self.index(of: .startOfScope, before: index) ?? startOfScopeIndex
+            }
+
+            if isStartOfClosure(at: startOfScopeAtIndex) {
+                return startOfScopeAtIndex != startOfScopeIndex
+            } else if token(at: startOfScopeAtIndex)?.isStartOfScope == true {
+                return indexIsWithinNestedClosure(startOfScopeAtIndex - 1)
+            } else {
+                return false
+            }
+        }
+
+        // Some heuristics to determine if this is a multi-statement block:
+
+        // (1) any statement-forming scope (mostly just { and #if)
+        //     within the main closure, that isn't itself a closure
+        for startOfScopeIndex in startOfScopeIndex ... endOfScopeIndex
+            where token(at: startOfScopeIndex)?.isStartOfScope == true
+            && token(at: startOfScopeIndex) != .startOfScope("(")
+        {
+            let startOfScope = tokens[startOfScopeIndex]
+
+            if startOfScope != .startOfScope("("), // Method calls / other parents are fine
+               startOfScope != .startOfScope("\""), // Strings are fine
+               startOfScope != .startOfScope("\"\"\""), // Strings are fine
+               !indexIsWithinNestedClosure(startOfScopeIndex),
+               !isStartOfClosure(at: startOfScopeIndex)
+            {
+                return false
+            }
+        }
+
+        // (2) any return statement within the main closure body
+        //     that isn't at the very beginning of the closure body
+        for returnIndex in startOfScopeIndex ... endOfScopeIndex
+            where token(at: returnIndex)?.string == "return"
+        {
+            let isAtStartOfClosure = index(of: .nonSpaceOrCommentOrLinebreak, before: returnIndex) == startOfScopeIndex
+
+            if !indexIsWithinNestedClosure(returnIndex),
+               !isAtStartOfClosure
+            {
+                return false
+            }
+        }
+
+        // (3) if there are any semicolons within the closure scope
+        //     but not at the end of a line
+        for semicolonIndex in startOfScopeIndex ... endOfScopeIndex
+            where token(at: semicolonIndex)?.string == ";"
+        {
+            let nextTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: semicolonIndex) ?? semicolonIndex
+            let isAtEndOfLine = startOfLine(at: semicolonIndex) != startOfLine(at: nextTokenIndex)
+
+            if !indexIsWithinNestedClosure(semicolonIndex), !isAtEndOfLine {
+                return false
+            }
+        }
+
+        // (4) if there are equals operators within the closure scope
+        for equalsIndex in startOfScopeIndex ... endOfScopeIndex
+            where token(at: equalsIndex)?.string == "="
+        {
+            if !indexIsWithinNestedClosure(equalsIndex) {
+                return false
+            }
+        }
+
+        // (5) if there is a method call immediately followed an identifier, as in:
+        //
+        //   method()
+        //   otherMethod()
+        //
+        for closingParenIndex in startOfScopeIndex ... endOfScopeIndex
+            where token(at: closingParenIndex)?.string == ")"
+        {
+            if !indexIsWithinNestedClosure(closingParenIndex),
+               let nextNonWhitespace = index(
+                   of: .nonSpaceOrCommentOrLinebreak,
+                   after: closingParenIndex
+               ),
+               token(at: nextNonWhitespace)?.isIdentifier == true
+            {
+                return false
+            }
+        }
+
+        return true
+    }
 }
 
 /// Helpers for recursively traversing the declaration hierarchy

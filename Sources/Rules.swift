@@ -4166,6 +4166,76 @@ public struct _FormatRules {
         }
     }
 
+    /// Reposition `await` keyword outside of the current scope.
+    public let hoistAwait = FormatRule(
+        help: "Reposition `await` keyword outside of the current scope.",
+        disabledByDefault: true,
+        options: []
+    ) { formatter in
+        formatter.forEach(.startOfScope("(")) { idx, _ in
+            func insertAwait(at insertIndex: Int) {
+                let awaitIndex = formatter.index(of: .keyword("await"), before: idx)
+
+                guard awaitIndex == nil || formatter.tokens[awaitIndex! ..< idx].contains(
+                    where: { $0.isStartOfScope || $0.isLinebreak }
+                ) else {
+                    return
+                }
+
+                formatter.insert([.keyword("await")], at: insertIndex)
+
+                if formatter.token(at: insertIndex + 1)?.isSpace == false {
+                    formatter.insertSpace(" ", at: insertIndex + 1)
+                }
+
+                if insertIndex > 0,
+                   let previousToken = formatter.token(at: insertIndex - 1),
+                   !previousToken.isLinebreak,
+                   previousToken.isSpace == false
+                {
+                    formatter.insertSpace(" ", at: insertIndex)
+                }
+            }
+
+            guard let endIndex = formatter.index(of: .endOfScope(")"), after: idx),
+                  formatter.lastSignificantKeyword(at: idx) != "if"
+            else {
+                return
+            }
+
+            var awaitIndexes: [Int] = []
+            var index = idx
+            while let next = formatter.index(of: .keyword("await"), after: index), index < endIndex {
+                awaitIndexes.append(next)
+                index = next
+            }
+
+            guard !awaitIndexes.isEmpty else { return }
+
+            let prevIndex = formatter.index(before: idx, where: {
+                $0.isSpaceOrLinebreak
+            })
+
+            awaitIndexes.reversed().forEach { awaitIndex in
+                formatter.removeToken(at: awaitIndex)
+                if formatter.tokens[awaitIndex].isSpace == true {
+                    formatter.removeToken(at: awaitIndex)
+                }
+            }
+
+            if let prevIndex {
+                let token = formatter.token(at: prevIndex)
+                if token?.isLinebreak == true {
+                    return insertAwait(at: prevIndex + 1)
+                } else {
+                    return insertAwait(at: prevIndex)
+                }
+            } else {
+                insertAwait(at: 0)
+            }
+        }
+    }
+
     /// Move `let` and `var` inside patterns to the beginning
     public let hoistPatternLet = FormatRule(
         help: "Reposition `let` or `var` bindings within pattern.",

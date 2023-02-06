@@ -6880,24 +6880,6 @@ public struct _FormatRules {
                     return
                 }
 
-                // Whether this is within the closure, but not within a child closure of the main closure
-                func indexIsWithinMainClosure(_ index: Int) -> Bool {
-                    let startOfScopeAtIndex: Int
-                    if formatter.token(at: index)?.isStartOfScope == true {
-                        startOfScopeAtIndex = index
-                    } else {
-                        startOfScopeAtIndex = formatter.index(of: .startOfScope, before: index) ?? closureStartIndex
-                    }
-
-                    if formatter.isStartOfClosure(at: startOfScopeAtIndex) {
-                        return startOfScopeAtIndex == closureStartIndex
-                    } else if formatter.token(at: startOfScopeAtIndex)?.isStartOfScope == true {
-                        return indexIsWithinMainClosure(startOfScopeAtIndex - 1)
-                    } else {
-                        return false
-                    }
-                }
-
                 // This rule also doesn't support closures with an `in` token.
                 //  - We can't just remove this, because it could have important type information.
                 //    For example, `let double = { () -> Double in 100 }()` and `let double = 100` have different types.
@@ -6906,7 +6888,7 @@ public struct _FormatRules {
                 for inIndex in closureStartIndex ... closureEndIndex
                     where formatter.token(at: inIndex) == .keyword("in")
                 {
-                    if indexIsWithinMainClosure(inIndex) {
+                    if !formatter.indexIsWithinNestedClosure(inIndex, startOfScopeIndex: closureStartIndex) {
                         return
                     }
                 }
@@ -6918,7 +6900,7 @@ public struct _FormatRules {
                 for i in closureStartIndex ... closureEndIndex {
                     switch formatter.tokens[i] {
                     case .identifier("fatalError"), .identifier("preconditionFailure"), .keyword("throw"):
-                        if indexIsWithinMainClosure(i) {
+                        if !formatter.indexIsWithinNestedClosure(i, startOfScopeIndex: closureStartIndex) {
                             return
                         }
                     default:

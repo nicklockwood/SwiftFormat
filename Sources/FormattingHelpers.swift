@@ -1211,7 +1211,7 @@ extension Formatter {
     }
 
     /// Whether the given index is directly within the body of the given scope, or part of a nested closure
-    private func indexIsWithinNestedClosure(_ index: Int, startOfScopeIndex: Int) -> Bool {
+    func indexIsWithinNestedClosure(_ index: Int, startOfScopeIndex: Int) -> Bool {
         let startOfScopeAtIndex: Int
         if token(at: index)?.isStartOfScope == true {
             startOfScopeAtIndex = index

@@ -4223,7 +4223,7 @@ public struct _FormatRules {
                 }
             }
 
-            if let prevIndex {
+            if let prevIndex = prevIndex {
                 let token = formatter.token(at: prevIndex)
                 if token?.isLinebreak == true {
                     return insertAwait(at: prevIndex + 1)

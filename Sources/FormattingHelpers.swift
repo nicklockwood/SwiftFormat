@@ -1037,7 +1037,6 @@ extension Formatter {
     func blockBodyHasSingleStatement(atStartOfScope startOfScopeIndex: Int) -> Bool {
         guard
             let endOfScopeIndex = endOfScope(at: startOfScopeIndex),
-            token(at: startOfScopeIndex) == .startOfScope("{"),
             token(at: endOfScopeIndex) == .endOfScope("}")
         else { return false }
 
@@ -1046,8 +1045,10 @@ extension Formatter {
             let startOfScopeAtIndex: Int
             if token(at: index)?.isStartOfScope == true {
                 startOfScopeAtIndex = index
+            } else if let previousStartOfScope = self.index(of: .startOfScope, before: index) {
+                startOfScopeAtIndex = previousStartOfScope
             } else {
-                startOfScopeAtIndex = self.index(of: .startOfScope, before: index) ?? startOfScopeIndex
+                return false
             }
 
             if isStartOfClosure(at: startOfScopeAtIndex) {
@@ -1059,11 +1060,21 @@ extension Formatter {
             }
         }
 
+        // If this is a closure that has an `in` clause, the body scope starts after that
+        var startOfBody = startOfScopeIndex
+        if
+            isStartOfClosure(at: startOfScopeIndex),
+            let inToken = index(of: .keyword("in"), in: (startOfScopeIndex + 1) ..< endOfScopeIndex),
+            !indexIsWithinNestedClosure(inToken)
+        {
+            startOfBody = inToken
+        }
+
         // Some heuristics to determine if this is a multi-statement block:
 
         // (1) any statement-forming scope (mostly just { and #if)
-        //     within the main closure, that isn't itself a closure
-        for startOfScopeIndex in startOfScopeIndex ... endOfScopeIndex
+        //     within the main body, that isn't itself a closure
+        for startOfScopeIndex in (startOfBody + 1) ... endOfScopeIndex
             where token(at: startOfScopeIndex)?.isStartOfScope == true
             && token(at: startOfScopeIndex) != .startOfScope("(")
         {
@@ -1079,12 +1090,12 @@ extension Formatter {
             }
         }
 
-        // (2) any return statement within the main closure body
-        //     that isn't at the very beginning of the closure body
-        for returnIndex in startOfScopeIndex ... endOfScopeIndex
+        // (2) any return statement within the main body
+        //     that isn't at the very beginning of the body
+        for returnIndex in startOfBody ... endOfScopeIndex
             where token(at: returnIndex)?.string == "return"
         {
-            let isAtStartOfClosure = index(of: .nonSpaceOrCommentOrLinebreak, before: returnIndex) == startOfScopeIndex
+            let isAtStartOfClosure = index(of: .nonSpaceOrCommentOrLinebreak, before: returnIndex) == startOfBody
 
             if !indexIsWithinNestedClosure(returnIndex),
                !isAtStartOfClosure
@@ -1093,9 +1104,9 @@ extension Formatter {
             }
         }
 
-        // (3) if there are any semicolons within the closure scope
+        // (3) if there are any semicolons within the scope
         //     but not at the end of a line
-        for semicolonIndex in startOfScopeIndex ... endOfScopeIndex
+        for semicolonIndex in startOfBody ... endOfScopeIndex
             where token(at: semicolonIndex)?.string == ";"
         {
             let nextTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: semicolonIndex) ?? semicolonIndex
@@ -1106,8 +1117,8 @@ extension Formatter {
             }
         }
 
-        // (4) if there are equals operators within the closure scope
-        for equalsIndex in startOfScopeIndex ... endOfScopeIndex
+        // (4) if there are equals operators within the scope
+        for equalsIndex in startOfBody ... endOfScopeIndex
             where token(at: equalsIndex)?.string == "="
         {
             if !indexIsWithinNestedClosure(equalsIndex) {
@@ -1120,7 +1131,7 @@ extension Formatter {
         //   method()
         //   otherMethod()
         //
-        for closingParenIndex in startOfScopeIndex ... endOfScopeIndex
+        for closingParenIndex in startOfBody ... endOfScopeIndex
             where token(at: closingParenIndex)?.string == ")"
         {
             if !indexIsWithinNestedClosure(closingParenIndex),

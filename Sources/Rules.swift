@@ -2997,6 +2997,61 @@ public struct _FormatRules {
     public let redundantReturn = FormatRule(
         help: "Remove unneeded `return` keyword."
     ) { formatter in
+        // Explicit returns are redundant in closures, functions, etc with a single statement body
+        formatter.forEach(.startOfScope("{")) { startOfScopeIndex, _ in
+            // Make sure this is a type of scope that supports implicit returns
+            if let previousKeywordIndex = formatter.indexOfLastSignificantKeyword(at: startOfScopeIndex) {
+                let previousKeyword = formatter.tokens[previousKeywordIndex].string
+
+                // Conditionals don't support implicit return, except in specific positions
+                // which are handled in a later codepath
+                if ["if", "else", "for", "guard", "while", "do", "switch", "catch"]
+                    .contains(previousKeyword)
+                {
+                    return
+                }
+
+                // `if let`, `if var`, `catch let`, `catch var` are all scopes that
+                // don't support implicit returns
+                if ["let", "var"].contains(previousKeyword),
+                   formatter.isConditionalStatement(at: previousKeywordIndex)
+                   || formatter.lastSignificantKeyword(at: previousKeywordIndex) == "catch"
+                { return }
+
+                // `for ... in ... where` scopes don't support implicit returns
+                if previousKeyword == "where",
+                   formatter.lastSignificantKeyword(at: previousKeywordIndex - 1) == "for"
+                { return }
+            }
+
+            // Closures always supported implicit returns, but other types of scopes
+            // only support implicit return in Swift 5.1+ (SE-0255)
+            if !formatter.isStartOfClosure(at: startOfScopeIndex) {
+                guard formatter.options.swiftVersion >= "5.1" else {
+                    return
+                }
+            }
+
+            // Make sure the body only has a single statement
+            guard
+                formatter.blockBodyHasSingleStatement(atStartOfScope: startOfScopeIndex)
+            else { return }
+
+            // If so, find and remove any return token at the start of the scope
+            guard
+                let endOfScopeIndex = formatter.endOfScope(at: startOfScopeIndex),
+                formatter.token(at: endOfScopeIndex) == .endOfScope("}"),
+                let returnIndex = formatter.index(of: .keyword("return"), after: startOfScopeIndex),
+                returnIndex < endOfScopeIndex,
+                let tokenIndexAfterReturn = formatter.index(of: .nonSpaceOrLinebreak, after: returnIndex)
+            else { return }
+
+            formatter.removeTokens(in: returnIndex ..< tokenIndexAfterReturn)
+        }
+
+        // Also handle redundant void returns in void functions, which can always be removed.
+        //  - The following code is the original implementation of the `redundantReturn` rule
+        //    and is partially redundant with the above code so could be simplified in the future.
         formatter.forEach(.keyword("return")) { i, _ in
             guard let startIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i) else {
                 return

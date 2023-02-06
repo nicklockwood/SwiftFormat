@@ -1973,9 +1973,11 @@ class RedundancyTests: RulesTests {
                        exclude: ["redundantParens", "wrapConditionalBodies"])
     }
 
-    func testNoRemoveReturnInTupleVarGetter() {
+    func testRemoveReturnInTupleVarGetter() {
         let input = "var foo: (Int, Int) { return (1, 2) }"
-        testFormatting(for: input, rule: FormatRules.redundantReturn)
+        let output = "var foo: (Int, Int) { (1, 2) }"
+        let options = FormatOptions(swiftVersion: "5.1")
+        testFormatting(for: input, output, rule: FormatRules.redundantReturn, options: options)
     }
 
     func testNoRemoveReturnInIfLetWithNoSpaceAfterParen() {
@@ -5754,8 +5756,8 @@ class RedundancyTests: RulesTests {
     }
 
     func testOperatorArgumentsAreUnnamed() {
-        let input = "func == (lhs: Int, rhs: Int) { return false }"
-        let output = "func == (_: Int, _: Int) { return false }"
+        let input = "func == (lhs: Int, rhs: Int) { false }"
+        let output = "func == (_: Int, _: Int) { false }"
         testFormatting(for: input, output, rule: FormatRules.unusedArguments)
     }
 

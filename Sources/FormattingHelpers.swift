@@ -1037,7 +1037,7 @@ extension Formatter {
     func blockBodyHasSingleStatement(atStartOfScope startOfScopeIndex: Int) -> Bool {
         guard let endOfScopeIndex = endOfScope(at: startOfScopeIndex) else { return false }
 
-        let startOfBody = startOfBody(atStartOfScope: startOfScopeIndex)
+        let startOfBody = self.startOfBody(atStartOfScope: startOfScopeIndex)
 
         // Some heuristics to determine if this is a multi-statement block:
 

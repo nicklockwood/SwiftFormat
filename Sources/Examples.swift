@@ -609,6 +609,23 @@ private struct Examples {
     ```diff
     - array.filter { return $0.foo == bar }
     + array.filter { $0.foo == bar }
+
+      // Swift 5.1+ (SE-0255)
+      var foo: String {
+    -     return "foo"
+    +     "foo"
+      }
+
+      // Swift 5.8+ (SE-0380)
+      func foo(_ condition: Bool) -> String {
+          if condition {
+    -         return "foo"
+    +         "foo"
+          } else {
+    -         return "bar"
+    +         "bar"
+          }
+      }
     ```
     """
 

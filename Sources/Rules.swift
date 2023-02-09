@@ -3004,6 +3004,84 @@ public struct _FormatRules {
     public let redundantReturn = FormatRule(
         help: "Remove unneeded `return` keyword."
     ) { formatter in
+        // Explicit returns are redundant in closures, functions, etc with a single statement body
+        formatter.forEach(.startOfScope("{")) { startOfScopeIndex, _ in
+            // Make sure this is a type of scope that supports implicit returns
+            if let previousKeywordIndex = formatter.indexOfLastSignificantKeyword(at: startOfScopeIndex) {
+                let previousKeyword = formatter.tokens[previousKeywordIndex].string
+
+                // Conditionals don't support implicit return, except in specific positions
+                // which are handled in a later codepath
+                if ["if", "else", "for", "guard", "while", "do", "switch", "catch"]
+                    .contains(previousKeyword)
+                {
+                    return
+                }
+
+                // `if let`, `if var`, `catch let`, `catch var` are all scopes that
+                // don't support implicit returns
+                if ["let", "var"].contains(previousKeyword),
+                   formatter.isConditionalStatement(at: previousKeywordIndex)
+                   || formatter.lastSignificantKeyword(at: previousKeywordIndex) == "catch"
+                { return }
+
+                // `for ... in ... where` scopes don't support implicit returns
+                if previousKeyword == "where",
+                   formatter.lastSignificantKeyword(at: previousKeywordIndex - 1) == "for"
+                { return }
+            }
+
+            // Closures always supported implicit returns, but other types of scopes
+            // only support implicit return in Swift 5.1+ (SE-0255)
+            if !formatter.isStartOfClosure(at: startOfScopeIndex) {
+                guard formatter.options.swiftVersion >= "5.1" else {
+                    return
+                }
+            }
+
+            // Make sure the body only has a single statement
+            guard
+                formatter.blockBodyHasSingleStatement(atStartOfScope: startOfScopeIndex)
+            else { return }
+
+            /// Removes return statements in the given single-statement scope
+            func removeReturn(atStartOfScope startOfScopeIndex: Int) {
+                // If this scope is a single-statement if or switch statement then we have to recursively
+                // remove the return from each branch of the if statement
+                let startOfBody = formatter.startOfBody(atStartOfScope: startOfScopeIndex)
+                let firstTokenInBody = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: startOfBody)
+
+                if let firstTokenInBody = firstTokenInBody,
+                   ["if", "switch"].contains(formatter.tokens[firstTokenInBody].string)
+                {
+                    if formatter.tokens[firstTokenInBody] == .keyword("if") {
+                        for branch in formatter.ifStatementBranches(at: firstTokenInBody) {
+                            removeReturn(atStartOfScope: branch.startOfBranch)
+                        }
+                    } else if formatter.tokens[firstTokenInBody] == .keyword("switch") {
+                        for branch in formatter.switchStatementBranches(at: firstTokenInBody) {
+                            removeReturn(atStartOfScope: branch.startOfBranch)
+                        }
+                    }
+                }
+
+                // Otherwise this is a simple case with a single return at the start of the scope
+                else if
+                    let endOfScopeIndex = formatter.endOfScope(at: startOfScopeIndex),
+                    let returnIndex = formatter.index(of: .keyword("return"), after: startOfScopeIndex),
+                    returnIndex < endOfScopeIndex,
+                    let tokenIndexAfterReturn = formatter.index(of: .nonSpaceOrLinebreak, after: returnIndex)
+                {
+                    formatter.removeTokens(in: returnIndex ..< tokenIndexAfterReturn)
+                }
+            }
+
+            removeReturn(atStartOfScope: startOfScopeIndex)
+        }
+
+        // Also handle redundant void returns in void functions, which can always be removed.
+        //  - The following code is the original implementation of the `redundantReturn` rule
+        //    and is partially redundant with the above code so could be simplified in the future.
         formatter.forEach(.keyword("return")) { i, _ in
             guard let startIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i) else {
                 return
@@ -6876,7 +6954,8 @@ public struct _FormatRules {
         Removes redundant closures bodies, containing a single statement,
         which are called immediately.
         """,
-        disabledByDefault: false
+        disabledByDefault: false,
+        orderAfter: ["redundantReturn"]
     ) { formatter in
         formatter.forEach(.startOfScope("{")) { closureStartIndex, _ in
             if formatter.isStartOfClosure(at: closureStartIndex),
@@ -6891,100 +6970,8 @@ public struct _FormatRules {
                // because removing them could break the build.
                formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closureStartIndex) != closureEndIndex
             {
-                // Whether this is within the closure, but not within a child closure of the main closure
-                func indexIsWithinMainClosure(_ index: Int) -> Bool {
-                    let startOfScopeAtIndex: Int
-                    if formatter.token(at: index)?.isStartOfScope == true {
-                        startOfScopeAtIndex = index
-                    } else {
-                        startOfScopeAtIndex = formatter.index(of: .startOfScope, before: index) ?? closureStartIndex
-                    }
-
-                    if formatter.isStartOfClosure(at: startOfScopeAtIndex) {
-                        return startOfScopeAtIndex == closureStartIndex
-                    } else if formatter.token(at: startOfScopeAtIndex)?.isStartOfScope == true {
-                        return indexIsWithinMainClosure(startOfScopeAtIndex - 1)
-                    } else {
-                        return false
-                    }
-                }
-
-                // Some heuristics to determine if this is a multi-statement closure:
-
-                // (1) any statement-forming scope (mostly just { and #if)
-                //     within the main closure, that isn't itself a closure
-                for startOfScopeIndex in closureStartIndex ... closureEndIndex
-                    where formatter.token(at: startOfScopeIndex)?.isStartOfScope == true
-                    && formatter.token(at: startOfScopeIndex) != .startOfScope("(")
-                {
-                    let startOfScope = formatter.tokens[startOfScopeIndex]
-
-                    if startOfScope != .startOfScope("("), // Method calls / other parents are fine
-                       startOfScope != .startOfScope("\""), // Strings are fine
-                       startOfScope != .startOfScope("\"\"\""), // Strings are fine
-                       indexIsWithinMainClosure(startOfScopeIndex),
-                       !formatter.isStartOfClosure(at: startOfScopeIndex)
-                    {
-                        return
-                    }
-                }
-
-                // (2) any return statement within the main closure body
-                //     that isn't at the very beginning of the closure body
-                for returnIndex in closureStartIndex ... closureEndIndex
-                    where formatter.token(at: returnIndex)?.string == "return"
-                {
-                    let isAtStartOfClosure = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: returnIndex) == closureStartIndex
-
-                    if indexIsWithinMainClosure(returnIndex),
-                       !isAtStartOfClosure
-                    {
-                        return
-                    }
-                }
-
-                // (3) if there are any semicolons within the closure scope
-                //     but not at the end of a line
-                for semicolonIndex in closureStartIndex ... closureEndIndex
-                    where formatter.token(at: semicolonIndex)?.string == ";"
-                {
-                    let nextTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: semicolonIndex) ?? semicolonIndex
-                    let isAtEndOfLine = formatter.startOfLine(at: semicolonIndex) != formatter.startOfLine(at: nextTokenIndex)
-
-                    if indexIsWithinMainClosure(semicolonIndex), !isAtEndOfLine {
-                        return
-                    }
-                }
-
-                // (4) if there are equals operators within the closure scope
-                for equalsIndex in closureStartIndex ... closureEndIndex
-                    where formatter.token(at: equalsIndex)?.string == "="
-                {
-                    if indexIsWithinMainClosure(equalsIndex) {
-                        return
-                    }
-                }
-
-                // (5) if there is a method call immediately followed an identifier, as in:
-                //
-                //   method()
-                //   otherMethod()
-                //
-                // This can only be an issue in Void closures, because any non-Void closure
-                // would have to have a `return` statement following one of these method calls,
-                // which would be covered by heuristic #2 above.
-                for closingParenIndex in closureStartIndex ... closureEndIndex
-                    where formatter.token(at: closingParenIndex)?.string == ")"
-                {
-                    if indexIsWithinMainClosure(closingParenIndex),
-                       let nextNonWhitespace = formatter.index(
-                           of: .nonSpaceOrCommentOrLinebreak,
-                           after: closingParenIndex
-                       ),
-                       formatter.token(at: nextNonWhitespace)?.isIdentifier == true
-                    {
-                        return
-                    }
+                guard formatter.blockBodyHasSingleStatement(atStartOfScope: closureStartIndex) else {
+                    return
                 }
 
                 // This rule also doesn't support closures with an `in` token.
@@ -6995,7 +6982,7 @@ public struct _FormatRules {
                 for inIndex in closureStartIndex ... closureEndIndex
                     where formatter.token(at: inIndex) == .keyword("in")
                 {
-                    if indexIsWithinMainClosure(inIndex) {
+                    if !formatter.indexIsWithinNestedClosure(inIndex, startOfScopeIndex: closureStartIndex) {
                         return
                     }
                 }
@@ -7007,7 +6994,7 @@ public struct _FormatRules {
                 for i in closureStartIndex ... closureEndIndex {
                     switch formatter.tokens[i] {
                     case .identifier("fatalError"), .identifier("preconditionFailure"), .keyword("throw"):
-                        if indexIsWithinMainClosure(i) {
+                        if !formatter.indexIsWithinNestedClosure(i, startOfScopeIndex: closureStartIndex) {
                             return
                         }
                     default:

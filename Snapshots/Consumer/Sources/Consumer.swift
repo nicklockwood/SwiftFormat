@@ -70,7 +70,7 @@ public extension Consumer {
     struct Location: Equatable {
         fileprivate var source: String.UnicodeScalarView
         public let range: Range<String.Index>
-        public var offset: (line: Int, column: Int) { return _offset }
+        public var offset: (line: Int, column: Int) { _offset }
     }
 
     /// Abstract syntax tree returned by consumer

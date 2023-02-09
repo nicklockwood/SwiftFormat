@@ -83,6 +83,7 @@
 * [blankLinesBetweenImports](#blankLinesBetweenImports)
 * [blockComments](#blockComments)
 * [docComments](#docComments)
+* [hoistAwait](#hoistAwait)
 * [isEmpty](#isEmpty)
 * [markTypes](#markTypes)
 * [organizeDeclarations](#organizeDeclarations)
@@ -746,6 +747,10 @@ Option | Description
 
 </details>
 <br/>
+
+## hoistAwait
+
+Reposition `await` keyword outside of the current scope.
 
 ## hoistPatternLet
 

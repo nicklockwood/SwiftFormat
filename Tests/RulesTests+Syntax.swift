@@ -604,6 +604,76 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.trailingClosures)
     }
 
+    // MARK: - hoistAwait
+
+    func testHoistAwait() {
+        let input = "greet(await name, await surname)"
+        let output = "await greet(name, surname)"
+        testFormatting(for: input, output, rule: FormatRules.hoistAwait)
+    }
+
+    func testHoistAwaitInsideIfDoesNothing() {
+        let input = "if !(await isSomething()) {}"
+        testFormatting(for: input, rule: FormatRules.hoistAwait)
+    }
+
+    func testHoistAwaitInsideArgument() {
+        let input = """
+        array.append(contentsOf: try await asyncFunction(param1: param1))
+        """
+        let output = """
+        await array.append(contentsOf: try asyncFunction(param1: param1))
+        """
+        testFormatting(for: input, output, rule: FormatRules.hoistAwait)
+    }
+
+    func testHoistAwaitWithReturn() {
+        let input = "return .enumCase(try await service.greet())"
+        let output = "return await .enumCase(try service.greet())"
+        testFormatting(for: input, output, rule: FormatRules.hoistAwait)
+    }
+
+    func testHoistAwaitWithInitAssignment() {
+        let input = "let variable = String(try await asyncFunction())"
+        let output = "let variable = await String(try asyncFunction())"
+        testFormatting(for: input, output, rule: FormatRules.hoistAwait)
+    }
+
+    func testHoistAwaitWithAssignment() {
+        let input = "let variable = (try await asyncFunction())"
+        let output = "let variable = await (try asyncFunction())"
+        testFormatting(for: input, output, rule: FormatRules.hoistAwait)
+    }
+
+    func testHoistAwaitInRedundantScopePriorToNumber() {
+        let input = """
+        let identifiersTypes = 1
+        (try? await asyncFunction(param1: param1))
+        """
+        let output = """
+        let identifiersTypes = 1
+        await (try? asyncFunction(param1: param1))
+        """
+        testFormatting(for: input, output, rule: FormatRules.hoistAwait)
+    }
+
+    func testHoistAwaitOnlyOne() {
+        let input = "greet(name, await surname)"
+        let output = "await greet(name, surname)"
+        testFormatting(for: input, output, rule: FormatRules.hoistAwait)
+    }
+
+    func testHoistAwaitRedundantAwait() {
+        let input = "await greet(await name, await surname)"
+        let output = "await greet(name, surname)"
+        testFormatting(for: input, output, rule: FormatRules.hoistAwait)
+    }
+
+    func testHoistAwaitDoesNothing() {
+        let input = "await greet(name, surname)"
+        testFormatting(for: input, rule: FormatRules.hoistAwait)
+    }
+
     // MARK: - hoistPatternLet
 
     // hoist = true

@@ -1607,9 +1607,7 @@ public class LayoutNode: NSObject {
     }
 
     public lazy var viewExpressionTypes: [String: RuntimeType] = viewClass.cachedExpressionTypes
-    public lazy var viewControllerExpressionTypes: [String: RuntimeType] = {
-        self.viewControllerClass.map { $0.cachedExpressionTypes } ?? [:]
-    }()
+    public lazy var viewControllerExpressionTypes: [String: RuntimeType] = self.viewControllerClass.map { $0.cachedExpressionTypes } ?? [:]
 
     #if arch(i386) || arch(x86_64)
 

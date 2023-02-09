@@ -2328,6 +2328,10 @@ Wrap the bodies of inline conditional statements onto a new line.
 
 Writes one enum case per line.
 
+Option | Description
+--- | ---
+`--wrapEnumCases` | Wrap enumn cases: "always", "if-values"
+
 <details>
 <summary>Examples</summary>
 

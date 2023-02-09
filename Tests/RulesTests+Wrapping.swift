@@ -4032,6 +4032,65 @@ class WrappingTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.wrapEnumCases)
     }
 
+    func testEnumCasesIfValuesWithoutValuesDoesNothing() {
+        let input = """
+        enum Foo {
+            case bar, baz, quux
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.wrapEnumCases, options: FormatOptions(wrapEnumCases: .ifValues))
+    }
+
+    func testEnumCasesIfValuesWithRawValuesAndNestedEnum() {
+        let input = """
+        enum Foo {
+            case bar = 1, baz, quux
+
+            enum Foo2 {
+                case bar, baz, quux
+            }
+        }
+        """
+        let output = """
+        enum Foo {
+            case bar = 1
+            case baz
+            case quux
+
+            enum Foo2 {
+                case bar, baz, quux
+            }
+        }
+        """
+        testFormatting(
+            for: input,
+            output,
+            rule: FormatRules.wrapEnumCases,
+            options: FormatOptions(wrapEnumCases: .ifValues)
+        )
+    }
+
+    func testEnumCasesIfValuesWithAssociatedValues() {
+        let input = """
+        enum Foo {
+            case bar(a: Int), baz, quux
+        }
+        """
+        let output = """
+        enum Foo {
+            case bar(a: Int)
+            case baz
+            case quux
+        }
+        """
+        testFormatting(
+            for: input,
+            output,
+            rule: FormatRules.wrapEnumCases,
+            options: FormatOptions(wrapEnumCases: .ifValues)
+        )
+    }
+
     func testEnumCasesWithCommentsAlreadyWrappedOntoMultipleLines() {
         let input = """
         enum Foo {

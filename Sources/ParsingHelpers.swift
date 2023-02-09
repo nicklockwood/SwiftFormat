@@ -171,8 +171,11 @@ public extension Formatter {
 
     /// Returns the end of the expression at the specified index, optionally stopping at any of the specified tokens
     func endOfExpression(at index: Int, upTo delimiters: [Token]) -> Int? {
-        var lastIndex = index
         var index: Int? = index
+        if token(at: index!)?.isEndOfScope == true {
+            index = self.index(of: .nonSpaceOrLinebreak, after: index!)
+        }
+        var lastIndex = index
         var wasOperator = true
         while var i = index {
             let token = tokens[i]
@@ -196,7 +199,8 @@ public extension Formatter {
                     return lastIndex
                 }
                 wasOperator = false
-            case .startOfScope where wasOperator,
+            case .startOfScope("<"),
+                 .startOfScope where wasOperator,
                  .startOfScope("{") where isStartOfClosure(at: i),
                  .startOfScope("(") where isSubscriptOrFunctionCall(at: i),
                  .startOfScope("[") where isSubscriptOrFunctionCall(at: i):

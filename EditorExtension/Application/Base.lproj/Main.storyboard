@@ -418,19 +418,19 @@
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
                             <box verticalHuggingPriority="750" boxType="separator" translatesAutoresizingMaskIntoConstraints="NO" id="RZx-Ps-pFP">
-                                <rect key="frame" x="0.0" y="591" width="498" height="5"/>
+                                <rect key="frame" x="0.0" y="599" width="498" height="5"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="1" id="cK6-hE-hqz"/>
                                 </constraints>
                             </box>
                             <scrollView borderType="none" autohidesScrollers="YES" horizontalLineScroll="33" horizontalPageScroll="10" verticalLineScroll="33" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" horizontalScrollElasticity="none" translatesAutoresizingMaskIntoConstraints="NO" id="vVz-rA-tRS">
-                                <rect key="frame" x="0.0" y="0.0" width="498" height="555"/>
+                                <rect key="frame" x="0.0" y="0.0" width="498" height="563"/>
                                 <clipView key="contentView" drawsBackground="NO" copiesOnScroll="NO" id="1nY-Z5-cvR">
-                                    <rect key="frame" x="0.0" y="0.0" width="498" height="555"/>
+                                    <rect key="frame" x="0.0" y="0.0" width="498" height="563"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" selectionHighlightStyle="none" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" typeSelect="NO" rowHeight="30" rowSizeStyle="automatic" usesAutomaticRowHeights="YES" viewBased="YES" id="JTc-wy-tJT">
-                                            <rect key="frame" x="0.0" y="0.0" width="498" height="555"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="498" height="563"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <size key="intercellSpacing" width="3" height="3"/>
                                             <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -574,7 +574,7 @@
                                 </scroller>
                             </scrollView>
                             <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="pHb-Fu-MRN">
-                                <rect key="frame" x="6" y="592" width="190" height="42"/>
+                                <rect key="frame" x="6" y="600" width="190" height="42"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="40" id="qEB-fw-FrU"/>
                                 </constraints>
@@ -587,7 +587,7 @@
                                 </connections>
                             </button>
                             <popUpButton horizontalHuggingPriority="500" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="YId-jI-Kpd">
-                                <rect key="frame" x="416" y="599" width="78" height="25"/>
+                                <rect key="frame" x="416" y="607" width="78" height="25"/>
                                 <popUpButtonCell key="cell" type="push" title="Item 1" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="nhQ-Kk-Ta3" id="JGl-KG-s99">
                                     <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                     <font key="font" metaFont="menu"/>
@@ -604,7 +604,7 @@
                                 </connections>
                             </popUpButton>
                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="8vB-lt-Jpe">
-                                <rect key="frame" x="335" y="605" width="82" height="16"/>
+                                <rect key="frame" x="335" y="613" width="82" height="16"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Swift version" id="pwb-qe-8jm">
                                     <font key="font" metaFont="system"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -612,7 +612,7 @@
                                 </textFieldCell>
                             </textField>
                             <searchField wantsLayer="YES" verticalHuggingPriority="750" textCompletion="NO" translatesAutoresizingMaskIntoConstraints="NO" id="g0F-OD-16q">
-                                <rect key="frame" x="8" y="563" width="482" height="22"/>
+                                <rect key="frame" x="8" y="571" width="482" height="22"/>
                                 <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" borderStyle="bezel" usesSingleLineMode="YES" bezelStyle="round" id="7UJ-JQ-nkl">
                                     <font key="font" metaFont="system"/>
                                     <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -657,7 +657,7 @@
         <!--About-->
         <scene sceneID="hIz-AP-VOD">
             <objects>
-                <viewController title="About" showSeguePresentationStyle="single" id="XfG-lQ-9wD" sceneMemberID="viewController">
+                <viewController title="About" showSeguePresentationStyle="single" id="XfG-lQ-9wD" customClass="AboutViewController" customModule="SwiftFormat_for_Xcode" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" wantsLayer="YES" id="m2S-Jp-Qdl">
                         <rect key="frame" x="0.0" y="0.0" width="385" height="512"/>
                         <autoresizingMask key="autoresizingMask"/>
@@ -806,14 +806,17 @@
                             <constraint firstAttribute="bottom" secondItem="aqr-5C-gJh" secondAttribute="bottom" constant="20" symbolic="YES" id="znD-d5-KwB"/>
                         </constraints>
                     </view>
+                    <connections>
+                        <outlet property="instructionsLabel" destination="VVr-7o-9zD" id="XyP-vB-iS9"/>
+                    </connections>
                 </viewController>
                 <customObject id="rPt-NT-nkU" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="536" y="1521"/>
+            <point key="canvasLocation" x="535.5" y="1521"/>
         </scene>
     </scenes>
     <resources>
-        <image name="NSTouchBarGetInfoTemplate" width="20" height="20"/>
-        <image name="NSTouchBarTextListTemplate" width="21" height="15"/>
+        <image name="NSTouchBarGetInfoTemplate" width="15" height="15"/>
+        <image name="NSTouchBarTextListTemplate" width="16" height="12"/>
     </resources>
 </document>

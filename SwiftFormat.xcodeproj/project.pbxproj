@@ -25,6 +25,7 @@
 		01567D30225B2BFD00B22D41 /* ParsingHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01567D2E225B2BFD00B22D41 /* ParsingHelpers.swift */; };
 		015AF2C01DC6A538008F0A8C /* SwiftFormat.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 01A0EAA41D5DB4CF00A0A8E3 /* SwiftFormat.framework */; };
 		015AF2CA1DC6A58C008F0A8C /* PerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 015AF2C91DC6A58C008F0A8C /* PerformanceTests.swift */; };
+		015D3A562995A0340065B2D9 /* AboutViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 015D3A552995A0340065B2D9 /* AboutViewController.swift */; };
 		018541CF1DBA0F17000F82E3 /* XCSourceTextBuffer+SwiftFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 018541CE1DBA0F17000F82E3 /* XCSourceTextBuffer+SwiftFormat.swift */; };
 		018E82751D62E730008CA0F8 /* TokenizerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 018E82741D62E730008CA0F8 /* TokenizerTests.swift */; };
 		01A0EAA81D5DB4CF00A0A8E3 /* SwiftFormat.h in Headers */ = {isa = PBXBuildFile; fileRef = 01A0EAA71D5DB4CF00A0A8E3 /* SwiftFormat.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -177,6 +178,7 @@
 		01567D2E225B2BFD00B22D41 /* ParsingHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParsingHelpers.swift; sourceTree = "<group>"; };
 		015AF2C51DC6A538008F0A8C /* SwiftFormatPerfTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SwiftFormatPerfTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		015AF2C91DC6A58C008F0A8C /* PerformanceTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PerformanceTests.swift; sourceTree = "<group>"; };
+		015D3A552995A0340065B2D9 /* AboutViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutViewController.swift; sourceTree = "<group>"; };
 		018541CE1DBA0F17000F82E3 /* XCSourceTextBuffer+SwiftFormat.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "XCSourceTextBuffer+SwiftFormat.swift"; sourceTree = "<group>"; };
 		018E82741D62E730008CA0F8 /* TokenizerTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TokenizerTests.swift; sourceTree = "<group>"; };
 		01A0EAA41D5DB4CF00A0A8E3 /* SwiftFormat.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftFormat.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -485,6 +487,7 @@
 				E41CB5C22026CACD00C1BEDE /* ListSelectionTableCellView.swift */,
 				E4872124201D980D0014845E /* BinarySelectionTableCellView.swift */,
 				E487211C201D885A0014845E /* RulesViewController.swift */,
+				015D3A552995A0340065B2D9 /* AboutViewController.swift */,
 				E41CB5BE2025761D00C1BEDE /* UserSelection.swift */,
 			);
 			path = Source;
@@ -826,6 +829,7 @@
 			files = (
 				E4083191202C049200CAF11D /* SwiftFormat.swift in Sources */,
 				E4FABAD7202FEF060065716E /* OptionDescriptor.swift in Sources */,
+				015D3A562995A0340065B2D9 /* AboutViewController.swift in Sources */,
 				E41CB5C52027700100C1BEDE /* FreeTextTableCellView.swift in Sources */,
 				E4872125201D980D0014845E /* BinarySelectionTableCellView.swift in Sources */,
 				E487211D201D885A0014845E /* RulesViewController.swift in Sources */,

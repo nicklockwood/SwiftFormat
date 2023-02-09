@@ -1905,6 +1905,51 @@ extension Formatter {
         }
         return result
     }
+
+    struct EnumCaseRange: Comparable {
+        let value: Range<Int>
+        let endOfCaseRangeToken: Token
+
+        static func < (lhs: Formatter.EnumCaseRange, rhs: Formatter.EnumCaseRange) -> Bool {
+            lhs.value.lowerBound < rhs.value.lowerBound
+        }
+    }
+
+    func parseEnumCaseRanges() -> [[EnumCaseRange]] {
+        var indexedRanges: [Int: [EnumCaseRange]] = [:]
+
+        forEach(.keyword("case")) { i, _ in
+            guard isEnumCase(at: i) else { return }
+
+            var idx = i
+            while
+                let starOfCaseRangeIdx = index(of: .identifier, after: idx),
+                lastSignificantKeyword(at: starOfCaseRangeIdx) == "case",
+                let lastCaseIndex = lastIndex(of: .keyword("case"), in: i ..< starOfCaseRangeIdx),
+                lastCaseIndex == i,
+                let endOfCaseRangeIdx = index(
+                    after: starOfCaseRangeIdx,
+                    where: { $0 == .delimiter(",") || $0.isLinebreak }
+                ),
+                let endOfCaseRangeToken = token(at: endOfCaseRangeIdx)
+            {
+                let startOfScopeIdx = index(of: .startOfScope, before: starOfCaseRangeIdx) ?? 0
+
+                var indexedCase = indexedRanges[startOfScopeIdx, default: []]
+                indexedCase.append(
+                    EnumCaseRange(
+                        value: starOfCaseRangeIdx ..< endOfCaseRangeIdx,
+                        endOfCaseRangeToken: endOfCaseRangeToken
+                    )
+                )
+                indexedRanges[startOfScopeIdx] = indexedCase
+
+                idx = endOfCaseRangeIdx
+            }
+        }
+
+        return Array(indexedRanges.values)
+    }
 }
 
 extension _FormatRules {

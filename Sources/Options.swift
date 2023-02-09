@@ -77,6 +77,12 @@ public enum WrapMode: String, CaseIterable {
     }
 }
 
+/// Wrap enum cases
+public enum WrapEnumCases: String, CaseIterable {
+    case always
+    case ifValues = "if-values"
+}
+
 /// Argument type for stripping
 public enum ArgumentStrippingMode: String, CaseIterable {
     case unnamedOnly = "unnamed-only"
@@ -364,6 +370,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var wrapParameters: WrapMode
     public var wrapCollections: WrapMode
     public var wrapTypealiases: WrapMode
+    public var wrapEnumCases: WrapEnumCases
     public var closingParenOnSameLine: Bool
     public var wrapReturnType: WrapReturnType
     public var wrapConditions: WrapMode
@@ -460,6 +467,7 @@ public struct FormatOptions: CustomStringConvertible {
                 wrapParameters: WrapMode = .default,
                 wrapCollections: WrapMode = .preserve,
                 wrapTypealiases: WrapMode = .preserve,
+                wrapEnumCases: WrapEnumCases = .always,
                 closingParenOnSameLine: Bool = false,
                 wrapReturnType: WrapReturnType = .preserve,
                 wrapConditions: WrapMode = .preserve,
@@ -547,6 +555,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.wrapParameters = wrapParameters
         self.wrapCollections = wrapCollections
         self.wrapTypealiases = wrapTypealiases
+        self.wrapEnumCases = wrapEnumCases
         self.closingParenOnSameLine = closingParenOnSameLine
         self.wrapReturnType = wrapReturnType
         self.wrapConditions = wrapConditions

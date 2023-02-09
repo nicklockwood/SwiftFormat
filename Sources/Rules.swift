@@ -738,16 +738,28 @@ public struct _FormatRules {
                 }
             } else if !wasValue, let valueStartIndex = formatter
                 .index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
-                !formatter.isConditionalStatement(at: i)
+                !formatter.isConditionalStatement(at: i),
+                let endIndex = formatter.endOfExpression(at: j, upTo: []),
+                endIndex > j
             {
-                if formatter.nextToken(after: j) == .startOfScope("(") {
-                    formatter.replaceTokens(in: valueStartIndex ... j, with: [.operator(".", .infix), .identifier("init")])
-                } else if
-                    // check for `= Type.identifier` or `= Type.identifier()`
-                    formatter.token(at: j + 1) == .operator(".", .infix),
-                    formatter.endOfExpression(at: j + 1, upTo: []) == j + 2 ||
-                    (formatter.token(at: j + 3) == .startOfScope("(") && formatter.token(at: j + 4) == .endOfScope(")"))
-                {
+                let allowChains = formatter.options.swiftVersion >= "5.4"
+                if formatter.next(.nonSpaceOrComment, after: j) == .startOfScope("(") {
+                    if allowChains || formatter.index(
+                        of: .operator(".", .infix),
+                        in: j ..< endIndex
+                    ) == nil {
+                        formatter.replaceTokens(in: valueStartIndex ... j, with: [
+                            .operator(".", .infix), .identifier("init"),
+                        ])
+                    }
+                } else if let nextIndex = formatter.index(
+                    of: .nonSpaceOrCommentOrLinebreak,
+                    after: j,
+                    if: { $0 == .operator(".", .infix) }
+                ), allowChains || formatter.index(
+                    of: .operator(".", .infix),
+                    in: (nextIndex + 1) ..< endIndex
+                ) == nil {
                     formatter.removeTokens(in: valueStartIndex ... j)
                 }
             }

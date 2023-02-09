@@ -1231,12 +1231,28 @@ class RedundancyTests: RulesTests {
                        options: options)
     }
 
+    func testVarRedundantTypeRemovalExplicitType2() {
+        let input = "var view: UIView = UIView /* foo */()"
+        let output = "var view: UIView = .init /* foo */()"
+        let options = FormatOptions(redundantType: .explicit)
+        testFormatting(for: input, output, rule: FormatRules.redundantType,
+                       options: options, exclude: ["spaceAroundComments"])
+    }
+
     func testLetRedundantGenericTypeRemovalExplicitType() {
         let input = "let relay: BehaviourRelay<Int?> = BehaviourRelay<Int?>(value: nil)"
         let output = "let relay: BehaviourRelay<Int?> = .init(value: nil)"
         let options = FormatOptions(redundantType: .explicit)
         testFormatting(for: input, output, rule: FormatRules.redundantType,
                        options: options)
+    }
+
+    func testLetRedundantGenericTypeRemovalExplicitTypeIfValueOnNextLine() {
+        let input = "let relay: Foo<Int?> = Foo<Int?>\n    .default"
+        let output = "let relay: Foo<Int?> = \n    .default"
+        let options = FormatOptions(redundantType: .explicit)
+        testFormatting(for: input, output, rule: FormatRules.redundantType,
+                       options: options, exclude: ["trailingSpace"])
     }
 
     func testVarNonRedundantTypeDoesNothingExplicitType() {
@@ -1341,10 +1357,37 @@ class RedundancyTests: RulesTests {
                        options: options)
     }
 
-    func testRedundantTypeDoesNothingWithStaticMemberMakingCopy() {
+    func testRedundantTypeDoesNothingWithChainedMember() {
         let input = "let session: URLSession = URLSession.default.makeCopy()"
         let options = FormatOptions(redundantType: .explicit)
         testFormatting(for: input, rule: FormatRules.redundantType, options: options)
+    }
+
+    func testRedundantRedundantChainedMemberTypeRemovedOnSwift5_4() {
+        let input = "let session: URLSession = URLSession.default.makeCopy()"
+        let output = "let session: URLSession = .default.makeCopy()"
+        let options = FormatOptions(redundantType: .explicit, swiftVersion: "5.4")
+        testFormatting(for: input, output, rule: FormatRules.redundantType,
+                       options: options)
+    }
+
+    func testRedundantTypeDoesNothingWithChainedMember2() {
+        let input = "let color: UIColor = UIColor.red.withAlphaComponent(0.5)"
+        let options = FormatOptions(redundantType: .explicit)
+        testFormatting(for: input, rule: FormatRules.redundantType, options: options)
+    }
+
+    func testRedundantTypeDoesNothingWithChainedMember3() {
+        let input = "let url: URL = URL(fileURLWithPath: #file).deletingLastPathComponent()"
+        let options = FormatOptions(redundantType: .explicit)
+        testFormatting(for: input, rule: FormatRules.redundantType, options: options)
+    }
+
+    func testRedundantTypeRemovedWithChainedMemberOnSwift5_4() {
+        let input = "let url: URL = URL(fileURLWithPath: #file).deletingLastPathComponent()"
+        let output = "let url: URL = .init(fileURLWithPath: #file).deletingLastPathComponent()"
+        let options = FormatOptions(redundantType: .explicit, swiftVersion: "5.4")
+        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options)
     }
 
     func testRedundantTypeDoesNothingIfLet() {

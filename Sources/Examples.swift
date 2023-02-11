@@ -1530,4 +1530,31 @@ private struct Examples {
     + //
     ```
     """
+
+    let conditionalAssignment = """
+    ```diff
+    - let foo: String
+    - if condition {
+    + let foo = if condition {
+    -     foo = "foo"
+    +     "foo"
+      } else {
+    -     return "bar"
+    +     "bar"
+      }
+    ```
+
+    ```diff
+    - let foo: String
+    - switch condition {
+    + let foo = switch condition {
+      case true:
+    -     foo = "foo"
+    +     "foo"
+      case false:
+    -     foo = "bar"
+    +     "bar"
+      }
+    ```
+    """
 }

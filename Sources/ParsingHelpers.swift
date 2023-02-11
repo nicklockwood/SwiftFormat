@@ -1148,7 +1148,23 @@ extension Formatter {
     ///  - `(...)`
     ///  - `Foo<...>`
     ///  - `(...) -> ...`
+    ///  - `...?`
+    ///  - `...!`
     func parseType(at startOfTypeIndex: Int) -> (name: String, range: ClosedRange<Int>) {
+        let baseType = parseNonOptionalType(at: startOfTypeIndex)
+
+        // Any type can be optional, so check for a trailing `?` or `!`
+        if let nextToken = index(of: .nonSpaceOrCommentOrLinebreak, after: baseType.range.upperBound),
+           ["?", "!"].contains(tokens[nextToken].string)
+        {
+            let typeRange = baseType.range.lowerBound ... nextToken
+            return (name: tokens[typeRange].string, range: typeRange)
+        }
+
+        return baseType
+    }
+
+    private func parseNonOptionalType(at startOfTypeIndex: Int) -> (name: String, range: ClosedRange<Int>) {
         // Parse types of the form `[...]`
         if tokens[startOfTypeIndex] == .startOfScope("["),
            let endOfScope = endOfScope(at: startOfTypeIndex)

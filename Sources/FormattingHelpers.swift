@@ -1045,25 +1045,17 @@ extension Formatter {
         //     are also considered single statements
         if
             options.swiftVersion >= "5.8",
-            let firstTokenInBody = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfBody)
+            let firstTokenInBody = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfBody),
+            let conditionalBranches = conditionalBranches(at: firstTokenInBody)
         {
-            var conditionalBranches: [(startOfBranch: Int, endOfBranch: Int)]?
-            if tokens[firstTokenInBody] == .keyword("if") {
-                conditionalBranches = ifStatementBranches(at: firstTokenInBody)
-            } else if tokens[firstTokenInBody] == .keyword("switch") {
-                conditionalBranches = switchStatementBranches(at: firstTokenInBody)
+            let isSingleStatement = conditionalBranches.allSatisfy { branch in
+                blockBodyHasSingleStatement(atStartOfScope: branch.startOfBranch)
             }
 
-            if let conditionalBranches = conditionalBranches {
-                let isSingleStatement = conditionalBranches.allSatisfy { branch in
-                    blockBodyHasSingleStatement(atStartOfScope: branch.startOfBranch)
-                }
+            let endOfStatement = conditionalBranches.last?.endOfBranch ?? firstTokenInBody
+            let isOnlyStatement = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfStatement) == endOfScopeIndex
 
-                let endOfStatement = conditionalBranches.last?.endOfBranch ?? firstTokenInBody
-                let isOnlyStatement = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfStatement) == endOfScopeIndex
-
-                return isSingleStatement && isOnlyStatement
-            }
+            return isSingleStatement && isOnlyStatement
         }
 
         // (2) any other statement-forming scope (e.g. guard, #if)
@@ -1158,9 +1150,23 @@ extension Formatter {
         }
     }
 
+    typealias ConditionalBranch = (startOfBranch: Int, endOfBranch: Int)
+
+    /// If `index` is the start of an `if` or `switch` statement,
+    /// finds and returns all of the statement branches.
+    func conditionalBranches(at index: Int) -> [ConditionalBranch]? {
+        if tokens[index] == .keyword("if") {
+            return ifStatementBranches(at: index)
+        } else if tokens[index] == .keyword("switch") {
+            return switchStatementBranches(at: index)
+        } else {
+            return nil
+        }
+    }
+
     /// Finds all of the branch bodies in an if statement.
     /// Returns the index of the `startOfScope` and `endOfScope` of each branch.
-    func ifStatementBranches(at ifIndex: Int) -> [(startOfBranch: Int, endOfBranch: Int)] {
+    func ifStatementBranches(at ifIndex: Int) -> [ConditionalBranch] {
         var branches = [(startOfBranch: Int, endOfBranch: Int)]()
         var nextConditionalBranchIndex: Int? = ifIndex
 
@@ -1181,7 +1187,7 @@ extension Formatter {
 
     /// Finds all of the branch bodies in a switch statement.
     /// Returns the index of the `startOfScope` and `endOfScope` of each branch.
-    func switchStatementBranches(at switchIndex: Int) -> [(startOfBranch: Int, endOfBranch: Int)] {
+    func switchStatementBranches(at switchIndex: Int) -> [ConditionalBranch] {
         guard
             let startOfSwitchScope = index(of: .startOfScope("{"), after: switchIndex),
             let firstCaseIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfSwitchScope),

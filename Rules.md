@@ -8,6 +8,7 @@
 * [blankLinesAtStartOfScope](#blankLinesAtStartOfScope)
 * [blankLinesBetweenScopes](#blankLinesBetweenScopes)
 * [braces](#braces)
+* [conditionalAssignment](#conditionalAssignment)
 * [consecutiveBlankLines](#consecutiveBlankLines)
 * [consecutiveSpaces](#consecutiveSpaces)
 * [duplicateImports](#duplicateImports)
@@ -439,6 +440,41 @@ Option | Description
   }
 + else {
     // bar
+  }
+```
+
+</details>
+<br/>
+
+## conditionalAssignment
+
+Assign properties using if / switch expressions.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- let foo: String
+- if condition {
++ let foo = if condition {
+-     foo = "foo"
++     "foo"
+  } else {
+-     return "bar"
++     "bar"
+  }
+```
+
+```diff
+- let foo: String
+- switch condition {
++ let foo = switch condition {
+  case true:
+-     foo = "foo"
++     "foo"
+  case false:
+-     foo = "bar"
++     "bar"
   }
 ```
 

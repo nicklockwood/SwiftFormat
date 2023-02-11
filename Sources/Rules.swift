@@ -7702,29 +7702,15 @@ public struct _FormatRules {
             }
 
             // Remove the `identifier =` from each conditional branch,
-            // working backwards so removing tokens doesn't invalidate existing indices
-            func removeAssignment(from branch: Formatter.ConditionalBranch) {
-                guard let firstTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: branch.startOfBranch) else { return }
-
-                // If this is a conditional branch then we remove `identifier =` from each branch
-                if let conditionalBranches = formatter.conditionalBranches(at: firstTokenIndex) {
-                    for branch in conditionalBranches.reversed() {
-                        removeAssignment(from: branch)
-                    }
-                }
-
-                // Otherwise this is a single statement so we just remove the `identifier =`
-                else if
+            formatter.forEachRecursiveConditionalBranch(in: conditionalBranches) { branch in
+                guard
+                    let firstTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: branch.startOfBranch),
                     let equalsIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: firstTokenIndex),
                     formatter.tokens[equalsIndex] == .operator("=", .infix),
                     let valueStartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex)
-                {
-                    formatter.removeTokens(in: firstTokenIndex ..< valueStartIndex)
-                }
-            }
+                else { return }
 
-            for conditionalBranch in conditionalBranches.reversed() {
-                removeAssignment(from: conditionalBranch)
+                formatter.removeTokens(in: firstTokenIndex ..< valueStartIndex)
             }
 
             // Lastly we have to insert an `=` between the type and the conditional

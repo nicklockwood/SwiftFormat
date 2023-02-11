@@ -3597,7 +3597,7 @@ class SyntaxTests: RulesTests {
         }
         """
         let options = FormatOptions(swiftVersion: "5.8")
-        testFormatting(for: input, output, rule: FormatRules.conditionalAssignment, options: options)
+        testFormatting(for: input, output, rule: FormatRules.conditionalAssignment, options: options, exclude: ["redundantType"])
     }
 
     func testConvertsSimpleSwitchStatementAssignment() {
@@ -3619,7 +3619,7 @@ class SyntaxTests: RulesTests {
         }
         """
         let options = FormatOptions(swiftVersion: "5.8")
-        testFormatting(for: input, output, rule: FormatRules.conditionalAssignment, options: options)
+        testFormatting(for: input, output, rule: FormatRules.conditionalAssignment, options: options, exclude: ["redundantType"])
     }
 
     func testConvertsTrivialSwitchStatementAssignment() {
@@ -3677,7 +3677,7 @@ class SyntaxTests: RulesTests {
         }
         """
         let options = FormatOptions(swiftVersion: "5.8")
-        testFormatting(for: input, output, rule: FormatRules.conditionalAssignment, options: options)
+        testFormatting(for: input, output, rule: FormatRules.conditionalAssignment, options: options, exclude: ["redundantType"])
     }
 
     func testConvertsIfStatementAssignmentPreservingComment() {
@@ -3700,7 +3700,7 @@ class SyntaxTests: RulesTests {
         }
         """
         let options = FormatOptions(swiftVersion: "5.8")
-        testFormatting(for: input, output, rule: FormatRules.conditionalAssignment, options: options, exclude: ["indent"])
+        testFormatting(for: input, output, rule: FormatRules.conditionalAssignment, options: options, exclude: ["indent", "redundantType"])
     }
 
     func testDoesntConvertsIfStatementAssigningMultipleProperties() {

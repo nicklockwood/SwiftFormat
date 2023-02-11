@@ -853,6 +853,23 @@ private struct Examples {
     +         let view = UIView()
           }
       }
+
+    // Swift 5.8+, inferred (SE-0380)
+    - let foo: Foo = if condition {
+    + let foo = if condition {
+          Foo("foo")
+      } else {
+          Foo("bar")
+      }
+
+    // Swift 5.8+, explicit (SE-0380)
+      let foo: Foo = if condition {
+    -     Foo("foo")
+    +     .init("foo")
+      } else {
+    -     Foo("bar")
+    +     .init("foo")
+      }
     ```
     """
 
@@ -1539,7 +1556,7 @@ private struct Examples {
     -     foo = "foo"
     +     "foo"
       } else {
-    -     return "bar"
+    -     bar = "bar"
     +     "bar"
       }
     ```

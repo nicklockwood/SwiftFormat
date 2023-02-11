@@ -1230,7 +1230,6 @@ extension Formatter {
                 for branch in conditionalBranches.reversed() {
                     handle(branch)
                 }
-                return
             } else {
                 handle(branch)
             }

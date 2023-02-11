@@ -1236,10 +1236,10 @@ class RedundancyTests: RulesTests {
 
     func testPreservesNonRedundantTypeWithIfExpression() {
         let input = """
-        let foo: FooOrBar = if condition {
+        let foo: Foo = if condition {
             Foo("foo")
         } else {
-            Bar("bar")
+            FooSubclass("bar")
         }
         """
         let options = FormatOptions(redundantType: .inferred, swiftVersion: "5.8")

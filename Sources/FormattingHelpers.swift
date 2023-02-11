@@ -1216,6 +1216,44 @@ extension Formatter {
         return branches
     }
 
+    /// Performs a closure for each conditional branch in the given conditional statement,
+    /// including any recursive conditional inside an individual branch.
+    /// Iterates backwards to support removing tokens in `handle`.
+    func forEachRecursiveConditionalBranch(
+        in branches: [ConditionalBranch],
+        _ handle: (ConditionalBranch) -> Void
+    ) {
+        for branch in branches.reversed() {
+            if let tokenAfterEquals = index(of: .nonSpaceOrCommentOrLinebreak, after: branch.startOfBranch),
+               let conditionalBranches = conditionalBranches(at: tokenAfterEquals)
+            {
+                for branch in conditionalBranches.reversed() {
+                    handle(branch)
+                }
+                return
+            } else {
+                handle(branch)
+            }
+        }
+    }
+
+    /// Performs a check for each conditional branch in the given conditional statement,
+    /// including any recursive conditional inside an individual branch
+    func allRecursiveConditionalBranches(
+        in branches: [ConditionalBranch],
+        satisfy branchSatisfiesCondition: (ConditionalBranch) -> Bool
+    )
+        -> Bool
+    {
+        var allSatisfy = true
+        forEachRecursiveConditionalBranch(in: branches) { branch in
+            if !branchSatisfiesCondition(branch) {
+                allSatisfy = false
+            }
+        }
+        return allSatisfy
+    }
+
     /// Whether the given index is directly within the body of the given scope, or part of a nested closure
     func indexIsWithinNestedClosure(_ index: Int, startOfScopeIndex: Int) -> Bool {
         let startOfScopeAtIndex: Int

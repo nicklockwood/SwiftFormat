@@ -671,51 +671,58 @@ public struct _FormatRules {
             let typeEndIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: equalsIndex)
             else { return }
 
-            // Check types match
-            var i = colonIndex, j = equalsIndex, wasValue = false
-            while let typeIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i),
-                  typeIndex <= typeEndIndex,
-                  let valueIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: j)
+            /// Compares whether or not two types are equivalent
+            func compare(typeStartingAfter j: Int, withTypeStartingAfter i: Int)
+                -> (matches: Bool, i: Int, j: Int, wasValue: Bool)
             {
-                let typeToken = formatter.tokens[typeIndex]
-                let valueToken = formatter.tokens[valueIndex]
-                if !wasValue {
-                    switch valueToken {
-                    case _ where valueToken.isStringDelimiter, .number,
-                         .identifier("true"), .identifier("false"):
-                        if formatter.options.redundantType == .explicit {
-                            // We never remove the value in this case, so exit early
-                            return
+                var i = i, j = j, wasValue = false
+
+                while let typeIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i),
+                      typeIndex <= typeEndIndex,
+                      let valueIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: j)
+                {
+                    let typeToken = formatter.tokens[typeIndex]
+                    let valueToken = formatter.tokens[valueIndex]
+                    if !wasValue {
+                        switch valueToken {
+                        case _ where valueToken.isStringDelimiter, .number,
+                             .identifier("true"), .identifier("false"):
+                            if formatter.options.redundantType == .explicit {
+                                // We never remove the value in this case, so exit early
+                                return (false, i, j, wasValue)
+                            }
+                            wasValue = true
+                        default:
+                            break
                         }
-                        wasValue = true
-                    default:
-                        break
+                    }
+                    guard typeToken == formatter.typeToken(forValueToken: valueToken) else {
+                        return (false, i, j, wasValue)
+                    }
+                    // Avoid introducing "inferred to have type 'Void'" warning
+                    if formatter.options.redundantType == .inferred, typeToken == .identifier("Void") ||
+                        typeToken == .endOfScope(")") && formatter.tokens[i] == .startOfScope("(")
+                    {
+                        return (false, i, j, wasValue)
+                    }
+                    i = typeIndex
+                    j = valueIndex
+                    if formatter.tokens[j].isStringDelimiter, let next = formatter.endOfScope(at: j) {
+                        j = next
                     }
                 }
-                guard typeToken == formatter.typeToken(forValueToken: valueToken) else {
-                    return
+                guard i == typeEndIndex else {
+                    return (false, i, j, wasValue)
                 }
-                // Avoid introducing "inferred to have type 'Void'" warning
-                if formatter.options.redundantType == .inferred, typeToken == .identifier("Void") ||
-                    typeToken == .endOfScope(")") && formatter.tokens[i] == .startOfScope("(")
-                {
-                    return
-                }
-                i = typeIndex
-                j = valueIndex
-                if formatter.tokens[j].isStringDelimiter, let next = formatter.endOfScope(at: j) {
-                    j = next
-                }
-            }
-            guard i == typeEndIndex else {
-                return
-            }
 
-            // Check for ternary
-            if let endOfExpression = formatter.endOfExpression(at: j, upTo: [.operator("?", .infix)]),
-               formatter.next(.nonSpaceOrCommentOrLinebreak, after: endOfExpression) == .operator("?", .infix)
-            {
-                return
+                // Check for ternary
+                if let endOfExpression = formatter.endOfExpression(at: j, upTo: [.operator("?", .infix)]),
+                   formatter.next(.nonSpaceOrCommentOrLinebreak, after: endOfExpression) == .operator("?", .infix)
+                {
+                    return (false, i, j, wasValue)
+                }
+
+                return (true, i, j, wasValue)
             }
 
             // The implementation of RedundantType uses inferred or explicit,
@@ -727,7 +734,7 @@ public struct _FormatRules {
             case .explicit:
                 isInferred = false
             case .inferLocalsOnly:
-                switch formatter.declarationScope(at: i) {
+                switch formatter.declarationScope(at: equalsIndex) {
                 case .global, .type:
                     isInferred = false
                 case .local:
@@ -735,36 +742,75 @@ public struct _FormatRules {
                 }
             }
 
-            if isInferred {
-                formatter.removeTokens(in: colonIndex ... typeEndIndex)
-                if formatter.tokens[colonIndex - 1].isSpace {
-                    formatter.removeToken(at: colonIndex - 1)
-                }
-            } else if !wasValue, let valueStartIndex = formatter
-                .index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
-                !formatter.isConditionalStatement(at: i),
-                let endIndex = formatter.endOfExpression(at: j, upTo: []),
-                endIndex > j
-            {
-                let allowChains = formatter.options.swiftVersion >= "5.4"
-                if formatter.next(.nonSpaceOrComment, after: j) == .startOfScope("(") {
-                    if allowChains || formatter.index(
-                        of: .operator(".", .infix),
-                        in: j ..< endIndex
-                    ) == nil {
-                        formatter.replaceTokens(in: valueStartIndex ... j, with: [
-                            .operator(".", .infix), .identifier("init"),
-                        ])
+            /// Removes a type already processed by `compare(typeStartingAfter:withTypeStartingAfter:)`
+            func removeType(after indexBeforeStartOfType: Int, i: Int, j: Int, wasValue: Bool) {
+                if isInferred {
+                    formatter.removeTokens(in: colonIndex ... typeEndIndex)
+                    if formatter.tokens[colonIndex - 1].isSpace {
+                        formatter.removeToken(at: colonIndex - 1)
                     }
-                } else if let nextIndex = formatter.index(
-                    of: .nonSpaceOrCommentOrLinebreak,
-                    after: j,
-                    if: { $0 == .operator(".", .infix) }
-                ), allowChains || formatter.index(
-                    of: .operator(".", .infix),
-                    in: (nextIndex + 1) ..< endIndex
-                ) == nil {
-                    formatter.removeTokens(in: valueStartIndex ... j)
+                } else if !wasValue, let valueStartIndex = formatter
+                    .index(of: .nonSpaceOrCommentOrLinebreak, after: indexBeforeStartOfType),
+                    !formatter.isConditionalStatement(at: i),
+                    let endIndex = formatter.endOfExpression(at: j, upTo: []),
+                    endIndex > j
+                {
+                    let allowChains = formatter.options.swiftVersion >= "5.4"
+                    if formatter.next(.nonSpaceOrComment, after: j) == .startOfScope("(") {
+                        if allowChains || formatter.index(
+                            of: .operator(".", .infix),
+                            in: j ..< endIndex
+                        ) == nil {
+                            formatter.replaceTokens(in: valueStartIndex ... j, with: [
+                                .operator(".", .infix), .identifier("init"),
+                            ])
+                        }
+                    } else if let nextIndex = formatter.index(
+                        of: .nonSpaceOrCommentOrLinebreak,
+                        after: j,
+                        if: { $0 == .operator(".", .infix) }
+                    ), allowChains || formatter.index(
+                        of: .operator(".", .infix),
+                        in: (nextIndex + 1) ..< endIndex
+                    ) == nil {
+                        formatter.removeTokens(in: valueStartIndex ... j)
+                    }
+                }
+            }
+
+            // In Swift 5.8+ we need to handle if / switch expressions by checking each branch
+            if formatter.options.swiftVersion >= "5.8",
+               let tokenAfterEquals = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
+               let conditionalBranches = formatter.conditionalBranches(at: tokenAfterEquals),
+               formatter.allRecursiveConditionalBranches(
+                   in: conditionalBranches,
+                   satisfy: { branch in
+                       compare(typeStartingAfter: branch.startOfBranch, withTypeStartingAfter: colonIndex).matches
+                   }
+               )
+            {
+                if isInferred {
+                    formatter.removeTokens(in: colonIndex ... typeEndIndex)
+                    if formatter.tokens[colonIndex - 1].isSpace {
+                        formatter.removeToken(at: colonIndex - 1)
+                    }
+                } else {
+                    formatter.forEachRecursiveConditionalBranch(in: conditionalBranches) { branch in
+                        let (_, i, j, wasValue) = compare(
+                            typeStartingAfter: branch.startOfBranch,
+                            withTypeStartingAfter: colonIndex
+                        )
+
+                        removeType(after: branch.startOfBranch, i: i, j: j, wasValue: wasValue)
+                    }
+                }
+            }
+
+            // Otherwise this is just a simple assignment expression where the RHS is a single value
+            else {
+                let (matches, i, j, wasValue) = compare(typeStartingAfter: equalsIndex, withTypeStartingAfter: colonIndex)
+                if matches {
+                    removeType(after: equalsIndex, i: i, j: j, wasValue: wasValue)
                 }
             }
         }

@@ -3655,7 +3655,11 @@ class SyntaxTests: RulesTests {
             case true:
                 foo = Foo("baaz")
             case false:
-                foo = Foo("quux")
+                if condition {
+                    foo = Foo("quux")
+                } else {
+                    foo = Foo("quack")
+                }
             }
         }
         """
@@ -3672,7 +3676,11 @@ class SyntaxTests: RulesTests {
             case true:
                 Foo("baaz")
             case false:
-                Foo("quux")
+                if condition {
+                    Foo("quux")
+                } else {
+                    Foo("quack")
+                }
             }
         }
         """

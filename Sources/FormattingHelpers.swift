@@ -1227,9 +1227,7 @@ extension Formatter {
             if let tokenAfterEquals = index(of: .nonSpaceOrCommentOrLinebreak, after: branch.startOfBranch),
                let conditionalBranches = conditionalBranches(at: tokenAfterEquals)
             {
-                for branch in conditionalBranches.reversed() {
-                    handle(branch)
-                }
+                forEachRecursiveConditionalBranch(in: conditionalBranches, handle)
             } else {
                 handle(branch)
             }

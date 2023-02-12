@@ -1284,29 +1284,74 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantType, options: options)
     }
 
+    func testRedundantTypeWithNestedIfExpression_inferred() {
+        let input = """
+        let foo: Foo = if condition {
+            switch condition {
+            case true:
+                if condition {
+                    Foo("foo")
+                } else {
+                    Foo("bar")
+                }
+            case false:
+                Foo("baaz")
+            }
+        } else {
+            Foo("quux")
+        }
+        """
+        let output = """
+        let foo = if condition {
+            switch condition {
+            case true:
+                if condition {
+                    Foo("foo")
+                } else {
+                    Foo("bar")
+                }
+            case false:
+                Foo("baaz")
+            }
+        } else {
+            Foo("quux")
+        }
+        """
+        let options = FormatOptions(redundantType: .inferred, swiftVersion: "5.8")
+        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options)
+    }
+
     func testRedundantTypeWithNestedIfExpression_explicit() {
         let input = """
         let foo: Foo = if condition {
             switch condition {
             case true:
-                Foo("foo")
+                if condition {
+                    Foo("foo")
+                } else {
+                    Foo("bar")
+                }
             case false:
-                Foo("bar")
+                Foo("baaz")
             }
         } else {
-            Foo("baaz")
+            Foo("quux")
         }
         """
         let output = """
         let foo: Foo = if condition {
             switch condition {
             case true:
-                .init("foo")
+                if condition {
+                    .init("foo")
+                } else {
+                    .init("bar")
+                }
             case false:
-                .init("bar")
+                .init("baaz")
             }
         } else {
-            .init("baaz")
+            .init("quux")
         }
         """
         let options = FormatOptions(redundantType: .explicit, swiftVersion: "5.8")

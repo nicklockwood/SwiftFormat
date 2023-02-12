@@ -524,7 +524,7 @@ extension Token {
     }
 }
 
-extension Collection<Token> {
+extension Collection where Element == Token {
     var string: String {
         map { $0.string }.joined()
     }

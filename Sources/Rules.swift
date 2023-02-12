@@ -7683,13 +7683,13 @@ public struct _FormatRules {
                     // remaining code in the branch is a single statement. To do that we can
                     // create a temporary formatter with the branch body _excluding_ `identifier =`.
                     let assignmentStatementRange = valueStartIndex ..< branch.endOfBranch
-                    var fakeScopeTokens = [Token]()
-                    fakeScopeTokens.append(.startOfScope("{"))
-                    fakeScopeTokens.append(contentsOf: formatter.tokens[assignmentStatementRange])
-                    fakeScopeTokens.append(.endOfScope("}"))
+                    var tempScopeTokens = [Token]()
+                    tempScopeTokens.append(.startOfScope("{"))
+                    tempScopeTokens.append(contentsOf: formatter.tokens[assignmentStatementRange])
+                    tempScopeTokens.append(.endOfScope("}"))
 
-                    let formatter = Formatter(fakeScopeTokens, options: formatter.options)
-                    return formatter.blockBodyHasSingleStatement(atStartOfScope: 0)
+                    let tempFormatter = Formatter(tempScopeTokens, options: formatter.options)
+                    return tempFormatter.blockBodyHasSingleStatement(atStartOfScope: 0)
                 }
 
                 return false

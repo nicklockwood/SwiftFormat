@@ -31,19 +31,16 @@
 
 import Foundation
 
-class JSONReporter {
-    let outputURL: URL
+final class JSONReporter: Reporter {
     var changes: [Formatter.Change] = []
 
-    init(outputURL: URL) {
-        self.outputURL = outputURL
-    }
+    init(environment _: [String: String]) {}
 
     func report(_ changes: [Formatter.Change]) {
         self.changes.append(contentsOf: changes)
     }
 
-    func write() throws {
+    func write() throws -> Data {
         let encoder = JSONEncoder()
         encoder.keyEncodingStrategy = .convertToSnakeCase
         encoder.outputFormatting = .prettyPrinted
@@ -65,7 +62,7 @@ class JSONReporter {
         if stripSlashes, let string = String(data: data, encoding: .utf8) {
             data = string.replacingOccurrences(of: "\\/", with: "/").data(using: .utf8) ?? data
         }
-        try data.write(to: outputURL, options: .atomic)
+        return data
     }
 }
 

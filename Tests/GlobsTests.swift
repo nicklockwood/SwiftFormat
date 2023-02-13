@@ -85,14 +85,14 @@ class GlobsTests: XCTestCase {
     func testExpandPathWithWildcardAtStart() {
         let path = "*Tests.swift"
         let directory = URL(fileURLWithPath: #file).deletingLastPathComponent()
-        XCTAssertEqual(try matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 13)
+        XCTAssertEqual(try matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 14)
     }
 
     func testExpandPathWithSubdirectoryAndWildcard() {
         let path = "Tests/*Tests.swift"
         let directory = URL(fileURLWithPath: #file)
             .deletingLastPathComponent().deletingLastPathComponent()
-        XCTAssertEqual(try matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 13)
+        XCTAssertEqual(try matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 14)
     }
 
     func testSingleWildcardDoesNotMatchDirectorySlash() {

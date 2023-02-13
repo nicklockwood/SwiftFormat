@@ -197,7 +197,9 @@ func printHelp(as type: CLI.OutputType) {
     --cache            Path to cache file, or "clear" or "ignore" the default cache
     --dryrun           Run in "dry" mode (without actually changing any files)
     --lint             Return an error for unformatted input, and list violations
-    --report           Path to a file where --lint output should be written
+    --reporter         Output --lint violations with a reporter
+                       (\(Reporters.availableIdentifiersHelp))
+    --report           Output file path for --reporter (defaults to stdout)
     --lenient          Suppress errors for unformatted code in --lint mode
     --verbose          Display detailed formatting output and warnings/errors
     --quiet            Disables non-critical output messages and warnings
@@ -293,8 +295,18 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
         }
 
         // Report output
-        let reporter = args["report"].map {
-            JSONReporter(outputURL: URL(fileURLWithPath: $0))
+        let reporter = try args["reporter"].map { identifier in
+            guard let reporter = Reporters.makeReporter(identifier: identifier, environment: environment) else {
+                throw FormatError.options("No available reporter with identifier \(identifier)")
+            }
+            return reporter
+        }
+
+        let report = try args["report"].map {
+            guard reporter != nil else {
+                throw FormatError.options("--report requires --reporter to be specified")
+            }
+            return URL(fileURLWithPath: $0)
         }
 
         // Show help
@@ -486,6 +498,10 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
                 print("warning: --output argument is unused when running in --lint mode", as: .warning)
             }
             return try parsePath(arg, for: "--output", in: directory)
+        }
+
+        guard !useStdout || (reporter == nil || report != nil) else {
+            throw FormatError.options("--report file must be specified when --output is stdout")
         }
 
         // Source range
@@ -731,8 +747,13 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
             print("warning: No eligible files found at \(inputPaths).", as: .warning)
         }
         if let reporter = reporter {
-            print("Writing report file to \(reporter.outputURL.path)")
-            try reporter.write()
+            let reporterOutput = try reporter.write()
+            if let report {
+                print("Writing report file to \(report.path)")
+                try reporterOutput.write(to: report, options: .atomic)
+            } else {
+                print(String(decoding: reporterOutput, as: UTF8.self), as: .raw)
+            }
         }
         print("SwiftFormat completed in \(time).", as: .success)
         return printResult(dryrun, lint, lenient, outputFlags)
@@ -838,7 +859,7 @@ func computeHash(_ source: String) -> String {
 }
 
 func applyRules(_ source: String, options: Options, lineRange: ClosedRange<Int>?,
-                verbose: Bool, lint: Bool, reporter: JSONReporter?) throws -> String
+                verbose: Bool, lint: Bool, reporter: Reporter?) throws -> String
 {
     // Parse source
     var tokens = tokenize(source)
@@ -893,7 +914,7 @@ func processInput(_ inputURLs: [URL],
                   dryrun: Bool,
                   lint: Bool,
                   cacheURL: URL?,
-                  reporter: JSONReporter?) -> (OutputFlags, [Error])
+                  reporter: Reporter?) -> (OutputFlags, [Error])
 {
     // Load cache
     let cacheDirectory = cacheURL?.deletingLastPathComponent().absoluteURL

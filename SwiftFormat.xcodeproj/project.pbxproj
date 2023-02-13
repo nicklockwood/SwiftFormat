@@ -110,6 +110,10 @@
 		C892E99527803D2300F16014 /* Inference.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01045A90211988F100D2BE3D /* Inference.swift */; };
 		C892E99627803D4700F16014 /* FormattingHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01D3B28524E9C9C700888DE0 /* FormattingHelpers.swift */; };
 		C8CA19B12780628F00F669AB /* ProjectConfigurationFinder.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8CA19B02780628F00F669AB /* ProjectConfigurationFinder.swift */; };
+		DD9AD39E2999FCC8001C2C0E /* GithubActionsLogReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD9AD39C2999FCC8001C2C0E /* GithubActionsLogReporter.swift */; };
+		DD9AD39F2999FCC8001C2C0E /* GithubActionsLogReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD9AD39C2999FCC8001C2C0E /* GithubActionsLogReporter.swift */; };
+		DD9AD3A32999FCC8001C2C0E /* Reporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD9AD39D2999FCC8001C2C0E /* Reporter.swift */; };
+		DD9AD3A42999FCC8001C2C0E /* Reporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD9AD39D2999FCC8001C2C0E /* Reporter.swift */; };
 		E4083191202C049200CAF11D /* SwiftFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A0EAC41D5DB54A00A0A8E3 /* SwiftFormat.swift */; };
 		E41CB5BF2025761D00C1BEDE /* UserSelection.swift in Sources */ = {isa = PBXBuildFile; fileRef = E41CB5BE2025761D00C1BEDE /* UserSelection.swift */; };
 		E41CB5C32026CACD00C1BEDE /* ListSelectionTableCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E41CB5C22026CACD00C1BEDE /* ListSelectionTableCellView.swift */; };
@@ -267,6 +271,8 @@
 		B9C4F55B2387FA3E0088DBEE /* SupportedContentUTIs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupportedContentUTIs.swift; sourceTree = "<group>"; };
 		C892E96F27803A4C00F16014 /* EditorExtensionXPCService.xpc */ = {isa = PBXFileReference; explicitFileType = "wrapper.xpc-service"; includeInIndex = 0; path = EditorExtensionXPCService.xpc; sourceTree = BUILT_PRODUCTS_DIR; };
 		C8CA19B02780628F00F669AB /* ProjectConfigurationFinder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectConfigurationFinder.swift; sourceTree = "<group>"; };
+		DD9AD39C2999FCC8001C2C0E /* GithubActionsLogReporter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GithubActionsLogReporter.swift; sourceTree = "<group>"; };
+		DD9AD39D2999FCC8001C2C0E /* Reporter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Reporter.swift; sourceTree = "<group>"; };
 		E41CB5BE2025761D00C1BEDE /* UserSelection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSelection.swift; sourceTree = "<group>"; };
 		E41CB5C22026CACD00C1BEDE /* ListSelectionTableCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListSelectionTableCellView.swift; sourceTree = "<group>"; };
 		E41CB5C42027700100C1BEDE /* FreeTextTableCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FreeTextTableCellView.swift; sourceTree = "<group>"; };
@@ -398,6 +404,8 @@
 		01A0EAA61D5DB4CF00A0A8E3 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				DD9AD39D2999FCC8001C2C0E /* Reporter.swift */,
+				DD9AD39C2999FCC8001C2C0E /* GithubActionsLogReporter.swift */,
 				A3DF48242620E03600F45A5F /* JSONReporter.swift */,
 				01F17E811E25870700DCD359 /* CommandLine.swift */,
 				E4E4D3C82033F17C000D7CB1 /* EnumAssociable.swift */,
@@ -853,7 +861,9 @@
 			files = (
 				01045A992119979400D2BE3D /* Arguments.swift in Sources */,
 				01567D2F225B2BFD00B22D41 /* ParsingHelpers.swift in Sources */,
+				DD9AD39E2999FCC8001C2C0E /* GithubActionsLogReporter.swift in Sources */,
 				01045A91211988F100D2BE3D /* Inference.swift in Sources */,
+				DD9AD3A32999FCC8001C2C0E /* Reporter.swift in Sources */,
 				E4FABAD5202FEF060065716E /* OptionDescriptor.swift in Sources */,
 				01BBD85921DAA2A000457380 /* Globs.swift in Sources */,
 				01ACAE05220CD90F003F3CCF /* Examples.swift in Sources */,
@@ -908,6 +918,7 @@
 				01567D30225B2BFD00B22D41 /* ParsingHelpers.swift in Sources */,
 				01B3987F1D7634A0009ADE61 /* Formatter.swift in Sources */,
 				01A0EAD41D5DC08A00A0A8E3 /* SwiftFormat.swift in Sources */,
+				DD9AD39F2999FCC8001C2C0E /* GithubActionsLogReporter.swift in Sources */,
 				E4E4D3CA2033F17C000D7CB1 /* EnumAssociable.swift in Sources */,
 				01BBD85A21DAA2A600457380 /* Globs.swift in Sources */,
 				01045A92211988F100D2BE3D /* Inference.swift in Sources */,
@@ -918,6 +929,7 @@
 				01F17E831E25870700DCD359 /* CommandLine.swift in Sources */,
 				01ACAE06220CD914003F3CCF /* Examples.swift in Sources */,
 				01A0EACD1D5DB5F500A0A8E3 /* main.swift in Sources */,
+				DD9AD3A42999FCC8001C2C0E /* Reporter.swift in Sources */,
 				01045A9A2119979400D2BE3D /* Arguments.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -472,6 +472,36 @@ class CommandLineTests: XCTestCase {
         XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "stdin --lint --rules indent --header foo"), .ok)
     }
 
+    // MARK: reporter
+
+    func testGithubActionsLogReporterEndToEnd() throws {
+        try withTmpFiles([
+            "foo.swift": "func foo() {\n}\n",
+        ]) { url in
+            CLI.print = { message, type in
+                switch type {
+                case .raw:
+                    XCTAssertTrue(message.hasPrefix("::warning file=foo.swift,line=1::"))
+                case .error, .warning:
+                    break
+                case .info, .success:
+                    break
+                case .content:
+                    XCTFail()
+                }
+            }
+            _ = processArguments([
+                "",
+                "--lint",
+                "--reporter",
+                "github-actions-log",
+                url.path,
+            ],
+            environment: ["GITHUB_WORKSPACE": url.deletingLastPathComponent().path],
+            in: "")
+        }
+    }
+
     // MARK: snapshot/regression tests
 
     func testRegressionSuite() {

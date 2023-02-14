@@ -3684,4 +3684,274 @@ class SyntaxTests: RulesTests {
 
         testFormatting(for: input, rule: FormatRules.docComments)
     }
+
+    // MARK: - conditionalAssignment
+
+    func testDoesntConvertIfStatementAssignmentSwift5_7() {
+        let input = """
+        let foo: Foo
+        if condition {
+            foo = Foo("foo")
+        } else {
+            foo = Foo("bar")
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, rule: FormatRules.conditionalAssignment, options: options)
+    }
+
+    func testConvertsIfStatementAssignment() {
+        let input = """
+        let foo: Foo
+        if condition {
+            foo = Foo("foo")
+        } else {
+            foo = Foo("bar")
+        }
+        """
+        let output = """
+        let foo: Foo = if condition {
+            Foo("foo")
+        } else {
+            Foo("bar")
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.8")
+        testFormatting(for: input, output, rule: FormatRules.conditionalAssignment, options: options, exclude: ["redundantType"])
+    }
+
+    func testConvertsSimpleSwitchStatementAssignment() {
+        let input = """
+        let foo: Foo
+        switch condition {
+        case true:
+            foo = Foo("foo")
+        case false:
+            foo = Foo("bar")
+        }
+        """
+        let output = """
+        let foo: Foo = switch condition {
+        case true:
+            Foo("foo")
+        case false:
+            Foo("bar")
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.8")
+        testFormatting(for: input, output, rule: FormatRules.conditionalAssignment, options: options, exclude: ["redundantType"])
+    }
+
+    func testConvertsTrivialSwitchStatementAssignment() {
+        let input = """
+        let foo: Foo
+        switch enumWithOnceCase(let value) {
+        case singleCase:
+            foo = value
+        }
+        """
+        let output = """
+        let foo: Foo = switch enumWithOnceCase(let value) {
+        case singleCase:
+            value
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.8")
+        testFormatting(for: input, output, rule: FormatRules.conditionalAssignment, options: options)
+    }
+
+    func testConvertsNestedIfAndStatementAssignments() {
+        let input = """
+        let foo: Foo
+        switch condition {
+        case true:
+            if condition {
+                foo = Foo("foo")
+            } else {
+                foo = Foo("bar")
+            }
+        case false:
+            switch condition {
+            case true:
+                foo = Foo("baaz")
+            case false:
+                if condition {
+                    foo = Foo("quux")
+                } else {
+                    foo = Foo("quack")
+                }
+            }
+        }
+        """
+        let output = """
+        let foo: Foo = switch condition {
+        case true:
+            if condition {
+                Foo("foo")
+            } else {
+                Foo("bar")
+            }
+        case false:
+            switch condition {
+            case true:
+                Foo("baaz")
+            case false:
+                if condition {
+                    Foo("quux")
+                } else {
+                    Foo("quack")
+                }
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.8")
+        testFormatting(for: input, output, rule: FormatRules.conditionalAssignment, options: options, exclude: ["redundantType"])
+    }
+
+    func testConvertsIfStatementAssignmentPreservingComment() {
+        let input = """
+        let foo: Foo
+        // This is a comment between the property and condition
+        if condition {
+            foo = Foo("foo")
+        } else {
+            foo = Foo("bar")
+        }
+        """
+        let output = """
+        let foo: Foo
+        // This is a comment between the property and condition
+        = if condition {
+            Foo("foo")
+        } else {
+            Foo("bar")
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.8")
+        testFormatting(for: input, output, rule: FormatRules.conditionalAssignment, options: options, exclude: ["indent", "redundantType"])
+    }
+
+    func testDoesntConvertsIfStatementAssigningMultipleProperties() {
+        let input = """
+        let foo: Foo
+        let bar: Bar
+        if condition {
+            foo = Foo("foo")
+            bar = Bar("foo")
+        } else {
+            foo = Foo("bar")
+            bar = Bar("bar")
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.8")
+        testFormatting(for: input, rule: FormatRules.conditionalAssignment, options: options)
+    }
+
+    func testDoesntConvertsIfStatementAssigningDifferentProperties() {
+        let input = """
+        var foo: Foo?
+        var bar: Bar?
+        if condition {
+            foo = Foo("foo")
+        } else {
+            bar = Bar("bar")
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.8")
+        testFormatting(for: input, rule: FormatRules.conditionalAssignment, options: options)
+    }
+
+    func testDoesntConvertNonExhaustiveIfStatementAssignment1() {
+        let input = """
+        var foo: Foo?
+        if condition {
+            foo = Foo("foo")
+        } else if someOtherCondition {
+            foo = Foo("bar")
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.8")
+        testFormatting(for: input, rule: FormatRules.conditionalAssignment, options: options)
+    }
+
+    func testDoesntConvertNonExhaustiveIfStatementAssignment2() {
+        let input = """
+        var foo: Foo?
+        if condition {
+            if condition {
+                foo = Foo("foo")
+            }
+        } else {
+            foo = Foo("bar")
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.8")
+        testFormatting(for: input, rule: FormatRules.conditionalAssignment, options: options)
+    }
+
+    func testDoesntConvertMultiStatementIfStatementAssignment1() {
+        let input = """
+        let foo: Foo
+        if condition {
+            foo = Foo("foo")
+            print("Multi-statement")
+        } else {
+            foo = Foo("bar")
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.8")
+        testFormatting(for: input, rule: FormatRules.conditionalAssignment, options: options)
+    }
+
+    func testDoesntConvertMultiStatementIfStatementAssignment2() {
+        let input = """
+        let foo: Foo
+        switch condition {
+        case true:
+            foo = Foo("foo")
+            print("Multi-statement")
+        case false:
+            foo = Foo("bar")
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.8")
+        testFormatting(for: input, rule: FormatRules.conditionalAssignment, options: options)
+    }
+
+    func testDoesntConvertMultiStatementIfStatementAssignment3() {
+        let input = """
+        let foo: Foo
+        if condition {
+            if condition {
+                foo = Foo("bar")
+            } else {
+                foo = Foo("baaz")
+            }
+            print("Multi-statement")
+        } else {
+            foo = Foo("bar")
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.8")
+        testFormatting(for: input, rule: FormatRules.conditionalAssignment, options: options)
+    }
+
+    func testDoesntConvertMultiStatementIfStatementAssignment4() {
+        let input = """
+        let foo: Foo
+        switch condition {
+        case true:
+            if condition {
+                foo = Foo("bar")
+            } else {
+                foo = Foo("baaz")
+            }
+            print("Multi-statement")
+        case false:
+            foo = Foo("bar")
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.8")
+        testFormatting(for: input, rule: FormatRules.conditionalAssignment, options: options)
+    }
 }

@@ -8,6 +8,7 @@
 * [blankLinesAtStartOfScope](#blankLinesAtStartOfScope)
 * [blankLinesBetweenScopes](#blankLinesBetweenScopes)
 * [braces](#braces)
+* [conditionalAssignment](#conditionalAssignment)
 * [consecutiveBlankLines](#consecutiveBlankLines)
 * [consecutiveSpaces](#consecutiveSpaces)
 * [duplicateImports](#duplicateImports)
@@ -440,6 +441,41 @@ Option | Description
   }
 + else {
     // bar
+  }
+```
+
+</details>
+<br/>
+
+## conditionalAssignment
+
+Assign properties using if / switch expressions.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- let foo: String
+- if condition {
++ let foo = if condition {
+-     foo = "foo"
++     "foo"
+  } else {
+-     bar = "bar"
++     "bar"
+  }
+```
+
+```diff
+- let foo: String
+- switch condition {
++ let foo = switch condition {
+  case true:
+-     foo = "foo"
++     "foo"
+  case false:
+-     foo = "bar"
++     "bar"
   }
 ```
 
@@ -1597,6 +1633,23 @@ Option | Description
 -         let view: UIView = UIView()
 +         let view = UIView()
       }
+  }
+
+// Swift 5.8+, inferred (SE-0380)
+- let foo: Foo = if condition {
++ let foo = if condition {
+      Foo("foo")
+  } else {
+      Foo("bar")
+  }
+
+// Swift 5.8+, explicit (SE-0380)
+  let foo: Foo = if condition {
+-     Foo("foo")
++     .init("foo")
+  } else {
+-     Foo("bar")
++     .init("foo")
   }
 ```
 

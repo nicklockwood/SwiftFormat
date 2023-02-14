@@ -531,6 +531,12 @@ extension Token {
     }
 }
 
+extension Collection where Element == Token {
+    var string: String {
+        map { $0.string }.joined()
+    }
+}
+
 extension UnicodeScalar {
     var isDigit: Bool { isdigit(Int32(value)) > 0 }
     var isHexDigit: Bool { isxdigit(Int32(value)) > 0 }

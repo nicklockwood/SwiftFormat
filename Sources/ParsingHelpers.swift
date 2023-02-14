@@ -1142,6 +1142,69 @@ extension Formatter {
         }
     }
 
+    /// Parses a type name starting at the given index, of one of the following forms:
+    ///  - `Foo`
+    ///  - `[...]`
+    ///  - `(...)`
+    ///  - `Foo<...>`
+    ///  - `(...) -> ...`
+    ///  - `...?`
+    ///  - `...!`
+    func parseType(at startOfTypeIndex: Int) -> (name: String, range: ClosedRange<Int>) {
+        let baseType = parseNonOptionalType(at: startOfTypeIndex)
+
+        // Any type can be optional, so check for a trailing `?` or `!`
+        if let nextToken = index(of: .nonSpaceOrCommentOrLinebreak, after: baseType.range.upperBound),
+           ["?", "!"].contains(tokens[nextToken].string)
+        {
+            let typeRange = baseType.range.lowerBound ... nextToken
+            return (name: tokens[typeRange].string, range: typeRange)
+        }
+
+        return baseType
+    }
+
+    private func parseNonOptionalType(at startOfTypeIndex: Int) -> (name: String, range: ClosedRange<Int>) {
+        // Parse types of the form `[...]`
+        if tokens[startOfTypeIndex] == .startOfScope("["),
+           let endOfScope = endOfScope(at: startOfTypeIndex)
+        {
+            let typeRange = startOfTypeIndex ... endOfScope
+            return (name: tokens[typeRange].string, range: typeRange)
+        }
+
+        // Parse types of the form `(...)` or `(...) -> ...`
+        if tokens[startOfTypeIndex] == .startOfScope("("),
+           let endOfScope = endOfScope(at: startOfTypeIndex)
+        {
+            // Parse types of the form `(...) -> ...`
+            if let closureReturnIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfScope),
+               tokens[closureReturnIndex] == .operator("->", .infix),
+               let returnTypeIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: closureReturnIndex)
+            {
+                let returnTypeRange = parseType(at: returnTypeIndex).range
+                let typeRange = startOfTypeIndex ... returnTypeRange.upperBound
+                return (name: tokens[typeRange].string, range: typeRange)
+            }
+
+            // Otherwise this is just `(...)`
+            let typeRange = startOfTypeIndex ... endOfScope
+            return (name: tokens[typeRange].string, range: typeRange)
+        }
+
+        // Parse types of the form `Foo<...>`
+        if let nextTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfTypeIndex),
+           tokens[nextTokenIndex] == .startOfScope("<"),
+           let endOfScope = endOfScope(at: nextTokenIndex)
+        {
+            let typeRange = startOfTypeIndex ... endOfScope
+            return (name: tokens[typeRange].string, range: typeRange)
+        }
+
+        // Otherwise this is just a single identifier
+        return (name: tokens[startOfTypeIndex].string, range: startOfTypeIndex ... startOfTypeIndex)
+    }
+
     struct ImportRange: Comparable {
         var module: String
         var range: Range<Int>

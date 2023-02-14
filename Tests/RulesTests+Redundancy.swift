@@ -1221,6 +1221,162 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantType, options: options)
     }
 
+    func testPreservesTypeWithIfExpressionInSwift5_7() {
+        let input = """
+        let foo: Foo
+        if condition {
+            foo = Foo("foo")
+        } else {
+            foo = Foo("bar")
+        }
+        """
+        let options = FormatOptions(redundantType: .inferred, swiftVersion: "5.7")
+        testFormatting(for: input, rule: FormatRules.redundantType, options: options)
+    }
+
+    func testPreservesNonRedundantTypeWithIfExpression() {
+        let input = """
+        let foo: Foo = if condition {
+            Foo("foo")
+        } else {
+            FooSubclass("bar")
+        }
+        """
+        let options = FormatOptions(redundantType: .inferred, swiftVersion: "5.8")
+        testFormatting(for: input, rule: FormatRules.redundantType, options: options)
+    }
+
+    func testRedundantTypeWithIfExpression_inferred() {
+        let input = """
+        let foo: Foo = if condition {
+            Foo("foo")
+        } else {
+            Foo("bar")
+        }
+        """
+        let output = """
+        let foo = if condition {
+            Foo("foo")
+        } else {
+            Foo("bar")
+        }
+        """
+        let options = FormatOptions(redundantType: .inferred, swiftVersion: "5.8")
+        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options)
+    }
+
+    func testRedundantTypeWithIfExpression_explicit() {
+        let input = """
+        let foo: Foo = if condition {
+            Foo("foo")
+        } else {
+            Foo("bar")
+        }
+        """
+        let output = """
+        let foo: Foo = if condition {
+            .init("foo")
+        } else {
+            .init("bar")
+        }
+        """
+        let options = FormatOptions(redundantType: .explicit, swiftVersion: "5.8")
+        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options)
+    }
+
+    func testRedundantTypeWithNestedIfExpression_inferred() {
+        let input = """
+        let foo: Foo = if condition {
+            switch condition {
+            case true:
+                if condition {
+                    Foo("foo")
+                } else {
+                    Foo("bar")
+                }
+            case false:
+                Foo("baaz")
+            }
+        } else {
+            Foo("quux")
+        }
+        """
+        let output = """
+        let foo = if condition {
+            switch condition {
+            case true:
+                if condition {
+                    Foo("foo")
+                } else {
+                    Foo("bar")
+                }
+            case false:
+                Foo("baaz")
+            }
+        } else {
+            Foo("quux")
+        }
+        """
+        let options = FormatOptions(redundantType: .inferred, swiftVersion: "5.8")
+        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options)
+    }
+
+    func testRedundantTypeWithNestedIfExpression_explicit() {
+        let input = """
+        let foo: Foo = if condition {
+            switch condition {
+            case true:
+                if condition {
+                    Foo("foo")
+                } else {
+                    Foo("bar")
+                }
+            case false:
+                Foo("baaz")
+            }
+        } else {
+            Foo("quux")
+        }
+        """
+        let output = """
+        let foo: Foo = if condition {
+            switch condition {
+            case true:
+                if condition {
+                    .init("foo")
+                } else {
+                    .init("bar")
+                }
+            case false:
+                .init("baaz")
+            }
+        } else {
+            .init("quux")
+        }
+        """
+        let options = FormatOptions(redundantType: .explicit, swiftVersion: "5.8")
+        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options)
+    }
+
+    func testRedundantTypeWithLiteralsInIfExpression() {
+        let input = """
+        let foo: String = if condition {
+            "foo"
+        } else {
+            "bar"
+        }
+        """
+        let output = """
+        let foo = if condition {
+            "foo"
+        } else {
+            "bar"
+        }
+        """
+        let options = FormatOptions(redundantType: .inferred, swiftVersion: "5.8")
+        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options)
+    }
+
     // --redundanttype explicit
 
     func testVarRedundantTypeRemovalExplicitType() {

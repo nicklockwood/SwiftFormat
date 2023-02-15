@@ -59,7 +59,7 @@ final class GithubActionsLogReporter: Reporter {
 
 private extension GithubActionsLogReporter {
     func workspaceRelativePath(filePath: String) -> String {
-        if let workspaceRoot, filePath.hasPrefix(workspaceRoot) {
+        if let workspaceRoot = workspaceRoot, filePath.hasPrefix(workspaceRoot) {
             return filePath.replacingOccurrences(of: workspaceRoot + "/", with: "", options: [.anchored])
         } else {
             return filePath

@@ -295,14 +295,14 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
         }
 
         // Report output
-        let reporter = try args["reporter"].map { identifier in
+        let reporter: Reporter? = try args["reporter"].map { identifier in
             guard let reporter = Reporters.makeReporter(identifier: identifier, environment: environment) else {
                 throw FormatError.options("No available reporter with identifier \(identifier)")
             }
             return reporter
         }
 
-        let report = try args["report"].map {
+        let report: URL? = try args["report"].map {
             guard reporter != nil else {
                 throw FormatError.options("--report requires --reporter to be specified")
             }
@@ -748,7 +748,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
         }
         if let reporter = reporter {
             let reporterOutput = try reporter.write()
-            if let report {
+            if let report = report {
                 print("Writing report file to \(report.path)")
                 try reporterOutput.write(to: report, options: .atomic)
             } else {

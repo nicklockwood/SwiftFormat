@@ -2130,7 +2130,6 @@ public struct _FormatRules {
                 ]), formatter.tokens[guardIndex] == .keyword("guard") else {
                     return
                 }
-                let isAllman = formatter.options.allmanBraces
                 let shouldWrap: Bool
                 switch formatter.options.guardElsePosition {
                 case .auto:
@@ -2145,7 +2144,7 @@ public struct _FormatRules {
                     shouldWrap = false
                 }
                 if shouldWrap {
-                    if !isAllman {
+                    if !formatter.options.allmanBraces {
                         formatter.replaceTokens(in: i + 1 ..< nextIndex, with: .space(" "))
                     }
                     if !isOnNewLine {
@@ -3107,7 +3106,7 @@ public struct _FormatRules {
                          isTypeRoot: Bool,
                          isInit: Bool)
         {
-            let explicitSelf = formatter.options.explicitSelf
+            var explicitSelf: SelfMode { formatter.options.explicitSelf }
             let isWhereClause = index > 0 && formatter.tokens[index - 1] == .keyword("where")
             assert(isWhereClause || formatter.currentScope(at: index).map { token -> Bool in
                 [.startOfScope("{"), .startOfScope(":"), .startOfScope("#if")].contains(token)
@@ -3940,11 +3939,9 @@ public struct _FormatRules {
             }
         }
         // Function arguments
-        guard formatter.options.stripUnusedArguments != .closureOnly else {
-            return
-        }
         formatter.forEachToken { i, token in
-            guard case let .keyword(keyword) = token, ["func", "init", "subscript"].contains(keyword),
+            guard formatter.options.stripUnusedArguments != .closureOnly,
+                  case let .keyword(keyword) = token, ["func", "init", "subscript"].contains(keyword),
                   let startIndex = formatter.index(of: .startOfScope("("), after: i),
                   let endIndex = formatter.index(of: .endOfScope(")"), after: startIndex) else { return }
             let isOperator = (keyword == "subscript") ||
@@ -4495,10 +4492,10 @@ public struct _FormatRules {
                 formatter.replaceToken(at: i, with: [.startOfScope("("), .endOfScope(")")])
             }
         }
-        guard formatter.options.useVoid else {
-            return
-        }
         formatter.forEach(.startOfScope("(")) { i, _ in
+            guard formatter.options.useVoid else {
+                return
+            }
             guard let endIndex = formatter.index(of: .nonSpaceOrLinebreak, after: i, if: {
                 $0 == .endOfScope(")")
             }), let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: i),
@@ -6061,6 +6058,7 @@ public struct _FormatRules {
             let isGroupedExtension: Bool
             switch declaration.keyword {
             case "extension":
+                // TODO: this should be stored in declaration at parse time
                 markMode = formatter.options.markExtensions
 
                 // We provide separate mark comment customization points for
@@ -6996,6 +6994,7 @@ public struct _FormatRules {
                 // If the method that generates the opaque parameter syntax doesn't succeed,
                 // then this type is ineligible (because it used a generic constraint that
                 // can't be represented using this syntax).
+                // TODO: this option probably needs to be captured earlier to support comment directives
                 if genericType.asOpaqueParameter(useSomeAny: formatter.options.useSomeAny) == nil {
                     genericType.eligibleToRemove = false
                     continue

@@ -2882,6 +2882,14 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
     }
 
+    func testNoRemoveSelfInExcludedInitializer() {
+        let input = """
+        let vc = UIHostingController(rootView: InspectionView(inspection: self.inspection))
+        """
+        let options = FormatOptions(selfRequired: ["InspectionView"])
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
     func testNoMistakeProtocolClassModifierForClassFunction() {
         let input = "protocol Foo: class {}\nfunc bar() {}"
         XCTAssertNoThrow(try format(input, rules: [FormatRules.redundantSelf]))
@@ -3693,6 +3701,20 @@ class RedundancyTests: RulesTests {
                 self.foo { rect1, rect2 -> Bool in
                     rect1.perimeter < rect2.perimeter
                 }
+            return bar
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.4")
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
+    func testSelfInsertDirective() {
+        let input = """
+        func smallest() -> Foo? {
+            // swiftformat:options:next --self insert
+            let bar = self.foo { rect1, rect2 -> Bool in
+                rect1.perimeter < rect2.perimeter
+            }
             return bar
         }
         """

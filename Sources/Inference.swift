@@ -638,7 +638,7 @@ private struct Inference {
                          isTypeRoot: Bool,
                          isInit: Bool)
         {
-            let selfRequired = formatter.options.selfRequired
+            var selfRequired: Set<String> { formatter.options.selfRequired }
             let currentScope = formatter.currentScope(at: index)
             let isWhereClause = index > 0 && formatter.tokens[index - 1] == .keyword("where")
             assert(isWhereClause || currentScope.map { token -> Bool in

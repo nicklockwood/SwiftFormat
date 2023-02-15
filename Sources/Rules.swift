@@ -7004,15 +7004,14 @@ public struct _FormatRules {
                 // If the generic type is used as a closure type parameter, it can't be removed or the compiler
                 // will emit a "'some' cannot appear in parameter position in parameter type <closure type>" error
                 for tokenIndex in keywordIndex ... closeBraceIndex {
-                    if
-                        // Check if this is the start of a closure
-                        formatter.tokens[tokenIndex] == .startOfScope("("),
-                        tokenIndex != paramListStartIndex,
-                        let endOfScope = formatter.endOfScope(at: tokenIndex),
-                        let tokenAfterParen = formatter.next(.nonSpaceOrCommentOrLinebreak, after: endOfScope),
-                        [.operator("->", .infix), .keyword("throws"), .identifier("async")].contains(tokenAfterParen),
-                        // Check if the closure type parameters contains this generic type
-                        formatter.tokens[tokenIndex ... endOfScope].contains(where: { $0.string == genericType.name })
+                    // Check if this is the start of a closure
+                    if formatter.tokens[tokenIndex] == .startOfScope("("),
+                       tokenIndex != paramListStartIndex,
+                       let endOfScope = formatter.endOfScope(at: tokenIndex),
+                       let tokenAfterParen = formatter.next(.nonSpaceOrCommentOrLinebreak, after: endOfScope),
+                       [.operator("->", .infix), .keyword("throws"), .identifier("async")].contains(tokenAfterParen),
+                       // Check if the closure type parameters contains this generic type
+                       formatter.tokens[tokenIndex ... endOfScope].contains(where: { $0.string == genericType.name })
                     {
                         genericType.eligibleToRemove = false
                     }
@@ -7060,11 +7059,23 @@ public struct _FormatRules {
                 let whereClauseSourceRanges = sourceRangesToRemove.filter { $0.lowerBound > whereIndex }
                 formatter.removeTokens(in: Array(whereClauseSourceRanges))
 
-                // if the where clause is completely empty now, we need to the where token as well
-                if let newOpenBraceIndex = formatter.index(of: .nonSpaceOrLinebreak, after: whereIndex),
-                   formatter.token(at: newOpenBraceIndex) == .startOfScope("{")
-                {
-                    formatter.removeTokens(in: whereIndex ..< newOpenBraceIndex)
+                if let newOpenBraceIndex = formatter.index(of: .startOfScope("{"), after: whereIndex) {
+                    // if where clause is completely empty, we need to remove the where token as well
+                    if formatter.index(of: .nonSpaceOrLinebreak, after: whereIndex) == newOpenBraceIndex {
+                        formatter.removeTokens(in: whereIndex ..< newOpenBraceIndex)
+                    }
+                    // remove trailing comma
+                    else if let commaIndex = formatter.index(
+                        of: .nonSpaceOrCommentOrLinebreak,
+                        before: newOpenBraceIndex, if: { $0 == .delimiter(",") }
+                    ) {
+                        formatter.removeToken(at: commaIndex)
+                        if formatter.tokens[commaIndex - 1].isSpace,
+                           formatter.tokens[commaIndex].isSpaceOrLinebreak
+                        {
+                            formatter.removeToken(at: commaIndex - 1)
+                        }
+                    }
                 }
             }
 

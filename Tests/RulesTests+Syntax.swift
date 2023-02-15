@@ -3356,6 +3356,14 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.opaqueGenericParameters, options: options)
     }
 
+    func testOpaqueGenericParametersDoesntleaveTrailingComma() {
+        let input = "func f<T, U>(x: U) -> T where T: A, U: B {}"
+        let output = "func f<T>(x: some B) -> T where T: A {}"
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, output, rule: FormatRules.opaqueGenericParameters,
+                       options: options, exclude: ["unusedArguments"])
+    }
+
     // MARK: docComments
 
     func testConvertCommentsToDocComments() {

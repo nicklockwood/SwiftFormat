@@ -1,5 +1,16 @@
 # Change Log
 
+## [0.50.9](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.50.9) (2022-02-16)
+
+- Added Github actions log reporter (see `--reporter` option for details)
+- Fixed bug where `redundantType` sometimes stripped in cases where it couldn't be inferred
+- The `redundantType` rule now supports removing type in more cases where supported
+- Made SwiftFormat for Xcode instructions dynamic according to OS version
+- Fixed bug where a trailing comma could be left behind by `opaqueGenericParameters` rule
+- Fixed bug where `wrapAttributes` rule sometimes wrapped inline attributes like `@MainActor`
+- Improved support for `// swiftformat:options` comment directives
+- Removed deprecated options from the example `.swiftformat` file
+
 ## [0.50.8](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.50.8) (2022-01-29)
 
 - The `redundantBackticks` rule no longer removes required comments around `self`

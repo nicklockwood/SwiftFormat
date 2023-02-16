@@ -5766,7 +5766,10 @@ public struct _FormatRules {
         formatter.forEach(.attribute) { i, _ in
             // Ignore sequential attributes
             guard let endIndex = formatter.endOfAttribute(at: i),
-                  var keywordIndex = formatter.index(of: .keyword, after: endIndex),
+                  var keywordIndex = formatter.index(
+                      of: .nonSpaceOrCommentOrLinebreak,
+                      after: endIndex, if: { $0.isKeyword || $0.isModifierKeyword }
+                  ),
                   var keyword = formatter.token(at: keywordIndex),
                   !formatter.tokens[keywordIndex].isAttribute
             else {

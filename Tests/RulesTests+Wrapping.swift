@@ -3800,6 +3800,15 @@ class WrappingTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
     }
 
+    func testInlineMainActorAttributeNotWrapped() {
+        let input = """
+        var foo: @MainActor (Foo) -> Void
+        var bar: @MainActor (Bar) -> Void
+        """
+        let options = FormatOptions(varAttributes: .prevLine)
+        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
+    }
+
     // MARK: wrapEnumCases
 
     func testMultilineEnumCases() {

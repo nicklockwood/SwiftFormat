@@ -197,9 +197,8 @@ func printHelp(as type: CLI.OutputType) {
     --cache            Path to cache file, or "clear" or "ignore" the default cache
     --dryrun           Run in "dry" mode (without actually changing any files)
     --lint             Return an error for unformatted input, and list violations
-    --reporter         Output --lint violations with a reporter
-                       (\(Reporters.availableIdentifiersHelp))
-    --report           Output file path for --reporter (defaults to stdout)
+    --report           Path to a file where --lint output should be written
+    --reporter         Report format: \(Reporters.help)
     --lenient          Suppress errors for unformatted code in --lint mode
     --verbose          Display detailed formatting output and warnings/errors
     --quiet            Disables non-critical output messages and warnings
@@ -294,19 +293,33 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
             print("warning: \(warning)", as: .warning)
         }
 
-        // Report output
-        let reporter: Reporter? = try args["reporter"].map { identifier in
-            guard let reporter = Reporters.makeReporter(identifier: identifier, environment: environment) else {
-                throw FormatError.options("No available reporter with identifier \(identifier)")
+        // Reporter
+        var reporter: Reporter? = try args["reporter"].map { identifier in
+            guard let reporter = Reporters.reporter(
+                named: identifier,
+                environment: environment
+            ) else {
+                var message = "'\(identifier)' is not a valid reporter"
+                let names = Reporters.all.map { $0.name }
+                if let match = identifier.bestMatches(in: names).first {
+                    message += "(did you mean '\(match)'?)"
+                }
+                throw FormatError.options(message)
             }
             return reporter
         }
 
-        let report: URL? = try args["report"].map {
-            guard reporter != nil else {
-                throw FormatError.options("--report requires --reporter to be specified")
+        // Report URL
+        let reportURL: URL? = try args["report"].map { arg in
+            let url = try parsePath(arg, for: "--output", in: directory)
+            if reporter == nil {
+                reporter = Reporters.reporter(for: url, environment: environment)
+                guard reporter != nil else {
+                    throw FormatError
+                        .options("--report requires --reporter to be specified")
+                }
             }
-            return URL(fileURLWithPath: $0)
+            return url
         }
 
         // Show help
@@ -500,7 +513,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
             return try parsePath(arg, for: "--output", in: directory)
         }
 
-        guard !useStdout || (reporter == nil || report != nil) else {
+        guard !useStdout || (reporter == nil || reportURL != nil) else {
             throw FormatError.options("--report file must be specified when --output is stdout")
         }
 
@@ -748,9 +761,9 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
         }
         if let reporter = reporter {
             let reporterOutput = try reporter.write()
-            if let report = report {
-                print("Writing report file to \(report.path)")
-                try reporterOutput.write(to: report, options: .atomic)
+            if let reportURL = reportURL {
+                print("Writing report file to \(reportURL.path)")
+                try reporterOutput.write(to: reportURL, options: .atomic)
             } else {
                 print(String(decoding: reporterOutput, as: UTF8.self), as: .raw)
             }

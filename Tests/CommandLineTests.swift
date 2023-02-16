@@ -474,6 +474,50 @@ class CommandLineTests: XCTestCase {
 
     // MARK: reporter
 
+    func testJSONReporterEndToEnd() throws {
+        try withTmpFiles([
+            "foo.swift": "func foo() {\n}\n",
+        ]) { url in
+            CLI.print = { message, type in
+                switch type {
+                case .raw:
+                    XCTAssert(message.contains("\"rule_id\" : \"emptyBraces\""))
+                case .error, .warning:
+                    break
+                case .info, .success:
+                    break
+                case .content:
+                    XCTFail()
+                }
+            }
+            _ = processArguments([
+                "",
+                "--lint",
+                "--reporter",
+                "json",
+                url.path,
+            ], in: "")
+        }
+    }
+
+    func testJSONReporterInferredFromURL() throws {
+        let outputURL = try createTmpFile("report.json", contents: "")
+        try withTmpFiles([
+            "foo.swift": "func foo() {\n}\n",
+        ]) { url in
+            CLI.print = { _, _ in }
+            _ = processArguments([
+                "",
+                "--lint",
+                "--report",
+                outputURL.path,
+                url.path,
+            ], in: "")
+        }
+        let ouput = try String(contentsOf: outputURL)
+        XCTAssert(ouput.contains("\"rule_id\" : \"emptyBraces\""))
+    }
+
     func testGithubActionsLogReporterEndToEnd() throws {
         try withTmpFiles([
             "foo.swift": "func foo() {\n}\n",
@@ -481,7 +525,7 @@ class CommandLineTests: XCTestCase {
             CLI.print = { message, type in
                 switch type {
                 case .raw:
-                    XCTAssertTrue(message.hasPrefix("::warning file=foo.swift,line=1::"))
+                    XCTAssert(message.hasPrefix("::warning file=foo.swift,line=1::"))
                 case .error, .warning:
                     break
                 case .info, .success:
@@ -499,6 +543,30 @@ class CommandLineTests: XCTestCase {
             ],
             environment: ["GITHUB_WORKSPACE": url.deletingLastPathComponent().path],
             in: "")
+        }
+    }
+
+    func testGithubActionsLogReporterMisspelled() throws {
+        try withTmpFiles([
+            "foo.swift": "func foo() {\n}\n",
+        ]) { url in
+            CLI.print = { message, type in
+                switch type {
+                case .raw, .warning, .info:
+                    break
+                case .error:
+                    XCTAssert(message.contains("did you mean 'github-actions-log'?"))
+                case .content, .success:
+                    XCTFail()
+                }
+            }
+            _ = processArguments([
+                "",
+                "--lint",
+                "--reporter",
+                "github-action-log",
+                url.path,
+            ], in: "")
         }
     }
 

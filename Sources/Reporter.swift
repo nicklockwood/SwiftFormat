@@ -32,22 +32,37 @@
 import Foundation
 
 protocol Reporter {
+    static var name: String { get }
+    static var fileExtension: String? { get }
+
     init(environment: [String: String])
+
     func report(_ changes: [Formatter.Change])
     func write() throws -> Data
 }
 
 enum Reporters {
-    static var availableIdentifiersHelp: String {
-        reporters.keys.sorted().joined(separator: ", ")
+    static let all: [Reporter.Type] = [
+        JSONReporter.self,
+        GithubActionsLogReporter.self,
+    ]
+
+    static var help: String {
+        let names = all.map { "\"\($0.name)\"" }
+        return names.dropLast().joined(separator: ", ") + (names.last.map {
+            " or \($0)"
+        } ?? "")
     }
 
-    static func makeReporter(identifier: String, environment: [String: String]) -> Reporter? {
-        reporters[identifier].map { $0.init(environment: environment) }
+    static func reporter(named: String, environment: [String: String]) -> Reporter? {
+        all.first(where: {
+            $0.name.caseInsensitiveCompare(named) == .orderedSame
+        })?.init(environment: environment)
+    }
+
+    static func reporter(for url: URL, environment: [String: String]) -> Reporter? {
+        all.first(where: {
+            $0.fileExtension?.caseInsensitiveCompare(url.pathExtension) == .orderedSame
+        })?.init(environment: environment)
     }
 }
-
-private let reporters: [String: Reporter.Type] = [
-    "json": JSONReporter.self,
-    "github-actions-log": GithubActionsLogReporter.self,
-]

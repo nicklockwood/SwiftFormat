@@ -36,6 +36,9 @@ import Foundation
 /// See https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#setting-a-warning-message
 ///
 final class GithubActionsLogReporter: Reporter {
+    static let name: String = "github-actions-log"
+    static let fileExtension: String? = nil
+
     private let workspaceRoot: String?
     private var changes: [Formatter.Change] = []
 

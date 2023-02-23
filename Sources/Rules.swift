@@ -4292,6 +4292,73 @@ public struct _FormatRules {
         }
     }
 
+    public let hoistTry = FormatRule(
+        help: "Reposition `try` keyword outside of the current scope.",
+        disabledByDefault: true,
+        options: []
+    ) { formatter in
+        formatter.forEach(.startOfScope("(")) { idx, _ in
+            func insertTry(at insertIndex: Int) {
+                let tryIndex = formatter.index(of: .keyword("try"), before: idx)
+
+                guard tryIndex == nil || formatter.tokens[tryIndex! ..< idx].contains(
+                    where: { $0.isStartOfScope || $0.isLinebreak }
+                ) else {
+                    return
+                }
+
+                formatter.insert([.keyword("try")], at: insertIndex)
+
+                if formatter.token(at: insertIndex + 1)?.isSpace == false {
+                    formatter.insertSpace(" ", at: insertIndex + 1)
+                }
+
+                if insertIndex > 0,
+                   let previousToken = formatter.token(at: insertIndex - 1),
+                   !previousToken.isLinebreak,
+                   previousToken.isSpace == false
+                {
+                    formatter.insertSpace(" ", at: insertIndex)
+                }
+            }
+
+            guard let endIndex = formatter.index(of: .endOfScope(")"), after: idx) else {
+                return
+            }
+
+            var tryIndexes: [Int] = []
+            var index = idx
+            while let next = formatter.index(of: .keyword("try"), after: index), index < endIndex {
+                tryIndexes.append(next)
+                index = next
+            }
+
+            guard !tryIndexes.isEmpty else { return }
+
+            let prevIndex = formatter.index(before: idx, where: {
+                $0.isSpaceOrLinebreak
+            })
+
+            tryIndexes.reversed().forEach { tryIndex in
+                formatter.removeToken(at: tryIndex)
+                if formatter.tokens[tryIndex].isSpace == true {
+                    formatter.removeToken(at: tryIndex)
+                }
+            }
+
+            if let prevIndex = prevIndex {
+                let token = formatter.token(at: prevIndex)
+                if token?.isLinebreak == true {
+                    return insertTry(at: prevIndex + 1)
+                } else {
+                    return insertTry(at: prevIndex)
+                }
+            } else {
+                insertTry(at: 0)
+            }
+        }
+    }
+
     /// Reposition `await` keyword outside of the current scope.
     public let hoistAwait = FormatRule(
         help: "Reposition `await` keyword outside of the current scope.",

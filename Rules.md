@@ -85,6 +85,7 @@
 * [blockComments](#blockComments)
 * [docComments](#docComments)
 * [hoistAwait](#hoistAwait)
+* [hoistTry](#hoistTry)
 * [isEmpty](#isEmpty)
 * [markTypes](#markTypes)
 * [organizeDeclarations](#organizeDeclarations)
@@ -815,6 +816,10 @@ Option | Description
 
 </details>
 <br/>
+
+## hoistTry
+
+Reposition `try` keyword outside of the current scope.
 
 ## indent
 

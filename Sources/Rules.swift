@@ -4328,7 +4328,12 @@ public struct _FormatRules {
 
             var tryIndexes: [Int] = []
             var index = idx
-            while let next = formatter.index(of: .keyword("try"), after: index), index < endIndex {
+            while let next = formatter.index(of: .keyword("try"), after: index),
+                  index < endIndex,
+                  formatter.token(at: next + 1)?.isOperator(ofType: .postfix) == false
+            {
+                // ignore try with postfix
+
                 tryIndexes.append(next)
                 index = next
             }
@@ -4339,12 +4344,14 @@ public struct _FormatRules {
                 $0.isSpaceOrLinebreak
             })
 
-            tryIndexes.reversed().forEach { tryIndex in
-                formatter.removeToken(at: tryIndex)
-                if formatter.tokens[tryIndex].isSpace == true {
+            tryIndexes.reversed()
+                .forEach { tryIndex in
                     formatter.removeToken(at: tryIndex)
+
+                    if formatter.tokens[tryIndex].isSpace == true {
+                        formatter.removeToken(at: tryIndex)
+                    }
                 }
-            }
 
             if let prevIndex = prevIndex {
                 let token = formatter.token(at: prevIndex)

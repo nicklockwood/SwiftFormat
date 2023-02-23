@@ -612,6 +612,12 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.hoistTry)
     }
 
+    func testHoistTryWithOptionalTry() {
+        let input = "greet(try name(), try? surname())"
+        let output = "try greet(name(), try? surname())"
+        testFormatting(for: input, output, rule: FormatRules.hoistTry)
+    }
+
     func testHoistTryInsideArgument() {
         let input = """
         array.append(contentsOf: try await asyncFunction(param1: param1))

@@ -2322,7 +2322,7 @@ Writes one enum case per line.
 
 Option | Description
 --- | ---
-`--wrapEnumCases` | Wrap enumn cases: "always", "if-values"
+`--wrapenumcases` | Wrap enum cases: "always" (default) or "with-values"
 
 <details>
 <summary>Examples</summary>

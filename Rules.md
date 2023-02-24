@@ -17,6 +17,7 @@
 * [extensionAccessControl](#extensionAccessControl)
 * [fileHeader](#fileHeader)
 * [genericExtensions](#genericExtensions)
+* [hoistAwait](#hoistAwait)
 * [hoistPatternLet](#hoistPatternLet)
 * [indent](#indent)
 * [initCoderUnavailable](#initCoderUnavailable)
@@ -83,7 +84,6 @@
 * [blankLinesBetweenImports](#blankLinesBetweenImports)
 * [blockComments](#blockComments)
 * [docComments](#docComments)
-* [hoistAwait](#hoistAwait)
 * [isEmpty](#isEmpty)
 * [markTypes](#markTypes)
 * [organizeDeclarations](#organizeDeclarations)
@@ -750,7 +750,23 @@ Option | Description
 
 ## hoistAwait
 
-Reposition `await` keyword outside of the current scope.
+Move inline `await` keyword(s) to start of expression.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- greet(await forename, await surname)
++ await greet(forename, surname)
+```
+
+```diff
+- let foo = String(try await getFoo())
++ let foo = await String(try getFoo())
+```
+
+</details>
+<br/>
 
 ## hoistPatternLet
 

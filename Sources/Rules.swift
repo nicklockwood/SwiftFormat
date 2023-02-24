@@ -4173,68 +4173,69 @@ public struct _FormatRules {
 
     /// Reposition `await` keyword outside of the current scope.
     public let hoistAwait = FormatRule(
-        help: "Reposition `await` keyword outside of the current scope.",
-        disabledByDefault: true,
-        options: []
+        help: "Move inline `await` keyword(s) to start of expression."
     ) { formatter in
-        formatter.forEach(.startOfScope("(")) { idx, _ in
-            func insertAwait(at insertIndex: Int) {
-                let awaitIndex = formatter.index(of: .keyword("await"), before: idx)
+        guard formatter.options.swiftVersion >= "5.5" else { return }
 
-                guard awaitIndex == nil || formatter.tokens[awaitIndex! ..< idx].contains(
-                    where: { $0.isStartOfScope || $0.isLinebreak }
-                ) else {
-                    return
+        formatter.forEach(.startOfScope("(")) { i, _ in
+            func insertAwait(at insertIndex: Int) {
+                if let awaitIndex = formatter.index(of: .keyword("await"), before: i) {
+                    guard formatter.tokens[awaitIndex ..< i].contains(where: {
+                        $0.isStartOfScope || $0.isLinebreak
+                    }) else {
+                        return
+                    }
+                }
+
+                var insertIndex = insertIndex
+                if formatter.tokens[insertIndex].isSpace {
+                    insertIndex += 1
                 }
 
                 formatter.insert([.keyword("await")], at: insertIndex)
 
-                if formatter.token(at: insertIndex + 1)?.isSpace == false {
+                if let nextToken = formatter.token(at: insertIndex + 1), !nextToken.isSpace {
                     formatter.insertSpace(" ", at: insertIndex + 1)
-                }
-
-                if insertIndex > 0,
-                   let previousToken = formatter.token(at: insertIndex - 1),
-                   !previousToken.isLinebreak,
-                   previousToken.isSpace == false
-                {
+                } else {
                     formatter.insertSpace(" ", at: insertIndex)
                 }
             }
 
-            guard let endIndex = formatter.index(of: .endOfScope(")"), after: idx),
-                  formatter.lastSignificantKeyword(at: idx) != "if"
-            else {
+            guard let endIndex = formatter.index(of: .endOfScope(")"), after: i) else {
                 return
             }
 
             var awaitIndexes: [Int] = []
-            var index = idx
-            while let next = formatter.index(of: .keyword("await"), after: index), index < endIndex {
+            var index = i
+            while let next = formatter.index(of: .keyword("await"), in: index + 1 ..< endIndex) {
                 awaitIndexes.append(next)
                 index = next
             }
 
-            guard !awaitIndexes.isEmpty else { return }
+            guard !awaitIndexes.isEmpty else {
+                return
+            }
 
-            let prevIndex = formatter.index(before: idx, where: {
+            let prevIndex = formatter.index(before: i, where: {
                 $0.isSpaceOrLinebreak
             })
 
-            awaitIndexes.reversed().forEach { awaitIndex in
-                formatter.removeToken(at: awaitIndex)
-                if formatter.tokens[awaitIndex].isSpace == true {
-                    formatter.removeToken(at: awaitIndex)
+            awaitIndexes.reversed().forEach {
+                formatter.removeToken(at: $0)
+                if formatter.token(at: $0)?.isSpace == true {
+                    formatter.removeToken(at: $0)
                 }
             }
 
-            if let prevIndex = prevIndex {
-                let token = formatter.token(at: prevIndex)
-                if token?.isLinebreak == true {
-                    return insertAwait(at: prevIndex + 1)
-                } else {
-                    return insertAwait(at: prevIndex)
-                }
+            if let prevIndex = formatter.index(before: i, where: {
+                $0.isDelimiter || $0.isLinebreak || $0.isStartOfScope ||
+                    $0.isOperator("=") || ($0.isKeyword && ![
+                        .keyword("is"), .keyword("as")
+                    ].contains($0))
+            }) {
+                insertAwait(at: prevIndex + 1)
+            } else if formatter.token(at: i - 1)?.isStartOfScope == true {
+                insertAwait(at: i)
             } else {
                 insertAwait(at: 0)
             }

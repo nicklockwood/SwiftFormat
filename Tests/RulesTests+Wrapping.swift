@@ -4038,7 +4038,8 @@ class WrappingTests: RulesTests {
             case bar, baz, quux
         }
         """
-        testFormatting(for: input, rule: FormatRules.wrapEnumCases, options: FormatOptions(wrapEnumCases: .ifValues))
+        testFormatting(for: input, rule: FormatRules.wrapEnumCases,
+                       options: FormatOptions(wrapEnumCases: .withValues))
     }
 
     func testEnumCasesIfValuesWithRawValuesAndNestedEnum() {
@@ -4066,7 +4067,7 @@ class WrappingTests: RulesTests {
             for: input,
             output,
             rule: FormatRules.wrapEnumCases,
-            options: FormatOptions(wrapEnumCases: .ifValues)
+            options: FormatOptions(wrapEnumCases: .withValues)
         )
     }
 
@@ -4087,7 +4088,7 @@ class WrappingTests: RulesTests {
             for: input,
             output,
             rule: FormatRules.wrapEnumCases,
-            options: FormatOptions(wrapEnumCases: .ifValues)
+            options: FormatOptions(wrapEnumCases: .withValues)
         )
     }
 

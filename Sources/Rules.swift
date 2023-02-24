@@ -4419,7 +4419,7 @@ public struct _FormatRules {
     public let wrapEnumCases = FormatRule(
         help: "Writes one enum case per line.",
         disabledByDefault: true,
-        options: ["wrapEnumCases"],
+        options: ["wrapenumcases"],
         sharedOptions: ["linebreaks"]
     ) { formatter in
 

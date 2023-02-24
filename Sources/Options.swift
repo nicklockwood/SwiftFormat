@@ -80,7 +80,7 @@ public enum WrapMode: String, CaseIterable {
 /// Wrap enum cases
 public enum WrapEnumCases: String, CaseIterable {
     case always
-    case ifValues = "if-values"
+    case withValues = "with-values"
 }
 
 /// Argument type for stripping

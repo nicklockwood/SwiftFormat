@@ -447,9 +447,9 @@ struct _Descriptors {
         keyPath: \.wrapArguments
     )
     let wrapEnumCases = OptionDescriptor(
-        argumentName: "wrapEnumCases",
+        argumentName: "wrapenumcases",
         displayName: "Wrap Enum Cases",
-        help: "Wrap enumn cases: \"always\", \"if-values\"",
+        help: "Wrap enum cases: \"always\" (default) or \"with-values\"",
         keyPath: \.wrapEnumCases
     )
     let wrapParameters = OptionDescriptor(

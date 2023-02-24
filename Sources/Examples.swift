@@ -342,6 +342,18 @@ private struct Examples {
     ```
     """
 
+    let hoistAwait = """
+    ```diff
+    - greet(await forename, await surname)
+    + await greet(forename, surname)
+    ```
+
+    ```diff
+    - let foo = String(try await getFoo())
+    + let foo = await String(try getFoo())
+    ```
+    """
+
     let indent = """
     ```diff
       if x {

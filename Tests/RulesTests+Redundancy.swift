@@ -1956,7 +1956,21 @@ class RedundancyTests: RulesTests {
                        exclude: ["unusedArguments"])
     }
 
-    func testNoRemoveReturnInCatch() {
+    func testNoRemoveReturnInDoCatch() {
+        let input = """
+        func foo() -> Int {
+            do {
+                return try Bar()
+            } catch {
+                return -1
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.1")
+        testFormatting(for: input, rule: FormatRules.redundantReturn, options: options)
+    }
+
+    func testNoRemoveReturnInDoCatchLet() {
         let input = """
         func foo() -> Int {
             do {
@@ -2192,6 +2206,43 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantReturn)
     }
 
+    func testNoRemoveReturnInIfCase() {
+        let input = """
+        var isSessionDeinitializedError: Bool {
+            if case .sessionDeinitialized = self { return true }
+            return false
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantReturn,
+                       options: FormatOptions(swiftVersion: "5.1"),
+                       exclude: ["wrapConditionalBodies"])
+    }
+
+    func testNoRemoveReturnInForCasewhere() {
+        let input = """
+        for case let .identifier(name) in formatter.tokens[startIndex ..< endIndex]
+            where names.contains(name)
+        {
+            return true
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantReturn,
+                       options: FormatOptions(swiftVersion: "5.1"))
+    }
+
+    func testNoRemoveRequiredReturnInFunctionInsideClosure() {
+        let input = """
+        foo {
+            func bar() -> Bar {
+                let bar = Bar()
+                return bar
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantReturn,
+                       options: FormatOptions(swiftVersion: "5.1"))
+    }
+
     func testRedundantIfStatementReturnSwift5_7() {
         let input = """
         func foo(condition: Bool) -> String {
@@ -2202,10 +2253,12 @@ class RedundancyTests: RulesTests {
             }
         }
         """
-        testFormatting(for: input, rule: FormatRules.redundantReturn)
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, rule: FormatRules.redundantReturn,
+                       options: options)
     }
 
-    func testNonRedundantIfStatementReturnSwift5_7() {
+    func testNonRedundantIfStatementReturnSwift5_8() {
         let input = """
         func foo(condition: Bool) -> String {
             if condition {

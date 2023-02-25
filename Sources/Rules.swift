@@ -3007,28 +3007,10 @@ public struct _FormatRules {
         // Explicit returns are redundant in closures, functions, etc with a single statement body
         formatter.forEach(.startOfScope("{")) { startOfScopeIndex, _ in
             // Make sure this is a type of scope that supports implicit returns
-            if let previousKeywordIndex = formatter.indexOfLastSignificantKeyword(at: startOfScopeIndex) {
-                let previousKeyword = formatter.tokens[previousKeywordIndex].string
-
-                // Conditionals don't support implicit return, except in specific positions
-                // which are handled in a later codepath
-                if ["if", "else", "for", "guard", "while", "do", "switch", "catch"]
-                    .contains(previousKeyword)
-                {
-                    return
-                }
-
-                // `if let`, `if var`, `catch let`, `catch var` are all scopes that
-                // don't support implicit returns
-                if ["let", "var"].contains(previousKeyword),
-                   formatter.isConditionalStatement(at: previousKeywordIndex)
-                   || formatter.lastSignificantKeyword(at: previousKeywordIndex) == "catch"
-                { return }
-
-                // `for ... in ... where` scopes don't support implicit returns
-                if previousKeyword == "where",
-                   formatter.lastSignificantKeyword(at: previousKeywordIndex - 1) == "for"
-                { return }
+            if formatter.isConditionalStatement(at: startOfScopeIndex) ||
+                ["do", "else", "catch"].contains(formatter.lastSignificantKeyword(at: startOfScopeIndex))
+            {
+                return
             }
 
             // Closures always supported implicit returns, but other types of scopes

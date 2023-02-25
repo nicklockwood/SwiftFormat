@@ -26,7 +26,7 @@ class LayoutViewControllerTests: XCTestCase {
 
     func testLayoutDidLoadWithValidXML() throws {
         let viewController = TestLayoutViewController()
-        viewController.loadLayout(withContentsOfURL: try url(forXml: "LayoutDidLoad_Valid"))
+        try viewController.loadLayout(withContentsOfURL: url(forXml: "LayoutDidLoad_Valid"))
 
         XCTAssertNotNil(viewController.layoutDidLoadLayoutNode)
         XCTAssertEqual(viewController.layoutNode, viewController.layoutDidLoadLayoutNode)
@@ -35,7 +35,7 @@ class LayoutViewControllerTests: XCTestCase {
 
     func testLayoutDidLoadWithInvalidXML() throws {
         let viewController = TestLayoutViewController()
-        viewController.loadLayout(withContentsOfURL: try url(forXml: "LayoutDidLoad_Invalid"))
+        try viewController.loadLayout(withContentsOfURL: url(forXml: "LayoutDidLoad_Invalid"))
 
         XCTAssertNil(viewController.layoutDidLoadLayoutNode)
         XCTAssertEqual(viewController.layoutDidLoadLayoutNodeCallCount, 0)
@@ -47,7 +47,7 @@ class LayoutViewControllerTests: XCTestCase {
         weak var node: LayoutNode?
         try autoreleasepool {
             let vc = TestLayoutViewController()
-            vc.loadLayout(withContentsOfURL: try url(forXml: "LayoutDidLoad_Valid"))
+            try vc.loadLayout(withContentsOfURL: url(forXml: "LayoutDidLoad_Valid"))
             node = vc.layoutNode
             XCTAssertNotNil(node)
             view = node?.view

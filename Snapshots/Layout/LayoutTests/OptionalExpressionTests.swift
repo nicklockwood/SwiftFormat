@@ -64,7 +64,7 @@ class OptionalExpressionTests: XCTestCase {
         let null: UIImage? = nil
         let node = LayoutNode(constants: ["foo": null as Any])
         let expression = LayoutExpression(imageExpression: "{foo}", for: node)
-        XCTAssertEqual((try expression?.evaluate() as? UIImage).map { $0.size }, .zero)
+        XCTAssertEqual(try (expression?.evaluate() as? UIImage).map { $0.size }, .zero)
     }
 
     func testNullAnyExpression() {

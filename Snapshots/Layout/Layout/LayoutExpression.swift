@@ -365,8 +365,8 @@ struct LayoutExpression {
                   for node: LayoutNode)
     {
         do {
-            self.init(
-                anyExpression: try parseExpression(anyExpression),
+            try self.init(
+                anyExpression: parseExpression(anyExpression),
                 type: type,
                 nullable: nullable,
                 constants: constants,
@@ -461,8 +461,8 @@ struct LayoutExpression {
                     let circular = (macro != nil) ? macroReferences.contains(key) : false
                     do {
                         if let macro = macro, !circular {
-                            guard let macroExpression = LayoutExpression(
-                                anyExpression: try parseExpression(macro),
+                            guard let macroExpression = try LayoutExpression(
+                                anyExpression: parseExpression(macro),
                                 type: .any,
                                 nullable: nullable,
                                 constants: constants,
@@ -527,7 +527,7 @@ struct LayoutExpression {
                         let string: String
                         if "'\"".contains(name.first ?? " ") {
                             string = String(name.dropFirst().dropLast())
-                        } else if let value = (try constants(key) ?? node.constantValue(forSymbol: key) ?? staticConstant(for: key)) {
+                        } else if let value = try (constants(key) ?? node.constantValue(forSymbol: key) ?? staticConstant(for: key)) {
                             guard let value = value as? String else {
                                 return nil
                             }
@@ -1216,7 +1216,7 @@ struct LayoutExpression {
             return nil
         }
         self.init(
-            evaluate: { Selector(try expression.evaluate() as! String) },
+            evaluate: { try Selector(expression.evaluate() as! String) },
             symbols: expression.symbols,
             isConstant: expression.isConstant
         )

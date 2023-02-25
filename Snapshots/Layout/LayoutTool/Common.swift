@@ -118,7 +118,7 @@ func enumerateFiles(withInputURL inputURL: URL,
         if resourceValues.isRegularFile == true {
             if options.supportedFileExtensions.contains(inputURL.pathExtension) {
                 do {
-                    onComplete(try block(inputURL, outputURL ?? inputURL))
+                    try onComplete(block(inputURL, outputURL ?? inputURL))
                 } catch {
                     onComplete { throw error }
                 }

@@ -1380,35 +1380,35 @@ class AnyExpressionTests: XCTestCase {
 
     func testNaN() {
         let expression = AnyExpression("NaN + 5", constants: ["NaN": Double.nan])
-        XCTAssertEqual((try expression.evaluate() as Double).isNaN, true)
+        XCTAssertEqual(try (expression.evaluate() as Double).isNaN, true)
     }
 
     func testEvilEdgeCase() {
         let evilValue = (-Double.nan) // exactly matches mask
         let expression = AnyExpression("evil + 5", constants: ["evil": evilValue])
-        XCTAssertEqual((try expression.evaluate() as Double).bitPattern, evilValue.bitPattern)
+        XCTAssertEqual(try (expression.evaluate() as Double).bitPattern, evilValue.bitPattern)
     }
 
     func testEvilEdgeCase2() {
         let evilValue = Double(bitPattern: (-Double.nan).bitPattern + 1 + 4) // outside range of stored variables
         let expression = AnyExpression("evil + 5", constants: ["evil": evilValue])
-        XCTAssertEqual((try expression.evaluate() as Double).bitPattern, (evilValue + 5).bitPattern)
+        XCTAssertEqual(try (expression.evaluate() as Double).bitPattern, (evilValue + 5).bitPattern)
     }
 
     func testEvilEdgeCase3() {
         let evilValue = Double(bitPattern: (-Double.nan).bitPattern - 1) // outside range of stored variables
         let expression = AnyExpression("evil + 5", constants: ["evil": evilValue])
-        XCTAssertEqual((try expression.evaluate() as Double).bitPattern, (evilValue + 5).bitPattern)
+        XCTAssertEqual(try (expression.evaluate() as Double).bitPattern, (evilValue + 5).bitPattern)
     }
 
     func testFloatNaN() {
         let expression = AnyExpression("NaN + 5", constants: ["NaN": Float.nan])
-        XCTAssertEqual((try expression.evaluate() as Double).isNaN, true)
+        XCTAssertEqual(try (expression.evaluate() as Double).isNaN, true)
     }
 
     func testInfinity() {
         let expression = AnyExpression("1/0")
-        XCTAssertEqual((try expression.evaluate() as Double).isInfinite, true)
+        XCTAssertEqual(try (expression.evaluate() as Double).isInfinite, true)
     }
 
     func testCGFloatTreatedAsDouble() throws {
@@ -2200,7 +2200,7 @@ class AnyExpressionTests: XCTestCase {
 
     func testCastNilResultAsAny() {
         let expression = AnyExpression("nil")
-        XCTAssertEqual("\(try expression.evaluate() as Any)", "nil")
+        XCTAssertEqual("try \(expression.evaluate() as Any)", "nil")
     }
 
     func testCastNilResultAsOptionalAny() {
@@ -2210,7 +2210,7 @@ class AnyExpressionTests: XCTestCase {
 
     func testCastNSNullResultAsAny() {
         let expression = AnyExpression("null", constants: ["null": NSNull()])
-        XCTAssertEqual("\(try expression.evaluate() as Any)", "nil")
+        XCTAssertEqual("try \(expression.evaluate() as Any)", "nil")
     }
 
     func testCastNSNullResultAsOptionalAny() {

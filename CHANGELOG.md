@@ -1,5 +1,17 @@
 # Change Log
 
+## [0.51.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.51.0) (2022-02-25)
+
+- Added `hoistAwait` and `hoistTry` rules to hoist inline `await`/`try` to start of expression
+- Extended `redundantPattern` rule to remove redundant `let` in patterns
+- Updated `redundantReturn`/`Closure` rules to support `if`/`switch` expressions in Swift 5.8
+- Added `conditionalAssignment` rule to assign variables using `if`/`switch` expressions in Swift 5.8
+- Updated `redundantType` rule to support `if`/`switch` expression assignment Swift 5.8
+- Extended `redundantSelf` rule to support implicit `self` in eligible closures in Swift 5.8
+- Added `--wrapenumcases with-values` option to only wrap enum cases with values
+- Added `--wrapeffects` option for wrapping function effects
+- Removed unsafe `preferDouble` rule
+
 ## [0.50.9](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.50.9) (2022-02-16)
 
 - Added Github actions log reporter (see `--reporter` option for details)

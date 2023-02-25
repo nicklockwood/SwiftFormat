@@ -916,7 +916,7 @@ Credits
 * [Romain Pouclet](https://github.com/palleas) - Homebrew formula
 * [Aerobounce](https://github.com/aerobounce) - Homebrew cask and Sublime Text plugin
 * [Cal Stephens](https://github.com/calda) - Several new formatting rules and options
-* [Facundo Menzella](https://github.com/facumenzella) - Several new formatting rules
+* [Facundo Menzella](https://github.com/facumenzella) - Several new formatting rules and options
 * [Ali Akhtarzada](https://github.com/aliak00) - Several path-related CLI enhancements
 * [Yonas Kolb](https://github.com/yonaskolb) - Swift Package Manager integration
 * [Wolfgang Lutz](https://github.com/Lutzifer) - AppleScript integration instructions

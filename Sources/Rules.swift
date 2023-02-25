@@ -3008,27 +3008,25 @@ public struct _FormatRules {
         formatter.forEach(.startOfScope("{")) { startOfScopeIndex, _ in
             // Make sure this is a type of scope that supports implicit returns
             if let previousKeywordIndex = formatter.indexOfLastSignificantKeyword(at: startOfScopeIndex) {
-                let previousKeyword = formatter.tokens[previousKeywordIndex].string
-
-                // Conditionals don't support implicit return, except in specific positions
-                // which are handled in a later codepath
-                if ["if", "else", "for", "guard", "while", "do", "switch", "catch"]
-                    .contains(previousKeyword)
-                {
+                switch formatter.tokens[previousKeywordIndex].string {
+                case "if", "else", "for", "guard", "while", "do", "switch", "catch", "case":
+                    // Conditionals don't support implicit return, except in specific positions
+                    // which are handled in a later codepath
                     return
+                case "let", "var":
+                    // `if let`, `if var`, `catch let`, `catch var` are all scopes that
+                    // don't support implicit returns
+                    if formatter.lastSignificantKeyword(at: previousKeywordIndex) == "catch" ||
+                        formatter.isConditionalStatement(at: previousKeywordIndex)
+                    {
+                        return
+                    }
+                case "where" where formatter.lastSignificantKeyword(at: previousKeywordIndex - 1) == "for":
+                    // `for ... in ... where` scopes don't support implicit returns
+                    return
+                default:
+                    break
                 }
-
-                // `if let`, `if var`, `catch let`, `catch var` are all scopes that
-                // don't support implicit returns
-                if ["let", "var"].contains(previousKeyword),
-                   formatter.isConditionalStatement(at: previousKeywordIndex)
-                   || formatter.lastSignificantKeyword(at: previousKeywordIndex) == "catch"
-                { return }
-
-                // `for ... in ... where` scopes don't support implicit returns
-                if previousKeyword == "where",
-                   formatter.lastSignificantKeyword(at: previousKeywordIndex - 1) == "for"
-                { return }
             }
 
             // Closures always supported implicit returns, but other types of scopes

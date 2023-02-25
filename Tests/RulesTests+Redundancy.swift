@@ -2177,6 +2177,18 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantReturn)
     }
 
+    func testNoRemoveReturnInIfCase() {
+        let input = """
+        var isSessionDeinitializedError: Bool {
+            if case .sessionDeinitialized = self { return true }
+            return false
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantReturn,
+                       options: FormatOptions(swiftVersion: "5.1"),
+                       exclude: ["wrapConditionalBodies"])
+    }
+
     func testNoRemoveVoidReturnInCatch() {
         let input = """
         func foo() {
@@ -2202,10 +2214,12 @@ class RedundancyTests: RulesTests {
             }
         }
         """
-        testFormatting(for: input, rule: FormatRules.redundantReturn)
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, rule: FormatRules.redundantReturn,
+                       options: options)
     }
 
-    func testNonRedundantIfStatementReturnSwift5_7() {
+    func testNonRedundantIfStatementReturnSwift5_8() {
         let input = """
         func foo(condition: Bool) -> String {
             if condition {

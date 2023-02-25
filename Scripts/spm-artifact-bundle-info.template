@@ -8,6 +8,10 @@
                 {
                     "path": "swiftformat-__VERSION__-macos/bin/swiftformat",
                     "supportedTriples": ["x86_64-apple-macosx", "arm64-apple-macosx"]
+                },
+                {
+                    "path": "swiftformat-__VERSION__-linux-gnu/bin/swiftformat_linux",
+                    "supportedTriples": ["x86_64-unknown-linux-gnu"]
                 }
             ]
         }

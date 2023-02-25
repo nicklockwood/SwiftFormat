@@ -4271,84 +4271,73 @@ public struct _FormatRules {
     }
 
     public let hoistTry = FormatRule(
-        help: "Reposition `try` keyword outside of the current scope.",
-        disabledByDefault: true,
-        options: []
+        help: "Move inline `try` keyword(s) to start of expression."
     ) { formatter in
-        formatter.forEach(.startOfScope("(")) { idx, _ in
-            func insertTry(at firstSpaceOrLinebreak: Int) {
-                let tryIndex = formatter.index(of: .keyword("try"), before: idx)
-
-                guard tryIndex == nil || formatter.tokens[tryIndex! ..< idx].contains(
-                    where: { $0.isStartOfScope || $0.isLinebreak }
-                ) else {
-                    return
-                }
-
-                var insertIndex = firstSpaceOrLinebreak
-                if let awaitIndex = formatter.index(before: insertIndex, where: { $0 == .keyword("await") }),
-                   !formatter.tokens[awaitIndex ..< insertIndex].contains(
-                       where: { $0.isStartOfScope || $0.isLinebreak }
-                   )
-                {
-                    insertIndex = awaitIndex
+        formatter.forEach(.startOfScope("(")) { i, _ in
+            func insertTry(at insertIndex: Int) {
+                var insertIndex = insertIndex
+                if formatter.tokens[insertIndex].isSpace {
+                    insertIndex += 1
                 }
 
                 formatter.insert([.keyword("try")], at: insertIndex)
 
-                if let nextToken = formatter.token(at: insertIndex + 1),
-                   !nextToken.isSpace && !nextToken.isStartOfScope
-                {
+                if let nextToken = formatter.token(at: insertIndex + 1), !nextToken.isSpace {
                     formatter.insertSpace(" ", at: insertIndex + 1)
-                }
-
-                if insertIndex > 0,
-                   let previousToken = formatter.token(at: insertIndex - 1),
-                   !previousToken.isLinebreak,
-                   !previousToken.isSpace,
-                   !previousToken.isStartOfScope
-                {
+                } else {
                     formatter.insertSpace(" ", at: insertIndex)
                 }
             }
 
-            guard let endIndex = formatter.index(of: .endOfScope(")"), after: idx) else {
+            // TODO: find better approach
+            func isThrowingAutoclosureFunction(_ token: Token) -> Bool {
+                if case let .identifier(name) = token {
+                    return name.hasPrefix("XCTAssert") || name == "expect"
+                }
+                return false
+            }
+
+            guard let endIndex = formatter.index(of: .endOfScope(")"), after: i) else {
                 return
             }
 
             var tryIndexes: [Int] = []
-            var index = idx
-            while let next = formatter.index(of: .keyword("try"), after: index),
-                  index < endIndex,
-                  formatter.token(at: next + 1)?.isOperator(ofType: .postfix) == false
+            var index = i
+            while let next = formatter.index(of: .keyword("try"), in: index + 1 ..< endIndex),
+                  !formatter.tokens[next + 1].isUnwrapOperator // ignore try? or try!
             {
-                // ignore try with postfix
-
                 tryIndexes.append(next)
                 index = next
             }
 
-            guard !tryIndexes.isEmpty else { return }
+            guard !tryIndexes.isEmpty else {
+                return
+            }
 
-            tryIndexes.reversed()
-                .forEach { tryIndex in
-                    formatter.removeToken(at: tryIndex)
-
-                    if formatter.tokens[tryIndex].isSpace == true {
-                        formatter.removeToken(at: tryIndex)
-                    }
+            tryIndexes.reversed().forEach {
+                formatter.removeToken(at: $0)
+                if formatter.token(at: $0)?.isSpace == true {
+                    formatter.removeToken(at: $0)
                 }
+            }
 
-            if let firstSpaceOrLinebreakIndex = formatter.index(before: idx, where: { $0.isSpaceOrLinebreak }),
-               let firstSpaceOrLinebreakToken = formatter.token(at: firstSpaceOrLinebreakIndex)
-            {
-                if firstSpaceOrLinebreakToken.isLinebreak {
-                    return insertTry(at: firstSpaceOrLinebreakIndex + 1)
-                } else {
-                    return insertTry(at: firstSpaceOrLinebreakIndex)
+            if var prevIndex = formatter.index(before: i, where: {
+                $0.isDelimiter || $0.isLinebreak || $0.isStartOfScope ||
+                    $0.isOperator("=") || ($0.isKeyword && ![
+                        .keyword("is"), .keyword("as"), .keyword("await")
+                    ].contains($0)) || isThrowingAutoclosureFunction($0)
+            }) {
+                if formatter.tokens[prevIndex] == .keyword("try") {
+                    return
                 }
-            } else if formatter.token(at: idx - 1)?.isStartOfScope == true {
-                insertTry(at: idx)
+                if isThrowingAutoclosureFunction(formatter.tokens[prevIndex]),
+                   let index = formatter.index(of: .startOfScope("("), after: prevIndex)
+                {
+                    prevIndex = index
+                }
+                insertTry(at: prevIndex + 1)
+            } else if formatter.token(at: i - 1)?.isStartOfScope == true {
+                insertTry(at: i)
             } else {
                 insertTry(at: 0)
             }

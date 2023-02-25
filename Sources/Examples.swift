@@ -354,6 +354,18 @@ private struct Examples {
     ```
     """
 
+    let hoistTry = """
+    ```diff
+    - foo(try bar(), try baz())
+    + tyr foo(bar(), baz())
+    ```
+
+    ```diff
+    - let foo = String(try await getFoo())
+    + let foo = try String(await getFoo())
+    ```
+    """
+
     let indent = """
     ```diff
       if x {

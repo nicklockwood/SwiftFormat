@@ -628,22 +628,88 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.hoistTry, exclude: ["hoistAwait"])
     }
 
+    func testNoHoistTryInsideXCTAssert() {
+        let input = "XCTAssertFalse(try foo())"
+        testFormatting(for: input, rule: FormatRules.hoistTry)
+    }
+
+    func testNoHoistTryInsideDo() {
+        let input = """
+        do {
+            rg.box.seal(.fulfilled(try body(error)))
+        }
+        """
+        let output = """
+        do {
+            try rg.box.seal(.fulfilled(body(error)))
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.hoistTry)
+    }
+
+    func testHoistedTryPlacedBeforeAwait() {
+        let input = "let foo = await bar(contentsOf: try baz())"
+        let output = "let foo = try await bar(contentsOf: baz())"
+        testFormatting(for: input, output, rule: FormatRules.hoistTry)
+    }
+
+    func testHoistTryInExpressionWithNoSpaces() {
+        let input = "let foo=bar(contentsOf:try baz())"
+        let output = "let foo=try bar(contentsOf:baz())"
+        testFormatting(for: input, output, rule: FormatRules.hoistTry,
+                       exclude: ["spaceAroundOperators"])
+    }
+
+    func testHoistTryInExpressionWithExcessSpaces() {
+        let input = "let foo = bar ( contentsOf: try baz() )"
+        let output = "let foo = try bar ( contentsOf: baz() )"
+        testFormatting(for: input, output, rule: FormatRules.hoistTry,
+                       exclude: ["spaceAroundParens", "spaceInsideParens"])
+    }
+
     func testHoistTryWithReturn() {
         let input = "return .enumCase(try await service.greet())"
         let output = "return try .enumCase(await service.greet())"
-        testFormatting(for: input, output, rule: FormatRules.hoistTry, exclude: ["hoistAwait"])
+        testFormatting(for: input, output, rule: FormatRules.hoistTry,
+                       exclude: ["hoistAwait"])
+    }
+
+    func testHoistDeeplyNestedTrys() {
+        let input = "let foo = (bar: (5, (try quux(), 6)), baz: (7, quux: try quux()))"
+        let output = "let foo = try (bar: (5, (quux(), 6)), baz: (7, quux: quux()))"
+        testFormatting(for: input, output, rule: FormatRules.hoistTry)
+    }
+
+    func testTryNotHoistedOutOfClosure() {
+        let input = "let foo = { (try bar(), 5) }"
+        let output = "let foo = { try (bar(), 5) }"
+        testFormatting(for: input, output, rule: FormatRules.hoistTry)
+    }
+
+    func testTryNotHoistedOutOfClosureWithArguments() {
+        let input = "let foo = { bar in (try baz(bar), 5) }"
+        let output = "let foo = { bar in try (baz(bar), 5) }"
+        testFormatting(for: input, output, rule: FormatRules.hoistTry)
+    }
+
+    func testTryNotHoistedOutOfForCondition() {
+        let input = "for foo in bar(try baz()) {}"
+        let output = "for foo in try bar(baz()) {}"
+        testFormatting(for: input, output, rule: FormatRules.hoistTry)
     }
 
     func testHoistTryWithInitAssignment() {
         let input = "let variable = String(try await asyncFunction())"
         let output = "let variable = try String(await asyncFunction())"
-        testFormatting(for: input, output, rule: FormatRules.hoistTry, exclude: ["hoistAwait"])
+        testFormatting(for: input, output, rule: FormatRules.hoistTry,
+                       exclude: ["hoistAwait"])
     }
 
     func testHoistTryWithAssignment() {
         let input = "let variable = (try await asyncFunction())"
         let output = "let variable = try (await asyncFunction())"
-        testFormatting(for: input, output, rule: FormatRules.hoistTry, exclude: ["hoistAwait"])
+        testFormatting(for: input, output, rule: FormatRules.hoistTry,
+                       exclude: ["hoistAwait"])
     }
 
     func testHoistTryOnlyOne() {
@@ -699,10 +765,12 @@ class SyntaxTests: RulesTests {
                        options: FormatOptions(swiftVersion: "5.5"))
     }
 
-    func testHoistAwaitInsideIfDoesNothing() {
+    func testHoistAwaitInsideIf() {
         let input = "if !(await isSomething()) {}"
-        testFormatting(for: input, rule: FormatRules.hoistAwait,
-                       options: FormatOptions(swiftVersion: "5.5"))
+        let output = "if await !(isSomething()) {}"
+        testFormatting(for: input, output, rule: FormatRules.hoistAwait,
+                       options: FormatOptions(swiftVersion: "5.5"),
+                       exclude: ["redundantParens"])
     }
 
     func testHoistAwaitInsideArgument() {

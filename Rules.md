@@ -20,6 +20,7 @@
 * [genericExtensions](#genericExtensions)
 * [hoistAwait](#hoistAwait)
 * [hoistPatternLet](#hoistPatternLet)
+* [hoistTry](#hoistTry)
 * [indent](#indent)
 * [initCoderUnavailable](#initCoderUnavailable)
 * [leadingDelimiters](#leadingDelimiters)
@@ -85,7 +86,6 @@
 * [blankLinesBetweenImports](#blankLinesBetweenImports)
 * [blockComments](#blockComments)
 * [docComments](#docComments)
-* [hoistTry](#hoistTry)
 * [isEmpty](#isEmpty)
 * [markTypes](#markTypes)
 * [organizeDeclarations](#organizeDeclarations)
@@ -835,7 +835,23 @@ Option | Description
 
 ## hoistTry
 
-Reposition `try` keyword outside of the current scope.
+Move inline `try` keyword(s) to start of expression.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- foo(try bar(), try baz())
++ tyr foo(bar(), baz())
+```
+
+```diff
+- let foo = String(try await getFoo())
++ let foo = try String(await getFoo())
+```
+
+</details>
+<br/>
 
 ## indent
 

@@ -153,7 +153,7 @@ private class LayoutData: NSObject {
                         return { [unowned self] _ in
                             try self.view.superview.map { superview in
                                 var size = superview.frame.size
-                                size.width = CGFloat(try self.computedValue(forKey: "width"))
+                                size.width = try CGFloat(self.computedValue(forKey: "width"))
                                 return Double(self.view.systemLayoutSizeFitting(size).height)
                             } ?? 0
                         }
@@ -233,10 +233,10 @@ public extension UIView {
         guard let layout = layout(create: true) else {
             return
         }
-        frame = CGRect(x: try layout.computedValue(forKey: "left"),
-                       y: try layout.computedValue(forKey: "top"),
-                       width: try layout.computedValue(forKey: "width"),
-                       height: try layout.computedValue(forKey: "height"))
+        frame = try CGRect(x: layout.computedValue(forKey: "left"),
+                           y: layout.computedValue(forKey: "top"),
+                           width: layout.computedValue(forKey: "width"),
+                           height: layout.computedValue(forKey: "height"))
 
         for view in subviews {
             try view.updateLayout()

@@ -217,7 +217,7 @@ class FontExpressionTests: XCTestCase {
         let node = LayoutNode()
         let expression = LayoutExpression(fontExpression: "body 150%", for: node)
         let expectedSize = UIFont.preferredFont(forTextStyle: .body).pointSize * 1.5
-        XCTAssertEqual((try expression?.evaluate() as? UIFont)?.pointSize, expectedSize)
+        XCTAssertEqual(try (expression?.evaluate() as? UIFont)?.pointSize, expectedSize)
     }
 
     func testInvalidSpecifier() {
@@ -255,19 +255,19 @@ class FontExpressionTests: XCTestCase {
     func testCustomStaticFont1() {
         let node = LayoutNode()
         let expression = LayoutExpression(fontExpression: "testFont", for: node)
-        XCTAssertEqual((try expression?.evaluate() as? UIFont)?.pointSize, UIFont.testFont.pointSize)
+        XCTAssertEqual(try (expression?.evaluate() as? UIFont)?.pointSize, UIFont.testFont.pointSize)
     }
 
     func testCustomStaticFont2() {
         let node = LayoutNode()
         let expression = LayoutExpression(fontExpression: "test", for: node)
-        XCTAssertEqual((try expression?.evaluate() as? UIFont)?.pointSize, UIFont.testFont.pointSize)
+        XCTAssertEqual(try (expression?.evaluate() as? UIFont)?.pointSize, UIFont.testFont.pointSize)
     }
 
     func testCustomStaticFont3() {
         let node = LayoutNode()
         let expression = LayoutExpression(fontExpression: "{UIFont.testFont}", for: node)
-        XCTAssertEqual((try expression?.evaluate() as? UIFont)?.pointSize, UIFont.testFont.pointSize)
+        XCTAssertEqual(try (expression?.evaluate() as? UIFont)?.pointSize, UIFont.testFont.pointSize)
     }
 
     func testCustomStaticFont4() {
@@ -280,16 +280,16 @@ class FontExpressionTests: XCTestCase {
         let node = LayoutNode()
         let familyName = "Avenir Next Condensed"
         let expression = LayoutExpression(fontExpression: "\(familyName) bold", for: node)
-        XCTAssertEqual((try expression?.evaluate() as? UIFont)?.familyName, familyName)
-        XCTAssertEqual((try expression?.evaluate() as? UIFont)?.fontWeight, .bold)
+        XCTAssertEqual(try (expression?.evaluate() as? UIFont)?.familyName, familyName)
+        XCTAssertEqual(try (expression?.evaluate() as? UIFont)?.fontWeight, .bold)
     }
 
     func testAmbiguousFamilyName2() {
         let node = LayoutNode()
         let familyName = "Avenir Next Condensed"
         let expression = LayoutExpression(fontExpression: "\(familyName) heavy", for: node)
-        XCTAssertEqual((try expression?.evaluate() as? UIFont)?.familyName, familyName)
-        XCTAssertEqual((try expression?.evaluate() as? UIFont)?.fontWeight, .heavy)
+        XCTAssertEqual(try (expression?.evaluate() as? UIFont)?.familyName, familyName)
+        XCTAssertEqual(try (expression?.evaluate() as? UIFont)?.fontWeight, .heavy)
     }
 
     func testBuiltInFontWeights() {

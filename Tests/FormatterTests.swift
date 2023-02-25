@@ -430,7 +430,7 @@ class FormatterTests: XCTestCase {
             var  bar = 5
         }
         """
-        XCTAssertEqual(sourceCode(for: try format(
+        XCTAssertEqual(try sourceCode(for: format(
             input,
             rules: [FormatRules.blankLinesAtStartOfScope],
             range: 6 ..< 9

@@ -32,7 +32,7 @@
 import Foundation
 
 /// The current SwiftFormat version
-let swiftFormatVersion = "0.50.9"
+let swiftFormatVersion = "0.51.0"
 public let version = swiftFormatVersion
 
 /// The standard SwiftFormat config file name
@@ -124,7 +124,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
         if options.shouldSkipFile(inputURL) {
             if let handler = skipped {
                 do {
-                    onComplete(try handler(inputURL, inputURL, options))
+                    try onComplete(handler(inputURL, inputURL, options))
                 } catch {
                     onComplete { throw error }
                 }
@@ -142,7 +142,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
                         return resolveInputURL(resolvedURL, options: options)
                     } else {
                         if let handler = skipped {
-                            onComplete(try handler(inputURL, inputURL, options))
+                            try onComplete(handler(inputURL, inputURL, options))
                         }
                         return nil
                     }
@@ -154,7 +154,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
                     return resolveInputURL(resolvedURL, options: options)
                 } else {
                     if let handler = skipped {
-                        onComplete(try handler(inputURL, inputURL, options))
+                        try onComplete(handler(inputURL, inputURL, options))
                     }
                     return nil
                 }
@@ -186,7 +186,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
                 var options = options
                 options.formatOptions?.fileInfo = fileInfo
                 do {
-                    onComplete(try handler(inputURL, outputURL ?? inputURL, options))
+                    try onComplete(handler(inputURL, outputURL ?? inputURL, options))
                 } catch {
                     onComplete { throw error }
                 }
@@ -443,12 +443,12 @@ public func applyRules(_ rules: [FormatRule],
                        trackChanges: Bool,
                        range: Range<Int>?) throws -> (tokens: [Token], changes: [Formatter.Change])
 {
-    return try applyRules(rules,
-                          to: originalTokens,
-                          with: options,
-                          trackChanges: trackChanges,
-                          range: range,
-                          callback: nil)
+    try applyRules(rules,
+                   to: originalTokens,
+                   with: options,
+                   trackChanges: trackChanges,
+                   range: range,
+                   callback: nil)
 }
 
 private func applyRules(
@@ -586,7 +586,7 @@ public func format(
 ) throws -> String {
     let tokens = tokenize(source)
     let range = lineRange.map { tokenRange(forLineRange: $0, in: tokens) }
-    return sourceCode(for: try format(tokens, rules: rules, options: options, range: range))
+    return try sourceCode(for: format(tokens, rules: rules, options: options, range: range))
 }
 
 /// Lint a pre-parsed token array

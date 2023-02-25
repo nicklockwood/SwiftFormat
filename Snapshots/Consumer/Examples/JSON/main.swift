@@ -33,13 +33,13 @@ func time<T>(_ block: () throws -> T) -> T {
 }
 
 // Evaluate json using interpreted parser
-time { print("interpreted:", try parseJSON(input)) }
+time { try print("interpreted:", parseJSON(input)) }
 
 // Evaluate json using handwritten parser
-time { print("handwritten:", try parseJSON2(input)) }
+time { try print("handwritten:", parseJSON2(input)) }
 
 // Evaluate json using compiled parser
-time { print("compiled:", try parseJSON3(input)!) }
+time { try print("compiled:", parseJSON3(input)!) }
 
 /// Update compiled parser
 print("Recompiling parser...")

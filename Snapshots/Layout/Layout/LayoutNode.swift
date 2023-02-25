@@ -955,7 +955,7 @@ public class LayoutNode: NSObject {
         }
 
         for child in layout.children {
-            addChild(try LayoutNode(layout: child))
+            try addChild(LayoutNode(layout: child))
         }
         if _setupComplete, _view?.window != nil || _owner != nil {
             update()
@@ -2293,11 +2293,11 @@ public class LayoutNode: NSObject {
     /// TODO: should this be public?
     public var frame: CGRect {
         return attempt {
-            CGRect(
-                x: try cgFloatValue(forSymbol: "left"),
-                y: try cgFloatValue(forSymbol: "top"),
-                width: _evaluating.contains("width") ? 0 : try cgFloatValue(forSymbol: "width"),
-                height: _evaluating.contains("height") ? 0 : try cgFloatValue(forSymbol: "height")
+            try CGRect(
+                x: cgFloatValue(forSymbol: "left"),
+                y: cgFloatValue(forSymbol: "top"),
+                width: _evaluating.contains("width") ? 0 : cgFloatValue(forSymbol: "width"),
+                height: _evaluating.contains("height") ? 0 : cgFloatValue(forSymbol: "height")
             )
         } ?? .zero
     }
@@ -2377,9 +2377,9 @@ public class LayoutNode: NSObject {
         } else if hasExpression("contentSize.width"), !_evaluating.contains("contentSize.width"),
                   hasExpression("contentSize.height"), !_evaluating.contains("contentSize.height")
         {
-            return CGSize(
-                width: try cgFloatValue(forSymbol: "contentSize.width"),
-                height: try cgFloatValue(forSymbol: "contentSize.height")
+            return try CGSize(
+                width: cgFloatValue(forSymbol: "contentSize.width"),
+                height: cgFloatValue(forSymbol: "contentSize.height")
             )
         }
         // TODO: remove special cases

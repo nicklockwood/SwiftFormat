@@ -2345,6 +2345,19 @@ class RedundancyTests: RulesTests {
                        exclude: ["wrapConditionalBodies"])
     }
 
+    func testNoRemoveRequiredReturnInFunctionInsideClosure() {
+        let input = """
+        foo {
+            func bar() -> Bar {
+                let bar = Bar()
+                return bar
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantReturn,
+                       options: FormatOptions(swiftVersion: "5.1"))
+    }
+
     func testNoRemoveVoidReturnInCatch() {
         let input = """
         func foo() {

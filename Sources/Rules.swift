@@ -4298,7 +4298,7 @@ public struct _FormatRules {
         options: []
     ) { formatter in
         formatter.forEach(.startOfScope("(")) { idx, _ in
-            func insertTry(at insertIndex: Int) {
+            func insertTry(at firstSpaceOrLinebreak: Int) {
                 let tryIndex = formatter.index(of: .keyword("try"), before: idx)
 
                 guard tryIndex == nil || formatter.tokens[tryIndex! ..< idx].contains(
@@ -4307,16 +4307,28 @@ public struct _FormatRules {
                     return
                 }
 
+                var insertIndex = firstSpaceOrLinebreak
+                if let awaitIndex = formatter.index(before: insertIndex, where: { $0 == .keyword("await") }),
+                   !formatter.tokens[awaitIndex ..< insertIndex].contains(
+                       where: { $0.isStartOfScope || $0.isLinebreak }
+                   )
+                {
+                    insertIndex = awaitIndex
+                }
+
                 formatter.insert([.keyword("try")], at: insertIndex)
 
-                if formatter.token(at: insertIndex + 1)?.isSpace == false {
+                if let nextToken = formatter.token(at: insertIndex + 1),
+                   !nextToken.isSpace && !nextToken.isStartOfScope
+                {
                     formatter.insertSpace(" ", at: insertIndex + 1)
                 }
 
                 if insertIndex > 0,
                    let previousToken = formatter.token(at: insertIndex - 1),
                    !previousToken.isLinebreak,
-                   previousToken.isSpace == false
+                   !previousToken.isSpace,
+                   !previousToken.isStartOfScope
                 {
                     formatter.insertSpace(" ", at: insertIndex)
                 }
@@ -4340,10 +4352,6 @@ public struct _FormatRules {
 
             guard !tryIndexes.isEmpty else { return }
 
-            let prevIndex = formatter.index(before: idx, where: {
-                $0.isSpaceOrLinebreak
-            })
-
             tryIndexes.reversed()
                 .forEach { tryIndex in
                     formatter.removeToken(at: tryIndex)
@@ -4353,13 +4361,16 @@ public struct _FormatRules {
                     }
                 }
 
-            if let prevIndex = prevIndex {
-                let token = formatter.token(at: prevIndex)
-                if token?.isLinebreak == true {
-                    return insertTry(at: prevIndex + 1)
+            if let firstSpaceOrLinebreakIndex = formatter.index(before: idx, where: { $0.isSpaceOrLinebreak }),
+               let firstSpaceOrLinebreakToken = formatter.token(at: firstSpaceOrLinebreakIndex)
+            {
+                if firstSpaceOrLinebreakToken.isLinebreak {
+                    return insertTry(at: firstSpaceOrLinebreakIndex + 1)
                 } else {
-                    return insertTry(at: prevIndex)
+                    return insertTry(at: firstSpaceOrLinebreakIndex)
                 }
+            } else if formatter.token(at: idx - 1)?.isStartOfScope == true {
+                insertTry(at: idx)
             } else {
                 insertTry(at: 0)
             }

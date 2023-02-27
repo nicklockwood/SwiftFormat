@@ -1060,17 +1060,17 @@ extension Formatter {
 
         // (2) any other statement-forming scope (e.g. guard, #if)
         //     within the main body, that isn't itself a closure
-        for startOfScopeIndex in (startOfBody + 1) ... endOfScopeIndex
-            where token(at: startOfScopeIndex)?.isStartOfScope == true
-            && token(at: startOfScopeIndex) != .startOfScope("(")
+        for innerStartOfScopeIndex in (startOfBody + 1) ... endOfScopeIndex
+            where token(at: innerStartOfScopeIndex)?.isStartOfScope == true
+            && token(at: innerStartOfScopeIndex) != .startOfScope("(")
         {
-            let startOfScope = tokens[startOfScopeIndex]
+            let innerStartOfScope = tokens[innerStartOfScopeIndex]
 
-            if startOfScope != .startOfScope("("), // Method calls / other parents are fine
-               startOfScope != .startOfScope("\""), // Strings are fine
-               startOfScope != .startOfScope("\"\"\""), // Strings are fine
-               !indexIsWithinNestedClosure(startOfScopeIndex, startOfScopeIndex: startOfScopeIndex),
-               !isStartOfClosure(at: startOfScopeIndex)
+            if innerStartOfScope != .startOfScope("("), // Method calls / other parents are fine
+               innerStartOfScope != .startOfScope("\""), // Strings are fine
+               innerStartOfScope != .startOfScope("\"\"\""), // Strings are fine
+               !indexIsWithinNestedClosure(innerStartOfScopeIndex, startOfScopeIndex: startOfScopeIndex),
+               !isStartOfClosure(at: innerStartOfScopeIndex)
             {
                 return false
             }
@@ -1259,6 +1259,10 @@ extension Formatter {
         } else if let previousStartOfScope = self.index(of: .startOfScope, before: index) {
             startOfScopeAtIndex = previousStartOfScope
         } else {
+            return false
+        }
+
+        if startOfScopeAtIndex <= startOfScopeIndex {
             return false
         }
 

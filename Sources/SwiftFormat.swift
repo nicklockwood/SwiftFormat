@@ -278,9 +278,15 @@ private func processDirectory(_ inputURL: URL, with options: inout Options, logg
     let manager = FileManager.default
     let configFile = inputURL.appendingPathComponent(swiftFormatConfigurationFile)
     if manager.fileExists(atPath: configFile.path) {
-        logger?("Reading config file at \(configFile.path)")
-        let data = try Data(contentsOf: configFile)
-        args = try parseConfigFile(data)
+        if let configURL = options.configURL {
+            if configURL.standardizedFileURL != configFile.standardizedFileURL {
+                logger?("Ignoring config file at \(configFile.path)")
+            }
+        } else {
+            logger?("Reading config file at \(configFile.path)")
+            let data = try Data(contentsOf: configFile)
+            args = try parseConfigFile(data)
+        }
     }
     let versionFile = inputURL.appendingPathComponent(swiftVersionFile)
     if manager.fileExists(atPath: versionFile.path) {

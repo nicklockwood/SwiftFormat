@@ -3281,10 +3281,18 @@ class WrappingTests: RulesTests {
         ], options: options)
     }
 
-    func testMultilineBraceNotAppliedToTrailingClosure_wrapAfterFirst() {
+    func testMultilineBraceAppliedToTrailingClosure_wrapAfterFirst() {
         let input = """
         UIView.animate(duration: 10,
                        options: []) {
+            print()
+        }
+        """
+
+        let output = """
+        UIView.animate(duration: 10,
+                       options: [])
+        {
             print()
         }
         """
@@ -3293,7 +3301,7 @@ class WrappingTests: RulesTests {
             wrapArguments: .afterFirst,
             closingParenOnSameLine: true
         )
-        testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces,
+        testFormatting(for: input, output, rule: FormatRules.wrapMultilineStatementBraces,
                        options: options, exclude: ["indent"])
     }
 

@@ -31,11 +31,7 @@ extension Formatter {
            let startIndex = self.index(of: .startOfScope("("), before: prevIndex),
            indentForLine(at: startIndex) < indent
         {
-            if options.wrapArguments == .beforeFirst {
-                return !onSameLine(startIndex, prevIndex)
-            } else {
-                return next(.nonSpaceOrComment, after: startIndex)?.isLinebreak == true
-            }
+            return !onSameLine(startIndex, prevIndex)
         }
         return false
     }

@@ -1545,7 +1545,7 @@ class IndentTests: RulesTests {
         """
         let options = FormatOptions(wrapArguments: .disabled, closingParenOnSameLine: true)
         testFormatting(for: input, rule: FormatRules.indent, options: options,
-                       exclude: ["wrapConditionalBodies"])
+                       exclude: ["wrapConditionalBodies", "wrapMultilineStatementBraces"])
     }
 
     func testDoubleIndentTrailingClosureBody() {
@@ -1576,7 +1576,8 @@ class IndentTests: RulesTests {
         }
         """
         let options = FormatOptions(wrapArguments: .disabled, closingParenOnSameLine: true)
-        testFormatting(for: input, rule: FormatRules.indent, options: options)
+        testFormatting(for: input, rule: FormatRules.indent, options: options,
+                       exclude: ["wrapMultilineStatementBraces"])
     }
 
     func testNoDoubleIndentTrailingClosureBodyIfLineStartsWithClosingBrace() {

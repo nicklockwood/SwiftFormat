@@ -18,7 +18,8 @@ class OptionDescriptorTests: XCTestCase {
     {
         var options = FormatOptions.default
         XCTAssertThrowsError(try descriptor.toOptions(invalidArguments, &options),
-                             "\(testName): Invalid format Throws") { err in
+                             "\(testName): Invalid format Throws")
+        { err in
             guard case FormatError.options = err else {
                 XCTFail("\(testName): Throws a FormatError.options error")
                 return

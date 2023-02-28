@@ -383,6 +383,13 @@ public extension Token {
     var isSpaceOrCommentOrLinebreak: Bool { isSpaceOrComment || isLinebreak }
     var isCommentOrLinebreak: Bool { isComment || isLinebreak }
 
+    var isSwitchCaseOrDefault: Bool {
+        if case let .endOfScope(string) = self {
+            return ["case", "default"].contains(string)
+        }
+        return false
+    }
+
     func isOperator(_ string: String) -> Bool {
         if case .operator(string, _) = self {
             return true

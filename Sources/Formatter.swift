@@ -439,9 +439,7 @@ public extension Formatter {
                 if case .linebreak = token, scopeStack.isEmpty, matches(token) {
                     return i
                 }
-            } else if token == .endOfScope("case") || token == .endOfScope("default"),
-                      scopeStack.last == .startOfScope("#if")
-            {
+            } else if token.isSwitchCaseOrDefault, scopeStack.last == .startOfScope("#if") {
                 continue
             } else if scopeStack.isEmpty, matches(token) {
                 return i

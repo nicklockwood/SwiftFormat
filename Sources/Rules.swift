@@ -1554,7 +1554,7 @@ public struct _FormatRules {
                         i += formatter.insertSpaceIfEnabled("", at: start)
                     } else {
                         var indent = indentStack.last ?? ""
-                        if [.endOfScope("case"), .endOfScope("default")].contains(token),
+                        if token.isSwitchCaseOrDefault,
                            formatter.options.indentCase, !isInIfdef()
                         {
                             indent += formatter.options.indent
@@ -3185,7 +3185,7 @@ public struct _FormatRules {
                 [.startOfScope("{"), .startOfScope(":"), .startOfScope("#if")].contains(token)
             } ?? true)
             let isCaseClause = !isWhereClause && index > 0 &&
-                [.endOfScope("case"), .endOfScope("default")].contains(formatter.tokens[index - 1])
+                formatter.tokens[index - 1].isSwitchCaseOrDefault
             if explicitSelf == .remove {
                 // Check if scope actually includes self before we waste a bunch of time
                 var scopeStack: [Token] = []

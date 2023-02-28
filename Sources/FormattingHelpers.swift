@@ -1099,7 +1099,7 @@ extension Formatter {
         guard
             let startOfSwitchScope = index(of: .startOfScope("{"), after: switchIndex),
             let firstCaseIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfSwitchScope),
-            tokens[firstCaseIndex] == .endOfScope("case")
+            tokens[firstCaseIndex].isSwitchCaseOrDefault
         else { return [] }
 
         var branches = [(startOfBranch: Int, endOfBranch: Int)]()
@@ -1107,14 +1107,14 @@ extension Formatter {
 
         while
             let conditionalBranchIndex = nextConditionalBranchIndex,
-            tokens[conditionalBranchIndex] == .endOfScope("case"),
+            tokens[conditionalBranchIndex].isSwitchCaseOrDefault,
             let startOfBody = index(of: .startOfScope, after: conditionalBranchIndex),
             tokens[startOfBody] == .startOfScope(":"),
             let endOfBody = endOfScope(at: startOfBody)
         {
             branches.append((startOfBranch: startOfBody, endOfBranch: endOfBody))
 
-            if tokens[endOfBody] == .endOfScope("case") {
+            if tokens[endOfBody].isSwitchCaseOrDefault {
                 nextConditionalBranchIndex = endOfBody
             } else {
                 break

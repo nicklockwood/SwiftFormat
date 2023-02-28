@@ -2377,6 +2377,61 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantReturn, options: options)
     }
 
+    func testNonRedundantSwitchStatementReturnInFunction() {
+        let input = """
+        func foo(condition: Bool) -> String {
+            switch condition {
+            case true:
+                return "foo"
+            case false:
+                return "bar"
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, rule: FormatRules.redundantReturn, options: options)
+    }
+
+    func testRedundantSwitchStatementReturnInFunctionWithDefault() {
+        let input = """
+        func foo(condition: Bool) -> String {
+            switch condition {
+            case true:
+                return "foo"
+            default:
+                return "bar"
+            }
+        }
+        """
+        let output = """
+        func foo(condition: Bool) -> String {
+            switch condition {
+            case true:
+                "foo"
+            default:
+                "bar"
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.8")
+        testFormatting(for: input, output, rule: FormatRules.redundantReturn, options: options)
+    }
+
+    func testNonRedundantSwitchStatementReturnInFunctionWithDefault() {
+        let input = """
+        func foo(condition: Bool) -> String {
+            switch condition {
+            case true:
+                return "foo"
+            default:
+                return "bar"
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, rule: FormatRules.redundantReturn, options: options)
+    }
+
     func testRedundantNestedSwitchStatementReturnInFunction() {
         let input = """
         func foo(condition: Bool) -> String {

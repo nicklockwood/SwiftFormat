@@ -987,14 +987,22 @@ extension Formatter {
     /// Note: this will produce false positives for any init that takes a closure
     func isInResultBuilder(at i: Int) -> Bool {
         var i = i
-        while let startIndex = index(of: .startOfScope("{"), before: i) {
+        while let startIndex = index(before: i, where: {
+            [.startOfScope("{"), .startOfScope(":")].contains($0)
+        }) {
             guard let prevIndex = index(before: startIndex, where: {
                 !$0.isSpaceOrCommentOrLinebreak && !$0.isEndOfScope
             }) else {
                 return false
             }
             if case let .identifier(name) = tokens[prevIndex], name.first?.isUppercase == true {
-                return true
+                switch last(.nonSpaceOrComment, before: prevIndex) {
+                case .identifier("some")?, .delimiter?, .startOfScope?, .endOfScope?,
+                     .operator(_, .infix)?, .operator(_, .prefix)?, nil:
+                    return true
+                default:
+                    break
+                }
             }
             i = prevIndex
         }

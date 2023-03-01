@@ -1828,11 +1828,32 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantLet)
     }
 
-    func testNoRemoveLetNestedInViewBuilder() {
+    func testNoRemoveLetInIfStatementInViewBuilder() {
         let input = """
         VStack {
             if visible == "YES" {
                 let _ = print("")
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantLet)
+    }
+
+    func testNoRemoveLetInSwitchStatementInViewBuilder() {
+        let input = """
+        struct TestView: View {
+            var body: some View {
+                var foo = ""
+                switch (self.min, self.max) {
+                case let (nil, max as Int):
+                    let _ = {
+                        foo = "\\(max)"
+                    }()
+                default:
+                    EmptyView()
+                }
+
+                Text(foo)
             }
         }
         """

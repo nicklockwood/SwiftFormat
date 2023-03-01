@@ -1,6 +1,6 @@
 # Change Log
 
-## [0.51.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.51.0) (2022-02-28)
+## [0.51.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.51.0) (2023-02-28)
 
 - Added `hoistAwait` and `hoistTry` rules to hoist inline `await`/`try` to start of expression
 - Extended `redundantPattern` rule to remove redundant `let` in patterns
@@ -14,9 +14,9 @@
 - Added `--wrapeffects` option for wrapping function effects
 - Removed unsafe `preferDouble` rule
 
-## [0.50.9](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.50.9) (2022-02-16)
+## [0.50.9](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.50.9) (2023-02-16)
 
-- Added Github actions log reporter (see `--reporter` option for details)
+- Added GitHub actions log reporter (see `--reporter` option for details)
 - Fixed bug where `redundantType` sometimes stripped in cases where it couldn't be inferred
 - The `redundantType` rule now supports removing type in more cases where supported
 - Made SwiftFormat for Xcode instructions dynamic according to OS version
@@ -25,7 +25,7 @@
 - Improved support for `// swiftformat:options` comment directives
 - Removed deprecated options from the example `.swiftformat` file
 
-## [0.50.8](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.50.8) (2022-01-29)
+## [0.50.8](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.50.8) (2023-01-29)
 
 - The `redundantBackticks` rule no longer removes required comments around `self`
 - Associated type headerdoc comments are now handles correctly by the `docComments` rule

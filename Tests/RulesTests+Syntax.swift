@@ -633,6 +633,11 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.hoistTry)
     }
 
+    func testNoMergeTrysInsideXCTAssert() {
+        let input = "XCTAssertEqual(try foo(), try bar())"
+        testFormatting(for: input, rule: FormatRules.hoistTry)
+    }
+
     func testNoHoistTryInsideDo() {
         let input = """
         do {

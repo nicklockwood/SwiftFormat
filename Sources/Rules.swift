@@ -4314,31 +4314,34 @@ public struct _FormatRules {
                 return
             }
 
-            tryIndexes.reversed().forEach {
-                formatter.removeToken(at: $0)
-                if formatter.token(at: $0)?.isSpace == true {
+            func removeTrys() {
+                tryIndexes.reversed().forEach {
                     formatter.removeToken(at: $0)
+                    if formatter.token(at: $0)?.isSpace == true {
+                        formatter.removeToken(at: $0)
+                    }
                 }
             }
 
-            if var prevIndex = formatter.index(before: i, where: {
+            if let prevIndex = formatter.index(before: i, where: {
                 $0.isDelimiter || $0.isLinebreak || $0.isStartOfScope ||
                     $0.isOperator("=") || ($0.isKeyword && ![
                         .keyword("is"), .keyword("as"), .keyword("await")
                     ].contains($0)) || isThrowingAutoclosureFunction($0)
             }) {
+                if isThrowingAutoclosureFunction(formatter.tokens[prevIndex]) {
+                    return
+                }
+                removeTrys()
                 if formatter.tokens[prevIndex] == .keyword("try") {
                     return
                 }
-                if isThrowingAutoclosureFunction(formatter.tokens[prevIndex]),
-                   let index = formatter.index(of: .startOfScope("("), after: prevIndex)
-                {
-                    prevIndex = index
-                }
                 insertTry(at: prevIndex + 1)
             } else if formatter.token(at: i - 1)?.isStartOfScope == true {
+                removeTrys()
                 insertTry(at: i)
             } else {
+                removeTrys()
                 insertTry(at: 0)
             }
         }

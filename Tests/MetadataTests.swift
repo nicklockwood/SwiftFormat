@@ -35,6 +35,21 @@ private let swiftFormatVersion: String = {
     return String(string[start ..< end])
 }()
 
+private let changelogTitles: [Substring] = {
+    let changelog = try! String(contentsOf: changeLogURL, encoding: .utf8)
+    var range = changelog.startIndex ..< changelog.endIndex
+    var matches = [Substring]()
+    while let match = changelog.range(
+        of: "## \\[[^]]+\\]\\([^)]+\\) \\([^)]+\\)",
+        options: .regularExpression,
+        range: range
+    ) {
+        matches.append(changelog[match])
+        range = match.upperBound ..< changelog.endIndex
+    }
+    return matches
+}()
+
 class MetadataTests: XCTestCase {
     // MARK: generate Rules.md
 
@@ -289,5 +304,23 @@ class MetadataTests: XCTestCase {
 
     func testVersionConstantUpdated() {
         XCTAssertEqual(SwiftFormat.version, swiftFormatVersion)
+    }
+
+    func testChangelogDatesAreAscending() throws {
+        var lastDate: Date?
+        let dateParser = DateFormatter()
+        dateParser.timeZone = TimeZone(identifier: "UTC")
+        dateParser.locale = Locale(identifier: "en_GB")
+        dateParser.dateFormat = " (yyyy-MM-dd)"
+        for title in changelogTitles {
+            let dateRange = try XCTUnwrap(title.range(of: " \\([^)]+\\)$", options: .regularExpression))
+            let dateString = String(title[dateRange])
+            let date = try XCTUnwrap(dateParser.date(from: dateString))
+            if let lastDate = lastDate, date > lastDate {
+                XCTFail("\(title) has newer date than subsequent version (\(date) vs \(lastDate))")
+                return
+            }
+            lastDate = date
+        }
     }
 }

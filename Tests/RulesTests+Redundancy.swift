@@ -1772,6 +1772,51 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantNilInit)
     }
 
+    func testNoRemoveNilInitInViewBuilder() {
+        let input = """
+        struct TestView: View {
+            var body: some View {
+                var foo: String? = nil
+                Text(foo ?? "")
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantNilInit)
+    }
+
+    func testNoRemoveNilInitInIfStatementInViewBuilder() {
+        let input = """
+        struct TestView: View {
+            var body: some View {
+                if true {
+                    var foo: String?
+                    Text(foo ?? "")
+                } else {
+                    EmptyView()
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantNilInit)
+    }
+
+    func testNoRemoveNilInitInSwitchStatementInViewBuilder() {
+        let input = """
+        struct TestView: View {
+            var body: some View {
+                switch foo {
+                case .bar:
+                    var foo: String?
+                    Text(foo ?? "")
+                default:
+                    EmptyView()
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantNilInit)
+    }
+
     // MARK: - redundantLet
 
     func testRemoveRedundantLet() {

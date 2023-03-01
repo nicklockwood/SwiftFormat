@@ -2852,7 +2852,7 @@ public struct _FormatRules {
         formatter.forEach(.keyword("var")) { i, _ in
             if formatter.modifiersForDeclaration(at: i, contains: {
                 $1 == "lazy" || ($1 != "@objc" && $1.hasPrefix("@"))
-            }) {
+            }) || formatter.isInResultBuilder(at: i) {
                 return // Can't remove the init
             }
             // Check this isn't a Codable

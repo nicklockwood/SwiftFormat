@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.51.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.51.1) (2023-03-02)
+
+- Fixed `redundantNilInit` removing required `nil` inside Result Builders
+- Fixed `redundantLet` removing required `let` inside Result Builder `switch/case` statements
+- Fixed `hoistTry` rule removing second `try` inside XCTAssert statements
+
 ## [0.51.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.51.0) (2023-02-28)
 
 - Added `hoistAwait` and `hoistTry` rules to hoist inline `await`/`try` to start of expression

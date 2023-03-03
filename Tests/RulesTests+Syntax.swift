@@ -639,6 +639,12 @@ class SyntaxTests: RulesTests {
     }
 
     func testNoHoistTryInsideDo() {
+        let input = "do { rg.box.seal(.fulfilled(try body(error))) }"
+        let output = "do { try rg.box.seal(.fulfilled(body(error))) }"
+        testFormatting(for: input, output, rule: FormatRules.hoistTry)
+    }
+
+    func testNoHoistTryInsideMultilineDo() {
         let input = """
         do {
             rg.box.seal(.fulfilled(try body(error)))
@@ -759,6 +765,42 @@ class SyntaxTests: RulesTests {
     func testHoistOptionalTryDoesNothing() {
         let input = "try? greet(name, surname)"
         testFormatting(for: input, rule: FormatRules.hoistTry)
+    }
+
+    func testHoistedTryOnLineBeginningWithInfixDot() {
+        let input = """
+        let foo = bar()
+            .baz(try quux())
+        """
+        let output = """
+        let foo = try bar()
+            .baz(quux())
+        """
+        testFormatting(for: input, output, rule: FormatRules.hoistTry)
+    }
+
+    func testHoistedTryOnLineBeginningWithInfixPlus() {
+        let input = """
+        let foo = bar()
+            + baz(try quux())
+        """
+        let output = """
+        let foo = try bar()
+            + baz(quux())
+        """
+        testFormatting(for: input, output, rule: FormatRules.hoistTry)
+    }
+
+    func testHoistedTryOnLineBeginningWithPrefixOperator() {
+        let input = """
+        foo()
+        !bar(try quux())
+        """
+        let output = """
+        foo()
+        try !bar(quux())
+        """
+        testFormatting(for: input, output, rule: FormatRules.hoistTry)
     }
 
     // MARK: - hoistAwait

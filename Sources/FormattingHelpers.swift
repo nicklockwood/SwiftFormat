@@ -942,6 +942,78 @@ extension Formatter {
         }
     }
 
+    // Common implementation for the `hoistTry` and `hoistAwait` rules
+    func hoistEffectKeyword(at i: Int, isEffectAbsorbingFunction: (Token) -> Bool) {
+        guard case let .keyword(keyword)? = token(at: i),
+              ["try", "await"].contains(keyword)
+        else {
+            assertionFailure()
+            return
+        }
+
+        guard let scopeStart = index(of: .startOfScope("("), before: i),
+              token(at: i + 1)?.isUnwrapOperator == false
+        else {
+            return
+        }
+
+        func insertEffectKeyword(at insertIndex: Int) {
+            var insertIndex = insertIndex
+            if tokens[insertIndex].isSpace {
+                insertIndex += 1
+            }
+
+            if tokens[insertIndex] == .keyword(keyword) {
+                return
+            }
+
+            insert([.keyword(keyword)], at: insertIndex)
+
+            if let nextToken = token(at: insertIndex + 1), !nextToken.isSpace {
+                insertSpace(" ", at: insertIndex + 1)
+            } else {
+                insertSpace(" ", at: insertIndex)
+            }
+        }
+
+        func removeKeyword() {
+            removeToken(at: i)
+            if token(at: i)?.isSpace == true {
+                removeToken(at: i)
+            }
+        }
+
+        var insertIndex = scopeStart
+        loop: while let i = index(of: .nonSpaceOrLinebreak, before: insertIndex) {
+            let prevToken = tokens[insertIndex]
+            let token = tokens[i]
+            switch token {
+            case .identifier where prevToken == .startOfScope("("):
+                if isEffectAbsorbingFunction(token) {
+                    return
+                }
+            case let .keyword(name) where ["is", "as", "try", "await"].contains(name):
+                break
+            case let .operator(name, .infix) where name != "=":
+                break
+            case .operator(_, .prefix):
+                break
+            case .operator(_, .postfix), .identifier, .number, .endOfScope:
+                if !prevToken.isOperator(ofType: .infix),
+                   !prevToken.isOperator(ofType: .postfix)
+                {
+                    break loop
+                }
+            default:
+                break loop
+            }
+            insertIndex = i
+        }
+
+        removeKeyword()
+        insertEffectKeyword(at: insertIndex)
+    }
+
     /// Whether or not the code block starting at the given `.startOfScope` token
     /// has a single statement. This makes it eligible to be used with implicit return.
     func blockBodyHasSingleStatement(atStartOfScope startOfScopeIndex: Int) -> Bool {

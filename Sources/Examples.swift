@@ -357,7 +357,7 @@ private struct Examples {
     let hoistTry = """
     ```diff
     - foo(try bar(), try baz())
-    + tyr foo(bar(), baz())
+    + try foo(bar(), baz())
     ```
 
     ```diff

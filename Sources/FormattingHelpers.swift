@@ -943,15 +943,14 @@ extension Formatter {
     }
 
     // Common implementation for the `hoistTry` and `hoistAwait` rules
-    func hoistEffectKeyword(at i: Int, isEffectAbsorbingFunction: (Token) -> Bool) {
-        guard case let .keyword(keyword)? = token(at: i),
-              ["try", "await"].contains(keyword)
-        else {
-            assertionFailure()
-            return
-        }
-
-        guard let scopeStart = index(of: .startOfScope("("), before: i),
+    // Hoists the first keyword of the specified type out of the specified scope
+    func hoistEffectKeyword(
+        _ keyword: String,
+        inScopeAt scopeStart: Int,
+        isEffectCapturing: (Token) -> Bool
+    ) {
+        assert(["try", "await"].contains(keyword))
+        guard let i = index(of: .keyword(keyword), after: scopeStart),
               token(at: i + 1)?.isUnwrapOperator == false
         else {
             return
@@ -989,7 +988,7 @@ extension Formatter {
             let token = tokens[i]
             switch token {
             case .identifier where prevToken == .startOfScope("("):
-                if isEffectAbsorbingFunction(token) {
+                if isEffectCapturing(token) {
                     return
                 }
             case let .keyword(name) where ["is", "as", "try", "await"].contains(name):

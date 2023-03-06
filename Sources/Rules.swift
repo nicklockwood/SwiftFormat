@@ -4277,8 +4277,8 @@ public struct _FormatRules {
         help: "Move inline `try` keyword(s) to start of expression.",
         options: ["throwcapturing"]
     ) { formatter in
-        formatter.forEach(.keyword("try")) { i, _ in
-            formatter.hoistEffectKeyword(at: i) { token in
+        formatter.forEach(.startOfScope("(")) { i, _ in
+            formatter.hoistEffectKeyword("try", inScopeAt: i) { token in
                 guard case let .identifier(name) = token else {
                     return false
                 }
@@ -4295,8 +4295,8 @@ public struct _FormatRules {
     ) { formatter in
         guard formatter.options.swiftVersion >= "5.5" else { return }
 
-        formatter.forEach(.keyword("await")) { i, _ in
-            formatter.hoistEffectKeyword(at: i) { token in
+        formatter.forEach(.startOfScope("(")) { i, _ in
+            formatter.hoistEffectKeyword("await", inScopeAt: i) { token in
                 formatter.options.asyncCapturing.contains(token.string)
             }
         }

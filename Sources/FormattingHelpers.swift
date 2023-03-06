@@ -39,14 +39,14 @@ extension Formatter {
     // remove self if possible
     func removeSelf(at i: Int, exclude: Set<String>, include: Set<String>? = nil) -> Bool {
         assert(tokens[i] == .identifier("self"))
+        let exclusionList = exclude.union(options.selfRequired).union(_FormatRules.globalSwiftFunctions)
         guard let dotIndex = index(of: .nonSpaceOrLinebreak, after: i, if: {
             $0 == .operator(".", .infix)
         }), !exclude.contains("self"),
         let nextIndex = index(of: .nonSpaceOrLinebreak, after: dotIndex),
         let token = token(at: nextIndex), token.isIdentifier,
         case let name = token.unescaped(), (include.map { $0.contains(name) } ?? true),
-        !exclude.contains(name), !options.selfRequired.contains(name),
-        !_FormatRules.globalSwiftFunctions.contains(name),
+        !isFunction(at: nextIndex, in: exclusionList),
         !backticksRequired(at: nextIndex, ignoreLeadingDot: true)
         else {
             return false
@@ -57,9 +57,10 @@ extension Formatter {
             case .startOfScope("["):
                 break
             case .startOfScope("("):
-                if case let .identifier(fn)? = last(.nonSpaceOrCommentOrLinebreak, before: scopeStart),
-                   options.selfRequired.contains(fn) ||
-                   fn == "expect" // Special case to support autoclosure arguments in the Nimble framework
+                if let prevIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: scopeStart),
+                   isFunction(at: prevIndex, in: options.selfRequired.union([
+                       "expect", // Special case to support autoclosure arguments in the Nimble framework
+                   ]))
                 {
                     return false
                 }
@@ -947,7 +948,7 @@ extension Formatter {
     func hoistEffectKeyword(
         _ keyword: String,
         inScopeAt scopeStart: Int,
-        isEffectCapturing: (Token) -> Bool
+        isEffectCapturingAt: (Int) -> Bool
     ) {
         assert(["try", "await"].contains(keyword))
         guard let i = index(of: .keyword(keyword), after: scopeStart),
@@ -985,10 +986,9 @@ extension Formatter {
         var insertIndex = scopeStart
         loop: while let i = index(of: .nonSpaceOrLinebreak, before: insertIndex) {
             let prevToken = tokens[insertIndex]
-            let token = tokens[i]
-            switch token {
+            switch tokens[i] {
             case .identifier where prevToken == .startOfScope("("):
-                if isEffectCapturing(token) {
+                if isEffectCapturingAt(i) {
                     return
                 }
             case let .keyword(name) where ["is", "as", "try", "await"].contains(name):

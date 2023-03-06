@@ -418,6 +418,15 @@ extension Formatter {
         return startIndex
     }
 
+    /// Return true if token at specified index in a function in the given list
+    func isFunction(at i: Int, in names: Set<String>) -> Bool {
+        // TODO: more sophisticated checks involving full signature, namespace, etc
+        guard let name = token(at: i)?.unescaped() else {
+            return false
+        }
+        return names.contains(name)
+    }
+
     /// Gather declared variable names, starting at index after let/var keyword
     func processDeclaredVariables(at index: inout Int, names: inout Set<String>) {
         processDeclaredVariables(at: &index, names: &names, removeSelf: false,

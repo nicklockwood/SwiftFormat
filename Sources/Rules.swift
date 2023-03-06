@@ -4277,13 +4277,13 @@ public struct _FormatRules {
         help: "Move inline `try` keyword(s) to start of expression.",
         options: ["throwcapturing"]
     ) { formatter in
+        let names = formatter.options.throwCapturing.union(["expect"])
         formatter.forEach(.startOfScope("(")) { i, _ in
-            formatter.hoistEffectKeyword("try", inScopeAt: i) { token in
-                guard case let .identifier(name) = token else {
+            formatter.hoistEffectKeyword("try", inScopeAt: i) { prevIndex in
+                guard case let .identifier(name) = formatter.tokens[prevIndex] else {
                     return false
                 }
-                return name.hasPrefix("XCTAssert") || name == "expect"
-                    || formatter.options.throwCapturing.contains(name)
+                return name.hasPrefix("XCTAssert") || formatter.isFunction(at: prevIndex, in: names)
             }
         }
     }
@@ -4296,8 +4296,8 @@ public struct _FormatRules {
         guard formatter.options.swiftVersion >= "5.5" else { return }
 
         formatter.forEach(.startOfScope("(")) { i, _ in
-            formatter.hoistEffectKeyword("await", inScopeAt: i) { token in
-                formatter.options.asyncCapturing.contains(token.string)
+            formatter.hoistEffectKeyword("await", inScopeAt: i) { prevIndex in
+                formatter.isFunction(at: prevIndex, in: formatter.options.asyncCapturing)
             }
         }
     }

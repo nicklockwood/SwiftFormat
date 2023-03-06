@@ -43,6 +43,9 @@ public final class FormatRule: Equatable, Comparable {
     let sharedOptions: [String]
     let deprecationMessage: String?
 
+    // Null rule, used for testing
+    static let none: FormatRule = .init(help: "") { _ in }
+
     var isDeprecated: Bool {
         deprecationMessage != nil
     }

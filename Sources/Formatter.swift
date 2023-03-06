@@ -192,10 +192,10 @@ public class Formatter: NSObject {
     private let trackChanges: Bool
 
     private func trackChange(at index: Int) {
-        guard trackChanges, let rule = currentRule else { return }
+        guard trackChanges else { return }
         changes.append(Change(
             line: originalLine(at: index),
-            rule: rule,
+            rule: currentRule ?? .none,
             filePath: options.fileInfo.filePath
         ))
     }

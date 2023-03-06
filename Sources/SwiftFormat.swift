@@ -506,13 +506,15 @@ private func applyRules(
     // Split tokens into lines
     func lines(in tokens: [Token]) -> [Int: ArraySlice<Token>?] {
         var lines: [Int: ArraySlice<Token>?] = [:]
-        var start = 0
+        var start = 0, nextLine = 1
         for (i, token) in tokens.enumerated() {
             if case let .linebreak(_, line) = token {
                 lines[line] = tokens[start ..< i]
+                nextLine = line + 1
                 start = i + 1
             }
         }
+        lines[nextLine] = tokens[start...]
         return lines
     }
 
@@ -553,7 +555,7 @@ private func applyRules(
             let newLines = lines(in: tokens)
             // Filter out duplicates and lines that haven't changed
             var last: Formatter.Change?
-            return (tokens, changes.filter { change in
+            changes = changes.filter { change in
                 if last == change {
                     return false
                 }
@@ -562,7 +564,8 @@ private func applyRules(
                     return false
                 }
                 return true
-            })
+            }
+            return (tokens, changes)
         }
         tokens = formatter.tokens
         rules.removeAll(where: { $0.runOnceOnly }) // Prevents infinite recursion

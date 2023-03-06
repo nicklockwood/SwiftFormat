@@ -450,6 +450,41 @@ class FormatterTests: XCTestCase {
 
     // MARK: change tracking
 
+    func testTrackChangesInFirstLine() {
+        let formatter = Formatter(tokenize("foo bar\nbaz"), trackChanges: true)
+        let tokens = formatter.tokens
+        formatter.removeLastToken()
+        XCTAssertNotEqual(formatter.tokens, tokens)
+        XCTAssertEqual(formatter.changes.count, 1)
+        XCTAssertEqual(formatter.changes.first?.line, 2)
+    }
+
+    func testTrackChangesInSecondLine() {
+        let formatter = Formatter(tokenize("foo\nbar\nbaz"), trackChanges: true)
+        let tokens = formatter.tokens
+        formatter.removeToken(at: formatter.tokens.firstIndex(of: .identifier("bar"))!)
+        XCTAssertNotEqual(formatter.tokens, tokens)
+        XCTAssertEqual(formatter.changes.count, 1)
+        XCTAssertEqual(formatter.changes.first?.line, 2)
+    }
+
+    func testTrackChangesInLastLine() {
+        let formatter = Formatter(tokenize("foo\nbar\nbaz"), trackChanges: true)
+        let tokens = formatter.tokens
+        formatter.removeLastToken()
+        XCTAssertNotEqual(formatter.tokens, tokens)
+        XCTAssertEqual(formatter.changes.count, 1)
+        XCTAssertEqual(formatter.changes.first?.line, 3)
+    }
+
+    func testTrackChangesInSingleLine() {
+        let formatter = Formatter(tokenize("foo bar"), trackChanges: true)
+        let tokens = formatter.tokens
+        formatter.removeToken(at: 0)
+        XCTAssertNotEqual(formatter.tokens, tokens)
+        XCTAssertEqual(formatter.changes.count, 1)
+    }
+
     func testTrackChangesIgnoresLinebreakIndex() {
         let formatter = Formatter(tokenize("\n\n"), trackChanges: true)
         var tokens = formatter.tokens

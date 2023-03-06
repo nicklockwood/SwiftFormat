@@ -842,7 +842,7 @@ Move inline `try` keyword(s) to start of expression.
 
 ```diff
 - foo(try bar(), try baz())
-+ tyr foo(bar(), baz())
++ try foo(bar(), baz())
 ```
 
 ```diff

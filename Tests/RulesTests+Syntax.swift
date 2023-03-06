@@ -803,6 +803,18 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.hoistTry)
     }
 
+    func testNoHoistTryInCapturingFunction() {
+        let input = "foo(try bar)"
+        testFormatting(for: input, rule: FormatRules.hoistAwait,
+                       options: FormatOptions(throwCapturing: ["foo"]))
+    }
+
+    func testNoHoistSecondArgumentTryInCapturingFunction() {
+        let input = "foo(bar, try baz)"
+        testFormatting(for: input, rule: FormatRules.hoistAwait,
+                       options: FormatOptions(throwCapturing: ["foo"]))
+    }
+
     // MARK: - hoistAwait
 
     func testHoistAwait() {
@@ -947,6 +959,18 @@ class SyntaxTests: RulesTests {
         let input = "await greet(name, surname)"
         testFormatting(for: input, rule: FormatRules.hoistAwait,
                        options: FormatOptions(swiftVersion: "5.5"))
+    }
+
+    func testNoHoistAwaitInCapturingFunction() {
+        let input = "foo(await bar)"
+        testFormatting(for: input, rule: FormatRules.hoistAwait,
+                       options: FormatOptions(asyncCapturing: ["foo"]))
+    }
+
+    func testNoHoistSecondArgumentAwaitInCapturingFunction() {
+        let input = "foo(bar, await baz)"
+        testFormatting(for: input, rule: FormatRules.hoistAwait,
+                       options: FormatOptions(asyncCapturing: ["foo"]))
     }
 
     // MARK: - hoistPatternLet

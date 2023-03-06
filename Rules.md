@@ -788,6 +788,10 @@ Option | Description
 
 Move inline `await` keyword(s) to start of expression.
 
+Option | Description
+--- | ---
+`--asynccapturing` | List of functions with async @autoclosure arguments
+
 <details>
 <summary>Examples</summary>
 
@@ -836,6 +840,10 @@ Option | Description
 ## hoistTry
 
 Move inline `try` keyword(s) to start of expression.
+
+Option | Description
+--- | ---
+`--throwcapturing` | List of functions with throwing @autoclosure arguments
 
 <details>
 <summary>Examples</summary>

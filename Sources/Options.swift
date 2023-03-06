@@ -389,6 +389,8 @@ public struct FormatOptions: CustomStringConvertible {
     public var guardElsePosition: ElsePosition
     public var explicitSelf: SelfMode
     public var selfRequired: Set<String>
+    public var throwCapturing: Set<String>
+    public var asyncCapturing: Set<String>
     public var experimentalRules: Bool
     public var importGrouping: ImportGrouping
     public var trailingClosures: Set<String>
@@ -486,6 +488,8 @@ public struct FormatOptions: CustomStringConvertible {
                 guardElsePosition: ElsePosition = .auto,
                 explicitSelf: SelfMode = .remove,
                 selfRequired: Set<String> = [],
+                throwCapturing: Set<String> = [],
+                asyncCapturing: Set<String> = [],
                 experimentalRules: Bool = false,
                 importGrouping: ImportGrouping = .alpha,
                 trailingClosures: Set<String> = [],
@@ -574,6 +578,8 @@ public struct FormatOptions: CustomStringConvertible {
         self.guardElsePosition = guardElsePosition
         self.explicitSelf = explicitSelf
         self.selfRequired = selfRequired
+        self.throwCapturing = throwCapturing
+        self.asyncCapturing = asyncCapturing
         self.experimentalRules = experimentalRules
         self.importGrouping = importGrouping
         self.trailingClosures = trailingClosures

@@ -598,6 +598,18 @@ struct _Descriptors {
         help: "Comma-delimited list of functions with @autoclosure arguments",
         keyPath: \FormatOptions.selfRequired
     )
+    let throwCapturing = OptionDescriptor(
+        argumentName: "throwcapturing",
+        displayName: "Throw Capturing",
+        help: "List of functions with throwing @autoclosure arguments",
+        keyPath: \FormatOptions.throwCapturing
+    )
+    let asyncCapturing = OptionDescriptor(
+        argumentName: "asynccapturing",
+        displayName: "Async Capturing",
+        help: "List of functions with async @autoclosure arguments",
+        keyPath: \FormatOptions.asyncCapturing
+    )
     let importGrouping = OptionDescriptor(
         argumentName: "importgrouping",
         displayName: "Import Grouping",

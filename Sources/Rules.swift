@@ -4274,27 +4274,31 @@ public struct _FormatRules {
     }
 
     public let hoistTry = FormatRule(
-        help: "Move inline `try` keyword(s) to start of expression."
+        help: "Move inline `try` keyword(s) to start of expression.",
+        options: ["throwcapturing"]
     ) { formatter in
         formatter.forEach(.keyword("try")) { i, _ in
             formatter.hoistEffectKeyword(at: i) { token in
-                // TODO: find better approach
-                if case let .identifier(name) = token {
-                    return name.hasPrefix("XCTAssert") || name == "expect"
+                guard case let .identifier(name) = token else {
+                    return false
                 }
-                return false
+                return name.hasPrefix("XCTAssert") || name == "expect"
+                    || formatter.options.throwCapturing.contains(name)
             }
         }
     }
 
     /// Reposition `await` keyword outside of the current scope.
     public let hoistAwait = FormatRule(
-        help: "Move inline `await` keyword(s) to start of expression."
+        help: "Move inline `await` keyword(s) to start of expression.",
+        options: ["asynccapturing"]
     ) { formatter in
         guard formatter.options.swiftVersion >= "5.5" else { return }
 
         formatter.forEach(.keyword("await")) { i, _ in
-            formatter.hoistEffectKeyword(at: i) { _ in false }
+            formatter.hoistEffectKeyword(at: i) { token in
+                formatter.options.asyncCapturing.contains(token.string)
+            }
         }
     }
 

@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.51.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.51.2) (2023-03-07)
+
+- Fixed `hoistTry` rule breaking multiline function chains
+- Added `--asynccapturing` and `--throwcapturing` options for `hoistTry` and `hoistAwait` rules
+- Fixed changes in last line of file not being correctly tracked
+
 ## [0.51.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.51.1) (2023-03-02)
 
 - Fixed `redundantNilInit` removing required `nil` inside Result Builders

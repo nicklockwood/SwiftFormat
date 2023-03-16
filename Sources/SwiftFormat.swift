@@ -44,7 +44,7 @@ public let swiftVersionFile = ".swift-version"
 /// Supported Swift versions
 public let swiftVersions = [
     "3.x", "4.0", "4.1", "4.2",
-    "5.0", "5.1", "5.2", "5.3", "5.4", "5.5", "5.6", "5.7", "5.8",
+    "5.0", "5.1", "5.2", "5.3", "5.4", "5.5", "5.6", "5.7", "5.8", "5.9",
 ]
 
 /// An enumeration of the types of error that may be thrown by SwiftFormat

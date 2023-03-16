@@ -781,8 +781,8 @@ public struct _FormatRules {
                 }
             }
 
-            // In Swift 5.8+ we need to handle if / switch expressions by checking each branch
-            if formatter.options.swiftVersion >= "5.8",
+            // In Swift 5.9+ (SE-0380) we need to handle if / switch expressions by checking each branch
+            if formatter.options.swiftVersion >= "5.9",
                let tokenAfterEquals = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
                let conditionalBranches = formatter.conditionalBranches(at: tokenAfterEquals),
                formatter.allRecursiveConditionalBranches(
@@ -7550,8 +7550,8 @@ public struct _FormatRules {
     public let conditionalAssignment = FormatRule(
         help: "Assign properties using if / switch expressions."
     ) { formatter in
-        // If / switch expressions were added in Swift 5.8 (SE-0380)
-        guard formatter.options.swiftVersion >= "5.8" else {
+        // If / switch expressions were added in Swift 5.9 (SE-0380)
+        guard formatter.options.swiftVersion >= "5.9" else {
             return
         }
 

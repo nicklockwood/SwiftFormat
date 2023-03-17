@@ -3874,7 +3874,7 @@ class SyntaxTests: RulesTests {
 
     // MARK: - conditionalAssignment
 
-    func testDoesntConvertIfStatementAssignmentSwift5_7() {
+    func testDoesntConvertIfStatementAssignmentSwift5_8() {
         let input = """
         let foo: Foo
         if condition {
@@ -3883,7 +3883,7 @@ class SyntaxTests: RulesTests {
             foo = Foo("bar")
         }
         """
-        let options = FormatOptions(swiftVersion: "5.7")
+        let options = FormatOptions(swiftVersion: "5.8")
         testFormatting(for: input, rule: FormatRules.conditionalAssignment, options: options)
     }
 
@@ -3903,7 +3903,7 @@ class SyntaxTests: RulesTests {
             Foo("bar")
         }
         """
-        let options = FormatOptions(swiftVersion: "5.8")
+        let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, output, rule: FormatRules.conditionalAssignment, options: options, exclude: ["redundantType"])
     }
 
@@ -3925,7 +3925,7 @@ class SyntaxTests: RulesTests {
             Foo("bar")
         }
         """
-        let options = FormatOptions(swiftVersion: "5.8")
+        let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, output, rule: FormatRules.conditionalAssignment, options: options, exclude: ["redundantType"])
     }
 
@@ -3943,7 +3943,7 @@ class SyntaxTests: RulesTests {
             value
         }
         """
-        let options = FormatOptions(swiftVersion: "5.8")
+        let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, output, rule: FormatRules.conditionalAssignment, options: options)
     }
 
@@ -3991,7 +3991,7 @@ class SyntaxTests: RulesTests {
             }
         }
         """
-        let options = FormatOptions(swiftVersion: "5.8")
+        let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, output, rule: FormatRules.conditionalAssignment, options: options, exclude: ["redundantType"])
     }
 
@@ -4014,7 +4014,7 @@ class SyntaxTests: RulesTests {
             Foo("bar")
         }
         """
-        let options = FormatOptions(swiftVersion: "5.8")
+        let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, output, rule: FormatRules.conditionalAssignment, options: options, exclude: ["indent", "redundantType"])
     }
 
@@ -4030,7 +4030,7 @@ class SyntaxTests: RulesTests {
             bar = Bar("bar")
         }
         """
-        let options = FormatOptions(swiftVersion: "5.8")
+        let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, rule: FormatRules.conditionalAssignment, options: options)
     }
 
@@ -4044,7 +4044,7 @@ class SyntaxTests: RulesTests {
             bar = Bar("bar")
         }
         """
-        let options = FormatOptions(swiftVersion: "5.8")
+        let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, rule: FormatRules.conditionalAssignment, options: options)
     }
 
@@ -4057,7 +4057,7 @@ class SyntaxTests: RulesTests {
             foo = Foo("bar")
         }
         """
-        let options = FormatOptions(swiftVersion: "5.8")
+        let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, rule: FormatRules.conditionalAssignment, options: options)
     }
 
@@ -4072,7 +4072,7 @@ class SyntaxTests: RulesTests {
             foo = Foo("bar")
         }
         """
-        let options = FormatOptions(swiftVersion: "5.8")
+        let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, rule: FormatRules.conditionalAssignment, options: options)
     }
 
@@ -4086,7 +4086,7 @@ class SyntaxTests: RulesTests {
             foo = Foo("bar")
         }
         """
-        let options = FormatOptions(swiftVersion: "5.8")
+        let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, rule: FormatRules.conditionalAssignment, options: options)
     }
 
@@ -4101,7 +4101,7 @@ class SyntaxTests: RulesTests {
             foo = Foo("bar")
         }
         """
-        let options = FormatOptions(swiftVersion: "5.8")
+        let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, rule: FormatRules.conditionalAssignment, options: options)
     }
 
@@ -4119,7 +4119,7 @@ class SyntaxTests: RulesTests {
             foo = Foo("bar")
         }
         """
-        let options = FormatOptions(swiftVersion: "5.8")
+        let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, rule: FormatRules.conditionalAssignment, options: options)
     }
 
@@ -4138,7 +4138,7 @@ class SyntaxTests: RulesTests {
             foo = Foo("bar")
         }
         """
-        let options = FormatOptions(swiftVersion: "5.8")
+        let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, rule: FormatRules.conditionalAssignment, options: options)
     }
 }

@@ -63,10 +63,10 @@ How do I install it?
 
 That depends - There are several ways you can use SwiftFormat:
 
-1. As a command-line tool that you run manually, or as part of some other toolchain
-2. As a Source Editor Extension that you can invoke via the Editor > SwiftFormat menu within Xcode
-3. As a build phase in your Xcode project, so that it runs every time you press Cmd-R or Cmd-B, or
-4. As a Git pre-commit hook, so that it runs on any files you've changed before you check them in
+1. As a [command-line tool](#command-line-tool) that you run manually, or as part of some other toolchain
+2. As a [Source Editor Extension](#xcode-source-editor-extension) that you can invoke via the Editor > SwiftFormat menu within Xcode
+3. As a [build phase](#xcode-build-phase) in your Xcode project, so that it runs every time you press Cmd-R or Cmd-B, or
+4. As a [Git pre-commit hook](#git-pre-commit-hook), so that it runs on any files you've changed before you check them in
 
 
 Command-line tool

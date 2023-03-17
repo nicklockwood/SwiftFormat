@@ -1062,6 +1062,17 @@ extension Formatter {
             }
         }
 
+        func isStringInterpolation(at insertIndex: Int) -> Bool {
+            switch token(at: insertIndex) {
+            case .startOfScope("(")?:
+                return token(at: insertIndex - 1) == .stringBody("\\")
+            case .stringBody("\\")?:
+                return token(at: insertIndex + 1) == .startOfScope("(")
+            default:
+                return false
+            }
+        }
+
         func removeKeyword() {
             removeToken(at: i)
             if token(at: i)?.isSpace == true {
@@ -1077,11 +1088,8 @@ extension Formatter {
                 if isEffectCapturingAt(i) {
                     return
                 }
-            case let .keyword(name) where ["is", "as", "try", "await"].contains(name):
-                break
-            case let .operator(name, .infix) where name != "=":
-                break
-            case .operator(_, .prefix):
+            case let .keyword(name) where ["is", "as", "try", "await"].contains(name),
+                 let .operator(name, .infix) where name != "=":
                 break
             case .operator(_, .postfix), .identifier, .number, .endOfScope:
                 if !prevToken.isOperator(ofType: .infix),
@@ -1089,6 +1097,10 @@ extension Formatter {
                 {
                     break loop
                 }
+            case .operator(_, .prefix),
+                 _ where isStringInterpolation(at: i),
+                 .startOfScope where tokens[i].isStringDelimiter:
+                break
             default:
                 break loop
             }

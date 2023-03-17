@@ -618,6 +618,12 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.hoistTry)
     }
 
+    func testHoistTryInsideStringInterpolation() {
+        let input = "\"\\(replace(regex: try something()))\""
+        let output = "try \"\\(replace(regex: something()))\""
+        testFormatting(for: input, output, rule: FormatRules.hoistTry)
+    }
+
     func testHoistTryInsideArgument() {
         let input = """
         array.append(contentsOf: try await asyncFunction(param1: param1))

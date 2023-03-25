@@ -4419,6 +4419,13 @@ class RedundancyTests: RulesTests {
         XCTAssertNoThrow(try format(input, rules: [FormatRules.redundantSelf]))
     }
 
+    func testRedundantSelfParsingBug6() {
+        let input = """
+        if let foo = bar, foo.tracking[jsonDict: "something"] != nil {}
+        """
+        XCTAssertNoThrow(try format(input, rules: [FormatRules.redundantSelf]))
+    }
+
     func testRedundantSelfWithStaticMethodAfterForLoop() {
         let input = """
         struct Foo {

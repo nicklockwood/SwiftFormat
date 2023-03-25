@@ -529,7 +529,8 @@ extension Formatter {
                 }
             }
             fallthrough
-        case .endOfScope where tokens[prevIndex].isStringDelimiter, .identifier, .number:
+        case .identifier, .number, .operator("?", .postfix), .operator("!", .postfix),
+             .endOfScope where tokens[prevIndex].isStringDelimiter:
             if let nextIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: i),
                isAccessorKeyword(at: nextIndex) || isAccessorKeyword(at: prevIndex)
             {
@@ -573,8 +574,7 @@ extension Formatter {
             default:
                 return true
             }
-        case .operator("?", .postfix), .operator("!", .postfix),
-             .keyword, .endOfScope("]"), .endOfScope(">"):
+        case .keyword, .endOfScope("]"), .endOfScope(">"):
             return false
         default:
             return true

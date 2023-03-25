@@ -3475,7 +3475,8 @@ public struct _FormatRules {
                             scopeAllowsImplicitSelfRebinding: scopeAllowsImplicitSelfRebinding
                         )
                         while let scope = formatter.currentScope(at: index) ?? formatter.token(at: index),
-                              [.startOfScope("["), .startOfScope("(")].contains(scope),
+                              case let .startOfScope(name) = scope,
+                              ["[", "("].contains(name) || scope.isStringDelimiter,
                               let endIndex = formatter.endOfScope(at: index)
                         {
                             // TODO: find less hacky workaround

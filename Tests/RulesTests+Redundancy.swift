@@ -4405,6 +4405,20 @@ class RedundancyTests: RulesTests {
         XCTAssertNoThrow(try format(input, rules: [FormatRules.redundantSelf]))
     }
 
+    func testRedundantSelfParsingBug5() {
+        let input = """
+        Button.primary(
+            title: "Title",
+            tapHandler: { [weak self] in
+                self?.dismissBlock? {
+                    // something
+                }
+            }
+        )
+        """
+        XCTAssertNoThrow(try format(input, rules: [FormatRules.redundantSelf]))
+    }
+
     func testRedundantSelfWithStaticMethodAfterForLoop() {
         let input = """
         struct Foo {

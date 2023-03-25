@@ -550,6 +550,13 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssert(formatter.isStartOfClosure(at: 6))
     }
 
+    func testTrailingClosureOnOptionalMethod() {
+        let formatter = Formatter(tokenize("""
+        foo.bar? { print("") }
+        """))
+        XCTAssert(formatter.isStartOfClosure(at: 5))
+    }
+
     // MARK: isAccessorKeyword
 
     func testDidSet() {

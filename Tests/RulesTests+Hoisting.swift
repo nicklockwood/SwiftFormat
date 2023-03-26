@@ -30,6 +30,18 @@ class HoistingTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.hoistTry)
     }
 
+    func testHoistTryInsideStringInterpolation2() {
+        let input = """
+        "Hello \\(try await someValue())"
+        """
+        let output = """
+        try "Hello \\(await someValue())"
+        """
+        testFormatting(for: input, output, rule: FormatRules.hoistTry,
+                       options: FormatOptions(swiftVersion: "5.5"),
+                       exclude: ["hoistAwait"])
+    }
+
     func testHoistTryInsideArgument() {
         let input = """
         array.append(contentsOf: try await asyncFunction(param1: param1))
@@ -250,6 +262,24 @@ class HoistingTests: RulesTests {
         """
         let output = """
         await array.append(contentsOf: try asyncFunction(param1: param1))
+        """
+        testFormatting(for: input, output, rule: FormatRules.hoistAwait,
+                       options: FormatOptions(swiftVersion: "5.5"), exclude: ["hoistTry"])
+    }
+
+    func testHoistAwaitInsideStringInterpolation() {
+        let input = "\"\\(replace(regex: await something()))\""
+        let output = "await \"\\(replace(regex: something()))\""
+        testFormatting(for: input, output, rule: FormatRules.hoistAwait,
+                       options: FormatOptions(swiftVersion: "5.5"))
+    }
+
+    func testHoistAwaitInsideStringInterpolation2() {
+        let input = """
+        "Hello \\(try await someValue())"
+        """
+        let output = """
+        await "Hello \\(try someValue())"
         """
         testFormatting(for: input, output, rule: FormatRules.hoistAwait,
                        options: FormatOptions(swiftVersion: "5.5"), exclude: ["hoistTry"])

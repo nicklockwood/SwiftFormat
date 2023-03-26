@@ -1065,8 +1065,8 @@ extension Formatter {
         func isStringInterpolation(at insertIndex: Int) -> Bool {
             switch token(at: insertIndex) {
             case .startOfScope("(")?:
-                return token(at: insertIndex - 1) == .stringBody("\\")
-            case .stringBody("\\")?:
+                return token(at: insertIndex - 1)?.isStringBody == true
+            case .stringBody:
                 return token(at: insertIndex + 1) == .startOfScope("(")
             default:
                 return false

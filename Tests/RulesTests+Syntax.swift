@@ -2650,6 +2650,22 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.opaqueGenericParameters, options: options)
     }
 
+    func testIssue1392() {
+        let input = """
+        public struct Ref<Value> {}
+
+        public extension Ref {
+            static func weak<Base: AnyObject, T>(
+                _: Base,
+                _: ReferenceWritableKeyPath<Base, Value>
+            ) -> Ref<Value> where T? == Value {}
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, rule: FormatRules.opaqueGenericParameters, options: options)
+    }
+
     // MARK: - genericExtensions
 
     func testGenericExtensionNotModifiedBeforeSwift5_7() {

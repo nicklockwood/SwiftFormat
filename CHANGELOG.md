@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.51.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.51.3) (2023-03-27)
+
+- Fixed `hoistTry` and `hoistAwait` rule breaking string interpolations
+- Fixed bug where `opaqueGenericParameters` rule would remove non-redundant generic type
+- Fixed parsing bug with trailing closures on optional methods
+- Fixed `redundantSelf` rule parsing bug affecting string literals
+- Updated if / switch expression features to be enabled only in Swift 5.9+
+
 ## [0.51.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.51.2) (2023-03-07)
 
 - Fixed `hoistTry` rule breaking multiline function chains

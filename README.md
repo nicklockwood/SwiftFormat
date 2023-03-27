@@ -108,7 +108,7 @@ Another option is to include the binary artifactbundle in your `Package.swift`:
 
 ```swift
 .binaryTarget(
-    name: "SwiftFormat",
+    name: "swiftformat",
     url: "https://github.com/nicklockwood/SwiftFormat/releases/download/0.49.12/swiftformat-macos.artifactbundle.zip",
     checksum: "CHECKSUM"
 ),

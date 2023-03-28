@@ -42,6 +42,25 @@ class HoistingTests: RulesTests {
                        exclude: ["hoistAwait"])
     }
 
+    func testHoistTryInsideStringInterpolation3() {
+        let input = """
+        let text = "\""
+        abc
+        \\(try bar())
+        xyz
+        "\""
+        """
+        let output = """
+        let text = try "\""
+        abc
+        \\(bar())
+        xyz
+        "\""
+        """
+        testFormatting(for: input, output, rule: FormatRules.hoistTry,
+                       options: FormatOptions(swiftVersion: "5.5"))
+    }
+
     func testHoistTryInsideArgument() {
         let input = """
         array.append(contentsOf: try await asyncFunction(param1: param1))

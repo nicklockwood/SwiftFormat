@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.51.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.51.4) (2023-04-01)
+
+- Limited `redundantReturn` inside if / switch expressions to Swift 5.9+
+- Fixed `hoistTry` and `hoistAwait` inside multiline string literals
+- Fixed invalid indenting of blank lines inside multiline string literals
+
 ## [0.51.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.51.3) (2023-03-27)
 
 - Fixed `hoistTry` and `hoistAwait` rule breaking string interpolations

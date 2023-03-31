@@ -1022,10 +1022,10 @@ extension Formatter {
 
         // Some heuristics to determine if this is a multi-statement block:
 
-        // (1) In Swift 5.8+, if and switch statements where each branch is a single statement
+        // (1) In Swift 5.9+, if and switch statements where each branch is a single statement
         //     are also considered single statements
         if
-            options.swiftVersion >= "5.8",
+            options.swiftVersion >= "5.9",
             let firstTokenInBody = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfBody),
             let conditionalBranches = conditionalBranches(at: firstTokenInBody)
         {

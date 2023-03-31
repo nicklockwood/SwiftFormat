@@ -2465,7 +2465,7 @@ class RedundancyTests: RulesTests {
                        options: FormatOptions(swiftVersion: "5.1"))
     }
 
-    func testRedundantIfStatementReturnSwift5_7() {
+    func testRedundantIfStatementReturnSwift5_8() {
         let input = """
         func foo(condition: Bool) -> String {
             if condition {
@@ -2475,12 +2475,12 @@ class RedundancyTests: RulesTests {
             }
         }
         """
-        let options = FormatOptions(swiftVersion: "5.7")
+        let options = FormatOptions(swiftVersion: "5.8")
         testFormatting(for: input, rule: FormatRules.redundantReturn,
                        options: options)
     }
 
-    func testNonRedundantIfStatementReturnSwift5_8() {
+    func testNonRedundantIfStatementReturnSwift5_9() {
         let input = """
         func foo(condition: Bool) -> String {
             if condition {
@@ -2491,7 +2491,7 @@ class RedundancyTests: RulesTests {
             return "baaz"
         }
         """
-        let options = FormatOptions(swiftVersion: "5.8")
+        let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, rule: FormatRules.redundantReturn, options: options)
     }
 
@@ -2526,7 +2526,7 @@ class RedundancyTests: RulesTests {
             }
         }
         """
-        let options = FormatOptions(swiftVersion: "5.8")
+        let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, output, rule: FormatRules.redundantReturn, options: options)
     }
 
@@ -2549,7 +2549,7 @@ class RedundancyTests: RulesTests {
             }
         }
         """
-        let options = FormatOptions(swiftVersion: "5.8")
+        let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, output, rule: FormatRules.redundantReturn, options: options)
     }
 
@@ -2570,7 +2570,7 @@ class RedundancyTests: RulesTests {
             "bar"
         }
         """
-        let options = FormatOptions(swiftVersion: "5.8")
+        let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, [output], rules: [FormatRules.redundantReturn, FormatRules.redundantClosure, FormatRules.indent], options: options)
     }
 
@@ -2595,7 +2595,7 @@ class RedundancyTests: RulesTests {
             }
         }
         """
-        let options = FormatOptions(swiftVersion: "5.8")
+        let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, output, rule: FormatRules.redundantReturn, options: options)
     }
 
@@ -2610,7 +2610,7 @@ class RedundancyTests: RulesTests {
             }
         }
         """
-        let options = FormatOptions(swiftVersion: "5.7")
+        let options = FormatOptions(swiftVersion: "5.8")
         testFormatting(for: input, rule: FormatRules.redundantReturn, options: options)
     }
 
@@ -2635,7 +2635,7 @@ class RedundancyTests: RulesTests {
             }
         }
         """
-        let options = FormatOptions(swiftVersion: "5.8")
+        let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, output, rule: FormatRules.redundantReturn, options: options)
     }
 
@@ -2650,7 +2650,7 @@ class RedundancyTests: RulesTests {
             }
         }
         """
-        let options = FormatOptions(swiftVersion: "5.7")
+        let options = FormatOptions(swiftVersion: "5.8")
         testFormatting(for: input, rule: FormatRules.redundantReturn, options: options)
     }
 
@@ -2693,7 +2693,7 @@ class RedundancyTests: RulesTests {
             }
         }
         """
-        let options = FormatOptions(swiftVersion: "5.8")
+        let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, output, rule: FormatRules.redundantReturn, options: options)
     }
 

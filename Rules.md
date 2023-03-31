@@ -1558,7 +1558,7 @@ Remove unneeded `return` keyword.
 +     "foo"
   }
 
-  // Swift 5.8+ (SE-0380)
+  // Swift 5.9+ (SE-0380)
   func foo(_ condition: Bool) -> String {
       if condition {
 -         return "foo"
@@ -1659,7 +1659,7 @@ Option | Description
       }
   }
 
-// Swift 5.8+, inferred (SE-0380)
+// Swift 5.9+, inferred (SE-0380)
 - let foo: Foo = if condition {
 + let foo = if condition {
       Foo("foo")
@@ -1667,7 +1667,7 @@ Option | Description
       Foo("bar")
   }
 
-// Swift 5.8+, explicit (SE-0380)
+// Swift 5.9+, explicit (SE-0380)
   let foo: Foo = if condition {
 -     Foo("foo")
 +     .init("foo")

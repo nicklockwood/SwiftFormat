@@ -1917,6 +1917,10 @@ public struct _FormatRules {
                 case .linebreak:
                     if formatter.options.truncateBlankLines {
                         formatter.insertSpaceIfEnabled("", at: i + 1)
+                    } else if scopeStack.last?.isStringDelimiter == true,
+                              formatter.token(at: i + 1)?.isSpace == true
+                    {
+                        formatter.insertSpaceIfEnabled(indent, at: i + 1)
                     }
                 case .error, .keyword("#else"), .keyword("#elseif"), .endOfScope("#endif"),
                      .startOfScope("#if") where formatter.options.ifdefIndent != .indent:

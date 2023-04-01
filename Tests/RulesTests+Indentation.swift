@@ -2581,6 +2581,62 @@ class IndentTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.indent, options: options)
     }
 
+    func testIndentUnderIndentedMultilineStringPreservesBlankLineIndent() {
+        let input = #"""
+        class Main {
+            func main() {
+                print("""
+            That've been not indented at all.
+            \#n\#  
+            After SwiftFormat it causes a compiler error in the line above.
+            """)
+            }
+        }
+        """#
+        let output = #"""
+        class Main {
+            func main() {
+                print("""
+                That've been not indented at all.
+                \#n\#
+                After SwiftFormat it causes a compiler error in the line above.
+                """)
+            }
+        }
+        """#
+        let options = FormatOptions(truncateBlankLines: false)
+        testFormatting(for: input, output, rule: FormatRules.indent,
+                       options: options)
+    }
+
+    func testIndentUnderIndentedMultilineStringDoesntAddIndent() {
+        let input = #"""
+        class Main {
+            func main() {
+                print("""
+            That've been not indented at all.
+
+            After SwiftFormat it causes a compiler error in the line above.
+            """)
+            }
+        }
+        """#
+        let output = #"""
+        class Main {
+            func main() {
+                print("""
+                That've been not indented at all.
+
+                After SwiftFormat it causes a compiler error in the line above.
+                """)
+            }
+        }
+        """#
+        let options = FormatOptions(truncateBlankLines: false)
+        testFormatting(for: input, output, rule: FormatRules.indent,
+                       options: options)
+    }
+
     // indent multiline raw strings
 
     func testIndentIndentedSimpleRawMultilineString() {

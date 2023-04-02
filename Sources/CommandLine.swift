@@ -82,15 +82,15 @@ private func printWarnings(_ errors: [Error]) -> Bool {
         if ![".", "?", "!"].contains(errorMessage.last ?? " ") {
             errorMessage += "."
         }
-        guard let error = error as? FormatError else {
-            continue
-        }
         let isError: Bool
-        switch error {
-        case let .writing(string):
+        switch error as? FormatError {
+        case let .writing(string)?:
             isError = !string.contains(" cache ")
-        case .parsing, .reading, .options:
+        case .parsing?, .reading?, .options?:
             isError = true
+        case nil:
+            isError = true
+            errorMessage = error.localizedDescription
         }
         if isError {
             containsError = true

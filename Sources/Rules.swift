@@ -5050,9 +5050,14 @@ public struct _FormatRules {
                 $0 == .startOfScope("(")
             }), let closeParenIndex = formatter.index(of: .endOfScope(")"), after: openParenIndex),
             formatter.last(.nonSpaceOrCommentOrLinebreak, before: closeParenIndex) != .delimiter(":"),
-            let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: dotIndex),
-            case let .identifier(name) = prevToken, let firstChar = name.first,
-            firstChar != "$", String(firstChar).uppercased() == String(firstChar) else {
+            let prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: dotIndex),
+            let prevToken = formatter.token(at: prevIndex), case let .identifier(name) = prevToken,
+            let firstChar = name.first, firstChar != "$",
+            String(firstChar).uppercased() == String(firstChar) else {
+                return
+            }
+            let lineStart = formatter.startOfLine(at: prevIndex, excludingIndent: true)
+            if [.startOfScope("#if"), .keyword("#elseif")].contains(formatter.tokens[lineStart]) {
                 return
             }
             var j = dotIndex

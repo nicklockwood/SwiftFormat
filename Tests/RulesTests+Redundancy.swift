@@ -822,6 +822,19 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantInit)
     }
 
+    func testNoRemoveInitInsideIfdef() {
+        let input = """
+        func myFunc() async throws -> String {
+            #if DEBUG
+            .init("foo")
+            #else
+            ""
+            #endif
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantInit, exclude: ["indent"])
+    }
+
     // MARK: - redundantLetError
 
     func testCatchLetError() {

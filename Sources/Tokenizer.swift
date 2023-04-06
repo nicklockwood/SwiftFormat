@@ -1485,8 +1485,29 @@ public func tokenize(_ source: String) -> [Token] {
         case ":", "=", "->":
             type = .infix
         case ".":
-            type = prevNonSpaceToken.isLvalue || prevNonSpaceToken.isAttribute ||
-                prevNonSpaceToken == .endOfScope("#endif") ? .infix : .prefix
+            var _type = OperatorType.prefix
+            var prevNonSpaceIndex = prevNonSpaceIndex
+            repeat {
+                let prevNonSpaceToken = tokens[prevNonSpaceIndex]
+                if prevNonSpaceToken.isLvalue {
+                    var lineStart = index(of: .linebreak, before: prevNonSpaceIndex) ?? 0
+                    lineStart = index(of: .nonSpaceOrComment, after: lineStart) ?? lineStart
+                    if [.startOfScope("#if"), .keyword("#elseif")].contains(tokens[lineStart]),
+                       let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: lineStart)
+                    {
+                        prevNonSpaceIndex = prevIndex
+                        continue
+                    } else {
+                        _type = .infix
+                    }
+                } else if prevNonSpaceToken.isAttribute ||
+                    prevNonSpaceToken == .endOfScope("#endif")
+                {
+                    _type = .infix
+                }
+                break
+            } while true
+            type = _type
         case "?":
             if prevToken.isSpaceOrCommentOrLinebreak {
                 // ? is a ternary operator, treat it as the start of a scope

@@ -3065,6 +3065,18 @@ class IndentTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.indent, options: options)
     }
 
+    func testNoIndentDotInitInsideIfdef() {
+        let input = """
+        func myFunc() -> String {
+            #if DEBUG
+            .init("foo")
+            #endif
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
     // indent #if/#else/#elseif/#endif (mode: outdent)
 
     func testIfEndifOutdenting() {

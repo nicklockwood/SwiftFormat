@@ -4184,6 +4184,43 @@ class RedundancyTests: RulesTests {
                        exclude: ["wrapConditionalBodies"])
     }
 
+    func testStructSelfRemovedInTrailingClosureInIfCase() {
+        let input = """
+        struct A {
+            func doSomething() {
+                B.method { mode in
+                    if case .edit = mode {
+                        self.doA()
+                    } else {
+                        self.doB()
+                    }
+                }
+            }
+
+            func doA() {}
+            func doB() {}
+        }
+        """
+        let output = """
+        struct A {
+            func doSomething() {
+                B.method { mode in
+                    if case .edit = mode {
+                        doA()
+                    } else {
+                        doB()
+                    }
+                }
+            }
+
+            func doA() {}
+            func doB() {}
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.redundantSelf,
+                       options: FormatOptions(swiftVersion: "5.8"))
+    }
+
     func testSelfNotRemovedInDynamicMemberLookup() {
         let input = """
         @dynamicMemberLookup

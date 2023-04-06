@@ -3450,6 +3450,8 @@ public struct _FormatRules {
                                 closureStack: &closureStack, membersByType: &membersByType, classMembersByType: &classMembersByType,
                                 usingDynamicLookup: usingDynamicLookup, isTypeRoot: true, isInit: false)
                     typeStack.removeLast()
+                case .keyword("case") where ["if", "while", "guard", "for"].contains(lastKeyword):
+                    break
                 case .keyword("var"), .keyword("let"):
                     index += 1
                     switch lastKeyword {
@@ -3508,8 +3510,6 @@ public struct _FormatRules {
                                     closureStack: &closureStack, membersByType: &membersByType, classMembersByType: &classMembersByType,
                                     usingDynamicLookup: usingDynamicLookup, isTypeRoot: false, isInit: isInit)
                         lastKeyword = ""
-                    case "case" where ["if", "while", "guard", "for"].contains(lastKeyword):
-                        break
                     default:
                         lastKeyword = token.string
                     }

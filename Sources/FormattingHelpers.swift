@@ -994,6 +994,8 @@ extension Formatter {
             case let .keyword(name) where ["is", "as", "try", "await"].contains(name),
                  let .operator(name, .infix) where name != "=":
                 break
+            case .endOfScope(")") where prevToken.isStringBody:
+                break
             case .operator(_, .postfix), .identifier, .number, .endOfScope:
                 if !prevToken.isOperator(ofType: .infix),
                    !prevToken.isOperator(ofType: .postfix)

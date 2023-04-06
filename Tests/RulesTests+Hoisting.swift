@@ -57,8 +57,17 @@ class HoistingTests: RulesTests {
         xyz
         "\""
         """
-        testFormatting(for: input, output, rule: FormatRules.hoistTry,
-                       options: FormatOptions(swiftVersion: "5.5"))
+        testFormatting(for: input, output, rule: FormatRules.hoistTry)
+    }
+
+    func testHoistTryInsideStringInterpolation4() {
+        let input = """
+        let str = "&enrolments[\\(index)][userid]=\\(try Foo.tryMe())"
+        """
+        let output = """
+        let str = try "&enrolments[\\(index)][userid]=\\(Foo.tryMe())"
+        """
+        testFormatting(for: input, output, rule: FormatRules.hoistTry)
     }
 
     func testHoistTryInsideArgument() {

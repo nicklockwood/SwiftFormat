@@ -6116,12 +6116,12 @@ public struct _FormatRules {
                 }
             case .sameLine:
                 // Make sure there isn't a newline immediately following the attribute
-                if let nextIndex = formatter.index(of: .nonSpaceOrComment, after: endIndex),
-                   formatter.token(at: nextIndex)?.isLinebreak != false
+                if let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: endIndex),
+                   formatter.tokens[(endIndex + 1) ..< nextIndex].contains(where: { $0.isLinebreak })
                 {
                     // Replace the newline with a space so the attribute doesn't
                     // merge with the next token.
-                    formatter.replaceToken(at: nextIndex, with: .space(" "))
+                    formatter.replaceTokens(in: (endIndex + 1) ..< nextIndex, with: .space(" "))
                 }
             }
         }

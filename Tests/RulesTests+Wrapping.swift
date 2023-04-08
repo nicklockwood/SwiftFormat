@@ -3742,6 +3742,26 @@ class WrappingTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
     }
 
+    func testUnwrapFuncAttribute2() {
+        let input = """
+        class MyClass: NSObject {
+            @objc
+            func myFunction() {
+                print("Testing")
+            }
+        }
+        """
+        let output = """
+        class MyClass: NSObject {
+            @objc func myFunction() {
+                print("Testing")
+            }
+        }
+        """
+        let options = FormatOptions(funcAttributes: .sameLine)
+        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
+    }
+
     func testFuncAttributeStaysUnwrapped() {
         let input = """
         @objc func foo() {}

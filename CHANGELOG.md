@@ -1,5 +1,18 @@
 # Change Log
 
+## [0.51.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.51.5) (2023-04-09)
+
+- Added `--baseconfig` option to replicate old `--config` behavior
+- Fixed `self` being incorrectly inserted inside capture list
+- Fixed indenting of `.init` inside `#if` statements
+- Fixed `redundantInit` glitch inside `#if` statements
+- Fixed `redundantSelf` inside `if case` expressions
+- Fixed `hoistTry` for strings containing multiple interpolation clauses
+- Fixed redundant parens not being removed after `return` keyword
+- Fixed spacing after attribute when using `--funcattributes same-line`
+- Fixed false positive in collection literals for `unusedArguments`
+- Fixed file access permissions errors not being reported
+
 ## [0.51.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.51.4) (2023-04-01)
 
 - Limited `redundantReturn` inside if / switch expressions to Swift 5.9+

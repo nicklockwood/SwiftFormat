@@ -916,7 +916,7 @@ extension Formatter {
 
         let isStartOfScope = tokens[index].isStartOfScope
         let spaceBefore = token(at: index - 1)?.isSpace == true
-        let spaceAfter = token(at: index + 1)?.isSpace == true
+        let spaceAfter = token(at: index + 1)?.isSpaceOrLinebreak == true
         removeToken(at: index)
         if isStartOfScope {
             if tokenOutsideParenRequiresSpacing(at: index - 1),
@@ -927,7 +927,7 @@ extension Formatter {
                     insert(.space(" "), at: index)
                 }
             } else if spaceAfter, spaceBefore {
-                removeToken(at: index)
+                removeToken(at: index - 1)
             }
         } else {
             if tokenInsideParenRequiresSpacing(at: index - 1),

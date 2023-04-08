@@ -2684,7 +2684,7 @@ public struct _FormatRules {
                 }
                 formatter.removeParen(at: closingIndex)
                 formatter.removeParen(at: i)
-            case let .keyword(name) where !conditionals.contains(name) && !["let", "var"].contains(name):
+            case let .keyword(name) where !conditionals.contains(name) && !["let", "var", "return"].contains(name):
                 return
             case .endOfScope("}"), .endOfScope(")"), .endOfScope("]"), .endOfScope(">"):
                 if formatter.tokens[previousIndex + 1 ..< i].contains(where: { $0.isLinebreak }) {

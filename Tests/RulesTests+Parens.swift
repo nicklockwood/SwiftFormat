@@ -230,6 +230,28 @@ class ParensTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantParens)
     }
 
+    func testRedundantParensInReturnRemoved() {
+        let input = "return (true)"
+        let output = "return true"
+        testFormatting(for: input, output, rule: FormatRules.redundantParens)
+    }
+
+    func testRedundantParensInMultilineReturnRemovedCleanly() {
+        let input = """
+        return (
+            foo
+                .bar
+        )
+        """
+        let output = """
+        return
+            foo
+                .bar
+
+        """
+        testFormatting(for: input, output, rule: FormatRules.redundantParens)
+    }
+
     // around conditions
 
     func testRedundantParensRemovedInIf() {

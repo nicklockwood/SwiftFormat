@@ -6726,6 +6726,21 @@ class RedundancyTests: RulesTests {
                        exclude: ["braces", "wrapArguments"])
     }
 
+    func testArgumentUsedInDictionaryLiteral() {
+        let input = """
+        class MyClass {
+            func testMe(value: String) {
+                let value = [
+                    "key": value
+                ]
+                print(value)
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedArguments,
+                       exclude: ["trailingCommas"])
+    }
+
     // functions (closure-only)
 
     func testNoMarkFunctionArgument() {

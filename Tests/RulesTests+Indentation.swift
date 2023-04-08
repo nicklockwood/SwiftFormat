@@ -2477,7 +2477,7 @@ class IndentTests: RulesTests {
         XCTAssertEqual(
             loggingService.assertions,
             """
-            My long mutli-line assertion.
+            My long multi-line assertion.
             This error was not recoverable.
             """
         )
@@ -2489,13 +2489,13 @@ class IndentTests: RulesTests {
     func testIndentMultilineStringInMethodCall() {
         let input = #"""
         XCTAssertEqual(loggingService.assertions, """
-        My long mutli-line assertion.
+        My long multi-line assertion.
         This error was not recoverable.
         """)
         """#
         let output = #"""
         XCTAssertEqual(loggingService.assertions, """
-            My long mutli-line assertion.
+            My long multi-line assertion.
             This error was not recoverable.
             """)
         """#

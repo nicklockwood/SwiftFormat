@@ -861,7 +861,9 @@ extension Formatter {
     }
 
     /// Determine if line starting with this token should be indented
-    func isStartOfStatement(at i: Int, in scope: Token? = nil) -> Bool {
+    func isStartOfStatement(at i: Int, in scope: Token? = nil,
+                            treatingCollectionKeysAsStart: Bool = true) -> Bool
+    {
         guard let token = token(at: i) else { return true }
         switch token {
         case let .keyword(string) where [
@@ -881,7 +883,8 @@ extension Formatter {
             }
             return [.endOfScope("case"), .keyword("case"), .delimiter(",")].contains(lastToken)
         case .space, .delimiter, .operator(_, .infix), .operator(_, .postfix),
-             .endOfScope("}"), .endOfScope("]"), .endOfScope(")"), .endOfScope(">"):
+             .endOfScope("}"), .endOfScope("]"), .endOfScope(")"), .endOfScope(">"),
+             .identifier where isTrailingClosureLabel(at: i):
             return false
         case .startOfScope("{") where isStartOfClosure(at: i):
             guard last(.nonSpaceOrComment, before: i)?.isLinebreak == true,
@@ -911,8 +914,13 @@ extension Formatter {
                 return false
             }
             fallthrough
-        case .identifier:
-            if isTrailingClosureLabel(at: i) {
+        case .startOfScope where token.isStringDelimiter && !treatingCollectionKeysAsStart,
+             .identifier:
+            if !treatingCollectionKeysAsStart,
+               let prevToken = last(.nonSpaceOrCommentOrLinebreak, before: i), [
+                   .delimiter(","), .startOfScope("["), .startOfScope("(")
+               ].contains(prevToken)
+            {
                 return false
             }
             fallthrough

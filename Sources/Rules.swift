@@ -4034,7 +4034,7 @@ public struct _FormatRules {
             }
             var i = range.lowerBound
             while i < range.upperBound {
-                if formatter.isStartOfStatement(at: i) {
+                if formatter.isStartOfStatement(at: i, treatingCollectionKeysAsStart: false) {
                     pushLocals()
                     wasDeclaration = false
                 }

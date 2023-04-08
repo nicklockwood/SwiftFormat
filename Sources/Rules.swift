@@ -3622,6 +3622,10 @@ public struct _FormatRules {
                     }
                     continue
                 case .startOfScope("{") where formatter.isStartOfClosure(at: index):
+                    let inIndex = formatter.index(of: .keyword, after: index, if: {
+                        $0 == .keyword("in")
+                    })
+
                     // Parse the capture list and arguments list,
                     // and record the type of `self` capture used in the closure
                     var captureList: [Token]?
@@ -3629,10 +3633,10 @@ public struct _FormatRules {
 
                     // Handle a capture list followed by an optional parameter list:
                     // `{ [self, foo] bar in` or `{ [self, foo] in` etc.
-                    if let captureListStartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index),
+                    if let inIndex = inIndex,
+                       let captureListStartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index),
                        formatter.tokens[captureListStartIndex] == .startOfScope("["),
-                       let captureListEndIndex = formatter.endOfScope(at: captureListStartIndex),
-                       let inIndex = formatter.index(of: .keyword("in"), after: captureListEndIndex)
+                       let captureListEndIndex = formatter.endOfScope(at: captureListStartIndex)
                     {
                         captureList = Array(formatter.tokens[(captureListStartIndex + 1) ..< captureListEndIndex])
                         parameterList = Array(formatter.tokens[(captureListEndIndex + 1) ..< inIndex])
@@ -3640,9 +3644,9 @@ public struct _FormatRules {
 
                     // Handle a parameter list if present without a capture list
                     // e.g. `{ foo, bar in`
-                    else if let firstTokenInClosure = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index),
-                            formatter.isInClosureArguments(at: firstTokenInClosure),
-                            let inIndex = formatter.index(of: .keyword("in"), after: index)
+                    else if let inIndex = inIndex,
+                            let firstTokenInClosure = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index),
+                            formatter.isInClosureArguments(at: firstTokenInClosure)
                     {
                         parameterList = Array(formatter.tokens[firstTokenInClosure ..< inIndex])
                     }
@@ -3737,7 +3741,7 @@ public struct _FormatRules {
                     }
 
                     closureStack.append((allowsImplicitSelf: closureAllowsImplicitSelf(), selfCapture: selfCapture))
-                    index += 1
+                    index = (inIndex ?? index) + 1
                     processBody(at: &index, localNames: closureLocalNames, members: members, typeStack: &typeStack, closureStack: &closureStack,
                                 membersByType: &membersByType, classMembersByType: &classMembersByType,
                                 usingDynamicLookup: usingDynamicLookup, isTypeRoot: false, isInit: isInit)

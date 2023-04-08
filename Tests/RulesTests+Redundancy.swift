@@ -5301,6 +5301,35 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
     }
 
+    func testNoInsertSelfInCaptureList() {
+        let input = """
+        class Thing {
+            var a: String? { nil }
+
+            func foo() {
+                let b = ""
+                { [weak a = b] _ in }
+            }
+        }
+        """
+        let options = FormatOptions(explicitSelf: .insert)
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
+    func testNoInsertSelfInCaptureList2() {
+        let input = """
+        class Thing {
+            var a: String? { nil }
+
+            func foo() {
+                { [weak a] _ in }
+            }
+        }
+        """
+        let options = FormatOptions(explicitSelf: .insert)
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
     // explicitSelf = .initOnly
 
     func testPreserveSelfInsideClassInit() {
@@ -5563,6 +5592,8 @@ class RedundancyTests: RulesTests {
         let options = FormatOptions(explicitSelf: .initOnly)
         testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
     }
+
+    // parsing bugs
 
     func testSelfRemovalParsingBug4() {
         let input = """

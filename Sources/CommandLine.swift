@@ -184,6 +184,7 @@ func printHelp(as type: CLI.OutputType) {
     --stdinpath        Path to stdin source file (used for generating header)
     --scriptinput      Read Xcode SCRIPT_INPUT_FILE* environment variables as files
     --config           Path to a configuration file containing rules and options
+    --baseconfig       Like --config, but local .swiftformat files aren't ignored
     --inferoptions     Instead of formatting input, use it to infer format options
     --output           Output path for formatted file(s) (defaults to input path)
     --exclude          Comma-delimited list of ignored paths (supports glob syntax)
@@ -249,6 +250,54 @@ private func serializeOptions(_ options: Options, to outputURL: URL?) throws {
         print(serialize(options: options, excludingDefaults: true, separator: " "), as: .content)
         print("")
     }
+}
+
+private func readConfigArg(
+    _ name: String,
+    with args: inout [String: String],
+    in directory: String
+) throws -> URL? {
+    guard let url = try args[name].map({
+        try parsePath($0, for: "--\(name)", in: directory)
+    }) else {
+        return nil
+    }
+    if args[name] == "" {
+        throw FormatError.options("--\(name) argument expects a value")
+    }
+    if !FileManager.default.fileExists(atPath: url.path) {
+        throw FormatError.reading("Specified config file does not exist: \(url.path)")
+    }
+    let data: Data
+    do {
+        data = try Data(contentsOf: url)
+    } catch {
+        throw FormatError.reading("Failed to read config file at \(url.path), \(error)")
+    }
+    var config = try parseConfigFile(data)
+    // Ensure exclude paths in config file are treated as relative to the file itself
+    // TODO: find a better way/place to do this
+    let directory = url.deletingLastPathComponent().path
+    if let exclude = config["exclude"] {
+        let excluded = expandGlobs(exclude, in: directory)
+        if excluded.isEmpty {
+            print("warning: --exclude value '\(exclude)' did not match any files in \(directory).", as: .warning)
+            config["exclude"] = nil
+        } else {
+            config["exclude"] = excluded.map { $0.description }.sorted().joined(separator: ",")
+        }
+    }
+    if let unexclude = config["unexclude"] {
+        let unexcluded = expandGlobs(unexclude, in: directory)
+        if unexcluded.isEmpty {
+            print("warning: --unexclude value '\(unexclude)' did not match any files in \(directory).", as: .warning)
+            config["unexclude"] = nil
+        } else {
+            config["unexclude"] = unexcluded.map { $0.description }.sorted().joined(separator: ",")
+        }
+    }
+    args = try mergeArguments(args, into: config)
+    return url
 }
 
 typealias OutputFlags = (
@@ -359,43 +408,17 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
         } ?? false
 
         // Config file
-        if let configURL = try args["config"].map({ try parsePath($0, for: "--config", in: directory) }) {
-            if args["config"] == "" {
-                throw FormatError.options("--config argument expects a value")
-            }
-            if !FileManager.default.fileExists(atPath: configURL.path) {
-                throw FormatError.reading("Specified config file does not exist: \(configURL.path)")
-            }
-            let data: Data
-            do {
-                data = try Data(contentsOf: configURL)
-            } catch {
-                throw FormatError.reading("Failed to read config file at \(configURL.path), \(error)")
-            }
-            var config = try parseConfigFile(data)
-            // Ensure exclude paths in config file are treated as relative to the file itself
-            // TODO: find a better way/place to do this
-            let directory = configURL.deletingLastPathComponent().path
-            if let exclude = config["exclude"] {
-                let excluded = expandGlobs(exclude, in: directory)
-                if excluded.isEmpty {
-                    print("warning: --exclude value '\(exclude)' did not match any files in \(directory).", as: .warning)
-                    config["exclude"] = nil
-                } else {
-                    config["exclude"] = excluded.map { $0.description }.sorted().joined(separator: ",")
-                }
-            }
-            if let unexclude = config["unexclude"] {
-                let unexcluded = expandGlobs(unexclude, in: directory)
-                if unexcluded.isEmpty {
-                    print("warning: --unexclude value '\(unexclude)' did not match any files in \(directory).", as: .warning)
-                    config["unexclude"] = nil
-                } else {
-                    config["unexclude"] = unexcluded.map { $0.description }.sorted().joined(separator: ",")
-                }
-            }
-            args = try mergeArguments(args, into: config)
+        let configURL = try readConfigArg("config", with: &args, in: directory)
+
+        // FormatOption overrides
+        var overrides = [String: String]()
+        for key in formattingArguments + rulesArguments {
+            overrides[key] = args[key]
         }
+
+        // Base config
+        _ = try readConfigArg("baseconfig", with: &args, in: directory)
+        _ = try readConfigArg("config", with: &args, in: directory)
 
         // Options
         var options = try Options(args, in: directory)
@@ -417,12 +440,6 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
             }
             print("")
             return .ok
-        }
-
-        // FormatOption overrides
-        var overrides = [String: String]()
-        for key in formattingArguments + rulesArguments {
-            overrides[key] = args[key]
         }
 
         // Input path(s)
@@ -538,7 +555,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
 
         // Infer options
         if args["inferoptions"] != nil {
-            guard args["config"] == nil else {
+            guard configURL == nil else {
                 throw FormatError.options("--inferoptions option can't be used along with a config file")
             }
             guard args["range"] == nil else {

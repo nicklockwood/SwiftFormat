@@ -655,6 +655,7 @@ let commandLineArguments = [
     "stdinpath",
     "scriptinput",
     "config",
+    "baseconfig",
     "inferoptions",
     "linerange",
     "output",

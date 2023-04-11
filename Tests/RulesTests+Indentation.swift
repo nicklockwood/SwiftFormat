@@ -2902,6 +2902,23 @@ class IndentTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.indent)
     }
 
+    func testNoIndentDotExpressionInsideIfdef() {
+        let input = """
+        let current: Platform = {
+            #if os(macOS)
+                .mac
+            #elseif os(Linux)
+                .linux
+            #elseif os(Windows)
+                .windows
+            #else
+                fatalError("Unknown OS not supported")
+            #endif
+        }()
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
     // indent #if/#else/#elseif/#endif (mode: noindent)
 
     func testIfEndifNoIndenting() {
@@ -3070,6 +3087,10 @@ class IndentTests: RulesTests {
         func myFunc() -> String {
             #if DEBUG
             .init("foo")
+            #elseif PROD
+            .init("bar")
+            #else
+            .init("baz")
             #endif
         }
         """

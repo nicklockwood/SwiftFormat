@@ -3972,6 +3972,22 @@ public struct _FormatRules {
             }), formatter.tokens[bodyStartIndex] == .startOfScope("{") else {
                 return
             }
+
+            // Functions defined inside closures with `[weak self]` captures can
+            // never use implicit self.
+            //
+            // When we encounter a `guard let self` in a `[weak self]` closure,
+            // we specifically avoid putting `self` in the list of locals since
+            // that disables implicit self. Now that we're moving into a function
+            // that doesn't support implicit self, we can re-insert `self` into
+            // the list of locals to disable implicit self again for this scope.
+            if formatter.options.swiftVersion >= "5.8",
+               closureStack.last?.selfCapture == "weak self",
+               !localNames.contains("self")
+            {
+                localNames.insert("self")
+            }
+
             if startToken == .keyword("subscript") {
                 index = bodyStartIndex
                 processAccessors(["get", "set"], for: "", at: &index, localNames: localNames,

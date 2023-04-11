@@ -1492,12 +1492,17 @@ public func tokenize(_ source: String) -> [Token] {
                 if prevNonSpaceToken.isLvalue {
                     var lineStart = index(of: .linebreak, before: prevNonSpaceIndex) ?? 0
                     lineStart = index(of: .nonSpaceOrComment, after: lineStart) ?? lineStart
-                    if [.startOfScope("#if"), .keyword("#elseif")].contains(tokens[lineStart]),
-                       let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: lineStart)
-                    {
+                    switch tokens[lineStart] {
+                    case .keyword("#elseif"), .keyword("#else"):
+                        lineStart = index(of: .startOfScope, before: lineStart) ?? lineStart
+                        fallthrough
+                    case .startOfScope("#if"):
+                        guard let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: lineStart) else {
+                            fallthrough
+                        }
                         prevNonSpaceIndex = prevIndex
                         continue
-                    } else {
+                    default:
                         _type = .infix
                     }
                 } else if prevNonSpaceToken.isAttribute ||

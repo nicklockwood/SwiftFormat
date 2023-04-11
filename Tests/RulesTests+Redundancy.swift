@@ -4675,36 +4675,6 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantSelf)
     }
 
-    func testSelfRemovalParsingBug() {
-        let input = """
-        extension Dictionary where Key == String {
-            func requiredValue<T>(for keyPath: String) throws -> T {
-                return keyPath as! T
-            }
-
-            func optionalValue<T>(for keyPath: String) throws -> T? {
-                guard let anyValue = self[keyPath] else {
-                    return nil
-                }
-                guard let value = anyValue as? T else {
-                    return nil
-                }
-                return value
-            }
-        }
-        """
-        testFormatting(for: input, rule: FormatRules.redundantSelf)
-    }
-
-    func testSelfRemovalParsingBug2() {
-        let input = """
-        if let test = value()["hi"] {
-            print("hi")
-        }
-        """
-        testFormatting(for: input, rule: FormatRules.redundantSelf)
-    }
-
     func testShadowedStringValueNotRemovedInInit() {
         let input = """
         init() {
@@ -5580,6 +5550,38 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
     }
 
+    // parsing bugs
+
+    func testSelfRemovalParsingBug() {
+        let input = """
+        extension Dictionary where Key == String {
+            func requiredValue<T>(for keyPath: String) throws -> T {
+                return keyPath as! T
+            }
+
+            func optionalValue<T>(for keyPath: String) throws -> T? {
+                guard let anyValue = self[keyPath] else {
+                    return nil
+                }
+                guard let value = anyValue as? T else {
+                    return nil
+                }
+                return value
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantSelf)
+    }
+
+    func testSelfRemovalParsingBug2() {
+        let input = """
+        if let test = value()["hi"] {
+            print("hi")
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantSelf)
+    }
+
     func testSelfRemovalParsingBug3() {
         let input = """
         func handleGenericError(_ error: Error) {
@@ -5592,8 +5594,6 @@ class RedundancyTests: RulesTests {
         let options = FormatOptions(explicitSelf: .initOnly)
         testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
     }
-
-    // parsing bugs
 
     func testSelfRemovalParsingBug4() {
         let input = """
@@ -5628,6 +5628,18 @@ class RedundancyTests: RulesTests {
         """
 
         testFormatting(for: input, rule: FormatRules.redundantSelf)
+    }
+
+    func testSelfRemovalParsingBug6() {
+        let input = """
+        something.do(onSuccess: { result in
+            if case .success((let d, _)) = result {
+                self.relay.onNext(d)
+            }
+        })
+        """
+        testFormatting(for: input, rule: FormatRules.redundantSelf,
+                       exclude: ["hoistPatternLet"])
     }
 
     func testSelfNotRemovedInCaseIfElse() {

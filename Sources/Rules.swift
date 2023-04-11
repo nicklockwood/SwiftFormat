@@ -3449,6 +3449,7 @@ public struct _FormatRules {
                     processBody(at: &index, localNames: ["init"], members: [], typeStack: &typeStack,
                                 closureStack: &closureStack, membersByType: &membersByType, classMembersByType: &classMembersByType,
                                 usingDynamicLookup: usingDynamicLookup, isTypeRoot: true, isInit: false)
+                    index -= 1
                     typeStack.removeLast()
                 case .keyword("case") where ["if", "while", "guard", "for"].contains(lastKeyword):
                     break
@@ -3488,7 +3489,7 @@ public struct _FormatRules {
                             // TODO: find less hacky workaround
                             index = endIndex + 1
                         }
-                        if scopeStack.last?.token == .startOfScope("(") {
+                        while scopeStack.last?.token == .startOfScope("(") {
                             scopeStack.removeLast()
                         }
                         guard var startIndex = formatter.token(at: index) == .startOfScope("{") ?
@@ -3509,6 +3510,7 @@ public struct _FormatRules {
                         processBody(at: &index, localNames: scopedNames, members: members, typeStack: &typeStack,
                                     closureStack: &closureStack, membersByType: &membersByType, classMembersByType: &classMembersByType,
                                     usingDynamicLookup: usingDynamicLookup, isTypeRoot: false, isInit: isInit)
+                        index -= 1
                         lastKeyword = ""
                     default:
                         lastKeyword = token.string

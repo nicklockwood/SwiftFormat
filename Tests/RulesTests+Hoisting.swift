@@ -70,6 +70,20 @@ class HoistingTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.hoistTry)
     }
 
+    func testHoistTryInsideStringInterpolation5() {
+        let input = """
+        return str +
+            "&enrolments[\\(index)][roleid]=\\(MoodleRoles.studentRole.rawValue)" +
+            "&enrolments[\\(index)][userid]=\\(try user.requireMoodleID())"
+        """
+        let output = """
+        return try str +
+            "&enrolments[\\(index)][roleid]=\\(MoodleRoles.studentRole.rawValue)" +
+            "&enrolments[\\(index)][userid]=\\(user.requireMoodleID())"
+        """
+        testFormatting(for: input, output, rule: FormatRules.hoistTry)
+    }
+
     func testHoistTryInsideArgument() {
         let input = """
         array.append(contentsOf: try await asyncFunction(param1: param1))

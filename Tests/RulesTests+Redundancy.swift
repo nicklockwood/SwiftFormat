@@ -5860,6 +5860,117 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantSelf)
     }
 
+    func testRemovesSelfInNestedFunctionInStrongSelfClosure() {
+        let input = """
+        class Test {
+            func doWork(_ escaping: @escaping () -> Void) {
+                escaping()
+            }
+
+            func test() {
+                doWork { [self] in
+                    doWork {
+                        // Not allowed. Warning in Swift 5 and error in Swift 6.
+                        self.test()
+                    }
+
+                    func innerFunc() {
+                        // Allowed: https://forums.swift.org/t/why-does-se-0269-have-different-rules-for-inner-closures-vs-inner-functions/64334/2
+                        self.test()
+                    }
+
+                    innerFunc()
+                }
+            }
+        }
+        """
+
+        let output = """
+        class Test {
+            func doWork(_ escaping: @escaping () -> Void) {
+                escaping()
+            }
+
+            func test() {
+                doWork { [self] in
+                    doWork {
+                        // Not allowed. Warning in Swift 5 and error in Swift 6.
+                        self.test()
+                    }
+
+                    func innerFunc() {
+                        // Allowed: https://forums.swift.org/t/why-does-se-0269-have-different-rules-for-inner-closures-vs-inner-functions/64334/2
+                        test()
+                    }
+
+                    innerFunc()
+                }
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.redundantSelf, options: FormatOptions(swiftVersion: "5.8"))
+    }
+
+    func testPreservesSelfInNestedFunctionInWeakSelfClosure() {
+        let input = """
+        class Test {
+            func doWork(_ escaping: @escaping () -> Void) {
+                escaping()
+            }
+
+            func test() {
+                doWork { [weak self] in
+                    func innerFunc() {
+                        self?.test()
+                    }
+
+                    guard let self else {
+                        return
+                    }
+
+                    self.test()
+
+                    func innerFunc() {
+                        self.test()
+                    }
+
+                    self.test()
+                }
+            }
+        }
+        """
+
+        let output = """
+        class Test {
+            func doWork(_ escaping: @escaping () -> Void) {
+                escaping()
+            }
+
+            func test() {
+                doWork { [weak self] in
+                    func innerFunc() {
+                        self?.test()
+                    }
+
+                    guard let self else {
+                        return
+                    }
+
+                    test()
+
+                    func innerFunc() {
+                        self.test()
+                    }
+
+                    test()
+                }
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.redundantSelf, options: FormatOptions(swiftVersion: "5.8"))
+    }
+
     // MARK: - semicolons
 
     func testSemicolonRemovedAtEndOfLine() {

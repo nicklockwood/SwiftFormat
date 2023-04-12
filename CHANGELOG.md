@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.51.6](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.51.6) (2023-04-12)
+
+- Required `self` is now preserved in function bodies inside closures with `[weak self]` captures
+- Fixed bug with `hoistTry` inside chains of concatenated interpolated strings
+- Fixed indenting of dot-prefixed identifiers inside `#else` and `#elseif` blocks
+- Fixed parsing bug in `redundantSelf` rule
+
 ## [0.51.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.51.5) (2023-04-09)
 
 - Added `--baseconfig` option to replicate old `--config` behavior

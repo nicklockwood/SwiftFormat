@@ -3657,7 +3657,7 @@ public struct _FormatRules {
                         parameterList = Array(formatter.tokens[firstTokenInClosure ..< inIndex])
                     }
 
-                    var captureListEntires = (captureList ?? []).split(separator: .delimiter(","), omittingEmptySubsequences: true)
+                    var captureListEntries = (captureList ?? []).split(separator: .delimiter(","), omittingEmptySubsequences: true)
                     let parameterListEntries = (parameterList ?? []).split(separator: .delimiter(","), omittingEmptySubsequences: true)
 
                     let supportedSelfCaptures = Set([
@@ -3668,7 +3668,7 @@ public struct _FormatRules {
                         "weak self",
                     ])
 
-                    let captureEntryStrings = captureListEntires.map { captureListEntry in
+                    let captureEntryStrings = captureListEntries.map { captureListEntry in
                         captureListEntry
                             .map { $0.string }
                             .joined()
@@ -3679,7 +3679,7 @@ public struct _FormatRules {
                         supportedSelfCaptures.contains($0)
                     })
 
-                    captureListEntires.removeAll(where: { captureListEntry in
+                    captureListEntries.removeAll(where: { captureListEntry in
                         let text = captureListEntry
                             .map { $0.string }
                             .joined()
@@ -3688,7 +3688,7 @@ public struct _FormatRules {
                         return text == selfCapture
                     })
 
-                    let localDefiningDeclarations = captureListEntires + parameterListEntries
+                    let localDefiningDeclarations = captureListEntries + parameterListEntries
                     var closureLocalNames = localNames
 
                     for tokens in localDefiningDeclarations {

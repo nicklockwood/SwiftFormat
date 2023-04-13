@@ -370,6 +370,25 @@ class GeneralTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
     }
 
+    func testStripHeaderWithWhenHeaderContainsUrl() {
+        let input = """
+        //
+        //  RulesTests+General.swift
+        //  SwiftFormatTests
+        //
+        //  Created by Nick Lockwood on 02/10/2021.
+        //  Copyright © 2021 Nick Lockwood. All rights reserved.
+        //  https://some.example.com
+        //
+
+        /// func
+        func foo() {}
+        """
+        let output = "/// func\nfunc foo() {}"
+        let options = FormatOptions(fileHeader: "")
+        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+    }
+
     func testReplaceHeaderWhenFileContainsNoCode() {
         let input = "// foobar"
         let options = FormatOptions(fileHeader: "// foobar")

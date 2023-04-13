@@ -65,7 +65,7 @@ public extension String {
     /// Is this string a comment directive (MARK:, TODO:, swiftlint:, etc)?
     var isCommentDirective: Bool {
         let parts = split(separator: ":")
-        guard parts.count > 1 else {
+        guard parts.count > 1 && !parts[1].hasPrefix("//") else {
             return false
         }
         return !parts[0].contains(" ")

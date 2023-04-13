@@ -68,7 +68,7 @@ public extension String {
         guard parts.count > 1 else {
             return false
         }
-        return !parts[0].contains(" ")
+        return !parts[0].contains(" ") && !parts[1].hasPrefix("//")
     }
 }
 

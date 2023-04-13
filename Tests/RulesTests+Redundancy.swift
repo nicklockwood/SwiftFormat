@@ -5300,6 +5300,23 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
     }
 
+    func testNoInsertSelfInCaptureList3() {
+        let input = """
+        class A {
+            var thing: B? { fatalError() }
+
+            func foo() {
+                let thing2 = B()
+                let _: (Bool) -> Void = { [weak thing = thing2] _ in
+                    thing?.bar()
+                }
+            }
+        }
+        """
+        let options = FormatOptions(explicitSelf: .insert)
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
     // explicitSelf = .initOnly
 
     func testPreserveSelfInsideClassInit() {

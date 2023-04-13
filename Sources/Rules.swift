@@ -3692,11 +3692,14 @@ public struct _FormatRules {
                     var closureLocalNames = localNames
 
                     for tokens in localDefiningDeclarations {
-                        guard let localIdentifier = tokens.first(where: { $0.isIdentifier }) else {
+                        guard let localIdentifier = tokens.first(where: {
+                            $0.isIdentifier && !ownershipModifiers.contains($0.string)
+                        }), case let .identifier(name) = localIdentifier,
+                        name != "_"
+                        else {
                             continue
                         }
-
-                        closureLocalNames.insert(localIdentifier.string)
+                        closureLocalNames.insert(name)
                     }
 
                     /// Whether or not the closure at the current index permits implicit self.

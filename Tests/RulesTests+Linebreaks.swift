@@ -402,6 +402,8 @@ class LinebreakTests: RulesTests {
         @testable import ModuleD
         @_exported import ModuleE
         @_implementationOnly import ModuleF
+        @_spi(SPI) import ModuleG
+        @_spiOnly import ModuleH
         class foo {}
         """
         let output = """
@@ -411,6 +413,8 @@ class LinebreakTests: RulesTests {
         @testable import ModuleD
         @_exported import ModuleE
         @_implementationOnly import ModuleF
+        @_spi(SPI) import ModuleG
+        @_spiOnly import ModuleH
 
         class foo {}
         """

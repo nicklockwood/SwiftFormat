@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.51.7](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.51.7) (2023-04-18)
+
+- Fixed `redundantSelf` incorrectly inserting `self` for local variables declared in capture list
+- Fixed `blankLineAfterImports` rule inserting blank line before `@_spi` imports
+- Fixed `fileHeader` rule ignoring headers containing URLs
+
 ## [0.51.6](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.51.6) (2023-04-12)
 
 - Required `self` is now preserved in function bodies inside closures with `[weak self]` captures

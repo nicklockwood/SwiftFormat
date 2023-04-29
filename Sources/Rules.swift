@@ -3207,6 +3207,35 @@ public struct _FormatRules {
         }
     }
 
+    /// Remove redundant Self keyword
+    public let redundantStaticSelf = FormatRule(
+        help: "Remove explicit `Self` where applicable.",
+        disabledByDefault: true
+    ) { formatter in
+
+        var endIndex: Int?
+
+        formatter.forEachToken { index, token in
+            if token == .keyword("static") {
+                if let startOfBodyIndex = formatter.index(of: .startOfScope("{"), after: index) {
+                    endIndex = formatter.endOfScope(at: startOfBodyIndex)
+                }
+            } else if endIndex != nil {
+                if index == endIndex {
+                    endIndex = nil
+                } else if token == .identifier("Self"),
+                          let nextTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index),
+                          formatter.token(at: nextTokenIndex) == .operator(".", .infix),
+                          formatter.token(at: nextTokenIndex + 1) != .identifier("init")
+                {
+                    let range = index ... nextTokenIndex
+                    formatter.removeTokens(in: range)
+                    endIndex? -= range.count
+                }
+            }
+        }
+    }
+
     /// Remove redundant self keyword
     // TODO: restructure this to use forEachToken to avoid exposing processCommentBody mechanism
     public let redundantSelf = FormatRule(

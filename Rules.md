@@ -89,6 +89,7 @@
 * [isEmpty](#isEmpty)
 * [markTypes](#markTypes)
 * [organizeDeclarations](#organizeDeclarations)
+* [redundantStaticSelf](#redundantStaticSelf)
 * [sortedSwitchCases](#sortedSwitchCases)
 * [wrapConditionalBodies](#wrapConditionalBodies)
 * [wrapEnumCases](#wrapEnumCases)
@@ -1627,6 +1628,10 @@ by using `--self init-only`:
 
 </details>
 <br/>
+
+## redundantStaticSelf
+
+Remove explicit `Self` where applicable.
 
 ## redundantType
 

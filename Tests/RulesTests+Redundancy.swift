@@ -6092,6 +6092,141 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantSelf)
     }
 
+    // MARK: - redundantStaticSelf
+
+    func testRedundantStaticSelfInStaticVar() {
+        let input = "enum E { static var x: Int { Self.y } }"
+        let output = "enum E { static var x: Int { y } }"
+        testFormatting(for: input, output, rule: FormatRules.redundantStaticSelf)
+    }
+
+    func testRedundantStaticSelfInStaticMethod() {
+        let input = "enum E { static func foo() { Self.bar() } }"
+        let output = "enum E { static func foo() { bar() } }"
+        testFormatting(for: input, output, rule: FormatRules.redundantStaticSelf)
+    }
+
+    func testRedundantStaticSelfOnNextLine() {
+        let input = """
+        enum E {
+            static func foo() {
+                Self
+                    .bar()
+            }
+        }
+        """
+        let output = """
+        enum E {
+            static func foo() {
+                bar()
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.redundantStaticSelf)
+    }
+
+    func testRedundantStaticSelfWithReturn() {
+        let input = "enum E { static func foo() { return Self.bar() } }"
+        let output = "enum E { static func foo() { return bar() } }"
+        testFormatting(for: input, output, rule: FormatRules.redundantStaticSelf)
+    }
+
+    func testRedundantStaticSelfInConditional() {
+        let input = """
+        enum E {
+            static func foo() {
+                if Bool.random() {
+                    Self.bar()
+                }
+            }
+        }
+        """
+        let output = """
+        enum E {
+            static func foo() {
+                if Bool.random() {
+                    bar()
+                }
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.redundantStaticSelf)
+    }
+
+    func testRedundantStaticSelfInNestedFunction() {
+        let input = """
+        enum E {
+            static func foo() {
+                func bar() {
+                    Self.foo()
+                }
+            }
+        }
+        """
+        let output = """
+        enum E {
+            static func foo() {
+                func bar() {
+                    foo()
+                }
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.redundantStaticSelf)
+    }
+
+    func testRedundantStaticSelfInNestedType() {
+        let input = """
+        enum Outer {
+            enum Inner {
+                static func foo() {}
+                static func bar() { Self.foo() }
+            }
+        }
+        """
+        let output = """
+        enum Outer {
+            enum Inner {
+                static func foo() {}
+                static func bar() { foo() }
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.redundantStaticSelf)
+    }
+
+    func testStaticSelfNotRemovedWhenUsedAsImplicitInitializer() {
+        let input = "enum E { static func foo() { Self().bar() } }"
+        testFormatting(for: input, rule: FormatRules.redundantStaticSelf)
+    }
+
+    func testStaticSelfNotRemovedWhenUsedAsExplicitInitializer() {
+        let input = "enum E { static func foo() { Self.init().bar() } }"
+        testFormatting(for: input, rule: FormatRules.redundantStaticSelf, exclude: ["redundantInit"])
+    }
+
+    func testPreservesStaticSelfInFunctionAfterStaticVar() {
+        let input = """
+        public enum MyFeatureCacheStrategy {
+            case networkOnly
+            case cacheFirst
+
+            public static let defaultCacheAge: TimeInterval = .minutes(5)
+
+            public func requestStrategy<Outcome>() -> SingleRequestStrategy<Outcome> {
+                switch self {
+                case .networkOnly:
+                    return .networkOnly(writeResultToCache: true)
+                case .cacheFirst:
+                    return .cacheFirst(maxCacheAge: Self.defaultCacheAge)
+                }
+            }
+        }
+        """
+
+        testFormatting(for: input, rule: FormatRules.redundantStaticSelf)
+    }
+
     // MARK: - semicolons
 
     func testSemicolonRemovedAtEndOfLine() {

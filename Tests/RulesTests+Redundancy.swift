@@ -6881,6 +6881,24 @@ class RedundancyTests: RulesTests {
                        exclude: ["trailingCommas"])
     }
 
+    func testArgumentUsedAfterIfDefInsideSwitchBlock() {
+        let input = """
+        func test(string: String) {
+            let number = 5
+            switch number {
+            #if DEBUG
+                case 1:
+                    print("ONE")
+            #endif
+            default:
+                print("NOT ONE")
+            }
+            print(string)
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
     // functions (closure-only)
 
     func testNoMarkFunctionArgument() {

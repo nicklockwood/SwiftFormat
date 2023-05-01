@@ -4093,6 +4093,7 @@ public struct _FormatRules {
                 case .startOfScope("{"):
                     guard let endIndex = formatter.endOfScope(at: i) else {
                         argNames.removeAll()
+                        associatedData.removeAll()
                         return
                     }
                     if formatter.isStartOfClosure(at: i) {
@@ -4118,6 +4119,7 @@ public struct _FormatRules {
                           let endIndex = formatter.endOfScope(at: colonIndex)
                     else {
                         argNames.removeAll()
+                        associatedData.removeAll()
                         return
                     }
                     removeUsed(from: &argNames, with: &associatedData,

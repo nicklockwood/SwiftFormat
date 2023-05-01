@@ -598,6 +598,23 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantFileprivate, options: options)
     }
 
+    func testFileprivateInitNotChangedToPrivateWhenAccessedFromSubclass() {
+        let input = """
+        public class Foo {
+            fileprivate init() {}
+        }
+
+        private class Bar: Foo {
+            init(something: String) {
+                print(something)
+                super.init()
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "4")
+        testFormatting(for: input, rule: FormatRules.redundantFileprivate, options: options)
+    }
+
     func testFileprivateInExtensionNotChangedToPrivateWhenAccessedFromExtensionOnSubclass() {
         let input = """
         class Foo: Bar {}

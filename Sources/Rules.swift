@@ -5861,16 +5861,18 @@ public struct _FormatRules {
         }
         func isInitOverridden(for type: String, in range: CountableRange<Int>) -> Bool {
             for i in range {
-                guard case .keyword("init") = formatter.tokens[i],
-                      formatter.modifiersForDeclaration(at: i, contains: "override"),
-                      let scopeIndex = formatter.index(of: .startOfScope("{"), before: i),
-                      let colonIndex = formatter.index(of: .delimiter(":"), before: scopeIndex),
-                      formatter.next(.nonSpaceOrCommentOrLinebreak, in: colonIndex + 1 ..< scopeIndex)
-                      == .identifier(type)
-                else {
-                    continue
+                if case .keyword("init") = formatter.tokens[i],
+                   let scopeStart = formatter.index(of: .startOfScope("{"), after: i),
+                   formatter.index(of: .identifier("super"), after: scopeStart) != nil,
+                   let scopeIndex = formatter.index(of: .startOfScope("{"), before: i),
+                   let colonIndex = formatter.index(of: .delimiter(":"), before: scopeIndex),
+                   formatter.next(
+                       .nonSpaceOrCommentOrLinebreak,
+                       in: colonIndex + 1 ..< scopeIndex
+                   ) == .identifier(type)
+                {
+                    return true
                 }
-                return true
             }
             return false
         }

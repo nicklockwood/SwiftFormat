@@ -153,9 +153,13 @@ public extension Formatter {
             return nil
         }
         guard startToken == .startOfScope("{") else {
-            return self.index(after: startIndex, where: {
-                $0.isEndOfScope(startToken)
-            })
+            var endIndex: Int? = startIndex
+            while let index = endIndex, !tokens[index].isEndOfScope(startToken) {
+                endIndex = self.index(after: index, where: {
+                    $0.isEndOfScope(startToken) || $0 == .endOfScope("#endif")
+                })
+            }
+            return endIndex
         }
         while let endIndex = self.index(after: startIndex, where: {
             $0.isEndOfScope(startToken)

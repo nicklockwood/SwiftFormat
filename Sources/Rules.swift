@@ -4092,9 +4092,7 @@ public struct _FormatRules {
                     }
                 case .startOfScope("{"):
                     guard let endIndex = formatter.endOfScope(at: i) else {
-                        argNames.removeAll()
-                        associatedData.removeAll()
-                        return
+                        return formatter.fatalError("Expected }", at: i)
                     }
                     if formatter.isStartOfClosure(at: i) {
                         removeUsed(from: &argNames, with: &associatedData,
@@ -4115,12 +4113,12 @@ public struct _FormatRules {
                     i = endIndex
                 case .endOfScope("case"), .endOfScope("default"):
                     pushLocals()
-                    guard let colonIndex = formatter.index(of: .startOfScope(":"), after: i),
-                          let endIndex = formatter.endOfScope(at: colonIndex)
-                    else {
-                        argNames.removeAll()
-                        associatedData.removeAll()
-                        return
+                    guard let colonIndex = formatter.index(of: .startOfScope(":"), after: i) else {
+                        return formatter.fatalError("Expected :", at: i)
+                    }
+                    guard let endIndex = formatter.endOfScope(at: colonIndex) else {
+                        return formatter.fatalError("Expected end of case statement",
+                                                    at: colonIndex)
                     }
                     removeUsed(from: &argNames, with: &associatedData,
                                locals: locals, in: i + 1 ..< endIndex)

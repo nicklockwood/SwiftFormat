@@ -3902,7 +3902,24 @@ class RedundancyTests: RulesTests {
         }
         """
         let options = FormatOptions(swiftVersion: "5.8")
-        testFormatting(for: input, output, rule: FormatRules.redundantSelf, options: options, exclude: ["redundantOptionalBinding"])
+        testFormatting(for: input, output, rule: FormatRules.redundantSelf,
+                       options: options, exclude: ["redundantOptionalBinding"])
+    }
+
+    func testWeakSelfNotRemovedIfNotUnwrapped() {
+        let input = """
+        class A {
+            weak var delegate: ADelegate?
+
+            func testFunction() {
+                DispatchQueue.main.async { [weak self] in
+                    self.flatMap { $0.delegate?.aDidSomething($0) }
+                }
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.8")
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
     }
 
     func testClosureParameterListShadowingPropertyOnSelf() {
@@ -5985,7 +6002,8 @@ class RedundancyTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, output, rule: FormatRules.redundantSelf, options: FormatOptions(swiftVersion: "5.8"))
+        testFormatting(for: input, output, rule: FormatRules.redundantSelf,
+                       options: FormatOptions(swiftVersion: "5.8"))
     }
 
     // MARK: - semicolons

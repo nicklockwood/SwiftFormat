@@ -3699,6 +3699,17 @@ public struct _FormatRules {
                         closureLocalNames.insert(name)
                     }
 
+                    // Functions defined inside closures with `[weak self]` captures can
+                    // only use implicit self once self has been unwrapped.
+                    //
+                    // When using `weak self` we add `self` to locals and will remove
+                    // it again if we encounter a `guard let self`.
+                    if formatter.options.swiftVersion >= "5.8",
+                       selfCapture == "weak self"
+                    {
+                        closureLocalNames.insert("self")
+                    }
+
                     /// Whether or not the closure at the current index permits implicit self.
                     ///
                     /// SE-0269 (in Swift 5.3) allows implicit self when:
@@ -3981,13 +3992,12 @@ public struct _FormatRules {
             // never use implicit self.
             //
             // When we encounter a `guard let self` in a `[weak self]` closure,
-            // we specifically avoid putting `self` in the list of locals since
-            // that disables implicit self. Now that we're moving into a function
-            // that doesn't support implicit self, we can re-insert `self` into
-            // the list of locals to disable implicit self again for this scope.
+            // we remove `self` from the list of locals since that disables
+            // implicit self. Now that we're moving into a function that doesn't
+            // support implicit self, we can re-insert `self` into the list of
+            // locals to disable implicit self again for this scope.
             if formatter.options.swiftVersion >= "5.8",
-               closureStack.last?.selfCapture == "weak self",
-               !localNames.contains("self")
+               closureStack.last?.selfCapture == "weak self"
             {
                 localNames.insert("self")
             }

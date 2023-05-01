@@ -130,8 +130,13 @@ extension Formatter {
                     }
                 }
 
-                if name != "_", declarationIndex != nil || !isConditional, !isPermittedImplicitSelfRebinding {
-                    locals.insert(name)
+                if name != "_", declarationIndex != nil || !isConditional {
+                    if isPermittedImplicitSelfRebinding {
+                        assert(name == "self")
+                        names.remove("self")
+                    } else {
+                        locals.insert(name)
+                    }
                 }
                 inner: while let nextIndex = self.index(of: .nonSpace, after: index) {
                     let token = tokens[nextIndex]

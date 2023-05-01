@@ -633,6 +633,23 @@ class HoistingTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.hoistPatternLet, options: options)
     }
 
+    func testUnhoistCaseLetDictionaryTuple() {
+        let input = """
+        switch (a, b) {
+        case let (c as [String: Any], d as [String: Any]):
+            break
+        }
+        """
+        let output = """
+        switch (a, b) {
+        case (let c as [String: Any], let d as [String: Any]):
+            break
+        }
+        """
+        let options = FormatOptions(hoistPatternLet: false)
+        testFormatting(for: input, output, rule: FormatRules.hoistPatternLet, options: options)
+    }
+
     func testUnhoistLabelledCaseLet() {
         let input = "if case let .foo(bar: bar, baz: baz) = quux {}"
         let output = "if case .foo(bar: let bar, baz: let baz) = quux {}"

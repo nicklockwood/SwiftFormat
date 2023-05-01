@@ -4438,6 +4438,11 @@ public struct _FormatRules {
                         }
                     case _ where token.isSpaceOrCommentOrLinebreak:
                         break
+                    case .startOfScope("["):
+                        guard let next = formatter.endOfScope(at: index) else {
+                            return formatter.fatalError("Expected ]", at: index)
+                        }
+                        index = next
                     default:
                         wasParenOrCommaOrLabel = false
                     }

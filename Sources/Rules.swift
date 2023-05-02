@@ -1197,9 +1197,17 @@ public struct _FormatRules {
                 else {
                     break
                 }
-                if let nextNonCommentIndex =
+                if var nextNonCommentIndex =
                     formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i)
                 {
+                    while formatter.tokens[nextNonCommentIndex] == .startOfScope("#if"),
+                          let nextIndex = formatter.index(
+                              of: .nonSpaceOrCommentOrLinebreak,
+                              after: formatter.endOfLine(at: nextNonCommentIndex)
+                          )
+                    {
+                        nextNonCommentIndex = nextIndex
+                    }
                     switch formatter.tokens[nextNonCommentIndex] {
                     case .error, .endOfScope,
                          .operator(".", _), .delimiter(","), .delimiter(":"),
@@ -1962,10 +1970,23 @@ public struct _FormatRules {
                         }
                     }
                 default:
-                    if formatter.isLabel(at: nextNonSpaceIndex),
-                       formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) == .endOfScope("}")
+                    var lastIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i) ?? i
+                    while formatter.token(at: lastIndex) == .endOfScope("#endif") ||
+                        formatter.currentScope(at: lastIndex) == .startOfScope("#if"),
+                        let index = formatter.index(of: .startOfScope("#if"), before: lastIndex)
                     {
-                        break
+                        lastIndex = formatter.index(
+                            of: .nonSpaceOrCommentOrLinebreak,
+                            before: index
+                        ) ?? index
+                    }
+                    let lastToken = formatter.tokens[lastIndex]
+                    if [.endOfScope("}"), .endOfScope(")")].contains(lastToken),
+                       lastIndex == formatter.startOfLine(at: lastIndex, excludingIndent: true),
+                       formatter.token(at: nextNonSpaceIndex) == .operator(".", .infix) ||
+                       (lastToken == .endOfScope("}") && formatter.isLabel(at: nextNonSpaceIndex))
+                    {
+                        indent = formatter.indentForLine(at: lastIndex)
                     }
                     formatter.insertSpaceIfEnabled(indent, at: i + 1)
                 }

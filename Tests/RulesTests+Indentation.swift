@@ -3082,6 +3082,42 @@ class IndentTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.indent, options: options)
     }
 
+    func testIfDefPostfixMemberSyntaxNoIndenting2() {
+        let input = """
+        func foo() {
+            Button {
+                "Hello"
+            }
+            #if DEBUG
+            .foo()
+            #else
+            .bar()
+            #endif
+            .baz()
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
+    func testIfDefPostfixMemberSyntaxNoIndenting3() {
+        let input = """
+        func foo() {
+            Text(
+                "Hello"
+            )
+            #if DEBUG
+            .foo()
+            #else
+            .bar()
+            #endif
+            .baz()
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
     func testNoIndentDotInitInsideIfdef() {
         let input = """
         func myFunc() -> String {
@@ -3198,6 +3234,42 @@ class IndentTests: RulesTests {
                     .font(.headline)
         #endif
             }
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .outdent)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
+    func testIfDefPostfixMemberSyntaxOutdenting2() {
+        let input = """
+        func foo() {
+            Button {
+                "Hello"
+            }
+        #if DEBUG
+            .foo()
+        #else
+            .bar()
+        #endif
+            .baz()
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .outdent)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
+    func testIfDefPostfixMemberSyntaxOutdenting3() {
+        let input = """
+        func foo() {
+            Text(
+                "Hello"
+            )
+        #if DEBUG
+            .foo()
+        #else
+            .bar()
+        #endif
+            .baz()
         }
         """
         let options = FormatOptions(ifdefIndent: .outdent)

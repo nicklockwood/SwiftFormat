@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.51.8](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.51.8) (2023-05-02)
+
+- Fixed `redundantSelf` removing non-unwrapped weak `self` inside closures
+- Fixed `fileprivate` rule making `init` private when inherited by subclass in the same file
+- Fixed `hoistPatternLet` rule inserting `let` inside dictionary type literal
+- Fixed indenting for chained members inside conditional compilation blocks
+- Fixed `unusedArguments` incorrectly removing used argument after conditional compilation block
+- Improved `unusedArguments` rule error handling
+
 ## [0.51.7](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.51.7) (2023-04-18)
 
 - Fixed `redundantSelf` incorrectly inserting `self` for local variables declared in capture list

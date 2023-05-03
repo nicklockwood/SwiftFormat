@@ -1931,6 +1931,94 @@ extension Formatter {
         }
     }
 
+    // Range of tokens forming file header comment
+    var headerCommentTokenRange: Range<Int>? {
+        guard !options.fragment else {
+            return nil
+        }
+        var start = 0
+        var lastHeaderTokenIndex = -1
+        if var startIndex = index(of: .nonSpaceOrLinebreak, after: -1) {
+            if tokens[startIndex] == .startOfScope("#!") {
+                guard let endIndex = index(of: .linebreak, after: startIndex) else {
+                    return nil
+                }
+                startIndex = index(of: .nonSpaceOrLinebreak, after: endIndex) ?? endIndex
+                start = startIndex
+                lastHeaderTokenIndex = startIndex - 1
+            }
+            switch tokens[startIndex] {
+            case .startOfScope("//"):
+                if case let .commentBody(body)? = next(.nonSpace, after: startIndex) {
+                    processCommentBody(body, at: startIndex)
+                    defer {
+                        processLinebreak()
+                        processLinebreak()
+                    }
+                    if !isEnabled || (body.hasPrefix("/") && !body.hasPrefix("//")) ||
+                        body.hasPrefix("swift-tools-version")
+                    {
+                        return nil
+                    } else if body.isCommentDirective {
+                        break
+                    }
+                }
+                var lastIndex = startIndex
+                while let index = index(of: .linebreak, after: lastIndex) {
+                    switch token(at: index + 1) ?? .space("") {
+                    case .startOfScope("//"):
+                        if case let .commentBody(body)? = next(.nonSpace, after: index + 1),
+                           body.isCommentDirective
+                        {
+                            break
+                        }
+                        lastIndex = index
+                        continue
+                    case .linebreak:
+                        lastHeaderTokenIndex = index + 1
+                    case .space where token(at: index + 2)?.isLinebreak == true:
+                        lastHeaderTokenIndex = index + 2
+                    default:
+                        break
+                    }
+                    break
+                }
+            case .startOfScope("/*"):
+                if case let .commentBody(body)? = next(.nonSpace, after: startIndex) {
+                    processCommentBody(body, at: startIndex)
+                    defer {
+                        processLinebreak()
+                        processLinebreak()
+                    }
+                    if !isEnabled || (body.hasPrefix("*") && !body.hasPrefix("**")) {
+                        return nil
+                    } else if body.isCommentDirective {
+                        break
+                    }
+                }
+                while let endIndex = index(of: .endOfScope("*/"), after: startIndex) {
+                    lastHeaderTokenIndex = endIndex
+                    if let linebreakIndex = index(of: .linebreak, after: endIndex) {
+                        lastHeaderTokenIndex = linebreakIndex
+                    }
+                    guard let nextIndex = index(of: .nonSpace, after: lastHeaderTokenIndex) else {
+                        break
+                    }
+                    guard tokens[nextIndex] == .startOfScope("/*") else {
+                        if let endIndex = index(of: .nonSpaceOrLinebreak, after: lastHeaderTokenIndex) {
+                            lastHeaderTokenIndex = endIndex - 1
+                        }
+                        break
+                    }
+                    startIndex = nextIndex
+                }
+            default:
+                break
+            }
+        }
+        return start ..< lastHeaderTokenIndex + 1
+    }
+
     struct SwitchCaseRange {
         let beforeDelimiterRange: Range<Int>
         let delimiterToken: Token

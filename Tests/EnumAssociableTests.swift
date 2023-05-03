@@ -1,5 +1,5 @@
 //
-//  EnumAssociableTest.swift
+//  EnumAssociableTests.swift
 //  SwiftFormat
 //
 //  Created by Vincent Bernier on 13-02-18.

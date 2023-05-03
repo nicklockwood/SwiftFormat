@@ -1,5 +1,5 @@
 //
-//  CommandLine.swift
+//  JSONReporter.swift
 //  SwiftFormat
 //
 //  Created by Daniele Formichelli on 09/04/2021.

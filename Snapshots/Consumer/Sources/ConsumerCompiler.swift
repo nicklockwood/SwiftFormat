@@ -1,5 +1,5 @@
 //
-//  Consumer.swift
+//  ConsumerCompiler.swift
 //  Consumer
 //
 //  Created by Nick Lockwood on 03/03/2018.

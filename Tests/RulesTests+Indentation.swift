@@ -1,5 +1,5 @@
 //
-//  RulesTests+Indent.swift
+//  RulesTests+Indentation.swift
 //  SwiftFormatTests
 //
 //  Created by Nick Lockwood on 04/09/2020.
@@ -2000,6 +2000,57 @@ class IndentTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.indent)
     }
 
+    func testConditionalInitArgumentIndentAfterBrace() {
+        let input = """
+        struct Foo: Codable {
+            let value: String
+            let number: Int
+
+            enum CodingKeys: String, CodingKey {
+                case value
+                case number
+            }
+
+            #if DEBUG
+                init(
+                    value: String,
+                    number: Int
+                ) {
+                    self.value = value
+                    self.number = number
+                }
+            #endif
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
+    func testConditionalInitArgumentIndentAfterBraceNoIndent() {
+        let input = """
+        struct Foo: Codable {
+            let value: String
+            let number: Int
+
+            enum CodingKeys: String, CodingKey {
+                case value
+                case number
+            }
+
+            #if DEBUG
+            init(
+                value: String,
+                number: Int
+            ) {
+                self.value = value
+                self.number = number
+            }
+            #endif
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
     func testConditionalCompiledWrappedChainedFunctionIndent() {
         let input = """
         var body: some View {
@@ -2008,6 +2059,10 @@ class IndentTests: RulesTests {
             }
             #if os(macOS)
                 .frame(minWidth: 200)
+            #elseif os(macOS)
+                    .frame(minWidth: 150)
+            #else
+                        .frame(minWidth: 0)
             #endif
         }
         """
@@ -2018,6 +2073,43 @@ class IndentTests: RulesTests {
             }
             #if os(macOS)
             .frame(minWidth: 200)
+            #elseif os(macOS)
+            .frame(minWidth: 150)
+            #else
+            .frame(minWidth: 0)
+            #endif
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .indent)
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options)
+    }
+
+    func testConditionalCompiledWrappedChainedFunctionIndent2() {
+        let input = """
+        var body: some View {
+            Text(
+                "Hello"
+            )
+            #if os(macOS)
+                .frame(minWidth: 200)
+            #elseif os(macOS)
+                    .frame(minWidth: 150)
+            #else
+                        .frame(minWidth: 0)
+            #endif
+        }
+        """
+        let output = """
+        var body: some View {
+            Text(
+                "Hello"
+            )
+            #if os(macOS)
+            .frame(minWidth: 200)
+            #elseif os(macOS)
+            .frame(minWidth: 150)
+            #else
+            .frame(minWidth: 0)
             #endif
         }
         """
@@ -2033,6 +2125,10 @@ class IndentTests: RulesTests {
             }
             #if os(macOS)
                 .frame(minWidth: 200)
+            #elseif os(macOS)
+                    .frame(minWidth: 150)
+            #else
+                        .frame(minWidth: 0)
             #endif
         }
         """
@@ -2043,6 +2139,10 @@ class IndentTests: RulesTests {
             }
             #if os(macOS)
             .frame(minWidth: 200)
+            #elseif os(macOS)
+            .frame(minWidth: 150)
+            #else
+            .frame(minWidth: 0)
             #endif
         }
         """
@@ -2058,6 +2158,10 @@ class IndentTests: RulesTests {
             }
         #if os(macOS)
         .frame(minWidth: 200)
+        #elseif os(macOS)
+                .frame(minWidth: 150)
+        #else
+                    .frame(minWidth: 0)
         #endif
         }
         """
@@ -2068,6 +2172,10 @@ class IndentTests: RulesTests {
             }
         #if os(macOS)
             .frame(minWidth: 200)
+        #elseif os(macOS)
+            .frame(minWidth: 150)
+        #else
+            .frame(minWidth: 0)
         #endif
         }
         """

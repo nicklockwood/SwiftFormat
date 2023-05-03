@@ -1,5 +1,5 @@
 //
-//  RulesTests+Organize.swift
+//  RulesTests+Organization.swift
 //  SwiftFormatTests
 //
 //  Created by Nick Lockwood on 04/09/2020.

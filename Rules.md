@@ -18,6 +18,7 @@
 * [extensionAccessControl](#extensionAccessControl)
 * [fileHeader](#fileHeader)
 * [genericExtensions](#genericExtensions)
+* [headerFileName](#headerFileName)
 * [hoistAwait](#hoistAwait)
 * [hoistPatternLet](#hoistPatternLet)
 * [hoistTry](#hoistTry)
@@ -784,6 +785,10 @@ Option | Description
 
 </details>
 <br/>
+
+## headerFileName
+
+Ensure file name reference in header matches actual file name.
 
 ## hoistAwait
 

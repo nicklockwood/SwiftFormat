@@ -1,5 +1,5 @@
 //
-//  OptionDescriptorTest.swift
+//  OptionDescriptorTests.swift
 //  SwiftFormatTests
 //
 //  Created by Vincent Bernier on 10-02-18.

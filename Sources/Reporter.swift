@@ -1,5 +1,5 @@
 //
-//  Report.swift
+//  Reporter.swift
 //  SwiftFormat
 //
 //  Created by Jonas Boberg on 2023/02/13.

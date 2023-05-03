@@ -56,6 +56,11 @@ public class Formatter: NSObject {
             disabledCount = 0
             disabledNext = 0
             ruleDisabled = false
+            wasNextDirective = false
+            if let options = tempOptions {
+                self.options = options
+                tempOptions = nil
+            }
         }
     }
 
@@ -142,12 +147,10 @@ public class Formatter: NSObject {
         if wasNextDirective {
             wasNextDirective = false
         } else {
+            disabledNext = 0
             if let options = tempOptions {
                 self.options = options
                 tempOptions = nil
-            }
-            if disabledNext != 0 {
-                disabledNext = 0
             }
         }
     }

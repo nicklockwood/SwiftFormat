@@ -5728,8 +5728,8 @@ public struct _FormatRules {
                     return
                 }
                 var typeTokens = formatter.tokens[typeStart ... typeEnd]
-                if formatter.index(of: .operator("&", .infix), in: typeStart ..< typeEnd) != nil ||
-                    formatter.index(of: .operator("->", .infix), in: typeStart ..< typeEnd) != nil
+                if [.operator("&", .infix), .operator("->", .infix),
+                    .identifier("some"), .identifier("any")].contains(where: typeTokens.contains)
                 {
                     typeTokens.insert(.startOfScope("("), at: typeTokens.startIndex)
                     typeTokens.append(.endOfScope(")"))

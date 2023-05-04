@@ -1637,6 +1637,12 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.typeSugar)
     }
 
+    func testUnwrappedOptionalSomeParenthesized() {
+        let input = "func foo() -> Optional<some Publisher<String, Never>> {}"
+        let output = "func foo() -> (some Publisher<String, Never>)? {}"
+        testFormatting(for: input, output, rule: FormatRules.typeSugar)
+    }
+
     // shortOptionals = exceptProperties
 
     func testPropertyTypeNotConvertedToSugar() {

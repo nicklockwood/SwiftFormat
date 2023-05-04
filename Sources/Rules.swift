@@ -2072,9 +2072,15 @@ public struct _FormatRules {
             else { return }
 
             // make sure the implementation is empty or fatalError
-            guard let firstToken = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: braceIndex, if: {
+            guard let firstTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: braceIndex, if: {
                 [.endOfScope("}"), .identifier("fatalError")].contains($0)
             }) else { return }
+
+            if formatter.token(at: firstTokenIndex) == .identifier("fatalError"),
+               let fatalParenEndOfScope = formatter.index(of: .endOfScope, after: firstTokenIndex + 1)
+            {
+                formatter.replaceTokens(in: firstTokenIndex ... fatalParenEndOfScope, with: [.identifier("nil")])
+            }
 
             // avoid adding attribute if it's already there
             if formatter.modifiersForDeclaration(at: i, contains: "@available") { return }

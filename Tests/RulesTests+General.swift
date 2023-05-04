@@ -33,7 +33,7 @@ class GeneralTests: RulesTests {
         extension Module {
             final class A: UIView {
                 required init?(coder _: NSCoder) {
-                    fatalError()
+                    fatalError("init(coder:) has not been implemented")
                 }
             }
         }
@@ -43,7 +43,7 @@ class GeneralTests: RulesTests {
             final class A: UIView {
                 @available(*, unavailable)
                 required init?(coder _: NSCoder) {
-                    fatalError()
+                    nil
                 }
             }
         }
@@ -62,7 +62,17 @@ class GeneralTests: RulesTests {
             }
         }
         """
-        testFormatting(for: input, rule: FormatRules.initCoderUnavailable)
+        let output = """
+        extension Module {
+            final class A: UIView {
+                @available(*, unavailable)
+                required init?(coder _: NSCoder) {
+                    nil
+                }
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.initCoderUnavailable)
     }
 
     func testInitCoderUnavailableImplemented() {
@@ -82,7 +92,7 @@ class GeneralTests: RulesTests {
         let input = """
         class Foo: UIView {
             public required init?(coder _: NSCoder) {
-                fatalError()
+                fatalError("init(coder:) has not been implemented")
             }
         }
         """
@@ -90,7 +100,7 @@ class GeneralTests: RulesTests {
         class Foo: UIView {
             @available(*, unavailable)
             public required init?(coder _: NSCoder) {
-                fatalError()
+                nil
             }
         }
         """
@@ -101,7 +111,7 @@ class GeneralTests: RulesTests {
         let input = """
         class Foo: UIView {
             required public init?(coder _: NSCoder) {
-                fatalError()
+                fatalError("init(coder:) has not been implemented")
             }
         }
         """
@@ -109,7 +119,7 @@ class GeneralTests: RulesTests {
         class Foo: UIView {
             @available(*, unavailable)
             required public init?(coder _: NSCoder) {
-                fatalError()
+                nil
             }
         }
         """

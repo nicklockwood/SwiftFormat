@@ -3515,4 +3515,134 @@ class OrganizationTests: RulesTests {
 
         testFormatting(for: input, rule: FormatRules.organizeDeclarations)
     }
+
+    // MARK: - sortTypealiases
+
+    func testSortSingleLineTypealias() {
+        let input = """
+        typealias Placeholders = Foo & Bar & Quux & Baaz
+        """
+
+        let output = """
+        typealias Placeholders = Baaz & Bar & Foo & Quux
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.sortTypealiases)
+    }
+
+    func testSortMultilineTypealias() {
+        let input = """
+        typealias Placeholders = Foo & Bar
+            & Quux & Baaz
+        """
+
+        let output = """
+        typealias Placeholders = Baaz & Bar
+            & Foo & Quux
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.sortTypealiases)
+    }
+
+    func testSortMultilineTypealiasWithComments() {
+        let input = """
+        typealias Placeholders = Foo & Bar // Comment about Bar
+            // Comment about Quux
+            & Quux & Baaz // Comment about Baaz
+        """
+
+        let output = """
+        typealias Placeholders = Baaz // Comment about Baaz
+            & Bar // Comment about Bar
+            & Foo
+            // Comment about Quux
+            & Quux
+        """
+
+        testFormatting(for: input, [output], rules: [FormatRules.sortTypealiases, FormatRules.indent, FormatRules.trailingSpace])
+    }
+
+    func testSortWrappedMultilineTypealias1() {
+        let input = """
+        typealias Dependencies = FooProviding
+            & BarProviding
+            & BaazProviding
+            & QuuxProviding
+        """
+
+        let output = """
+        typealias Dependencies = BaazProviding
+            & BarProviding
+            & FooProviding
+            & QuuxProviding
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.sortTypealiases)
+    }
+
+    func testSortWrappedMultilineTypealias2() {
+        let input = """
+        typealias Dependencies
+            = FooProviding
+            & BarProviding
+            & BaazProviding
+            & QuuxProviding
+        """
+
+        let output = """
+        typealias Dependencies
+            = BaazProviding
+            & BarProviding
+            & FooProviding
+            & QuuxProviding
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.sortTypealiases)
+    }
+
+    func testSortWrappedMultilineTypealiasWithComments() {
+        let input = """
+        typealias Dependencies
+            // Comment about FooProviding
+            = FooProviding
+            // Comment about BarProviding
+            & BarProviding
+            & QuuxProviding // Comment about QuuxProviding
+            // Comment about BaazProviding
+            & BaazProviding // Comment about BaazProviding
+        """
+
+        let output = """
+        typealias Dependencies
+            // Comment about BaazProviding
+            = BaazProviding // Comment about BaazProviding
+            // Comment about BarProviding
+            & BarProviding
+            // Comment about FooProviding
+            & FooProviding
+            & QuuxProviding // Comment about QuuxProviding
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.sortTypealiases)
+    }
+
+    func testSortTypealiasesWithAssociatedTypes() {
+        let input = """
+        typealias Collections
+            = Collection<Int>
+            & Collection<String>
+            & Collection<Double>
+            & Collection<Float>
+        """
+
+        let output = """
+        typealias Collections
+            = Collection<Double>
+            & Collection<Float>
+            & Collection<Int>
+            & Collection<String>
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.sortTypealiases)
+    }
 }

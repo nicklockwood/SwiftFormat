@@ -7769,7 +7769,7 @@ public struct _FormatRules {
     }
 
     public let sortTypealiases = FormatRule(
-        help: "Sort protocol composition typealiases",
+        help: "Sort protocol composition typealiases.",
         disabledByDefault: true
     ) { formatter in
         formatter.forEach(.keyword("typealias")) { typealiasIndex, _ in

@@ -2130,6 +2130,46 @@ extension Formatter {
 
         return Array(indexedRanges.values)
     }
+
+    /// Parses the prorocol composition typealias declaration starting at the given `typealias` keyword index.
+    /// Returns `nil` if the given index isn't a protocol composition typealias.
+    func parseProtocolCompositionTypealias(at typealiasIndex: Int)
+        -> (equalsIndex: Int, andTokenIndices: [Int], endIndex: Int)?
+    {
+        guard
+            let equalsIndex = index(of: .operator("=", .infix), after: typealiasIndex),
+            // Any type can follow the equals index of a typealias,
+            // but we're specifically looking for protocol compositions.
+            //  - Valid composite protocols are strictly _only_ identifiers
+            //    separated by `&` tokens. Protocols can't be generic,
+            //    so we know that this typealias can't be generic.
+            //    TODO: This is outdated ^, protocols can be generic now so this has to be updated
+            //  - `&` tokens in types are also _only valid_ for composite protocol types,
+            //    so if we see one then we know this if what we're looking for.
+            // https://docs.swift.org/swift-book/ReferenceManual/Types.html#grammar_protocol-composition-type
+            let firstIdentifierIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
+            tokens[firstIdentifierIndex].isIdentifier,
+            let firstAndIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: firstIdentifierIndex),
+            tokens[firstAndIndex] == .operator("&", .infix)
+        else { return nil }
+
+        // Parse through to the end of the composite protocol type
+        // so we know how long it is (and where the &s are)
+        var lastIdentifierIndex = firstIdentifierIndex
+        var andTokenIndices = [Int]()
+
+        while
+            let nextAndIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: lastIdentifierIndex),
+            tokens[nextAndIndex] == .operator("&", .infix),
+            let nextIdentifierIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: nextAndIndex),
+            tokens[nextIdentifierIndex].isIdentifier
+        {
+            andTokenIndices.append(nextAndIndex)
+            lastIdentifierIndex = nextIdentifierIndex
+        }
+
+        return (equalsIndex, andTokenIndices, lastIdentifierIndex)
+    }
 }
 
 extension _FormatRules {

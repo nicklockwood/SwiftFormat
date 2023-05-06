@@ -3601,4 +3601,24 @@ class OrganizationTests: RulesTests {
 
         testFormatting(for: input, output, rule: FormatRules.sortTypealiases)
     }
+
+    func testSortTypealiasesWithAssociatedTypes() {
+        let input = """
+        typealias Collections
+            = Collection<Int>
+            & Collection<String>
+            & Collection<Double>
+            & Collection<Float>
+        """
+
+        let output = """
+        typealias Collections
+            = Collection<Double>
+            & Collection<Float>
+            & Collection<Int>
+            & Collection<String>
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.sortTypealiases)
+    }
 }

@@ -781,35 +781,8 @@ extension Formatter {
         forEach(.keyword("typealias")) { typealiasIndex, _ in
             guard
                 options.wrapTypealiases == .beforeFirst || options.wrapTypealiases == .afterFirst,
-                let equalsIndex = index(of: .operator("=", .infix), after: typealiasIndex),
-                // Any type can follow the equals index of a typealias,
-                // but we're specifically looking to wrap lengthy composite protocols.
-                //  - Valid composite protocols are strictly _only_ identifiers
-                //    separated by `&` tokens. Protocols can't be generic,
-                //    so we know that this typealias can't be generic.
-                //  - `&` tokens in types are also _only valid_ for composite protocol types,
-                //    so if we see one then we know this if what we're looking for.
-                // https://docs.swift.org/swift-book/ReferenceManual/Types.html#grammar_protocol-composition-type
-                let firstIdentifierIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
-                tokens[firstIdentifierIndex].isIdentifier,
-                let firstAndIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: firstIdentifierIndex),
-                tokens[firstAndIndex] == .operator("&", .infix)
+                let (equalsIndex, andTokenIndices, lastIdentifierIndex) = parseProtocolCompositionTypealias(at: typealiasIndex)
             else { return }
-
-            // Parse through to the end of the composite protocol type
-            // so we know how long it is (and where the &s are)
-            var lastIdentifierIndex = firstIdentifierIndex
-            var andTokenIndices = [Int]()
-
-            while
-                let nextAndIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: lastIdentifierIndex),
-                tokens[nextAndIndex] == .operator("&", .infix),
-                let nextIdentifierIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: nextAndIndex),
-                tokens[nextIdentifierIndex].isIdentifier
-            {
-                andTokenIndices.append(nextAndIndex)
-                lastIdentifierIndex = nextIdentifierIndex
-            }
 
             // Decide which indices to wrap at
             //  - We always wrap at each `&`

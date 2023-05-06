@@ -2140,35 +2140,35 @@ extension Formatter {
             let equalsIndex = index(of: .operator("=", .infix), after: typealiasIndex),
             // Any type can follow the equals index of a typealias,
             // but we're specifically looking for protocol compositions.
-            //  - Valid composite protocols are strictly _only_ identifiers
-            //    separated by `&` tokens. Protocols can't be generic,
-            //    so we know that this typealias can't be generic.
-            //    TODO: This is outdated ^, protocols can be generic now so this has to be updated
+            //  - Valid composite protocols are strictly _only_ prootocol types
+            //    separated by `&` tokens. These always start with identifiers,
+            //    but can be generic (e.g. `Collection<Int>`).
             //  - `&` tokens in types are also _only valid_ for composite protocol types,
             //    so if we see one then we know this if what we're looking for.
             // https://docs.swift.org/swift-book/ReferenceManual/Types.html#grammar_protocol-composition-type
             let firstIdentifierIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
             tokens[firstIdentifierIndex].isIdentifier,
-            let firstAndIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: firstIdentifierIndex),
+            case var lastTypeEndIndex = parseType(at: firstIdentifierIndex).range.upperBound,
+            let firstAndIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: lastTypeEndIndex),
             tokens[firstAndIndex] == .operator("&", .infix)
         else { return nil }
 
         // Parse through to the end of the composite protocol type
         // so we know how long it is (and where the &s are)
-        var lastIdentifierIndex = firstIdentifierIndex
         var andTokenIndices = [Int]()
 
         while
-            let nextAndIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: lastIdentifierIndex),
+            let nextAndIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: lastTypeEndIndex),
             tokens[nextAndIndex] == .operator("&", .infix),
             let nextIdentifierIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: nextAndIndex),
             tokens[nextIdentifierIndex].isIdentifier
         {
+            let endOfType = parseType(at: nextIdentifierIndex).range.upperBound
             andTokenIndices.append(nextAndIndex)
-            lastIdentifierIndex = nextIdentifierIndex
+            lastTypeEndIndex = endOfType
         }
 
-        return (equalsIndex, andTokenIndices, lastIdentifierIndex)
+        return (equalsIndex, andTokenIndices, lastTypeEndIndex)
     }
 }
 

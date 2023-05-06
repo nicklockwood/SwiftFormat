@@ -91,6 +91,7 @@
 * [markTypes](#markTypes)
 * [organizeDeclarations](#organizeDeclarations)
 * [redundantStaticSelf](#redundantStaticSelf)
+* [sortTypealiases](#sortTypealiases)
 * [sortedSwitchCases](#sortedSwitchCases)
 * [wrapConditionalBodies](#wrapConditionalBodies)
 * [wrapEnumCases](#wrapEnumCases)
@@ -1791,6 +1792,29 @@ and declarations between // swiftformat:sort:begin and
           Foo()
       }
   }
+```
+
+</details>
+<br/>
+
+## sortTypealiases
+
+Sort protocol composition typealiases.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- typealias Placeholders = Foo & Bar & Baaz & Quux
++ typealias Placeholders = Baaz & Bar & Foo & Quux
+
+  typealias Dependencies
+-     = FooProviding
++     = BaazProviding
+      & BarProviding
+-     & BaazProviding
++     & FooProviding
+      & QuuxProviding
 ```
 
 </details>

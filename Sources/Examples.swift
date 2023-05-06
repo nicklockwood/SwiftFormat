@@ -1587,4 +1587,19 @@ private struct Examples {
       }
     ```
     """
+
+    let sortTypealiases = """
+    ```diff
+    - typealias Placeholders = Foo & Bar & Baaz & Quux
+    + typealias Placeholders = Baaz & Bar & Foo & Quux
+
+      typealias Dependencies
+    -     = FooProviding
+    +     = BaazProviding
+          & BarProviding
+    -     & BaazProviding
+    +     & FooProviding
+          & QuuxProviding
+    ```
+    """
 }

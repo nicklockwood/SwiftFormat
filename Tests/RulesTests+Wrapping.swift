@@ -2527,7 +2527,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(wrapTypealiases: .beforeFirst, maxWidth: 40)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options, exclude: ["sortTypealiases"])
     }
 
     func testWrapArguments_multipleTypealiases_beforeFirst() {
@@ -2550,7 +2550,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(wrapTypealiases: .beforeFirst, maxWidth: 45)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options, exclude: ["sortTypealiases"])
     }
 
     func testWrapArguments_typealias_afterFirst() {
@@ -2566,7 +2566,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(wrapTypealiases: .afterFirst, maxWidth: 40)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options, exclude: ["sortTypealiases"])
     }
 
     func testWrapArguments_multipleTypealiases_afterFirst() {
@@ -2587,7 +2587,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(wrapTypealiases: .afterFirst, maxWidth: 45)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options, exclude: ["sortTypealiases"])
     }
 
     func testWrapArguments_typealias_shorterThanMaxWidth() {
@@ -2596,7 +2596,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(wrapTypealiases: .afterFirst, maxWidth: 100)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options, exclude: ["sortTypealiases"])
     }
 
     func testWrapArguments_typealias_shorterThanMaxWidth_butWrappedInconsistently() {
@@ -2613,7 +2613,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(wrapTypealiases: .afterFirst, maxWidth: 200)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options, exclude: ["sortTypealiases"])
     }
 
     func testWrapArguments_typealias_shorterThanMaxWidth_butWrappedInconsistently2() {
@@ -2635,7 +2635,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(wrapTypealiases: .beforeFirst, maxWidth: 200)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options, exclude: ["sortTypealiases"])
     }
 
     func testWrapArguments_typealias_shorterThanMaxWidth_butWrappedInconsistently3() {
@@ -2653,7 +2653,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(wrapTypealiases: .afterFirst, maxWidth: 200)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options, exclude: ["sortTypealiases"])
     }
 
     func testWrapArguments_typealias_shorterThanMaxWidth_butWrappedInconsistently4() {
@@ -2673,7 +2673,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(wrapTypealiases: .afterFirst, maxWidth: 200)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options, exclude: ["sortTypealiases"])
     }
 
     func testWrapArguments_typealias_shorterThanMaxWidth_butWrappedInconsistentlyWithComment() {
@@ -2693,7 +2693,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(wrapTypealiases: .beforeFirst, maxWidth: 200)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options, exclude: ["sortTypealiases"])
     }
 
     func testWrapArguments_typealias_singleTypePreserved() {
@@ -2717,7 +2717,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(wrapTypealiases: .beforeFirst, maxWidth: 100)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options, exclude: ["sortTypealiases"])
     }
 
     func testWrapArguments_typealias_preservesCommentsAfterTypes() {
@@ -2729,7 +2729,24 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(wrapTypealiases: .beforeFirst, maxWidth: 100)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options, exclude: ["sortTypealiases"])
+    }
+
+    func testWrapArguments_typealias_withAssociatedType() {
+        let input = """
+        typealias Collections = Collection<Int> & Collection<String> & Collection<Double> & Collection<Float>
+        """
+
+        let output = """
+        typealias Collections
+            = Collection<Int>
+            & Collection<String>
+            & Collection<Double>
+            & Collection<Float>
+        """
+
+        let options = FormatOptions(wrapTypealiases: .beforeFirst, maxWidth: 50)
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options, exclude: ["sortTypealiases"])
     }
 
     // MARK: - -return wrap-if-multiline

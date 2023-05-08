@@ -280,6 +280,112 @@ class WrappingTests: RulesTests {
                        options: options)
     }
 
+    // blankLineBeforeElse = preserve
+
+    func testPreserveBlankLineBeforeElse() {
+        let input = """
+        if foo {
+            print("foo")
+        }
+
+        else if bar {
+            print("bar")
+        }
+
+        else {
+            print("baaz")
+        }
+        """
+
+        let options = FormatOptions(blankLineBeforeElse: .preserve)
+        testFormatting(for: input, rule: FormatRules.elseOnSameLine, options: options)
+    }
+
+    func testPreserveBlankLineBeforeElseOnSameLine() {
+        let input = """
+        if foo {
+            print("foo")
+        }
+
+        else if bar {
+            print("bar")
+        }
+
+        else {
+            print("baaz")
+        }
+        """
+
+        let options = FormatOptions(elseOnNextLine: false, blankLineBeforeElse: .preserve)
+        testFormatting(for: input, rule: FormatRules.elseOnSameLine, options: options)
+    }
+
+    func testPreserveBlankLineBeforeElseWithComments() {
+        let input = """
+        if foo {
+            print("foo")
+        }
+        // Comment before else if
+        else if bar {
+            print("bar")
+        }
+
+        // Comment before else
+        else {
+            print("baaz")
+        }
+        """
+
+        let options = FormatOptions(blankLineBeforeElse: .preserve)
+        testFormatting(for: input, rule: FormatRules.elseOnSameLine, options: options)
+    }
+
+    func testPreserveBlankLineBeforeElseDoesntAffectOtherCases() {
+        let input = """
+        if foo {
+            print("foo")
+        }
+        else {
+            print("bar")
+        }
+
+        guard foo else {
+            return
+        }
+
+        guard
+            let foo,
+            let bar,
+            lat baaz else
+        {
+            return
+        }
+        """
+
+        let output = """
+        if foo {
+            print("foo")
+        } else {
+            print("bar")
+        }
+
+        guard foo else {
+            return
+        }
+
+        guard
+            let foo,
+            let bar,
+            lat baaz
+        else {
+            return
+        }
+        """
+
+        let options = FormatOptions(elseOnNextLine: false, guardElsePosition: .nextLine, blankLineBeforeElse: .preserve)
+        testFormatting(for: input, output, rule: FormatRules.elseOnSameLine, options: options)
+    }
+
     // MARK: - wrapConditionalBodies
 
     func testGuardReturnWraps() {

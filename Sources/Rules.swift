@@ -2168,7 +2168,7 @@ public struct _FormatRules {
         next line).
         """,
         orderAfter: ["wrapMultilineStatementBraces"],
-        options: ["elseposition", "guardelse"],
+        options: ["elseposition", "guardelse", "elseblankline"],
         sharedOptions: ["allman", "linebreaks"]
     ) { formatter in
         func bracesContainLinebreak(_ endIndex: Int) -> Bool {
@@ -2235,6 +2235,14 @@ public struct _FormatRules {
                 guard let prevIndex = formatter.index(of: .nonSpace, before: i) else {
                     return
                 }
+
+                let precededByBlankLine = formatter.tokens[prevIndex].isLinebreak
+                    && formatter.lastToken(before: prevIndex, where: { !$0.isSpaceOrComment })?.isLinebreak == true
+
+                if precededByBlankLine, formatter.options.blankLineBeforeElse == .preserve {
+                    return
+                }
+
                 let shouldWrap = formatter.options.allmanBraces || formatter.options.elseOnNextLine
                 if !shouldWrap, formatter.tokens[prevIndex].isLinebreak {
                     if let prevBraceIndex = formatter.index(of: .nonSpaceOrLinebreak, before: prevIndex, if: {

@@ -1570,7 +1570,7 @@ extension Formatter {
 
         /// If there was another declaration after this one in the same scope,
         /// then we know this declaration ends before that one starts
-        if let endOfDeclaration {
+        if let endOfDeclaration = endOfDeclaration {
             return endOfDeclaration
         }
 
@@ -1602,7 +1602,7 @@ extension Formatter {
             }
 
             let declarationKeyword = declarationType(at: i) ?? "#if"
-            let endOfDeclaration = endOfDeclaration(atDeclarationKeyword: i, fallBackToEndOfScope: false)
+            let endOfDeclaration = self.endOfDeclaration(atDeclarationKeyword: i, fallBackToEndOfScope: false)
 
             let declarationRange = startOfDeclaration ... min(endOfDeclaration ?? .max, tokens.count - 1)
             startOfDeclaration = declarationRange.upperBound + 1

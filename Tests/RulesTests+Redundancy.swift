@@ -6136,6 +6136,28 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantStaticSelf, exclude: ["redundantInit"])
     }
 
+    func testPreservesStaticSelfInFunctionAfterStaticVar() {
+        let input = """
+        public enum MyFeatureCacheStrategy {
+            case networkOnly
+            case cacheFirst
+
+            public static let defaultCacheAge: TimeInterval = .minutes(5)
+
+            public func requestStrategy<Outcome>() -> SingleRequestStrategy<Outcome> {
+                switch self {
+                case .networkOnly:
+                    return .networkOnly(writeResultToCache: true)
+                case .cacheFirst:
+                    return .cacheFirst(maxCacheAge: Self.defaultCacheAge)
+                }
+            }
+        }
+        """
+
+        testFormatting(for: input, rule: FormatRules.redundantStaticSelf)
+    }
+
     // MARK: - semicolons
 
     func testSemicolonRemovedAtEndOfLine() {

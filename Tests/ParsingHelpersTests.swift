@@ -1738,7 +1738,6 @@ class ParsingHelpersTests: XCTestCase {
             case .networkOnly:
               return .networkOnly(writeResultToCache: true)
             case .cacheFirst:
-              // `Self.` is unexpectedly removed, breaking the build
               return .cacheFirst(maxCacheAge: Self.defaultCacheAge)
             }
           }
@@ -1746,6 +1745,6 @@ class ParsingHelpersTests: XCTestCase {
         """))
 
         XCTAssertEqual(formatter.endOfDeclaration(atDeclarationKeyword: 24), 39) // let defaultCacheAge
-        XCTAssertEqual(formatter.endOfDeclaration(atDeclarationKeyword: 43), 117) // func requestStrategy
+        XCTAssertEqual(formatter.endOfDeclaration(atDeclarationKeyword: 43), 112) // func requestStrategy
     }
 }

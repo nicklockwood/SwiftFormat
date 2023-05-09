@@ -1401,6 +1401,26 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(declarations[0].body?[0].body?[0].keyword, "let")
     }
 
+    func testParseSimpleNestedCompilationBlockCorrectly() {
+        let input = """
+        #if canImport(UIKit)
+        #if DEBUG
+        struct DebugFoo {
+            let bar = "debug"
+        }
+        #endif
+        #endif
+        """
+
+        let originalTokens = tokenize(input)
+        let declarations = Formatter(originalTokens).parseDeclarations()
+
+        XCTAssertNotNil(declarations[0].keyword, "#if")
+        XCTAssertEqual(declarations[0].body?[0].keyword, "#if")
+        XCTAssertEqual(declarations[0].body?[0].body?[0].keyword, "struct")
+        XCTAssertEqual(declarations[0].body?[0].body?[0].body?[0].keyword, "let")
+    }
+
     func testParseComplexConditionalCompilationBlockCorrectly() {
         let input = """
         let beforeBlock = "baz"
@@ -1703,5 +1723,29 @@ class ParsingHelpersTests: XCTestCase {
         let foo: ((Foo, Bar) -> (Foo, Bar)?)? = { foo, bar in (foo, bar) }
         """))
         XCTAssertEqual(formatter.parseType(at: 5).name, "((Foo, Bar) -> (Foo, Bar)?)?")
+    }
+
+    func testEndOfDeclaration() {
+        let formatter = Formatter(tokenize("""
+        public enum MyFeatureCacheStrategy {
+          case networkOnly
+          case cacheFirst
+
+          public static let defaultCacheAge: TimeInterval = .minutes(5)
+
+          public func requestStrategy<Outcome>() -> SingleRequestStrategy<Outcome> {
+            switch self {
+            case .networkOnly:
+              return .networkOnly(writeResultToCache: true)
+            case .cacheFirst:
+              // `Self.` is unexpectedly removed, breaking the build
+              return .cacheFirst(maxCacheAge: Self.defaultCacheAge)
+            }
+          }
+        }
+        """))
+
+        XCTAssertEqual(formatter.endOfDeclaration(atDeclarationKeyword: 24), 39) // let defaultCacheAge
+        XCTAssertEqual(formatter.endOfDeclaration(atDeclarationKeyword: 43), 117) // func requestStrategy
     }
 }

@@ -3243,7 +3243,12 @@ public struct _FormatRules {
 
         formatter.forEachToken { index, token in
             if token == .keyword("static") {
-                if let startOfBodyIndex = formatter.index(of: .startOfScope("{"), after: index) {
+                if let startOfBodyIndex = formatter.index(of: .startOfScope("{"), after: index),
+                   // Make sure the open brace is part of the same declaration as the `static` keyword
+                   let declarationKeywordToken = formatter.index(after: index, where: { $0.isDeclarationTypeKeyword }),
+                   let endOfDeclaration = formatter.endOfDeclaration(atDeclarationKeyword: declarationKeywordToken),
+                   startOfBodyIndex < endOfDeclaration
+                {
                     endIndex = formatter.endOfScope(at: startOfBodyIndex)
                 }
             } else if endIndex != nil {

@@ -3235,8 +3235,7 @@ public struct _FormatRules {
 
     /// Remove redundant Self keyword
     public let redundantStaticSelf = FormatRule(
-        help: "Remove explicit `Self` where applicable.",
-        disabledByDefault: true
+        help: "Remove explicit `Self` where applicable."
     ) { formatter in
 
         var endIndex: Int?

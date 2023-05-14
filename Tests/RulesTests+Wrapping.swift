@@ -280,8 +280,6 @@ class WrappingTests: RulesTests {
                        options: options)
     }
 
-    // blankLineBeforeElse = preserve
-
     func testPreserveBlankLineBeforeElse() {
         let input = """
         if foo {
@@ -297,8 +295,7 @@ class WrappingTests: RulesTests {
         }
         """
 
-        let options = FormatOptions(blankLineBeforeElse: .preserve)
-        testFormatting(for: input, rule: FormatRules.elseOnSameLine, options: options)
+        testFormatting(for: input, rule: FormatRules.elseOnSameLine)
     }
 
     func testPreserveBlankLineBeforeElseOnSameLine() {
@@ -316,7 +313,7 @@ class WrappingTests: RulesTests {
         }
         """
 
-        let options = FormatOptions(elseOnNextLine: false, blankLineBeforeElse: .preserve)
+        let options = FormatOptions(elseOnNextLine: false)
         testFormatting(for: input, rule: FormatRules.elseOnSameLine, options: options)
     }
 
@@ -336,8 +333,7 @@ class WrappingTests: RulesTests {
         }
         """
 
-        let options = FormatOptions(blankLineBeforeElse: .preserve)
-        testFormatting(for: input, rule: FormatRules.elseOnSameLine, options: options)
+        testFormatting(for: input, rule: FormatRules.elseOnSameLine)
     }
 
     func testPreserveBlankLineBeforeElseDoesntAffectOtherCases() {
@@ -382,7 +378,7 @@ class WrappingTests: RulesTests {
         }
         """
 
-        let options = FormatOptions(elseOnNextLine: false, guardElsePosition: .nextLine, blankLineBeforeElse: .preserve)
+        let options = FormatOptions(elseOnNextLine: false, guardElsePosition: .nextLine)
         testFormatting(for: input, output, rule: FormatRules.elseOnSameLine, options: options)
     }
 

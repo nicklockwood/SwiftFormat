@@ -592,12 +592,6 @@ struct _Descriptors {
         help: "Guard else: \"same-line\", \"next-line\" or \"auto\" (default)",
         keyPath: \.guardElsePosition
     )
-    let blankLineBeforeElse = OptionDescriptor(
-        argumentName: "elseblankline",
-        displayName: "Blank Line Before Else",
-        help: "Blank line before else: \"update\" (default), \"preserve\"",
-        keyPath: \.blankLineBeforeElse
-    )
     let explicitSelf = OptionDescriptor(
         argumentName: "self",
         displayName: "Self",

@@ -2172,7 +2172,7 @@ public struct _FormatRules {
         next line).
         """,
         orderAfter: ["wrapMultilineStatementBraces"],
-        options: ["elseposition", "guardelse", "elseblankline"],
+        options: ["elseposition", "guardelse"],
         sharedOptions: ["allman", "linebreaks"]
     ) { formatter in
         func bracesContainLinebreak(_ endIndex: Int) -> Bool {
@@ -2243,7 +2243,7 @@ public struct _FormatRules {
                 let precededByBlankLine = formatter.tokens[prevIndex].isLinebreak
                     && formatter.lastToken(before: prevIndex, where: { !$0.isSpaceOrComment })?.isLinebreak == true
 
-                if precededByBlankLine, formatter.options.blankLineBeforeElse == .preserve {
+                if precededByBlankLine {
                     return
                 }
 

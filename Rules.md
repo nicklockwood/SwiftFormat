@@ -581,7 +581,6 @@ Option | Description
 --- | ---
 `--elseposition` | Placement of else/catch: "same-line" (default) or "next-line"
 `--guardelse` | Guard else: "same-line", "next-line" or "auto" (default)
-`--elseblankline` | Blank line before else: "update" (default), "preserve"
 
 <details>
 <summary>Examples</summary>

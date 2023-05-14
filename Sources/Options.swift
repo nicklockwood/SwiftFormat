@@ -348,14 +348,6 @@ public enum EnumNamespacesMode: String, CaseIterable {
     case structsOnly = "structs-only"
 }
 
-/// Whether or not to reformat an `else` statement preceded by a blank line
-public enum BlankLineBeforeElse: String, CaseIterable {
-    /// Always update the `else` statement using the `elseOnSameLine` rule
-    case update
-    /// If there is a blank line before the `else` statement, don't apply the `elseOnSameLine` rule
-    case preserve
-}
-
 /// Configuration options for formatting. These aren't actually used by the
 /// Formatter class itself, but it makes them available to the format rules.
 public struct FormatOptions: CustomStringConvertible {
@@ -395,7 +387,6 @@ public struct FormatOptions: CustomStringConvertible {
     public var stripUnusedArguments: ArgumentStrippingMode
     public var elseOnNextLine: Bool
     public var guardElsePosition: ElsePosition
-    public var blankLineBeforeElse: BlankLineBeforeElse
     public var explicitSelf: SelfMode
     public var selfRequired: Set<String>
     public var throwCapturing: Set<String>
@@ -495,7 +486,6 @@ public struct FormatOptions: CustomStringConvertible {
                 stripUnusedArguments: ArgumentStrippingMode = .all,
                 elseOnNextLine: Bool = false,
                 guardElsePosition: ElsePosition = .auto,
-                blankLineBeforeElse: BlankLineBeforeElse = .update,
                 explicitSelf: SelfMode = .remove,
                 selfRequired: Set<String> = [],
                 throwCapturing: Set<String> = [],
@@ -586,7 +576,6 @@ public struct FormatOptions: CustomStringConvertible {
         self.stripUnusedArguments = stripUnusedArguments
         self.elseOnNextLine = elseOnNextLine
         self.guardElsePosition = guardElsePosition
-        self.blankLineBeforeElse = blankLineBeforeElse
         self.explicitSelf = explicitSelf
         self.selfRequired = selfRequired
         self.throwCapturing = throwCapturing

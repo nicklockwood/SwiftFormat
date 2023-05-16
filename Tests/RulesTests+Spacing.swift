@@ -300,6 +300,12 @@ class SpacingTests: RulesTests {
                        options: FormatOptions(swiftVersion: "5.4.9"))
     }
 
+    func testRemoveSpaceBetweenParenAndConsume() {
+        let input = "let foo = consume (bar)"
+        let output = "let foo = consume(bar)"
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundParens)
+    }
+
     // MARK: - spaceInsideParens
 
     func testSpaceInsideParens() {

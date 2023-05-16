@@ -4339,6 +4339,80 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    // MARK: consume and discard operators
+
+    func testConsumeOperator() {
+        let input = "_ = consume x"
+        let output: [Token] = [
+            .identifier("_"),
+            .space(" "),
+            .operator("=", .infix),
+            .space(" "),
+            .keyword("consume"),
+            .space(" "),
+            .identifier("x"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testDiscardOperator() {
+        let input = "discard x"
+        let output: [Token] = [
+            .keyword("discard"),
+            .space(" "),
+            .identifier("x"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testConsumeFunction() {
+        let input = "_ = consume (x)"
+        let output: [Token] = [
+            .identifier("_"),
+            .space(" "),
+            .operator("=", .infix),
+            .space(" "),
+            .identifier("consume"),
+            .space(" "),
+            .startOfScope("("),
+            .identifier("x"),
+            .endOfScope(")"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testConsumeLabel() {
+        let input = "func foo(consume bar: Int)"
+        let output: [Token] = [
+            .keyword("func"),
+            .space(" "),
+            .identifier("foo"),
+            .startOfScope("("),
+            .identifier("consume"),
+            .space(" "),
+            .identifier("bar"),
+            .delimiter(":"),
+            .space(" "),
+            .identifier("Int"),
+            .endOfScope(")"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testConsumeVariable() {
+        let input = "let consume = 5"
+        let output: [Token] = [
+            .keyword("let"),
+            .space(" "),
+            .identifier("consume"),
+            .space(" "),
+            .operator("=", .infix),
+            .space(" "),
+            .number("5", .integer),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     // MARK: await
 
     func testAwaitExpression() {

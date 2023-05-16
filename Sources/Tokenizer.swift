@@ -1494,7 +1494,12 @@ public func tokenize(_ source: String) -> [Token] {
                     lineStart = index(of: .nonSpaceOrComment, after: lineStart) ?? lineStart
                     switch tokens[lineStart] {
                     case .keyword("#elseif"), .keyword("#else"):
-                        lineStart = index(of: .startOfScope, before: lineStart) ?? lineStart
+                        while let start = index(of: .startOfScope, before: lineStart) {
+                            lineStart = start
+                            if tokens[start] == .startOfScope("#if") {
+                                break
+                            }
+                        }
                         fallthrough
                     case .startOfScope("#if"):
                         guard let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: lineStart) else {

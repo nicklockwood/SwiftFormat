@@ -3242,6 +3242,20 @@ class IndentTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.indent, options: options)
     }
 
+    func testNoIndentDotInitInsideIfdef2() {
+        let input = """
+        var title: Font {
+            #if os(iOS)
+            .init(style: .title2)
+            #else
+            .init(style: .title2, size: 40)
+            #endif
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
     // indent #if/#else/#elseif/#endif (mode: outdent)
 
     func testIfEndifOutdenting() {

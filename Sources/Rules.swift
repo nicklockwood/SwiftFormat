@@ -1975,11 +1975,10 @@ public struct _FormatRules {
                     }
                 default:
                     var lastIndex = lastNonSpaceOrLinebreakIndex > -1 ? lastNonSpaceOrLinebreakIndex : i
-                    while formatter.token(at: lastIndex) == .endOfScope("#endif") ||
-                        formatter.currentScope(at: lastIndex) == .startOfScope("#if"),
-                        let index = formatter.index(of: .startOfScope, before: lastIndex, if: {
-                            $0 == .startOfScope("#ifdef")
-                        })
+                    while formatter.token(at: lastIndex) == .endOfScope("#endif"),
+                          let index = formatter.index(of: .startOfScope, before: lastIndex, if: {
+                              $0 == .startOfScope("#if")
+                          })
                     {
                         lastIndex = formatter.index(
                             of: .nonSpaceOrCommentOrLinebreak,

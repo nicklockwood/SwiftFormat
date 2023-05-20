@@ -6138,7 +6138,7 @@ public struct _FormatRules {
             }
 
             // Skip modifiers
-            while keyword.isModifierKeyword {
+            while formatter.isModifier(at: keywordIndex) {
                 guard let nextIndex = formatter.index(of: .keyword, after: keywordIndex) else {
                     break
                 }

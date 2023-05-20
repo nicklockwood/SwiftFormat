@@ -358,6 +358,19 @@ extension Formatter {
         }
     }
 
+    /// Returns true if the token at specified index is a modifier
+    func isModifier(at index: Int) -> Bool {
+        guard let token = token(at: index), token.isModifierKeyword else {
+            return false
+        }
+        if token == .keyword("class"),
+           let nextToken = next(.nonSpaceOrCommentOrLinebreak, after: index)
+        {
+            return nextToken.isDeclarationTypeKeyword || nextToken.isModifierKeyword
+        }
+        return true
+    }
+
     /// Returns true if the modifiers list for the given declaration contain a
     /// modifier matching the specified predicate
     func modifiersForDeclaration(at index: Int, contains: (Int, String) -> Bool) -> Bool {

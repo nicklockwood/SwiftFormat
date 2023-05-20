@@ -2,6 +2,7 @@
 
 * [andOperator](#andOperator)
 * [anyObjectProtocol](#anyObjectProtocol)
+* [applicationMain](#applicationMain)
 * [assertionFailures](#assertionFailures)
 * [blankLinesAroundMark](#blankLinesAroundMark)
 * [blankLinesAtEndOfScope](#blankLinesAtEndOfScope)
@@ -177,6 +178,11 @@ swift version is set to 4.1 or above.
 
 </details>
 <br/>
+
+## applicationMain
+
+Replace obsolete @UIApplicationMain and @NSApplicationMain attributes
+with @main for Swift 5.3 and above.
 
 ## assertionFailures
 

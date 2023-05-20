@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.51.10](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.51.10) (2023-05-21)
+
+- Fixed bug in `wrapAttributes` rule due to `class` declaration being mistaken for class-scoped var
+- Fixed another case of incorrect indenting inside an `#ifdef` block
+- Fixed linebreaks being incorrectly removed by `sortedSwitchCases`
+
 ## [0.51.9](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.51.9) (2023-05-04)
 
 - Fixed `typeSugar` rule unwrapping Optional `some/any` without inserting required parentheses

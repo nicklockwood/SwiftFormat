@@ -4286,6 +4286,20 @@ class WrappingTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
     }
 
+    func testClassAttributeNotMistakenForClassLet() {
+        let input = """
+        @objc final class MyClass: NSObject {}
+        let myClass = MyClass()
+        """
+        let output = """
+        @objc
+        final class MyClass: NSObject {}
+        let myClass = MyClass()
+        """
+        let options = FormatOptions(typeAttributes: .prevLine)
+        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
+    }
+
     func testClassImportAttributeNotTreatedAsType() {
         let input = """
         @testable import class Framework.Foo

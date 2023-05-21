@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.51.9](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.51.9) (2023-05-04)
+
+- Fixed `typeSugar` rule unwrapping Optional `some/any` without inserting required parentheses
+- Fixed indenting of function arguments inside an `#ifdef` block after a closing brace
+- Fixed comment directive state leaking between rules
+
 ## [0.51.8](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.51.8) (2023-05-02)
 
 - Fixed `redundantSelf` removing non-unwrapped weak `self` inside closures

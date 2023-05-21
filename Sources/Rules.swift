@@ -178,6 +178,27 @@ extension _FormatRules {
 public struct _FormatRules {
     fileprivate init() {}
 
+    /// Replace the obsolete `@UIApplicationMain` and `@NSApplicationMain`
+    /// attributes with `@main` in Swift 5.3 and above, per SE-0383
+    public let applicationMain = FormatRule(
+        help: """
+        Replace obsolete @UIApplicationMain and @NSApplicationMain attributes
+        with @main for Swift 5.3 and above.
+        """
+    ) { formatter in
+        guard formatter.options.swiftVersion >= "5.3" else {
+            return
+        }
+        formatter.forEachToken(where: {
+            [
+                .keyword("@UIApplicationMain"),
+                .keyword("@NSApplicationMain"),
+            ].contains($0)
+        }) { i, _ in
+            formatter.replaceToken(at: i, with: .keyword("@main"))
+        }
+    }
+
     /// Implement the following rules with respect to the spacing around parens:
     /// * There is no space between an opening paren and the preceding identifier,
     ///   unless the identifier is one of the specified keywords
@@ -1975,11 +1996,10 @@ public struct _FormatRules {
                     }
                 default:
                     var lastIndex = lastNonSpaceOrLinebreakIndex > -1 ? lastNonSpaceOrLinebreakIndex : i
-                    while formatter.token(at: lastIndex) == .endOfScope("#endif") ||
-                        formatter.currentScope(at: lastIndex) == .startOfScope("#if"),
-                        let index = formatter.index(of: .startOfScope, before: lastIndex, if: {
-                            $0 == .startOfScope("#ifdef")
-                        })
+                    while formatter.token(at: lastIndex) == .endOfScope("#endif"),
+                          let index = formatter.index(of: .startOfScope, before: lastIndex, if: {
+                              $0 == .startOfScope("#if")
+                          })
                     {
                         lastIndex = formatter.index(
                             of: .nonSpaceOrCommentOrLinebreak,
@@ -2247,6 +2267,14 @@ public struct _FormatRules {
                 guard let prevIndex = formatter.index(of: .nonSpace, before: i) else {
                     return
                 }
+
+                let precededByBlankLine = formatter.tokens[prevIndex].isLinebreak
+                    && formatter.lastToken(before: prevIndex, where: { !$0.isSpaceOrComment })?.isLinebreak == true
+
+                if precededByBlankLine {
+                    return
+                }
+
                 let shouldWrap = formatter.options.allmanBraces || formatter.options.elseOnNextLine
                 if !shouldWrap, formatter.tokens[prevIndex].isLinebreak {
                     if let prevBraceIndex = formatter.index(of: .nonSpaceOrLinebreak, before: prevIndex, if: {
@@ -3243,15 +3271,19 @@ public struct _FormatRules {
 
     /// Remove redundant Self keyword
     public let redundantStaticSelf = FormatRule(
-        help: "Remove explicit `Self` where applicable.",
-        disabledByDefault: true
+        help: "Remove explicit `Self` where applicable."
     ) { formatter in
 
         var endIndex: Int?
 
         formatter.forEachToken { index, token in
             if token == .keyword("static") {
-                if let startOfBodyIndex = formatter.index(of: .startOfScope("{"), after: index) {
+                if let startOfBodyIndex = formatter.index(of: .startOfScope("{"), after: index),
+                   // Make sure the open brace is part of the same declaration as the `static` keyword
+                   let declarationKeywordToken = formatter.index(after: index, where: { $0.isDeclarationTypeKeyword }),
+                   let endOfDeclaration = formatter.endOfDeclaration(atDeclarationKeyword: declarationKeywordToken),
+                   startOfBodyIndex < endOfDeclaration
+                {
                     endIndex = formatter.endOfScope(at: startOfBodyIndex)
                 }
             } else if endIndex != nil {
@@ -5205,11 +5237,7 @@ public struct _FormatRules {
                 for switchCase in switchCaseRanges.enumerated().reversed() {
                     let newTokens = Array(sortedTokens[switchCase.offset])
                     var newComments = Array(sortedComments[switchCase.offset])
-                    let oldCommentsRange = sorted[switchCaseRanges.count - switchCase.offset - 1].afterDelimiterRange
-
-                    let oldComments = formatter.tokens[oldCommentsRange]
-
-                    var shouldInsertBreakLine = sortedComments[switchCaseRanges.count - switchCase.offset - 1].first?.isLinebreak == true
+                    let oldComments = formatter.tokens[switchCaseRanges[switchCase.offset].afterDelimiterRange]
 
                     if newComments.last?.isLinebreak == oldComments.last?.isLinebreak {
                         formatter.replaceTokens(in: switchCaseRanges[switchCase.offset].afterDelimiterRange, with: newComments)
@@ -5725,8 +5753,8 @@ public struct _FormatRules {
                     return
                 }
                 var typeTokens = formatter.tokens[typeStart ... typeEnd]
-                if formatter.index(of: .operator("&", .infix), in: typeStart ..< typeEnd) != nil ||
-                    formatter.index(of: .operator("->", .infix), in: typeStart ..< typeEnd) != nil
+                if [.operator("&", .infix), .operator("->", .infix),
+                    .identifier("some"), .identifier("any")].contains(where: typeTokens.contains)
                 {
                     typeTokens.insert(.startOfScope("("), at: typeTokens.startIndex)
                     typeTokens.append(.endOfScope(")"))
@@ -6136,7 +6164,7 @@ public struct _FormatRules {
             }
 
             // Skip modifiers
-            while keyword.isModifierKeyword {
+            while formatter.isModifier(at: keywordIndex) {
                 guard let nextIndex = formatter.index(of: .keyword, after: keywordIndex) else {
                     break
                 }
@@ -7771,6 +7799,120 @@ public struct _FormatRules {
             // Instead we just insert `= ` after the type.
             else {
                 formatter.insert([.operator("=", .infix), .space(" ")], at: startOfConditional)
+            }
+        }
+    }
+
+    public let sortTypealiases = FormatRule(
+        help: "Sort protocol composition typealiases.",
+        disabledByDefault: true
+    ) { formatter in
+        formatter.forEach(.keyword("typealias")) { typealiasIndex, _ in
+            guard
+                let (equalsIndex, andTokenIndices, endIndex) = formatter.parseProtocolCompositionTypealias(at: typealiasIndex),
+                let typealiasNameIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: equalsIndex)
+            else {
+                return
+            }
+
+            // Split the typealias into individual elements.
+            // Any comments on their own line are grouped with the following element.
+            let delimiters = [equalsIndex] + andTokenIndices
+            var parsedElements: [(startIndex: Int, delimiterIndex: Int, endIndex: Int, type: String, allTokens: [Token])] = []
+
+            for delimiter in delimiters.indices {
+                let endOfPreviousElement = parsedElements.last?.endIndex ?? typealiasNameIndex
+                let elementStartIndex = formatter.index(of: .nonSpaceOrLinebreak, after: endOfPreviousElement) ?? delimiters[delimiter]
+
+                // Start with the end index just being the end of the type name
+                var elementEndIndex: Int
+                let nextElementIsOnSameLine: Bool
+                if delimiter == delimiters.indices.last {
+                    elementEndIndex = endIndex
+                    nextElementIsOnSameLine = false
+                } else {
+                    let nextDelimiterIndex = delimiters[delimiter + 1]
+                    elementEndIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: nextDelimiterIndex) ?? (nextDelimiterIndex - 1)
+
+                    let endOfLine = formatter.endOfLine(at: elementEndIndex)
+                    nextElementIsOnSameLine = formatter.endOfLine(at: nextDelimiterIndex) == endOfLine
+                }
+
+                // Handle comments in multiline typealiases
+                if !nextElementIsOnSameLine {
+                    // Any comments on the same line as the type name should be considered part of this element.
+                    // Any comments after the linebreak are consisidered part of the next element.
+                    // To do that we just extend this element to the end of the current line.
+                    elementEndIndex = formatter.endOfLine(at: elementEndIndex) - 1
+                }
+
+                let tokens = Array(formatter.tokens[elementStartIndex ... elementEndIndex])
+                let typeName = tokens
+                    .filter { !$0.isSpaceOrCommentOrLinebreak && !$0.isOperator }
+                    .map { $0.string }.joined()
+
+                parsedElements.append((
+                    startIndex: elementStartIndex,
+                    delimiterIndex: delimiters[delimiter],
+                    endIndex: elementEndIndex,
+                    type: typeName,
+                    allTokens: tokens
+                ))
+            }
+
+            // Sort each element by type name
+            var sortedElements = parsedElements.sorted(by: { lhsElement, rhsElement in
+                lhsElement.type.lexicographicallyPrecedes(rhsElement.type)
+            })
+
+            // Don't modify the file if the typealias is already sorted
+            if parsedElements.map(\.startIndex) == sortedElements.map(\.startIndex) {
+                return
+            }
+
+            for elementIndex in sortedElements.indices {
+                // Revalidate all of the delimiters after sorting
+                // (the first delimiter should be `=` and all others should be `&`
+                let delimiterIndexInTokens = sortedElements[elementIndex].delimiterIndex - sortedElements[elementIndex].startIndex
+
+                if elementIndex == 0 {
+                    sortedElements[elementIndex].allTokens[delimiterIndexInTokens] = .operator("=", .infix)
+                } else {
+                    sortedElements[elementIndex].allTokens[delimiterIndexInTokens] = .operator("&", .infix)
+                }
+
+                // Make sure there's always a linebreak after any comments, to prevent
+                // them from accidentially commenting out following elements of the typealias
+                if
+                    elementIndex != sortedElements.indices.last,
+                    sortedElements[elementIndex].allTokens.last?.isComment == true,
+                    let nextToken = formatter.nextToken(after: parsedElements[elementIndex].endIndex),
+                    !nextToken.isLinebreak
+                {
+                    sortedElements[elementIndex].allTokens.append(.linebreak("\n", 0))
+                }
+
+                // If this element starts with a comment, that's because the comment
+                // was originally on a line all by itself. To preserve this, make sure
+                // there's a linebreak before the comment.
+                if
+                    elementIndex != sortedElements.indices.first,
+                    sortedElements[elementIndex].allTokens.first?.isComment == true,
+                    let previousToken = formatter.lastToken(before: parsedElements[elementIndex].startIndex, where: { !$0.isSpace }),
+                    !previousToken.isLinebreak
+                {
+                    sortedElements[elementIndex].allTokens.insert(.linebreak("\n", 0), at: 0)
+                }
+            }
+
+            // Replace each index in the parsed list with the corresponding index in the sorted list,
+            // working backwards to not invalidate any existing indices
+            for (originalElement, newElement) in zip(parsedElements, sortedElements).reversed() {
+                let newElementTokens =
+                    formatter.replaceTokens(
+                        in: originalElement.startIndex ... originalElement.endIndex,
+                        with: newElement.allTokens
+                    )
             }
         }
     }

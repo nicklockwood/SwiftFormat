@@ -1486,6 +1486,43 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.anyObjectProtocol, options: options)
     }
 
+    // MARK: - applicationMain
+
+    func testUIApplicationMainReplacedByMain() {
+        let input = """
+        @UIApplicationMain
+        class AppDelegate: UIResponder, UIApplicationDelegate {}
+        """
+        let output = """
+        @main
+        class AppDelegate: UIResponder, UIApplicationDelegate {}
+        """
+        let options = FormatOptions(swiftVersion: "5.3")
+        testFormatting(for: input, output, rule: FormatRules.applicationMain, options: options)
+    }
+
+    func testNSApplicationMainReplacedByMain() {
+        let input = """
+        @NSApplicationMain
+        class AppDelegate: NSObject, NSApplicationDelegate {}
+        """
+        let output = """
+        @main
+        class AppDelegate: NSObject, NSApplicationDelegate {}
+        """
+        let options = FormatOptions(swiftVersion: "5.3")
+        testFormatting(for: input, output, rule: FormatRules.applicationMain, options: options)
+    }
+
+    func testNSApplicationMainNotReplacedInSwift5_2() {
+        let input = """
+        @NSApplicationMain
+        class AppDelegate: NSObject, NSApplicationDelegate {}
+        """
+        let options = FormatOptions(swiftVersion: "5.2")
+        testFormatting(for: input, rule: FormatRules.applicationMain, options: options)
+    }
+
     // MARK: - typeSugar
 
     // arrays
@@ -1635,6 +1672,12 @@ class SyntaxTests: RulesTests {
     func testCaseOptionalNotReplaced2() {
         let input = "if case Optional<Any>.none = foo {}"
         testFormatting(for: input, rule: FormatRules.typeSugar)
+    }
+
+    func testUnwrappedOptionalSomeParenthesized() {
+        let input = "func foo() -> Optional<some Publisher<String, Never>> {}"
+        let output = "func foo() -> (some Publisher<String, Never>)? {}"
+        testFormatting(for: input, output, rule: FormatRules.typeSugar)
     }
 
     // shortOptionals = exceptProperties

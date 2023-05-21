@@ -358,6 +358,19 @@ extension Formatter {
         }
     }
 
+    /// Returns true if the token at specified index is a modifier
+    func isModifier(at index: Int) -> Bool {
+        guard let token = token(at: index), token.isModifierKeyword else {
+            return false
+        }
+        if token == .keyword("class"),
+           let nextToken = next(.nonSpaceOrCommentOrLinebreak, after: index)
+        {
+            return nextToken.isDeclarationTypeKeyword || nextToken.isModifierKeyword
+        }
+        return true
+    }
+
     /// Returns true if the modifiers list for the given declaration contain a
     /// modifier matching the specified predicate
     func modifiersForDeclaration(at index: Int, contains: (Int, String) -> Bool) -> Bool {
@@ -1504,6 +1517,92 @@ extension Formatter {
         }
     }
 
+    /// Returns the end index of the `Declaration` containing `declarationKeywordIndex`.
+    ///  - `declarationKeywordIndex.isDeclarationTypeKeyword` must be `true`
+    ///    (e.g. it must be a keyword like `let`, `var`, `func`, `class`, etc.
+    ///  - Parameter `fallBackToEndOfScope`: whether or not to return the end of the current
+    ///    scope if this is the last declaration in the current scope. If `false`,
+    ///    returns `nil` if this declaration is not followed by some other declaration.
+    func endOfDeclaration(
+        atDeclarationKeyword declarationKeywordIndex: Int,
+        fallBackToEndOfScope: Bool = true
+    ) -> Int? {
+        assert(tokens[declarationKeywordIndex].isDeclarationTypeKeyword
+            || tokens[declarationKeywordIndex] == .startOfScope("#if"))
+
+        // Get declaration keyword
+        var searchIndex = declarationKeywordIndex
+        let declarationKeyword = declarationType(at: declarationKeywordIndex) ?? "#if"
+        switch tokens[declarationKeywordIndex] {
+        case .startOfScope("#if"):
+            // For conditional compilation blocks, the `declarationKeyword` _is_ the `startOfScope`
+            // so we can immediately skip to the corresponding #endif
+            if let endOfConditionalCompilationScope = endOfScope(at: declarationKeywordIndex) {
+                searchIndex = endOfConditionalCompilationScope
+            }
+        case .keyword("class") where declarationKeyword != "class":
+            // Most declarations will include exactly one token that `isDeclarationTypeKeyword` in
+            //  - `class func` methods will have two (and the first one will be incorrect!)
+            searchIndex = index(of: .keyword(declarationKeyword), after: declarationKeywordIndex) ?? searchIndex
+        case .keyword("import"):
+            // Symbol imports (like `import class Module.Type`) will have an extra `isDeclarationTypeKeyword`
+            // immediately following their `declarationKeyword`, so we need to skip them.
+            if let symbolTypeKeywordIndex = index(of: .nonSpaceOrComment, after: declarationKeywordIndex),
+               tokens[symbolTypeKeywordIndex].isDeclarationTypeKeyword
+            {
+                searchIndex = symbolTypeKeywordIndex
+            }
+        case .keyword("protocol"), .keyword("struct"), .keyword("actor"),
+             .keyword("enum"), .keyword("extension"):
+            if let scopeStart = index(of: .startOfScope("{"), after: declarationKeywordIndex) {
+                searchIndex = endOfScope(at: scopeStart) ?? searchIndex
+            }
+        default:
+            break
+        }
+
+        // Search for the next declaration so we know where this declaration ends.
+        let nextDeclarationKeywordIndex = index(after: searchIndex, where: {
+            $0.isDeclarationTypeKeyword || $0 == .startOfScope("#if")
+        })
+
+        // Search backward from the next declaration keyword to find where declaration begins.
+        var endOfDeclaration = nextDeclarationKeywordIndex.flatMap {
+            index(before: startOfModifiers(at: $0, includingAttributes: true), where: {
+                !$0.isSpaceOrCommentOrLinebreak
+            }).map { endOfLine(at: $0) }
+        }
+
+        // Prefer keeping linebreaks at the end of a declaration's tokens,
+        // instead of the start of the next delaration's tokens
+        while let linebreakSearchIndex = endOfDeclaration,
+              token(at: linebreakSearchIndex + 1)?.isLinebreak == true
+        {
+            endOfDeclaration = linebreakSearchIndex + 1
+        }
+
+        /// If there was another declaration after this one in the same scope,
+        /// then we know this declaration ends before that one starts
+        if let endOfDeclaration = endOfDeclaration {
+            return endOfDeclaration
+        }
+
+        /// Otherwise this is the last declaration in the scope.
+        /// To know where this declaration ends we just have to know where
+        /// the parent scope ends.
+        ///  - We don't do this inside `parseDeclarations` itself since it handles this cases
+        if
+            fallBackToEndOfScope,
+            declarationKeywordIndex != 0,
+            let endOfParentScope = endOfScope(at: declarationKeywordIndex - 1),
+            let endOfDeclaration = index(of: .nonSpaceOrLinebreak, before: endOfParentScope)
+        {
+            return endOfDeclaration
+        }
+
+        return nil
+    }
+
     /// Parse all declarations in the formatter's token range
     func parseDeclarations() -> [Declaration] {
         var declarations = [Declaration]()
@@ -1515,56 +1614,8 @@ extension Formatter {
                 return
             }
 
-            // Get declaration keyword
-            var searchIndex = i
             let declarationKeyword = declarationType(at: i) ?? "#if"
-            switch token {
-            case .startOfScope("#if"):
-                // For conditional compilation blocks, the `declarationKeyword` _is_ the `startOfScope`
-                // so we can immediately skip to the corresponding #endif
-                if let endOfConditionalCompilationScope = endOfScope(at: i) {
-                    searchIndex = endOfConditionalCompilationScope
-                }
-            case .keyword("class") where declarationKeyword != "class":
-                // Most declarations will include exactly one token that `isDeclarationTypeKeyword` in
-                //  - `class func` methods will have two (and the first one will be incorrect!)
-                searchIndex = index(of: .keyword(declarationKeyword), after: i) ?? searchIndex
-            case .keyword("import"):
-                // Symbol imports (like `import class Module.Type`) will have an extra `isDeclarationTypeKeyword`
-                // immediately following their `declarationKeyword`, so we need to skip them.
-                if let symbolTypeKeywordIndex = index(of: .nonSpaceOrComment, after: i),
-                   tokens[symbolTypeKeywordIndex].isDeclarationTypeKeyword
-                {
-                    searchIndex = symbolTypeKeywordIndex
-                }
-            case .keyword("protocol"), .keyword("struct"), .keyword("actor"),
-                 .keyword("enum"), .keyword("extension"):
-                if let scopeStart = index(of: .startOfScope("{"), after: i) {
-                    searchIndex = endOfScope(at: scopeStart) ?? searchIndex
-                }
-            default:
-                break
-            }
-
-            // Search for the next declaration so we know where this declaration ends.
-            let nextDeclarationKeywordIndex = index(after: searchIndex, where: {
-                $0.isDeclarationTypeKeyword || $0 == .startOfScope("#if")
-            })
-
-            // Search backward from the next declaration keyword to find where declaration begins.
-            var endOfDeclaration = nextDeclarationKeywordIndex.flatMap {
-                index(before: startOfModifiers(at: $0, includingAttributes: true), where: {
-                    !$0.isSpaceOrCommentOrLinebreak
-                }).map { endOfLine(at: $0) }
-            }
-
-            // Prefer keeping linebreaks at the end of a declaration's tokens,
-            // instead of the start of the next delaration's tokens
-            while let linebreakSearchIndex = endOfDeclaration,
-                  self.token(at: linebreakSearchIndex + 1)?.isLinebreak == true
-            {
-                endOfDeclaration = linebreakSearchIndex + 1
-            }
+            let endOfDeclaration = self.endOfDeclaration(atDeclarationKeyword: i, fallBackToEndOfScope: false)
 
             let declarationRange = startOfDeclaration ... min(endOfDeclaration ?? .max, tokens.count - 1)
             startOfDeclaration = declarationRange.upperBound + 1
@@ -2129,6 +2180,46 @@ extension Formatter {
         }
 
         return Array(indexedRanges.values)
+    }
+
+    /// Parses the prorocol composition typealias declaration starting at the given `typealias` keyword index.
+    /// Returns `nil` if the given index isn't a protocol composition typealias.
+    func parseProtocolCompositionTypealias(at typealiasIndex: Int)
+        -> (equalsIndex: Int, andTokenIndices: [Int], endIndex: Int)?
+    {
+        guard
+            let equalsIndex = index(of: .operator("=", .infix), after: typealiasIndex),
+            // Any type can follow the equals index of a typealias,
+            // but we're specifically looking for protocol compositions.
+            //  - Valid composite protocols are strictly _only_ prootocol types
+            //    separated by `&` tokens. These always start with identifiers,
+            //    but can be generic (e.g. `Collection<Int>`).
+            //  - `&` tokens in types are also _only valid_ for composite protocol types,
+            //    so if we see one then we know this if what we're looking for.
+            // https://docs.swift.org/swift-book/ReferenceManual/Types.html#grammar_protocol-composition-type
+            let firstIdentifierIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
+            tokens[firstIdentifierIndex].isIdentifier,
+            case var lastTypeEndIndex = parseType(at: firstIdentifierIndex).range.upperBound,
+            let firstAndIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: lastTypeEndIndex),
+            tokens[firstAndIndex] == .operator("&", .infix)
+        else { return nil }
+
+        // Parse through to the end of the composite protocol type
+        // so we know how long it is (and where the &s are)
+        var andTokenIndices = [Int]()
+
+        while
+            let nextAndIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: lastTypeEndIndex),
+            tokens[nextAndIndex] == .operator("&", .infix),
+            let nextIdentifierIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: nextAndIndex),
+            tokens[nextIdentifierIndex].isIdentifier
+        {
+            let endOfType = parseType(at: nextIdentifierIndex).range.upperBound
+            andTokenIndices.append(nextAndIndex)
+            lastTypeEndIndex = endOfType
+        }
+
+        return (equalsIndex, andTokenIndices, lastTypeEndIndex)
     }
 }
 

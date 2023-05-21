@@ -948,6 +948,10 @@ Option | Description
 Add `@available(*, unavailable)` attribute to required `init(coder:)` when
 it hasn't been implemented.
 
+Option | Description
+--- | ---
+`--initcodernil` | Replace fatalError with nil inside unavailable init
+
 <details>
 <summary>Examples</summary>
 

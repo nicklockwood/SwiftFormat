@@ -2050,7 +2050,7 @@ public struct _FormatRules {
         Add `@available(*, unavailable)` attribute to required `init(coder:)` when
         it hasn't been implemented.
         """,
-        options: [],
+        options: ["initCoderNil"],
         sharedOptions: ["linebreaks"]
     ) { formatter in
         let unavailableTokens = tokenize("@available(*, unavailable)")
@@ -2076,7 +2076,8 @@ public struct _FormatRules {
                 [.endOfScope("}"), .identifier("fatalError")].contains($0)
             }) else { return }
 
-            if formatter.token(at: firstTokenIndex) == .identifier("fatalError"),
+            if formatter.options.initCoderNil,
+               formatter.token(at: firstTokenIndex) == .identifier("fatalError"),
                let fatalParenEndOfScope = formatter.index(of: .endOfScope, after: firstTokenIndex + 1)
             {
                 formatter.replaceTokens(in: firstTokenIndex ... fatalParenEndOfScope, with: [.identifier("nil")])

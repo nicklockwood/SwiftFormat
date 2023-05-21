@@ -450,6 +450,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var preserveSingleLineForEach: Bool
     public var preserveDocComments: Bool
     public var spaceAroundDelimiter: SpaceAroundDelimiter
+    public var initCoderNil: Bool
 
     /// Deprecated
     public var indentComments: Bool
@@ -555,6 +556,7 @@ public struct FormatOptions: CustomStringConvertible {
                 preserveSingleLineForEach: Bool = true,
                 preserveDocComments: Bool = false,
                 spaceAroundDelimiter: SpaceAroundDelimiter = .trailing,
+                initCoderNil: Bool = false,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -650,6 +652,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.preserveSingleLineForEach = preserveSingleLineForEach
         self.preserveDocComments = preserveDocComments
         self.spaceAroundDelimiter = spaceAroundDelimiter
+        self.initCoderNil = initCoderNil
         // Doesn't really belong here, but hard to put elsewhere
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

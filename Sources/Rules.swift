@@ -5230,11 +5230,7 @@ public struct _FormatRules {
                 for switchCase in switchCaseRanges.enumerated().reversed() {
                     let newTokens = Array(sortedTokens[switchCase.offset])
                     var newComments = Array(sortedComments[switchCase.offset])
-                    let oldCommentsRange = sorted[switchCaseRanges.count - switchCase.offset - 1].afterDelimiterRange
-
-                    let oldComments = formatter.tokens[oldCommentsRange]
-
-                    var shouldInsertBreakLine = sortedComments[switchCaseRanges.count - switchCase.offset - 1].first?.isLinebreak == true
+                    let oldComments = formatter.tokens[switchCaseRanges[switchCase.offset].afterDelimiterRange]
 
                     if newComments.last?.isLinebreak == oldComments.last?.isLinebreak {
                         formatter.replaceTokens(in: switchCaseRanges[switchCase.offset].afterDelimiterRange, with: newComments)

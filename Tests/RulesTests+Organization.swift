@@ -3084,6 +3084,23 @@ class OrganizationTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.sortedSwitchCases)
     }
 
+    func testSortedSwitchCasesNoUnwrapReturn() {
+        let input = """
+        switch self {
+        case .b, .a, .c, .e, .d:
+            return nil
+        }
+        """
+        let output = """
+        switch self {
+        case .a, .b, .c, .d, .e:
+            return nil
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.sortedSwitchCases,
+                       exclude: ["wrapSwitchCases"])
+    }
+
     // MARK: - modifierOrder
 
     func testVarModifiersCorrected() {

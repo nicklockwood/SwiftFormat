@@ -449,6 +449,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var preserveAnonymousForEach: Bool
     public var preserveSingleLineForEach: Bool
     public var spaceAroundDelimiter: SpaceAroundDelimiter
+    public var initCoderNil: Bool
 
     /// Deprecated
     public var indentComments: Bool
@@ -558,7 +559,8 @@ public struct FormatOptions: CustomStringConvertible {
                 swiftVersion: Version = .undefined,
                 fileInfo: FileInfo = FileInfo(),
                 timeout: TimeInterval = 1,
-                spaceAroundDelimiter: SpaceAroundDelimiter = .trailing)
+                spaceAroundDelimiter: SpaceAroundDelimiter = .trailing,
+                initCoderNil: Bool = false)
     {
         self.lineAfterMarks = lineAfterMarks
         self.indent = indent
@@ -653,6 +655,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.swiftVersion = swiftVersion
         self.fileInfo = fileInfo
         self.timeout = timeout
+        self.initCoderNil = initCoderNil
     }
 
     public var useTabs: Bool {

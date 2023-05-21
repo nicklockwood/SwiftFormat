@@ -28,12 +28,12 @@ class GeneralTests: RulesTests {
                        exclude: ["unusedArguments"])
     }
 
-    func testInitCoderUnavailableFatalError() {
+    func testInitCoderUnavailableFatalErrorNilDisabled() {
         let input = """
         extension Module {
             final class A: UIView {
                 required init?(coder _: NSCoder) {
-                    fatalError()
+                    fatalError("init(coder:) has not been implemented")
                 }
             }
         }
@@ -43,12 +43,37 @@ class GeneralTests: RulesTests {
             final class A: UIView {
                 @available(*, unavailable)
                 required init?(coder _: NSCoder) {
-                    fatalError()
+                    fatalError("init(coder:) has not been implemented")
                 }
             }
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.initCoderUnavailable)
+        let options = FormatOptions(initCoderNil: false)
+        testFormatting(for: input, output, rule: FormatRules.initCoderUnavailable, options: options)
+    }
+
+    func testInitCoderUnavailableFatalErrorNilEnabled() {
+        let input = """
+        extension Module {
+            final class A: UIView {
+                required init?(coder _: NSCoder) {
+                    fatalError("init(coder:) has not been implemented")
+                }
+            }
+        }
+        """
+        let output = """
+        extension Module {
+            final class A: UIView {
+                @available(*, unavailable)
+                required init?(coder _: NSCoder) {
+                    nil
+                }
+            }
+        }
+        """
+        let options = FormatOptions(initCoderNil: true)
+        testFormatting(for: input, output, rule: FormatRules.initCoderUnavailable, options: options)
     }
 
     func testInitCoderUnavailableAlreadyPresent() {
@@ -82,7 +107,7 @@ class GeneralTests: RulesTests {
         let input = """
         class Foo: UIView {
             public required init?(coder _: NSCoder) {
-                fatalError()
+                fatalError("init(coder:) has not been implemented")
             }
         }
         """
@@ -90,7 +115,7 @@ class GeneralTests: RulesTests {
         class Foo: UIView {
             @available(*, unavailable)
             public required init?(coder _: NSCoder) {
-                fatalError()
+                fatalError("init(coder:) has not been implemented")
             }
         }
         """
@@ -101,7 +126,7 @@ class GeneralTests: RulesTests {
         let input = """
         class Foo: UIView {
             required public init?(coder _: NSCoder) {
-                fatalError()
+                fatalError("init(coder:) has not been implemented")
             }
         }
         """
@@ -109,12 +134,13 @@ class GeneralTests: RulesTests {
         class Foo: UIView {
             @available(*, unavailable)
             required public init?(coder _: NSCoder) {
-                fatalError()
+                nil
             }
         }
         """
+        let options = FormatOptions(initCoderNil: true)
         testFormatting(for: input, output, rule: FormatRules.initCoderUnavailable,
-                       exclude: ["modifierOrder"])
+                       options: options, exclude: ["modifierOrder"])
     }
 
     // MARK: - trailingCommas

@@ -955,6 +955,14 @@ struct _Descriptors {
         trueValues: ["preserve"],
         falseValues: ["before-declarations", "declarations"]
     )
+    let initCoderNil = OptionDescriptor(
+        argumentName: "initcodernil",
+        displayName: "Return nil in init?(coder)",
+        help: "Replace fatalError with nil in unavailable init?(coder:)",
+        keyPath: \.initCoderNil,
+        trueValues: ["true", "enabled"],
+        falseValues: ["false", "disabled"]
+    )
 
     // MARK: - Internal
 

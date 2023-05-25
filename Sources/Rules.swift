@@ -1036,6 +1036,7 @@ public struct _FormatRules {
             }
             if formatter.options.removeBlankLines, indexOfFirstLineBreak != indexOfLastLineBreak {
                 formatter.removeTokens(in: indexOfFirstLineBreak ..< indexOfLastLineBreak)
+                formatter.insertLinebreak(at: indexOfFirstLineBreak)
                 return
             }
         }

@@ -125,6 +125,13 @@ class SwiftFormatTests: XCTestCase {
         ])
     }
 
+    func testLintConsecutiveBlankLinesAtEndOfFile() {
+        let input = "foo\n\n"
+        XCTAssertEqual(try lint(input), [
+            .init(line: 2, rule: FormatRules.consecutiveBlankLines, filePath: nil),
+        ])
+    }
+
     // MARK: fragments
 
     func testFormattingFailsForFragment() {

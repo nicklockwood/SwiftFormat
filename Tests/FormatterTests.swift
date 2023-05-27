@@ -493,4 +493,22 @@ class FormatterTests: XCTestCase {
         formatter.replaceTokens(in: 0 ..< 2, with: tokens)
         XCTAssert(formatter.changes.isEmpty)
     }
+
+    func testTrackRemovalOfBlankLineFollowedByBlankLine() {
+        let formatter = Formatter(tokenize("foo\n\n\n"), trackChanges: true)
+        let tokens = formatter.tokens
+        formatter.removeToken(at: 2)
+        XCTAssertNotEqual(formatter.tokens, tokens)
+        XCTAssertEqual(formatter.changes.count, 1)
+        XCTAssertEqual(formatter.changes.first?.line, 2)
+    }
+
+    func testTrackRemovalOfBlankLineAfterBlankLine() {
+        let formatter = Formatter(tokenize("foo\n\n\n"), trackChanges: true)
+        let tokens = formatter.tokens
+        formatter.removeLastToken()
+        XCTAssertNotEqual(formatter.tokens, tokens)
+        XCTAssertEqual(formatter.changes.count, 1)
+        XCTAssertEqual(formatter.changes.first?.line, 3)
+    }
 }

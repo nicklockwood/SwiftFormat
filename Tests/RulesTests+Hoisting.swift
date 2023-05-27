@@ -281,6 +281,36 @@ class HoistingTests: RulesTests {
                        options: FormatOptions(throwCapturing: ["foo"]))
     }
 
+    func testNoHoistFailToTerminate() {
+        let input = """
+        return ManyInitExample(
+            a: try Example(string: try throwingExample()),
+            b: try throwingExample(),
+            c: try throwingExample(),
+            d: try throwingExample(),
+            e: try throwingExample(),
+            f: try throwingExample(),
+            g: try throwingExample(),
+            h: try throwingExample(),
+            i: try throwingExample()
+        )
+        """
+        let output = """
+        return try ManyInitExample(
+            a: Example(string: throwingExample()),
+            b: throwingExample(),
+            c: throwingExample(),
+            d: throwingExample(),
+            e: throwingExample(),
+            f: throwingExample(),
+            g: throwingExample(),
+            h: throwingExample(),
+            i: throwingExample()
+        )
+        """
+        testFormatting(for: input, output, rule: FormatRules.hoistTry)
+    }
+
     // MARK: - hoistAwait
 
     func testHoistAwait() {

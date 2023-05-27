@@ -956,36 +956,43 @@ extension Formatter {
         isEffectCapturingAt: (Int) -> Bool
     ) {
         assert(["try", "await"].contains(keyword))
-        guard let i = index(of: .keyword(keyword), after: scopeStart),
-              token(at: i + 1)?.isUnwrapOperator == false
-        else {
-            return
-        }
 
-        func insertEffectKeyword(at insertIndex: Int) {
-            var insertIndex = insertIndex
-            if tokens[insertIndex].isSpace {
-                insertIndex += 1
+        func insertEffectKeyword(at index: Int) {
+            var index = index
+            if tokens[index].isSpace {
+                index += 1
             }
 
-            if tokens[insertIndex] == .keyword(keyword) {
+            if tokens[index] == .keyword(keyword) {
                 return
             }
 
-            insert([.keyword(keyword)], at: insertIndex)
+            insert([.keyword(keyword)], at: index)
 
-            if let nextToken = token(at: insertIndex + 1), !nextToken.isSpace {
-                insertSpace(" ", at: insertIndex + 1)
+            if let nextToken = token(at: index + 1), !nextToken.isSpace {
+                insertSpace(" ", at: index + 1)
             } else {
-                insertSpace(" ", at: insertIndex)
+                insertSpace(" ", at: index)
             }
         }
 
-        func removeKeyword() {
-            removeToken(at: i)
-            if token(at: i)?.isSpace == true {
-                removeToken(at: i)
+        func removeKeyword(at index: Int) {
+            removeToken(at: index)
+            if token(at: index)?.isSpace == true {
+                removeToken(at: index)
             }
+        }
+
+        var indicesToRemove = [Int]()
+        var prev = scopeStart
+        while let i = index(of: .keyword(keyword), after: prev) {
+            if token(at: i + 1)?.isUnwrapOperator == false {
+                indicesToRemove.append(i)
+            }
+            prev = i
+        }
+        if indicesToRemove.isEmpty {
+            return
         }
 
         var insertIndex = scopeStart
@@ -1017,7 +1024,7 @@ extension Formatter {
             insertIndex = i
         }
 
-        removeKeyword()
+        indicesToRemove.reversed().forEach(removeKeyword(at:))
         insertEffectKeyword(at: insertIndex)
     }
 

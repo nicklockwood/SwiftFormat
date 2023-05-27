@@ -271,13 +271,13 @@ class HoistingTests: RulesTests {
 
     func testNoHoistTryInCapturingFunction() {
         let input = "foo(try bar)"
-        testFormatting(for: input, rule: FormatRules.hoistAwait,
+        testFormatting(for: input, rule: FormatRules.hoistTry,
                        options: FormatOptions(throwCapturing: ["foo"]))
     }
 
     func testNoHoistSecondArgumentTryInCapturingFunction() {
         let input = "foo(bar, try baz)"
-        testFormatting(for: input, rule: FormatRules.hoistAwait,
+        testFormatting(for: input, rule: FormatRules.hoistTry,
                        options: FormatOptions(throwCapturing: ["foo"]))
     }
 

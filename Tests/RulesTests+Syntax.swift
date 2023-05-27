@@ -3038,7 +3038,8 @@ class SyntaxTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, output, rule: FormatRules.docComments, exclude: ["spaceInsideComments"])
+        testFormatting(for: input, output, rule: FormatRules.docComments,
+                       exclude: ["spaceInsideComments"])
     }
 
     func testConvertDocCommentsToComments() {
@@ -3112,7 +3113,8 @@ class SyntaxTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, output, rule: FormatRules.docComments, exclude: ["spaceInsideComments"])
+        testFormatting(for: input, output, rule: FormatRules.docComments,
+                       exclude: ["spaceInsideComments"])
     }
 
     func testDoesntConvertAnnotationCommentsToDocComments() {
@@ -3125,6 +3127,15 @@ class SyntaxTests: RulesTests {
 
         // sourcery:directive
         let testSourcery: Foo
+        """
+
+        testFormatting(for: input, rule: FormatRules.docComments)
+    }
+
+    func testDoesntConvertTODOCommentsToDocComments() {
+        let input = """
+        // TODO: Clean up this mess
+        func doSomething() {}
         """
 
         testFormatting(for: input, rule: FormatRules.docComments)

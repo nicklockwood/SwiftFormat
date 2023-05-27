@@ -7543,24 +7543,10 @@ public struct _FormatRules {
                 }
 
                 // Check if this is a special type of comment that isn't documentation
-                if
-                    let commentBodyIndex = formatter.index(after: index, where: { token in
-                        if case .commentBody = token { return true }
-                        else { return false }
-                    }),
-                    commentBodyIndex < endOfComment,
-                    let commentBodyToken = formatter.token(at: commentBodyIndex)
+                if case let .commentBody(body)? = formatter.next(.nonSpace, after: index),
+                   body.isCommentDirective
                 {
-                    let commentBody = commentBodyToken.string.trimmingCharacters(in: .whitespaces)
-
-                    // Don't modify directive comments like `// MARK: Section title`
-                    // or `// swiftformat:disable rule`, since those tools expect
-                    // regular comments and not doc comments.
-                    for knownTag in ["mark", "swiftformat", "sourcery", "swiftlint"]
-                        where commentBody.lowercased().hasPrefix(knownTag + ":")
-                    {
-                        return false
-                    }
+                    return false
                 }
 
                 // Only comments at the start of a line can be doc comments

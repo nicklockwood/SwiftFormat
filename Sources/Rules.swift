@@ -3992,22 +3992,11 @@ public struct _FormatRules {
                 }
                 index = formatter.index(of: .delimiter(","), after: index) ?? endIndex
             }
-            guard let bodyStartIndex = formatter.index(after: endIndex, where: {
-                switch $0 {
-                case .startOfScope("{"): // What we're looking for
-                    return true
-                case .keyword("throws"),
-                     .keyword("rethrows"),
-                     .keyword("where"),
-                     .keyword("is"):
-                    return false // Keep looking
-                case .keyword:
-                    return true // Not valid between end of arguments and start of body
-                default:
-                    return false // Keep looking
-                }
-            }), formatter.tokens[bodyStartIndex] == .startOfScope("{") else {
-                return
+            guard let bodyStartIndex = formatter.index(
+                of: .startOfScope("{"),
+                after: endIndex
+            ) else {
+                return // TODO: treat this as an error?
             }
 
             // Functions defined inside closures with `[weak self]` captures can

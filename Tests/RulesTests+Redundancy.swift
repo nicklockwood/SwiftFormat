@@ -5787,6 +5787,34 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantSelf)
     }
 
+    func testRedundantSelfWithStaticAsyncSendableClosureFunction() {
+        let input = """
+        class Foo: Bar {
+            static func bar(
+                _ closure: @escaping @Sendable () async -> Foo
+            ) -> @Sendable () async -> Foo {
+                self.foo = closure
+                return closure
+            }
+
+            static func bar() {}
+        }
+        """
+        let output = """
+        class Foo: Bar {
+            static func bar(
+                _ closure: @escaping @Sendable () async -> Foo
+            ) -> @Sendable () async -> Foo {
+                foo = closure
+                return closure
+            }
+
+            static func bar() {}
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.redundantSelf)
+    }
+
     // enable/disable
 
     func testDisableRemoveSelf() {

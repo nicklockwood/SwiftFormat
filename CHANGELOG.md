@@ -1,10 +1,17 @@
 # Change Log
 
+## [0.51.11](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.51.11) (2023-05-29)
+
+- Fixed unexpected static function error false positive in `redundantSelf` rule
+- Fixed failure to report lint error when removing a duplicate blank line at the end of the file
+- Fixed bug where `hoistTry` rule failed with more than 10 `try` expressions at the same scope level
+- Comments containing `TODO:` directives are no longer converted by the `docComments` rule
+
 ## [0.51.10](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.51.10) (2023-05-21)
 
 - Fixed bug in `wrapAttributes` rule due to `class` declaration being mistaken for class-scoped var
 - Fixed another case of incorrect indenting inside an `#ifdef` block
-- Fixed linebreaks being incorrectly removed by `sortedSwitchCases`
+- Fixed line breaks being incorrectly removed by `sortedSwitchCases`
 
 ## [0.51.9](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.51.9) (2023-05-04)
 

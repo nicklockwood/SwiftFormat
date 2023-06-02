@@ -314,6 +314,32 @@ fi
 
 This is not recommended for shared projects however, as different team members using different versions of SwiftFormat may result in noise in the commit history as code gets reformatted inconsistently.
 
+If you installed SwiftFormat via Homebrew on Apple Silicon, you might experience this warning:
+
+> warning: SwiftFormat not installed, download from https://github.com/nicklockwood/SwiftFormat
+
+That is because Homebrew on Apple Silicon installs the binaries into the `/opt/homebrew/bin`
+folder by default. To instruct Xcode where to find SwiftFormat, you can either add
+`/opt/homebrew/bin` to the `PATH` environment variable in your build phase
+
+```bash
+if [[ "$(uname -m)" == arm64 ]]; then
+    export PATH="/opt/homebrew/bin:$PATH"
+fi
+
+if which swiftformat > /dev/null; then
+  swiftformat
+else
+  echo "warning: SwiftFormat not installed, download from https://github.com/nicklockwood/SwiftFormat"
+fi
+```
+
+or you can create a symbolic link in `/usr/local/bin` pointing to the actual binary:
+
+```bash
+ln -s /opt/homebrew/bin/swiftlint /usr/local/bin/swiftlint
+```
+
 Swift Package Manager plugin
 -----------------------------
 

@@ -269,6 +269,18 @@ class HoistingTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.hoistTry)
     }
 
+    func testNoHoistTryIntoPreviousLineEndingWithPostfixOperator() {
+        let input = """
+        let foo = bar!
+        (try baz(), quux()).foo()
+        """
+        let output = """
+        let foo = bar!
+        try (baz(), quux()).foo()
+        """
+        testFormatting(for: input, output, rule: FormatRules.hoistTry)
+    }
+
     func testNoHoistTryInCapturingFunction() {
         let input = "foo(try bar)"
         testFormatting(for: input, rule: FormatRules.hoistTry,
@@ -308,6 +320,12 @@ class HoistingTests: RulesTests {
             i: throwingExample()
         )
         """
+        testFormatting(for: input, output, rule: FormatRules.hoistTry)
+    }
+
+    func testHoistTryInsideOptionalFunction() {
+        let input = "foo?(try bar())"
+        let output = "try foo?(bar())"
         testFormatting(for: input, output, rule: FormatRules.hoistTry)
     }
 

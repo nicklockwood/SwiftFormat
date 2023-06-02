@@ -959,7 +959,7 @@ extension Formatter {
 
         func insertEffectKeyword(at index: Int) {
             var index = index
-            if tokens[index].isSpace {
+            while tokens[index].isSpaceOrLinebreak {
                 index += 1
             }
 
@@ -996,7 +996,7 @@ extension Formatter {
         }
 
         var insertIndex = scopeStart
-        loop: while let i = index(of: .nonSpaceOrLinebreak, before: insertIndex) {
+        loop: while let i = index(of: .nonSpace, before: insertIndex) {
             let prevToken = tokens[insertIndex]
             switch tokens[i] {
             case .identifier where prevToken == .startOfScope("("):
@@ -1010,13 +1010,19 @@ extension Formatter {
                  .endOfScope(")") where prevToken.isStringBody ||
                      (prevToken.isEndOfScope && prevToken.isStringDelimiter),
                  .startOfScope where tokens[i].isStringDelimiter,
-                 .endOfScope where tokens[i].isStringDelimiter:
+                 .endOfScope where tokens[i].isStringDelimiter,
+                 _ where tokens[i].isUnwrapOperator && prevToken == .startOfScope("("):
                 break
             case .operator(_, .postfix), .identifier, .number, .endOfScope:
                 if !prevToken.isOperator(ofType: .infix),
                    !prevToken.isOperator(ofType: .postfix)
                 {
                     break loop
+                }
+            case .linebreak:
+                if prevToken.isOperator(ofType: .infix) {
+                    insertIndex = index(of: .nonSpaceOrLinebreak, before: i) ?? i
+                    continue
                 }
             default:
                 break loop

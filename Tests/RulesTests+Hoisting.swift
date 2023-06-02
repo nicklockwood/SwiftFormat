@@ -329,6 +329,11 @@ class HoistingTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.hoistTry)
     }
 
+    func testNoHoistTryAfterOptionalTry() {
+        let input = "let foo = try? bar(try baz())"
+        testFormatting(for: input, rule: FormatRules.hoistTry)
+    }
+
     // MARK: - hoistAwait
 
     func testHoistAwait() {

@@ -955,6 +955,7 @@ extension Formatter {
         inScopeAt scopeStart: Int,
         isEffectCapturingAt: (Int) -> Bool
     ) {
+        assert([.startOfScope("("), .startOfScope("[")].contains(tokens[scopeStart]))
         assert(["try", "await"].contains(keyword))
 
         func insertEffectKeyword(at index: Int) {
@@ -999,7 +1000,7 @@ extension Formatter {
         loop: while let i = index(of: .nonSpace, before: insertIndex) {
             let prevToken = tokens[insertIndex]
             switch tokens[i] {
-            case .identifier where prevToken == .startOfScope("("):
+            case .identifier where [.startOfScope("("), .startOfScope("[")].contains(prevToken):
                 if isEffectCapturingAt(i) {
                     return
                 }
@@ -1020,14 +1021,21 @@ extension Formatter {
                     }
                     break loop
                 }
-                if prevToken != .startOfScope("(") {
+                if prevToken != .startOfScope("("), prevToken != .startOfScope("[") {
                     fallthrough
                 }
             case .operator(_, .postfix), .identifier, .number, .endOfScope:
-                if !prevToken.isOperator(ofType: .infix),
-                   !prevToken.isOperator(ofType: .postfix)
-                {
+                switch prevToken {
+                case .operator(_, .infix),
+                     .operator(_, .postfix),
+                     .startOfScope("<"):
+                    break
+                default:
                     break loop
+                }
+                if tokens[i].isEndOfScope {
+                    insertIndex = startOfScope(at: i) ?? i
+                    continue
                 }
             case .linebreak:
                 if prevToken.isOperator(ofType: .infix) {

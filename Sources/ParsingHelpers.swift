@@ -139,6 +139,11 @@ public extension Formatter {
         last(.startOfScope, before: index)
     }
 
+    /// Returns the index of the starting token for the current scope
+    func startOfScope(at index: Int) -> Int? {
+        self.index(of: .startOfScope, before: index)
+    }
+
     /// Returns the index of the ending token for the current scope
     func endOfScope(at index: Int) -> Int? {
         // TODO: should this return the closing `}` for `switch { ...` instead of nested `case`?

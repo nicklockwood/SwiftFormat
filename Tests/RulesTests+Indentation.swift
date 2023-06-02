@@ -2271,7 +2271,7 @@ class IndentTests: RulesTests {
             viewModel.snake,
         ]
         """
-        testFormatting(for: input, rule: FormatRules.indent)
+        testFormatting(for: input, rule: FormatRules.indent, exclude: ["hoistTry"])
     }
 
     func testIndentChainedFunctionAfterTryInParens() {

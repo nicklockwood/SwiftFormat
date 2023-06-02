@@ -4330,7 +4330,9 @@ public struct _FormatRules {
         options: ["throwcapturing"]
     ) { formatter in
         let names = formatter.options.throwCapturing.union(["expect"])
-        formatter.forEach(.startOfScope("(")) { i, _ in
+        formatter.forEachToken(where: {
+            $0 == .startOfScope("(") || $0 == .startOfScope("[")
+        }) { i, _ in
             formatter.hoistEffectKeyword("try", inScopeAt: i) { prevIndex in
                 guard case let .identifier(name) = formatter.tokens[prevIndex] else {
                     return false
@@ -4347,7 +4349,9 @@ public struct _FormatRules {
     ) { formatter in
         guard formatter.options.swiftVersion >= "5.5" else { return }
 
-        formatter.forEach(.startOfScope("(")) { i, _ in
+        formatter.forEachToken(where: {
+            $0 == .startOfScope("(") || $0 == .startOfScope("[")
+        }) { i, _ in
             formatter.hoistEffectKeyword("await", inScopeAt: i) { prevIndex in
                 formatter.isFunction(at: prevIndex, in: formatter.options.asyncCapturing)
             }

@@ -591,8 +591,13 @@ extension Formatter {
                 }
                 return false
             case "class", "actor", "struct", "protocol", "enum", "extension",
-                 "func", "subscript", "throws", "rethrows", "async", "catch":
+                 "func", "subscript", "catch":
                 return false
+            case "throws", "rethrows", "async":
+                return next(
+                    .nonSpaceOrLinebreak,
+                    after: prevKeywordIndex
+                ) == .keyword("in")
             default:
                 return true
             }

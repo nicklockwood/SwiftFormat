@@ -3681,6 +3681,18 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantSelf)
     }
 
+    func testNestedClosureInNotMistakenForForLoop() {
+        let input = """
+        func f() {
+            let str = "hello"
+            try! str.withCString(encodedAs: UTF8.self) { _ throws in
+                try! str.withCString(encodedAs: UTF8.self) { _ throws in }
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantSelf)
+    }
+
     func testRedundantSelfPreservesSelfInClosureWithExplicitStrongCaptureBefore5_3() {
         let input = """
         class Foo {

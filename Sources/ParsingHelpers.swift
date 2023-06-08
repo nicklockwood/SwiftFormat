@@ -1174,7 +1174,7 @@ extension Formatter {
             }
         default:
             if let funcIndex = index(of: .keyword, before: i, if: {
-                [.keyword("func"), .keyword("init"), .keyword("subscript")].contains($0)
+                [.keyword("func"), .keyword("init"), .keyword("subscript"), .keyword("macro")].contains($0)
             }), lastIndex(of: .endOfScope("}"), in: funcIndex ..< i) == nil {
                 // Is parameters at start of function
                 return true

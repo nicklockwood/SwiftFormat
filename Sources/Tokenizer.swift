@@ -1619,11 +1619,12 @@ public func tokenize(_ source: String) -> [Token] {
             }
         case .identifier:
             if let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: count - 1),
-               case .identifier("actor") = tokens[prevIndex],
+               case let .identifier(name) = tokens[prevIndex],
+               ["actor", "macro"].contains(name),
                case let prevPrevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex),
                prevPrevIndex.map({ tokens[$0].isOperator(ofType: .infix) }) != true
             {
-                tokens[prevIndex] = .keyword("actor")
+                tokens[prevIndex] = .keyword(name)
                 processToken()
                 return
             }

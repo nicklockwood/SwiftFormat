@@ -4504,6 +4504,35 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    // MARK: macros
+
+    func testMacroType() {
+        let input = "macro stringify()"
+        let output: [Token] = [
+            .keyword("macro"),
+            .space(" "),
+            .identifier("stringify"),
+            .startOfScope("("),
+            .endOfScope(")"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testMacroProperty() {
+        let input = "let macro = {}"
+        let output: [Token] = [
+            .keyword("let"),
+            .space(" "),
+            .identifier("macro"),
+            .space(" "),
+            .operator("=", .infix),
+            .space(" "),
+            .startOfScope("{"),
+            .endOfScope("}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     // MARK: some / any
 
     func testSomeView() {

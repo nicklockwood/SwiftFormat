@@ -2264,6 +2264,25 @@ class WrappingTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
     }
 
+    // macros
+
+    func testWrapMacroParametersBeforeFirst() {
+        let input = """
+        @freestanding(expression)
+        public macro stringify<T>(_ value: T, label: String) -> (T, String)
+        """
+        let output = """
+        @freestanding(expression)
+        public macro stringify<T>(
+            _ value: T,
+            label: String
+        ) -> (T, String)
+        """
+        let options = FormatOptions(wrapParameters: .beforeFirst, maxWidth: 30)
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments,
+                       options: options)
+    }
+
     // MARK: - wrapArguments --wrapCollections
 
     // MARK: beforeFirst

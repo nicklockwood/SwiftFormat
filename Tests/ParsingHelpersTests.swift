@@ -690,8 +690,8 @@ class ParsingHelpersTests: XCTestCase {
         let options = FormatOptions(modifierOrder: ["convenience", "override"])
         let formatter = Formatter([], options: options)
         XCTAssertEqual(formatter.modifierOrder, [
-            "private", "fileprivate", "internal", "public", "open",
-            "private(set)", "fileprivate(set)", "internal(set)", "public(set)", "open(set)",
+            "private", "fileprivate", "internal", "package", "public", "open",
+            "private(set)", "fileprivate(set)", "internal(set)", "package(set)", "public(set)", "open(set)",
             "final",
             "dynamic",
             "optional", "required",
@@ -715,8 +715,8 @@ class ParsingHelpersTests: XCTestCase {
         let formatter = Formatter([], options: options)
         XCTAssertEqual(formatter.modifierOrder, [
             "override",
-            "private", "fileprivate", "internal", "public", "open",
-            "private(set)", "fileprivate(set)", "internal(set)", "public(set)", "open(set)",
+            "private", "fileprivate", "internal", "package", "public", "open",
+            "private(set)", "fileprivate(set)", "internal(set)", "package(set)", "public(set)", "open(set)",
             "dynamic",
             "indirect",
             "isolated", "nonisolated",

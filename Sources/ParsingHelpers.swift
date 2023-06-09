@@ -2093,7 +2093,7 @@ extension _FormatRules {
     static let allModifiers = Set(defaultModifierOrder.flatMap { $0 })
 
     /// ACL modifiers
-    static let aclModifiers = ["private", "fileprivate", "internal", "public", "open"]
+    static let aclModifiers = ["private", "fileprivate", "internal", "package", "public", "open"]
 
     /// ACL setter modifiers
     static let aclSetterModifiers = aclModifiers.map { "\($0)(set)" }

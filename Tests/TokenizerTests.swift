@@ -4339,6 +4339,104 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    // MARK: Noncopyable
+
+    func testNoncopyableStructDeclaration() {
+        let input = "struct Foo: ~Copyable {}"
+        let output: [Token] = [
+            .keyword("struct"),
+            .space(" "),
+            .identifier("Foo"),
+            .delimiter(":"),
+            .space(" "),
+            .operator("~", .prefix),
+            .identifier("Copyable"),
+            .space(" "),
+            .startOfScope("{"),
+            .endOfScope("}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    // MARK: borrowing and consuming modifiers
+
+    func testBorrowingParameterModifier() {
+        let input = "func foo(_: borrowing Foo)"
+        let output: [Token] = [
+            .keyword("func"),
+            .space(" "),
+            .identifier("foo"),
+            .startOfScope("("),
+            .identifier("_"),
+            .delimiter(":"),
+            .space(" "),
+            .identifier("borrowing"),
+            .space(" "),
+            .identifier("Foo"),
+            .endOfScope(")"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testConsumingParameterModifier() {
+        let input = "func foo(_: consuming Foo)"
+        let output: [Token] = [
+            .keyword("func"),
+            .space(" "),
+            .identifier("foo"),
+            .startOfScope("("),
+            .identifier("_"),
+            .delimiter(":"),
+            .space(" "),
+            .identifier("consuming"),
+            .space(" "),
+            .identifier("Foo"),
+            .endOfScope(")"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testBorrowingClosureParameter() {
+        let input = "bar { (a: borrowing Foo) in a }"
+        let output: [Token] = [
+            .identifier("bar"),
+            .space(" "),
+            .startOfScope("{"),
+            .space(" "),
+            .startOfScope("("),
+            .identifier("a"),
+            .delimiter(":"),
+            .space(" "),
+            .identifier("borrowing"),
+            .space(" "),
+            .identifier("Foo"),
+            .endOfScope(")"),
+            .space(" "),
+            .keyword("in"),
+            .space(" "),
+            .identifier("a"),
+            .space(" "),
+            .endOfScope("}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testBorrowingFunctionSignature() {
+        let input = "(borrowing Foo) -> Void"
+        let output: [Token] = [
+            .startOfScope("("),
+            .identifier("borrowing"),
+            .space(" "),
+            .identifier("Foo"),
+            .endOfScope(")"),
+            .space(" "),
+            .operator("->", .infix),
+            .space(" "),
+            .identifier("Void"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     // MARK: consume and discard operators
 
     func testConsumeOperator() {

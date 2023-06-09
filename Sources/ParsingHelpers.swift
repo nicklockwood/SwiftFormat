@@ -2098,6 +2098,9 @@ extension _FormatRules {
     /// ACL setter modifiers
     static let aclSetterModifiers = aclModifiers.map { "\($0)(set)" }
 
+    /// Mutating modifiers
+    static let mutatingModifiers = ["borrowing", "consuming", "mutating", "nonmutating"]
+
     /// Ownership modifiers
     static let ownershipModifiers = ["weak", "unowned"]
 
@@ -2109,7 +2112,7 @@ extension _FormatRules {
         case "setteracl":
             return aclSetterModifiers
         case "mutators":
-            return ["mutating", "nonmutating"]
+            return mutatingModifiers
         case "typemethods":
             return [] // Not clear what this is for - legacy?
         case "owned":
@@ -2139,7 +2142,7 @@ extension _FormatRules {
         ["lazy"],
         ownershipModifiers,
         ["static", "class"],
-        ["mutating", "nonmutating"],
+        mutatingModifiers,
         ["prefix", "infix", "postfix"],
     ]
 

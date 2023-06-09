@@ -6974,6 +6974,53 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.unusedArguments)
     }
 
+    func testUsedConsumingArgument() {
+        let input = """
+        func close(file: consuming FileHandle) {
+            file.close()
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
+    func testUsedConsumingBorrowingArguments() {
+        let input = """
+        func foo(a: consuming Foo, b: borrowing Bar) {
+            consume(a)
+            borrow(b)
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
+    func testUnusedConsumingArgument() {
+        let input = """
+        func close(file: consuming FileHandle) {
+            print("no-op")
+        }
+        """
+        let output = """
+        func close(file _: consuming FileHandle) {
+            print("no-op")
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+    }
+
+    func testUnusedConsumingBorrowingArguments() {
+        let input = """
+        func foo(a: consuming Foo, b: borrowing Bar) {
+            print("no-op")
+        }
+        """
+        let output = """
+        func foo(a _: consuming Foo, b _: borrowing Bar) {
+            print("no-op")
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+    }
+
     // functions (closure-only)
 
     func testNoMarkFunctionArgument() {

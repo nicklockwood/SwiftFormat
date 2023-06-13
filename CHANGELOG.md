@@ -1,5 +1,17 @@
 # Change Log
 
+## [0.51.12](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.51.12) (2023-06-13)
+
+- Fixed `hoistTry` bugs with generics, subscripts and collection literals
+- Fixed hoisting bugs with statements containing both `try?` and `try`
+- Fixed hoisting of `try` inside an optional function
+- Fixed function argument wrapping bug
+- Fixed bug where nested closure `in` was mistaken for part of a `for` loop
+- Added preliminary support for wrapping Swift 5.9 macro declarations
+- Added preliminary support for Swift 5.9 `package` access modifier
+- Added preliminary support for Swift 5.9 `consume` and `discard` operators
+- Added preliminary support for Swift 5.9 `borrowing` and `consuming` modifiers
+
 ## [0.51.11](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.51.11) (2023-05-29)
 
 - Fixed unexpected static function error false positive in `redundantSelf` rule

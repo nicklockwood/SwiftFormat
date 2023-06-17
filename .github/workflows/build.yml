@@ -62,3 +62,32 @@ jobs:
           token: a47579fa-9a2a-4c48-b557-aa725c6b5f92
           files: SwiftFormat.lcov
           env_vars: SWIFT_VERSION,SWIFT_PLATFORM,RUNNER_OS,RUNNER_ARCH
+
+  windows:
+    runs-on: windows-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - branch: development
+            tag: DEVELOPMENT-SNAPSHOT-2023-06-05-a
+
+    name: ${{ matrix.tag }}
+
+    steps:
+      - uses: compnerd/gha-setup-swift@main
+        with:
+          tag: ${{ matrix.tag }}
+          branch: ${{ matrix.branch }}
+
+      - uses: actions/checkout@v3
+
+      - run: swift test --enable-code-coverage
+      - run: llvm-cov export -format lcov -ignore-filename-regex '/(\.build|Tests|Sources|Snapshots|PerformanceTests)/' -instr-profile .build\x86_64-unknown-windows-msvc\debug\codecov\default.profdata .build\x86_64-unknown-windows-msvc\debug\SwiftFormatPackageTests.xctest > SwiftFormat.lcov
+
+      - uses: codecov/codecov-action@v3
+        with:
+          token: a47579fa-9a2a-4c48-b557-aa725c6b5f92
+          files: SwiftFormat.lcov
+          env_vars: RUNNER_OS,RUNNER_ARCH

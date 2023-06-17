@@ -1,0 +1,61 @@
+name: Windows Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      revision:
+        description: 'Revision to build (branch, tag, or SHA)'
+        required: false
+        default: 'master'
+
+      version:
+        description: 'Version being released'
+        required: false
+        default: '0.0.0'
+
+jobs:
+  windows:
+    runs-on: windows-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - branch: swift-5.8.1-release
+            tag: 5.8.1-RELEASE
+
+          - branch: development
+            tag: DEVELOPMENT-SNAPSHOT-2023-06-05-a
+
+    name: Windows (${{ matrix.tag }})
+
+    steps:
+      - uses: compnerd/gha-setup-swift@main
+        with:
+          tag: ${{ matrix.tag }}
+          branch: ${{ matrix.branch }}
+
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.inputs.revision }}
+
+      - run: swift build -c release -Xswiftc -gnone
+
+      - uses: microsoft/setup-msbuild@v1.3.1
+
+      - run: msbuild -nologo -restore Platforms\Windows\SwiftFormat.wixproj -p:Configuration=Release -p:ProductVersion=${{ github.event.inputs.version }} -p:SWIFTFORMAT_BUILD=${{ github.workspace }}\.build\release -p:OutputPath=${{ github.workspace }}\artifacts -p:RunWixToolsOutOfProc=true
+
+      - run: |
+          $MSI_PATH = cygpath -m ${{ github.workspace }}\artifacts\SwiftFormat.msi
+          Echo MSI_PATH=$MSI_PATH | Out-File -FilePath ${env:GITHUB_ENV} -Encoding utf8 -Append
+
+      - name: release
+        uses: softprops/action-gh-release@v1
+        with:
+          draft: true
+          prerelease: true
+          name: SwiftFormat v${{ github.event.inputs.version }} (Swift ${{ matrix.tag }})
+          tag_name: v${{ github.event.inputs.version }}
+          files: |
+            .build/x86_64-unknown-windows-msvc/release/swiftformat.exe
+            ${{ env.MSI_PATH }}

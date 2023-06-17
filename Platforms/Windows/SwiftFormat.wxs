@@ -1,0 +1,51 @@
+<Wix
+    xmlns="http://wixtoolset.org/schemas/v4/wxs"
+    xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+  <Package
+      Language="1033"
+      Manufacturer="nicklockwood"
+      Name="SwiftFormat"
+      UpgradeCode="98e01ac8-a17d-43fd-99ed-1cd8b58715bf"
+      Version="$(var.ProductVersion)"
+      Scope="perMachine">
+    <SummaryInformation Description="SwiftFormat" />
+
+    <Media Id="1" Cabinet="SwiftFormat.cab" EmbedCab="yes" />
+
+    <StandardDirectory Id="%ProgramFiles64Folder%">
+      <Directory Id="Manufacturer" Name="nicklockwood">
+        <Directory Id="INSTALLDIR" Name="SwiftFormat">
+          <Directory Id="_usr" Name="usr">
+            <Directory Id="_usr_bin" Name="bin" />
+          </Directory>
+        </Directory>
+      </Directory>
+    </Directory>
+
+    <Component Directory="_usr_bin" Id="swiftformat.exe">
+      <File Id="swiftformat.exe" Source="$(var.SWIFTFORMAT_BUILD)\swiftformat.exe" Checksum="yes" KeyPath="yes" />
+    </Component>
+
+    <ComponentGroup Id="EnvironmentVariables">
+      <Component Id="SystemEnvironmentVariables" Condition="ALLUSERS=1" Directory="INSTALLDIR" Guid="b46687c3-f836-47e5-9b43-d9fd2552a731">
+        <Environment Id="SystemPath" Action="set" Name="Path" Part="last" Permanent="no" System="yes" Value="[INSTALLDIR]usr\bin" />
+      </Component>
+      <Component Id="UserEnvironmentVariables" Condition="NOT ALLUSERS=1" Directory="INSTALLDIR" Guid="a1c1ada1-6eb3-4e42-a667-6b0720807ce4">
+        <Environment Id="UserPath" Action="set" Name="Path" Part="last" Permanent="no" System="no" Value="[INSTALLDIR]usr\bin" />
+      </Component>
+    </ComponentGroup>
+
+    <Feature Id="SwiftFormat" Level="1">
+      <ComponentRef Id="swiftformat.exe" />
+      <ComponentGroupRef Id="EnvironmentVariables" />
+    </Feature>
+
+    <UI>
+      <ui:WixUI Id="WixUI_InstallDir" />
+      <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="InstallDirDlg" Order="2" />
+      <Publish Dialog="InstallDirDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg" Order="2" />
+    </UI>
+
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR"></Property>
+  </Package>
+</Wix>

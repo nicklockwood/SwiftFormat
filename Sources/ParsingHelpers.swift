@@ -1061,7 +1061,7 @@ extension Formatter {
         let unescaped = token.unescaped()
         if !unescaped.isSwiftKeyword {
             switch unescaped {
-            case "_":
+            case "_", "$":
                 return true
             case "self":
                 if last(.nonSpaceOrCommentOrLinebreak, before: i)?.isOperator(".") == true {

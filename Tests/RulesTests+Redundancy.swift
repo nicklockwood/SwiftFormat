@@ -2926,6 +2926,11 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantBackticks, options: options)
     }
 
+    func testNoRemoveBackticksAroundDollar() {
+        let input = "@attached(peer, names: prefixed(`$`))"
+        testFormatting(for: input, rule: FormatRules.redundantBackticks)
+    }
+
     // MARK: - redundantSelf
 
     // explicitSelf = .remove

@@ -614,13 +614,11 @@ public func lint(
 // MARK: Path utilities
 
 public func expandPath(_ path: String, in directory: String) -> URL {
-    if path.hasPrefix("/") {
-        return URL(fileURLWithPath: path).standardized
+    let nsPath: NSString = (path as NSString).expandingTildeInPath as NSString
+    if nsPath.isAbsolutePath {
+        return URL(fileURLWithPath: nsPath as String).standardized
     }
-    if path.hasPrefix("~") {
-        return URL(fileURLWithPath: NSString(string: path).expandingTildeInPath).standardized
-    }
-    return URL(fileURLWithPath: directory).appendingPathComponent(path).standardized
+    return URL(fileURLWithPath: directory, isDirectory: true).appendingPathComponent(path).standardized
 }
 
 func getResourceValues(for url: URL, keys: [URLResourceKey]) throws -> URLResourceValues {

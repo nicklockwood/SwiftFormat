@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <SignOutput Condition=" '$(SignOutput)' == '' ">false</SignOutput>
+    <SignOutput>$(SignOutput)</SignOutput>
+  </PropertyGroup>
+
+  <Target Name="FindSignTool">
+    <PropertyGroup>
+      <WindowsKitsRoot Condition=" '$(WindowsKitsRoot)' == '' ">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Kits\Installed Roots', 'KitsRoot10', null, RegistryView.Registry32, RegistryView.Default))</WindowsKitsRoot>
+      <WindowsKitsRoot Condition=" '$(WindowsKitsRoot)' == '' ">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Kits\Installed Roots', 'KitsRoot81', null, RegistryView.Registry32, RegistryView.Default))</WindowsKitsRoot>
+      <WindowsKitsRoot Condition=" '$(WindowsKitsRoot)' == '' ">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Kits\Installed Roots', 'KitsRoot', null, RegistryView.Registry32, RegistryView.Default))</WindowsKitsRoot>
+
+      <!-- Windows 11 SDKs -->
+      <SignToolPath Condition=" '$(SignToolPath)' == '' AND '$(PROCESSOR_ARCHITECTURE)' == 'AMD64' AND Exists('$(WindowsKitsRoot)bin\10.0.22621.0\x64\signtool.exe')">$(WindowsKitsRoot)bin\10.0.22621.0\x64\</SignToolPath>
+      <SignToolPath Condition=" '$(SignToolPath)' == '' AND '$(PROCESSOR_ARCHITECTURE)' == 'AMD64' AND Exists('$(WindowsKitsRoot)bin\10.0.22000.0\x64\signtool.exe')">$(WindowsKitsRoot)bin\10.0.22000.0\x64\</SignToolPath>
+      <!-- Windows 10 SDKs -->
+      <SignToolPath Condition=" '$(SignToolPath)' == '' AND '$(PROCESSOR_ARCHITECTURE)' == 'AMD64' AND Exists('$(WindowsKitsRoot)bin\10.0.20348.0\x64\signtool.exe')">$(WindowsKitsRoot)bin\10.0.20348.0\x64\</SignToolPath>
+      <SignToolPath Condition=" '$(SignToolPath)' == '' AND '$(PROCESSOR_ARCHITECTURE)' == 'AMD64' AND Exists('$(WindowsKitsRoot)bin\10.0.19041.0\x64\signtool.exe')">$(WindowsKitsRoot)bin\10.0.19041.0\x64\</SignToolPath>
+      <SignToolPath Condition=" '$(SignToolPath)' == '' AND '$(PROCESSOR_ARCHITECTURE)' == 'AMD64' AND Exists('$(WindowsKitsRoot)bin\10.0.18362.0\x64\signtool.exe')">$(WindowsKitsRoot)bin\10.0.18362.0\x64\</SignToolPath>
+      <SignToolPath Condition=" '$(SignToolPath)' == '' AND '$(PROCESSOR_ARCHITECTURE)' == 'AMD64' AND Exists('$(WindowsKitsRoot)bin\10.0.17763.0\x64\signtool.exe')">$(WindowsKitsRoot)bin\10.0.17763.0\x64\</SignToolPath>
+      <SignToolPath Condition=" '$(SignToolPath)' == '' AND '$(PROCESSOR_ARCHITECTURE)' == 'AMD64' AND Exists('$(WindowsKitsRoot)bin\10.0.17134.0\x64\signtool.exe')">$(WindowsKitsRoot)bin\10.0.17134.0\x64\</SignToolPath>
+      <SignToolPath Condition=" '$(SignToolPath)' == '' AND '$(PROCESSOR_ARCHITECTURE)' == 'AMD64' AND Exists('$(WindowsKitsRoot)bin\10.0.16299.0\x64\signtool.exe')">$(WindowsKitsRoot)bin\10.0.16299.0\x64\</SignToolPath>
+      <SignToolPath Condition=" '$(SignToolPath)' == '' AND '$(PROCESSOR_ARCHITECTURE)' == 'AMD64' AND Exists('$(WindowsKitsRoot)bin\10.0.15063.0\x64\signtool.exe')">$(WindowsKitsRoot)bin\10.0.15063.0\x64\</SignToolPath>
+      <SignToolPath Condition=" '$(SignToolPath)' == '' AND '$(PROCESSOR_ARCHITECTURE)' == 'AMD64' AND Exists('$(WindowsKitsRoot)bin\10.0.14393.0\x64\signtool.exe')">$(WindowsKitsRoot)bin\10.0.14393.0\x64\</SignToolPath>
+      <SignToolPath Condition=" '$(SignToolPath)' == '' AND '$(PROCESSOR_ARCHITECTURE)' == 'AMD64' AND Exists('$(WindowsKitsRoot)bin\10.0.10586.0\x64\signtool.exe')">$(WindowsKitsRoot)bin\10.0.10586.0\x64\</SignToolPath>
+      <SignToolPath Condition=" '$(SignToolPath)' == '' AND '$(PROCESSOR_ARCHITECTURE)' == 'AMD64' AND Exists('$(WindowsKitsRoot)bin\10.0.10240.0\x64\signtool.exe')">$(WindowsKitsRoot)bin\10.0.10240.0\x64\</SignToolPath>
+      <!-- Windows 8.1 SDKS -->
+      <SignToolPath Condition=" '$(SignToolPath)' == '' AND '$(PROCESSOR_ARCHITECTURE)' == 'AMD64' AND Exists('$(WindowsKitsRoot)bin\x64\signtool.exe')">$(WindowsKitsRoot)bin\x64\</SignToolPath>
+
+      <!-- Windows 11 SDKs -->
+      <SignToolPath Condition=" '$(SignToolPath)' == '' AND '$(PROCESSOR_ARCHITECTURE)' == 'ARM64' AND Exists('$(WindowsKitsRoot)bin\10.0.22621.0\arm64\signtool.exe')">$(WindowsKitsRoot)bin\10.0.22621.0\arm64\</SignToolPath>
+      <SignToolPath Condition=" '$(SignToolPath)' == '' AND '$(PROCESSOR_ARCHITECTURE)' == 'ARM64' AND Exists('$(WindowsKitsRoot)bin\10.0.22000.0\arm64\signtool.exe')">$(WindowsKitsRoot)bin\10.0.22000.0\arm64\</SignToolPath>
+      <!-- Windows 10 SDKs -->
+      <SignToolPath Condition=" '$(SignToolPath)' == '' AND '$(PROCESSOR_ARCHITECTURE)' == 'ARM64' AND Exists('$(WindowsKitsRoot)bin\10.0.20348.0\arm64\signtool.exe')">$(WindowsKitsRoot)bin\10.0.20348.0\arm64\</SignToolPath>
+      <SignToolPath Condition=" '$(SignToolPath)' == '' AND '$(PROCESSOR_ARCHITECTURE)' == 'ARM64' AND Exists('$(WindowsKitsRoot)bin\10.0.19041.0\arm64\signtool.exe')">$(WindowsKitsRoot)bin\10.0.19041.0\arm64\</SignToolPath>
+      <SignToolPath Condition=" '$(SignToolPath)' == '' AND '$(PROCESSOR_ARCHITECTURE)' == 'ARM64' AND Exists('$(WindowsKitsRoot)bin\10.0.18362.0\arm64\signtool.exe')">$(WindowsKitsRoot)bin\10.0.18362.0\arm64\</SignToolPath>
+      <SignToolPath Condition=" '$(SignToolPath)' == '' AND '$(PROCESSOR_ARCHITECTURE)' == 'ARM64' AND Exists('$(WindowsKitsRoot)bin\10.0.17763.0\arm64\signtool.exe')">$(WindowsKitsRoot)bin\10.0.17763.0\arm64\</SignToolPath>
+      <SignToolPath Condition=" '$(SignToolPath)' == '' AND '$(PROCESSOR_ARCHITECTURE)' == 'ARM64' AND Exists('$(WindowsKitsRoot)bin\10.0.17134.0\arm64\signtool.exe')">$(WindowsKitsRoot)bin\10.0.17134.0\arm64\</SignToolPath>
+      <SignToolPath Condition=" '$(SignToolPath)' == '' AND '$(PROCESSOR_ARCHITECTURE)' == 'ARM64' AND Exists('$(WindowsKitsRoot)bin\10.0.16299.0\arm64\signtool.exe')">$(WindowsKitsRoot)bin\10.0.16299.0\arm64\</SignToolPath>
+      <SignToolPath Condition=" '$(SignToolPath)' == '' AND '$(PROCESSOR_ARCHITECTURE)' == 'ARM64' AND Exists('$(WindowsKitsRoot)bin\10.0.15063.0\arm64\signtool.exe')">$(WindowsKitsRoot)bin\10.0.15063.0\arm64\</SignToolPath>
+      <SignToolPath Condition=" '$(SignToolPath)' == '' AND '$(PROCESSOR_ARCHITECTURE)' == 'ARM64' AND Exists('$(WindowsKitsRoot)bin\10.0.14393.0\arm64\signtool.exe')">$(WindowsKitsRoot)bin\10.0.14393.0\arm64\</SignToolPath>
+      <SignToolPath Condition=" '$(SignToolPath)' == '' AND '$(PROCESSOR_ARCHITECTURE)' == 'ARM64' AND Exists('$(WindowsKitsRoot)bin\10.0.10586.0\arm64\signtool.exe')">$(WindowsKitsRoot)bin\10.0.10586.0\arm64\</SignToolPath>
+      <SignToolPath Condition=" '$(SignToolPath)' == '' AND '$(PROCESSOR_ARCHITECTURE)' == 'ARM64' AND Exists('$(WindowsKitsRoot)bin\10.0.10240.0\arm64\signtool.exe')">$(WindowsKitsRoot)bin\10.0.10240.0\arm64\</SignToolPath>
+
+      <SignTool>"$(SignToolPath)signtool.exe" sign /f "$(CERTIFICATE)" /p "$(PASSPHRASE)" /tr http://timestamp.digicert.com /fd sha256 /td sha256</SignTool>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="SignCabs" DependsOnTargets="FindSignTool">
+    <Exec Command="$(SignTool) &quot;%(SignCabs.FullPath)&quot;" />
+  </Target>
+
+  <Target Name="SignMsi" DependsOnTargets="FindSignTool">
+    <Exec Command="$(SignTool) &quot;%(SignMsi.FullPath)&quot;" />
+  </Target>
+
+  <Target Name="SignMsm" DependsOnTargets="FindSignTool">
+    <Exec Command="$(SignTool) &quot;%(SignMsm.FullPath)&quot;" />
+  </Target>
+
+  <Target Name="SignBundleEngine" DependsOnTargets="FindSignTool">
+    <Exec Command="$(SignTool) &quot;@(SignBundleEngine)&quot;" />
+  </Target>
+
+  <Target Name="SignBundle" DependsOnTargets="FindSignTool">
+    <Exec Command="$(SignTool) &quot;@(SignBundle)&quot;" />
+  </Target>
+</Project>

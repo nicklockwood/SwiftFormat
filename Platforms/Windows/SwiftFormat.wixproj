@@ -19,7 +19,7 @@
   <Import Project="WiXCodeSigning.targets" />
 
   <PropertyGroup>
-    <DefineConstants>ProductArchitecture=$(ProductArchitecture);ProductVersion=$(ProductVersion);SWIFTFORMAT_BUILD=$(SWIFT_FORMAT_BUILD)</DefineConstants>
+    <DefineConstants>ProductArchitecture=$(ProductArchitecture);ProductVersion=$(ProductVersion);SWIFTFORMAT_BUILD=$(SWIFTFORMAT_BUILD)</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(ProductArchitecture)' == 'amd64' ">

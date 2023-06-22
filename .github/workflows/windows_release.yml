@@ -53,9 +53,9 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           draft: true
-          prerelease: true
+          prerelease: false
           name: SwiftFormat v${{ github.event.inputs.version }} (Swift ${{ matrix.tag }})
-          tag_name: v${{ github.event.inputs.version }}
+          tag_name: swift-${{matrix.tag}}-v${{ github.event.inputs.version }}
           files: |
             .build/x86_64-unknown-windows-msvc/release/swiftformat.exe
             ${{ env.MSI_PATH }}

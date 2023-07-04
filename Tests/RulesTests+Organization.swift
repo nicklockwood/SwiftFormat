@@ -20,6 +20,7 @@ class OrganizationTests: RulesTests {
             private let bar = 1
             public let baz = 1
             open var quack = 2
+            package func packageMethod() {}
             var quux = 2
 
             /// `open` is the only visibility keyword that
@@ -58,6 +59,10 @@ class OrganizationTests: RulesTests {
 
             /// Doc comment
             public func publicMethod() {}
+
+            // MARK: Package
+
+            package func packageMethod() {}
 
             // MARK: Internal
 

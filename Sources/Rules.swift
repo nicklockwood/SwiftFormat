@@ -3519,9 +3519,10 @@ public struct _FormatRules {
                 case .keyword("extension"), .keyword("struct"), .keyword("enum"), .keyword("class"), .keyword("actor"),
                      .keyword("where") where ["extension", "struct", "enum", "class", "actor"].contains(lastKeyword):
                     let keyword = formatter.tokens[index].string
-                    guard formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) != .keyword("import"),
-                          let scopeStart = formatter.index(of: .startOfScope("{"), after: index)
-                    else {
+                    guard formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) != .keyword("import") else {
+                        break
+                    }
+                    guard let scopeStart = formatter.index(of: .startOfScope("{"), after: index) else {
                         return
                     }
                     guard let nameToken = formatter.next(.identifier, after: index),

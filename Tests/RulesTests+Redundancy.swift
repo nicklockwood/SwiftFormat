@@ -6068,6 +6068,30 @@ class RedundancyTests: RulesTests {
                        options: FormatOptions(swiftVersion: "5.8"))
     }
 
+    func testRedundantSelfAfterScopedImport() {
+        let input = """
+        import struct Foundation.Date
+
+        struct Foo {
+            let foo: String
+            init(bar: String) {
+                self.foo = bar
+            }
+        }
+        """
+        let output = """
+        import struct Foundation.Date
+
+        struct Foo {
+            let foo: String
+            init(bar: String) {
+                foo = bar
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.redundantSelf)
+    }
+
     // MARK: - semicolons
 
     func testSemicolonRemovedAtEndOfLine() {

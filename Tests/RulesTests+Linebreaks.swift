@@ -392,6 +392,30 @@ class LinebreakTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.blankLinesBetweenImports)
     }
 
+    // MARK: - blankLinesBetweenChainedFuncs
+
+    func testBlankLinesBetweenChainedFuncs() {
+        let input = """
+        [0, 1, 2]
+        .map { $0 * 2 }
+
+
+
+        .map { $0 * 3 }
+        """
+        let output1 = """
+        [0, 1, 2]
+        .map { $0 * 2 }
+        .map { $0 * 3 }
+        """
+        let output2 = """
+        [0, 1, 2]
+            .map { $0 * 2 }
+            .map { $0 * 3 }
+        """
+        testFormatting(for: input, [output1, output2], rules: [FormatRules.blankLinesBetweenChainedFuncs])
+    }
+
     // MARK: - blankLineAfterImports
 
     func testBlankLineAfterImport() {

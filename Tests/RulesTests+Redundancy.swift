@@ -6843,6 +6843,23 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.unusedArguments)
     }
 
+    func testShadowedUsedArguments5() {
+        let input = """
+        func doSomething(with number: Int) {
+            if let number = Int?(123),
+               number == 456
+            {
+                print("Not likely")
+            }
+
+            if number == 180 {
+                print("Bullseye!")
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
     func testShadowedUsedArgumentInSwitchCase() {
         let input = """
         func foo(bar baz: Foo) -> Foo? {

@@ -4228,12 +4228,13 @@ public struct _FormatRules {
                     ].contains(scope) {
                         break
                     }
-                    if isConditional {
+                    if isConditional, !isGuard {
                         wasDeclaration = false
+                    } else {
+                        let _wasDeclaration = wasDeclaration
+                        pushLocals()
+                        isDeclaration = _wasDeclaration
                     }
-                    let _wasDeclaration = wasDeclaration
-                    pushLocals()
-                    isDeclaration = _wasDeclaration
                 case .delimiter(";"):
                     pushLocals()
                     wasDeclaration = false

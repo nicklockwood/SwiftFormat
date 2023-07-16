@@ -1,4 +1,4 @@
-name: Windows Release
+name: Build for Windows
 
 on:
   workflow_dispatch:
@@ -14,7 +14,8 @@ on:
         default: '0.0.0'
 
 jobs:
-  windows:
+  build:
+    name: Build SwiftFormat for Windows
     runs-on: windows-latest
 
     strategy:
@@ -26,8 +27,6 @@ jobs:
 
           - branch: development
             tag: DEVELOPMENT-SNAPSHOT-2023-06-05-a
-
-    name: Windows (${{ matrix.tag }})
 
     steps:
       - uses: compnerd/gha-setup-swift@main
@@ -48,14 +47,17 @@ jobs:
       - run: |
           $MSI_PATH = cygpath -m ${{ github.workspace }}\artifacts\SwiftFormat.msi
           Echo MSI_PATH=$MSI_PATH | Out-File -FilePath ${env:GITHUB_ENV} -Encoding utf8 -Append
-
-      - name: release
-        uses: softprops/action-gh-release@v1
+          
+      - name: 'Upload EXE'
+        uses: actions/upload-artifact@v3
         with:
-          draft: true
-          prerelease: false
-          name: SwiftFormat v${{ github.event.inputs.version }} (Swift ${{ matrix.tag }})
-          tag_name: swift-${{matrix.tag}}-v${{ github.event.inputs.version }}
-          files: |
-            .build/x86_64-unknown-windows-msvc/release/swiftformat.exe
-            ${{ env.MSI_PATH }}
+          name: swiftformat_windows.exe
+          path: .build/x86_64-unknown-windows-msvc/release/swiftformat.exe
+          retention-days: 5
+
+      - name: 'Upload MSI'
+        uses: actions/upload-artifact@v3
+        with:
+          name: SwiftFormat.msi
+          path: ${{ env.MSI_PATH }}
+          retention-days: 5

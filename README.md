@@ -43,7 +43,7 @@ Table of Contents
 What is this?
 ----------------
 
-SwiftFormat is a code library and command-line tool for reformatting Swift code on macOS or Linux.
+SwiftFormat is a code library and command-line tool for reformatting Swift code on macOS, Linux or Windows.
 
 SwiftFormat goes above and beyond what you might expect from a code formatter. In addition to adjusting white space it can insert or remove implicit `self`, remove redundant parentheses, and correct many other deviations from the standard Swift idioms.
 

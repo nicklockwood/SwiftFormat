@@ -1472,6 +1472,7 @@ extension Formatter {
         case lifecycle
         case open
         case `public`
+        case package
         case `internal`
         case `fileprivate`
         case `private`
@@ -1482,6 +1483,8 @@ extension Formatter {
                 self = .open
             case .public:
                 self = .public
+            case .package:
+                self = .package
             case .internal:
                 self = .internal
             case .fileprivate:
@@ -1506,6 +1509,7 @@ extension Formatter {
     enum Visibility: String, CaseIterable, Comparable {
         case open
         case `public`
+        case package
         case `internal`
         case `fileprivate`
         case `private`
@@ -1529,7 +1533,7 @@ extension Formatter {
     }
 
     static let categoryOrdering: [Category] = [
-        .beforeMarks, .lifecycle, .open, .public, .internal, .fileprivate, .private,
+        .beforeMarks, .lifecycle, .open, .public, .package, .internal, .fileprivate, .private,
     ]
 
     static let categorySubordering: [DeclarationType] = [

@@ -12,15 +12,15 @@
 
     <Media Id="1" Cabinet="SwiftFormat.cab" EmbedCab="yes" />
 
-    <StandardDirectory Id="%ProgramFiles64Folder%">
-      <Directory Id="Manufacturer" Name="nicklockwood">
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="ManufacturerFolder" Name="nicklockwood">
         <Directory Id="INSTALLDIR" Name="SwiftFormat">
           <Directory Id="_usr" Name="usr">
             <Directory Id="_usr_bin" Name="bin" />
           </Directory>
         </Directory>
       </Directory>
-    </Directory>
+    </StandardDirectory>
 
     <Component Directory="_usr_bin" Id="swiftformat.exe">
       <File Id="swiftformat.exe" Source="$(var.SWIFTFORMAT_BUILD)\swiftformat.exe" Checksum="yes" KeyPath="yes" />

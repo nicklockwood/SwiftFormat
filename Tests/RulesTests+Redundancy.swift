@@ -6068,6 +6068,30 @@ class RedundancyTests: RulesTests {
                        options: FormatOptions(swiftVersion: "5.8"))
     }
 
+    func testRedundantSelfAfterScopedImport() {
+        let input = """
+        import struct Foundation.Date
+
+        struct Foo {
+            let foo: String
+            init(bar: String) {
+                self.foo = bar
+            }
+        }
+        """
+        let output = """
+        import struct Foundation.Date
+
+        struct Foo {
+            let foo: String
+            init(bar: String) {
+                foo = bar
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.redundantSelf)
+    }
+
     // MARK: - redundantStaticSelf
 
     func testRedundantStaticSelfInStaticVar() {
@@ -6814,6 +6838,23 @@ class RedundancyTests: RulesTests {
                 return
             }
             print(bar)
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
+    func testShadowedUsedArguments5() {
+        let input = """
+        func doSomething(with number: Int) {
+            if let number = Int?(123),
+               number == 456
+            {
+                print("Not likely")
+            }
+
+            if number == 180 {
+                print("Bullseye!")
+            }
         }
         """
         testFormatting(for: input, rule: FormatRules.unusedArguments)

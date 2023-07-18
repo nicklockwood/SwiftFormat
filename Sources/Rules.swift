@@ -3519,9 +3519,10 @@ public struct _FormatRules {
                 case .keyword("extension"), .keyword("struct"), .keyword("enum"), .keyword("class"), .keyword("actor"),
                      .keyword("where") where ["extension", "struct", "enum", "class", "actor"].contains(lastKeyword):
                     let keyword = formatter.tokens[index].string
-                    guard formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) != .keyword("import"),
-                          let scopeStart = formatter.index(of: .startOfScope("{"), after: index)
-                    else {
+                    guard formatter.last(.nonSpaceOrCommentOrLinebreak, before: index) != .keyword("import") else {
+                        break
+                    }
+                    guard let scopeStart = formatter.index(of: .startOfScope("{"), after: index) else {
                         return
                     }
                     guard let nameToken = formatter.next(.identifier, after: index),
@@ -4227,12 +4228,13 @@ public struct _FormatRules {
                     ].contains(scope) {
                         break
                     }
-                    if isConditional {
+                    if isConditional, !isGuard {
                         wasDeclaration = false
+                    } else {
+                        let _wasDeclaration = wasDeclaration
+                        pushLocals()
+                        isDeclaration = _wasDeclaration
                     }
-                    let _wasDeclaration = wasDeclaration
-                    pushLocals()
-                    isDeclaration = _wasDeclaration
                 case .delimiter(";"):
                     pushLocals()
                     wasDeclaration = false

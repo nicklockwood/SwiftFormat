@@ -955,6 +955,7 @@ Credits
 * [Daniele Formichelli](https://github.com/danyf90) - JSON reporter
 * [Jonas Boberg](https://github.com/bobergj) - Github actions log reporter
 * [Mahdi Bchatnia](https://github.com/inket) - Linux build workflow
+* [Saleem Abdulrasool](https://github.com/compnerd) - Windows build workflow
 * [Arthur Semenyutin](https://github.com/vox-humana) - Docker image
 * [Marco Eidinger](https://github.com/MarcoEidinger) - Swift Package Manager plugin
 * [Nick Lockwood](https://github.com/nicklockwood) - Everything else

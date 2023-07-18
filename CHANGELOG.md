@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.51.13](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.51.13) (2023-07-18)
+
+- Fixed bug where importing a type caused the `redundantSelf` rule to be silently disabled
+- Fixed bug where `unusedArguments` would remove an argument that was used after an `if`
+- Fixed Windows support and added Windows release  binaries (thanks to Saleem Abdulrasool)
+- Added support for `package` keyword in `organizeDeclarations` rule
+
 ## [0.51.12](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.51.12) (2023-06-13)
 
 - Fixed `hoistTry` bugs with generics, subscripts and collection literals

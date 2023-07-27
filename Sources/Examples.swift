@@ -1613,4 +1613,22 @@ private struct Examples {
           & QuuxProviding
     ```
     """
+
+    let redundantInternal = """
+    ```diff
+    - internal class Foo {
+    + class Foo {
+    -     internal let bar: String
+    +     let bar: String
+
+    -     internal func baaz() {}
+    +     func baaz() {}
+
+    -     internal init() {
+    +     init() {
+              bar = "bar"
+          }
+      }
+    ```
+    """
 }

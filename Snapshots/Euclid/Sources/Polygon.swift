@@ -206,7 +206,7 @@ public extension Polygon {
     }
 }
 
-internal extension Polygon {
+extension Polygon {
     /// Create polygon from vertices and face normal without performing validation
     /// Vertices may be convex or concave, but are assumed to describe a non-degenerate polygon
     init(

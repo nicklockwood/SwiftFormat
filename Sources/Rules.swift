@@ -1114,6 +1114,24 @@ public struct _FormatRules {
         }
     }
 
+    /// Remove blank lines between chained functions but keep the linebreaks
+    public let blankLinesBetweenChainedFuncs = FormatRule(
+        help: """
+        Remove blank lines between chained functions but keep the linebreaks.
+        """,
+        disabledByDefault: true,
+        sharedOptions: ["linebreaks"]
+    ) { formatter in
+        formatter.forEach(.operator(".", .infix)) { currentDotIndex, _ in
+            guard let endOfLine = formatter.index(of: .linebreak, after: currentDotIndex),
+                  let nextDotIndex = formatter.index(of: .operator(".", .infix), after: endOfLine)
+            else {
+                return
+            }
+            formatter.removeTokens(in: endOfLine + 1 ..< nextDotIndex)
+        }
+    }
+
     /// Insert blank line after import statements
     public let blankLineAfterImports = FormatRule(
         help: """

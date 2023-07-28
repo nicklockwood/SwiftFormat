@@ -100,13 +100,13 @@ public class RuntimeType: NSObject {
 
     public typealias Getter = (_ target: AnyObject, _ key: String) -> Any?
     public typealias Setter = (_ target: AnyObject, _ key: String, _ value: Any) throws -> Void
-    internal typealias Caster = (_ value: Any) -> Any?
+    typealias Caster = (_ value: Any) -> Any?
 
     let kind: Kind
     private(set) var availability = Availability.available
     private(set) var getter: Getter?
     private(set) var setter: Setter?
-    internal var caster: Caster?
+    var caster: Caster?
 
     fileprivate static var cache = [String: RuntimeType?]()
     private static let queue = DispatchQueue(label: "com.Layout.RuntimeType")

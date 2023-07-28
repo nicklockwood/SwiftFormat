@@ -1,4 +1,4 @@
-internal protocol P1 {}
+protocol P1 {}
 
 extension P1 {
     public func f() {}

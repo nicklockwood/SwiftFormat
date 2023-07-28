@@ -267,7 +267,7 @@ public extension Polygon {
     }
 }
 
-internal extension Path {
+extension Path {
     init(unchecked points: [PathPoint], plane: Plane?, subpathIndices: [Int]?) {
         assert(sanitizePoints(points) == points)
         self.points = points

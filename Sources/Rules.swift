@@ -1140,20 +1140,21 @@ public struct _FormatRules {
     }
 
     /// Remove blank lines between chained functions but keep the linebreaks
-    public let blankLinesBetweenChainedFuncs = FormatRule(
+    public let blankLinesBetweenChainedFunctions = FormatRule(
         help: """
         Remove blank lines between chained functions but keep the linebreaks.
         """,
         disabledByDefault: true,
         sharedOptions: ["linebreaks"]
     ) { formatter in
-        formatter.forEach(.operator(".", .infix)) { currentDotIndex, _ in
-            guard let endOfLine = formatter.index(of: .linebreak, after: currentDotIndex),
-                  let nextDotIndex = formatter.index(of: .operator(".", .infix), after: endOfLine)
-            else {
-                return
+        formatter.forEach(.operator(".", .infix)) { i, _ in
+            let endOfLine = formatter.endOfLine(at: i)
+            if let nextIndex = formatter.index(of: .nonSpaceOrLinebreak, after: endOfLine, if: {
+                $0 == .operator(".", .infix)
+            }) {
+                let startOfLine = formatter.startOfLine(at: nextIndex)
+                formatter.removeTokens(in: endOfLine + 1 ..< startOfLine)
             }
-            formatter.removeTokens(in: endOfLine + 1 ..< nextDotIndex)
         }
     }
 

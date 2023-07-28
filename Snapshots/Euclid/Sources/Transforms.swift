@@ -190,7 +190,7 @@ public extension Rotation {
     }
 }
 
-internal extension Rotation {
+extension Rotation {
     /// http://www.euclideanspace.com/maths/geometry/rotations/conversions/angleToMatrix/
     init(unchecked axis: Vector, radians: Double) {
         assert(axis.isNormalized)

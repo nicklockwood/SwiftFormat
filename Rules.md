@@ -39,6 +39,7 @@
 * [redundantFileprivate](#redundantFileprivate)
 * [redundantGet](#redundantGet)
 * [redundantInit](#redundantInit)
+* [redundantInternal](#redundantInternal)
 * [redundantLet](#redundantLet)
 * [redundantLetError](#redundantLetError)
 * [redundantNilInit](#redundantNilInit)
@@ -1379,6 +1380,32 @@ Remove explicit `init` if not required.
 ```diff
 - String.init("text")
 + String("text")
+```
+
+</details>
+<br/>
+
+## redundantInternal
+
+Remove redundant internal access control.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- internal class Foo {
++ class Foo {
+-     internal let bar: String
++     let bar: String
+
+-     internal func baaz() {}
++     func baaz() {}
+
+-     internal init() {
++     init() {
+          bar = "bar"
+      }
+  }
 ```
 
 </details>

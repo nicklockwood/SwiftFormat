@@ -88,7 +88,7 @@ public extension Plane {
     }
 }
 
-internal extension Plane {
+extension Plane {
     init(unchecked normal: Vector, w: Double) {
         assert(normal.isNormalized)
         self.normal = normal

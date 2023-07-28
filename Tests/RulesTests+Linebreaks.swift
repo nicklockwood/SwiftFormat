@@ -58,6 +58,32 @@ class LinebreakTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.trailingSpace, options: options)
     }
 
+    // MARK: - linebreaks
+
+    func testCarriageReturn() {
+        let input = "foo\rbar"
+        let output = "foo\nbar"
+        testFormatting(for: input, output, rule: FormatRules.linebreaks)
+    }
+
+    func testCarriageReturnLinefeed() {
+        let input = "foo\r\nbar"
+        let output = "foo\nbar"
+        testFormatting(for: input, output, rule: FormatRules.linebreaks)
+    }
+
+    func testVerticalTab() {
+        let input = "foo\u{000B}bar"
+        let output = "foo\nbar"
+        testFormatting(for: input, output, rule: FormatRules.linebreaks)
+    }
+
+    func testFormfeed() {
+        let input = "foo\u{000C}bar"
+        let output = "foo\nbar"
+        testFormatting(for: input, output, rule: FormatRules.linebreaks)
+    }
+
     // MARK: - consecutiveBlankLines
 
     func testConsecutiveBlankLines() {

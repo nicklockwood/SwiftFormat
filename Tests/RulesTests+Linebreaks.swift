@@ -10,54 +10,6 @@ import XCTest
 @testable import SwiftFormat
 
 class LinebreakTests: RulesTests {
-    // MARK: - trailingSpace
-
-    // truncateBlankLines = true
-
-    func testTrailingSpace() {
-        let input = "foo  \nbar"
-        let output = "foo\nbar"
-        testFormatting(for: input, output, rule: FormatRules.trailingSpace)
-    }
-
-    func testTrailingSpaceAtEndOfFile() {
-        let input = "foo  "
-        let output = "foo"
-        testFormatting(for: input, output, rule: FormatRules.trailingSpace)
-    }
-
-    func testTrailingSpaceInMultilineComments() {
-        let input = "/* foo  \n bar  */"
-        let output = "/* foo\n bar  */"
-        testFormatting(for: input, output, rule: FormatRules.trailingSpace)
-    }
-
-    func testTrailingSpaceInSingleLineComments() {
-        let input = "// foo  \n// bar  "
-        let output = "// foo\n// bar"
-        testFormatting(for: input, output, rule: FormatRules.trailingSpace)
-    }
-
-    func testTruncateBlankLine() {
-        let input = "foo {\n    // bar\n    \n    // baz\n}"
-        let output = "foo {\n    // bar\n\n    // baz\n}"
-        testFormatting(for: input, output, rule: FormatRules.trailingSpace)
-    }
-
-    func testTrailingSpaceInArray() {
-        let input = "let foo = [\n    1,\n    \n    2,\n]"
-        let output = "let foo = [\n    1,\n\n    2,\n]"
-        testFormatting(for: input, output, rule: FormatRules.trailingSpace, exclude: ["redundantSelf"])
-    }
-
-    // truncateBlankLines = false
-
-    func testNoTruncateBlankLine() {
-        let input = "foo {\n    // bar\n    \n    // baz\n}"
-        let options = FormatOptions(truncateBlankLines: false)
-        testFormatting(for: input, rule: FormatRules.trailingSpace, options: options)
-    }
-
     // MARK: - linebreaks
 
     func testCarriageReturn() {

@@ -742,13 +742,18 @@ private extension UnicodeScalarView {
     }
 
     mutating func parseLineBreak() -> Token? {
-        if read("\r") {
+        switch first {
+        case "\r":
+            removeFirst()
             if read("\n") {
                 return .linebreak("\r\n", 0)
             }
             return .linebreak("\r", 0)
+        case "\n", "\u{000B}", "\u{000C}":
+            return .linebreak(String(removeFirst()), 0)
+        default:
+            return nil
         }
-        return read("\n") ? .linebreak("\n", 0) : nil
     }
 
     mutating func parseDelimiter() -> Token? {

@@ -219,6 +219,32 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    // MARK: Linebreaks
+
+    func testCarriageReturnLinefeed() {
+        let input = "\r\n"
+        let output: [Token] = [
+            .linebreak("\r\n", 1),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testVerticalTab() {
+        let input = "\u{000B}"
+        let output: [Token] = [
+            .linebreak("\u{000B}", 1),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testFormfeed() {
+        let input = "\u{000C}"
+        let output: [Token] = [
+            .linebreak("\u{000C}", 1),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     // MARK: Strings
 
     func testEmptyString() {

@@ -87,6 +87,7 @@
 
 * [acronyms](#acronyms)
 * [blankLineAfterImports](#blankLineAfterImports)
+* [blankLinesBetweenChainedFunctions](#blankLinesBetweenChainedFunctions)
 * [blankLinesBetweenImports](#blankLinesBetweenImports)
 * [blockComments](#blockComments)
 * [docComments](#docComments)
@@ -340,6 +341,10 @@ Option | Description
 
 </details>
 <br/>
+
+## blankLinesBetweenChainedFunctions
+
+Remove blank lines between chained functions but keep the linebreaks.
 
 ## blankLinesBetweenImports
 

@@ -7870,4 +7870,34 @@ public struct _FormatRules {
             }
         }
     }
+
+    public let redundantInternal = FormatRule(
+        help: "Remove redundant internal access control."
+    ) { formatter in
+        formatter.forEach(.keyword("internal")) { internalKeywordIndex, _ in
+            let accessControlLevels = ["public", "package", "internal", "private", "fileprivate"]
+
+            // If we're inside an extension, than `internal` is only redundant
+            // if the extension itself is `internal`.
+            if
+                let startOfScope = formatter.startOfScope(at: internalKeywordIndex),
+                let typeKeywordIndex = formatter.indexOfLastSignificantKeyword(at: startOfScope),
+                formatter.tokens[typeKeywordIndex] == .keyword("extension"),
+                // In the language grammar, the ACL level always directly precedes the
+                // `extension` keyword if present.
+                let previousToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: typeKeywordIndex),
+                accessControlLevels.contains(previousToken.string),
+                previousToken.string != "internal"
+            {
+                // The extension has an explicit ACL other than `internal`, so is not internal.
+                // We can't remove the `internal` keyword since the declaration would change
+                // to the ACL of the extension.
+                return
+            }
+
+            guard formatter.token(at: internalKeywordIndex + 1)?.isSpace == true else { return }
+
+            formatter.removeTokens(in: internalKeywordIndex ... (internalKeywordIndex + 1))
+        }
+    }
 }

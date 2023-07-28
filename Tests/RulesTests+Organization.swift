@@ -205,7 +205,7 @@ class OrganizationTests: RulesTests {
         testFormatting(
             for: input, output,
             rule: FormatRules.organizeDeclarations,
-            exclude: ["blankLinesAtStartOfScope"]
+            exclude: ["blankLinesAtStartOfScope", "redundantInternal"]
         )
     }
 
@@ -1361,7 +1361,8 @@ class OrganizationTests: RulesTests {
 
         testFormatting(
             for: input, output, rule: FormatRules.extensionAccessControl,
-            options: FormatOptions(extensionACLPlacement: .onDeclarations)
+            options: FormatOptions(extensionACLPlacement: .onDeclarations),
+            exclude: ["redundantInternal"]
         )
     }
 
@@ -1724,7 +1725,7 @@ class OrganizationTests: RulesTests {
             func bar() {}
         }
         """
-        testFormatting(for: input, rule: FormatRules.extensionAccessControl)
+        testFormatting(for: input, rule: FormatRules.extensionAccessControl, exclude: ["redundantInternal"])
     }
 
     func testNoHoistAccessModifierForExtensionThatAddsProtocolConformance() {

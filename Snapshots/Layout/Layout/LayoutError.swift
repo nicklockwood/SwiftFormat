@@ -16,7 +16,7 @@ private func stringify(_ error: Error) -> String {
 }
 
 /// An error relating to a specific symbol/expression
-internal struct SymbolError: Error, CustomStringConvertible {
+struct SymbolError: Error, CustomStringConvertible {
     let symbol: String
     let error: Error
     var fatal = false

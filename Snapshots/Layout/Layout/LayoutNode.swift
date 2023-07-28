@@ -260,7 +260,7 @@ public class LayoutNode: NSObject {
 
     /// called by UITableView/UICollectionView as cells are loaded
     private var _anyExpressionDependsOnContentSize: Bool?
-    internal func contentSizeChanged() {
+    func contentSizeChanged() {
         if _anyExpressionDependsOnContentSize == nil {
             _anyExpressionDependsOnContentSize = anyExpressionDependsOn([
                 "inferredSize.width", "inferredSize.height",
@@ -864,7 +864,7 @@ public class LayoutNode: NSObject {
     }
 
     /// Experimental - used for nested XML reference loading
-    internal func update(with layout: Layout) throws {
+    func update(with layout: Layout) throws {
         let _newClass: AnyClass = try layout.getClass()
         let oldClass = _class
         guard let newClass = _newClass as? LayoutManaged.Type, _newClass.isSubclass(of: oldClass) else {

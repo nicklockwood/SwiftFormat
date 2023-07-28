@@ -215,7 +215,7 @@ extension UIView: LayoutManaged {
         )
     }
 
-    internal var _effectiveUserInterfaceLayoutDirection: UIUserInterfaceLayoutDirection {
+    var _effectiveUserInterfaceLayoutDirection: UIUserInterfaceLayoutDirection {
         if #available(iOS 10.0, *) {
             return effectiveUserInterfaceLayoutDirection
         } else {

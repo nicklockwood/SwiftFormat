@@ -64,7 +64,7 @@ public extension Vertex {
     }
 }
 
-internal extension Vertex {
+extension Vertex {
     init(unchecked position: Vector, _ normal: Vector, _ texcoord: Vector = .zero) {
         self.position = position.quantized()
         self.normal = normal

@@ -7838,4 +7838,82 @@ class RedundancyTests: RulesTests {
         let options = FormatOptions(swiftVersion: "5.7")
         testFormatting(for: input, rule: FormatRules.redundantOptionalBinding, options: options)
     }
+
+    // MARK: - redundantInternal
+
+    func testRemoveRedundantInternalACL() {
+        let input = """
+        internal class Foo {
+            internal let bar: String
+
+            internal func baaz() {}
+
+            internal init() {
+                bar = "bar"
+            }
+        }
+        """
+
+        let output = """
+        class Foo {
+            let bar: String
+
+            func baaz() {}
+
+            init() {
+                bar = "bar"
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.redundantInternal)
+    }
+
+    func testPreserveInternalInNonInternalExtensionExtension() {
+        let input = """
+        extension Foo {
+            /// internal is redundant here since the extension is internal
+            internal func bar() {}
+
+            public func baaz() {}
+
+            /// internal is redundant here since the extension is internal
+            internal func bar() {}
+        }
+
+        public extension Foo {
+            /// internal is not redundant here since the extension is public
+            internal func bar() {}
+
+            public func baaz() {}
+
+            /// internal is not redundant here since the extension is public
+            internal func bar() {}
+        }
+        """
+
+        let output = """
+        extension Foo {
+            /// internal is redundant here since the extension is internal
+            func bar() {}
+
+            public func baaz() {}
+
+            /// internal is redundant here since the extension is internal
+            func bar() {}
+        }
+
+        public extension Foo {
+            /// internal is not redundant here since the extension is public
+            internal func bar() {}
+
+            public func baaz() {}
+
+            /// internal is not redundant here since the extension is public
+            internal func bar() {}
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.redundantInternal, exclude: ["redundantExtensionACL"])
+    }
 }

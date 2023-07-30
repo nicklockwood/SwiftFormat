@@ -74,6 +74,7 @@
 		01F3DF8D1DB9FD3F00454944 /* Options.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01F3DF8B1DB9FD3F00454944 /* Options.swift */; };
 		01F3DF8E1DB9FD3F00454944 /* Options.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01F3DF8B1DB9FD3F00454944 /* Options.swift */; };
 		01F3DF901DBA003E00454944 /* InferenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01F3DF8F1DBA003E00454944 /* InferenceTests.swift */; };
+		2E2808502A76BC59007A914E /* GrammaticalNumber in Frameworks */ = {isa = PBXBuildFile; productRef = 2E28084F2A76BC59007A914E /* GrammaticalNumber */; };
 		37D828AB24BF77DA0012FC0A /* XcodeKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 37D828AA24BF77DA0012FC0A /* XcodeKit.framework */; };
 		37D828AC24BF77DA0012FC0A /* XcodeKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 37D828AA24BF77DA0012FC0A /* XcodeKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		9028F7831DA4B435009FE5B4 /* SwiftFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A0EAC41D5DB54A00A0A8E3 /* SwiftFormat.swift */; };
@@ -263,6 +264,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2E2808502A76BC59007A914E /* GrammaticalNumber in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -551,6 +553,9 @@
 			dependencies = (
 			);
 			name = SwiftFormat;
+			packageProductDependencies = (
+				2E28084F2A76BC59007A914E /* GrammaticalNumber */,
+			);
 			productName = SwiftFormat;
 			productReference = 01A0EAA41D5DB4CF00A0A8E3 /* SwiftFormat.framework */;
 			productType = "com.apple.product-type.framework";
@@ -679,6 +684,9 @@
 				Base,
 			);
 			mainGroup = 01A0EA9A1D5DB4CF00A0A8E3;
+			packageReferences = (
+				2E28084E2A76BC59007A914E /* XCRemoteSwiftPackageReference "GrammaticalNumber" */,
+			);
 			productRefGroup = 01A0EAA51D5DB4CF00A0A8E3 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -1416,6 +1424,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		2E28084E2A76BC59007A914E /* XCRemoteSwiftPackageReference "GrammaticalNumber" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Cosmo/GrammaticalNumber.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.0.3;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		2E28084F2A76BC59007A914E /* GrammaticalNumber */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2E28084E2A76BC59007A914E /* XCRemoteSwiftPackageReference "GrammaticalNumber" */;
+			productName = GrammaticalNumber;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 01A0EA9B1D5DB4CF00A0A8E3 /* Project object */;
 }

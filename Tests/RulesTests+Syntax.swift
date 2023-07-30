@@ -3447,4 +3447,119 @@ class SyntaxTests: RulesTests {
         let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, rule: FormatRules.conditionalAssignment, options: options)
     }
+
+    // MARK: - forLoop
+
+    func testConvertSimpleForEachToForLoop() {
+        let input = """
+        let placeholderStrings = ["foo", "bar", "baaz"]
+        placeholderStrings.forEach { string in
+            print(string)
+        }
+
+        let placeholderStrings = ["foo", "bar", "baaz"]
+        placeholderStrings.forEach { (string: String) in
+            print(string)
+        }
+        """
+
+        let output = """
+        let placeholderStrings = ["foo", "bar", "baaz"]
+        for string in placeholderStrings {
+            print(string)
+        }
+
+        let placeholderStrings = ["foo", "bar", "baaz"]
+        for string in placeholderStrings {
+            print(string)
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.forLoop)
+    }
+
+    func testConvertAnonymousForEachToForLoop() {
+        let input = """
+        let placeholderStrings = ["foo", "bar", "baaz"]
+        placeholderStrings.forEach {
+            print($0)
+        }
+
+        potatoes.forEach({ $0.bake() })
+        """
+
+        let output = """
+        let placeholderStrings = ["foo", "bar", "baaz"]
+        for placeholderString in placeholderStrings {
+            print(placeholderString)
+        }
+
+        for potato in potatoes { potato.bake() }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.forLoop)
+    }
+
+    func testDefaultNameAlreadyUsedInLoopBody() {
+        let input = """
+        let placeholderStrings = ["foo", "bar", "baaz"]
+        placeholderStrings.forEach {
+            let placeholderString = $0.uppercased()
+            print(placeholderString)
+        }
+        """
+
+        let output = """
+        let placeholderStrings = ["foo", "bar", "baaz"]
+        for placeholderStringValue in placeholderStrings {
+            let placeholderString = placeholderStringValue.uppercased()
+            print(placeholderString)
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.forLoop)
+    }
+
+    func testIgnoreLoopsWithCaptureListForNow() {
+        let input = """
+        let placeholderStrings = ["foo", "bar", "baaz"]
+        placeholderStrings.forEach { [someCapturedValue = fooBar] in
+            print($0, someCapturedValue)
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.forLoop)
+    }
+
+    func testConvertsReturnToContinue() {
+        let input = """
+        let placeholderStrings = ["foo", "bar", "baaz"]
+        placeholderStrings.forEach {
+            func capitalize(_ value: String) -> String {
+                return value.uppercased()
+            }
+
+            if $0 == "foo" {
+                return
+            } else {
+                print(capitalize($0))
+            }
+        }
+        """
+
+        let output = """
+        let placeholderStrings = ["foo", "bar", "baaz"]
+        for placeholderString in placeholderStrings {
+            func capitalize(_ value: String) -> String {
+                return value.uppercased()
+            }
+
+            if placeholderString == "foo" {
+                continue
+            } else {
+                print(capitalize(placeholderString))
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.forLoop)
+    }
 }

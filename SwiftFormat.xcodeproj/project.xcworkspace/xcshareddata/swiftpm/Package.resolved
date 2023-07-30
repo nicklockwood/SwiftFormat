@@ -1,0 +1,14 @@
+{
+  "pins" : [
+    {
+      "identity" : "grammaticalnumber",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Cosmo/GrammaticalNumber.git",
+      "state" : {
+        "revision" : "3827665bd38a0fd5f215220b26c92df876539af0",
+        "version" : "0.0.3"
+      }
+    }
+  ],
+  "version" : 2
+}

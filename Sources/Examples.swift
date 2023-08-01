@@ -1653,7 +1653,7 @@ private struct Examples {
     +     print(baazValue)
       }
 
-      // Don't affect long multiline functional chains ✅
+      // Doesn't affect long multiline functional chains ✅
       placeholderStrings
           .filter { $0.style == .fooBar }
           .map { $0.uppercased() }

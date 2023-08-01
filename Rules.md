@@ -784,7 +784,7 @@ Convert functional `forEach` calls to for loops.
 +     print(baazValue)
   }
 
-  // Don't affect long multiline functional chains ✅
+  // Doesn't affect long multiline functional chains ✅
   placeholderStrings
       .filter { $0.style == .fooBar }
       .map { $0.uppercased() }

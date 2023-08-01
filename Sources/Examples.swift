@@ -1620,4 +1620,33 @@ private struct Examples {
       }
     ```
     """
+
+    let forLoop = """
+    ```diff
+      let strings = ["foo", "bar", "baaz"]
+    - strings.forEach { placeholder in
+    + for placeholder in strings {
+          print(placeholder)
+      }
+
+    // Supports anonymous closures!
+    - strings.forEach {
+    + for string in strings {
+    -     print($0)
+    +     print(string)
+      }
+
+    - foo.item().bar[2].baazValues(option: true).forEach {
+    + for baazValue in foo.item().bar[2].baazValues(option: true) {
+    -     print($0)
+    +     print(baazValue)
+      }
+
+      // Doesn't affect long multiline functional chains ✅
+      placeholderStrings
+          .filter { $0.style == .fooBar }
+          .map { $0.uppercased() }
+          .forEach { print($0) }
+    ```
+    """
 }

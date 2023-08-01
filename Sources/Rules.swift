@@ -30,7 +30,6 @@
 //
 
 import Foundation
-import GrammaticalNumber
 
 public final class FormatRule: Equatable, Comparable {
     private let fn: (Formatter) -> Void

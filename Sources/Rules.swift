@@ -8060,11 +8060,31 @@ public struct _FormatRules {
             guard currentIndex != forEachIndex else { return }
             forLoopSubjectRange = currentIndex ... indexBeforeFunctionCallDot
 
+            // If the chain includes linebreaks, don't convert it to a for loop.
+            //
+            // In this case converting something like:
+            //
+            //  placeholderStrings
+            //    .filter { $0.style == .fooBar }
+            //    .map { $0.uppercased() }
+            //    .forEach { print($0) }
+            //
+            // to:
+            //
+            //  for placeholderString in placeholderStrings
+            //    .filter { $0.style == .fooBar }
+            //    .map { $0.uppercased() } { print($0) }
+            //
+            // would be a pretty obvious downgrade.
+            if formatter.tokens[forLoopSubjectRange].contains(where: \.isLinebreak) {
+                return
+            }
+
             // Next, parse the `in` clause of the closure. This can be either:
             //  1. an anonymous closure with no `in` clause
             //  2. a simple identifier like `{ value in ... }`
             //  3. an identifier and a type, like `{ (value: ValueType) in ... }`
-            
+
             /// The name of the argument to the `forEach` closure. e.g. `foo` in `forEach { foo in ... }`.
             let forEachValueName: String
             let inKeywordIndex: Int?

@@ -3533,9 +3533,9 @@ class SyntaxTests: RulesTests {
 
         let output = """
         let placeholderStrings = ["foo", "bar", "baaz"]
-        for placeholderStringValue in placeholderStrings {
-            let placeholderString = placeholderStringValue.uppercased()
-            print(placeholderString, placeholderStringValue)
+        for placeholderStringItem in placeholderStrings {
+            let placeholderString = placeholderStringItem.uppercased()
+            print(placeholderString, placeholderStringItem)
         }
         """
 
@@ -3685,5 +3685,32 @@ class SyntaxTests: RulesTests {
         }
         """
         testFormatting(for: input, output, rule: FormatRules.forLoop, exclude: ["redundantParens"])
+    }
+
+    func testPreservesForEachAfterMultilineChain() {
+        let input = """
+        placeholderStrings
+            .filter { $0.style == .fooBar }
+            .map { $0.uppercased() }
+            .forEach { print($0) }
+
+        placeholderStrings
+            .filter({ $0.style == .fooBar })
+            .map({ $0.uppercased() })
+            .forEach({ print($0) })
+        """
+        testFormatting(for: input, rule: FormatRules.forLoop, exclude: ["trailingClosures"])
+    }
+
+    func testPreservesChainWithClosure() {
+        let input = """
+        // Converting this to a for loop would result in unusual looking syntax like
+        // `for string in strings.map { $0.uppercased() } { print($0) }`
+        // which causes a warning to be emitted: "trailing closure in this context is
+        // confusable with the body of the statement; pass as a parenthesized argument
+        // to silence this warning".
+        strings.map { $0.uppercased() }.forEach { print($0) }
+        """
+        testFormatting(for: input, rule: FormatRules.forLoop)
     }
 }

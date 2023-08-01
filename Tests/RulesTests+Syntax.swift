@@ -3500,12 +3500,34 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.forLoop)
     }
 
+    func testConvertNestedForEach() {
+        let input = """
+        let nestedArrays = [[1, 2], [3, 4]]
+        nestedArrays.forEach {
+            $0.forEach {
+                print($0)
+            }
+        }
+        """
+
+        let output = """
+        let nestedArrays = [[1, 2], [3, 4]]
+        for nestedArray in nestedArrays {
+            for nestedArrayItem in nestedArray {
+                print(nestedArrayItem)
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.forLoop)
+    }
+
     func testDefaultNameAlreadyUsedInLoopBody() {
         let input = """
         let placeholderStrings = ["foo", "bar", "baaz"]
         placeholderStrings.forEach {
             let placeholderString = $0.uppercased()
-            print(placeholderString)
+            print(placeholderString, $0)
         }
         """
 
@@ -3513,7 +3535,7 @@ class SyntaxTests: RulesTests {
         let placeholderStrings = ["foo", "bar", "baaz"]
         for placeholderStringValue in placeholderStrings {
             let placeholderString = placeholderStringValue.uppercased()
-            print(placeholderString)
+            print(placeholderString, placeholderStringValue)
         }
         """
 
@@ -3561,5 +3583,107 @@ class SyntaxTests: RulesTests {
         }
         """
         testFormatting(for: input, output, rule: FormatRules.forLoop)
+    }
+
+    func testHandlesForEachOnChainedProperties() {
+        let input = """
+        let bar = foo.bar
+        bar.baaz.quux.strings.forEach {
+            print($0)
+        }
+        """
+
+        let output = """
+        let bar = foo.bar
+        for string in bar.baaz.quux.strings {
+            print(string)
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.forLoop)
+    }
+
+    func testHandlesForEachOnFunctionCallResult() {
+        let input = """
+        let bar = foo.bar
+        foo.item().bar[2].baazValues(option: true).forEach {
+            print($0)
+        }
+        """
+
+        let output = """
+        let bar = foo.bar
+        for baazValue in foo.item().bar[2].baazValues(option: true) {
+            print(baazValue)
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.forLoop)
+    }
+
+    func testHandlesForEachOnSubscriptResult() {
+        let input = """
+        let bar = foo.bar
+        foo.item().bar[2].dictionary["myValue"].forEach {
+            print($0)
+        }
+        """
+
+        let output = """
+        let bar = foo.bar
+        for dictionaryItem in foo.item().bar[2].dictionary["myValue"] {
+            print(dictionaryItem)
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.forLoop)
+    }
+
+    func testHandlesForEachOnArrayLiteral() {
+        let input = """
+        let quux = foo.bar.baaz.quux
+        ["foo", "bar", "baaz", quux].forEach {
+            print($0)
+        }
+        """
+
+        let output = """
+        let quux = foo.bar.baaz.quux
+        for item in ["foo", "bar", "baaz", quux] {
+            print(item)
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.forLoop)
+    }
+
+    func testHandlesForEachOnCurriedFunctionWithSubscript() {
+        let input = """
+        let quux = foo.bar.baaz.quux
+        foo(bar)(baaz)["item"].forEach {
+            print($0)
+        }
+        """
+
+        let output = """
+        let quux = foo.bar.baaz.quux
+        for fooItem in foo(bar)(baaz)["item"] {
+            print(fooItem)
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.forLoop)
+    }
+
+    func testHandlesForEachOnArrayLiteralInParens() {
+        let input = """
+        let quux = foo.bar.baaz.quux
+        (["foo", "bar", "baaz", quux]).forEach {
+            print($0)
+        }
+        """
+
+        let output = """
+        let quux = foo.bar.baaz.quux
+        for item in (["foo", "bar", "baaz", quux]) {
+            print(item)
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.forLoop, exclude: ["redundantParens"])
     }
 }

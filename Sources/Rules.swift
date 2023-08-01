@@ -7957,7 +7957,8 @@ public struct _FormatRules {
             guard
                 let functionCallDotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: forEachIndex),
                 formatter.tokens[functionCallDotIndex] == .operator(".", .infix),
-                let indexAfterForEach = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: forEachIndex)
+                let indexAfterForEach = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: forEachIndex),
+                let indexBeforeFunctionCallDot = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: functionCallDotIndex)
             else { return }
 
             // Parse either `{ ... }` or `({ ... })`
@@ -8000,20 +8001,70 @@ public struct _FormatRules {
 
             // Parse the value that `forEach` is being called on
             let forLoopSubjectRange: ClosedRange<Int>
-            let forLoopSubjectIdentifier: String?
+            var forLoopSubjectIdentifier: String?
 
-            guard let indexBeforeFunctionCallDot = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: functionCallDotIndex) else { return }
+            // Parse a functional chain backwards from the `forEach` token
+            var currentIndex = forEachIndex
 
-            // Parse a single identifier like `value.forEach { ... }`
-            //  TODO: How do we handle chains like foo.bar.baaz.forEach { ... }?
-            if formatter.tokens[indexBeforeFunctionCallDot].isIdentifier {
-                forLoopSubjectRange = indexBeforeFunctionCallDot ... indexBeforeFunctionCallDot
-                forLoopSubjectIdentifier = formatter.tokens[indexBeforeFunctionCallDot].string
-            } else {
-                // TODO: This needs to handle many more cases than just a single `identifier`
-                return
+            // Returns the start index of the chain component ending at the given index
+            func startOfChainComponent(at index: Int) -> Int? {
+                // The previous item in a dot chain can either be:
+                //  1. an identifier like `foo.`
+                //  2. a function call like `foo(...).`
+                //  3. a subscript like `foo[...].
+                //  4. Some other combination of parens / subscript like `(foo).`
+                //     or even `foo["bar"]()()`.
+                // And any of these can be preceeded by one of the others
+                switch formatter.tokens[index] {
+                case let .identifier(identifierName):
+                    if forLoopSubjectIdentifier == nil {
+                        // Since we have to pick a single identifier to represent the subject of the for loop,
+                        // just use the last identifier in the chain
+                        forLoopSubjectIdentifier = identifierName
+                    }
+
+                    return index
+
+                case .endOfScope(")"), .endOfScope("]"):
+                    let closingParenIndex = index
+                    guard
+                        let startOfScopeIndex = formatter.startOfScope(at: closingParenIndex),
+                        let previousNonSpaceNonCommentIndex = formatter.index(of: .nonSpaceOrComment, before: startOfScopeIndex)
+                    else { return nil }
+
+                    // When we find parens for a function call or braces for a subscript,
+                    // continue parsing at the previous non-space non-comment token.
+                    //  - If the previous token is a newline then this isn't a function call
+                    //    and we'd stop parsing. `foo   ()` is a function call but `foo\n()` isn't.
+                    return startOfChainComponent(at: previousNonSpaceNonCommentIndex) ?? startOfScopeIndex
+
+                default:
+                    return nil
+                }
             }
 
+            while
+                let previousDotIndex = formatter.index(of: .nonSpaceOrLinebreak, before: currentIndex),
+                formatter.tokens[previousDotIndex] == .operator(".", .infix),
+                let tokenBeforeDotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: previousDotIndex)
+            {
+                guard let startOfChainComponent = startOfChainComponent(at: tokenBeforeDotIndex) else {
+                    // If we parse a dot we expect to parse at least one additional component in the chain.
+                    // Otherwise we'd have a malformed chain that starts with a dot, so abort.
+                    return
+                }
+
+                currentIndex = startOfChainComponent
+            }
+
+            guard currentIndex != forEachIndex else { return }
+            forLoopSubjectRange = currentIndex ... indexBeforeFunctionCallDot
+
+            // Next, parse the `in` clause of the closure. This can be either:
+            //  1. an anonymous closure with no `in` clause
+            //  2. a simple identifier like `{ value in ... }`
+            //  3. an identifier and a type, like `{ (value: ValueType) in ... }`
+            
             /// The name of the argument to the `forEach` closure. e.g. `foo` in `forEach { foo in ... }`.
             let forEachValueName: String
             let inKeywordIndex: Int?
@@ -8050,22 +8101,49 @@ public struct _FormatRules {
             // named explicitly, we have to generate it ourselves. In simple cases
             // we can just use the singluar form of the value being iterated over.
             else {
-                // TODO: Validate that it's safe to introduce a new variable with the given name
-                forEachValueName = forLoopSubjectIdentifier?.singularized() ?? "value"
                 inKeywordIndex = nil
                 isAnonymousClosure = true
+
+                // We can't introduce an identifier that already exists in the for each body,
+                // so choose the first eligible option from a set of potential names
+                let eligibleValueNames: [String]
+                if let existingPluralIdentifier = forLoopSubjectIdentifier {
+                    eligibleValueNames = [
+                        existingPluralIdentifier.singularized(),
+                        existingPluralIdentifier.singularized() + "Item",
+                        existingPluralIdentifier.singularized() + "Value",
+                        "item",
+                        "value",
+                    ]
+                } else {
+                    eligibleValueNames = ["item", "value"]
+                }
+
+                guard let chosenValueName = eligibleValueNames.first(where: { potentialValueName in
+                    // The chosen name should be different than the existing plural identifier
+                    forLoopSubjectIdentifier != potentialValueName
+                        // And the chosen name shouldn't already exist in the closure body
+                        && !formatter.tokens[closureOpenBraceIndex ... closureCloseBraceIndex].contains(where: { $0.string == potentialValueName })
+                }) else { return }
+
+                forEachValueName = chosenValueName
             }
 
-            // Start updating the `forEach` call to a `for .. in .. {` loop.
-
+            // Start updating the `forEach` call to a `for .. in .. {` loop
             for closureBodyIndex in closureOpenBraceIndex ... closureCloseBraceIndex {
+                guard !formatter.indexIsWithinNestedClosure(closureBodyIndex, startOfScopeIndex: closureOpenBraceIndex) else { continue }
+
                 // The for loop won't have any `$0` identifiers anymore, so we have to
-                // update those to
+                // update those to the value at the current loop index
                 if isAnonymousClosure, formatter.tokens[closureBodyIndex].string == "$0" {
                     formatter.replaceToken(at: closureBodyIndex, with: .identifier(forEachValueName))
                 }
 
-                // TODO: Convert `return`s within the direct closure body to `continue`s
+                // In a `forEach` closure, `return` continues to the next loop iteration.
+                // To get the same behavior in a for loop we convert `return`s to `continue`s.
+                if formatter.tokens[closureBodyIndex] == .keyword("return") {
+                    formatter.replaceToken(at: closureBodyIndex, with: .keyword("continue"))
+                }
             }
 
             if let forEachCallCloseParenIndex = forEachCallCloseParenIndex {

@@ -1292,12 +1292,30 @@ extension Formatter {
             return false
         }
 
-        if isStartOfClosure(at: startOfScopeAtIndex) {
+        if isStartOfClosureOrFunctionBody(at: startOfScopeAtIndex) {
             return startOfScopeAtIndex != startOfScopeIndex
         } else if token(at: startOfScopeAtIndex)?.isStartOfScope == true {
             return indexIsWithinNestedClosure(startOfScopeAtIndex - 1, startOfScopeIndex: startOfScopeIndex)
         } else {
             return false
+        }
+    }
+
+    func isStartOfClosureOrFunctionBody(at startOfScopeIndex: Int) -> Bool {
+        guard tokens[startOfScopeIndex] == .startOfScope("{") else { return false }
+
+        // An open brace is always one of:
+        //  - a statement with a keyword, like `if x { ...`
+        //  - a declaration with keyword, like `func x() { ... ` or `var x: String { ...`
+        //  - a closure, which won't have an associated keyword, like `value.map { ...`.
+        if isStartOfClosure(at: startOfScopeIndex) {
+            return true
+        } else {
+            // Since this isn't a closure, it should be either the start of a statement
+            // like `if x { ...` _or_ a declaration like `func x() { ... `.
+            // All of these cases have a keyword, so the last significant keyword
+            // should be part of the same declaration / statement as the brace itself.
+            return last(.keyword, before: startOfScopeIndex) == .keyword("func")
         }
     }
 }

@@ -3515,4 +3515,270 @@ class SyntaxTests: RulesTests {
         let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, rule: FormatRules.conditionalAssignment, options: options)
     }
+
+    // MARK: - forLoop
+
+    func testConvertSimpleForEachToForLoop() {
+        let input = """
+        let placeholderStrings = ["foo", "bar", "baaz"]
+        placeholderStrings.forEach { string in
+            print(string)
+        }
+
+        let placeholderStrings = ["foo", "bar", "baaz"]
+        placeholderStrings.forEach { (string: String) in
+            print(string)
+        }
+        """
+
+        let output = """
+        let placeholderStrings = ["foo", "bar", "baaz"]
+        for string in placeholderStrings {
+            print(string)
+        }
+
+        let placeholderStrings = ["foo", "bar", "baaz"]
+        for string in placeholderStrings {
+            print(string)
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.forLoop)
+    }
+
+    func testConvertAnonymousForEachToForLoop() {
+        let input = """
+        let placeholderStrings = ["foo", "bar", "baaz"]
+        placeholderStrings.forEach {
+            print($0)
+        }
+
+        potatoes.forEach({ $0.bake() })
+        """
+
+        let output = """
+        let placeholderStrings = ["foo", "bar", "baaz"]
+        for placeholderString in placeholderStrings {
+            print(placeholderString)
+        }
+
+        for potato in potatoes { potato.bake() }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.forLoop)
+    }
+
+    func testConvertNestedForEach() {
+        let input = """
+        let nestedArrays = [[1, 2], [3, 4]]
+        nestedArrays.forEach {
+            $0.forEach {
+                print($0)
+            }
+        }
+        """
+
+        let output = """
+        let nestedArrays = [[1, 2], [3, 4]]
+        for nestedArray in nestedArrays {
+            for nestedArrayItem in nestedArray {
+                print(nestedArrayItem)
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.forLoop)
+    }
+
+    func testDefaultNameAlreadyUsedInLoopBody() {
+        let input = """
+        let placeholderStrings = ["foo", "bar", "baaz"]
+        placeholderStrings.forEach {
+            let placeholderString = $0.uppercased()
+            print(placeholderString, $0)
+        }
+        """
+
+        let output = """
+        let placeholderStrings = ["foo", "bar", "baaz"]
+        for placeholderStringItem in placeholderStrings {
+            let placeholderString = placeholderStringItem.uppercased()
+            print(placeholderString, placeholderStringItem)
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.forLoop)
+    }
+
+    func testIgnoreLoopsWithCaptureListForNow() {
+        let input = """
+        let placeholderStrings = ["foo", "bar", "baaz"]
+        placeholderStrings.forEach { [someCapturedValue = fooBar] in
+            print($0, someCapturedValue)
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.forLoop)
+    }
+
+    func testConvertsReturnToContinue() {
+        let input = """
+        let placeholderStrings = ["foo", "bar", "baaz"]
+        placeholderStrings.forEach {
+            func capitalize(_ value: String) -> String {
+                return value.uppercased()
+            }
+
+            if $0 == "foo" {
+                return
+            } else {
+                print(capitalize($0))
+            }
+        }
+        """
+
+        let output = """
+        let placeholderStrings = ["foo", "bar", "baaz"]
+        for placeholderString in placeholderStrings {
+            func capitalize(_ value: String) -> String {
+                return value.uppercased()
+            }
+
+            if placeholderString == "foo" {
+                continue
+            } else {
+                print(capitalize(placeholderString))
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.forLoop)
+    }
+
+    func testHandlesForEachOnChainedProperties() {
+        let input = """
+        let bar = foo.bar
+        bar.baaz.quux.strings.forEach {
+            print($0)
+        }
+        """
+
+        let output = """
+        let bar = foo.bar
+        for string in bar.baaz.quux.strings {
+            print(string)
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.forLoop)
+    }
+
+    func testHandlesForEachOnFunctionCallResult() {
+        let input = """
+        let bar = foo.bar
+        foo.item().bar[2].baazValues(option: true).forEach {
+            print($0)
+        }
+        """
+
+        let output = """
+        let bar = foo.bar
+        for baazValue in foo.item().bar[2].baazValues(option: true) {
+            print(baazValue)
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.forLoop)
+    }
+
+    func testHandlesForEachOnSubscriptResult() {
+        let input = """
+        let bar = foo.bar
+        foo.item().bar[2].dictionary["myValue"].forEach {
+            print($0)
+        }
+        """
+
+        let output = """
+        let bar = foo.bar
+        for dictionaryItem in foo.item().bar[2].dictionary["myValue"] {
+            print(dictionaryItem)
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.forLoop)
+    }
+
+    func testHandlesForEachOnArrayLiteral() {
+        let input = """
+        let quux = foo.bar.baaz.quux
+        ["foo", "bar", "baaz", quux].forEach {
+            print($0)
+        }
+        """
+
+        let output = """
+        let quux = foo.bar.baaz.quux
+        for item in ["foo", "bar", "baaz", quux] {
+            print(item)
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.forLoop)
+    }
+
+    func testHandlesForEachOnCurriedFunctionWithSubscript() {
+        let input = """
+        let quux = foo.bar.baaz.quux
+        foo(bar)(baaz)["item"].forEach {
+            print($0)
+        }
+        """
+
+        let output = """
+        let quux = foo.bar.baaz.quux
+        for fooItem in foo(bar)(baaz)["item"] {
+            print(fooItem)
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.forLoop)
+    }
+
+    func testHandlesForEachOnArrayLiteralInParens() {
+        let input = """
+        let quux = foo.bar.baaz.quux
+        (["foo", "bar", "baaz", quux]).forEach {
+            print($0)
+        }
+        """
+
+        let output = """
+        let quux = foo.bar.baaz.quux
+        for item in (["foo", "bar", "baaz", quux]) {
+            print(item)
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.forLoop, exclude: ["redundantParens"])
+    }
+
+    func testPreservesForEachAfterMultilineChain() {
+        let input = """
+        placeholderStrings
+            .filter { $0.style == .fooBar }
+            .map { $0.uppercased() }
+            .forEach { print($0) }
+
+        placeholderStrings
+            .filter({ $0.style == .fooBar })
+            .map({ $0.uppercased() })
+            .forEach({ print($0) })
+        """
+        testFormatting(for: input, rule: FormatRules.forLoop, exclude: ["trailingClosures"])
+    }
+
+    func testPreservesChainWithClosure() {
+        let input = """
+        // Converting this to a for loop would result in unusual looking syntax like
+        // `for string in strings.map { $0.uppercased() } { print($0) }`
+        // which causes a warning to be emitted: "trailing closure in this context is
+        // confusable with the body of the statement; pass as a parenthesized argument
+        // to silence this warning".
+        strings.map { $0.uppercased() }.forEach { print($0) }
+        """
+        testFormatting(for: input, rule: FormatRules.forLoop)
+    }
 }

@@ -943,6 +943,22 @@ struct _Descriptors {
         trueValues: ["true", "enabled"],
         falseValues: ["false", "disabled"]
     )
+    let preserveAnonymousForEach = OptionDescriptor(
+        argumentName: "anonymousForEach",
+        displayName: "Anonymous forEach closures",
+        help: "Convert anonymous forEach: \"convert\" (default) or \"preserve\".",
+        keyPath: \.preserveAnonymousForEach,
+        trueValues: ["preserve"],
+        falseValues: ["convert"]
+    )
+    let preserveSingleLineForEach = OptionDescriptor(
+        argumentName: "oneLineForEach",
+        displayName: "One-line forEach closures",
+        help: "Convert one-line forEach: \"preserve\" (default) or \"wrap\".",
+        keyPath: \.preserveSingleLineForEach,
+        trueValues: ["preserve"],
+        falseValues: ["wrap"]
+    )
 
     // MARK: - Internal
 

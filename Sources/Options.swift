@@ -448,6 +448,8 @@ public struct FormatOptions: CustomStringConvertible {
     public var wrapEffects: WrapEffects
     public var spaceAroundDelimiter: SpaceAroundDelimiter
     public var initCoderNil: Bool
+    public var preserveAnonymousForEach: Bool
+    public var preserveSingleLineForEach: Bool
 
     // Deprecated
     public var indentComments: Bool
@@ -548,6 +550,8 @@ public struct FormatOptions: CustomStringConvertible {
                 genericTypes: String = "",
                 useSomeAny: Bool = true,
                 wrapEffects: WrapEffects = .preserve,
+                preserveAnonymousForEach: Bool = false,
+                preserveSingleLineForEach: Bool = true,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -642,6 +646,8 @@ public struct FormatOptions: CustomStringConvertible {
         self.useSomeAny = useSomeAny
         self.wrapEffects = wrapEffects
         self.spaceAroundDelimiter = spaceAroundDelimiter
+        self.preserveAnonymousForEach = preserveAnonymousForEach
+        self.preserveSingleLineForEach = preserveSingleLineForEach
         // Doesn't really belong here, but hard to put elsewhere
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

@@ -10,7 +10,7 @@ jobs:
       matrix:
         macos:
           - 11
-          - 12
+          - 13
         xcode:
           - latest-stable
     runs-on: macos-${{ matrix.macos }}
@@ -22,8 +22,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Build and Test
-        run:
-          xcodebuild -project SwiftFormat.xcodeproj -scheme "SwiftFormat (Framework)" -sdk macosx clean build test
+        run: |
+          xcodebuild -project SwiftFormat.xcodeproj -scheme "SwiftFormat (Framework)" -sdk macosx clean build test -enableCodeCoverage YES -derivedDataPath Build/
+          cd Build/Build/ProfileData
+          cd $(ls -d */|head -n 1)
+          directory=${PWD##*/}
+          pathCoverage=Build/Build/ProfileData/${directory}/Coverage.profdata
+          cd ../../../../
+          xcrun llvm-cov export -format="lcov" -instr-profile $pathCoverage Build/Build/Products/Debug/SwiftFormat.framework/SwiftFormat > info.lcov
       - name: Codecov
         uses: codecov/codecov-action@v2
         with:
@@ -48,46 +54,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Build and Test
-        run: swift test --enable-test-discovery --enable-code-coverage
-      - name: Convert profdata to LCOV
-        run: |
-          llvm-cov export -format lcov \
-            --ignore-filename-regex='/(\.build|Tests|Sources|Snapshots|PerformanceTests)/' \
-            -instr-profile=$(dirname $(swift test --enable-code-coverage --show-codecov-path))/default.profdata \
-            $(swift build --show-bin-path)/SwiftFormatPackageTests.xctest \
-            >SwiftFormat.lcov
-      - name: Codecov
-        uses: codecov/codecov-action@v2
-        with:
-          token: a47579fa-9a2a-4c48-b557-aa725c6b5f92
-          files: SwiftFormat.lcov
-          env_vars: SWIFT_VERSION,SWIFT_PLATFORM,RUNNER_OS,RUNNER_ARCH
+        run: swift test --enable-test-discovery
 
   windows:
-    runs-on: windows-latest
-
     strategy:
       fail-fast: false
       matrix:
         include:
           - branch: development
             tag: DEVELOPMENT-SNAPSHOT-2023-06-05-a
-
+    runs-on: windows-latest
     name: ${{ matrix.tag }}
-
     steps:
       - uses: compnerd/gha-setup-swift@main
         with:
           tag: ${{ matrix.tag }}
           branch: ${{ matrix.branch }}
-
       - uses: actions/checkout@v3
-
-      - run: swift test --enable-code-coverage
-      - run: llvm-cov export -format lcov -ignore-filename-regex '/(\.build|Tests|Sources|Snapshots|PerformanceTests)/' -instr-profile .build\x86_64-unknown-windows-msvc\debug\codecov\default.profdata .build\x86_64-unknown-windows-msvc\debug\SwiftFormatPackageTests.xctest > SwiftFormat.lcov
-
-      - uses: codecov/codecov-action@v3
-        with:
-          token: a47579fa-9a2a-4c48-b557-aa725c6b5f92
-          files: SwiftFormat.lcov
-          env_vars: RUNNER_OS,RUNNER_ARCH
+      - run: swift test

@@ -4083,7 +4083,7 @@ public struct _FormatRules {
                     wasDeclaration = false
                 }
                 let token = formatter.tokens[i]
-                switch token {
+                outer: switch token {
                 case .keyword("guard"):
                     isGuard = true
                 case .keyword("let"), .keyword("var"), .keyword("func"), .keyword("for"):
@@ -4103,8 +4103,14 @@ public struct _FormatRules {
                        formatter.currentScope(at: i) == .startOfScope("[")
                     {
                         if isDeclaration {
-                            tempLocals.insert(name)
-                            break
+                            switch formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) {
+                            case .endOfScope(")")?, .operator("=", .infix)?,
+                                 .delimiter(",")? where !isConditional || formatter.currentScope(at: i) == .startOfScope("("):
+                                tempLocals.insert(name)
+                                break outer
+                            default:
+                                break
+                            }
                         }
                         argNames.remove(at: index)
                         associatedData.remove(at: index)

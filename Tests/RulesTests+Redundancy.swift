@@ -6482,6 +6482,34 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.unusedArguments)
     }
 
+    func testClosureArgumentUsedInGuardNotRemoved() {
+        let input = """
+        bar(for: quux) { _, _, foo in
+            guard
+                let baz = quux.baz,
+                foo.contains(where: { $0.baz == baz })
+            else {
+                return
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
+    func testClosureArgumentUsedInIfNotRemoved() {
+        let input = """
+        foo = { reservations, _ in
+            if let reservations, eligibleToShow(
+                reservations,
+                accountService: accountService
+            ) {
+                coordinator.startFlow()
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
     // init
 
     func testParameterUsedInInit() {
@@ -7065,6 +7093,23 @@ class RedundancyTests: RulesTests {
         }
         """
         testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+    }
+
+    func testFunctionArgumentUsedInGuardNotRemoved() {
+        let input = """
+        func scrollViewDidEndDecelerating(_ visibleDayRange: DayRange) {
+            guard
+                store.state.request.isIdle,
+                let nextDayToLoad = store.state.request.nextCursor?.lowerBound,
+                visibleDayRange.upperBound.distance(to: nextDayToLoad) < 30
+            else {
+                return
+            }
+
+            store.handle(.loadNext)
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
     }
 
     // functions (closure-only)

@@ -3705,11 +3705,23 @@ class SyntaxTests: RulesTests {
     func testPreservesChainWithClosure() {
         let input = """
         // Converting this to a for loop would result in unusual looking syntax like
-        // `for string in strings.map { $0.uppercased() } { print($0) }`
+        // `for string in strings.map { $0.uppercased() } { print(string) }`
         // which causes a warning to be emitted: "trailing closure in this context is
         // confusable with the body of the statement; pass as a parenthesized argument
         // to silence this warning".
         strings.map { $0.uppercased() }.forEach { print($0) }
+        """
+        testFormatting(for: input, rule: FormatRules.forLoop)
+    }
+
+    func testPreservesChainWithClosureInMiddleOfChain() {
+        let input = """
+        // Converting this to a for loop would result in unusual looking syntax like
+        // `for string in strings.map { $0.uppercased() }.values { print(string) }`
+        // which causes a warning to be emitted: "trailing closure in this context is
+        // confusable with the body of the statement; pass as a parenthesized argument
+        // to silence this warning".
+        strings.map { $0.uppercased() }.values.forEach { print($0) }
         """
         testFormatting(for: input, rule: FormatRules.forLoop)
     }

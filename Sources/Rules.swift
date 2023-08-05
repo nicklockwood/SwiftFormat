@@ -8012,7 +8012,8 @@ public struct _FormatRules {
                 //  1. an identifier like `foo.`
                 //  2. a function call like `foo(...).`
                 //  3. a subscript like `foo[...].
-                //  4. Some other combination of parens / subscript like `(foo).`
+                //  4. a trailing closure like `map { ... }`
+                //  5. Some other combination of parens / subscript like `(foo).`
                 //     or even `foo["bar"]()()`.
                 // And any of these can be preceeded by one of the others
                 switch formatter.tokens[index] {
@@ -8045,6 +8046,15 @@ public struct _FormatRules {
                     //  - If the previous token is a newline then this isn't a function call
                     //    and we'd stop parsing. `foo   ()` is a function call but `foo\n()` isn't.
                     return startOfChainComponent(at: previousNonSpaceNonCommentIndex) ?? startOfScopeIndex
+                    
+                case .endOfScope("}"):
+                    // Stop parsing if we reach a trailing closure.
+                    // Converting this to a for loop would result in unusual looking syntax like
+                    // `for string in strings.map { $0.uppercased() } { print(string) }`
+                    // which causes a warning to be emitted: "trailing closure in this context is
+                    // confusable with the body of the statement; pass as a parenthesized argument
+                    // to silence this warning".
+                    return nil
 
                 default:
                     return nil

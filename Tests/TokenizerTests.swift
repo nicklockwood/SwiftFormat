@@ -777,8 +777,8 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
-    func testSingleLineRegexLiteralPrecededByTry() {
-        let input = "let regex = try /foo/"
+    func testSingleLineRegexLiteralWithEscapedClosingParen() {
+        let input = "let regex = /\\)/"
         let output: [Token] = [
             .keyword("let"),
             .space(" "),
@@ -786,8 +786,52 @@ class TokenizerTests: XCTestCase {
             .space(" "),
             .operator("=", .infix),
             .space(" "),
-            .keyword("try"),
+            .startOfScope("/"),
+            .stringBody("\\)"),
+            .endOfScope("/"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testSingleLineRegexLiteralWithEscapedClosingParenAtStartOfFile() {
+        let input = "/\\)/"
+        let output: [Token] = [
+            .startOfScope("/"),
+            .stringBody("\\)"),
+            .endOfScope("/"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testSingleLineRegexLiteralWithEscapedClosingParenAtStartOfLine() {
+        let input = """
+        let a = b
+        /\\)/
+        """
+        let output: [Token] = [
+            .keyword("let"),
             .space(" "),
+            .identifier("a"),
+            .space(" "),
+            .operator("=", .infix),
+            .space(" "),
+            .identifier("b"),
+            .linebreak("\n", 1),
+            .startOfScope("/"),
+            .stringBody("\\)"),
+            .endOfScope("/"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testSingleLineRegexLiteralPrecededByTry() {
+        let input = "let regex=try/foo/"
+        let output: [Token] = [
+            .keyword("let"),
+            .space(" "),
+            .identifier("regex"),
+            .operator("=", .infix),
+            .keyword("try"),
             .startOfScope("/"),
             .stringBody("foo"),
             .endOfScope("/"),
@@ -796,17 +840,14 @@ class TokenizerTests: XCTestCase {
     }
 
     func testSingleLineRegexLiteralPrecededByOptionalTry() {
-        let input = "let regex = try? /foo/"
+        let input = "let regex=try?/foo/"
         let output: [Token] = [
             .keyword("let"),
             .space(" "),
             .identifier("regex"),
-            .space(" "),
             .operator("=", .infix),
-            .space(" "),
             .keyword("try"),
             .operator("?", .postfix),
-            .space(" "),
             .startOfScope("/"),
             .stringBody("foo"),
             .endOfScope("/"),
@@ -901,6 +942,26 @@ class TokenizerTests: XCTestCase {
             .stringBody("bar"),
             .linebreak("\n", 3),
             .endOfScope("/##"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testDivisionFollowedByCommentNotMistakenForRegexLiteral() {
+        let input = "foo = bar / 100 // baz"
+        let output: [Token] = [
+            .identifier("foo"),
+            .space(" "),
+            .operator("=", .infix),
+            .space(" "),
+            .identifier("bar"),
+            .space(" "),
+            .operator("/", .infix),
+            .space(" "),
+            .number("100", .integer),
+            .space(" "),
+            .startOfScope("//"),
+            .space(" "),
+            .commentBody("baz"),
         ]
         XCTAssertEqual(tokenize(input), output)
     }

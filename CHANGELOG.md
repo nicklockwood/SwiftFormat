@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.51.14](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.51.14) (2023-08-05)
+
+- Fixed regression in `unusedArguments` rule that caused used parameters to be marked unused
+- Fixed some additional cases where regex literal was mistaken for `/` operator
+- Vertical tab and form feed characters in source file no longer cause spurious errors
+
 ## [0.51.13](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.51.13) (2023-07-18)
 
 - Fixed bug where importing a type caused the `redundantSelf` rule to be silently disabled

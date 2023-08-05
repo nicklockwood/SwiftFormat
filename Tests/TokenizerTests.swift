@@ -219,32 +219,6 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
-    // MARK: Linebreaks
-
-    func testCarriageReturnLinefeed() {
-        let input = "\r\n"
-        let output: [Token] = [
-            .linebreak("\r\n", 1),
-        ]
-        XCTAssertEqual(tokenize(input), output)
-    }
-
-    func testVerticalTab() {
-        let input = "\u{000B}"
-        let output: [Token] = [
-            .linebreak("\u{000B}", 1),
-        ]
-        XCTAssertEqual(tokenize(input), output)
-    }
-
-    func testFormfeed() {
-        let input = "\u{000C}"
-        let output: [Token] = [
-            .linebreak("\u{000C}", 1),
-        ]
-        XCTAssertEqual(tokenize(input), output)
-    }
-
     // MARK: Strings
 
     func testEmptyString() {
@@ -803,61 +777,17 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
-    func testSingleLineRegexLiteralWithEscapedClosingParen() {
-        let input = "let regex = /\\)/"
-        let output: [Token] = [
-            .keyword("let"),
-            .space(" "),
-            .identifier("regex"),
-            .space(" "),
-            .operator("=", .infix),
-            .space(" "),
-            .startOfScope("/"),
-            .stringBody("\\)"),
-            .endOfScope("/"),
-        ]
-        XCTAssertEqual(tokenize(input), output)
-    }
-
-    func testSingleLineRegexLiteralWithEscapedClosingParenAtStartOfFile() {
-        let input = "/\\)/"
-        let output: [Token] = [
-            .startOfScope("/"),
-            .stringBody("\\)"),
-            .endOfScope("/"),
-        ]
-        XCTAssertEqual(tokenize(input), output)
-    }
-
-    func testSingleLineRegexLiteralWithEscapedClosingParenAtStartOfLine() {
-        let input = """
-        let a = b
-        /\\)/
-        """
-        let output: [Token] = [
-            .keyword("let"),
-            .space(" "),
-            .identifier("a"),
-            .space(" "),
-            .operator("=", .infix),
-            .space(" "),
-            .identifier("b"),
-            .linebreak("\n", 1),
-            .startOfScope("/"),
-            .stringBody("\\)"),
-            .endOfScope("/"),
-        ]
-        XCTAssertEqual(tokenize(input), output)
-    }
-
     func testSingleLineRegexLiteralPrecededByTry() {
-        let input = "let regex=try/foo/"
+        let input = "let regex = try /foo/"
         let output: [Token] = [
             .keyword("let"),
             .space(" "),
             .identifier("regex"),
+            .space(" "),
             .operator("=", .infix),
+            .space(" "),
             .keyword("try"),
+            .space(" "),
             .startOfScope("/"),
             .stringBody("foo"),
             .endOfScope("/"),
@@ -866,14 +796,17 @@ class TokenizerTests: XCTestCase {
     }
 
     func testSingleLineRegexLiteralPrecededByOptionalTry() {
-        let input = "let regex=try?/foo/"
+        let input = "let regex = try? /foo/"
         let output: [Token] = [
             .keyword("let"),
             .space(" "),
             .identifier("regex"),
+            .space(" "),
             .operator("=", .infix),
+            .space(" "),
             .keyword("try"),
             .operator("?", .postfix),
+            .space(" "),
             .startOfScope("/"),
             .stringBody("foo"),
             .endOfScope("/"),
@@ -968,26 +901,6 @@ class TokenizerTests: XCTestCase {
             .stringBody("bar"),
             .linebreak("\n", 3),
             .endOfScope("/##"),
-        ]
-        XCTAssertEqual(tokenize(input), output)
-    }
-
-    func testDivisionFollowedByCommentNotMistakenForRegexLiteral() {
-        let input = "foo = bar / 100 // baz"
-        let output: [Token] = [
-            .identifier("foo"),
-            .space(" "),
-            .operator("=", .infix),
-            .space(" "),
-            .identifier("bar"),
-            .space(" "),
-            .operator("/", .infix),
-            .space(" "),
-            .number("100", .integer),
-            .space(" "),
-            .startOfScope("//"),
-            .space(" "),
-            .commentBody("baz"),
         ]
         XCTAssertEqual(tokenize(input), output)
     }

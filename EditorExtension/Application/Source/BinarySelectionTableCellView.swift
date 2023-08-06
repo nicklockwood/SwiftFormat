@@ -1,5 +1,5 @@
 //
-//  RuleSelectionTableCellView.swift
+//  BinarySelectionTableCellView.swift
 //  SwiftFormat for Xcode
 //
 //  Created by Vincent Bernier on 28/01/18.

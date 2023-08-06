@@ -10,52 +10,30 @@ import XCTest
 @testable import SwiftFormat
 
 class LinebreakTests: RulesTests {
-    // MARK: - trailingSpace
+    // MARK: - linebreaks
 
-    // truncateBlankLines = true
-
-    func testTrailingSpace() {
-        let input = "foo  \nbar"
+    func testCarriageReturn() {
+        let input = "foo\rbar"
         let output = "foo\nbar"
-        testFormatting(for: input, output, rule: FormatRules.trailingSpace)
+        testFormatting(for: input, output, rule: FormatRules.linebreaks)
     }
 
-    func testTrailingSpaceAtEndOfFile() {
-        let input = "foo  "
-        let output = "foo"
-        testFormatting(for: input, output, rule: FormatRules.trailingSpace)
+    func testCarriageReturnLinefeed() {
+        let input = "foo\r\nbar"
+        let output = "foo\nbar"
+        testFormatting(for: input, output, rule: FormatRules.linebreaks)
     }
 
-    func testTrailingSpaceInMultilineComments() {
-        let input = "/* foo  \n bar  */"
-        let output = "/* foo\n bar  */"
-        testFormatting(for: input, output, rule: FormatRules.trailingSpace)
+    func testVerticalTab() {
+        let input = "foo\u{000B}bar"
+        let output = "foo\nbar"
+        testFormatting(for: input, output, rule: FormatRules.linebreaks)
     }
 
-    func testTrailingSpaceInSingleLineComments() {
-        let input = "// foo  \n// bar  "
-        let output = "// foo\n// bar"
-        testFormatting(for: input, output, rule: FormatRules.trailingSpace)
-    }
-
-    func testTruncateBlankLine() {
-        let input = "foo {\n    // bar\n    \n    // baz\n}"
-        let output = "foo {\n    // bar\n\n    // baz\n}"
-        testFormatting(for: input, output, rule: FormatRules.trailingSpace)
-    }
-
-    func testTrailingSpaceInArray() {
-        let input = "let foo = [\n    1,\n    \n    2,\n]"
-        let output = "let foo = [\n    1,\n\n    2,\n]"
-        testFormatting(for: input, output, rule: FormatRules.trailingSpace, exclude: ["redundantSelf"])
-    }
-
-    // truncateBlankLines = false
-
-    func testNoTruncateBlankLine() {
-        let input = "foo {\n    // bar\n    \n    // baz\n}"
-        let options = FormatOptions(truncateBlankLines: false)
-        testFormatting(for: input, rule: FormatRules.trailingSpace, options: options)
+    func testFormfeed() {
+        let input = "foo\u{000C}bar"
+        let output = "foo\nbar"
+        testFormatting(for: input, output, rule: FormatRules.linebreaks)
     }
 
     // MARK: - consecutiveBlankLines

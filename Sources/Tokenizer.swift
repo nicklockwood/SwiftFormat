@@ -551,6 +551,10 @@ extension UnicodeScalar {
             return false
         }
     }
+
+    var isSpaceOrLinebreak: Bool {
+        isSpace || "\n\r\u{000B}\u{000C}".unicodeScalars.contains(self)
+    }
 }
 
 // Workaround for horribly slow String.UnicodeScalarView.Subsequence perf
@@ -728,7 +732,7 @@ private extension UnicodeScalarView {
     }
 
     mutating func readToEndOfToken() -> String {
-        readCharacters { !$0.isSpace && !"\n\r".unicodeScalars.contains($0) } ?? ""
+        readCharacters { !$0.isSpaceOrLinebreak } ?? ""
     }
 }
 
@@ -738,13 +742,18 @@ private extension UnicodeScalarView {
     }
 
     mutating func parseLineBreak() -> Token? {
-        if read("\r") {
+        switch first {
+        case "\r":
+            removeFirst()
             if read("\n") {
                 return .linebreak("\r\n", 0)
             }
             return .linebreak("\r", 0)
+        case "\n", "\u{000B}", "\u{000C}":
+            return .linebreak(String(removeFirst()), 0)
+        default:
+            return nil
         }
-        return read("\n") ? .linebreak("\n", 0) : nil
     }
 
     mutating func parseDelimiter() -> Token? {
@@ -1467,8 +1476,10 @@ public func tokenize(_ source: String) -> [Token] {
             return
         }
         guard let prevNonSpaceIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: i) else {
-            if tokens.count > i + 1 {
-                tokens[i] = string == "/" ? .startOfScope("/") : .operator(string, .prefix)
+            if string == "/" {
+                tokens[i] = .startOfScope("/")
+            } else if tokens.count > i + 1 {
+                tokens[i] = .operator(string, .prefix)
             }
             return
         }
@@ -1538,11 +1549,8 @@ public func tokenize(_ source: String) -> [Token] {
             guard let nextNonSpaceToken =
                 index(of: .nonSpaceOrCommentOrLinebreak, after: i).map({ tokens[$0] })
             else {
-                if prevToken.isLvalue {
-                    type = .postfix
-                    break
-                }
                 if token == .operator("/", .none),
+                   prevToken.isSpaceOrLinebreak ||
                    prevNonSpaceToken.isOperator(ofType: .infix) || (
                        prevNonSpaceToken.isUnwrapOperator &&
                            prevNonSpaceIndex > 0 &&
@@ -1554,6 +1562,9 @@ public func tokenize(_ source: String) -> [Token] {
                    ].contains(prevNonSpaceToken)
                 {
                     tokens[i] = .startOfScope("/")
+                } else if prevToken.isLvalue {
+                    type = .postfix
+                    break
                 }
                 return
             }
@@ -1864,6 +1875,12 @@ public func tokenize(_ source: String) -> [Token] {
         token = tokens[count - 1]
         switch token {
         case .startOfScope("/"):
+            if let next = characters.first, next.isSpaceOrLinebreak {
+                // Misidentified as regex
+                token = .operator("/", .none)
+                tokens[count - 1] = token
+                return
+            }
             scopeIndexStack.append(count - 1)
             let start = characters
             processStringBody(regex: true, hashCount: 0)

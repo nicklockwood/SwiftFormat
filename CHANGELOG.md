@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.51.15](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.51.15) (2023-08-06)
+
+- This release actually includes the fixes listed for 0.51.14 (these were accidentally reverted in a merge error).
+
 ## [0.51.14](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.51.14) (2023-08-05)
 
 - Fixed regression in `unusedArguments` rule that caused used parameters to be marked unused

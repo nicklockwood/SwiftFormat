@@ -755,6 +755,11 @@ Token | Description
 
 Convert functional `forEach` calls to for loops.
 
+Option | Description
+--- | ---
+`--anonymousforeach` | Convert anonymous forEach: "convert" (default) or "preserve".
+`--onelineforeach` | Convert one-line forEach: "preserve" (default) or "wrap".
+
 <details>
 <summary>Examples</summary>
 

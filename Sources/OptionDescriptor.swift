@@ -92,6 +92,7 @@ class OptionDescriptor {
          falseValues: [String])
     {
         assert(argumentName.count <= Options.maxArgumentNameLength)
+        assert(argumentName == argumentName.lowercased())
         self.argumentName = argumentName
         self.displayName = displayName
         self.help = help
@@ -1027,13 +1028,4 @@ struct _Descriptors {
             }
         }
     ).renamed(to: "modifierOrder")
-
-    let someAny = OptionDescriptor(
-        argumentName: "someAny",
-        displayName: "Use `some Any`",
-        help: "deprecated",
-        keyPath: \.useSomeAny,
-        trueValues: ["true", "enabled"],
-        falseValues: ["false", "disabled"]
-    ).renamed(to: "someany")
 }

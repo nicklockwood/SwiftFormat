@@ -269,6 +269,13 @@ class MetadataTests: XCTestCase {
         }
     }
 
+    func testArgumentNamesAreLowercase() {
+        let arguments = Set(commandLineArguments).subtracting(deprecatedArguments)
+        for argument in arguments {
+            XCTAssertEqual(argument, argument.lowercased())
+        }
+    }
+
     // MARK: examples
 
     func testAllExamplesMatchRule() {

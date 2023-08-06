@@ -132,6 +132,16 @@ class ArgumentsTests: XCTestCase {
         ]), output)
     }
 
+    func testPreprocessArgumentsNormalizesKeyCase() {
+        let input = ["", "--Help", "-VERSION", "-foo", "BaR"]
+        let output = ["0": "", "help": "", "version": "", "foo": "BaR"]
+        XCTAssertEqual(try preprocessArguments(input, [
+            "help",
+            "version",
+            "foo",
+        ]), output)
+    }
+
     func testEmptyArgsAreRecognized() {
         let input = ["", "--help", "--version"]
         let output = ["0": "", "help": "", "version": ""]

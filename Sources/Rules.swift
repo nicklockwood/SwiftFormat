@@ -7084,7 +7084,9 @@ public struct _FormatRules {
 
     public let forLoop = FormatRule(
         help: "Convert functional `forEach` calls to for loops.",
-        disabledByDefault: true
+        disabledByDefault: true,
+        options: ["anonymousforeach", "onelineforeach"],
+        sharedOptions: ["linebreaks"]
     ) { formatter in
         formatter.forEach(.identifier("forEach")) { forEachIndex, _ in
             // Make sure this is a function call preceeded by a `.`
@@ -7146,12 +7148,21 @@ public struct _FormatRules {
                 //  1. an identifier like `foo.`
                 //  2. a function call like `foo(...).`
                 //  3. a subscript like `foo[...].
-                //  4. Some other combination of parens / subscript like `(foo).`
+                //  4. a trailing closure like `map { ... }`
+                //  5. Some other combination of parens / subscript like `(foo).`
                 //     or even `foo["bar"]()()`.
                 // And any of these can be preceeded by one of the others
                 switch formatter.tokens[index] {
                 case let .identifier(identifierName):
-                    if forLoopSubjectIdentifier == nil {
+                    // Allowlist certain dot chain elements that should be ignored.
+                    // For example, in `foos.reversed().forEach { ... }` we want
+                    // `forLoopSubjectIdentifier` to be `foos` rather than `reversed`.
+                    let chainElementsToIgnore = Set([
+                        "reversed", "sorted", "shuffled", "enumerated", "dropFirst", "dropLast",
+                        "map", "flatMap", "compactMap", "filter", "reduce", "lazy",
+                    ])
+
+                    if forLoopSubjectIdentifier == nil || chainElementsToIgnore.contains(forLoopSubjectIdentifier ?? "") {
                         // Since we have to pick a single identifier to represent the subject of the for loop,
                         // just use the last identifier in the chain
                         forLoopSubjectIdentifier = identifierName
@@ -7171,6 +7182,15 @@ public struct _FormatRules {
                     //  - If the previous token is a newline then this isn't a function call
                     //    and we'd stop parsing. `foo   ()` is a function call but `foo\n()` isn't.
                     return startOfChainComponent(at: previousNonSpaceNonCommentIndex) ?? startOfScopeIndex
+
+                case .endOfScope("}"):
+                    // Stop parsing if we reach a trailing closure.
+                    // Converting this to a for loop would result in unusual looking syntax like
+                    // `for string in strings.map { $0.uppercased() } { print(string) }`
+                    // which causes a warning to be emitted: "trailing closure in this context is
+                    // confusable with the body of the statement; pass as a parenthesized argument
+                    // to silence this warning".
+                    return nil
 
                 default:
                     return nil
@@ -7214,49 +7234,24 @@ public struct _FormatRules {
                 return
             }
 
-            // Next, parse the `in` clause of the closure. This can be either:
-            //  1. an anonymous closure with no `in` clause
-            //  2. a simple identifier like `{ value in ... }`
-            //  3. an identifier and a type, like `{ (value: ValueType) in ... }`
-
-            /// The name of the argument to the `forEach` closure. e.g. `foo` in `forEach { foo in ... }`.
-            let forEachValueName: String
+            /// The names of the argument to the `forEach` closure.
+            /// e.g. `["foo"]` in `forEach { foo in ... }`
+            /// or `["foo, bar"]` in `forEach { (foo: Foo, bar: Bar) in ... }`
+            let forEachValueNames: [String]
             let inKeywordIndex: Int?
             let isAnonymousClosure: Bool
 
-            // Check if this is a closure `{ value in ... }` clause
-            if
-                let indexAfterOpenBrace = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closureOpenBraceIndex),
-                formatter.tokens[indexAfterOpenBrace].isIdentifier,
-                let indexAfterFirstIdentifier = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: indexAfterOpenBrace),
-                formatter.tokens[indexAfterFirstIdentifier] == .keyword("in")
-            {
-                forEachValueName = formatter.tokens[indexAfterOpenBrace].string
-                inKeywordIndex = indexAfterFirstIdentifier
+            if let argumentList = formatter.parseClosureArgumentList(at: closureOpenBraceIndex) {
                 isAnonymousClosure = false
-            }
-
-            // Check if this is a closure `{ (value: ValueType) in ... }` clause
-            else if
-                let indexAfterOpenBrace = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closureOpenBraceIndex),
-                formatter.tokens[indexAfterOpenBrace] == .startOfScope("("),
-                let endOfArgumentsScopeIndex = formatter.endOfScope(at: indexAfterOpenBrace),
-                let firstTokenInArgumentsScope = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: indexAfterOpenBrace),
-                formatter.tokens[firstTokenInArgumentsScope].isIdentifier,
-                let indexAfterArguments = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: endOfArgumentsScopeIndex),
-                formatter.tokens[indexAfterArguments] == .keyword("in")
-            {
-                forEachValueName = formatter.tokens[firstTokenInArgumentsScope].string
-                inKeywordIndex = indexAfterArguments
-                isAnonymousClosure = false
-            }
-
-            // Otherwise this is an anyonymous closure. Since the argument isn't
-            // named explicitly, we have to generate it ourselves. In simple cases
-            // we can just use the singluar form of the value being iterated over.
-            else {
-                inKeywordIndex = nil
+                forEachValueNames = argumentList.argumentNames
+                inKeywordIndex = argumentList.inKeywordIndex
+            } else {
                 isAnonymousClosure = true
+                inKeywordIndex = nil
+
+                if formatter.options.preserveAnonymousForEach {
+                    return
+                }
 
                 // We can't introduce an identifier that already exists in the for each body,
                 // so choose the first eligible option from a set of potential names
@@ -7280,17 +7275,52 @@ public struct _FormatRules {
                         && !formatter.tokens[closureOpenBraceIndex ... closureCloseBraceIndex].contains(where: { $0.string == potentialValueName })
                 }) else { return }
 
-                forEachValueName = chosenValueName
+                forEachValueNames = [chosenValueName]
+            }
+
+            // Validate that the closure body is eligible to be converted to a for loop
+            for closureBodyIndex in closureOpenBraceIndex ... closureCloseBraceIndex {
+                guard !formatter.indexIsWithinNestedClosure(closureBodyIndex, startOfScopeIndex: closureOpenBraceIndex) else { continue }
+
+                // We can only handle anonymous closures that just use $0, since we don't have good names to
+                // use for other arguments like $1, $2, etc. If the closure has an anonymous argument
+                // other than just $0 then we have to ignore it.
+                if formatter.tokens[closureBodyIndex].string.hasPrefix("$"),
+                   let intValue = Int(formatter.tokens[closureBodyIndex].string.dropFirst()),
+                   intValue != 0
+                {
+                    return
+                }
+
+                // We can convert `return`s to `continue`, but only when `return` is on its own line.
+                // It's legal to write something like `return print("foo")` in a `forEach` as long as
+                // you're still returning a `Void` value. Since `continue print("foo")` isn't legal,
+                // we should just ignore this closure.
+                if
+                    formatter.tokens[closureBodyIndex] == .keyword("return"),
+                    let tokenAfterReturnKeyword = formatter.next(.nonSpaceOrComment, after: closureBodyIndex),
+                    !tokenAfterReturnKeyword.isLinebreak
+                {
+                    return
+                }
             }
 
             // Start updating the `forEach` call to a `for .. in .. {` loop
+            let wasDefinedOnSingleLine = formatter.endOfLine(at: closureOpenBraceIndex) == formatter.endOfLine(at: closureCloseBraceIndex)
+
+            // If we're converting this single-line forEach to a multiline for loop, add a newline before the closing brace.
+            // Do this first since any other changes we make may invalidate this existing `closureCloseBraceIndex` value.
+            if wasDefinedOnSingleLine, !formatter.options.preserveSingleLineForEach {
+                formatter.insertLinebreak(at: closureCloseBraceIndex - 1)
+            }
+
             for closureBodyIndex in closureOpenBraceIndex ... closureCloseBraceIndex {
                 guard !formatter.indexIsWithinNestedClosure(closureBodyIndex, startOfScopeIndex: closureOpenBraceIndex) else { continue }
 
                 // The for loop won't have any `$0` identifiers anymore, so we have to
                 // update those to the value at the current loop index
                 if isAnonymousClosure, formatter.tokens[closureBodyIndex].string == "$0" {
-                    formatter.replaceToken(at: closureBodyIndex, with: .identifier(forEachValueName))
+                    formatter.replaceToken(at: closureBodyIndex, with: .identifier(forEachValueNames[0]))
                 }
 
                 // In a `forEach` closure, `return` continues to the next loop iteration.
@@ -7304,25 +7334,49 @@ public struct _FormatRules {
                 formatter.removeToken(at: forEachCallCloseParenIndex)
             }
 
-            let newTokens: [Token] =
-                [
-                    .keyword("for"),
-                    .space(" "),
-                    .identifier(forEachValueName),
-                    .space(" "),
-                    .keyword("in"),
-                    .space(" "),
-                ]
-                + formatter.tokens[forLoopSubjectRange]
-                + [
-                    .space(" "),
-                    .startOfScope("{"),
-                ]
+            // Construct the new for loop
+            var newTokens: [Token] = [
+                .keyword("for"),
+                .space(" "),
+            ]
+
+            let forEachValueNameTokens: [Token]
+            if forEachValueNames.count == 1 {
+                newTokens.append(.identifier(forEachValueNames[0]))
+            } else {
+                newTokens.append(contentsOf: tokenize("(\(forEachValueNames.joined(separator: ", ")))"))
+            }
+
+            newTokens.append(contentsOf: [
+                .space(" "),
+                .keyword("in"),
+                .space(" "),
+            ])
+
+            newTokens.append(contentsOf: formatter.tokens[forLoopSubjectRange])
+
+            newTokens.append(contentsOf: [
+                .space(" "),
+                .startOfScope("{"),
+            ])
+
+            if wasDefinedOnSingleLine, !formatter.options.preserveSingleLineForEach {
+                newTokens.append(formatter.linebreakToken(for: closureOpenBraceIndex))
+            }
 
             formatter.replaceTokens(
                 in: (forLoopSubjectRange.lowerBound) ... (inKeywordIndex ?? closureOpenBraceIndex),
                 with: newTokens
             )
+
+            // `forEach` is `rethrows`, so there may be a `try` before the call. Now that we're using `for` instead,
+            // `try` is invalid here and has to be removed.
+            if
+                let tokenIndexBeforeForLoop = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: forLoopSubjectRange.lowerBound),
+                formatter.tokens[tokenIndexBeforeForLoop] == .keyword("try")
+            {
+                formatter.removeTokens(in: tokenIndexBeforeForLoop ..< forLoopSubjectRange.lowerBound)
+            }
         }
     }
 }

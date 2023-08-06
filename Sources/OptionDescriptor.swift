@@ -46,7 +46,7 @@ class OptionDescriptor {
     fileprivate(set) var propertyName = "" // internal property; ok to change this
     let displayName: String
     let help: String
-    let deprecationMessage: String?
+    fileprivate(set) var deprecationMessage: String?
     let toOptions: (String, inout FormatOptions) throws -> Void
     let fromOptions: (FormatOptions) -> String
     private(set) var type: ArgumentType
@@ -72,6 +72,7 @@ class OptionDescriptor {
 
     fileprivate func renamed(to newPropertyName: String) -> OptionDescriptor {
         propertyName = newPropertyName
+        deprecationMessage = "Use --\(newPropertyName) instead."
         return self
     }
 
@@ -994,7 +995,6 @@ struct _Descriptors {
         argumentName: "empty",
         displayName: "Empty",
         help: "deprecated",
-        deprecationMessage: "Use --voidtype instead.",
         keyPath: \.useVoid,
         trueValues: ["void"],
         falseValues: ["tuple", "tuples"]
@@ -1004,7 +1004,6 @@ struct _Descriptors {
         argumentName: "hexliterals",
         displayName: "hexliterals",
         help: "deprecated",
-        deprecationMessage: "Use --hexliteralcase instead.",
         keyPath: \.uppercaseHex,
         trueValues: ["uppercase", "upper"],
         falseValues: ["lowercase", "lower"]
@@ -1014,7 +1013,6 @@ struct _Descriptors {
         argumentName: "wrapelements",
         displayName: "Wrap Elements",
         help: "deprecated",
-        deprecationMessage: "Use --wrapcollections instead.",
         keyPath: \.wrapCollections
     ).renamed(to: "wrapCollections")
 
@@ -1022,7 +1020,6 @@ struct _Descriptors {
         argumentName: "specifierorder",
         displayName: "Specifier Order",
         help: "deprecated",
-        deprecationMessage: "Use --modifierorder instead.",
         keyPath: \FormatOptions.modifierOrder,
         validate: {
             guard _FormatRules.mapModifiers($0) != nil else {

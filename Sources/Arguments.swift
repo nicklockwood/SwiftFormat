@@ -157,7 +157,7 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
     for arg in args {
         if arg.hasPrefix("--") {
             // Long argument names
-            let key = String(arg.unicodeScalars.dropFirst(2))
+            let key = String(arg.unicodeScalars.dropFirst(2)).lowercased()
             guard names.contains(key) else {
                 guard let match = key.bestMatches(in: names).first else {
                     throw FormatError.options("Unknown option --\(key)")
@@ -169,7 +169,7 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
             continue
         } else if arg.hasPrefix("-") {
             // Short argument names
-            let flag = String(arg.unicodeScalars.dropFirst())
+            let flag = String(arg.unicodeScalars.dropFirst()).lowercased()
             guard let match = names.first(where: { $0.hasPrefix(flag) }) else {
                 throw FormatError.options("Unknown flag -\(flag)")
             }

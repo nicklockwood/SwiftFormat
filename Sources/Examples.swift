@@ -1484,7 +1484,7 @@ private struct Examples {
           print(value)
       }
 
-    // With `--someAny enabled` (the default)
+    // With `--someany enabled` (the default)
     - func handle<T>(_ value: T) {
     + func handle(_ value: some Any) {
           print(value)

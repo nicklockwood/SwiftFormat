@@ -1379,6 +1379,67 @@ extension Formatter {
         return importStack
     }
 
+    /// Parses the arguments of the closure whose open brace is at the given index.
+    /// Returns `nil` if this is an anonymous closure, or if there was an issue parsing the closure arguments.
+    ///  - `{ foo in ... }` returns `argumentNames: ["foo"]`
+    ///  - `{ foo, bar in ... }` returns `argumentNames: ["foo", "bar"]`
+    ///  - `{ (foo: Foo, bar: Bar) in ... }` returns `argumentNames: ["foo", "bar"]`
+    func parseClosureArgumentList(at closureOpenBraceIndex: Int) -> (argumentNames: [String], inKeywordIndex: Int)? {
+        var argumentNames = [String]()
+        let inKeywordIndex: Int
+
+        // Check if this is a closure `{ value in ... }` clause
+        if let indexAfterOpenBrace = index(of: .nonSpaceOrCommentOrLinebreak, after: closureOpenBraceIndex),
+           tokens[indexAfterOpenBrace].isIdentifier
+        {
+            // Parse a list of argument names like `foo, bar, baaz` until the `in` keyword
+            var currentArgumentListIndex = indexAfterOpenBrace
+            while tokens[currentArgumentListIndex].isIdentifier {
+                argumentNames.append(tokens[currentArgumentListIndex].string)
+
+                guard let nextIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: currentArgumentListIndex) else {
+                    return nil
+                }
+
+                // Skip over any commas
+                if tokens[nextIndex] == .delimiter(",") {
+                    currentArgumentListIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: nextIndex) ?? nextIndex
+                } else {
+                    currentArgumentListIndex = nextIndex
+                }
+            }
+
+            // Finally we expect there to be an `in` keyword
+            guard tokens[currentArgumentListIndex] == .keyword("in") else {
+                return nil
+            }
+
+            inKeywordIndex = currentArgumentListIndex
+        }
+
+        // Check if this is a closure `{ (value: ValueType) in ... }` clause
+        else if let indexAfterOpenBrace = index(of: .nonSpaceOrCommentOrLinebreak, after: closureOpenBraceIndex),
+                tokens[indexAfterOpenBrace] == .startOfScope("("),
+                let endOfArgumentsScopeIndex = endOfScope(at: indexAfterOpenBrace),
+                let firstTokenInArgumentsList = index(of: .nonSpaceOrCommentOrLinebreak, after: indexAfterOpenBrace),
+                let lastTokenInArgumentsList = index(of: .nonSpaceOrCommentOrLinebreak, before: endOfArgumentsScopeIndex),
+                let indexAfterArguments = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfArgumentsScopeIndex),
+                tokens[indexAfterArguments] == .keyword("in")
+        {
+            inKeywordIndex = indexAfterArguments
+
+            let argumentTokens = tokens[firstTokenInArgumentsList ... lastTokenInArgumentsList].split(separator: .delimiter(","))
+            argumentNames = argumentTokens.map { $0.first(where: \.isIdentifier)?.string ?? $0[0].string }
+        }
+
+        // Otherwise this is an anonymous closure
+        else {
+            return nil
+        }
+
+        return (argumentNames: argumentNames, inKeywordIndex: inKeywordIndex)
+    }
+
     enum Declaration: Equatable {
         /// A type-like declaration with body of additional declarations (`class`, `struct`, etc)
         indirect case type(kind: String, open: [Token], body: [Declaration], close: [Token])

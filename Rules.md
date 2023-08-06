@@ -1155,7 +1155,7 @@ primary associated types for common standard library types, so definitions like
 
 Option | Description
 --- | ---
-`--someAny` | Use `some Any` types: "true" (default) or "false"
+`--someany` | Use `some Any` types: "true" (default) or "false"
 
 <details>
 <summary>Examples</summary>
@@ -1176,7 +1176,7 @@ Option | Description
       print(value)
   }
 
-// With `--someAny enabled` (the default)
+// With `--someany enabled` (the default)
 - func handle<T>(_ value: T) {
 + func handle(_ value: some Any) {
       print(value)

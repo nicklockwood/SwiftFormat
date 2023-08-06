@@ -7149,7 +7149,7 @@ public struct _FormatRules {
         primary associated types for common standard library types, so definitions like
         `T where T: Collection, T.Element == Foo` are updated to `some Collection<Foo>`.
         """,
-        options: ["someAny"]
+        options: ["someany"]
     ) { formatter in
         formatter.forEach(.keyword) { keywordIndex, keyword in
             guard

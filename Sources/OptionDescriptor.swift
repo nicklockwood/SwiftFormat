@@ -917,7 +917,7 @@ struct _Descriptors {
         toArgument: { $0 }
     )
     let useSomeAny = OptionDescriptor(
-        argumentName: "someAny",
+        argumentName: "someany",
         displayName: "Use `some Any`",
         help: "Use `some Any` types: \"true\" (default) or \"false\"",
         keyPath: \.useSomeAny,
@@ -1027,4 +1027,13 @@ struct _Descriptors {
             }
         }
     ).renamed(to: "modifierOrder")
+
+    let someAny = OptionDescriptor(
+        argumentName: "someAny",
+        displayName: "Use `some Any`",
+        help: "deprecated",
+        keyPath: \.useSomeAny,
+        trueValues: ["true", "enabled"],
+        falseValues: ["false", "disabled"]
+    ).renamed(to: "someany")
 }

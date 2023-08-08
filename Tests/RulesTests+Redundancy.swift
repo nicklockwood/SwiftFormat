@@ -2727,6 +2727,35 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantReturn, options: options)
     }
 
+    func testRedundantSwitchStatementReturnWithAssociatedValueMatchingInFunction() {
+        let input = """
+        func test(_ value: SomeEnum) -> String {
+            switch value {
+            case let .first(str):
+                return "first \\(str)"
+            case .second("str"):
+                return "second"
+            default:
+                return "default"
+            }
+        }
+        """
+        let output = """
+        func test(_ value: SomeEnum) -> String {
+            switch value {
+            case let .first(str):
+                "first \\(str)"
+            case .second("str"):
+                "second"
+            default:
+                "default"
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, output, rule: FormatRules.redundantReturn, options: options)
+    }
+
     // MARK: - redundantBackticks
 
     func testRemoveRedundantBackticksInLet() {

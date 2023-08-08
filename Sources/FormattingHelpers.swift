@@ -1279,8 +1279,7 @@ extension Formatter {
         while
             let conditionalBranchIndex = nextConditionalBranchIndex,
             tokens[conditionalBranchIndex].isSwitchCaseOrDefault,
-            let startOfBody = index(of: .startOfScope, after: conditionalBranchIndex),
-            tokens[startOfBody] == .startOfScope(":"),
+            let startOfBody = index(of: .startOfScope(":"), after: conditionalBranchIndex),
             let endOfBody = endOfScope(at: startOfBody)
         {
             branches.append((startOfBranch: startOfBody, endOfBranch: endOfBody))

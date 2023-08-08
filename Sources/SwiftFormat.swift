@@ -179,9 +179,22 @@ public func enumerateFiles(withInputURL inputURL: URL,
         let fileOptions = options.fileOptions ?? .default
         if resourceValues.isRegularFile == true {
             if fileOptions.supportedFileExtensions.contains(inputURL.pathExtension) {
+                let shouldGetCreatedBy =
+                    options.rules?.contains(FormatRules.fileHeader.name) ?? false &&
+                    options.formatOptions?.fileHeader.hasTemplateKey(.createdName, .createdEmail) ?? false
+
+                let gitInfo = shouldGetCreatedBy
+                    ? GitHelpers.fileInfo(inputURL)
+                    : nil
+
                 let fileInfo = FileInfo(
                     filePath: resourceValues.path,
-                    creationDate: resourceValues.creationDate
+                    replacements: [
+                        .createdDate: resourceValues.creationDate?.shortString,
+                        .createdYear: resourceValues.creationDate?.yearString,
+                        .createdName: gitInfo?.createdByName,
+                        .createdEmail: gitInfo?.createdByEmail,
+                    ].compactMapValues { $0 }
                 )
                 var options = options
                 options.formatOptions?.fileInfo = fileInfo
@@ -487,19 +500,15 @@ private func applyRules(
 
     // Check if required FileInfo is available
     if rules.contains(FormatRules.fileHeader) {
-        if options.fileHeader.rawValue.contains("{created"),
-           options.fileInfo.creationDate == nil
-        {
-            throw FormatError.options(
-                "Failed to apply {created} template in file header as file info is unavailable"
-            )
-        }
-        if options.fileHeader.rawValue.contains("{file"),
-           options.fileInfo.fileName == nil
-        {
-            throw FormatError.options(
-                "Failed to apply {file} template in file header as file name was not provided"
-            )
+        let header = options.fileHeader
+        let fileInfo = options.fileInfo
+
+        for key in FileInfoKey.allCases {
+            if header.hasTemplateKey(key), !fileInfo.hasReplacement(for: key) {
+                throw FormatError.options(
+                    "Failed to apply {\(key.rawValue)} template in file header as required info is unavailable"
+                )
+            }
         }
     }
 

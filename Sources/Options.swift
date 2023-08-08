@@ -245,24 +245,54 @@ public enum HeaderStrippingMode: Equatable, RawRepresentable, ExpressibleByStrin
             return string.isEmpty ? "strip" : string.replacingOccurrences(of: "\n", with: "\\n")
         }
     }
+
+    public func hasTemplateKey(_ keys: FileInfoKey...) -> Bool {
+        guard case let .replace(str) = self else {
+            return false
+        }
+
+        return keys.contains(where: { str.contains("{\($0.rawValue)}") })
+    }
+}
+
+public enum FileInfoKey: String, CaseIterable {
+    case fileName = "file"
+    case currentYear = "year"
+    case createdName = "created.name"
+    case createdEmail = "created.email"
+    case createdDate = "created"
+    case createdYear = "created.year"
 }
 
 /// File info, used for constructing header comments
 public struct FileInfo: Equatable, CustomStringConvertible {
-    var filePath: String?
-    var creationDate: Date?
+    let filePath: String?
+    var replacements: [FileInfoKey: String] = [:]
 
     var fileName: String? {
         filePath.map { URL(fileURLWithPath: $0).lastPathComponent }
     }
 
-    public init(filePath: String? = nil, creationDate: Date? = nil) {
+    public init(filePath: String? = nil, replacements: [FileInfoKey: String] = [:]) {
         self.filePath = filePath
-        self.creationDate = creationDate
+
+        self.replacements.merge(replacements, uniquingKeysWith: { $1 })
+
+        if let fileName = fileName {
+            self.replacements[.fileName] = fileName
+        }
+
+        self.replacements[.currentYear] = Date.currentYear
     }
 
     public var description: String {
-        "\(fileName ?? "");\(creationDate.map { "\($0)" } ?? "")"
+        replacements.enumerated()
+            .map { "\($0)=\($1)" }
+            .joined(separator: ";")
+    }
+
+    public func hasReplacement(for key: FileInfoKey) -> Bool {
+        replacements[key] != nil
     }
 }
 

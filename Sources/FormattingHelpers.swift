@@ -2404,3 +2404,28 @@ extension Formatter {
         }
     }
 }
+
+extension Date {
+    static var shortDateFormatter: (Date) -> String = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .short
+        formatter.timeStyle = .none
+        return { date in formatter.string(from: date) }
+    }()
+
+    static var yearFormatter: (Date) -> String = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy"
+        return { date in formatter.string(from: date) }
+    }()
+
+    static var currentYear = yearFormatter(Date())
+
+    var yearString: String {
+        Date.yearFormatter(self)
+    }
+
+    var shortString: String {
+        Date.shortDateFormatter(self)
+    }
+}

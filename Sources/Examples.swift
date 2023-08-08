@@ -1562,6 +1562,8 @@ private struct Examples {
     `{file}` | File name
     `{year}` | Current year
     `{created}` | File creation date
+    `{created.name}` | Name of the user who first committed the file
+    `{created.email}` | Email of the user who first committed the file
     `{created.year}` | File creation year
 
     **Example**:
@@ -1576,6 +1578,9 @@ private struct Examples {
     + //  Copyright © 2023 CompanyName.
     + //
     ```
+
+    **Note**: `{created.name}` and `{created.email}` requires the project
+    to be version controlled by git.
     """
 
     let conditionalAssignment = """

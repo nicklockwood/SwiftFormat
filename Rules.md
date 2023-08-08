@@ -748,6 +748,8 @@ Token | Description
 `{file}` | File name
 `{year}` | Current year
 `{created}` | File creation date
+`{created.name}` | Name of the user who first committed the file
+`{created.email}` | Email of the user who first committed the file
 `{created.year}` | File creation year
 
 **Example**:
@@ -763,6 +765,8 @@ Token | Description
 + //
 ```
 
+**Note**: `{created.name}` and `{created.email}` requires the project
+to be version controlled by git.
 </details>
 <br/>
 

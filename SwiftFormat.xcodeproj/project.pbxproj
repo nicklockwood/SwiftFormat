@@ -97,6 +97,14 @@
 		A3DF48252620E03600F45A5F /* JSONReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3DF48242620E03600F45A5F /* JSONReporter.swift */; };
 		A3DF48262620E03600F45A5F /* JSONReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3DF48242620E03600F45A5F /* JSONReporter.swift */; };
 		B9C4F55C2387FA3E0088DBEE /* SupportedContentUTIs.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9C4F55B2387FA3E0088DBEE /* SupportedContentUTIs.swift */; };
+		D52F6A642A82E04600FE1448 /* GitHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = D52F6A632A82E04600FE1448 /* GitHelpers.swift */; };
+		D52F6A652A82E04600FE1448 /* GitHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = D52F6A632A82E04600FE1448 /* GitHelpers.swift */; };
+		D52F6A662A82E04600FE1448 /* GitHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = D52F6A632A82E04600FE1448 /* GitHelpers.swift */; };
+		D52F6A672A82E04600FE1448 /* GitHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = D52F6A632A82E04600FE1448 /* GitHelpers.swift */; };
+		D52F6A692A82E0DD00FE1448 /* ShellHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = D52F6A682A82E0DD00FE1448 /* ShellHelpers.swift */; };
+		D52F6A6A2A82E0DD00FE1448 /* ShellHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = D52F6A682A82E0DD00FE1448 /* ShellHelpers.swift */; };
+		D52F6A6B2A82E0DD00FE1448 /* ShellHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = D52F6A682A82E0DD00FE1448 /* ShellHelpers.swift */; };
+		D52F6A6C2A82E0DD00FE1448 /* ShellHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = D52F6A682A82E0DD00FE1448 /* ShellHelpers.swift */; };
 		DD9AD39E2999FCC8001C2C0E /* GithubActionsLogReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD9AD39C2999FCC8001C2C0E /* GithubActionsLogReporter.swift */; };
 		DD9AD39F2999FCC8001C2C0E /* GithubActionsLogReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD9AD39C2999FCC8001C2C0E /* GithubActionsLogReporter.swift */; };
 		DD9AD3A32999FCC8001C2C0E /* Reporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD9AD39D2999FCC8001C2C0E /* Reporter.swift */; };
@@ -242,6 +250,8 @@
 		90F16AFA1DA5ED9A00EB4EA1 /* CommandErrors.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CommandErrors.swift; sourceTree = "<group>"; };
 		A3DF48242620E03600F45A5F /* JSONReporter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = JSONReporter.swift; sourceTree = "<group>"; };
 		B9C4F55B2387FA3E0088DBEE /* SupportedContentUTIs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupportedContentUTIs.swift; sourceTree = "<group>"; };
+		D52F6A632A82E04600FE1448 /* GitHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitHelpers.swift; sourceTree = "<group>"; };
+		D52F6A682A82E0DD00FE1448 /* ShellHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShellHelpers.swift; sourceTree = "<group>"; };
 		DD9AD39C2999FCC8001C2C0E /* GithubActionsLogReporter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GithubActionsLogReporter.swift; sourceTree = "<group>"; };
 		DD9AD39D2999FCC8001C2C0E /* Reporter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Reporter.swift; sourceTree = "<group>"; };
 		E41CB5BE2025761D00C1BEDE /* UserSelection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSelection.swift; sourceTree = "<group>"; };
@@ -366,6 +376,8 @@
 				01A0EAC41D5DB54A00A0A8E3 /* SwiftFormat.swift */,
 				01A0EABF1D5DB4F700A0A8E3 /* Tokenizer.swift */,
 				01BBD85821DAA2A000457380 /* Globs.swift */,
+				D52F6A632A82E04600FE1448 /* GitHelpers.swift */,
+				D52F6A682A82E0DD00FE1448 /* ShellHelpers.swift */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
@@ -776,6 +788,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D52F6A642A82E04600FE1448 /* GitHelpers.swift in Sources */,
 				01045A992119979400D2BE3D /* Arguments.swift in Sources */,
 				01567D2F225B2BFD00B22D41 /* ParsingHelpers.swift in Sources */,
 				DD9AD39E2999FCC8001C2C0E /* GithubActionsLogReporter.swift in Sources */,
@@ -783,6 +796,7 @@
 				DD9AD3A32999FCC8001C2C0E /* Reporter.swift in Sources */,
 				E4FABAD5202FEF060065716E /* OptionDescriptor.swift in Sources */,
 				01BBD85921DAA2A000457380 /* Globs.swift in Sources */,
+				D52F6A692A82E0DD00FE1448 /* ShellHelpers.swift in Sources */,
 				01ACAE05220CD90F003F3CCF /* Examples.swift in Sources */,
 				01D3B28624E9C9C700888DE0 /* FormattingHelpers.swift in Sources */,
 				E4E4D3C92033F17C000D7CB1 /* EnumAssociable.swift in Sources */,
@@ -841,9 +855,11 @@
 				DD9AD39F2999FCC8001C2C0E /* GithubActionsLogReporter.swift in Sources */,
 				E4E4D3CA2033F17C000D7CB1 /* EnumAssociable.swift in Sources */,
 				01BBD85A21DAA2A600457380 /* Globs.swift in Sources */,
+				D52F6A6A2A82E0DD00FE1448 /* ShellHelpers.swift in Sources */,
 				01045A92211988F100D2BE3D /* Inference.swift in Sources */,
 				01F3DF8D1DB9FD3F00454944 /* Options.swift in Sources */,
 				E4FABAD6202FEF060065716E /* OptionDescriptor.swift in Sources */,
+				D52F6A652A82E04600FE1448 /* GitHelpers.swift in Sources */,
 				A3DF48262620E03600F45A5F /* JSONReporter.swift in Sources */,
 				01A8320724EC7F7600A9D0EB /* FormattingHelpers.swift in Sources */,
 				01F17E831E25870700DCD359 /* CommandLine.swift in Sources */,
@@ -868,6 +884,7 @@
 				01045A9B2119979400D2BE3D /* Arguments.swift in Sources */,
 				E4872114201D3B8C0014845E /* Tokenizer.swift in Sources */,
 				015243E32B04B0A600F65221 /* Singularize.swift in Sources */,
+				D52F6A6B2A82E0DD00FE1448 /* ShellHelpers.swift in Sources */,
 				E4872112201D3B860014845E /* Rules.swift in Sources */,
 				E4962DE0203F3CD500A02013 /* OptionsStore.swift in Sources */,
 				01ACAE07220CD915003F3CCF /* Examples.swift in Sources */,
@@ -881,6 +898,7 @@
 				E41CB5BF2025761D00C1BEDE /* UserSelection.swift in Sources */,
 				E4872111201D3B830014845E /* Options.swift in Sources */,
 				01A95BD3225BEDE400744931 /* ParsingHelpers.swift in Sources */,
+				D52F6A662A82E04600FE1448 /* GitHelpers.swift in Sources */,
 				90C4B6CD1DA4B04A009EB000 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -898,6 +916,7 @@
 				E4E4D3CC2033F17C000D7CB1 /* EnumAssociable.swift in Sources */,
 				E4FABAD8202FEF060065716E /* OptionDescriptor.swift in Sources */,
 				015243E42B04B0A700F65221 /* Singularize.swift in Sources */,
+				D52F6A6C2A82E0DD00FE1448 /* ShellHelpers.swift in Sources */,
 				9028F7841DA4B435009FE5B4 /* Tokenizer.swift in Sources */,
 				90F16AFB1DA5ED9A00EB4EA1 /* CommandErrors.swift in Sources */,
 				01A8320924EC7F7800A9D0EB /* FormattingHelpers.swift in Sources */,
@@ -911,6 +930,7 @@
 				90C4B6E71DA4B059009EB000 /* FormatSelectionCommand.swift in Sources */,
 				90F16AF81DA5EB4600EB4EA1 /* FormatFileCommand.swift in Sources */,
 				01ACAE08220CD916003F3CCF /* Examples.swift in Sources */,
+				D52F6A672A82E04600FE1448 /* GitHelpers.swift in Sources */,
 				9028F7861DA4B435009FE5B4 /* Rules.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

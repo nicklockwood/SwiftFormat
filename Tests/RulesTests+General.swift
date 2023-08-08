@@ -9,6 +9,16 @@
 import XCTest
 @testable import SwiftFormat
 
+func createFileInfo(filePath: String? = nil, creationDate: Date? = nil, replacements: [FileInfoKey: String] = [:]) -> FileInfo {
+    var allReplacements = replacements
+    allReplacements.merge([
+        .createdDate: creationDate?.shortString,
+        .createdYear: creationDate?.yearString,
+    ].compactMapValues { $0 }, uniquingKeysWith: { $1 })
+
+    return FileInfo(filePath: filePath, replacements: allReplacements)
+}
+
 class GeneralTests: RulesTests {
     // MARK: - initCoderUnavailable
 
@@ -537,8 +547,18 @@ class GeneralTests: RulesTests {
             formatter.dateFormat = "yyyy"
             return "// Copyright © \(formatter.string(from: date))\n\nlet foo = bar"
         }()
-        let fileInfo = FileInfo(creationDate: date)
+        let fileInfo = createFileInfo(creationDate: date)
         let options = FormatOptions(fileHeader: "// Copyright © {created.year}", fileInfo: fileInfo)
+        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+    }
+
+    func testFileHeaderCreatorReplacement() {
+        let name = "Test User"
+        let email = "test@email.com"
+        let input = "let foo = bar"
+        let output = "// Created by \(name) \(email)\n\nlet foo = bar"
+        let fileInfo = createFileInfo(replacements: [.createdName: name, .createdEmail: email])
+        let options = FormatOptions(fileHeader: "// Created by {created.name} {created.email}", fileInfo: fileInfo)
         testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
     }
 
@@ -551,7 +571,7 @@ class GeneralTests: RulesTests {
             formatter.timeStyle = .none
             return "// Created by Nick Lockwood on \(formatter.string(from: date)).\n\nlet foo = bar"
         }()
-        let fileInfo = FileInfo(creationDate: date)
+        let fileInfo = createFileInfo(creationDate: date)
         let options = FormatOptions(fileHeader: "// Created by Nick Lockwood on {created}.", fileInfo: fileInfo)
         testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
     }

@@ -806,6 +806,8 @@ It is common practice to include the file name, creation date and/or the current
 * `{file}` - the name of the file
 * `{year}` - the current year
 * `{created}` - the date on which the file was created
+* `{created.name}` - the name of the user who first committed the file
+* `{created.email}` - the email of the user who first committed the file 
 * `{created.year}` - the year in which the file was created
 
 For example, a header template of:
@@ -822,7 +824,7 @@ Will be formatted as:
 // Created by John Smith on 01/02/2016.
 ```
 
-**NOTE:** the `{year}` value and `{created}` date format are determined from the current locale and timezone of the machine running the script.
+**NOTE:** the `{year}` value and `{created}` date format are determined from the current locale and timezone of the machine running the script. `{created.name}` and `{created.email}` requires the project to be version controlled by git.
 
 
 FAQ

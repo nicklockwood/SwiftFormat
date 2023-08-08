@@ -4299,7 +4299,7 @@ public struct _FormatRules {
             return
         case var .replace(string):
             for (key, replacement) in formatter.options.fileInfo.replacements {
-                if let range = string.range(of: "{\(key.rawValue)}") {
+                while let range = string.range(of: "{\(key.rawValue)}") {
                     string.replaceSubrange(range, with: replacement)
                 }
             }

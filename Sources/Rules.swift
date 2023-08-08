@@ -4196,24 +4196,12 @@ public struct _FormatRules {
         case .ignore:
             return
         case var .replace(string):
-            if let range = string.range(of: "{file}"),
-               let file = formatter.options.fileInfo.fileName
-            {
-                string.replaceSubrange(range, with: file)
+            for (key, replacement) in formatter.options.fileInfo.replacements {
+                if let range = string.range(of: "{\(key.rawValue)}") {
+                    string.replaceSubrange(range, with: replacement)
+                }
             }
-            if let range = string.range(of: "{year}") {
-                string.replaceSubrange(range, with: currentYear)
-            }
-            if let range = string.range(of: "{created}"),
-               let date = formatter.options.fileInfo.creationDate
-            {
-                string.replaceSubrange(range, with: shortDateFormatter(date))
-            }
-            if let range = string.range(of: "{created.year}"),
-               let date = formatter.options.fileInfo.creationDate
-            {
-                string.replaceSubrange(range, with: yearFormatter(date))
-            }
+
             header = string
         }
 

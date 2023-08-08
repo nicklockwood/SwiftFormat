@@ -2290,24 +2290,6 @@ extension Formatter {
 }
 
 extension _FormatRules {
-    /// Short date formatter. Used by fileHeader rule
-    static var shortDateFormatter: (Date) -> String = {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .short
-        formatter.timeStyle = .none
-        return { formatter.string(from: $0) }
-    }()
-
-    /// Year formatter. Used by fileHeader rule
-    static var yearFormatter: (Date) -> String = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy"
-        return { formatter.string(from: $0) }
-    }()
-
-    /// Current year. Used by fileHeader rule
-    static var currentYear: String = yearFormatter(Date())
-
     /// Swiftlint semantic modifier groups
     static let semanticModifierGroups = ["acl", "setteracl", "mutators", "typemethods", "owned"]
 

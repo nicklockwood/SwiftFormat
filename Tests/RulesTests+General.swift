@@ -562,6 +562,15 @@ class GeneralTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
     }
 
+    func testFileHeaderMultipleReplacement() {
+        let name = "Test User"
+        let input = "let foo = bar"
+        let output = "// Copyright © \(name)\n// Created by \(name)\n\nlet foo = bar"
+        let fileInfo = createFileInfo(replacements: [.createdName: name])
+        let options = FormatOptions(fileHeader: "// Copyright © {created.name}\n// Created by {created.name}", fileInfo: fileInfo)
+        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+    }
+
     func testFileHeaderCreationDateReplacement() {
         let input = "let foo = bar"
         let date = Date(timeIntervalSince1970: 0)

@@ -961,6 +961,14 @@ struct _Descriptors {
         trueValues: ["true", "enabled"],
         falseValues: ["false", "disabled"]
     )
+    let dateFormat = OptionDescriptor(
+        argumentName: "dateformat",
+        displayName: "Date format",
+        help: "Format dates: system (default), iso, dmy, mdy or a custom format",
+        keyPath: \.dateFormat,
+        fromArgument: { DateFormat(rawValue: $0) },
+        toArgument: { $0.rawValue }
+    )
 
     // MARK: - Internal
 

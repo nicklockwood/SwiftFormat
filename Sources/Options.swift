@@ -197,6 +197,15 @@ public struct Version: RawRepresentable, Comparable, ExpressibleByStringLiteral,
     }
 }
 
+public enum ReplacementKey: String, CaseIterable {
+    case fileName = "file"
+    case currentYear = "year"
+    case createdDate = "created"
+    case createdName = "created.name"
+    case createdEmail = "created.email"
+    case createdYear = "created.year"
+}
+
 /// Argument type for stripping
 public enum HeaderStrippingMode: Equatable, RawRepresentable, ExpressibleByStringLiteral {
     case ignore
@@ -240,7 +249,7 @@ public enum HeaderStrippingMode: Equatable, RawRepresentable, ExpressibleByStrin
         }
     }
 
-    public func hasTemplateKey(_ keys: FileInfoKey...) -> Bool {
+    public func hasTemplateKey(_ keys: ReplacementKey...) -> Bool {
         guard case let .replace(str) = self else {
             return false
         }
@@ -249,34 +258,82 @@ public enum HeaderStrippingMode: Equatable, RawRepresentable, ExpressibleByStrin
     }
 }
 
-public enum FileInfoKey: String, CaseIterable {
-    case fileName = "file"
-    case currentYear = "year"
-    case createdName = "created.name"
-    case createdEmail = "created.email"
-    case createdDate = "created"
-    case createdYear = "created.year"
+public struct ReplacementOptions {
+    var dateFormat: DateFormat
+    var timeZone: FormatTimeZone
+
+    init(dateFormat: DateFormat, timeZone: FormatTimeZone) {
+        self.dateFormat = dateFormat
+        self.timeZone = timeZone
+    }
+
+    init(_ options: FormatOptions) {
+        self.init(dateFormat: options.dateFormat, timeZone: options.timeZone)
+    }
+}
+
+public enum ReplacementType: Equatable {
+    case constant(String)
+    case dynamic((FileInfo, ReplacementOptions) -> String?)
+
+    init?(_ value: String?) {
+        guard let val = value else { return nil }
+        self = .constant(val)
+    }
+
+    public static func == (lhs: ReplacementType, rhs: ReplacementType) -> Bool {
+        switch (lhs, rhs) {
+        case let (.constant(lhsVal), .constant(rhsVal)):
+            return lhsVal == rhsVal
+        case let (.dynamic(lhsClosure), .dynamic(rhsClosure)):
+            return lhsClosure as AnyObject === rhsClosure as AnyObject
+        default:
+            return false
+        }
+    }
+
+    public func resolve(_ info: FileInfo, _ options: ReplacementOptions) -> String? {
+        switch self {
+        case let .constant(value):
+            return value
+        case let .dynamic(fn):
+            return fn(info, options)
+        }
+    }
 }
 
 /// File info, used for constructing header comments
 public struct FileInfo: Equatable, CustomStringConvertible {
+    static let defaultReplacements: [ReplacementKey: ReplacementType] = [
+        .createdDate: .dynamic { info, options in
+            info.creationDate?.format(with: options.dateFormat,
+                                      timeZone: options.timeZone)
+        },
+        .createdYear: .dynamic { info, _ in info.creationDate?.yearString },
+        .currentYear: .constant(Date.currentYear),
+    ]
+
     let filePath: String?
-    var replacements: [FileInfoKey: String] = [:]
+    var creationDate: Date?
+    var replacements: [ReplacementKey: ReplacementType] = Self.defaultReplacements
 
     var fileName: String? {
         filePath.map { URL(fileURLWithPath: $0).lastPathComponent }
     }
 
-    public init(filePath: String? = nil, replacements: [FileInfoKey: String] = [:]) {
+    public init(
+        filePath: String? = nil,
+        creationDate: Date? = nil,
+        replacements: [ReplacementKey: ReplacementType] = [:]
+    ) {
         self.filePath = filePath
+        self.creationDate = creationDate
 
         self.replacements.merge(replacements, uniquingKeysWith: { $1 })
 
         if let fileName = fileName {
-            self.replacements[.fileName] = fileName
+            self.replacements[.fileName] = .constant(fileName)
         }
-
-        self.replacements[.currentYear] = Date.currentYear
     }
 
     public var description: String {
@@ -285,8 +342,19 @@ public struct FileInfo: Equatable, CustomStringConvertible {
             .joined(separator: ";")
     }
 
-    public func hasReplacement(for key: FileInfoKey) -> Bool {
-        replacements[key] != nil
+    public func hasReplacement(for key: ReplacementKey, options: FormatOptions) -> Bool {
+        switch replacements[key] {
+        case nil:
+            return false
+        case .constant:
+            return true
+        case let .dynamic(fn):
+            guard let date = creationDate else {
+                return false
+            }
+
+            return fn(self, ReplacementOptions(options)) != nil
+        }
     }
 }
 
@@ -385,6 +453,98 @@ public enum DelimiterSpacing: String, CaseIterable {
     case noSpace = "no-space"
 }
 
+/// Format to use when printing dates
+public enum DateFormat: Equatable, RawRepresentable, CustomStringConvertible {
+    case dayMonthYear
+    case iso
+    case monthDayYear
+    case system
+    case custom(String)
+
+    public init?(rawValue: String) {
+        switch rawValue {
+        case "dmy":
+            self = .dayMonthYear
+        case "iso":
+            self = .iso
+        case "mdy":
+            self = .monthDayYear
+        case "system":
+            self = .system
+        default:
+            self = .custom(rawValue)
+        }
+    }
+
+    public var rawValue: String {
+        switch self {
+        case .dayMonthYear:
+            return "dmy"
+        case .iso:
+            return "iso"
+        case .monthDayYear:
+            return "mdy"
+        case .system:
+            return "system"
+        case let .custom(str):
+            return str
+        }
+    }
+
+    public var description: String {
+        rawValue
+    }
+}
+
+/// Timezone to use when printing dates
+public enum FormatTimeZone: Equatable, RawRepresentable, CustomStringConvertible {
+    case system
+    case abbreviation(String)
+    case identifier(String)
+
+    static let utcNames = ["utc", "gmt"]
+
+    public init?(rawValue: String) {
+        if Self.utcNames.contains(rawValue.lowercased()) {
+            self = .identifier("UTC")
+        } else if TimeZone.knownTimeZoneIdentifiers.contains(rawValue) {
+            self = .identifier(rawValue)
+        } else if TimeZone.abbreviationDictionary.keys.contains(rawValue) {
+            self = .abbreviation(rawValue)
+        } else if rawValue == Self.system.rawValue {
+            self = .system
+        } else {
+            return nil
+        }
+    }
+
+    public var rawValue: String {
+        switch self {
+        case .system:
+            return "system"
+        case let .abbreviation(abbreviation):
+            return abbreviation
+        case let .identifier(identifier):
+            return identifier
+        }
+    }
+
+    public var timeZone: TimeZone? {
+        switch self {
+        case .system:
+            return TimeZone.current
+        case let .abbreviation(abbreviation):
+            return TimeZone(abbreviation: abbreviation)
+        case let .identifier(identifier):
+            return TimeZone(identifier: identifier)
+        }
+    }
+
+    public var description: String {
+        rawValue
+    }
+}
+
 /// Configuration options for formatting. These aren't actually used by the
 /// Formatter class itself, but it makes them available to the format rules.
 public struct FormatOptions: CustomStringConvertible {
@@ -475,6 +635,8 @@ public struct FormatOptions: CustomStringConvertible {
     public var preserveDocComments: Bool
     public var typeDelimiterSpacing: DelimiterSpacing
     public var initCoderNil: Bool
+    public var dateFormat: DateFormat
+    public var timeZone: FormatTimeZone
 
     /// Deprecated
     public var indentComments: Bool
@@ -580,6 +742,8 @@ public struct FormatOptions: CustomStringConvertible {
                 preserveDocComments: Bool = false,
                 typeDelimiterSpacing: DelimiterSpacing = .spaceAfter,
                 initCoderNil: Bool = false,
+                dateFormat: DateFormat = .system,
+                timeZone: FormatTimeZone = .system,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -675,6 +839,8 @@ public struct FormatOptions: CustomStringConvertible {
         self.preserveDocComments = preserveDocComments
         self.typeDelimiterSpacing = typeDelimiterSpacing
         self.initCoderNil = initCoderNil
+        self.dateFormat = dateFormat
+        self.timeZone = timeZone
         // Doesn't really belong here, but hard to put elsewhere
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

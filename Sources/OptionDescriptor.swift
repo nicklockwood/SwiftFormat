@@ -963,6 +963,22 @@ struct _Descriptors {
         trueValues: ["true", "enabled"],
         falseValues: ["false", "disabled"]
     )
+    let dateFormat = OptionDescriptor(
+        argumentName: "dateformat",
+        displayName: "Date format",
+        help: "\"system\" (default), \"iso\", \"dmy\", \"mdy\" or custom",
+        keyPath: \.dateFormat,
+        fromArgument: { DateFormat(rawValue: $0) },
+        toArgument: { $0.rawValue }
+    )
+    let timeZone = OptionDescriptor(
+        argumentName: "timezone",
+        displayName: "Date formatting timezone",
+        help: "\"system\" (default) or a valid identifier/abbreviation",
+        keyPath: \.timeZone,
+        fromArgument: { FormatTimeZone(rawValue: $0) },
+        toArgument: { $0.rawValue }
+    )
 
     // MARK: - Internal
 

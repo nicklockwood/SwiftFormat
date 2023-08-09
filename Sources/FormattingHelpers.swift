@@ -3288,13 +3288,6 @@ extension Formatter {
 }
 
 extension Date {
-    static var shortDateFormatter: (Date) -> String = {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .short
-        formatter.timeStyle = .none
-        return { date in formatter.string(from: date) }
-    }()
-
     static var yearFormatter: (Date) -> String = {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy"
@@ -3307,7 +3300,28 @@ extension Date {
         Date.yearFormatter(self)
     }
 
-    var shortString: String {
-        Date.shortDateFormatter(self)
+    func format(with format: DateFormat?) -> String {
+        let formatter = DateFormatter()
+
+        if format != nil, format != .system {
+            // Default to UTC
+            formatter.timeZone = .init(identifier: "UTC")
+        }
+
+        switch format {
+        case nil, .system:
+            formatter.dateStyle = .short
+            formatter.timeStyle = .none
+        case .dayMonthYear:
+            formatter.dateFormat = "dd/MM/yyyy"
+        case .iso:
+            formatter.dateFormat = "yyyy-MM-dd"
+        case .monthDayYear:
+            formatter.dateFormat = "MM/dd/yyyy"
+        case let .custom(format):
+            formatter.dateFormat = format
+        }
+
+        return formatter.string(from: self)
     }
 }

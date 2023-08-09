@@ -390,6 +390,49 @@ public enum SpaceAroundDelimiter: String, CaseIterable {
     case leadingTrailing = "leading-trailing"
 }
 
+/// Format for printed dates
+public enum DateFormat: Equatable, RawRepresentable, CustomStringConvertible {
+    case dayMonthYear
+    case iso
+    case monthDayYear
+    case system
+    case custom(String)
+
+    public init?(rawValue: String) {
+        switch rawValue {
+        case "dmy":
+            self = .dayMonthYear
+        case "iso":
+            self = .iso
+        case "mdy":
+            self = .monthDayYear
+        case "system":
+            self = .system
+        default:
+            self = .custom(rawValue)
+        }
+    }
+
+    public var rawValue: String {
+        switch self {
+        case .dayMonthYear:
+            return "dmy"
+        case .iso:
+            return "iso"
+        case .monthDayYear:
+            return "mdy"
+        case .system:
+            return "system"
+        case let .custom(str):
+            return str
+        }
+    }
+
+    public var description: String {
+        rawValue
+    }
+}
+
 /// Configuration options for formatting. These aren't actually used by the
 /// Formatter class itself, but it makes them available to the format rules.
 public struct FormatOptions: CustomStringConvertible {
@@ -480,6 +523,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var preserveSingleLineForEach: Bool
     public var spaceAroundDelimiter: SpaceAroundDelimiter
     public var initCoderNil: Bool
+    public var dateFormat: DateFormat
 
     /// Deprecated
     public var indentComments: Bool
@@ -583,6 +627,7 @@ public struct FormatOptions: CustomStringConvertible {
                 wrapEffects: WrapEffects = .preserve,
                 preserveAnonymousForEach: Bool = false,
                 preserveSingleLineForEach: Bool = true,
+                dateFormat: DateFormat = .system,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -679,6 +724,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.preserveAnonymousForEach = preserveAnonymousForEach
         self.preserveSingleLineForEach = preserveSingleLineForEach
         self.spaceAroundDelimiter = spaceAroundDelimiter
+        self.dateFormat = dateFormat
         // Doesn't really belong here, but hard to put elsewhere
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

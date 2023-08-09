@@ -485,7 +485,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
             formatOptions.fileInfo = FileInfo(
                 filePath: resourceValues.path,
                 replacements: [
-                    .createdDate: resourceValues.creationDate?.shortString,
+                    .createdDate: resourceValues.creationDate?.format(with: options.formatOptions?.dateFormat),
                     .createdYear: resourceValues.creationDate?.yearString,
                 ].compactMapValues { $0 }
             )

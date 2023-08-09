@@ -9,14 +9,33 @@
 import XCTest
 @testable import SwiftFormat
 
-func createFileInfo(filePath: String? = nil, creationDate: Date? = nil, replacements: [FileInfoKey: String] = [:]) -> FileInfo {
+func createFileInfo(
+    filePath: String? = nil,
+    creationDate: Date? = nil,
+    replacements: [FileInfoKey: String] = [:],
+    dateFormat: DateFormat? = nil
+) -> FileInfo {
     var allReplacements = replacements
     allReplacements.merge([
-        .createdDate: creationDate?.shortString,
+        .createdDate: creationDate?.format(with: dateFormat),
         .createdYear: creationDate?.yearString,
     ].compactMapValues { $0 }, uniquingKeysWith: { $1 })
 
     return FileInfo(filePath: filePath, replacements: allReplacements)
+}
+
+private enum TestDateFormat: String {
+    case basic = "yyyy-MM-dd"
+    case timestamp = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ"
+}
+
+private func createTestDate(
+    _ input: String,
+    _ format: TestDateFormat = .basic
+) -> Date {
+    let formatter = DateFormatter()
+    formatter.dateFormat = format.rawValue
+    return formatter.date(from: input)!
 }
 
 class GeneralTests: RulesTests {
@@ -582,6 +601,46 @@ class GeneralTests: RulesTests {
         }()
         let fileInfo = createFileInfo(creationDate: date)
         let options = FormatOptions(fileHeader: "// Created by Nick Lockwood on {created}.", fileInfo: fileInfo)
+        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+    }
+
+    func testFileHeaderDateFormattingIso() {
+        let date = createTestDate("2023-08-09")
+
+        let input = "let foo = bar"
+        let output = "// 2023-08-09\n\nlet foo = bar"
+        let fileInfo = createFileInfo(creationDate: date, dateFormat: .iso)
+        let options = FormatOptions(fileHeader: "// {created}", fileInfo: fileInfo)
+        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+    }
+
+    func testFileHeaderDateFormattingDayMonthYear() {
+        let date = createTestDate("2023-08-09")
+
+        let input = "let foo = bar"
+        let output = "// 09/08/2023\n\nlet foo = bar"
+        let fileInfo = createFileInfo(creationDate: date, dateFormat: .dayMonthYear)
+        let options = FormatOptions(fileHeader: "// {created}", fileInfo: fileInfo)
+        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+    }
+
+    func testFileHeaderDateFormattingMonthDayYear() {
+        let date = createTestDate("2023-08-09")
+
+        let input = "let foo = bar"
+        let output = "// 08/09/2023\n\nlet foo = bar"
+        let fileInfo = createFileInfo(creationDate: date, dateFormat: .monthDayYear)
+        let options = FormatOptions(fileHeader: "// {created}", fileInfo: fileInfo)
+        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+    }
+
+    func testFileHeaderDateFormattingCustom() {
+        let date = createTestDate("2023-08-09T12:59:30.345Z", .timestamp)
+
+        let input = "let foo = bar"
+        let output = "// 23.08.09-12.59.30.345\n\nlet foo = bar"
+        let fileInfo = createFileInfo(creationDate: date, dateFormat: .custom("yy.MM.dd-HH.mm.ss.SSS"))
+        let options = FormatOptions(fileHeader: "// {created}", fileInfo: fileInfo)
         testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
     }
 

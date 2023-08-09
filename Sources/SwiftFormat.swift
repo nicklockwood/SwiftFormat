@@ -190,7 +190,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
                 let fileInfo = FileInfo(
                     filePath: resourceValues.path,
                     replacements: [
-                        .createdDate: resourceValues.creationDate?.shortString,
+                        .createdDate: resourceValues.creationDate?.format(with: options.formatOptions?.dateFormat),
                         .createdYear: resourceValues.creationDate?.yearString,
                         .createdName: gitInfo?.createdByName,
                         .createdEmail: gitInfo?.createdByEmail,

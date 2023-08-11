@@ -5461,6 +5461,21 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
     }
 
+    func testBodilessFunctionDoesntBreakParser() {
+        let input = """
+        @_silgen_name("foo")
+        func foo(_: CFString, _: CFTypeRef) -> Int?
+
+        enum Bar {
+            static func baz() {
+                fatalError()
+            }
+        }
+        """
+        let options = FormatOptions(explicitSelf: .insert)
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
     // explicitSelf = .initOnly
 
     func testPreserveSelfInsideClassInit() {

@@ -2727,6 +2727,99 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantReturn, options: options)
     }
 
+    func testRedundantReturnDoesntFailToTerminateOnLongSwitch() {
+        let input = """
+        func test(_ value: SomeEnum) -> String {
+            switch value {
+            case .one:
+                return ""
+            case .two:
+                return ""
+            case .three:
+                return ""
+            case .four:
+                return ""
+            case .five:
+                return ""
+            case .six:
+                return ""
+            case .seven:
+                return ""
+            case .eight:
+                return ""
+            case .nine:
+                return ""
+            case .ten:
+                return ""
+            case .eleven:
+                return ""
+            case .twelve:
+                return ""
+            case .thirteen:
+                return ""
+            case .fourteen:
+                return ""
+            case .fifteen:
+                return ""
+            case .sixteen:
+                return ""
+            case .seventeen:
+                return ""
+            case .eighteen:
+                return ""
+            case .nineteen:
+                return ""
+            }
+        }
+        """
+        let output = """
+        func test(_ value: SomeEnum) -> String {
+            switch value {
+            case .one:
+                ""
+            case .two:
+                ""
+            case .three:
+                ""
+            case .four:
+                ""
+            case .five:
+                ""
+            case .six:
+                ""
+            case .seven:
+                ""
+            case .eight:
+                ""
+            case .nine:
+                ""
+            case .ten:
+                ""
+            case .eleven:
+                ""
+            case .twelve:
+                ""
+            case .thirteen:
+                ""
+            case .fourteen:
+                ""
+            case .fifteen:
+                ""
+            case .sixteen:
+                ""
+            case .seventeen:
+                ""
+            case .eighteen:
+                ""
+            case .nineteen:
+                ""
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, output, rule: FormatRules.redundantReturn, options: options)
+    }
+
     // MARK: - redundantBackticks
 
     func testRemoveRedundantBackticksInLet() {

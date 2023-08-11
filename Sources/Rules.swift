@@ -3137,7 +3137,7 @@ public struct _FormatRules {
                 if let firstTokenInBody = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: startOfBody),
                    let conditionalBranches = formatter.conditionalBranches(at: firstTokenInBody)
                 {
-                    for branch in conditionalBranches {
+                    for branch in conditionalBranches.reversed() {
                         removeReturn(atStartOfScope: branch.startOfBranch)
                     }
                 }

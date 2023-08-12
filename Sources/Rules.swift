@@ -7297,7 +7297,7 @@ public struct _FormatRules {
         }
     }
 
-    public let forLoop = FormatRule(
+    public let preferForLoop = FormatRule(
         help: "Convert functional `forEach` calls to for loops.",
         disabledByDefault: true,
         options: ["anonymousforeach", "onelineforeach"],

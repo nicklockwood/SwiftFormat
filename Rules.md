@@ -54,6 +54,7 @@
 * [redundantVoidReturnType](#redundantVoidReturnType)
 * [semicolons](#semicolons)
 * [sortDeclarations](#sortDeclarations)
+* [sortTypealiases](#sortTypealiases)
 * [sortedImports](#sortedImports)
 * [spaceAroundBraces](#spaceAroundBraces)
 * [spaceAroundBrackets](#spaceAroundBrackets)
@@ -93,7 +94,6 @@
 * [isEmpty](#isEmpty)
 * [markTypes](#markTypes)
 * [organizeDeclarations](#organizeDeclarations)
-* [sortTypealiases](#sortTypealiases)
 * [sortedSwitchCases](#sortedSwitchCases)
 * [wrapConditionalBodies](#wrapConditionalBodies)
 * [wrapEnumCases](#wrapEnumCases)
@@ -1831,7 +1831,7 @@ and declarations between // swiftformat:sort:begin and
 
 ## sortTypealiases
 
-Sort protocol composition typealiases.
+Sort protocol composition typealiases alphabetically.
 
 <details>
 <summary>Examples</summary>

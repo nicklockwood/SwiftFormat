@@ -928,14 +928,14 @@ struct _Descriptors {
     let preserveAnonymousForEach = OptionDescriptor(
         argumentName: "anonymousforeach",
         displayName: "Anonymous forEach closures",
-        help: "Convert anonymous forEach: \"convert\" (default) or \"preserve\".",
+        help: "Convert anonymous forEach: \"convert\" (default) or \"ignore\".",
         keyPath: \.preserveAnonymousForEach,
-        trueValues: ["preserve"],
+        trueValues: ["ignore", "preserve"],
         falseValues: ["convert"]
     )
     let preserveSingleLineForEach = OptionDescriptor(
         argumentName: "onelineforeach",
-        displayName: "One-line forEach closures",
+        displayName: "Single-line forEach closures",
         help: "Convert one-line forEach: \"preserve\" (default) or \"wrap\".",
         keyPath: \.preserveSingleLineForEach,
         trueValues: ["preserve"],

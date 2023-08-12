@@ -1621,7 +1621,7 @@ private struct Examples {
     ```
     """
 
-    let forLoop = """
+    let preferForLoop = """
     ```diff
       let strings = ["foo", "bar", "baaz"]
     - strings.forEach { placeholder in
@@ -1629,7 +1629,7 @@ private struct Examples {
           print(placeholder)
       }
 
-    // Supports anonymous closures!
+      // Supports anonymous closures
     - strings.forEach {
     + for string in strings {
     -     print($0)
@@ -1642,7 +1642,7 @@ private struct Examples {
     +     print(baazValue)
       }
 
-      // Doesn't affect long multiline functional chains ✅
+      // Doesn't affect long multiline functional chains
       placeholderStrings
           .filter { $0.style == .fooBar }
           .map { $0.uppercased() }

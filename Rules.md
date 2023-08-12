@@ -90,10 +90,10 @@
 * [blankLinesBetweenImports](#blankLinesBetweenImports)
 * [blockComments](#blockComments)
 * [docComments](#docComments)
-* [forLoop](#forLoop)
 * [isEmpty](#isEmpty)
 * [markTypes](#markTypes)
 * [organizeDeclarations](#organizeDeclarations)
+* [preferForLoop](#preferForLoop)
 * [sortTypealiases](#sortTypealiases)
 * [sortedSwitchCases](#sortedSwitchCases)
 * [wrapConditionalBodies](#wrapConditionalBodies)
@@ -751,48 +751,6 @@ Token | Description
 </details>
 <br/>
 
-## forLoop
-
-Convert functional `forEach` calls to for loops.
-
-Option | Description
---- | ---
-`--anonymousforeach` | Convert anonymous forEach: "convert" (default) or "preserve".
-`--onelineforeach` | Convert one-line forEach: "preserve" (default) or "wrap".
-
-<details>
-<summary>Examples</summary>
-
-```diff
-  let strings = ["foo", "bar", "baaz"]
-- strings.forEach { placeholder in
-+ for placeholder in strings {
-      print(placeholder)
-  }
-
-// Supports anonymous closures!
-- strings.forEach {
-+ for string in strings {
--     print($0)
-+     print(string)
-  }
-
-- foo.item().bar[2].baazValues(option: true).forEach {
-+ for baazValue in foo.item().bar[2].baazValues(option: true) {
--     print($0)
-+     print(baazValue)
-  }
-
-  // Doesn't affect long multiline functional chains ✅
-  placeholderStrings
-      .filter { $0.style == .fooBar }
-      .map { $0.uppercased() }
-      .forEach { print($0) }
-```
-
-</details>
-<br/>
-
 ## genericExtensions
 
 When extending generic types, use angle brackets (`extension Array<Foo>`)
@@ -1246,6 +1204,48 @@ Option | Description
 +     private let g: Int = 2
 +
  }
+```
+
+</details>
+<br/>
+
+## preferForLoop
+
+Convert functional `forEach` calls to for loops.
+
+Option | Description
+--- | ---
+`--anonymousforeach` | Convert anonymous forEach: "convert" (default) or "ignore".
+`--onelineforeach` | Convert one-line forEach: "preserve" (default) or "wrap".
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  let strings = ["foo", "bar", "baaz"]
+- strings.forEach { placeholder in
++ for placeholder in strings {
+      print(placeholder)
+  }
+
+  // Supports anonymous closures
+- strings.forEach {
++ for string in strings {
+-     print($0)
++     print(string)
+  }
+
+- foo.item().bar[2].baazValues(option: true).forEach {
++ for baazValue in foo.item().bar[2].baazValues(option: true) {
+-     print($0)
++     print(baazValue)
+  }
+
+  // Doesn't affect long multiline functional chains
+  placeholderStrings
+      .filter { $0.style == .fooBar }
+      .map { $0.uppercased() }
+      .forEach { print($0) }
 ```
 
 </details>

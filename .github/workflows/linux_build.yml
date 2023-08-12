@@ -6,7 +6,7 @@ on:
       ref:
         description: 'Ref to build (branch, tag or SHA)'
         required: false
-        default: 'master'
+        default: 'main'
 
 jobs:
   build:

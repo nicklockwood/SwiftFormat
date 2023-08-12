@@ -3169,7 +3169,7 @@ public struct _FormatRules {
                 if let firstTokenInBody = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: startOfBody),
                    let conditionalBranches = formatter.conditionalBranches(at: firstTokenInBody)
                 {
-                    for branch in conditionalBranches {
+                    for branch in conditionalBranches.reversed() {
                         removeReturn(atStartOfScope: branch.startOfBranch)
                     }
                 }
@@ -4084,11 +4084,23 @@ public struct _FormatRules {
                 }
                 index = formatter.index(of: .delimiter(","), after: index) ?? endIndex
             }
-            guard let bodyStartIndex = formatter.index(
-                of: .startOfScope("{"),
-                after: endIndex
-            ) else {
-                return // TODO: treat this as an error?
+            guard let bodyStartIndex = formatter.index(after: endIndex, where: {
+                switch $0 {
+                case .startOfScope("{"): // What we're looking for
+                    return true
+                case .keyword("async"),
+                     .keyword("throws"),
+                     .keyword("rethrows"),
+                     .keyword("where"),
+                     .keyword("is"):
+                    return false // Keep looking
+                case .keyword where !$0.isAttribute:
+                    return true // Not valid between end of arguments and start of body
+                default:
+                    return false // Keep looking
+                }
+            }), formatter.tokens[bodyStartIndex] == .startOfScope("{") else {
+                return
             }
 
             // Functions defined inside closures with `[weak self]` captures can
@@ -5073,24 +5085,12 @@ public struct _FormatRules {
         case .ignore:
             return
         case var .replace(string):
-            if let range = string.range(of: "{file}"),
-               let file = formatter.options.fileInfo.fileName
-            {
-                string.replaceSubrange(range, with: file)
+            for (key, replacement) in formatter.options.fileInfo.replacements {
+                while let range = string.range(of: "{\(key.rawValue)}") {
+                    string.replaceSubrange(range, with: replacement)
+                }
             }
-            if let range = string.range(of: "{year}") {
-                string.replaceSubrange(range, with: currentYear)
-            }
-            if let range = string.range(of: "{created}"),
-               let date = formatter.options.fileInfo.creationDate
-            {
-                string.replaceSubrange(range, with: shortDateFormatter(date))
-            }
-            if let range = string.range(of: "{created.year}"),
-               let date = formatter.options.fileInfo.creationDate
-            {
-                string.replaceSubrange(range, with: yearFormatter(date))
-            }
+
             header = string
         }
 
@@ -7809,8 +7809,7 @@ public struct _FormatRules {
     }
 
     public let sortTypealiases = FormatRule(
-        help: "Sort protocol composition typealiases.",
-        disabledByDefault: true
+        help: "Sort protocol composition typealiases alphabetically."
     ) { formatter in
         formatter.forEach(.keyword("typealias")) { typealiasIndex, _ in
             guard
@@ -7952,7 +7951,7 @@ public struct _FormatRules {
         }
     }
 
-    public let forLoop = FormatRule(
+    public let preferForLoop = FormatRule(
         help: "Convert functional `forEach` calls to for loops.",
         disabledByDefault: true,
         options: ["anonymousforeach", "onelineforeach"],

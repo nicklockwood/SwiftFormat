@@ -55,6 +55,7 @@
 * [redundantVoidReturnType](#redundantVoidReturnType)
 * [semicolons](#semicolons)
 * [sortDeclarations](#sortDeclarations)
+* [sortTypealiases](#sortTypealiases)
 * [sortedImports](#sortedImports)
 * [spaceAroundBraces](#spaceAroundBraces)
 * [spaceAroundBrackets](#spaceAroundBrackets)
@@ -96,6 +97,7 @@
 * [markTypes](#markTypes)
 * [organizeDeclarations](#organizeDeclarations)
 * [sortTypealiases](#sortTypealiases)
+* [preferForLoop](#preferForLoop)
 * [sortedSwitchCases](#sortedSwitchCases)
 * [wrapConditionalBodies](#wrapConditionalBodies)
 * [wrapEnumCases](#wrapEnumCases)
@@ -1261,6 +1263,48 @@ Option | Description
 </details>
 <br/>
 
+## preferForLoop
+
+Convert functional `forEach` calls to for loops.
+
+Option | Description
+--- | ---
+`--anonymousforeach` | Convert anonymous forEach: "convert" (default) or "ignore".
+`--onelineforeach` | Convert one-line forEach: "preserve" (default) or "wrap".
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  let strings = ["foo", "bar", "baaz"]
+- strings.forEach { placeholder in
++ for placeholder in strings {
+      print(placeholder)
+  }
+
+  // Supports anonymous closures
+- strings.forEach {
++ for string in strings {
+-     print($0)
++     print(string)
+  }
+
+- foo.item().bar[2].baazValues(option: true).forEach {
++ for baazValue in foo.item().bar[2].baazValues(option: true) {
+-     print($0)
++     print(baazValue)
+  }
+
+  // Doesn't affect long multiline functional chains
+  placeholderStrings
+      .filter { $0.style == .fooBar }
+      .map { $0.uppercased() }
+      .forEach { print($0) }
+```
+
+</details>
+<br/>
+
 ## preferKeyPath
 
 Convert trivial `map { $0.foo }` closures to keyPath-based syntax.
@@ -1884,7 +1928,7 @@ and declarations between // swiftformat:sort:begin and
 
 ## sortTypealiases
 
-Sort protocol composition typealiases.
+Sort protocol composition typealiases alphabetically.
 
 <details>
 <summary>Examples</summary>

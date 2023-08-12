@@ -8,14 +8,14 @@ Here's what you need to know:
 
 SwiftFormat follows the principles of [Semantic Versioning](http://semver.org/spec/v2.0.0.html) (semver), however since SwiftFormat is still pre-1.0, the rules are a little less strict. In general, 0.0.x releases are for bug fixes and non-breaking changes, and 0.x.0 releases are for breaking changes.
 
-Since SwiftFormat is an application as well as a framework, "breaking changes" refers to the behavior of the formatter as well as the API. The addition of new rules, or changes to the default behavior of an existing rule are considered to be breaking, even if they do not affect the framework API.
+Since SwiftFormat is an application as well as a framework, "breaking changes" refers to the behavior of the formatter as well as the API. The addition of new (enabled-by-default) rules, or changes to the behavior of an existing rule are considered to be breaking, even if they do not affect the framework API.
 
 The SwiftFormat repository has 2 main branches:
 
-* master - the currently shipping version
+* main - the currently shipping version
 * develop - the upcoming version
 
-Many projects use master for development, but users often check master for documentation or to download the executable app, so to avoid confusion the source and documentation on master should reflect the latest tagged version of SwiftFormat at all times.
+Many projects use main for development, but users often check main for documentation or to download the executable app, so to avoid confusion the source and documentation on main should reflect the latest tagged version of SwiftFormat at all times.
 
 ## Your First Pull Request
 
@@ -25,7 +25,7 @@ All types of PR are welcome, but please do read these guidelines carefully to av
 
 Types of PR:
 
-* Documentation fixes - if you've found a typo, or incorrect comment, either in the README or a code comment, feel free to create a PR directly against the **master** branch.
+* Documentation fixes - if you've found a typo, or incorrect comment, either in the README or a code comment, feel free to create a PR directly against the **main** branch.
 
 * Minor code fixes - a typo in a method name or a trivial bug fix should be made against the **develop** branch.
 

@@ -91,7 +91,7 @@ $ brew upgrade swiftformat
 Alternatively, you can install the tool on macOS or Linux by using [Mint](https://github.com/yonaskolb/Mint) as follows:
 
 ```bash
-$ mint install nicklockwood/SwiftFormat
+$ mint install nicklockwood/SwiftFormat@main
 ```
 
 Or if you prefer, you can check out and build SwiftFormat manually on macOS, Linux or Windows as follows:
@@ -506,7 +506,7 @@ The options available in SwiftFormat can be displayed using the `--options` comm
 
 Rules are configured by adding `--[option_name] [value]` to your command-line arguments, or by creating a `.swiftformat` [config file](#config-file) and placing it in your project directory.
 
-A given option may affect multiple rules. Use `--ruleinfo [rule_name]` command for details about which options affect a given rule, or see the [Rules.md](https://github.com/nicklockwood/SwiftFormat/blob/master/Rules.md) file.
+A given option may affect multiple rules. Use `--ruleinfo [rule_name]` command for details about which options affect a given rule, or see the [Rules.md](https://github.com/nicklockwood/SwiftFormat/blob/main/Rules.md) file.
 
 You can configure options for specific files or code ranges by using `swiftformat:options` directive in comments inside your Swift file. To temporarily set one or more options inside a source file, use:
 
@@ -525,7 +525,7 @@ doTheThing(); print("Did the thing")
 Rules
 -----
 
-SwiftFormat includes over 50 rules, and new ones are added all the time. An up-to-date list can be found in [Rules.md](https://github.com/nicklockwood/SwiftFormat/blob/master/Rules.md) along with documentation for how they are used.
+SwiftFormat includes over 50 rules, and new ones are added all the time. An up-to-date list can be found in [Rules.md](https://github.com/nicklockwood/SwiftFormat/blob/main/Rules.md) along with documentation for how they are used.
 
 The list of available rules can be displayed within the command-line app using the `--rules` argument. Rules can be either enabled or disabled. Most are enabled by default. Disabled rules are marked with "(disabled)" when displayed using `--rules`.
 
@@ -797,6 +797,8 @@ It is common practice to include the file name, creation date and/or the current
 * `{file}` - the name of the file
 * `{year}` - the current year
 * `{created}` - the date on which the file was created
+* `{created.name}` - the name of the user who first committed the file
+* `{created.email}` - the email of the user who first committed the file 
 * `{created.year}` - the year in which the file was created
 
 For example, a header template of:
@@ -813,7 +815,7 @@ Will be formatted as:
 // Created by John Smith on 01/02/2016.
 ```
 
-**NOTE:** the `{year}` value and `{created}` date format are determined from the current locale and timezone of the machine running the script.
+**NOTE:** the `{year}` value and `{created}` date format are determined from the current locale and timezone of the machine running the script. `{created.name}` and `{created.email}` requires the project to be version controlled by git.
 
 
 FAQ

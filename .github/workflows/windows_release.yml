@@ -6,7 +6,7 @@ on:
       revision:
         description: 'Revision to build (branch, tag, or SHA)'
         required: false
-        default: 'master'
+        default: 'main'
 
       version:
         description: 'Version being released'

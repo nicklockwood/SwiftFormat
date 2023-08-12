@@ -3448,7 +3448,7 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.conditionalAssignment, options: options)
     }
 
-    // MARK: - forLoop
+    // MARK: - preferForLoop
 
     func testConvertSimpleForEachToForLoop() {
         let input = """
@@ -3475,7 +3475,7 @@ class SyntaxTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, output, rule: FormatRules.forLoop)
+        testFormatting(for: input, output, rule: FormatRules.preferForLoop)
     }
 
     func testConvertAnonymousForEachToForLoop() {
@@ -3497,7 +3497,7 @@ class SyntaxTests: RulesTests {
         for potato in potatoes { potato.bake() }
         """
 
-        testFormatting(for: input, output, rule: FormatRules.forLoop)
+        testFormatting(for: input, output, rule: FormatRules.preferForLoop)
     }
 
     func testConvertNestedForEach() {
@@ -3519,7 +3519,7 @@ class SyntaxTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, output, rule: FormatRules.forLoop)
+        testFormatting(for: input, output, rule: FormatRules.preferForLoop)
     }
 
     func testDefaultNameAlreadyUsedInLoopBody() {
@@ -3539,7 +3539,7 @@ class SyntaxTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, output, rule: FormatRules.forLoop)
+        testFormatting(for: input, output, rule: FormatRules.preferForLoop)
     }
 
     func testIgnoreLoopsWithCaptureListForNow() {
@@ -3549,7 +3549,7 @@ class SyntaxTests: RulesTests {
             print($0, someCapturedValue)
         }
         """
-        testFormatting(for: input, rule: FormatRules.forLoop)
+        testFormatting(for: input, rule: FormatRules.preferForLoop)
     }
 
     func testConvertsReturnToContinue() {
@@ -3582,7 +3582,7 @@ class SyntaxTests: RulesTests {
             }
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.forLoop)
+        testFormatting(for: input, output, rule: FormatRules.preferForLoop)
     }
 
     func testHandlesForEachOnChainedProperties() {
@@ -3599,7 +3599,7 @@ class SyntaxTests: RulesTests {
             print(string)
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.forLoop)
+        testFormatting(for: input, output, rule: FormatRules.preferForLoop)
     }
 
     func testHandlesForEachOnFunctionCallResult() {
@@ -3616,7 +3616,7 @@ class SyntaxTests: RulesTests {
             print(baazValue)
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.forLoop)
+        testFormatting(for: input, output, rule: FormatRules.preferForLoop)
     }
 
     func testHandlesForEachOnSubscriptResult() {
@@ -3633,7 +3633,7 @@ class SyntaxTests: RulesTests {
             print(dictionaryItem)
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.forLoop)
+        testFormatting(for: input, output, rule: FormatRules.preferForLoop)
     }
 
     func testHandlesForEachOnArrayLiteral() {
@@ -3650,7 +3650,7 @@ class SyntaxTests: RulesTests {
             print(item)
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.forLoop)
+        testFormatting(for: input, output, rule: FormatRules.preferForLoop)
     }
 
     func testHandlesForEachOnCurriedFunctionWithSubscript() {
@@ -3667,7 +3667,7 @@ class SyntaxTests: RulesTests {
             print(fooItem)
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.forLoop)
+        testFormatting(for: input, output, rule: FormatRules.preferForLoop)
     }
 
     func testHandlesForEachOnArrayLiteralInParens() {
@@ -3684,7 +3684,7 @@ class SyntaxTests: RulesTests {
             print(item)
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.forLoop, exclude: ["redundantParens"])
+        testFormatting(for: input, output, rule: FormatRules.preferForLoop, exclude: ["redundantParens"])
     }
 
     func testPreservesForEachAfterMultilineChain() {
@@ -3699,7 +3699,7 @@ class SyntaxTests: RulesTests {
             .map({ $0.uppercased() })
             .forEach({ print($0) })
         """
-        testFormatting(for: input, rule: FormatRules.forLoop, exclude: ["trailingClosures"])
+        testFormatting(for: input, rule: FormatRules.preferForLoop, exclude: ["trailingClosures"])
     }
 
     func testPreservesChainWithClosure() {
@@ -3711,7 +3711,7 @@ class SyntaxTests: RulesTests {
         // to silence this warning".
         strings.map { $0.uppercased() }.forEach { print($0) }
         """
-        testFormatting(for: input, rule: FormatRules.forLoop)
+        testFormatting(for: input, rule: FormatRules.preferForLoop)
     }
 
     func testPreservesChainWithClosureInMiddleOfChain() {
@@ -3723,7 +3723,7 @@ class SyntaxTests: RulesTests {
         // to silence this warning".
         strings.map { $0.uppercased() }.values.forEach { print($0) }
         """
-        testFormatting(for: input, rule: FormatRules.forLoop)
+        testFormatting(for: input, rule: FormatRules.preferForLoop)
     }
 
     func testHandlesTryBeforeForEach() {
@@ -3739,7 +3739,7 @@ class SyntaxTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, output, rule: FormatRules.forLoop)
+        testFormatting(for: input, output, rule: FormatRules.preferForLoop)
     }
 
     func testForEachReversed() {
@@ -3755,7 +3755,7 @@ class SyntaxTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, output, rule: FormatRules.forLoop)
+        testFormatting(for: input, output, rule: FormatRules.preferForLoop)
     }
 
     func testForEachSorted() {
@@ -3771,7 +3771,7 @@ class SyntaxTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, output, rule: FormatRules.forLoop)
+        testFormatting(for: input, output, rule: FormatRules.preferForLoop)
     }
 
     func testForEachMapFilterSort() {
@@ -3787,7 +3787,7 @@ class SyntaxTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, output, rule: FormatRules.forLoop)
+        testFormatting(for: input, output, rule: FormatRules.preferForLoop)
     }
 
     func testForEachEnumeratedWithSingleVariable() {
@@ -3803,7 +3803,7 @@ class SyntaxTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, output, rule: FormatRules.forLoop)
+        testFormatting(for: input, output, rule: FormatRules.preferForLoop)
     }
 
     func testForEachEnumeratedAnonymousNotConverted() {
@@ -3814,7 +3814,7 @@ class SyntaxTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, rule: FormatRules.forLoop)
+        testFormatting(for: input, rule: FormatRules.preferForLoop)
     }
 
     func testForEachWithNamedArgumentAndType() {
@@ -3830,7 +3830,7 @@ class SyntaxTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, output, rule: FormatRules.forLoop)
+        testFormatting(for: input, output, rule: FormatRules.preferForLoop)
     }
 
     func testForEachWithNamedArguments() {
@@ -3846,7 +3846,7 @@ class SyntaxTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, output, rule: FormatRules.forLoop)
+        testFormatting(for: input, output, rule: FormatRules.preferForLoop)
     }
 
     func testForEachWithNamedArgumentsAndTypes() {
@@ -3862,7 +3862,7 @@ class SyntaxTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, output, rule: FormatRules.forLoop)
+        testFormatting(for: input, output, rule: FormatRules.preferForLoop)
     }
 
     func testForEachWithReturnVoidValue() {
@@ -3875,7 +3875,7 @@ class SyntaxTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, rule: FormatRules.forLoop, exclude: ["redundantReturn"])
+        testFormatting(for: input, rule: FormatRules.preferForLoop, exclude: ["redundantReturn"])
     }
 
     func testPreservesAnonymousClosure() {
@@ -3890,7 +3890,7 @@ class SyntaxTests: RulesTests {
         """
 
         let options = FormatOptions(preserveAnonymousForEach: true)
-        testFormatting(for: input, output, rule: FormatRules.forLoop, options: options)
+        testFormatting(for: input, output, rule: FormatRules.preferForLoop, options: options)
     }
 
     func testConvertSingleLineForEachToMultiLineForLoop() {
@@ -3910,6 +3910,6 @@ class SyntaxTests: RulesTests {
         """
 
         let options = FormatOptions(preserveSingleLineForEach: false)
-        testFormatting(for: input, [output], rules: [FormatRules.forLoop, FormatRules.indent, FormatRules.blankLinesBetweenScopes], options: options)
+        testFormatting(for: input, [output], rules: [FormatRules.preferForLoop, FormatRules.indent, FormatRules.blankLinesBetweenScopes], options: options)
     }
 }

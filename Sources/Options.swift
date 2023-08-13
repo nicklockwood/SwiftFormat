@@ -444,7 +444,8 @@ public struct FormatOptions: CustomStringConvertible {
     public var fileInfo: FileInfo
     public var timeout: TimeInterval
 
-    // Enabled rules
+    // Enabled rules - this is a hack used to allow rules to vary their behavior
+    // based on other rules being enabled. Do not rely on it in other contexts
     var enabledRules: Set<String> = []
 
     public static let `default` = FormatOptions()

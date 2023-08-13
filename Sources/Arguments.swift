@@ -602,7 +602,7 @@ public func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions? 
 }
 
 // Get deprecation warnings from a set of arguments
-func warningsForArguments(_ args: [String: String]) -> [String] {
+func warningsForArguments(_ args: [String: String], ignoreUnusedOptions: Bool = false) -> [String] {
     var warnings = [String]()
     for option in Descriptors.all {
         if args[option.argumentName] != nil, let message = option.deprecationMessage {
@@ -614,7 +614,7 @@ func warningsForArguments(_ args: [String: String]) -> [String] {
             warnings.append("\(name) rule is deprecated. \(message)")
         }
     }
-    if let rules = try? rulesFor(args, lint: true) {
+    if !ignoreUnusedOptions, let rules = try? rulesFor(args, lint: true) {
         for arg in args.keys where formattingArguments.contains(arg) {
             if !rules.contains(where: {
                 guard let rule = FormatRules.byName[$0] else {

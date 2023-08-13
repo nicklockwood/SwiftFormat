@@ -968,7 +968,9 @@ func processInput(_ inputURLs: [URL],
     var shownWarnings = Set<String>()
     var showedConfigurationWarnings = false
     func showConfigurationWarnings(_ options: Options) {
-        for warning in warningsForArguments(argumentsFor(options, excludingDefaults: true)) where !shownWarnings.contains(warning) {
+        let arguments = argumentsFor(options, excludingDefaults: true)
+        let warnings = warningsForArguments(arguments, ignoreUnusedOptions: true)
+        for warning in warnings where !shownWarnings.contains(warning) {
             shownWarnings.insert(warning)
             print("warning: \(warning)", as: .warning)
         }

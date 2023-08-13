@@ -880,7 +880,7 @@ public struct _FormatRules {
     // Converts types used for hosting only static members into enums to avoid instantiation.
     public let enumNamespaces = FormatRule(
         help: """
-        Converts types used for hosting only static members into enums (an empty enum is
+        Convert types used for hosting only static members into enums (an empty enum is
         the canonical way to create a namespace in Swift as it can't be instantiated).
         """,
         options: ["enumnamespaces"]
@@ -4644,7 +4644,7 @@ public struct _FormatRules {
 
     /// Formats enum cases declaration into one case per line
     public let wrapEnumCases = FormatRule(
-        help: "Writes one enum case per line.",
+        help: "Rewrite comma-delimited enum cases to one case per line.",
         disabledByDefault: true,
         options: ["wrapenumcases"],
         sharedOptions: ["linebreaks"]
@@ -4752,7 +4752,7 @@ public struct _FormatRules {
 
     /// Writes one switch case per line
     public let wrapSwitchCases = FormatRule(
-        help: "Writes one switch case per line.",
+        help: "Wrap comma-delimited switch cases onto multiple lines.",
         disabledByDefault: true,
         sharedOptions: ["linebreaks", "tabwidth", "indent", "smarttabs"]
     ) { formatter in
@@ -6257,7 +6257,7 @@ public struct _FormatRules {
     }
 
     public let organizeDeclarations = FormatRule(
-        help: "Organizes declarations within class, struct, enum, actor, and extension bodies.",
+        help: "Organize declarations within class, struct, enum, actor, and extension bodies.",
         runOnceOnly: true,
         disabledByDefault: true,
         orderAfter: ["extensionAccessControl", "redundantFileprivate"],
@@ -6396,7 +6396,7 @@ public struct _FormatRules {
     }
 
     public let markTypes = FormatRule(
-        help: "Adds a mark comment before top-level types and extensions.",
+        help: "Add a MARK comment before top-level types and extensions.",
         runOnceOnly: true,
         disabledByDefault: true,
         options: ["marktypes", "typemark", "markextensions", "extensionmark", "groupedextension"],
@@ -6802,7 +6802,7 @@ public struct _FormatRules {
     }
 
     public let acronyms = FormatRule(
-        help: "Capitalizes acronyms when the first character is capitalized.",
+        help: "Capitalize acronyms when the first character is capitalized.",
         disabledByDefault: true,
         options: ["acronyms"]
     ) { formatter in
@@ -6867,7 +6867,7 @@ public struct _FormatRules {
     }
 
     public let blockComments = FormatRule(
-        help: "Changes block comments to single line comments.",
+        help: "Convert block comments to consecutive single line comments.",
         disabledByDefault: true
     ) { formatter in
         formatter.forEachToken { i, token in
@@ -7099,7 +7099,7 @@ public struct _FormatRules {
     }
 
     public let redundantOptionalBinding = FormatRule(
-        help: "Removes redundant identifiers in optional binding conditions.",
+        help: "Remove redundant identifiers in optional binding conditions.",
         // We can convert `if let foo = self.foo` to just `if let foo`,
         // but only if `redundantSelf` can first remove the `self.`.
         orderAfter: ["redundantSelf"]
@@ -7388,8 +7388,8 @@ public struct _FormatRules {
 
     public let genericExtensions = FormatRule(
         help: """
-        When extending generic types, use angle brackets (`extension Array<Foo>`)
-        instead of generic type constraints (`extension Array where Element == Foo`).
+        Use angle brackets (`extension Array<Foo>`) for generic type extensions
+        instead of type constraints (`extension Array where Element == Foo`).
         """,
         options: ["generictypes"]
     ) { formatter in
@@ -7504,7 +7504,7 @@ public struct _FormatRules {
     }
 
     public let docComments = FormatRule(
-        help: "Use doc comments for comments preceding declarations.",
+        help: "Use doc comments for API declarations, otherwise use regular comments.",
         disabledByDefault: true,
         orderAfter: ["fileHeader"]
     ) { formatter in

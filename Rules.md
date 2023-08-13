@@ -110,7 +110,7 @@
 
 ## acronyms
 
-Capitalizes acronyms when the first character is capitalized.
+Capitalize acronyms when the first character is capitalized.
 
 Option | Description
 --- | ---
@@ -404,7 +404,7 @@ declarations.
 
 ## blockComments
 
-Changes block comments to single line comments.
+Convert block comments to consecutive single line comments.
 
 <details>
 <summary>Examples</summary>
@@ -541,7 +541,7 @@ Replace consecutive spaces with a single space.
 
 ## docComments
 
-Use doc comments for comments preceding declarations.
+Use doc comments for API declarations, otherwise use regular comments.
 
 <details>
 <summary>Examples</summary>
@@ -671,7 +671,7 @@ Option | Description
 
 ## enumNamespaces
 
-Converts types used for hosting only static members into enums (an empty enum is
+Convert types used for hosting only static members into enums (an empty enum is
 the canonical way to create a namespace in Swift as it can't be instantiated).
 
 Option | Description
@@ -760,8 +760,8 @@ Token | Description
 
 ## genericExtensions
 
-When extending generic types, use angle brackets (`extension Array<Foo>`)
-instead of generic type constraints (`extension Array where Element == Foo`).
+Use angle brackets (`extension Array<Foo>`) for generic type extensions
+instead of type constraints (`extension Array where Element == Foo`).
 
 Option | Description
 --- | ---
@@ -1018,7 +1018,7 @@ Option | Description
 
 ## markTypes
 
-Adds a mark comment before top-level types and extensions.
+Add a MARK comment before top-level types and extensions.
 
 Option | Description
 --- | ---
@@ -1153,7 +1153,7 @@ Option | Description
 
 ## organizeDeclarations
 
-Organizes declarations within class, struct, enum, actor, and extension bodies.
+Organize declarations within class, struct, enum, actor, and extension bodies.
 
 Option | Description
 --- | ---
@@ -1496,7 +1496,7 @@ Remove redundant `@objc` annotations.
 
 ## redundantOptionalBinding
 
-Removes redundant identifiers in optional binding conditions.
+Remove redundant identifiers in optional binding conditions.
 
 <details>
 <summary>Examples</summary>
@@ -2519,7 +2519,7 @@ Wrap the bodies of inline conditional statements onto a new line.
 
 ## wrapEnumCases
 
-Writes one enum case per line.
+Rewrite comma-delimited enum cases to one case per line.
 
 Option | Description
 --- | ---
@@ -2612,7 +2612,7 @@ Wrap single line `//` comments that exceed the specified `--maxwidth`.
 
 ## wrapSwitchCases
 
-Writes one switch case per line.
+Wrap comma-delimited switch cases onto multiple lines.
 
 <details>
 <summary>Examples</summary>

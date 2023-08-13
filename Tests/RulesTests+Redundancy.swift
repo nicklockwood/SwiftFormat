@@ -7040,7 +7040,7 @@ class RedundancyTests: RulesTests {
         }
         """
         testFormatting(for: input, rule: FormatRules.unusedArguments,
-                       exclude: ["sortedSwitchCases"])
+                       exclude: ["sortSwitchCases"])
     }
 
     func testTryArgumentNotMarkedUnused() {

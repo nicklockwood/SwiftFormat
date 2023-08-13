@@ -501,25 +501,25 @@ class IndentTests: RulesTests {
     func testSwitchWrappedCaseIndenting() {
         let input = "switch x {\ncase foo,\nbar,\n    baz:\n    break\ndefault:\n    break\n}"
         let output = "switch x {\ncase foo,\n     bar,\n     baz:\n    break\ndefault:\n    break\n}"
-        testFormatting(for: input, output, rule: FormatRules.indent, exclude: ["sortedSwitchCases"])
+        testFormatting(for: input, output, rule: FormatRules.indent, exclude: ["sortSwitchCases"])
     }
 
     func testSwitchWrappedEnumCaseIndenting() {
         let input = "switch x {\ncase .foo,\n.bar,\n    .baz:\n    break\ndefault:\n    break\n}"
         let output = "switch x {\ncase .foo,\n     .bar,\n     .baz:\n    break\ndefault:\n    break\n}"
-        testFormatting(for: input, output, rule: FormatRules.indent, exclude: ["sortedSwitchCases"])
+        testFormatting(for: input, output, rule: FormatRules.indent, exclude: ["sortSwitchCases"])
     }
 
     func testSwitchWrappedEnumCaseIndentingVariant2() {
         let input = "switch x {\ncase\n.foo,\n.bar,\n    .baz:\n    break\ndefault:\n    break\n}"
         let output = "switch x {\ncase\n    .foo,\n    .bar,\n    .baz:\n    break\ndefault:\n    break\n}"
-        testFormatting(for: input, output, rule: FormatRules.indent, exclude: ["sortedSwitchCases"])
+        testFormatting(for: input, output, rule: FormatRules.indent, exclude: ["sortSwitchCases"])
     }
 
     func testSwitchWrappedEnumCaseIsIndenting() {
         let input = "switch x {\ncase is Foo.Type,\n    is Bar.Type:\n    break\ndefault:\n    break\n}"
         let output = "switch x {\ncase is Foo.Type,\n     is Bar.Type:\n    break\ndefault:\n    break\n}"
-        testFormatting(for: input, output, rule: FormatRules.indent, exclude: ["sortedSwitchCases"])
+        testFormatting(for: input, output, rule: FormatRules.indent, exclude: ["sortSwitchCases"])
     }
 
     func testSwitchCaseIsDictionaryIndenting() {
@@ -900,7 +900,7 @@ class IndentTests: RulesTests {
         let input = "switch x {\ncase .foo,\n.bar,\n    .baz:\n    break\ndefault:\n    break\n}"
         let output = "switch x {\n    case .foo,\n         .bar,\n         .baz:\n        break\n    default:\n        break\n}"
         let options = FormatOptions(indentCase: true)
-        testFormatting(for: input, output, rule: FormatRules.indent, options: options, exclude: ["sortedSwitchCases"])
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options, exclude: ["sortSwitchCases"])
     }
 
     func testIndentMultilineSwitchCaseCommentsWithIndentCaseTrue() {
@@ -3524,7 +3524,7 @@ class IndentTests: RulesTests {
         }
         """
         let options = FormatOptions(indent: "\t", tabWidth: 2, smartTabs: true)
-        testFormatting(for: input, output, rule: FormatRules.indent, options: options, exclude: ["sortedSwitchCases"])
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options, exclude: ["sortSwitchCases"])
     }
 
     func testTabIndentCaseWithoutSmartTabs() {
@@ -3543,7 +3543,7 @@ class IndentTests: RulesTests {
         }
         """
         let options = FormatOptions(indent: "\t", tabWidth: 2, smartTabs: false)
-        testFormatting(for: input, output, rule: FormatRules.indent, options: options, exclude: ["sortedSwitchCases"])
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options, exclude: ["sortSwitchCases"])
     }
 
     func testTabIndentCaseWithoutSmartTabs2() {
@@ -3563,7 +3563,7 @@ class IndentTests: RulesTests {
         """
         let options = FormatOptions(indent: "\t", indentCase: true,
                                     tabWidth: 2, smartTabs: false)
-        testFormatting(for: input, output, rule: FormatRules.indent, options: options, exclude: ["sortedSwitchCases"])
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options, exclude: ["sortSwitchCases"])
     }
 
     // indent blank lines

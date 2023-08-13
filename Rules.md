@@ -95,13 +95,14 @@
 * [isEmpty](#isEmpty)
 * [markTypes](#markTypes)
 * [organizeDeclarations](#organizeDeclarations)
-* [sortedSwitchCases](#sortedSwitchCases)
+* [sortSwitchCases](#sortSwitchCases)
 * [wrapConditionalBodies](#wrapConditionalBodies)
 * [wrapEnumCases](#wrapEnumCases)
 * [wrapSwitchCases](#wrapSwitchCases)
 
 # Deprecated Rules (do not use)
 
+* [sortedSwitchCases](#sortedSwitchCases)
 * [specifiers](#specifiers)
 
 ----------
@@ -1835,6 +1836,10 @@ and declarations between // swiftformat:sort:begin and
 </details>
 <br/>
 
+## sortSwitchCases
+
+Sort switch cases alphabetically.
+
 ## sortTypealiases
 
 Sort protocol composition typealiases alphabetically.
@@ -1896,7 +1901,9 @@ Option | Description
 
 ## sortedSwitchCases
 
-Sorts switch cases alphabetically.
+Sort switch cases alphabetically.
+
+*Note: sortedSwitchCases rule is deprecated. Use sortSwitchCases instead.*
 
 ## spaceAroundBraces
 

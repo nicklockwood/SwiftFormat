@@ -142,6 +142,9 @@ public extension _FormatRules {
     /// Rules that are disabled by default
     var disabledByDefault: [String] { _disabledByDefault }
 
+    /// Rules that are deprecated
+    var deprecated: [String] { _deprecatedRules }
+
     /// Just the specified rules
     func named(_ names: [String]) -> [FormatRule] {
         Array(names.sorted().compactMap { rulesByName[$0] })
@@ -5124,10 +5127,18 @@ public struct _FormatRules {
         }
     }
 
-    /// Sorts switch cases alphabetically
+    /// Deprecated
     public let sortedSwitchCases = FormatRule(
-        help: "Sorts switch cases alphabetically.",
-        disabledByDefault: true // TODO: enable by default in next major release
+        help: "Sort switch cases alphabetically.",
+        deprecationMessage: "Use sortSwitchCases instead."
+    ) { formatter in
+        FormatRules.sortSwitchCases.apply(with: formatter)
+    }
+
+    /// Sorts switch cases alphabetically
+    public let sortSwitchCases = FormatRule(
+        help: "Sort switch cases alphabetically.",
+        disabledByDefault: true
     ) { formatter in
         formatter.parseSwitchCaseRanges()
             .reversed() // don't mess with indexes

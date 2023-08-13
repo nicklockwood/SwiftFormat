@@ -2778,7 +2778,7 @@ class OrganizationTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.sortedImports)
     }
 
-    // MARK: - sortedSwitchCases
+    // MARK: - sortSwitchCases
 
     func testSortedSwitchCaseNestedSwitchOneCaseDoesNothing() {
         let input = """
@@ -2799,7 +2799,7 @@ class OrganizationTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, rule: FormatRules.sortedSwitchCases, exclude: ["redundantSelf"])
+        testFormatting(for: input, rule: FormatRules.sortSwitchCases, exclude: ["redundantSelf"])
     }
 
     func testSortedSwitchCaseMultilineWithOneComment() {
@@ -2817,7 +2817,7 @@ class OrganizationTests: RulesTests {
             break
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.sortedSwitchCases)
+        testFormatting(for: input, output, rule: FormatRules.sortSwitchCases)
     }
 
     func testSortedSwitchCaseMultilineWithComments() {
@@ -2835,7 +2835,7 @@ class OrganizationTests: RulesTests {
             break
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.sortedSwitchCases, exclude: ["indent"])
+        testFormatting(for: input, output, rule: FormatRules.sortSwitchCases, exclude: ["indent"])
     }
 
     func testSortedSwitchCaseMultilineWithCommentsAndMoreThanOneCasePerLine() {
@@ -2856,7 +2856,7 @@ class OrganizationTests: RulesTests {
             break
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.sortedSwitchCases)
+        testFormatting(for: input, output, rule: FormatRules.sortSwitchCases)
     }
 
     func testSortedSwitchCaseMultiline() {
@@ -2874,7 +2874,7 @@ class OrganizationTests: RulesTests {
             break
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.sortedSwitchCases)
+        testFormatting(for: input, output, rule: FormatRules.sortSwitchCases)
     }
 
     func testSortedSwitchCaseMultipleAssociatedValues() {
@@ -2890,7 +2890,7 @@ class OrganizationTests: RulesTests {
             break
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.sortedSwitchCases,
+        testFormatting(for: input, output, rule: FormatRules.sortSwitchCases,
                        exclude: ["wrapSwitchCases"])
     }
 
@@ -2907,7 +2907,7 @@ class OrganizationTests: RulesTests {
             break
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.sortedSwitchCases,
+        testFormatting(for: input, output, rule: FormatRules.sortSwitchCases,
                        exclude: ["wrapSwitchCases", "spaceAroundOperators"])
     }
 
@@ -2924,7 +2924,7 @@ class OrganizationTests: RulesTests {
             break
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.sortedSwitchCases,
+        testFormatting(for: input, output, rule: FormatRules.sortSwitchCases,
                        exclude: ["wrapSwitchCases"])
     }
 
@@ -2935,7 +2935,7 @@ class OrganizationTests: RulesTests {
             break
         }
         """
-        testFormatting(for: input, rule: FormatRules.sortedSwitchCases)
+        testFormatting(for: input, rule: FormatRules.sortSwitchCases)
     }
 
     func testSortedSwitchStrings() {
@@ -2951,7 +2951,7 @@ class OrganizationTests: RulesTests {
             break
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.sortedSwitchCases,
+        testFormatting(for: input, output, rule: FormatRules.sortSwitchCases,
                        exclude: ["wrapSwitchCases"])
     }
 
@@ -2963,7 +2963,7 @@ class OrganizationTests: RulesTests {
         }
         """
         testFormatting(for: input,
-                       rule: FormatRules.sortedSwitchCases,
+                       rule: FormatRules.sortSwitchCases,
                        exclude: ["wrapSwitchCases"])
     }
 
@@ -2980,7 +2980,7 @@ class OrganizationTests: RulesTests {
             break
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.sortedSwitchCases,
+        testFormatting(for: input, output, rule: FormatRules.sortSwitchCases,
                        exclude: ["wrapSwitchCases"])
     }
 
@@ -2997,7 +2997,7 @@ class OrganizationTests: RulesTests {
             break
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.sortedSwitchCases,
+        testFormatting(for: input, output, rule: FormatRules.sortSwitchCases,
                        exclude: ["wrapSwitchCases"])
     }
 
@@ -3018,7 +3018,7 @@ class OrganizationTests: RulesTests {
              (.foo, _):
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.sortedSwitchCases)
+        testFormatting(for: input, output, rule: FormatRules.sortSwitchCases)
     }
 
     func testSortedSwitchTuples2() {
@@ -3040,10 +3040,10 @@ class OrganizationTests: RulesTests {
              (.quux, .bar):
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.sortedSwitchCases)
+        testFormatting(for: input, output, rule: FormatRules.sortSwitchCases)
     }
 
-    func testSortedSwitchCasesShortestFirst() {
+    func testSortSwitchCasesShortestFirst() {
         let input = """
         switch foo {
         case let .fooAndBar(baz, quux),
@@ -3056,7 +3056,7 @@ class OrganizationTests: RulesTests {
              let .fooAndBar(baz, quux):
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.sortedSwitchCases)
+        testFormatting(for: input, output, rule: FormatRules.sortSwitchCases)
     }
 
     func testSortHexLiteralCasesInAscendingOrder() {
@@ -3072,7 +3072,7 @@ class OrganizationTests: RulesTests {
             return false
         }
         """
-        testFormatting(for: input, rule: FormatRules.sortedSwitchCases)
+        testFormatting(for: input, rule: FormatRules.sortSwitchCases)
     }
 
     func testMixedOctalHexIntAndBinaryLiteralCasesInAscendingOrder() {
@@ -3087,10 +3087,10 @@ class OrganizationTests: RulesTests {
             return false
         }
         """
-        testFormatting(for: input, rule: FormatRules.sortedSwitchCases)
+        testFormatting(for: input, rule: FormatRules.sortSwitchCases)
     }
 
-    func testSortedSwitchCasesNoUnwrapReturn() {
+    func testSortSwitchCasesNoUnwrapReturn() {
         let input = """
         switch self {
         case .b, .a, .c, .e, .d:
@@ -3103,7 +3103,7 @@ class OrganizationTests: RulesTests {
             return nil
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.sortedSwitchCases,
+        testFormatting(for: input, output, rule: FormatRules.sortSwitchCases,
                        exclude: ["wrapSwitchCases"])
     }
 

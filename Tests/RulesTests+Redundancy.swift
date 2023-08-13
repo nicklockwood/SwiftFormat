@@ -1724,7 +1724,7 @@ class RedundancyTests: RulesTests {
     func testNoRemoveLazyPublicPrivateSetVarNilInit() {
         let input = "lazy private(set) public var foo: Int? = nil"
         testFormatting(for: input, rule: FormatRules.redundantNilInit,
-                       exclude: ["modifierOrder", "specifiers"])
+                       exclude: ["modifierOrder"])
     }
 
     func testNoRemoveCodableNilInit() {
@@ -3426,7 +3426,7 @@ class RedundancyTests: RulesTests {
         let input = "class Foo {\n    class private func foo() {\n        func bar() { self.foo() }\n    }\n}"
         let output = "class Foo {\n    class private func foo() {\n        func bar() { foo() }\n    }\n}"
         testFormatting(for: input, output, rule: FormatRules.redundantSelf,
-                       exclude: ["modifierOrder", "specifiers"])
+                       exclude: ["modifierOrder"])
     }
 
     func testNoRemoveSelfInClassFunction() {

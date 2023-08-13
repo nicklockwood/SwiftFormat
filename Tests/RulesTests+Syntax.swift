@@ -906,7 +906,7 @@ class SyntaxTests: RulesTests {
         }
         """
         testFormatting(for: input, rule: FormatRules.enumNamespaces,
-                       exclude: ["modifierOrder", "specifiers"])
+                       exclude: ["modifierOrder"])
     }
 
     func testOpenClassNotReplacedByEnum() {

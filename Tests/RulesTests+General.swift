@@ -114,7 +114,7 @@ class GeneralTests: RulesTests {
         }
         """
         testFormatting(for: input, output, rule: FormatRules.initCoderUnavailable,
-                       exclude: ["modifierOrder", "specifiers"])
+                       exclude: ["modifierOrder"])
     }
 
     // MARK: - trailingCommas

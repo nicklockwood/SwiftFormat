@@ -125,6 +125,7 @@ private func allRules(except rules: [String]) -> [FormatRule] {
 }
 
 private let _allRules = allRules(except: [])
+private let _deprecatedRules = _allRules.filter { $0.isDeprecated }.map { $0.name }
 private let _disabledByDefault = _allRules.filter { $0.disabledByDefault }.map { $0.name }
 private let _defaultRules = allRules(except: _disabledByDefault)
 

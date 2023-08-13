@@ -5216,8 +5216,20 @@ public struct _FormatRules {
             }
     }
 
-    /// Sort import statements
+    /// Deprecated
     public let sortedImports = FormatRule(
+        help: "Sort import statements alphabetically.",
+        deprecationMessage: "Use sortImports instead.",
+        options: ["importgrouping"],
+        sharedOptions: ["linebreaks"]
+    ) { formatter in
+        _ = formatter.options.importGrouping
+        _ = formatter.options.linebreak
+        FormatRules.sortImports.apply(with: formatter)
+    }
+
+    /// Sort import statements
+    public let sortImports = FormatRule(
         help: "Sort import statements alphabetically.",
         options: ["importgrouping"],
         sharedOptions: ["linebreaks"]

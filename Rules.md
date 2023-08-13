@@ -55,8 +55,8 @@
 * [redundantVoidReturnType](#redundantVoidReturnType)
 * [semicolons](#semicolons)
 * [sortDeclarations](#sortDeclarations)
+* [sortImports](#sortImports)
 * [sortTypealiases](#sortTypealiases)
-* [sortedImports](#sortedImports)
 * [spaceAroundBraces](#spaceAroundBraces)
 * [spaceAroundBrackets](#spaceAroundBrackets)
 * [spaceAroundComments](#spaceAroundComments)
@@ -102,6 +102,7 @@
 
 # Deprecated Rules (do not use)
 
+* [sortedImports](#sortedImports)
 * [sortedSwitchCases](#sortedSwitchCases)
 * [specifiers](#specifiers)
 
@@ -1836,34 +1837,7 @@ and declarations between // swiftformat:sort:begin and
 </details>
 <br/>
 
-## sortSwitchCases
-
-Sort switch cases alphabetically.
-
-## sortTypealiases
-
-Sort protocol composition typealiases alphabetically.
-
-<details>
-<summary>Examples</summary>
-
-```diff
-- typealias Placeholders = Foo & Bar & Baaz & Quux
-+ typealias Placeholders = Baaz & Bar & Foo & Quux
-
-  typealias Dependencies
--     = FooProviding
-+     = BaazProviding
-      & BarProviding
--     & BaazProviding
-+     & FooProviding
-      & QuuxProviding
-```
-
-</details>
-<br/>
-
-## sortedImports
+## sortImports
 
 Sort import statements alphabetically.
 
@@ -1898,6 +1872,39 @@ Option | Description
 
 </details>
 <br/>
+
+## sortSwitchCases
+
+Sort switch cases alphabetically.
+
+## sortTypealiases
+
+Sort protocol composition typealiases alphabetically.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- typealias Placeholders = Foo & Bar & Baaz & Quux
++ typealias Placeholders = Baaz & Bar & Foo & Quux
+
+  typealias Dependencies
+-     = FooProviding
++     = BaazProviding
+      & BarProviding
+-     & BaazProviding
++     & FooProviding
+      & QuuxProviding
+```
+
+</details>
+<br/>
+
+## sortedImports
+
+Sort import statements alphabetically.
+
+*Note: sortedImports rule is deprecated. Use sortImports instead.*
 
 ## sortedSwitchCases
 

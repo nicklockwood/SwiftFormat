@@ -721,7 +721,7 @@ private struct Examples {
     ```
     """
 
-    let sortedImports = """
+    let sortImports = """
     ```diff
     - import Foo
     - import Bar

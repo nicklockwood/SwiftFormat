@@ -755,7 +755,7 @@ class ArgumentsTests: XCTestCase {
 
     func testParseOptionAsRuleThrows() {
         XCTAssertThrowsError(try parseRules("importgrouping")) { error in
-            XCTAssert("\(error)".contains("'sortedImports'"))
+            XCTAssert("\(error)".contains("'sortImports'"))
         }
     }
 

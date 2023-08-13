@@ -196,6 +196,8 @@ class MetadataTests: XCTestCase {
                         Descriptors.assetLiteralWidth, Descriptors.wrapReturnType, Descriptors.wrapEffects,
                         Descriptors.wrapConditions, Descriptors.wrapTypealiases, Descriptors.wrapTernaryOperators,
                     ]
+                case .identifier("wrapStatementBody"):
+                    referencedOptions += [Descriptors.indent, Descriptors.linebreak]
                 case .identifier("indexWhereLineShouldWrapInLine"), .identifier("indexWhereLineShouldWrap"):
                     referencedOptions += [
                         Descriptors.indent, Descriptors.tabWidth, Descriptors.assetLiteralWidth,
@@ -239,7 +241,7 @@ class MetadataTests: XCTestCase {
                           "\(argName) not used in \(name) rule")
             }
         }
-        // TODO: check all options are used
+        // TODO: check all options are used somewhere
         // TODO: check all shared options are set as non-shared for at least one rule
     }
 

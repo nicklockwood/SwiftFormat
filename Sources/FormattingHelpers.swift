@@ -871,6 +871,67 @@ extension Formatter {
         }
     }
 
+    /// Wrap a single-line statement body onto multiple lines
+    func wrapStatementBody(at i: Int) {
+        assert(token(at: i) == .startOfScope("{"))
+        var openBraceIndex = i
+
+        // We need to make sure to move past any closures in the conditional
+        while isStartOfClosure(at: openBraceIndex) {
+            guard let endOfClosureIndex = index(of: .endOfScope("}"), after: openBraceIndex),
+                  let nextOpenBrace = index(of: .startOfScope("{"), after: endOfClosureIndex + 1)
+            else {
+                return
+            }
+            openBraceIndex = nextOpenBrace
+        }
+
+        guard var indexOfFirstTokenInNewScope = index(of: .nonSpaceOrComment, after: openBraceIndex),
+              // If the scope is empty we don't need to do anything
+              !tokens[indexOfFirstTokenInNewScope].isEndOfScope,
+              // If there is already a newline after the brace we can just stop
+              !tokens[indexOfFirstTokenInNewScope].isLinebreak
+        else {
+            return
+        }
+
+        insertLinebreak(at: indexOfFirstTokenInNewScope)
+
+        if tokens[indexOfFirstTokenInNewScope - 1].isSpace {
+            // We left behind a trailing space on the previous line so we should clean it up
+            removeToken(at: indexOfFirstTokenInNewScope - 1)
+            indexOfFirstTokenInNewScope -= 1
+        }
+
+        let movedTokenIndex = indexOfFirstTokenInNewScope + 1
+
+        // We want the token to be indented one level more than the conditional is
+        let indent = indentForLine(at: i) + options.indent
+        insertSpace(indent, at: movedTokenIndex)
+
+        guard var closingBraceIndex = index(of: .endOfScope("}"), after: movedTokenIndex),
+              !(movedTokenIndex ..< closingBraceIndex).contains(where: { tokens[$0].isLinebreak })
+        else {
+            // The closing brace is already on its own line so we don't need to do anything else
+            return
+        }
+
+        insertLinebreak(at: closingBraceIndex)
+
+        let lineBreakIndex = closingBraceIndex
+        closingBraceIndex += 1
+
+        let previousIndex = lineBreakIndex - 1
+        if tokens[previousIndex].isSpace {
+            // We left behind a trailing space on the previous line so we should clean it up
+            removeToken(at: previousIndex)
+            closingBraceIndex -= 1
+        }
+
+        // We want the closing brace at the same indentation level as conditional
+        insertSpace(indentForLine(at: i), at: closingBraceIndex)
+    }
+
     func removeParen(at index: Int) {
         func tokenOutsideParenRequiresSpacing(at index: Int) -> Bool {
             guard let token = token(at: index) else { return false }

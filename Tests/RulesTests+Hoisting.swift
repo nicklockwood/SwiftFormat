@@ -743,11 +743,12 @@ class HoistingTests: RulesTests {
 
     func testNoUnhoistGuardCaseLetFollowedByFunction() {
         let input = """
-        guard case let foo as Foo = bar { else return }
+        guard case let foo as Foo = bar else { return }
         foo.bar(foo: bar)
         """
         let options = FormatOptions(hoistPatternLet: false)
-        testFormatting(for: input, rule: FormatRules.hoistPatternLet, options: options)
+        testFormatting(for: input, rule: FormatRules.hoistPatternLet, options: options,
+                       exclude: ["wrapConditionalBodies"])
     }
 
     func testNoUnhoistSwitchCaseLetFollowedByWhere() {

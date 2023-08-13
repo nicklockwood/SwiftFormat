@@ -596,8 +596,8 @@ class WrappingTests: RulesTests {
         let output = """
         guard foo else
             {
-            return bar
-        }
+                return bar
+            }
         """
 
         testFormatting(for: input, output, rule: FormatRules.wrapConditionalBodies,
@@ -616,16 +616,16 @@ class WrappingTests: RulesTests {
         let output = """
         if foo
             {
-            return bar
-        }
+                return bar
+            }
         else if baz
             {
-            return qux
-        }
+                return qux
+            }
         else
             {
-            return quux
-        }
+                return quux
+            }
         """
         testFormatting(for: input, output, rule: FormatRules.wrapConditionalBodies,
                        exclude: ["braces", "indent", "elseOnSameLine"])

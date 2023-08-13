@@ -149,6 +149,8 @@ class MetadataTests: XCTestCase {
         let tokens = tokenize(rulesSource)
         let formatter = Formatter(tokens)
         var rulesByOption = [String: String]()
+        var allOptions = Set(formattingArguments).subtracting(deprecatedArguments)
+        var allSharedOptions = allOptions
         formatter.forEach(.identifier("FormatRule")) { i, _ in
             guard formatter.next(.nonSpaceOrLinebreak, after: i) == .startOfScope("("),
                   case let .identifier(name)? = formatter.last(.identifier, before: i),
@@ -164,7 +166,9 @@ class MetadataTests: XCTestCase {
                 }
                 rulesByOption[option] = name
             }
-            let allOptions = rule.options + rule.sharedOptions
+            let ruleOptions = rule.options + rule.sharedOptions
+            allOptions.subtract(rule.options)
+            allSharedOptions.subtract(ruleOptions)
             var referencedOptions = [OptionDescriptor]()
             for index in scopeStart + 1 ..< scopeEnd {
                 guard formatter.token(at: index - 1) == .operator(".", .infix),
@@ -233,16 +237,16 @@ class MetadataTests: XCTestCase {
                 }
             }
             for option in referencedOptions {
-                XCTAssert(allOptions.contains(option.argumentName) || option.isDeprecated,
+                XCTAssert(ruleOptions.contains(option.argumentName) || option.isDeprecated,
                           "\(option.argumentName) not listed in \(name) rule")
             }
-            for argName in allOptions {
+            for argName in ruleOptions {
                 XCTAssert(referencedOptions.contains { $0.argumentName == argName },
                           "\(argName) not used in \(name) rule")
             }
         }
-        // TODO: check all options are used somewhere
-        // TODO: check all shared options are set as non-shared for at least one rule
+        XCTAssert(allSharedOptions.isEmpty, "Options \(allSharedOptions.joined(separator: ",")) not shared by any rule)")
+        XCTAssert(allOptions.isEmpty, "Options \(allSharedOptions.joined(separator: ",")) not owned by any rule)")
     }
 
     func testAllOptionsInRulesFile() {

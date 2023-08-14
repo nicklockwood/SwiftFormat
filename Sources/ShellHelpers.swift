@@ -36,7 +36,7 @@ extension String {
         let process = Process()
         let pipe = Pipe()
 
-        process.executableURL = URL(string: "/bin/bash")
+        process.executableURL = URL(fileURLWithPath: "/bin/bash")
         process.arguments = ["-c", self]
         process.standardOutput = pipe
         process.standardError = pipe

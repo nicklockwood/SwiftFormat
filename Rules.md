@@ -733,6 +733,8 @@ Use specified source file header template for all files.
 Option | Description
 --- | ---
 `--header` | Header comments: "strip", "ignore", or the text you wish use
+`--dateformat` | "system" (default), "iso", "dmy", "mdy" or custom
+`--timezone` | "system" (default) or a valid identifier/abbreviation
 
 <details>
 <summary>Examples</summary>

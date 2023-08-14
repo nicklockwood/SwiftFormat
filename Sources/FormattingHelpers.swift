@@ -3300,16 +3300,15 @@ extension Date {
         Date.yearFormatter(self)
     }
 
-    func format(with format: DateFormat?) -> String {
+    func format(with format: DateFormat, timeZone: FormatTimeZone) -> String {
         let formatter = DateFormatter()
 
-        if format != nil, format != .system {
-            // Default to UTC
-            formatter.timeZone = .init(identifier: "UTC")
+        if let chosenTimeZone = timeZone.timeZone {
+            formatter.timeZone = chosenTimeZone
         }
 
         switch format {
-        case nil, .system:
+        case .system:
             formatter.dateStyle = .short
             formatter.timeStyle = .none
         case .dayMonthYear:

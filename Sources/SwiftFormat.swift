@@ -187,10 +187,18 @@ public func enumerateFiles(withInputURL inputURL: URL,
                     ? GitHelpers.fileInfo(inputURL)
                     : nil
 
+                var createdDate: String?
+                if let creationDate = resourceValues.creationDate,
+                   let formatOptions = options.formatOptions
+                {
+                    createdDate = creationDate.format(with: formatOptions.dateFormat,
+                                                      timeZone: formatOptions.timeZone)
+                }
+
                 let fileInfo = FileInfo(
                     filePath: resourceValues.path,
                     replacements: [
-                        .createdDate: resourceValues.creationDate?.format(with: options.formatOptions?.dateFormat),
+                        .createdDate: createdDate,
                         .createdYear: resourceValues.creationDate?.yearString,
                         .createdName: gitInfo?.createdByName,
                         .createdEmail: gitInfo?.createdByEmail,

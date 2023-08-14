@@ -6344,13 +6344,13 @@ class RedundancyTests: RulesTests {
 
     func testPreservesStaticSelfInFunctionAfterStaticVar() {
         let input = """
-        public enum MyFeatureCacheStrategy {
+        enum MyFeatureCacheStrategy {
             case networkOnly
             case cacheFirst
 
-            public static let defaultCacheAge: TimeInterval = .minutes(5)
+            static let defaultCacheAge: TimeInterval = .minutes(5)
 
-            public func requestStrategy<Outcome>() -> SingleRequestStrategy<Outcome> {
+            func requestStrategy<Outcome>() -> SingleRequestStrategy<Outcome> {
                 switch self {
                 case .networkOnly:
                     return .networkOnly(writeResultToCache: true)
@@ -6360,8 +6360,55 @@ class RedundancyTests: RulesTests {
             }
         }
         """
-
         testFormatting(for: input, rule: FormatRules.redundantStaticSelf)
+    }
+
+    func testPreserveStaticSelfForShadowedProperty() {
+        let input = """
+        enum Foo {
+            static var value = 0
+
+            static func f(value: Int) {
+                Self.value = value
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantStaticSelf)
+    }
+
+    func testPreserveStaticSelfInGetter() {
+        let input = """
+        public enum Foo {
+            static let foo: String = "foo"
+
+            var sharedFoo: String {
+                Self.foo
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantStaticSelf)
+    }
+
+    func testRemoveStaticSelfInStaticGetter() {
+        let input = """
+        public enum Foo {
+            static let foo: String = "foo"
+
+            static var getFoo: String {
+                Self.foo
+            }
+        }
+        """
+        let output = """
+        public enum Foo {
+            static let foo: String = "foo"
+
+            static var getFoo: String {
+                foo
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.redundantStaticSelf)
     }
 
     // MARK: - semicolons

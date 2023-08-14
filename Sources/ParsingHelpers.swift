@@ -451,7 +451,7 @@ extension Formatter {
 
     /// Gather declared variable names, starting at index after let/var keyword
     func processDeclaredVariables(at index: inout Int, names: inout Set<String>) {
-        processDeclaredVariables(at: &index, names: &names, removeSelf: false,
+        processDeclaredVariables(at: &index, names: &names, removeSelfKeyword: nil,
                                  onlyLocal: false, scopeAllowsImplicitSelfRebinding: false)
     }
 

@@ -3215,33 +3215,7 @@ public struct _FormatRules {
     public let redundantStaticSelf = FormatRule(
         help: "Remove explicit `Self` where applicable."
     ) { formatter in
-
-        var endIndex: Int?
-
-        formatter.forEachToken { index, token in
-            if token == .keyword("static") {
-                if let startOfBodyIndex = formatter.index(of: .startOfScope("{"), after: index),
-                   // Make sure the open brace is part of the same declaration as the `static` keyword
-                   let declarationKeywordToken = formatter.index(after: index, where: { $0.isDeclarationTypeKeyword }),
-                   let endOfDeclaration = formatter.endOfDeclaration(atDeclarationKeyword: declarationKeywordToken),
-                   startOfBodyIndex < endOfDeclaration
-                {
-                    endIndex = formatter.endOfScope(at: startOfBodyIndex)
-                }
-            } else if endIndex != nil {
-                if index == endIndex {
-                    endIndex = nil
-                } else if token == .identifier("Self"),
-                          let nextTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index),
-                          formatter.token(at: nextTokenIndex) == .operator(".", .infix),
-                          formatter.token(at: nextTokenIndex + 1) != .identifier("init")
-                {
-                    let range = index ... nextTokenIndex
-                    formatter.removeTokens(in: range)
-                    endIndex? -= range.count
-                }
-            }
-        }
+        formatter.addOrRemoveSelf(static: true)
     }
 
     /// Insert or remove redundant self keyword
@@ -3251,7 +3225,7 @@ public struct _FormatRules {
     ) { formatter in
         _ = formatter.options.selfRequired
         _ = formatter.options.explicitSelf
-        formatter.addOrRemoveSelf()
+        formatter.addOrRemoveSelf(static: false)
     }
 
     /// Replace unused arguments with an underscore

@@ -13,11 +13,13 @@ func createFileInfo(
     filePath: String? = nil,
     creationDate: Date? = nil,
     replacements: [FileInfoKey: String] = [:],
-    dateFormat: DateFormat? = nil
+    dateFormat: DateFormat = .system,
+    timeZone: FormatTimeZone = .system
 ) -> FileInfo {
     var allReplacements = replacements
+
     allReplacements.merge([
-        .createdDate: creationDate?.format(with: dateFormat),
+        .createdDate: creationDate?.format(with: dateFormat, timeZone: timeZone),
         .createdYear: creationDate?.yearString,
     ].compactMapValues { $0 }, uniquingKeysWith: { $1 })
 
@@ -26,6 +28,7 @@ func createFileInfo(
 
 private enum TestDateFormat: String {
     case basic = "yyyy-MM-dd"
+    case time = "HH:mmZZZZZ"
     case timestamp = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ"
 }
 
@@ -35,6 +38,8 @@ private func createTestDate(
 ) -> Date {
     let formatter = DateFormatter()
     formatter.dateFormat = format.rawValue
+    formatter.timeZone = .current
+
     return formatter.date(from: input)!
 }
 
@@ -639,9 +644,80 @@ class GeneralTests: RulesTests {
 
         let input = "let foo = bar"
         let output = "// 23.08.09-12.59.30.345\n\nlet foo = bar"
-        let fileInfo = createFileInfo(creationDate: date, dateFormat: .custom("yy.MM.dd-HH.mm.ss.SSS"))
+        let fileInfo = createFileInfo(
+            creationDate: date,
+            dateFormat: .custom("yy.MM.dd-HH.mm.ss.SSS"),
+            timeZone: .identifier("UTC")
+        )
         let options = FormatOptions(fileHeader: "// {created}", fileInfo: fileInfo)
         testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+    }
+
+    private func testTimeZone(
+        timeZone: FormatTimeZone,
+        tests: [String: String]
+    ) {
+        for (input, expected) in tests {
+            let date = createTestDate(input, .time)
+            let input = "let foo = bar"
+            let output = "// \(expected)\n\nlet foo = bar"
+
+            let fileInfo = createFileInfo(
+                creationDate: date,
+                dateFormat: .custom("HH:mm"),
+                timeZone: timeZone
+            )
+
+            let options = FormatOptions(
+                fileHeader: "// {created}",
+                timeZone: timeZone,
+                fileInfo: fileInfo
+            )
+
+            testFormatting(for: input, output,
+                           rule: FormatRules.fileHeader,
+                           options: options)
+        }
+    }
+
+    func testFileHeaderDateTimeZoneSystem() {
+        let baseDate = createTestDate("15:00Z", .time)
+        let offset = TimeZone.current.secondsFromGMT(for: baseDate)
+
+        let date = baseDate.addingTimeInterval(Double(offset))
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+
+        let expected = formatter.string(from: date)
+
+        testTimeZone(timeZone: .system, tests: [
+            "15:00Z": expected,
+            "16:00+1": expected,
+            "01:00+10": expected,
+            "16:30+0130": expected,
+        ])
+    }
+
+    func testFileHeaderDateTimeZoneAbbreviations() {
+        // GMT+0530
+        testTimeZone(timeZone: FormatTimeZone(rawValue: "IST")!, tests: [
+            "15:00Z": "20:30",
+            "16:00+1": "20:30",
+            "01:00+10": "20:30",
+            "16:30+0130": "20:30",
+        ])
+    }
+
+    func testFileHeaderDateTimeZoneIdentifiers() {
+        // GMT+0845
+        testTimeZone(timeZone: FormatTimeZone(rawValue: "Australia/Eucla")!, tests: [
+            "15:00Z": "23:45",
+            "16:00+1": "23:45",
+            "01:00+10": "23:45",
+            "16:30+0130": "23:45",
+        ])
     }
 
     func testFileHeaderRuleThrowsIfCreationDateUnavailable() {

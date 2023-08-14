@@ -1113,6 +1113,12 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testStandaloneSlashOperator() {
+        let input = "/"
+        let output: [Token] = [.operator("/", .none)]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     // MARK: Single-line comments
 
     func testSingleLineComment() {

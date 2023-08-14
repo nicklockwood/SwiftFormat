@@ -946,6 +946,13 @@ class SpacingTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.spaceAroundOperators, options: options)
     }
 
+    func testNoAddSpaceAroundNoSpaceSlash() {
+        let input = "let a = b/c+d"
+        let output = "let a = b/c + d"
+        let options = FormatOptions(noSpaceOperators: ["/"])
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundOperators, options: options)
+    }
+
     func testNoAddSpaceAroundNoSpaceRange() {
         let input = "let a = b...c"
         let options = FormatOptions(noSpaceOperators: ["..."])

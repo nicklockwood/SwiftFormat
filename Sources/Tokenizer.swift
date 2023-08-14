@@ -1875,7 +1875,7 @@ public func tokenize(_ source: String) -> [Token] {
         token = tokens[count - 1]
         switch token {
         case .startOfScope("/"):
-            if let next = characters.first, next.isSpaceOrLinebreak {
+            if characters.first.map({ $0.isSpaceOrLinebreak }) ?? true {
                 // Misidentified as regex
                 token = .operator("/", .none)
                 tokens[count - 1] = token
@@ -1955,11 +1955,6 @@ public func tokenize(_ source: String) -> [Token] {
             }
             break loop
         }
-    }
-
-    // Set final operator type
-    if let lastOperatorIndex = index(of: .operator, before: tokens.count) {
-        setOperatorType(at: lastOperatorIndex)
     }
 
     return tokens

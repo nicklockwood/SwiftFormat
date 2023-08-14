@@ -969,6 +969,14 @@ struct _Descriptors {
         fromArgument: { DateFormat(rawValue: $0) },
         toArgument: { $0.rawValue }
     )
+    let timeZone = OptionDescriptor(
+        argumentName: "timezone",
+        displayName: "Date formatting timezone",
+        help: "Use timezone when formatting dates: system (default) or a valid identifier/abbreviation",
+        keyPath: \.timeZone,
+        fromArgument: { FormatTimeZone(rawValue: $0) },
+        toArgument: { $0.rawValue }
+    )
 
     // MARK: - Internal
 

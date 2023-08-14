@@ -390,7 +390,7 @@ public enum SpaceAroundDelimiter: String, CaseIterable {
     case leadingTrailing = "leading-trailing"
 }
 
-/// Format for printed dates
+/// Format to use when printing dates
 public enum DateFormat: Equatable, RawRepresentable, CustomStringConvertible {
     case dayMonthYear
     case iso
@@ -425,6 +425,55 @@ public enum DateFormat: Equatable, RawRepresentable, CustomStringConvertible {
             return "system"
         case let .custom(str):
             return str
+        }
+    }
+
+    public var description: String {
+        rawValue
+    }
+}
+
+/// Timezone to use when printing dates
+public enum FormatTimeZone: Equatable, RawRepresentable, CustomStringConvertible {
+    case system
+    case abbreviation(String)
+    case identifier(String)
+
+    static let utcNames = ["utc", "gmt"]
+
+    public init?(rawValue: String) {
+        if Self.utcNames.contains(rawValue.lowercased()) {
+            self = .identifier("UTC")
+        } else if TimeZone.knownTimeZoneIdentifiers.contains(rawValue) {
+            self = .identifier(rawValue)
+        } else if TimeZone.abbreviationDictionary.keys.contains(rawValue) {
+            self = .abbreviation(rawValue)
+        } else if rawValue == Self.system.rawValue {
+            self = .system
+        } else {
+            return nil
+        }
+    }
+
+    public var rawValue: String {
+        switch self {
+        case .system:
+            return "system"
+        case let .abbreviation(abbreviation):
+            return abbreviation
+        case let .identifier(identifier):
+            return identifier
+        }
+    }
+
+    public var timeZone: TimeZone? {
+        switch self {
+        case .system:
+            return TimeZone.current
+        case let .abbreviation(abbreviation):
+            return TimeZone(abbreviation: abbreviation)
+        case let .identifier(identifier):
+            return TimeZone(identifier: identifier)
         }
     }
 
@@ -525,6 +574,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var spaceAroundDelimiter: SpaceAroundDelimiter
     public var initCoderNil: Bool
     public var dateFormat: DateFormat
+    public var timeZone: FormatTimeZone
 
     /// Deprecated
     public var indentComments: Bool
@@ -632,6 +682,7 @@ public struct FormatOptions: CustomStringConvertible {
                 spaceAroundDelimiter: SpaceAroundDelimiter = .trailing,
                 initCoderNil: Bool = false,
                 dateFormat: DateFormat = .system,
+                timeZone: FormatTimeZone = .system,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -729,6 +780,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.spaceAroundDelimiter = spaceAroundDelimiter
         self.initCoderNil = initCoderNil
         self.dateFormat = dateFormat
+        self.timeZone = timeZone
         // Doesn't really belong here, but hard to put elsewhere
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

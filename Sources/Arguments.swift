@@ -673,6 +673,7 @@ let commandLineArguments = [
     "options",
     "ruleinfo",
     "dateformat",
+    "timezone",
 ] + optionsArguments
 
 let deprecatedArguments = Descriptors.all.compactMap {

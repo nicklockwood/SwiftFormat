@@ -4184,7 +4184,7 @@ public struct _FormatRules {
     public let fileHeader = FormatRule(
         help: "Use specified source file header template for all files.",
         runOnceOnly: true,
-        options: ["header"],
+        options: ["header", "dateformat", "timezone"],
         sharedOptions: ["linebreaks"]
     ) { formatter in
         guard let headerRange = formatter.headerCommentTokenRange else {

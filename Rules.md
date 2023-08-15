@@ -746,6 +746,13 @@ Token | Description
 `{created.name}` | Name of the user who first committed the file
 `{created.email}` | Email of the user who first committed the file
 `{created.year}` | File creation year
+`{created.follow}` | `{created}` but followed in git
+
+All `{created*}` options also have a `.follow` option to follow the file across
+renames in the git history (e.g `{created.follow}` and `{created.name.follow}`).
+
+**Note**: `{created.follow*}, `{created.name}` and `{created.email}` requires
+the project to be version controlled by git.
 
 **Example**:
 
@@ -759,9 +766,6 @@ Token | Description
 + //  Copyright © 2023 CompanyName.
 + //
 ```
-
-**Note**: `{created.name}` and `{created.email}` requires the project
-to be version controlled by git.
 
 You can use the following built-in formats for `--dateformat`:
 

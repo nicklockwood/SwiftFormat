@@ -34,6 +34,7 @@ import Foundation
 struct GitFileInfo {
     var createdByName: String?
     var createdByEmail: String?
+    var createdAt: Date?
 }
 
 struct GitHelpers {
@@ -70,26 +71,49 @@ struct GitHelpers {
     private enum FileInfoPart: String {
         case email = "ae"
         case name = "an"
+        case createdAt = "at"
     }
 
-    private func fileInfoPart(_ inputURL: URL, _ part: FileInfoPart) -> String? {
-        let value = "git log --diff-filter=A --pretty=%\(part.rawValue) \(inputURL.relativePath)"
+    private func fileInfoPart(_ inputURL: URL,
+                              _ part: FileInfoPart,
+                              follow: Bool) -> String?
+    {
+        // --follow to keep tracking the file across renames
+        let follow = follow ? "--follow" : ""
+        let format = part.rawValue
+        let path = inputURL.relativePath
+
+        let value = "git log \(follow) --diff-filter=A --pretty=%\(format) \(path)"
             .shellOutput(cwd: currentWorkingDirectory)
 
         guard let safeValue = value, !safeValue.isEmpty else { return nil }
         return safeValue
     }
 
-    func fileInfo(_ inputURL: URL) -> GitFileInfo? {
+    func fileInfo(_ inputURL: URL, follow: Bool) -> GitFileInfo? {
         guard inGitRoot else { return nil }
 
-        let name = fileInfoPart(inputURL, .name) ?? defaultGitInfo?.createdByName
-        let email = fileInfoPart(inputURL, .email) ?? defaultGitInfo?.createdByEmail
+        let name = fileInfoPart(inputURL, .name, follow: follow) ??
+            defaultGitInfo?.createdByName
+        let email = fileInfoPart(inputURL, .email, follow: follow) ??
+            defaultGitInfo?.createdByEmail
 
-        return GitFileInfo(createdByName: name, createdByEmail: email)
+        var date: Date?
+        if let createdAtString = fileInfoPart(inputURL, .createdAt, follow: follow),
+           let interval = TimeInterval(createdAtString)
+        {
+            date = Date(timeIntervalSince1970: interval)
+        }
+
+        return GitFileInfo(createdByName: name,
+                           createdByEmail: email,
+                           createdAt: date)
     }
 
-    static func fileInfo(_ inputURL: URL, cwd: URL? = nil) -> GitFileInfo? {
-        GitHelpers(cwd: cwd).fileInfo(inputURL)
+    static func fileInfo(_ inputURL: URL,
+                         cwd: URL? = nil,
+                         follow: Bool = false) -> GitFileInfo?
+    {
+        GitHelpers(cwd: cwd).fileInfo(inputURL, follow: follow)
     }
 }

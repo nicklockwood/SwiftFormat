@@ -187,21 +187,12 @@ public func enumerateFiles(withInputURL inputURL: URL,
                     ? GitHelpers.fileInfo(inputURL)
                     : nil
 
-                var createdDate: String?
-                if let creationDate = resourceValues.creationDate,
-                   let formatOptions = options.formatOptions
-                {
-                    createdDate = creationDate.format(with: formatOptions.dateFormat,
-                                                      timeZone: formatOptions.timeZone)
-                }
-
                 let fileInfo = FileInfo(
                     filePath: resourceValues.path,
+                    creationDate: resourceValues.creationDate,
                     replacements: [
-                        .createdDate: createdDate,
-                        .createdYear: resourceValues.creationDate?.yearString,
-                        .createdName: gitInfo?.createdByName,
-                        .createdEmail: gitInfo?.createdByEmail,
+                        .createdName: .init(gitInfo?.createdByName),
+                        .createdEmail: .init(gitInfo?.createdByEmail),
                     ].compactMapValues { $0 }
                 )
                 var options = options
@@ -511,8 +502,8 @@ private func applyRules(
         let header = options.fileHeader
         let fileInfo = options.fileInfo
 
-        for key in FileInfoKey.allCases {
-            if header.hasTemplateKey(key), !fileInfo.hasReplacement(for: key) {
+        for key in ReplacementKey.allCases {
+            if !fileInfo.hasReplacement(for: key, options: options), header.hasTemplateKey(key) {
                 throw FormatError.options(
                     "Failed to apply {\(key.rawValue)} template in file header as required info is unavailable"
                 )

@@ -1,5 +1,15 @@
 # Change Log
 
+## [0.52.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.52.1) (2023-08-17)
+
+- Fixed various bugs and edge cases in `redundantStaticSelf` rule
+- Fixed bug with `redundantReturn` rule for switch statements containing `fallthrough`
+- Fixed `redundantReturn` rule stripping required return from `Void` switch statements
+- Fixed some more cases where prefix `/` operator could be mistaken for a regex literal
+- The `redundantReturn` rule now handles statements containing comments or raw strings
+- Fixed spurious warning for unused options when using `--lintonly` rules
+- Including `/` operator in `--nospaceoperators` or `--nowrapoperators` now works again
+
 ## [0.52.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.52.0) (2023-08-13)
 
 - Added `redundantInternal` rule to remove redundant `internal` access modifiers

@@ -803,7 +803,7 @@ Option | Description
 
 ## headerFileName
 
-Ensure file name reference in header matches actual file name.
+Ensure file name in header comment matches the actual file name.
 
 ## hoistAwait
 

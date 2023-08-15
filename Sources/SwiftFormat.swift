@@ -179,20 +179,36 @@ public func enumerateFiles(withInputURL inputURL: URL,
         let fileOptions = options.fileOptions ?? .default
         if resourceValues.isRegularFile == true {
             if fileOptions.supportedFileExtensions.contains(inputURL.pathExtension) {
-                let shouldGetCreatedBy =
+                let shouldGetGitInfo =
                     options.rules?.contains(FormatRules.fileHeader.name) ?? false &&
-                    options.formatOptions?.fileHeader.hasTemplateKey(.createdName, .createdEmail) ?? false
+                    options.formatOptions?.fileHeader.hasTemplateKey(
+                        .createdName,
+                        .createdEmail,
+                        .createdDate,
+                        .createdYear,
+                        .followedCreatedName,
+                        .followedCreatedEmail,
+                        .followedCreatedDate,
+                        .followedCreatedYear
+                    ) ?? false
 
-                let gitInfo = shouldGetCreatedBy
+                let gitInfo = shouldGetGitInfo
                     ? GitHelpers.fileInfo(inputURL)
+                    : nil
+
+                let followedGitInfo = shouldGetGitInfo && gitInfo != nil
+                    ? GitHelpers.fileInfo(inputURL, follow: true)
                     : nil
 
                 let fileInfo = FileInfo(
                     filePath: resourceValues.path,
-                    creationDate: resourceValues.creationDate,
+                    creationDate: gitInfo?.createdAt ?? resourceValues.creationDate,
+                    followedCreationDate: followedGitInfo?.createdAt,
                     replacements: [
                         .createdName: .init(gitInfo?.createdByName),
                         .createdEmail: .init(gitInfo?.createdByEmail),
+                        .followedCreatedName: .init(followedGitInfo?.createdByName),
+                        .followedCreatedEmail: .init(followedGitInfo?.createdByEmail),
                     ].compactMapValues { $0 }
                 )
                 var options = options

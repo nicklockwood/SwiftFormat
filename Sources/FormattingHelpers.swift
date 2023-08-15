@@ -1099,10 +1099,8 @@ extension Formatter {
         guard let endOfScopeIndex = endOfScope(at: startOfScopeIndex) else { return false }
         let startOfBody = self.startOfBody(atStartOfScope: startOfScopeIndex)
 
-        // Some heuristics to determine if this is a multi-statement block:
-
-        // (1) In Swift 5.9+, if and switch statements where each branch is a single statement
-        //     are also considered single statements
+        // In Swift 5.9+, if and switch statements where each branch is a single statement
+        // are also considered single statements
         if options.swiftVersion >= "5.9",
            let firstTokenInBody = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfBody),
            let conditionalBranches = conditionalBranches(at: firstTokenInBody)
@@ -1117,82 +1115,40 @@ extension Formatter {
             return isSingleStatement && isOnlyStatement
         }
 
-        // (2) any other statement-forming scope (e.g. guard, #if)
-        //     within the main body, that isn't itself a closure
-        for innerStartOfScopeIndex in (startOfBody + 1) ... endOfScopeIndex
-            where tokens[innerStartOfScopeIndex].isStartOfScope
-            && tokens[innerStartOfScopeIndex] != .startOfScope("(")
-        {
-            let innerStartOfScope = tokens[innerStartOfScopeIndex]
-
-            if innerStartOfScope != .startOfScope("("), // Method calls / other parents are fine
-               innerStartOfScope != .startOfScope("\""), // Strings are fine
-               innerStartOfScope != .startOfScope("\"\"\""), // Strings are fine
-               !indexIsWithinNestedClosure(innerStartOfScopeIndex, startOfScopeIndex: startOfScopeIndex),
-               !isStartOfClosure(at: innerStartOfScopeIndex)
-            {
+        var index = startOfBody + 1
+        while index < endOfScopeIndex {
+            switch tokens[index] {
+            case .startOfScope("("), .startOfScope("//"), .startOfScope("/*"),
+                 .startOfScope where tokens[index].isStringDelimiter:
+                break
+            case .startOfScope("{") where isStartOfClosure(at: index):
+                index = endOfScope(at: index) ?? index
+            case .startOfScope:
+                // any other statement-forming scope (e.g. guard, #if)
+                // within the main body, that isn't itself a closure
                 return false
-            }
-        }
-
-        // (3) any return statement within the main body
-        //     that isn't at the very beginning of the body
-        for returnIndex in startOfBody ... endOfScopeIndex
-            where tokens[returnIndex] == .keyword("return")
-        {
-            let isAtStartOfClosure = index(of: .nonSpaceOrCommentOrLinebreak, before: returnIndex) == startOfBody
-
-            if !indexIsWithinNestedClosure(returnIndex, startOfScopeIndex: startOfScopeIndex),
-               !isAtStartOfClosure
-            {
+            case .keyword("return"):
+                // any return statement within the main body that isn't at the very beginning of the body
+                if self.index(of: .nonSpaceOrCommentOrLinebreak, before: index) != startOfBody {
+                    return false
+                }
+            case .delimiter(";"):
+                // if there are any semicolons within the scope but not at the end of a line
+                let nextTokenIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index) ?? index
+                if startOfLine(at: index) == startOfLine(at: nextTokenIndex) {
+                    return false
+                }
+            case .operator("=", _), .keyword("fallthrough"):
                 return false
+            case .endOfScope(")"):
+                // if there is a method call immediately followed an identifier
+                if next(.nonSpaceOrCommentOrLinebreak, after: index)?.isIdentifier == true {
+                    return false
+                }
+            default:
+                break
             }
-        }
-
-        // (4) if there are any semicolons within the scope
-        //     but not at the end of a line
-        for semicolonIndex in startOfBody ... endOfScopeIndex
-            where tokens[semicolonIndex] == .delimiter(";")
-        {
-            let nextTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: semicolonIndex) ?? semicolonIndex
-            let isAtEndOfLine = startOfLine(at: semicolonIndex) != startOfLine(at: nextTokenIndex)
-
-            if !indexIsWithinNestedClosure(semicolonIndex, startOfScopeIndex: startOfScopeIndex), !isAtEndOfLine {
-                return false
-            }
-        }
-
-        // (5) if there are equals operators within the scope
-        for equalsIndex in startOfBody ... endOfScopeIndex
-            where tokens[equalsIndex].isOperator("=")
-        {
-            if !indexIsWithinNestedClosure(equalsIndex, startOfScopeIndex: startOfScopeIndex) {
-                return false
-            }
-        }
-
-        // (6) if there is a method call immediately followed an identifier, as in:
-        //
-        //   method()
-        //   otherMethod()
-        //
-        for closingParenIndex in startOfBody ... endOfScopeIndex
-            where tokens[closingParenIndex] == .endOfScope(")")
-        {
-            if !indexIsWithinNestedClosure(closingParenIndex, startOfScopeIndex: startOfScopeIndex),
-               next(.nonSpaceOrCommentOrLinebreak, after: closingParenIndex)?.isIdentifier == true
-            {
-                return false
-            }
-        }
-
-        // (7) if there is a fallthrough within the scope
-        for index in startOfBody ... endOfScopeIndex
-            where tokens[index] == .keyword("fallthrough")
-        {
-            if !indexIsWithinNestedClosure(index, startOfScopeIndex: startOfScopeIndex) {
-                return false
-            }
+            index += 1
         }
 
         return true

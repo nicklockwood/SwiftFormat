@@ -661,7 +661,7 @@ class ArgumentsTests: XCTestCase {
     }
 
     func testAddArgumentsDoesntBreakFileInfo() throws {
-        let fileInfo = createFileInfo(filePath: "~/Foo.swift", creationDate: Date())
+        let fileInfo = FileInfo(filePath: "~/Foo.swift", creationDate: Date())
         var options = Options(formatOptions: FormatOptions(fileInfo: fileInfo))
         try options.addArguments(["indent": "2"], in: "")
         guard let formatOptions = options.formatOptions else {

@@ -9,23 +9,6 @@
 import XCTest
 @testable import SwiftFormat
 
-func createFileInfo(
-    filePath: String? = nil,
-    creationDate: Date? = nil,
-    replacements: [FileInfoKey: String] = [:],
-    dateFormat: DateFormat = .system,
-    timeZone: FormatTimeZone = .system
-) -> FileInfo {
-    var allReplacements = replacements
-
-    allReplacements.merge([
-        .createdDate: creationDate?.format(with: dateFormat, timeZone: timeZone),
-        .createdYear: creationDate?.yearString,
-    ].compactMapValues { $0 }, uniquingKeysWith: { $1 })
-
-    return FileInfo(filePath: filePath, replacements: allReplacements)
-}
-
 private enum TestDateFormat: String {
     case basic = "yyyy-MM-dd"
     case time = "HH:mmZZZZZ"
@@ -571,7 +554,7 @@ class GeneralTests: RulesTests {
             formatter.dateFormat = "yyyy"
             return "// Copyright © \(formatter.string(from: date))\n\nlet foo = bar"
         }()
-        let fileInfo = createFileInfo(creationDate: date)
+        let fileInfo = FileInfo(creationDate: date)
         let options = FormatOptions(fileHeader: "// Copyright © {created.year}", fileInfo: fileInfo)
         testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
     }
@@ -581,7 +564,7 @@ class GeneralTests: RulesTests {
         let email = "test@email.com"
         let input = "let foo = bar"
         let output = "// Created by \(name) \(email)\n\nlet foo = bar"
-        let fileInfo = createFileInfo(replacements: [.createdName: name, .createdEmail: email])
+        let fileInfo = FileInfo(replacements: [.createdName: .constant(name), .createdEmail: .constant(email)])
         let options = FormatOptions(fileHeader: "// Created by {created.name} {created.email}", fileInfo: fileInfo)
         testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
     }
@@ -590,7 +573,7 @@ class GeneralTests: RulesTests {
         let name = "Test User"
         let input = "let foo = bar"
         let output = "// Copyright © \(name)\n// Created by \(name)\n\nlet foo = bar"
-        let fileInfo = createFileInfo(replacements: [.createdName: name])
+        let fileInfo = FileInfo(replacements: [.createdName: .constant(name)])
         let options = FormatOptions(fileHeader: "// Copyright © {created.name}\n// Created by {created.name}", fileInfo: fileInfo)
         testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
     }
@@ -604,7 +587,7 @@ class GeneralTests: RulesTests {
             formatter.timeStyle = .none
             return "// Created by Nick Lockwood on \(formatter.string(from: date)).\n\nlet foo = bar"
         }()
-        let fileInfo = createFileInfo(creationDate: date)
+        let fileInfo = FileInfo(creationDate: date)
         let options = FormatOptions(fileHeader: "// Created by Nick Lockwood on {created}.", fileInfo: fileInfo)
         testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
     }
@@ -614,8 +597,8 @@ class GeneralTests: RulesTests {
 
         let input = "let foo = bar"
         let output = "// 2023-08-09\n\nlet foo = bar"
-        let fileInfo = createFileInfo(creationDate: date, dateFormat: .iso)
-        let options = FormatOptions(fileHeader: "// {created}", fileInfo: fileInfo)
+        let fileInfo = FileInfo(creationDate: date)
+        let options = FormatOptions(fileHeader: "// {created}", dateFormat: .iso, fileInfo: fileInfo)
         testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
     }
 
@@ -624,8 +607,8 @@ class GeneralTests: RulesTests {
 
         let input = "let foo = bar"
         let output = "// 09/08/2023\n\nlet foo = bar"
-        let fileInfo = createFileInfo(creationDate: date, dateFormat: .dayMonthYear)
-        let options = FormatOptions(fileHeader: "// {created}", fileInfo: fileInfo)
+        let fileInfo = FileInfo(creationDate: date)
+        let options = FormatOptions(fileHeader: "// {created}", dateFormat: .dayMonthYear, fileInfo: fileInfo)
         testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
     }
 
@@ -634,8 +617,10 @@ class GeneralTests: RulesTests {
 
         let input = "let foo = bar"
         let output = "// 08/09/2023\n\nlet foo = bar"
-        let fileInfo = createFileInfo(creationDate: date, dateFormat: .monthDayYear)
-        let options = FormatOptions(fileHeader: "// {created}", fileInfo: fileInfo)
+        let fileInfo = FileInfo(creationDate: date)
+        let options = FormatOptions(fileHeader: "// {created}",
+                                    dateFormat: .monthDayYear,
+                                    fileInfo: fileInfo)
         testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
     }
 
@@ -644,12 +629,11 @@ class GeneralTests: RulesTests {
 
         let input = "let foo = bar"
         let output = "// 23.08.09-12.59.30.345\n\nlet foo = bar"
-        let fileInfo = createFileInfo(
-            creationDate: date,
-            dateFormat: .custom("yy.MM.dd-HH.mm.ss.SSS"),
-            timeZone: .identifier("UTC")
-        )
-        let options = FormatOptions(fileHeader: "// {created}", fileInfo: fileInfo)
+        let fileInfo = FileInfo(creationDate: date)
+        let options = FormatOptions(fileHeader: "// {created}",
+                                    dateFormat: .custom("yy.MM.dd-HH.mm.ss.SSS"),
+                                    timeZone: .identifier("UTC"),
+                                    fileInfo: fileInfo)
         testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
     }
 
@@ -662,14 +646,11 @@ class GeneralTests: RulesTests {
             let input = "let foo = bar"
             let output = "// \(expected)\n\nlet foo = bar"
 
-            let fileInfo = createFileInfo(
-                creationDate: date,
-                dateFormat: .custom("HH:mm"),
-                timeZone: timeZone
-            )
+            let fileInfo = FileInfo(creationDate: date)
 
             let options = FormatOptions(
                 fileHeader: "// {created}",
+                dateFormat: .custom("HH:mm"),
                 timeZone: timeZone,
                 fileInfo: fileInfo
             )

@@ -36,22 +36,31 @@ struct GitFileInfo {
     var createdByEmail: String?
 }
 
-enum GitHelpers {
-    private static var inGitRoot: Bool {
+struct GitHelpers {
+    var currentWorkingDirectory: URL?
+
+    init(cwd: URL?) {
+        currentWorkingDirectory = cwd
+    }
+
+    private var inGitRoot: Bool {
         // Get current git repository top level directory
-        guard let root = "git rev-parse --show-toplevel".shellOutput() else { return false }
+        guard let root = "git rev-parse --show-toplevel"
+            .shellOutput(cwd: currentWorkingDirectory) else { return false }
         // Make sure a valid URL was returned
         guard let _ = URL(string: root) else { return false }
         // Make sure an existing path was returned
         return FileManager.default.fileExists(atPath: root)
     }
 
-    // If a file has never been committed, default to the local git user for that repository
-    private static var defaultGitInfo: GitFileInfo? {
+    // If a file has never been committed, defaults to the local git user for that repository
+    private var defaultGitInfo: GitFileInfo? {
         guard inGitRoot else { return nil }
 
-        let name = "git config user.name".shellOutput()
-        let email = "git config user.email".shellOutput()
+        let name = "git config user.name"
+            .shellOutput(cwd: currentWorkingDirectory)
+        let email = "git config user.email"
+            .shellOutput(cwd: currentWorkingDirectory)
 
         guard let safeName = name, let safeEmail = email else { return nil }
 
@@ -63,20 +72,24 @@ enum GitHelpers {
         case name = "an"
     }
 
-    private static func fileInfoPart(_ inputURL: URL, _ part: FileInfoPart) -> String? {
+    private func fileInfoPart(_ inputURL: URL, _ part: FileInfoPart) -> String? {
         let value = "git log --diff-filter=A --pretty=%\(part.rawValue) \(inputURL.relativePath)"
-            .shellOutput()
+            .shellOutput(cwd: currentWorkingDirectory)
 
         guard let safeValue = value, !safeValue.isEmpty else { return nil }
         return safeValue
     }
 
-    static func fileInfo(_ inputURL: URL) -> GitFileInfo? {
+    func fileInfo(_ inputURL: URL) -> GitFileInfo? {
         guard inGitRoot else { return nil }
 
         let name = fileInfoPart(inputURL, .name) ?? defaultGitInfo?.createdByName
         let email = fileInfoPart(inputURL, .email) ?? defaultGitInfo?.createdByEmail
 
         return GitFileInfo(createdByName: name, createdByEmail: email)
+    }
+
+    static func fileInfo(_ inputURL: URL, cwd: URL? = nil) -> GitFileInfo? {
+        GitHelpers(cwd: cwd).fileInfo(inputURL)
     }
 }

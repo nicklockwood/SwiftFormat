@@ -46,8 +46,8 @@ private let swiftKeywords = Set([
     "class", "try", "guard", "case", "for", "init", "extension", "private", "static",
     "fileprivate", "internal", "switch", "do", "catch", "enum", "struct", "throws",
     "throw", "typealias", "where", "break", "deinit", "subscript", "is", "while",
-    "associatedtype", "inout", "continue", "operator", "repeat", "rethrows",
-    "default", "protocol", "defer", "await", "consume", "discard",
+    "associatedtype", "inout", "continue", "fallthrough", "operator", "repeat",
+    "rethrows", "default", "protocol", "defer", "await", "consume", "discard",
     /* Any, Self, self, super, nil, true, false */
 ])
 

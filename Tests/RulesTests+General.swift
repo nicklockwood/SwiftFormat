@@ -701,15 +701,34 @@ class GeneralTests: RulesTests {
         ])
     }
 
-    func testGitHelpersReturnsInfo() {
+    func testGitHelpersReturnsNoFollowInfo() {
         let projectDirectory = URL(fileURLWithPath: #file)
             .deletingLastPathComponent().deletingLastPathComponent()
+        let dateFormat = DateFormat.custom("yyyy-MM-dd HH:mm:ss ZZZZZ")
 
         let info = GitHelpers(cwd: projectDirectory)
-            .fileInfo(URL(fileURLWithPath: #file))
+            .fileInfo(URL(fileURLWithPath: #file), follow: false)
 
         XCTAssertEqual(info?.createdByName, "Nick Lockwood")
         XCTAssertEqual(info?.createdByEmail, "nick@charcoaldesign.co.uk")
+        let formattedDate = info?.createdAt?.format(with: dateFormat,
+                                                    timeZone: .identifier("UTC"))
+        XCTAssertEqual(formattedDate, "2021-09-28 14:23:05 Z")
+    }
+
+    func testGitHelpersReturnsFollowInfo() {
+        let projectDirectory = URL(fileURLWithPath: #file)
+            .deletingLastPathComponent().deletingLastPathComponent()
+        let dateFormat = DateFormat.custom("yyyy-MM-dd HH:mm:ss ZZZZZ")
+
+        let info = GitHelpers(cwd: projectDirectory)
+            .fileInfo(URL(fileURLWithPath: #file), follow: true)
+
+        XCTAssertEqual(info?.createdByName, "Nick Lockwood")
+        XCTAssertEqual(info?.createdByEmail, "nick@charcoaldesign.co.uk")
+        let formattedDate = info?.createdAt?.format(with: dateFormat,
+                                                    timeZone: .identifier("UTC"))
+        XCTAssertEqual(formattedDate, "2016-08-22 19:41:41 Z")
     }
 
     func testFileHeaderRuleThrowsIfCreationDateUnavailable() {

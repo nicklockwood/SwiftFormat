@@ -483,18 +483,9 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
             )
             var formatOptions = options.formatOptions ?? .default
 
-            var createdDate: String?
-            if let creationDate = resourceValues.creationDate {
-                createdDate = creationDate.format(with: formatOptions.dateFormat,
-                                                  timeZone: formatOptions.timeZone)
-            }
-
             formatOptions.fileInfo = FileInfo(
                 filePath: resourceValues.path,
-                replacements: [
-                    .createdDate: createdDate,
-                    .createdYear: resourceValues.creationDate?.yearString,
-                ].compactMapValues { $0 }
+                creationDate: resourceValues.creationDate
             )
             options.formatOptions = formatOptions
         }

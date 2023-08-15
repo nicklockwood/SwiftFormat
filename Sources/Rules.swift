@@ -4196,9 +4196,17 @@ public struct _FormatRules {
         case .ignore:
             return
         case var .replace(string):
+            let file = formatter.options.fileInfo
+            let options = ReplacementOptions(
+                dateFormat: formatter.options.dateFormat,
+                timeZone: formatter.options.timeZone
+            )
+
             for (key, replacement) in formatter.options.fileInfo.replacements {
-                while let range = string.range(of: "{\(key.rawValue)}") {
-                    string.replaceSubrange(range, with: replacement)
+                if let replacementStr = replacement.resolve(file, options) {
+                    while let range = string.range(of: "{\(key.rawValue)}") {
+                        string.replaceSubrange(range, with: replacementStr)
+                    }
                 }
             }
 

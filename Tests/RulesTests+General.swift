@@ -701,6 +701,17 @@ class GeneralTests: RulesTests {
         ])
     }
 
+    func testGitHelpersReturnsInfo() {
+        let projectDirectory = URL(fileURLWithPath: #file)
+            .deletingLastPathComponent().deletingLastPathComponent()
+
+        let info = GitHelpers(cwd: projectDirectory)
+            .fileInfo(URL(fileURLWithPath: #file))
+
+        XCTAssertEqual(info?.createdByName, "Nick Lockwood")
+        XCTAssertEqual(info?.createdByEmail, "nick@charcoaldesign.co.uk")
+    }
+
     func testFileHeaderRuleThrowsIfCreationDateUnavailable() {
         let input = "let foo = bar"
         let options = FormatOptions(fileHeader: "// Created by Nick Lockwood on {created}.", fileInfo: FileInfo())

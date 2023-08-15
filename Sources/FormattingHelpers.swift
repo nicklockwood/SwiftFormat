@@ -1097,17 +1097,15 @@ extension Formatter {
     /// has a single statement. This makes it eligible to be used with implicit return.
     func blockBodyHasSingleStatement(atStartOfScope startOfScopeIndex: Int) -> Bool {
         guard let endOfScopeIndex = endOfScope(at: startOfScopeIndex) else { return false }
-
         let startOfBody = self.startOfBody(atStartOfScope: startOfScopeIndex)
 
         // Some heuristics to determine if this is a multi-statement block:
 
         // (1) In Swift 5.9+, if and switch statements where each branch is a single statement
         //     are also considered single statements
-        if
-            options.swiftVersion >= "5.9",
-            let firstTokenInBody = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfBody),
-            let conditionalBranches = conditionalBranches(at: firstTokenInBody)
+        if options.swiftVersion >= "5.9",
+           let firstTokenInBody = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfBody),
+           let conditionalBranches = conditionalBranches(at: firstTokenInBody)
         {
             let isSingleStatement = conditionalBranches.allSatisfy { branch in
                 blockBodyHasSingleStatement(atStartOfScope: branch.startOfBranch)
@@ -1122,8 +1120,8 @@ extension Formatter {
         // (2) any other statement-forming scope (e.g. guard, #if)
         //     within the main body, that isn't itself a closure
         for innerStartOfScopeIndex in (startOfBody + 1) ... endOfScopeIndex
-            where token(at: innerStartOfScopeIndex)?.isStartOfScope == true
-            && token(at: innerStartOfScopeIndex) != .startOfScope("(")
+            where tokens[innerStartOfScopeIndex].isStartOfScope
+            && tokens[innerStartOfScopeIndex] != .startOfScope("(")
         {
             let innerStartOfScope = tokens[innerStartOfScopeIndex]
 
@@ -1140,7 +1138,7 @@ extension Formatter {
         // (3) any return statement within the main body
         //     that isn't at the very beginning of the body
         for returnIndex in startOfBody ... endOfScopeIndex
-            where token(at: returnIndex)?.string == "return"
+            where tokens[returnIndex] == .keyword("return")
         {
             let isAtStartOfClosure = index(of: .nonSpaceOrCommentOrLinebreak, before: returnIndex) == startOfBody
 
@@ -1154,7 +1152,7 @@ extension Formatter {
         // (4) if there are any semicolons within the scope
         //     but not at the end of a line
         for semicolonIndex in startOfBody ... endOfScopeIndex
-            where token(at: semicolonIndex)?.string == ";"
+            where tokens[semicolonIndex] == .delimiter(";")
         {
             let nextTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: semicolonIndex) ?? semicolonIndex
             let isAtEndOfLine = startOfLine(at: semicolonIndex) != startOfLine(at: nextTokenIndex)
@@ -1166,7 +1164,7 @@ extension Formatter {
 
         // (5) if there are equals operators within the scope
         for equalsIndex in startOfBody ... endOfScopeIndex
-            where token(at: equalsIndex)?.string == "="
+            where tokens[equalsIndex].isOperator("=")
         {
             if !indexIsWithinNestedClosure(equalsIndex, startOfScopeIndex: startOfScopeIndex) {
                 return false
@@ -1179,15 +1177,20 @@ extension Formatter {
         //   otherMethod()
         //
         for closingParenIndex in startOfBody ... endOfScopeIndex
-            where token(at: closingParenIndex)?.string == ")"
+            where tokens[closingParenIndex] == .endOfScope(")")
         {
             if !indexIsWithinNestedClosure(closingParenIndex, startOfScopeIndex: startOfScopeIndex),
-               let nextNonWhitespace = index(
-                   of: .nonSpaceOrCommentOrLinebreak,
-                   after: closingParenIndex
-               ),
-               token(at: nextNonWhitespace)?.isIdentifier == true
+               next(.nonSpaceOrCommentOrLinebreak, after: closingParenIndex)?.isIdentifier == true
             {
+                return false
+            }
+        }
+
+        // (7) if there is a fallthrough within the scope
+        for index in startOfBody ... endOfScopeIndex
+            where tokens[index] == .keyword("fallthrough")
+        {
+            if !indexIsWithinNestedClosure(index, startOfScopeIndex: startOfScopeIndex) {
                 return false
             }
         }

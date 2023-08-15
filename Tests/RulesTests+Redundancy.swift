@@ -2684,6 +2684,21 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantReturn, options: options)
     }
 
+    func testNonRedundantSwitchStatementReturnInFunctionWithFallthrough() {
+        let input = """
+        func foo(condition: Bool) -> String {
+            switch condition {
+            case true:
+                fallthrough
+            case false:
+                return "bar"
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: FormatRules.redundantReturn, options: options)
+    }
+
     func testRedundantNestedSwitchStatementReturnInFunction() {
         let input = """
         func foo(condition: Bool) -> String {

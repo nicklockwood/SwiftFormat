@@ -210,6 +210,10 @@ public enum ReplacementKey: String, CaseIterable {
     case createdName = "created.name"
     case createdEmail = "created.email"
     case createdYear = "created.year"
+    case followedCreatedDate = "created.follow"
+    case followedCreatedName = "created.name.follow"
+    case followedCreatedEmail = "created.email.follow"
+    case followedCreatedYear = "created.year.follow"
 }
 
 /// Argument type for stripping
@@ -310,17 +314,27 @@ public enum ReplacementType: Equatable {
 
 /// File info, used for constructing header comments
 public struct FileInfo: Equatable, CustomStringConvertible {
-    static let defaultReplacements: [ReplacementKey: ReplacementType] = [
-        .createdDate: .dynamic { info, options in
-            info.creationDate?.format(with: options.dateFormat,
-                                      timeZone: options.timeZone)
-        },
-        .createdYear: .dynamic { info, _ in info.creationDate?.yearString },
-        .currentYear: .constant(Date.currentYear),
-    ]
+    static var defaultReplacements: [ReplacementKey: ReplacementType] {
+        [
+            .createdDate: .dynamic { info, options in
+                info.creationDate?.format(with: options.dateFormat,
+                                          timeZone: options.timeZone)
+            },
+            .createdYear: .dynamic { info, _ in info.creationDate?.yearString },
+            .followedCreatedDate: .dynamic { info, options in
+                info.followedCreationDate?.format(with: options.dateFormat,
+                                                  timeZone: options.timeZone)
+            },
+            .followedCreatedYear: .dynamic { info, _ in
+                info.followedCreationDate?.yearString
+            },
+            .currentYear: .constant(Date.currentYear),
+        ]
+    }
 
     let filePath: String?
     var creationDate: Date?
+    var followedCreationDate: Date?
     var replacements: [ReplacementKey: ReplacementType] = Self.defaultReplacements
 
     var fileName: String? {
@@ -330,10 +344,12 @@ public struct FileInfo: Equatable, CustomStringConvertible {
     public init(
         filePath: String? = nil,
         creationDate: Date? = nil,
+        followedCreationDate: Date? = nil,
         replacements: [ReplacementKey: ReplacementType] = [:]
     ) {
         self.filePath = filePath
         self.creationDate = creationDate
+        self.followedCreationDate = followedCreationDate
 
         self.replacements.merge(replacements, uniquingKeysWith: { $1 })
 
@@ -355,10 +371,6 @@ public struct FileInfo: Equatable, CustomStringConvertible {
         case .constant:
             return true
         case let .dynamic(fn):
-            guard let date = creationDate else {
-                return false
-            }
-
             return fn(self, ReplacementOptions(options)) != nil
         }
     }

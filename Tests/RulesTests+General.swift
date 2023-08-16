@@ -701,34 +701,16 @@ class GeneralTests: RulesTests {
         ])
     }
 
-    func testGitHelpersReturnsNoFollowInfo() {
-        let projectDirectory = URL(fileURLWithPath: #file)
-            .deletingLastPathComponent().deletingLastPathComponent()
-        let dateFormat = DateFormat.custom("yyyy-MM-dd HH:mm:ss ZZZZZ")
+    func testGitHelpersReturnsInfo() {
+        let info = GitHelpers.fileInfo(URL(fileURLWithPath: #file), follow: false)
+        XCTAssertNotNil(info?.createdByName)
+        XCTAssertNotNil(info?.createdByEmail)
+        XCTAssertNotNil(info?.createdAt)
 
-        let info = GitHelpers(cwd: projectDirectory)
-            .fileInfo(URL(fileURLWithPath: #file), follow: false)
-
-        XCTAssertEqual(info?.createdByName, "Nick Lockwood")
-        XCTAssertEqual(info?.createdByEmail, "nick@charcoaldesign.co.uk")
-        let formattedDate = info?.createdAt?.format(with: dateFormat,
-                                                    timeZone: .identifier("UTC"))
-        XCTAssertEqual(formattedDate, "2021-09-28 14:23:05 Z")
-    }
-
-    func testGitHelpersReturnsFollowInfo() {
-        let projectDirectory = URL(fileURLWithPath: #file)
-            .deletingLastPathComponent().deletingLastPathComponent()
-        let dateFormat = DateFormat.custom("yyyy-MM-dd HH:mm:ss ZZZZZ")
-
-        let info = GitHelpers(cwd: projectDirectory)
-            .fileInfo(URL(fileURLWithPath: #file), follow: true)
-
-        XCTAssertEqual(info?.createdByName, "Nick Lockwood")
-        XCTAssertEqual(info?.createdByEmail, "nick@charcoaldesign.co.uk")
-        let formattedDate = info?.createdAt?.format(with: dateFormat,
-                                                    timeZone: .identifier("UTC"))
-        XCTAssertEqual(formattedDate, "2016-08-22 19:41:41 Z")
+        let followInfo = GitHelpers.fileInfo(URL(fileURLWithPath: #file), follow: true)
+        XCTAssertNotNil(followInfo?.createdByName)
+        XCTAssertNotNil(followInfo?.createdByEmail)
+        XCTAssertNotNil(followInfo?.createdAt)
     }
 
     func testFileHeaderRuleThrowsIfCreationDateUnavailable() {

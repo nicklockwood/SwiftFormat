@@ -266,6 +266,16 @@ public enum HeaderStrippingMode: Equatable, RawRepresentable, ExpressibleByStrin
 
         return keys.contains(where: { str.contains("{\($0.rawValue)}") })
     }
+
+    public var needsGitInfo: Bool {
+        hasTemplateKey(.createdDate, .createdYear,
+                       .createdName, .createdEmail)
+    }
+
+    public var needsFollowGitInfo: Bool {
+        hasTemplateKey(.followedCreatedDate, .followedCreatedYear,
+                       .followedCreatedName, .followedCreatedEmail)
+    }
 }
 
 public struct ReplacementOptions {
@@ -314,23 +324,21 @@ public enum ReplacementType: Equatable {
 
 /// File info, used for constructing header comments
 public struct FileInfo: Equatable, CustomStringConvertible {
-    static var defaultReplacements: [ReplacementKey: ReplacementType] {
-        [
-            .createdDate: .dynamic { info, options in
-                info.creationDate?.format(with: options.dateFormat,
-                                          timeZone: options.timeZone)
-            },
-            .createdYear: .dynamic { info, _ in info.creationDate?.yearString },
-            .followedCreatedDate: .dynamic { info, options in
-                info.followedCreationDate?.format(with: options.dateFormat,
-                                                  timeZone: options.timeZone)
-            },
-            .followedCreatedYear: .dynamic { info, _ in
-                info.followedCreationDate?.yearString
-            },
-            .currentYear: .constant(Date.currentYear),
-        ]
-    }
+    static var defaultReplacements: [ReplacementKey: ReplacementType] = [
+        .createdDate: .dynamic { info, options in
+            info.creationDate?.format(with: options.dateFormat,
+                                      timeZone: options.timeZone)
+        },
+        .createdYear: .dynamic { info, _ in info.creationDate?.yearString },
+        .followedCreatedDate: .dynamic { info, options in
+            info.followedCreationDate?.format(with: options.dateFormat,
+                                              timeZone: options.timeZone)
+        },
+        .followedCreatedYear: .dynamic { info, _ in
+            info.followedCreationDate?.yearString
+        },
+        .currentYear: .constant(Date.currentYear),
+    ]
 
     let filePath: String?
     var creationDate: Date?

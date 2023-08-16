@@ -179,24 +179,18 @@ public func enumerateFiles(withInputURL inputURL: URL,
         let fileOptions = options.fileOptions ?? .default
         if resourceValues.isRegularFile == true {
             if fileOptions.supportedFileExtensions.contains(inputURL.pathExtension) {
-                let shouldGetGitInfo =
-                    options.rules?.contains(FormatRules.fileHeader.name) ?? false &&
-                    options.formatOptions?.fileHeader.hasTemplateKey(
-                        .createdName,
-                        .createdEmail,
-                        .createdDate,
-                        .createdYear,
-                        .followedCreatedName,
-                        .followedCreatedEmail,
-                        .followedCreatedDate,
-                        .followedCreatedYear
-                    ) ?? false
+                let fileHeaderRuleEnabled = options.rules?.contains(FormatRules.fileHeader.name) ?? false
+                let shouldGetGitInfo = fileHeaderRuleEnabled &&
+                    options.formatOptions?.fileHeader.needsGitInfo == true
+
+                let shouldGetFollowGitInfo = fileHeaderRuleEnabled &&
+                    options.formatOptions?.fileHeader.needsFollowGitInfo == true
 
                 let gitInfo = shouldGetGitInfo
                     ? GitHelpers.fileInfo(inputURL)
                     : nil
 
-                let followedGitInfo = shouldGetGitInfo && gitInfo != nil
+                let followedGitInfo = shouldGetFollowGitInfo
                     ? GitHelpers.fileInfo(inputURL, follow: true)
                     : nil
 
@@ -205,12 +199,13 @@ public func enumerateFiles(withInputURL inputURL: URL,
                     creationDate: gitInfo?.createdAt ?? resourceValues.creationDate,
                     followedCreationDate: followedGitInfo?.createdAt,
                     replacements: [
-                        .createdName: .init(gitInfo?.createdByName),
-                        .createdEmail: .init(gitInfo?.createdByEmail),
-                        .followedCreatedName: .init(followedGitInfo?.createdByName),
-                        .followedCreatedEmail: .init(followedGitInfo?.createdByEmail),
+                        .createdName: ReplacementType(gitInfo?.createdByName),
+                        .createdEmail: ReplacementType(gitInfo?.createdByEmail),
+                        .followedCreatedName: ReplacementType(followedGitInfo?.createdByName),
+                        .followedCreatedEmail: ReplacementType(followedGitInfo?.createdByEmail),
                     ].compactMapValues { $0 }
                 )
+
                 var options = options
                 options.formatOptions?.fileInfo = fileInfo
                 do {

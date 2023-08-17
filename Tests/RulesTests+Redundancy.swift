@@ -2699,6 +2699,21 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantReturn, options: options)
     }
 
+    func testVoidReturnNotStrippedFromSwitch() {
+        let input = """
+        func foo(condition: Bool) {
+            switch condition {
+            case true:
+                print("foo")
+            case false:
+                return
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: FormatRules.redundantReturn, options: options)
+    }
+
     func testRedundantNestedSwitchStatementReturnInFunction() {
         let input = """
         func foo(condition: Bool) -> String {

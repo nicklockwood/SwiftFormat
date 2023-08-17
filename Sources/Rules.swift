@@ -3080,9 +3080,9 @@ public struct _FormatRules {
             }
 
             // Make sure the body only has a single statement
-            guard
-                formatter.blockBodyHasSingleStatement(atStartOfScope: startOfScopeIndex)
-            else { return }
+            guard formatter.blockBodyHasSingleStatement(atStartOfScope: startOfScopeIndex) else {
+                return
+            }
 
             /// Removes return statements in the given single-statement scope
             func removeReturn(atStartOfScope startOfScopeIndex: Int) {
@@ -3099,13 +3099,13 @@ public struct _FormatRules {
                 }
 
                 // Otherwise this is a simple case with a single return at the start of the scope
-                else if
-                    let endOfScopeIndex = formatter.endOfScope(at: startOfScopeIndex),
-                    let returnIndex = formatter.index(of: .keyword("return"), after: startOfScopeIndex),
-                    returnIndex < endOfScopeIndex,
-                    let tokenIndexAfterReturn = formatter.index(of: .nonSpaceOrLinebreak, after: returnIndex)
+                else if let endOfScopeIndex = formatter.endOfScope(at: startOfScopeIndex),
+                        let returnIndex = formatter.index(of: .keyword("return"), after: startOfScopeIndex),
+                        returnIndex < endOfScopeIndex,
+                        let nextIndex = formatter.index(of: .nonSpaceOrLinebreak, after: returnIndex),
+                        formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: returnIndex)! < endOfScopeIndex
                 {
-                    formatter.removeTokens(in: returnIndex ..< tokenIndexAfterReturn)
+                    formatter.removeTokens(in: returnIndex ..< nextIndex)
                 }
             }
 

@@ -3062,62 +3062,21 @@ public struct _FormatRules {
     public let redundantReturn = FormatRule(
         help: "Remove unneeded `return` keyword."
     ) { formatter in
-        // Explicit returns are redundant in closures, functions, etc with a single statement body
-        formatter.forEach(.startOfScope("{")) { startOfScopeIndex, _ in
-            // Make sure this is a type of scope that supports implicit returns
-            if formatter.isConditionalStatement(at: startOfScopeIndex) ||
-                ["do", "else", "catch"].contains(formatter.lastSignificantKeyword(at: startOfScopeIndex))
-            {
-                return
-            }
-
-            // Closures always supported implicit returns, but other types of scopes
-            // only support implicit return in Swift 5.1+ (SE-0255)
-            if !formatter.isStartOfClosure(at: startOfScopeIndex) {
-                guard formatter.options.swiftVersion >= "5.1" else {
-                    return
-                }
-            }
-
-            // Make sure the body only has a single statement
-            guard formatter.blockBodyHasSingleStatement(atStartOfScope: startOfScopeIndex) else {
-                return
-            }
-
-            /// Removes return statements in the given single-statement scope
-            func removeReturn(atStartOfScope startOfScopeIndex: Int) {
-                // If this scope is a single-statement if or switch statement then we have to recursively
-                // remove the return from each branch of the if statement
-                let startOfBody = formatter.startOfBody(atStartOfScope: startOfScopeIndex)
-
-                if let firstTokenInBody = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: startOfBody),
-                   let conditionalBranches = formatter.conditionalBranches(at: firstTokenInBody)
-                {
-                    for branch in conditionalBranches.reversed() {
-                        removeReturn(atStartOfScope: branch.startOfBranch)
-                    }
-                }
-
-                // Otherwise this is a simple case with a single return at the start of the scope
-                else if let endOfScopeIndex = formatter.endOfScope(at: startOfScopeIndex),
-                        let returnIndex = formatter.index(of: .keyword("return"), after: startOfScopeIndex),
-                        returnIndex < endOfScopeIndex,
-                        let nextIndex = formatter.index(of: .nonSpaceOrLinebreak, after: returnIndex),
-                        formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: returnIndex)! < endOfScopeIndex
-                {
-                    formatter.removeTokens(in: returnIndex ..< nextIndex)
-                }
-            }
-
-            removeReturn(atStartOfScope: startOfScopeIndex)
-        }
+        // indices of returns that are safe to remove
+        var returnIndices = [Int]()
 
         // Also handle redundant void returns in void functions, which can always be removed.
         //  - The following code is the original implementation of the `redundantReturn` rule
-        //    and is partially redundant with the above code so could be simplified in the future.
+        //    and is partially redundant with the below code so could be simplified in the future.
         formatter.forEach(.keyword("return")) { i, _ in
             guard let startIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i) else {
                 return
+            }
+            defer {
+                // Check return wasn't removed already
+                if formatter.token(at: i) == .keyword("return") {
+                    returnIndices.append(i)
+                }
             }
             switch formatter.tokens[startIndex] {
             case .keyword("in"):
@@ -3196,6 +3155,63 @@ public struct _FormatRules {
             } else if formatter.token(at: i)?.isSpace == true {
                 formatter.removeToken(at: i)
             }
+        }
+
+        // Explicit returns are redundant in closures, functions, etc with a single statement body
+        formatter.forEach(.startOfScope("{")) { startOfScopeIndex, _ in
+            // Closures always supported implicit returns, but other types of scopes
+            // only support implicit return in Swift 5.1+ (SE-0255)
+            if formatter.options.swiftVersion < "5.1", !formatter.isStartOfClosure(at: startOfScopeIndex) {
+                return
+            }
+
+            // Make sure this is a type of scope that supports implicit returns
+            if formatter.isConditionalStatement(at: startOfScopeIndex) ||
+                ["do", "else", "catch"].contains(formatter.lastSignificantKeyword(at: startOfScopeIndex))
+            {
+                return
+            }
+
+            // Make sure the body only has a single statement
+            guard formatter.blockBodyHasSingleStatement(atStartOfScope: startOfScopeIndex) else {
+                return
+            }
+
+            /// Removes return statements in the given single-statement scope
+            func removeReturn(atStartOfScope startOfScopeIndex: Int) {
+                // If this scope is a single-statement if or switch statement then we have to recursively
+                // remove the return from each branch of the if statement
+                let startOfBody = formatter.startOfBody(atStartOfScope: startOfScopeIndex)
+
+                if let firstTokenInBody = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: startOfBody),
+                   let conditionalBranches = formatter.conditionalBranches(at: firstTokenInBody)
+                {
+                    for branch in conditionalBranches.reversed() {
+                        removeReturn(atStartOfScope: branch.startOfBranch)
+                    }
+                }
+
+                // Otherwise this is a simple case with a single return at the start of the scope
+                else if let endOfScopeIndex = formatter.endOfScope(at: startOfScopeIndex),
+                        let returnIndex = formatter.index(of: .keyword("return"), after: startOfScopeIndex),
+                        returnIndices.contains(returnIndex),
+                        returnIndex < endOfScopeIndex,
+                        let nextIndex = formatter.index(of: .nonSpaceOrLinebreak, after: returnIndex),
+                        formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: returnIndex)! < endOfScopeIndex
+                {
+                    let range = returnIndex ..< nextIndex
+                    for (i, index) in returnIndices.enumerated().reversed() {
+                        if range.contains(index) {
+                            returnIndices.remove(at: i)
+                        } else if index > returnIndex {
+                            returnIndices[i] -= range.count
+                        }
+                    }
+                    formatter.removeTokens(in: range)
+                }
+            }
+
+            removeReturn(atStartOfScope: startOfScopeIndex)
         }
     }
 

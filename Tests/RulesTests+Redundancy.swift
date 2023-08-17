@@ -2495,6 +2495,17 @@ class RedundancyTests: RulesTests {
                        options: FormatOptions(swiftVersion: "5.1"))
     }
 
+    func testDisableNextRedundantReturn() {
+        let input = """
+        func foo() -> Foo {
+            // swiftformat:disable:next redundantReturn
+            return Foo()
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.1")
+        testFormatting(for: input, rule: FormatRules.redundantReturn, options: options)
+    }
+
     func testRedundantIfStatementReturnSwift5_8() {
         let input = """
         func foo(condition: Bool) -> String {

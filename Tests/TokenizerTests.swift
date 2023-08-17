@@ -1113,6 +1113,59 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testPrefixSlashOperatorFollowedByComment() {
+        let input = "let _ = /Foo.bar//"
+        let output: [Token] = [
+            .keyword("let"),
+            .space(" "),
+            .identifier("_"),
+            .space(" "),
+            .operator("=", .infix),
+            .space(" "),
+            .operator("/", .prefix),
+            .identifier("Foo"),
+            .operator(".", .infix),
+            .identifier("bar"),
+            .startOfScope("//"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testRegexCannotEndWithUnescapedSpace() {
+        let input = "let _ = /foo / bar"
+        let output: [Token] = [
+            .keyword("let"),
+            .space(" "),
+            .identifier("_"),
+            .space(" "),
+            .operator("=", .infix),
+            .space(" "),
+            .operator("/", .prefix),
+            .identifier("foo"),
+            .space(" "),
+            .operator("/", .infix),
+            .space(" "),
+            .identifier("bar"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testHashedRegexCanEndWithUnescapedSpace() {
+        let input = "let _ = #/foo /#"
+        let output: [Token] = [
+            .keyword("let"),
+            .space(" "),
+            .identifier("_"),
+            .space(" "),
+            .operator("=", .infix),
+            .space(" "),
+            .startOfScope("#/"),
+            .stringBody("foo "),
+            .endOfScope("/#"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     func testStandaloneSlashOperator() {
         let input = "/"
         let output: [Token] = [.operator("/", .none)]

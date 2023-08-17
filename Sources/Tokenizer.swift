@@ -1159,6 +1159,12 @@ public func tokenize(_ source: String) -> [Token] {
                 string.append("\\" + hashes)
                 continue
             case delimiter where !escaped && characters.readString(hashes):
+                if regex, hashCount == 0, ["/", "*"].contains(characters.first ?? "\n") ||
+                    string.unicodeScalars.last?.isSpace == true
+                {
+                    // Encountered a comment, so this isn't a regex literal after all
+                    return
+                }
                 if string != "" {
                     tokens.append(.stringBody(string))
                 }

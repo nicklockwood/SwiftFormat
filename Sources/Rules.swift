@@ -4222,7 +4222,7 @@ public struct _FormatRules {
 
     /// Ensure file name reference in header matches actual file name
     public let headerFileName = FormatRule(
-        help: "Ensure file name reference in header matches actual file name.",
+        help: "Ensure file name in header comment matches the actual file name.",
         runOnceOnly: true,
         orderAfter: ["fileHeader"]
     ) { formatter in

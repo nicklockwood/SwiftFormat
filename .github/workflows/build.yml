@@ -47,14 +47,18 @@ jobs:
         swiftos:
           - focal
     runs-on: ubuntu-latest
-    container: 
+    container:
       image: ${{ format('{0}-{1}', matrix.swiftver, matrix.swiftos) }}
       options: --cap-add=SYS_PTRACE --security-opt seccomp=unconfined --security-opt apparmor=unconfined
     steps:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Build and Test
-        run: swift test --enable-test-discovery
+        run: |
+          # Needed to be allowed to run git commands in the tests
+          # https://github.com/actions/runner-images/issues/6775
+          git config --global --add safe.directory /__w/SwiftFormat/SwiftFormat
+          swift test --enable-test-discovery
 
   windows:
     strategy:

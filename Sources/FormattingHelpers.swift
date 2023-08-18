@@ -2441,12 +2441,12 @@ extension Formatter {
                                 processDeclaredVariables(at: &i, names: &members)
                             }
                         } else {
-                            let removeSelf = explicitSelf != .insert && !usingDynamicLookup && !inClosureDisallowingImplicitSelf
-                            let onlyLocal = options.swiftVersion < "5"
-
+                            let removeSelf = explicitSelf != .insert && !usingDynamicLookup && (
+                                (staticSelf && classOrStatic) || (!staticSelf && !inClosureDisallowingImplicitSelf)
+                            )
                             processDeclaredVariables(at: &i, names: &localNames,
                                                      removeSelfKeyword: removeSelf ? selfKeyword : nil,
-                                                     onlyLocal: onlyLocal,
+                                                     onlyLocal: options.swiftVersion < "5",
                                                      scopeAllowsImplicitSelfRebinding: scopeAllowsImplicitSelfRebinding)
                         }
                     case .keyword("func"):
@@ -2586,7 +2586,9 @@ extension Formatter {
                         assert(!isTypeRoot)
                         // Guard is included because it's an error to reference guard vars in body
                         var scopedNames = localNames
-                        let removeSelf = explicitSelf != .insert && !inClosureDisallowingImplicitSelf
+                        let removeSelf = explicitSelf != .insert && !usingDynamicLookup && (
+                            (staticSelf && classOrStatic) || (!staticSelf && !inClosureDisallowingImplicitSelf)
+                        )
                         processDeclaredVariables(
                             at: &index, names: &scopedNames,
                             removeSelfKeyword: removeSelf ? selfKeyword : nil,

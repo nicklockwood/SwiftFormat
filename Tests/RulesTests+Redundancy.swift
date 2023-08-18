@@ -6433,6 +6433,19 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantStaticSelf)
     }
 
+    func testPreserveStaticSelfInInstanceFunction() {
+        let input = """
+        enum Foo {
+            static var value = 0
+
+            func f() {
+                Self.value = value
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantStaticSelf)
+    }
+
     func testPreserveStaticSelfForShadowedProperty() {
         let input = """
         enum Foo {
@@ -6448,7 +6461,7 @@ class RedundancyTests: RulesTests {
 
     func testPreserveStaticSelfInGetter() {
         let input = """
-        public enum Foo {
+        enum Foo {
             static let foo: String = "foo"
 
             var sharedFoo: String {
@@ -6479,6 +6492,20 @@ class RedundancyTests: RulesTests {
         }
         """
         testFormatting(for: input, output, rule: FormatRules.redundantStaticSelf)
+    }
+
+    func testPreserveStaticSelfInGuardLet() {
+        let input = """
+        class LocationDeeplink: Deeplink {
+            convenience init?(warnRegion: String) {
+                guard let value = Self.location(for: warnRegion) else {
+                    return nil
+                }
+                self.init(location: value)
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantStaticSelf)
     }
 
     // MARK: - semicolons

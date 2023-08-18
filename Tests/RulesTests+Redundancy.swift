@@ -6508,6 +6508,13 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantStaticSelf)
     }
 
+    func testPreserveStaticSelfInSingleLineClassInit() {
+        let input = """
+        class A { static let defaultName = "A"; let name: String; init() { name = Self.defaultName }}
+        """
+        testFormatting(for: input, rule: FormatRules.redundantStaticSelf)
+    }
+
     // MARK: - semicolons
 
     func testSemicolonRemovedAtEndOfLine() {

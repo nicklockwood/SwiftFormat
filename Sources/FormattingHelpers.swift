@@ -2511,7 +2511,6 @@ extension Formatter {
                                     usingDynamicLookup: usingDynamicLookup,
                                     classOrStatic: classOrStatic)
                     classOrStatic = false
-                    assert(self.token(at: index) != .endOfScope("}"))
                     continue
                 case .keyword("static"):
                     if !isTypeRoot {

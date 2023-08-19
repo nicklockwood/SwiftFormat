@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.52.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.52.2) (2023-08-19)
+
+- Fixed static `Self` being incorrectly removed in `let` or `if let` expressions
+- Fixed `// swiftformat:disable` directive not working for `redundantReturn` rule
+- Fixed spurious assertion failure
+
 ## [0.52.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.52.1) (2023-08-17)
 
 - Fixed various bugs and edge cases in `redundantStaticSelf` rule

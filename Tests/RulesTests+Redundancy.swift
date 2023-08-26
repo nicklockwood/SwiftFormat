@@ -2919,6 +2919,22 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantReturn, options: options)
     }
 
+    func testNoRemoveDebugReturnFollowedBySwitch() {
+        let input = """
+        func swiftFormatBug() -> Foo {
+            return .foo
+
+            switch state {
+            case .foo, .bar:
+                return state
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: FormatRules.redundantReturn, options: options,
+                       exclude: ["wrapSwitchCases", "sortSwitchCases"])
+    }
+
     // MARK: - redundantBackticks
 
     func testRemoveRedundantBackticksInLet() {

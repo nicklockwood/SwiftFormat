@@ -21,7 +21,7 @@ private func createTestDate(
 ) -> Date {
     let formatter = DateFormatter()
     formatter.dateFormat = format.rawValue
-    formatter.timeZone = TimeZone(secondsFromGMT: 0)
+    formatter.timeZone = .current
 
     return formatter.date(from: input)!
 }

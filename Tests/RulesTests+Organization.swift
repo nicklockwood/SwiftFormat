@@ -3165,7 +3165,7 @@ class OrganizationTests: RulesTests {
         let input = "consuming public func close()"
         let output = "public consuming func close()"
         let options = FormatOptions(modifierOrder: ["public", "consuming"])
-        testFormatting(for: input, output, rule: FormatRules.modifierOrder, options: options)
+        testFormatting(for: input, output, rule: FormatRules.modifierOrder, options: options, exclude: ["noExplicitOwnership"])
     }
 
     func testNoConfusePostfixIdentifierWithKeyword() {

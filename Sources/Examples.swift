@@ -1730,4 +1730,11 @@ private struct Examples {
           .forEach { print($0) }
     ```
     """
+
+    let noExplicitOwnership = """
+    ```diff
+    - borrowing func foo(_ bar: consuming Bar) { ... }
+    + func foo(_ bar: Bar) { ... }
+    ```
+    """
 }

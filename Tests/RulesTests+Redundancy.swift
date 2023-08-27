@@ -7707,7 +7707,7 @@ class RedundancyTests: RulesTests {
             file.close()
         }
         """
-        testFormatting(for: input, rule: FormatRules.unusedArguments)
+        testFormatting(for: input, rule: FormatRules.unusedArguments, exclude: ["noExplicitOwnership"])
     }
 
     func testUsedConsumingBorrowingArguments() {
@@ -7717,7 +7717,7 @@ class RedundancyTests: RulesTests {
             borrow(b)
         }
         """
-        testFormatting(for: input, rule: FormatRules.unusedArguments)
+        testFormatting(for: input, rule: FormatRules.unusedArguments, exclude: ["noExplicitOwnership"])
     }
 
     func testUnusedConsumingArgument() {
@@ -7731,7 +7731,7 @@ class RedundancyTests: RulesTests {
             print("no-op")
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments, exclude: ["noExplicitOwnership"])
     }
 
     func testUnusedConsumingBorrowingArguments() {
@@ -7745,7 +7745,7 @@ class RedundancyTests: RulesTests {
             print("no-op")
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments, exclude: ["noExplicitOwnership"])
     }
 
     func testFunctionArgumentUsedInGuardNotRemoved() {
@@ -9124,5 +9124,59 @@ class RedundancyTests: RulesTests {
         """
 
         testFormatting(for: input, output, rule: FormatRules.redundantInternal, exclude: ["redundantExtensionACL"])
+    }
+
+    // MARK: - noExplicitOwnership
+
+    func testRemovesOwnershipKeywordsFromFunc() {
+        let input = """
+        consuming func myMethod(consuming foo: consuming Foo, borrowing bars: borrowing [Bar]) {}
+        borrowing func myMethod(consuming foo: consuming Foo, borrowing bars: borrowing [Bar]) {}
+        """
+
+        let output = """
+        func myMethod(consuming foo: Foo, borrowing bars: [Bar]) {}
+        func myMethod(consuming foo: Foo, borrowing bars: [Bar]) {}
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.noExplicitOwnership, exclude: ["unusedArguments"])
+    }
+
+    func testRemovesOwnershipKeywordsFromClosure() {
+        let input = """
+        foos.map { (foo: consuming Foo) in
+            foo.bar
+        }
+
+        foos.map { (foo: borrowing Foo) in
+            foo.bar
+        }
+        """
+
+        let output = """
+        foos.map { (foo: Foo) in
+            foo.bar
+        }
+
+        foos.map { (foo: Foo) in
+            foo.bar
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.noExplicitOwnership, exclude: ["unusedArguments"])
+    }
+
+    func testRemovesOwnershipKeywordsFromType() {
+        let input = """
+        let consuming: (consuming Foo) -> Bar
+        let borrowing: (borrowing Foo) -> Bar
+        """
+
+        let output = """
+        let consuming: (Foo) -> Bar
+        let borrowing: (Foo) -> Bar
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.noExplicitOwnership)
     }
 }

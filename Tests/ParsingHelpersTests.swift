@@ -1652,77 +1652,101 @@ class ParsingHelpersTests: XCTestCase {
         let formatter = Formatter(tokenize("""
         let foo: Foo = .init()
         """))
-        XCTAssertEqual(formatter.parseType(at: 5).name, "Foo")
+        XCTAssertEqual(formatter.parseType(at: 5)?.name, "Foo")
     }
 
     func testParseOptionalType() {
         let formatter = Formatter(tokenize("""
         let foo: Foo? = .init()
         """))
-        XCTAssertEqual(formatter.parseType(at: 5).name, "Foo?")
+        XCTAssertEqual(formatter.parseType(at: 5)?.name, "Foo?")
     }
 
     func testParseIOUType() {
         let formatter = Formatter(tokenize("""
         let foo: Foo! = .init()
         """))
-        XCTAssertEqual(formatter.parseType(at: 5).name, "Foo!")
+        XCTAssertEqual(formatter.parseType(at: 5)?.name, "Foo!")
     }
 
     func testParseGenericType() {
         let formatter = Formatter(tokenize("""
         let foo: Foo<Bar, Baaz> = .init()
         """))
-        XCTAssertEqual(formatter.parseType(at: 5).name, "Foo<Bar, Baaz>")
+        XCTAssertEqual(formatter.parseType(at: 5)?.name, "Foo<Bar, Baaz>")
     }
 
     func testParseOptionalGenericType() {
         let formatter = Formatter(tokenize("""
         let foo: Foo<Bar, Baaz>? = .init()
         """))
-        XCTAssertEqual(formatter.parseType(at: 5).name, "Foo<Bar, Baaz>?")
+        XCTAssertEqual(formatter.parseType(at: 5)?.name, "Foo<Bar, Baaz>?")
     }
 
     func testParseDictionaryType() {
         let formatter = Formatter(tokenize("""
         let foo: [Foo: Bar] = [:]
         """))
-        XCTAssertEqual(formatter.parseType(at: 5).name, "[Foo: Bar]")
+        XCTAssertEqual(formatter.parseType(at: 5)?.name, "[Foo: Bar]")
     }
 
     func testParseOptionalDictionaryType() {
         let formatter = Formatter(tokenize("""
         let foo: [Foo: Bar]? = [:]
         """))
-        XCTAssertEqual(formatter.parseType(at: 5).name, "[Foo: Bar]?")
+        XCTAssertEqual(formatter.parseType(at: 5)?.name, "[Foo: Bar]?")
     }
 
     func testParseTupleType() {
         let formatter = Formatter(tokenize("""
         let foo: (Foo, Bar) = (Foo(), Bar())
         """))
-        XCTAssertEqual(formatter.parseType(at: 5).name, "(Foo, Bar)")
+        XCTAssertEqual(formatter.parseType(at: 5)?.name, "(Foo, Bar)")
     }
 
     func testParseClosureType() {
         let formatter = Formatter(tokenize("""
         let foo: (Foo, Bar) -> (Foo, Bar) = { foo, bar in (foo, bar) }
         """))
-        XCTAssertEqual(formatter.parseType(at: 5).name, "(Foo, Bar) -> (Foo, Bar)")
+        XCTAssertEqual(formatter.parseType(at: 5)?.name, "(Foo, Bar) -> (Foo, Bar)")
+    }
+
+    func testParseClosureTypeWithOwnership() {
+        let formatter = Formatter(tokenize("""
+        let foo: (consuming Foo, borrowing Bar) -> (Foo, Bar) = { foo, bar in (foo, bar) }
+        """))
+        XCTAssertEqual(formatter.parseType(at: 5)?.name, "(consuming Foo, borrowing Bar) -> (Foo, Bar)")
     }
 
     func testParseOptionalReturningClosureType() {
         let formatter = Formatter(tokenize("""
         let foo: (Foo, Bar) -> (Foo, Bar)? = { foo, bar in (foo, bar) }
         """))
-        XCTAssertEqual(formatter.parseType(at: 5).name, "(Foo, Bar) -> (Foo, Bar)?")
+        XCTAssertEqual(formatter.parseType(at: 5)?.name, "(Foo, Bar) -> (Foo, Bar)?")
     }
 
     func testParseOptionalClosureType() {
         let formatter = Formatter(tokenize("""
         let foo: ((Foo, Bar) -> (Foo, Bar)?)? = { foo, bar in (foo, bar) }
         """))
-        XCTAssertEqual(formatter.parseType(at: 5).name, "((Foo, Bar) -> (Foo, Bar)?)?")
+        XCTAssertEqual(formatter.parseType(at: 5)?.name, "((Foo, Bar) -> (Foo, Bar)?)?")
+    }
+
+    func testParseOptionalClosureTypeWithOwnership() {
+        let formatter = Formatter(tokenize("""
+        let foo: ((consuming Foo, borrowing Bar) -> (Foo, Bar)?)? = { foo, bar in (foo, bar) }
+        """))
+        XCTAssertEqual(formatter.parseType(at: 5)?.name, "((consuming Foo, borrowing Bar) -> (Foo, Bar)?)?")
+    }
+
+    func testParseInvalidType() {
+        let formatter = Formatter(tokenize("""
+        let foo = { foo, bar in (foo, bar) }
+        """))
+        XCTAssertEqual(formatter.parseType(at: 4)?.name, nil)
+        XCTAssertEqual(formatter.parseType(at: 5)?.name, nil)
+        XCTAssertEqual(formatter.parseType(at: 6)?.name, nil)
+        XCTAssertEqual(formatter.parseType(at: 7)?.name, nil)
     }
 
     func testEndOfDeclaration() {

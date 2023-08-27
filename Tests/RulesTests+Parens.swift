@@ -408,6 +408,21 @@ class ParensTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantParens)
     }
 
+    func testOptionalFunctionCallResultNotUnwrapped() {
+        let input = "bar = (foo?()).flatMap(Bar.init)"
+        testFormatting(for: input, rule: FormatRules.redundantParens)
+    }
+
+    func testOptionalSubscriptResultNotUnwrapped() {
+        let input = "bar = (foo?[0]).flatMap(Bar.init)"
+        testFormatting(for: input, rule: FormatRules.redundantParens)
+    }
+
+    func testOptionalMemberResultNotUnwrapped() {
+        let input = "bar = (foo?.baz).flatMap(Bar.init)"
+        testFormatting(for: input, rule: FormatRules.redundantParens)
+    }
+
     func testForceUnwrapFunctionCallNotUnwrapped() {
         let input = "foo!(bar)"
         testFormatting(for: input, rule: FormatRules.redundantParens)

@@ -2802,7 +2802,9 @@ public struct _FormatRules {
                           default:
                               return false
                           }
-                      }) == nil
+                      }) == nil,
+                      formatter.index(in: i + 1 ..< closingIndex, where: { $0.isUnwrapOperator }) ?? closingIndex >=
+                      formatter.index(of: .nonSpace, before: closingIndex) ?? closingIndex - 1
                 else {
                     return
                 }

@@ -6810,9 +6810,8 @@ public struct _FormatRules {
                   let startOfTypeIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: colonIndex)
             else { return }
 
-            let (typeName, typeRange) = formatter.parseType(at: startOfTypeIndex)
-
-            guard let startOfConditional = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: typeRange.upperBound),
+            guard let (typeName, typeRange) = formatter.parseType(at: startOfTypeIndex),
+                  let startOfConditional = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: typeRange.upperBound),
                   let conditionalBranches = formatter.conditionalBranches(at: startOfConditional)
             else { return }
 
@@ -7379,6 +7378,43 @@ public struct _FormatRules {
                formatter.tokens[tokenIndexBeforeForLoop] == .keyword("try")
             {
                 formatter.removeTokens(in: tokenIndexBeforeForLoop ..< forLoopSubjectRange.lowerBound)
+            }
+        }
+    }
+
+    public let noExplicitOwnership = FormatRule(
+        help: "Don't use explicit ownership modifiers (borrowing / consuming).",
+        disabledByDefault: true
+    ) { formatter in
+        formatter.forEachToken { keywordIndex, token in
+            guard ["borrowing", "consuming"].contains(token.string),
+                  let nextTokenIndex = formatter.index(of: .nonSpaceOrLinebreak, after: keywordIndex)
+            else { return }
+
+            // Use of `borrowing` and `consuming` as ownership modifiers
+            // immediately precede a valid type, or the `func` keyword.
+            // You could also simply use these names as a property,
+            // like `let borrowing = foo` or `func myFunc(borrowing foo: Foo)`.
+            // As a simple heuristic to detect the difference, attempt to parse the
+            // following tokens as a type, and require that it doesn't start with lower-case letter.
+            let isValidOwnershipModifier: Bool
+
+            if formatter.tokens[nextTokenIndex] == .keyword("func") {
+                isValidOwnershipModifier = true
+            }
+
+            else if formatter.parseType(at: nextTokenIndex) != nil,
+                    formatter.tokens[nextTokenIndex].string.first?.isLowercase == false
+            {
+                isValidOwnershipModifier = true
+            }
+
+            else {
+                isValidOwnershipModifier = false
+            }
+
+            if isValidOwnershipModifier {
+                formatter.removeTokens(in: keywordIndex ..< nextTokenIndex)
             }
         }
     }

@@ -1202,8 +1202,10 @@ extension Formatter {
     ///  - `(...) -> ...`
     ///  - `...?`
     ///  - `...!`
-    func parseType(at startOfTypeIndex: Int) -> (name: String, range: ClosedRange<Int>) {
-        let baseType = parseNonOptionalType(at: startOfTypeIndex)
+    ///  - `borrowing ...`
+    ///  - `consuming ...`
+    func parseType(at startOfTypeIndex: Int) -> (name: String, range: ClosedRange<Int>)? {
+        guard let baseType = parseNonOptionalType(at: startOfTypeIndex) else { return nil }
 
         // Any type can be optional, so check for a trailing `?` or `!`
         if let nextToken = index(of: .nonSpaceOrCommentOrLinebreak, after: baseType.range.upperBound),
@@ -1216,7 +1218,7 @@ extension Formatter {
         return baseType
     }
 
-    private func parseNonOptionalType(at startOfTypeIndex: Int) -> (name: String, range: ClosedRange<Int>) {
+    private func parseNonOptionalType(at startOfTypeIndex: Int) -> (name: String, range: ClosedRange<Int>)? {
         // Parse types of the form `[...]`
         if tokens[startOfTypeIndex] == .startOfScope("["),
            let endOfScope = endOfScope(at: startOfTypeIndex)
@@ -1232,9 +1234,9 @@ extension Formatter {
             // Parse types of the form `(...) -> ...`
             if let closureReturnIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfScope),
                tokens[closureReturnIndex] == .operator("->", .infix),
-               let returnTypeIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: closureReturnIndex)
+               let returnTypeIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: closureReturnIndex),
+               let returnTypeRange = parseType(at: returnTypeIndex)?.range
             {
-                let returnTypeRange = parseType(at: returnTypeIndex).range
                 let typeRange = startOfTypeIndex ... returnTypeRange.upperBound
                 return (name: tokens[typeRange].string, range: typeRange)
             }
@@ -1253,8 +1255,21 @@ extension Formatter {
             return (name: tokens[typeRange].string, range: typeRange)
         }
 
+        // Parse types of the form `borrowing ...` and `consuming ...`
+        if ["borrowing", "consuming"].contains(tokens[startOfTypeIndex].string),
+           let nextToken = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfTypeIndex),
+           let followingType = parseType(at: nextToken)
+        {
+            let typeRange = startOfTypeIndex ... followingType.range.upperBound
+            return (name: tokens[typeRange].string, range: typeRange)
+        }
+
         // Otherwise this is just a single identifier
-        return (name: tokens[startOfTypeIndex].string, range: startOfTypeIndex ... startOfTypeIndex)
+        if tokens[startOfTypeIndex].isIdentifier || tokens[startOfTypeIndex].isKeyword {
+            return (name: tokens[startOfTypeIndex].string, range: startOfTypeIndex ... startOfTypeIndex)
+        }
+
+        return nil
     }
 
     struct ImportRange: Comparable {
@@ -2266,7 +2281,7 @@ extension Formatter {
               // https://docs.swift.org/swift-book/ReferenceManual/Types.html#grammar_protocol-composition-type
               let firstIdentifierIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
               tokens[firstIdentifierIndex].isIdentifier,
-              case var lastTypeEndIndex = parseType(at: firstIdentifierIndex).range.upperBound,
+              var lastTypeEndIndex = parseType(at: firstIdentifierIndex)?.range.upperBound,
               let firstAndIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: lastTypeEndIndex),
               tokens[firstAndIndex] == .operator("&", .infix)
         else { return nil }
@@ -2278,9 +2293,9 @@ extension Formatter {
         while let nextAndIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: lastTypeEndIndex),
               tokens[nextAndIndex] == .operator("&", .infix),
               let nextIdentifierIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: nextAndIndex),
-              tokens[nextIdentifierIndex].isIdentifier
+              tokens[nextIdentifierIndex].isIdentifier,
+              let endOfType = parseType(at: nextIdentifierIndex)?.range.upperBound
         {
-            let endOfType = parseType(at: nextIdentifierIndex).range.upperBound
             andTokenIndices.append(nextAndIndex)
             lastTypeEndIndex = endOfType
         }

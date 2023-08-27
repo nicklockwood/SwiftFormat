@@ -94,6 +94,7 @@
 * [docComments](#docComments)
 * [isEmpty](#isEmpty)
 * [markTypes](#markTypes)
+* [noExplicitOwnership](#noExplicitOwnership)
 * [organizeDeclarations](#organizeDeclarations)
 * [preferForLoop](#preferForLoop)
 * [sortSwitchCases](#sortSwitchCases)
@@ -1148,6 +1149,21 @@ Option | Description
 ```diff
 - convenience private init()
 + private convenience init()
+```
+
+</details>
+<br/>
+
+## noExplicitOwnership
+
+Don't use explicit ownership modifiers (borrowing / consuming).
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- borrowing func foo(_ bar: consuming Bar) { ... }
++ func foo(_ bar: Bar) { ... }
 ```
 
 </details>

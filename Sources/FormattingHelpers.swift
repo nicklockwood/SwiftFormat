@@ -1068,8 +1068,9 @@ extension Formatter {
             case .operator(_, .postfix), .identifier, .number,
                  .endOfScope(">"), .endOfScope("]"), .endOfScope(")"):
                 switch prevToken {
-                case .operator(_, .infix), .operator(_, .postfix),
-                     .startOfScope("<"), .startOfScope("["), .startOfScope("("):
+                case .operator(_, .infix), .operator(_, .postfix), .stringBody,
+                     .startOfScope("<"), .startOfScope("["), .startOfScope("("),
+                     _ where currentScope(at: i + 1)?.isMultilineStringDelimiter == true:
                     break
                 default:
                     break loop

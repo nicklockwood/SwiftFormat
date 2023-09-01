@@ -84,6 +84,26 @@ class HoistingTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.hoistTry)
     }
 
+    func testHoistTryInsideStringInterpolation6() {
+        let input = #"""
+        """
+        let \(object.varName) =
+        \(tripleQuote)
+        \(try encode(object.object))
+        \(tripleQuote)
+        """
+        """#
+        let output = #"""
+        try """
+        let \(object.varName) =
+        \(tripleQuote)
+        \(encode(object.object))
+        \(tripleQuote)
+        """
+        """#
+        testFormatting(for: input, output, rule: FormatRules.hoistTry)
+    }
+
     func testHoistTryInsideArgument() {
         let input = """
         array.append(contentsOf: try await asyncFunction(param1: param1))

@@ -358,6 +358,26 @@ class HoistingTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.hoistTry)
     }
 
+    func testHoistTryInsideGenericInit() {
+        let input = """
+        return Target<T>(
+            file: try parseFile(path: $0)
+        )
+        """
+        let output = """
+        return try Target<T>(
+            file: parseFile(path: $0)
+        )
+        """
+        testFormatting(for: input, output, rule: FormatRules.hoistTry)
+    }
+
+    func testHoistTryInsideArrayClosure() {
+        let input = "foo[bar](try parseFile(path: $0))"
+        let output = "try foo[bar](parseFile(path: $0))"
+        testFormatting(for: input, output, rule: FormatRules.hoistTry)
+    }
+
     // MARK: - hoistAwait
 
     func testHoistAwait() {

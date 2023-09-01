@@ -1065,11 +1065,11 @@ extension Formatter {
                 if prevToken != .startOfScope("("), prevToken != .startOfScope("[") {
                     fallthrough
                 }
-            case .operator(_, .postfix), .identifier, .number, .endOfScope:
+            case .operator(_, .postfix), .identifier, .number,
+                 .endOfScope(">"), .endOfScope("]"), .endOfScope(")"):
                 switch prevToken {
-                case .operator(_, .infix),
-                     .operator(_, .postfix),
-                     .startOfScope("<"):
+                case .operator(_, .infix), .operator(_, .postfix),
+                     .startOfScope("<"), .startOfScope("["), .startOfScope("("):
                     break
                 default:
                     break loop

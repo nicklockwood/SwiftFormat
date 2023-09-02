@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.52.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.52.3) (2023-09-02)
+
+- Fixed incorrect hoisting of `try` inside multiline string literal interpolations
+- Fixed incorrect hoisting of `try` inside generic type initializer calls
+- Fixed case where parens were incorrectly removed around optional function calls
+- Fixed bug where early `return` statements added while debugging would be incorrectly removed
+
 ## [0.52.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.52.2) (2023-08-19)
 
 - Fixed static `Self` being incorrectly removed in `let` or `if let` expressions

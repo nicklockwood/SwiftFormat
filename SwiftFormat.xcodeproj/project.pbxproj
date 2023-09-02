@@ -1111,7 +1111,7 @@
 					"@loader_path/Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
-				MARKETING_VERSION = 0.52.2;
+				MARKETING_VERSION = 0.52.3;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu99 gnu++11";
 				PRODUCT_BUNDLE_IDENTIFIER = com.charcoaldesign.SwiftFormat;
@@ -1144,7 +1144,7 @@
 					"@loader_path/Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
-				MARKETING_VERSION = 0.52.2;
+				MARKETING_VERSION = 0.52.3;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu99 gnu++11";
 				PRODUCT_BUNDLE_IDENTIFIER = com.charcoaldesign.SwiftFormat;
@@ -1251,7 +1251,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
-				MARKETING_VERSION = 0.52.2;
+				MARKETING_VERSION = 0.52.3;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.charcoaldesign.SwiftFormat-for-Xcode";
 				PRODUCT_NAME = "SwiftFormat for Xcode";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1282,7 +1282,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
-				MARKETING_VERSION = 0.52.2;
+				MARKETING_VERSION = 0.52.3;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.charcoaldesign.SwiftFormat-for-Xcode";
 				PRODUCT_NAME = "SwiftFormat for Xcode";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1310,7 +1310,7 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
-				MARKETING_VERSION = 0.52.2;
+				MARKETING_VERSION = 0.52.3;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.charcoaldesign.SwiftFormat-for-Xcode.SourceEditorExtension";
 				PRODUCT_NAME = SwiftFormat;
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1340,7 +1340,7 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
-				MARKETING_VERSION = 0.52.2;
+				MARKETING_VERSION = 0.52.3;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.charcoaldesign.SwiftFormat-for-Xcode.SourceEditorExtension";
 				PRODUCT_NAME = SwiftFormat;
 				PROVISIONING_PROFILE_SPECIFIER = "";

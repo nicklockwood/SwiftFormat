@@ -1040,7 +1040,7 @@ extension Formatter {
                 return false
             }
             if case let .identifier(name) = tokens[prevIndex], name.first?.isUppercase == true {
-                switch last(.nonSpaceOrComment, before: prevIndex) {
+                switch last(.nonSpaceOrCommentOrLinebreak, before: prevIndex) {
                 case .identifier("some")?, .delimiter?, .startOfScope?, .endOfScope?,
                      .operator(_, .infix)?, .operator(_, .prefix)?, nil:
                     return true

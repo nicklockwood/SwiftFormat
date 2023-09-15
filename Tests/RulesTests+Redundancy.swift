@@ -1903,6 +1903,20 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantLet)
     }
 
+    func testNoRemoveLetInViewBuilderModifier() {
+        let input = """
+        VStack {
+            Text("Some text")
+        }
+        .overlay(
+            HStack {
+                let _ = print("")
+            }
+        )
+        """
+        testFormatting(for: input, rule: FormatRules.redundantLet)
+    }
+
     func testNoRemoveLetInIfStatementInViewBuilder() {
         let input = """
         VStack {

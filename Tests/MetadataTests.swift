@@ -282,6 +282,41 @@ class MetadataTests: XCTestCase {
         }
     }
 
+    // MARK: keywords
+
+    func testContextualKeywordsReferencedCorrectly() throws {
+        for file in ["Rules", "ParsingHelpers", "FormattingHelpers"] {
+            let sourceFile = projectDirectory.appendingPathComponent("Sources/\(file).swift")
+            let fileSource = try String(contentsOf: sourceFile, encoding: .utf8)
+            let tokens = tokenize(fileSource)
+            let formatter = Formatter(tokens)
+            let keywords = swiftKeywords + ["actor", "macro"]
+            formatter.forEach(.identifier("keyword")) { i, _ in
+                guard formatter.token(at: i - 1) == .operator(".", .prefix),
+                      let parenIndex = formatter.index(of: .nonSpaceOrComment, after: i, if: {
+                          $0 == .startOfScope("(")
+                      }),
+                      let endIndex = formatter.endOfScope(at: parenIndex),
+                      let stringIndex = formatter.index(of: .nonSpaceOrComment, in: parenIndex + 1 ..< endIndex, if: {
+                          $0.isStringDelimiter
+                      }),
+                      case let .stringBody(keyword) = formatter.next(
+                          .nonSpaceOrCommentOrLinebreak,
+                          in: stringIndex + 1 ..< endIndex
+                      )
+                else {
+                    return
+                }
+                guard keywords.contains(keyword) || keyword.hasPrefix("#") || keyword.hasPrefix("@") else {
+                    let line = formatter.originalLine(at: i)
+                    XCTFail("'\(keyword)' referenced on line \(line) of '\(file).swift' is not a valid Swift keyword. "
+                        + "Contextual keywords should be referenced with `.identifier(...)`")
+                    return
+                }
+            }
+        }
+    }
+
     // MARK: examples
 
     func testAllExamplesMatchRule() {

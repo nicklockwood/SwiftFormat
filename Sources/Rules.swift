@@ -1898,7 +1898,7 @@ public struct _FormatRules {
                     func isWrappedDeclaration() -> Bool {
                         guard let keywordIndex = formatter
                             .indexOfLastSignificantKeyword(at: i, excluding: [
-                                "where", "throws", "rethrows", "async",
+                                "where", "throws", "rethrows",
                             ]), !formatter.tokens[keywordIndex ..< i].contains(.endOfScope("}")),
                             case let .keyword(keyword) = formatter.tokens[keywordIndex],
                             ["class", "actor", "struct", "enum", "protocol", "extension",
@@ -3119,7 +3119,7 @@ public struct _FormatRules {
                     else {
                         return
                     }
-                case "func", "throws", "rethrows", "async", "init", "subscript":
+                case "func", "throws", "rethrows", "init", "subscript":
                     if formatter.options.swiftVersion < "5.1",
                        formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) != .endOfScope("}")
                     {
@@ -3134,7 +3134,7 @@ public struct _FormatRules {
                 }), let startIndex = formatter.index(of: .startOfScope("{"), before: endIndex) else {
                     return
                 }
-                if !formatter.isStartOfClosure(at: startIndex), !["func", "throws", "rethrows", "async"]
+                if !formatter.isStartOfClosure(at: startIndex), !["func", "throws", "rethrows"]
                     .contains(formatter.lastSignificantKeyword(at: startIndex, excluding: ["where"]) ?? "")
                 {
                     return

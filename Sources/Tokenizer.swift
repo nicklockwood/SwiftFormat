@@ -41,13 +41,13 @@ import Foundation
 // any, associativity, async, convenience, didSet, dynamic, final, get, indirect, infix, lazy,
 // left, mutating, none, nonmutating, open, optional, override, postfix, precedence,
 // prefix, Protocol, required, right, set, some, any, Type, unowned, weak, willSet
-private let swiftKeywords = Set([
+let swiftKeywords = Set([
     "let", "return", "func", "var", "if", "public", "as", "else", "in", "import",
     "class", "try", "guard", "case", "for", "init", "extension", "private", "static",
     "fileprivate", "internal", "switch", "do", "catch", "enum", "struct", "throws",
     "throw", "typealias", "where", "break", "deinit", "subscript", "is", "while",
-    "associatedtype", "inout", "continue", "fallthrough", "operator", "repeat",
-    "rethrows", "default", "protocol", "defer", "await", "consume", "discard",
+    "associatedtype", "inout", "continue", "fallthrough", "operator", "precedencegroup",
+    "repeat", "rethrows", "default", "protocol", "defer", "await", "consume", "discard",
     /* Any, Self, self, super, nil, true, false */
 ])
 

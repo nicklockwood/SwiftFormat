@@ -2880,14 +2880,14 @@ class WrappingTests: RulesTests {
         let input = """
         func multilineFunction(
             foo _: String,
-            bar _: String) async throws -> String {}
+            bar _: String) async -> String {}
         """
 
         let output = """
         func multilineFunction(
             foo _: String,
             bar _: String)
-            async throws -> String {}
+            async -> String {}
         """
 
         let options = FormatOptions(

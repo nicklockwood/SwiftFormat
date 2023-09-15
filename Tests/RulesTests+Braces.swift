@@ -366,6 +366,13 @@ class BracesTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.braces, options: options)
     }
 
+    func testAllmanBraceAsyncFunctionIndent() {
+        let input = "func foo() async {\n    bar\n}"
+        let output = "func foo() async\n{\n    bar\n}"
+        let options = FormatOptions(allmanBraces: true)
+        testFormatting(for: input, output, rule: FormatRules.braces, options: options)
+    }
+
     func testAllmanBraceAfterCommentIndent() {
         let input = "func foo() { // foo\n\n    bar\n}"
         let output = "func foo()\n{ // foo\n    bar\n}"

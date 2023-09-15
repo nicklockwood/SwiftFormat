@@ -464,7 +464,7 @@ extension Formatter {
     /// the specified index is in a return type declaration.
     func startOfReturnType(at i: Int) -> Int? {
         guard let startIndex = indexOfLastSignificantKeyword(
-            at: i, excluding: ["throws", "rethrows", "async"]
+            at: i, excluding: ["throws", "rethrows"]
         ), ["func", "subscript"].contains(tokens[startIndex].string) else {
             return nil
         }
@@ -593,7 +593,7 @@ extension Formatter {
             case "class", "actor", "struct", "protocol", "enum", "extension",
                  "func", "subscript", "catch":
                 return false
-            case "throws", "rethrows", "async":
+            case "throws", "rethrows":
                 return next(
                     .nonSpaceOrLinebreak,
                     after: prevKeywordIndex

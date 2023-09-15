@@ -344,9 +344,9 @@ extension Formatter {
                 }
             }
 
-            if let effectIndex = index(after: endOfFunctionScope, where: { ["throws", "async"].contains($0.string) }),
-               effectIndex < openBracket
-            {
+            if let effectIndex = index(after: endOfFunctionScope, where: {
+                [.keyword("throws"), .identifier("async")].contains($0)
+            }), effectIndex < openBracket {
                 switch options.wrapEffects {
                 case .preserve:
                     break
@@ -3108,8 +3108,7 @@ extension Formatter {
                 switch $0 {
                 case .startOfScope("{"): // What we're looking for
                     return true
-                case .keyword("async"),
-                     .keyword("throws"),
+                case .keyword("throws"),
                      .keyword("rethrows"),
                      .keyword("where"),
                      .keyword("is"):

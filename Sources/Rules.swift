@@ -6957,10 +6957,12 @@ public struct _FormatRules {
                 return
             }
 
+            var seenTypes = Set<String>()
+
             // Split the typealias into individual elements.
             // Any comments on their own line are grouped with the following element.
             let delimiters = [equalsIndex] + andTokenIndices
-            var parsedElements: [(startIndex: Int, delimiterIndex: Int, endIndex: Int, type: String, allTokens: [Token])] = []
+            var parsedElements: [(startIndex: Int, delimiterIndex: Int, endIndex: Int, type: String, allTokens: [Token], isDuplicate: Bool)] = []
 
             for delimiter in delimiters.indices {
                 let endOfPreviousElement = parsedElements.last?.endIndex ?? typealiasNameIndex
@@ -6993,12 +6995,19 @@ public struct _FormatRules {
                     .filter { !$0.isSpaceOrCommentOrLinebreak && !$0.isOperator }
                     .map { $0.string }.joined()
 
+                // While we're here, also filter out any duplicates.
+                // Since we're sorting, duplicates would sit right next to each other
+                // which makes them especially obvious.
+                let isDuplicate = seenTypes.contains(typeName)
+                seenTypes.insert(typeName)
+
                 parsedElements.append((
                     startIndex: elementStartIndex,
                     delimiterIndex: delimiters[delimiter],
                     endIndex: elementEndIndex,
                     type: typeName,
-                    allTokens: tokens
+                    allTokens: tokens,
+                    isDuplicate: isDuplicate
                 ))
             }
 
@@ -7012,12 +7021,14 @@ public struct _FormatRules {
                 return
             }
 
+            let firstNonDuplicateIndex = sortedElements.firstIndex(where: { !$0.isDuplicate })
+
             for elementIndex in sortedElements.indices {
                 // Revalidate all of the delimiters after sorting
                 // (the first delimiter should be `=` and all others should be `&`
                 let delimiterIndexInTokens = sortedElements[elementIndex].delimiterIndex - sortedElements[elementIndex].startIndex
 
-                if elementIndex == 0 {
+                if elementIndex == firstNonDuplicateIndex {
                     sortedElements[elementIndex].allTokens[delimiterIndexInTokens] = .operator("=", .infix)
                 } else {
                     sortedElements[elementIndex].allTokens[delimiterIndexInTokens] = .operator("&", .infix)
@@ -7050,11 +7061,14 @@ public struct _FormatRules {
             // Replace each index in the parsed list with the corresponding index in the sorted list,
             // working backwards to not invalidate any existing indices
             for (originalElement, newElement) in zip(parsedElements, sortedElements).reversed() {
-                let newElementTokens =
+                if newElement.isDuplicate, let tokenBeforeElement = formatter.index(of: .nonSpaceOrLinebreak, before: originalElement.startIndex) {
+                    formatter.removeTokens(in: (tokenBeforeElement + 1) ... originalElement.endIndex)
+                } else {
                     formatter.replaceTokens(
                         in: originalElement.startIndex ... originalElement.endIndex,
                         with: newElement.allTokens
                     )
+                }
             }
         }
     }

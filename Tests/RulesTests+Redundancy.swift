@@ -1940,6 +1940,24 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantLet)
     }
 
+    func testNoRemoveLetImmediatelyAfterMainActorAttribute() {
+        let input = """
+        let foo = bar { @MainActor
+            let _ = try await baz()
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantLet)
+    }
+
+    func testNoRemoveLetImmediatelyAfterSendableAttribute() {
+        let input = """
+        let foo = bar { @Sendable
+            let _ = try await baz()
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantLet)
+    }
+
     // MARK: - redundantPattern
 
     func testRemoveRedundantPatternInIfCase() {

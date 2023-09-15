@@ -3651,4 +3651,42 @@ class OrganizationTests: RulesTests {
 
         testFormatting(for: input, output, rule: FormatRules.sortTypealiases)
     }
+
+    func testSortTypeAliasesAndRemoveDuplicates() {
+        let input = """
+        typealias Placeholders = Foo & Bar & Quux & Baaz & Bar
+
+        typealias Dependencies1
+            = FooProviding
+            & BarProviding
+            & BaazProviding
+            & QuuxProviding
+            & FooProviding
+
+        typealias Dependencies2
+            = FooProviding
+            & BarProviding
+            & BaazProviding
+            & QuuxProviding
+            & BaazProviding
+        """
+
+        let output = """
+        typealias Placeholders = Baaz & Bar & Foo & Quux
+
+        typealias Dependencies1
+            = BaazProviding
+            & BarProviding
+            & FooProviding
+            & QuuxProviding
+
+        typealias Dependencies2
+            = BaazProviding
+            & BarProviding
+            & FooProviding
+            & QuuxProviding
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.sortTypealiases)
+    }
 }

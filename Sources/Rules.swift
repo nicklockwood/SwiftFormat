@@ -6686,47 +6686,50 @@ public struct _FormatRules {
         orderAfter: ["fileHeader"]
     ) { formatter in
         formatter.forEach(.startOfScope) { index, token in
-            guard
-                ["//", "/*"].contains(token.string),
-                let endOfComment = formatter.endOfScope(at: index)
+            guard [.startOfScope("//"), .startOfScope("/*")].contains(token),
+                  let endOfComment = formatter.endOfScope(at: index)
             else { return }
 
             let shouldBeDocComment: Bool = {
-                guard let nextDeclarationIndex = formatter.index(
-                    after: endOfComment,
-                    where: { token in
-                        // Check if this token defines a declaration that supports doc comments
-                        token.isDeclarationTypeKeyword(excluding: ["import"])
-                    }
-                ) else { return false }
-
-                // Only use doc comments on declarations in type bodies, or top-level declarations
-                if let startOfEnclosingScope = formatter.index(of: .startOfScope("{"), before: index) {
-                    guard let scopeKeyword = formatter.lastSignificantKeyword(at: startOfEnclosingScope, excluding: ["where"]) else {
-                        return false
-                    }
-
-                    if !["class", "struct", "enum", "actor", "protocol", "extension"].contains(scopeKeyword) {
-                        return false
-                    }
-                }
-
-                // If there aren't any blank lines between the comment and declaration,
-                // this comment is associated with that declaration
-                let trailingTokens = formatter.tokens[(endOfComment - 1) ... nextDeclarationIndex]
-                let lines = trailingTokens.split(omittingEmptySubsequences: false, whereSeparator: \.isLinebreak)
-                let blankLineBeforeDeclaration = lines.contains(where: { line in
-                    line.isEmpty || line.allSatisfy(\.isSpace)
-                })
-
-                if blankLineBeforeDeclaration {
+                // Check if this is a special type of comment that isn't documentation
+                if case let .commentBody(body)? = formatter.next(.nonSpace, after: index), body.isCommentDirective {
                     return false
                 }
 
-                // Check if this is a special type of comment that isn't documentation
-                if case let .commentBody(body)? = formatter.next(.nonSpace, after: index),
-                   body.isCommentDirective
-                {
+                // Check if this token defines a declaration that supports doc comments
+                let nextDeclarationIndex: Int
+                do {
+                    guard var nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: endOfComment) else {
+                        return false
+                    }
+                    var token = formatter.tokens[nextIndex]
+                    if token.isAttribute || token.isModifierKeyword, let index = formatter.index(after: nextIndex, where: {
+                        $0.isDeclarationTypeKeyword
+                    }) {
+                        nextIndex = index
+                        token = formatter.tokens[nextIndex]
+                    }
+                    if token.isDeclarationTypeKeyword(excluding: ["import"]) {
+                        nextDeclarationIndex = nextIndex
+                    } else {
+                        return false
+                    }
+                }
+
+                // Only use doc comments on declarations in type bodies, or top-level declarations
+                if let startOfEnclosingScope = formatter.index(of: .startOfScope, before: index) {
+                    guard formatter.tokens[startOfEnclosingScope] == .startOfScope("{"),
+                          let scope = formatter.lastSignificantKeyword(at: startOfEnclosingScope, excluding: ["where"]),
+                          ["class", "actor", "struct", "enum", "protocol", "extension"].contains(scope)
+                    else {
+                        return false
+                    }
+                }
+
+                // If there are blank lines between comment and declaration, comment is not treated as doc comment
+                let trailingTokens = formatter.tokens[(endOfComment - 1) ... nextDeclarationIndex]
+                let lines = trailingTokens.split(omittingEmptySubsequences: false, whereSeparator: \.isLinebreak)
+                if lines.contains(where: { $0.allSatisfy(\.isSpace) }) {
                     return false
                 }
 
@@ -6740,7 +6743,8 @@ public struct _FormatRules {
                     }
                 }
 
-                return true
+                // Comments inside conditional statements are not doc comments
+                return !formatter.isConditionalStatement(at: index)
             }()
 
             // Doc comment tokens like `///` and `/**` aren't parsed as a

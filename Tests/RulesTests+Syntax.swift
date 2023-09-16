@@ -3178,6 +3178,74 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.docComments)
     }
 
+    func testMultilineDocCommentReplaced() {
+        let input = """
+        // A class
+        // With some other details
+        class Foo {}
+        """
+        let output = """
+        /// A class
+        /// With some other details
+        class Foo {}
+        """
+        testFormatting(for: input, output, rule: FormatRules.docComments)
+    }
+
+    func testCommentWithBlankLineNotReplaced() {
+        let input = """
+        // A class
+        // With some other details
+
+        class Foo {}
+        """
+        testFormatting(for: input, rule: FormatRules.docComments)
+    }
+
+    func testDocCommentsAssociatedTypeNotReplaced() {
+        let input = """
+        /// An interesting comment about Foo.
+        associatedtype Foo
+        """
+        testFormatting(for: input, rule: FormatRules.docComments)
+    }
+
+    func testNonDocCommentsAssociatedTypeReplaced() {
+        let input = """
+        // An interesting comment about Foo.
+        associatedtype Foo
+        """
+        let output = """
+        /// An interesting comment about Foo.
+        associatedtype Foo
+        """
+        testFormatting(for: input, output, rule: FormatRules.docComments)
+    }
+
+    func testConditionalDeclarationCommentNotReplaced() {
+        let input = """
+        if let foo = bar,
+           // baz
+           let baz = bar
+        {}
+        """
+        testFormatting(for: input, rule: FormatRules.docComments)
+    }
+
+    func testCommentInsideSwitchCaseNotReplaced() {
+        let input = """
+        switch foo {
+        case .bar:
+            // bar
+            let bar = baz()
+        default:
+            // baz
+            let baz = quux()
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.docComments)
+    }
+
     // MARK: - conditionalAssignment
 
     func testDoesntConvertIfStatementAssignmentSwift5_8() {

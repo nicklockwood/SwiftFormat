@@ -3824,6 +3824,49 @@ class WrappingTests: RulesTests {
         )
     }
 
+    func testWrapConditionsAfterFirstWhenFirstLineIsComment() {
+        let input = """
+        guard
+            // Apply this rule to any function-like declaration
+            ["func", "init", "subscript"].contains(keyword.string),
+            // Opaque generic parameter syntax is only supported in Swift 5.7+
+            formatter.options.swiftVersion >= "5.7",
+            // Validate that this is a generic method using angle bracket syntax,
+            // and find the indices for all of the key tokens
+            let paramListStartIndex = formatter.index(of: .startOfScope("("), after: keywordIndex),
+            let paramListEndIndex = formatter.endOfScope(at: paramListStartIndex),
+            let genericSignatureStartIndex = formatter.index(of: .startOfScope("<"), after: keywordIndex),
+            let genericSignatureEndIndex = formatter.endOfScope(at: genericSignatureStartIndex),
+            genericSignatureStartIndex < paramListStartIndex,
+            genericSignatureEndIndex < paramListStartIndex,
+            let openBraceIndex = formatter.index(of: .startOfScope("{"), after: paramListEndIndex),
+            let closeBraceIndex = formatter.endOfScope(at: openBraceIndex)
+        else { return }
+        """
+        let output = """
+        guard // Apply this rule to any function-like declaration
+            ["func", "init", "subscript"].contains(keyword.string),
+            // Opaque generic parameter syntax is only supported in Swift 5.7+
+            formatter.options.swiftVersion >= "5.7",
+            // Validate that this is a generic method using angle bracket syntax,
+            // and find the indices for all of the key tokens
+            let paramListStartIndex = formatter.index(of: .startOfScope("("), after: keywordIndex),
+            let paramListEndIndex = formatter.endOfScope(at: paramListStartIndex),
+            let genericSignatureStartIndex = formatter.index(of: .startOfScope("<"), after: keywordIndex),
+            let genericSignatureEndIndex = formatter.endOfScope(at: genericSignatureStartIndex),
+            genericSignatureStartIndex < paramListStartIndex,
+            genericSignatureEndIndex < paramListStartIndex,
+            let openBraceIndex = formatter.index(of: .startOfScope("{"), after: paramListEndIndex),
+            let closeBraceIndex = formatter.endOfScope(at: openBraceIndex)
+        else { return }
+        """
+        testFormatting(
+            for: input, [output], rules: [FormatRules.wrapArguments, FormatRules.indent],
+            options: FormatOptions(wrapConditions: .afterFirst),
+            exclude: ["wrapConditionalBodies"]
+        )
+    }
+
     // MARK: - wrapAttributes
 
     func testPreserveWrappedFuncAttributeByDefault() {

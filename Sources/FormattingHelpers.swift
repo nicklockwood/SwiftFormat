@@ -694,10 +694,9 @@ extension Formatter {
 
             // Only wrap when this is a control flow condition that spans multiple lines
             guard let endOfConditionsTokenIndex = self.index(of: endOfConditionsToken, after: index),
-                  let nextTokenIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index),
+                  let nextTokenIndex = self.index(of: .nonSpaceOrLinebreak, after: index),
                   !(onSameLine(index, endOfConditionsTokenIndex)
-                      || self.index(of: .nonSpaceOrCommentOrLinebreak,
-                                    after: endOfLine(at: index)) == endOfConditionsTokenIndex)
+                      || self.index(of: .nonSpaceOrLinebreak, after: endOfLine(at: index)) == endOfConditionsTokenIndex)
             else { return }
 
             switch options.wrapConditions {

@@ -371,9 +371,8 @@ extension Formatter {
                 }
             }
 
-            if
-                let returnArrowIndex = index(of: .operator("->", .infix), after: endOfFunctionScope),
-                returnArrowIndex < openBracket
+            if let returnArrowIndex = index(of: .operator("->", .infix), after: endOfFunctionScope),
+               returnArrowIndex < openBracket
             {
                 switch options.wrapReturnType {
                 case .preserve:
@@ -801,9 +800,8 @@ extension Formatter {
 
         // -- wraptypealiases
         forEach(.keyword("typealias")) { typealiasIndex, _ in
-            guard
-                options.wrapTypealiases == .beforeFirst || options.wrapTypealiases == .afterFirst,
-                let (equalsIndex, andTokenIndices, lastIdentifierIndex) = parseProtocolCompositionTypealias(at: typealiasIndex)
+            guard options.wrapTypealiases == .beforeFirst || options.wrapTypealiases == .afterFirst,
+                  let (equalsIndex, andTokenIndices, lastIdentifierIndex) = parseProtocolCompositionTypealias(at: typealiasIndex)
             else { return }
 
             // Decide which indices to wrap at
@@ -842,10 +840,9 @@ extension Formatter {
 
         // --wrapternary
         forEach(.operator("?", .infix)) { conditionIndex, _ in
-            guard
-                options.wrapTernaryOperators != .default,
-                let expressionStartIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: conditionIndex),
-                !isInSingleLineStringLiteral(at: conditionIndex)
+            guard options.wrapTernaryOperators != .default,
+                  let expressionStartIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: conditionIndex),
+                  !isInSingleLineStringLiteral(at: conditionIndex)
             else { return }
 
             // Find the : operator that separates the true and false branches
@@ -860,9 +857,8 @@ extension Formatter {
             var currentIndex = conditionIndex + 1
             var foundColonIndex: Int?
 
-            while
-                foundColonIndex == nil,
-                currentIndex < tokens.count
+            while foundColonIndex == nil,
+                  currentIndex < tokens.count
             {
                 switch tokens[currentIndex] {
                 case .operator("?", .infix):
@@ -880,9 +876,8 @@ extension Formatter {
                 currentIndex += 1
             }
 
-            guard
-                let colonIndex = foundColonIndex,
-                let endOfElseExpression = endOfExpression(at: colonIndex, upTo: [])
+            guard let colonIndex = foundColonIndex,
+                  let endOfElseExpression = endOfExpression(at: colonIndex, upTo: [])
             else { return }
 
             wrapMultilineStatement(
@@ -1174,11 +1169,10 @@ extension Formatter {
     /// If this is a closure, the body starts after any `in` clause that may exist.
     func startOfBody(atStartOfScope startOfScopeIndex: Int) -> Int {
         // If this is a closure that has an `in` clause, the body scope starts after that
-        if
-            isStartOfClosure(at: startOfScopeIndex),
-            let endOfScopeIndex = endOfScope(at: startOfScopeIndex),
-            let inToken = index(of: .keyword("in"), in: (startOfScopeIndex + 1) ..< endOfScopeIndex),
-            !indexIsWithinNestedClosure(inToken, startOfScopeIndex: startOfScopeIndex)
+        if isStartOfClosure(at: startOfScopeIndex),
+           let endOfScopeIndex = endOfScope(at: startOfScopeIndex),
+           let inToken = index(of: .keyword("in"), in: (startOfScopeIndex + 1) ..< endOfScopeIndex),
+           !indexIsWithinNestedClosure(inToken, startOfScopeIndex: startOfScopeIndex)
         {
             return inToken
         } else {
@@ -1206,13 +1200,12 @@ extension Formatter {
         var branches = [(startOfBranch: Int, endOfBranch: Int)]()
         var nextConditionalBranchIndex: Int? = ifIndex
 
-        while
-            let conditionalBranchIndex = nextConditionalBranchIndex,
-            ["if", "else"].contains(tokens[conditionalBranchIndex].string),
-            let startOfBody = index(of: .startOfScope, after: conditionalBranchIndex),
-            tokens[startOfBody] == .startOfScope("{"),
-            let endOfBody = endOfScope(at: startOfBody),
-            tokens[endOfBody] == .endOfScope("}")
+        while let conditionalBranchIndex = nextConditionalBranchIndex,
+              ["if", "else"].contains(tokens[conditionalBranchIndex].string),
+              let startOfBody = index(of: .startOfScope, after: conditionalBranchIndex),
+              tokens[startOfBody] == .startOfScope("{"),
+              let endOfBody = endOfScope(at: startOfBody),
+              tokens[endOfBody] == .endOfScope("}")
         {
             branches.append((startOfBranch: startOfBody, endOfBranch: endOfBody))
             nextConditionalBranchIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfBody)
@@ -1224,20 +1217,18 @@ extension Formatter {
     /// Finds all of the branch bodies in a switch statement.
     /// Returns the index of the `startOfScope` and `endOfScope` of each branch.
     func switchStatementBranches(at switchIndex: Int) -> [ConditionalBranch] {
-        guard
-            let startOfSwitchScope = index(of: .startOfScope("{"), after: switchIndex),
-            let firstCaseIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfSwitchScope),
-            tokens[firstCaseIndex].isSwitchCaseOrDefault
+        guard let startOfSwitchScope = index(of: .startOfScope("{"), after: switchIndex),
+              let firstCaseIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfSwitchScope),
+              tokens[firstCaseIndex].isSwitchCaseOrDefault
         else { return [] }
 
         var branches = [(startOfBranch: Int, endOfBranch: Int)]()
         var nextConditionalBranchIndex: Int? = firstCaseIndex
 
-        while
-            let conditionalBranchIndex = nextConditionalBranchIndex,
-            tokens[conditionalBranchIndex].isSwitchCaseOrDefault,
-            let startOfBody = index(of: .startOfScope(":"), after: conditionalBranchIndex),
-            let endOfBody = endOfScope(at: startOfBody)
+        while let conditionalBranchIndex = nextConditionalBranchIndex,
+              tokens[conditionalBranchIndex].isSwitchCaseOrDefault,
+              let startOfBody = index(of: .startOfScope(":"), after: conditionalBranchIndex),
+              let endOfBody = endOfScope(at: startOfBody)
         {
             branches.append((startOfBranch: startOfBody, endOfBranch: endOfBody))
 
@@ -2259,9 +2250,8 @@ extension Formatter {
         var currentIndex = genericSignatureStartIndex
 
         while currentIndex < genericSignatureEndIndex - 1 {
-            guard
-                let genericTypeNameIndex = index(of: .identifier, after: currentIndex),
-                genericTypeNameIndex < genericSignatureEndIndex
+            guard let genericTypeNameIndex = index(of: .identifier, after: currentIndex),
+                  genericTypeNameIndex < genericSignatureEndIndex
             else { break }
 
             let typeEndIndex: Int

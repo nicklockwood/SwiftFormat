@@ -10,10 +10,9 @@ public struct DataChangedNotificationPayload: NotificationPayload {
     public let deletedObjects: [NSManagedObject]
 
     public init?(userInfo: [AnyHashable: Any]?) {
-        if
-            let insertedObjects = userInfo?[UserInfoKey.insertedObjects] as? [NSManagedObject],
-            let updatedObjects = userInfo?[UserInfoKey.updatedObjects] as? [NSManagedObject],
-            let deletedObjects = userInfo?[UserInfoKey.deletedObjects] as? [NSManagedObject]
+        if let insertedObjects = userInfo?[UserInfoKey.insertedObjects] as? [NSManagedObject],
+           let updatedObjects = userInfo?[UserInfoKey.updatedObjects] as? [NSManagedObject],
+           let deletedObjects = userInfo?[UserInfoKey.deletedObjects] as? [NSManagedObject]
         {
             self.insertedObjects = insertedObjects
             self.updatedObjects = updatedObjects

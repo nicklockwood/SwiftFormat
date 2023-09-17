@@ -33,6 +33,7 @@
 --trimwhitespace always
 --wraparguments preserve
 --wrapcollections preserve
+--wrapconditions after-first
 
 # rules
 

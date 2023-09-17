@@ -79,7 +79,7 @@ private func printWarnings(_ errors: [Error]) -> Bool {
     var containsError = false
     for error in errors {
         var errorMessage = "\(error)"
-        if ![".", "?", "!"].contains(errorMessage.last ?? " ") {
+        if !".?!".contains(errorMessage.last ?? " ") {
             errorMessage += "."
         }
         let isError: Bool
@@ -1092,15 +1092,23 @@ func processInput(_ inputURLs: [URL],
                 }
             } catch {
                 if verbose {
-                    print("-- error: \(error)", as: .error)
+                    var errorMessage = "\(error)"
+                    if !".?!".contains(errorMessage.last ?? " ") {
+                        errorMessage += "."
+                    }
+                    print("-- error: \(errorMessage)", as: .error)
                 }
                 return {
                     outputFlags.filesChecked += 1
                     showConfigurationWarnings(options)
-                    if case let FormatError.parsing(string) = error {
+                    switch error {
+                    case let FormatError.parsing(string):
                         throw FormatError.parsing("\(string) in \(inputURL.path)")
+                    case let FormatError.writing(string):
+                        throw FormatError.writing("\(string) in \(inputURL.path)")
+                    default:
+                        throw error
                     }
-                    throw error
                 }
             }
         }

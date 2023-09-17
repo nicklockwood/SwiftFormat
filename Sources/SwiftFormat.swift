@@ -504,7 +504,7 @@ private func applyRules(
     }
 
     // Split tokens into lines
-    func lines(in tokens: [Token], includingLinebreaks: Bool) -> [Int: ArraySlice<Token>?] {
+    func getLines(in tokens: [Token], includingLinebreaks: Bool) -> [Int: ArraySlice<Token>?] {
         var lines: [Int: ArraySlice<Token>?] = [:]
         var start = 0, nextLine = 1
         for (i, token) in tokens.enumerated() {
@@ -551,8 +551,8 @@ private func applyRules(
                 return $0.line < $1.line
             })
             // Get lines
-            let oldLines = lines(in: originalTokens, includingLinebreaks: true)
-            let newLines = lines(in: tokens, includingLinebreaks: true)
+            let oldLines = getLines(in: originalTokens, includingLinebreaks: true)
+            let newLines = getLines(in: tokens, includingLinebreaks: true)
             // Filter out duplicates and lines that haven't changed
             var last: Formatter.Change?
             changes = changes.filter { change in
@@ -570,7 +570,20 @@ private func applyRules(
         tokens = formatter.tokens
         rules.removeAll(where: { $0.runOnceOnly }) // Prevents infinite recursion
     }
-    throw FormatError.writing("Failed to terminate")
+    let formatter = Formatter(tokens, options: options, trackChanges: true, range: range)
+    rules.sorted().forEach { $0.apply(with: formatter) }
+    let rulesApplied = Set(formatter.changes.map { $0.rule.name }).sorted()
+    if rulesApplied.isEmpty {
+        throw FormatError.writing("Failed to terminate")
+    }
+    let names = rulesApplied.count > 1 ?
+        "\(rulesApplied.dropLast().joined(separator: ", ")) and \(rulesApplied.last!) rules" :
+        "\(rulesApplied[0]) rule"
+    let changeLines = Set(formatter.changes.map { "\($0.line)" }).sorted()
+    let lines = changeLines.count > 1 ?
+        "lines \(changeLines.dropLast().joined(separator: ", ")) and \(changeLines.last!)" :
+        "line \(changeLines[0])"
+    throw FormatError.writing("The \(names) failed to terminate at \(lines)")
 }
 
 /// Format a pre-parsed token array

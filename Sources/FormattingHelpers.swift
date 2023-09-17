@@ -682,34 +682,44 @@ extension Formatter {
 
         // -- wrapconditions
         forEach(.keyword) { index, token in
+            let indent: String
             let endOfConditionsToken: Token
             switch token {
             case .keyword("guard"):
                 endOfConditionsToken = .keyword("else")
-            case .keyword("if"), .keyword("while"):
+                indent = "      "
+            case .keyword("if"):
                 endOfConditionsToken = .startOfScope("{")
+                indent = "   "
+            case .keyword("while"):
+                endOfConditionsToken = .startOfScope("{")
+                indent = "      "
             default:
                 return
             }
 
             // Only wrap when this is a control flow condition that spans multiple lines
-            guard let endOfConditionsTokenIndex = self.index(of: endOfConditionsToken, after: index),
+            guard let endIndex = self.index(of: endOfConditionsToken, after: index),
                   let nextTokenIndex = self.index(of: .nonSpaceOrLinebreak, after: index),
-                  !(onSameLine(index, endOfConditionsTokenIndex)
-                      || self.index(of: .nonSpaceOrLinebreak, after: endOfLine(at: index)) == endOfConditionsTokenIndex)
+                  !(onSameLine(index, endIndex) || self.index(of: .nonSpaceOrLinebreak, after: endOfLine(at: index)) == endIndex)
             else { return }
 
             switch options.wrapConditions {
             case .preserve, .disabled, .default:
                 break
-
             case .beforeFirst:
                 // Wrap if the next non-whitespace-or-comment
                 // is on the same line as the control flow keyword
                 if onSameLine(index, nextTokenIndex) {
                     insertLinebreak(at: index + 1)
                 }
-
+                // Re-indent lines
+                var linebreakIndex: Int? = index + 1
+                let indent = indentForLine(at: index) + options.indent
+                while let index = linebreakIndex, index < endIndex {
+                    insertSpace(indent, at: index + 1)
+                    linebreakIndex = self.index(of: .linebreak, after: index)
+                }
             case .afterFirst:
                 // Unwrap if the next non-whitespace-or-comment
                 // is not on the same line as the control flow keyword
@@ -718,9 +728,15 @@ extension Formatter {
                 {
                     removeToken(at: linebreakIndex)
                 }
-
                 // Make sure there is exactly one space after control flow keyword
                 insertSpace(" ", at: index + 1)
+                // Re-indent lines
+                var lastIndex = index + 1
+                let indent = spaceEquivalentToTokens(from: startOfLine(at: index), upTo: index) + indent
+                while let index = self.index(of: .linebreak, after: lastIndex), index < endIndex {
+                    insertSpace(indent, at: index + 1)
+                    lastIndex = index
+                }
             }
         }
 

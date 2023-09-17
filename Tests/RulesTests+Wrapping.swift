@@ -3697,7 +3697,6 @@ class WrappingTests: RulesTests {
             let quux = baz.quux
         {}
         """
-
         testFormatting(
             for: input, rules: [FormatRules.wrapArguments, FormatRules.indent],
             options: FormatOptions(closingParenOnSameLine: true, wrapConditions: .beforeFirst)
@@ -3721,7 +3720,6 @@ class WrappingTests: RulesTests {
         while let foo = foo,
               let bar = bar {}
         """
-
         let output = """
         if
           let foo = foo,
@@ -3742,9 +3740,8 @@ class WrappingTests: RulesTests {
           let foo = foo,
           let bar = bar {}
         """
-
         testFormatting(
-            for: input, [output], rules: [FormatRules.wrapArguments, FormatRules.indent],
+            for: input, output, rule: FormatRules.wrapArguments,
             options: FormatOptions(indent: "  ", wrapConditions: .beforeFirst),
             exclude: ["wrapConditionalBodies"]
         )
@@ -3766,9 +3763,8 @@ class WrappingTests: RulesTests {
         guard let foo = bar
         else {}
         """
-
         testFormatting(
-            for: input, rules: [FormatRules.wrapArguments, FormatRules.indent],
+            for: input, rule: FormatRules.wrapArguments,
             options: FormatOptions(indent: "  ", wrapConditions: .beforeFirst),
             exclude: ["elseOnSameLine", "wrapConditionalBodies"]
         )
@@ -3797,7 +3793,6 @@ class WrappingTests: RulesTests {
           let foo = foo,
           let bar = bar {}
         """
-
         let output = """
         if let foo = foo,
            let bar = bar,
@@ -3816,9 +3811,8 @@ class WrappingTests: RulesTests {
         while let foo = foo,
               let bar = bar {}
         """
-
         testFormatting(
-            for: input, [output], rules: [FormatRules.wrapArguments, FormatRules.indent],
+            for: input, output, rule: FormatRules.wrapArguments,
             options: FormatOptions(indent: "  ", wrapConditions: .afterFirst),
             exclude: ["wrapConditionalBodies"]
         )

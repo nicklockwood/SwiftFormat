@@ -32,7 +32,7 @@
 import Foundation
 
 /// The current SwiftFormat version
-let swiftFormatVersion = "0.52.3"
+let swiftFormatVersion = "0.52.4"
 public let version = swiftFormatVersion
 
 /// The standard SwiftFormat config file name
@@ -254,7 +254,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
     return errors
 }
 
-// Process configuration in all directories in specified path.
+/// Process configuration in all directories in specified path.
 func gatherOptions(_ options: inout Options, for inputURL: URL, with logger: Logger?) throws {
     var directory = URL(fileURLWithPath: inputURL.pathComponents[0]).standardized
     for part in inputURL.pathComponents.dropFirst().dropLast() {
@@ -266,7 +266,7 @@ func gatherOptions(_ options: inout Options, for inputURL: URL, with logger: Log
     }
 }
 
-// Process configuration files in specified directory.
+/// Process configuration files in specified directory.
 private var configCache = [URL: [String: String]]()
 private let configQueue = DispatchQueue(label: "swiftformat.config", qos: .userInteractive)
 private func processDirectory(_ inputURL: URL, with options: inout Options, logger: Logger?) throws {
@@ -646,7 +646,7 @@ func getResourceValues(for url: URL, keys: [URLResourceKey]) throws -> URLResour
 
 // MARK: Documentation utilities
 
-// Strip markdown code-formatting
+/// Strip markdown code-formatting
 func stripMarkdown(_ input: String) -> String {
     var result = ""
     var startCount = 0

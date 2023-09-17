@@ -11,7 +11,7 @@ import Foundation
 // MARK: shared helper methods
 
 extension Formatter {
-    // should brace be wrapped according to `wrapMultilineStatementBraces` rule?
+    /// should brace be wrapped according to `wrapMultilineStatementBraces` rule?
     func shouldWrapMultilineStatementBrace(at index: Int) -> Bool {
         assert(tokens[index] == .startOfScope("{"))
         guard let endIndex = endOfScope(at: index),
@@ -36,7 +36,7 @@ extension Formatter {
         return false
     }
 
-    // remove self if possible
+    /// remove self if possible
     func removeSelf(at i: Int, exclude: Set<String>, include: Set<String>? = nil) -> Bool {
         guard case let .identifier(selfKeyword) = tokens[i], ["self", "Self"].contains(selfKeyword) else {
             assertionFailure()
@@ -82,7 +82,7 @@ extension Formatter {
         return true
     }
 
-    // gather declared variable names, starting at index after let/var keyword
+    /// gather declared variable names, starting at index after let/var keyword
     func processDeclaredVariables(at index: inout Int, names: inout Set<String>,
                                   removeSelfKeyword: String?, onlyLocal: Bool,
                                   scopeAllowsImplicitSelfRebinding: Bool)
@@ -270,7 +270,7 @@ extension Formatter {
         }
     }
 
-    // Shared wrap implementation
+    /// Shared wrap implementation
     func wrapCollectionsAndArguments(completePartialWrapping: Bool, wrapSingleArguments: Bool) {
         let maxWidth = options.maxWidth
         func removeLinebreakBeforeEndOfScope(at endOfScope: inout Int) {
@@ -540,7 +540,7 @@ extension Formatter {
             var isParameters = false
             switch string {
             case "(":
-                /// Don't wrap color/image literals due to Xcode bug
+                // Don't wrap color/image literals due to Xcode bug
                 guard let prevToken = self.token(at: i - 1),
                       prevToken != .keyword("#colorLiteral"),
                       prevToken != .keyword("#imageLiteral")
@@ -739,10 +739,10 @@ extension Formatter {
             }
         }
 
-        /// Wraps / re-wraps a multi-line statement where each delimiter index
-        /// should be the first token on its line, if the statement
-        /// is longer than the max width or there is already a linebreak
-        /// adjacent to one of the delimiters
+        // Wraps / re-wraps a multi-line statement where each delimiter index
+        // should be the first token on its line, if the statement
+        // is longer than the max width or there is already a linebreak
+        // adjacent to one of the delimiters
         @discardableResult
         func wrapMultilineStatement(
             startIndex: Int,
@@ -999,8 +999,8 @@ extension Formatter {
         }
     }
 
-    // Common implementation for the `hoistTry` and `hoistAwait` rules
-    // Hoists the first keyword of the specified type out of the specified scope
+    /// Common implementation for the `hoistTry` and `hoistAwait` rules
+    /// Hoists the first keyword of the specified type out of the specified scope
     func hoistEffectKeyword(
         _ keyword: String,
         inScopeAt scopeStart: Int,
@@ -1469,7 +1469,7 @@ extension Formatter {
     }
 }
 
-// Utility functions used by organizeDeclarations rule
+/// Utility functions used by organizeDeclarations rule
 // TODO: find a better place to put this
 extension Formatter {
     /// Categories of declarations within an individual type
@@ -1883,7 +1883,7 @@ extension Formatter {
             $0.isComment && $0.string.contains("swiftformat:sort") && !$0.string.contains(":sort:")
         })
 
-        /// Sorts the given categoried declarations based on their derived metadata
+        // Sorts the given categoried declarations based on their derived metadata
         func sortDeclarations(
             _ declarations: CategorizedDeclarations,
             byCategory sortByCategory: Bool,
@@ -1941,8 +1941,8 @@ extension Formatter {
         if typeDeclaration.kind == "struct",
            !typeDeclaration.body.contains(where: { $0.keyword == "init" })
         {
-            /// Whether or not this declaration is an instance property that can affect
-            /// the parameters struct's synthesized memberwise initializer
+            // Whether or not this declaration is an instance property that can affect
+            // the parameters struct's synthesized memberwise initializer
             func affectsSynthesizedMemberwiseInitializer(
                 _ declaration: Declaration,
                 _ type: DeclarationType?
@@ -2114,7 +2114,7 @@ extension Formatter {
 }
 
 extension Formatter {
-    /// A generic type parameter for a method
+    // A generic type parameter for a method
     class GenericType {
         /// The name of the generic parameter. For example with `<T: Fooable>` the generic parameter `name` is `T`.
         let name: String
@@ -2153,8 +2153,8 @@ extension Formatter {
             self.conformances = conformances
         }
 
-        // The opaque parameter syntax that represents this generic type,
-        // if the constraints can be expressed using this syntax
+        /// The opaque parameter syntax that represents this generic type,
+        /// if the constraints can be expressed using this syntax
         func asOpaqueParameter(useSomeAny: Bool) -> [Token]? {
             // Protocols with primary associated types that can be used with
             // opaque parameter syntax. In the future we could make this extensible
@@ -2850,14 +2850,14 @@ extension Formatter {
                         closureLocalNames.insert("self")
                     }
 
-                    /// Whether or not the closure at the current index permits implicit self.
-                    ///
-                    /// SE-0269 (in Swift 5.3) allows implicit self when:
-                    ///  - the closure captures self explicitly using [self] or [unowned self]
-                    ///  - self is not a reference type
-                    ///
-                    /// SE-0365 (in Swift 5.8) additionally allows implicit self using
-                    /// [weak self] captures after self has been unwrapped.
+                    // Whether or not the closure at the current index permits implicit self.
+                    //
+                    // SE-0269 (in Swift 5.3) allows implicit self when:
+                    //  - the closure captures self explicitly using [self] or [unowned self]
+                    //  - self is not a reference type
+                    //
+                    // SE-0365 (in Swift 5.8) additionally allows implicit self using
+                    // [weak self] captures after self has been unwrapped.
                     func closureAllowsImplicitSelf() -> Bool {
                         guard options.swiftVersion >= "5.3" else {
                             return false

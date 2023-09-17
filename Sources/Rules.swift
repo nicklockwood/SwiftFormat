@@ -43,7 +43,7 @@ public final class FormatRule: Equatable, Comparable {
     let sharedOptions: [String]
     let deprecationMessage: String?
 
-    // Null rule, used for testing
+    /// Null rule, used for testing
     static let none: FormatRule = .init(help: "") { _ in }
 
     var isDeprecated: Bool {
@@ -166,7 +166,7 @@ extension _FormatRules {
         return options.sorted()
     }
 
-    // Get shared-only options for a given set of rules
+    /// Get shared-only options for a given set of rules
     func sharedOptionsForRules(_ rules: [FormatRule]) -> [String] {
         var options = Set<String>()
         var sharedOptions = Set<String>()
@@ -695,7 +695,7 @@ public struct _FormatRules {
             let typeEndIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: equalsIndex)
             else { return }
 
-            /// Compares whether or not two types are equivalent
+            // Compares whether or not two types are equivalent
             func compare(typeStartingAfter j: Int, withTypeStartingAfter i: Int)
                 -> (matches: Bool, i: Int, j: Int, wasValue: Bool)
             {
@@ -766,7 +766,7 @@ public struct _FormatRules {
                 }
             }
 
-            /// Removes a type already processed by `compare(typeStartingAfter:withTypeStartingAfter:)`
+            // Removes a type already processed by `compare(typeStartingAfter:withTypeStartingAfter:)`
             func removeType(after indexBeforeStartOfType: Int, i: Int, j: Int, wasValue: Bool) {
                 if isInferred {
                     formatter.removeTokens(in: colonIndex ... typeEndIndex)
@@ -877,7 +877,7 @@ public struct _FormatRules {
         }
     }
 
-    // Converts types used for hosting only static members into enums to avoid instantiation.
+    /// Converts types used for hosting only static members into enums to avoid instantiation.
     public let enumNamespaces = FormatRule(
         help: """
         Convert types used for hosting only static members into enums (an empty enum is
@@ -1039,7 +1039,7 @@ public struct _FormatRules {
 
             // Consumers can choose whether or not this rule should apply to type bodies
             if !formatter.options.removeStartOrEndBlankLinesFromTypes,
-               ["class", "struct", "enum", "actor", "protocol", "extension"].contains(
+               ["class", "actor", "struct", "enum", "protocol", "extension"].contains(
                    formatter.lastSignificantKeyword(at: i, excluding: ["where"]))
             {
                 return
@@ -1084,7 +1084,7 @@ public struct _FormatRules {
 
             // Consumers can choose whether or not this rule should apply to type bodies
             if !formatter.options.removeStartOrEndBlankLinesFromTypes,
-               ["class", "struct", "enum", "actor", "protocol", "extension"].contains(
+               ["class", "actor", "struct", "enum", "protocol", "extension"].contains(
                    formatter.lastSignificantKeyword(at: startOfScopeIndex, excluding: ["where"]))
             {
                 return
@@ -2080,7 +2080,7 @@ public struct _FormatRules {
         }
     }
 
-    // Add @available(*, unavailable) to init?(coder aDecoder: NSCoder)
+    /// Add @available(*, unavailable) to init?(coder aDecoder: NSCoder)
     public let initCoderUnavailable = FormatRule(
         help: """
         Add `@available(*, unavailable)` attribute to required `init(coder:)` when
@@ -2122,7 +2122,7 @@ public struct _FormatRules {
         }
     }
 
-    // Implement brace-wrapping rules
+    /// Implement brace-wrapping rules
     public let braces = FormatRule(
         help: "Wrap braces in accordance with selected style (K&R or Allman).",
         options: ["allman"],
@@ -3180,7 +3180,7 @@ public struct _FormatRules {
                 return
             }
 
-            /// Removes return statements in the given single-statement scope
+            // Removes return statements in the given single-statement scope
             func removeReturn(atStartOfScope startOfScopeIndex: Int) {
                 // If this scope is a single-statement if or switch statement then we have to recursively
                 // remove the return from each branch of the if statement
@@ -5617,7 +5617,7 @@ public struct _FormatRules {
                     isGroupedWithExtendingType = declarationsBetweenTypeAndExtension.allSatisfy {
                         // Only treat the type and its extension as grouped if there aren't any other
                         // types or type-like declarations between them
-                        if ["class", "actor", "enum", "protocol", "struct", "typealias"].contains($0.keyword) {
+                        if ["class", "actor", "struct", "enum", "protocol", "typealias"].contains($0.keyword) {
                             return false
                         }
                         // Extensions extending other types also break the grouping
@@ -6808,8 +6808,8 @@ public struct _FormatRules {
                   let conditionalBranches = formatter.conditionalBranches(at: startOfConditional)
             else { return }
 
-            /// Whether or not the conditional statement that starts at the given index
-            /// has branches that are exhaustive
+            // Whether or not the conditional statement that starts at the given index
+            // has branches that are exhaustive
             func conditionalBranchesAreExhaustive(
                 conditionKeywordIndex: Int,
                 branches: [Formatter.ConditionalBranch]

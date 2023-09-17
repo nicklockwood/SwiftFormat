@@ -33,7 +33,7 @@ import Foundation
 
 class OptionDescriptor {
     enum ArgumentType: EnumAssociable {
-        // index 0 is official value, others are acceptable
+        /// index 0 is official value, others are acceptable
         case binary(true: [String], false: [String])
         case `enum`([String])
         case text

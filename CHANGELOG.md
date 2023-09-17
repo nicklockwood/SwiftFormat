@@ -1,5 +1,15 @@
 # Change Log
 
+## [0.52.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.52.4) (2023-09-17)
+
+- Fixed `docComments` rule incorrectly replacing comments inside switch cases and if/guard conditions
+- Fixed `redundantLet` rule removing required `let` inside `ViewBuilder` modifiers
+- Fixed `redundantLet` rule removing required `let` after `@MainActor` or `@Sendable`
+- Fixed bug when using `--wrapconditions after-first` if first line of condition is a comment
+- Added more context to "failed to terminate" error message to aid tracking down issues
+- Updated `sortTypealiases` rule to also remove duplicate protocols in declaration
+- Added some fixes to support parameter packs in Swift 5.9
+
 ## [0.52.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.52.3) (2023-09-02)
 
 - Fixed incorrect hoisting of `try` inside multiline string literal interpolations

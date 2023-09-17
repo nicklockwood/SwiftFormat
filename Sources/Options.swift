@@ -90,7 +90,7 @@ public enum ArgumentStrippingMode: String, CaseIterable {
     case all = "always"
 }
 
-// Wrap mode for @ attributes
+/// Wrap mode for @ attributes
 public enum AttributeMode: String, CaseIterable {
     case prevLine = "prev-line"
     case sameLine = "same-line"
@@ -434,18 +434,18 @@ public struct FormatOptions: CustomStringConvertible {
     public var useSomeAny: Bool
     public var wrapEffects: WrapEffects
 
-    // Deprecated
+    /// Deprecated
     public var indentComments: Bool
 
-    // Doesn't really belong here, but hard to put elsewhere
+    /// Doesn't really belong here, but hard to put elsewhere
     public var fragment: Bool
     public var ignoreConflictMarkers: Bool
     public var swiftVersion: Version
     public var fileInfo: FileInfo
     public var timeout: TimeInterval
 
-    // Enabled rules - this is a hack used to allow rules to vary their behavior
-    // based on other rules being enabled. Do not rely on it in other contexts
+    /// Enabled rules - this is a hack used to allow rules to vary their behavior
+    /// based on other rules being enabled. Do not rely on it in other contexts
     var enabledRules: Set<String> = []
 
     public static let `default` = FormatOptions()

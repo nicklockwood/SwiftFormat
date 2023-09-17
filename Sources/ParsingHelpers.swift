@@ -590,7 +590,7 @@ extension Formatter {
                     }
                 }
                 return false
-            case "class", "actor", "struct", "protocol", "enum", "extension",
+            case "class", "actor", "struct", "enum", "protocol", "extension",
                  "func", "subscript", "catch":
                 return false
             case "throws", "rethrows":
@@ -1447,7 +1447,7 @@ extension Formatter {
 
         /// Whether or not this declaration defines a type (a class, enum, etc, but not an extension)
         var definesType: Bool {
-            ["class", "actor", "enum", "protocol", "struct", "typealias"].contains(keyword)
+            ["class", "actor", "struct", "enum", "protocol", "typealias"].contains(keyword)
         }
 
         /// The name of this type or variable
@@ -1591,16 +1591,16 @@ extension Formatter {
             endOfDeclaration = linebreakSearchIndex + 1
         }
 
-        /// If there was another declaration after this one in the same scope,
-        /// then we know this declaration ends before that one starts
+        // If there was another declaration after this one in the same scope,
+        // then we know this declaration ends before that one starts
         if let endOfDeclaration = endOfDeclaration {
             return endOfDeclaration
         }
 
-        /// Otherwise this is the last declaration in the scope.
-        /// To know where this declaration ends we just have to know where
-        /// the parent scope ends.
-        ///  - We don't do this inside `parseDeclarations` itself since it handles this cases
+        // Otherwise this is the last declaration in the scope.
+        // To know where this declaration ends we just have to know where
+        // the parent scope ends.
+        //  - We don't do this inside `parseDeclarations` itself since it handles this cases
         if fallBackToEndOfScope,
            declarationKeywordIndex != 0,
            let endOfParentScope = endOfScope(at: declarationKeywordIndex - 1),
@@ -1639,7 +1639,7 @@ extension Formatter {
         return declarations.map { declaration in
             let declarationParser = Formatter(declaration.tokens)
 
-            /// Parses this declaration into a body of declarations separate from the start and end tokens
+            // Parses this declaration into a body of declarations separate from the start and end tokens
             func parseBody(in bodyRange: ClosedRange<Int>) -> (start: [Token], body: [Declaration], end: [Token]) {
                 var startTokens = declarationParser.tokens[...bodyRange.lowerBound]
                 var bodyTokens = declarationParser.tokens[bodyRange.lowerBound + 1 ..< bodyRange.upperBound]
@@ -1719,10 +1719,10 @@ extension Formatter {
     /// Returns the declaration scope (global, type, or local) that the
     /// given token index is contained by.
     func declarationScope(at i: Int) -> DeclarationScope {
-        /// Declarations which have `DeclarationScope.type`
+        // Declarations which have `DeclarationScope.type`
         let typeDeclarations = Set(["class", "actor", "struct", "enum", "extension"])
 
-        /// Declarations which have `DeclarationScope.local`
+        // Declarations which have `DeclarationScope.local`
         let localDeclarations = Set(["let", "var", "func", "subscript", "init", "deinit"])
 
         let allDeclarationScopes = typeDeclarations.union(localDeclarations)
@@ -1990,7 +1990,7 @@ extension Formatter {
         }
     }
 
-    // Range of tokens forming file header comment
+    /// Range of tokens forming file header comment
     var headerCommentTokenRange: Range<Int>? {
         guard !options.fragment else {
             return nil

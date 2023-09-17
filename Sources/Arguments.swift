@@ -56,7 +56,7 @@ extension Options {
 }
 
 extension String {
-    // Find best match for the string in a list of options
+    /// Find best match for the string in a list of options
     func bestMatches(in options: [String]) -> [String] {
         let lowercaseQuery = lowercased()
         // Sort matches by Levenshtein edit distance
@@ -108,8 +108,8 @@ extension String {
     }
 }
 
-// Parse a space-delimited string into an array of command-line arguments
-// Replicates the behavior implemented by the console when parsing input
+/// Parse a space-delimited string into an array of command-line arguments
+/// Replicates the behavior implemented by the console when parsing input
 func parseArguments(_ argumentString: String, ignoreComments: Bool = true) -> [String] {
     var arguments = [""] // Arguments always begin with script path
     var characters = String.UnicodeScalarView.SubSequence(argumentString.unicodeScalars)
@@ -149,7 +149,7 @@ func parseArguments(_ argumentString: String, ignoreComments: Bool = true) -> [S
     return arguments
 }
 
-// Parse a flat array of command-line arguments into a dictionary of flags and values
+/// Parse a flat array of command-line arguments into a dictionary of flags and values
 func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String: String] {
     var anonymousArgs = 0
     var namedArgs: [String: String] = [:]
@@ -205,7 +205,7 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
     return namedArgs
 }
 
-// Parse a comma-delimited list of items
+/// Parse a comma-delimited list of items
 func parseCommaDelimitedList(_ string: String) -> [String] {
     string.components(separatedBy: ",").compactMap {
         let item = $0.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -213,7 +213,7 @@ func parseCommaDelimitedList(_ string: String) -> [String] {
     }
 }
 
-// Parse a comma-delimited string into an array of rules
+/// Parse a comma-delimited string into an array of rules
 let allRules = Set(FormatRules.byName.keys)
 func parseRules(_ rules: String) throws -> [String] {
     try parseCommaDelimitedList(rules).flatMap { proposedName -> [String] in
@@ -238,7 +238,7 @@ func parseRules(_ rules: String) throws -> [String] {
     }
 }
 
-// Parse single file path, disallowing globs or commas
+/// Parse single file path, disallowing globs or commas
 func parsePath(_ path: String, for argument: String, in directory: String) throws -> URL {
     let expandedPath = expandPath(path, in: directory)
     if !FileManager.default.fileExists(atPath: expandedPath.path) {
@@ -252,12 +252,12 @@ func parsePath(_ path: String, for argument: String, in directory: String) throw
     return expandedPath
 }
 
-// Parse one or more comma-delimited file paths, expanding globs as required
+/// Parse one or more comma-delimited file paths, expanding globs as required
 func parsePaths(_ paths: String, in directory: String) throws -> [URL] {
     try matchGlobs(expandGlobs(paths, in: directory), in: directory)
 }
 
-// Merge two dictionaries of arguments
+/// Merge two dictionaries of arguments
 func mergeArguments(_ args: [String: String], into config: [String: String]) throws -> [String: String] {
     var input = config
     var output = args
@@ -327,7 +327,7 @@ func mergeArguments(_ args: [String: String], into config: [String: String]) thr
     return output
 }
 
-// Parse a configuration file into a dictionary of arguments
+/// Parse a configuration file into a dictionary of arguments
 public func parseConfigFile(_ data: Data) throws -> [String: String] {
     guard let input = String(data: data, encoding: .utf8) else {
         throw FormatError.reading("Unable to read data for configuration file")
@@ -378,7 +378,7 @@ private func effectiveContent(of line: String) -> String {
         .trimmingCharacters(in: .whitespaces)
 }
 
-// Serialize a set of options into either an arguments string or a file
+/// Serialize a set of options into either an arguments string or a file
 func serialize(options: Options,
                swiftVersion: Version = .undefined,
                excludingDefaults: Bool = false,
@@ -412,7 +412,7 @@ func serialize(options: Options,
         .joined(separator: separator)
 }
 
-// Serialize arguments
+/// Serialize arguments
 func serialize(arguments: [String: String],
                separator: String = "\n") -> String
 {
@@ -425,7 +425,7 @@ func serialize(arguments: [String: String],
     }.sorted().joined(separator: separator)
 }
 
-// Get command line arguments from options
+/// Get command line arguments from options
 func argumentsFor(_ options: Options, excludingDefaults: Bool = false) -> [String: String] {
     var args = [String: String]()
     if let fileOptions = options.fileOptions {
@@ -523,7 +523,7 @@ private func processOption(_ key: String,
     }
 }
 
-// Parse rule names from arguments
+/// Parse rule names from arguments
 public func rulesFor(_ args: [String: String], lint: Bool) throws -> Set<String> {
     var rules = allRules
     rules = try args["rules"].map {
@@ -545,7 +545,7 @@ public func rulesFor(_ args: [String: String], lint: Bool) throws -> Set<String>
     return rules
 }
 
-// Parse FileOptions from arguments
+/// Parse FileOptions from arguments
 func fileOptionsFor(_ args: [String: String], in directory: String) throws -> FileOptions? {
     var options = FileOptions()
     var arguments = Set(fileArguments)
@@ -584,8 +584,8 @@ func fileOptionsFor(_ args: [String: String], in directory: String) throws -> Fi
     return containsFileOption ? options : nil
 }
 
-// Parse FormatOptions from arguments
-// Returns nil if the arguments dictionary does not contain any formatting arguments
+/// Parse FormatOptions from arguments
+/// Returns nil if the arguments dictionary does not contain any formatting arguments
 public func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions? {
     var options = FormatOptions.default
     var arguments = Set(formattingArguments)
@@ -601,7 +601,7 @@ public func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions? 
     return containsFormatOption ? options : nil
 }
 
-// Get deprecation warnings from a set of arguments
+/// Get deprecation warnings from a set of arguments
 func warningsForArguments(_ args: [String: String], ignoreUnusedOptions: Bool = false) -> [String] {
     var warnings = [String]()
     for option in Descriptors.all {

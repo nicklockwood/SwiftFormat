@@ -74,7 +74,7 @@ private func print(_ message: String, as type: CLI.OutputType = .info) {
     }
 }
 
-// Print warnings and return true if any was an actual error
+/// Print warnings and return true if any was an actual error
 private func printWarnings(_ errors: [Error]) -> Bool {
     var containsError = false
     for error in errors {
@@ -102,7 +102,7 @@ private func printWarnings(_ errors: [Error]) -> Bool {
     return containsError
 }
 
-// Represents the exit codes to the command line. See `man sysexits` for more information.
+/// Represents the exit codes to the command line. See `man sysexits` for more information.
 public enum ExitCode: Int32 {
     case ok = 0 // EX_OK
     case lintFailure = 1

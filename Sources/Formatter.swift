@@ -2,7 +2,7 @@
 //  Formatter.swift
 //  SwiftFormat
 //
-//  Version 0.52.3
+//  Version 0.52.4
 //
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Nick Lockwood
@@ -47,10 +47,10 @@ public class Formatter: NSObject {
     private var tempOptions: FormatOptions?
     private var wasNextDirective = false
 
-    // Formatting range
+    /// Formatting range
     public var range: Range<Int>?
 
-    // Current rule, used for handling comment directives
+    /// Current rule, used for handling comment directives
     var currentRule: FormatRule? {
         didSet {
             disabledCount = 0
@@ -64,7 +64,7 @@ public class Formatter: NSObject {
         }
     }
 
-    // Is current rule enabled
+    /// Is current rule enabled
     var isEnabled: Bool {
         if ruleDisabled || disabledCount + disabledNext > 0 ||
             range?.contains(enumerationIndex) == false
@@ -77,7 +77,7 @@ public class Formatter: NSObject {
     /// Directives that can be used in comments, e.g. `// swiftformat:disable rule`
     let directives = ["disable", "enable", "options", "sort"]
 
-    // Process a comment token (which may contain directives)
+    /// Process a comment token (which may contain directives)
     func processCommentBody(_ comment: String, at index: Int) {
         var prefix = "swiftformat:"
         guard let range = comment.range(of: prefix) else {
@@ -590,7 +590,7 @@ public extension Formatter {
         return 0 // Inserted 0 tokens
     }
 
-    // As above, but only if formatting is enabled
+    /// As above, but only if formatting is enabled
     @discardableResult
     internal func insertSpaceIfEnabled(_ space: String, at index: Int) -> Int {
         isEnabled ? insertSpace(space, at: index) : 0

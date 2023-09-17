@@ -2402,10 +2402,17 @@ extension Formatter {
                     case .keyword("class"), .keyword("static"):
                         classOrStatic = true
                     case .keyword("repeat"):
-                        guard let nextIndex = self.index(of: .keyword("while"), after: i) else {
-                            return fatalError("Expected while", at: i)
+                        if let scopeStart = self.index(of: .nonSpaceOrCommentOrLinebreak, after: i, if: {
+                            $0 == .startOfScope("{")
+                        }) {
+                            guard let nextIndex = self.index(of: .keyword("while"), after: i) else {
+                                return fatalError("Expected while", at: i)
+                            }
+                            i = nextIndex
+                        } else {
+                            // Probably a parameter pack
+                            break
                         }
-                        i = nextIndex
                     case .keyword("if"), .keyword("for"), .keyword("while"):
                         if explicitSelf == .insert {
                             break

@@ -993,4 +993,11 @@ class ParensTests: RulesTests {
         let input = "a ? (b = c) : (b = d)"
         testFormatting(for: input, rule: FormatRules.redundantParens)
     }
+
+    // around parameter repeat each
+
+    func testRequiredParensNotRemovedAroundRepeat() {
+        let input = "(repeat (each foo, each bar))"
+        testFormatting(for: input, rule: FormatRules.redundantParens)
+    }
 }

@@ -6347,6 +6347,16 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantSelf)
     }
 
+    func testRedundantSelfNotConfusedByParameterPack() {
+        let input = """
+        func pairUp<each T, each U>(firstPeople: repeat each T, secondPeople: repeat each U) -> (repeat (first: each T, second: each U)) {
+            (repeat (each firstPeople, each secondPeople))
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
     // MARK: - redundantStaticSelf
 
     func testRedundantStaticSelfInStaticVar() {

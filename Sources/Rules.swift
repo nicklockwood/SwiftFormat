@@ -2624,7 +2624,9 @@ public struct _FormatRules {
         let conditionals = Set(["in", "while", "if", "case", "switch", "where", "for", "guard"])
 
         formatter.forEach(.startOfScope("(")) { i, _ in
-            guard var closingIndex = formatter.index(of: .endOfScope(")"), after: i) else {
+            guard var closingIndex = formatter.index(of: .endOfScope(")"), after: i),
+                  formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) != .keyword("repeat")
+            else {
                 return
             }
             var innerParens = nestedParens(in: i ... closingIndex)

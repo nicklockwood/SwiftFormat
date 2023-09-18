@@ -20,6 +20,7 @@ Table of Contents
     - [Via Applescript](#via-applescript)
     - [VSCode plugin](#vscode-plugin)
     - [Sublime Text plugin](#sublime-text-plugin)
+    - [Nova plugin](nova-plugin)
     - [Git pre-commit hook](#git-pre-commit-hook)
     - [On CI using Danger](#on-ci-using-danger)
     - [Bazel build](#bazel-build)
@@ -408,6 +409,12 @@ Sublime Text plugin
 --------------------
 
 If you prefer to use the [Sublime Text](https://www.sublimetext.com) editor, try the [Sublime-Swift-Format plugin](https://github.com/aerobounce/Sublime-Swift-Format) by [Aerobounce](https://github.com/aerobounce).
+
+
+Nova plugin
+-----------
+
+If you prefer to use the [Nova](https://panic.com/nova) editor, try the [SwiftFormat extension](https://extensions.panic.com/extensions/org.padraig/org.padraig.SwiftFormat/) by [Pádraig Ó Cinnéide](https://mastodon.social/@PadraigOCinneide).
 
 
 Git pre-commit hook

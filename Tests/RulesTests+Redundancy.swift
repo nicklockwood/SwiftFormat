@@ -2220,6 +2220,39 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantReturn)
     }
 
+    func testNoRemoveReturnInFailableInitWithConditional() {
+        let input = """
+        init?(optionalHex: String?) {
+            if let optionalHex {
+                self.init(hex: optionalHex)
+            } else {
+                return nil
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: FormatRules.redundantReturn, options: options)
+    }
+
+    func testNoRemoveReturnInFailableInitWithNestedConditional() {
+        let input = """
+        init?(optionalHex: String?) {
+            if let optionalHex {
+                self.init(hex: optionalHex)
+            } else {
+                switch foo {
+                case .foo:
+                    self.init()
+                case .bar:
+                    return nil
+                }
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: FormatRules.redundantReturn, options: options)
+    }
+
     func testRemoveReturnInFailableInit() {
         let input = "init?() { return nil }"
         let output = "init?() { nil }"

@@ -3180,6 +3180,15 @@ public struct _FormatRules {
                 return
             }
 
+            // Make sure we aren't in a failable `init?`, where explicit return is required
+            if let lastSignificantKeywordIndex = formatter.indexOfLastSignificantKeyword(at: startOfScopeIndex),
+               formatter.tokens[lastSignificantKeywordIndex] == .keyword("init"),
+               let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: lastSignificantKeywordIndex),
+               nextToken == .operator("?", .postfix)
+            {
+                return
+            }
+
             // Removes return statements in the given single-statement scope
             func removeReturn(atStartOfScope startOfScopeIndex: Int) {
                 // If this scope is a single-statement if or switch statement then we have to recursively

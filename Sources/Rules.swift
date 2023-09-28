@@ -6716,10 +6716,16 @@ public struct _FormatRules {
 
                 // Only use doc comments on declarations in type bodies, or top-level declarations
                 if let startOfEnclosingScope = formatter.index(of: .startOfScope, before: index) {
-                    guard formatter.tokens[startOfEnclosingScope] == .startOfScope("{"),
-                          let scope = formatter.lastSignificantKeyword(at: startOfEnclosingScope, excluding: ["where"]),
-                          ["class", "actor", "struct", "enum", "protocol", "extension"].contains(scope)
-                    else {
+                    switch formatter.tokens[startOfEnclosingScope] {
+                    case .startOfScope("#if"):
+                        break
+                    case .startOfScope("{"):
+                        guard let scope = formatter.lastSignificantKeyword(at: startOfEnclosingScope, excluding: ["where"]),
+                              ["class", "actor", "struct", "enum", "protocol", "extension"].contains(scope)
+                        else {
+                            return false
+                        }
+                    default:
                         return false
                     }
                 }

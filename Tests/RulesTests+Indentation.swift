@@ -2776,6 +2776,106 @@ class IndentTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.indent)
     }
 
+    // indent #if/#else/#elseif/#endif
+
+    func testIfDefIndentModes() {
+        let input = """
+        struct ContentView: View {
+            var body: some View {
+                // swiftformat:options --ifdef indent
+
+                Text("Hello, world!")
+                // Comment above
+                #if os(macOS)
+                    .padding()
+                #endif
+
+                Text("Hello, world!")
+                #if os(macOS)
+                    // Comment inside
+                    .padding()
+                #endif
+
+                // swiftformat:options --ifdef no-indent
+
+                Text("Hello, world!")
+                // Comment above
+                #if os(macOS)
+                    .padding()
+                #endif
+
+                Text("Hello, world!")
+                #if os(macOS)
+                    // Comment inside
+                    .padding()
+                #endif
+
+                // swiftformat:options --ifdef outdent
+
+                Text("Hello, world!")
+                // Comment above
+                #if os(macOS)
+                    .padding()
+                #endif
+
+                Text("Hello, world!")
+                #if os(macOS)
+                    // Comment inside
+                    .padding()
+                #endif
+            }
+        }
+        """
+        let output = """
+        struct ContentView: View {
+            var body: some View {
+                // swiftformat:options --ifdef indent
+
+                Text("Hello, world!")
+                // Comment above
+                #if os(macOS)
+                    .padding()
+                #endif
+
+                Text("Hello, world!")
+                #if os(macOS)
+                    // Comment inside
+                    .padding()
+                #endif
+
+                // swiftformat:options --ifdef no-indent
+
+                Text("Hello, world!")
+                // Comment above
+                #if os(macOS)
+                    .padding()
+                #endif
+
+                Text("Hello, world!")
+                #if os(macOS)
+                    // Comment inside
+                    .padding()
+                #endif
+
+                // swiftformat:options --ifdef outdent
+
+                Text("Hello, world!")
+        // Comment above
+        #if os(macOS)
+                    .padding()
+        #endif
+
+                Text("Hello, world!")
+        #if os(macOS)
+                    // Comment inside
+                    .padding()
+        #endif
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.indent)
+    }
+
     // indent #if/#else/#elseif/#endif (mode: indent)
 
     func testIfEndifIndenting() {

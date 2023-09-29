@@ -1927,7 +1927,7 @@ public struct _FormatRules {
                         if let startToken = startToken, [
                             .startOfScope("#if"), .keyword("#else"), .keyword("#elseif"), .endOfScope("#endif")
                         ].contains(startToken) {
-                            if let index = formatter.index(of: .nonSpaceOrLinebreak, before: lineStart) {
+                            if let index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: lineStart) {
                                 lastNonSpaceOrLinebreakIndex = index
                                 lineStart = formatter.startOfLine(at: lastNonSpaceOrLinebreakIndex, excludingIndent: true)
                             }

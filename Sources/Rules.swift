@@ -3557,7 +3557,7 @@ public struct _FormatRules {
                 guard case let .identifier(name) = formatter.tokens[prevIndex] else {
                     return false
                 }
-                return name.hasPrefix("XCTAssert") || formatter.isFunction(at: prevIndex, in: names)
+                return name.hasPrefix("XCTAssert") || formatter.isSymbol(at: prevIndex, in: names)
             }
         }
     }
@@ -3573,7 +3573,7 @@ public struct _FormatRules {
             $0 == .startOfScope("(") || $0 == .startOfScope("[")
         }) { i, _ in
             formatter.hoistEffectKeyword("await", inScopeAt: i) { prevIndex in
-                formatter.isFunction(at: prevIndex, in: formatter.options.asyncCapturing)
+                formatter.isSymbol(at: prevIndex, in: formatter.options.asyncCapturing)
             }
         }
     }

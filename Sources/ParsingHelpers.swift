@@ -441,7 +441,7 @@ extension Formatter {
     }
 
     /// Return true if token at specified index in a function in the given list
-    func isFunction(at i: Int, in names: Set<String>) -> Bool {
+    func isSymbol(at i: Int, in names: Set<String>) -> Bool {
         // TODO: more sophisticated checks involving full signature, namespace, etc
         guard let name = token(at: i)?.unescaped() else {
             return false

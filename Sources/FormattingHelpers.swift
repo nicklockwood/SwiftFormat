@@ -52,7 +52,7 @@ extension Formatter {
         let nextIndex = index(of: .nonSpaceOrLinebreak, after: dotIndex),
         let token = token(at: nextIndex), token.isIdentifier,
         case let name = token.unescaped(), (include.map { $0.contains(name) } ?? true),
-        !isFunction(at: nextIndex, in: exclusionList),
+        !isSymbol(at: nextIndex, in: exclusionList),
         !backticksRequired(at: nextIndex, ignoreLeadingDot: true)
         else {
             return false
@@ -64,7 +64,7 @@ extension Formatter {
                 break
             case .startOfScope("("):
                 if let prevIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: scopeStart),
-                   isFunction(at: prevIndex, in: staticSelf ? [] : options.selfRequired.union([
+                   isSymbol(at: prevIndex, in: staticSelf ? [] : options.selfRequired.union([
                        "expect", // Special case to support autoclosure arguments in the Nimble framework
                    ]))
                 {
@@ -1055,8 +1055,11 @@ extension Formatter {
                 if isEffectCapturingAt(i) {
                     return
                 }
-            case let .keyword(name) where ["is", "as", "try", "await"].contains(name),
-                 let .operator(name, .infix) where name != "=":
+            case let .operator(name, .infix) where name != "=":
+                if [.startOfScope("("), .startOfScope("[")].contains(prevToken), isEffectCapturingAt(i) {
+                    return
+                }
+            case let .keyword(name) where ["is", "as", "try", "await"].contains(name):
                 break
             case .operator(_, .prefix), .stringBody,
                  .endOfScope(")") where prevToken.isStringBody ||

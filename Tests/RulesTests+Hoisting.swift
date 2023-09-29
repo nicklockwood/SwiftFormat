@@ -565,13 +565,33 @@ class HoistingTests: RulesTests {
     func testNoHoistAwaitInCapturingFunction() {
         let input = "foo(await bar)"
         testFormatting(for: input, rule: FormatRules.hoistAwait,
-                       options: FormatOptions(asyncCapturing: ["foo"]))
+                       options: FormatOptions(asyncCapturing: ["foo"], swiftVersion: "5.5"))
     }
 
     func testNoHoistSecondArgumentAwaitInCapturingFunction() {
         let input = "foo(bar, await baz)"
         testFormatting(for: input, rule: FormatRules.hoistAwait,
-                       options: FormatOptions(asyncCapturing: ["foo"]))
+                       options: FormatOptions(asyncCapturing: ["foo"], swiftVersion: "5.5"))
+    }
+
+    func testHoistAwaitAfterOrdinaryOperator() {
+        let input = "let foo = bar + (await baz)"
+        let output = "let foo = await bar + (baz)"
+        testFormatting(for: input, output, rule: FormatRules.hoistAwait,
+                       options: FormatOptions(swiftVersion: "5.5"), exclude: ["redundantParens"])
+    }
+
+    func testHoistAwaitAfterUnknownOperator() {
+        let input = "let foo = bar ??? (await baz)"
+        let output = "let foo = await bar ??? (baz)"
+        testFormatting(for: input, output, rule: FormatRules.hoistAwait,
+                       options: FormatOptions(swiftVersion: "5.5"), exclude: ["redundantParens"])
+    }
+
+    func testNoHoistAwaitAfterCapturingOperator() {
+        let input = "let foo = await bar ??? (await baz)"
+        testFormatting(for: input, rule: FormatRules.hoistAwait,
+                       options: FormatOptions(asyncCapturing: ["???"], swiftVersion: "5.5"))
     }
 
     // MARK: - hoistPatternLet

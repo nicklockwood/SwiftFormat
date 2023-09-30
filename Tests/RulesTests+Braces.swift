@@ -307,6 +307,21 @@ class BracesTests: RulesTests {
         ])
     }
 
+    func testIssue1534() {
+        let input = """
+        func application(_: UIApplication, willFinishLaunchingWithOptions _: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool
+        {
+        //
+        }
+        """
+        let output = """
+        func application(_: UIApplication, willFinishLaunchingWithOptions _: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
+        //
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.braces)
+    }
+
     // allman style
 
     func testKnRBracesAreConverted() {

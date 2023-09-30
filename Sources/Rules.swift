@@ -2176,8 +2176,7 @@ public struct _FormatRules {
 
                 var maxWidth = formatter.options.maxWidth
                 if maxWidth == 0 {
-                    // Set reasonable default
-                    maxWidth = 100
+                    maxWidth = .max
                 }
 
                 // Check that unwrapping wouldn't exceed line length

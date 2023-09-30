@@ -1367,8 +1367,6 @@ class WrappingTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.wrapArguments)
     }
 
-    // MARK: wrapArguments
-
     func testWrapParametersDoesNotAffectFunctionDeclaration() {
         let input = "foo(\n    bar _: Int,\n    baz _: String\n)"
         let options = FormatOptions(wrapArguments: .preserve, wrapParameters: .afterFirst)
@@ -1432,6 +1430,20 @@ class WrappingTests: RulesTests {
         """
         let options = FormatOptions(wrapArguments: .beforeFirst, maxWidth: 20)
         testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+    }
+
+    func testIssue1530() {
+        let input = """
+        extension DRAutoWeatherReadRequestResponse {
+            static let mock = DRAutoWeatherReadRequestResponse(
+                offlineFirstWeather: DRAutoWeatherReadRequestResponse.DROfflineFirstWeather(
+                    daily: .mockWeatherID, hourly: []
+                )
+            )
+        }
+        """
+        let options = FormatOptions(wrapArguments: .beforeFirst)
+        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
     }
 
     // MARK: wrapParameters

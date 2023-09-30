@@ -123,8 +123,7 @@ extension Formatter {
                 {
                     // If we find the end of the condition instead of an = token,
                     // then this was a shorthand `if let self` condition.
-                    if tokens[equalsIndex] == .startOfScope("{") || tokens[equalsIndex] == .delimiter(",") || tokens[equalsIndex] == .keyword("else")
-                    {
+                    if tokens[equalsIndex] == .startOfScope("{") || tokens[equalsIndex] == .delimiter(",") || tokens[equalsIndex] == .keyword("else") {
                         isPermittedImplicitSelfRebinding = true
                     } else if tokens[equalsIndex] == Token.operator("=", .infix),
                               let rhsSelfIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),

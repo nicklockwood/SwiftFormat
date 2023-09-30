@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.52.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.52.5) (2023-09-30)
+
+- Fixed bug where `redundantReturn` rule could break fallible initializers in Swift 5.9
+- Fixed incorrect application of `docComments` rule inside `#if` statements
+- The `docComments` rule no longer treats comments starting with `Note:` as a special directive
+- Fixed incorrect indenting inside `#if` statements immediately preceded by a comment
+- Removed arbitrary unwrap threshold for `braces` rule when no `--maxwidth` is specified
+- You can now include operators in the `--asynccapturing` list
+
 ## [0.52.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.52.4) (2023-09-17)
 
 - Fixed `docComments` rule incorrectly replacing comments inside switch cases and if/guard conditions

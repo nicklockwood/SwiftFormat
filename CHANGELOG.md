@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.52.6](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.52.6) (2023-10-01)
+
+- Fixed bug where `redundantReturn` rule was incorrectly applied to consecutive `if` statements in Swift 5.9
+
 ## [0.52.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.52.5) (2023-09-30)
 
 - Fixed bug where `redundantReturn` rule could break fallible initializers in Swift 5.9

@@ -2659,6 +2659,23 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantReturn, options: options)
     }
 
+    func testNoRemoveReturnInConsecutiveIfStatements() {
+        let input = """
+        func foo() -> String? {
+            if bar {
+                return nil
+            }
+            if baz {
+                return "baz"
+            } else {
+                return "quux"
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: FormatRules.redundantReturn, options: options)
+    }
+
     func testRedundantIfStatementReturnInRedundantClosure() {
         let input = """
         let value = {

@@ -1199,15 +1199,14 @@ extension Formatter {
     /// Finds all of the branch bodies in an if statement.
     /// Returns the index of the `startOfScope` and `endOfScope` of each branch.
     func ifStatementBranches(at ifIndex: Int) -> [ConditionalBranch] {
+        assert(tokens[ifIndex] == .keyword("if"))
         var branches = [(startOfBranch: Int, endOfBranch: Int)]()
         var nextConditionalBranchIndex: Int? = ifIndex
 
         while let conditionalBranchIndex = nextConditionalBranchIndex,
-              ["if", "else"].contains(tokens[conditionalBranchIndex].string),
-              let startOfBody = index(of: .startOfScope, after: conditionalBranchIndex),
-              tokens[startOfBody] == .startOfScope("{"),
-              let endOfBody = endOfScope(at: startOfBody),
-              tokens[endOfBody] == .endOfScope("}")
+              conditionalBranchIndex == ifIndex || tokens[conditionalBranchIndex] == .keyword("else"),
+              let startOfBody = index(of: .startOfScope("{"), after: conditionalBranchIndex),
+              let endOfBody = endOfScope(at: startOfBody)
         {
             branches.append((startOfBranch: startOfBody, endOfBranch: endOfBody))
             nextConditionalBranchIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfBody)
@@ -1219,6 +1218,7 @@ extension Formatter {
     /// Finds all of the branch bodies in a switch statement.
     /// Returns the index of the `startOfScope` and `endOfScope` of each branch.
     func switchStatementBranches(at switchIndex: Int) -> [ConditionalBranch] {
+        assert(tokens[switchIndex] == .keyword("switch"))
         guard let startOfSwitchScope = index(of: .startOfScope("{"), after: switchIndex),
               let firstCaseIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfSwitchScope),
               tokens[firstCaseIndex].isSwitchCaseOrDefault

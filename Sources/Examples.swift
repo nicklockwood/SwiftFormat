@@ -1116,7 +1116,8 @@ private struct Examples {
       }
 
     + func foo(bar: Int,
-    +          baz: String) {
+    +          baz: String)
+    + {
         ...
       }
     ```

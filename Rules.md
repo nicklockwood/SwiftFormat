@@ -2419,7 +2419,8 @@ provided for `--wrapparameters`, the value for `--wraparguments` will be used.
   }
 
 + func foo(bar: Int,
-+          baz: String) {
++          baz: String)
++ {
     ...
   }
 ```

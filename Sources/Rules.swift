@@ -6187,6 +6187,7 @@ public struct _FormatRules {
         orderAfter: ["redundantReturn"]
     ) { formatter in
         formatter.forEach(.startOfScope("{")) { closureStartIndex, _ in
+            var startIndex = closureStartIndex
             if formatter.isStartOfClosure(at: closureStartIndex),
                var closureEndIndex = formatter.endOfScope(at: closureStartIndex),
                // Closures that are called immediately are redundant
@@ -6231,11 +6232,23 @@ public struct _FormatRules {
                     }
                 }
 
+                // If closure is preceded by try and/or await then remove those too
+                if let prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startIndex, if: {
+                    $0 == .keyword("await")
+                }) {
+                    startIndex = prevIndex
+                }
+                if let prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startIndex, if: {
+                    $0 == .keyword("try")
+                }) {
+                    startIndex = prevIndex
+                }
+
                 // If the closure is a property with an explicit `Void` type,
                 // we can't remove the closure since the build would break
                 // if the method is `@discardableResult`
                 // https://github.com/nicklockwood/SwiftFormat/issues/1236
-                if let equalsIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: closureStartIndex),
+                if let equalsIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startIndex),
                    formatter.token(at: equalsIndex) == .operator("=", .infix),
                    let colonIndex = formatter.index(of: .delimiter(":"), before: equalsIndex),
                    let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: colonIndex),
@@ -6267,7 +6280,7 @@ public struct _FormatRules {
                 formatter.removeToken(at: closureCallCloseParenIndex)
                 formatter.removeToken(at: closureCallOpenParenIndex)
                 formatter.removeToken(at: closureEndIndex)
-                formatter.removeToken(at: closureStartIndex)
+                formatter.removeTokens(in: startIndex ... closureStartIndex)
 
                 // Remove the initial return token, and any trailing space, if present
                 if let returnIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closureStartIndex - 1),

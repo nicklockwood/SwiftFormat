@@ -8062,6 +8062,50 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantClosure)
     }
 
+    func testRedundantClosureDoesntLeaveStrayTry() {
+        let input = """
+        let user2: User? = try {
+            if let data2 = defaults.data(forKey: defaultsKey) {
+                return try PropertyListDecoder().decode(User.self, from: data2)
+            } else {
+                return nil
+            }
+        }()
+        """
+        let output = """
+        let user2: User? = if let data2 = defaults.data(forKey: defaultsKey) {
+                return try PropertyListDecoder().decode(User.self, from: data2)
+            } else {
+                return nil
+            }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, output, rule: FormatRules.redundantClosure, options: options,
+                       exclude: ["redundantReturn", "indent"])
+    }
+
+    func testRedundantClosureDoesntLeaveStrayTryAwait() {
+        let input = """
+        let user2: User? = try await {
+            if let data2 = defaults.data(forKey: defaultsKey) {
+                return try await PropertyListDecoder().decode(User.self, from: data2)
+            } else {
+                return nil
+            }
+        }()
+        """
+        let output = """
+        let user2: User? = if let data2 = defaults.data(forKey: defaultsKey) {
+                return try await PropertyListDecoder().decode(User.self, from: data2)
+            } else {
+                return nil
+            }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, output, rule: FormatRules.redundantClosure, options: options,
+                       exclude: ["redundantReturn", "indent"])
+    }
+
     // MARK: Redundant optional binding
 
     func testRemovesRedundantOptionalBindingsInSwift5_7() {

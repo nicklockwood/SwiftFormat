@@ -1216,7 +1216,7 @@ extension Formatter {
 
         // The body should contain exactly one expression.
         // We can confirm this by parsing the body with `parseExpressionRange`,
-        // and checking that the toke after that expression is just the end of the scope.
+        // and checking that the token after that expression is just the end of the scope.
         guard var firstTokenInBody = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfBody) else {
             return false
         }

@@ -3573,4 +3573,79 @@ class SyntaxTests: RulesTests {
         let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, rule: FormatRules.conditionalAssignment, options: options)
     }
+
+    func testDoesntConvertMultiStatementIfStatementWithStringLiteral() {
+        let input = """
+        let text: String
+        if conditionOne {
+            text = "Hello World!"
+            doSomeStuffHere()
+        } else {
+            text = "Goodbye!"
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: FormatRules.conditionalAssignment, options: options)
+    }
+
+    func testDoesntConvertMultiStatementIfStatementWithCollectionLiteral() {
+        let input = """
+        let text: [String]
+        if conditionOne {
+            text = []
+            doSomeStuffHere()
+        } else {
+            text = ["Goodbye!"]
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: FormatRules.conditionalAssignment, options: options)
+    }
+
+    func testDoesntConvertMultiStatementIfStatementWithIntLiteral() {
+        let input = """
+        let number: Int?
+        if conditionOne {
+            number = 5
+            doSomeStuffHere()
+        } else {
+            number = 10
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: FormatRules.conditionalAssignment, options: options)
+    }
+
+    func testDoesntConvertMultiStatementIfStatementWithNilLiteral() {
+        let input = """
+        let number: Int?
+        if conditionOne {
+            number = nil
+            doSomeStuffHere()
+        } else {
+            number = 10
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: FormatRules.conditionalAssignment, options: options)
+    }
+
+    func testDoesntConvertMultiStatementIfStatementWithOtherProperty() {
+        let input = """
+        let number: Int?
+        if conditionOne {
+            number = someOtherProperty
+            doSomeStuffHere()
+        } else {
+            number = 10
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: FormatRules.conditionalAssignment, options: options)
+    }
 }

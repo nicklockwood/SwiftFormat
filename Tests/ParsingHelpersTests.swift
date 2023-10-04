@@ -1771,4 +1771,189 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(formatter.endOfDeclaration(atDeclarationKeyword: 24), 39) // let defaultCacheAge
         XCTAssertEqual(formatter.endOfDeclaration(atDeclarationKeyword: 43), 112) // func requestStrategy
     }
+
+    // MARK: - parseExpressionRange
+
+    func testParseIndividualExpressions() {
+        XCTAssert(isSingleExpression(#"Foo("bar")"#))
+        XCTAssert(isSingleExpression(#"foo.bar"#))
+        XCTAssert(isSingleExpression(#"foo .bar"#))
+        XCTAssert(isSingleExpression(#"foo["bar"]("baaz")"#))
+        XCTAssert(isSingleExpression(#"foo().bar().baaz[]().bar"#))
+        XCTAssert(isSingleExpression(#"foo?.bar?().baaz!.quux ?? """#))
+        XCTAssert(isSingleExpression(#"1"#))
+        XCTAssert(isSingleExpression(#"10.0"#))
+        XCTAssert(isSingleExpression(#"10000"#))
+        XCTAssert(isSingleExpression(#"-24.0"#))
+        XCTAssert(isSingleExpression(#"3.14e2"#))
+        XCTAssert(isSingleExpression(#"1 + 2"#))
+        XCTAssert(isSingleExpression(#"-0.05 * 10"#))
+        XCTAssert(isSingleExpression(#"0...10"#))
+        XCTAssert(isSingleExpression(#"0..<20"#))
+        XCTAssert(isSingleExpression(#"0 ... array.indices.last"#))
+        XCTAssert(isSingleExpression(#"true"#))
+        XCTAssert(isSingleExpression(#"false"#))
+        XCTAssert(isSingleExpression(#"!boolean"#))
+        XCTAssert(isSingleExpression(#"boolean || !boolean && boolean"#))
+        XCTAssert(isSingleExpression(#"boolean ? value : value"#))
+        XCTAssert(isSingleExpression(#"foo"#))
+        XCTAssert(isSingleExpression(#""foo""#))
+        XCTAssert(isSingleExpression(##"#"raw string"#"##))
+        XCTAssert(isSingleExpression(###"##"raw string"##"###))
+        XCTAssert(isSingleExpression(#"["foo", "bar"]"#))
+        XCTAssert(isSingleExpression(#"["foo": bar]"#))
+        XCTAssert(isSingleExpression(#"(tuple: "foo", bar: "baaz")"#))
+        XCTAssert(isSingleExpression(#"foo.bar { "baaz"}"#))
+        XCTAssert(isSingleExpression(#"foo.bar({ "baaz" })"#))
+        XCTAssert(isSingleExpression(#"foo.bar() { "baaz" }"#))
+        XCTAssert(isSingleExpression(#"foo.bar { "baaz" } anotherTrailingClosure: { "quux" }"#))
+        XCTAssert(isSingleExpression(#"try foo()"#))
+        XCTAssert(isSingleExpression(#"try! foo()"#))
+        XCTAssert(isSingleExpression(#"try? foo()"#))
+        XCTAssert(isSingleExpression(#"try await foo()"#))
+        XCTAssert(isSingleExpression(#"foo is Foo"#))
+        XCTAssert(isSingleExpression(#"foo as Foo"#))
+        XCTAssert(isSingleExpression(#"foo as? Foo"#))
+        XCTAssert(isSingleExpression(#"foo as! Foo"#))
+        XCTAssert(isSingleExpression(#"foo ? bar : baaz"#))
+        XCTAssert(isSingleExpression(#".implicitMember"#))
+        XCTAssert(isSingleExpression(#"\Foo.explicitKeypath"#))
+        XCTAssert(isSingleExpression(#"\.inferredKeypath"#))
+        XCTAssert(isSingleExpression(#"#selector(Foo.bar)"#))
+        XCTAssert(isSingleExpression(#"#macro()"#))
+        XCTAssert(isSingleExpression(#"#outerMacro(12, #innerMacro(34), "some text")"#))
+
+        XCTAssert(isSingleExpression("""
+        foo
+            .bar
+        """))
+
+        XCTAssert(isSingleExpression("""
+        foo?
+            .bar?()
+            .baaz![0]
+        """))
+
+        XCTAssert(isSingleExpression(#"""
+        """
+        multi-line string
+        """
+        """#))
+
+        XCTAssert(isSingleExpression(##"""
+        #"""
+        raw multi-line string
+        """#
+        """##))
+
+        XCTAssertFalse(isSingleExpression(#"foo = bar"#))
+        XCTAssertFalse(isSingleExpression(#"foo = "foo"#))
+        XCTAssertFalse(isSingleExpression(#"10 20 30"#))
+        XCTAssertFalse(isSingleExpression(#"foo bar"#))
+        XCTAssertFalse(isSingleExpression(#"foo? bar"#))
+
+        XCTAssertFalse(isSingleExpression("""
+        foo
+            () // if you have a linebreak before a method call, its parsed as a tuple
+        """))
+
+        XCTAssertFalse(isSingleExpression("""
+        foo
+            [0] // if you have a linebreak before a subscript, its invalid
+        """))
+
+        XCTAssertFalse(isSingleExpression("""
+        #if DEBUG
+        foo
+        #else
+        bar
+        #endif
+        """))
+    }
+
+    func testParseMultipleSingleLineExpressions() {
+        let input = """
+        foo
+        foo?.bar().baaz()
+        24
+        !foo
+        methodCall()
+        foo ?? bar ?? baaz
+        """
+
+        // Each line is a single expression
+        let expectedExpressions = input.components(separatedBy: "\n")
+        XCTAssertEqual(parseExpressions(input), expectedExpressions)
+    }
+
+    func testParseMultipleLineExpressions() {
+        let input = """
+        [
+            "foo",
+            "bar"
+        ].map {
+            $0.uppercased()
+        }
+
+        foo?.bar().methodCall(
+            foo: foo,
+            bar: bar)
+
+        foo.multipleTrailingClosure {
+            print("foo")
+        } anotherTrailingClosure: {
+            print("bar")
+        }
+        """
+
+        let expectedExpressions = [
+            """
+            [
+                "foo",
+                "bar"
+            ].map {
+                $0.uppercased()
+            }
+            """,
+            """
+            foo?.bar().methodCall(
+                foo: foo,
+                bar: bar)
+            """,
+            """
+            foo.multipleTrailingClosure {
+                print("foo")
+            } anotherTrailingClosure: {
+                print("bar")
+            }
+            """,
+        ]
+
+        XCTAssertEqual(parseExpressions(input), expectedExpressions)
+    }
+
+    func isSingleExpression(_ string: String) -> Bool {
+        let formatter = Formatter(tokenize(string))
+        guard let expressionRange = formatter.parseExpressionRange(startingAt: 0) else { return false }
+        return expressionRange.upperBound == formatter.tokens.indices.last!
+    }
+
+    func parseExpressions(_ string: String) -> [String] {
+        let formatter = Formatter(tokenize(string))
+        var expressions = [String]()
+
+        var parseIndex = 0
+        while let expressionRange = formatter.parseExpressionRange(startingAt: parseIndex) {
+            let expression = formatter.tokens[expressionRange].map { $0.string }.joined()
+            expressions.append(expression)
+
+            if let nextExpressionIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: expressionRange.upperBound) {
+                parseIndex = nextExpressionIndex
+            } else {
+                return expressions
+            }
+        }
+
+        return expressions
+    }
 }

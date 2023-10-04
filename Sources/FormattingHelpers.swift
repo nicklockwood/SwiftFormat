@@ -1214,43 +1214,25 @@ extension Formatter {
             return isSingleStatement && isOnlyStatement
         }
 
-        var index = startOfBody + 1
-        while index < endOfScopeIndex {
-            switch tokens[index] {
-            case .startOfScope("("), .startOfScope("//"), .startOfScope("/*"),
-                 .startOfScope where tokens[index].isStringDelimiter:
-                break
-            case .startOfScope("{") where isStartOfClosure(at: index):
-                index = endOfScope(at: index) ?? index
-            case .startOfScope:
-                // any other statement-forming scope (e.g. guard, #if)
-                // within the main body, that isn't itself a closure
-                return false
-            case .keyword("return"):
-                // any return statement within the main body that isn't at the very beginning of the body
-                if self.index(of: .nonSpaceOrCommentOrLinebreak, before: index) != startOfBody {
-                    return false
-                }
-            case .delimiter(";"):
-                // if there are any semicolons within the scope but not at the end of a line
-                let nextTokenIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index) ?? index
-                if startOfLine(at: index) == startOfLine(at: nextTokenIndex) {
-                    return false
-                }
-            case .operator("=", _), .keyword("fallthrough"):
-                return false
-            case .endOfScope(")"):
-                // if there is a method call immediately followed an identifier
-                if next(.nonSpaceOrCommentOrLinebreak, after: index)?.isIdentifier == true {
-                    return false
-                }
-            default:
-                break
-            }
-            index += 1
+        // The body should contain exactly one expression.
+        // We can confirm this by parsing the body with `parseExpressionRange`,
+        // and checking that the toke after that expression is just the end of the scope.
+        guard var firstTokenInBody = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfBody) else {
+            return false
         }
 
-        return true
+        // Skip over any optional `return` keyword
+        if tokens[firstTokenInBody] == .keyword("return") {
+            guard let tokenAfterReturnKeyword = index(of: .nonSpaceOrCommentOrLinebreak, after: firstTokenInBody) else { return false }
+            firstTokenInBody = tokenAfterReturnKeyword
+        }
+        guard let expressionRange = parseExpressionRange(startingAt: firstTokenInBody),
+              let nextIndexAfterExpression = index(of: .nonSpaceOrCommentOrLinebreak, after: expressionRange.upperBound)
+        else {
+            return false
+        }
+
+        return nextIndexAfterExpression == endOfScopeIndex
     }
 
     /// The token before the body of the scope following the given `startOfScopeIndex`.

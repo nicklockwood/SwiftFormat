@@ -1272,6 +1272,160 @@ extension Formatter {
         return nil
     }
 
+    /// Parses the expression starting at the given index.
+    ///
+    /// A full list of expression types are available here:
+    /// https://docs.swift.org/swift-book/documentation/the-swift-programming-language/expressions/
+    ///
+    /// Can be any of:
+    ///  - `identifier`
+    ///  - `1` (integer literal)
+    ///  - `1.0` (double literal)
+    ///  - `"foo"` (string literal)
+    ///  - `(...)` (tuple)
+    ///  - `[...]` (array or dictionary)
+    ///  - `{ ... }` (closure)
+    ///  - `#selector(...)` / macro invocations
+    ///  - Any value can be preceded by a prefix operator
+    ///  - Any value can be preceded by `try`, `try?`, `try!`, or `await`
+    ///  - Any value can be followed by a postfix operator
+    ///  - Any value can be followed by an infix operator plus a right-hand-side expression.
+    ///  - Any value can be followed by an arbitrary number of method calls `(...)` or subscripts `[...]`.
+    ///  - Any value can be followed by a `.identifier`
+    func parseExpressionRange(startingAt startIndex: Int) -> ClosedRange<Int>? {
+        // Any expression can start with a prefix operator, or `await`
+        if tokens[startIndex].isOperator(ofType: .prefix) || tokens[startIndex].string == "await",
+           let nextTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: startIndex),
+           let followingExpression = parseExpressionRange(startingAt: nextTokenIndex)
+        {
+            return startIndex ... followingExpression.upperBound
+        }
+
+        // Any value can be preceded by `try`
+        if tokens[startIndex].string == "try" {
+            guard var nextTokenAfterTry = index(of: .nonSpaceOrCommentOrLinebreak, after: startIndex) else { return nil }
+
+            // `try` can either be by itself, or followed by `?` or `!` (`try`, `try?`, or `try!`).
+            // If present, skip the operator.
+            if tokens[nextTokenAfterTry] == .operator("?", .postfix)
+                || tokens[nextTokenAfterTry] == .operator("!", .postfix)
+            {
+                guard let nextTokenAfterTryOperator = index(of: .nonSpaceOrCommentOrLinebreak, after: nextTokenAfterTry) else { return nil }
+                nextTokenAfterTry = nextTokenAfterTryOperator
+            }
+
+            if let startOfFollowingExpressionIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: nextTokenAfterTry),
+               let followingExpression = parseExpressionRange(startingAt: startOfFollowingExpressionIndex)
+            {
+                return startIndex ... followingExpression.upperBound
+            }
+        }
+
+        // Parse the base of any potential method call or chain,
+        // which is always a simple identifier or a simple literal.
+        var endOfExpression: Int
+        switch tokens[startIndex] {
+        case .identifier, .number:
+            endOfExpression = startIndex
+
+        case .startOfScope:
+            // All types of scopes (tuples, arrays, closures, strings) are considered expressions
+            // _except_ for conditional complication blocks.
+            if ["#if", "#elseif", "#else"].contains(tokens[startIndex].string) {
+                return nil
+            }
+
+            guard let endOfScope = endOfScope(at: startIndex) else { return nil }
+            endOfExpression = endOfScope
+
+        case let .keyword(keyword) where keyword.hasPrefix("#"):
+            // #selector() and macro expansions like #macro() are parsed into keyword tokens.
+            endOfExpression = startIndex
+
+        default:
+            return nil
+        }
+
+        while let nextTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfExpression),
+              let nextToken = token(at: nextTokenIndex)
+        {
+            switch nextToken {
+            // Any expression can be followed by an arbitrary number of method calls `(...)` or subscripts `[...]`.
+            case .startOfScope("("), .startOfScope("["):
+                // If there's a linebreak between an expression and a paren or subscript,
+                // then it's not parsed as a method call and is actually a separate expression
+                if tokens[endOfExpression ..< nextTokenIndex].contains(where: \.isLinebreak) {
+                    return startIndex ... endOfExpression
+                }
+
+                guard let endOfScope = endOfScope(at: nextTokenIndex) else { return nil }
+                endOfExpression = endOfScope
+
+            /// Any value can be followed by a `.identifier`
+            case .delimiter("."):
+                guard let nextIdentifierIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: nextTokenIndex),
+                      tokens[nextIdentifierIndex].isIdentifier
+                else { return startIndex ... endOfExpression }
+
+                endOfExpression = nextIdentifierIndex
+
+            /// Any value can be followed by a postfix operator
+            case .operator(_, .postfix):
+                endOfExpression = nextTokenIndex
+
+            /// Any value can be followed by an infix operator, plus another expression
+            ///  - However, the assignment operator (`=`) is special and _isn't_ an expression
+            case let .operator(operatorString, .infix) where operatorString != "=":
+                guard let nextTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: nextTokenIndex),
+                      let nextExpression = parseExpressionRange(startingAt: nextTokenIndex)
+                else { return startIndex ... endOfExpression }
+
+                endOfExpression = nextExpression.upperBound
+
+            /// Any value can be followed by `is`, `as`, `as?`, or `as?`, plus another expression
+            case .keyword("is"), .keyword("as"):
+                guard var nextTokenAfterKeyword = index(of: .nonSpaceOrCommentOrLinebreak, after: nextTokenIndex) else { return nil }
+
+                // `as` can either be by itself, or followed by `?` or `!` (`as`, `as?`, or `as!`).
+                // If present, skip the operator.
+                if tokens[nextTokenAfterKeyword] == .operator("?", .postfix)
+                    || tokens[nextTokenAfterKeyword] == .operator("!", .postfix)
+                {
+                    guard let nextTokenAfterOperator = index(of: .nonSpaceOrCommentOrLinebreak, after: nextTokenAfterKeyword) else { return nil }
+                    nextTokenAfterKeyword = nextTokenAfterOperator
+                }
+
+                guard let followingExpression = parseExpressionRange(startingAt: nextTokenAfterKeyword) else {
+                    return startIndex ... endOfExpression
+                }
+
+                endOfExpression = followingExpression.upperBound
+
+            /// Any value can be followed by a trailing closure
+            case .startOfScope("{"):
+                guard let endOfScope = endOfScope(at: nextTokenIndex) else { return nil }
+                endOfExpression = endOfScope
+
+            /// Some values can be followed by a labeled trailing closure,
+            /// like (expression) trailingClosure: { ... }
+            case .identifier:
+                guard let colonIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: nextTokenIndex),
+                      tokens[colonIndex] == .delimiter(":"),
+                      let startOfClosureIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: colonIndex),
+                      tokens[startOfClosureIndex] == .startOfScope("{"),
+                      let endOfClosureScope = endOfScope(at: startOfClosureIndex)
+                else { return startIndex ... endOfExpression }
+
+                endOfExpression = endOfClosureScope
+
+            default:
+                return startIndex ... endOfExpression
+            }
+        }
+
+        return startIndex ... endOfExpression
+    }
+
     struct ImportRange: Comparable {
         var module: String
         var range: Range<Int>

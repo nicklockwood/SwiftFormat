@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.52.7](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.52.7) (2023-10-06)
+
+- Fixed bug where `conditionalAssignment` and `redundantClosure` rules would be applied incorrectly
+- Fixed `redundantClosure` rule leaving stray `try` or `await` keywords behind
+
 ## [0.52.6](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.52.6) (2023-10-01)
 
 - Fixed bug where `redundantReturn` rule was incorrectly applied to consecutive `if` statements in Swift 5.9

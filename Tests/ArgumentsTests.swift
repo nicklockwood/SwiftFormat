@@ -428,6 +428,14 @@ class ArgumentsTests: XCTestCase {
         XCTAssertEqual(args["swiftversion"], "5.1")
     }
 
+    func testParseArgumentsContainingDisableAll() throws {
+        let config = "--disable all"
+        let data = Data(config.utf8)
+        let args = try parseConfigFile(data)
+        let options = try Options(args, in: "/")
+        XCTAssertEqual(options.rules, [])
+    }
+
     // MARK: config file serialization
 
     // file header comment encoding

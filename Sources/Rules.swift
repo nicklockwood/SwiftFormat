@@ -6757,7 +6757,32 @@ public struct _FormatRules {
                 return !formatter.isConditionalStatement(at: index)
             }
 
+            var commentIndices = [index]
+            if token == .startOfScope("//") {
+                var i = index
+                while let prevLineIndex = formatter.index(of: .linebreak, before: i),
+                      case let lineStartIndex = formatter.startOfLine(at: prevLineIndex, excludingIndent: true),
+                      formatter.token(at: lineStartIndex) == .startOfScope("//")
+                {
+                    commentIndices.append(lineStartIndex)
+                    i = lineStartIndex
+                }
+                i = index
+                while let nextLineIndex = formatter.index(of: .linebreak, after: i),
+                      let lineStartIndex = formatter.index(of: .nonSpace, after: nextLineIndex),
+                      formatter.token(at: lineStartIndex) == .startOfScope("//")
+                {
+                    commentIndices.append(lineStartIndex)
+                    i = lineStartIndex
+                }
+            }
+
             let useDocComment = shouldBeDocComment(at: index, endOfComment: endOfComment)
+            guard commentIndices.allSatisfy({
+                shouldBeDocComment(at: $0, endOfComment: endOfComment) == useDocComment
+            }) else {
+                return
+            }
 
             // Doc comment tokens like `///` and `/**` aren't parsed as a
             // single `.startOfScope` token -- they're parsed as:

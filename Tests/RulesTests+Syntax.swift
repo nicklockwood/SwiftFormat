@@ -3178,6 +3178,24 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.docComments)
     }
 
+    func testDoesntConvertCommentAfterTODOToDocComments() {
+        let input = """
+        // TODO: Clean up this mess
+        // because it's bothering me
+        func doSomething() {}
+        """
+        testFormatting(for: input, rule: FormatRules.docComments)
+    }
+
+    func testDoesntConvertCommentBeforeTODOToDocComments() {
+        let input = """
+        // Something, something
+        // TODO: Clean up this mess
+        func doSomething() {}
+        """
+        testFormatting(for: input, rule: FormatRules.docComments)
+    }
+
     func testConvertNoteCommentsToDocComments() {
         let input = """
         // Does something

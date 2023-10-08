@@ -6697,33 +6697,27 @@ public struct _FormatRules {
     ) { formatter in
         formatter.forEach(.startOfScope) { index, token in
             guard [.startOfScope("//"), .startOfScope("/*")].contains(token),
-                  let endOfComment = formatter.endOfScope(at: index)
-            else { return }
+                  let endOfComment = formatter.endOfScope(at: index),
+                  let nextDeclarationIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: endOfComment)
+            else {
+                return
+            }
 
-            let shouldBeDocComment: Bool = {
+            func shouldBeDocComment(at index: Int, endOfComment: Int) -> Bool {
                 // Check if this is a special type of comment that isn't documentation
                 if case let .commentBody(body)? = formatter.next(.nonSpace, after: index), body.isCommentDirective {
                     return false
                 }
 
                 // Check if this token defines a declaration that supports doc comments
-                let nextDeclarationIndex: Int
-                do {
-                    guard var nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: endOfComment) else {
-                        return false
-                    }
-                    var token = formatter.tokens[nextIndex]
-                    if token.isAttribute || token.isModifierKeyword, let index = formatter.index(after: nextIndex, where: {
-                        $0.isDeclarationTypeKeyword
-                    }) {
-                        nextIndex = index
-                        token = formatter.tokens[nextIndex]
-                    }
-                    if token.isDeclarationTypeKeyword(excluding: ["import"]) {
-                        nextDeclarationIndex = nextIndex
-                    } else {
-                        return false
-                    }
+                var declarationToken = formatter.tokens[nextDeclarationIndex]
+                if declarationToken.isAttribute || declarationToken.isModifierKeyword,
+                   let index = formatter.index(after: nextDeclarationIndex, where: { $0.isDeclarationTypeKeyword })
+                {
+                    declarationToken = formatter.tokens[index]
+                }
+                guard declarationToken.isDeclarationTypeKeyword(excluding: ["import"]) else {
+                    return false
                 }
 
                 // Only use doc comments on declarations in type bodies, or top-level declarations
@@ -6761,7 +6755,9 @@ public struct _FormatRules {
 
                 // Comments inside conditional statements are not doc comments
                 return !formatter.isConditionalStatement(at: index)
-            }()
+            }
+
+            let useDocComment = shouldBeDocComment(at: index, endOfComment: endOfComment)
 
             // Doc comment tokens like `///` and `/**` aren't parsed as a
             // single `.startOfScope` token -- they're parsed as:
@@ -6780,10 +6776,11 @@ public struct _FormatRules {
             if let commentBody = formatter.token(at: index + 1),
                case .commentBody = commentBody
             {
-                if shouldBeDocComment, !commentBody.string.hasPrefix(startOfDocCommentBody) {
+                let isDocComment = commentBody.string.hasPrefix(startOfDocCommentBody)
+                if useDocComment, !isDocComment {
                     let updatedCommentBody = "\(startOfDocCommentBody)\(commentBody.string)"
                     formatter.replaceToken(at: index + 1, with: .commentBody(updatedCommentBody))
-                } else if !shouldBeDocComment, commentBody.string.hasPrefix(startOfDocCommentBody) {
+                } else if !useDocComment, isDocComment {
                     let prefix = commentBody.string.prefix(while: { String($0) == startOfDocCommentBody })
 
                     // Do nothing if this is a unusual comment like `//////////////////`
@@ -6800,7 +6797,7 @@ public struct _FormatRules {
                     )
                 }
 
-            } else if shouldBeDocComment {
+            } else if useDocComment {
                 formatter.insert(.commentBody(startOfDocCommentBody), at: index + 1)
             }
         }

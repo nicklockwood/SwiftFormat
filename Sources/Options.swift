@@ -566,6 +566,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var wrapTypealiases: WrapMode
     public var wrapEnumCases: WrapEnumCases
     public var closingParenOnSameLine: Bool
+    public var forceClosingParenOnSameLineForFunctionCalls: Bool
     public var wrapReturnType: WrapReturnType
     public var wrapConditions: WrapMode
     public var wrapTernaryOperators: TernaryOperatorWrapMode
@@ -673,6 +674,7 @@ public struct FormatOptions: CustomStringConvertible {
                 wrapTypealiases: WrapMode = .preserve,
                 wrapEnumCases: WrapEnumCases = .always,
                 closingParenOnSameLine: Bool = false,
+                forceClosingParenOnSameLineForFunctionCalls: Bool = false,
                 wrapReturnType: WrapReturnType = .preserve,
                 wrapConditions: WrapMode = .preserve,
                 wrapTernaryOperators: TernaryOperatorWrapMode = .default,
@@ -770,6 +772,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.wrapTypealiases = wrapTypealiases
         self.wrapEnumCases = wrapEnumCases
         self.closingParenOnSameLine = closingParenOnSameLine
+        self.forceClosingParenOnSameLineForFunctionCalls = forceClosingParenOnSameLineForFunctionCalls
         self.wrapReturnType = wrapReturnType
         self.wrapConditions = wrapConditions
         self.wrapTernaryOperators = wrapTernaryOperators

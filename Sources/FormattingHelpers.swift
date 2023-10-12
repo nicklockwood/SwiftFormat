@@ -397,7 +397,25 @@ extension Formatter {
             keepParameterLabelsOnSameLine(startOfScope: i,
                                           endOfScope: &endOfScope)
 
-            if endOfScopeOnSameLine {
+            let isFunctionCall: Bool = {
+                if let openingParenIndex = self.index(of: .startOfScope("("), before: i + 1) {
+                    if let prevTokenIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: openingParenIndex),
+                       tokens[prevTokenIndex].isIdentifier
+                    {
+                        if let keywordIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: prevTokenIndex),
+                           tokens[keywordIndex] == .keyword("func") || tokens[keywordIndex] == .keyword("init")
+                        {
+                            return false
+                        }
+                        return true
+                    }
+                }
+                return false
+            }()
+
+            if isFunctionCall, options.forceClosingParenOnSameLineForFunctionCalls {
+                removeLinebreakBeforeEndOfScope(at: &endOfScope)
+            } else if endOfScopeOnSameLine {
                 removeLinebreakBeforeEndOfScope(at: &endOfScope)
             } else {
                 // Insert linebreak before closing paren

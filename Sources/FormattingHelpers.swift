@@ -397,23 +397,7 @@ extension Formatter {
             keepParameterLabelsOnSameLine(startOfScope: i,
                                           endOfScope: &endOfScope)
 
-            let isFunctionCall: Bool = {
-                if let openingParenIndex = self.index(of: .startOfScope("("), before: i + 1) {
-                    if let prevTokenIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: openingParenIndex),
-                       tokens[prevTokenIndex].isIdentifier
-                    {
-                        if let keywordIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: prevTokenIndex),
-                           tokens[keywordIndex] == .keyword("func") || tokens[keywordIndex] == .keyword("init")
-                        {
-                            return false
-                        }
-                        return true
-                    }
-                }
-                return false
-            }()
-
-            if isFunctionCall, options.forceClosingParenOnSameLineForFunctionCalls {
+            if options.forceClosingParenOnSameLineForFunctionCalls, isFunctionCall(at: i) {
                 removeLinebreakBeforeEndOfScope(at: &endOfScope)
             } else if endOfScopeOnSameLine {
                 removeLinebreakBeforeEndOfScope(at: &endOfScope)
@@ -1435,6 +1419,23 @@ extension Formatter {
             }
         }
         return allSatisfy
+    }
+
+    /// Whether the given index is in a function call (not declaration)
+    func isFunctionCall(at index: Int) -> Bool {
+        if let openingParenIndex = self.index(of: .startOfScope("("), before: index + 1) {
+            if let prevTokenIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: openingParenIndex),
+               tokens[prevTokenIndex].isIdentifier
+            {
+                if let keywordIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: prevTokenIndex),
+                   tokens[keywordIndex] == .keyword("func") || tokens[keywordIndex] == .keyword("init")
+                {
+                    return false
+                }
+                return true
+            }
+        }
+        return false
     }
 
     /// Whether the given index is directly within the body of the given scope, or part of a nested closure

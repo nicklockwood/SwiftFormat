@@ -1436,6 +1436,86 @@ class WrappingTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
     }
 
+    func testWrapParametersFunctionDeclarationClosingParenOnSameLine() {
+        let input = """
+        func foo(
+            bar _: Int,
+            baz _: String
+        ) {}
+        """
+        let output = """
+        func foo(
+            bar _: Int,
+            baz _: String) {}
+        """
+        let options = FormatOptions(wrapArguments: .beforeFirst, closingParenOnSameLine: true)
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+    }
+
+    func testWrapParametersFunctionDeclarationClosingParenOnNextLine() {
+        let input = """
+        func foo(
+            bar _: Int,
+            baz _: String) {}
+        """
+        let output = """
+        func foo(
+            bar _: Int,
+            baz _: String
+        ) {}
+        """
+        let options = FormatOptions(wrapArguments: .beforeFirst, closingParenOnSameLine: false)
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+    }
+
+    func testWrapParametersFunctionDeclarationClosingParenOnSameLineAndForce() {
+        let input = """
+        func foo(
+            bar _: Int,
+            baz _: String
+        ) {}
+        """
+        let output = """
+        func foo(
+            bar _: Int,
+            baz _: String) {}
+        """
+        let options = FormatOptions(wrapArguments: .beforeFirst, closingParenOnSameLine: true, forceClosingParenOnSameLineForFunctionCalls: true)
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+    }
+
+    func testWrapParametersFunctionDeclarationClosingParenOnNextLineAndForce() {
+        let input = """
+        func foo(
+            bar _: Int,
+            baz _: String) {}
+        """
+        let output = """
+        func foo(
+            bar _: Int,
+            baz _: String
+        ) {}
+        """
+        let options = FormatOptions(wrapArguments: .beforeFirst, closingParenOnSameLine: false, forceClosingParenOnSameLineForFunctionCalls: true)
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+    }
+
+    func testWrapParametersFunctionCallClosingParenOnNextLineAndForce() {
+        let input = """
+        foo(
+            bar: 42,
+            baz: "foo"
+        )
+        """
+        let output = """
+        foo(
+            bar: 42,
+            baz: "foo")
+        """
+        let options = FormatOptions(wrapArguments: .beforeFirst, closingParenOnSameLine: false, forceClosingParenOnSameLineForFunctionCalls: true)
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+    }
+
     func testIndentMultilineStringWhenWrappingArguments() {
         let input = """
         foobar(foo: \"\""

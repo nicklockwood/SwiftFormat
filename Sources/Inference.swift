@@ -407,15 +407,15 @@ private struct Inference {
             }
         }
 
-        // Decide on forceClosingParenOnSameLineForFunctionCalls
+        // Decide on closingCallSiteParenOnSameLine
         if functionCallSameLine > functionCallBalanced && functionDeclarationBalanced > functionDeclarationSameLine {
-            options.forceClosingParenOnSameLineForFunctionCalls = true
+            options.closingCallSiteParenOnSameLine = true
         } else {
-            options.forceClosingParenOnSameLineForFunctionCalls = false
+            options.closingCallSiteParenOnSameLine = false
         }
 
-        // If forceClosingParenOnSameLineForFunctionCalls is true, trust only the declarations to infer closingParenOnSameLine
-        if options.forceClosingParenOnSameLineForFunctionCalls {
+        // If closingCallSiteParenOnSameLine is true, trust only the declarations to infer closingParenOnSameLine
+        if options.closingCallSiteParenOnSameLine {
             options.closingParenOnSameLine = functionDeclarationSameLine > functionDeclarationBalanced
         } else {
             let balanced = functionDeclarationBalanced + functionCallBalanced

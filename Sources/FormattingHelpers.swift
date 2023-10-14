@@ -397,7 +397,7 @@ extension Formatter {
             keepParameterLabelsOnSameLine(startOfScope: i,
                                           endOfScope: &endOfScope)
 
-            if options.forceClosingParenOnSameLineForFunctionCalls, isFunctionCall(at: i) {
+            if options.closingCallSiteParenOnSameLine, isFunctionCall(at: i) {
                 removeLinebreakBeforeEndOfScope(at: &endOfScope)
             } else if endOfScopeOnSameLine {
                 removeLinebreakBeforeEndOfScope(at: &endOfScope)

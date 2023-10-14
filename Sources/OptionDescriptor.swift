@@ -511,11 +511,11 @@ struct _Descriptors {
         falseValues: ["balanced"]
     )
     let forceClosingParenOnSameLineForFunctionCalls = OptionDescriptor(
-        argumentName: "closingparenfcall",
+        argumentName: "callsiteparen",
         displayName: "Force Closing Paren on same line for function calls",
-        help: "Force the closingParenOnSameLine option specifically for function calls: \"inherit\" (default) or \"force-same-line\"",
+        help: "Closing paren at call site: \"inherit\" (default) or \"same-line\"",
         keyPath: \.forceClosingParenOnSameLineForFunctionCalls,
-        trueValues: ["force-same-line", "same-line"],
+        trueValues: ["same-line"],
         falseValues: ["inherit"]
     )
     let uppercaseHex = OptionDescriptor(

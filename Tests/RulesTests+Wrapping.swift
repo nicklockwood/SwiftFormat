@@ -1480,7 +1480,7 @@ class WrappingTests: RulesTests {
             bar _: Int,
             baz _: String) {}
         """
-        let options = FormatOptions(wrapArguments: .beforeFirst, closingParenOnSameLine: true, forceClosingParenOnSameLineForFunctionCalls: true)
+        let options = FormatOptions(wrapArguments: .beforeFirst, closingParenOnSameLine: true, closingCallSiteParenOnSameLine: true)
         testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
     }
 
@@ -1496,7 +1496,7 @@ class WrappingTests: RulesTests {
             baz _: String
         ) {}
         """
-        let options = FormatOptions(wrapArguments: .beforeFirst, closingParenOnSameLine: false, forceClosingParenOnSameLineForFunctionCalls: true)
+        let options = FormatOptions(wrapArguments: .beforeFirst, closingParenOnSameLine: false, closingCallSiteParenOnSameLine: true)
         testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
     }
 
@@ -1512,7 +1512,7 @@ class WrappingTests: RulesTests {
             bar: 42,
             baz: "foo")
         """
-        let options = FormatOptions(wrapArguments: .beforeFirst, closingParenOnSameLine: false, forceClosingParenOnSameLineForFunctionCalls: true)
+        let options = FormatOptions(wrapArguments: .beforeFirst, closingParenOnSameLine: false, closingCallSiteParenOnSameLine: true)
         testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
     }
 

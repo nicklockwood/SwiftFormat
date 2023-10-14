@@ -195,7 +195,8 @@ class MetadataTests: XCTestCase {
                 case .identifier("wrapCollectionsAndArguments"):
                     referencedOptions += [
                         Descriptors.wrapArguments, Descriptors.wrapParameters, Descriptors.wrapCollections,
-                        Descriptors.closingParenOnSameLine, Descriptors.linebreak, Descriptors.truncateBlankLines,
+                        Descriptors.closingParenOnSameLine, Descriptors.closingCallSiteParenOnSameLine,
+                        Descriptors.linebreak, Descriptors.truncateBlankLines,
                         Descriptors.indent, Descriptors.tabWidth, Descriptors.smartTabs, Descriptors.maxWidth,
                         Descriptors.assetLiteralWidth, Descriptors.wrapReturnType, Descriptors.wrapEffects,
                         Descriptors.wrapConditions, Descriptors.wrapTypealiases, Descriptors.wrapTernaryOperators, Descriptors.conditionsWrap,

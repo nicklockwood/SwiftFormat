@@ -1196,25 +1196,12 @@ extension Formatter {
 
     /// Whether or not the code block starting at the given `.startOfScope` token
     /// has a single statement. This makes it eligible to be used with implicit return.
-    func blockBodyHasSingleStatement(atStartOfScope startOfScopeIndex: Int) -> Bool {
+    func blockBodyHasSingleStatement(
+        atStartOfScope startOfScopeIndex: Int,
+        includingConditionalStatements: Bool = true
+    ) -> Bool {
         guard let endOfScopeIndex = endOfScope(at: startOfScopeIndex) else { return false }
         let startOfBody = self.startOfBody(atStartOfScope: startOfScopeIndex)
-
-        // In Swift 5.9+, if and switch statements where each branch is a single statement
-        // are also considered single statements
-        if options.swiftVersion >= "5.9",
-           let firstTokenInBody = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfBody),
-           let conditionalBranches = conditionalBranches(at: firstTokenInBody)
-        {
-            let isSingleStatement = conditionalBranches.allSatisfy { branch in
-                blockBodyHasSingleStatement(atStartOfScope: branch.startOfBranch)
-            }
-
-            let endOfStatement = conditionalBranches.last?.endOfBranch ?? firstTokenInBody
-            let isOnlyStatement = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfStatement) == endOfScopeIndex
-
-            return isSingleStatement && isOnlyStatement
-        }
 
         // The body should contain exactly one expression.
         // We can confirm this by parsing the body with `parseExpressionRange`,
@@ -1228,6 +1215,23 @@ extension Formatter {
             guard let tokenAfterReturnKeyword = index(of: .nonSpaceOrCommentOrLinebreak, after: firstTokenInBody) else { return false }
             firstTokenInBody = tokenAfterReturnKeyword
         }
+
+        // In Swift 5.9+, if and switch statements where each branch is a single statement
+        // are also considered single statements
+        if options.swiftVersion >= "5.9",
+           includingConditionalStatements,
+           let conditionalBranches = conditionalBranches(at: firstTokenInBody)
+        {
+            let isSingleStatement = conditionalBranches.allSatisfy { branch in
+                blockBodyHasSingleStatement(atStartOfScope: branch.startOfBranch, includingConditionalStatements: true)
+            }
+
+            let endOfStatement = conditionalBranches.last?.endOfBranch ?? firstTokenInBody
+            let isOnlyStatement = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfStatement) == endOfScopeIndex
+
+            return isSingleStatement && isOnlyStatement
+        }
+
         guard let expressionRange = parseExpressionRange(startingAt: firstTokenInBody),
               let nextIndexAfterExpression = index(of: .nonSpaceOrCommentOrLinebreak, after: expressionRange.upperBound)
         else {
@@ -1257,6 +1261,26 @@ extension Formatter {
     /// If `index` is the start of an `if` or `switch` statement,
     /// finds and returns all of the statement branches.
     func conditionalBranches(at index: Int) -> [ConditionalBranch]? {
+        // Skip over any `try`, `try?`, `try!`, or `await` token,
+        // which are valid before an if/switch expression.
+        if tokens[index] == .keyword("await"),
+           let nextToken = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index)
+        {
+            return conditionalBranches(at: nextToken)
+        }
+
+        if tokens[index] == .keyword("try"),
+           let tokenAfterTry = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index)
+        {
+            if tokens[tokenAfterTry] == .operator("!", .postfix) || tokens[tokenAfterTry] == .operator("?", .postfix),
+               let tokenAfterOperator = self.index(of: .nonSpaceOrCommentOrLinebreak, after: tokenAfterTry)
+            {
+                return conditionalBranches(at: tokenAfterOperator)
+            } else {
+                return conditionalBranches(at: tokenAfterTry)
+            }
+        }
+
         if tokens[index] == .keyword("if") {
             return ifStatementBranches(at: index)
         } else if tokens[index] == .keyword("switch") {

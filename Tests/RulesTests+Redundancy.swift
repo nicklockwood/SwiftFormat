@@ -7724,6 +7724,69 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantClosure)
     }
 
+    func testRedundantClosureWithExplicitReturn() {
+        let input = """
+        let foo = { return "Foo" }()
+
+        let bar = {
+            return if Bool.random() {
+                "Bar"
+            } else {
+                "Baaz"
+            }
+        }()
+        """
+
+        let output = """
+        let foo = "Foo"
+
+        let bar = if Bool.random() {
+                "Bar"
+            } else {
+                "Baaz"
+            }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, output, rule: FormatRules.redundantClosure, options: options, exclude: ["indent"])
+    }
+
+    func testRedundantClosureWithExplicitReturn2() {
+        let input = """
+        func foo() -> String {
+            methodCall()
+            return { return "Foo" }()
+        }
+
+        func bar() -> String {
+            methodCall()
+            return { "Bar" }()
+        }
+
+        func baaz() -> String {
+            { return "Baaz" }()
+        }
+        """
+
+        let output = """
+        func foo() -> String {
+            methodCall()
+            return "Foo"
+        }
+
+        func bar() -> String {
+            methodCall()
+            return "Bar"
+        }
+
+        func baaz() -> String {
+            "Baaz"
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.redundantClosure, exclude: ["redundantReturn"])
+    }
+
     func testKeepsClosureThatIsNotCalled() {
         let input = """
         let foo = { "Foo" }
@@ -8104,6 +8167,307 @@ class RedundancyTests: RulesTests {
         let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, output, rule: FormatRules.redundantClosure, options: options,
                        exclude: ["redundantReturn", "indent"])
+    }
+
+    func testRedundantClosureDoesntLeaveInvalidSwitchExpressionInOperatorChain() {
+        let input = """
+        private enum Format {
+            case uint8
+            case uint16
+
+            var bytes: Int {
+                {
+                    switch self {
+                    case .uint8: UInt8.bitWidth
+                    case .uint16: UInt16.bitWidth
+                    }
+                }() / 8
+            }
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: FormatRules.redundantClosure, options: options)
+    }
+
+    func testRedundantClosureDoesntLeaveInvalidIfExpressionInOperatorChain() {
+        let input = """
+        private enum Format {
+            case uint8
+            case uint16
+
+            var bytes: Int {
+                {
+                    if self == .uint8 {
+                        UInt8.bitWidth
+                    } else {
+                        UInt16.bitWidth
+                    }
+                }() / 8
+            }
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: FormatRules.redundantClosure, options: options)
+    }
+
+    func testRedundantClosureDoesntLeaveInvalidIfExpressionInOperatorChain2() {
+        let input = """
+        private enum Format {
+            case uint8
+            case uint16
+
+            var bytes: Int {
+                8 / {
+                    if self == .uint8 {
+                        UInt8.bitWidth
+                    } else {
+                        UInt16.bitWidth
+                    }
+                }()
+            }
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: FormatRules.redundantClosure, options: options)
+    }
+
+    func testRedundantClosureDoesntLeaveInvalidIfExpressionInOperatorChain3() {
+        let input = """
+        private enum Format {
+            case uint8
+            case uint16
+
+            var bytes = 8 / {
+                if self == .uint8 {
+                    UInt8.bitWidth
+                } else {
+                    UInt16.bitWidth
+                }
+            }()
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: FormatRules.redundantClosure, options: options)
+    }
+
+    func testRedundantClosureDoesRemoveRedundantIfStatementClosureInAssignmentPosition() {
+        let input = """
+        private enum Format {
+            case uint8
+            case uint16
+
+            var bytes = {
+                if self == .uint8 {
+                    UInt8.bitWidth
+                } else {
+                    UInt16.bitWidth
+                }
+            }()
+        }
+        """
+
+        let output = """
+        private enum Format {
+            case uint8
+            case uint16
+
+            var bytes = if self == .uint8 {
+                    UInt8.bitWidth
+                } else {
+                    UInt16.bitWidth
+                }
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, output, rule: FormatRules.redundantClosure, options: options, exclude: ["indent"])
+    }
+
+    func testRedundantClosureDoesntLeaveInvalidSwitchExpressionInArray() {
+        let input = """
+        private func constraint() -> [Int] {
+            [
+                1,
+                2,
+                {
+                    if Bool.random() {
+                        3
+                    } else {
+                        4
+                    }
+                }(),
+            ]
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: FormatRules.redundantClosure, options: options)
+    }
+
+    func testRedundantClosureRemovesClosureAsReturnTryStatement() {
+        let input = """
+        func method() -> Int {
+            return {
+              return try! if Bool.random() {
+                  randomThrows()
+              } else {
+                  randomThrows()
+              }
+            }()
+        }
+        """
+
+        let output = """
+        func method() -> Int {
+            return try! if Bool.random() {
+                  randomThrows()
+              } else {
+                  randomThrows()
+              }
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, output, rule: FormatRules.redundantClosure, options: options, exclude: ["redundantReturn", "indent"])
+    }
+
+    func testRedundantClosureRemovesClosureAsReturnTryStatement2() {
+        let input = """
+        func method() throws -> Int {
+            return try {
+              return try if Bool.random() {
+                  randomThrows()
+              } else {
+                  randomThrows()
+              }
+            }()
+        }
+        """
+
+        let output = """
+        func method() throws -> Int {
+            return try if Bool.random() {
+                  randomThrows()
+              } else {
+                  randomThrows()
+              }
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, output, rule: FormatRules.redundantClosure, options: options, exclude: ["redundantReturn", "indent"])
+    }
+
+    func testRedundantClosureRemovesClosureAsReturnTryStatement3() {
+        let input = """
+        func method() async throws -> Int {
+            return try await {
+              return try await if Bool.random() {
+                  randomAsyncThrows()
+              } else {
+                  randomAsyncThrows()
+              }
+            }()
+        }
+        """
+
+        let output = """
+        func method() async throws -> Int {
+            return try await if Bool.random() {
+                  randomAsyncThrows()
+              } else {
+                  randomAsyncThrows()
+              }
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, output, rule: FormatRules.redundantClosure, options: options, exclude: ["redundantReturn", "indent"])
+    }
+
+    func testRedundantClosureRemovesClosureAsReturnTryStatement4() {
+        let input = """
+        func method() -> Int {
+            return {
+              return try! if Bool.random() {
+                  randomThrows()
+              } else {
+                  randomThrows()
+              }
+            }()
+        }
+        """
+
+        let output = """
+        func method() -> Int {
+            return try! if Bool.random() {
+                  randomThrows()
+              } else {
+                  randomThrows()
+              }
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, output, rule: FormatRules.redundantClosure, options: options, exclude: ["redundantReturn", "indent"])
+    }
+
+    func testRedundantClosureRemovesClosureAsReturnStatement() {
+        let input = """
+        func method() -> Int {
+            return {
+              return if Bool.random() {
+                  42
+              } else {
+                  43
+              }
+            }()
+        }
+        """
+
+        let output = """
+        func method() -> Int {
+            return if Bool.random() {
+                  42
+              } else {
+                  43
+              }
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, output, rule: FormatRules.redundantClosure, options: options, exclude: ["redundantReturn", "indent"])
+    }
+
+    func testRedundantClosureRemovesClosureAsImplicitReturnStatement() {
+        let input = """
+        func method() -> Int {
+            {
+              if Bool.random() {
+                  42
+              } else {
+                  43
+              }
+            }()
+        }
+        """
+
+        let output = """
+        func method() -> Int {
+            if Bool.random() {
+                  42
+              } else {
+                  43
+              }
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, output, rule: FormatRules.redundantClosure, options: options, exclude: ["indent"])
     }
 
     // MARK: Redundant optional binding

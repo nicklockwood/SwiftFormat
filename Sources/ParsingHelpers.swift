@@ -1299,9 +1299,7 @@ extension Formatter {
                 nextTokenAfterTry = nextTokenAfterTryOperator
             }
 
-            if let startOfFollowingExpressionIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: nextTokenAfterTry),
-               let followingExpression = parseExpressionRange(startingAt: startOfFollowingExpressionIndex)
-            {
+            if let followingExpression = parseExpressionRange(startingAt: nextTokenAfterTry) {
                 return startIndex ... followingExpression.upperBound
             }
         }

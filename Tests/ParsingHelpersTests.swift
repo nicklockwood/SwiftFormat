@@ -1798,6 +1798,11 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssert(isSingleExpression(#"#selector(Foo.bar)"#))
         XCTAssert(isSingleExpression(#"#macro()"#))
         XCTAssert(isSingleExpression(#"#outerMacro(12, #innerMacro(34), "some text")"#))
+        XCTAssert(isSingleExpression(#"try { try printThrows(foo) }()"#))
+        XCTAssert(isSingleExpression(#"try! { try printThrows(foo) }()"#))
+        XCTAssert(isSingleExpression(#"try? { try printThrows(foo) }()"#))
+        XCTAssert(isSingleExpression(#"await { await printAsync(foo) }()"#))
+        XCTAssert(isSingleExpression(#"try await { try await printAsyncThrows(foo) }()"#))
 
         XCTAssert(isSingleExpression("""
         foo

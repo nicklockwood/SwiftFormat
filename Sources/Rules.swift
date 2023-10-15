@@ -6192,7 +6192,17 @@ public struct _FormatRules {
                // because removing them could break the build.
                formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closureStartIndex) != closureEndIndex
             {
-                guard formatter.blockBodyHasSingleStatement(atStartOfScope: closureStartIndex) else {
+                /// Whether or not this closure has a single, simple expression in its body.
+                /// These closures can always be simplified / removed regardless of the context.
+                let hasSingleSimpleExpression = formatter.blockBodyHasSingleStatement(atStartOfScope: closureStartIndex, includingConditionalStatements: false)
+
+                /// Whether or not this closure has a single if/switch expression in its body.
+                /// Since if/switch expressions are only valid in the `return` position or as an `=` assignment,
+                /// these closures can only sometimes be simplified / removed.
+                let hasSingleConditionalExpression = !hasSingleSimpleExpression &&
+                    formatter.blockBodyHasSingleStatement(atStartOfScope: closureStartIndex, includingConditionalStatements: true)
+
+                guard hasSingleSimpleExpression || hasSingleConditionalExpression else {
                     return
                 }
 
@@ -6236,6 +6246,43 @@ public struct _FormatRules {
                     startIndex = prevIndex
                 }
 
+                // Since if/switch expressions are only valid in the `return` position or as an `=` assignment,
+                // these closures can only sometimes be simplified / removed.
+                if hasSingleConditionalExpression {
+                    // Find the `{` start of scope or `=` and verify that the entire following expression consists of just this closure.
+                    var startOfScopeContainingClosure = formatter.startOfScope(at: startIndex)
+                    var assignmentBeforeClosure = formatter.index(of: .operator("=", .infix), before: startIndex)
+
+                    let potentialStartOfExpressionContainingClosure: Int?
+                    switch (startOfScopeContainingClosure, assignmentBeforeClosure) {
+                    case (nil, nil):
+                        potentialStartOfExpressionContainingClosure = nil
+                    case (.some(let startOfScope), nil):
+                        potentialStartOfExpressionContainingClosure = startOfScope
+                    case (nil, let .some(assignmentBeforeClosure)):
+                        potentialStartOfExpressionContainingClosure = assignmentBeforeClosure
+                    case let (.some(startOfScope), .some(assignmentBeforeClosure)):
+                        potentialStartOfExpressionContainingClosure = max(startOfScope, assignmentBeforeClosure)
+                    }
+
+                    if let potentialStartOfExpressionContainingClosure = potentialStartOfExpressionContainingClosure {
+                        guard var startOfExpressionIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: potentialStartOfExpressionContainingClosure)
+                        else { return }
+
+                        // Skip over any return token that may be present
+                        if formatter.tokens[startOfExpressionIndex] == .keyword("return"),
+                           let nextTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: startOfExpressionIndex)
+                        {
+                            startOfExpressionIndex = nextTokenIndex
+                        }
+
+                        // Parse the expression and require that entire expression is simply just this closure.
+                        guard let expressionRange = formatter.parseExpressionRange(startingAt: startOfExpressionIndex),
+                              expressionRange == startIndex ... closureCallCloseParenIndex
+                        else { return }
+                    }
+                }
+
                 // If the closure is a property with an explicit `Void` type,
                 // we can't remove the closure since the build would break
                 // if the method is `@discardableResult`
@@ -6268,14 +6315,13 @@ public struct _FormatRules {
                     closureEndIndex -= 1
                 }
 
-                // remove the { }() tokens
+                // remove the trailing }() tokens, working backwards to not invalidate any indices
                 formatter.removeToken(at: closureCallCloseParenIndex)
                 formatter.removeToken(at: closureCallOpenParenIndex)
                 formatter.removeToken(at: closureEndIndex)
-                formatter.removeTokens(in: startIndex ... closureStartIndex)
 
-                // Remove the initial return token, and any trailing space, if present
-                if let returnIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closureStartIndex - 1),
+                // Remove the initial return token, and any trailing space, if present.
+                if let returnIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closureStartIndex),
                    formatter.token(at: returnIndex)?.string == "return"
                 {
                     while formatter.token(at: returnIndex + 1)?.isSpaceOrLinebreak == true {
@@ -6284,6 +6330,9 @@ public struct _FormatRules {
 
                     formatter.removeToken(at: returnIndex)
                 }
+
+                // Finally, remove then open `{` token
+                formatter.removeTokens(in: startIndex ... closureStartIndex)
             }
         }
     }

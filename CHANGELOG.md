@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.52.8](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.52.8) (2023-10-17)
+
+- Fixed `redundantClosure` rule in cases where an `if`/`switch` expression is not permitted
+- The `docComments` rule now correctly handles macro comments
+- The `docComments` rule is now only applied to a comment block if all lines match the pattern 
+
 ## [0.52.7](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.52.7) (2023-10-06)
 
 - Fixed bug where `conditionalAssignment` and `redundantClosure` rules would be applied incorrectly

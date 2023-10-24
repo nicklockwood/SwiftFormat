@@ -8470,6 +8470,21 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantClosure, options: options, exclude: ["indent"])
     }
 
+    func testClosureNotRemovedAroundIfExpressionInGuard() {
+        let input = """
+        guard let foo = {
+            if condition {
+                bar()
+            }
+        }() else {
+            return
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: FormatRules.redundantClosure, options: options)
+    }
+
     // MARK: Redundant optional binding
 
     func testRemovesRedundantOptionalBindingsInSwift5_7() {

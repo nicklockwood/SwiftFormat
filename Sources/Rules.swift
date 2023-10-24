@@ -6261,6 +6261,11 @@ public struct _FormatRules {
                     var startOfScopeContainingClosure = formatter.startOfScope(at: startIndex)
                     var assignmentBeforeClosure = formatter.index(of: .operator("=", .infix), before: startIndex)
 
+                    if let assignmentBeforeClosure = assignmentBeforeClosure, formatter.isConditionalStatement(at: assignmentBeforeClosure) {
+                        // Not valid to use conditional expression directly in condition body
+                        return
+                    }
+
                     let potentialStartOfExpressionContainingClosure: Int?
                     switch (startOfScopeContainingClosure, assignmentBeforeClosure) {
                     case (nil, nil):

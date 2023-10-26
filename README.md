@@ -340,7 +340,7 @@ fi
 or you can create a symbolic link in `/usr/local/bin` pointing to the actual binary:
 
 ```bash
-ln -s /opt/homebrew/bin/swiftlint /usr/local/bin/swiftlint
+ln -s /opt/homebrew/bin/swiftformat /usr/local/bin/swiftformat
 ```
 
 Swift Package Manager plugin

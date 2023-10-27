@@ -3678,6 +3678,123 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.conditionalAssignment, options: options)
     }
 
+    func testDoesntConvertConditionalCastInSwift5_9() {
+        // The following code doesn't compile in Swift 5.9 due to this issue:
+        // https://github.com/apple/swift/issues/68764
+        //
+        //  let result = if condition {
+        //    foo as? String
+        //  } else {
+        //    "bar"
+        //  }
+        //
+        let input = """
+        let result1: String?
+        if condition {
+            result1 = foo as? String
+        } else {
+            result1 = "bar"
+        }
+
+        let result2: String?
+        switch condition {
+        case true:
+            result2 = foo as? String
+        case false:
+            result2 = "bar"
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: FormatRules.conditionalAssignment, options: options)
+    }
+
+    func testAllowsAsWithinInnerScope() {
+        let input = """
+        let result: String?
+        switch condition {
+        case true:
+            result = method(string: foo as? String)
+        case false:
+            result = "bar"
+        }
+        """
+
+        let output = """
+        let result: String? = switch condition {
+        case true:
+            method(string: foo as? String)
+        case false:
+            "bar"
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, output, rule: FormatRules.conditionalAssignment, options: options)
+    }
+
+    let input = """
+    let result1: String?
+    if condition {
+        result1 = foo as? String
+    } else {
+        result1 = "bar"
+    }
+
+    let result2: String?
+    switch condition {
+    case true:
+        result2 = foo as? String
+    case false:
+        result2 = "bar"
+    }
+
+    let result3: String?
+    switch condition {
+    case true:
+        result3 = method(string: foo as? String) // ok
+    case false:
+        result3 = "bar"
+    }
+    """
+
+    func testConvertsConditionalCastInSwift5_10() {
+        let input = """
+        let result1: String?
+        if condition {
+            result1 = foo as? String
+        } else {
+            result1 = "bar"
+        }
+
+        let result2: String?
+        switch condition {
+        case true:
+            result2 = foo as? String
+        case false:
+            result2 = "bar"
+        }
+        """
+
+        let output = """
+        let result1: String? = if condition {
+            foo as? String
+        } else {
+            "bar"
+        }
+
+        let result2: String? = switch condition {
+        case true:
+            foo as? String
+        case false:
+            "bar"
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.10")
+        testFormatting(for: input, output, rule: FormatRules.conditionalAssignment, options: options)
+    }
+
     // MARK: - forLoop
 
     func testConvertSimpleForEachToForLoop() {

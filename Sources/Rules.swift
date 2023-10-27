@@ -6271,6 +6271,7 @@ public struct _FormatRules {
                     case (nil, nil):
                         potentialStartOfExpressionContainingClosure = nil
                     case (.some(let startOfScope), nil):
+                        guard formatter.tokens[startOfScope] == .startOfScope("{") else { return }
                         potentialStartOfExpressionContainingClosure = startOfScope
                     case (nil, let .some(assignmentBeforeClosure)):
                         potentialStartOfExpressionContainingClosure = assignmentBeforeClosure

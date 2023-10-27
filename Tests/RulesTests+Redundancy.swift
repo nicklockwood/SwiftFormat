@@ -8485,6 +8485,70 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantClosure, options: options)
     }
 
+    func testClosureNotRemovedInMethodCall() {
+        let input = """
+        XCTAssert({
+            if foo {
+                bar
+            } else {
+                baaz
+            }
+        }())
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: FormatRules.redundantClosure, options: options)
+    }
+
+    func testClosureNotRemovedInMethodCall2() {
+        let input = """
+        method("foo", {
+            if foo {
+                bar
+            } else {
+                baaz
+            }
+        }())
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: FormatRules.redundantClosure, options: options)
+    }
+
+    func testClosureNotRemovedInMethodCall3() {
+        let input = """
+        XCTAssert({
+            if foo {
+                bar
+            } else {
+                baaz
+            }
+        }(), "message")
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: FormatRules.redundantClosure, options: options)
+    }
+
+    func testClosureNotRemovedInMethodCall4() {
+        let input = """
+        method(
+            "foo",
+            {
+                if foo {
+                    bar
+                } else {
+                    baaz
+                }
+            }(),
+            "bar"
+        )
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: FormatRules.redundantClosure, options: options)
+    }
+
     // MARK: Redundant optional binding
 
     func testRemovesRedundantOptionalBindingsInSwift5_7() {

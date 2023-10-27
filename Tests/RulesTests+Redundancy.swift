@@ -3017,6 +3017,91 @@ class RedundancyTests: RulesTests {
                        exclude: ["wrapSwitchCases", "sortSwitchCases"])
     }
 
+    func testDoesntRemoveReturnFromIfExpressionConditionalCastInSwift5_9() {
+        // The following code doesn't compile in Swift 5.9 due to this issue:
+        // https://github.com/apple/swift/issues/68764
+        //
+        //  var result: String {
+        //    if condition {
+        //      foo as? String
+        //    } else {
+        //      "bar"
+        //    }
+        //  }
+        //
+        let input = """
+        var result1: String {
+            if condition {
+                return foo as? String
+            } else {
+                return "bar"
+            }
+        }
+
+        var result2: String {
+            switch condition {
+            case true:
+                return foo as? String
+            case false:
+                return "bar"
+            }
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: FormatRules.redundantReturn, options: options)
+    }
+
+    func testRemovseReturnFromIfExpressionNestedConditionalCastInSwift5_9() {
+        let input = """
+        var result1: String {
+            if condition {
+                return method(foo as? String)
+            } else {
+                return "bar"
+            }
+        }
+        """
+
+        let output = """
+        var result1: String {
+            if condition {
+                method(foo as? String)
+            } else {
+                "bar"
+            }
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, output, rule: FormatRules.redundantReturn, options: options)
+    }
+
+    func testRemovesReturnFromIfExpressionConditionalCastInSwift5_10() {
+        let input = """
+        var result: String {
+            if condition {
+                return foo as? String
+            } else {
+                return "bar"
+            }
+        }
+        """
+
+        let output = """
+        var result: String {
+            if condition {
+                foo as? String
+            } else {
+                "bar"
+            }
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.10")
+        testFormatting(for: input, output, rule: FormatRules.redundantReturn, options: options)
+    }
+
     // MARK: - redundantBackticks
 
     func testRemoveRedundantBackticksInLet() {
@@ -8547,6 +8632,78 @@ class RedundancyTests: RulesTests {
 
         let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, rule: FormatRules.redundantClosure, options: options)
+    }
+
+    func testDoesntRemoveClosureWithIfExpressionConditionalCastInSwift5_9() {
+        // The following code doesn't compile in Swift 5.9 due to this issue:
+        // https://github.com/apple/swift/issues/68764
+        //
+        //  let result = if condition {
+        //    foo as? String
+        //  } else {
+        //    "bar"
+        //  }
+        //
+        let input = """
+        let result1: String? = {
+            if condition {
+                return foo as? String
+            } else {
+                return "bar"
+            }
+        }()
+
+        let result1: String? = {
+            switch condition {
+            case true:
+                return foo as? String
+            case false:
+                return "bar"
+            }
+        }()
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: FormatRules.redundantClosure, options: options)
+    }
+
+    func testDoesRemoveClosureWithIfExpressionConditionalCastInSwift5_10() {
+        let input = """
+        let result1: String? = {
+            if condition {
+                foo as? String
+            } else {
+                "bar"
+            }
+        }()
+
+        let result2: String? = {
+            switch condition {
+            case true:
+                foo as? String
+            case false:
+                "bar"
+            }
+        }()
+        """
+
+        let output = """
+        let result1: String? = if condition {
+                foo as? String
+            } else {
+                "bar"
+            }
+
+        let result2: String? = switch condition {
+            case true:
+                foo as? String
+            case false:
+                "bar"
+            }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.10")
+        testFormatting(for: input, output, rule: FormatRules.redundantClosure, options: options, exclude: ["indent"])
     }
 
     // MARK: Redundant optional binding

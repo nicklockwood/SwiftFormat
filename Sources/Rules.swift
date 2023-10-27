@@ -3188,7 +3188,12 @@ public struct _FormatRules {
                 return
             }
 
-            // Removes return statements in the given single-statement scope
+            // Find all of the return keywords to remove before we remove any of them,
+            // so we can apply additional validation first.
+            var returnKeywordRangesToRemove = [Range<Int>]()
+            var hasReturnThatCantBeRemoved = false
+
+            /// Finds the return keywords to remove and stores them in `returnKeywordRangesToRemove`
             func removeReturn(atStartOfScope startOfScopeIndex: Int) {
                 // If this scope is a single-statement if or switch statement then we have to recursively
                 // remove the return from each branch of the if statement
@@ -3198,6 +3203,23 @@ public struct _FormatRules {
                    let conditionalBranches = formatter.conditionalBranches(at: firstTokenInBody)
                 {
                     for branch in conditionalBranches.reversed() {
+                        // In Swift 5.9, there's a bug that prevents you from writing an
+                        // if or switch expression using an `as?` on one of the branches:
+                        // https://github.com/apple/swift/issues/68764
+                        //
+                        //  if condition {
+                        //    foo as? String
+                        //  } else {
+                        //    "bar"
+                        //  }
+                        //
+                        if formatter.conditionalBranchHasUnsupportedCastOperator(
+                            startOfScopeIndex: branch.startOfBranch)
+                        {
+                            hasReturnThatCantBeRemoved = true
+                            return
+                        }
+
                         removeReturn(atStartOfScope: branch.startOfBranch)
                     }
                 }
@@ -3218,11 +3240,17 @@ public struct _FormatRules {
                             returnIndices[i] -= range.count
                         }
                     }
-                    formatter.removeTokens(in: range)
+                    returnKeywordRangesToRemove.append(range)
                 }
             }
 
             removeReturn(atStartOfScope: startOfScopeIndex)
+
+            guard !hasReturnThatCantBeRemoved else { return }
+
+            for returnKeywordRangeToRemove in returnKeywordRangesToRemove.sorted(by: { $0.startIndex > $1.startIndex }) {
+                formatter.removeTokens(in: returnKeywordRangeToRemove)
+            }
         }
     }
 
@@ -6982,7 +7010,25 @@ public struct _FormatRules {
                     tempScopeTokens.append(.endOfScope("}"))
 
                     let tempFormatter = Formatter(tempScopeTokens, options: formatter.options)
-                    return tempFormatter.blockBodyHasSingleStatement(atStartOfScope: 0)
+                    guard tempFormatter.blockBodyHasSingleStatement(atStartOfScope: 0) else {
+                        return false
+                    }
+
+                    // In Swift 5.9, there's a bug that prevents you from writing an
+                    // if or switch expression using an `as?` on one of the branches:
+                    // https://github.com/apple/swift/issues/68764
+                    //
+                    //  let result = if condition {
+                    //    foo as? String
+                    //  } else {
+                    //    "bar"
+                    //  }
+                    //
+                    if tempFormatter.conditionalBranchHasUnsupportedCastOperator(startOfScopeIndex: 0) {
+                        return false
+                    }
+
+                    return true
                 }
 
                 return false

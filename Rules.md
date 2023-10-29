@@ -2383,7 +2383,7 @@ Prefer shorthand syntax for Arrays, Dictionaries and Optionals.
 
 Option | Description
 --- | ---
-`--shortoptionals` | Use ? for optionals "always" (default) or "except-properties"
+`--shortoptionals` | Use ? for optionals "always" or "except-properties" (default)
 
 <details>
 <summary>Examples</summary>

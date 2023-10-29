@@ -505,7 +505,7 @@ public struct FormatOptions: CustomStringConvertible {
                 noSpaceOperators: Set<String> = [],
                 noWrapOperators: Set<String> = [],
                 modifierOrder: [String] = [],
-                shortOptionals: OptionalsMode = .always,
+                shortOptionals: OptionalsMode = .exceptProperties,
                 funcAttributes: AttributeMode = .preserve,
                 typeAttributes: AttributeMode = .preserve,
                 varAttributes: AttributeMode = .preserve,

@@ -736,7 +736,7 @@ struct _Descriptors {
     let shortOptionals = OptionDescriptor(
         argumentName: "shortoptionals",
         displayName: "Short Optional Syntax",
-        help: "Use ? for optionals \"always\" (default) or \"except-properties\"",
+        help: "Use ? for optionals \"always\" or \"except-properties\" (default)",
         keyPath: \.shortOptionals
     )
     let markTypes = OptionDescriptor(

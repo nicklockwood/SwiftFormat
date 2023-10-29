@@ -1606,40 +1606,51 @@ class SyntaxTests: RulesTests {
 
     // optionals
 
+    func testOptionalPropertyTypeNotConvertedToSugarByDefault() {
+        let input = "var bar: Optional<String>"
+        testFormatting(for: input, rule: FormatRules.typeSugar)
+    }
+
     func testOptionalTypeConvertedToSugar() {
         let input = "var foo: Optional<String>"
         let output = "var foo: String?"
-        testFormatting(for: input, output, rule: FormatRules.typeSugar)
+        let options = FormatOptions(shortOptionals: .always)
+        testFormatting(for: input, output, rule: FormatRules.typeSugar, options: options)
     }
 
     func testSwiftOptionalTypeConvertedToSugar() {
         let input = "var foo: Swift.Optional<String>"
         let output = "var foo: String?"
-        testFormatting(for: input, output, rule: FormatRules.typeSugar)
+        let options = FormatOptions(shortOptionals: .always)
+        testFormatting(for: input, output, rule: FormatRules.typeSugar, options: options)
     }
 
     func testOptionalClosureParenthesizedConvertedToSugar() {
         let input = "var foo: Optional<(Int) -> String>"
         let output = "var foo: ((Int) -> String)?"
-        testFormatting(for: input, output, rule: FormatRules.typeSugar)
+        let options = FormatOptions(shortOptionals: .always)
+        testFormatting(for: input, output, rule: FormatRules.typeSugar, options: options)
     }
 
     func testOptionalTupleWrappedInParensConvertedToSugar() {
         let input = "let foo: Optional<(foo: Int, bar: String)>"
         let output = "let foo: (foo: Int, bar: String)?"
-        testFormatting(for: input, output, rule: FormatRules.typeSugar)
+        let options = FormatOptions(shortOptionals: .always)
+        testFormatting(for: input, output, rule: FormatRules.typeSugar, options: options)
     }
 
     func testOptionalComposedProtocolWrappedInParensConvertedToSugar() {
         let input = "let foo: Optional<UIView & Foo>"
         let output = "let foo: (UIView & Foo)?"
-        testFormatting(for: input, output, rule: FormatRules.typeSugar)
+        let options = FormatOptions(shortOptionals: .always)
+        testFormatting(for: input, output, rule: FormatRules.typeSugar, options: options)
     }
 
     func testSwiftOptionalClosureParenthesizedConvertedToSugar() {
         let input = "var foo: Swift.Optional<(Int) -> String>"
         let output = "var foo: ((Int) -> String)?"
-        testFormatting(for: input, output, rule: FormatRules.typeSugar)
+        let options = FormatOptions(shortOptionals: .always)
+        testFormatting(for: input, output, rule: FormatRules.typeSugar, options: options)
     }
 
     func testStrippingSwiftNamespaceInOptionalTypeWhenConvertedToSugar() {
@@ -1651,7 +1662,8 @@ class SyntaxTests: RulesTests {
     func testStrippingSwiftNamespaceDoesNotStripPreviousSwiftNamespaceReferences() {
         let input = "let a: Swift.String = Optional<String>"
         let output = "let a: Swift.String = String?"
-        testFormatting(for: input, output, rule: FormatRules.typeSugar)
+        let options = FormatOptions(shortOptionals: .always)
+        testFormatting(for: input, output, rule: FormatRules.typeSugar, options: options)
     }
 
     func testOptionalTypeInsideCaseConvertedToSugar() {
@@ -1680,65 +1692,63 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.typeSugar)
     }
 
-    // shortOptionals = exceptProperties
-
-    func testPropertyTypeNotConvertedToSugar() {
-        let input = "var foo: Optional<String>"
-        let options = FormatOptions(shortOptionals: .exceptProperties)
-        testFormatting(for: input, rule: FormatRules.typeSugar, options: options)
-    }
-
     // swift parser bug
 
     func testAvoidSwiftParserBugWithClosuresInsideArrays() {
         let input = "var foo = Array<(_ image: Data?) -> Void>()"
-        testFormatting(for: input, rule: FormatRules.typeSugar)
+        testFormatting(for: input, rule: FormatRules.typeSugar, options: FormatOptions(shortOptionals: .always))
     }
 
     func testAvoidSwiftParserBugWithClosuresInsideDictionaries() {
         let input = "var foo = Dictionary<String, (_ image: Data?) -> Void>()"
-        testFormatting(for: input, rule: FormatRules.typeSugar)
+        testFormatting(for: input, rule: FormatRules.typeSugar, options: FormatOptions(shortOptionals: .always))
     }
 
     func testAvoidSwiftParserBugWithClosuresInsideOptionals() {
         let input = "var foo = Optional<(_ image: Data?) -> Void>()"
-        testFormatting(for: input, rule: FormatRules.typeSugar)
+        testFormatting(for: input, rule: FormatRules.typeSugar, options: FormatOptions(shortOptionals: .always))
     }
 
     func testDontOverApplyBugWorkaround() {
         let input = "var foo: Array<(_ image: Data?) -> Void>"
         let output = "var foo: [(_ image: Data?) -> Void]"
-        testFormatting(for: input, output, rule: FormatRules.typeSugar)
+        let options = FormatOptions(shortOptionals: .always)
+        testFormatting(for: input, output, rule: FormatRules.typeSugar, options: options)
     }
 
     func testDontOverApplyBugWorkaround2() {
         let input = "var foo: Dictionary<String, (_ image: Data?) -> Void>"
         let output = "var foo: [String: (_ image: Data?) -> Void]"
-        testFormatting(for: input, output, rule: FormatRules.typeSugar)
+        let options = FormatOptions(shortOptionals: .always)
+        testFormatting(for: input, output, rule: FormatRules.typeSugar, options: options)
     }
 
     func testDontOverApplyBugWorkaround3() {
         let input = "var foo: Optional<(_ image: Data?) -> Void>"
         let output = "var foo: ((_ image: Data?) -> Void)?"
-        testFormatting(for: input, output, rule: FormatRules.typeSugar)
+        let options = FormatOptions(shortOptionals: .always)
+        testFormatting(for: input, output, rule: FormatRules.typeSugar, options: options)
     }
 
     func testDontOverApplyBugWorkaround4() {
         let input = "var foo = Array<(image: Data?) -> Void>()"
         let output = "var foo = [(image: Data?) -> Void]()"
-        testFormatting(for: input, output, rule: FormatRules.typeSugar)
+        let options = FormatOptions(shortOptionals: .always)
+        testFormatting(for: input, output, rule: FormatRules.typeSugar, options: options)
     }
 
     func testDontOverApplyBugWorkaround5() {
         let input = "var foo = Array<(Data?) -> Void>()"
         let output = "var foo = [(Data?) -> Void]()"
-        testFormatting(for: input, output, rule: FormatRules.typeSugar)
+        let options = FormatOptions(shortOptionals: .always)
+        testFormatting(for: input, output, rule: FormatRules.typeSugar, options: options)
     }
 
     func testDontOverApplyBugWorkaround6() {
         let input = "var foo = Dictionary<Int, Array<(_ image: Data?) -> Void>>()"
         let output = "var foo = [Int: Array<(_ image: Data?) -> Void>]()"
-        testFormatting(for: input, output, rule: FormatRules.typeSugar)
+        let options = FormatOptions(shortOptionals: .always)
+        testFormatting(for: input, output, rule: FormatRules.typeSugar, options: options)
     }
 
     // MARK: - preferKeyPath

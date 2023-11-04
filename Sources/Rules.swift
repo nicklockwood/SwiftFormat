@@ -6338,6 +6338,27 @@ public struct _FormatRules {
                     return
                 }
 
+                // If the redundantReturn rule wasn't enabled, we have to apply it
+                // to the closure body manually since any remaining return keywords
+                // would become invalid outside of a closure.
+                if !formatter.options.enabledRules.contains("redundantReturn") {
+                    let closureTokens = Array(formatter.tokens[closureStartIndex ... closureEndIndex])
+                    let closureFormatter = Formatter(closureTokens, options: formatter.options)
+                    FormatRules.redundantReturn.apply(with: closureFormatter)
+                    let updatedClosureTokens = closureFormatter.tokens
+
+                    if closureTokens != updatedClosureTokens {
+                        // Apply the new closure body to the code,
+                        // and update any index references following the body.
+                        formatter.replaceTokens(in: closureStartIndex ... closureEndIndex, with: updatedClosureTokens)
+
+                        let bodySizeDifference = closureTokens.count - updatedClosureTokens.count
+                        closureCallOpenParenIndex -= bodySizeDifference
+                        closureCallCloseParenIndex -= bodySizeDifference
+                        closureEndIndex -= bodySizeDifference
+                    }
+                }
+
                 // First we remove the spaces and linebreaks between the { } and the remainder of the closure body
                 //  - This requires a bit of bookkeeping, but makes sure we don't remove any
                 //    whitespace characters outside of the closure itself

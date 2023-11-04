@@ -8222,9 +8222,9 @@ class RedundancyTests: RulesTests {
         """
         let output = """
         let user2: User? = if let data2 = defaults.data(forKey: defaultsKey) {
-                return try PropertyListDecoder().decode(User.self, from: data2)
+                try PropertyListDecoder().decode(User.self, from: data2)
             } else {
-                return nil
+                nil
             }
         """
         let options = FormatOptions(swiftVersion: "5.9")
@@ -8244,9 +8244,9 @@ class RedundancyTests: RulesTests {
         """
         let output = """
         let user2: User? = if let data2 = defaults.data(forKey: defaultsKey) {
-                return try await PropertyListDecoder().decode(User.self, from: data2)
+                try await PropertyListDecoder().decode(User.self, from: data2)
             } else {
-                return nil
+                nil
             }
         """
         let options = FormatOptions(swiftVersion: "5.9")
@@ -8704,6 +8704,71 @@ class RedundancyTests: RulesTests {
 
         let options = FormatOptions(swiftVersion: "5.10")
         testFormatting(for: input, output, rule: FormatRules.redundantClosure, options: options, exclude: ["indent"])
+    }
+
+    func testRedundantClosureDoesntBreakBuildWithRedundantReturnRuleDisabled() {
+        let input = """
+        enum MyEnum {
+            case a
+            case b
+        }
+
+        let myEnum = MyEnum.a
+        let test: Int = {
+            return 0
+        }()
+        """
+
+        let output = """
+        enum MyEnum {
+            case a
+            case b
+        }
+
+        let myEnum = MyEnum.a
+        let test: Int = 0
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, output, rule: FormatRules.redundantClosure, options: options, exclude: ["redundantReturn", "indent"])
+    }
+
+    func testRedundantClosureWithSwitchExpressionDoesntBreakBuildWithRedundantReturnRuleDisabled() {
+        // From https://github.com/nicklockwood/SwiftFormat/issues/1565
+        let input = """
+        enum MyEnum {
+            case a
+            case b
+        }
+
+        let myEnum = MyEnum.a
+        let test: Int = {
+            switch myEnum {
+            case .a:
+                return 0
+            case .b:
+                return 1
+            }
+        }()
+        """
+
+        let output = """
+        enum MyEnum {
+            case a
+            case b
+        }
+
+        let myEnum = MyEnum.a
+        let test: Int = switch myEnum {
+            case .a:
+                0
+            case .b:
+                1
+            }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, output, rule: FormatRules.redundantClosure, options: options, exclude: ["redundantReturn", "indent"])
     }
 
     // MARK: Redundant optional binding

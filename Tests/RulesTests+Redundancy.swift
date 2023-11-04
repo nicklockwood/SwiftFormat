@@ -2722,6 +2722,22 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantReturn, options: options)
     }
 
+    func testClosureAroundConditionalAssignmentNotRedundantForExplicitReturn() {
+        let input = """
+        let myEnum = MyEnum.a
+        let test: Int = {
+            switch myEnum {
+            case .a:
+                return 0
+            case .b:
+                return 1
+            }
+        }()
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: FormatRules.redundantClosure, options: options, exclude: ["redundantReturn"])
+    }
+
     func testNonRedundantSwitchStatementReturnInFunction() {
         let input = """
         func foo(condition: Bool) -> String {
@@ -7833,7 +7849,8 @@ class RedundancyTests: RulesTests {
         """
 
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: FormatRules.redundantClosure, options: options, exclude: ["indent"])
+        testFormatting(for: input, [output], rules: [FormatRules.redundantReturn, FormatRules.redundantClosure],
+                       options: options, exclude: ["indent"])
     }
 
     func testRedundantClosureWithExplicitReturn2() {
@@ -7869,7 +7886,7 @@ class RedundancyTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, output, rule: FormatRules.redundantClosure, exclude: ["redundantReturn"])
+        testFormatting(for: input, [output], rules: [FormatRules.redundantReturn, FormatRules.redundantClosure])
     }
 
     func testKeepsClosureThatIsNotCalled() {
@@ -7936,7 +7953,8 @@ class RedundancyTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, [output], rules: [FormatRules.redundantClosure, FormatRules.semicolons])
+        testFormatting(for: input, [output], rules: [FormatRules.redundantReturn, FormatRules.redundantClosure,
+                                                     FormatRules.semicolons])
     }
 
     func testRemoveRedundantClosureInWrappedPropertyDeclaration_beforeFirst() {
@@ -8222,14 +8240,14 @@ class RedundancyTests: RulesTests {
         """
         let output = """
         let user2: User? = if let data2 = defaults.data(forKey: defaultsKey) {
-                return try PropertyListDecoder().decode(User.self, from: data2)
+                try PropertyListDecoder().decode(User.self, from: data2)
             } else {
-                return nil
+                nil
             }
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: FormatRules.redundantClosure, options: options,
-                       exclude: ["redundantReturn", "indent"])
+        testFormatting(for: input, [output], rules: [FormatRules.redundantReturn, FormatRules.redundantClosure],
+                       options: options, exclude: ["indent"])
     }
 
     func testRedundantClosureDoesntLeaveStrayTryAwait() {
@@ -8244,14 +8262,14 @@ class RedundancyTests: RulesTests {
         """
         let output = """
         let user2: User? = if let data2 = defaults.data(forKey: defaultsKey) {
-                return try await PropertyListDecoder().decode(User.self, from: data2)
+                try await PropertyListDecoder().decode(User.self, from: data2)
             } else {
-                return nil
+                nil
             }
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: FormatRules.redundantClosure, options: options,
-                       exclude: ["redundantReturn", "indent"])
+        testFormatting(for: input, [output], rules: [FormatRules.redundantReturn, FormatRules.redundantClosure],
+                       options: options, exclude: ["indent"])
     }
 
     func testRedundantClosureDoesntLeaveInvalidSwitchExpressionInOperatorChain() {
@@ -8525,7 +8543,8 @@ class RedundancyTests: RulesTests {
         """
 
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: FormatRules.redundantClosure, options: options, exclude: ["redundantReturn", "indent"])
+        testFormatting(for: input, [output], rules: [FormatRules.redundantClosure],
+                       options: options, exclude: ["redundantReturn", "indent"])
     }
 
     func testRedundantClosureRemovesClosureAsImplicitReturnStatement() {
@@ -8706,7 +8725,70 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantClosure, options: options, exclude: ["indent"])
     }
 
-    // MARK: Redundant optional binding
+    func testRedundantClosureDoesntBreakBuildWithRedundantReturnRuleDisabled() {
+        let input = """
+        enum MyEnum {
+            case a
+            case b
+        }
+        let myEnum = MyEnum.a
+        let test: Int = {
+            return 0
+        }()
+        """
+
+        let output = """
+        enum MyEnum {
+            case a
+            case b
+        }
+        let myEnum = MyEnum.a
+        let test: Int = 0
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, output, rule: FormatRules.redundantClosure, options: options,
+                       exclude: ["redundantReturn", "blankLinesBetweenScopes"])
+    }
+
+    func testRedundantClosureWithSwitchExpressionDoesntBreakBuildWithRedundantReturnRuleDisabled() {
+        // From https://github.com/nicklockwood/SwiftFormat/issues/1565
+        let input = """
+        enum MyEnum {
+            case a
+            case b
+        }
+        let myEnum = MyEnum.a
+        let test: Int = {
+            switch myEnum {
+            case .a:
+                return 0
+            case .b:
+                return 1
+            }
+        }()
+        """
+
+        let output = """
+        enum MyEnum {
+            case a
+            case b
+        }
+        let myEnum = MyEnum.a
+        let test: Int = switch myEnum {
+            case .a:
+                0
+            case .b:
+                1
+            }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, [output], rules: [FormatRules.redundantReturn, FormatRules.redundantClosure],
+                       options: options, exclude: ["indent", "blankLinesBetweenScopes"])
+    }
+
+    // MARK: - redundantOptionalBinding
 
     func testRemovesRedundantOptionalBindingsInSwift5_7() {
         let input = """

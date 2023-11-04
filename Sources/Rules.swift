@@ -3186,7 +3186,11 @@ public struct _FormatRules {
             }
 
             // Make sure the body only has a single statement
-            guard formatter.blockBodyHasSingleStatement(atStartOfScope: startOfScopeIndex) else {
+            guard formatter.blockBodyHasSingleStatement(
+                atStartOfScope: startOfScopeIndex,
+                includingConditionalStatements: true,
+                includingReturnStatements: true
+            ) else {
                 return
             }
 
@@ -6230,13 +6234,22 @@ public struct _FormatRules {
             {
                 /// Whether or not this closure has a single, simple expression in its body.
                 /// These closures can always be simplified / removed regardless of the context.
-                let hasSingleSimpleExpression = formatter.blockBodyHasSingleStatement(atStartOfScope: closureStartIndex, includingConditionalStatements: false)
+                let hasSingleSimpleExpression = formatter.blockBodyHasSingleStatement(
+                    atStartOfScope: closureStartIndex,
+                    includingConditionalStatements: false,
+                    includingReturnStatements: true
+                )
 
                 /// Whether or not this closure has a single if/switch expression in its body.
                 /// Since if/switch expressions are only valid in the `return` position or as an `=` assignment,
                 /// these closures can only sometimes be simplified / removed.
                 let hasSingleConditionalExpression = !hasSingleSimpleExpression &&
-                    formatter.blockBodyHasSingleStatement(atStartOfScope: closureStartIndex, includingConditionalStatements: true)
+                    formatter.blockBodyHasSingleStatement(
+                        atStartOfScope: closureStartIndex,
+                        includingConditionalStatements: true,
+                        includingReturnStatements: true,
+                        includingReturnInConditionalStatements: false
+                    )
 
                 guard hasSingleSimpleExpression || hasSingleConditionalExpression else {
                     return
@@ -6920,7 +6933,8 @@ public struct _FormatRules {
     }
 
     public let conditionalAssignment = FormatRule(
-        help: "Assign properties using if / switch expressions."
+        help: "Assign properties using if / switch expressions.",
+        orderAfter: ["redundantReturn"]
     ) { formatter in
         // If / switch expressions were added in Swift 5.9 (SE-0380)
         guard formatter.options.swiftVersion >= "5.9" else {
@@ -7017,7 +7031,11 @@ public struct _FormatRules {
                     tempScopeTokens.append(.endOfScope("}"))
 
                     let tempFormatter = Formatter(tempScopeTokens, options: formatter.options)
-                    guard tempFormatter.blockBodyHasSingleStatement(atStartOfScope: 0) else {
+                    guard tempFormatter.blockBodyHasSingleStatement(
+                        atStartOfScope: 0,
+                        includingConditionalStatements: true,
+                        includingReturnStatements: false
+                    ) else {
                         return false
                     }
 

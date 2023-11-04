@@ -406,6 +406,7 @@ class LinebreakTests: RulesTests {
         @_implementationOnly import ModuleF
         @_spi(SPI) import ModuleG
         @_spiOnly import ModuleH
+        @preconcurrency import ModuleI
         class foo {}
         """
         let output = """
@@ -417,6 +418,7 @@ class LinebreakTests: RulesTests {
         @_implementationOnly import ModuleF
         @_spi(SPI) import ModuleG
         @_spiOnly import ModuleH
+        @preconcurrency import ModuleI
 
         class foo {}
         """

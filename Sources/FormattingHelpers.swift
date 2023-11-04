@@ -1110,7 +1110,9 @@ extension Formatter {
     /// has a single statement. This makes it eligible to be used with implicit return.
     func blockBodyHasSingleStatement(
         atStartOfScope startOfScopeIndex: Int,
-        includingConditionalStatements: Bool = true
+        includingConditionalStatements: Bool,
+        includingReturnStatements: Bool,
+        includingReturnInConditionalStatements: Bool? = nil
     ) -> Bool {
         guard let endOfScopeIndex = endOfScope(at: startOfScopeIndex) else { return false }
         let startOfBody = self.startOfBody(atStartOfScope: startOfScopeIndex)
@@ -1123,7 +1125,7 @@ extension Formatter {
         }
 
         // Skip over any optional `return` keyword
-        if tokens[firstTokenInBody] == .keyword("return") {
+        if includingReturnStatements, tokens[firstTokenInBody] == .keyword("return") {
             guard let tokenAfterReturnKeyword = index(of: .nonSpaceOrCommentOrLinebreak, after: firstTokenInBody) else { return false }
             firstTokenInBody = tokenAfterReturnKeyword
         }
@@ -1149,7 +1151,12 @@ extension Formatter {
                     return false
                 }
 
-                return blockBodyHasSingleStatement(atStartOfScope: branch.startOfBranch, includingConditionalStatements: true)
+                return blockBodyHasSingleStatement(
+                    atStartOfScope: branch.startOfBranch,
+                    includingConditionalStatements: true,
+                    includingReturnStatements: includingReturnInConditionalStatements ?? includingReturnStatements,
+                    includingReturnInConditionalStatements: includingReturnInConditionalStatements
+                )
             }
 
             let endOfStatement = conditionalBranches.last?.endOfBranch ?? firstTokenInBody

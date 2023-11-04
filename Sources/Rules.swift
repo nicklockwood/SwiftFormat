@@ -1183,7 +1183,7 @@ public struct _FormatRules {
             switch formatter.tokens[nextIndex] {
             case .linebreak, .keyword("import"), .keyword("@testable"),
                  .keyword("@_exported"), .keyword("@_implementationOnly"),
-                 .keyword("@_spi"), .keyword("@_spiOnly"),
+                 .keyword("@_spi"), .keyword("@_spiOnly"), .keyword("@preconcurrency"),
                  .keyword("#else"), .keyword("#elseif"), .endOfScope("#endif"):
                 break
             default:

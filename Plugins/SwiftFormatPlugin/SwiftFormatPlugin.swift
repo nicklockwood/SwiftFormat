@@ -41,14 +41,15 @@ import PackagePlugin
                 print("Command plugin execution with arguments \(arguments.description) for Swift package \(context.package.displayName). All target information: \(context.package.targets.description)")
             }
 
-            var targetsToProcess: [Target] = context.package.targets
-
             var argExtractor = ArgumentExtractor(arguments)
 
             let selectedTargets = argExtractor.extractOption(named: "target")
 
-            if selectedTargets.isEmpty == false {
-                targetsToProcess = context.package.targets.filter { selectedTargets.contains($0.name) }.map { $0 }
+            let targetsToProcess: [Target]
+            if selectedTargets.isEmpty {
+                targetsToProcess = context.package.targets
+            } else {
+                targetsToProcess = try context.package.allLocalTargets(of: selectedTargets)
             }
 
             for target in targetsToProcess {
@@ -56,6 +57,22 @@ import PackagePlugin
 
                 try formatCode(in: target.directory, context: context, arguments: argExtractor.remainingArguments)
             }
+        }
+    }
+
+    extension Package {
+        func allLocalTargets(of targetNames: [String]) throws -> [Target] {
+            let matchingTargets = try self.targets(named: targetNames)
+            let packageTargets = Set(self.targets.map(\.id))
+            let withLocalDependencies = matchingTargets.flatMap { [$0] + $0.recursiveTargetDependencies }
+                .filter { packageTargets.contains($0.id) }
+            let enumeratedKeyValues = withLocalDependencies.map(\.id).enumerated()
+                .map { (key: $0.element, value: $0.offset) }
+            let indexLookupTable = Dictionary(enumeratedKeyValues, uniquingKeysWith: { l, _ in l })
+            let groupedByID = Dictionary(grouping: withLocalDependencies, by: \.id)
+            let sortedUniqueTargets = groupedByID.map(\.value[0])
+                .sorted { indexLookupTable[$0.id, default: 0] < indexLookupTable[$1.id, default: 0] }
+            return sortedUniqueTargets
         }
     }
 #endif

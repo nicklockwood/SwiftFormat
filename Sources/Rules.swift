@@ -1960,7 +1960,24 @@ public struct _FormatRules {
                     } else if !formatter.options.xcodeIndentation || !isWrappedDeclaration() {
                         indent += formatter.linewrapIndent(at: i)
                     }
-                    linewrapStack[linewrapStack.count - 1] = true
+
+                    /// Whether or not this indent from a linewrap should be applied to following lines in the indentation scope.
+                    /// If true, doesn't modify the `linewrapStack`.
+                    var linewrapIndentAppliesToFollowingLines = false
+
+                    // If / switch expressions on the line following an = assignment
+                    // should be indented, including all of the branches.
+                    if let nextTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i),
+                       ["if", "switch"].contains(formatter.tokens[nextTokenIndex].string),
+                       !formatter.onSameLine(i, nextTokenIndex)
+                    {
+                        linewrapIndentAppliesToFollowingLines = true
+                    }
+
+                    if !linewrapIndentAppliesToFollowingLines {
+                        linewrapStack[linewrapStack.count - 1] = true
+                    }
+
                     indentStack.append(indent)
                     stringBodyIndentStack.append("")
                 }
@@ -7584,6 +7601,75 @@ public struct _FormatRules {
 
             if isValidOwnershipModifier {
                 formatter.removeTokens(in: keywordIndex ..< nextTokenIndex)
+            }
+        }
+    }
+
+    public let wrapMultilineConditionalAssignment = FormatRule(
+        help: "Wraps multiline conditional assignment expressions after the assignment operator",
+        orderAfter: ["conditionalAssignment"]
+    ) { formatter in
+        formatter.forEach(.keyword) { introducerIndex, introducerToken in
+            guard ["let", "var"].contains(introducerToken.string),
+                  let identifierIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: introducerIndex),
+                  let identifier = formatter.token(at: identifierIndex),
+                  identifier.isIdentifier
+            else { return }
+
+            // Find the `=` index for this variable, if present
+            let assignmentIndex: Int
+            if let colonIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: identifierIndex),
+               formatter.tokens[colonIndex] == .delimiter(":"),
+               let startOfTypeIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: colonIndex),
+               let typeRange = formatter.parseType(at: startOfTypeIndex)?.range,
+               let tokenAfterType = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: typeRange.upperBound),
+               formatter.tokens[tokenAfterType] == .operator("=", .infix)
+            {
+                assignmentIndex = tokenAfterType
+            }
+
+            else if let tokenAfterIdentifier = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: identifierIndex),
+                    formatter.tokens[tokenAfterIdentifier] == .operator("=", .infix)
+            {
+                assignmentIndex = tokenAfterIdentifier
+            }
+
+            else {
+                return
+            }
+
+            // Verify the RHS of the assignment is an if/switch expression
+            guard let startOfConditionalExpression = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: assignmentIndex),
+                  ["if", "switch"].contains(formatter.tokens[startOfConditionalExpression].string),
+                  let conditionalBranches = formatter.conditionalBranches(at: startOfConditionalExpression),
+                  let lastBranch = conditionalBranches.last
+            else { return }
+
+            // If the entire expression is on a single line, we leave the formatting as-is
+            guard !formatter.onSameLine(startOfConditionalExpression, lastBranch.endOfBranch) else {
+                return
+            }
+
+            // The `=` should be on the same line as the `let`/`var` introducer
+            if !formatter.onSameLine(introducerIndex, assignmentIndex),
+               formatter.last(.nonSpaceOrComment, before: assignmentIndex)?.isLinebreak == true,
+               let previousToken = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: assignmentIndex),
+               formatter.onSameLine(introducerIndex, previousToken)
+            {
+                // Move the assignment operator to follow the previous token.
+                // Also remove any trailing space after the previous position
+                // of the assignment operator.
+                if formatter.tokens[assignmentIndex + 1].isSpaceOrLinebreak {
+                    formatter.removeToken(at: assignmentIndex + 1)
+                }
+
+                formatter.removeToken(at: assignmentIndex)
+                formatter.insert([.space(" "), .operator("=", .infix)], at: previousToken + 1)
+            }
+
+            // And there should be a line break between the `=` and the `if` / `switch` keyword
+            else if !formatter.tokens[(assignmentIndex + 1) ..< startOfConditionalExpression].contains(where: \.isLinebreak) {
+                formatter.insertLinebreak(at: startOfConditionalExpression - 1)
             }
         }
     }

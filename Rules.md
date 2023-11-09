@@ -80,6 +80,7 @@
 * [wrap](#wrap)
 * [wrapArguments](#wrapArguments)
 * [wrapAttributes](#wrapAttributes)
+* [wrapMultilineConditionalAssignment](#wrapMultilineConditionalAssignment)
 * [wrapMultilineStatementBraces](#wrapMultilineStatementBraces)
 * [wrapSingleLineComments](#wrapSingleLineComments)
 * [yodaConditions](#yodaConditions)
@@ -2687,6 +2688,28 @@ Option | Description
 +   case baz
   }
 ```
+
+</details>
+<br/>
+
+## wrapMultilineConditionalAssignment
+
+Wraps multiline conditional assignment expressions after the assignment operator
+
+<details>
+<summary>Examples</summary>
+
+- let planetLocation = if let star = planet.star {
+-     "The \(star.name) system"
+- } else {
+-     "Rogue planet"
+- }
++ let planetLocation =
++     if let star = planet.star {
++         "The \(star.name) system"
++     } else {
++         "Rogue planet"
++     }
 
 </details>
 <br/>

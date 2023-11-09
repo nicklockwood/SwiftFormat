@@ -3759,4 +3759,126 @@ class IndentTests: RulesTests {
         let options = FormatOptions(closingParenOnSameLine: true)
         testFormatting(for: input, rule: FormatRules.indent, options: options)
     }
+
+    func testIndentIfExpressionAssignmentOnNextLine() {
+        let input = """
+        let foo =
+        if let bar {
+            bar
+        } else if let baaz {
+            baaz
+        } else if let quux {
+            if let foo {
+                foo
+            } else {
+                quux
+            }
+        }
+        """
+
+        let output = """
+        let foo =
+            if let bar {
+                bar
+            } else if let baaz {
+                baaz
+            } else if let quux {
+                if let foo {
+                    foo
+                } else {
+                    quux
+                }
+            }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.indent)
+    }
+
+    func testIndentIfExpressionAssignmentOnSameLine() {
+        let input = """
+        let foo = if let bar {
+            bar
+        } else if let baaz {
+            baaz
+        } else if let quux {
+            if let foo {
+                foo
+            } else {
+                quux
+            }
+        }
+        """
+
+        testFormatting(for: input, rule: FormatRules.indent, exclude: ["wrapMultilineConditionalAssignment"])
+    }
+
+    func testIndentSwitchExpressionAssignment() {
+        let input = """
+        let foo =
+        switch bar {
+        case true:
+            bar
+        case baaz:
+            baaz
+        }
+        """
+
+        let output = """
+        let foo =
+            switch bar {
+            case true:
+                bar
+            case baaz:
+                baaz
+            }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.indent)
+    }
+
+    func testIndentIfExpressionWithComments() {
+        let input = """
+        let foo =
+            // There is a comment before the first branch
+            if let foo {
+                foo
+            }
+            // And also a comment before the second branch
+            else {
+                bar
+            }
+
+        let foo =
+            // There is a multi-line comment before the first branch,
+            // check it out I am a multi-line comment
+            if let foo {
+                foo
+            }
+            //
+            // There is a multi-line comment before the second branch too
+            //
+            else {
+                bar
+            }
+        """
+
+        //
+        // TODO: Fix issue with wrapMultilineStatementBraces
+        //
+        testFormatting(for: input, rule: FormatRules.indent, exclude: ["wrapMultilineStatementBraces"])
+    }
+
+    func testSE0380Example() {
+        let input = """
+        let bullet =
+            if isRoot && (count == 0 || !willExpand) { "" }
+            else if count == 0 { "- " }
+            else if maxDepth <= 0 { "▹ " }
+            else { "▿ " }
+
+        print(bullet)
+        """
+        let options = FormatOptions()
+        testFormatting(for: input, rule: FormatRules.indent, options: options, exclude: ["wrapConditionalBodies", "andOperator", "redundantParens"])
+    }
 }

@@ -950,9 +950,8 @@ public struct _FormatRules {
             .keyword("class"),
             .keyword("struct"),
         ].contains($0) }) { i, token in
-            guard formatter.last(.keyword, before: i) != .keyword("import"),
-                  // exit if class is a type modifier
-                  let next = formatter.next(.nonSpaceOrCommentOrLinebreak, after: i),
+            // exit if class is a type modifier
+            guard let next = formatter.next(.nonSpaceOrCommentOrLinebreak, after: i),
                   !(next.isKeyword || next.isModifierKeyword),
                   // exit for class as protocol conformance
                   formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .delimiter(":"),

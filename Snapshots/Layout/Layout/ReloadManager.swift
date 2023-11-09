@@ -3,7 +3,7 @@
 import Foundation
 import UIKit
 
-class ReloadManager {
+enum ReloadManager {
     private static var boxes = [ObserverBox]()
 
     private struct ObserverBox {

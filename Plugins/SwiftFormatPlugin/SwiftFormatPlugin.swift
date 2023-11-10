@@ -62,8 +62,8 @@ import PackagePlugin
 
     extension Package {
         func allLocalTargets(of targetNames: [String]) throws -> [Target] {
-            let matchingTargets = try self.targets(named: targetNames)
-            let packageTargets = Set(self.targets.map(\.id))
+            let matchingTargets = try targets(named: targetNames)
+            let packageTargets = Set(targets.map(\.id))
             let withLocalDependencies = matchingTargets.flatMap { [$0] + $0.recursiveTargetDependencies }
                 .filter { packageTargets.contains($0.id) }
             let enumeratedKeyValues = withLocalDependencies.map(\.id).enumerated()

@@ -1788,8 +1788,6 @@ public func tokenize(_ source: String) -> [Token] {
                     convertOpeningChevronToOperator(at: scopeIndex)
                     processToken()
                     return
-                case .keyword("where"):
-                    break
                 case .endOfScope, .keyword:
                     // If we encountered a keyword, or closing scope token that wasn't >
                     // then the opening < must have been an operator after all

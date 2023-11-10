@@ -3266,26 +3266,6 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
-    func testGenericsWithWhereClause() {
-        let input = "<A where A.B == C>"
-        let output: [Token] = [
-            .startOfScope("<"),
-            .identifier("A"),
-            .space(" "),
-            .keyword("where"),
-            .space(" "),
-            .identifier("A"),
-            .operator(".", .infix),
-            .identifier("B"),
-            .space(" "),
-            .operator("==", .infix),
-            .space(" "),
-            .identifier("C"),
-            .endOfScope(">"),
-        ]
-        XCTAssertEqual(tokenize(input), output)
-    }
-
     func testIfLessThanGreaterThanExpression() {
         let input = "if x < (y + z), y > (z * w) {}"
         let output: [Token] = [

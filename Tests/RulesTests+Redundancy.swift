@@ -8788,6 +8788,72 @@ class RedundancyTests: RulesTests {
                        options: options, exclude: ["indent", "blankLinesBetweenScopes"])
     }
 
+    func testRedundantSwitchStatementReturnInFunctionWithMultipleWhereClauses() {
+        // https://github.com/nicklockwood/SwiftFormat/issues/1554
+        let input = """
+        func foo(cases: FooCases, count: Int) -> String? {
+            switch cases {
+            case .fooCase1 where count == 0:
+                return "foo"
+            case .fooCase2 where count < 100,
+                 .fooCase3 where count < 100,
+                 .fooCase4:
+                return "bar"
+            default:
+                return nil
+            }
+        }
+        """
+        let output = """
+        func foo(cases: FooCases, count: Int) -> String? {
+            switch cases {
+            case .fooCase1 where count == 0:
+                "foo"
+            case .fooCase2 where count < 100,
+                 .fooCase3 where count < 100,
+                 .fooCase4:
+                "bar"
+            default:
+                nil
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, output, rule: FormatRules.redundantReturn, options: options)
+    }
+
+    func testRedundantSwitchStatementReturnInFunctionWithSingleWhereClause() {
+        // https://github.com/nicklockwood/SwiftFormat/issues/1554
+        let input = """
+        func anotherFoo(cases: FooCases, count: Int) -> String? {
+            switch cases {
+            case .fooCase1 where count == 0:
+                return "foo"
+            case .fooCase2 where count < 100,
+                 .fooCase4:
+                return "bar"
+            default:
+                return nil
+            }
+        }
+        """
+        let output = """
+        func anotherFoo(cases: FooCases, count: Int) -> String? {
+            switch cases {
+            case .fooCase1 where count == 0:
+                "foo"
+            case .fooCase2 where count < 100,
+                 .fooCase4:
+                "bar"
+            default:
+                nil
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, output, rule: FormatRules.redundantReturn, options: options)
+    }
+
     // MARK: - redundantOptionalBinding
 
     func testRemovesRedundantOptionalBindingsInSwift5_7() {

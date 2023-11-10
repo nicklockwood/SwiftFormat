@@ -49,7 +49,7 @@ import PackagePlugin
             if selectedTargets.isEmpty {
                 targetsToProcess = context.package.targets
             } else {
-                targetsToProcess = try context.allLocalTargets(for: selectedTargets)
+                targetsToProcess = try context.package.allLocalTargets(of: selectedTargets)
             }
 
             for target in targetsToProcess {
@@ -60,10 +60,10 @@ import PackagePlugin
         }
     }
 
-    extension PluginContext {
-        func allLocalTargets(for targetNames: [String]) throws -> [Target] {
-            let matchingTargets = try self.package.targets(named: targetNames)
-            let packageTargets = Set(self.package.targets.map(\.id))
+    extension Package {
+        func allLocalTargets(of targetNames: [String]) throws -> [Target] {
+            let matchingTargets = try self.targets(named: targetNames)
+            let packageTargets = Set(self.targets.map(\.id))
             let withLocalDependencies = matchingTargets.flatMap { [$0] + $0.recursiveTargetDependencies }
                 .filter { packageTargets.contains($0.id) }
             let enumeratedKeyValues = withLocalDependencies.map(\.id).enumerated()

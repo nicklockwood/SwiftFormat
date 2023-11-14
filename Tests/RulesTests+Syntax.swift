@@ -3795,30 +3795,6 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.conditionalAssignment, options: options)
     }
 
-    let input = """
-    let result1: String?
-    if condition {
-        result1 = foo as? String
-    } else {
-        result1 = "bar"
-    }
-
-    let result2: String?
-    switch condition {
-    case true:
-        result2 = foo as? String
-    case false:
-        result2 = "bar"
-    }
-
-    let result3: String?
-    switch condition {
-    case true:
-        result3 = method(string: foo as? String) // ok
-    case false:
-        result3 = "bar"
-    }
-    """
 
     func testConvertsConditionalCastInSwift5_10() {
         let input = """

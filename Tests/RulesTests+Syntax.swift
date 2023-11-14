@@ -621,12 +621,24 @@ class SyntaxTests: RulesTests {
     }
 
     func testEnumNamespacesImportClass() {
-        let input = "import class MyUIKit.AutoHeightTableView"
+        let input = """
+        import class MyUIKit.AutoHeightTableView
+
+        enum Foo {
+            static var bar: String
+        }
+        """
         testFormatting(for: input, rule: FormatRules.enumNamespaces)
     }
 
     func testEnumNamespacesImportStruct() {
-        let input = "import struct Core.CurrencyFormatter"
+        let input = """
+        import struct Core.CurrencyFormatter
+
+        enum Foo {
+            static var bar: String
+        }
+        """
         testFormatting(for: input, rule: FormatRules.enumNamespaces)
     }
 
@@ -928,7 +940,7 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.enumNamespaces, options: options)
     }
 
-    func testEnumNamespacesAfterImport1() {
+    func testEnumNamespacesAfterImport() {
         // https://github.com/nicklockwood/SwiftFormat/issues/1569
         let input = """
         import Foundation

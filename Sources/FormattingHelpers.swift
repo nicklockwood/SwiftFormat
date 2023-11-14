@@ -1194,31 +1194,30 @@ extension Formatter {
     /// If `index` is the start of an `if` or `switch` statement,
     /// finds and returns all of the statement branches.
     func conditionalBranches(at index: Int) -> [ConditionalBranch]? {
-        // Skip over any `try`, `try?`, `try!`, or `await` token,
-        // which are valid before an if/switch expression.
-        if tokens[index] == .keyword("await"),
-           let nextToken = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index)
-        {
-            return conditionalBranches(at: nextToken)
-        }
-
-        if tokens[index] == .keyword("try"),
-           let tokenAfterTry = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index)
-        {
-            if tokens[tokenAfterTry] == .operator("!", .postfix) || tokens[tokenAfterTry] == .operator("?", .postfix),
-               let tokenAfterOperator = self.index(of: .nonSpaceOrCommentOrLinebreak, after: tokenAfterTry)
-            {
-                return conditionalBranches(at: tokenAfterOperator)
-            } else {
-                return conditionalBranches(at: tokenAfterTry)
+        switch tokens[index] {
+        case .keyword("await"):
+            // Skip over any `try`, `try?`, `try!`, or `await` token,
+            // which are valid before an if/switch expression.
+            if let nextToken = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index) {
+                return conditionalBranches(at: nextToken)
             }
-        }
-
-        if tokens[index] == .keyword("if") {
+            return nil
+        case .keyword("try"):
+            if let tokenAfterTry = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index) {
+                if tokens[tokenAfterTry] == .operator("!", .postfix) || tokens[tokenAfterTry] == .operator("?", .postfix),
+                   let tokenAfterOperator = self.index(of: .nonSpaceOrCommentOrLinebreak, after: tokenAfterTry)
+                {
+                    return conditionalBranches(at: tokenAfterOperator)
+                } else {
+                    return conditionalBranches(at: tokenAfterTry)
+                }
+            }
+            return nil
+        case .keyword("if"):
             return ifStatementBranches(at: index)
-        } else if tokens[index] == .keyword("switch") {
+        case .keyword("switch"):
             return switchStatementBranches(at: index)
-        } else {
+        default:
             return nil
         }
     }

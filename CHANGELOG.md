@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.52.10](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.52.10) (2023-11-14)
+
+- Fixed `enumNamespaces` rule breaking `import struct`/`class` statements
+- Fixed unsafe application of `conditionalAssignment` rule to `switch` statements containing `#if` blocks
+
 ## [0.52.9](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.52.9) (2023-11-10)
 
 - Fixed `redundantClosure` removing required closure around conditional statements
@@ -9,7 +14,7 @@
 - Fixed `blankLineAfterImports` introducing spurious blank line before `@preconcurrency` attribute
 - Fixed bug where `enumNamespaces` rule wouldn't be applied immediately after an `import` statement
 - Fixed issue where `switch` case with multiple `where` clauses could be parsed incorrectly
-- The SwiftFormat SPM plugin now formats local dependencies as well as final product targets
+- The SwiftFormat SPM plugin now formats local dependencies, not just final product targets
 
 ## [0.52.8](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.52.8) (2023-10-17)
 

@@ -3795,6 +3795,47 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.conditionalAssignment, options: options)
     }
 
+    // TODO: update branches parser to handle this case properly
+    func testIgnoreSwitchWithConditionalCompilation() {
+        let input = """
+        func foo() -> String? {
+            let result: String?
+            switch condition {
+            #if os(macOS)
+            case .foo:
+                result = method(string: foo as? String)
+            #endif
+            case .bar:
+                return nil
+            }
+            return result
+        }
+        """
+
+        let options = FormatOptions(ifdefIndent: .noIndent, swiftVersion: "5.9")
+        testFormatting(for: input, rule: FormatRules.conditionalAssignment, options: options)
+    }
+
+    // TODO: update branches parser to handle this scenario properly
+    func testIgnoreSwitchWithConditionalCompilation2() {
+        let input = """
+        func foo() -> String? {
+            let result: String?
+            switch condition {
+            case .foo:
+                result = method(string: foo as? String)
+            #if os(macOS)
+            case .bar:
+                return nil
+            #endif
+            }
+            return result
+        }
+        """
+
+        let options = FormatOptions(ifdefIndent: .noIndent, swiftVersion: "5.9")
+        testFormatting(for: input, rule: FormatRules.conditionalAssignment, options: options)
+    }
 
     func testConvertsConditionalCastInSwift5_10() {
         let input = """

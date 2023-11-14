@@ -1243,12 +1243,12 @@ extension Formatter {
 
     /// Finds all of the branch bodies in a switch statement.
     /// Returns the index of the `startOfScope` and `endOfScope` of each branch.
-    func switchStatementBranches(at switchIndex: Int) -> [ConditionalBranch] {
+    func switchStatementBranches(at switchIndex: Int) -> [ConditionalBranch]? {
         assert(tokens[switchIndex] == .keyword("switch"))
         guard let startOfSwitchScope = index(of: .startOfScope("{"), after: switchIndex),
               let firstCaseIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfSwitchScope),
               tokens[firstCaseIndex].isSwitchCaseOrDefault
-        else { return [] }
+        else { return nil }
 
         var branches = [(startOfBranch: Int, endOfBranch: Int)]()
         var nextConditionalBranchIndex: Int? = firstCaseIndex
@@ -1262,6 +1262,8 @@ extension Formatter {
 
             if tokens[endOfBody].isSwitchCaseOrDefault {
                 nextConditionalBranchIndex = endOfBody
+            } else if tokens[startOfBody ..< endOfBody].contains(.startOfScope("#if")) {
+                return nil
             } else {
                 break
             }

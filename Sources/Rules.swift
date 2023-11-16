@@ -1646,7 +1646,7 @@ public struct _FormatRules {
                         // Make sure the `=` actually created a new scope
                         if scopeStack.last == .operator("=", .infix),
                            // Parse the conditional branches following the `=` assignment operator
-                           let previousAssignmentIndex,
+                           let previousAssignmentIndex = previousAssignmentIndex,
                            let nextTokenAfterAssignment = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: previousAssignmentIndex),
                            let conditionalBranches = formatter.conditionalBranches(at: nextTokenAfterAssignment),
                            // If this is the very end of the conditional assignment following the `=`,

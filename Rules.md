@@ -2694,7 +2694,7 @@ Option | Description
 
 ## wrapMultilineConditionalAssignment
 
-Wraps multiline conditional assignment expressions after the assignment operator
+Wraps multiline conditional assignment expressions after the assignment operator.
 
 <details>
 <summary>Examples</summary>

@@ -3763,35 +3763,43 @@ class IndentTests: RulesTests {
     func testIndentIfExpressionAssignmentOnNextLine() {
         let input = """
         let foo =
-        if let bar {
+        if let bar = someBar {
             bar
-        } else if let baaz {
+        } else if let baaz = someBaaz {
             baaz
-        } else if let quux {
-            if let foo {
+        } else if let quux = someQuux {
+            if let foo = someFoo {
                 foo
             } else {
                 quux
             }
+        } else {
+            foo2
         }
+
+        print(foo)
         """
 
         let output = """
         let foo =
-            if let bar {
+            if let bar = someBar {
                 bar
-            } else if let baaz {
+            } else if let baaz = someBaaz {
                 baaz
-            } else if let quux {
-                if let foo {
+            } else if let quux = someQuux {
+                if let foo = someFoo {
                     foo
                 } else {
                     quux
                 }
+            } else {
+                foo2
             }
+
+        print(foo)
         """
 
-        testFormatting(for: input, output, rule: FormatRules.indent)
+        testFormatting(for: input, output, rule: FormatRules.indent, exclude: ["wrapMultilineStatementBraces"])
     }
 
     func testIndentIfExpressionAssignmentOnSameLine() {
@@ -3836,6 +3844,126 @@ class IndentTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.indent)
     }
 
+    func testIndentSwitchExpressionAssignmentInNestedScope() {
+        let input = """
+        class Foo {
+            func foo() -> Foo {
+                let foo =
+                switch bar {
+                case true:
+                    bar
+                case baaz:
+                    baaz
+                }
+
+                return foo
+            }
+        }
+        """
+
+        let output = """
+        class Foo {
+            func foo() -> Foo {
+                let foo =
+                    switch bar {
+                    case true:
+                        bar
+                    case baaz:
+                        baaz
+                    }
+
+                return foo
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.indent)
+    }
+
+    func testIndentNestedSwitchExpressionAssignment() {
+        let input = """
+        let foo =
+        switch bar {
+        case true:
+            bar
+        case baaz:
+            switch bar {
+            case true:
+                bar
+            case baaz:
+                baaz
+            }
+        }
+        """
+
+        let output = """
+        let foo =
+            switch bar {
+            case true:
+                bar
+            case baaz:
+                switch bar {
+                case true:
+                    bar
+                case baaz:
+                    baaz
+                }
+            }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.indent)
+    }
+
+    func testIndentSwitchExpressionAssignmentWithComments() {
+        let input = """
+        let foo =
+        // There is a comment before the switch statement
+        switch bar {
+        // Plus a comment before each case
+        case true:
+            bar
+        // Plus a comment before each case
+        case baaz:
+            baaz
+        }
+
+        print(foo)
+        """
+
+        let output = """
+        let foo =
+            // There is a comment before the switch statement
+            switch bar {
+            // Plus a comment before each case
+            case true:
+                bar
+            // Plus a comment before each case
+            case baaz:
+                baaz
+            }
+
+        print(foo)
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.indent)
+    }
+
+    func testIndentIfExpressionWithSingleComment() {
+        let input = """
+        let foo =
+            // There is a comment before the first branch
+            if let foo {
+                foo
+            } else {
+                bar
+            }
+
+        print(foo)
+        """
+
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
     func testIndentIfExpressionWithComments() {
         let input = """
         let foo =
@@ -3843,29 +3971,79 @@ class IndentTests: RulesTests {
             if let foo {
                 foo
             }
-            // And also a comment before the second branch
+            // There is a comment before the second branch
             else {
                 bar
             }
 
+        print(foo)
+        """
+
+        testFormatting(for: input, rule: FormatRules.indent, exclude: ["wrapMultilineStatementBraces"])
+    }
+
+    func testIndentMultilineIfExpression() {
+        let input = """
         let foo =
-            // There is a multi-line comment before the first branch,
-            // check it out I am a multi-line comment
+            if
+                let foo,
+                foo != disallowedFoo
+            {
+                foo
+            }
+            // There is a comment before the second branch
+            else {
+                bar
+            }
+
+        print(foo)
+        print(foo)
+        """
+
+        testFormatting(for: input, rule: FormatRules.indent, exclude: ["braces"])
+    }
+
+    func testIndentNestedIfExpressionWithComments() {
+        let input = """
+        let foo =
+            // There is a comment before the first branch
             if let foo {
                 foo
             }
-            //
-            // There is a multi-line comment before the second branch too
-            //
+            // There is a comment before the second branch
+            else {
+                // And a comment before each of these nested branches
+                if let bar {
+                    bar
+                }
+                // And a comment before each of these nested branches
+                else {
+                    baaz
+                }
+            }
+
+        print(foo)
+        """
+
+        testFormatting(for: input, rule: FormatRules.indent, exclude: ["wrapMultilineStatementBraces"])
+    }
+
+    func testIndentIfExpressionWithMultilineComments() {
+        let input = """
+        let foo =
+            // There is a comment before the first branch
+            // which spans across multiple lines
+            if let foo {
+                foo
+            }
+            // And also a comment before the second branch
+            // which spans across multiple lines
             else {
                 bar
             }
         """
 
-        //
-        // TODO: Fix issue with wrapMultilineStatementBraces
-        //
-        testFormatting(for: input, rule: FormatRules.indent, exclude: ["wrapMultilineStatementBraces"])
+        testFormatting(for: input, rule: FormatRules.indent)
     }
 
     func testSE0380Example() {

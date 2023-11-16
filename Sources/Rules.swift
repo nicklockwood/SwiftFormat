@@ -1614,7 +1614,50 @@ public struct _FormatRules {
                 {
                     indentStack[indentStack.count - 1] += formatter.options.indent
                 }
+            case .operator("=", .infix):
+                // If/switch expressions on their own line following an `=` assignment should always be indented
+                guard let nextKeyword = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i),
+                      ["if", "switch"].contains(formatter.tokens[nextKeyword].string),
+                      !formatter.onSameLine(i, nextKeyword)
+                else { fallthrough }
+
+                let indent = (indentStack.last ?? "") + formatter.options.indent
+                indentStack.append(indent)
+                stringBodyIndentStack.append("")
+                indentCounts.append(1)
+                scopeStartLineIndexes.append(lineIndex)
+                linewrapStack.append(false)
+                scopeStack.append(.operator("=", .infix))
+                scopeStartLineIndexes.append(lineIndex)
+
             default:
+                /// If this is the final `endOfScope` in a conditional assignment,
+                /// we have to end the scope introduced by that assignment operator.
+                defer {
+                    if token == .endOfScope("}"), let startOfScope = formatter.startOfScope(at: i) {
+                        // Find the `=` before this start of scope, which isn't itself part of the conditional statement
+                        var previousAssignmentIndex = formatter.index(of: .operator("=", .infix), before: startOfScope)
+                        while let currentPreviousAssignmentIndex = previousAssignmentIndex,
+                              formatter.isConditionalStatement(at: currentPreviousAssignmentIndex)
+                        {
+                            previousAssignmentIndex = formatter.index(of: .operator("=", .infix), before: currentPreviousAssignmentIndex)
+                        }
+
+                        // Make sure the `=` actually created a new scope
+                        if scopeStack.last == .operator("=", .infix),
+                           // Parse the conditional branches following the `=` assignment operator
+                           let previousAssignmentIndex,
+                           let nextTokenAfterAssignment = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: previousAssignmentIndex),
+                           let conditionalBranches = formatter.conditionalBranches(at: nextTokenAfterAssignment),
+                           // If this is the very end of the conditional assignment following the `=`,
+                           // then we can end the scope.
+                           conditionalBranches.last?.endOfBranch == i
+                        {
+                            popScope()
+                        }
+                    }
+                }
+
                 // Handle end of scope
                 if let scope = scopeStack.last, token.isEndOfScope(scope) {
                     let indentCount = indentCounts.last! - 1
@@ -1631,6 +1674,7 @@ public struct _FormatRules {
                             stringBodyIndentStack.append(stringBodyIndentStack.last ?? "")
                         }
                     }
+
                     // Don't reduce indent if line doesn't start with end of scope
                     let start = formatter.startOfLine(at: i)
                     guard let firstIndex = formatter.index(of: .nonSpaceOrComment, after: start - 1) else {
@@ -1961,23 +2005,7 @@ public struct _FormatRules {
                         indent += formatter.linewrapIndent(at: i)
                     }
 
-                    /// Whether or not this indent from a linewrap should be applied to following lines in the indentation scope.
-                    /// If true, doesn't modify the `linewrapStack`.
-                    var linewrapIndentAppliesToFollowingLines = false
-
-                    // If / switch expressions on the line following an = assignment
-                    // should be indented, including all of the branches.
-                    if let nextTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i),
-                       ["if", "switch"].contains(formatter.tokens[nextTokenIndex].string),
-                       !formatter.onSameLine(i, nextTokenIndex)
-                    {
-                        linewrapIndentAppliesToFollowingLines = true
-                    }
-
-                    if !linewrapIndentAppliesToFollowingLines {
-                        linewrapStack[linewrapStack.count - 1] = true
-                    }
-
+                    linewrapStack[linewrapStack.count - 1] = true
                     indentStack.append(indent)
                     stringBodyIndentStack.append("")
                 }
@@ -7606,8 +7634,9 @@ public struct _FormatRules {
     }
 
     public let wrapMultilineConditionalAssignment = FormatRule(
-        help: "Wraps multiline conditional assignment expressions after the assignment operator",
-        orderAfter: ["conditionalAssignment"]
+        help: "Wraps multiline conditional assignment expressions after the assignment operator.",
+        orderAfter: ["conditionalAssignment"],
+        sharedOptions: ["linebreaks"]
     ) { formatter in
         formatter.forEach(.keyword) { introducerIndex, introducerToken in
             guard ["let", "var"].contains(introducerToken.string),

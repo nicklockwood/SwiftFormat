@@ -1377,7 +1377,8 @@ extension Formatter {
            let asIndex = index(of: .keyword("as"), after: startOfScopeIndex),
            let endOfScopeIndex = endOfScope(at: startOfScopeIndex),
            asIndex < endOfScopeIndex,
-           next(.nonSpaceOrCommentOrLinebreak, after: asIndex) == .operator("?", .postfix),
+           next(.nonSpaceOrCommentOrLinebreak, after: asIndex) == .operator("?", .postfix)
+           || next(.nonSpaceOrCommentOrLinebreak, after: asIndex) == .operator("!", .postfix),
            // Make sure the as? is at the top level, not nested in some
            // inner scope like a function call or closure
            startOfScope(at: asIndex) == startOfScopeIndex

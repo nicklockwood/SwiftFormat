@@ -1589,14 +1589,18 @@ extension Formatter {
                 tokens[indexAfterOpenBrace] == .startOfScope("("),
                 let endOfArgumentsScopeIndex = endOfScope(at: indexAfterOpenBrace),
                 let firstTokenInArgumentsList = index(of: .nonSpaceOrCommentOrLinebreak, after: indexAfterOpenBrace),
-                let lastTokenInArgumentsList = index(of: .nonSpaceOrCommentOrLinebreak, before: endOfArgumentsScopeIndex),
                 let indexAfterArguments = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfArgumentsScopeIndex),
                 tokens[indexAfterArguments] == .keyword("in")
         {
             inKeywordIndex = indexAfterArguments
 
-            let argumentTokens = tokens[firstTokenInArgumentsList ... lastTokenInArgumentsList].split(separator: .delimiter(","))
-            argumentNames = argumentTokens.map { $0.first(where: \.isIdentifier)?.string ?? $0[0].string }
+            // This can be a completely empty argument list, like `{ () in ... }`.
+            if firstTokenInArgumentsList == endOfArgumentsScopeIndex {
+                return (argumentNames: [], inKeywordIndex: inKeywordIndex)
+            }
+
+            let argumentTokens = tokens[firstTokenInArgumentsList ... endOfArgumentsScopeIndex].split(separator: .delimiter(","))
+            argumentNames = argumentTokens.compactMap { $0.first(where: \.isIdentifier)?.string ?? $0[0].string }
         }
 
         // Otherwise this is an anonymous closure

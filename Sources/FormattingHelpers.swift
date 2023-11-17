@@ -1267,11 +1267,9 @@ extension Formatter {
     func startOfBody(atStartOfScope startOfScopeIndex: Int) -> Int {
         // If this is a closure that has an `in` clause, the body scope starts after that
         if isStartOfClosure(at: startOfScopeIndex),
-           let endOfScopeIndex = endOfScope(at: startOfScopeIndex),
-           let inToken = index(of: .keyword("in"), in: (startOfScopeIndex + 1) ..< endOfScopeIndex),
-           !indexIsWithinNestedClosure(inToken, startOfScopeIndex: startOfScopeIndex)
+           let inKeywordIndex = parseClosureArgumentList(at: startOfScopeIndex)?.inKeywordIndex
         {
-            return inToken
+            return inKeywordIndex
         } else {
             return startOfScopeIndex
         }

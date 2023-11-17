@@ -3874,6 +3874,22 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.conditionalAssignment, options: options)
     }
 
+    func testDoesntConvertIfStatementWithForLoopInBranch() {
+        let input = """
+        var foo: Foo?
+        if condition {
+            foo = Foo("foo")
+            for foo in foos {
+                print(foo)
+            }
+        } else {
+            foo = Foo("bar")
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: FormatRules.conditionalAssignment, options: options)
+    }
+
     // MARK: - forLoop
 
     func testConvertSimpleForEachToForLoop() {

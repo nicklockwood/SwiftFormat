@@ -5006,4 +5006,11 @@ class WrappingTests: RulesTests {
 
         testFormatting(for: input, [output], rules: [FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent])
     }
+
+    func testPreservesSingleLineConditionalAssignment() {
+        let input = """
+        let foo = if let bar { bar } else { baaz }
+        print(foo)
+        """
+    }
 }

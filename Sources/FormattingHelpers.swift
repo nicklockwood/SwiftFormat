@@ -1267,11 +1267,9 @@ extension Formatter {
     func startOfBody(atStartOfScope startOfScopeIndex: Int) -> Int {
         // If this is a closure that has an `in` clause, the body scope starts after that
         if isStartOfClosure(at: startOfScopeIndex),
-           let endOfScopeIndex = endOfScope(at: startOfScopeIndex),
-           let inToken = index(of: .keyword("in"), in: (startOfScopeIndex + 1) ..< endOfScopeIndex),
-           !indexIsWithinNestedClosure(inToken, startOfScopeIndex: startOfScopeIndex)
+           let inKeywordIndex = parseClosureArgumentList(at: startOfScopeIndex)?.inKeywordIndex
         {
-            return inToken
+            return inKeywordIndex
         } else {
             return startOfScopeIndex
         }
@@ -1291,13 +1289,13 @@ extension Formatter {
             }
             return nil
         case .keyword("try"):
-            if let tokenAfterTry = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index) {
-                if tokens[tokenAfterTry] == .operator("!", .postfix) || tokens[tokenAfterTry] == .operator("?", .postfix),
-                   let tokenAfterOperator = self.index(of: .nonSpaceOrCommentOrLinebreak, after: tokenAfterTry)
+            if let nextIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index) {
+                if tokens[nextIndex].isUnwrapOperator,
+                   let tokenAfterOperator = self.index(of: .nonSpaceOrCommentOrLinebreak, after: nextIndex)
                 {
                     return conditionalBranches(at: tokenAfterOperator)
                 } else {
-                    return conditionalBranches(at: tokenAfterTry)
+                    return conditionalBranches(at: nextIndex)
                 }
             }
             return nil
@@ -1377,7 +1375,7 @@ extension Formatter {
            let asIndex = index(of: .keyword("as"), after: startOfScopeIndex),
            let endOfScopeIndex = endOfScope(at: startOfScopeIndex),
            asIndex < endOfScopeIndex,
-           next(.nonSpaceOrCommentOrLinebreak, after: asIndex) == .operator("?", .postfix),
+           next(.nonSpaceOrCommentOrLinebreak, after: asIndex)?.isUnwrapOperator == true,
            // Make sure the as? is at the top level, not nested in some
            // inner scope like a function call or closure
            startOfScope(at: asIndex) == startOfScopeIndex

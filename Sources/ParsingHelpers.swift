@@ -1307,9 +1307,7 @@ extension Formatter {
 
             // `try` can either be by itself, or followed by `?` or `!` (`try`, `try?`, or `try!`).
             // If present, skip the operator.
-            if tokens[nextTokenAfterTry] == .operator("?", .postfix)
-                || tokens[nextTokenAfterTry] == .operator("!", .postfix)
-            {
+            if tokens[nextTokenAfterTry].isUnwrapOperator {
                 guard let nextTokenAfterTryOperator = index(of: .nonSpaceOrCommentOrLinebreak, after: nextTokenAfterTry) else { return nil }
                 nextTokenAfterTry = nextTokenAfterTryOperator
             }
@@ -1386,9 +1384,7 @@ extension Formatter {
 
                 // `as` can either be by itself, or followed by `?` or `!` (`as`, `as?`, or `as!`).
                 // If present, skip the operator.
-                if tokens[nextTokenAfterKeyword] == .operator("?", .postfix)
-                    || tokens[nextTokenAfterKeyword] == .operator("!", .postfix)
-                {
+                if tokens[nextTokenAfterKeyword].isUnwrapOperator {
                     guard let nextTokenAfterOperator = index(of: .nonSpaceOrCommentOrLinebreak, after: nextTokenAfterKeyword) else { return nil }
                     nextTokenAfterKeyword = nextTokenAfterOperator
                 }
@@ -1589,14 +1585,18 @@ extension Formatter {
                 tokens[indexAfterOpenBrace] == .startOfScope("("),
                 let endOfArgumentsScopeIndex = endOfScope(at: indexAfterOpenBrace),
                 let firstTokenInArgumentsList = index(of: .nonSpaceOrCommentOrLinebreak, after: indexAfterOpenBrace),
-                let lastTokenInArgumentsList = index(of: .nonSpaceOrCommentOrLinebreak, before: endOfArgumentsScopeIndex),
                 let indexAfterArguments = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfArgumentsScopeIndex),
                 tokens[indexAfterArguments] == .keyword("in")
         {
             inKeywordIndex = indexAfterArguments
 
-            let argumentTokens = tokens[firstTokenInArgumentsList ... lastTokenInArgumentsList].split(separator: .delimiter(","))
-            argumentNames = argumentTokens.map { $0.first(where: \.isIdentifier)?.string ?? $0[0].string }
+            // This can be a completely empty argument list, like `{ () in ... }`.
+            if firstTokenInArgumentsList == endOfArgumentsScopeIndex {
+                return (argumentNames: [], inKeywordIndex: inKeywordIndex)
+            }
+
+            let argumentTokens = tokens[firstTokenInArgumentsList ... endOfArgumentsScopeIndex].split(separator: .delimiter(","))
+            argumentNames = argumentTokens.compactMap { $0.first(where: \.isIdentifier)?.string ?? $0[0].string }
         }
 
         // Otherwise this is an anonymous closure

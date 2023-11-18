@@ -8675,7 +8675,7 @@ class RedundancyTests: RulesTests {
         let result1: String? = {
             switch condition {
             case true:
-                return foo as? String
+                return foo as! String
             case false:
                 return "bar"
             }

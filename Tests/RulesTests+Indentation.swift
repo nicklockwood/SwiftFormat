@@ -3817,7 +3817,7 @@ class IndentTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, rule: FormatRules.indent)
+        testFormatting(for: input, rule: FormatRules.indent, exclude: ["wrapMultilineConditionalAssignment"])
     }
 
     func testIndentSwitchExpressionAssignment() {

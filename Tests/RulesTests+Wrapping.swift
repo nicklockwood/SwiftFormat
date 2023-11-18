@@ -4935,4 +4935,75 @@ class WrappingTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.wrapSingleLineComments,
                        options: FormatOptions(maxWidth: 40), exclude: ["docComments"])
     }
+
+    // MARK: - wrapMultilineConditionalAssignment
+
+    func testWrapIfExpressionAssignment() {
+        let input = """
+        let foo = if let bar {
+            bar
+        } else {
+            baaz
+        }
+        """
+
+        let output = """
+        let foo =
+            if let bar {
+                bar
+            } else {
+                baaz
+            }
+        """
+
+        testFormatting(for: input, [output], rules: [FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent])
+    }
+
+    func testUnwrapsAssignmentOperatorInIfExpressionAssignment() {
+        let input = """
+        let foo
+            = if let bar {
+                bar
+            } else {
+                baaz
+            }
+        """
+
+        let output = """
+        let foo =
+            if let bar {
+                bar
+            } else {
+                baaz
+            }
+        """
+
+        testFormatting(for: input, [output], rules: [FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent])
+    }
+
+    func testUnwrapsAssignmentOperatorInIfExpressionFollowingComment() {
+        let input = """
+        let foo
+            // In order to unwrap the `=` here it has to move it to
+            // before the comment, rather than simply unwrapping it.
+            = if let bar {
+                bar
+            } else {
+                baaz
+            }
+        """
+
+        let output = """
+        let foo =
+            // In order to unwrap the `=` here it has to move it to
+            // before the comment, rather than simply unwrapping it.
+            if let bar {
+                bar
+            } else {
+                baaz
+            }
+        """
+
+        testFormatting(for: input, [output], rules: [FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent])
+    }
 }

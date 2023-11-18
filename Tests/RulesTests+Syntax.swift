@@ -3437,7 +3437,7 @@ class SyntaxTests: RulesTests {
         }
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: FormatRules.conditionalAssignment, options: options, exclude: ["redundantType"])
+        testFormatting(for: input, output, rule: FormatRules.conditionalAssignment, options: options, exclude: ["redundantType", "wrapMultilineConditionalAssignment"])
     }
 
     func testConvertsSimpleSwitchStatementAssignment() {
@@ -3459,7 +3459,7 @@ class SyntaxTests: RulesTests {
         }
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: FormatRules.conditionalAssignment, options: options, exclude: ["redundantType"])
+        testFormatting(for: input, output, rule: FormatRules.conditionalAssignment, options: options, exclude: ["redundantType", "wrapMultilineConditionalAssignment"])
     }
 
     func testConvertsTrivialSwitchStatementAssignment() {
@@ -3477,7 +3477,7 @@ class SyntaxTests: RulesTests {
         }
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: FormatRules.conditionalAssignment, options: options)
+        testFormatting(for: input, output, rule: FormatRules.conditionalAssignment, options: options, exclude: ["wrapMultilineConditionalAssignment"])
     }
 
     func testConvertsNestedIfAndStatementAssignments() {
@@ -3525,7 +3525,7 @@ class SyntaxTests: RulesTests {
         }
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: FormatRules.conditionalAssignment, options: options, exclude: ["redundantType"])
+        testFormatting(for: input, output, rule: FormatRules.conditionalAssignment, options: options, exclude: ["redundantType", "wrapMultilineConditionalAssignment"])
     }
 
     func testConvertsIfStatementAssignmentPreservingComment() {
@@ -3548,7 +3548,7 @@ class SyntaxTests: RulesTests {
         }
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: FormatRules.conditionalAssignment, options: options, exclude: ["indent", "redundantType"])
+        testFormatting(for: input, output, rule: FormatRules.conditionalAssignment, options: options, exclude: ["indent", "redundantType", "wrapMultilineConditionalAssignment"])
     }
 
     func testDoesntConvertsIfStatementAssigningMultipleProperties() {
@@ -3802,7 +3802,7 @@ class SyntaxTests: RulesTests {
         """
 
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: FormatRules.conditionalAssignment, options: options)
+        testFormatting(for: input, output, rule: FormatRules.conditionalAssignment, options: options, exclude: ["wrapMultilineConditionalAssignment"])
     }
 
     // TODO: update branches parser to handle this case properly
@@ -3881,23 +3881,7 @@ class SyntaxTests: RulesTests {
         """
 
         let options = FormatOptions(swiftVersion: "5.10")
-        testFormatting(for: input, output, rule: FormatRules.conditionalAssignment, options: options)
-    }
-
-    func testDoesntConvertIfStatementWithForLoopInBranch() {
-        let input = """
-        var foo: Foo?
-        if condition {
-            foo = Foo("foo")
-            for foo in foos {
-                print(foo)
-            }
-        } else {
-            foo = Foo("bar")
-        }
-        """
-        let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, rule: FormatRules.conditionalAssignment, options: options)
+        testFormatting(for: input, output, rule: FormatRules.conditionalAssignment, options: options, exclude: ["wrapMultilineConditionalAssignment"])
     }
 
     // MARK: - forLoop
@@ -4164,5 +4148,21 @@ class SyntaxTests: RulesTests {
         strings.map { $0.uppercased() }.forEach { print($0) }
         """
         testFormatting(for: input, rule: FormatRules.preferForLoop)
+    }
+
+    func testDoesntConvertIfStatementWithForLoopInBranch() {
+        let input = """
+        var foo: Foo?
+        if condition {
+            foo = Foo("foo")
+            for foo in foos {
+                print(foo)
+            }
+        } else {
+            foo = Foo("bar")
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: FormatRules.conditionalAssignment, options: options)
     }
 }

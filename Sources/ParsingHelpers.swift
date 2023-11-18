@@ -1292,9 +1292,7 @@ extension Formatter {
 
             // `try` can either be by itself, or followed by `?` or `!` (`try`, `try?`, or `try!`).
             // If present, skip the operator.
-            if tokens[nextTokenAfterTry] == .operator("?", .postfix)
-                || tokens[nextTokenAfterTry] == .operator("!", .postfix)
-            {
+            if tokens[nextTokenAfterTry].isUnwrapOperator {
                 guard let nextTokenAfterTryOperator = index(of: .nonSpaceOrCommentOrLinebreak, after: nextTokenAfterTry) else { return nil }
                 nextTokenAfterTry = nextTokenAfterTryOperator
             }
@@ -1371,9 +1369,7 @@ extension Formatter {
 
                 // `as` can either be by itself, or followed by `?` or `!` (`as`, `as?`, or `as!`).
                 // If present, skip the operator.
-                if tokens[nextTokenAfterKeyword] == .operator("?", .postfix)
-                    || tokens[nextTokenAfterKeyword] == .operator("!", .postfix)
-                {
+                if tokens[nextTokenAfterKeyword].isUnwrapOperator {
                     guard let nextTokenAfterOperator = index(of: .nonSpaceOrCommentOrLinebreak, after: nextTokenAfterKeyword) else { return nil }
                     nextTokenAfterKeyword = nextTokenAfterOperator
                 }

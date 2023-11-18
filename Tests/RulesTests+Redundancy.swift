@@ -1273,7 +1273,7 @@ class RedundancyTests: RulesTests {
         }
         """
         let options = FormatOptions(redundantType: .inferred, swiftVersion: "5.9")
-        testFormatting(for: input, rule: FormatRules.redundantType, options: options)
+        testFormatting(for: input, rule: FormatRules.redundantType, options: options, exclude: ["wrapMultilineConditionalAssignment"])
     }
 
     func testRedundantTypeWithIfExpression_inferred() {
@@ -1292,7 +1292,7 @@ class RedundancyTests: RulesTests {
         }
         """
         let options = FormatOptions(redundantType: .inferred, swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options)
+        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options, exclude: ["wrapMultilineConditionalAssignment"])
     }
 
     func testRedundantTypeWithIfExpression_explicit() {
@@ -1311,7 +1311,7 @@ class RedundancyTests: RulesTests {
         }
         """
         let options = FormatOptions(redundantType: .explicit, swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options)
+        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options, exclude: ["wrapMultilineConditionalAssignment"])
     }
 
     func testRedundantTypeWithNestedIfExpression_inferred() {
@@ -1348,7 +1348,7 @@ class RedundancyTests: RulesTests {
         }
         """
         let options = FormatOptions(redundantType: .inferred, swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options)
+        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options, exclude: ["wrapMultilineConditionalAssignment"])
     }
 
     func testRedundantTypeWithNestedIfExpression_explicit() {
@@ -1385,7 +1385,7 @@ class RedundancyTests: RulesTests {
         }
         """
         let options = FormatOptions(redundantType: .explicit, swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options)
+        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options, exclude: ["wrapMultilineConditionalAssignment"])
     }
 
     func testRedundantTypeWithLiteralsInIfExpression() {
@@ -1404,7 +1404,7 @@ class RedundancyTests: RulesTests {
         }
         """
         let options = FormatOptions(redundantType: .inferred, swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options)
+        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options, exclude: ["wrapMultilineConditionalAssignment"])
     }
 
     // --redundanttype explicit
@@ -2694,7 +2694,7 @@ class RedundancyTests: RulesTests {
         }
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, [output], rules: [FormatRules.redundantReturn, FormatRules.redundantClosure, FormatRules.indent], options: options)
+        testFormatting(for: input, [output], rules: [FormatRules.redundantReturn, FormatRules.redundantClosure, FormatRules.indent], options: options, exclude: ["wrapMultilineConditionalAssignment"])
     }
 
     func testRedundantSwitchStatementReturnInFunction() {
@@ -7890,7 +7890,7 @@ class RedundancyTests: RulesTests {
 
         let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, [output], rules: [FormatRules.redundantReturn, FormatRules.redundantClosure],
-                       options: options, exclude: ["indent"])
+                       options: options, exclude: ["indent", "wrapMultilineConditionalAssignment"])
     }
 
     func testRedundantClosureWithExplicitReturn2() {
@@ -8287,7 +8287,7 @@ class RedundancyTests: RulesTests {
         """
         let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, [output], rules: [FormatRules.redundantReturn, FormatRules.redundantClosure],
-                       options: options, exclude: ["indent"])
+                       options: options, exclude: ["indent", "wrapMultilineConditionalAssignment"])
     }
 
     func testRedundantClosureDoesntLeaveStrayTryAwait() {
@@ -8309,7 +8309,7 @@ class RedundancyTests: RulesTests {
         """
         let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, [output], rules: [FormatRules.redundantReturn, FormatRules.redundantClosure],
-                       options: options, exclude: ["indent"])
+                       options: options, exclude: ["indent", "wrapMultilineConditionalAssignment"])
     }
 
     func testRedundantClosureDoesntLeaveInvalidSwitchExpressionInOperatorChain() {
@@ -8427,7 +8427,7 @@ class RedundancyTests: RulesTests {
         """
 
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: FormatRules.redundantClosure, options: options, exclude: ["indent"])
+        testFormatting(for: input, output, rule: FormatRules.redundantClosure, options: options, exclude: ["indent", "wrapMultilineConditionalAssignment"])
     }
 
     func testRedundantClosureDoesntLeaveInvalidSwitchExpressionInArray() {
@@ -8762,7 +8762,7 @@ class RedundancyTests: RulesTests {
         """
 
         let options = FormatOptions(swiftVersion: "5.10")
-        testFormatting(for: input, output, rule: FormatRules.redundantClosure, options: options, exclude: ["indent"])
+        testFormatting(for: input, output, rule: FormatRules.redundantClosure, options: options, exclude: ["indent", "wrapMultilineConditionalAssignment"])
     }
 
     func testRedundantClosureDoesntBreakBuildWithRedundantReturnRuleDisabled() {
@@ -8825,7 +8825,7 @@ class RedundancyTests: RulesTests {
 
         let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, [output], rules: [FormatRules.redundantReturn, FormatRules.redundantClosure],
-                       options: options, exclude: ["indent", "blankLinesBetweenScopes"])
+                       options: options, exclude: ["indent", "blankLinesBetweenScopes", "wrapMultilineConditionalAssignment"])
     }
 
     func testRedundantSwitchStatementReturnInFunctionWithMultipleWhereClauses() {

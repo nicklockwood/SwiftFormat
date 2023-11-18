@@ -101,6 +101,7 @@
 * [sortSwitchCases](#sortSwitchCases)
 * [wrapConditionalBodies](#wrapConditionalBodies)
 * [wrapEnumCases](#wrapEnumCases)
+* [wrapMultilineConditionalAssignment](#wrapMultilineConditionalAssignment)
 * [wrapSwitchCases](#wrapSwitchCases)
 
 # Deprecated Rules (do not use)
@@ -2623,6 +2624,28 @@ Wrap the bodies of inline loop statements onto a new line.
 +     print(foo)
 + }
 ```
+
+</details>
+<br/>
+
+## wrapMultilineConditionalAssignment
+
+Wrap multiline conditional assignment expressions after the assignment operator.
+
+<details>
+<summary>Examples</summary>
+
+- let planetLocation = if let star = planet.star {
+-     "The \(star.name) system"
+- } else {
+-     "Rogue planet"
+- }
++ let planetLocation =
++     if let star = planet.star {
++         "The \(star.name) system"
++     } else {
++         "Rogue planet"
++     }
 
 </details>
 <br/>

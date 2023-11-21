@@ -5475,7 +5475,7 @@ public struct _FormatRules {
 
     public let wrapAttributes = FormatRule(
         help: "Wrap @attributes onto a separate line, or keep them on the same line.",
-        options: ["funcattributes", "typeattributes", "varattributes"],
+        options: ["funcattributes", "typeattributes", "varattributes", "storedvarattrs"],
         sharedOptions: ["linebreaks", "maxwidth"]
     ) { formatter in
         formatter.forEach(.attribute) { i, _ in
@@ -5504,7 +5504,11 @@ public struct _FormatRules {
             case "class", "actor", "struct", "enum", "protocol", "extension":
                 attributeMode = formatter.options.typeAttributes
             case "var", "let":
-                attributeMode = formatter.options.varAttributes
+                if formatter.isStoredProperty(atIntroducerIndex: keywordIndex) {
+                    attributeMode = formatter.options.storedVarAttributes
+                } else {
+                    attributeMode = formatter.options.varAttributes
+                }
             default:
                 return
             }

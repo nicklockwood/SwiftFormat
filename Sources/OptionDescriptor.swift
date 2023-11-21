@@ -868,8 +868,14 @@ struct _Descriptors {
     let varAttributes = OptionDescriptor(
         argumentName: "varattributes",
         displayName: "Var Attributes",
-        help: "Property @attributes: \"preserve\", \"prev-line\", or \"same-line\"",
+        help: "Computed property @attributes: \"preserve\", \"prev-line\", or \"same-line\"",
         keyPath: \.varAttributes
+    )
+    let storedVarAttributes = OptionDescriptor(
+        argumentName: "storedvarattrs",
+        displayName: "Stored Var Attributes",
+        help: "Stored property @attributes: \"preserve\", \"prev-line\", or \"same-line\"",
+        keyPath: \.storedVarAttributes
     )
     let yodaSwap = OptionDescriptor(
         argumentName: "yodaswap",

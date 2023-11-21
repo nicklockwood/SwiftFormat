@@ -4507,6 +4507,18 @@ class WrappingTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
     }
 
+    func testWrapPrivateSetComputedVarAttributes() {
+        let input = """
+        @objc private(set) dynamic var foo = Foo()
+        """
+        let output = """
+        @objc
+        private(set) dynamic var foo = Foo()
+        """
+        let options = FormatOptions(storedVarAttributes: .prevLine, computedVarAttributes: .prevLine)
+        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
+    }
+
     func testWrapPrivateSetVarAttributes() {
         let input = """
         @objc private(set) dynamic var foo = Foo()
@@ -4515,7 +4527,7 @@ class WrappingTests: RulesTests {
         @objc
         private(set) dynamic var foo = Foo()
         """
-        let options = FormatOptions(varAttributes: .prevLine, storedVarAttributes: .prevLine)
+        let options = FormatOptions(varAttributes: .prevLine)
         testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
     }
 
@@ -4543,6 +4555,18 @@ class WrappingTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
     }
 
+    func testWrapPropertyWrapperAttributeVarAttributes() {
+        let input = """
+        @OuterType.Wrapper var foo: Int
+        """
+        let output = """
+        @OuterType.Wrapper
+        var foo: Int
+        """
+        let options = FormatOptions(varAttributes: .prevLine)
+        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
+    }
+
     func testWrapPropertyWrapperAttribute() {
         let input = """
         @OuterType.Wrapper var foo: Int
@@ -4551,7 +4575,7 @@ class WrappingTests: RulesTests {
         @OuterType.Wrapper
         var foo: Int
         """
-        let options = FormatOptions(varAttributes: .prevLine, storedVarAttributes: .prevLine)
+        let options = FormatOptions(storedVarAttributes: .prevLine, computedVarAttributes: .prevLine)
         testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
     }
 
@@ -4575,7 +4599,7 @@ class WrappingTests: RulesTests {
         @OuterType.Generic<WrappedType>
         var foo: WrappedType
         """
-        let options = FormatOptions(varAttributes: .prevLine, storedVarAttributes: .prevLine)
+        let options = FormatOptions(storedVarAttributes: .prevLine, computedVarAttributes: .prevLine)
         testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
     }
 
@@ -4587,7 +4611,7 @@ class WrappingTests: RulesTests {
         @OuterType.Generic<WrappedType>.Foo
         var foo: WrappedType
         """
-        let options = FormatOptions(varAttributes: .prevLine, storedVarAttributes: .prevLine)
+        let options = FormatOptions(storedVarAttributes: .prevLine, computedVarAttributes: .prevLine)
         testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
     }
 
@@ -4647,7 +4671,7 @@ class WrappingTests: RulesTests {
             var foo = Foo()
         }
         """
-        let options = FormatOptions(varAttributes: .prevLine, storedVarAttributes: .prevLine)
+        let options = FormatOptions(storedVarAttributes: .prevLine, computedVarAttributes: .prevLine)
         testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
     }
 
@@ -4696,7 +4720,7 @@ class WrappingTests: RulesTests {
             }
         }
         """
-        let options = FormatOptions(varAttributes: .prevLine, storedVarAttributes: .sameLine)
+        let options = FormatOptions(varAttributes: .sameLine, storedVarAttributes: .sameLine, computedVarAttributes: .prevLine)
         testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
     }
 
@@ -4716,7 +4740,26 @@ class WrappingTests: RulesTests {
         }
         """
 
-        let options = FormatOptions(varAttributes: .prevLine, storedVarAttributes: .sameLine)
+        let options = FormatOptions(varAttributes: .sameLine, storedVarAttributes: .sameLine, computedVarAttributes: .prevLine)
+        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
+    }
+
+    func testWrapAttributesInSwiftUIView() {
+        let input = """
+        struct MyView: View {
+            @State var textContent: String
+
+            var body: some View {
+                childView
+            }
+
+            @ViewBuilder var childView: some View {
+                Text(verbatim: textContent)
+            }
+        }
+        """
+
+        let options = FormatOptions(varAttributes: .sameLine)
         testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
     }
 
@@ -4725,7 +4768,7 @@ class WrappingTests: RulesTests {
         var foo: @MainActor (Foo) -> Void
         var bar: @MainActor (Bar) -> Void
         """
-        let options = FormatOptions(varAttributes: .prevLine, storedVarAttributes: .prevLine)
+        let options = FormatOptions(storedVarAttributes: .prevLine, computedVarAttributes: .prevLine)
         testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
     }
 

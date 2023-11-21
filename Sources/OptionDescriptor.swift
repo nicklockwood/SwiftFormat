@@ -868,14 +868,21 @@ struct _Descriptors {
     let varAttributes = OptionDescriptor(
         argumentName: "varattributes",
         displayName: "Var Attributes",
-        help: "Computed property @attributes: \"preserve\", \"prev-line\", or \"same-line\"",
+        help: "[Deprecated] Property @attributes: \"preserve\", \"prev-line\", or \"same-line\"",
+        deprecationMessage: "Replaced with --storedvarattrs and --computedvarattrs.",
         keyPath: \.varAttributes
     )
     let storedVarAttributes = OptionDescriptor(
         argumentName: "storedvarattrs",
-        displayName: "Stored Var Attributes",
+        displayName: "Stored Property Attributes",
         help: "Stored property @attributes: \"preserve\", \"prev-line\", or \"same-line\"",
         keyPath: \.storedVarAttributes
+    )
+    let computedVarAttributes = OptionDescriptor(
+        argumentName: "computedvarattrs",
+        displayName: "Computed Property Attributes",
+        help: "Stored property @attributes: \"preserve\", \"prev-line\", or \"same-line\"",
+        keyPath: \.computedVarAttributes
     )
     let yodaSwap = OptionDescriptor(
         argumentName: "yodaswap",

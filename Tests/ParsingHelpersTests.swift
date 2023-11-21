@@ -1739,6 +1739,20 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(formatter.parseType(at: 5)?.name, "((consuming Foo, borrowing Bar) -> (Foo, Bar)?)?")
     }
 
+    func testParseExistentialAny() {
+        let formatter = Formatter(tokenize("""
+        let foo: any Foo
+        """))
+        XCTAssertEqual(formatter.parseType(at: 5)?.name, "any Foo")
+    }
+
+    func testParseOpaqueReturnType() {
+        let formatter = Formatter(tokenize("""
+        var body: some View { EmptyView() }
+        """))
+        XCTAssertEqual(formatter.parseType(at: 5)?.name, "some View")
+    }
+
     func testParseInvalidType() {
         let formatter = Formatter(tokenize("""
         let foo = { foo, bar in (foo, bar) }
@@ -1960,5 +1974,49 @@ class ParsingHelpersTests: XCTestCase {
         }
 
         return expressions
+    }
+
+    // MARK: isStoredProperty
+
+    func testIsStoredProperty() {
+        XCTAssertTrue(isStoredProperty("var foo: String"))
+        XCTAssertTrue(isStoredProperty("let foo = 42"))
+        XCTAssertTrue(isStoredProperty("let foo: Int = 42"))
+        XCTAssertTrue(isStoredProperty("var foo: Int = 42"))
+        XCTAssertTrue(isStoredProperty("@Environment(\\.myEnvironmentProperty) var foo", at: 7))
+
+        XCTAssertTrue(isStoredProperty("""
+        var foo: String {
+          didSet {
+            print(newValue)
+          }
+        }
+        """))
+
+        XCTAssertTrue(isStoredProperty("""
+        var foo: String {
+          willSet {
+            print(newValue)
+          }
+        }
+        """))
+
+        XCTAssertFalse(isStoredProperty("""
+        var foo: String {
+            "foo"
+        }
+        """))
+
+        XCTAssertFalse(isStoredProperty("""
+        var foo: String {
+            get { "foo" }
+            set { print(newValue} }
+        }
+        """))
+    }
+
+    func isStoredProperty(_ input: String, at index: Int = 0) -> Bool {
+        let formatter = Formatter(tokenize(input))
+        return formatter.isStoredProperty(atIntroducerIndex: index)
     }
 }

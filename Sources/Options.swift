@@ -632,6 +632,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var typeAttributes: AttributeMode
     public var varAttributes: AttributeMode
     public var storedVarAttributes: AttributeMode
+    public var computedVarAttributes: AttributeMode
     public var markTypes: MarkMode
     public var typeMarkComment: String
     public var markExtensions: MarkMode
@@ -742,6 +743,7 @@ public struct FormatOptions: CustomStringConvertible {
                 typeAttributes: AttributeMode = .preserve,
                 varAttributes: AttributeMode = .preserve,
                 storedVarAttributes: AttributeMode = .preserve,
+                computedVarAttributes: AttributeMode = .preserve,
                 markTypes: MarkMode = .always,
                 typeMarkComment: String = "MARK: - %t",
                 markExtensions: MarkMode = .always,
@@ -842,6 +844,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.typeAttributes = typeAttributes
         self.varAttributes = varAttributes
         self.storedVarAttributes = storedVarAttributes
+        self.computedVarAttributes = computedVarAttributes
         self.markTypes = markTypes
         self.typeMarkComment = typeMarkComment
         self.markExtensions = markExtensions

@@ -1996,4 +1996,48 @@ class ParsingHelpersTests: XCTestCase {
 
         return expressions
     }
+
+    // MARK: isStoredProperty
+
+    func testIsStoredProperty() {
+        XCTAssertTrue(isStoredProperty("var foo: String"))
+        XCTAssertTrue(isStoredProperty("let foo = 42"))
+        XCTAssertTrue(isStoredProperty("let foo: Int = 42"))
+        XCTAssertTrue(isStoredProperty("var foo: Int = 42"))
+        XCTAssertTrue(isStoredProperty("@Environment(\\.myEnvironmentProperty) var foo", at: 7))
+
+        XCTAssertTrue(isStoredProperty("""
+        var foo: String {
+          didSet {
+            print(newValue)
+          }
+        }
+        """))
+
+        XCTAssertTrue(isStoredProperty("""
+        var foo: String {
+          willSet {
+            print(newValue)
+          }
+        }
+        """))
+
+        XCTAssertFalse(isStoredProperty("""
+        var foo: String {
+            "foo"
+        }
+        """))
+
+        XCTAssertFalse(isStoredProperty("""
+        var foo: String {
+            get { "foo" }
+            set { print(newValue} }
+        }
+        """))
+    }
+
+    func isStoredProperty(_ input: String, at index: Int = 0) -> Bool {
+        let formatter = Formatter(tokenize(input))
+        return formatter.isStoredProperty(atIntroducerIndex: index)
+    }
 }

@@ -825,6 +825,59 @@ extension Formatter {
         }
     }
 
+    /// Whether or not this property at the given introducer index (either `var` or `let`)
+    /// is a stored property or a computed property.
+    func isStoredProperty(atIntroducerIndex introducerIndex: Int) -> Bool {
+        assert(["let", "var"].contains(tokens[introducerIndex].string))
+
+        var parseIndex = introducerIndex
+
+        // All properties have the property name after the introducer
+        if let propertyNameIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: parseIndex),
+           tokens[propertyNameIndex].isIdentifierOrKeyword
+        {
+            parseIndex = propertyNameIndex
+        }
+
+        // Properties have an optional `: TypeName` component
+        if let typeAnnotationStartIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: parseIndex),
+           tokens[typeAnnotationStartIndex] == .delimiter(":"),
+           let startOfTypeIndex = index(of: .nonSpaceOrComment, after: typeAnnotationStartIndex),
+           let typeRange = parseType(at: startOfTypeIndex)?.range
+        {
+            parseIndex = typeRange.upperBound
+        }
+
+        // Properties have an optional `= expression` component
+        if let assignmentIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: parseIndex),
+           tokens[assignmentIndex] == .operator("=", .infix)
+        {
+            // If the type has an assignment operator, it's guaranteed to be a stored property.
+            return true
+        }
+
+        // Finally, properties have an optional `{` body
+        if let startOfBody = index(of: .nonSpaceOrCommentOrLinebreak, after: parseIndex),
+           tokens[startOfBody] == .startOfScope("{")
+        {
+            // If this property has a body, then its a stored property if and only if the body
+            // has a `didSet` or `willSet` keyword, based on the grammar for a variable declaration.
+            if let nextToken = next(.nonSpaceOrCommentOrLinebreak, after: startOfBody),
+               [.identifier("willSet"), .identifier("didSet")].contains(nextToken)
+            {
+                return true
+            } else {
+                return false
+            }
+        }
+
+        // If the property declaration isn't followed by a `{ ... }` block,
+        // then it's definitely a stored property and not a computed property.
+        else {
+            return true
+        }
+    }
+
     /// Determine if next line after this token should be indented
     func isEndOfStatement(at i: Int, in scope: Token? = nil) -> Bool {
         guard let token = token(at: i) else { return true }

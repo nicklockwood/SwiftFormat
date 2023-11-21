@@ -273,7 +273,10 @@ class MetadataTests: XCTestCase {
     func testArgumentNamesAreValidLength() {
         let arguments = Set(commandLineArguments).subtracting(deprecatedArguments)
         for argument in arguments {
-            XCTAssert(argument.count <= Options.maxArgumentNameLength)
+            XCTAssert(
+                argument.count <= Options.maxArgumentNameLength,
+                "\"\(argument)\" (length=\(argument.count)) longer than maximum allowed argument name length \(Options.maxArgumentNameLength)"
+            )
         }
     }
 

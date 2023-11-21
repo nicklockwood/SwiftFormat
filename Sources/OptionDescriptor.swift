@@ -865,17 +865,17 @@ struct _Descriptors {
         help: "Type @attributes: \"preserve\", \"prev-line\", or \"same-line\"",
         keyPath: \.typeAttributes
     )
-    let varAttributes = OptionDescriptor(
-        argumentName: "varattributes",
-        displayName: "Var Attributes",
-        help: "Computed property @attributes: \"preserve\", \"prev-line\", or \"same-line\"",
-        keyPath: \.varAttributes
-    )
     let storedVarAttributes = OptionDescriptor(
         argumentName: "storedvarattrs",
-        displayName: "Stored Var Attributes",
+        displayName: "Stored Property Attributes",
         help: "Stored property @attributes: \"preserve\", \"prev-line\", or \"same-line\"",
         keyPath: \.storedVarAttributes
+    )
+    let computedVarAttributes = OptionDescriptor(
+        argumentName: "computedvarattrs",
+        displayName: "Computed Property Attributes",
+        help: "Stored property @attributes: \"preserve\", \"prev-line\", or \"same-line\"",
+        keyPath: \.computedVarAttributes
     )
     let yodaSwap = OptionDescriptor(
         argumentName: "yodaswap",
@@ -1054,6 +1054,13 @@ struct _Descriptors {
         keyPath: \.experimentalRules,
         trueValues: ["enabled", "true"],
         falseValues: ["disabled", "false"]
+    )
+    let varAttributes = OptionDescriptor(
+        argumentName: "varattributes",
+        displayName: "Var Attributes",
+        help: "Property @attributes: \"preserve\", \"prev-line\", or \"same-line\"",
+        deprecationMessage: "Use with `--storedvarattrs` or `--computedvarattrs` instead.",
+        keyPath: \.varAttributes
     )
 
     // MARK: - RENAMED

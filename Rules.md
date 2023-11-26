@@ -2599,7 +2599,6 @@ Option | Description
 --- | ---
 `--funcattributes` | Function @attributes: "preserve", "prev-line", or "same-line"
 `--typeattributes` | Type @attributes: "preserve", "prev-line", or "same-line"
-`--varattributes` | Property @attributes: "preserve", "prev-line", or "same-line"
 `--storedvarattrs` | Stored property @attributes: "preserve", "prev-line", or "same-line"
 `--computedvarattrs` | Stored property @attributes: "preserve", "prev-line", or "same-line"
 

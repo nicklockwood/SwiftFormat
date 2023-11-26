@@ -86,8 +86,11 @@ class MetadataTests: XCTestCase {
             if !rule.options.isEmpty {
                 result += "\n\nOption | Description\n--- | ---"
                 for option in rule.options {
-                    let help = Descriptors.byName[option]!.help
-                    result += "\n`--\(option)` | \(help)"
+                    let descriptor = Descriptors.byName[option]!
+                    guard !descriptor.isDeprecated else {
+                        continue
+                    }
+                    result += "\n`--\(option)` | \(descriptor.help)"
                 }
             }
             if let examples = rule.examples {

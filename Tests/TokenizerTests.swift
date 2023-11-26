@@ -610,6 +610,16 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testRawStringContainingJustTwoUnescapedQuotes() {
+        let input = "#\"\"\"\"#"
+        let output: [Token] = [
+            .startOfScope("#\""),
+            .stringBody("\"\""),
+            .endOfScope("\"#"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     func testRawStringContainingUnhashedBackslash() {
         let input = "#\"\\\"#"
         let output: [Token] = [

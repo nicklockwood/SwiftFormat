@@ -542,6 +542,7 @@ extension Collection where Element == Token {
 extension UnicodeScalar {
     var isDigit: Bool { isdigit(Int32(value)) > 0 }
     var isHexDigit: Bool { isxdigit(Int32(value)) > 0 }
+    var isLinebreak: Bool { "\n\r\u{000B}\u{000C}".unicodeScalars.contains(self) }
     var isSpace: Bool {
         switch value {
         case 0x0009, 0x0011, 0x0012, 0x0020,
@@ -554,7 +555,7 @@ extension UnicodeScalar {
     }
 
     var isSpaceOrLinebreak: Bool {
-        isSpace || "\n\r\u{000B}\u{000C}".unicodeScalars.contains(self)
+        isSpace || isLinebreak
     }
 }
 
@@ -769,7 +770,7 @@ private extension UnicodeScalarView {
         }
         let start = self
         if readString("\"\"") {
-            if first != "#" {
+            if first?.isLinebreak ?? true {
                 return .startOfScope("\"\"\"")
             }
             self = start

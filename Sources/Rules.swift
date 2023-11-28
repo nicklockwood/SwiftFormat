@@ -5475,7 +5475,7 @@ public struct _FormatRules {
 
     public let wrapAttributes = FormatRule(
         help: "Wrap @attributes onto a separate line, or keep them on the same line.",
-        options: ["funcattributes", "typeattributes", "varattributes", "storedvarattrs", "computedvarattrs"],
+        options: ["funcattributes", "typeattributes", "varattributes", "storedvarattrs", "computedvarattrs", "complexattrs", "noncomplexattrs"],
         sharedOptions: ["linebreaks", "maxwidth"]
     ) { formatter in
         formatter.forEach(.attribute) { i, _ in
@@ -5497,7 +5497,7 @@ public struct _FormatRules {
             }
 
             // Check which `AttributeMode` option to use
-            let attributeMode: AttributeMode
+            var attributeMode: AttributeMode
             switch formatter.tokens[keywordIndex].string {
             case "func", "init", "subscript":
                 attributeMode = formatter.options.funcAttributes
@@ -5520,6 +5520,16 @@ public struct _FormatRules {
                 }
             default:
                 return
+            }
+
+            // If the complexAttriubtes option is configured, it takes precedence over other options
+            // if this is a complex attributes with arguments.
+            let attributeName = formatter.tokens[i].string
+            let isComplexAttribute = formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) == .startOfScope("(")
+                && !formatter.options.complexAttributesExceptions.contains(attributeName)
+
+            if isComplexAttribute, formatter.options.complexAttributes != .preserve {
+                attributeMode = formatter.options.complexAttributes
             }
 
             // Apply the `AttributeMode`

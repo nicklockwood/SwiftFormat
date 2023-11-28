@@ -2599,6 +2599,8 @@ Option | Description
 `--typeattributes` | Type @attributes: "preserve", "prev-line", or "same-line"
 `--storedvarattrs` | Stored var @attribs: "preserve", "prev-line", or "same-line"
 `--computedvarattrs` | Computed var @attribs: "preserve", "prev-line", "same-line"
+`--complexattrs` | Complex @attributes: "preserve", "prev-line", or "same-line"
+`--noncomplexattrs` | List of @attributes to exclude from complexattrs rule
 
 <details>
 <summary>Examples</summary>

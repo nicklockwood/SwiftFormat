@@ -877,6 +877,18 @@ struct _Descriptors {
         help: "Computed var @attribs: \"preserve\", \"prev-line\", \"same-line\"",
         keyPath: \.computedVarAttributes
     )
+    let complexAttributes = OptionDescriptor(
+        argumentName: "complexattrs",
+        displayName: "Complex Attributes",
+        help: "Complex @attributes: \"preserve\", \"prev-line\", or \"same-line\"",
+        keyPath: \.complexAttributes
+    )
+    let complexAttributesExceptions = OptionDescriptor(
+        argumentName: "noncomplexattrs",
+        displayName: "Complex Attribute exceptions",
+        help: "List of @attributes to exclude from complexattrs rule",
+        keyPath: \.complexAttributesExceptions
+    )
     let yodaSwap = OptionDescriptor(
         argumentName: "yodaswap",
         displayName: "Yoda Swap",

@@ -117,14 +117,20 @@ class OptionDescriptorTests: XCTestCase {
     func testAllDescriptorsHaveProperty() {
         let allProperties = Set(FormatOptions.default.allOptions.keys)
         for descriptor in Descriptors.all where !descriptor.isDeprecated {
-            XCTAssert(allProperties.contains(descriptor.propertyName))
+            XCTAssert(
+                allProperties.contains(descriptor.propertyName),
+                "FormatOptions doesn't have property named \(descriptor.propertyName)."
+            )
         }
     }
 
     func testAllPropertiesHaveDescriptor() {
         let allDescriptors = Set(Descriptors.all.map { $0.propertyName })
         for property in FormatOptions.default.allOptions.keys {
-            XCTAssert(allDescriptors.contains(property))
+            XCTAssert(
+                allDescriptors.contains(property),
+                "Missing OptionDescriptor for FormatOptions.\(property) option."
+            )
         }
     }
 

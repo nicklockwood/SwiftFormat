@@ -2601,6 +2601,8 @@ Option | Description
 `--typeattributes` | Type @attributes: "preserve", "prev-line", or "same-line"
 `--storedvarattrs` | Stored property @attributes: "preserve", "prev-line", or "same-line"
 `--computedvarattrs` | Stored property @attributes: "preserve", "prev-line", or "same-line"
+`--complexattrs` | Complex @attributes(...): "preserve", "prev-line", or "same-line"
+`--noncomplexattrs` | List of @attributes to exclude from complexattrs rule
 
 <details>
 <summary>Examples</summary>

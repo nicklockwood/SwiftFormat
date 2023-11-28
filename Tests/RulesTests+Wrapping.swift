@@ -4659,6 +4659,39 @@ class WrappingTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
     }
 
+    func testDoesntWrapComplexAttribute() {
+        let input = """
+        @Option(
+            name: ["myArgument"],
+            help: "Long help text for my example arg from Swift argument parser")
+        var foo: WrappedType
+        """
+        let options = FormatOptions(closingParenOnSameLine: true, varAttributes: .prevLine, storedVarAttributes: .sameLine, complexAttributes: .prevLine)
+        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
+    }
+
+    func testDoesntWrapComplexMultilineAttribute() {
+        let input = """
+        @available(*, deprecated, message: "Deprecated!")
+        var foo: WrappedType
+        """
+        let options = FormatOptions(varAttributes: .prevLine, storedVarAttributes: .sameLine, complexAttributes: .prevLine)
+        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
+    }
+
+    func testWrapsComplexAttribute() {
+        let input = """
+        @available(*, deprecated, message: "Deprecated!") var foo: WrappedType
+        """
+
+        let output = """
+        @available(*, deprecated, message: "Deprecated!")
+        var foo: WrappedType
+        """
+        let options = FormatOptions(varAttributes: .prevLine, storedVarAttributes: .sameLine, complexAttributes: .prevLine)
+        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
+    }
+
     func testWrapAttributesIndentsLineCorrectly() {
         let input = """
         class Foo {
@@ -4673,6 +4706,39 @@ class WrappingTests: RulesTests {
         """
         let options = FormatOptions(storedVarAttributes: .prevLine, computedVarAttributes: .prevLine)
         testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
+    }
+
+    func testComplexAttributesException() {
+        let input = """
+        @Environment(\\.myEnvironmentVar) var foo: Foo
+
+        @SomeCustomAttr(argument: true) var foo: Foo
+
+        @available(*, deprecated) var foo: Foo
+        """
+
+        let output = """
+        @Environment(\\.myEnvironmentVar) var foo: Foo
+
+        @SomeCustomAttr(argument: true) var foo: Foo
+
+        @available(*, deprecated)
+        var foo: Foo
+        """
+
+        let options = FormatOptions(varAttributes: .sameLine, storedVarAttributes: .sameLine, computedVarAttributes: .prevLine, complexAttributes: .prevLine, complexAttributesExceptions: ["@Environment", "@SomeCustomAttr"])
+        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
+    }
+
+    func testEscapingClosureNotMistakenForComplexAttribute() {
+        let input = """
+        func foo(_ fooClosure: @escaping () throws -> Void) {
+            try fooClosure()
+        }
+        """
+
+        let options = FormatOptions(complexAttributes: .prevLine)
+        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
     }
 
     func testWrapOrDontWrapMultipleDeclarationsInClass() {
@@ -4704,7 +4770,8 @@ class WrappingTests: RulesTests {
         class Foo {
             @objc var foo = Foo()
 
-            @available(*, unavailable) var bar: Bar
+            @available(*, unavailable)
+            var bar: Bar
 
             @available(*, unavailable)
             var myComputedFoo: String {
@@ -4720,7 +4787,7 @@ class WrappingTests: RulesTests {
             }
         }
         """
-        let options = FormatOptions(varAttributes: .sameLine, storedVarAttributes: .sameLine, computedVarAttributes: .prevLine)
+        let options = FormatOptions(varAttributes: .sameLine, storedVarAttributes: .sameLine, computedVarAttributes: .prevLine, complexAttributes: .prevLine, complexAttributesExceptions: ["@Environment"])
         testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
     }
 
@@ -4748,6 +4815,7 @@ class WrappingTests: RulesTests {
         let input = """
         struct MyView: View {
             @State var textContent: String
+            @Environment(\\.myEnvironmentVar) var environmentVar
 
             var body: some View {
                 childView
@@ -4759,7 +4827,7 @@ class WrappingTests: RulesTests {
         }
         """
 
-        let options = FormatOptions(varAttributes: .sameLine)
+        let options = FormatOptions(varAttributes: .sameLine, complexAttributes: .prevLine, complexAttributesExceptions: ["@Environment"])
         testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
     }
 

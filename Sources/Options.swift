@@ -746,7 +746,7 @@ public struct FormatOptions: CustomStringConvertible {
                 storedVarAttributes: AttributeMode = .preserve,
                 computedVarAttributes: AttributeMode = .preserve,
                 complexAttributes: AttributeMode = .preserve,
-                complexAttributesExceptions: Set<String> = [],
+                complexAttributesExceptions: Set<String> = ["@Environment"],
                 markTypes: MarkMode = .always,
                 typeMarkComment: String = "MARK: - %t",
                 markExtensions: MarkMode = .always,

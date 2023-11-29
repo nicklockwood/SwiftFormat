@@ -4741,7 +4741,7 @@ class WrappingTests: RulesTests {
             }
         }
         """
-        let options = FormatOptions(varAttributes: .sameLine, storedVarAttributes: .sameLine, computedVarAttributes: .prevLine, complexAttributes: .prevLine, complexAttributesExceptions: ["@Environment"])
+        let options = FormatOptions(varAttributes: .sameLine, storedVarAttributes: .sameLine, computedVarAttributes: .prevLine, complexAttributes: .prevLine)
         testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
     }
 
@@ -4781,7 +4781,7 @@ class WrappingTests: RulesTests {
         }
         """
 
-        let options = FormatOptions(varAttributes: .sameLine, complexAttributes: .prevLine, complexAttributesExceptions: ["@Environment"])
+        let options = FormatOptions(varAttributes: .sameLine, complexAttributes: .prevLine)
         testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
     }
 

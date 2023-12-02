@@ -2753,7 +2753,7 @@ extension Formatter {
                     continue
                 case .startOfScope("{") where isWhereClause && scopeStack.count == 1:
                     return
-                case .startOfScope("{") where lastKeyword == "switch":
+                case .startOfScope("{") where lastKeyword == "switch" && scopeStack.count == 1:
                     lastKeyword = ""
                     index += 1
                     loop: while let token = self.token(at: index) {

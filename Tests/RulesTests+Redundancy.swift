@@ -6505,7 +6505,28 @@ class RedundancyTests: RulesTests {
         }
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, rule: FormatRules.indent, options: options)
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
+    func testRedundantSelfNotConfusedByStaticAfterSwitch() {
+        let input = """
+        public final class MyClass {
+            private static func privateStaticFunction1() -> Bool {
+                switch Result(catching: { try someThrowingFunction() }) {
+                case .success:
+                    return true
+                case .failure:
+                    return false
+                }
+            }
+
+            private static func privateStaticFunction2() -> Bool {
+                return false
+            }
+        }
+        """
+        let options = FormatOptions(explicitSelf: .insert)
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options, exclude: ["enumNamespaces"])
     }
 
     // MARK: - redundantStaticSelf

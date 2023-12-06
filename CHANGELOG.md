@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.52.11](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.52.11) (2023-12-05)
+
+- Updated `if`/`switch` expression workaround for Swift 5.9 bug to handle `as!` casts
+- Fixed indent logic  for wrapped conditional assignment expressions
+- Fixed assertion failure in `redundantSelf` rule
+- Fixed raw string parsing bug
+
 ## [0.52.10](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.52.10) (2023-11-14)
 
 - Fixed `enumNamespaces` rule breaking `import struct`/`class` statements

@@ -4955,13 +4955,73 @@ class WrappingTests: RulesTests {
         var foo: Foo
         """
 
-        let options = FormatOptions(varAttributes: .sameLine, storedVarAttributes: .sameLine, computedVarAttributes: .prevLine, complexAttributes: .prevLine, complexAttributesExceptions: ["@Environment", "@SomeCustomAttr"])
+        let options = FormatOptions(varAttributes: .sameLine, storedVarAttributes: .sameLine, computedVarAttributes: .prevLine, complexAttributes: .prevLine, complexAttributesExceptions: ["@SomeCustomAttr"])
+        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
+    }
+
+    func testMixedComplexAndSimpleAttributes() {
+        let input = """
+        /// Simple attributes stay on a single line:
+        @State private var warpDriveEnabled: Bool
+
+        @ObservedObject private var lifeSupportService: LifeSupportService
+
+        @Environment(\\.controlPanelStyle) private var controlPanelStyle
+
+        @AppStorage("ControlsConfig") private var controlsConfig: ControlConfiguration
+
+        /// Complex attributes are wrapped:
+        @AppStorage("ControlPanelState", store: myCustomUserDefaults) private var controlPanelState: ControlPanelState
+
+        @Tweak(name: "Aspect ratio") private var aspectRatio = AspectRatio.stretch
+
+        @available(*, unavailable) var saturn5Builder: Saturn5Builder
+
+        @available(*, unavailable, message: "No longer in production") var saturn5Builder: Saturn5Builder
+        """
+
+        let output = """
+        /// Simple attributes stay on a single line:
+        @State private var warpDriveEnabled: Bool
+
+        @ObservedObject private var lifeSupportService: LifeSupportService
+
+        @Environment(\\.controlPanelStyle) private var controlPanelStyle
+
+        @AppStorage("ControlsConfig") private var controlsConfig: ControlConfiguration
+
+        /// Complex attributes are wrapped:
+        @AppStorage("ControlPanelState", store: myCustomUserDefaults)
+        private var controlPanelState: ControlPanelState
+
+        @Tweak(name: "Aspect ratio")
+        private var aspectRatio = AspectRatio.stretch
+
+        @available(*, unavailable)
+        var saturn5Builder: Saturn5Builder
+
+        @available(*, unavailable, message: "No longer in production")
+        var saturn5Builder: Saturn5Builder
+        """
+
+        let options = FormatOptions(storedVarAttributes: .sameLine, complexAttributes: .prevLine)
         testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
     }
 
     func testEscapingClosureNotMistakenForComplexAttribute() {
         let input = """
         func foo(_ fooClosure: @escaping () throws -> Void) {
+            try fooClosure()
+        }
+        """
+
+        let options = FormatOptions(complexAttributes: .prevLine)
+        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
+    }
+
+    func testEscapingTypedThrowClosureNotMistakenForComplexAttribute() {
+        let input = """
+        func foo(_ fooClosure: @escaping () throws(Foo) -> Void) {
             try fooClosure()
         }
         """

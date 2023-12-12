@@ -5463,10 +5463,10 @@ public struct _FormatRules {
                 return
             }
 
-            // If the complexAttriubtes option is configured, it takes precedence over other options
+            // If the complexAttributes option is configured, it takes precedence over other options
             // if this is a complex attributes with arguments.
             let attributeName = formatter.tokens[i].string
-            let isComplexAttribute = formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) == .startOfScope("(")
+            let isComplexAttribute = formatter.isComplexAttribute(at: i)
                 && !formatter.options.complexAttributesExceptions.contains(attributeName)
 
             if isComplexAttribute, formatter.options.complexAttributes != .preserve {

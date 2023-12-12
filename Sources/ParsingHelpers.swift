@@ -878,6 +878,38 @@ extension Formatter {
         }
     }
 
+    /// Whether or not the attribute starting at the given index is complex. That is, has:
+    ///  - any named arguments
+    ///  - more than one unnamed argument
+    func isComplexAttribute(at attributeIndex: Int) -> Bool {
+        assert(tokens[attributeIndex].string.hasPrefix("@"))
+
+        guard let startOfScopeIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: attributeIndex),
+              tokens[startOfScopeIndex] == .startOfScope("("),
+              let firstTokenInBody = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfScopeIndex),
+              let endOfScopeIndex = endOfScope(at: startOfScopeIndex),
+              firstTokenInBody != endOfScopeIndex
+        else { return false }
+
+        // If the first argument is named with a parameter label, then this is a complex attribute:
+        if tokens[firstTokenInBody].isIdentifierOrKeyword,
+           let followingToken = index(of: .nonSpaceOrCommentOrLinebreak, after: firstTokenInBody),
+           tokens[followingToken] == .delimiter(":")
+        {
+            return true
+        }
+
+        // If there are any commas in the attribute body, then this attribute has
+        // multiple arguments and is thus complex:
+        for index in startOfScopeIndex ... endOfScopeIndex {
+            if tokens[index] == .delimiter(","), startOfScope(at: index) == startOfScopeIndex {
+                return true
+            }
+        }
+
+        return false
+    }
+
     /// Determine if next line after this token should be indented
     func isEndOfStatement(at i: Int, in scope: Token? = nil) -> Bool {
         guard let token = token(at: i) else { return true }

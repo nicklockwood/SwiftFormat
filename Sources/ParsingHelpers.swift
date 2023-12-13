@@ -1291,6 +1291,7 @@ extension Formatter {
     ///  - `some ...`
     ///  - `borrowing ...`
     ///  - `consuming ...`
+    ///  - `(type).(type)`
     func parseType(at startOfTypeIndex: Int) -> (name: String, range: ClosedRange<Int>)? {
         guard let baseType = parseNonOptionalType(at: startOfTypeIndex) else { return nil }
 
@@ -1299,6 +1300,16 @@ extension Formatter {
            ["?", "!"].contains(tokens[nextToken].string)
         {
             let typeRange = baseType.range.lowerBound ... nextToken
+            return (name: tokens[typeRange].string, range: typeRange)
+        }
+
+        // Any type can be followed by a `.` which can then continue the type
+        if let nextTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: baseType.range.upperBound),
+           tokens[nextTokenIndex] == .operator(".", .infix),
+           let followingToken = index(of: .nonSpaceOrCommentOrLinebreak, after: nextTokenIndex),
+           let followingType = parseType(at: followingToken)
+        {
+            let typeRange = startOfTypeIndex ... followingType.range.upperBound
             return (name: tokens[typeRange].string, range: typeRange)
         }
 

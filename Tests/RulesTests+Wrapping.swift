@@ -4843,6 +4843,20 @@ class WrappingTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
     }
 
+    func testAttributeOnComputedProperty() {
+        let input = """
+        extension SectionContainer: ContentProviding where Section: ContentProviding {
+            @_disfavoredOverload
+            public var content: Section.Content {
+                section.content
+            }
+        }
+        """
+
+        let options = FormatOptions(storedVarAttributes: .sameLine, computedVarAttributes: .prevLine)
+        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
+    }
+
     // MARK: wrapEnumCases
 
     func testMultilineEnumCases() {

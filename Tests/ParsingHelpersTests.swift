@@ -1746,6 +1746,27 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(formatter.parseType(at: 5)?.name, "any Foo")
     }
 
+    func testParseCompoundType() {
+        let formatter = Formatter(tokenize("""
+        let foo: Foo.Bar.Baaz
+        """))
+        XCTAssertEqual(formatter.parseType(at: 5)?.name, "Foo.Bar.Baaz")
+    }
+
+    func testParseCompoundGenericType() {
+        let formatter = Formatter(tokenize("""
+        let foo: Foo<Bar>.Bar.Baaz<Quux.V2>
+        """))
+        XCTAssertEqual(formatter.parseType(at: 5)?.name, "Foo<Bar>.Bar.Baaz<Quux.V2>")
+    }
+
+    func testParseExistentialTypeWithSubtype() {
+        let formatter = Formatter(tokenize("""
+        let foo: (any Foo).Bar.Baaz
+        """))
+        XCTAssertEqual(formatter.parseType(at: 5)?.name, "(any Foo).Bar.Baaz")
+    }
+
     func testParseOpaqueReturnType() {
         let formatter = Formatter(tokenize("""
         var body: some View { EmptyView() }

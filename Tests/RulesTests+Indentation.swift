@@ -2290,8 +2290,8 @@ class IndentTests: RulesTests {
     func testIndentLabelledTrailingClosure() {
         let input = """
         var buttonLabel: some View {
-            self.label()
-                .if(self.isInline) {
+            label()
+                .if(isInline) {
                     $0.font(.hsBody)
                 }
                 else: {

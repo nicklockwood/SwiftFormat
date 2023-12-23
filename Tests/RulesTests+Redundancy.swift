@@ -5774,6 +5774,25 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
     }
 
+    func testNoInsertSelfBeforeSet() {
+        let input = """
+        class Foo {
+            var foo: Bool
+
+            var bar: Bool {
+                get { self.foo }
+                set { self.foo = newValue }
+            }
+
+            required init() {}
+
+            func set() {}
+        }
+        """
+        let options = FormatOptions(explicitSelf: .insert)
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
     // explicitSelf = .initOnly
 
     func testPreserveSelfInsideClassInit() {

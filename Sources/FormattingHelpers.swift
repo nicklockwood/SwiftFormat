@@ -2795,12 +2795,6 @@ extension Formatter {
                     var prevIndex = index - 1
                     var name: String?
                     while let token = self.token(at: prevIndex), token != .keyword("var") {
-                        if token.isLvalue, let nextToken = nextToken(after: prevIndex, where: {
-                            !$0.isSpaceOrCommentOrLinebreak && !$0.isStartOfScope
-                        }), nextToken.isRvalue, !nextToken.isOperator(".") {
-                            // It's a closure
-                            fallthrough
-                        }
                         if case let .identifier(_name) = token {
                             // Is the declared variable
                             name = _name

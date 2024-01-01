@@ -977,8 +977,8 @@ public extension SNS {
         public func validate(name: String) throws {
             try validate(resourceArn, name: "resourceArn", parent: name, max: 1011)
             try validate(resourceArn, name: "resourceArn", parent: name, min: 1)
-            try tags.forEach {
-                try $0.validate(name: "\(name).tags[]")
+            for tag in tags {
+                try tag.validate(name: "\(name).tags[]")
             }
         }
 
@@ -1033,9 +1033,9 @@ public extension SNS {
         public func validate(name: String) throws {
             try validate(resourceArn, name: "resourceArn", parent: name, max: 1011)
             try validate(resourceArn, name: "resourceArn", parent: name, min: 1)
-            try tagKeys.forEach {
-                try validate($0, name: "tagKeys[]", parent: name, max: 128)
-                try validate($0, name: "tagKeys[]", parent: name, min: 1)
+            for tagKey in tagKeys {
+                try validate(tagKey, name: "tagKeys[]", parent: name, max: 128)
+                try validate(tagKey, name: "tagKeys[]", parent: name, min: 1)
             }
         }
 

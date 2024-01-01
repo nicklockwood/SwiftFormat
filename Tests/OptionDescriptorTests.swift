@@ -33,14 +33,14 @@ class OptionDescriptorTests: XCTestCase {
                                                      testName: String = #function)
     {
         var options = FormatOptions.default
-        expectations.forEach {
+        for expectation in expectations {
             do {
-                try descriptor.toOptions($0.argumentValue, &options)
-                XCTAssertEqual(options[keyPath: keyPath], $0.optionValue, "\(testName): Argument \($0.argumentValue) map to option \($0.optionValue)")
-                try descriptor.toOptions($0.argumentValue.uppercased(), &options)
-                XCTAssertEqual(options[keyPath: keyPath], $0.optionValue, "\(testName): Argument Uppercased \($0.argumentValue) map to option \($0.optionValue)")
-                try descriptor.toOptions($0.argumentValue.capitalized, &options)
-                XCTAssertEqual(options[keyPath: keyPath], $0.optionValue, "\(testName): Argument capitalized \($0.argumentValue) map to option \($0.optionValue)")
+                try descriptor.toOptions(expectation.argumentValue, &options)
+                XCTAssertEqual(options[keyPath: keyPath], expectation.optionValue, "\(testName): Argument \(expectation.argumentValue) map to option \(expectation.optionValue)")
+                try descriptor.toOptions(expectation.argumentValue.uppercased(), &options)
+                XCTAssertEqual(options[keyPath: keyPath], expectation.optionValue, "\(testName): Argument Uppercased \(expectation.argumentValue) map to option \(expectation.optionValue)")
+                try descriptor.toOptions(expectation.argumentValue.capitalized, &options)
+                XCTAssertEqual(options[keyPath: keyPath], expectation.optionValue, "\(testName): Argument capitalized \(expectation.argumentValue) map to option \(expectation.optionValue)")
             } catch {
                 XCTFail("\(testName): error: \(error)")
             }
@@ -54,16 +54,16 @@ class OptionDescriptorTests: XCTestCase {
                                                              testName: String = #function)
     {
         var options = FormatOptions.default
-        expectations.forEach {
+        for expectation in expectations {
             do {
-                try descriptor.toOptions($0.argumentValue, &options)
-                XCTAssertEqual(options[keyPath: keyPath], $0.optionValue, "\(testName): Argument \($0.argumentValue) map to option \(String(describing: $0.optionValue))")
+                try descriptor.toOptions(expectation.argumentValue, &options)
+                XCTAssertEqual(options[keyPath: keyPath], expectation.optionValue, "\(testName): Argument \(expectation.argumentValue) map to option \(String(describing: expectation.optionValue))")
                 if testCaseVariation {
                     do {
-                        try descriptor.toOptions($0.argumentValue.uppercased(), &options)
-                        XCTAssertEqual(options[keyPath: keyPath], $0.optionValue, "\(testName): Argument Uppercased \($0.argumentValue) map to option \(String(describing: $0.optionValue))")
-                        try descriptor.toOptions($0.argumentValue.capitalized, &options)
-                        XCTAssertEqual(options[keyPath: keyPath], $0.optionValue, "\(testName): Argument capitalized \($0.argumentValue) map to option \(String(describing: $0.optionValue))")
+                        try descriptor.toOptions(expectation.argumentValue.uppercased(), &options)
+                        XCTAssertEqual(options[keyPath: keyPath], expectation.optionValue, "\(testName): Argument Uppercased \(expectation.argumentValue) map to option \(String(describing: expectation.optionValue))")
+                        try descriptor.toOptions(expectation.argumentValue.capitalized, &options)
+                        XCTAssertEqual(options[keyPath: keyPath], expectation.optionValue, "\(testName): Argument capitalized \(expectation.argumentValue) map to option \(String(describing: expectation.optionValue))")
                     } catch {
                         XCTFail("\(testName): error: \(error)")
                     }
@@ -106,9 +106,9 @@ class OptionDescriptorTests: XCTestCase {
                                                expectations: [FreeTextValidationExpectation],
                                                testName: String = #function)
     {
-        expectations.forEach {
-            let isValid = descriptor.validateArgument($0.input)
-            XCTAssertEqual(isValid, $0.isValid, "\(testName): \(isValid) != \($0.isValid)")
+        for expectation in expectations {
+            let isValid = descriptor.validateArgument(expectation.input)
+            XCTAssertEqual(isValid, expectation.isValid, "\(testName): \(isValid) != \(expectation.isValid)")
         }
     }
 

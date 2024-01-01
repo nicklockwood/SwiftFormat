@@ -482,8 +482,8 @@ extension Polygon {
     {
         precondition(isConvex)
         guard polygon.isConvex else {
-            polygon.tessellate().forEach {
-                clip($0, &inside, &outside, &id)
+            for item in polygon.tessellate() {
+                clip(item, &inside, &outside, &id)
             }
             return
         }
@@ -538,8 +538,8 @@ extension Polygon {
                 polygon.id = id
             }
             if !polygon.isConvex {
-                polygon.tessellate().forEach {
-                    $0.split(along: plane, &coplanar, &front, &back, &id)
+                for item in polygon.tessellate() {
+                    item.split(along: plane, &coplanar, &front, &back, &id)
                 }
                 return
             }

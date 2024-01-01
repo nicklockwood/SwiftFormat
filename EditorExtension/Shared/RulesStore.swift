@@ -165,8 +165,8 @@ extension RulesStore {
 
         let disabledRules = Set(FormatRules.disabledByDefault)
         var rules = currentRules
-        newRuleNames.forEach {
-            rules[$0] = !disabledRules.contains($0)
+        for newRuleName in newRuleNames {
+            rules[newRuleName] = !disabledRules.contains(newRuleName)
         }
 
         save(rules)

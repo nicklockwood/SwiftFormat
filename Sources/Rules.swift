@@ -103,7 +103,7 @@ private let rulesByName: [String: FormatRule] = {
     while changedOrder {
         changedOrder = false
         for value in values {
-            value.orderAfter.forEach { name in
+            for name in value.orderAfter {
                 guard let rule = rules[name] else {
                     preconditionFailure(name)
                 }
@@ -7299,7 +7299,6 @@ public struct _FormatRules {
 
     public let preferForLoop = FormatRule(
         help: "Convert functional `forEach` calls to for loops.",
-        disabledByDefault: true,
         options: ["anonymousforeach", "onelineforeach"]
     ) { formatter in
         formatter.forEach(.identifier("forEach")) { forEachIndex, _ in

@@ -938,8 +938,8 @@ struct _Descriptors {
         displayName: "Single-line forEach closures",
         help: "Convert one-line forEach: \"preserve\" (default) or \"wrap\".",
         keyPath: \.preserveSingleLineForEach,
-        trueValues: ["preserve"],
-        falseValues: ["wrap"]
+        trueValues: ["ignore", "preserve"],
+        falseValues: ["convert"]
     )
 
     // MARK: - Internal

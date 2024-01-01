@@ -3936,10 +3936,40 @@ class SyntaxTests: RulesTests {
             print(placeholderString)
         }
 
-        for potato in potatoes { potato.bake() }
+        potatoes.forEach({ $0.bake() })
         """
 
-        testFormatting(for: input, output, rule: FormatRules.preferForLoop)
+        testFormatting(for: input, output, rule: FormatRules.preferForLoop, exclude: ["trailingClosures"])
+    }
+
+    func testNoConvertAnonymousForEachToForLoop() {
+        let input = """
+        let placeholderStrings = ["foo", "bar", "baaz"]
+        placeholderStrings.forEach {
+            print($0)
+        }
+
+        potatoes.forEach({ $0.bake() })
+        """
+
+        let options = FormatOptions(preserveAnonymousForEach: true, preserveSingleLineForEach: false)
+        testFormatting(for: input, rule: FormatRules.preferForLoop, options: options, exclude: ["trailingClosures"])
+    }
+
+    func testConvertSingleLineForEachToForLoop() {
+        let input = "potatoes.forEach({ item in item.bake() })"
+        let output = "for item in potatoes { item.bake() }"
+
+        let options = FormatOptions(preserveSingleLineForEach: false)
+        testFormatting(for: input, output, rule: FormatRules.preferForLoop, options: options)
+    }
+
+    func testConvertSingleLineAnonymousForEachToForLoop() {
+        let input = "potatoes.forEach({ $0.bake() })"
+        let output = "for potato in potatoes { potato.bake() }"
+
+        let options = FormatOptions(preserveSingleLineForEach: false)
+        testFormatting(for: input, output, rule: FormatRules.preferForLoop, options: options)
     }
 
     func testConvertNestedForEach() {

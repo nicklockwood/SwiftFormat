@@ -7300,11 +7300,10 @@ public struct _FormatRules {
     public let preferForLoop = FormatRule(
         help: "Convert functional `forEach` calls to for loops.",
         disabledByDefault: true,
-        options: ["anonymousforeach", "onelineforeach"],
-        sharedOptions: ["linebreaks"]
+        options: ["anonymousforeach", "onelineforeach"]
     ) { formatter in
         formatter.forEach(.identifier("forEach")) { forEachIndex, _ in
-            // Make sure this is a function call preceeded by a `.`
+            // Make sure this is a function call preceded by a `.`
             guard let functionCallDotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: forEachIndex),
                   formatter.tokens[functionCallDotIndex] == .operator(".", .infix),
                   let indexAfterForEach = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: forEachIndex),
@@ -7341,6 +7340,11 @@ public struct _FormatRules {
             default:
                 return
             }
+
+            // Abort early for single-line loops
+            guard !formatter.options.preserveSingleLineForEach || formatter
+                .tokens[closureOpenBraceIndex ..< closureCloseBraceIndex].contains(where: { $0.isLinebreak })
+            else { return }
 
             // Ignore closures with capture lists for now since they're rare
             // in this context and add complexity
@@ -7516,14 +7520,6 @@ public struct _FormatRules {
             }
 
             // Start updating the `forEach` call to a `for .. in .. {` loop
-            let wasDefinedOnSingleLine = formatter.endOfLine(at: closureOpenBraceIndex) == formatter.endOfLine(at: closureCloseBraceIndex)
-
-            // If we're converting this single-line forEach to a multiline for loop, add a newline before the closing brace.
-            // Do this first since any other changes we make may invalidate this existing `closureCloseBraceIndex` value.
-            if wasDefinedOnSingleLine, !formatter.options.preserveSingleLineForEach {
-                formatter.insertLinebreak(at: closureCloseBraceIndex - 1)
-            }
-
             for closureBodyIndex in closureOpenBraceIndex ... closureCloseBraceIndex {
                 guard !formatter.indexIsWithinNestedClosure(closureBodyIndex, startOfScopeIndex: closureOpenBraceIndex) else { continue }
 
@@ -7569,10 +7565,6 @@ public struct _FormatRules {
                 .space(" "),
                 .startOfScope("{"),
             ])
-
-            if wasDefinedOnSingleLine, !formatter.options.preserveSingleLineForEach {
-                newTokens.append(formatter.linebreakToken(for: closureOpenBraceIndex))
-            }
 
             formatter.replaceTokens(
                 in: (forLoopSubjectRange.lowerBound) ... (inKeywordIndex ?? closureOpenBraceIndex),

@@ -83,5 +83,18 @@ extension String {
             return nil
         }
         return replacingOccurrences(of: rule, with: replacement, options: [.regularExpression, .caseInsensitive])
+            .removingPrefix("all")
+    }
+
+    func removingPrefix(_ prefix: String) -> String? {
+        if hasPrefix(prefix.lowercased()) {
+            let string = dropFirst(prefix.count)
+            return string.first.map { "\($0.lowercased())\(string.dropFirst())" }
+        }
+        if hasPrefix(prefix.capitalized) {
+            let string = dropFirst(prefix.count)
+            return string.first.map { "\($0.uppercased())\(string.dropFirst())" }
+        }
+        return self
     }
 }

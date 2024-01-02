@@ -4028,6 +4028,22 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.preferForLoop)
     }
 
+    func testRemoveAllPrefixFromLoopIdentifier() {
+        let input = """
+        allWindows.forEach {
+            print($0)
+        }
+        """
+
+        let output = """
+        for window in allWindows {
+            print(window)
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.preferForLoop)
+    }
+
     func testConvertsReturnToContinue() {
         let input = """
         let placeholderStrings = ["foo", "bar", "baaz"]

@@ -7468,26 +7468,16 @@ public struct _FormatRules {
                     return
                 }
 
-                // We can't introduce an identifier that already exists in the for each body,
+                // We can't introduce an identifier that already exists in the loop body
                 // so choose the first eligible option from a set of potential names
-                let eligibleValueNames: [String]
-                if let existingPluralIdentifier = forLoopSubjectIdentifier {
-                    eligibleValueNames = [
-                        existingPluralIdentifier.singularized(),
-                        existingPluralIdentifier.singularized() + "Item",
-                        existingPluralIdentifier.singularized() + "Value",
-                        "item",
-                        "value",
-                    ]
-                } else {
-                    eligibleValueNames = ["item", "value"]
+                var eligibleValueNames = ["item", "element", "value"]
+                if let identifier = forLoopSubjectIdentifier?.singularized() {
+                    eligibleValueNames = [identifier] + eligibleValueNames
                 }
 
-                guard let chosenValueName = eligibleValueNames.first(where: { potentialValueName in
-                    // The chosen name should be different than the existing plural identifier
-                    forLoopSubjectIdentifier != potentialValueName
-                        // And the chosen name shouldn't already exist in the closure body
-                        && !formatter.tokens[closureOpenBraceIndex ... closureCloseBraceIndex].contains(where: { $0.string == potentialValueName })
+                // The chosen name shouldn't already exist in the closure body
+                guard let chosenValueName = eligibleValueNames.first(where: { name in
+                    !formatter.tokens[closureOpenBraceIndex ... closureCloseBraceIndex].contains(where: { $0.string == name })
                 }) else { return }
 
                 forEachValueNames = [chosenValueName]

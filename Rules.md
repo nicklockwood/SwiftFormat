@@ -1224,7 +1224,7 @@ Convert functional `forEach` calls to for loops.
 Option | Description
 --- | ---
 `--anonymousforeach` | Convert anonymous forEach: "convert" (default) or "ignore".
-`--onelineforeach` | Convert one-line forEach: "preserve" (default) or "wrap".
+`--onelineforeach` | Convert one-line forEach: "convert" or "ignore" (default).
 
 <details>
 <summary>Examples</summary>

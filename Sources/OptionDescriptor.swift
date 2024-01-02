@@ -936,7 +936,7 @@ struct _Descriptors {
     let preserveSingleLineForEach = OptionDescriptor(
         argumentName: "onelineforeach",
         displayName: "Single-line forEach closures",
-        help: "Convert one-line forEach: \"preserve\" (default) or \"wrap\".",
+        help: "Convert one-line forEach: \"convert\" or \"ignore\" (default).",
         keyPath: \.preserveSingleLineForEach,
         trueValues: ["ignore", "preserve"],
         falseValues: ["convert"]

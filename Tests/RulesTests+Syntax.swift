@@ -3977,7 +3977,9 @@ class SyntaxTests: RulesTests {
         let nestedArrays = [[1, 2], [3, 4]]
         nestedArrays.forEach {
             $0.forEach {
-                print($0)
+                $0.forEach {
+                    print($0)
+                }
             }
         }
         """
@@ -3985,8 +3987,10 @@ class SyntaxTests: RulesTests {
         let output = """
         let nestedArrays = [[1, 2], [3, 4]]
         for nestedArray in nestedArrays {
-            for nestedArrayItem in nestedArray {
-                print(nestedArrayItem)
+            for item in nestedArray {
+                for item in item {
+                    print(item)
+                }
             }
         }
         """
@@ -4005,9 +4009,9 @@ class SyntaxTests: RulesTests {
 
         let output = """
         let placeholderStrings = ["foo", "bar", "baaz"]
-        for placeholderStringItem in placeholderStrings {
-            let placeholderString = placeholderStringItem.uppercased()
-            print(placeholderString, placeholderStringItem)
+        for item in placeholderStrings {
+            let placeholderString = item.uppercased()
+            print(placeholderString, item)
         }
         """
 
@@ -4101,8 +4105,8 @@ class SyntaxTests: RulesTests {
 
         let output = """
         let bar = foo.bar
-        for dictionaryItem in foo.item().bar[2].dictionary["myValue"] {
-            print(dictionaryItem)
+        for item in foo.item().bar[2].dictionary["myValue"] {
+            print(item)
         }
         """
         testFormatting(for: input, output, rule: FormatRules.preferForLoop)
@@ -4135,8 +4139,8 @@ class SyntaxTests: RulesTests {
 
         let output = """
         let quux = foo.bar.baaz.quux
-        for fooItem in foo(bar)(baaz)["item"] {
-            print(fooItem)
+        for item in foo(bar)(baaz)["item"] {
+            print(item)
         }
         """
         testFormatting(for: input, output, rule: FormatRules.preferForLoop)

@@ -1163,7 +1163,6 @@ public struct _FormatRules {
         help: """
         Insert blank line after import statements.
         """,
-        disabledByDefault: true,
         sharedOptions: ["linebreaks"]
     ) { formatter in
         formatter.forEach(.keyword("import")) { currentImportIndex, _ in

@@ -892,6 +892,7 @@ extension Float: _Numeric {}
 
 #if os(iOS) || os(macOS) || os(tvOS) || os(watchOS)
     import CoreGraphics
+
     extension CGFloat: _Numeric {}
 #endif
 

@@ -4,6 +4,7 @@
 * [anyObjectProtocol](#anyObjectProtocol)
 * [applicationMain](#applicationMain)
 * [assertionFailures](#assertionFailures)
+* [blankLineAfterImports](#blankLineAfterImports)
 * [blankLinesAroundMark](#blankLinesAroundMark)
 * [blankLinesAtEndOfScope](#blankLinesAtEndOfScope)
 * [blankLinesAtStartOfScope](#blankLinesAtStartOfScope)
@@ -88,7 +89,6 @@
 # Opt-in Rules (disabled by default)
 
 * [acronyms](#acronyms)
-* [blankLineAfterImports](#blankLineAfterImports)
 * [blankLinesBetweenChainedFunctions](#blankLinesBetweenChainedFunctions)
 * [blankLinesBetweenImports](#blankLinesBetweenImports)
 * [blockComments](#blockComments)

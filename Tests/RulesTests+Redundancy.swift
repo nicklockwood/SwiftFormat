@@ -2303,12 +2303,12 @@ class RedundancyTests: RulesTests {
 
     func testNoRemoveReturnInForIn() {
         let input = "for foo in bar { return 5 }"
-        testFormatting(for: input, rule: FormatRules.redundantReturn)
+        testFormatting(for: input, rule: FormatRules.redundantReturn, exclude: ["wrapLoopBodies"])
     }
 
     func testNoRemoveReturnInForWhere() {
         let input = "for foo in bar where baz { return 5 }"
-        testFormatting(for: input, rule: FormatRules.redundantReturn)
+        testFormatting(for: input, rule: FormatRules.redundantReturn, exclude: ["wrapLoopBodies"])
     }
 
     func testNoRemoveReturnInIfLetTry() {
@@ -3500,12 +3500,12 @@ class RedundancyTests: RulesTests {
 
     func testNoRemoveSelfForIndexVarInFor() {
         let input = "for foo in bar { self.foo = foo }"
-        testFormatting(for: input, rule: FormatRules.redundantSelf)
+        testFormatting(for: input, rule: FormatRules.redundantSelf, exclude: ["wrapLoopBodies"])
     }
 
     func testNoRemoveSelfForKeyValueTupleInFor() {
         let input = "for (foo, bar) in baz { self.foo = foo; self.bar = bar }"
-        testFormatting(for: input, rule: FormatRules.redundantSelf)
+        testFormatting(for: input, rule: FormatRules.redundantSelf, exclude: ["wrapLoopBodies"])
     }
 
     func testRemoveSelfFromComputedVar() {
@@ -3660,13 +3660,13 @@ class RedundancyTests: RulesTests {
 
     func testNoRemoveSelfForVarDeclaredInWhileCondition() {
         let input = "while let foo = bar { self.foo = foo }"
-        testFormatting(for: input, rule: FormatRules.redundantSelf)
+        testFormatting(for: input, rule: FormatRules.redundantSelf, exclude: ["wrapLoopBodies"])
     }
 
     func testRemoveSelfForVarNotDeclaredInWhileCondition() {
         let input = "while let foo == bar { self.baz = 5 }"
         let output = "while let foo == bar { baz = 5 }"
-        testFormatting(for: input, output, rule: FormatRules.redundantSelf)
+        testFormatting(for: input, output, rule: FormatRules.redundantSelf, exclude: ["wrapLoopBodies"])
     }
 
     func testNoRemoveSelfForVarDeclaredInSwitchCase() {
@@ -5258,7 +5258,7 @@ class RedundancyTests: RulesTests {
     func testNoInsertSelfForNestedVarReference() {
         let input = "class Foo {\n    func bar() {\n        var bar = 5\n        repeat { bar = 6 } while true\n    }\n}"
         let options = FormatOptions(explicitSelf: .insert)
-        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options, exclude: ["wrapLoopBodies"])
     }
 
     func testNoInsertSelfInSwitchCaseLet() {
@@ -7304,7 +7304,7 @@ class RedundancyTests: RulesTests {
     func testLabelsAreNotArguments() {
         let input = "func foo(bar: Int, baz: String) {\n    bar: while true { print(baz) }\n}"
         let output = "func foo(bar _: Int, baz: String) {\n    bar: while true { print(baz) }\n}"
-        testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments, exclude: ["wrapLoopBodies"])
     }
 
     func testDictionaryLiteralsRuinEverything() {

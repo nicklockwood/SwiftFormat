@@ -631,6 +631,38 @@ class WrappingTests: RulesTests {
                        exclude: ["braces", "indent", "elseOnSameLine"])
     }
 
+    // MARK: - wrapLoopBodies
+
+    func testWrapForLoop() {
+        let input = "for foo in bar { print(foo) }"
+        let output = """
+        for foo in bar {
+            print(foo)
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.wrapLoopBodies)
+    }
+
+    func testWrapWhileLoop() {
+        let input = "while let foo = bar.next() { print(foo) }"
+        let output = """
+        while let foo = bar.next() {
+            print(foo)
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.wrapLoopBodies)
+    }
+
+    func testWrapRepeatWhileLoop() {
+        let input = "repeat { print(foo) } while condition()"
+        let output = """
+        repeat {
+            print(foo)
+        } while condition()
+        """
+        testFormatting(for: input, output, rule: FormatRules.wrapLoopBodies)
+    }
+
     // MARK: - wrap
 
     func testWrapIfStatement() {

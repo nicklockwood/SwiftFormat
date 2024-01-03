@@ -325,6 +325,22 @@ private struct Examples {
     ```
     """
 
+    let wrapLoopBodies = """
+    ```diff
+    - for foo in array { print(foo) }
+    + for foo in array {
+    +     print(foo)
+    + }
+    ```
+
+    ```diff
+    - while let foo = bar.next() { print(foo) }
+    + while let foo = bar.next() {
+    +     print(foo)
+    + }
+    ```
+    """
+
     let hoistPatternLet = """
     ```diff
     - (let foo, let bar) = baz()

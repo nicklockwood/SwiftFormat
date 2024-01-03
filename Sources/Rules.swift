@@ -2363,6 +2363,24 @@ public struct _FormatRules {
         }
     }
 
+    public let wrapLoopBodies = FormatRule(
+        help: "Wrap the bodies of inline loop statements onto a new line.",
+        orderAfter: ["preferForLoop"],
+        sharedOptions: ["linebreaks", "indent"]
+    ) { formatter in
+        formatter.forEachToken(where: { [
+            .keyword("for"),
+            .keyword("while"),
+            .keyword("repeat"),
+        ].contains($0) }) { i, token in
+            if let startIndex = formatter.index(of: .startOfScope("{"), after: i) {
+                formatter.wrapStatementBody(at: startIndex)
+            } else if token == .keyword("for") {
+                return formatter.fatalError("Expected {", at: i)
+            }
+        }
+    }
+
     /// Ensure that the last item in a multi-line array literal is followed by a comma.
     /// This is useful for preventing noise in commits when items are added to end of array.
     public let trailingCommas = FormatRule(

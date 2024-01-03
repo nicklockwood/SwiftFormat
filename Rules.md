@@ -83,6 +83,7 @@
 * [wrap](#wrap)
 * [wrapArguments](#wrapArguments)
 * [wrapAttributes](#wrapAttributes)
+* [wrapLoopBodies](#wrapLoopBodies)
 * [wrapMultilineStatementBraces](#wrapMultilineStatementBraces)
 * [wrapSingleLineComments](#wrapSingleLineComments)
 * [yodaConditions](#yodaConditions)
@@ -2597,6 +2598,30 @@ Option | Description
 +   case bar
 +   case baz
   }
+```
+
+</details>
+<br/>
+
+## wrapLoopBodies
+
+Wrap the bodies of inline loop statements onto a new line.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- for foo in array { print(foo) }
++ for foo in array {
++     print(foo)
++ }
+```
+
+```diff
+- while let foo = bar.next() { print(foo) }
++ while let foo = bar.next() {
++     print(foo)
++ }
 ```
 
 </details>

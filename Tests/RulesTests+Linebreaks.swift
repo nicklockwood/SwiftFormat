@@ -593,7 +593,7 @@ class LinebreakTests: RulesTests {
         { print("bar") }()
         """
         let options = FormatOptions(allmanBraces: true)
-        testFormatting(for: input, rule: FormatRules.blankLinesBetweenScopes, options: options, exclude: ["redundantClosure"])
+        testFormatting(for: input, rule: FormatRules.blankLinesBetweenScopes, options: options, exclude: ["redundantClosure", "wrapLoopBodies"])
     }
 
     func testBlankLineBeforeWhileIfNotRepeatWhile() {

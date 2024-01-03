@@ -364,7 +364,7 @@ class ParensTests: RulesTests {
 
     func testParensForLoopWhereClauseMethodNotRemoved() {
         let input = "for foo in foos where foo.method() { print(foo) }"
-        testFormatting(for: input, rule: FormatRules.redundantParens)
+        testFormatting(for: input, rule: FormatRules.redundantParens, exclude: ["wrapLoopBodies"])
     }
 
     func testSpaceInsertedWhenRemovingParens() {

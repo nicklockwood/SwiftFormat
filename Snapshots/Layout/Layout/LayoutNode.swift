@@ -1027,7 +1027,9 @@ public class LayoutNode: NSObject {
     }
 
     private func clearCachedValues() {
-        for fn in _valueClearers { fn() }
+        for fn in _valueClearers {
+            fn()
+        }
     }
 
     private func cleanUp(recursive: Bool) {

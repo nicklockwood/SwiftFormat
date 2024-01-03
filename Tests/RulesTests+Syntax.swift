@@ -3961,7 +3961,8 @@ class SyntaxTests: RulesTests {
         let output = "for item in potatoes { item.bake() }"
 
         let options = FormatOptions(preserveSingleLineForEach: false)
-        testFormatting(for: input, output, rule: FormatRules.preferForLoop, options: options)
+        testFormatting(for: input, output, rule: FormatRules.preferForLoop, options: options,
+                       exclude: ["wrapLoopBodies"])
     }
 
     func testConvertSingleLineAnonymousForEachToForLoop() {
@@ -3969,7 +3970,8 @@ class SyntaxTests: RulesTests {
         let output = "for potato in potatoes { potato.bake() }"
 
         let options = FormatOptions(preserveSingleLineForEach: false)
-        testFormatting(for: input, output, rule: FormatRules.preferForLoop, options: options)
+        testFormatting(for: input, output, rule: FormatRules.preferForLoop, options: options,
+                       exclude: ["wrapLoopBodies"])
     }
 
     func testConvertNestedForEach() {

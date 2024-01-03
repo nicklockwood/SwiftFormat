@@ -8,6 +8,7 @@
 * [blankLinesAroundMark](#blankLinesAroundMark)
 * [blankLinesAtEndOfScope](#blankLinesAtEndOfScope)
 * [blankLinesAtStartOfScope](#blankLinesAtStartOfScope)
+* [blankLinesBetweenChainedFunctions](#blankLinesBetweenChainedFunctions)
 * [blankLinesBetweenScopes](#blankLinesBetweenScopes)
 * [braces](#braces)
 * [conditionalAssignment](#conditionalAssignment)
@@ -89,7 +90,6 @@
 # Opt-in Rules (disabled by default)
 
 * [acronyms](#acronyms)
-* [blankLinesBetweenChainedFunctions](#blankLinesBetweenChainedFunctions)
 * [blankLinesBetweenImports](#blankLinesBetweenImports)
 * [blockComments](#blockComments)
 * [docComments](#docComments)

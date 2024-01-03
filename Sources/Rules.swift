@@ -1144,8 +1144,7 @@ public struct _FormatRules {
     public let blankLinesBetweenChainedFunctions = FormatRule(
         help: """
         Remove blank lines between chained functions but keep the linebreaks.
-        """,
-        disabledByDefault: true
+        """
     ) { formatter in
         formatter.forEach(.operator(".", .infix)) { i, _ in
             let endOfLine = formatter.endOfLine(at: i)

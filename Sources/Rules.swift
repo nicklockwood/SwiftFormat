@@ -5400,7 +5400,7 @@ public struct _FormatRules {
     public let wrapAttributes = FormatRule(
         help: "Wrap @attributes onto a separate line, or keep them on the same line.",
         options: ["funcattributes", "typeattributes", "varattributes"],
-        sharedOptions: ["linebreaks"]
+        sharedOptions: ["linebreaks", "maxwidth"]
     ) { formatter in
         formatter.forEach(.attribute) { i, _ in
             // Ignore sequential attributes
@@ -5458,6 +5458,20 @@ public struct _FormatRules {
                 if let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: endIndex),
                    formatter.tokens[(endIndex + 1) ..< nextIndex].contains(where: { $0.isLinebreak })
                 {
+                    // If unwrapping the attribute causes the line to exceed the max width,
+                    // leave it as-is. The existing formatting is likely better than how
+                    // this would be re-unwrapped by the wrap rule.
+                    let startOfLine = formatter.startOfLine(at: i)
+                    let endOfLine = formatter.endOfLine(at: i)
+                    let startOfNextLine = formatter.startOfLine(at: nextIndex, excludingIndent: true)
+                    let endOfNextLine = formatter.endOfLine(at: nextIndex)
+                    let combinedLine = formatter.tokens[startOfLine ... endOfLine].map { $0.string }.joined()
+                        + formatter.tokens[startOfNextLine ..< endOfNextLine].map { $0.string }.joined()
+
+                    if formatter.options.maxWidth > 0, combinedLine.count > formatter.options.maxWidth {
+                        return
+                    }
+
                     // Replace the newline with a space so the attribute doesn't
                     // merge with the next token.
                     formatter.replaceTokens(in: (endIndex + 1) ..< nextIndex, with: .space(" "))

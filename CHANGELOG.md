@@ -1,5 +1,19 @@
 # Change Log
 
+## [0.53.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.53.0) (2024-01-07)
+
+- Added `preferForLoop` rule to convert `forEach { ... }` calls to regular `for` loops
+- Added `wrapLoopBodies` rule to wrap single-line loop bodies over multiple lines
+- Added `noExplicitOwnership` rule to remove unwanted `borrowing` and `consuming` modifiers
+- Added `wrapMultilineConditionalAssignment` rule to wrap `if` or `switch` expressions to new line
+- The `wrapAttributes` rule no longer unwraps attributes if they would exceed `--maxwidth`
+- The `typeSugar` rule's `--shortoptionals` option now defaults to `except-properties`
+- Enabled `blankLinesBetweenChainedFunctions` rule by default
+- Enabled `blankLineAfterImports` rule by default
+- Fixed `self` being incorrectly inserted before `set` clause in computed properties
+- Fixed a bug in `parseType()` helper function where qualified types were not recognized
+- Fixed Xcode command plugin
+
 ## [0.52.11](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.52.11) (2023-12-05)
 
 - Updated `if`/`switch` expression workaround for Swift 5.9 bug to handle `as!` casts

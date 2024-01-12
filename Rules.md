@@ -2635,6 +2635,7 @@ Wrap multiline conditional assignment expressions after the assignment operator.
 <details>
 <summary>Examples</summary>
 
+```diff
 - let planetLocation = if let star = planet.star {
 -     "The \(star.name) system"
 - } else {
@@ -2646,6 +2647,7 @@ Wrap multiline conditional assignment expressions after the assignment operator.
 +     } else {
 +         "Rogue planet"
 +     }
+```
 
 </details>
 <br/>

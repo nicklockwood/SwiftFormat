@@ -1675,6 +1675,7 @@ private struct Examples {
     """
 
     let wrapMultilineConditionalAssignment = #"""
+    ```diff
     - let planetLocation = if let star = planet.star {
     -     "The \(star.name) system"
     - } else {
@@ -1686,5 +1687,6 @@ private struct Examples {
     +     } else {
     +         "Rogue planet"
     +     }
+    ```
     """#
 }

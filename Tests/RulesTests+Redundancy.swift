@@ -9165,6 +9165,11 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantInternal, exclude: ["redundantExtensionACL"])
     }
 
+    func testPreserveInternalImport() {
+        let input = "internal import MyPackage"
+        testFormatting(for: input, rule: FormatRules.redundantInternal)
+    }
+
     // MARK: - noExplicitOwnership
 
     func testRemovesOwnershipKeywordsFromFunc() {

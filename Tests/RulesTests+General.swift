@@ -492,6 +492,44 @@ class GeneralTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
     }
 
+    func testNoDuplicateHeaderContainingPossibleCommentDirective() {
+        let input = """
+        // Copyright (c) 2010-2023 Foobar
+        //
+        // SPDX-License-Identifier: EPL-2.0
+
+        class Foo {}
+        """
+        let output = """
+        // Copyright (c) 2010-2024 Foobar
+        //
+        // SPDX-License-Identifier: EPL-2.0
+
+        class Foo {}
+        """
+        let options = FormatOptions(fileHeader: "// Copyright (c) 2010-2024 Foobar\n//\n// SPDX-License-Identifier: EPL-2.0")
+        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+    }
+
+    func testNoDuplicateHeaderContainingCommentDirective() {
+        let input = """
+        // Copyright (c) 2010-2023 Foobar
+        //
+        // swiftformat:disable all
+
+        class Foo {}
+        """
+        let output = """
+        // Copyright (c) 2010-2024 Foobar
+        //
+        // swiftformat:disable all
+
+        class Foo {}
+        """
+        let options = FormatOptions(fileHeader: "// Copyright (c) 2010-2024 Foobar\n//\n// swiftformat:disable all")
+        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+    }
+
     func testFileHeaderYearReplacement() {
         let input = "let foo = bar"
         let output: String = {

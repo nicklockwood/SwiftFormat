@@ -65,12 +65,20 @@ public extension String {
 
     /// Is this string a comment directive (MARK:, TODO:, swiftlint:, etc)?
     var isCommentDirective: Bool {
+        commentDirective != nil
+    }
+
+    /// Returns comment directive prefix (MARK:, TODO:, swiftlint:, etc)?
+    var commentDirective: String? {
         let parts = split(separator: ":")
         guard parts.count > 1 else {
-            return false
+            return nil
         }
         let exclude = ["note", "warning"]
-        return !parts[0].contains(" ") && !exclude.contains(parts[0].lowercased()) && !parts[1].hasPrefix("//")
+        guard !parts[0].contains(" "), !exclude.contains(parts[0].lowercased()), !parts[1].hasPrefix("//") else {
+            return nil
+        }
+        return String(parts[0])
     }
 }
 

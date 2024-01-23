@@ -92,6 +92,9 @@ public class Formatter: NSObject {
             if let range = directive.rangeOfCharacter(from: .whitespacesAndNewlines) {
                 directive = String(directive[..<range.lowerBound])
             }
+            if directive.isEmpty {
+                return fatalError("Expected directive after 'swiftformat:' prefix", at: index)
+            }
             return fatalError("Unknown directive swiftformat:\(directive)", at: index)
         }
         prefix = directive

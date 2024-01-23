@@ -2232,7 +2232,7 @@ extension Formatter {
     }
 
     /// Range of tokens forming file header comment
-    var headerCommentTokenRange: Range<Int>? {
+    func headerCommentTokenRange(includingDirectives directives: [String]) -> Range<Int>? {
         guard !options.fragment else {
             return nil
         }
@@ -2259,7 +2259,10 @@ extension Formatter {
                         body.hasPrefix("swift-tools-version")
                     {
                         return nil
-                    } else if body.isCommentDirective {
+                    } else if let directive = body.commentDirective,
+                              !directives.contains(directive),
+                              directives != ["*"]
+                    {
                         break
                     }
                 }
@@ -2268,7 +2271,9 @@ extension Formatter {
                     switch token(at: index + 1) ?? .space("") {
                     case .startOfScope("//"):
                         if case let .commentBody(body)? = next(.nonSpace, after: index + 1),
-                           body.isCommentDirective
+                           let directive = body.commentDirective,
+                           !directives.contains(directive),
+                           directives != ["*"]
                         {
                             break
                         }

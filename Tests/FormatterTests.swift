@@ -256,11 +256,16 @@ class FormatterTests: XCTestCase {
     }
 
     func testMalformedDirective() {
-        let input = """
-        // swiftformat:disbible all
-        """
+        let input = "// swiftformat:disbible all"
         XCTAssertThrowsError(try format(input, rules: FormatRules.default)) { error in
             XCTAssert("\(error)".contains("Unknown directive swiftformat:disbible"))
+        }
+    }
+
+    func testMalformedDirective2() {
+        let input = "// swiftformat: --disable all"
+        XCTAssertThrowsError(try format(input, rules: FormatRules.default)) { error in
+            XCTAssertEqual("\(error)", "Expected directive after \'swiftformat:\' prefix on line 1")
         }
     }
 

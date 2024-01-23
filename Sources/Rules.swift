@@ -4277,11 +4277,8 @@ public struct _FormatRules {
         options: ["header"],
         sharedOptions: ["linebreaks"]
     ) { formatter in
-        guard let headerRange = formatter.headerCommentTokenRange else {
-            return
-        }
-
-        let header: String
+        var headerTokens = [Token]()
+        var directives = [String]()
         switch formatter.options.fileHeader {
         case .ignore:
             return
@@ -4304,15 +4301,24 @@ public struct _FormatRules {
             {
                 string.replaceSubrange(range, with: yearFormatter(date))
             }
-            header = string
+            headerTokens = tokenize(string)
+            directives = headerTokens.compactMap {
+                guard case let .commentBody(body) = $0 else {
+                    return nil
+                }
+                return body.commentDirective
+            }
         }
 
-        if header.isEmpty {
+        guard let headerRange = formatter.headerCommentTokenRange(includingDirectives: directives) else {
+            return
+        }
+
+        if headerTokens.isEmpty {
             formatter.removeTokens(in: headerRange)
             return
         }
 
-        var headerTokens = tokenize(header)
         var lastHeaderTokenIndex = headerRange.endIndex - 1
         let endIndex = lastHeaderTokenIndex + headerTokens.count
         if formatter.tokens.endIndex > endIndex, headerTokens == Array(formatter.tokens[
@@ -4348,7 +4354,7 @@ public struct _FormatRules {
         orderAfter: ["fileHeader"]
     ) { formatter in
         guard let fileName = formatter.options.fileInfo.fileName,
-              let headerRange = formatter.headerCommentTokenRange,
+              let headerRange = formatter.headerCommentTokenRange(includingDirectives: ["*"]),
               fileName.hasSuffix(".swift")
         else {
             return

@@ -3405,7 +3405,7 @@ public struct _FormatRules {
                     }
                     if formatter.last(.nonSpaceOrCommentOrLinebreak, before: i)?.isOperator(".") == false,
                        formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) != .delimiter(":") ||
-                       formatter.currentScope(at: i) == .startOfScope("[")
+                       [.startOfScope("("), .startOfScope("[")].contains(formatter.currentScope(at: i) ?? .space(""))
                     {
                         if isDeclaration {
                             switch formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) {
@@ -3466,7 +3466,10 @@ public struct _FormatRules {
                     ].contains(scope) {
                         break
                     }
-                    if isConditional, !isGuard {
+                    if isConditional {
+                        if isGuard, wasDeclaration {
+                            pushLocals()
+                        }
                         wasDeclaration = false
                     } else {
                         let _wasDeclaration = wasDeclaration

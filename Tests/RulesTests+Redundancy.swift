@@ -7784,6 +7784,26 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.unusedArguments)
     }
 
+    func testFunctionArgumentUsedInGuardNotRemoved2() {
+        let input = """
+        func convert(
+            filter: Filter,
+            accounts: [Account],
+            outgoingTotal: MulticurrencyTotal?
+        ) -> History? {
+            guard
+                let firstParameter = incomingTotal?.currency,
+                let secondParameter = outgoingTotal?.currency,
+                isFilter(filter, accounts: accounts)
+            else {
+                return nil
+            }
+            return History(firstParameter, secondParameter)
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
     // functions (closure-only)
 
     func testNoMarkFunctionArgument() {

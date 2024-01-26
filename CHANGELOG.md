@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.53.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.53.1) (2024-01-26)
+
+- Fixed bug where `fileHeader` could duplicate headers containing a colon
+- The `redundantInternal` rule no longer strips `internal` from `import` statements
+- Fixed false positive with `unusedArguments` rule
+
 ## [0.53.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.53.0) (2024-01-07)
 
 - Added `preferForLoop` rule to convert `forEach { ... }` calls to regular `for` loops

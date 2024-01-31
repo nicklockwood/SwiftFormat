@@ -1058,6 +1058,8 @@ extension Formatter {
                 if [.startOfScope("("), .startOfScope("[")].contains(prevToken), isEffectCapturingAt(i) {
                     return
                 }
+            case .keyword("try") where keyword == "await":
+                break loop
             case let .keyword(name) where ["is", "as", "try", "await"].contains(name):
                 break
             case .operator(_, .prefix), .stringBody,

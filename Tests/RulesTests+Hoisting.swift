@@ -562,6 +562,13 @@ class HoistingTests: RulesTests {
                        options: FormatOptions(swiftVersion: "5.5"))
     }
 
+    func testNoHoistAwaitBeforeTry() {
+        let input = "try foo(await bar())"
+        let output = "try await foo(bar())"
+        testFormatting(for: input, output, rule: FormatRules.hoistAwait,
+                       options: FormatOptions(swiftVersion: "5.5"))
+    }
+
     func testNoHoistAwaitInCapturingFunction() {
         let input = "foo(await bar)"
         testFormatting(for: input, rule: FormatRules.hoistAwait,

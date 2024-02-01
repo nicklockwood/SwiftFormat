@@ -1929,7 +1929,6 @@ class SpacingTests: RulesTests {
             // Other planets have rings, but satun's are the best.
             case .saturn:
                 "Saturn"
-
             case .uranus:
                 "Uranus"
             case .neptune:

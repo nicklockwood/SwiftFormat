@@ -5,7 +5,6 @@
 * [applicationMain](#applicationMain)
 * [assertionFailures](#assertionFailures)
 * [blankLineAfterImports](#blankLineAfterImports)
-* [blankLineAfterMultilineSwitchCase](#blankLineAfterMultilineSwitchCase)
 * [blankLinesAroundMark](#blankLinesAroundMark)
 * [blankLinesAtEndOfScope](#blankLinesAtEndOfScope)
 * [blankLinesAtStartOfScope](#blankLinesAtStartOfScope)
@@ -15,7 +14,6 @@
 * [conditionalAssignment](#conditionalAssignment)
 * [consecutiveBlankLines](#consecutiveBlankLines)
 * [consecutiveSpaces](#consecutiveSpaces)
-* [consistentSwitchStatementSpacing](#consistentSwitchStatementSpacing)
 * [duplicateImports](#duplicateImports)
 * [elseOnSameLine](#elseOnSameLine)
 * [emptyBraces](#emptyBraces)
@@ -93,8 +91,10 @@
 # Opt-in Rules (disabled by default)
 
 * [acronyms](#acronyms)
+* [blankLineAfterMultilineSwitchCase](#blankLineAfterMultilineSwitchCase)
 * [blankLinesBetweenImports](#blankLinesBetweenImports)
 * [blockComments](#blockComments)
+* [consistentSwitchStatementSpacing](#consistentSwitchStatementSpacing)
 * [docComments](#docComments)
 * [isEmpty](#isEmpty)
 * [markTypes](#markTypes)
@@ -244,6 +244,33 @@ Insert blank line after import statements.
 
 Insert a blank line after multiline switch cases (excluding the last case,
 which is followed by a closing brace).
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  func handle(_ action: SpaceshipAction) {
+      switch action {
+      case .engageWarpDrive:
+          navigationComputer.destination = targetedDestination
+          await warpDrive.spinUp()
+          warpDrive.activate()
++
+      case let .scanPlanet(planet):
+          scanner.target = planet
+          scanner.scanAtmosphere()
+          scanner.scanBiosphere()
+          scanner.scanForArticialLife()
++
+      case .handleIncomingEnergyBlast:
+          await energyShields.prepare()
+          energyShields.engage()
+      }
+  }
+```
+
+</details>
+<br/>
 
 ## blankLinesAroundMark
 
@@ -555,6 +582,59 @@ Replace consecutive spaces with a single space.
 Ensures consistent spacing among all of the cases in a switch statement.
 If the majority of cases have a trailing blank line, all cases should have a trailing blank line.
 If the majority of cases do not have a trailing blank line, no cases should have a trailing blank line.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  func handle(_ action: SpaceshipAction) {
+      switch action {
+      case .engageWarpDrive:
+          navigationComputer.destination = targetedDestination
+          await warpDrive.spinUp()
+          warpDrive.activate()
+
+      case .enableArtificialGravity:
+          artificialGravityEngine.enable(strength: .oneG)
++
+      case let .scanPlanet(planet):
+          scanner.target = planet
+          scanner.scanAtmosphere()
+          scanner.scanBiosphere()
+          scanner.scanForArtificialLife()
+
+      case .handleIncomingEnergyBlast:
+          energyShields.engage()
+      }
+  }
+```
+
+```diff
+  var name: PlanetType {
+  switch self {
+  case .mercury:
+      "Mercury"
+-
+  case .venus:
+      "Venus"
+  case .earth:
+      "Earth"
+  case .mars:
+      "Mars"
+-
+  case .jupiter:
+      "Jupiter"
+  case .saturn:
+      "Saturn"
+  case .uranus:
+      "Uranus"
+  case .neptune:
+      "Neptune"
+  }
+```
+
+</details>
+<br/>
 
 ## docComments
 
@@ -2752,7 +2832,6 @@ Wrap multiline conditional assignment expressions after the assignment operator.
 +     } else {
 +         "Rogue planet"
 +     }
-```
 
 </details>
 <br/>

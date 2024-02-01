@@ -7753,6 +7753,7 @@ public struct _FormatRules {
         Insert a blank line after multiline switch cases (excluding the last case,
         which is followed by a closing brace).
         """,
+        disabledByDefault: true,
         orderAfter: ["redundantBreak"]
     ) { formatter in
         formatter.forEach(.keyword("switch")) { switchIndex, _ in
@@ -7785,6 +7786,7 @@ public struct _FormatRules {
         If the majority of cases have a trailing blank line, all cases should have a trailing blank line.
         If the majority of cases do not have a trailing blank line, no cases should have a trailing blank line.
         """,
+        disabledByDefault: true,
         orderAfter: ["blankLineAfterMultilineSwitchCase"]
     ) { formatter in
         formatter.forEach(.keyword("switch")) { switchIndex, _ in

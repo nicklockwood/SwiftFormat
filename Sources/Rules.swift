@@ -7753,7 +7753,7 @@ public struct _FormatRules {
         Insert a blank line after multiline switch cases (excluding the last case,
         which is followed by a closing brace).
         """,
-        sharedOptions: ["linebreaks"]
+        orderAfter: ["redundantBreak"]
     ) { formatter in
         formatter.forEach(.keyword("switch")) { switchIndex, _ in
             guard let switchCases = formatter.switchStatementBranchesWithSpacingInfo(at: switchIndex) else { return }
@@ -7785,15 +7785,14 @@ public struct _FormatRules {
         If the majority of cases have a trailing blank line, all cases should have a trailing blank line.
         If the majority of cases do not have a trailing blank line, no cases should have a trailing blank line.
         """,
-        orderAfter: ["blankLineAfterMultilineSwitchCase"],
-        sharedOptions: ["linebreaks"]
+        orderAfter: ["blankLineAfterMultilineSwitchCase"]
     ) { formatter in
         formatter.forEach(.keyword("switch")) { switchIndex, _ in
             guard let switchCases = formatter.switchStatementBranchesWithSpacingInfo(at: switchIndex) else { return }
 
             // When counting the switch cases, exclude the last case (which should never have a trailing blank line).
-            let countWithTrailingBlankLine = switchCases.dropLast(1).filter { $0.isFollowedByBlankLine }.count
-            let countWithoutTrailingBlankLine = switchCases.dropLast(1).filter { !$0.isFollowedByBlankLine }.count
+            var countWithTrailingBlankLine = switchCases.filter { $0.isFollowedByBlankLine && !$0.isLastCase }.count
+            var countWithoutTrailingBlankLine = switchCases.filter { !$0.isFollowedByBlankLine && !$0.isLastCase }.count
 
             // We want the spacing to be consistent for all switch cases,
             // so use whichever formatting is used for the majority of cases.

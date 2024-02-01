@@ -5,6 +5,7 @@
 * [applicationMain](#applicationMain)
 * [assertionFailures](#assertionFailures)
 * [blankLineAfterImports](#blankLineAfterImports)
+* [blankLineAfterMultilineSwitchCase](#blankLineAfterMultilineSwitchCase)
 * [blankLinesAroundMark](#blankLinesAroundMark)
 * [blankLinesAtEndOfScope](#blankLinesAtEndOfScope)
 * [blankLinesAtStartOfScope](#blankLinesAtStartOfScope)
@@ -14,6 +15,7 @@
 * [conditionalAssignment](#conditionalAssignment)
 * [consecutiveBlankLines](#consecutiveBlankLines)
 * [consecutiveSpaces](#consecutiveSpaces)
+* [consistentSwitchStatementSpacing](#consistentSwitchStatementSpacing)
 * [duplicateImports](#duplicateImports)
 * [elseOnSameLine](#elseOnSameLine)
 * [emptyBraces](#emptyBraces)
@@ -237,6 +239,11 @@ Insert blank line after import statements.
 
 </details>
 <br/>
+
+## blankLineAfterMultilineSwitchCase
+
+Insert a blank line after multiline switch cases (excluding the last case,
+which is followed by a closing brace).
 
 ## blankLinesAroundMark
 
@@ -542,6 +549,12 @@ Replace consecutive spaces with a single space.
 
 </details>
 <br/>
+
+## consistentSwitchStatementSpacing
+
+Ensures consistent spacing among all of the cases in a switch statement.
+If the majority of cases have a trailing blank line, all cases should have a trailing blank line.
+If the majority of cases do not have a trailing blank line, no cases should have a trailing blank line.
 
 ## docComments
 

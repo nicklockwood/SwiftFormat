@@ -553,18 +553,18 @@ class IndentTests: RulesTests {
 
     func testIndentSwitchAfterRangeCase() {
         let input = "switch x {\ncase 0 ..< 2:\n    switch y {\n    default:\n        break\n    }\ndefault:\n    break\n}"
-        testFormatting(for: input, rule: FormatRules.indent)
+        testFormatting(for: input, rule: FormatRules.indent, exclude: ["blankLineAfterMultilineSwitchCase"])
     }
 
     func testIndentEnumDeclarationInsideSwitchCase() {
         let input = "switch x {\ncase y:\nenum Foo {\ncase z\n}\nbar()\ndefault: break\n}"
         let output = "switch x {\ncase y:\n    enum Foo {\n        case z\n    }\n    bar()\ndefault: break\n}"
-        testFormatting(for: input, output, rule: FormatRules.indent)
+        testFormatting(for: input, output, rule: FormatRules.indent, exclude: ["blankLineAfterMultilineSwitchCase"])
     }
 
     func testIndentEnumCaseBodyAfterWhereClause() {
         let input = "switch foo {\ncase _ where baz < quux:\n    print(1)\n    print(2)\ndefault:\n    break\n}"
-        testFormatting(for: input, rule: FormatRules.indent)
+        testFormatting(for: input, rule: FormatRules.indent, exclude: ["blankLineAfterMultilineSwitchCase"])
     }
 
     func testIndentSwitchCaseCommentsCorrectly() {
@@ -590,7 +590,7 @@ class IndentTests: RulesTests {
             break
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.indent)
+        testFormatting(for: input, output, rule: FormatRules.indent, exclude: ["blankLineAfterMultilineSwitchCase"])
     }
 
     func testIndentMultilineSwitchCaseCommentsCorrectly() {
@@ -2949,14 +2949,14 @@ class IndentTests: RulesTests {
         let input = "switch foo {\ncase .bar:\n#if x\nbar()\n#endif\nbaz()\ncase .baz: break\n}"
         let output = "switch foo {\ncase .bar:\n    #if x\n        bar()\n    #endif\n    baz()\ncase .baz: break\n}"
         let options = FormatOptions(indentCase: false)
-        testFormatting(for: input, output, rule: FormatRules.indent, options: options)
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options, exclude: ["blankLineAfterMultilineSwitchCase"])
     }
 
     func testSwitchIfEndifInsideCaseIndenting2() {
         let input = "switch foo {\ncase .bar:\n#if x\nbar()\n#endif\nbaz()\ncase .baz: break\n}"
         let output = "switch foo {\n    case .bar:\n        #if x\n            bar()\n        #endif\n        baz()\n    case .baz: break\n}"
         let options = FormatOptions(indentCase: true)
-        testFormatting(for: input, output, rule: FormatRules.indent, options: options)
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options, exclude: ["blankLineAfterMultilineSwitchCase"])
     }
 
     func testIfUnknownCaseEndifIndenting() {
@@ -3191,14 +3191,14 @@ class IndentTests: RulesTests {
         let input = "switch foo {\ncase .bar:\n#if x\nbar()\n#endif\nbaz()\ncase .baz: break\n}"
         let output = "switch foo {\ncase .bar:\n    #if x\n    bar()\n    #endif\n    baz()\ncase .baz: break\n}"
         let options = FormatOptions(indentCase: false, ifdefIndent: .noIndent)
-        testFormatting(for: input, output, rule: FormatRules.indent, options: options)
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options, exclude: ["blankLineAfterMultilineSwitchCase"])
     }
 
     func testIfEndifInsideCaseNoIndenting2() {
         let input = "switch foo {\ncase .bar:\n#if x\nbar()\n#endif\nbaz()\ncase .baz: break\n}"
         let output = "switch foo {\n    case .bar:\n        #if x\n        bar()\n        #endif\n        baz()\n    case .baz: break\n}"
         let options = FormatOptions(indentCase: true, ifdefIndent: .noIndent)
-        testFormatting(for: input, output, rule: FormatRules.indent, options: options)
+        testFormatting(for: input, output, rule: FormatRules.indent, options: options, exclude: ["blankLineAfterMultilineSwitchCase"])
     }
 
     func testSwitchCaseInIfEndif() {

@@ -1344,11 +1344,18 @@ extension Formatter {
         while let conditionalBranchIndex = nextConditionalBranchIndex,
               tokens[conditionalBranchIndex].isSwitchCaseOrDefault,
               let startOfBody = index(of: .startOfScope(":"), after: conditionalBranchIndex),
-              let endOfBody = endOfScope(at: startOfBody)
+              var endOfBody = endOfScope(at: startOfBody)
         {
+            // If the next case has the `@unknown` prefix, make sure that token isn't included in the body of this branch.
+            if let unknownKeyword = index(of: .nonSpaceOrCommentOrLinebreak, before: endOfBody),
+               tokens[unknownKeyword] == .keyword("@unknown")
+            {
+                endOfBody = unknownKeyword
+            }
+
             branches.append((startOfBranch: startOfBody, endOfBranch: endOfBody))
 
-            if tokens[endOfBody].isSwitchCaseOrDefault {
+            if tokens[endOfBody].isSwitchCaseOrDefault || tokens[endOfBody] == .keyword("@unknown") {
                 nextConditionalBranchIndex = endOfBody
             } else if tokens[startOfBody ..< endOfBody].contains(.startOfScope("#if")) {
                 return nil

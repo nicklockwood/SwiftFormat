@@ -1968,4 +1968,52 @@ class SpacingTests: RulesTests {
 
         testFormatting(for: input, output, rule: FormatRules.consistentSwitchStatementSpacing)
     }
+
+    func testSingleLineAndMultiLineSwitchCase1() {
+        let input = """
+        switch planetType {
+        case .terrestrial:
+            if options.treatPlutoAsPlanet {
+                [.mercury, .venus, .earth, .mars, .pluto]
+            } else {
+                [.mercury, .venus, .earth, .mars]
+            }
+        case .gasGiant:
+            [.jupiter, .saturn, .uranus, .neptune]
+        }
+        """
+
+        let output = """
+        switch planetType {
+        case .terrestrial:
+            if options.treatPlutoAsPlanet {
+                [.mercury, .venus, .earth, .mars, .pluto]
+            } else {
+                [.mercury, .venus, .earth, .mars]
+            }
+
+        case .gasGiant:
+            [.jupiter, .saturn, .uranus, .neptune]
+        }
+        """
+
+        testFormatting(for: input, [output], rules: [FormatRules.blankLineAfterMultilineSwitchCase, FormatRules.consistentSwitchStatementSpacing])
+    }
+
+    func testSingleLineAndMultiLineSwitchCase2() {
+        let input = """
+        switch planetType {
+        case .gasGiant:
+            [.jupiter, .saturn, .uranus, .neptune]
+        case .terrestrial:
+            if options.treatPlutoAsPlanet {
+                [.mercury, .venus, .earth, .mars, .pluto]
+            } else {
+                [.mercury, .venus, .earth, .mars]
+            }
+        }
+        """
+
+        testFormatting(for: input, rule: FormatRules.consistentSwitchStatementSpacing)
+    }
 }

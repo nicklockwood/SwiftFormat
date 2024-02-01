@@ -580,8 +580,6 @@ Replace consecutive spaces with a single space.
 ## consistentSwitchStatementSpacing
 
 Ensures consistent spacing among all of the cases in a switch statement.
-If the majority of cases have a trailing blank line, all cases should have a trailing blank line.
-If the majority of cases do not have a trailing blank line, no cases should have a trailing blank line.
 
 <details>
 <summary>Examples</summary>

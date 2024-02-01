@@ -7781,11 +7781,7 @@ public struct _FormatRules {
     }
 
     public let consistentSwitchStatementSpacing = FormatRule(
-        help: """
-        Ensures consistent spacing among all of the cases in a switch statement.
-        If the majority of cases have a trailing blank line, all cases should have a trailing blank line.
-        If the majority of cases do not have a trailing blank line, no cases should have a trailing blank line.
-        """,
+        help: "Ensures consistent spacing among all of the cases in a switch statement.",
         disabledByDefault: true,
         orderAfter: ["blankLineAfterMultilineSwitchCase"]
     ) { formatter in
@@ -7793,12 +7789,21 @@ public struct _FormatRules {
             guard let switchCases = formatter.switchStatementBranchesWithSpacingInfo(at: switchIndex) else { return }
 
             // When counting the switch cases, exclude the last case (which should never have a trailing blank line).
-            var countWithTrailingBlankLine = switchCases.filter { $0.isFollowedByBlankLine && !$0.isLastCase }.count
-            var countWithoutTrailingBlankLine = switchCases.filter { !$0.isFollowedByBlankLine && !$0.isLastCase }.count
+            let countWithTrailingBlankLine = switchCases.filter { $0.isFollowedByBlankLine && !$0.isLastCase }.count
+            let countWithoutTrailingBlankLine = switchCases.filter { !$0.isFollowedByBlankLine && !$0.isLastCase }.count
 
             // We want the spacing to be consistent for all switch cases,
             // so use whichever formatting is used for the majority of cases.
-            let allCasesShouldHaveBlankLine = countWithTrailingBlankLine >= countWithoutTrailingBlankLine
+            var allCasesShouldHaveBlankLine = countWithTrailingBlankLine >= countWithoutTrailingBlankLine
+
+            // When the `blankLinesBetweenChainedFunctions` rule is enabled, and there is a switch case
+            // that is required to span multiple lines, then all cases must span multiple lines.
+            // (Since if this rule removed the blank line from that case, it would contradict the other rule)
+            if formatter.options.enabledRules.contains(FormatRules.blankLineAfterMultilineSwitchCase.name),
+               switchCases.contains(where: { $0.spansMultipleLines && !$0.isLastCase })
+            {
+                allCasesShouldHaveBlankLine = true
+            }
 
             for switchCase in switchCases.reversed() {
                 if !switchCase.isFollowedByBlankLine, allCasesShouldHaveBlankLine, !switchCase.isLastCase {

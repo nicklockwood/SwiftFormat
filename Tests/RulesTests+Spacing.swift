@@ -2015,4 +2015,60 @@ class SpacingTests: RulesTests {
 
         testFormatting(for: input, rule: FormatRules.consistentSwitchStatementSpacing)
     }
+
+    func testSwitchStatementWithSingleMultilineCase_blankLineAfterMultilineSwitchCaseEnabled() {
+        let input = """
+        switch action {
+        case .enableArtificialGravity:
+            artificialGravityEngine.enable(strength: .oneG)
+        case .engageWarpDrive:
+            navigationComputer.destination = targetedDestination
+            await warpDrive.spinUp()
+            warpDrive.activate()
+        case let .scanPlanet(planet):
+            scanner.scan(planet)
+        case .handleIncomingEnergyBlast:
+            energyShields.engage()
+        }
+        """
+
+        let output = """
+        switch action {
+        case .enableArtificialGravity:
+            artificialGravityEngine.enable(strength: .oneG)
+
+        case .engageWarpDrive:
+            navigationComputer.destination = targetedDestination
+            await warpDrive.spinUp()
+            warpDrive.activate()
+
+        case let .scanPlanet(planet):
+            scanner.scan(planet)
+
+        case .handleIncomingEnergyBlast:
+            energyShields.engage()
+        }
+        """
+
+        testFormatting(for: input, [output], rules: [FormatRules.consistentSwitchStatementSpacing, FormatRules.blankLineAfterMultilineSwitchCase])
+    }
+
+    func testSwitchStatementWithSingleMultilineCase_blankLineAfterMultilineSwitchCaseDisabled() {
+        let input = """
+        switch action {
+        case .enableArtificialGravity:
+            artificialGravityEngine.enable(strength: .oneG)
+        case .engageWarpDrive:
+            navigationComputer.destination = targetedDestination
+            await warpDrive.spinUp()
+            warpDrive.activate()
+        case let .scanPlanet(planet):
+            scanner.scan(planet)
+        case .handleIncomingEnergyBlast:
+            energyShields.engage()
+        }
+        """
+
+        testFormatting(for: input, rule: FormatRules.consistentSwitchStatementSpacing, exclude: ["blankLineAfterMultilineSwitchCase"])
+    }
 }

@@ -7747,4 +7747,77 @@ public struct _FormatRules {
             }
         }
     }
+
+    public let blankLineAfterMultilineSwitchCase = FormatRule(
+        help: """
+        Insert a blank line after multiline switch cases (excluding the last case,
+        which is followed by a closing brace).
+        """,
+        sharedOptions: ["linebreaks"]
+    ) { formatter in
+        formatter.forEach(.keyword("switch")) { switchIndex, _ in
+            guard let switchCases = formatter.switchStatementBranches(at: switchIndex) else { return }
+
+            for (index, switchCase) in switchCases.enumerated() {
+                // Consider any trailing comments to actually be leading comments of the following case
+                var endOfSwitchCaseBranch = switchCase.endOfBranch
+                while let tokenBeforeEndOfScope = formatter.index(of: .nonSpace, before: endOfSwitchCaseBranch),
+                      formatter.tokens[tokenBeforeEndOfScope].isLinebreak,
+                      let commentBeforeEndOfScope = formatter.index(of: .nonSpace, before: tokenBeforeEndOfScope),
+                      formatter.tokens[commentBeforeEndOfScope].isComment,
+                      let startOfComment = formatter.startOfScope(at: commentBeforeEndOfScope),
+                      formatter.tokens[startOfComment].isComment
+                {
+                    endOfSwitchCaseBranch = startOfComment
+                }
+
+                guard let firstTokenInBody = formatter.index(of: .nonSpaceOrLinebreak, after: switchCase.startOfBranch),
+                      let lastTokenInBody = formatter.index(of: .nonSpaceOrLinebreak, before: endOfSwitchCaseBranch)
+                else { continue }
+
+                let isLastCase = index == switchCases.indices.last
+                let spansMultipleLines = !formatter.onSameLine(firstTokenInBody, lastTokenInBody)
+
+                var isFollowedByBlankLine = false
+                var linebreakBeforeEndOfScope: Int?
+                var linebreakBeforeBlankLine: Int?
+
+                if let tokenBeforeEndOfScope = formatter.index(of: .nonSpace, before: endOfSwitchCaseBranch),
+                   formatter.tokens[tokenBeforeEndOfScope].isLinebreak
+                {
+                    linebreakBeforeEndOfScope = tokenBeforeEndOfScope
+                }
+
+                if let linebreakBeforeEndOfScope = linebreakBeforeEndOfScope,
+                   let tokenBeforeBlankLine = formatter.index(of: .nonSpace, before: linebreakBeforeEndOfScope),
+                   formatter.tokens[tokenBeforeBlankLine].isLinebreak
+                {
+                    linebreakBeforeBlankLine = tokenBeforeBlankLine
+                    isFollowedByBlankLine = true
+                }
+
+                // Any switch statement that spans multiple lines should be followed by a blank line
+                // (excluding the last case, which is followed by a closing brace).
+                if spansMultipleLines,
+                   !isLastCase,
+                   !isFollowedByBlankLine,
+                   let linebreakBeforeEndOfScope = linebreakBeforeEndOfScope
+                {
+                    // There isn't a blank line before the end of the scope, so we have to add one.
+                    formatter.insertLinebreak(at: linebreakBeforeEndOfScope)
+                }
+
+                // The last case should never be followed by a blank line, since it's
+                // already followed by a closing brace.
+                if isLastCase,
+                   isFollowedByBlankLine,
+                   let linebreakBeforeEndOfScope = linebreakBeforeEndOfScope,
+                   let linebreakBeforeBlankLine = linebreakBeforeBlankLine
+                {
+                    // There is unexpectedly a blank line before the end of the scope, so we remove it.
+                    formatter.removeTokens(in: (linebreakBeforeBlankLine + 1) ... linebreakBeforeEndOfScope)
+                }
+            }
+        }
+    }
 }

@@ -1732,7 +1732,7 @@ class SpacingTests: RulesTests {
             energyShields.engage()
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.blankLineAfterMultilineSwitchCase)
+        testFormatting(for: input, output, rule: FormatRules.blankLineAfterMultilineSwitchCase, exclude: ["consistentSwitchStatementSpacing"])
     }
 
     func testAllowsBlankLinesAfterSingleLineCases() {
@@ -1744,7 +1744,7 @@ class SpacingTests: RulesTests {
         case .enableArtificialGravity:
             artificialGravityEngine.enable(strength: .oneG)
 
-        case .scanPlanet(let planet):
+        case let .scanPlanet(planet):
             scanner.scan(planet)
 
         case .handleIncomingEnergyBlast:
@@ -1753,5 +1753,219 @@ class SpacingTests: RulesTests {
         """
 
         testFormatting(for: input, rule: FormatRules.blankLineAfterMultilineSwitchCase)
+    }
+
+    // MARK: - consistentSwitchStatementSpacing
+
+    func testInsertsBlankLinesToMakeSwitchStatementSpacingConsistent1() {
+        let input = """
+        switch action {
+        case .engageWarpDrive:
+            navigationComputer.destination = targetedDestination
+            await warpDrive.spinUp()
+            warpDrive.activate()
+
+        case .enableArtificialGravity:
+            artificialGravityEngine.enable(strength: .oneG)
+        case let .scanPlanet(planet):
+            scanner.target = planet
+            scanner.scanAtmosphere()
+            scanner.scanBiosphere()
+            scanner.scanForArtificialLife()
+
+        case .handleIncomingEnergyBlast:
+            energyShields.engage()
+        }
+        """
+
+        let output = """
+        switch action {
+        case .engageWarpDrive:
+            navigationComputer.destination = targetedDestination
+            await warpDrive.spinUp()
+            warpDrive.activate()
+
+        case .enableArtificialGravity:
+            artificialGravityEngine.enable(strength: .oneG)
+
+        case let .scanPlanet(planet):
+            scanner.target = planet
+            scanner.scanAtmosphere()
+            scanner.scanBiosphere()
+            scanner.scanForArtificialLife()
+
+        case .handleIncomingEnergyBlast:
+            energyShields.engage()
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.consistentSwitchStatementSpacing)
+    }
+
+    func testInsertsBlankLinesToMakeSwitchStatementSpacingConsistent2() {
+        let input = """
+        switch action {
+        case .engageWarpDrive:
+            navigationComputer.destination = targetedDestination
+            await warpDrive.spinUp()
+            warpDrive.activate()
+
+        case .enableArtificialGravity:
+            artificialGravityEngine.enable(strength: .oneG)
+        case .handleIncomingEnergyBlast:
+            energyShields.engage()
+        }
+        """
+
+        let output = """
+        switch action {
+        case .engageWarpDrive:
+            navigationComputer.destination = targetedDestination
+            await warpDrive.spinUp()
+            warpDrive.activate()
+
+        case .enableArtificialGravity:
+            artificialGravityEngine.enable(strength: .oneG)
+
+        case .handleIncomingEnergyBlast:
+            energyShields.engage()
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.consistentSwitchStatementSpacing)
+    }
+
+    func testInsertsBlankLinesToMakeSwitchStatementSpacingConsistent3() {
+        let input = """
+        var name: PlanetType {
+            switch self {
+            // The planet closest to the sun
+            case .mercury:
+                "Mercury"
+            // Similar to Earth but way more deadly
+            case .venus:
+                "Venus"
+
+            // The best planet, where everything cool happens
+            case .earth:
+                "Earth"
+
+            // This planet is entirely inhabited by robots.
+            // There are cool landers, rovers, and even a helicopter.
+            case .mars:
+                "Mars"
+
+            // The biggest planet with the most moons
+            case .jupiter:
+                "Jupiter"
+
+            // Other planets have rings, but satun's are the best.
+            case .saturn:
+                "Saturn"
+            case .uranus:
+                "Uranus"
+            case .neptune:
+                "Neptune"
+            }
+        }
+        """
+
+        let output = """
+        var name: PlanetType {
+            switch self {
+            // The planet closest to the sun
+            case .mercury:
+                "Mercury"
+
+            // Similar to Earth but way more deadly
+            case .venus:
+                "Venus"
+
+            // The best planet, where everything cool happens
+            case .earth:
+                "Earth"
+
+            // This planet is entirely inhabited by robots.
+            // There are cool landers, rovers, and even a helicopter.
+            case .mars:
+                "Mars"
+
+            // The biggest planet with the most moons
+            case .jupiter:
+                "Jupiter"
+
+            // Other planets have rings, but satun's are the best.
+            case .saturn:
+                "Saturn"
+
+            case .uranus:
+                "Uranus"
+
+            case .neptune:
+                "Neptune"
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.consistentSwitchStatementSpacing)
+    }
+
+    func testRemovesBlankLinesToMakeSwitchStatementConsistent() {
+        let input = """
+        var name: PlanetType {
+            switch self {
+            // The planet closest to the sun
+            case .mercury:
+                "Mercury"
+
+            case .venus:
+                "Venus"
+            // The best planet, where everything cool happens
+            case .earth:
+                "Earth"
+            // This planet is entirely inhabited by robots.
+            // There are cool landers, rovers, and even a helicopter.
+            case .mars:
+                "Mars"
+            case .jupiter:
+                "Jupiter"
+            // Other planets have rings, but satun's are the best.
+            case .saturn:
+                "Saturn"
+
+            case .uranus:
+                "Uranus"
+            case .neptune:
+                "Neptune"
+            }
+        }
+        """
+
+        let output = """
+        var name: PlanetType {
+            switch self {
+            // The planet closest to the sun
+            case .mercury:
+                "Mercury"
+            case .venus:
+                "Venus"
+            // The best planet, where everything cool happens
+            case .earth:
+                "Earth"
+            // This planet is entirely inhabited by robots.
+            // There are cool landers, rovers, and even a helicopter.
+            case .mars:
+                "Mars"
+            case .jupiter:
+                "Jupiter"
+            // Other planets have rings, but satun's are the best.
+            case .saturn:
+                "Saturn"
+            case .uranus:
+                "Uranus"
+            case .neptune:
+                "Neptune"
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.consistentSwitchStatementSpacing)
     }
 }

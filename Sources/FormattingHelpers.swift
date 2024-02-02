@@ -1432,7 +1432,7 @@ extension Formatter {
 
     /// Context describing the structure of a case in a switch statement
     struct SwitchStatementBranchWithSpacingInfo {
-        let startOfBranch: Int
+        let startOfBranchExcludingLeadingComments: Int
         let endOfBranchExcludingTrailingComments: Int
         let spansMultipleLines: Bool
         let isLastCase: Bool
@@ -1465,7 +1465,22 @@ extension Formatter {
         guard let switchStatementBranches = switchStatementBranches(at: switchIndex) else { return nil }
 
         return switchStatementBranches.enumerated().compactMap { caseIndex, switchCase -> SwitchStatementBranchWithSpacingInfo? in
-            // Consider any trailing comments to actually be leading comments of the following case
+            // Exclude any comments when considering if this is a single line or multi-line branch
+            var startOfBranchExcludingLeadingComments = switchCase.startOfBranch
+            while let tokenAfterStartOfScope = index(of: .nonSpace, after: startOfBranchExcludingLeadingComments),
+                  tokens[tokenAfterStartOfScope].isLinebreak,
+                  let commentAfterStartOfScope = index(of: .nonSpace, after: tokenAfterStartOfScope),
+                  tokens[commentAfterStartOfScope].isComment,
+                  let endOfComment = endOfScope(at: commentAfterStartOfScope),
+                  let tokenBeforeEndOfComment = index(of: .nonSpace, before: endOfComment)
+            {
+                if tokens[endOfComment].isLinebreak {
+                    startOfBranchExcludingLeadingComments = tokenBeforeEndOfComment
+                } else {
+                    startOfBranchExcludingLeadingComments = endOfComment
+                }
+            }
+
             var endOfBranchExcludingTrailingComments = switchCase.endOfBranch
             while let tokenBeforeEndOfScope = index(of: .nonSpace, before: endOfBranchExcludingTrailingComments),
                   tokens[tokenBeforeEndOfScope].isLinebreak,
@@ -1477,7 +1492,7 @@ extension Formatter {
                 endOfBranchExcludingTrailingComments = startOfComment
             }
 
-            guard let firstTokenInBody = index(of: .nonSpaceOrLinebreak, after: switchCase.startOfBranch),
+            guard let firstTokenInBody = index(of: .nonSpaceOrLinebreak, after: startOfBranchExcludingLeadingComments),
                   let lastTokenInBody = index(of: .nonSpaceOrLinebreak, before: endOfBranchExcludingTrailingComments)
             else { return nil }
 
@@ -1503,7 +1518,7 @@ extension Formatter {
             }
 
             return SwitchStatementBranchWithSpacingInfo(
-                startOfBranch: switchCase.startOfBranch,
+                startOfBranchExcludingLeadingComments: startOfBranchExcludingLeadingComments,
                 endOfBranchExcludingTrailingComments: endOfBranchExcludingTrailingComments,
                 spansMultipleLines: spansMultipleLines,
                 isLastCase: isLastCase,

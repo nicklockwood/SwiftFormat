@@ -1655,6 +1655,17 @@ class SpacingTests: RulesTests {
         let input = """
         var planetType: PlanetType {
             switch self {
+            case .mercury, .venus, .earth, .mars:
+                // The terrestrial planets are smaller and have a solid, rocky surface
+                .terrestrial
+            case .jupiter, .saturn, .uranus, .neptune:
+                // The gas giants are huge and lack a solid surface
+                .gasGiant
+            }
+        }
+
+        var planetType: PlanetType {
+            switch self {
             // The terrestrial planets are smaller and have a solid, rocky surface
             case .mercury, .venus, .earth, .mars:
                 .terrestrial
@@ -1680,10 +1691,14 @@ class SpacingTests: RulesTests {
                 "Mars"
             case .jupiter:
                 "Jupiter"
-            // Other planets have rings, but satun's are the best.
             case .saturn:
+                // Other planets have rings, but satun's are the best.
+                // It's rings are the only once that are usually visible in photos.
                 "Saturn"
             case .uranus:
+                /*
+                 * The pronunciation of this planet's name is subject of scholarly debate
+                 */
                 "Uranus"
             case .neptune:
                 "Neptune"
@@ -1691,7 +1706,7 @@ class SpacingTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, rule: FormatRules.blankLineAfterMultilineSwitchCase, exclude: ["sortSwitchCases", "wrapSwitchCases"])
+        testFormatting(for: input, rule: FormatRules.blankLineAfterMultilineSwitchCase, exclude: ["sortSwitchCases", "wrapSwitchCases", "blockComments"])
     }
 
     func testMixedSingleLineAndMultiLineCases() {

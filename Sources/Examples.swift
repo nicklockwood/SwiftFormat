@@ -1754,6 +1754,29 @@ private struct Examples {
     ```
     """
 
+    let blankLineAfterMultilineSwitchCase = #"""
+    ```diff
+      func handle(_ action: SpaceshipAction) {
+          switch action {
+          case .engageWarpDrive:
+              navigationComputer.destination = targetedDestination
+              await warpDrive.spinUp()
+              warpDrive.activate()
+    +
+          case let .scanPlanet(planet):
+              scanner.target = planet
+              scanner.scanAtmosphere()
+              scanner.scanBiosphere()
+              scanner.scanForArticialLife()
+    +
+          case .handleIncomingEnergyBlast:
+              await energyShields.prepare()
+              energyShields.engage()
+          }
+      }
+    ```
+    """#
+
     let wrapMultilineConditionalAssignment = #"""
     ```diff
     - let planetLocation = if let star = planet.star {
@@ -1767,6 +1790,55 @@ private struct Examples {
     +     } else {
     +         "Rogue planet"
     +     }
+    ```
+    """#
+
+    let consistentSwitchStatementSpacing = #"""
+    ```diff
+      func handle(_ action: SpaceshipAction) {
+          switch action {
+          case .engageWarpDrive:
+              navigationComputer.destination = targetedDestination
+              await warpDrive.spinUp()
+              warpDrive.activate()
+
+          case .enableArtificialGravity:
+              artificialGravityEngine.enable(strength: .oneG)
+    +
+          case let .scanPlanet(planet):
+              scanner.target = planet
+              scanner.scanAtmosphere()
+              scanner.scanBiosphere()
+              scanner.scanForArtificialLife()
+
+          case .handleIncomingEnergyBlast:
+              energyShields.engage()
+          }
+      }
+    ```
+
+    ```diff
+      var name: PlanetType {
+      switch self {
+      case .mercury:
+          "Mercury"
+    -
+      case .venus:
+          "Venus"
+      case .earth:
+          "Earth"
+      case .mars:
+          "Mars"
+    -
+      case .jupiter:
+          "Jupiter"
+      case .saturn:
+          "Saturn"
+      case .uranus:
+          "Uranus"
+      case .neptune:
+          "Neptune"
+      }
     ```
     """#
 }

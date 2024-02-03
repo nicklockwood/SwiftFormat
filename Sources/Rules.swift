@@ -1654,7 +1654,6 @@ public struct _FormatRules {
                 linewrapStack.append(false)
                 scopeStack.append(.operator("=", .infix))
                 scopeStartLineIndexes.append(lineIndex)
-
             default:
                 // If this is the final `endOfScope` in a conditional assignment,
                 // we have to end the scope introduced by that assignment operator.
@@ -2112,7 +2111,6 @@ public struct _FormatRules {
                 if linewrapped, shouldIndentNextLine(at: i) {
                     indentStack[indentStack.count - 1] += formatter.options.indent
                 }
-
             default:
                 break
             }
@@ -7870,7 +7868,6 @@ public struct _FormatRules {
 
     public let consistentSwitchStatementSpacing = FormatRule(
         help: "Ensures consistent spacing among all of the cases in a switch statement.",
-        disabledByDefault: true,
         orderAfter: ["blankLineAfterMultilineSwitchCase"]
     ) { formatter in
         formatter.forEach(.keyword("switch")) { switchIndex, _ in

@@ -1263,7 +1263,7 @@ extension Formatter {
         {
             branches.append((startOfBranch: startOfBody, endOfBranch: endOfBody))
 
-            if tokens[endOfBody].isSwitchCaseOrDefault {
+            if tokens[endOfBody].isSwitchCaseOrDefault || tokens[endOfBody] == .keyword("@unknown") {
                 nextConditionalBranchIndex = endOfBody
             } else if tokens[startOfBody ..< endOfBody].contains(.startOfScope("#if")) {
                 return nil
@@ -1363,6 +1363,105 @@ extension Formatter {
             }
         }
         return allSatisfy
+    }
+
+    /// Context describing the structure of a case in a switch statement
+    struct SwitchStatementBranchWithSpacingInfo {
+        let startOfBranchExcludingLeadingComments: Int
+        let endOfBranchExcludingTrailingComments: Int
+        let spansMultipleLines: Bool
+        let isLastCase: Bool
+        let isFollowedByBlankLine: Bool
+        let linebreakBeforeEndOfScope: Int?
+        let linebreakBeforeBlankLine: Int?
+
+        /// Inserts a blank line at the end of the switch case
+        func insertTrailingBlankLine(using formatter: Formatter) {
+            guard let linebreakBeforeEndOfScope = linebreakBeforeEndOfScope else {
+                return
+            }
+
+            formatter.insertLinebreak(at: linebreakBeforeEndOfScope)
+        }
+
+        /// Removes the trailing blank line from the switch case if present
+        func removeTrailingBlankLine(using formatter: Formatter) {
+            guard let linebreakBeforeEndOfScope = linebreakBeforeEndOfScope,
+                  let linebreakBeforeBlankLine = linebreakBeforeBlankLine
+            else { return }
+
+            formatter.removeTokens(in: (linebreakBeforeBlankLine + 1) ... linebreakBeforeEndOfScope)
+        }
+    }
+
+    /// Finds all of the branch bodies in a switch statement, and derives additional information
+    /// about the structure of each branch / case.
+    func switchStatementBranchesWithSpacingInfo(at switchIndex: Int) -> [SwitchStatementBranchWithSpacingInfo]? {
+        guard let switchStatementBranches = switchStatementBranches(at: switchIndex) else { return nil }
+
+        return switchStatementBranches.enumerated().compactMap { caseIndex, switchCase -> SwitchStatementBranchWithSpacingInfo? in
+            // Exclude any comments when considering if this is a single line or multi-line branch
+            var startOfBranchExcludingLeadingComments = switchCase.startOfBranch
+            while let tokenAfterStartOfScope = index(of: .nonSpace, after: startOfBranchExcludingLeadingComments),
+                  tokens[tokenAfterStartOfScope].isLinebreak,
+                  let commentAfterStartOfScope = index(of: .nonSpace, after: tokenAfterStartOfScope),
+                  tokens[commentAfterStartOfScope].isComment,
+                  let endOfComment = endOfScope(at: commentAfterStartOfScope),
+                  let tokenBeforeEndOfComment = index(of: .nonSpace, before: endOfComment)
+            {
+                if tokens[endOfComment].isLinebreak {
+                    startOfBranchExcludingLeadingComments = tokenBeforeEndOfComment
+                } else {
+                    startOfBranchExcludingLeadingComments = endOfComment
+                }
+            }
+
+            var endOfBranchExcludingTrailingComments = switchCase.endOfBranch
+            while let tokenBeforeEndOfScope = index(of: .nonSpace, before: endOfBranchExcludingTrailingComments),
+                  tokens[tokenBeforeEndOfScope].isLinebreak,
+                  let commentBeforeEndOfScope = index(of: .nonSpace, before: tokenBeforeEndOfScope),
+                  tokens[commentBeforeEndOfScope].isComment,
+                  let startOfComment = startOfScope(at: commentBeforeEndOfScope),
+                  tokens[startOfComment].isComment
+            {
+                endOfBranchExcludingTrailingComments = startOfComment
+            }
+
+            guard let firstTokenInBody = index(of: .nonSpaceOrLinebreak, after: startOfBranchExcludingLeadingComments),
+                  let lastTokenInBody = index(of: .nonSpaceOrLinebreak, before: endOfBranchExcludingTrailingComments)
+            else { return nil }
+
+            let isLastCase = caseIndex == switchStatementBranches.indices.last
+            let spansMultipleLines = !onSameLine(firstTokenInBody, lastTokenInBody)
+
+            var isFollowedByBlankLine = false
+            var linebreakBeforeEndOfScope: Int?
+            var linebreakBeforeBlankLine: Int?
+
+            if let tokenBeforeEndOfScope = index(of: .nonSpace, before: endOfBranchExcludingTrailingComments),
+               tokens[tokenBeforeEndOfScope].isLinebreak
+            {
+                linebreakBeforeEndOfScope = tokenBeforeEndOfScope
+            }
+
+            if let linebreakBeforeEndOfScope = linebreakBeforeEndOfScope,
+               let tokenBeforeBlankLine = index(of: .nonSpace, before: linebreakBeforeEndOfScope),
+               tokens[tokenBeforeBlankLine].isLinebreak
+            {
+                linebreakBeforeBlankLine = tokenBeforeBlankLine
+                isFollowedByBlankLine = true
+            }
+
+            return SwitchStatementBranchWithSpacingInfo(
+                startOfBranchExcludingLeadingComments: startOfBranchExcludingLeadingComments,
+                endOfBranchExcludingTrailingComments: endOfBranchExcludingTrailingComments,
+                spansMultipleLines: spansMultipleLines,
+                isLastCase: isLastCase,
+                isFollowedByBlankLine: isFollowedByBlankLine,
+                linebreakBeforeEndOfScope: linebreakBeforeEndOfScope,
+                linebreakBeforeBlankLine: linebreakBeforeBlankLine
+            )
+        }
     }
 
     /// Whether the given index is in a function call (not declaration)

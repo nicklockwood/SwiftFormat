@@ -2790,6 +2790,7 @@ class OrganizationTests: RulesTests {
             case .value:
                 print("value")
             }
+
         case .failure:
             guard self.bar else {
                 print(self.bar)

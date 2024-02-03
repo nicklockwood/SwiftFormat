@@ -91,8 +91,10 @@
 # Opt-in Rules (disabled by default)
 
 * [acronyms](#acronyms)
+* [blankLineAfterMultilineSwitchCase](#blankLineAfterMultilineSwitchCase)
 * [blankLinesBetweenImports](#blankLinesBetweenImports)
 * [blockComments](#blockComments)
+* [consistentSwitchStatementSpacing](#consistentSwitchStatementSpacing)
 * [docComments](#docComments)
 * [isEmpty](#isEmpty)
 * [markTypes](#markTypes)
@@ -232,6 +234,38 @@ Insert blank line after import statements.
 +
   class Foo {
     // foo
+  }
+```
+
+</details>
+<br/>
+
+## blankLineAfterMultilineSwitchCase
+
+Insert a blank line after multiline switch cases (excluding the last case,
+which is followed by a closing brace).
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  func handle(_ action: SpaceshipAction) {
+      switch action {
+      case .engageWarpDrive:
+          navigationComputer.destination = targetedDestination
+          await warpDrive.spinUp()
+          warpDrive.activate()
++
+      case let .scanPlanet(planet):
+          scanner.target = planet
+          scanner.scanAtmosphere()
+          scanner.scanBiosphere()
+          scanner.scanForArticialLife()
++
+      case .handleIncomingEnergyBlast:
+          await energyShields.prepare()
+          energyShields.engage()
+      }
   }
 ```
 
@@ -538,6 +572,63 @@ Replace consecutive spaces with a single space.
 ```diff
 - let     foo = 5
 + let foo = 5
+```
+
+</details>
+<br/>
+
+## consistentSwitchStatementSpacing
+
+Ensures consistent spacing among all of the cases in a switch statement.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  func handle(_ action: SpaceshipAction) {
+      switch action {
+      case .engageWarpDrive:
+          navigationComputer.destination = targetedDestination
+          await warpDrive.spinUp()
+          warpDrive.activate()
+
+      case .enableArtificialGravity:
+          artificialGravityEngine.enable(strength: .oneG)
++
+      case let .scanPlanet(planet):
+          scanner.target = planet
+          scanner.scanAtmosphere()
+          scanner.scanBiosphere()
+          scanner.scanForArtificialLife()
+
+      case .handleIncomingEnergyBlast:
+          energyShields.engage()
+      }
+  }
+```
+
+```diff
+  var name: PlanetType {
+  switch self {
+  case .mercury:
+      "Mercury"
+-
+  case .venus:
+      "Venus"
+  case .earth:
+      "Earth"
+  case .mars:
+      "Mars"
+-
+  case .jupiter:
+      "Jupiter"
+  case .saturn:
+      "Saturn"
+  case .uranus:
+      "Uranus"
+  case .neptune:
+      "Neptune"
+  }
 ```
 
 </details>

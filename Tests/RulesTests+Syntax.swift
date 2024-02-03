@@ -3628,6 +3628,7 @@ class SyntaxTests: RulesTests {
         case .bar:
             // bar
             let bar = baz()
+
         default:
             // baz
             let baz = quux()
@@ -3762,10 +3763,12 @@ class SyntaxTests: RulesTests {
             } else {
                 foo = Foo("bar")
             }
+
         case false:
             switch condition {
             case true:
                 foo = Foo("baaz")
+
             case false:
                 if condition {
                     foo = Foo("quux")
@@ -3783,10 +3786,12 @@ class SyntaxTests: RulesTests {
             } else {
                 Foo("bar")
             }
+
         case false:
             switch condition {
             case true:
                 Foo("baaz")
+
             case false:
                 if condition {
                     Foo("quux")
@@ -3902,6 +3907,7 @@ class SyntaxTests: RulesTests {
         case true:
             foo = Foo("foo")
             print("Multi-statement")
+
         case false:
             foo = Foo("bar")
         }
@@ -3939,6 +3945,7 @@ class SyntaxTests: RulesTests {
                 foo = Foo("baaz")
             }
             print("Multi-statement")
+
         case false:
             foo = Foo("bar")
         }

@@ -7743,4 +7743,73 @@ public struct _FormatRules {
             }
         }
     }
+
+    public let blankLineAfterMultilineSwitchCase = FormatRule(
+        help: """
+        Insert a blank line after multiline switch cases (excluding the last case,
+        which is followed by a closing brace).
+        """,
+        disabledByDefault: true,
+        orderAfter: ["redundantBreak"]
+    ) { formatter in
+        formatter.forEach(.keyword("switch")) { switchIndex, _ in
+            guard let switchCases = formatter.switchStatementBranchesWithSpacingInfo(at: switchIndex) else { return }
+
+            for switchCase in switchCases.reversed() {
+                // Any switch statement that spans multiple lines should be followed by a blank line
+                // (excluding the last case, which is followed by a closing brace).
+                if switchCase.spansMultipleLines,
+                   !switchCase.isLastCase,
+                   !switchCase.isFollowedByBlankLine
+                {
+                    switchCase.insertTrailingBlankLine(using: formatter)
+                }
+
+                // The last case should never be followed by a blank line, since it's
+                // already followed by a closing brace.
+                if switchCase.isLastCase,
+                   switchCase.isFollowedByBlankLine
+                {
+                    switchCase.removeTrailingBlankLine(using: formatter)
+                }
+            }
+        }
+    }
+
+    public let consistentSwitchStatementSpacing = FormatRule(
+        help: "Ensures consistent spacing among all of the cases in a switch statement.",
+        disabledByDefault: true,
+        orderAfter: ["blankLineAfterMultilineSwitchCase"]
+    ) { formatter in
+        formatter.forEach(.keyword("switch")) { switchIndex, _ in
+            guard let switchCases = formatter.switchStatementBranchesWithSpacingInfo(at: switchIndex) else { return }
+
+            // When counting the switch cases, exclude the last case (which should never have a trailing blank line).
+            let countWithTrailingBlankLine = switchCases.filter { $0.isFollowedByBlankLine && !$0.isLastCase }.count
+            let countWithoutTrailingBlankLine = switchCases.filter { !$0.isFollowedByBlankLine && !$0.isLastCase }.count
+
+            // We want the spacing to be consistent for all switch cases,
+            // so use whichever formatting is used for the majority of cases.
+            var allCasesShouldHaveBlankLine = countWithTrailingBlankLine >= countWithoutTrailingBlankLine
+
+            // When the `blankLinesBetweenChainedFunctions` rule is enabled, and there is a switch case
+            // that is required to span multiple lines, then all cases must span multiple lines.
+            // (Since if this rule removed the blank line from that case, it would contradict the other rule)
+            if formatter.options.enabledRules.contains(FormatRules.blankLineAfterMultilineSwitchCase.name),
+               switchCases.contains(where: { $0.spansMultipleLines && !$0.isLastCase })
+            {
+                allCasesShouldHaveBlankLine = true
+            }
+
+            for switchCase in switchCases.reversed() {
+                if !switchCase.isFollowedByBlankLine, allCasesShouldHaveBlankLine, !switchCase.isLastCase {
+                    switchCase.insertTrailingBlankLine(using: formatter)
+                }
+
+                if switchCase.isFollowedByBlankLine, !allCasesShouldHaveBlankLine || switchCase.isLastCase {
+                    switchCase.removeTrailingBlankLine(using: formatter)
+                }
+            }
+        }
+    }
 }

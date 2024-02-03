@@ -1324,6 +1324,7 @@ class RedundancyTests: RulesTests {
                 } else {
                     Foo("bar")
                 }
+
             case false:
                 Foo("baaz")
             }
@@ -1340,6 +1341,7 @@ class RedundancyTests: RulesTests {
                 } else {
                     Foo("bar")
                 }
+
             case false:
                 Foo("baaz")
             }
@@ -1361,6 +1363,7 @@ class RedundancyTests: RulesTests {
                 } else {
                     Foo("bar")
                 }
+
             case false:
                 Foo("baaz")
             }
@@ -1377,6 +1380,7 @@ class RedundancyTests: RulesTests {
                 } else {
                     .init("bar")
                 }
+
             case false:
                 .init("baaz")
             }
@@ -1838,6 +1842,7 @@ class RedundancyTests: RulesTests {
                 case .bar:
                     var foo: String?
                     Text(foo ?? "")
+
                 default:
                     EmptyView()
                 }
@@ -1938,6 +1943,7 @@ class RedundancyTests: RulesTests {
                     let _ = {
                         foo = "\\(max)"
                     }()
+
                 default:
                     EmptyView()
                 }
@@ -2785,6 +2791,7 @@ class RedundancyTests: RulesTests {
             case true:
                 // foo
                 return "foo"
+
             default:
                 /* bar */
                 return "bar"
@@ -2797,6 +2804,7 @@ class RedundancyTests: RulesTests {
             case true:
                 // foo
                 "foo"
+
             default:
                 /* bar */
                 "bar"
@@ -2867,6 +2875,7 @@ class RedundancyTests: RulesTests {
                         return "baaz"
                     }
                 }
+
             case false:
                 return "quux"
             }
@@ -2886,6 +2895,7 @@ class RedundancyTests: RulesTests {
                         "baaz"
                     }
                 }
+
             case false:
                 "quux"
             }
@@ -6158,6 +6168,7 @@ class RedundancyTests: RulesTests {
                             print(self.bar)
                         }
                     }
+
                 case .failure:
                     if self.bar {
                         print(self.bar)
@@ -6185,6 +6196,7 @@ class RedundancyTests: RulesTests {
                     }
                 }
                 self.method()
+
             case .failure:
                 break
             }
@@ -6215,6 +6227,7 @@ class RedundancyTests: RulesTests {
                     case .value:
                         print("value")
                     }
+
                 case .failure:
                     guard self.bar else {
                         print(self.bar)

@@ -3884,6 +3884,96 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.conditionalAssignment, options: options, exclude: ["wrapMultilineConditionalAssignment"])
     }
 
+    func testConvertsSwitchWithDefaultCase() {
+        let input = """
+        let foo: Foo
+        switch condition {
+        case .foo:
+            foo = Foo("foo")
+        case .bar:
+            foo = Foo("bar")
+        default:
+            foo = Foo("default")
+        }
+        """
+
+        let output = """
+        let foo: Foo = switch condition {
+        case .foo:
+            Foo("foo")
+        case .bar:
+            Foo("bar")
+        default:
+            Foo("default")
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, output, rule: FormatRules.conditionalAssignment, options: options, exclude: ["wrapMultilineConditionalAssignment", "redundantType"])
+    }
+
+    func testConvertsSwitchWithUnknownDefaultCase() {
+        let input = """
+        let foo: Foo
+        switch condition {
+        case .foo:
+            foo = Foo("foo")
+        case .bar:
+            foo = Foo("bar")
+        @unknown default:
+            foo = Foo("default")
+        }
+        """
+
+        let output = """
+        let foo: Foo = switch condition {
+        case .foo:
+            Foo("foo")
+        case .bar:
+            Foo("bar")
+        @unknown default:
+            Foo("default")
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, output, rule: FormatRules.conditionalAssignment, options: options, exclude: ["wrapMultilineConditionalAssignment", "redundantType"])
+    }
+
+    func testPreservesSwitchWithReturnInDefaultCase() {
+        let input = """
+        let foo: Foo
+        switch condition {
+        case .foo:
+            foo = Foo("foo")
+        case .bar:
+            foo = Foo("bar")
+        default:
+            return
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: FormatRules.conditionalAssignment, options: options)
+    }
+
+    func testPreservesSwitchWithReturnInUnknownDefaultCase() {
+        let input = """
+        let foo: Foo
+        switch condition {
+        case .foo:
+            foo = Foo("foo")
+        case .bar:
+            foo = Foo("bar")
+        @unknown default:
+            return
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: FormatRules.conditionalAssignment, options: options)
+    }
+
     // MARK: - forLoop
 
     func testConvertSimpleForEachToForLoop() {

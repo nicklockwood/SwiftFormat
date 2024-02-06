@@ -1343,19 +1343,11 @@ extension Formatter {
 
         while let conditionalBranchIndex = nextConditionalBranchIndex,
               tokens[conditionalBranchIndex].isSwitchCaseOrDefault,
-              let startOfBody = index(of: .startOfScope(":"), after: conditionalBranchIndex),
-              var endOfBody = endOfScope(at: startOfBody)
+              let (startOfBody, endOfBody) = parseSwitchStatementCase(caseOrDefaultIndex: conditionalBranchIndex)
         {
-            // If the next case has the `@unknown` prefix, make sure that token isn't included in the body of this branch.
-            if let unknownKeyword = index(of: .nonSpaceOrCommentOrLinebreak, before: endOfBody),
-               tokens[unknownKeyword] == .keyword("@unknown")
-            {
-                endOfBody = unknownKeyword
-            }
-
             branches.append((startOfBranch: startOfBody, endOfBranch: endOfBody))
 
-            if tokens[endOfBody].isSwitchCaseOrDefault || tokens[endOfBody] == .keyword("@unknown") {
+            if tokens[endOfBody].isSwitchCaseOrDefault {
                 nextConditionalBranchIndex = endOfBody
             } else if tokens[startOfBody ..< endOfBody].contains(.startOfScope("#if")) {
                 return nil
@@ -1365,6 +1357,33 @@ extension Formatter {
         }
 
         return branches
+    }
+
+    /// Parses the switch statement case starting at the given index,
+    /// which should be one of: `case`, `default`, or `@unknown`.
+    private func parseSwitchStatementCase(caseOrDefaultIndex: Int) -> (startOfBody: Int, endOfBody: Int)? {
+        assert(tokens[caseOrDefaultIndex].isSwitchCaseOrDefault)
+
+        // `@unknown` (a keyword) is handled differently from `case` and `default` (endOfScope tokens).
+        // In this case we have `.keyword("@unknown"), .endOfScope("default"), .startOfScope(":")`.
+        var caseOrDefaultIndex = caseOrDefaultIndex
+        if tokens[caseOrDefaultIndex] == .keyword("@unknown") {
+            guard let nextEndOfScope = endOfScope(at: caseOrDefaultIndex) else { return nil }
+            caseOrDefaultIndex = nextEndOfScope
+        }
+
+        guard let startOfBody = index(of: .startOfScope(":"), after: caseOrDefaultIndex),
+              var endOfBody = endOfScope(at: startOfBody)
+        else { return nil }
+
+        // If the next case has the `@unknown` prefix, make sure that token isn't included in the body of this branch.
+        if let unknownKeyword = index(of: .nonSpaceOrCommentOrLinebreak, before: endOfBody),
+           tokens[unknownKeyword] == .keyword("@unknown")
+        {
+            endOfBody = unknownKeyword
+        }
+
+        return (startOfBody: startOfBody, endOfBody: endOfBody)
     }
 
     /// In Swift 5.9, there's a bug that prevents you from writing an

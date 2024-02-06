@@ -397,7 +397,7 @@ public extension Token {
         if case let .endOfScope(string) = self {
             return ["case", "default"].contains(string)
         }
-        return false
+        return self == .keyword("@unknown") // support `@unknown default` as well
     }
 
     func isOperator(_ string: String) -> Bool {

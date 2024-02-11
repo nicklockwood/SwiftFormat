@@ -746,8 +746,7 @@ extension Formatter {
             return nil
         }
         switch keyword {
-        case let name where
-            name.hasPrefix("#") || name.hasPrefix("@") || excluding.contains(name):
+        case let name where name.hasPrefix("#") || excluding.contains(name):
             fallthrough
         case "in", "is", "as", "try", "await":
             return indexOfLastSignificantKeyword(at: index - 1, excluding: excluding)
@@ -1173,7 +1172,7 @@ extension Formatter {
                 return true
             }
         default:
-            if let funcIndex = index(of: .keyword, before: i, if: {
+            if let funcIndex = index(of: .keywordOrAttribute, before: i, if: {
                 [.keyword("func"), .keyword("init"), .keyword("subscript"), .keyword("macro")].contains($0)
             }), lastIndex(of: .endOfScope("}"), in: funcIndex ..< i) == nil {
                 // Is parameters at start of function
@@ -1278,7 +1277,7 @@ extension Formatter {
         }
 
         // Otherwise this is just a single identifier
-        if tokens[startOfTypeIndex].isIdentifier || tokens[startOfTypeIndex].isKeyword {
+        if tokens[startOfTypeIndex].isIdentifier || tokens[startOfTypeIndex].isKeywordOrAttribute {
             return (name: tokens[startOfTypeIndex].string, range: startOfTypeIndex ... startOfTypeIndex)
         }
 
@@ -1461,14 +1460,14 @@ extension Formatter {
             // Get start of line
             var startIndex = index(of: .linebreak, before: i) ?? 0
             // Check for attributes
-            var previousKeywordIndex = index(of: .keyword, before: i)
+            var previousKeywordIndex = index(of: .keywordOrAttribute, before: i)
             while let previousIndex = previousKeywordIndex {
                 var nextStart: Int? // workaround for Swift Linux bug
                 if tokens[previousIndex].isAttribute {
                     if previousIndex < startIndex {
                         nextStart = index(of: .linebreak, before: previousIndex) ?? 0
                     }
-                    previousKeywordIndex = index(of: .keyword, before: previousIndex)
+                    previousKeywordIndex = index(of: .keywordOrAttribute, before: previousIndex)
                     startIndex = nextStart ?? startIndex
                 } else if previousIndex >= startIndex {
                     // Can't handle another keyword on same line as import

@@ -306,6 +306,16 @@ class SpacingTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.spaceAroundParens)
     }
 
+    func testNoAddSpaceBetweenParenAndAvailableAfterFunc() {
+        let input = """
+        func foo()
+
+        @available(macOS 10.13, *)
+        func bar()
+        """
+        testFormatting(for: input, rule: FormatRules.spaceAroundParens)
+    }
+
     // MARK: - spaceInsideParens
 
     func testSpaceInsideParens() {

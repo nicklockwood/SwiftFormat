@@ -1247,7 +1247,7 @@ private struct Inference {
     let elseOnNextLine = OptionInferrer { formatter, options in
         var sameLine = 0, nextLine = 0
         formatter.forEach(.keyword) { i, token in
-            guard ["else", "catch", "while"].contains(token.string) else { return }
+            guard [.keyword("else"), .keyword("catch"), .keyword("while")].contains(token) else { return }
             // Check for brace
             guard let braceIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i, if: {
                 $0 == .endOfScope("}")

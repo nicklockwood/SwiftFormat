@@ -6548,6 +6548,24 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantSelf, options: options, exclude: ["enumNamespaces"])
     }
 
+    func testRedundantSelfNotConfusedByMainActor() {
+        let input = """
+        class Test {
+            private var p: Int
+
+            func f() {
+                self.f2(
+                    closure: { @MainActor [weak self] p in
+                        print(p)
+                    }
+                )
+            }
+        }
+        """
+        let options = FormatOptions(explicitSelf: .insert)
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
     // MARK: - redundantStaticSelf
 
     func testRedundantStaticSelfInStaticVar() {

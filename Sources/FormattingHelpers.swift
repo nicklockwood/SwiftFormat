@@ -2847,7 +2847,9 @@ extension Formatter {
                     // Handle a capture list followed by an optional parameter list:
                     // `{ [self, foo] bar in` or `{ [self, foo] in` etc.
                     if let inIndex = inIndex,
-                       let captureListStartIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index),
+                       let captureListStartIndex = self.index(in: (index + 1) ..< inIndex, where: {
+                           !$0.isSpaceOrCommentOrLinebreak && !$0.isAttribute
+                       }),
                        tokens[captureListStartIndex] == .startOfScope("["),
                        let captureListEndIndex = endOfScope(at: captureListStartIndex)
                     {

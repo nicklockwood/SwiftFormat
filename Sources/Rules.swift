@@ -3410,7 +3410,7 @@ public struct _FormatRules {
                         if isDeclaration {
                             switch formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) {
                             case .endOfScope(")")?, .operator("=", .infix)?,
-                                 .delimiter(",")? where !isConditional || formatter.currentScope(at: i) == .startOfScope("("):
+                                 .delimiter(",")? where !isConditional:
                                 tempLocals.insert(name)
                                 break outer
                             default:

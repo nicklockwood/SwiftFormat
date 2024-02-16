@@ -7822,6 +7822,23 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.unusedArguments)
     }
 
+    func testFunctionArgumentUsedInGuardNotRemoved3() {
+        let input = """
+        public func flagMessage(_ message: Message) {
+          model.withState { state in
+            guard
+              let flagMessageFeature,
+              shouldAllowFlaggingMessage(
+                message,
+                thread: state.thread)
+            else { return }
+          }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedArguments,
+                       exclude: ["wrapArguments", "wrapConditionalBodies", "indent"])
+    }
+
     // functions (closure-only)
 
     func testNoMarkFunctionArgument() {

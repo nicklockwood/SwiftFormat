@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.53.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.53.2) (2024-02-17)
+
+- Fixed bug where `hoistAwait` rule could move `await` before `try` keyword
+- Fixed bug where `redundantSelf` rule was confused by `@MainActor` annotation
+- Fixed edge case where `unusedArguments` removed required argument inside `guard`
+
 ## [0.53.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.53.1) (2024-01-26)
 
 - Fixed bug where `fileHeader` could duplicate headers containing a colon

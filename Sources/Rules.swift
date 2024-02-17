@@ -5969,7 +5969,8 @@ public struct _FormatRules {
         Sorts the body of declarations with // swiftformat:sort
         and declarations between // swiftformat:sort:begin and
         // swiftformat:sort:end comments.
-        """
+        """,
+        sharedOptions: ["organizetypes"]
     ) { formatter in
         formatter.forEachToken(
             where: { $0.isComment && $0.string.contains("swiftformat:sort") }
@@ -5995,20 +5996,28 @@ public struct _FormatRules {
 
             // For `:sort` directives, we sort the declarations
             // between the open and close brace of the following type
-            else if !commentToken.string.contains(":sort:"),
-                    // This part of the rule conflicts with the organizeDeclarations rule.
-                    // Instead, that rule manually implements support for the :sort directive.
-                    !formatter.options.enabledRules.contains(FormatRules.organizeDeclarations.name)
-            {
+            else if !commentToken.string.contains(":sort:") {
                 guard let typeOpenBrace = formatter.index(of: .startOfScope("{"), after: commentIndex),
                       let typeCloseBrace = formatter.endOfScope(at: typeOpenBrace),
                       let firstTypeBodyToken = formatter.index(of: .nonLinebreak, after: typeOpenBrace),
                       let lastTypeBodyToken = formatter.index(of: .nonLinebreak, before: typeCloseBrace),
+                      let declarationKeyword = formatter.lastSignificantKeyword(at: typeOpenBrace),
                       lastTypeBodyToken > typeOpenBrace
                 else { return }
 
-                rangeToSort = typeOpenBrace + 1 ... lastTypeBodyToken
-                numberOfLeadingLinebreaks = firstTypeBodyToken - typeOpenBrace - 1
+                // Sorting the body of a type conflicts with the `organizeDeclaration`
+                // keyword if enabled for this type of declaration. In that case,
+                // defer to the sorting implementation in `organizeDeclarations`.
+                if formatter.options.enabledRules.contains(FormatRules.organizeDeclarations.name),
+                   formatter.options.organizeTypes.contains(declarationKeyword)
+                {
+                    return
+                }
+
+                rangeToSort = firstTypeBodyToken ... lastTypeBodyToken
+                // We don't include any leading linebreaks in the range to sort,
+                // since `firstTypeBodyToken` is the first `nonLinebreak` in the body
+                numberOfLeadingLinebreaks = 0
             } else {
                 return
             }

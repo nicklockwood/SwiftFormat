@@ -3286,34 +3286,24 @@ class OrganizationTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.sortDeclarations)
     }
 
-    func testTypeBodyWithBlankLines() {
+    func testSortsTypeBody() {
         let input = """
         // swiftformat:sort
         enum FeatureFlags {
-
             case upsellB
-
             case fooFeature
-
             case barFeature
-
             case upsellA
-
         }
         """
 
         let output = """
         // swiftformat:sort
         enum FeatureFlags {
-
             case barFeature
-
             case fooFeature
-
             case upsellA
-
             case upsellB
-
         }
         """
 
@@ -3520,6 +3510,69 @@ class OrganizationTests: RulesTests {
         """
 
         testFormatting(for: input, rule: FormatRules.organizeDeclarations)
+    }
+
+    func testSortDeclarationsSortsExtensionBody() {
+        let input = """
+        enum Namespace {}
+
+        // swiftformat:sort
+        extension Namespace {
+            static let foo = "foo"
+            public static let bar = "bar"
+            static let baaz = "baaz"
+        }
+        """
+
+        let output = """
+        enum Namespace {}
+
+        // swiftformat:sort
+        extension Namespace {
+            static let baaz = "baaz"
+            public static let bar = "bar"
+            static let foo = "foo"
+        }
+        """
+
+        // organizeTypes doesn't include "extension". So even though the
+        // organizeDeclarations rule is enabled, the extension should be
+        // sorted by the sortDeclarations rule.
+        let options = FormatOptions(organizeTypes: ["class"])
+        testFormatting(for: input, [output], rules: [FormatRules.sortDeclarations, FormatRules.organizeDeclarations], options: options)
+    }
+
+    func testOrganizeDeclarationsSortsExtensionBody() {
+        let input = """
+        enum Namespace {}
+
+        // swiftformat:sort
+        extension Namespace {
+            static let foo = "foo"
+            public static let bar = "bar"
+            static let baaz = "baaz"
+        }
+        """
+
+        let output = """
+        enum Namespace {}
+
+        // swiftformat:sort
+        extension Namespace {
+
+            // MARK: Public
+
+            public static let bar = "bar"
+
+            // MARK: Internal
+
+            static let baaz = "baaz"
+            static let foo = "foo"
+        }
+        """
+
+        let options = FormatOptions(organizeTypes: ["extension"])
+        testFormatting(for: input, output, rule: FormatRules.organizeDeclarations, options: options, exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"])
     }
 
     // MARK: - sortTypealiases

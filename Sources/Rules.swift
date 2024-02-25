@@ -7512,10 +7512,10 @@ public struct _FormatRules {
                     return
                 }
 
-                // We can't introduce an identifier that already exists in the loop body
-                // so choose the first eligible option from a set of potential names
+                // We can't introduce an identifier that matches a keyword or already exists in
+                // the loop body so choose the first eligible option from a set of potential names
                 var eligibleValueNames = ["item", "element", "value"]
-                if let identifier = forLoopSubjectIdentifier?.singularized() {
+                if var identifier = forLoopSubjectIdentifier?.singularized(), !identifier.isSwiftKeyword {
                     eligibleValueNames = [identifier] + eligibleValueNames
                 }
 

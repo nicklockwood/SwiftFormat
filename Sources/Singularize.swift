@@ -34,8 +34,8 @@ import Foundation
 // Inspired by https://github.com/Cosmo/GrammaticalNumber
 private let rules: [(String, replacement: String)] = [
     ("s$", ""),
-    ("ae$", "a"),
     ("eaux$", "eau"),
+    ("ae$", "a"),
     ("era$", "us"),
     ("(e)ae$", "$1us"),
     ("(ss)$", "$1"),
@@ -53,6 +53,8 @@ private let rules: [(String, replacement: String)] = [
     ("(cris|test)es$", "$1is"),
     ("^(pra|a)xes$", "$1xis"),
     ("([sz])es$", "$1"),
+    ("(ace|ase)s$", "$1"),
+    ("(ias)es$", "$1"),
     ("(z)zes$", "$1"),
     ("((ba|grou)se)s$", "$1"),
     ("(x)en", "$1"),

@@ -11,6 +11,7 @@ import XCTest
 
 class SingularizeTests: XCTestCase {
     func testSingularization() {
+        XCTAssertEqual("aces".singularized(), "ace")
         XCTAssertEqual("addenda".singularized(), "addendum")
         XCTAssertEqual("aircraft".singularized(), "aircraft")
         XCTAssertEqual("aliases".singularized(), "alias")
@@ -31,6 +32,7 @@ class SingularizeTests: XCTestCase {
         XCTAssertEqual("buses".singularized(), "bus")
         XCTAssertEqual("bureaux".singularized(), "bureau")
         XCTAssertEqual("cacti".singularized(), "cactus")
+        XCTAssertEqual("cases".singularized(), "case")
         XCTAssertEqual("centers".singularized(), "center")
         XCTAssertEqual("children".singularized(), "child")
         XCTAssertEqual("cilia".singularized(), "cilium")
@@ -47,6 +49,7 @@ class SingularizeTests: XCTestCase {
         XCTAssertEqual("ellipses".singularized(), "ellipsis")
         XCTAssertEqual("errata".singularized(), "erratum")
         XCTAssertEqual("fairies".singularized(), "fairy")
+        XCTAssertEqual("faces".singularized(), "face")
         XCTAssertEqual("faxes".singularized(), "fax")
         XCTAssertEqual("fezes".singularized(), "fez")
         XCTAssertEqual("fezzes".singularized(), "fez")

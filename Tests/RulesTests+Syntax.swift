@@ -3974,7 +3974,23 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.conditionalAssignment, options: options)
     }
 
-    // MARK: - forLoop
+    func testDoesntConvertIfStatementWithForLoopInBranch() {
+        let input = """
+        var foo: Foo?
+        if condition {
+            foo = Foo("foo")
+            for foo in foos {
+                print(foo)
+            }
+        } else {
+            foo = Foo("bar")
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: FormatRules.conditionalAssignment, options: options)
+    }
+
+    // MARK: - preferForLoop
 
     func testConvertSimpleForEachToForLoop() {
         let input = """
@@ -4292,19 +4308,17 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.preferForLoop)
     }
 
-    func testDoesntConvertIfStatementWithForLoopInBranch() {
+    func testForLoopVariableNotUsedIfClashesWithKeyword() {
         let input = """
-        var foo: Foo?
-        if condition {
-            foo = Foo("foo")
-            for foo in foos {
-                print(foo)
-            }
-        } else {
-            foo = Foo("bar")
+        Foo.allCases.forEach {
+            print($0)
         }
         """
-        let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, rule: FormatRules.conditionalAssignment, options: options)
+        let output = """
+        for item in Foo.allCases {
+            print(item)
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.preferForLoop)
     }
 }

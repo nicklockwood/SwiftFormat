@@ -7473,6 +7473,19 @@ public struct _FormatRules {
             guard currentIndex != forEachIndex else { return }
             forLoopSubjectRange = currentIndex ... indexBeforeFunctionCallDot
 
+            // If there is a `try` before the `forEach` we cannot know if the subject is async/throwing or the body,
+            // which makes it impossible to know if we should move it or *remove* it, so we must abort (same for await).
+            if let tokenIndexBeforeForLoop = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: currentIndex),
+               var prevToken = formatter.token(at: tokenIndexBeforeForLoop)
+            {
+                if prevToken.isUnwrapOperator {
+                    prevToken = formatter.last(.nonSpaceOrComment, before: tokenIndexBeforeForLoop) ?? .space("")
+                }
+                if [.keyword("try"), .keyword("await")].contains(prevToken) {
+                    return
+                }
+            }
+
             // If the chain includes linebreaks, don't convert it to a for loop.
             //
             // In this case converting something like:
@@ -7604,14 +7617,6 @@ public struct _FormatRules {
                 in: (forLoopSubjectRange.lowerBound) ... (inKeywordIndex ?? closureOpenBraceIndex),
                 with: newTokens
             )
-
-            // `forEach` is `rethrows`, so there may be a `try` before the call. Now that we're using `for` instead,
-            // `try` is invalid here and has to be removed.
-            if let tokenIndexBeforeForLoop = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: forLoopSubjectRange.lowerBound),
-               formatter.tokens[tokenIndexBeforeForLoop] == .keyword("try")
-            {
-                formatter.removeTokens(in: tokenIndexBeforeForLoop ..< forLoopSubjectRange.lowerBound)
-            }
         }
     }
 

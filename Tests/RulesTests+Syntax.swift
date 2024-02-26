@@ -4321,4 +4321,31 @@ class SyntaxTests: RulesTests {
         """
         testFormatting(for: input, output, rule: FormatRules.preferForLoop)
     }
+
+    func testTryNotRemovedInThrowingForEach() {
+        let input = """
+        try list().forEach {
+            print($0)
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.preferForLoop)
+    }
+
+    func testOptionalTryNotRemovedInThrowingForEach() {
+        let input = """
+        try? list().forEach {
+            print($0)
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.preferForLoop)
+    }
+
+    func testAwaitNotRemovedInAsyncForEach() {
+        let input = """
+        await list().forEach {
+            print($0)
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.preferForLoop)
+    }
 }

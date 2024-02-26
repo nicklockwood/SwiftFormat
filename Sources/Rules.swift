@@ -946,31 +946,31 @@ public struct _FormatRules {
             return false
         }
 
-        formatter.forEachToken(where: { [
-            .keyword("class"),
-            .keyword("struct"),
-        ].contains($0) }) { i, token in
-            guard let next = formatter.next(.nonSpaceOrCommentOrLinebreak, after: i),
-                  // exit if class is a type modifier
-                  !(next.isKeywordOrAttribute || next.isModifierKeyword),
+        formatter.forEachToken(where: { [.keyword("class"), .keyword("struct")].contains($0) }) { i, token in
+            if token == .keyword("class") {
+                guard let next = formatter.next(.nonSpaceOrCommentOrLinebreak, after: i),
+                      // exit if structs only
+                      formatter.options.enumNamespaces != .structsOnly,
+                      // exit if class is a type modifier
+                      !(next.isKeywordOrAttribute || next.isModifierKeyword),
+                      // exit for class as protocol conformance
+                      formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .delimiter(":"),
+                      // exit if not closed for extension
+                      formatter.modifiersForDeclaration(at: i, contains: "final"),
+                      // exit if has attribute(s)
+                      !formatter.modifiersForDeclaration(at: i, contains: { $1.hasPrefix("@") })
+                else {
+                    return
+                }
+            }
+            guard let braceIndex = formatter.index(of: .startOfScope("{"), after: i),
                   // exit if import statement
                   formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .keyword("import"),
-                  // exit for class as protocol conformance
-                  formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .delimiter(":"),
-                  let braceIndex = formatter.index(of: .startOfScope("{"), after: i),
-                  // exit if type is conforming any types
+                  // exit if type is conforming any other types
                   !formatter.tokens[i ... braceIndex].contains(.delimiter(":")),
                   let endIndex = formatter.index(of: .endOfScope("}"), after: braceIndex),
-                  case let .identifier(name)? = formatter.next(.identifier, after: i + 1),
-                  // exit if open for extension
-                  !formatter.modifiersForDeclaration(at: i, contains: "open")
+                  case let .identifier(name)? = formatter.next(.identifier, after: i + 1)
             else {
-                return
-            }
-            switch formatter.options.enumNamespaces {
-            case .structsOnly where token == .keyword("struct"), .always:
-                break
-            case .structsOnly:
                 return
             }
             let range = braceIndex + 1 ..< endIndex

@@ -1006,6 +1006,35 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.enumNamespaces)
     }
 
+    func testEnumNamespacesNotAppliedToNonFinalClass() {
+        let input = """
+        class Foo {
+            static let = "A"
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.enumNamespaces)
+    }
+
+    func testEnumNamespacesNotAppliedIfObjC() {
+        let input = """
+        @objc(NSFoo)
+        final class Foo {
+            static let = "A"
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.enumNamespaces)
+    }
+
+    func testEnumNamespacesNotAppliedIfMacro() {
+        let input = """
+        @FooBar
+        final class Foo {
+            static let = "A"
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.enumNamespaces)
+    }
+
     // MARK: - numberFormatting
 
     // hex case

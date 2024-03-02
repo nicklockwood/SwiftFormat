@@ -199,6 +199,12 @@ class SpacingTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.spaceAroundParens, exclude: ["redundantVoidReturnType"])
     }
 
+    func testAddSpaceBetweenCaptureListAndArguments8() {
+        let input = "{ [weak self]() throws(Foo) -> Void in }"
+        let output = "{ [weak self] () throws(Foo) -> Void in }"
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundParens, exclude: ["redundantVoidReturnType"])
+    }
+
     func testAddSpaceBetweenEscapingAndParenthesizedClosure() {
         let input = "@escaping(() -> Void)"
         let output = "@escaping (() -> Void)"
@@ -314,6 +320,12 @@ class SpacingTests: RulesTests {
         func bar()
         """
         testFormatting(for: input, rule: FormatRules.spaceAroundParens)
+    }
+
+    func testNoAddSpaceAroundTypedThrowsFunctionType() {
+        let input = "func foo() throws (Bar) -> Baz {}"
+        let output = "func foo() throws(Bar) -> Baz {}"
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundParens)
     }
 
     // MARK: - spaceInsideParens

@@ -873,6 +873,28 @@ class WrappingTests: RulesTests {
         testFormatting(for: input, [output, output2], rules: [FormatRules.wrap], options: options, exclude: ["wrapMultilineStatementBraces"])
     }
 
+    func testWrapFunctionIfReturnTypeExceedsMaxWidth2WithXcodeIndentation2() {
+        let input = """
+        func testFunc() throws(Foo) -> (ReturnType, ReturnType2) {
+            doSomething()
+        }
+        """
+        let output = """
+        func testFunc() throws(Foo)
+            -> (ReturnType, ReturnType2) {
+            doSomething()
+        }
+        """
+        let output2 = """
+        func testFunc() throws(Foo)
+        -> (ReturnType, ReturnType2) {
+            doSomething()
+        }
+        """
+        let options = FormatOptions(xcodeIndentation: true, maxWidth: 35)
+        testFormatting(for: input, [output, output2], rules: [FormatRules.wrap], options: options, exclude: ["wrapMultilineStatementBraces"])
+    }
+
     func testWrapFunctionIfReturnTypeExceedsMaxWidth3() {
         let input = """
         func testFunc() -> (Bool, String) -> String? {
@@ -981,6 +1003,22 @@ class WrappingTests: RulesTests {
         """
         let output = """
         func testFunc(_: () -> Void) throws
+            -> (Bool, String) -> String? {
+            doSomething()
+        }
+        """
+        let options = FormatOptions(maxWidth: 42)
+        testFormatting(for: input, output, rule: FormatRules.wrap, options: options, exclude: ["wrapMultilineStatementBraces"])
+    }
+
+    func testWrapTypedThrowingFunctionIfReturnTypeExceedsMaxWidth() {
+        let input = """
+        func testFunc(_: () -> Void) throws(Foo) -> (Bool, String) -> String? {
+            doSomething()
+        }
+        """
+        let output = """
+        func testFunc(_: () -> Void) throws(Foo)
             -> (Bool, String) -> String? {
             doSomething()
         }
@@ -1774,6 +1812,28 @@ class WrappingTests: RulesTests {
             Int,
             String
         ) throws -> Int = { _, _, _ in
+            0
+        }
+        """
+        let options = FormatOptions(wrapParameters: .beforeFirst)
+        testFormatting(for: input, [output],
+                       rules: [FormatRules.wrapArguments],
+                       options: options)
+    }
+
+    func testWrapParametersListBeforeFirstInTypedThrowingClosureType() {
+        let input = """
+        var mathFunction: (Int,
+                           Int, String) throws(Foo) -> Int = { _, _, _ in
+            0
+        }
+        """
+        let output = """
+        var mathFunction: (
+            Int,
+            Int,
+            String
+        ) throws(Foo) -> Int = { _, _, _ in
             0
         }
         """
@@ -2959,6 +3019,21 @@ class WrappingTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
     }
 
+    func testDoesntWrapReturnAndTypedEffectOnSingleLineFunctionDeclaration() {
+        let input = """
+        func singleLineFunction() async throws(Foo) -> String {}
+        """
+
+        let options = FormatOptions(
+            wrapArguments: .beforeFirst,
+            closingParenOnSameLine: true,
+            wrapReturnType: .ifMultiline,
+            wrapEffects: .ifMultiline
+        )
+
+        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+    }
+
     func testWrapEffectOnMultilineFunctionDeclaration() {
         let input = """
         func multilineFunction(
@@ -3615,6 +3690,35 @@ class WrappingTests: RulesTests {
             one _: Int,
             two _: Int
         ) async throws -> String {
+            "one"
+        }
+        """
+
+        let options = FormatOptions(
+            wrapArguments: .beforeFirst,
+            closingParenOnSameLine: false,
+            wrapEffects: .never
+        )
+        testFormatting(for: input, [output], rules: [
+            FormatRules.wrapMultilineStatementBraces,
+            FormatRules.wrapArguments,
+        ], options: options)
+    }
+
+    func testWrapsMultilineStatementConsistently2_withTypedEffects() {
+        let input = """
+        func aFunc(
+            one _: Int,
+            two _: Int) async throws(Foo) -> String {
+            "one"
+        }
+        """
+
+        let output = """
+        func aFunc(
+            one _: Int,
+            two _: Int
+        ) async throws(Foo) -> String {
             "one"
         }
         """

@@ -3710,6 +3710,17 @@ class IndentTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.indent, options: options)
     }
 
+    func testAsyncTypedThrowsNotUnindented() {
+        let input = """
+        func multilineFunction(
+            foo _: String,
+            bar _: String)
+            async throws(Foo) -> String {}
+        """
+        let options = FormatOptions(closingParenOnSameLine: true)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
     func testIndentAsyncLet() {
         let input = """
         func foo() async {

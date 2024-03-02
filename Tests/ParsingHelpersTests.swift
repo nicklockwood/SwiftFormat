@@ -550,6 +550,23 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssert(formatter.isStartOfClosure(at: 6))
     }
 
+    func testTypedThrowingClosure() {
+        let formatter = Formatter(tokenize("""
+        let foo = { bar throws(Foo) in bar }
+        """))
+        XCTAssert(formatter.isStartOfClosure(at: 6))
+    }
+
+    func testNestedTypedThrowingClosures() {
+        let formatter = Formatter(tokenize("""
+        try! str.withCString(encodedAs: UTF8.self) { _ throws(Foo) in
+            try! str.withCString(encodedAs: UTF8.self) { _ throws(Foo) in }
+        }
+        """))
+        XCTAssert(formatter.isStartOfClosure(at: 15))
+        XCTAssert(formatter.isStartOfClosure(at: 42))
+    }
+
     func testTrailingClosureOnOptionalMethod() {
         let formatter = Formatter(tokenize("""
         foo.bar? { print("") }

@@ -594,10 +594,7 @@ extension Formatter {
                  "func", "subscript", "catch":
                 return false
             case "throws", "rethrows":
-                return next(
-                    .nonSpaceOrLinebreak,
-                    after: prevKeywordIndex
-                ) == .keyword("in")
+                return next(.keyword, after: prevKeywordIndex) == .keyword("in")
             default:
                 return true
             }

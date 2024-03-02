@@ -217,6 +217,12 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.void)
     }
 
+    func testFunctionThatReturnsAFunctionThatHasTypedThrows() {
+        let input = "(Void) -> Void throws(Foo) -> ()"
+        let output = "(Void) -> () throws(Foo) -> Void"
+        testFormatting(for: input, output, rule: FormatRules.void)
+    }
+
     func testChainOfFunctionsIsNotChanged() {
         let input = "() -> () -> () -> Void"
         testFormatting(for: input, rule: FormatRules.void)
@@ -227,8 +233,18 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.void)
     }
 
+    func testChainOfFunctionsWithTypedThrowsIsNotChanged() {
+        let input = "() -> () throws(Foo) -> () throws(Foo) -> Void"
+        testFormatting(for: input, rule: FormatRules.void)
+    }
+
     func testVoidThrowsIsNotMangled() {
         let input = "(Void) throws -> Void"
+        testFormatting(for: input, rule: FormatRules.void)
+    }
+
+    func testVoidTypedThrowsIsNotMangled() {
+        let input = "(Void) throws(Foo) -> Void"
         testFormatting(for: input, rule: FormatRules.void)
     }
 
@@ -2965,8 +2981,10 @@ class SyntaxTests: RulesTests {
         let input = """
         func foo<Foo>(_: (Foo) -> Void) {}
         func bar<Foo>(_: (Foo) throws -> Void) {}
+        func baz<Foo>(_: (Foo) throws(Bar) -> Void) {}
         func baaz<Foo>(_: (Foo) async -> Void) {}
-        func quux<Foo>(_: (Foo) async throws -> Void) {}
+        func qux<Foo>(_: (Foo) async throws -> Void) {}
+        func quux<Foo>(_: (Foo) async throws(Bar) -> Void) {}
         func qaax<Foo>(_: ([Foo]) -> Void) {}
         func qaax<Foo>(_: ((Foo, Bar)) -> Void) {}
         """

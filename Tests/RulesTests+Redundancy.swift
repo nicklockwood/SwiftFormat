@@ -852,6 +852,19 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantInit, exclude: ["indent"])
     }
 
+    func testNoRemoveInitInsideIfdef2() {
+        let input = """
+        func myFunc() async throws(Foo) -> String {
+            #if DEBUG
+            .init("foo")
+            #else
+            ""
+            #endif
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantInit, exclude: ["indent"])
+    }
+
     // MARK: - redundantLetError
 
     func testCatchLetError() {
@@ -4089,6 +4102,18 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantSelf)
     }
 
+    func testTypedThrowingNestedClosureInNotMistakenForForLoop() {
+        let input = """
+        func f() {
+            let str = "hello"
+            try! str.withCString(encodedAs: UTF8.self) { _ throws(Foo) in
+                try! str.withCString(encodedAs: UTF8.self) { _ throws(Foo) in }
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantSelf)
+    }
+
     func testRedundantSelfPreservesSelfInClosureWithExplicitStrongCaptureBefore5_3() {
         let input = """
         class Foo {
@@ -6135,6 +6160,27 @@ class RedundancyTests: RulesTests {
                        exclude: ["hoistPatternLet"])
     }
 
+    func testSelfRemovalParsingBug7() {
+        let input = """
+        extension Dictionary where Key == String {
+            func requiredValue<T>(for keyPath: String) throws(Foo) -> T {
+                return keyPath as! T
+            }
+
+            func optionalValue<T>(for keyPath: String) throws(Foo) -> T? {
+                guard let anyValue = self[keyPath] else {
+                    return nil
+                }
+                guard let value = anyValue as? T else {
+                    return nil
+                }
+                return value
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantSelf)
+    }
+
     func testSelfNotRemovedInCaseIfElse() {
         let input = """
         class Foo {
@@ -6929,6 +6975,11 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.unusedArguments)
     }
 
+    func testNoRemoveClosureTypedThrows() {
+        let input = "let foo = { () throws(Foo) in }"
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
     func testNoRemoveClosureGenericReturnTypes() {
         let input = "let foo = { () -> Promise<String> in bar }"
         testFormatting(for: input, rule: FormatRules.unusedArguments)
@@ -7097,8 +7148,19 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.unusedArguments)
     }
 
+    func testUnusedTypedThrowingClosureArgument() {
+        let input = "foo = { bar throws(Foo) in \"\" }"
+        let output = "foo = { _ throws(Foo) in \"\" }"
+        testFormatting(for: input, output, rule: FormatRules.unusedArguments)
+    }
+
     func testUsedThrowingClosureArgument() {
         let input = "let foo = { bar throws in bar + \"\" }"
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
+    func testUsedTypedThrowingClosureArgument() {
+        let input = "let foo = { bar throws(Foo) in bar + \"\" }"
         testFormatting(for: input, rule: FormatRules.unusedArguments)
     }
 
@@ -7475,6 +7537,17 @@ class RedundancyTests: RulesTests {
     func testTryAwaitArgumentNotMarkedUnused() {
         let input = """
         func foo(bar: String) async throws -> String? {
+            let bar = try
+                await parse(bar)
+            return bar
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
+    func testTypedTryAwaitArgumentNotMarkedUnused() {
+        let input = """
+        func foo(bar: String) async throws(Foo) -> String? {
             let bar = try
                 await parse(bar)
             return bar

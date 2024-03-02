@@ -233,7 +233,7 @@ public struct _FormatRules {
                 }
                 return false
             case "private", "fileprivate", "internal",
-                 "init", "subscript":
+                 "init", "subscript", "throws":
                 return false
             case "await":
                 return formatter.options.swiftVersion >= "5.5" ||

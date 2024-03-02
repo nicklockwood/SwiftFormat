@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.53.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.53.3) (2024-03-02)
+
+- The `preferForLoop` rule now correctly singularizes loop conditions that end with "cases"
+- Fixed bug where `preferForLoop` mangled throwing or async `forEach` expressions
+- Fixed extension body not being sorted if `organizeDeclarations` was enabled but excluded declaration type
+- Fixed conditionalAssignment bugs with `@unknown default` cases
+- Fixed some unsafe applications of the `enumNamespaces` rule
+- Add preliminary support for typed `throws`
+
 ## [0.53.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.53.2) (2024-02-17)
 
 - Fixed bug where `hoistAwait` rule could move `await` before `try` keyword

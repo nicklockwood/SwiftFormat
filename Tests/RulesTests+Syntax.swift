@@ -1028,7 +1028,7 @@ class SyntaxTests: RulesTests {
     func testEnumNamespacesNotAppliedIfMacro() {
         let input = """
         @FooBar
-        final class Foo {
+        struct Foo {
             static let = "A"
         }
         """

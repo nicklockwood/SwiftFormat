@@ -3147,6 +3147,12 @@ class OrganizationTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.modifierOrder)
     }
 
+    func testSpaceInModifiersLeftIntact2() {
+        let input = "nonisolated(unsafe) public var foo: String"
+        let output = "public nonisolated(unsafe) var foo: String"
+        testFormatting(for: input, output, rule: FormatRules.modifierOrder)
+    }
+
     func testPrefixModifier() {
         let input = "prefix public static func - (rhs: Foo) -> Foo"
         let output = "public static prefix func - (rhs: Foo) -> Foo"

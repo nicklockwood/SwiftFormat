@@ -2541,7 +2541,7 @@ extension _FormatRules {
         ["optional", "required"],
         ["convenience"],
         ["indirect"],
-        ["isolated", "nonisolated"],
+        ["isolated", "nonisolated", "nonisolated(unsafe)"],
         ["lazy"],
         ownershipModifiers,
         ["static", "class"],

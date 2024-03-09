@@ -873,6 +873,12 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantLetError)
     }
 
+    func testCatchLetErrorWithTypedThrows() {
+        let input = "do throws(Foo) {} catch let error {}"
+        let output = "do throws(Foo) {} catch {}"
+        testFormatting(for: input, output, rule: FormatRules.redundantLetError)
+    }
+
     // MARK: - redundantObjc
 
     func testRedundantObjcRemovedFromBeforeOutlet() {
@@ -2300,10 +2306,38 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantReturn, options: options)
     }
 
+    func testNoRemoveReturnInDoThrowsCatch() {
+        let input = """
+        func foo() -> Int {
+            do throws(Foo) {
+                return try Bar()
+            } catch {
+                return -1
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.1")
+        testFormatting(for: input, rule: FormatRules.redundantReturn, options: options)
+    }
+
     func testNoRemoveReturnInDoCatchLet() {
         let input = """
         func foo() -> Int {
             do {
+                return try Bar()
+            } catch let e as Error {
+                return -1
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.1")
+        testFormatting(for: input, rule: FormatRules.redundantReturn, options: options)
+    }
+
+    func testNoRemoveReturnInDoThrowsCatchLet() {
+        let input = """
+        func foo() -> Int {
+            do throws(Foo) {
                 return try Bar()
             } catch let e as Error {
                 return -1
@@ -3478,6 +3512,11 @@ class RedundancyTests: RulesTests {
 
     func testNoRemoveSelfForErrorInCatch() {
         let input = "do {} catch { self.error = error }"
+        testFormatting(for: input, rule: FormatRules.redundantSelf)
+    }
+
+    func testNoRemoveSelfForErrorInDoThrowsCatch() {
+        let input = "do throws(Foo) {} catch { self.error = error }"
         testFormatting(for: input, rule: FormatRules.redundantSelf)
     }
 

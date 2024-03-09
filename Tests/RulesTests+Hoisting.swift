@@ -130,6 +130,12 @@ class HoistingTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.hoistTry)
     }
 
+    func testNoHoistTryInsideDoThrows() {
+        let input = "do throws(Foo) { rg.box.seal(.fulfilled(try body(error))) }"
+        let output = "do throws(Foo) { try rg.box.seal(.fulfilled(body(error))) }"
+        testFormatting(for: input, output, rule: FormatRules.hoistTry)
+    }
+
     func testNoHoistTryInsideMultilineDo() {
         let input = """
         do {
@@ -452,6 +458,21 @@ class HoistingTests: RulesTests {
         """
         let output = """
         do {
+            await rg.box.seal(.fulfilled(body(error)))
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.hoistAwait,
+                       options: FormatOptions(swiftVersion: "5.5"))
+    }
+
+    func testNoHoistAwaitInsideDoThrows() {
+        let input = """
+        do throws(Foo) {
+            rg.box.seal(.fulfilled(await body(error)))
+        }
+        """
+        let output = """
+        do throws(Foo) {
             await rg.box.seal(.fulfilled(body(error)))
         }
         """

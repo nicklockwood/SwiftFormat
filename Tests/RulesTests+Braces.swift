@@ -360,6 +360,14 @@ class BracesTests: RulesTests {
                        exclude: ["emptyBraces"])
     }
 
+    func testAllmanBraceDoThrowsCatchClauseIndent() {
+        let input = "do throws(Foo) {\n    try foo\n}\ncatch {\n}"
+        let output = "do throws(Foo)\n{\n    try foo\n}\ncatch\n{\n}"
+        let options = FormatOptions(allmanBraces: true)
+        testFormatting(for: input, output, rule: FormatRules.braces, options: options,
+                       exclude: ["emptyBraces"])
+    }
+
     func testAllmanBraceRepeatWhileIndent() {
         let input = "repeat {\n    foo\n}\nwhile x"
         let output = "repeat\n{\n    foo\n}\nwhile x"

@@ -3231,7 +3231,7 @@ public struct _FormatRules {
 
             // Make sure this is a type of scope that supports implicit returns
             if formatter.isConditionalStatement(at: startOfScopeIndex) ||
-                ["do", "else", "catch"].contains(formatter.lastSignificantKeyword(at: startOfScopeIndex))
+                ["do", "else", "catch"].contains(formatter.lastSignificantKeyword(at: startOfScopeIndex, excluding: ["throws"]))
             {
                 return
             }

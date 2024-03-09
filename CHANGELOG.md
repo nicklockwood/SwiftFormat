@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.53.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.53.4) (2024-03-09)
+
+- The `enumNamespaces` rule is no longer applied to structs with attributes or macros
+- The new `nonisolated(unsafe)` modifier is now handled correctly
+- Added support for `do throws(Type) { ... }` clauses
+
 ## [0.53.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.53.3) (2024-03-02)
 
 - The `preferForLoop` rule now correctly singularizes loop conditions that end with "cases"
@@ -7,7 +13,7 @@
 - Fixed extension body not being sorted if `organizeDeclarations` was enabled but excluded declaration type
 - Fixed conditionalAssignment bugs with `@unknown default` cases
 - Fixed some unsafe applications of the `enumNamespaces` rule
-- Add preliminary support for typed `throws`
+- Added preliminary support for typed `throws`
 
 ## [0.53.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.53.2) (2024-02-17)
 

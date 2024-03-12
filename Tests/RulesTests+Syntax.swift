@@ -3273,6 +3273,231 @@ class SyntaxTests: RulesTests {
                        exclude: ["spaceInsideComments"])
     }
 
+    func testPreservesDocComments() {
+        let input = """
+        /// Comment not associated with class
+
+        class Foo {
+            /** Comment not associated with function */
+
+            // Documentation for function
+            func bar() {
+                /// Comment inside function declaration.
+                /// This one is multi-line.
+
+                /// This comment is inside a function and precedes a declaration.
+                /// Since the option to preserve doc comments is enabled,
+                /// it should be left as-is.
+                let bar: Bar? = Bar()
+                print(bar)
+            }
+
+            // Documentation for property
+            var baaz: Baaz {
+                /// Comment inside property getter
+                let baazImpl = Baaz()
+                return baazImpl
+            }
+
+            // Documentation for function
+            var quux: Quux {
+                didSet {
+                    /// Comment inside didSet
+                    let newQuux = Quux()
+                    print(newQuux)
+                }
+            }
+        }
+        """
+
+        let output = """
+        /// Comment not associated with class
+
+        class Foo {
+            /** Comment not associated with function */
+
+            /// Documentation for function
+            func bar() {
+                /// Comment inside function declaration.
+                /// This one is multi-line.
+
+                /// This comment is inside a function and precedes a declaration.
+                /// Since the option to preserve doc comments is enabled,
+                /// it should be left as-is.
+                let bar: Bar? = Bar()
+                print(bar)
+            }
+
+            /// Documentation for property
+            var baaz: Baaz {
+                /// Comment inside property getter
+                let baazImpl = Baaz()
+                return baazImpl
+            }
+
+            /// Documentation for function
+            var quux: Quux {
+                didSet {
+                    /// Comment inside didSet
+                    let newQuux = Quux()
+                    print(newQuux)
+                }
+            }
+        }
+        """
+
+        let options = FormatOptions(preserveDocComments: true)
+        testFormatting(for: input, output, rule: FormatRules.docComments, options: options, exclude: ["spaceInsideComments"])
+    }
+
+    func testDoesntConvertCommentBeforeConsecutivePropertiesToDocComment() {
+        let input = """
+        // Names of the planets
+        struct PlanetNames {
+            // Inner planets
+            let mercury = "Mercury"
+            let venus = "Venus"
+            let earth = "Earth"
+            let mars = "Mars"
+
+            // Inner planets
+            let jupiter = "Jupiter"
+            let saturn = "Saturn"
+            let uranus = "Uranus"
+            let neptune = "Neptune"
+
+            /// Dwarf planets
+            let pluto = "Pluto"
+            let ceres = "Ceres"
+        }
+        """
+
+        let output = """
+        /// Names of the planets
+        struct PlanetNames {
+            // Inner planets
+            let mercury = "Mercury"
+            let venus = "Venus"
+            let earth = "Earth"
+            let mars = "Mars"
+
+            // Inner planets
+            let jupiter = "Jupiter"
+            let saturn = "Saturn"
+            let uranus = "Uranus"
+            let neptune = "Neptune"
+
+            /// Dwarf planets
+            let pluto = "Pluto"
+            let ceres = "Ceres"
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.docComments)
+    }
+
+    func testConvertsCommentsToDocCommentsInConsecutiveDeclarations() {
+        let input = """
+        // Names of the planets
+        enum PlanetNames {
+            // Mercuy
+            case mercury
+            // Venus
+            case venus
+            // Earth
+            case earth
+            // Mars
+            case mars
+
+            // Jupiter
+            case jupiter
+
+            // Saturn
+            case saturn
+
+            // Uranus
+            case uranus
+
+            // Neptune
+            case neptune
+        }
+        """
+
+        let output = """
+        /// Names of the planets
+        enum PlanetNames {
+            /// Mercuy
+            case mercury
+            /// Venus
+            case venus
+            /// Earth
+            case earth
+            /// Mars
+            case mars
+
+            /// Jupiter
+            case jupiter
+
+            /// Saturn
+            case saturn
+
+            /// Uranus
+            case uranus
+
+            /// Neptune
+            case neptune
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.docComments)
+    }
+
+    func testDoesntConvertCommentBeforeConsecutiveEnumCasesToDocComment() {
+        let input = """
+        // Names of the planets
+        enum PlanetNames {
+            // Inner planets
+            case mercury
+            case venus
+            case earth
+            case mars
+
+            // Inner planets
+            case jupiter
+            case saturn
+            case uranus
+            case neptune
+
+            // Dwarf planets
+            case pluto
+            case ceres
+        }
+        """
+
+        let output = """
+        /// Names of the planets
+        enum PlanetNames {
+            // Inner planets
+            case mercury
+            case venus
+            case earth
+            case mars
+
+            // Inner planets
+            case jupiter
+            case saturn
+            case uranus
+            case neptune
+
+            // Dwarf planets
+            case pluto
+            case ceres
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.docComments)
+    }
+
     func testDoesntConvertAnnotationCommentsToDocComments() {
         let input = """
         // swiftformat:disable some_swift_format_rule

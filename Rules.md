@@ -638,6 +638,10 @@ Ensures consistent spacing among all of the cases in a switch statement.
 
 Use doc comments for API declarations, otherwise use regular comments.
 
+Option | Description
+--- | ---
+`--doccomments` | Preserve doc comments: "default" or "preserve".
+
 <details>
 <summary>Examples</summary>
 

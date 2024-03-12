@@ -663,6 +663,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var wrapEffects: WrapEffects
     public var preserveAnonymousForEach: Bool
     public var preserveSingleLineForEach: Bool
+    public var preserveDocComments: Bool
     public var spaceAroundDelimiter: SpaceAroundDelimiter
     public var initCoderNil: Bool
     public var dateFormat: DateFormat
@@ -775,6 +776,7 @@ public struct FormatOptions: CustomStringConvertible {
                 wrapEffects: WrapEffects = .preserve,
                 preserveAnonymousForEach: Bool = false,
                 preserveSingleLineForEach: Bool = true,
+                preserveDocComments: Bool = false,
                 dateFormat: DateFormat = .system,
                 timeZone: FormatTimeZone = .system,
                 // Doesn't really belong here, but hard to put elsewhere
@@ -877,6 +879,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.wrapEffects = wrapEffects
         self.preserveAnonymousForEach = preserveAnonymousForEach
         self.preserveSingleLineForEach = preserveSingleLineForEach
+        self.preserveDocComments = preserveDocComments
         self.spaceAroundDelimiter = spaceAroundDelimiter
         self.dateFormat = dateFormat
         self.timeZone = timeZone

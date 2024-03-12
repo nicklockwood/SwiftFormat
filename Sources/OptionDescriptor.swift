@@ -979,6 +979,16 @@ struct _Descriptors {
         trueValues: ["ignore", "preserve"],
         falseValues: ["convert"]
     )
+
+    let preserveDocComments = OptionDescriptor(
+        argumentName: "doccomments",
+        displayName: "Doc comments",
+        help: "Preserve doc comments: \"default\" or \"preserve\".",
+        keyPath: \.preserveSingleLineForEach,
+        trueValues: ["preserve"],
+        falseValues: ["default"]
+    )
+
     let initCoderNil = OptionDescriptor(
         argumentName: "initcodernil",
         displayName: "nil for initWithCoder",

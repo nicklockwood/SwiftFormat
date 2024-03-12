@@ -6908,7 +6908,8 @@ public struct _FormatRules {
     public let docComments = FormatRule(
         help: "Use doc comments for API declarations, otherwise use regular comments.",
         disabledByDefault: true,
-        orderAfter: ["fileHeader"]
+        orderAfter: ["fileHeader"],
+        options: ["doccomments"]
     ) { formatter in
         formatter.forEach(.startOfScope) { index, token in
             guard [.startOfScope("//"), .startOfScope("/*")].contains(token),
@@ -6999,6 +7000,31 @@ public struct _FormatRules {
                 return
             }
 
+            // Determine whether or not this is the start of a list of sequential declarations, like:
+            //
+            //   // The placeholder names we use in test cases
+            //   case foo
+            //   case bar
+            //   case baaz
+            //
+            // In these cases it's not obvious whether or not the comment refers to the property or
+            // the entire group, so we preserve the existing formatting.
+            var preserveRegularComments = false
+            if useDocComment,
+               let declarationKeyword = formatter.index(after: endOfComment, where: \.isDeclarationTypeKeyword),
+               let endOfDeclaration = formatter.endOfDeclaration(atDeclarationKeyword: declarationKeyword, fallBackToEndOfScope: false),
+               let nextDeclarationKeyword = formatter.index(after: endOfDeclaration, where: \.isDeclarationTypeKeyword)
+            {
+                let linebreaksBetweenDeclarations = formatter.tokens[declarationKeyword ... nextDeclarationKeyword]
+                    .filter { $0.isLinebreak }.count
+
+                // If there is only a single line break between the start of this declaration and the subsequent declaration,
+                // then they are written sequentially in a block. In this case, don't convert regular comments to doc comments.
+                if linebreaksBetweenDeclarations == 1 {
+                    preserveRegularComments = true
+                }
+            }
+
             // Doc comment tokens like `///` and `/**` aren't parsed as a
             // single `.startOfScope` token -- they're parsed as:
             // `.startOfScope("//"), .commentBody("/ ...")` or
@@ -7017,10 +7043,10 @@ public struct _FormatRules {
                case .commentBody = commentBody
             {
                 let isDocComment = commentBody.string.hasPrefix(startOfDocCommentBody)
-                if useDocComment, !isDocComment {
+                if useDocComment, !isDocComment, !preserveRegularComments {
                     let updatedCommentBody = "\(startOfDocCommentBody)\(commentBody.string)"
                     formatter.replaceToken(at: index + 1, with: .commentBody(updatedCommentBody))
-                } else if !useDocComment, isDocComment {
+                } else if !useDocComment, isDocComment, !formatter.options.preserveDocComments {
                     let prefix = commentBody.string.prefix(while: { String($0) == startOfDocCommentBody })
 
                     // Do nothing if this is a unusual comment like `//////////////////`
@@ -7037,7 +7063,7 @@ public struct _FormatRules {
                     )
                 }
 
-            } else if useDocComment {
+            } else if useDocComment, !preserveRegularComments {
                 formatter.insert(.commentBody(startOfDocCommentBody), at: index + 1)
             }
         }

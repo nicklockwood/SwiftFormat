@@ -1389,6 +1389,21 @@ extension Formatter {
         return nil
     }
 
+    // Whether or not the token at this index could potentially be the last token in a type.
+    // For a full list of all supported type patterns, check the documentation of `parseType(at:)`.
+    func isValidEndOfType(at index: Int) -> Bool {
+        if tokens[index].isIdentifier {
+            return true
+        }
+
+        let validEndOfTypeTokens = ["]", ")", ">", "?", "!"]
+        if validEndOfTypeTokens.contains(tokens[index].string) {
+            return true
+        }
+
+        return false
+    }
+
     /// Parses the expression starting at the given index.
     ///
     /// A full list of expression types are available here:

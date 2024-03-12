@@ -3669,7 +3669,7 @@ class WrappingTests: RulesTests {
 
     func testMultilineBraceAppliedToGetterBody_wrapBeforeFirst() {
         let input = """
-        var items: Adaptive<CGFloat> = .adaptive(
+        var items = Adaptive<CGFloat>.adaptive(
             compact: Sizes.horizontalPaddingTiny_8,
             regular: Sizes.horizontalPaddingLarge_64) {
                 didSet { updateAccessoryViewSpacing() }
@@ -3677,7 +3677,7 @@ class WrappingTests: RulesTests {
         """
 
         let output = """
-        var items: Adaptive<CGFloat> = .adaptive(
+        var items = Adaptive<CGFloat>.adaptive(
             compact: Sizes.horizontalPaddingTiny_8,
             regular: Sizes.horizontalPaddingLarge_64)
         {
@@ -3721,8 +3721,8 @@ class WrappingTests: RulesTests {
 
     func testMultilineBraceAppliedToGetterBody_wrapAfterFirst() {
         let input = """
-        var items: Adaptive<CGFloat> = .adaptive(compact: Sizes.horizontalPaddingTiny_8,
-                                                 regular: Sizes.horizontalPaddingLarge_64)
+        var items = Adaptive<CGFloat>.adaptive(compact: Sizes.horizontalPaddingTiny_8,
+                                               regular: Sizes.horizontalPaddingLarge_64)
         {
             didSet { updateAccessoryViewSpacing() }
         }

@@ -100,6 +100,7 @@
 * [markTypes](#markTypes)
 * [noExplicitOwnership](#noExplicitOwnership)
 * [organizeDeclarations](#organizeDeclarations)
+* [preferInferredTypes](#preferInferredTypes)
 * [sortSwitchCases](#sortSwitchCases)
 * [wrapConditionalBodies](#wrapConditionalBodies)
 * [wrapEnumCases](#wrapEnumCases)
@@ -1438,6 +1439,31 @@ Option | Description
       .filter { $0.style == .fooBar }
       .map { $0.uppercased() }
       .forEach { print($0) }
+```
+
+</details>
+<br/>
+
+## preferInferredTypes
+
+Prefer using inferred types on property definitions (`let foo = Foo()`) rather than explicit types (`let foo: Foo = .init()`).
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- let foo: Foo = .init()
++ let foo: Foo = .init()
+
+- let bar: Bar = .defaultValue
++ let bar = .defaultValue
+
+- let baaz: Baaz = .buildBaaz(foo: foo, bar: bar)
++ let baaz = Baaz.buildBaaz(foo: foo, bar: bar)
+
+  let float: CGFloat = 10.0
+  let array: [String] = []
+  let anyFoo: AnyFoo = foo
 ```
 
 </details>

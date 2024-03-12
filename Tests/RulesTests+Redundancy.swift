@@ -531,7 +531,7 @@ class RedundancyTests: RulesTests {
         }
         """
         let options = FormatOptions(swiftVersion: "4")
-        testFormatting(for: input, rule: FormatRules.redundantFileprivate, options: options)
+        testFormatting(for: input, rule: FormatRules.redundantFileprivate, options: options, exclude: ["preferInferredTypes"])
     }
 
     func testFileprivateInitNotChangedToPrivateWhenUsingTrailingClosureInit() {
@@ -1513,7 +1513,7 @@ class RedundancyTests: RulesTests {
         let output = "var view: UIView = .init()"
         let options = FormatOptions(redundantType: .explicit)
         testFormatting(for: input, output, rule: FormatRules.redundantType,
-                       options: options)
+                       options: options, exclude: ["preferInferredTypes"])
     }
 
     func testVarRedundantTypeRemovalExplicitType2() {
@@ -1521,7 +1521,7 @@ class RedundancyTests: RulesTests {
         let output = "var view: UIView = .init /* foo */()"
         let options = FormatOptions(redundantType: .explicit)
         testFormatting(for: input, output, rule: FormatRules.redundantType,
-                       options: options, exclude: ["spaceAroundComments"])
+                       options: options, exclude: ["spaceAroundComments", "preferInferredTypes"])
     }
 
     func testLetRedundantGenericTypeRemovalExplicitType() {
@@ -1529,7 +1529,7 @@ class RedundancyTests: RulesTests {
         let output = "let relay: BehaviourRelay<Int?> = .init(value: nil)"
         let options = FormatOptions(redundantType: .explicit)
         testFormatting(for: input, output, rule: FormatRules.redundantType,
-                       options: options)
+                       options: options, exclude: ["preferInferredTypes"])
     }
 
     func testLetRedundantGenericTypeRemovalExplicitTypeIfValueOnNextLine() {
@@ -1537,7 +1537,7 @@ class RedundancyTests: RulesTests {
         let output = "let relay: Foo<Int?> = \n    .default"
         let options = FormatOptions(redundantType: .explicit)
         testFormatting(for: input, output, rule: FormatRules.redundantType,
-                       options: options, exclude: ["trailingSpace"])
+                       options: options, exclude: ["trailingSpace", "preferInferredTypes"])
     }
 
     func testVarNonRedundantTypeDoesNothingExplicitType() {
@@ -1551,7 +1551,7 @@ class RedundancyTests: RulesTests {
         let output = "let view: UIView = .init()"
         let options = FormatOptions(redundantType: .explicit)
         testFormatting(for: input, output, rule: FormatRules.redundantType,
-                       options: options)
+                       options: options, exclude: ["preferInferredTypes"])
     }
 
     func testRedundantTypeRemovedIfValueOnNextLineExplicitType() {
@@ -1565,7 +1565,7 @@ class RedundancyTests: RulesTests {
         """
         let options = FormatOptions(redundantType: .explicit)
         testFormatting(for: input, output, rule: FormatRules.redundantType,
-                       options: options)
+                       options: options, exclude: ["preferInferredTypes"])
     }
 
     func testRedundantTypeRemovedIfValueOnNextLine2ExplicitType() {
@@ -1579,7 +1579,7 @@ class RedundancyTests: RulesTests {
         """
         let options = FormatOptions(redundantType: .explicit)
         testFormatting(for: input, output, rule: FormatRules.redundantType,
-                       options: options)
+                       options: options, exclude: ["preferInferredTypes"])
     }
 
     func testRedundantTypeRemovalWithCommentExplicitType() {
@@ -1587,7 +1587,7 @@ class RedundancyTests: RulesTests {
         let output = "var view: UIView /* view */ = .init()"
         let options = FormatOptions(redundantType: .explicit)
         testFormatting(for: input, output, rule: FormatRules.redundantType,
-                       options: options)
+                       options: options, exclude: ["preferInferredTypes"])
     }
 
     func testRedundantTypeRemovalWithComment2ExplicitType() {
@@ -1595,7 +1595,7 @@ class RedundancyTests: RulesTests {
         let output = "var view: UIView = /* view */ .init()"
         let options = FormatOptions(redundantType: .explicit)
         testFormatting(for: input, output, rule: FormatRules.redundantType,
-                       options: options)
+                       options: options, exclude: ["preferInferredTypes"])
     }
 
     func testRedundantTypeRemovalWithStaticMember() {
@@ -1617,7 +1617,7 @@ class RedundancyTests: RulesTests {
         """
         let options = FormatOptions(redundantType: .explicit)
         testFormatting(for: input, output, rule: FormatRules.redundantType,
-                       options: options)
+                       options: options, exclude: ["preferInferredTypes"])
     }
 
     func testRedundantTypeRemovalWithStaticFunc() {
@@ -1639,7 +1639,7 @@ class RedundancyTests: RulesTests {
         """
         let options = FormatOptions(redundantType: .explicit)
         testFormatting(for: input, output, rule: FormatRules.redundantType,
-                       options: options)
+                       options: options, exclude: ["preferInferredTypes"])
     }
 
     func testRedundantTypeDoesNothingWithChainedMember() {
@@ -1653,7 +1653,7 @@ class RedundancyTests: RulesTests {
         let output = "let session: URLSession = .default.makeCopy()"
         let options = FormatOptions(redundantType: .explicit, swiftVersion: "5.4")
         testFormatting(for: input, output, rule: FormatRules.redundantType,
-                       options: options)
+                       options: options, exclude: ["preferInferredTypes"])
     }
 
     func testRedundantTypeDoesNothingWithChainedMember2() {
@@ -1672,7 +1672,7 @@ class RedundancyTests: RulesTests {
         let input = "let url: URL = URL(fileURLWithPath: #file).deletingLastPathComponent()"
         let output = "let url: URL = .init(fileURLWithPath: #file).deletingLastPathComponent()"
         let options = FormatOptions(redundantType: .explicit, swiftVersion: "5.4")
-        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options)
+        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options, exclude: ["preferInferredTypes"])
     }
 
     func testRedundantTypeDoesNothingIfLet() {
@@ -1704,7 +1704,7 @@ class RedundancyTests: RulesTests {
         """
         let options = FormatOptions(redundantType: .explicit)
         testFormatting(for: input, output, rule: FormatRules.redundantType,
-                       options: options)
+                       options: options, exclude: ["preferInferredTypes"])
     }
 
     func testRedundantTypeIfVoid() {
@@ -1712,7 +1712,7 @@ class RedundancyTests: RulesTests {
         let output = "let foo: [Void] = .init()"
         let options = FormatOptions(redundantType: .explicit)
         testFormatting(for: input, output, rule: FormatRules.redundantType,
-                       options: options)
+                       options: options, exclude: ["preferInferredTypes"])
     }
 
     func testRedundantTypeWithIntegerLiteralNotMangled() {
@@ -1794,7 +1794,7 @@ class RedundancyTests: RulesTests {
 
         let options = FormatOptions(redundantType: .inferLocalsOnly)
         testFormatting(for: input, output, rule: FormatRules.redundantType,
-                       options: options)
+                       options: options, exclude: ["preferInferredTypes"])
     }
 
     // MARK: - redundantNilInit
@@ -3704,7 +3704,7 @@ class RedundancyTests: RulesTests {
     func testNoRemoveBackticksAroundInitPropertyInSwift5() {
         let input = "let foo: Foo = .`init`"
         let options = FormatOptions(swiftVersion: "5")
-        testFormatting(for: input, rule: FormatRules.redundantBackticks, options: options)
+        testFormatting(for: input, rule: FormatRules.redundantBackticks, options: options, exclude: ["preferInferredTypes"])
     }
 
     func testNoRemoveBackticksAroundAnyProperty() {
@@ -7251,7 +7251,7 @@ class RedundancyTests: RulesTests {
             case networkOnly
             case cacheFirst
 
-            static let defaultCacheAge: TimeInterval = .minutes(5)
+            static let defaultCacheAge = TimeInterval.minutes(5)
 
             func requestStrategy<Outcome>() -> SingleRequestStrategy<Outcome> {
                 switch self {

@@ -4424,7 +4424,8 @@ public struct _FormatRules {
 
     /// Strip redundant `.init` from type instantiations
     public let redundantInit = FormatRule(
-        help: "Remove explicit `init` if not required."
+        help: "Remove explicit `init` if not required.",
+        orderAfter: ["preferInferredTypes"]
     ) { formatter in
         formatter.forEach(.identifier("init")) { initIndex, _ in
             guard let dotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: initIndex, if: {
@@ -7952,6 +7953,35 @@ public struct _FormatRules {
                     switchCase.removeTrailingBlankLine(using: formatter)
                 }
             }
+        }
+    }
+
+    public let preferInferredTypes = FormatRule(
+        help: "Prefer using inferred types on property definitions (`let foo = Foo()`) rather than explicit types (`let foo: Foo = .init()`).",
+        disabledByDefault: true,
+        orderAfter: ["redundantType"]
+    ) { formatter in
+        formatter.forEach(.operator("=", .infix)) { equalsIndex, _ in
+            guard // Parse and validate the LHS of the property declaration.
+                // It should take the form `(let|var) propertyName: (Type) = .staticMember`
+                let introducerIndex = formatter.indexOfLastSignificantKeyword(at: equalsIndex),
+                ["var", "let"].contains(formatter.tokens[introducerIndex].string),
+                let colonIndex = formatter.index(of: .delimiter(":"), before: equalsIndex),
+                introducerIndex < colonIndex,
+                let typeStartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: colonIndex),
+                let type = formatter.parseType(at: typeStartIndex),
+                // If the RHS starts with a leading dot, then we know its accessing some static member on this type.
+                let dotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
+                formatter.tokens[dotIndex] == .operator(".", .prefix)
+            else { return }
+
+            let typeTokens = formatter.tokens[type.range]
+
+            // Insert a copy of the type on the RHS before the dot
+            formatter.insert(typeTokens, at: dotIndex)
+
+            // Remove the colon and explicit type before the equals token
+            formatter.removeTokens(in: colonIndex ... type.range.upperBound)
         }
     }
 }

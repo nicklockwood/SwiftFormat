@@ -4978,4 +4978,249 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.preferForLoop,
                        exclude: ["wrapConditionalBodies"])
     }
+
+    // MARK: preferInferredTypes
+
+    func testConvertsExplicitTypeToImplicitType() {
+        let input = """
+        let foo: Foo = .init()
+        let bar: Bar = .staticBar
+        let baaz: Baaz = .Example.default
+        let quux: Quux = .quuxBulder(foo: .foo, bar: .bar)
+
+        let dictionary: [Foo: Bar] = .init()
+        let array: [Foo] = .init()
+        let genericType: MyGenericType<Foo, Bar> = .init()
+        """
+
+        let output = """
+        let foo = Foo()
+        let bar = Bar.staticBar
+        let baaz = Baaz.Example.default
+        let quux = Quux.quuxBulder(foo: .foo, bar: .bar)
+
+        let dictionary = [Foo: Bar]()
+        let array = [Foo]()
+        let genericType = MyGenericType<Foo, Bar>()
+        """
+
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, [output], rules: [FormatRules.preferInferredTypes, FormatRules.redundantInit], options: options)
+    }
+
+    func testPreservesExplicitTypeIfNoRHS() {
+        let input = """
+        let foo: Foo
+        let bar: Bar
+        """
+
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, rule: FormatRules.preferInferredTypes, options: options)
+    }
+
+    func testPreservesExplicitTypeIfUsingLocalValueOrLiteral() {
+        let input = """
+        let foo: Foo = localFoo
+        let bar: Bar = localBar
+        let int: Int64 = 1234
+        let number: CGFloat = 12.345
+        let array: [String] = []
+        let dictionary: [String: Int] = [:]
+        let tuple: (String, Int) = ("foo", 123)
+        """
+
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, rule: FormatRules.preferInferredTypes, options: options, exclude: ["redundantType"])
+    }
+
+    func testCompatibleWithRedundantTypeInferred() {
+        let input = """
+        let foo: Foo = Foo()
+        """
+
+        let output = """
+        let foo = Foo()
+        """
+
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, [output], rules: [FormatRules.redundantType, FormatRules.preferInferredTypes], options: options)
+    }
+
+    func testCompatibleWithRedundantTypeExplicit() {
+        let input = """
+        let foo: Foo = Foo()
+        """
+
+        let output = """
+        let foo = Foo()
+        """
+
+        let options = FormatOptions(redundantType: .explicit)
+        testFormatting(for: input, [output], rules: [FormatRules.redundantType, FormatRules.preferInferredTypes], options: options)
+    }
+
+    func testCompatibleWithRedundantTypeInferLocalsOnly() {
+        let input = """
+        let foo: Foo = Foo.init()
+        let foo: Foo = .init()
+
+        func bar() {
+            let baaz: Baaz = Baaz.init()
+            let baaz: Baaz = .init()
+        }
+        """
+
+        let output = """
+        let foo: Foo = .init()
+        let foo: Foo = .init()
+
+        func bar() {
+            let baaz = Baaz()
+            let baaz = Baaz()
+        }
+        """
+
+        let options = FormatOptions(redundantType: .inferLocalsOnly)
+        testFormatting(for: input, [output], rules: [FormatRules.redundantType, FormatRules.preferInferredTypes, FormatRules.redundantInit], options: options)
+    }
+
+    func testPreferInferredTypesWithIfExpressionDisabledByDefault() {
+        let input = """
+        let foo: SomeTypeWithALongGenrericName<AndGenericArgument> =
+            if condition {
+                .init(bar)
+            } else {
+                .init(baaz)
+            }
+        """
+
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, rule: FormatRules.preferInferredTypes, options: options)
+    }
+
+    func testPreferInferredTypesWithIfExpression() {
+        let input = """
+        let foo: Foo =
+            if condition {
+                .init(bar)
+            } else {
+                .init(baaz)
+            }
+        """
+
+        let output = """
+        let foo =
+            if condition {
+                Foo(bar)
+            } else {
+                Foo(baaz)
+            }
+        """
+
+        let options = FormatOptions(redundantType: .inferred, inferredTypesInConditionalExpressions: true)
+        testFormatting(for: input, [output], rules: [FormatRules.preferInferredTypes, FormatRules.redundantInit], options: options)
+    }
+
+    func testPreferInferredTypesWithSwitchExpression() {
+        let input = """
+        let foo: Foo =
+            switch condition {
+            case true:
+                .init(bar)
+            case false:
+                .init(baaz)
+            }
+        """
+
+        let output = """
+        let foo =
+            switch condition {
+            case true:
+                Foo(bar)
+            case false:
+                Foo(baaz)
+            }
+        """
+
+        let options = FormatOptions(redundantType: .inferred, inferredTypesInConditionalExpressions: true)
+        testFormatting(for: input, [output], rules: [FormatRules.preferInferredTypes, FormatRules.redundantInit], options: options)
+    }
+
+    func testPreservesNonMatchingIfExpression() {
+        let input = """
+        let foo: Foo =
+            if condition {
+                .init(bar)
+            } else {
+                [] // e.g. using ExpressibleByArrayLiteral
+            }
+        """
+
+        let options = FormatOptions(redundantType: .inferred, inferredTypesInConditionalExpressions: true)
+        testFormatting(for: input, rule: FormatRules.preferInferredTypes, options: options)
+    }
+
+    func testPreservesExplicitOptionalType() {
+        // `let foo = Foo?.foo` doesn't work if `.foo` is defined on `Foo` but not `Foo?`
+        let input = """
+        let optionalFoo1: Foo? = .foo
+        let optionalFoo2: Foo? = Foo.foo
+        let optionalFoo3: Foo! = .foo
+        let optionalFoo4: Foo! = Foo.foo
+        """
+
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, rule: FormatRules.preferInferredTypes, options: options)
+    }
+
+    func testPreservesTypeWithSeparateDeclarationAndProperty() {
+        let input = """
+        var foo: Foo!
+        foo = Foo(afterDelay: {
+            print(foo)
+        })
+        """
+
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, rule: FormatRules.preferInferredTypes, options: options)
+    }
+
+    func testPreservesTypeWithExistentialAny() {
+        let input = """
+        protocol ShapeStyle {}
+        struct MyShapeStyle: ShapeStyle {}
+
+        extension ShapeStyle where Self == MyShapeStyle {
+            static var myShape: MyShapeStyle { MyShapeStyle() }
+        }
+
+        /// This compiles
+        let myShape1: any ShapeStyle = .myShape
+
+        // This would fail with "error: static member 'myShape' cannot be used on protocol metatype '(any ShapeStyle).Type'"
+        // let myShape2 = (any ShapeStyle).myShape
+        """
+
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, rule: FormatRules.preferInferredTypes, options: options)
+    }
+
+    func testPreservesRightHandSideWithOperator() {
+        let input = """
+        let value: ClosedRange<Int> = .zero ... 10
+        let dynamicTypeSizeRange: ClosedRange<DynamicTypeSize> = .large ... .xxxLarge
+        let dynamicTypeSizeRange: ClosedRange<DynamicTypeSize> = .large() ... .xxxLarge()
+        let dynamicTypeSizeRange: ClosedRange<DynamicTypeSize> = .convertFromLiteral(.large ... .xxxLarge)
+        """
+
+        let output = """
+        let value: ClosedRange<Int> = .zero ... 10
+        let dynamicTypeSizeRange: ClosedRange<DynamicTypeSize> = .large ... .xxxLarge
+        let dynamicTypeSizeRange: ClosedRange<DynamicTypeSize> = .large() ... .xxxLarge()
+        let dynamicTypeSizeRange = ClosedRange<DynamicTypeSize>.convertFromLiteral(.large ... .xxxLarge)
+        """
+
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, output, rule: FormatRules.preferInferredTypes, options: options)
+    }
 }

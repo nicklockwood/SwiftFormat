@@ -101,6 +101,7 @@
 * [markTypes](#markTypes)
 * [noExplicitOwnership](#noExplicitOwnership)
 * [organizeDeclarations](#organizeDeclarations)
+* [preferInferredTypes](#preferInferredTypes)
 * [redundantProperty](#redundantProperty)
 * [sortSwitchCases](#sortSwitchCases)
 * [wrapConditionalBodies](#wrapConditionalBodies)
@@ -1498,6 +1499,46 @@ Option | Description
       .filter { $0.style == .fooBar }
       .map { $0.uppercased() }
       .forEach { print($0) }
+```
+
+</details>
+<br/>
+
+## preferInferredTypes
+
+Prefer using inferred types on property definitions (`let foo = Foo()`) rather than explicit types (`let foo: Foo = .init()`).
+
+Option | Description
+--- | ---
+`--inferredtypes` | "exclude-cond-exprs" (default) or "always"
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- let foo: Foo = .init()
++ let foo = Foo.init()
+
+- let bar: Bar = .defaultValue
++ let bar = Bar.defaultValue
+
+- let baaz: Baaz = .buildBaaz(foo: foo, bar: bar)
++ let baaz = Baaz.buildBaaz(foo: foo, bar: bar)
+
+  let float: CGFloat = 10.0
+  let array: [String] = []
+  let anyFoo: AnyFoo = foo
+
+  // with --inferredtypes always:
+- let foo: Foo =
++ let foo =
+    if condition {
+-     .init(bar)
++     Foo(bar)
+    } else {
+-     .init(baaz)
++     Foo(baaz)
+    }
 ```
 
 </details>

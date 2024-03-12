@@ -1912,4 +1912,32 @@ private struct Examples {
       }
     ```
     """
+
+    let preferInferredTypes = """
+    ```diff
+    - let foo: Foo = .init()
+    + let foo = Foo.init()
+
+    - let bar: Bar = .defaultValue
+    + let bar = Bar.defaultValue
+
+    - let baaz: Baaz = .buildBaaz(foo: foo, bar: bar)
+    + let baaz = Baaz.buildBaaz(foo: foo, bar: bar)
+
+      let float: CGFloat = 10.0
+      let array: [String] = []
+      let anyFoo: AnyFoo = foo
+
+      // with --inferredtypes always:
+    - let foo: Foo =
+    + let foo =
+        if condition {
+    -     .init(bar)
+    +     Foo(bar)
+        } else {
+    -     .init(baaz)
+    +     Foo(baaz)
+        }
+    ```
+    """
 }

@@ -852,7 +852,7 @@ class SpacingTests: RulesTests {
     }
 
     func testGenericBracketAroundAttributeNotConfusedWithLessThan() {
-        let input = "let example = Example<(@MainActor () -> Void)?>(nil)"
+        let input = "Example<(@MainActor () -> Void)?>(nil)"
         testFormatting(for: input, rule: FormatRules.spaceAroundOperators)
     }
 

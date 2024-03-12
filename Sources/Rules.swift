@@ -784,7 +784,9 @@ public struct _FormatRules {
                 isInferred = true
                 declarationKeywordIndex = nil
             case .explicit:
-                isInferred = false
+                // If the `preferInferredTypes` rule is also enabled, it takes precedence
+                // over the `--redundanttype explicit` option.
+                isInferred = formatter.options.enabledRules.contains("preferInferredTypes")
                 declarationKeywordIndex = formatter.declarationIndexAndScope(at: equalsIndex).index
             case .inferLocalsOnly:
                 let (index, scope) = formatter.declarationIndexAndScope(at: equalsIndex)
@@ -4493,7 +4495,8 @@ public struct _FormatRules {
 
     /// Strip redundant `.init` from type instantiations
     public let redundantInit = FormatRule(
-        help: "Remove explicit `init` if not required."
+        help: "Remove explicit `init` if not required.",
+        orderAfter: ["preferInferredTypes"]
     ) { formatter in
         formatter.forEach(.identifier("init")) { initIndex, _ in
             guard let dotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: initIndex, if: {
@@ -7402,15 +7405,10 @@ public struct _FormatRules {
             //    matches the identifier assigned on each conditional branch.
             if let introducerIndex = formatter.indexOfLastSignificantKeyword(at: startOfConditional, excluding: ["if", "switch"]),
                ["let", "var"].contains(formatter.tokens[introducerIndex].string),
-               let propertyIdentifierIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: introducerIndex),
-               let propertyIdentifier = formatter.token(at: propertyIdentifierIndex),
-               propertyIdentifier.isIdentifier,
-               formatter.tokens[lvalueRange.lowerBound] == propertyIdentifier,
-               lvalueRange.count == 1,
-               let colonIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: propertyIdentifierIndex),
-               formatter.tokens[colonIndex] == .delimiter(":"),
-               let startOfTypeIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: colonIndex),
-               let typeRange = formatter.parseType(at: startOfTypeIndex)?.range,
+               let property = formatter.parsePropertyDeclaration(atIntroducerIndex: introducerIndex),
+               formatter.tokens[lvalueRange.lowerBound].string == property.identifier,
+               property.value == nil,
+               let typeRange = property.type?.range,
                let nextTokenAfterProperty = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: typeRange.upperBound),
                nextTokenAfterProperty == startOfConditional
             {
@@ -8075,7 +8073,8 @@ public struct _FormatRules {
 
     public let redundantProperty = FormatRule(
         help: "Simplifies redundant property definitions that are immediately returned.",
-        disabledByDefault: true
+        disabledByDefault: true,
+        orderAfter: ["preferInferredTypes"]
     ) { formatter in
         formatter.forEach(.keyword) { introducerIndex, introducerToken in
             // Find properties like `let identifier = value` followed by `return identifier`
@@ -8139,6 +8138,102 @@ public struct _FormatRules {
             if throwsType == "any Error" || throwsType == "any Swift.Error" || throwsType == "Swift.Error" {
                 formatter.removeTokens(in: startOfScope ... endOfScope)
             }
+        }
+    }
+
+    public let preferInferredTypes = FormatRule(
+        help: "Prefer using inferred types on property definitions (`let foo = Foo()`) rather than explicit types (`let foo: Foo = .init()`).",
+        disabledByDefault: true,
+        orderAfter: ["redundantType"],
+        options: ["inferredtypes"],
+        sharedOptions: ["redundanttype"]
+    ) { formatter in
+        formatter.forEach(.operator("=", .infix)) { equalsIndex, _ in
+            // Respect the `.inferLocalsOnly` option if enabled
+            if formatter.options.redundantType == .inferLocalsOnly,
+               formatter.declarationScope(at: equalsIndex) != .local
+            { return }
+
+            guard // Parse and validate the LHS of the property declaration.
+                // It should take the form `(let|var) propertyName: (Type) = .staticMember`
+                let introducerIndex = formatter.indexOfLastSignificantKeyword(at: equalsIndex),
+                ["var", "let"].contains(formatter.tokens[introducerIndex].string),
+                let property = formatter.parsePropertyDeclaration(atIntroducerIndex: introducerIndex),
+                let type = property.type,
+                let rhsExpressionRange = property.value?.expressionRange
+            else { return }
+
+            let rhsStartIndex = rhsExpressionRange.lowerBound
+            let typeTokens = formatter.tokens[type.range]
+
+            // Preserve the existing formatting if the LHS type is optional.
+            //  - `let foo: Foo? = .foo` is valid, but `let foo = Foo?.foo`
+            //    is invalid if `.foo` is defined on `Foo` but not `Foo?`.
+            guard !["?", "!"].contains(typeTokens.last?.string ?? "") else { return }
+
+            // Preserve the existing formatting if the LHS type is an existential (indicated with `any`).
+            //  - The `extension MyProtocol where Self == MyType { ... }` syntax
+            //    creates static members where `let foo: any MyProtocol = .myType`
+            //    is valid, but `let foo = (any MyProtocol).myType` isn't.
+            guard typeTokens.first?.string != "any" else { return }
+
+            // Preserve the existing formatting if the RHS expression has a top-level infix operator.
+            //  - `let value: ClosedRange<Int> = .zero ... 10` would not be valid to convert to
+            //    `let value = ClosedRange<Int>.zero ... 10`.
+            if let nextInfixOperatorIndex = formatter.index(after: rhsStartIndex, where: { token in
+                token.isOperator(ofType: .infix) && token != .operator(".", .infix)
+            }),
+                rhsExpressionRange.contains(nextInfixOperatorIndex)
+            {
+                return
+            }
+
+            // If the RHS starts with a leading dot, then we know its accessing some static member on this type.
+            if formatter.tokens[rhsStartIndex].isOperator(".") {
+                // Update the . token from a prefix operator to an infix operator.
+                formatter.replaceToken(at: rhsStartIndex, with: .operator(".", .infix))
+
+                // Insert a copy of the type on the RHS before the dot
+                formatter.insert(typeTokens, at: rhsStartIndex)
+            }
+
+            // If the RHS is an if/switch expression, check that each branch starts with a leading dot
+            else if formatter.options.inferredTypesInConditionalExpressions,
+                    ["if", "switch"].contains(formatter.tokens[rhsStartIndex].string),
+                    let conditonalBranches = formatter.conditionalBranches(at: rhsStartIndex)
+            {
+                var hasInvalidConditionalBranch = false
+                formatter.forEachRecursiveConditionalBranch(in: conditonalBranches) { branch in
+                    guard let firstTokenInBranch = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: branch.startOfBranch) else {
+                        hasInvalidConditionalBranch = true
+                        return
+                    }
+
+                    if !formatter.tokens[firstTokenInBranch].isOperator(".") {
+                        hasInvalidConditionalBranch = true
+                    }
+                }
+
+                guard !hasInvalidConditionalBranch else { return }
+
+                // Insert a copy of the type on the RHS before the dot in each branch
+                formatter.forEachRecursiveConditionalBranch(in: conditonalBranches) { branch in
+                    guard let dotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: branch.startOfBranch) else { return }
+
+                    // Update the . token from a prefix operator to an infix operator.
+                    formatter.replaceToken(at: dotIndex, with: .operator(".", .infix))
+
+                    // Insert a copy of the type on the RHS before the dot
+                    formatter.insert(typeTokens, at: dotIndex)
+                }
+            }
+
+            else {
+                return
+            }
+
+            // Remove the colon and explicit type before the equals token
+            formatter.removeTokens(in: type.colonIndex ... type.range.upperBound)
         }
     }
 }

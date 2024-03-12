@@ -4948,4 +4948,57 @@ class SyntaxTests: RulesTests {
 
         testFormatting(for: input, output, rule: FormatRules.preferForLoop)
     }
+
+    // MARK: preferInferredTypes
+
+    func testConvertsExplicitTypeToImplicitType() {
+        let input = """
+        let foo: Foo = .init()
+        let bar: Bar = .staticBar
+        let baaz: Baaz = .Example.default
+        let quux: Quux = .quuxBulder(foo: .foo, bar: .bar)
+
+        let dictionary: [Foo: Bar] = .init()
+        let array: [Foo] = .init()
+        let genericType: MyGenericType<Foo, Bar> = .init()
+        let optional: String? = .init("Foo")
+        """
+
+        let output = """
+        let foo = Foo.init()
+        let bar = Bar.staticBar
+        let baaz = Baaz.Example.default
+        let quux = Quux.quuxBulder(foo: .foo, bar: .bar)
+
+        let dictionary = [Foo: Bar].init()
+        let array = [Foo].init()
+        let genericType = MyGenericType<Foo, Bar>.init()
+        let optional = String?.init("Foo")
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.preferInferredTypes, exclude: ["redundantInit"])
+    }
+
+    func testPreservesExplicitTypeIfNoRHS() {
+        let input = """
+        let foo: Foo
+        let bar: Bar
+        """
+
+        testFormatting(for: input, rule: FormatRules.preferInferredTypes)
+    }
+
+    func testPreservesExplicitTypeIfUsingLocalValueOrLiteral() {
+        let input = """
+        let foo: Foo = localFoo
+        let bar: Bar = localBar
+        let int: Int64 = 1234
+        let number: CGFloat = 12.345
+        let array: [String] = []
+        let dictionary: [String: Int] = [:]
+        let tuple: (String, Int) = ("foo", 123)
+        """
+
+        testFormatting(for: input, rule: FormatRules.preferInferredTypes)
+    }
 }

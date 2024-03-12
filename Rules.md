@@ -547,6 +547,10 @@ Replace consecutive spaces with a single space.
 
 Use doc comments for API declarations, otherwise use regular comments.
 
+Option | Description
+--- | ---
+`--doccomments` | Preserve doc comments: "default" or "preserve".
+
 <details>
 <summary>Examples</summary>
 

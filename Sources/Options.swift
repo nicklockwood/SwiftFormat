@@ -435,6 +435,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var wrapEffects: WrapEffects
     public var preserveAnonymousForEach: Bool
     public var preserveSingleLineForEach: Bool
+    public var preserveDocComments: Bool
 
     /// Deprecated
     public var indentComments: Bool
@@ -537,6 +538,7 @@ public struct FormatOptions: CustomStringConvertible {
                 wrapEffects: WrapEffects = .preserve,
                 preserveAnonymousForEach: Bool = false,
                 preserveSingleLineForEach: Bool = true,
+                preserveDocComments: Bool = false,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -629,6 +631,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.wrapEffects = wrapEffects
         self.preserveAnonymousForEach = preserveAnonymousForEach
         self.preserveSingleLineForEach = preserveSingleLineForEach
+        self.preserveDocComments = preserveDocComments
         // Doesn't really belong here, but hard to put elsewhere
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

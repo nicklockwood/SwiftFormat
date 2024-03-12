@@ -941,6 +941,14 @@ struct _Descriptors {
         trueValues: ["ignore", "preserve"],
         falseValues: ["convert"]
     )
+    let preserveDocComments = OptionDescriptor(
+        argumentName: "doccomments",
+        displayName: "Doc comments",
+        help: "Preserve doc comments: \"default\" or \"preserve\".",
+        keyPath: \.preserveDocComments,
+        trueValues: ["preserve"],
+        falseValues: ["default"]
+    )
 
     // MARK: - Internal
 

@@ -1879,6 +1879,8 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssert(isSingleExpression(#"try? { try printThrows(foo) }()"#))
         XCTAssert(isSingleExpression(#"await { await printAsync(foo) }()"#))
         XCTAssert(isSingleExpression(#"try await { try await printAsyncThrows(foo) }()"#))
+        XCTAssert(isSingleExpression(#"Foo<Bar>()"#))
+        XCTAssert(isSingleExpression(#"Foo<Bar, Baaz>(quux: quux)"#))
 
         XCTAssert(isSingleExpression("""
         foo

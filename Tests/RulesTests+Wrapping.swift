@@ -5611,4 +5611,48 @@ class WrappingTests: RulesTests {
 
         testFormatting(for: input, [output], rules: [FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent])
     }
+
+    func testWrapIfAssignmentWithoutIntroducer() {
+        let input = """
+        property = if condition {
+            Foo("foo")
+        } else {
+            Foo("bar")
+        }
+        """
+
+        let output = """
+        property =
+            if condition {
+                Foo("foo")
+            } else {
+                Foo("bar")
+            }
+        """
+
+        testFormatting(for: input, [output], rules: [FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent])
+    }
+
+    func testWrapSwitchAssignmentWithoutIntroducer() {
+        let input = """
+        property = switch condition {
+        case true:
+            Foo("foo")
+        case false:
+            Foo("bar")
+        }
+        """
+
+        let output = """
+        property =
+            switch condition {
+            case true:
+                Foo("foo")
+            case false:
+                Foo("bar")
+            }
+        """
+
+        testFormatting(for: input, [output], rules: [FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent])
+    }
 }

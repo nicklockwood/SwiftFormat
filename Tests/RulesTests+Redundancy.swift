@@ -9008,6 +9008,22 @@ class RedundancyTests: RulesTests {
                        options: options, exclude: ["indent", "blankLinesBetweenScopes", "wrapMultilineConditionalAssignment"])
     }
 
+    func testRemovesRedundantClosureWithGenericExistentialTypes() {
+        let input = """
+        let foo: Foo<Bar> = { DefaultFoo<Bar>() }()
+        let foo: any Foo = { DefaultFoo() }()
+        let foo: any Foo<Bar> = { DefaultFoo<Bar>() }()
+        """
+
+        let output = """
+        let foo: Foo<Bar> = DefaultFoo<Bar>()
+        let foo: any Foo = DefaultFoo()
+        let foo: any Foo<Bar> = DefaultFoo<Bar>()
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.redundantClosure)
+    }
+
     func testRedundantSwitchStatementReturnInFunctionWithMultipleWhereClauses() {
         // https://github.com/nicklockwood/SwiftFormat/issues/1554
         let input = """

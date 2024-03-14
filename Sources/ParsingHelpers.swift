@@ -1384,7 +1384,7 @@ extension Formatter {
     ///  - Any value can be preceded by `try`, `try?`, `try!`, or `await`
     ///  - Any value can be followed by a postfix operator
     ///  - Any value can be followed by an infix operator plus a right-hand-side expression.
-    ///  - Any value can be followed by an arbitrary number of method calls `(...)` or subscripts `[...]`.
+    ///  - Any value can be followed by an arbitrary number of method calls `(...)`, subscripts `[...]`, or generic arguments `<...>`.
     ///  - Any value can be followed by a `.identifier`
     func parseExpressionRange(startingAt startIndex: Int) -> ClosedRange<Int>? {
         // Any expression can start with a prefix operator, or `await`
@@ -1440,8 +1440,8 @@ extension Formatter {
               let nextToken = token(at: nextTokenIndex)
         {
             switch nextToken {
-            // Any expression can be followed by an arbitrary number of method calls `(...)` or subscripts `[...]`.
-            case .startOfScope("("), .startOfScope("["):
+            // Any expression can be followed by an arbitrary number of method calls `(...)`, subscripts `[...]`, or generic arguments `<...>`.
+            case .startOfScope("("), .startOfScope("["), .startOfScope("<"):
                 // If there's a linebreak between an expression and a paren or subscript,
                 // then it's not parsed as a method call and is actually a separate expression
                 if tokens[endOfExpression ..< nextTokenIndex].contains(where: \.isLinebreak) {

@@ -4310,6 +4310,209 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.conditionalAssignment, options: options)
     }
 
+    func testConvertsIfStatementNotFollowingPropertyDefinition() {
+        let input = """
+        if condition {
+            property = Foo("foo")
+        } else {
+            property = Foo("bar")
+        }
+        """
+
+        let output = """
+        property =
+            if condition {
+                Foo("foo")
+            } else {
+                Foo("bar")
+            }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, [output], rules: [FormatRules.conditionalAssignment, FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent], options: options)
+    }
+
+    func testPreservesIfStatementNotFollowingPropertyDefinitionWithInvalidBranch() {
+        let input = """
+        if condition {
+            property = Foo("foo")
+        } else {
+            property = Foo("bar")
+            print("A second expression on this branch")
+        }
+
+        if condition {
+            property = Foo("foo")
+        } else {
+            if otherCondition {
+                property = Foo("foo")
+            }
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rules: [FormatRules.conditionalAssignment, FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent], options: options)
+    }
+
+    func testPreservesNonExhaustiveIfStatementNotFollowingPropertyDefinition() {
+        let input = """
+        if condition {
+            property = Foo("foo")
+        }
+
+        if condition {
+            property = Foo("foo")
+        } else if otherCondition {
+            property = Foo("foo")
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rules: [FormatRules.conditionalAssignment, FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent], options: options)
+    }
+
+    func testConvertsSwitchStatementNotFollowingPropertyDefinition() {
+        let input = """
+        switch condition {
+        case true:
+            property = Foo("foo")
+        case false:
+            property = Foo("bar")
+        }
+        """
+
+        let output = """
+        property =
+            switch condition {
+            case true:
+                Foo("foo")
+            case false:
+                Foo("bar")
+            }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, [output], rules: [FormatRules.conditionalAssignment, FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent], options: options)
+    }
+
+    func testDoesntMergePropertyWithUnrelatedCondition() {
+        let input = """
+        let differentProperty: Foo
+        switch condition {
+        case true:
+            property = Foo("foo")
+        case false:
+            property = Foo("bar")
+        }
+        """
+
+        let output = """
+        let differentProperty: Foo
+        property =
+            switch condition {
+            case true:
+                Foo("foo")
+            case false:
+                Foo("bar")
+            }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, [output], rules: [FormatRules.conditionalAssignment, FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent], options: options)
+    }
+
+    func testConvertsNestedIfSwitchStatementNotFollowingPropertyDefinition() {
+        let input = """
+        switch firstCondition {
+        case true:
+            if secondCondition {
+                property = Foo("foo")
+            } else {
+                property = Foo("bar")
+            }
+
+        case false:
+            if thirdCondition {
+                property = Foo("baaz")
+            } else {
+                property = Foo("quux")
+            }
+        }
+        """
+
+        let output = """
+        property =
+            switch firstCondition {
+            case true:
+                if secondCondition {
+                    Foo("foo")
+                } else {
+                    Foo("bar")
+                }
+
+            case false:
+                if thirdCondition {
+                    Foo("baaz")
+                } else {
+                    Foo("quux")
+                }
+            }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, [output], rules: [FormatRules.conditionalAssignment, FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent], options: options)
+    }
+
+    func testPreservesSwitchConditionWithIneligibleBranch() {
+        let input = """
+        switch firstCondition {
+        case true:
+            // Even though this condition is eligible to be converted,
+            // we leave it as-is because it's nested in an ineligible condition.
+            if secondCondition {
+                property = Foo("foo")
+            } else {
+                property = Foo("bar")
+            }
+
+        case false:
+            if thirdCondition {
+                property = Foo("baaz")
+            } else {
+                property = Foo("quux")
+                print("A second expression on this branch")
+            }
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rules: [FormatRules.conditionalAssignment, FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent], options: options)
+    }
+
+    func testPreservesIfConditionWithIneligibleBranch() {
+        let input = """
+        if firstCondition {
+            // Even though this condition is eligible to be converted,
+            // we leave it as-is because it's nested in an ineligible condition.
+            if secondCondition {
+                property = Foo("foo")
+            } else {
+                property = Foo("bar")
+            }
+        } else {
+            if thirdCondition {
+                property = Foo("baaz")
+            } else {
+                property = Foo("quux")
+                print("A second expression on this branch")
+            }
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rules: [FormatRules.conditionalAssignment, FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent], options: options)
+    }
+
     // MARK: - preferForLoop
 
     func testConvertSimpleForEachToForLoop() {

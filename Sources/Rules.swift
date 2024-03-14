@@ -7078,24 +7078,28 @@ public struct _FormatRules {
             return
         }
 
-        formatter.forEach(.keyword) { introducerIndex, introducerToken in
-            // Look for declarations of the pattern:
-            //
-            // let foo: Foo
-            // if/switch...
-            //
-            guard ["let", "var"].contains(introducerToken.string),
-                  let identifierIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: introducerIndex),
-                  let identifier = formatter.token(at: identifierIndex),
-                  identifier.isIdentifier,
-                  let colonIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: identifierIndex),
-                  formatter.tokens[colonIndex] == .delimiter(":"),
-                  let startOfTypeIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: colonIndex)
+        formatter.forEach(.keyword) { startOfConditional, keywordToken in
+            // Look for an if/switch expression where the first branch starts with `identifier =`
+            guard ["if", "switch"].contains(keywordToken.string),
+                  let conditionalBranches = formatter.conditionalBranches(at: startOfConditional),
+                  var startOfFirstBranch = conditionalBranches.first?.startOfBranch
             else { return }
 
-            guard let (typeName, typeRange) = formatter.parseType(at: startOfTypeIndex),
-                  let startOfConditional = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: typeRange.upperBound),
-                  let conditionalBranches = formatter.conditionalBranches(at: startOfConditional)
+            // Traverse any nested if/switch branches until we find the first code branch
+            while let firstTokenInBranch = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: startOfFirstBranch),
+                  ["if", "switch"].contains(formatter.tokens[firstTokenInBranch].string),
+                  let nestedConditionalBranches = formatter.conditionalBranches(at: firstTokenInBranch),
+                  let startOfNestedBranch = nestedConditionalBranches.first?.startOfBranch
+            {
+                startOfFirstBranch = startOfNestedBranch
+            }
+
+            // Check if the first branch starts with the pattern `identifier =`.
+            guard let firstIdentifierIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: startOfFirstBranch),
+                  let identifier = formatter.token(at: firstIdentifierIndex),
+                  identifier.isIdentifier,
+                  let equalsIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: firstIdentifierIndex),
+                  formatter.tokens[equalsIndex] == .operator("=", .infix)
             else { return }
 
             // Whether or not the conditional statement that starts at the given index
@@ -7202,42 +7206,104 @@ public struct _FormatRules {
                 return
             }
 
-            // Remove the `identifier =` from each conditional branch,
-            formatter.forEachRecursiveConditionalBranch(in: conditionalBranches) { branch in
-                guard let firstTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: branch.startOfBranch),
-                      let equalsIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: firstTokenIndex),
-                      formatter.tokens[equalsIndex] == .operator("=", .infix),
-                      let valueStartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex)
-                else { return }
+            // Removes the `identifier =` from each conditional branch
+            func removeAssignmentFromAllBranches() {
+                formatter.forEachRecursiveConditionalBranch(in: conditionalBranches) { branch in
+                    guard let firstTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: branch.startOfBranch),
+                          let equalsIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: firstTokenIndex),
+                          formatter.tokens[equalsIndex] == .operator("=", .infix),
+                          let valueStartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex)
+                    else { return }
 
-                formatter.removeTokens(in: firstTokenIndex ..< valueStartIndex)
+                    formatter.removeTokens(in: firstTokenIndex ..< valueStartIndex)
+                }
             }
 
-            // Lastly we have to insert an `=` between the type and the conditional
-            let rangeBetweenTypeAndConditional = (typeRange.upperBound + 1) ..< startOfConditional
+            // If this expression follows a property like `let identifier: Type`, we just
+            // have to insert an `=` between property and the conditional.
+            //  - Find the introducer (let/var), parse the property, and verify that the identifier
+            //    matches the identifier assigned on each conditional branch.
+            if let introducerIndex = formatter.indexOfLastSignificantKeyword(at: startOfConditional, excluding: ["if", "switch"]),
+               ["let", "var"].contains(formatter.tokens[introducerIndex].string),
+               let propertyIdentifierIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: introducerIndex),
+               let propertyIdentifier = formatter.token(at: propertyIdentifierIndex),
+               propertyIdentifier.isIdentifier,
+               propertyIdentifier == identifier,
+               let colonIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: propertyIdentifierIndex),
+               formatter.tokens[colonIndex] == .delimiter(":"),
+               let startOfTypeIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: colonIndex),
+               let typeRange = formatter.parseType(at: startOfTypeIndex)?.range,
+               let nextTokenAfterProperty = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: typeRange.upperBound),
+               nextTokenAfterProperty == startOfConditional
+            {
+                removeAssignmentFromAllBranches()
 
-            // If there are no comments between the type and conditional,
-            // we reformat it from:
-            //
-            // let foo: Foo\n
-            // if condition {
-            //
-            // to:
-            //
-            // let foo: Foo = if condition {
-            //
-            if formatter.tokens[rangeBetweenTypeAndConditional].allSatisfy(\.isSpaceOrLinebreak) {
-                formatter.replaceTokens(in: rangeBetweenTypeAndConditional, with: [
+                let rangeBetweenTypeAndConditional = (typeRange.upperBound + 1) ..< startOfConditional
+
+                // If there are no comments between the type and conditional,
+                // we reformat it from:
+                //
+                // let foo: Foo\n
+                // if condition {
+                //
+                // to:
+                //
+                // let foo: Foo = if condition {
+                //
+                if formatter.tokens[rangeBetweenTypeAndConditional].allSatisfy(\.isSpaceOrLinebreak) {
+                    formatter.replaceTokens(in: rangeBetweenTypeAndConditional, with: [
+                        .space(" "),
+                        .operator("=", .infix),
+                        .space(" "),
+                    ])
+                }
+
+                // But if there are comments, then we shouldn't just delete them.
+                // Instead we just insert `= ` after the type.
+                else {
+                    formatter.insert([.operator("=", .infix), .space(" ")], at: startOfConditional)
+                }
+            }
+
+            // Otherwise we insert an `identifier =` before the if/switch expression
+            else {
+                // In this case we should only apply the conversion if this is a top-level condition,
+                // and not nested in some parent condition. In large complex if/switch conditions
+                // with multiple layers of nesting, for example, this prevents us from making any
+                // changes unless the entire set of nested conditions can be converted as a unit.
+                //  - First attempt to find and parse a parent if / switch condition.
+                var startOfParentScope = formatter.startOfScope(at: startOfConditional)
+
+                // If we're inside a switch case, expand to look at the whole switch statement
+                while let currentStartOfParentScope = startOfParentScope,
+                      formatter.tokens[currentStartOfParentScope] == .startOfScope(":"),
+                      let caseToken = formatter.index(of: .endOfScope("case"), before: currentStartOfParentScope)
+                {
+                    startOfParentScope = formatter.startOfScope(at: caseToken)
+                }
+
+                if let startOfParentScope = startOfParentScope,
+                   let mostRecentIfOrSwitch = formatter.index(of: .keyword, before: startOfParentScope, if: { ["if", "switch"].contains($0.string) }),
+                   let conditionalBranches = formatter.conditionalBranches(at: mostRecentIfOrSwitch),
+                   let startOfFirstParentBranch = conditionalBranches.first?.startOfBranch,
+                   let endOfLastParentBranch = conditionalBranches.last?.endOfBranch,
+                   // If this condition is contained within a parent condition, do nothing.
+                   // We should only convert the entire set of nested conditions together as a unit.
+                   (startOfFirstParentBranch ... endOfLastParentBranch).contains(startOfConditional)
+                { return }
+
+                // Now we can remove the `identifier =` from each branch,
+                // and instead add it before the if / switch expression.
+                removeAssignmentFromAllBranches()
+
+                let identifierEqualsTokens: [Token] = [
+                    identifier,
                     .space(" "),
                     .operator("=", .infix),
                     .space(" "),
-                ])
-            }
+                ]
 
-            // But if there are comments, then we shouldn't just delete them.
-            // Instead we just insert `= ` after the type.
-            else {
-                formatter.insert([.operator("=", .infix), .space(" ")], at: startOfConditional)
+                formatter.insert(identifierEqualsTokens, at: startOfConditional)
             }
         }
     }
@@ -7717,34 +7783,12 @@ public struct _FormatRules {
         orderAfter: ["conditionalAssignment"],
         sharedOptions: ["linebreaks"]
     ) { formatter in
-        formatter.forEach(.keyword) { introducerIndex, introducerToken in
-            guard [.keyword("let"), .keyword("var")].contains(introducerToken),
-                  let identifierIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: introducerIndex),
-                  let identifier = formatter.token(at: identifierIndex),
-                  identifier.isIdentifier
+        formatter.forEach(.keyword) { startOfCondition, keywordToken in
+            guard [.keyword("if"), .keyword("switch")].contains(keywordToken),
+                  let assignmentIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startOfCondition),
+                  formatter.tokens[assignmentIndex] == .operator("=", .infix),
+                  let endOfPropertyDefinition = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: assignmentIndex)
             else { return }
-
-            // Find the `=` index for this variable, if present
-            let assignmentIndex: Int
-            if let colonIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: identifierIndex),
-               formatter.tokens[colonIndex] == .delimiter(":"),
-               let startOfTypeIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: colonIndex),
-               let typeRange = formatter.parseType(at: startOfTypeIndex)?.range,
-               let tokenAfterType = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: typeRange.upperBound),
-               formatter.tokens[tokenAfterType] == .operator("=", .infix)
-            {
-                assignmentIndex = tokenAfterType
-            }
-
-            else if let tokenAfterIdentifier = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: identifierIndex),
-                    formatter.tokens[tokenAfterIdentifier] == .operator("=", .infix)
-            {
-                assignmentIndex = tokenAfterIdentifier
-            }
-
-            else {
-                return
-            }
 
             // Verify the RHS of the assignment is an if/switch expression
             guard let startOfConditionalExpression = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: assignmentIndex),
@@ -7758,11 +7802,11 @@ public struct _FormatRules {
                 return
             }
 
-            // The `=` should be on the same line as the `let`/`var` introducer
-            if !formatter.onSameLine(introducerIndex, assignmentIndex),
+            // The `=` should be on the same line as the rest of the property
+            if !formatter.onSameLine(endOfPropertyDefinition, assignmentIndex),
                formatter.last(.nonSpaceOrComment, before: assignmentIndex)?.isLinebreak == true,
                let previousToken = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: assignmentIndex),
-               formatter.onSameLine(introducerIndex, previousToken)
+               formatter.onSameLine(endOfPropertyDefinition, previousToken)
             {
                 // Move the assignment operator to follow the previous token.
                 // Also remove any trailing space after the previous position

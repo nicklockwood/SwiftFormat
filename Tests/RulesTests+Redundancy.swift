@@ -1399,7 +1399,7 @@ class RedundancyTests: RulesTests {
         }
         """
         let options = FormatOptions(redundantType: .explicit, swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options, exclude: ["wrapMultilineConditionalAssignment"])
+        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options, exclude: ["wrapMultilineConditionalAssignment", "preferInferredTypes"])
     }
 
     func testRedundantTypeWithNestedIfExpression_inferred() {
@@ -1477,7 +1477,7 @@ class RedundancyTests: RulesTests {
         }
         """
         let options = FormatOptions(redundantType: .explicit, swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options, exclude: ["wrapMultilineConditionalAssignment"])
+        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options, exclude: ["wrapMultilineConditionalAssignment", "preferInferredTypes"])
     }
 
     func testRedundantTypeWithLiteralsInIfExpression() {
@@ -1638,7 +1638,7 @@ class RedundancyTests: RulesTests {
     func testRedundantTypeDoesNothingWithChainedMember() {
         let input = "let session: URLSession = URLSession.default.makeCopy()"
         let options = FormatOptions(redundantType: .explicit)
-        testFormatting(for: input, rule: FormatRules.redundantType, options: options)
+        testFormatting(for: input, rule: FormatRules.redundantType, options: options, exclude: ["preferInferredTypes"])
     }
 
     func testRedundantRedundantChainedMemberTypeRemovedOnSwift5_4() {
@@ -1652,13 +1652,13 @@ class RedundancyTests: RulesTests {
     func testRedundantTypeDoesNothingWithChainedMember2() {
         let input = "let color: UIColor = UIColor.red.withAlphaComponent(0.5)"
         let options = FormatOptions(redundantType: .explicit)
-        testFormatting(for: input, rule: FormatRules.redundantType, options: options)
+        testFormatting(for: input, rule: FormatRules.redundantType, options: options, exclude: ["preferInferredTypes"])
     }
 
     func testRedundantTypeDoesNothingWithChainedMember3() {
         let input = "let url: URL = URL(fileURLWithPath: #file).deletingLastPathComponent()"
         let options = FormatOptions(redundantType: .explicit)
-        testFormatting(for: input, rule: FormatRules.redundantType, options: options)
+        testFormatting(for: input, rule: FormatRules.redundantType, options: options, exclude: ["preferInferredTypes"])
     }
 
     func testRedundantTypeRemovedWithChainedMemberOnSwift5_4() {
@@ -1671,19 +1671,19 @@ class RedundancyTests: RulesTests {
     func testRedundantTypeDoesNothingIfLet() {
         let input = "if let foo: Foo = Foo() {}"
         let options = FormatOptions(redundantType: .explicit)
-        testFormatting(for: input, rule: FormatRules.redundantType, options: options)
+        testFormatting(for: input, rule: FormatRules.redundantType, options: options, exclude: ["preferInferredTypes"])
     }
 
     func testRedundantTypeDoesNothingGuardLet() {
         let input = "guard let foo: Foo = Foo() else {}"
         let options = FormatOptions(redundantType: .explicit)
-        testFormatting(for: input, rule: FormatRules.redundantType, options: options)
+        testFormatting(for: input, rule: FormatRules.redundantType, options: options, exclude: ["preferInferredTypes"])
     }
 
     func testRedundantTypeDoesNothingIfLetAfterComma() {
         let input = "if check == true, let foo: Foo = Foo() {}"
         let options = FormatOptions(redundantType: .explicit)
-        testFormatting(for: input, rule: FormatRules.redundantType, options: options)
+        testFormatting(for: input, rule: FormatRules.redundantType, options: options, exclude: ["preferInferredTypes"])
     }
 
     func testRedundantTypeWorksAfterIf() {
@@ -1745,7 +1745,8 @@ class RedundancyTests: RulesTests {
         }
         """
         let options = FormatOptions(redundantType: .explicit)
-        testFormatting(for: input, rule: FormatRules.redundantType, options: options)
+        testFormatting(for: input, rule: FormatRules.redundantType, options: options,
+                       exclude: ["preferInferredTypes"])
     }
 
     // --redundanttype infer-locals-only

@@ -4899,7 +4899,8 @@ class SyntaxTests: RulesTests {
         let optional = String?.init("Foo")
         """
 
-        testFormatting(for: input, output, rule: FormatRules.preferInferredTypes, exclude: ["redundantInit"])
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, output, rule: FormatRules.preferInferredTypes, options: options, exclude: ["redundantInit"])
     }
 
     func testPreservesExplicitTypeIfNoRHS() {
@@ -4908,7 +4909,8 @@ class SyntaxTests: RulesTests {
         let bar: Bar
         """
 
-        testFormatting(for: input, rule: FormatRules.preferInferredTypes)
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, rule: FormatRules.preferInferredTypes, options: options)
     }
 
     func testPreservesExplicitTypeIfUsingLocalValueOrLiteral() {
@@ -4922,6 +4924,58 @@ class SyntaxTests: RulesTests {
         let tuple: (String, Int) = ("foo", 123)
         """
 
-        testFormatting(for: input, rule: FormatRules.preferInferredTypes)
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, rule: FormatRules.preferInferredTypes, options: options, exclude: ["redundantType"])
+    }
+
+    func testCompatibleWithRedundantTypeInferred() {
+        let input = """
+        let foo: Foo = Foo()
+        """
+
+        let output = """
+        let foo = Foo()
+        """
+
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, [output], rules: [FormatRules.redundantType, FormatRules.preferInferredTypes], options: options)
+    }
+
+    func testCompatibleWithRedundantTypeExplicit() {
+        let input = """
+        let foo: Foo = Foo()
+        """
+
+        let output = """
+        let foo = Foo()
+        """
+
+        let options = FormatOptions(redundantType: .explicit)
+        testFormatting(for: input, [output], rules: [FormatRules.redundantType, FormatRules.preferInferredTypes], options: options)
+    }
+
+    func testCompatibleWithRedundantTypeInferLocalsOnly() {
+        let input = """
+        let foo: Foo = Foo.init()
+        let foo: Foo = .init()
+
+        func bar() {
+            let baaz: Baaz = Baaz.init()
+            let baaz: Baaz = .init()
+        }
+        """
+
+        let output = """
+        let foo: Foo = .init()
+        let foo: Foo = .init()
+
+        func bar() {
+            let baaz = Baaz.init()
+            let baaz = Baaz.init()
+        }
+        """
+
+        let options = FormatOptions(redundantType: .inferLocalsOnly)
+        testFormatting(for: input, [output], rules: [FormatRules.redundantType, FormatRules.preferInferredTypes], options: options, exclude: ["redundantInit"])
     }
 }

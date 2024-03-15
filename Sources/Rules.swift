@@ -776,8 +776,16 @@ public struct _FormatRules {
             switch formatter.options.redundantType {
             case .inferred:
                 isInferred = true
+
             case .explicit:
-                isInferred = false
+                // If the `preferInferredTypes` rule is also enabled, it takes precedence
+                // over the `--redundanttype explicit` option.
+                if formatter.options.enabledRules.contains("preferInferredTypes") {
+                    isInferred = true
+                } else {
+                    isInferred = false
+                }
+
             case .inferLocalsOnly:
                 switch formatter.declarationScope(at: equalsIndex) {
                 case .global, .type:
@@ -7914,7 +7922,8 @@ public struct _FormatRules {
     public let preferInferredTypes = FormatRule(
         help: "Prefer using inferred types on property definitions (`let foo = Foo()`) rather than explicit types (`let foo: Foo = .init()`).",
         disabledByDefault: true,
-        orderAfter: ["redundantType"]
+        orderAfter: ["redundantType"],
+        sharedOptions: ["redundanttype"]
     ) { formatter in
         formatter.forEach(.operator("=", .infix)) { equalsIndex, _ in
             guard // Parse and validate the LHS of the property declaration.
@@ -7929,6 +7938,11 @@ public struct _FormatRules {
                 let dotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
                 formatter.tokens[dotIndex] == .operator(".", .prefix)
             else { return }
+
+            // Respect the `.inferLocalsOnly` option if enabled
+            if formatter.options.redundantType == .inferLocalsOnly,
+               formatter.declarationScope(at: equalsIndex) != .local
+            { return }
 
             let typeTokens = formatter.tokens[type.range]
 

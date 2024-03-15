@@ -783,7 +783,9 @@ public struct _FormatRules {
                 isInferred = true
                 declarationKeywordIndex = nil
             case .explicit:
-                isInferred = false
+                // If the `preferInferredTypes` rule is also enabled, it takes precedence
+                // over the `--redundanttype explicit` option.
+                isInferred = formatter.options.enabledRules.contains("preferInferredTypes")
                 declarationKeywordIndex = formatter.declarationIndexAndScope(at: equalsIndex).index
             case .inferLocalsOnly:
                 let (index, scope) = formatter.declarationIndexAndScope(at: equalsIndex)
@@ -7977,7 +7979,8 @@ public struct _FormatRules {
 
     public let redundantProperty = FormatRule(
         help: "Simplifies redundant property definitions that are immediately returned.",
-        disabledByDefault: true
+        disabledByDefault: true,
+        orderAfter: ["preferInferredTypes"]
     ) { formatter in
         formatter.forEach(.keyword) { introducerIndex, introducerToken in
             // Find properties like `let identifier = value` followed by `return identifier`
@@ -8047,7 +8050,8 @@ public struct _FormatRules {
     public let preferInferredTypes = FormatRule(
         help: "Prefer using inferred types on property definitions (`let foo = Foo()`) rather than explicit types (`let foo: Foo = .init()`).",
         disabledByDefault: true,
-        orderAfter: ["redundantType"]
+        orderAfter: ["redundantType"],
+        sharedOptions: ["redundanttype"]
     ) { formatter in
         formatter.forEach(.operator("=", .infix)) { equalsIndex, _ in
             guard // Parse and validate the LHS of the property declaration.
@@ -8062,6 +8066,11 @@ public struct _FormatRules {
                 let dotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
                 formatter.tokens[dotIndex] == .operator(".", .prefix)
             else { return }
+
+            // Respect the `.inferLocalsOnly` option if enabled
+            if formatter.options.redundantType == .inferLocalsOnly,
+               formatter.declarationScope(at: equalsIndex) != .local
+            { return }
 
             let typeTokens = formatter.tokens[type.range]
 

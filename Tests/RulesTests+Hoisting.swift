@@ -404,6 +404,42 @@ class HoistingTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.hoistTry)
     }
 
+    func testHoistTryAfterString() {
+        let input = """
+        let json = "{}"
+
+        someFunction(try parse(json), "someKey")
+        """
+        let output = """
+        let json = "{}"
+
+        try someFunction(parse(json), "someKey")
+        """
+        testFormatting(for: input, output, rule: FormatRules.hoistTry)
+    }
+
+    func testHoistTryAfterMultilineString() {
+        let input = #"""
+        let json = """
+        {
+          "foo": "bar"
+        }
+        """
+
+        someFunction(try parse(json), "someKey")
+        """#
+        let output = #"""
+        let json = """
+        {
+          "foo": "bar"
+        }
+        """
+
+        try someFunction(parse(json), "someKey")
+        """#
+        testFormatting(for: input, output, rule: FormatRules.hoistTry)
+    }
+
     // MARK: - hoistAwait
 
     func testHoistAwait() {

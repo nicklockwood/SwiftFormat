@@ -1065,8 +1065,7 @@ extension Formatter {
             case .operator(_, .prefix), .stringBody,
                  .endOfScope(")") where prevToken.isStringBody ||
                      (prevToken.isEndOfScope && prevToken.isStringDelimiter),
-                 .startOfScope where tokens[i].isStringDelimiter,
-                 .endOfScope where tokens[i].isStringDelimiter:
+                 .startOfScope where tokens[i].isStringDelimiter:
                 break
             case _ where tokens[i].isUnwrapOperator:
                 if last(.nonSpaceOrComment, before: i) == .keyword("try") {
@@ -1080,7 +1079,8 @@ extension Formatter {
                     fallthrough
                 }
             case .operator(_, .postfix), .identifier, .number,
-                 .endOfScope(">"), .endOfScope("]"), .endOfScope(")"):
+                 .endOfScope(">"), .endOfScope("]"), .endOfScope(")"),
+                 .endOfScope where tokens[i].isStringDelimiter:
                 switch prevToken {
                 case .operator(_, .infix), .operator(_, .postfix), .stringBody,
                      .startOfScope("<"), .startOfScope("["), .startOfScope("("),

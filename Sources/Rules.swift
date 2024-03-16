@@ -5868,7 +5868,7 @@ public struct _FormatRules {
                 // Remove any lines that have the same prefix as the comment template
                 //  - We can't really do exact matches here like we do for `organizeDeclaration`
                 //    category separators, because there's a much wider variety of options
-                //    that a user could use the the type name (orphaned renames, etc.)
+                //    that a user could use for the type name (orphaned renames, etc.)
                 var commentPrefixes = Set(["// MARK: ", "// MARK: - "])
 
                 if let typeNameSymbolIndex = commentTemplate.firstIndex(of: "%") {

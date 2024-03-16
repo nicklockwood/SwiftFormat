@@ -3578,7 +3578,45 @@ class OrganizationTests: RulesTests {
         """
 
         let options = FormatOptions(organizeTypes: ["extension"])
-        testFormatting(for: input, output, rule: FormatRules.organizeDeclarations, options: options, exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"])
+        testFormatting(for: input, output, rule: FormatRules.organizeDeclarations, options: options,
+                       exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"])
+    }
+
+    func testOrganizeDeclarationsContainingNonisolated() {
+        let input = """
+        class Test {
+            public static func test1() {}
+
+            private nonisolated(unsafe) static var test3: ((
+                _ arg1: Bool,
+                _ arg2: Int
+            ) -> Bool)?
+
+            static func test2() {}
+        }
+        """
+        let output = """
+        class Test {
+
+            // MARK: Public
+
+            public static func test1() {}
+
+            // MARK: Internal
+
+            static func test2() {}
+
+            // MARK: Private
+
+            private nonisolated(unsafe) static var test3: ((
+                _ arg1: Bool,
+                _ arg2: Int
+            ) -> Bool)?
+
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.organizeDeclarations,
+                       exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"])
     }
 
     // MARK: - sortTypealiases

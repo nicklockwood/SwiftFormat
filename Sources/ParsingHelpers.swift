@@ -390,7 +390,7 @@ extension Formatter {
             case .endOfScope(")"):
                 guard let startIndex = self.index(of: .startOfScope("("), before: prevIndex),
                       last(.nonSpaceOrCommentOrLinebreak, before: startIndex, if: {
-                          $0.isAttribute || _FormatRules.aclModifiers.contains($0.string)
+                          $0.isAttribute || _FormatRules.allModifiers.contains($0.string)
                       }) != nil
                 else {
                     return false

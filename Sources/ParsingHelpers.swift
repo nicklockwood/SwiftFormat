@@ -43,8 +43,8 @@ public extension Formatter {
         startOfLine(at: lhs) == startOfLine(at: rhs)
     }
 
-    /// Returns the space at the start of the line containing the specified index
-    func indentForLine(at index: Int) -> String {
+    /// Returns the current space at the start of the line containing the specified index
+    func currentIndentForLine(at index: Int) -> String {
         if case let .space(string)? = token(at: startOfLine(at: index)) {
             return string
         }
@@ -922,7 +922,7 @@ extension Formatter {
             if [.endOfScope(")"), .endOfScope("]")].contains(prevToken),
                let startIndex = index(of: .startOfScope, before: prevIndex),
                !tokens[startIndex ..< prevIndex].contains(where: { $0.isLinebreak })
-               || indentForLine(at: startIndex) == indentForLine(at: prevIndex)
+               || currentIndentForLine(at: startIndex) == currentIndentForLine(at: prevIndex)
             {
                 return false
             }
@@ -2156,7 +2156,7 @@ extension Formatter {
                    tokens[lineStart] == .operator(".", .infix),
                    self.index(of: .startOfScope, before: index) ?? -1 < lineStart
                 {
-                    return indentForLine(at: lineStart)
+                    return currentIndentForLine(at: lineStart)
                 }
             }
             return options.indent

@@ -1509,7 +1509,7 @@ public struct _FormatRules {
                     // method call the trailing closure body should be double-indented
                     if let prevIndex = formatter.index(of: .nonSpaceOrComment, before: i),
                        formatter.tokens[prevIndex] == .endOfScope(")"),
-                       case let prevIndent = formatter.indentForLine(at: prevIndex),
+                       case let prevIndent = formatter.currentIndentForLine(at: prevIndex),
                        prevIndent == indent + formatter.options.indent
                     {
                         if linewrapStack.last == false {
@@ -1888,10 +1888,10 @@ public struct _FormatRules {
                            let conditionBeginIndex = formatter.index(before: i, where: {
                                ["if", "guard", "while", "for"].contains($0.string)
                            }),
-                           formatter.indentForLine(at: conditionBeginIndex)
+                           formatter.currentIndentForLine(at: conditionBeginIndex)
                            .count < indent.count + formatter.options.indent.count
                         {
-                            indent = formatter.indentForLine(at: conditionBeginIndex) + formatter.options.indent
+                            indent = formatter.currentIndentForLine(at: conditionBeginIndex) + formatter.options.indent
                             indentStack[indentStack.count - 1] = indent
                         }
 
@@ -1932,7 +1932,7 @@ public struct _FormatRules {
                            let previousOperatorIndex = scope.string.components(separatedBy: "-").last.flatMap({ Int($0) })
                         {
                             scopeStack.removeLast()
-                            indent = formatter.indentForLine(at: previousOperatorIndex)
+                            indent = formatter.currentIndentForLine(at: previousOperatorIndex)
                             indentStack[indentStack.count - 1] = indent
                         }
                     }
@@ -1978,12 +1978,12 @@ public struct _FormatRules {
                         if formatter.token(at: lineStart) == .operator(".", .infix),
                            [.keyword("#else"), .keyword("#elseif"), .endOfScope("#endif")].contains(startToken)
                         {
-                            indent = formatter.indentForLine(at: lineStart)
+                            indent = formatter.currentIndentForLine(at: lineStart)
                         } else if formatter.tokens[lineStart ..< lastNonSpaceOrLinebreakIndex].allSatisfy({
                             $0.isEndOfScope || $0.isSpaceOrComment
                         }) {
                             if lastToken.isEndOfScope {
-                                indent = formatter.indentForLine(at: lastNonSpaceOrLinebreakIndex)
+                                indent = formatter.currentIndentForLine(at: lastNonSpaceOrLinebreakIndex)
                             }
                             if !lastToken.isEndOfScope || lastToken == .endOfScope("case") ||
                                 formatter.options.xcodeIndentation, ![
@@ -2073,7 +2073,7 @@ public struct _FormatRules {
                        formatter.token(at: nextNonSpaceIndex) == .operator(".", .infix) ||
                        (lastToken == .endOfScope("}") && formatter.isLabel(at: nextNonSpaceIndex))
                     {
-                        indent = formatter.indentForLine(at: lastIndex)
+                        indent = formatter.currentIndentForLine(at: lastIndex)
                     }
                     formatter.insertSpaceIfEnabled(indent, at: i + 1)
                 }
@@ -2096,7 +2096,7 @@ public struct _FormatRules {
 
         if formatter.options.indentStrings {
             formatter.forEach(.startOfScope("\"\"\"")) { stringStartIndex, _ in
-                let baseIndent = formatter.indentForLine(at: stringStartIndex)
+                let baseIndent = formatter.currentIndentForLine(at: stringStartIndex)
                 let expectedIndent = baseIndent + formatter.options.indent
 
                 guard let stringEndIndex = formatter.endOfScope(at: stringStartIndex),
@@ -2160,7 +2160,7 @@ public struct _FormatRules {
             if formatter.modifiersForDeclaration(at: i, contains: "@available") { return }
 
             let startIndex = formatter.startOfModifiers(at: i, includingAttributes: true)
-            formatter.insert(.space(formatter.indentForLine(at: startIndex)), at: startIndex)
+            formatter.insert(.space(formatter.currentIndentForLine(at: startIndex)), at: startIndex)
             formatter.insertLinebreak(at: startIndex)
             formatter.insert(unavailableTokens, at: startIndex)
         }
@@ -2185,7 +2185,7 @@ public struct _FormatRules {
             if let penultimateToken = formatter.last(.nonSpaceOrComment, before: closingBraceIndex),
                !penultimateToken.isLinebreak
             {
-                formatter.insertSpace(formatter.indentForLine(at: i), at: closingBraceIndex)
+                formatter.insertSpace(formatter.currentIndentForLine(at: i), at: closingBraceIndex)
                 formatter.insertLinebreak(at: closingBraceIndex)
                 if formatter.token(at: closingBraceIndex - 1)?.isSpace == true {
                     formatter.removeToken(at: closingBraceIndex - 1)
@@ -2202,7 +2202,7 @@ public struct _FormatRules {
                     {
                         formatter.removeTokens(in: breakIndex ..< nextIndex)
                     }
-                    formatter.insertSpace(formatter.indentForLine(at: i), at: i + 1)
+                    formatter.insertSpace(formatter.currentIndentForLine(at: i), at: i + 1)
                     if formatter.tokens[i - 1].isSpace {
                         formatter.removeToken(at: i - 1)
                     }
@@ -2310,7 +2310,7 @@ public struct _FormatRules {
                     if !isOnNewLine {
                         formatter.replaceTokens(in: prevIndex + 1 ..< i, with:
                             formatter.linebreakToken(for: prevIndex + 1))
-                        formatter.insertSpace(formatter.indentForLine(at: guardIndex), at: prevIndex + 2)
+                        formatter.insertSpace(formatter.currentIndentForLine(at: guardIndex), at: prevIndex + 2)
                     }
                 } else if isOnNewLine {
                     formatter.replaceTokens(in: prevIndex + 1 ..< i, with: .space(" "))
@@ -2342,7 +2342,7 @@ public struct _FormatRules {
                 {
                     formatter.replaceTokens(in: prevIndex + 1 ..< i, with:
                         formatter.linebreakToken(for: prevIndex + 1))
-                    formatter.insertSpace(formatter.indentForLine(at: prevIndex + 1), at: prevIndex + 2)
+                    formatter.insertSpace(formatter.currentIndentForLine(at: prevIndex + 1), at: prevIndex + 2)
                 }
             default:
                 break
@@ -2514,7 +2514,7 @@ public struct _FormatRules {
                     if formatter.token(at: i + 1)?.isSpace == true {
                         formatter.removeToken(at: i + 1)
                     }
-                    formatter.insertSpace(formatter.indentForLine(at: i), at: i + 1)
+                    formatter.insertSpace(formatter.currentIndentForLine(at: i), at: i + 1)
                     formatter.replaceToken(at: i, with: formatter.linebreakToken(for: i))
                 }
             } else {
@@ -3862,7 +3862,7 @@ public struct _FormatRules {
                 return
             }
             if token.isLinebreak {
-                indent = formatter.indentForLine(at: i + 1)
+                indent = formatter.currentIndentForLine(at: i + 1)
                 alreadyLinewrapped = isLinewrapToken(formatter.last(.nonSpaceOrComment, before: i))
                 currentIndex = i + 1
             } else if let breakPoint = formatter.indexWhereLineShouldWrapInLine(at: i) {
@@ -3911,7 +3911,7 @@ public struct _FormatRules {
             else {
                 return
             }
-            let indent = formatter.indentForLine(at: endIndex)
+            let indent = formatter.currentIndentForLine(at: endIndex)
             // Insert linebreak
             formatter.insertLinebreak(at: i)
             // Align the opening brace with closing brace
@@ -3952,7 +3952,7 @@ public struct _FormatRules {
                     return
                 }
                 let caseIndex = formatter.lastIndex(of: .keyword("case"), in: 0 ..< enumCase.value.lowerBound)
-                let indent = formatter.indentForLine(at: caseIndex ?? enumCase.value.lowerBound)
+                let indent = formatter.currentIndentForLine(at: caseIndex ?? enumCase.value.lowerBound)
 
                 if formatter.tokens[nextNonSpaceIndex] == .startOfScope("//") {
                     formatter.removeToken(at: enumCase.value.upperBound)
@@ -4433,7 +4433,7 @@ public struct _FormatRules {
                 guard switchCaseRanges.count > 1, // nothing to sort
                       let firstCaseIndex = switchCaseRanges.first?.beforeDelimiterRange.lowerBound else { return }
 
-                let indentCounts = switchCaseRanges.map { formatter.indentForLine(at: $0.beforeDelimiterRange.lowerBound).count }
+                let indentCounts = switchCaseRanges.map { formatter.currentIndentForLine(at: $0.beforeDelimiterRange.lowerBound).count }
                 let maxIndentCount = indentCounts.max() ?? 0
 
                 func sortableValue(for token: Token) -> String? {
@@ -4630,7 +4630,7 @@ public struct _FormatRules {
             case .spaced:
                 formatter.replaceTokens(in: range, with: .space(" "))
             case .linebreak:
-                formatter.insertSpace(formatter.indentForLine(at: i), at: range.endIndex)
+                formatter.insertSpace(formatter.currentIndentForLine(at: i), at: range.endIndex)
                 formatter.replaceTokens(in: range, with: formatter.linebreakToken(for: i + 1))
             }
         }
@@ -5391,7 +5391,7 @@ public struct _FormatRules {
                 return
             }
             let nextIndex = formatter.index(of: .nonSpace, after: i) ?? (i + 1)
-            formatter.insertSpace(formatter.indentForLine(at: i), at: nextIndex)
+            formatter.insertSpace(formatter.currentIndentForLine(at: i), at: nextIndex)
             formatter.insertLinebreak(at: nextIndex)
             formatter.removeTokens(in: i + 1 ..< nextIndex)
             guard case .commentBody? = formatter.last(.nonSpace, before: endOfLine) else {
@@ -5451,7 +5451,7 @@ public struct _FormatRules {
                 if let nextIndex = formatter.index(of: .nonSpaceOrComment, after: endIndex),
                    formatter.token(at: nextIndex)?.isLinebreak != true
                 {
-                    formatter.insertSpace(formatter.indentForLine(at: i), at: nextIndex)
+                    formatter.insertSpace(formatter.currentIndentForLine(at: i), at: nextIndex)
                     formatter.insertLinebreak(at: nextIndex)
                     // Remove any trailing whitespace left on the line with the attributes
                     if let prevToken = formatter.token(at: nextIndex - 1), prevToken.isSpace {
@@ -6223,7 +6223,7 @@ public struct _FormatRules {
 
                 // Replace opening delimiter
                 var startIndex = i
-                let indent = formatter.indentForLine(at: i)
+                let indent = formatter.currentIndentForLine(at: i)
                 if case let .commentBody(body) = formatter.tokens[i + 1] {
                     isDocComment = body.hasPrefix("*")
                     let commentBody = body.drop(while: { $0 == "*" })

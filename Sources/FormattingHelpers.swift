@@ -22,14 +22,14 @@ extension Formatter {
         else {
             return false
         }
-        let indent = indentForLine(at: prevIndex)
+        let indent = currentIndentForLine(at: prevIndex)
         guard isStartOfClosure(at: index) else {
-            return indent > indentForLine(at: endIndex)
+            return indent > currentIndentForLine(at: endIndex)
         }
         if prevToken == .endOfScope(")"),
            !tokens[startOfLine(at: prevIndex, excludingIndent: true)].is(.endOfScope),
            let startIndex = self.index(of: .startOfScope("("), before: prevIndex),
-           indentForLine(at: startIndex) < indent
+           currentIndentForLine(at: startIndex) < indent
         {
             return !onSameLine(startIndex, prevIndex)
         }
@@ -334,7 +334,7 @@ extension Formatter {
             else { return }
 
             func wrap(before index: Int) {
-                insertSpace(indentForLine(at: index), at: index)
+                insertSpace(currentIndentForLine(at: index), at: index)
                 insertLinebreak(at: index)
 
                 // Remove any trailing whitespace that is now orphaned on the previous line
@@ -391,7 +391,7 @@ extension Formatter {
                                       endOfScopeOnSameLine: Bool)
         {
             // Get indent
-            let indent = indentForLine(at: i)
+            let indent = currentIndentForLine(at: i)
             var endOfScope = endOfScope
 
             keepParameterLabelsOnSameLine(startOfScope: i,
@@ -713,7 +713,7 @@ extension Formatter {
                 }
                 // Re-indent lines
                 var linebreakIndex: Int? = index + 1
-                let indent = indentForLine(at: index) + options.indent
+                let indent = currentIndentForLine(at: index) + options.indent
                 while let index = linebreakIndex, index < endIndex {
                     insertSpace(indent, at: index + 1)
                     linebreakIndex = self.index(of: .linebreak, after: index)
@@ -769,7 +769,7 @@ extension Formatter {
 
             // ** Now that we know this is supposed to wrap,
             //    make sure each delimiter is the start of a line
-            let indent = indentForLine(at: startIndex) + options.indent
+            let indent = currentIndentForLine(at: startIndex) + options.indent
 
             for indexToWrap in delimiterIndices.reversed() {
                 // if this item isn't already on its own line, then wrap it
@@ -922,7 +922,7 @@ extension Formatter {
         let movedTokenIndex = indexOfFirstTokenInNewScope + 1
 
         // We want the token to be indented one level more than the conditional is
-        let indent = indentForLine(at: i) + options.indent
+        let indent = currentIndentForLine(at: i) + options.indent
         insertSpace(indent, at: movedTokenIndex)
 
         guard var closingBraceIndex = index(of: .endOfScope("}"), after: movedTokenIndex),
@@ -945,7 +945,7 @@ extension Formatter {
         }
 
         // We want the closing brace at the same indentation level as conditional
-        insertSpace(indentForLine(at: i), at: closingBraceIndex)
+        insertSpace(currentIndentForLine(at: i), at: closingBraceIndex)
     }
 
     func removeParen(at index: Int) {
@@ -2126,7 +2126,7 @@ extension Formatter {
             {
                 let firstDeclaration = sortedDeclarations[indexOfFirstDeclaration].declaration
                 let declarationParser = Formatter(firstDeclaration.tokens)
-                let indentation = declarationParser.indentForLine(at: 0)
+                let indentation = declarationParser.currentIndentForLine(at: 0)
 
                 let endMarkDeclaration = options.lineAfterMarks ? "\n\n" : "\n"
                 let markDeclaration = tokenize("\(indentation)\(markComment)\(endMarkDeclaration)")

@@ -2627,14 +2627,14 @@ extension Formatter {
                     continue
                 case .keyword("static"):
                     if !isTypeRoot {
-                        return fatalError("Unexpected static keyword", at: index)
+                        return fatalError("The static modifier is not valid outside a type body", at: index)
                     }
                     classOrStatic = true
                 case .keyword("class") where
                     next(.nonSpaceOrCommentOrLinebreak, after: index)?.isIdentifier == false:
                     if last(.nonSpaceOrCommentOrLinebreak, before: index) != .delimiter(":") {
                         if !isTypeRoot {
-                            return fatalError("Unexpected class keyword", at: index)
+                            return fatalError("The class modifier is not valid outside a type body", at: index)
                         }
                         classOrStatic = true
                     }

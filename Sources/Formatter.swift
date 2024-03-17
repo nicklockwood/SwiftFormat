@@ -2,8 +2,6 @@
 //  Formatter.swift
 //  SwiftFormat
 //
-//  Version 0.53.4
-//
 //  Created by Nick Lockwood on 12/08/2016.
 //  Copyright 2016 Nick Lockwood
 //

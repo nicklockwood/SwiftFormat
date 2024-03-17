@@ -1,5 +1,15 @@
 # Change Log
 
+## [0.53.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.53.5) (2024-03-17)
+
+- Fixed bug with trailing comma being inserted into wrapped capture list
+- Fixed bugs with parsing `nonisolated(unsafe)` modifiers
+- Fixed bug with hoisting `try` or `async` after a string literal expression
+- Fixed issue with parsing expressions containing generic arguments
+- Lint warnings are now displayed as errors when not running in `--lenient` mode
+- Improved error message for unexpected `static`/`class` modifiers
+- Added Swift 6.0 to list of supported Swift versions
+
 ## [0.53.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.53.4) (2024-03-09)
 
 - The `enumNamespaces` rule is no longer applied to structs with attributes or macros

@@ -689,7 +689,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
                     }
                     let output = try applyRules(
                         input, options: options, lineRange: lineRange,
-                        verbose: verbose, lint: lint, reporter: reporter
+                        verbose: verbose, lint: lint, lenient: lenient, reporter: reporter
                     )
                     if let outputURL = outputURL, !useStdout {
                         if !dryrun, (try? String(contentsOf: outputURL)) != output {
@@ -701,7 +701,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
                     }
                     let exitCode: ExitCode
                     if lint, output != input {
-                        print("Source input did not pass lint check.", as: .error)
+                        print("Source input did not pass lint check.", as: lenient ? .warning : .error)
                         exitCode = lenient ? .ok : .lintFailure
                     } else {
                         print("SwiftFormat completed successfully.", as: .success)
@@ -764,6 +764,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
                                                   verbose: verbose,
                                                   dryrun: dryrun,
                                                   lint: lint,
+                                                  lenient: lenient,
                                                   cacheURL: cacheURL,
                                                   reporter: reporter)
             errors += _errors
@@ -889,7 +890,7 @@ func computeHash(_ source: String) -> String {
 }
 
 func applyRules(_ source: String, options: Options, lineRange: ClosedRange<Int>?,
-                verbose: Bool, lint: Bool, reporter: Reporter?) throws -> String
+                verbose: Bool, lint: Bool, lenient: Bool, reporter: Reporter?) throws -> String
 {
     // Parse source
     var tokens = tokenize(source)
@@ -916,7 +917,7 @@ func applyRules(_ source: String, options: Options, lineRange: ClosedRange<Int>?
     // Display info
     let updatedSource = sourceCode(for: tokens)
     if lint, updatedSource != source {
-        changes.forEach { print($0.description, as: .warning) }
+        changes.forEach { print($0.description(asError: !lenient), as: lenient ? .warning : .error) }
         reporter?.report(changes)
     }
     if verbose {
@@ -943,6 +944,7 @@ func processInput(_ inputURLs: [URL],
                   verbose: Bool,
                   dryrun: Bool,
                   lint: Bool,
+                  lenient: Bool,
                   cacheURL: URL?,
                   reporter: Reporter?) -> (OutputFlags, [Error])
 {
@@ -1033,7 +1035,8 @@ func processInput(_ inputURLs: [URL],
                     }
                 } else {
                     output = try applyRules(input, options: options, lineRange: lineRange,
-                                            verbose: verbose, lint: lint, reporter: reporter)
+                                            verbose: verbose, lint: lint, lenient: lenient,
+                                            reporter: reporter)
                     if output != input {
                         sourceHash = nil
                     }

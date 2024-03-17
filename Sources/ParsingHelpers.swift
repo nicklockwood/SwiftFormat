@@ -303,7 +303,10 @@ extension Formatter {
                 isType = true
             } else if next(.nonSpaceOrComment, after: endIndex) == .startOfScope("(") {
                 isType = true
-            } else if let prevIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: index) {
+            } else if var prevIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: index) {
+                if tokens[prevIndex].isAttribute {
+                    prevIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex) ?? prevIndex
+                }
                 switch tokens[prevIndex] {
                 case .identifier, .endOfScope(")"), .endOfScope("]"),
                      .operator("?", _), .operator("!", _),

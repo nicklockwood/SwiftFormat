@@ -4354,6 +4354,30 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, [output], rules: [FormatRules.conditionalAssignment, FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent], options: options)
     }
 
+    func testConvertsSwitchStatementWithComplexLValueNotFollowingPropertyDefinition() {
+        let input = """
+        switch condition {
+        case true:
+            property?.foo!.bar["baaz"] = Foo("foo")
+        case false:
+            property?.foo!.bar["baaz"] = Foo("bar")
+        }
+        """
+
+        let output = """
+        property?.foo!.bar["baaz"] =
+            switch condition {
+            case true:
+                Foo("foo")
+            case false:
+                Foo("bar")
+            }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, [output], rules: [FormatRules.conditionalAssignment, FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent], options: options)
+    }
+
     func testDoesntMergePropertyWithUnrelatedCondition() {
         let input = """
         let differentProperty: Foo

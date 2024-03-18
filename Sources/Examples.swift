@@ -1662,7 +1662,6 @@ private struct Examples {
     -     bar = "bar"
     +     "bar"
       }
-    ```
 
     ```diff
     - let foo: String
@@ -1674,6 +1673,17 @@ private struct Examples {
       case false:
     -     foo = "bar"
     +     "bar"
+      }
+    ```
+
+    - switch condition {
+    + foo.bar = switch condition {
+      case true:
+    -     foo.bar = "baaz"
+    +     "baaz"
+      case false:
+    -     foo.bar = "quux"
+    +     "quux"
       }
     ```
     """

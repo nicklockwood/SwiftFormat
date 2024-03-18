@@ -519,7 +519,6 @@ Assign properties using if / switch expressions.
 -     bar = "bar"
 +     "bar"
   }
-```
 
 ```diff
 - let foo: String
@@ -531,6 +530,17 @@ Assign properties using if / switch expressions.
   case false:
 -     foo = "bar"
 +     "bar"
+  }
+```
+
+- switch condition {
++ foo.bar = switch condition {
+  case true:
+-     foo.bar = "baaz"
++     "baaz"
+  case false:
+-     foo.bar = "quux"
++     "quux"
   }
 ```
 

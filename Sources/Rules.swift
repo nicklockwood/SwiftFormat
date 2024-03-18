@@ -7154,11 +7154,10 @@ public struct _FormatRules {
                 startOfFirstBranch = startOfNestedBranch
             }
 
-            // Check if the first branch starts with the pattern `identifier =`.
-            guard let firstIdentifierIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: startOfFirstBranch),
-                  let identifier = formatter.token(at: firstIdentifierIndex),
-                  identifier.isIdentifier,
-                  let equalsIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: firstIdentifierIndex),
+            // Check if the first branch starts with the pattern `lvalue =`.
+            guard let firstTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: startOfFirstBranch),
+                  let lvalueRange = formatter.parseExpressionRange(startingAt: firstTokenIndex),
+                  let equalsIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: lvalueRange.upperBound),
                   formatter.tokens[equalsIndex] == .operator("=", .infix)
             else { return }
 
@@ -7189,7 +7188,7 @@ public struct _FormatRules {
 
             // Whether or not the given conditional branch body qualifies as a single statement
             // that assigns a value to `identifier`. This is either:
-            //  1. a single assignment to `identifier =`
+            //  1. a single assignment to `lvalue =`
             //  2. a single `if` or `switch` statement where each of the branches also qualify,
             //     and the statement is exhaustive.
             func isExhaustiveSingleStatementAssignment(_ branch: Formatter.ConditionalBranch) -> Bool {
@@ -7216,9 +7215,10 @@ public struct _FormatRules {
                         && isExhaustive
                 }
 
-                // Otherwise we expect this to be of the pattern `identifier = (statement)`
-                else if formatter.tokens[firstTokenIndex] == identifier,
-                        let equalsIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: firstTokenIndex),
+                // Otherwise we expect this to be of the pattern `lvalue = (statement)`
+                else if let firstExpressionRange = formatter.parseExpressionRange(startingAt: firstTokenIndex),
+                        formatter.tokens[firstExpressionRange] == formatter.tokens[lvalueRange],
+                        let equalsIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: firstExpressionRange.upperBound),
                         formatter.tokens[equalsIndex] == .operator("=", .infix),
                         let valueStartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex)
                 {
@@ -7270,7 +7270,8 @@ public struct _FormatRules {
             func removeAssignmentFromAllBranches() {
                 formatter.forEachRecursiveConditionalBranch(in: conditionalBranches) { branch in
                     guard let firstTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: branch.startOfBranch),
-                          let equalsIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: firstTokenIndex),
+                          let firstExpressionRange = formatter.parseExpressionRange(startingAt: firstTokenIndex),
+                          let equalsIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: firstExpressionRange.upperBound),
                           formatter.tokens[equalsIndex] == .operator("=", .infix),
                           let valueStartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex)
                     else { return }
@@ -7288,7 +7289,8 @@ public struct _FormatRules {
                let propertyIdentifierIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: introducerIndex),
                let propertyIdentifier = formatter.token(at: propertyIdentifierIndex),
                propertyIdentifier.isIdentifier,
-               propertyIdentifier == identifier,
+               formatter.tokens[lvalueRange.lowerBound] == propertyIdentifier,
+               lvalueRange.count == 1,
                let colonIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: propertyIdentifierIndex),
                formatter.tokens[colonIndex] == .delimiter(":"),
                let startOfTypeIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: colonIndex),
@@ -7352,12 +7354,13 @@ public struct _FormatRules {
                    (startOfFirstParentBranch ... endOfLastParentBranch).contains(startOfConditional)
                 { return }
 
+                let lvalueTokens = formatter.tokens[lvalueRange]
+
                 // Now we can remove the `identifier =` from each branch,
                 // and instead add it before the if / switch expression.
                 removeAssignmentFromAllBranches()
 
-                let identifierEqualsTokens: [Token] = [
-                    identifier,
+                let identifierEqualsTokens = lvalueTokens + [
                     .space(" "),
                     .operator("=", .infix),
                     .space(" "),

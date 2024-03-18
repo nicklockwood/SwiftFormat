@@ -979,7 +979,6 @@ struct _Descriptors {
         trueValues: ["ignore", "preserve"],
         falseValues: ["convert"]
     )
-
     let preserveDocComments = OptionDescriptor(
         argumentName: "doccomments",
         displayName: "Doc comments",
@@ -988,7 +987,14 @@ struct _Descriptors {
         trueValues: ["preserve"],
         falseValues: ["default"]
     )
-
+    let conditionalAssignmentOnlyAfterNewProperties = OptionDescriptor(
+        argumentName: "condassignment",
+        displayName: "Apply conditionalAssignment rule",
+        help: "Use cond. assignment: \"after-property\" (default) or \"always\".",
+        keyPath: \.preserveSingleLineForEach,
+        trueValues: ["after-property"],
+        falseValues: ["always"]
+    )
     let initCoderNil = OptionDescriptor(
         argumentName: "initcodernil",
         displayName: "nil for initWithCoder",

@@ -4287,7 +4287,7 @@ class SyntaxTests: RulesTests {
             }
         """
 
-        let options = FormatOptions(swiftVersion: "5.9")
+        let options = FormatOptions(conditionalAssignmentOnlyAfterNewProperties: false, swiftVersion: "5.9")
         testFormatting(for: input, [output], rules: [FormatRules.conditionalAssignment, FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent], options: options)
     }
 
@@ -4309,7 +4309,7 @@ class SyntaxTests: RulesTests {
         }
         """
 
-        let options = FormatOptions(swiftVersion: "5.9")
+        let options = FormatOptions(conditionalAssignmentOnlyAfterNewProperties: false, swiftVersion: "5.9")
         testFormatting(for: input, rules: [FormatRules.conditionalAssignment, FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent], options: options)
     }
 
@@ -4326,7 +4326,7 @@ class SyntaxTests: RulesTests {
         }
         """
 
-        let options = FormatOptions(swiftVersion: "5.9")
+        let options = FormatOptions(conditionalAssignmentOnlyAfterNewProperties: false, swiftVersion: "5.9")
         testFormatting(for: input, rules: [FormatRules.conditionalAssignment, FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent], options: options)
     }
 
@@ -4350,7 +4350,7 @@ class SyntaxTests: RulesTests {
             }
         """
 
-        let options = FormatOptions(swiftVersion: "5.9")
+        let options = FormatOptions(conditionalAssignmentOnlyAfterNewProperties: false, swiftVersion: "5.9")
         testFormatting(for: input, [output], rules: [FormatRules.conditionalAssignment, FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent], options: options)
     }
 
@@ -4374,7 +4374,7 @@ class SyntaxTests: RulesTests {
             }
         """
 
-        let options = FormatOptions(swiftVersion: "5.9")
+        let options = FormatOptions(conditionalAssignmentOnlyAfterNewProperties: false, swiftVersion: "5.9")
         testFormatting(for: input, [output], rules: [FormatRules.conditionalAssignment, FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent], options: options)
     }
 
@@ -4400,7 +4400,7 @@ class SyntaxTests: RulesTests {
             }
         """
 
-        let options = FormatOptions(swiftVersion: "5.9")
+        let options = FormatOptions(conditionalAssignmentOnlyAfterNewProperties: false, swiftVersion: "5.9")
         testFormatting(for: input, [output], rules: [FormatRules.conditionalAssignment, FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent], options: options)
     }
 
@@ -4442,7 +4442,7 @@ class SyntaxTests: RulesTests {
             }
         """
 
-        let options = FormatOptions(swiftVersion: "5.9")
+        let options = FormatOptions(conditionalAssignmentOnlyAfterNewProperties: false, swiftVersion: "5.9")
         testFormatting(for: input, [output], rules: [FormatRules.conditionalAssignment, FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent], options: options)
     }
 
@@ -4468,7 +4468,7 @@ class SyntaxTests: RulesTests {
         }
         """
 
-        let options = FormatOptions(swiftVersion: "5.9")
+        let options = FormatOptions(conditionalAssignmentOnlyAfterNewProperties: false, swiftVersion: "5.9")
         testFormatting(for: input, rules: [FormatRules.conditionalAssignment, FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent], options: options)
     }
 

@@ -7131,7 +7131,8 @@ public struct _FormatRules {
 
     public let conditionalAssignment = FormatRule(
         help: "Assign properties using if / switch expressions.",
-        orderAfter: ["redundantReturn"]
+        orderAfter: ["redundantReturn"],
+        options: ["condassignment"]
     ) { formatter in
         // If / switch expressions were added in Swift 5.9 (SE-0380)
         guard formatter.options.swiftVersion >= "5.9" else {
@@ -7328,7 +7329,7 @@ public struct _FormatRules {
             }
 
             // Otherwise we insert an `identifier =` before the if/switch expression
-            else {
+            else if !formatter.options.conditionalAssignmentOnlyAfterNewProperties {
                 // In this case we should only apply the conversion if this is a top-level condition,
                 // and not nested in some parent condition. In large complex if/switch conditions
                 // with multiple layers of nesting, for example, this prevents us from making any

@@ -981,6 +981,14 @@ struct _Descriptors {
         trueValues: ["preserve"],
         falseValues: ["before-declarations", "declarations"]
     )
+    let conditionalAssignmentOnlyAfterNewProperties = OptionDescriptor(
+        argumentName: "condassignment",
+        displayName: "Apply conditionalAssignment rule",
+        help: "Use cond. assignment: \"after-property\" (default) or \"always\".",
+        keyPath: \.preserveSingleLineForEach,
+        trueValues: ["after-property"],
+        falseValues: ["always"]
+    )
     let initCoderNil = OptionDescriptor(
         argumentName: "initcodernil",
         displayName: "Return nil in init?(coder)",

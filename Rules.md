@@ -507,6 +507,10 @@ Option | Description
 
 Assign properties using if / switch expressions.
 
+Option | Description
+--- | ---
+`--condassignment` | Use cond. assignment: "after-property" (default) or "always".
+
 <details>
 <summary>Examples</summary>
 
@@ -534,6 +538,7 @@ Assign properties using if / switch expressions.
   }
 ```
 
+// With --condassignment always (disabled by default)
 - switch condition {
 + foo.bar = switch condition {
   case true:

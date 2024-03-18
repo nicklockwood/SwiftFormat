@@ -1676,6 +1676,7 @@ private struct Examples {
       }
     ```
 
+    // With --condassignment always (disabled by default)
     - switch condition {
     + foo.bar = switch condition {
       case true:

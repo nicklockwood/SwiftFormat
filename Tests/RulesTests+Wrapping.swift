@@ -5494,4 +5494,27 @@ class WrappingTests: RulesTests {
 
         testFormatting(for: input, [output], rules: [FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent])
     }
+
+    func testWrapSwitchAssignmentWithComplexLValue() {
+        let input = """
+        property?.foo!.bar["baaz"] = switch condition {
+        case true:
+            Foo("foo")
+        case false:
+            Foo("bar")
+        }
+        """
+
+        let output = """
+        property?.foo!.bar["baaz"] =
+            switch condition {
+            case true:
+                Foo("foo")
+            case false:
+                Foo("bar")
+            }
+        """
+
+        testFormatting(for: input, [output], rules: [FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent])
+    }
 }

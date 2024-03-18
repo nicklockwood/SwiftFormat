@@ -641,6 +641,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var preserveAnonymousForEach: Bool
     public var preserveSingleLineForEach: Bool
     public var preserveDocComments: Bool
+    public var conditionalAssignmentOnlyAfterNewProperties: Bool
     public var typeDelimiterSpacing: DelimiterSpacing
     public var initCoderNil: Bool
     public var dateFormat: DateFormat
@@ -754,6 +755,7 @@ public struct FormatOptions: CustomStringConvertible {
                 preserveAnonymousForEach: Bool = false,
                 preserveSingleLineForEach: Bool = true,
                 preserveDocComments: Bool = false,
+                conditionalAssignmentOnlyAfterNewProperties: Bool = true,
                 typeDelimiterSpacing: DelimiterSpacing = .spaceAfter,
                 initCoderNil: Bool = false,
                 dateFormat: DateFormat = .system,
@@ -857,6 +859,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.preserveAnonymousForEach = preserveAnonymousForEach
         self.preserveSingleLineForEach = preserveSingleLineForEach
         self.preserveDocComments = preserveDocComments
+        self.conditionalAssignmentOnlyAfterNewProperties = conditionalAssignmentOnlyAfterNewProperties
         self.typeDelimiterSpacing = typeDelimiterSpacing
         self.initCoderNil = initCoderNil
         self.dateFormat = dateFormat

@@ -38,7 +38,7 @@ final class AboutViewController: NSViewController {
         super.viewDidLoad()
         if ProcessInfo.processInfo.operatingSystemVersion.majorVersion < 13 {
             instructionsLabel.stringValue = """
-            1. Open System Preferences
+            1. Open System Settings
             2. Click on "Extensions"
             3. Select "Xcode Source Editor"
             4. Ensure the checkbox next to "SwiftFormat" is checked

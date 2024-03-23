@@ -7290,15 +7290,10 @@ public struct _FormatRules {
             //    matches the identifier assigned on each conditional branch.
             if let introducerIndex = formatter.indexOfLastSignificantKeyword(at: startOfConditional, excluding: ["if", "switch"]),
                ["let", "var"].contains(formatter.tokens[introducerIndex].string),
-               let propertyIdentifierIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: introducerIndex),
-               let propertyIdentifier = formatter.token(at: propertyIdentifierIndex),
-               propertyIdentifier.isIdentifier,
-               formatter.tokens[lvalueRange.lowerBound] == propertyIdentifier,
-               lvalueRange.count == 1,
-               let colonIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: propertyIdentifierIndex),
-               formatter.tokens[colonIndex] == .delimiter(":"),
-               let startOfTypeIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: colonIndex),
-               let typeRange = formatter.parseType(at: startOfTypeIndex)?.range,
+               let property = formatter.parsePropertyDeclaration(atIntroducerIndex: introducerIndex),
+               formatter.tokens[lvalueRange.lowerBound].string == property.identifier,
+               property.value == nil,
+               let typeRange = property.type?.range,
                let nextTokenAfterProperty = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: typeRange.upperBound),
                nextTokenAfterProperty == startOfConditional
             {
@@ -7978,11 +7973,9 @@ public struct _FormatRules {
                 // It should take the form `(let|var) propertyName: (Type) = .staticMember`
                 let introducerIndex = formatter.indexOfLastSignificantKeyword(at: equalsIndex),
                 ["var", "let"].contains(formatter.tokens[introducerIndex].string),
-                let colonIndex = formatter.index(of: .delimiter(":"), before: equalsIndex),
-                introducerIndex < colonIndex,
-                let typeStartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: colonIndex),
-                let type = formatter.parseType(at: typeStartIndex),
-                let rhsStartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex)
+                let property = formatter.parsePropertyDeclaration(atIntroducerIndex: introducerIndex),
+                let type = property.type,
+                let rhsStartIndex = property.value?.expressionRange.lowerBound
             else { return }
 
             let typeTokens = formatter.tokens[type.range]
@@ -8025,7 +8018,48 @@ public struct _FormatRules {
             }
 
             // Remove the colon and explicit type before the equals token
-            formatter.removeTokens(in: colonIndex ... type.range.upperBound)
+            formatter.removeTokens(in: type.colonIndex ... type.range.upperBound)
+        }
+    }
+
+    public let redundantProperty = FormatRule(
+        help: "Simplifies redundant property definitions that are immediately returned.",
+        disabledByDefault: true,
+        orderAfter: ["preferInferredTypes"]
+    ) { formatter in
+        formatter.forEach(.keyword) { introducerIndex, introducerToken in
+            // Find properties like `let identifier = value` followed by `return identifier`
+            guard ["let", "var"].contains(introducerToken.string),
+                  let property = formatter.parsePropertyDeclaration(atIntroducerIndex: introducerIndex),
+                  let (assignmentIndex, expressionRange) = property.value,
+                  let returnIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: expressionRange.upperBound),
+                  formatter.tokens[returnIndex] == .keyword("return"),
+                  let returnedValueIndex = formatter.index(of: .nonSpaceOrComment, after: returnIndex),
+                  let returnedExpression = formatter.parseExpressionRange(startingAt: returnedValueIndex, allowConditionalExpressions: true),
+                  formatter.tokens[returnedExpression] == [.identifier(property.identifier)]
+            else { return }
+
+            let returnRange = formatter.startOfLine(at: returnIndex) ... formatter.endOfLine(at: returnedExpression.upperBound)
+            let propertyRange = introducerIndex ... expressionRange.upperBound
+
+            guard !propertyRange.overlaps(returnRange) else { return }
+
+            // Remove the line with the `return identifier` statement.
+            formatter.removeTokens(in: returnRange)
+
+            // If there's nothing but whitespace between the end of the expression
+            // and the return statement, we can remove all of it. But if there's a comment,
+            // we should preserve it.
+            let rangeBetweenExpressionAndReturn = (expressionRange.upperBound + 1) ..< (returnRange.lowerBound - 1)
+            if formatter.tokens[rangeBetweenExpressionAndReturn].allSatisfy(\.isSpaceOrLinebreak) {
+                formatter.removeTokens(in: rangeBetweenExpressionAndReturn)
+            }
+
+            // Replace the `let identifier = value` with `return value`
+            formatter.replaceTokens(
+                in: introducerIndex ..< expressionRange.lowerBound,
+                with: [.keyword("return"), .space(" ")]
+            )
         }
     }
 }

@@ -1421,17 +1421,24 @@ extension Formatter {
     ///  - `[...]` (array or dictionary)
     ///  - `{ ... }` (closure)
     ///  - `#selector(...)` / macro invocations
+    ///  - An `if/switch` expression (only allowed if this is the only expression in
+    ///    a code block or if following an assignment `=` operator).
     ///  - Any value can be preceded by a prefix operator
     ///  - Any value can be preceded by `try`, `try?`, `try!`, or `await`
     ///  - Any value can be followed by a postfix operator
     ///  - Any value can be followed by an infix operator plus a right-hand-side expression.
     ///  - Any value can be followed by an arbitrary number of method calls `(...)`, subscripts `[...]`, or generic arguments `<...>`.
     ///  - Any value can be followed by a `.identifier`
-    func parseExpressionRange(startingAt startIndex: Int) -> ClosedRange<Int>? {
+    func parseExpressionRange(
+        startingAt startIndex: Int,
+        allowConditionalExpressions: Bool = false
+    )
+        -> ClosedRange<Int>?
+    {
         // Any expression can start with a prefix operator, or `await`
         if tokens[startIndex].isOperator(ofType: .prefix) || tokens[startIndex].string == "await",
            let nextTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: startIndex),
-           let followingExpression = parseExpressionRange(startingAt: nextTokenIndex)
+           let followingExpression = parseExpressionRange(startingAt: nextTokenIndex, allowConditionalExpressions: allowConditionalExpressions)
         {
             return startIndex ... followingExpression.upperBound
         }
@@ -1447,7 +1454,7 @@ extension Formatter {
                 nextTokenAfterTry = nextTokenAfterTryOperator
             }
 
-            if let followingExpression = parseExpressionRange(startingAt: nextTokenAfterTry) {
+            if let followingExpression = parseExpressionRange(startingAt: nextTokenAfterTry, allowConditionalExpressions: allowConditionalExpressions) {
                 return startIndex ... followingExpression.upperBound
             }
         }
@@ -1473,10 +1480,16 @@ extension Formatter {
             // #selector() and macro expansions like #macro() are parsed into keyword tokens.
             endOfExpression = startIndex
 
+        case .keyword("if"), .keyword("switch"):
+            guard allowConditionalExpressions,
+                  let conditionalBranches = conditionalBranches(at: startIndex),
+                  let lastBranch = conditionalBranches.last
+            else { return nil }
+            endOfExpression = lastBranch.endOfBranch
+
         default:
             return nil
         }
-
         while let nextTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfExpression),
               let nextToken = token(at: nextTokenIndex)
         {
@@ -1493,7 +1506,7 @@ extension Formatter {
                 endOfExpression = endOfScope
 
             /// Any value can be followed by a `.identifier`
-            case .delimiter("."):
+            case .delimiter("."), .operator(".", _):
                 guard let nextIdentifierIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: nextTokenIndex),
                       tokens[nextIdentifierIndex].isIdentifier
                 else { return startIndex ... endOfExpression }
@@ -1569,6 +1582,73 @@ extension Formatter {
             let lb = rhs.module.lowercased()
             return la == lb ? lhs.module < rhs.module : la < lb
         }
+    }
+
+    /// A property of the format `(let|var) identifier: Type = expression`.
+    ///  - `: Type` and `= expression` elements are optional
+    struct PropertyDeclaration {
+        let introducerIndex: Int
+        let identifier: String
+        let identifierIndex: Int
+        let type: (colonIndex: Int, name: String, range: ClosedRange<Int>)?
+        let value: (assignmentIndex: Int, expressionRange: ClosedRange<Int>)?
+
+        var range: ClosedRange<Int> {
+            if let value = value {
+                return introducerIndex ... value.expressionRange.upperBound
+            } else if let type = type {
+                return introducerIndex ... type.range.upperBound
+            } else {
+                return introducerIndex ... identifierIndex
+            }
+        }
+    }
+
+    /// Parses a property of the format `(let|var) identifier: Type = expression`
+    /// starting at the given introducer index (the `let` / `var` keyword).
+    func parsePropertyDeclaration(atIntroducerIndex introducerIndex: Int) -> PropertyDeclaration? {
+        assert(["let", "var"].contains(tokens[introducerIndex].string))
+
+        guard let propertyIdentifierIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: introducerIndex),
+              let propertyIdentifier = token(at: propertyIdentifierIndex),
+              propertyIdentifier.isIdentifier
+        else { return nil }
+
+        var typeInformation: (colonIndex: Int, name: String, range: ClosedRange<Int>)?
+
+        if let colonIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: propertyIdentifierIndex),
+           tokens[colonIndex] == .delimiter(":"),
+           let startOfTypeIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: colonIndex),
+           let type = parseType(at: startOfTypeIndex)
+        {
+            typeInformation = (
+                colonIndex: colonIndex,
+                name: type.name,
+                range: type.range
+            )
+        }
+
+        let endOfTypeOrIdentifier = typeInformation?.range.upperBound ?? propertyIdentifierIndex
+        var valueInformation: (assignmentIndex: Int, expressionRange: ClosedRange<Int>)?
+
+        if let assignmentIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfTypeOrIdentifier),
+           tokens[assignmentIndex] == .operator("=", .infix),
+           let startOfExpression = index(of: .nonSpaceOrCommentOrLinebreak, after: assignmentIndex),
+           let expressionRange = parseExpressionRange(startingAt: startOfExpression, allowConditionalExpressions: true)
+        {
+            valueInformation = (
+                assignmentIndex: assignmentIndex,
+                expressionRange: expressionRange
+            )
+        }
+
+        return PropertyDeclaration(
+            introducerIndex: introducerIndex,
+            identifier: propertyIdentifier.string,
+            identifierIndex: propertyIdentifierIndex,
+            type: typeInformation,
+            value: valueInformation
+        )
     }
 
     /// Shared import rules implementation

@@ -3311,7 +3311,7 @@ class SyntaxTests: RulesTests {
         """
 
         testFormatting(for: input, output, rule: FormatRules.docComments,
-                       exclude: ["spaceInsideComments"])
+                       exclude: ["spaceInsideComments", "redundantProperty"])
     }
 
     func testPreservesDocComments() {
@@ -3388,7 +3388,7 @@ class SyntaxTests: RulesTests {
         """
 
         let options = FormatOptions(preserveDocComments: true)
-        testFormatting(for: input, output, rule: FormatRules.docComments, options: options, exclude: ["spaceInsideComments"])
+        testFormatting(for: input, output, rule: FormatRules.docComments, options: options, exclude: ["spaceInsideComments", "redundantProperty"])
     }
 
     func testDoesntConvertCommentBeforeConsecutivePropertiesToDocComment() {

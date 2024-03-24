@@ -4912,19 +4912,19 @@ class SyntaxTests: RulesTests {
         """
 
         let output = """
-        let foo = Foo.init()
+        let foo = Foo()
         let bar = Bar.staticBar
         let baaz = Baaz.Example.default
         let quux = Quux.quuxBulder(foo: .foo, bar: .bar)
 
-        let dictionary = [Foo: Bar].init()
-        let array = [Foo].init()
-        let genericType = MyGenericType<Foo, Bar>.init()
-        let optional = String?.init("Foo")
+        let dictionary = [Foo: Bar]()
+        let array = [Foo]()
+        let genericType = MyGenericType<Foo, Bar>()
+        let optional = String?("Foo")
         """
 
         let options = FormatOptions(redundantType: .inferred)
-        testFormatting(for: input, output, rule: FormatRules.preferInferredTypes, options: options, exclude: ["redundantInit"])
+        testFormatting(for: input, [output], rules: [FormatRules.preferInferredTypes, FormatRules.redundantInit], options: options)
     }
 
     func testPreservesExplicitTypeIfNoRHS() {
@@ -4994,12 +4994,88 @@ class SyntaxTests: RulesTests {
         let foo: Foo = .init()
 
         func bar() {
-            let baaz = Baaz.init()
-            let baaz = Baaz.init()
+            let baaz = Baaz()
+            let baaz = Baaz()
         }
         """
 
         let options = FormatOptions(redundantType: .inferLocalsOnly)
-        testFormatting(for: input, [output], rules: [FormatRules.redundantType, FormatRules.preferInferredTypes], options: options, exclude: ["redundantInit"])
+        testFormatting(for: input, [output], rules: [FormatRules.redundantType, FormatRules.preferInferredTypes, FormatRules.redundantInit], options: options)
+    }
+
+    func testPreferInferredTypesWithIfExpressionDisabledByDefault() {
+        let input = """
+        let foo: SomeTypeWithALongGenrericName<AndGenericArgument> =
+            if condition {
+                .init(bar)
+            } else {
+                .init(baaz)
+            }
+        """
+
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, rule: FormatRules.preferInferredTypes, options: options)
+    }
+
+    func testPreferInferredTypesWithIfExpression() {
+        let input = """
+        let foo: Foo =
+            if condition {
+                .init(bar)
+            } else {
+                .init(baaz)
+            }
+        """
+
+        let output = """
+        let foo =
+            if condition {
+                Foo(bar)
+            } else {
+                Foo(baaz)
+            }
+        """
+
+        let options = FormatOptions(redundantType: .inferred, inferredTypesInConditionalExpressions: true)
+        testFormatting(for: input, [output], rules: [FormatRules.preferInferredTypes, FormatRules.redundantInit], options: options)
+    }
+
+    func testPreferInferredTypesWithSwitchExpression() {
+        let input = """
+        let foo: Foo =
+            switch condition {
+            case true:
+                .init(bar)
+            case false:
+                .init(baaz)
+            }
+        """
+
+        let output = """
+        let foo =
+            switch condition {
+            case true:
+                Foo(bar)
+            case false:
+                Foo(baaz)
+            }
+        """
+
+        let options = FormatOptions(redundantType: .inferred, inferredTypesInConditionalExpressions: true)
+        testFormatting(for: input, [output], rules: [FormatRules.preferInferredTypes, FormatRules.redundantInit], options: options)
+    }
+
+    func testPreservesNonMatchingIfExpression() {
+        let input = """
+        let foo: Foo =
+            if condition {
+                .init(bar)
+            } else {
+                [] // e.g. using ExpressibleByArrayLiteral
+            }
+        """
+
+        let options = FormatOptions(redundantType: .inferred, inferredTypesInConditionalExpressions: true)
+        testFormatting(for: input, rule: FormatRules.preferInferredTypes, options: options)
     }
 }

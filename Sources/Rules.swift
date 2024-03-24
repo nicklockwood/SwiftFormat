@@ -7965,9 +7965,15 @@ public struct _FormatRules {
         help: "Prefer using inferred types on property definitions (`let foo = Foo()`) rather than explicit types (`let foo: Foo = .init()`).",
         disabledByDefault: true,
         orderAfter: ["redundantType"],
+        options: ["inferredtypes"],
         sharedOptions: ["redundanttype"]
     ) { formatter in
         formatter.forEach(.operator("=", .infix)) { equalsIndex, _ in
+            // Respect the `.inferLocalsOnly` option if enabled
+            if formatter.options.redundantType == .inferLocalsOnly,
+               formatter.declarationScope(at: equalsIndex) != .local
+            { return }
+
             guard // Parse and validate the LHS of the property declaration.
                 // It should take the form `(let|var) propertyName: (Type) = .staticMember`
                 let introducerIndex = formatter.indexOfLastSignificantKeyword(at: equalsIndex),
@@ -7976,20 +7982,47 @@ public struct _FormatRules {
                 introducerIndex < colonIndex,
                 let typeStartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: colonIndex),
                 let type = formatter.parseType(at: typeStartIndex),
-                // If the RHS starts with a leading dot, then we know its accessing some static member on this type.
-                let dotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
-                formatter.tokens[dotIndex] == .operator(".", .prefix)
+                let rhsStartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex)
             else { return }
-
-            // Respect the `.inferLocalsOnly` option if enabled
-            if formatter.options.redundantType == .inferLocalsOnly,
-               formatter.declarationScope(at: equalsIndex) != .local
-            { return }
 
             let typeTokens = formatter.tokens[type.range]
 
-            // Insert a copy of the type on the RHS before the dot
-            formatter.insert(typeTokens, at: dotIndex)
+            // If the RHS starts with a leading dot, then we know its accessing some static member on this type.
+            if formatter.tokens[rhsStartIndex].isOperator(".") {
+                // Insert a copy of the type on the RHS before the dot
+                formatter.insert(typeTokens, at: rhsStartIndex)
+            }
+
+            // If the RHS is an if/switch expression, check that each branch starts with a leading dot
+            else if formatter.options.inferredTypesInConditionalExpressions,
+                    ["if", "switch"].contains(formatter.tokens[rhsStartIndex].string),
+                    let conditonalBranches = formatter.conditionalBranches(at: rhsStartIndex)
+            {
+                var hasInvalidConditionalBranch = false
+                formatter.forEachRecursiveConditionalBranch(in: conditonalBranches) { branch in
+                    guard let firstTokenInBranch = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: branch.startOfBranch) else {
+                        hasInvalidConditionalBranch = true
+                        return
+                    }
+
+                    if !formatter.tokens[firstTokenInBranch].isOperator(".") {
+                        hasInvalidConditionalBranch = true
+                    }
+                }
+
+                guard !hasInvalidConditionalBranch else { return }
+
+                // Insert a copy of the type on the RHS before the dot in each branch
+                formatter.forEachRecursiveConditionalBranch(in: conditonalBranches) { branch in
+                    guard let dotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: branch.startOfBranch) else { return }
+
+                    formatter.insert(typeTokens, at: dotIndex)
+                }
+            }
+
+            else {
+                return
+            }
 
             // Remove the colon and explicit type before the equals token
             formatter.removeTokens(in: colonIndex ... type.range.upperBound)

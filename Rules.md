@@ -1507,6 +1507,10 @@ Option | Description
 
 Prefer using inferred types on property definitions (`let foo = Foo()`) rather than explicit types (`let foo: Foo = .init()`).
 
+Option | Description
+--- | ---
+`--inferredtypes` | "exclude-cond-exprs" (default) or "always"
+
 <details>
 <summary>Examples</summary>
 
@@ -1523,6 +1527,17 @@ Prefer using inferred types on property definitions (`let foo = Foo()`) rather t
   let float: CGFloat = 10.0
   let array: [String] = []
   let anyFoo: AnyFoo = foo
+
+  // with --inferredtypes always:
+- let foo: Foo =
++ let foo =
+    if condition {
+-     .init(bar)
++     Foo(bar)
+    } else {
+-     .init(baaz)
++     Foo(baaz)
+    }
 ```
 
 </details>

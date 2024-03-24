@@ -923,6 +923,14 @@ struct _Descriptors {
         help: "\"inferred\", \"explicit\", or \"infer-locals-only\" (default)",
         keyPath: \.redundantType
     )
+    let inferredTypesInConditionalExpressions = OptionDescriptor(
+        argumentName: "inferredtypes",
+        displayName: "Prefer Inferred Types",
+        help: "\"exclude-cond-exprs\" (default) or \"always\"",
+        keyPath: \.inferredTypesInConditionalExpressions,
+        trueValues: ["exclude-cond-exprs"],
+        falseValues: ["always"]
+    )
     let emptyBracesSpacing = OptionDescriptor(
         argumentName: "emptybraces",
         displayName: "Empty Braces",

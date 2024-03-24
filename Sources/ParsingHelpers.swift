@@ -141,7 +141,14 @@ public extension Formatter {
 
     /// Returns the index of the starting token for the current scope
     func startOfScope(at index: Int) -> Int? {
-        self.index(of: .startOfScope, before: index)
+        self.index(of: .startOfScope, before: index).flatMap {
+            if [.startOfScope("//"), .startOfScope("#!")].contains(tokens[$0]),
+               self.index(of: .linebreak, after: $0) ?? index < index
+            {
+                return nil
+            }
+            return $0
+        }
     }
 
     /// Returns the index of the ending token for the current scope

@@ -158,7 +158,9 @@ public extension Formatter {
         guard var startToken = token(at: index) else { return nil }
         if case .startOfScope = startToken {
             startIndex = index
-        } else if let index = self.index(of: .startOfScope, before: index) {
+        } else if let index = self.index(of: .startOfScope, before: index, if: {
+            ![.startOfScope("//"), .startOfScope("#!")].contains($0)
+        }) {
             startToken = tokens[index]
             startIndex = index
         } else {

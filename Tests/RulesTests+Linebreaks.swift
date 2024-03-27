@@ -477,6 +477,23 @@ class LinebreakTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.blankLineAfterImports)
     }
 
+    func testBlankLineAfterScopedImports() {
+        let input = """
+        internal import UIKit
+        internal import Foundation
+        private import Time
+        public class Foo {}
+        """
+        let output = """
+        internal import UIKit
+        internal import Foundation
+        private import Time
+
+        public class Foo {}
+        """
+        testFormatting(for: input, output, rule: FormatRules.blankLineAfterImports)
+    }
+
     // MARK: - blankLinesBetweenScopes
 
     func testBlankLineBetweenFunctions() {

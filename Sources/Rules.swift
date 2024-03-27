@@ -1170,20 +1170,15 @@ public struct _FormatRules {
             else {
                 return
             }
-            if formatter.tokens[nextIndex] == .startOfScope("#if") {
-                var keyword = "#if"
-                while keyword == "#if",
-                      let index = formatter.index(of: .keywordOrAttribute, after: nextIndex)
-                {
-                    nextIndex = index
-                    keyword = formatter.tokens[nextIndex].string
-                }
+            var keyword: Token = formatter.tokens[nextIndex]
+            while keyword == .startOfScope("#if") || keyword.isModifierKeyword || keyword.isAttribute,
+                  let index = formatter.index(of: .keyword, after: nextIndex)
+            {
+                nextIndex = index
+                keyword = formatter.tokens[nextIndex]
             }
             switch formatter.tokens[nextIndex] {
-            case .linebreak, .keyword("import"), .keyword("@testable"),
-                 .keyword("@_exported"), .keyword("@_implementationOnly"),
-                 .keyword("@_spi"), .keyword("@_spiOnly"), .keyword("@preconcurrency"),
-                 .keyword("#else"), .keyword("#elseif"), .endOfScope("#endif"):
+            case .linebreak, .keyword("import"), .keyword("#else"), .keyword("#elseif"), .endOfScope("#endif"):
                 break
             default:
                 formatter.insertLinebreak(at: endOfLine)

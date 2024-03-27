@@ -13,14 +13,14 @@ import Foundation
 public extension Formatter {
     /// Returns the index of the first token of the line containing the specified index
     func startOfLine(at index: Int, excludingIndent: Bool = false) -> Int {
-        var index = index
+        var index = min(index, tokens.count)
         while let token = token(at: index - 1) {
             if case .linebreak = token {
                 break
             }
             index -= 1
         }
-        if excludingIndent, case .space = tokens[index] {
+        if excludingIndent, case .space? = token(at: index) {
             return index + 1
         }
         return index

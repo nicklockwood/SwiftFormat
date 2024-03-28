@@ -68,6 +68,7 @@
 		01C209B92502D3C500E728A2 /* RulesTests+Wrapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01C209B82502D3C500E728A2 /* RulesTests+Wrapping.swift */; };
 		01C209BB2502D62000E728A2 /* RulesTests+Organization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01C209BA2502D62000E728A2 /* RulesTests+Organization.swift */; };
 		01C209BD2502D71F00E728A2 /* RulesTests+Redundancy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01C209BC2502D71F00E728A2 /* RulesTests+Redundancy.swift */; };
+		01C4D3292BB518D400BDF1AF /* ZRegressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01C4D3282BB518D400BDF1AF /* ZRegressionTests.swift */; };
 		01D3B28624E9C9C700888DE0 /* FormattingHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01D3B28524E9C9C700888DE0 /* FormattingHelpers.swift */; };
 		01EF830F25616089003F6F2D /* RulesTests+Syntax.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01EF830E25616089003F6F2D /* RulesTests+Syntax.swift */; };
 		01EFC8B729CF2B5100222029 /* RulesTests+Hoisting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01EFC8B629CF2B5100222029 /* RulesTests+Hoisting.swift */; };
@@ -225,6 +226,7 @@
 		01C209B82502D3C500E728A2 /* RulesTests+Wrapping.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RulesTests+Wrapping.swift"; sourceTree = "<group>"; };
 		01C209BA2502D62000E728A2 /* RulesTests+Organization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RulesTests+Organization.swift"; sourceTree = "<group>"; };
 		01C209BC2502D71F00E728A2 /* RulesTests+Redundancy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RulesTests+Redundancy.swift"; sourceTree = "<group>"; };
+		01C4D3282BB518D400BDF1AF /* ZRegressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZRegressionTests.swift; sourceTree = "<group>"; };
 		01D3B28524E9C9C700888DE0 /* FormattingHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormattingHelpers.swift; sourceTree = "<group>"; };
 		01EF830E25616089003F6F2D /* RulesTests+Syntax.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RulesTests+Syntax.swift"; sourceTree = "<group>"; };
 		01EFC8B629CF2B5100222029 /* RulesTests+Hoisting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RulesTests+Hoisting.swift"; sourceTree = "<group>"; };
@@ -411,6 +413,7 @@
 				01BBD85D21DAA30700457380 /* GlobsTests.swift */,
 				018E82741D62E730008CA0F8 /* TokenizerTests.swift */,
 				011A53E921FFAA3A00DD9268 /* VersionTests.swift */,
+				01C4D3282BB518D400BDF1AF /* ZRegressionTests.swift */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -826,6 +829,7 @@
 				01EF830F25616089003F6F2D /* RulesTests+Syntax.swift in Sources */,
 				01BBD85E21DAA30700457380 /* GlobsTests.swift in Sources */,
 				01B3987B1D763424009ADE61 /* FormatterTests.swift in Sources */,
+				01C4D3292BB518D400BDF1AF /* ZRegressionTests.swift in Sources */,
 				01C209BD2502D71F00E728A2 /* RulesTests+Redundancy.swift in Sources */,
 				0142F06F1D72FE10007D66CC /* SwiftFormatTests.swift in Sources */,
 				01C209AF2502CD3C00E728A2 /* RulesTests+Spacing.swift in Sources */,

@@ -933,6 +933,8 @@ Known issues
 
 * If compiling for macOS with Xcode 14.0 and configuring SwiftFormat with `--swift-version 5.7`, the `genericExtensions` rule may cause a build failure by updating extensions of the format `extension Collection where Element == Foo` to `extension Collection<Foo>`. This fails to compile for macOS in Xcode 14.0, because the macOS SDK in that version of Xcode [does not include](https://forums.swift.org/t/xcode-14-rc-cannot-specialize-protocol-type/60171) the Swift 5.7 standard library. Workarounds include using `--swift-version 5.6` instead, updating to Xcode 14.1+, or disabling the `genericExtensions` rule (e.g. with `// swiftformat:next:disable genericExtensions`).
 
+* The `preferInferredTypes` rule can cause a build failure in cases where there are multiple static overloads with the same name but different return types.
+
 
 Tip Jar
 -----------

@@ -7965,15 +7965,31 @@ public struct _FormatRules {
                 ["var", "let"].contains(formatter.tokens[introducerIndex].string),
                 let property = formatter.parsePropertyDeclaration(atIntroducerIndex: introducerIndex),
                 let type = property.type,
-                let rhsStartIndex = property.value?.expressionRange.lowerBound
+                let rhsExpressionRange = property.value?.expressionRange
             else { return }
 
+            let rhsStartIndex = rhsExpressionRange.lowerBound
             let typeTokens = formatter.tokens[type.range]
 
             // Preserve the existing formatting if the LHS type is optional.
             //  - `let foo: Foo? = .foo` is valid, but `let foo = Foo?.foo`
             //    is invalid if `.foo` is defined on `Foo` but not `Foo?`.
-            guard !["?", "!"].contains(typeTokens.last?.string ?? "") else {
+            guard !["?", "!"].contains(typeTokens.last?.string ?? "") else { return }
+
+            // Preserve the existing formatting if the LHS type is an existential (indicated with `any`).
+            //  - The `extension MyProtocol where Self == MyType { ... }` syntax
+            //    creates static members where `let foo: any MyProtocol = .myType`
+            //    is valid, but `let foo = (any MyProtocol).myType` isn't.
+            guard typeTokens.first?.string != "any" else { return }
+
+            // Preserve the existing formatting if the RHS expression has a top-level infix operator.
+            //  - `let value: ClosedRange<Int> = .zero ... 10` would not be valid to convert to
+            //    `let value = ClosedRange<Int>.zero ... 10`.
+            if let nextInfixOperatorIndex = formatter.index(after: rhsStartIndex, where: { token in
+                token.isOperator(ofType: .infix) && token != .operator(".", .infix)
+            }),
+                rhsExpressionRange.contains(nextInfixOperatorIndex)
+            {
                 return
             }
 

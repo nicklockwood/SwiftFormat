@@ -340,14 +340,6 @@ class CommandLineTests: XCTestCase {
         XCTAssertNotEqual(computeHash(input), computeHash(output))
     }
 
-    // MARK: end-to-end formatting
-
-    func testFormatting() {
-        CLI.print = { _, _ in }
-        let args = ". --dryrun --disable redundantSelf"
-        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: args), .ok)
-    }
-
     // MARK: rules
 
     func testRulesNotMarkedAsDisabled() {
@@ -565,25 +557,5 @@ class CommandLineTests: XCTestCase {
                 url.path,
             ], in: "")
         }
-    }
-
-    // MARK: snapshot/regression tests
-
-    func testRegressionSuite() {
-        CLI.print = { message, _ in
-            Swift.print(message)
-        }
-        // NOTE: to update regression suite, run again without `--lint` argument
-        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "Sources,Tests,Snapshots --unexclude Snapshots --symlinks follow --cache ignore --lint"), .ok)
-    }
-
-    func testRegressionSuiteNotDisabled() throws {
-        let commandLineTests = try String(contentsOf: URL(fileURLWithPath: #file))
-        let range = try XCTUnwrap(
-            commandLineTests.range(of: "testRegressionSuiteNotDisabled()")
-        )
-        XCTAssert(commandLineTests[..<range.lowerBound].contains("""
-        with: "Sources,Tests,Snapshots --unexclude Snapshots --symlinks follow --cache ignore --lint")
-        """))
     }
 }

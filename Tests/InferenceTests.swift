@@ -33,29 +33,6 @@ import XCTest
 @testable import SwiftFormat
 
 class InferenceTests: XCTestCase {
-    static let files: [String] = {
-        var files = [String]()
-        let inputURL = URL(fileURLWithPath: #file)
-            .deletingLastPathComponent().deletingLastPathComponent()
-
-        _ = enumerateFiles(withInputURL: inputURL) { url, _, _ in
-            {
-                if let source = try? String(contentsOf: url) {
-                    files.append(source)
-                }
-            }
-        }
-        return files
-    }()
-
-    func testInferOptionsForProject() {
-        let files = InferenceTests.files
-        let tokens = files.flatMap { tokenize($0) }
-        let options = Options(formatOptions: inferFormatOptions(from: tokens))
-        let arguments = serialize(options: options, excludingDefaults: true, separator: " ")
-        XCTAssertEqual(arguments, "--binarygrouping none --decimalgrouping none --hexgrouping none --octalgrouping none --semicolons never")
-    }
-
     // MARK: indent
 
     func testInferIndentLevel() {

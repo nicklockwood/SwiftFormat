@@ -31,9 +31,9 @@
 
 import Foundation
 
-public final class FormatRule: Equatable, Comparable {
+public final class FormatRule: Equatable, Comparable, CustomStringConvertible {
     private let fn: (Formatter) -> Void
-    fileprivate(set) var name = ""
+    fileprivate(set) var name = "[unnamed rule]"
     fileprivate(set) var index = 0
     let help: String
     let runOnceOnly: Bool
@@ -48,6 +48,10 @@ public final class FormatRule: Equatable, Comparable {
 
     var isDeprecated: Bool {
         deprecationMessage != nil
+    }
+
+    public var description: String {
+        name
     }
 
     fileprivate init(help: String,
@@ -254,7 +258,10 @@ public struct _FormatRules {
             case .endOfScope("]") where formatter.isInClosureArguments(at: index),
                  .endOfScope(")") where formatter.isAttribute(at: index),
                  .identifier("some") where formatter.isTypePosition(at: index),
-                 .identifier("any") where formatter.isTypePosition(at: index):
+                 .identifier("any") where formatter.isTypePosition(at: index),
+                 .identifier("borrowing") where formatter.isTypePosition(at: index),
+                 .identifier("consuming") where formatter.isTypePosition(at: index),
+                 .identifier("isolated") where formatter.isTypePosition(at: index):
                 formatter.insert(.space(" "), at: i)
             case .space:
                 let index = i - 2
@@ -263,7 +270,10 @@ public struct _FormatRules {
                 }
                 switch token {
                 case .identifier("some") where formatter.isTypePosition(at: index),
-                     .identifier("any") where formatter.isTypePosition(at: index):
+                     .identifier("any") where formatter.isTypePosition(at: index),
+                     .identifier("borrowing") where formatter.isTypePosition(at: index),
+                     .identifier("consuming") where formatter.isTypePosition(at: index),
+                     .identifier("isolated") where formatter.isTypePosition(at: index):
                     break
                 case let .keyword(string) where !spaceAfter(string, index: index):
                     fallthrough
@@ -326,15 +336,22 @@ public struct _FormatRules {
         help: "Add or remove space around square brackets."
     ) { formatter in
         formatter.forEach(.startOfScope("[")) { i, _ in
-            guard let prevToken = formatter.token(at: i - 1) else {
+            let index = i - 1
+            guard let prevToken = formatter.token(at: index) else {
                 return
             }
             switch prevToken {
-            case .keyword:
+            case .keyword,
+                 .identifier("borrowing") where formatter.isTypePosition(at: index),
+                 .identifier("consuming") where formatter.isTypePosition(at: index):
                 formatter.insert(.space(" "), at: i)
             case .space:
-                if let token = formatter.token(at: i - 2) {
+                let index = i - 2
+                if let token = formatter.token(at: index) {
                     switch token {
+                    case .identifier("borrowing") where formatter.isTypePosition(at: index),
+                         .identifier("consuming") where formatter.isTypePosition(at: index):
+                        break
                     case .identifier, .number, .endOfScope("]"), .endOfScope("}"), .endOfScope(")"):
                         formatter.removeToken(at: i - 1)
                     default:

@@ -4961,7 +4961,6 @@ class SyntaxTests: RulesTests {
         let dictionary: [Foo: Bar] = .init()
         let array: [Foo] = .init()
         let genericType: MyGenericType<Foo, Bar> = .init()
-        let optional: String? = .init("Foo")
         """
 
         let output = """
@@ -4973,7 +4972,6 @@ class SyntaxTests: RulesTests {
         let dictionary = [Foo: Bar]()
         let array = [Foo]()
         let genericType = MyGenericType<Foo, Bar>()
-        let optional = String?("Foo")
         """
 
         let options = FormatOptions(redundantType: .inferred)
@@ -5129,6 +5127,31 @@ class SyntaxTests: RulesTests {
         """
 
         let options = FormatOptions(redundantType: .inferred, inferredTypesInConditionalExpressions: true)
+        testFormatting(for: input, rule: FormatRules.preferInferredTypes, options: options)
+    }
+
+    func testPreservesExplicitOptionalType() {
+        // `let foo = Foo?.foo` doesn't work if `.foo` is defined on `Foo` but not `Foo?`
+        let input = """
+        let optionalFoo1: Foo? = .foo
+        let optionalFoo2: Foo? = Foo.foo
+        let optionalFoo3: Foo! = .foo
+        let optionalFoo4: Foo! = Foo.foo
+        """
+
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, rule: FormatRules.preferInferredTypes, options: options)
+    }
+
+    func testPreservesTypeWithSeparateDeclarationAndProperty() {
+        let input = """
+        var foo: Foo!
+        foo = Foo(afterDelay: {
+            print(foo)
+        })
+        """
+
+        let options = FormatOptions(redundantType: .inferred)
         testFormatting(for: input, rule: FormatRules.preferInferredTypes, options: options)
     }
 }

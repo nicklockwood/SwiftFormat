@@ -868,13 +868,27 @@ class RedundancyTests: RulesTests {
     func testRemoveInitAfterCollectionLiterals() {
         let input = """
         let array = [String].init()
+        let arrayElement = [String].Element.init()
+        let nestedArray = [[String]].init()
+        let tupleArray = [(key: String, value: Int)].init()
         let dictionary = [String: Int].init()
         """
         let output = """
         let array = [String]()
+        let arrayElement = [String].Element()
+        let nestedArray = [[String]]()
+        let tupleArray = [(key: String, value: Int)]()
         let dictionary = [String: Int]()
         """
         testFormatting(for: input, output, rule: FormatRules.redundantInit)
+    }
+
+    func testPreservesInitAfterTypeOfCall() {
+        let input = """
+        type(of: oldViewController).init()
+        """
+
+        testFormatting(for: input, rule: FormatRules.redundantInit)
     }
 
     func testRemoveInitAfterOptionalType() {
@@ -904,10 +918,12 @@ class RedundancyTests: RulesTests {
         let input = """
         let array = Array<String>.init()
         let dictionary = Dictionary<String, Int>.init()
+        let atomicDictionary = Atomic<[String: Int]>.init()
         """
         let output = """
         let array = Array<String>()
         let dictionary = Dictionary<String, Int>()
+        let atomicDictionary = Atomic<[String: Int]>()
         """
 
         testFormatting(for: input, output, rule: FormatRules.redundantInit, exclude: ["typeSugar"])

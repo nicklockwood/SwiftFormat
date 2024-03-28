@@ -991,7 +991,7 @@ struct _Descriptors {
         argumentName: "doccomments",
         displayName: "Doc comments",
         help: "Preserve doc comments: \"default\" or \"preserve\".",
-        keyPath: \.preserveSingleLineForEach,
+        keyPath: \.preserveDocComments,
         trueValues: ["preserve"],
         falseValues: ["default"]
     )

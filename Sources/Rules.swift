@@ -4406,7 +4406,7 @@ public struct _FormatRules {
     ) { formatter in
         formatter.forEach(.identifier("init")) { i, _ in
             guard let dotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i, if: {
-                $0.isOperator(".")
+                $0.isOperator(".", .infix)
             }), let openParenIndex = formatter.index(of: .nonSpaceOrLinebreak, after: i, if: {
                 $0 == .startOfScope("(")
             }), let closeParenIndex = formatter.index(of: .endOfScope(")"), after: openParenIndex),
@@ -7937,13 +7937,39 @@ public struct _FormatRules {
                 ["var", "let"].contains(formatter.tokens[introducerIndex].string),
                 let property = formatter.parsePropertyDeclaration(atIntroducerIndex: introducerIndex),
                 let type = property.type,
-                let rhsStartIndex = property.value?.expressionRange.lowerBound
+                let rhsExpressionRange = property.value?.expressionRange
             else { return }
 
+            let rhsStartIndex = rhsExpressionRange.lowerBound
             let typeTokens = formatter.tokens[type.range]
+
+            // Preserve the existing formatting if the LHS type is optional.
+            //  - `let foo: Foo? = .foo` is valid, but `let foo = Foo?.foo`
+            //    is invalid if `.foo` is defined on `Foo` but not `Foo?`.
+            guard !["?", "!"].contains(typeTokens.last?.string ?? "") else { return }
+
+            // Preserve the existing formatting if the LHS type is an existential (indicated with `any`).
+            //  - The `extension MyProtocol where Self == MyType { ... }` syntax
+            //    creates static members where `let foo: any MyProtocol = .myType`
+            //    is valid, but `let foo = (any MyProtocol).myType` isn't.
+            guard typeTokens.first?.string != "any" else { return }
+
+            // Preserve the existing formatting if the RHS expression has a top-level infix operator.
+            //  - `let value: ClosedRange<Int> = .zero ... 10` would not be valid to convert to
+            //    `let value = ClosedRange<Int>.zero ... 10`.
+            if let nextInfixOperatorIndex = formatter.index(after: rhsStartIndex, where: { token in
+                token.isOperator(ofType: .infix) && token != .operator(".", .infix)
+            }),
+                rhsExpressionRange.contains(nextInfixOperatorIndex)
+            {
+                return
+            }
 
             // If the RHS starts with a leading dot, then we know its accessing some static member on this type.
             if formatter.tokens[rhsStartIndex].isOperator(".") {
+                // Update the . token from a prefix operator to an infix operator.
+                formatter.replaceToken(at: rhsStartIndex, with: .operator(".", .infix))
+
                 // Insert a copy of the type on the RHS before the dot
                 formatter.insert(typeTokens, at: rhsStartIndex)
             }
@@ -7971,6 +7997,10 @@ public struct _FormatRules {
                 formatter.forEachRecursiveConditionalBranch(in: conditonalBranches) { branch in
                     guard let dotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: branch.startOfBranch) else { return }
 
+                    // Update the . token from a prefix operator to an infix operator.
+                    formatter.replaceToken(at: dotIndex, with: .operator(".", .infix))
+
+                    // Insert a copy of the type on the RHS before the dot
                     formatter.insert(typeTokens, at: dotIndex)
                 }
             }

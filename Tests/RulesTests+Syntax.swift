@@ -4867,7 +4867,6 @@ class SyntaxTests: RulesTests {
         let dictionary: [Foo: Bar] = .init()
         let array: [Foo] = .init()
         let genericType: MyGenericType<Foo, Bar> = .init()
-        let optional: String? = .init("Foo")
         """
 
         let output = """
@@ -4879,7 +4878,6 @@ class SyntaxTests: RulesTests {
         let dictionary = [Foo: Bar]()
         let array = [Foo]()
         let genericType = MyGenericType<Foo, Bar>()
-        let optional = String?("Foo")
         """
 
         let options = FormatOptions(redundantType: .inferred)
@@ -5036,5 +5034,69 @@ class SyntaxTests: RulesTests {
 
         let options = FormatOptions(redundantType: .inferred, inferredTypesInConditionalExpressions: true)
         testFormatting(for: input, rule: FormatRules.preferInferredTypes, options: options)
+    }
+
+    func testPreservesExplicitOptionalType() {
+        // `let foo = Foo?.foo` doesn't work if `.foo` is defined on `Foo` but not `Foo?`
+        let input = """
+        let optionalFoo1: Foo? = .foo
+        let optionalFoo2: Foo? = Foo.foo
+        let optionalFoo3: Foo! = .foo
+        let optionalFoo4: Foo! = Foo.foo
+        """
+
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, rule: FormatRules.preferInferredTypes, options: options)
+    }
+
+    func testPreservesTypeWithSeparateDeclarationAndProperty() {
+        let input = """
+        var foo: Foo!
+        foo = Foo(afterDelay: {
+            print(foo)
+        })
+        """
+
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, rule: FormatRules.preferInferredTypes, options: options)
+    }
+
+    func testPreservesTypeWithExistentialAny() {
+        let input = """
+        protocol ShapeStyle {}
+        struct MyShapeStyle: ShapeStyle {}
+
+        extension ShapeStyle where Self == MyShapeStyle {
+            static var myShape: MyShapeStyle { MyShapeStyle() }
+        }
+
+        /// This compiles
+        let myShape1: any ShapeStyle = .myShape
+
+        // This would fail with "error: static member 'myShape' cannot be used on protocol metatype '(any ShapeStyle).Type'"
+        // let myShape2 = (any ShapeStyle).myShape
+        """
+
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, rule: FormatRules.preferInferredTypes, options: options)
+    }
+
+    func testPreservesRightHandSideWithOperator() {
+        let input = """
+        let value: ClosedRange<Int> = .zero ... 10
+        let dynamicTypeSizeRange: ClosedRange<DynamicTypeSize> = .large ... .xxxLarge
+        let dynamicTypeSizeRange: ClosedRange<DynamicTypeSize> = .large() ... .xxxLarge()
+        let dynamicTypeSizeRange: ClosedRange<DynamicTypeSize> = .convertFromLiteral(.large ... .xxxLarge)
+        """
+
+        let output = """
+        let value: ClosedRange<Int> = .zero ... 10
+        let dynamicTypeSizeRange: ClosedRange<DynamicTypeSize> = .large ... .xxxLarge
+        let dynamicTypeSizeRange: ClosedRange<DynamicTypeSize> = .large() ... .xxxLarge()
+        let dynamicTypeSizeRange = ClosedRange<DynamicTypeSize>.convertFromLiteral(.large ... .xxxLarge)
+        """
+
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, output, rule: FormatRules.preferInferredTypes, options: options)
     }
 }

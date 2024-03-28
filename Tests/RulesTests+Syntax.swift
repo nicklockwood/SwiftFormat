@@ -5060,4 +5060,43 @@ class SyntaxTests: RulesTests {
         let options = FormatOptions(redundantType: .inferred)
         testFormatting(for: input, rule: FormatRules.preferInferredTypes, options: options)
     }
+
+    func testPreservesTypeWithExistentialAny() {
+        let input = """
+        protocol ShapeStyle {}
+        struct MyShapeStyle: ShapeStyle {}
+
+        extension ShapeStyle where Self == MyShapeStyle {
+            static var myShape: MyShapeStyle { MyShapeStyle() }
+        }
+
+        /// This compiles
+        let myShape1: any ShapeStyle = .myShape
+
+        // This would fail with "error: static member 'myShape' cannot be used on protocol metatype '(any ShapeStyle).Type'"
+        // let myShape2 = (any ShapeStyle).myShape
+        """
+
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, rule: FormatRules.preferInferredTypes, options: options)
+    }
+
+    func testPreservesRightHandSideWithOperator() {
+        let input = """
+        let value: ClosedRange<Int> = .zero ... 10
+        let dynamicTypeSizeRange: ClosedRange<DynamicTypeSize> = .large ... .xxxLarge
+        let dynamicTypeSizeRange: ClosedRange<DynamicTypeSize> = .large() ... .xxxLarge()
+        let dynamicTypeSizeRange: ClosedRange<DynamicTypeSize> = .convertFromLiteral(.large ... .xxxLarge)
+        """
+
+        let output = """
+        let value: ClosedRange<Int> = .zero ... 10
+        let dynamicTypeSizeRange: ClosedRange<DynamicTypeSize> = .large ... .xxxLarge
+        let dynamicTypeSizeRange: ClosedRange<DynamicTypeSize> = .large() ... .xxxLarge()
+        let dynamicTypeSizeRange = ClosedRange<DynamicTypeSize>.convertFromLiteral(.large ... .xxxLarge)
+        """
+
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, output, rule: FormatRules.preferInferredTypes, options: options)
+    }
 }

@@ -7981,8 +7981,18 @@ public struct _FormatRules {
 
             let typeTokens = formatter.tokens[type.range]
 
+            // Preserve the existing formatting if the LHS type is optional.
+            //  - `let foo: Foo? = .foo` is valid, but `let foo = Foo?.foo`
+            //    is invalid if `.foo` is defined on `Foo` but not `Foo?`.
+            guard !["?", "!"].contains(typeTokens.last?.string ?? "") else {
+                return
+            }
+
             // If the RHS starts with a leading dot, then we know its accessing some static member on this type.
             if formatter.tokens[rhsStartIndex].isOperator(".") {
+                // Update the . token from a prefix operator to an infix operator.
+                formatter.replaceToken(at: rhsStartIndex, with: .operator(".", .infix))
+
                 // Insert a copy of the type on the RHS before the dot
                 formatter.insert(typeTokens, at: rhsStartIndex)
             }
@@ -8010,6 +8020,10 @@ public struct _FormatRules {
                 formatter.forEachRecursiveConditionalBranch(in: conditonalBranches) { branch in
                     guard let dotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: branch.startOfBranch) else { return }
 
+                    // Update the . token from a prefix operator to an infix operator.
+                    formatter.replaceToken(at: dotIndex, with: .operator(".", .infix))
+
+                    // Insert a copy of the type on the RHS before the dot
                     formatter.insert(typeTokens, at: dotIndex)
                 }
             }

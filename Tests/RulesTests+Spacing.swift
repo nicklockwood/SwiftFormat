@@ -328,6 +328,19 @@ class SpacingTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.spaceAroundParens)
     }
 
+    func testAddSpaceBetweenParenAndBorrowing() {
+        let input = "func foo(_: borrowing(any Foo)) {}"
+        let output = "func foo(_: borrowing (any Foo)) {}"
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundParens,
+                       exclude: ["noExplicitOwnership"])
+    }
+
+    func testAddSpaceBetweenParenAndIsolated() {
+        let input = "func foo(isolation _: isolated(any Actor)) {}"
+        let output = "func foo(isolation _: isolated (any Actor)) {}"
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundParens)
+    }
+
     // MARK: - spaceInsideParens
 
     func testSpaceInsideParens() {
@@ -404,6 +417,26 @@ class SpacingTests: RulesTests {
         let input = "let foo = bar { [self](foo: Int) in foo }"
         let output = "let foo = bar { [self] (foo: Int) in foo }"
         testFormatting(for: input, output, rule: FormatRules.spaceAroundBrackets)
+    }
+
+    func testAddSpaceBetweenInoutAndStringArray() {
+        let input = "func foo(arg _: inout[String]) {}"
+        let output = "func foo(arg _: inout [String]) {}"
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundBrackets)
+    }
+
+    func testAddSpaceBetweenConsumingAndStringArray() {
+        let input = "func foo(arg _: consuming[String]) {}"
+        let output = "func foo(arg _: consuming [String]) {}"
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundBrackets,
+                       exclude: ["noExplicitOwnership"])
+    }
+
+    func testAddSpaceBetweenBorrowingAndStringArray() {
+        let input = "func foo(arg _: borrowing[String]) {}"
+        let output = "func foo(arg _: borrowing [String]) {}"
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundBrackets,
+                       exclude: ["noExplicitOwnership"])
     }
 
     // MARK: - spaceInsideBrackets

@@ -270,14 +270,25 @@ extension Formatter {
              .keyword("is"), .keyword("as"):
             return true
         case .delimiter(":"), .delimiter(","):
-            // Check for type declaration
-            if let scopeType = scopeType(at: index) {
-                return scopeType.isType
-            }
+            // Check for property declaration
             if let token = last(.keyword, before: index),
                [.keyword("let"), .keyword("var")].contains(token)
             {
                 return true
+            }
+            // Check for function declaration
+            if let scopeStart = startOfScope(at: index) {
+                switch tokens[scopeStart] {
+                case .startOfScope("("):
+                    if last(.keyword, before: scopeStart) == .keyword("func") {
+                        return true
+                    }
+                    fallthrough
+                case .startOfScope("["):
+                    return isInClosureArguments(at: scopeStart)
+                default:
+                    break
+                }
             }
             fallthrough
         default:

@@ -786,12 +786,12 @@ class ParensTests: RulesTests {
 
     func testParensNotRemovedInGenericInstantiation() {
         let input = "let foo = Foo<T>()"
-        testFormatting(for: input, rule: FormatRules.redundantParens)
+        testFormatting(for: input, rule: FormatRules.redundantParens, exclude: ["propertyType"])
     }
 
     func testParensNotRemovedInGenericInstantiation2() {
         let input = "let foo = Foo<T>(bar)"
-        testFormatting(for: input, rule: FormatRules.redundantParens)
+        testFormatting(for: input, rule: FormatRules.redundantParens, exclude: ["propertyType"])
     }
 
     func testRedundantParensRemovedAfterGenerics() {

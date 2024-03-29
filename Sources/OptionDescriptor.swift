@@ -1064,6 +1064,12 @@ struct _Descriptors {
         help: "The version of Swift used in the files being formatted",
         keyPath: \.swiftVersion
     )
+    let preserveSymbols = OptionDescriptor(
+        argumentName: "preservesymbols",
+        displayName: "Preserve Symbols",
+        help: "Comma-delimited list of symbol names to preserve",
+        keyPath: \.preserveSymbols
+    )
 
     // MARK: - DEPRECATED
 

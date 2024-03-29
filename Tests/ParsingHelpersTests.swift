@@ -1620,6 +1620,10 @@ class ParsingHelpersTests: XCTestCase {
             }
 
             let instanceMember3 = Bar()
+
+            let instanceMemberClosure = Foo {
+                let localMember2 = Bar()
+            }
         }
         """
 
@@ -1632,6 +1636,8 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(formatter.declarationScope(at: 42), .type) // instanceMethod
         XCTAssertEqual(formatter.declarationScope(at: 51), .local) // localMember1
         XCTAssertEqual(formatter.declarationScope(at: 66), .type) // instanceMember3
+        XCTAssertEqual(formatter.declarationScope(at: 78), .type) // instanceMemberClosure
+        XCTAssertEqual(formatter.declarationScope(at: 89), .local) // localMember2
     }
 
     func testDeclarationScope_protocol() {
@@ -1826,6 +1832,48 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(formatter.parseType(at: 0)?.name, "Foo.bar")
     }
 
+    func testDoesntParseMacroInvocationAsType() {
+        let formatter = Formatter(tokenize("""
+        let foo = #colorLiteral(1, 2, 3)
+        """))
+        XCTAssertNil(formatter.parseType(at: 6))
+    }
+
+    func testDoesntParseSelectorAsType() {
+        let formatter = Formatter(tokenize("""
+        let foo = #selector(Foo.bar)
+        """))
+        XCTAssertNil(formatter.parseType(at: 6))
+    }
+
+    func testDoesntParseArrayAsType() {
+        let formatter = Formatter(tokenize("""
+        let foo = [foo, bar].member()
+        """))
+        XCTAssertNil(formatter.parseType(at: 6))
+    }
+
+    func testDoesntParseDictionaryAsType() {
+        let formatter = Formatter(tokenize("""
+        let foo = [foo: bar, baaz: quux].member()
+        """))
+        XCTAssertNil(formatter.parseType(at: 6))
+    }
+
+    func testParsesArrayAsType() {
+        let formatter = Formatter(tokenize("""
+        let foo = [Foo]()
+        """))
+        XCTAssertEqual(formatter.parseType(at: 6)?.name, "[Foo]")
+    }
+
+    func testParsesDictionaryAsType() {
+        let formatter = Formatter(tokenize("""
+        let foo = [Foo: Bar]()
+        """))
+        XCTAssertEqual(formatter.parseType(at: 6)?.name, "[Foo: Bar]")
+    }
+
     func testParseGenericType() {
         let formatter = Formatter(tokenize("""
         let foo: Foo<Bar, Baaz> = .init()
@@ -1908,6 +1956,13 @@ class ParsingHelpersTests: XCTestCase {
         let foo: Foo.Bar.Baaz
         """))
         XCTAssertEqual(formatter.parseType(at: 5)?.name, "Foo.Bar.Baaz")
+    }
+
+    func testDoesntParseLeadingDotAsType() {
+        let formatter = Formatter(tokenize("""
+        let foo: Foo = .Bar.baaz
+        """))
+        XCTAssertEqual(formatter.parseType(at: 9)?.name, nil)
     }
 
     func testParseCompoundGenericType() {

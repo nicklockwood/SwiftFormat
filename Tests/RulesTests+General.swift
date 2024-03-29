@@ -277,7 +277,7 @@ class GeneralTests: RulesTests {
             Int
         ]).self
         """
-        testFormatting(for: input, rule: FormatRules.trailingCommas)
+        testFormatting(for: input, rule: FormatRules.trailingCommas, exclude: ["propertyType"])
     }
 
     func testTrailingCommaNotAddedToTypeDeclaration() {
@@ -324,7 +324,7 @@ class GeneralTests: RulesTests {
             String: Int
         ]]()
         """
-        testFormatting(for: input, rule: FormatRules.trailingCommas)
+        testFormatting(for: input, rule: FormatRules.trailingCommas, exclude: ["propertyType"])
     }
 
     func testTrailingCommaNotAddedToTypeDeclaration6() {
@@ -337,7 +337,7 @@ class GeneralTests: RulesTests {
             ])
         ]]()
         """
-        testFormatting(for: input, rule: FormatRules.trailingCommas)
+        testFormatting(for: input, rule: FormatRules.trailingCommas, exclude: ["propertyType"])
     }
 
     func testTrailingCommaNotAddedToTypeDeclaration7() {

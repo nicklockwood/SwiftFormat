@@ -1846,7 +1846,7 @@ private struct Examples {
     ```
     """#
 
-    let preferInferredTypes = """
+    let propertyType = """
     ```diff
     - let foo: Foo = .init()
     + let foo: Foo = .init()

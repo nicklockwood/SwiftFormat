@@ -874,7 +874,7 @@ class OrganizationTests: RulesTests {
 
         testFormatting(for: input, output, rule: FormatRules.organizeDeclarations,
                        options: FormatOptions(ifdefIndent: .noIndent),
-                       exclude: ["blankLinesAtStartOfScope"])
+                       exclude: ["blankLinesAtStartOfScope", "propertyType"])
     }
 
     func testOrganizesTypeBelowSymbolImport() {
@@ -1508,7 +1508,8 @@ class OrganizationTests: RulesTests {
 
         testFormatting(
             for: input, output, rule: FormatRules.extensionAccessControl,
-            options: FormatOptions(extensionACLPlacement: .onDeclarations, swiftVersion: "4")
+            options: FormatOptions(extensionACLPlacement: .onDeclarations, swiftVersion: "4"),
+            exclude: ["propertyType"]
         )
     }
 
@@ -3352,7 +3353,7 @@ class OrganizationTests: RulesTests {
 
         testFormatting(for: input, [output],
                        rules: [FormatRules.sortDeclarations, FormatRules.consecutiveBlankLines],
-                       exclude: ["blankLinesBetweenScopes"])
+                       exclude: ["blankLinesBetweenScopes", "propertyType"])
     }
 
     func testSortBetweenDirectiveCommentsInType() {

@@ -88,7 +88,7 @@ class IndentTests: RulesTests {
                                           paymentFormURL: .paymentForm)
         """
         let options = FormatOptions(wrapParameters: .preserve)
-        testFormatting(for: input, rule: FormatRules.indent, options: options)
+        testFormatting(for: input, rule: FormatRules.indent, options: options, exclude: ["propertyType"])
     }
 
     func testIndentPreservedForNestedWrappedParameters2() {
@@ -99,7 +99,7 @@ class IndentTests: RulesTests {
                                                            paymentFormURL: .paymentForm))
         """
         let options = FormatOptions(wrapParameters: .preserve)
-        testFormatting(for: input, rule: FormatRules.indent, options: options)
+        testFormatting(for: input, rule: FormatRules.indent, options: options, exclude: ["propertyType"])
     }
 
     func testIndentPreservedForNestedWrappedParameters3() {
@@ -112,7 +112,7 @@ class IndentTests: RulesTests {
         )
         """
         let options = FormatOptions(wrapParameters: .preserve)
-        testFormatting(for: input, rule: FormatRules.indent, options: options)
+        testFormatting(for: input, rule: FormatRules.indent, options: options, exclude: ["propertyType"])
     }
 
     func testIndentTrailingClosureInParensContainingUnwrappedArguments() {
@@ -346,7 +346,7 @@ class IndentTests: RulesTests {
             return x + y
         }
         """
-        testFormatting(for: input, rule: FormatRules.indent)
+        testFormatting(for: input, rule: FormatRules.indent, exclude: ["propertyType"])
     }
 
     func testIndentWrappedClosureCaptureListWithUnwrappedParameters() {
@@ -373,7 +373,7 @@ class IndentTests: RulesTests {
             }
         """
         let options = FormatOptions(closingParenOnSameLine: true)
-        testFormatting(for: input, rule: FormatRules.indent, options: options)
+        testFormatting(for: input, rule: FormatRules.indent, options: options, exclude: ["propertyType"])
     }
 
     func testIndentAllmanTrailingClosureArguments() {
@@ -389,7 +389,7 @@ class IndentTests: RulesTests {
             }
         """
         let options = FormatOptions(allmanBraces: true)
-        testFormatting(for: input, rule: FormatRules.indent, options: options)
+        testFormatting(for: input, rule: FormatRules.indent, options: options, exclude: ["propertyType"])
     }
 
     func testIndentAllmanTrailingClosureArguments2() {
@@ -1193,7 +1193,7 @@ class IndentTests: RulesTests {
 
     func testNoIndentAfterDefaultAsIdentifier() {
         let input = "let foo = FileManager.default\n/// Comment\nlet bar = 0"
-        testFormatting(for: input, rule: FormatRules.indent)
+        testFormatting(for: input, rule: FormatRules.indent, exclude: ["propertyType"])
     }
 
     func testIndentClosureStartingOnIndentedLine() {
@@ -1589,7 +1589,7 @@ class IndentTests: RulesTests {
         }
         """
         let options = FormatOptions(wrapArguments: .disabled, closingParenOnSameLine: true)
-        testFormatting(for: input, rule: FormatRules.indent, options: options)
+        testFormatting(for: input, rule: FormatRules.indent, options: options, exclude: ["propertyType"])
     }
 
     func testSingleIndentTrailingClosureBodyThatStartsOnFollowingLine() {
@@ -1732,7 +1732,7 @@ class IndentTests: RulesTests {
         .bar
         .baz
         """
-        testFormatting(for: input, rule: FormatRules.indent)
+        testFormatting(for: input, rule: FormatRules.indent, exclude: ["propertyType"])
     }
 
     func testIndentChainedPropertiesAfterFunctionCallWithXcodeIndentation() {
@@ -1744,7 +1744,7 @@ class IndentTests: RulesTests {
         .baz
         """
         let options = FormatOptions(xcodeIndentation: true)
-        testFormatting(for: input, rule: FormatRules.indent, options: options)
+        testFormatting(for: input, rule: FormatRules.indent, options: options, exclude: ["propertyType"])
     }
 
     func testIndentChainedPropertiesAfterFunctionCall2() {
@@ -1756,7 +1756,7 @@ class IndentTests: RulesTests {
         .baz
         """
         testFormatting(for: input, rule: FormatRules.indent,
-                       exclude: ["trailingClosures"])
+                       exclude: ["trailingClosures", "propertyType"])
     }
 
     func testIndentChainedPropertiesAfterFunctionCallWithXcodeIndentation2() {
@@ -1769,7 +1769,7 @@ class IndentTests: RulesTests {
         """
         let options = FormatOptions(xcodeIndentation: true)
         testFormatting(for: input, rule: FormatRules.indent, options: options,
-                       exclude: ["trailingClosures"])
+                       exclude: ["trailingClosures", "propertyType"])
     }
 
     func testIndentChainedMethodsAfterTrailingClosure() {

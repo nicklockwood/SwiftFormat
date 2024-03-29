@@ -101,7 +101,7 @@
 * [markTypes](#markTypes)
 * [noExplicitOwnership](#noExplicitOwnership)
 * [organizeDeclarations](#organizeDeclarations)
-* [preferInferredTypes](#preferInferredTypes)
+* [propertyType](#propertyType)
 * [redundantProperty](#redundantProperty)
 * [sortSwitchCases](#sortSwitchCases)
 * [wrapConditionalBodies](#wrapConditionalBodies)
@@ -1503,13 +1503,32 @@ Option | Description
 </details>
 <br/>
 
-## preferInferredTypes
+## preferKeyPath
 
-Prefer using inferred types on property definitions (`let foo = Foo()`) rather than explicit types (`let foo: Foo = .init()`).
+Convert trivial `map { $0.foo }` closures to keyPath-based syntax.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- let barArray = fooArray.map { $0.bar }
++ let barArray = fooArray.map(\.bar)
+
+- let barArray = fooArray.compactMap { $0.optionalBar }
++ let barArray = fooArray.compactMap(\.optionalBar)
+```
+
+</details>
+<br/>
+
+## propertyType
+
+Convert property declarations to use inferred types (`let foo = Foo()`) or explicit types (`let foo: Foo = .init()`).
 
 Option | Description
 --- | ---
 `--inferredtypes` | "exclude-cond-exprs" (default) or "always"
+`--preservesymbols` | Comma-delimited list of symbol names to preserve
 
 <details>
 <summary>Examples</summary>
@@ -1538,24 +1557,6 @@ Option | Description
 -     .init(baaz)
 +     Foo(baaz)
     }
-```
-
-</details>
-<br/>
-
-## preferKeyPath
-
-Convert trivial `map { $0.foo }` closures to keyPath-based syntax.
-
-<details>
-<summary>Examples</summary>
-
-```diff
-- let barArray = fooArray.map { $0.bar }
-+ let barArray = fooArray.map(\.bar)
-
-- let barArray = fooArray.compactMap { $0.optionalBar }
-+ let barArray = fooArray.compactMap(\.optionalBar)
 ```
 
 </details>

@@ -1410,7 +1410,7 @@ class WrappingTests: RulesTests {
             Thing(),
         ])
         """
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments)
+        testFormatting(for: input, output, rule: FormatRules.wrapArguments, exclude: ["propertyType"])
     }
 
     func testWrapArgumentsDoesntIndentTrailingComment() {
@@ -1593,7 +1593,7 @@ class WrappingTests: RulesTests {
         }
         """
         let options = FormatOptions(wrapArguments: .beforeFirst)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options, exclude: ["propertyType"])
     }
 
     // MARK: wrapParameters
@@ -3309,7 +3309,7 @@ class WrappingTests: RulesTests {
             wrapReturnType: .ifMultiline
         )
 
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options, exclude: ["propertyType"])
     }
 
     func testPreserveReturnOnMultilineFunctionDeclarationByDefault() {
@@ -3479,7 +3479,7 @@ class WrappingTests: RulesTests {
             print("statement body")
         }
         """
-        testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces)
+        testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces, exclude: ["propertyType"])
     }
 
     func testSingleLineIfBraceOnSameLine() {
@@ -3634,7 +3634,7 @@ class WrappingTests: RulesTests {
         testFormatting(for: input, [output], rules: [
             FormatRules.wrapMultilineStatementBraces,
             FormatRules.indent,
-        ], options: options)
+        ], options: options, exclude: ["propertyType"])
     }
 
     func testMultilineBraceAppliedToTrailingClosure_wrapAfterFirst() {
@@ -3677,7 +3677,7 @@ class WrappingTests: RulesTests {
         testFormatting(for: input, [], rules: [
             FormatRules.wrapMultilineStatementBraces,
             FormatRules.wrapArguments,
-        ], options: options)
+        ], options: options, exclude: ["propertyType"])
     }
 
     func testMultilineBraceAppliedToSubscriptBody() {
@@ -4052,7 +4052,8 @@ class WrappingTests: RulesTests {
         """
         testFormatting(
             for: input, rules: [FormatRules.wrapArguments, FormatRules.indent],
-            options: FormatOptions(closingParenOnSameLine: true, wrapConditions: .beforeFirst)
+            options: FormatOptions(closingParenOnSameLine: true, wrapConditions: .beforeFirst),
+            exclude: ["propertyType"]
         )
     }
 
@@ -4725,7 +4726,7 @@ class WrappingTests: RulesTests {
         let myClass = MyClass()
         """
         let options = FormatOptions(typeAttributes: .prevLine)
-        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options, exclude: ["propertyType"])
     }
 
     func testClassImportAttributeNotTreatedAsType() {
@@ -4745,7 +4746,7 @@ class WrappingTests: RulesTests {
         private(set) dynamic var foo = Foo()
         """
         let options = FormatOptions(storedVarAttributes: .prevLine, computedVarAttributes: .prevLine)
-        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options, exclude: ["propertyType"])
     }
 
     func testWrapPrivateSetVarAttributes() {
@@ -4757,7 +4758,7 @@ class WrappingTests: RulesTests {
         private(set) dynamic var foo = Foo()
         """
         let options = FormatOptions(varAttributes: .prevLine)
-        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options, exclude: ["propertyType"])
     }
 
     func testDontWrapPrivateSetVarAttributes() {
@@ -4769,7 +4770,7 @@ class WrappingTests: RulesTests {
         @objc private(set) dynamic var foo = Foo()
         """
         let options = FormatOptions(varAttributes: .prevLine, storedVarAttributes: .sameLine)
-        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options, exclude: ["propertyType"])
     }
 
     func testWrapConvenienceInitAttribute() {
@@ -4934,7 +4935,7 @@ class WrappingTests: RulesTests {
         }
         """
         let options = FormatOptions(storedVarAttributes: .prevLine, computedVarAttributes: .prevLine)
-        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options, exclude: ["propertyType"])
     }
 
     func testComplexAttributesException() {
@@ -5005,7 +5006,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(storedVarAttributes: .sameLine, complexAttributes: .prevLine)
-        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options, exclude: ["propertyType"])
     }
 
     func testEscapingClosureNotMistakenForComplexAttribute() {
@@ -5077,7 +5078,7 @@ class WrappingTests: RulesTests {
         }
         """
         let options = FormatOptions(varAttributes: .sameLine, storedVarAttributes: .sameLine, computedVarAttributes: .prevLine, complexAttributes: .prevLine)
-        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options, exclude: ["propertyType"])
     }
 
     func testWrapOrDontAttributesInSwiftUIView() {

@@ -226,7 +226,7 @@ class RedundancyTests: RulesTests {
         let kFoo = Foo().foo
         """
         let options = FormatOptions(swiftVersion: "4")
-        testFormatting(for: input, rule: FormatRules.redundantFileprivate, options: options)
+        testFormatting(for: input, rule: FormatRules.redundantFileprivate, options: options, exclude: ["propertyType"])
     }
 
     func testFileprivateVarNotChangedToPrivateIfAccessedFromAVar() {
@@ -382,7 +382,7 @@ class RedundancyTests: RulesTests {
         let foo = Foo()
         """
         let options = FormatOptions(swiftVersion: "4")
-        testFormatting(for: input, rule: FormatRules.redundantFileprivate, options: options)
+        testFormatting(for: input, rule: FormatRules.redundantFileprivate, options: options, exclude: ["propertyType"])
     }
 
     func testFileprivateInitNotChangedToPrivateIfConstructorCalledOutsideType2() {
@@ -396,7 +396,7 @@ class RedundancyTests: RulesTests {
         }
         """
         let options = FormatOptions(swiftVersion: "4")
-        testFormatting(for: input, rule: FormatRules.redundantFileprivate, options: options)
+        testFormatting(for: input, rule: FormatRules.redundantFileprivate, options: options, exclude: ["propertyType"])
     }
 
     func testFileprivateStructMemberNotChangedToPrivateIfConstructorCalledOutsideType() {
@@ -408,7 +408,7 @@ class RedundancyTests: RulesTests {
         let foo = Foo(bar: "test")
         """
         let options = FormatOptions(swiftVersion: "4")
-        testFormatting(for: input, rule: FormatRules.redundantFileprivate, options: options)
+        testFormatting(for: input, rule: FormatRules.redundantFileprivate, options: options, exclude: ["propertyType"])
     }
 
     func testFileprivateClassMemberChangedToPrivateEvenIfConstructorCalledOutsideType() {
@@ -427,7 +427,7 @@ class RedundancyTests: RulesTests {
         let foo = Foo()
         """
         let options = FormatOptions(swiftVersion: "4")
-        testFormatting(for: input, output, rule: FormatRules.redundantFileprivate, options: options)
+        testFormatting(for: input, output, rule: FormatRules.redundantFileprivate, options: options, exclude: ["propertyType"])
     }
 
     func testFileprivateExtensionFuncNotChangedToPrivateIfPartOfProtocolConformance() {
@@ -531,7 +531,7 @@ class RedundancyTests: RulesTests {
         }
         """
         let options = FormatOptions(swiftVersion: "4")
-        testFormatting(for: input, rule: FormatRules.redundantFileprivate, options: options, exclude: ["preferInferredTypes"])
+        testFormatting(for: input, rule: FormatRules.redundantFileprivate, options: options, exclude: ["propertyType"])
     }
 
     func testFileprivateInitNotChangedToPrivateWhenUsingTrailingClosureInit() {
@@ -829,7 +829,7 @@ class RedundancyTests: RulesTests {
         let Foo = Foo.self
         let foo = Foo.init()
         """
-        testFormatting(for: input, rule: FormatRules.redundantInit)
+        testFormatting(for: input, rule: FormatRules.redundantInit, exclude: ["propertyType"])
     }
 
     func testNoRemoveInitForLocalLetType2() {
@@ -885,7 +885,7 @@ class RedundancyTests: RulesTests {
         let tupleArray = [(key: String, value: Int)]()
         let dictionary = [String: Int]()
         """
-        testFormatting(for: input, output, rule: FormatRules.redundantInit)
+        testFormatting(for: input, output, rule: FormatRules.redundantInit, exclude: ["propertyType"])
     }
 
     func testPreservesInitAfterTypeOfCall() {
@@ -906,7 +906,7 @@ class RedundancyTests: RulesTests {
         // (String!.init("Foo") isn't valid Swift code, so we don't test for it)
         """
 
-        testFormatting(for: input, output, rule: FormatRules.redundantInit)
+        testFormatting(for: input, output, rule: FormatRules.redundantInit, exclude: ["propertyType"])
     }
 
     func testPreservesTryBeforeInit() {
@@ -931,7 +931,7 @@ class RedundancyTests: RulesTests {
         let atomicDictionary = Atomic<[String: Int]>()
         """
 
-        testFormatting(for: input, output, rule: FormatRules.redundantInit, exclude: ["typeSugar"])
+        testFormatting(for: input, output, rule: FormatRules.redundantInit, exclude: ["typeSugar", "propertyType"])
     }
 
     // MARK: - redundantLetError
@@ -1399,7 +1399,7 @@ class RedundancyTests: RulesTests {
         }
         """
         let options = FormatOptions(redundantType: .explicit, swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options, exclude: ["wrapMultilineConditionalAssignment", "preferInferredTypes"])
+        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options, exclude: ["wrapMultilineConditionalAssignment", "propertyType"])
     }
 
     func testRedundantTypeWithNestedIfExpression_inferred() {
@@ -1477,7 +1477,7 @@ class RedundancyTests: RulesTests {
         }
         """
         let options = FormatOptions(redundantType: .explicit, swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options, exclude: ["wrapMultilineConditionalAssignment", "preferInferredTypes"])
+        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options, exclude: ["wrapMultilineConditionalAssignment", "propertyType"])
     }
 
     func testRedundantTypeWithLiteralsInIfExpression() {
@@ -1506,7 +1506,7 @@ class RedundancyTests: RulesTests {
         let output = "var view: UIView = .init()"
         let options = FormatOptions(redundantType: .explicit)
         testFormatting(for: input, output, rule: FormatRules.redundantType,
-                       options: options, exclude: ["preferInferredTypes"])
+                       options: options, exclude: ["propertyType"])
     }
 
     func testVarRedundantTypeRemovalExplicitType2() {
@@ -1514,7 +1514,7 @@ class RedundancyTests: RulesTests {
         let output = "var view: UIView = .init /* foo */()"
         let options = FormatOptions(redundantType: .explicit)
         testFormatting(for: input, output, rule: FormatRules.redundantType,
-                       options: options, exclude: ["spaceAroundComments", "preferInferredTypes"])
+                       options: options, exclude: ["spaceAroundComments", "propertyType"])
     }
 
     func testLetRedundantGenericTypeRemovalExplicitType() {
@@ -1522,7 +1522,7 @@ class RedundancyTests: RulesTests {
         let output = "let relay: BehaviourRelay<Int?> = .init(value: nil)"
         let options = FormatOptions(redundantType: .explicit)
         testFormatting(for: input, output, rule: FormatRules.redundantType,
-                       options: options, exclude: ["preferInferredTypes"])
+                       options: options, exclude: ["propertyType"])
     }
 
     func testLetRedundantGenericTypeRemovalExplicitTypeIfValueOnNextLine() {
@@ -1530,7 +1530,7 @@ class RedundancyTests: RulesTests {
         let output = "let relay: Foo<Int?> = \n    .default"
         let options = FormatOptions(redundantType: .explicit)
         testFormatting(for: input, output, rule: FormatRules.redundantType,
-                       options: options, exclude: ["trailingSpace", "preferInferredTypes"])
+                       options: options, exclude: ["trailingSpace", "propertyType"])
     }
 
     func testVarNonRedundantTypeDoesNothingExplicitType() {
@@ -1544,7 +1544,7 @@ class RedundancyTests: RulesTests {
         let output = "let view: UIView = .init()"
         let options = FormatOptions(redundantType: .explicit)
         testFormatting(for: input, output, rule: FormatRules.redundantType,
-                       options: options, exclude: ["preferInferredTypes"])
+                       options: options, exclude: ["propertyType"])
     }
 
     func testRedundantTypeRemovedIfValueOnNextLineExplicitType() {
@@ -1558,7 +1558,7 @@ class RedundancyTests: RulesTests {
         """
         let options = FormatOptions(redundantType: .explicit)
         testFormatting(for: input, output, rule: FormatRules.redundantType,
-                       options: options, exclude: ["preferInferredTypes"])
+                       options: options, exclude: ["propertyType"])
     }
 
     func testRedundantTypeRemovedIfValueOnNextLine2ExplicitType() {
@@ -1572,7 +1572,7 @@ class RedundancyTests: RulesTests {
         """
         let options = FormatOptions(redundantType: .explicit)
         testFormatting(for: input, output, rule: FormatRules.redundantType,
-                       options: options, exclude: ["preferInferredTypes"])
+                       options: options, exclude: ["propertyType"])
     }
 
     func testRedundantTypeRemovalWithCommentExplicitType() {
@@ -1580,7 +1580,7 @@ class RedundancyTests: RulesTests {
         let output = "var view: UIView /* view */ = .init()"
         let options = FormatOptions(redundantType: .explicit)
         testFormatting(for: input, output, rule: FormatRules.redundantType,
-                       options: options, exclude: ["preferInferredTypes"])
+                       options: options, exclude: ["propertyType"])
     }
 
     func testRedundantTypeRemovalWithComment2ExplicitType() {
@@ -1588,7 +1588,7 @@ class RedundancyTests: RulesTests {
         let output = "var view: UIView = /* view */ .init()"
         let options = FormatOptions(redundantType: .explicit)
         testFormatting(for: input, output, rule: FormatRules.redundantType,
-                       options: options, exclude: ["preferInferredTypes"])
+                       options: options, exclude: ["propertyType"])
     }
 
     func testRedundantTypeRemovalWithStaticMember() {
@@ -1610,7 +1610,7 @@ class RedundancyTests: RulesTests {
         """
         let options = FormatOptions(redundantType: .explicit)
         testFormatting(for: input, output, rule: FormatRules.redundantType,
-                       options: options, exclude: ["preferInferredTypes"])
+                       options: options, exclude: ["propertyType"])
     }
 
     func testRedundantTypeRemovalWithStaticFunc() {
@@ -1632,13 +1632,13 @@ class RedundancyTests: RulesTests {
         """
         let options = FormatOptions(redundantType: .explicit)
         testFormatting(for: input, output, rule: FormatRules.redundantType,
-                       options: options, exclude: ["preferInferredTypes"])
+                       options: options, exclude: ["propertyType"])
     }
 
     func testRedundantTypeDoesNothingWithChainedMember() {
         let input = "let session: URLSession = URLSession.default.makeCopy()"
         let options = FormatOptions(redundantType: .explicit)
-        testFormatting(for: input, rule: FormatRules.redundantType, options: options, exclude: ["preferInferredTypes"])
+        testFormatting(for: input, rule: FormatRules.redundantType, options: options, exclude: ["propertyType"])
     }
 
     func testRedundantRedundantChainedMemberTypeRemovedOnSwift5_4() {
@@ -1646,44 +1646,44 @@ class RedundancyTests: RulesTests {
         let output = "let session: URLSession = .default.makeCopy()"
         let options = FormatOptions(redundantType: .explicit, swiftVersion: "5.4")
         testFormatting(for: input, output, rule: FormatRules.redundantType,
-                       options: options, exclude: ["preferInferredTypes"])
+                       options: options, exclude: ["propertyType"])
     }
 
     func testRedundantTypeDoesNothingWithChainedMember2() {
         let input = "let color: UIColor = UIColor.red.withAlphaComponent(0.5)"
         let options = FormatOptions(redundantType: .explicit)
-        testFormatting(for: input, rule: FormatRules.redundantType, options: options, exclude: ["preferInferredTypes"])
+        testFormatting(for: input, rule: FormatRules.redundantType, options: options, exclude: ["propertyType"])
     }
 
     func testRedundantTypeDoesNothingWithChainedMember3() {
         let input = "let url: URL = URL(fileURLWithPath: #file).deletingLastPathComponent()"
         let options = FormatOptions(redundantType: .explicit)
-        testFormatting(for: input, rule: FormatRules.redundantType, options: options, exclude: ["preferInferredTypes"])
+        testFormatting(for: input, rule: FormatRules.redundantType, options: options, exclude: ["propertyType"])
     }
 
     func testRedundantTypeRemovedWithChainedMemberOnSwift5_4() {
         let input = "let url: URL = URL(fileURLWithPath: #file).deletingLastPathComponent()"
         let output = "let url: URL = .init(fileURLWithPath: #file).deletingLastPathComponent()"
         let options = FormatOptions(redundantType: .explicit, swiftVersion: "5.4")
-        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options, exclude: ["preferInferredTypes"])
+        testFormatting(for: input, output, rule: FormatRules.redundantType, options: options, exclude: ["propertyType"])
     }
 
     func testRedundantTypeDoesNothingIfLet() {
         let input = "if let foo: Foo = Foo() {}"
         let options = FormatOptions(redundantType: .explicit)
-        testFormatting(for: input, rule: FormatRules.redundantType, options: options, exclude: ["preferInferredTypes"])
+        testFormatting(for: input, rule: FormatRules.redundantType, options: options, exclude: ["propertyType"])
     }
 
     func testRedundantTypeDoesNothingGuardLet() {
         let input = "guard let foo: Foo = Foo() else {}"
         let options = FormatOptions(redundantType: .explicit)
-        testFormatting(for: input, rule: FormatRules.redundantType, options: options, exclude: ["preferInferredTypes"])
+        testFormatting(for: input, rule: FormatRules.redundantType, options: options, exclude: ["propertyType"])
     }
 
     func testRedundantTypeDoesNothingIfLetAfterComma() {
         let input = "if check == true, let foo: Foo = Foo() {}"
         let options = FormatOptions(redundantType: .explicit)
-        testFormatting(for: input, rule: FormatRules.redundantType, options: options, exclude: ["preferInferredTypes"])
+        testFormatting(for: input, rule: FormatRules.redundantType, options: options, exclude: ["propertyType"])
     }
 
     func testRedundantTypeWorksAfterIf() {
@@ -1697,7 +1697,7 @@ class RedundancyTests: RulesTests {
         """
         let options = FormatOptions(redundantType: .explicit)
         testFormatting(for: input, output, rule: FormatRules.redundantType,
-                       options: options, exclude: ["preferInferredTypes"])
+                       options: options, exclude: ["propertyType"])
     }
 
     func testRedundantTypeIfVoid() {
@@ -1705,7 +1705,7 @@ class RedundancyTests: RulesTests {
         let output = "let foo: [Void] = .init()"
         let options = FormatOptions(redundantType: .explicit)
         testFormatting(for: input, output, rule: FormatRules.redundantType,
-                       options: options, exclude: ["preferInferredTypes"])
+                       options: options, exclude: ["propertyType"])
     }
 
     func testRedundantTypeWithIntegerLiteralNotMangled() {
@@ -1745,8 +1745,7 @@ class RedundancyTests: RulesTests {
         }
         """
         let options = FormatOptions(redundantType: .explicit)
-        testFormatting(for: input, rule: FormatRules.redundantType, options: options,
-                       exclude: ["preferInferredTypes"])
+        testFormatting(for: input, rule: FormatRules.redundantType, options: options)
     }
 
     // --redundanttype infer-locals-only
@@ -1788,7 +1787,7 @@ class RedundancyTests: RulesTests {
 
         let options = FormatOptions(redundantType: .inferLocalsOnly)
         testFormatting(for: input, output, rule: FormatRules.redundantType,
-                       options: options, exclude: ["preferInferredTypes"])
+                       options: options, exclude: ["propertyType"])
     }
 
     // MARK: - redundantNilInit
@@ -2870,7 +2869,7 @@ class RedundancyTests: RulesTests {
         }()
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, rule: FormatRules.redundantClosure, options: options, exclude: ["redundantReturn"])
+        testFormatting(for: input, rule: FormatRules.redundantClosure, options: options, exclude: ["redundantReturn", "propertyType"])
     }
 
     func testNonRedundantSwitchStatementReturnInFunction() {
@@ -3413,19 +3412,19 @@ class RedundancyTests: RulesTests {
         let input = "var type = Foo.`true`"
         let output = "var type = Foo.true"
         let options = FormatOptions(swiftVersion: "4")
-        testFormatting(for: input, output, rule: FormatRules.redundantBackticks, options: options)
+        testFormatting(for: input, output, rule: FormatRules.redundantBackticks, options: options, exclude: ["propertyType"])
     }
 
     func testRemoveBackticksAroundProperty() {
         let input = "var type = Foo.`bar`"
         let output = "var type = Foo.bar"
-        testFormatting(for: input, output, rule: FormatRules.redundantBackticks)
+        testFormatting(for: input, output, rule: FormatRules.redundantBackticks, exclude: ["propertyType"])
     }
 
     func testRemoveBackticksAroundKeywordProperty() {
         let input = "var type = Foo.`default`"
         let output = "var type = Foo.default"
-        testFormatting(for: input, output, rule: FormatRules.redundantBackticks)
+        testFormatting(for: input, output, rule: FormatRules.redundantBackticks, exclude: ["propertyType"])
     }
 
     func testRemoveBackticksAroundKeypathProperty() {
@@ -3449,7 +3448,7 @@ class RedundancyTests: RulesTests {
     func testNoRemoveBackticksAroundInitPropertyInSwift5() {
         let input = "let foo: Foo = .`init`"
         let options = FormatOptions(swiftVersion: "5")
-        testFormatting(for: input, rule: FormatRules.redundantBackticks, options: options, exclude: ["preferInferredTypes"])
+        testFormatting(for: input, rule: FormatRules.redundantBackticks, options: options, exclude: ["propertyType"])
     }
 
     func testNoRemoveBackticksAroundAnyProperty() {
@@ -4021,7 +4020,7 @@ class RedundancyTests: RulesTests {
         let vc = UIHostingController(rootView: InspectionView(inspection: self.inspection))
         """
         let options = FormatOptions(selfRequired: ["InspectionView"])
-        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options, exclude: ["propertyType"])
     }
 
     func testNoMistakeProtocolClassModifierForClassFunction() {
@@ -6929,7 +6928,7 @@ class RedundancyTests: RulesTests {
             }
         }
         """
-        testFormatting(for: input, rule: FormatRules.redundantStaticSelf)
+        testFormatting(for: input, rule: FormatRules.redundantStaticSelf, exclude: ["propertyType"])
     }
 
     func testPreserveStaticSelfInInstanceFunction() {
@@ -7306,7 +7305,7 @@ class RedundancyTests: RulesTests {
             return parser
         }
         """
-        testFormatting(for: input, rule: FormatRules.unusedArguments, exclude: ["redundantProperty"])
+        testFormatting(for: input, rule: FormatRules.unusedArguments, exclude: ["redundantProperty", "propertyType"])
     }
 
     func testShadowedClosureArgument2() {
@@ -8271,7 +8270,7 @@ class RedundancyTests: RulesTests {
         lazy var bar = Bar()
         """
 
-        testFormatting(for: input, output, rule: FormatRules.redundantClosure)
+        testFormatting(for: input, output, rule: FormatRules.redundantClosure, exclude: ["propertyType"])
     }
 
     func testRemoveRedundantClosureInMultiLinePropertyDeclarationWithString() {
@@ -8308,7 +8307,7 @@ class RedundancyTests: RulesTests {
         """
 
         testFormatting(for: input, [output], rules: [FormatRules.redundantReturn, FormatRules.redundantClosure,
-                                                     FormatRules.semicolons])
+                                                     FormatRules.semicolons], exclude: ["propertyType"])
     }
 
     func testRemoveRedundantClosureInWrappedPropertyDeclaration_beforeFirst() {
@@ -8329,7 +8328,7 @@ class RedundancyTests: RulesTests {
         let options = FormatOptions(wrapArguments: .beforeFirst, closingParenOnSameLine: true)
         testFormatting(for: input, [output],
                        rules: [FormatRules.redundantClosure, FormatRules.wrapArguments],
-                       options: options)
+                       options: options, exclude: ["propertyType"])
     }
 
     func testRemoveRedundantClosureInWrappedPropertyDeclaration_afterFirst() {
@@ -8348,7 +8347,7 @@ class RedundancyTests: RulesTests {
         let options = FormatOptions(wrapArguments: .afterFirst, closingParenOnSameLine: true)
         testFormatting(for: input, [output],
                        rules: [FormatRules.redundantClosure, FormatRules.wrapArguments],
-                       options: options)
+                       options: options, exclude: ["propertyType"])
     }
 
     func testRedundantClosureKeepsMultiStatementClosureThatSetsProperty() {
@@ -8516,7 +8515,7 @@ class RedundancyTests: RulesTests {
         lazy var foo = Foo(handle: { fatalError() })
         """
 
-        testFormatting(for: input, output, rule: FormatRules.redundantClosure)
+        testFormatting(for: input, output, rule: FormatRules.redundantClosure, exclude: ["propertyType"])
     }
 
     func testPreservesClosureWithMultipleVoidMethodCalls() {
@@ -9102,7 +9101,7 @@ class RedundancyTests: RulesTests {
 
         let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, output, rule: FormatRules.redundantClosure, options: options,
-                       exclude: ["redundantReturn", "blankLinesBetweenScopes"])
+                       exclude: ["redundantReturn", "blankLinesBetweenScopes", "propertyType"])
     }
 
     func testRedundantClosureWithSwitchExpressionDoesntBreakBuildWithRedundantReturnRuleDisabled() {
@@ -9139,7 +9138,7 @@ class RedundancyTests: RulesTests {
 
         let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, [output], rules: [FormatRules.redundantReturn, FormatRules.redundantClosure],
-                       options: options, exclude: ["indent", "blankLinesBetweenScopes", "wrapMultilineConditionalAssignment"])
+                       options: options, exclude: ["indent", "blankLinesBetweenScopes", "wrapMultilineConditionalAssignment", "propertyType"])
     }
 
     func testRemovesRedundantClosureWithGenericExistentialTypes() {
@@ -9625,7 +9624,7 @@ class RedundancyTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, [output], rules: [FormatRules.preferInferredTypes, FormatRules.redundantProperty, FormatRules.redundantInit], exclude: ["redundantReturn"])
+        testFormatting(for: input, [output], rules: [FormatRules.propertyType, FormatRules.redundantProperty, FormatRules.redundantInit], exclude: ["redundantReturn"])
     }
 
     func testRemovesRedundantPropertyWithComments() {

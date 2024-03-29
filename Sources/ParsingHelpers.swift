@@ -1311,8 +1311,13 @@ extension Formatter {
     ///  - `borrowing ...`
     ///  - `consuming ...`
     ///  - `(type).(type)`
-    func parseType(at startOfTypeIndex: Int) -> (name: String, range: ClosedRange<Int>)? {
-        guard let baseType = parseNonOptionalType(at: startOfTypeIndex) else { return nil }
+    func parseType(
+        at startOfTypeIndex: Int,
+        excludeLowercaseIdentifiers: Bool = false
+    )
+        -> (name: String, range: ClosedRange<Int>)?
+    {
+        guard let baseType = parseNonOptionalType(at: startOfTypeIndex, excludeLowercaseIdentifiers: excludeLowercaseIdentifiers) else { return nil }
 
         // Any type can be optional, so check for a trailing `?` or `!`
         if let nextToken = index(of: .nonSpaceOrCommentOrLinebreak, after: baseType.range.upperBound),
@@ -1326,7 +1331,7 @@ extension Formatter {
         if let nextTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: baseType.range.upperBound),
            tokens[nextTokenIndex] == .operator(".", .infix),
            let followingToken = index(of: .nonSpaceOrCommentOrLinebreak, after: nextTokenIndex),
-           let followingType = parseType(at: followingToken)
+           let followingType = parseType(at: followingToken, excludeLowercaseIdentifiers: excludeLowercaseIdentifiers)
         {
             let typeRange = startOfTypeIndex ... followingType.range.upperBound
             return (name: tokens[typeRange].string, range: typeRange)
@@ -1335,10 +1340,33 @@ extension Formatter {
         return baseType
     }
 
-    private func parseNonOptionalType(at startOfTypeIndex: Int) -> (name: String, range: ClosedRange<Int>)? {
-        // Parse types of the form `[...]`
+    private func parseNonOptionalType(
+        at startOfTypeIndex: Int,
+        excludeLowercaseIdentifiers: Bool
+    )
+        -> (name: String, range: ClosedRange<Int>)?
+    {
         let startToken = tokens[startOfTypeIndex]
+
+        // Parse types of the form `[...]`
         if startToken == .startOfScope("["), let endOfScope = endOfScope(at: startOfTypeIndex) {
+            // Validate that the inner type is also valid
+            guard let innerTypeStartIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfTypeIndex),
+                  let innerType = parseType(at: innerTypeStartIndex, excludeLowercaseIdentifiers: excludeLowercaseIdentifiers),
+                  let indexAfterType = index(of: .nonSpaceOrCommentOrLinebreak, after: innerType.range.upperBound)
+            else { return nil }
+
+            // This is either an array type of the form `[Element]`,
+            // or a dictionary type of the form `[Key: Value]`.
+            if indexAfterType != endOfScope {
+                guard tokens[indexAfterType] == .delimiter(":"),
+                      let secondTypeIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: indexAfterType),
+                      let secondType = parseType(at: secondTypeIndex, excludeLowercaseIdentifiers: excludeLowercaseIdentifiers),
+                      let indexAfterSecondType = index(of: .nonSpaceOrCommentOrLinebreak, after: secondType.range.upperBound),
+                      indexAfterSecondType == endOfScope
+                else { return nil }
+            }
+
             let typeRange = startOfTypeIndex ... endOfScope
             return (name: tokens[typeRange].string, range: typeRange)
         }
@@ -1380,6 +1408,14 @@ extension Formatter {
 
         // Otherwise this is just a single identifier
         if startToken.isIdentifier || startToken.isKeywordOrAttribute, startToken != .identifier("init") {
+            let firstCharacter = startToken.string.first.flatMap(String.init) ?? ""
+            let isLowercaseIdentifier = firstCharacter.uppercased() != firstCharacter
+
+            guard !(excludeLowercaseIdentifiers && isLowercaseIdentifier),
+                  // Don't parse macro invocations or `#selector` as a type.
+                  !["#"].contains(firstCharacter)
+            else { return nil }
+
             return (name: startToken.string, range: startOfTypeIndex ... startOfTypeIndex)
         }
 
@@ -2149,7 +2185,7 @@ extension Formatter {
         case type
 
         /// The declaration is within some local scope,
-        /// like a function body.
+        /// like a function body or closure.
         case local
     }
 
@@ -2160,7 +2196,7 @@ extension Formatter {
         let typeDeclarations = Set(["class", "actor", "struct", "enum", "extension"])
 
         // Declarations which have `DeclarationScope.local`
-        let localDeclarations = Set(["let", "var", "func", "subscript", "init", "deinit"])
+        let localDeclarations = Set(["let", "var", "func", "subscript", "init", "deinit", "get", "set", "willSet", "didSet"])
 
         let allDeclarationScopes = typeDeclarations.union(localDeclarations)
 

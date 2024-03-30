@@ -865,6 +865,70 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantInit, exclude: ["indent"])
     }
 
+    func testRemoveInitAfterCollectionLiterals() {
+        let input = """
+        let array = [String].init()
+        let arrayElement = [String].Element.init()
+        let nestedArray = [[String]].init()
+        let tupleArray = [(key: String, value: Int)].init()
+        let dictionary = [String: Int].init()
+        """
+        let output = """
+        let array = [String]()
+        let arrayElement = [String].Element()
+        let nestedArray = [[String]]()
+        let tupleArray = [(key: String, value: Int)]()
+        let dictionary = [String: Int]()
+        """
+        testFormatting(for: input, output, rule: FormatRules.redundantInit)
+    }
+
+    func testPreservesInitAfterTypeOfCall() {
+        let input = """
+        type(of: oldViewController).init()
+        """
+
+        testFormatting(for: input, rule: FormatRules.redundantInit)
+    }
+
+    func testRemoveInitAfterOptionalType() {
+        let input = """
+        let someOptional = String?.init("Foo")
+        // (String!.init("Foo") isn't valid Swift code, so we don't test for it)
+        """
+        let output = """
+        let someOptional = String?("Foo")
+        // (String!.init("Foo") isn't valid Swift code, so we don't test for it)
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.redundantInit)
+    }
+
+    func testPreservesTryBeforeInit() {
+        let input = """
+        let throwing: Foo = try .init()
+        let throwingOptional1: Foo = try? .init()
+        let throwingOptional2: Foo = try! .init()
+        """
+
+        testFormatting(for: input, rule: FormatRules.redundantInit)
+    }
+
+    func testRemoveInitAfterGenericType() {
+        let input = """
+        let array = Array<String>.init()
+        let dictionary = Dictionary<String, Int>.init()
+        let atomicDictionary = Atomic<[String: Int]>.init()
+        """
+        let output = """
+        let array = Array<String>()
+        let dictionary = Dictionary<String, Int>()
+        let atomicDictionary = Atomic<[String: Int]>()
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.redundantInit, exclude: ["typeSugar"])
+    }
+
     // MARK: - redundantLetError
 
     func testCatchLetError() {

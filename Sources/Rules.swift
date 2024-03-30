@@ -2710,15 +2710,20 @@ public struct _FormatRules {
                 innerParens = nestedParens(in: i ... closingIndex)
             }
             var isClosure = false
+            let previousIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i) ?? -1
+            let prevToken = formatter.token(at: previousIndex) ?? .space("")
             let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: closingIndex) ?? .space("")
             switch nextToken {
             case .operator("->", .infix), .keyword("throws"), .keyword("rethrows"),
                  .identifier("async"), .keyword("in"):
-                guard let prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i) else {
-                    return
+                if prevToken != .keyword("throws"),
+                   formatter.index(before: i, where: {
+                       [.endOfScope(")"), .operator("->", .infix), .keyword("for")].contains($0)
+                   }) == nil,
+                   let scopeIndex = formatter.startOfScope(at: i)
+                {
+                    isClosure = formatter.isStartOfClosure(at: scopeIndex)
                 }
-                isClosure = formatter.tokens[prevIndex] == .endOfScope("]") ||
-                    formatter.isStartOfClosure(at: prevIndex)
                 if !isClosure, nextToken != .keyword("in") {
                     return // It's a closure type or function declaration
                 }
@@ -2731,8 +2736,6 @@ public struct _FormatRules {
             default:
                 break
             }
-            let previousIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i) ?? -1
-            let prevToken = formatter.token(at: previousIndex) ?? .space("")
             switch prevToken {
             case _ where isClosure:
                 if formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i) == closingIndex ||

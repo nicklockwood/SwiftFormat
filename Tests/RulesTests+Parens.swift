@@ -570,6 +570,12 @@ class ParensTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantParens, exclude: ["unusedArguments"])
     }
 
+    func testSingleMainActorClosureArgumentUnwrapped() {
+        let input = "{ @MainActor (foo) in }"
+        let output = "{ @MainActor foo in }"
+        testFormatting(for: input, output, rule: FormatRules.redundantParens, exclude: ["unusedArguments"])
+    }
+
     func testSingleClosureArgumentWithReturnValueUnwrapped() {
         let input = "{ (foo) -> Int in 5 }"
         let output = "{ foo -> Int in 5 }"
@@ -631,7 +637,21 @@ class ParensTests: RulesTests {
 
     func testNoRemoveParensAroundArrayInitializer() {
         let input = "let foo = bar { [Int](foo) }"
-        testFormatting(for: input, rule: FormatRules.spaceAroundParens)
+        testFormatting(for: input, rule: FormatRules.redundantParens)
+    }
+
+    func testNoRemoveParensAroundForIndexInsideClosure() {
+        let input = """
+        let foo = {
+            for (i, token) in bar {}
+        }()
+        """
+        testFormatting(for: input, rule: FormatRules.redundantParens)
+    }
+
+    func testNoRemoveRequiredParensInsideClosure() {
+        let input = "let foo = { _ in (a + b).c }"
+        testFormatting(for: input, rule: FormatRules.redundantParens)
     }
 
     // before trailing closure

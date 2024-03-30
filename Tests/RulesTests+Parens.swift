@@ -521,6 +521,11 @@ class ParensTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantParens)
     }
 
+    func testParensAroundParameterPackEachNotRemoved() {
+        let input = "func f<each V>(_: repeat ((each V).Type, as: (each V) -> String)) {}"
+        testFormatting(for: input, rule: FormatRules.redundantParens)
+    }
+
     func testRedundantParensRemovedAroundOptionalClosureType() {
         let input = "let foo = ((() -> ()))?"
         let output = "let foo = (() -> ())?"

@@ -2839,7 +2839,7 @@ public struct _FormatRules {
                 guard formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i) != closingIndex,
                       formatter.index(in: i + 1 ..< closingIndex, where: {
                           switch $0 {
-                          case .operator(_, .infix), .identifier("any"), .identifier("some"),
+                          case .operator(_, .infix), .identifier("any"), .identifier("some"), .identifier("each"),
                                .keyword("as"), .keyword("is"), .keyword("try"), .keyword("await"):
                               switch prevToken {
                               // TODO: add option to always strip parens in this case (or only for boolean operators?)

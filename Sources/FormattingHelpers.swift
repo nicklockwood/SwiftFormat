@@ -329,8 +329,7 @@ extension Formatter {
             endOfFunctionScope: Int
         ) {
             guard token(at: startOfScope) == .startOfScope("("),
-                  let openBracket = index(of: .startOfScope, after: endOfFunctionScope),
-                  token(at: openBracket) == .startOfScope("{")
+                  let openBracket = index(of: .startOfScope("{"), after: endOfFunctionScope)
             else { return }
 
             func wrap(before index: Int) {

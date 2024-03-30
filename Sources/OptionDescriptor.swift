@@ -991,7 +991,7 @@ struct _Descriptors {
         argumentName: "doccomments",
         displayName: "Doc comments",
         help: "Preserve doc comments: \"default\" or \"preserve\".",
-        keyPath: \.preserveSingleLineForEach,
+        keyPath: \.preserveDocComments,
         trueValues: ["preserve"],
         falseValues: ["default"]
     )
@@ -1051,6 +1051,12 @@ struct _Descriptors {
         displayName: "Swift Version",
         help: "The version of Swift used in the files being formatted",
         keyPath: \.swiftVersion
+    )
+    let preserveSymbols = OptionDescriptor(
+        argumentName: "preservesymbols",
+        displayName: "Preserve Symbols",
+        help: "Comma-delimited list of symbol names to preserve",
+        keyPath: \.preserveSymbols
     )
 
     // MARK: - DEPRECATED

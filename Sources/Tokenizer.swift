@@ -1831,7 +1831,14 @@ public func tokenize(_ source: String) -> [Token] {
                     scopeIndex = scopeIndexStack[scopeStackIndex]
                     scope = tokens[scopeIndex]
                 }
-                if [.startOfScope("{"), .startOfScope(":")].contains(scope) {
+                switch scope {
+                case .startOfScope("("):
+                    if scopeIndex > 0, tokens[scopeIndex - 1].isAttribute {
+                        tokens[tokens.count - 1] = .identifier(string)
+                        processToken()
+                        return
+                    }
+                case .startOfScope("{"), .startOfScope(":"):
                     switch string {
                     case "default":
                         tokens[tokens.count - 1] = .endOfScope(string)
@@ -1867,6 +1874,8 @@ public func tokenize(_ source: String) -> [Token] {
                     default:
                         break
                     }
+                default:
+                    break
                 }
             } else if scope == .startOfScope(":") {
                 if [.keyword("#else"), .keyword("#elseif")].contains(token) {

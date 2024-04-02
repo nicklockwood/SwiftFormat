@@ -1746,6 +1746,22 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testAttributeArguments() {
+        let input = "@derivative(of: subscript.get)"
+        let output: [Token] = [
+            .keyword("@derivative"),
+            .startOfScope("("),
+            .identifier("of"),
+            .delimiter(":"),
+            .space(" "),
+            .identifier("subscript"),
+            .operator(".", .infix),
+            .identifier("get"),
+            .endOfScope(")"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     func testKeywordsAsArgumentLabelNames() {
         let input = "foo(for: bar, if: baz)"
         let output: [Token] = [

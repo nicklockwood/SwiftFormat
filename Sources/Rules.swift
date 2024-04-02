@@ -769,18 +769,33 @@ public struct _FormatRules {
             // The implementation of RedundantType uses inferred or explicit,
             // potentially depending on the context.
             let isInferred: Bool
+            let declarationKeywordIndex: Int?
             switch formatter.options.redundantType {
             case .inferred:
                 isInferred = true
+                declarationKeywordIndex = nil
             case .explicit:
                 isInferred = false
+                declarationKeywordIndex = formatter.declarationIndexAndScope(at: equalsIndex).index
             case .inferLocalsOnly:
-                switch formatter.declarationScope(at: equalsIndex) {
+                let (index, scope) = formatter.declarationIndexAndScope(at: equalsIndex)
+                switch scope {
                 case .global, .type:
                     isInferred = false
+                    declarationKeywordIndex = index
                 case .local:
                     isInferred = true
+                    declarationKeywordIndex = nil
                 }
+            }
+
+            // Explicit type can't be safely removed from @Model classes
+            // https://github.com/nicklockwood/SwiftFormat/issues/1649
+            if !isInferred,
+               let declarationKeywordIndex = declarationKeywordIndex,
+               formatter.modifiersForDeclaration(at: declarationKeywordIndex, contains: "@Model")
+            {
+                return
             }
 
             // Removes a type already processed by `compare(typeStartingAfter:withTypeStartingAfter:)`

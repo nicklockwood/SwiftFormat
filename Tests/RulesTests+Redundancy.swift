@@ -1727,6 +1727,18 @@ class RedundancyTests: RulesTests {
                        options: options)
     }
 
+    func testRedundantTypeInModelClassNotStripped() {
+        // See: https://github.com/nicklockwood/SwiftFormat/issues/1649
+        let input = """
+        @Model
+        class FooBar {
+            var created: Date = Date.now
+        }
+        """
+        let options = FormatOptions(redundantType: .explicit)
+        testFormatting(for: input, rule: FormatRules.redundantType, options: options)
+    }
+
     // --redundanttype infer-locals-only
 
     func testRedundantTypeinferLocalsOnly() {

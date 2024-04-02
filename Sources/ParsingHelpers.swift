@@ -1991,9 +1991,9 @@ extension Formatter {
         case local
     }
 
-    /// Returns the declaration scope (global, type, or local) that the
-    /// given token index is contained by.
-    func declarationScope(at i: Int) -> DeclarationScope {
+    /// Returns the index of the start of the declaration scope that the given token index is contained by,
+    /// and the type (global, type, or local)
+    func declarationIndexAndScope(at i: Int) -> (index: Int?, scope: DeclarationScope) {
         // Declarations which have `DeclarationScope.type`
         let typeDeclarations = Set(["class", "actor", "struct", "enum", "extension"])
 
@@ -2015,6 +2015,15 @@ extension Formatter {
             if tokens[currentIndex] == .endOfScope("}") {
                 unpairedEndScopeCount += 1
             } else if tokens[currentIndex] == .startOfScope("{") {
+                // If we find a closure or conditional statement that contains the index we're checking,
+                // we know the inner code is local.
+                if let endOfScope = endOfScope(at: currentIndex),
+                   (currentIndex ... endOfScope).contains(i),
+                   isStartOfClosureOrFunctionBody(at: currentIndex) || isConditionalStatement(at: currentIndex)
+                {
+                    return (nil, .local)
+                }
+
                 if unpairedEndScopeCount == 0 {
                     startOfScope = currentIndex
                 } else {
@@ -2025,17 +2034,32 @@ extension Formatter {
 
         // If this declaration isn't within any scope,
         // it must be a global.
-        guard let startOfScopeIndex = startOfScope,
-              let declarationTypeKeyword = lastToken(before: startOfScopeIndex, where: { allDeclarationScopes.contains($0.string) })
-        else {
-            return .global
+        guard let startOfScopeIndex = startOfScope else {
+            return (nil, .global)
         }
 
-        if typeDeclarations.contains(declarationTypeKeyword.string) {
-            return .type
-        } else {
-            return .local
+        // Code within closures and conditionals is always local
+        if isStartOfClosureOrFunctionBody(at: startOfScopeIndex) || isConditionalStatement(at: startOfScopeIndex) {
+            return (nil, .local)
         }
+
+        guard let declarationKeywordIndex = index(before: startOfScopeIndex, where: {
+            allDeclarationScopes.contains($0.string)
+        }) else {
+            return (nil, .global)
+        }
+
+        if typeDeclarations.contains(tokens[declarationKeywordIndex].string) {
+            return (declarationKeywordIndex, .type)
+        } else {
+            return (nil, .local)
+        }
+    }
+
+    /// Returns the declaration scope (global, type, or local) that the
+    /// given token index is contained by.
+    func declarationScope(at i: Int) -> DeclarationScope {
+        declarationIndexAndScope(at: i).scope
     }
 
     /// Swift modifier keywords, in preferred order

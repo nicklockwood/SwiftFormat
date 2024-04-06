@@ -878,7 +878,7 @@ struct _Descriptors {
     let acronyms = OptionDescriptor(
         argumentName: "acronyms",
         displayName: "Acronyms",
-        help: "Acronyms to auto-capitalize. Defaults to \"ID,URL,UUID\".",
+        help: "Acronyms to auto-capitalize. Defaults to \"ID,URL,UUID\"",
         keyPath: \.acronyms
     )
     let indentStrings = OptionDescriptor(
@@ -928,7 +928,7 @@ struct _Descriptors {
     let preserveAnonymousForEach = OptionDescriptor(
         argumentName: "anonymousforeach",
         displayName: "Anonymous forEach closures",
-        help: "Convert anonymous forEach: \"convert\" (default) or \"ignore\".",
+        help: "Convert anonymous forEach: \"convert\" (default) or \"ignore\"",
         keyPath: \.preserveAnonymousForEach,
         trueValues: ["ignore", "preserve"],
         falseValues: ["convert"]
@@ -936,7 +936,7 @@ struct _Descriptors {
     let preserveSingleLineForEach = OptionDescriptor(
         argumentName: "onelineforeach",
         displayName: "Single-line forEach closures",
-        help: "Convert one-line forEach: \"convert\" or \"ignore\" (default).",
+        help: "Convert one-line forEach: \"convert\" or \"ignore\" (default)",
         keyPath: \.preserveSingleLineForEach,
         trueValues: ["ignore", "preserve"],
         falseValues: ["convert"]
@@ -944,10 +944,10 @@ struct _Descriptors {
     let preserveDocComments = OptionDescriptor(
         argumentName: "doccomments",
         displayName: "Doc comments",
-        help: "Preserve doc comments: \"default\" or \"preserve\".",
+        help: "Doc comments: \"before-declarations\" (default) or \"preserve\"",
         keyPath: \.preserveDocComments,
         trueValues: ["preserve"],
-        falseValues: ["default"]
+        falseValues: ["before-declarations", "declarations"]
     )
 
     // MARK: - Internal

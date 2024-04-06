@@ -22,6 +22,7 @@ Table of Contents
     - [Sublime Text plugin](#sublime-text-plugin)
     - [Nova plugin](nova-plugin)
     - [Git pre-commit hook](#git-pre-commit-hook)
+    - [GitHub Actions](#github-actions)
     - [On CI using Danger](#on-ci-using-danger)
     - [Bazel build](#bazel-build)
     - [Docker](#docker)
@@ -445,6 +446,25 @@ The pre-commit hook will now run whenever you run `git commit`. Running `git com
 
 **NOTE (2):** Unlike the Xcode build phase approach, git pre-commit hook won't be checked in to source control, and there's no way to guarantee that all users of the project are using the same version of SwiftFormat. For a collaborative project, you might want to consider a *post*-commit hook instead, which would run on your continuous integration server.
 
+GitHub Actions
+---------------------
+
+1. SwiftFormat comes preinstalled on all macOS GitHub-hosted runners. If you are self hosting you will need to ensure SwiftFormat is installed on your runner.
+2. Create a GitHub Actions workflow using SwiftFormat, passing the `--reporter github-actions-log` command line option. The following example action lints pull requests using SwiftFormat, reporting warnings using the GitHub Actions log.
+```yaml
+# Lint.yml
+name: Lint
+on: pull_request
+
+jobs:
+  Lint:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: SwiftFormat
+        run: swiftformat --lint . --reporter github-actions-log
+```
+
 On CI using Danger
 -------------------
 
@@ -635,7 +655,7 @@ The preferred option is to add a `.swift-version` file to your project directory
 
 The `.swift-version` file applies hierarchically; If you have submodules in your project that use a different Swift version, you can add separate `.swift-version` files to those directories.
 
-The other option to specify the Swift version using the `--swiftversion` command line argument. Note that this will be overridden by any `.swift-version` files encountered while processing.
+The other option to specify the Swift version using the `--swiftversion` command line argument. Note that this will be overridden by any `.swift-version` files encountered while processing. You can also add the `--swiftversion` option to your `.swiftformat` file.
 
 
 Config file

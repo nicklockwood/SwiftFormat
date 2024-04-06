@@ -1,5 +1,17 @@
 # Change Log
 
+## [0.53.6](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.53.6) (2024-04-11)
+
+- Fixed bug where a space was incorrectly added before a `.` operator inside attribute arguments
+- The `redundantType` rule no longer strips required explicit type from `@Model` class default values
+- Fixed issue where `redundantInit` didn't work on collection types
+- The `redundantParens` rule now correctly handles `@MainActor` closures
+- Fixed bug where required parens were removed around `each X` parameter pack expressions
+- Fixed issue where `--wrapreturntype if-multiline` didn't work with arrays, dictionaries, tuples, or generic types
+- The `spaceAroundParens/Brackets` rules now correctly insert a space after `borrowing`/`consuming` and `isolated`
+- Fixed spurious line breaks inserted between scoped `import` statements
+- Added `--doccomments preserve` option to preserve all doc comments, even if not followed by a declaration
+
 ## [0.53.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.53.5) (2024-03-17)
 
 - Fixed bug with trailing comma being inserted into wrapped capture list

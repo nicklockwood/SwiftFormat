@@ -32,7 +32,7 @@
 import Foundation
 
 /// The current SwiftFormat version
-let swiftFormatVersion = "0.53.5"
+let swiftFormatVersion = "0.53.6"
 public let version = swiftFormatVersion
 
 /// The standard SwiftFormat config file name

@@ -3962,20 +3962,24 @@ public struct _FormatRules {
     ) { formatter in
 
         func shouldWrapCaseRangeGroup(_ caseRangeGroup: [Formatter.EnumCaseRange]) -> Bool {
-            formatter.options.wrapEnumCases == .always
-                || caseRangeGroup
-                .first(
-                    where: { formatter.tokens[$0.value].contains { token in
-                        token == .startOfScope("(") || token == .operator("=", .infix)
-                    }}
-                ) != nil
+            guard let firstIndex = caseRangeGroup.first?.value.lowerBound,
+                  let scopeStart = formatter.startOfScope(at: firstIndex),
+                  formatter.tokens[scopeStart ..< firstIndex].contains(where: { $0.isLinebreak })
+            else {
+                // Don't wrap if first case is on same line as opening `{`
+                return false
+            }
+            return formatter.options.wrapEnumCases == .always || caseRangeGroup.contains(where: {
+                formatter.tokens[$0.value].contains(where: {
+                    [.startOfScope("("), .operator("=", .infix)].contains($0)
+                })
+            })
         }
 
         formatter.parseEnumCaseRanges()
             .filter(shouldWrapCaseRangeGroup)
             .flatMap { $0 }
             .filter { $0.endOfCaseRangeToken == .delimiter(",") }
-            .sorted()
             .reversed()
             .forEach { enumCase in
                 guard var nextNonSpaceIndex = formatter.index(of: .nonSpace, after: enumCase.value.upperBound) else {

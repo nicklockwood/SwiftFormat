@@ -4675,6 +4675,11 @@ class WrappingTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.wrapEnumCases, exclude: ["indent"])
     }
 
+    func testNoWrapSingleLineEnumCases() {
+        let input = "enum Foo { case foo, bar }"
+        testFormatting(for: input, rule: FormatRules.wrapEnumCases)
+    }
+
     // MARK: wrapSwitchCases
 
     func testMultilineSwitchCases() {

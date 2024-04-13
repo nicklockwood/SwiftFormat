@@ -2752,20 +2752,6 @@ public struct _FormatRules {
                 break
             }
             switch prevToken {
-            case _ where isClosure:
-                if formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i) == closingIndex ||
-                    formatter.index(of: .delimiter(":"), in: i + 1 ..< closingIndex) != nil ||
-                    formatter.tokens[i + 1 ..< closingIndex].contains(.identifier("self"))
-                {
-                    return
-                }
-                if let index = formatter.tokens[i + 1 ..< closingIndex].firstIndex(of: .identifier("_")),
-                   formatter.next(.nonSpaceOrComment, after: index)?.isIdentifier == true
-                {
-                    return
-                }
-                formatter.removeParen(at: closingIndex)
-                formatter.removeParen(at: i)
             case .stringBody, .operator("?", .postfix), .operator("!", .postfix), .operator("->", .infix):
                 return
             case .identifier: // TODO: are trailing closures allowed in other cases?
@@ -2776,6 +2762,20 @@ public struct _FormatRules {
                       }),
                       formatter.isStartOfClosure(at: openingIndex)
                 else {
+                    return
+                }
+                formatter.removeParen(at: closingIndex)
+                formatter.removeParen(at: i)
+            case _ where isClosure:
+                if formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i) == closingIndex ||
+                    formatter.index(of: .delimiter(":"), in: i + 1 ..< closingIndex) != nil ||
+                    formatter.tokens[i + 1 ..< closingIndex].contains(.identifier("self"))
+                {
+                    return
+                }
+                if let index = formatter.tokens[i + 1 ..< closingIndex].firstIndex(of: .identifier("_")),
+                   formatter.next(.nonSpaceOrComment, after: index)?.isIdentifier == true
+                {
                     return
                 }
                 formatter.removeParen(at: closingIndex)

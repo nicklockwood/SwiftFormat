@@ -1025,4 +1025,16 @@ class ParensTests: RulesTests {
         let input = "(repeat (each foo, each bar))"
         testFormatting(for: input, rule: FormatRules.redundantParens)
     }
+
+    // in async expression
+
+    func testRequiredParensNotRemovedInAsyncLet() {
+        let input = """
+        Task {
+            async let dataTask1: Void = someTask(request)
+            async let dataTask2: Void = someTask(request)
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantParens)
+    }
 }

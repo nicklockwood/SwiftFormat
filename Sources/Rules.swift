@@ -4001,9 +4001,10 @@ public struct _FormatRules {
                     formatter.insertLinebreak(at: nextNonSpaceIndex)
                 }
 
+                let offset = indent.isEmpty ? 0 : 1
                 formatter.insertSpace(indent, at: nextNonSpaceIndex + 1)
-                formatter.insert([.keyword("case")], at: nextNonSpaceIndex + 2)
-                formatter.insertSpace(" ", at: nextNonSpaceIndex + 3)
+                formatter.insert([.keyword("case")], at: nextNonSpaceIndex + 1 + offset)
+                formatter.insertSpace(" ", at: nextNonSpaceIndex + 2 + offset)
             }
     }
 

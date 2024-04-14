@@ -1252,17 +1252,14 @@ extension Formatter {
 
     private func parseNonOptionalType(at startOfTypeIndex: Int) -> (name: String, range: ClosedRange<Int>)? {
         // Parse types of the form `[...]`
-        if tokens[startOfTypeIndex] == .startOfScope("["),
-           let endOfScope = endOfScope(at: startOfTypeIndex)
-        {
+        let startToken = tokens[startOfTypeIndex]
+        if startToken == .startOfScope("["), let endOfScope = endOfScope(at: startOfTypeIndex) {
             let typeRange = startOfTypeIndex ... endOfScope
             return (name: tokens[typeRange].string, range: typeRange)
         }
 
         // Parse types of the form `(...)` or `(...) -> ...`
-        if tokens[startOfTypeIndex] == .startOfScope("("),
-           let endOfScope = endOfScope(at: startOfTypeIndex)
-        {
+        if startToken == .startOfScope("("), let endOfScope = endOfScope(at: startOfTypeIndex) {
             // Parse types of the form `(...) -> ...`
             if let closureReturnIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfScope),
                tokens[closureReturnIndex] == .operator("->", .infix),
@@ -1288,7 +1285,7 @@ extension Formatter {
         }
 
         // Parse types of the form `any ...`, `some ...`, `borrowing ...`, `consuming ...`
-        if ["any", "some", "borrowing", "consuming"].contains(tokens[startOfTypeIndex].string),
+        if ["any", "some", "borrowing", "consuming"].contains(startToken.string),
            let nextToken = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfTypeIndex),
            let followingType = parseType(at: nextToken)
         {
@@ -1297,8 +1294,8 @@ extension Formatter {
         }
 
         // Otherwise this is just a single identifier
-        if tokens[startOfTypeIndex].isIdentifier || tokens[startOfTypeIndex].isKeywordOrAttribute {
-            return (name: tokens[startOfTypeIndex].string, range: startOfTypeIndex ... startOfTypeIndex)
+        if startToken.isIdentifier || startToken.isKeywordOrAttribute, startToken != .identifier("init") {
+            return (name: startToken.string, range: startOfTypeIndex ... startOfTypeIndex)
         }
 
         return nil

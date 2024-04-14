@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.53.7](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.53.7) (2024-04-14)
+
+- Fixed bug with `redundantParens` where first parens inside a closure were spuriously removed
+- Fixed `wrapEnumCases` rule mangling unindented cases
+- The `wrapEnumCases` rule no longer wraps cases inside inline enum declarations
+- Improved the `redundantInit` metatype heuristic to reduce false positives 
+
 ## [0.53.6](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.53.6) (2024-04-11)
 
 - Fixed bug where a space was incorrectly added before a `.` operator inside attribute arguments

@@ -773,6 +773,11 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantInit)
     }
 
+    func testDontRemoveInitWhenUsedOnPossibleMetatype() {
+        let input = "let something = Foo.bar.init()"
+        testFormatting(for: input, rule: FormatRules.redundantInit)
+    }
+
     func testDontRemoveInitWithExplicitSignature() {
         let input = "[String.self].map(Foo.init(bar:))"
         testFormatting(for: input, rule: FormatRules.redundantInit)

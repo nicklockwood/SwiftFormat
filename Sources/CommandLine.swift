@@ -201,6 +201,7 @@ func printHelp(as type: CLI.OutputType) {
     --report           Path to a file where --lint output should be written
     --reporter         Report format: \(Reporters.help)
     --lenient          Suppress errors for unformatted code in --lint mode
+    --strict           Emit errors for unformatted code when formatting
     --verbose          Display detailed formatting output and warnings/errors
     --quiet            Disables non-critical output messages and warnings
 
@@ -311,6 +312,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
     var errors = [Error]()
     var verbose = false
     var lenient = false
+    var strict = false
 
     quietMode = false
     defer {
@@ -328,8 +330,11 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
         // Verbose
         verbose = (args["verbose"] != nil)
 
-        // Verbose
+        // Lenient
         lenient = (args["lenient"] != nil)
+
+        // Strict
+        strict = (args["strict"] != nil)
 
         // Lint
         let lint = (args["lint"] != nil)
@@ -510,6 +515,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
         try addInputPaths(for: "quiet")
         try addInputPaths(for: "verbose")
         try addInputPaths(for: "lenient")
+        try addInputPaths(for: "strict")
         try addInputPaths(for: "dryrun")
         try addInputPaths(for: "lint")
         try addInputPaths(for: "inferoptions")
@@ -704,6 +710,9 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
                     if lint, output != input {
                         print("Source input did not pass lint check.", as: lenient ? .warning : .error)
                         exitCode = lenient ? .ok : .lintFailure
+                    } else if strict, output != input {
+                        print("Source input was reformatted.", as: .error)
+                        exitCode = .lintFailure
                     } else {
                         print("SwiftFormat completed successfully.", as: .success)
                         exitCode = .ok
@@ -788,7 +797,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
             }
         }
         print("SwiftFormat completed in \(time).", as: .success)
-        return printResult(dryrun, lint, lenient, outputFlags)
+        return printResult(dryrun, lint, lenient, strict, outputFlags)
     } catch {
         _ = printWarnings(errors)
         // Fatal error
@@ -838,7 +847,7 @@ func parseScriptInput(from environment: [String: String]) throws -> [URL] {
     }
 }
 
-func printResult(_ dryrun: Bool, _ lint: Bool, _ lenient: Bool, _ flags: OutputFlags) -> ExitCode {
+func printResult(_ dryrun: Bool, _ lint: Bool, _ lenient: Bool, _ strict: Bool, _ flags: OutputFlags) -> ExitCode {
     let (written, checked, skipped, failed) = flags
     let ignored = (skipped == 0) ? "" : ", \(skipped) file\(skipped == 1 ? "" : "s") skipped"
     if checked == 0 {
@@ -853,7 +862,7 @@ func printResult(_ dryrun: Bool, _ lint: Bool, _ lenient: Bool, _ flags: OutputF
     } else {
         print("\(written)/\(checked) files formatted\(ignored).", as: .info)
     }
-    return !lenient && lint && failed > 0 ? .lintFailure : .ok
+    return ((!lenient && lint) || strict) && failed > 0 ? .lintFailure : .ok
 }
 
 func inferOptions(from inputURLs: [URL], options: FileOptions) -> (Int, FormatOptions, [Error]) {

@@ -663,6 +663,7 @@ let commandLineArguments = [
     "dryrun",
     "lint",
     "lenient",
+    "strict",
     "verbose",
     "quiet",
     "reporter",

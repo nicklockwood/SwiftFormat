@@ -781,7 +781,7 @@ Error codes
 The swiftformat command-line tool will always exit with one of the following codes:
 
 * 0 - Success. This code will be returned in the event of a successful formatting run or if `--lint` detects no violations.
-* 1 - Lint failure. This code will be returned only when running in `--lint` mode if the input requires formatting.
+* 1 - Lint failure. This code will be returned when running in `--lint` mode, or when autocorrecting in `--strict` mode, if the input requires formatting.
 * 70 - Program error. This code will be returned if there is a problem with the input or configuration arguments.
 
 

@@ -1037,4 +1037,13 @@ class ParensTests: RulesTests {
         """
         testFormatting(for: input, rule: FormatRules.redundantParens)
     }
+
+    func testRequiredParensNotRemovedInAsyncLet2() {
+        let input = """
+        Task {
+            let processURL: (URL) async throws -> Void = { _ in }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantParens)
+    }
 }

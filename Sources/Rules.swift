@@ -2737,10 +2737,10 @@ public struct _FormatRules {
                    }) == nil,
                    let scopeIndex = formatter.startOfScope(at: i)
                 {
-                    isClosure = formatter.isStartOfClosure(at: scopeIndex)
+                    isClosure = formatter.isStartOfClosure(at: scopeIndex) && formatter.isInClosureArguments(at: i)
                 }
                 if !isClosure, nextToken != .keyword("in") {
-                    return // It's a closure type or function declaration
+                    return // It's a closure type, function declaration or for loop
                 }
             case .operator:
                 if case let .operator(inner, _)? = formatter.last(.nonSpace, before: closingIndex),

@@ -632,13 +632,19 @@ extension Formatter {
         var i = i
         while let token = token(at: i) {
             switch token {
-            case .keyword("in"), .keyword("throws"), .keyword("rethrows"):
+            case .keyword("in"), .keyword("throws"), .keyword("rethrows"), .identifier("async"):
                 guard let scopeIndex = index(of: .startOfScope, before: i, if: {
                     $0 == .startOfScope("{")
-                }) else {
+                }), isStartOfClosure(at: scopeIndex) else {
                     return false
                 }
-                return isStartOfClosure(at: scopeIndex)
+                if token != .keyword("in"),
+                   let arrowIndex = index(of: .operator("->", .infix), after: i),
+                   next(.keyword, after: arrowIndex) != .keyword("in")
+                {
+                    return false
+                }
+                return true
             case .startOfScope("("), .startOfScope("["), .startOfScope("<"),
                  .endOfScope(")"), .endOfScope("]"), .endOfScope(">"),
                  .keyword where token.isAttribute, _ where token.isComment:

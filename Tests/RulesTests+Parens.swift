@@ -203,6 +203,16 @@ class ParensTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantParens)
     }
 
+    func testNonRedundantParensAroundClosureTypeNotRemoved() {
+        let input = """
+        describe("getAlbums") {
+            typealias PhotoCollectionEnumerationHandler = (PhotoCollection) -> Void
+            typealias PhotoEnumerationHandler = (PhotoFetchResultEnumeration) -> Void
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantParens)
+    }
+
     // TODO: future enhancement
 //    func testRedundantParensAroundClosureReturnTypeRemoved() {
 //        let input = "typealias Foo = (Int) -> ((Int) -> Bool)"
@@ -1033,6 +1043,15 @@ class ParensTests: RulesTests {
         Task {
             async let dataTask1: Void = someTask(request)
             async let dataTask2: Void = someTask(request)
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantParens)
+    }
+
+    func testRequiredParensNotRemovedInAsyncLet2() {
+        let input = """
+        Task {
+            let processURL: (URL) async throws -> Void = { _ in }
         }
         """
         testFormatting(for: input, rule: FormatRules.redundantParens)

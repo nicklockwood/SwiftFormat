@@ -98,6 +98,10 @@
 		A3DF48252620E03600F45A5F /* JSONReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3DF48242620E03600F45A5F /* JSONReporter.swift */; };
 		A3DF48262620E03600F45A5F /* JSONReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3DF48242620E03600F45A5F /* JSONReporter.swift */; };
 		B9C4F55C2387FA3E0088DBEE /* SupportedContentUTIs.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9C4F55B2387FA3E0088DBEE /* SupportedContentUTIs.swift */; };
+		C2FFD17D2BD06C9200774F55 /* XMLReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FFD17C2BD06C9200774F55 /* XMLReporter.swift */; };
+		C2FFD17E2BD06C9200774F55 /* XMLReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FFD17C2BD06C9200774F55 /* XMLReporter.swift */; };
+		C2FFD17F2BD06C9200774F55 /* XMLReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FFD17C2BD06C9200774F55 /* XMLReporter.swift */; };
+		C2FFD1802BD06C9200774F55 /* XMLReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FFD17C2BD06C9200774F55 /* XMLReporter.swift */; };
 		DD9AD39E2999FCC8001C2C0E /* GithubActionsLogReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD9AD39C2999FCC8001C2C0E /* GithubActionsLogReporter.swift */; };
 		DD9AD39F2999FCC8001C2C0E /* GithubActionsLogReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD9AD39C2999FCC8001C2C0E /* GithubActionsLogReporter.swift */; };
 		DD9AD3A32999FCC8001C2C0E /* Reporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD9AD39D2999FCC8001C2C0E /* Reporter.swift */; };
@@ -244,6 +248,7 @@
 		90F16AFA1DA5ED9A00EB4EA1 /* CommandErrors.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CommandErrors.swift; sourceTree = "<group>"; };
 		A3DF48242620E03600F45A5F /* JSONReporter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = JSONReporter.swift; sourceTree = "<group>"; };
 		B9C4F55B2387FA3E0088DBEE /* SupportedContentUTIs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupportedContentUTIs.swift; sourceTree = "<group>"; };
+		C2FFD17C2BD06C9200774F55 /* XMLReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XMLReporter.swift; sourceTree = "<group>"; };
 		DD9AD39C2999FCC8001C2C0E /* GithubActionsLogReporter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GithubActionsLogReporter.swift; sourceTree = "<group>"; };
 		DD9AD39D2999FCC8001C2C0E /* Reporter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Reporter.swift; sourceTree = "<group>"; };
 		E41CB5BE2025761D00C1BEDE /* UserSelection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSelection.swift; sourceTree = "<group>"; };
@@ -368,6 +373,7 @@
 				01A0EAC41D5DB54A00A0A8E3 /* SwiftFormat.swift */,
 				01A0EABF1D5DB4F700A0A8E3 /* Tokenizer.swift */,
 				01BBD85821DAA2A000457380 /* Globs.swift */,
+				C2FFD17C2BD06C9200774F55 /* XMLReporter.swift */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
@@ -797,6 +803,7 @@
 				01F17E821E25870700DCD359 /* CommandLine.swift in Sources */,
 				01F3DF8C1DB9FD3F00454944 /* Options.swift in Sources */,
 				01A0EAC21D5DB4F700A0A8E3 /* Tokenizer.swift in Sources */,
+				C2FFD17D2BD06C9200774F55 /* XMLReporter.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -841,6 +848,7 @@
 				01A0EAD61D5DC08A00A0A8E3 /* Tokenizer.swift in Sources */,
 				01567D30225B2BFD00B22D41 /* ParsingHelpers.swift in Sources */,
 				01B3987F1D7634A0009ADE61 /* Formatter.swift in Sources */,
+				C2FFD17E2BD06C9200774F55 /* XMLReporter.swift in Sources */,
 				01A0EAD41D5DC08A00A0A8E3 /* SwiftFormat.swift in Sources */,
 				DD9AD39F2999FCC8001C2C0E /* GithubActionsLogReporter.swift in Sources */,
 				E4E4D3CA2033F17C000D7CB1 /* EnumAssociable.swift in Sources */,
@@ -863,6 +871,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C2FFD17F2BD06C9200774F55 /* XMLReporter.swift in Sources */,
 				E4083191202C049200CAF11D /* SwiftFormat.swift in Sources */,
 				E4FABAD7202FEF060065716E /* OptionDescriptor.swift in Sources */,
 				015D3A562995A0340065B2D9 /* AboutViewController.swift in Sources */,
@@ -893,6 +902,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C2FFD1802BD06C9200774F55 /* XMLReporter.swift in Sources */,
 				01045AA0211A1EE300D2BE3D /* Arguments.swift in Sources */,
 				01BBD85C21DAA2A700457380 /* Globs.swift in Sources */,
 				01045A9F2119D30D00D2BE3D /* Inference.swift in Sources */,

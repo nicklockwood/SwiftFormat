@@ -45,6 +45,7 @@ enum Reporters {
     static let all: [Reporter.Type] = [
         JSONReporter.self,
         GithubActionsLogReporter.self,
+        XMLReporter.self,
     ]
 
     static var help: String {

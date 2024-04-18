@@ -5658,7 +5658,7 @@ public struct _FormatRules {
         disabledByDefault: true,
         orderAfter: ["extensionAccessControl", "redundantFileprivate"],
         options: ["categorymark", "markcategories", "beforemarks", "lifecycle", "organizetypes",
-                  "structthreshold", "classthreshold", "enumthreshold", "extensionlength"],
+                  "structthreshold", "classthreshold", "enumthreshold", "extensionlength", "organizationmode"],
         sharedOptions: ["lineaftermarks"]
     ) { formatter in
         guard !formatter.options.fragment else { return }

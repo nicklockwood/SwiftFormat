@@ -853,6 +853,12 @@ struct _Descriptors {
         help: "Minimum line count to organize extension body. Defaults to 0",
         keyPath: \.organizeExtensionThreshold
     )
+    let organizationMode = OptionDescriptor(
+        argumentName: "organizationmode",
+        displayName: "Declaration Types Organization Mode",
+        help: "Organization mode for declarations. Defaults to \"visibility\"",
+        keyPath: \.organizationMode
+    )
     let funcAttributes = OptionDescriptor(
         argumentName: "funcattributes",
         displayName: "Function Attributes",

@@ -1919,7 +1919,7 @@ class RedundancyTests: RulesTests {
         struct TestView: View {
             var body: some View {
                 if true {
-                    var foo: String?
+                    var foo: String? = nil
                     Text(foo ?? "")
                 } else {
                     EmptyView()
@@ -1936,7 +1936,7 @@ class RedundancyTests: RulesTests {
             var body: some View {
                 switch foo {
                 case .bar:
-                    var foo: String?
+                    var foo: String? = nil
                     Text(foo ?? "")
                 default:
                     EmptyView()

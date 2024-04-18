@@ -1692,6 +1692,13 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(formatter.parseType(at: 5)?.name, "Foo!")
     }
 
+    func testDoesntParseTernaryOperatorAsType() {
+        let formatter = Formatter(tokenize("""
+        Foo.bar ? .foo : .bar
+        """))
+        XCTAssertEqual(formatter.parseType(at: 0)?.name, "Foo.bar")
+    }
+
     func testDoesntParseMacroInvocationAsType() {
         let formatter = Formatter(tokenize("""
         let foo = #colorLiteral(1, 2, 3)

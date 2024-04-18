@@ -552,6 +552,8 @@ private struct Examples {
     """
 
     let redundantNilInit = """
+    `--nilinit remove`
+
     ```diff
     - var foo: Int? = nil
     + var foo: Int?
@@ -560,6 +562,13 @@ private struct Examples {
     ```diff
     // doesn't apply to `let` properties
     let foo: Int? = nil
+    ```
+
+    `--nilinit insert`
+
+    ```diff
+    - var foo: Int?
+    + var foo: Int? = nil
     ```
 
     ```diff

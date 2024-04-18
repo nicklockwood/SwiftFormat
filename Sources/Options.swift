@@ -348,6 +348,16 @@ public enum EnumNamespacesMode: String, CaseIterable {
     case structsOnly = "structs-only"
 }
 
+/// When initializing an optional value type,
+/// is it necessary to explicitly declare a default value
+public enum NilInitType: String, CaseIterable {
+    /// Remove redundant `nil` if it is added as default value
+    case remove
+
+    /// Add `nil` as default if not explicitly declared
+    case insert
+}
+
 /// Configuration options for formatting. These aren't actually used by the
 /// Formatter class itself, but it makes them available to the format rules.
 public struct FormatOptions: CustomStringConvertible {
@@ -436,6 +446,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var preserveAnonymousForEach: Bool
     public var preserveSingleLineForEach: Bool
     public var preserveDocComments: Bool
+    public var nilInitType: NilInitType
 
     /// Deprecated
     public var indentComments: Bool
@@ -539,6 +550,7 @@ public struct FormatOptions: CustomStringConvertible {
                 preserveAnonymousForEach: Bool = false,
                 preserveSingleLineForEach: Bool = true,
                 preserveDocComments: Bool = false,
+                nilInitType: NilInitType = .remove,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -632,6 +644,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.preserveAnonymousForEach = preserveAnonymousForEach
         self.preserveSingleLineForEach = preserveSingleLineForEach
         self.preserveDocComments = preserveDocComments
+        self.nilInitType = nilInitType
         // Doesn't really belong here, but hard to put elsewhere
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

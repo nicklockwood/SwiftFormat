@@ -564,16 +564,16 @@ private struct Examples {
     let foo: Int? = nil
     ```
 
+    ```diff
+    // doesn't affect non-nil initialization
+    var foo: Int? = 0
+    ```
+
     `--nilinit insert`
 
     ```diff
     - var foo: Int?
     + var foo: Int? = nil
-    ```
-
-    ```diff
-    // doesn't affect non-nil initialization
-    var foo: Int? = 0
     ```
     """
 

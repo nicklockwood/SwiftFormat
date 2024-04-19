@@ -1739,7 +1739,7 @@ Remove/insert redundant `nil` default value (Optional vars are nil by default).
 
 Option | Description
 --- | ---
-`--nilinit` | Explicit self: "insert", "remove" (default)
+`--nilinit` | "remove" (default) redundant nil or "insert" missing nil
 
 <details>
 <summary>Examples</summary>

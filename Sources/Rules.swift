@@ -2956,7 +2956,7 @@ public struct _FormatRules {
                     })
                     switch formatter.options.nilInitType {
                     case .remove:
-                        if let equalsIndex, let nilIndex = formatter.index(of: .nonSpaceOrLinebreak, after: equalsIndex, if: {
+                        if let equalsIndex = equalsIndex, let nilIndex = formatter.index(of: .nonSpaceOrLinebreak, after: equalsIndex, if: {
                             $0 == .identifier("nil")
                         }) {
                             formatter.removeTokens(in: optionalIndex + 1 ... nilIndex)

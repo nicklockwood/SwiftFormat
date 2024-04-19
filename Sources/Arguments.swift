@@ -663,6 +663,7 @@ let commandLineArguments = [
     "dryrun",
     "lint",
     "lenient",
+    "strict",
     "verbose",
     "quiet",
     "reporter",
@@ -672,6 +673,8 @@ let commandLineArguments = [
     "version",
     "options",
     "ruleinfo",
+    "dateformat",
+    "timezone",
 ] + optionsArguments
 
 let deprecatedArguments = Descriptors.all.compactMap {

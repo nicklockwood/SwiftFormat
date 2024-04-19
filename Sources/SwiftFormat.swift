@@ -180,10 +180,33 @@ public func enumerateFiles(withInputURL inputURL: URL,
         let fileOptions = options.fileOptions ?? .default
         if resourceValues.isRegularFile == true {
             if fileOptions.supportedFileExtensions.contains(inputURL.pathExtension) {
+                let fileHeaderRuleEnabled = options.rules?.contains(FormatRules.fileHeader.name) ?? false
+                let shouldGetGitInfo = fileHeaderRuleEnabled &&
+                    options.formatOptions?.fileHeader.needsGitInfo == true
+
+                let shouldGetFollowGitInfo = fileHeaderRuleEnabled &&
+                    options.formatOptions?.fileHeader.needsFollowGitInfo == true
+
+                let gitInfo = shouldGetGitInfo
+                    ? GitHelpers.fileInfo(inputURL)
+                    : nil
+
+                let followedGitInfo = shouldGetFollowGitInfo
+                    ? GitHelpers.fileInfo(inputURL, follow: true)
+                    : nil
+
                 let fileInfo = FileInfo(
                     filePath: resourceValues.path,
-                    creationDate: resourceValues.creationDate
+                    creationDate: gitInfo?.createdAt ?? resourceValues.creationDate,
+                    followedCreationDate: followedGitInfo?.createdAt,
+                    replacements: [
+                        .createdName: ReplacementType(gitInfo?.createdByName),
+                        .createdEmail: ReplacementType(gitInfo?.createdByEmail),
+                        .followedCreatedName: ReplacementType(followedGitInfo?.createdByName),
+                        .followedCreatedEmail: ReplacementType(followedGitInfo?.createdByEmail),
+                    ].compactMapValues { $0 }
                 )
+
                 var options = options
                 options.formatOptions?.fileInfo = fileInfo
                 do {
@@ -488,19 +511,15 @@ private func applyRules(
 
     // Check if required FileInfo is available
     if rules.contains(FormatRules.fileHeader) {
-        if options.fileHeader.rawValue.contains("{created"),
-           options.fileInfo.creationDate == nil
-        {
-            throw FormatError.options(
-                "Failed to apply {created} template in file header as file info is unavailable"
-            )
-        }
-        if options.fileHeader.rawValue.contains("{file"),
-           options.fileInfo.fileName == nil
-        {
-            throw FormatError.options(
-                "Failed to apply {file} template in file header as file name was not provided"
-            )
+        let header = options.fileHeader
+        let fileInfo = options.fileInfo
+
+        for key in ReplacementKey.allCases {
+            if !fileInfo.hasReplacement(for: key, options: options), header.hasTemplateKey(key) {
+                throw FormatError.options(
+                    "Failed to apply {\(key.rawValue)} template in file header as required info is unavailable"
+                )
+            }
         }
     }
 

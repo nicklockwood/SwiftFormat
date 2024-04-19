@@ -379,7 +379,9 @@ private struct Inference {
     }
 
     let closingParenOnSameLine = OptionInferrer { formatter, options in
-        var balanced = 0, sameLine = 0
+        var functionCallSameLine = 0, functionCallBalanced = 0
+        var functionDeclarationSameLine = 0, functionDeclarationBalanced = 0
+
         formatter.forEach(.startOfScope("(")) { i, _ in
             guard let closingBraceIndex = formatter.endOfScope(at: i),
                   let linebreakIndex = formatter.index(of: .linebreak, after: i),
@@ -387,13 +389,39 @@ private struct Inference {
             else {
                 return
             }
-            if formatter.last(.nonSpaceOrComment, before: closingBraceIndex)?.isLinebreak == true {
-                balanced += 1
+
+            let isClosingParenOnSameLine = (formatter.last(.nonSpaceOrComment, before: closingBraceIndex)?.isLinebreak != true)
+
+            if formatter.isFunctionCall(at: i) {
+                if isClosingParenOnSameLine {
+                    functionCallSameLine += 1
+                } else {
+                    functionCallBalanced += 1
+                }
             } else {
-                sameLine += 1
+                if isClosingParenOnSameLine {
+                    functionDeclarationSameLine += 1
+                } else {
+                    functionDeclarationBalanced += 1
+                }
             }
         }
-        options.closingParenOnSameLine = (sameLine > balanced)
+
+        // Decide on closingCallSiteParenOnSameLine
+        if functionCallSameLine > functionCallBalanced && functionDeclarationBalanced > functionDeclarationSameLine {
+            options.closingCallSiteParenOnSameLine = true
+        } else {
+            options.closingCallSiteParenOnSameLine = false
+        }
+
+        // If closingCallSiteParenOnSameLine is true, trust only the declarations to infer closingParenOnSameLine
+        if options.closingCallSiteParenOnSameLine {
+            options.closingParenOnSameLine = functionDeclarationSameLine > functionDeclarationBalanced
+        } else {
+            let balanced = functionDeclarationBalanced + functionCallBalanced
+            let sameLine = functionDeclarationSameLine + functionCallSameLine
+            options.closingParenOnSameLine = sameLine > balanced
+        }
     }
 
     let uppercaseHex = OptionInferrer { formatter, options in

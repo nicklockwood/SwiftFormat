@@ -9,6 +9,23 @@
 import XCTest
 @testable import SwiftFormat
 
+private enum TestDateFormat: String {
+    case basic = "yyyy-MM-dd"
+    case time = "HH:mmZZZZZ"
+    case timestamp = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ"
+}
+
+private func createTestDate(
+    _ input: String,
+    _ format: TestDateFormat = .basic
+) -> Date {
+    let formatter = DateFormatter()
+    formatter.dateFormat = format.rawValue
+    formatter.timeZone = .current
+
+    return formatter.date(from: input)!
+}
+
 class GeneralTests: RulesTests {
     // MARK: - initCoderUnavailable
 
@@ -28,12 +45,12 @@ class GeneralTests: RulesTests {
                        exclude: ["unusedArguments"])
     }
 
-    func testInitCoderUnavailableFatalError() {
+    func testInitCoderUnavailableFatalErrorNilDisabled() {
         let input = """
         extension Module {
             final class A: UIView {
                 required init?(coder _: NSCoder) {
-                    fatalError()
+                    fatalError("init(coder:) has not been implemented")
                 }
             }
         }
@@ -43,12 +60,37 @@ class GeneralTests: RulesTests {
             final class A: UIView {
                 @available(*, unavailable)
                 required init?(coder _: NSCoder) {
-                    fatalError()
+                    fatalError("init(coder:) has not been implemented")
                 }
             }
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.initCoderUnavailable)
+        let options = FormatOptions(initCoderNil: false)
+        testFormatting(for: input, output, rule: FormatRules.initCoderUnavailable, options: options)
+    }
+
+    func testInitCoderUnavailableFatalErrorNilEnabled() {
+        let input = """
+        extension Module {
+            final class A: UIView {
+                required init?(coder _: NSCoder) {
+                    fatalError("init(coder:) has not been implemented")
+                }
+            }
+        }
+        """
+        let output = """
+        extension Module {
+            final class A: UIView {
+                @available(*, unavailable)
+                required init?(coder _: NSCoder) {
+                    nil
+                }
+            }
+        }
+        """
+        let options = FormatOptions(initCoderNil: true)
+        testFormatting(for: input, output, rule: FormatRules.initCoderUnavailable, options: options)
     }
 
     func testInitCoderUnavailableAlreadyPresent() {
@@ -82,7 +124,7 @@ class GeneralTests: RulesTests {
         let input = """
         class Foo: UIView {
             public required init?(coder _: NSCoder) {
-                fatalError()
+                fatalError("init(coder:) has not been implemented")
             }
         }
         """
@@ -90,7 +132,7 @@ class GeneralTests: RulesTests {
         class Foo: UIView {
             @available(*, unavailable)
             public required init?(coder _: NSCoder) {
-                fatalError()
+                fatalError("init(coder:) has not been implemented")
             }
         }
         """
@@ -101,7 +143,7 @@ class GeneralTests: RulesTests {
         let input = """
         class Foo: UIView {
             required public init?(coder _: NSCoder) {
-                fatalError()
+                fatalError("init(coder:) has not been implemented")
             }
         }
         """
@@ -109,12 +151,13 @@ class GeneralTests: RulesTests {
         class Foo: UIView {
             @available(*, unavailable)
             required public init?(coder _: NSCoder) {
-                fatalError()
+                nil
             }
         }
         """
+        let options = FormatOptions(initCoderNil: true)
         testFormatting(for: input, output, rule: FormatRules.initCoderUnavailable,
-                       exclude: ["modifierOrder"])
+                       options: options, exclude: ["modifierOrder"])
     }
 
     // MARK: - trailingCommas
@@ -234,7 +277,7 @@ class GeneralTests: RulesTests {
             Int
         ]).self
         """
-        testFormatting(for: input, rule: FormatRules.trailingCommas)
+        testFormatting(for: input, rule: FormatRules.trailingCommas, exclude: ["propertyType"])
     }
 
     func testTrailingCommaNotAddedToTypeDeclaration() {
@@ -281,7 +324,7 @@ class GeneralTests: RulesTests {
             String: Int
         ]]()
         """
-        testFormatting(for: input, rule: FormatRules.trailingCommas)
+        testFormatting(for: input, rule: FormatRules.trailingCommas, exclude: ["propertyType"])
     }
 
     func testTrailingCommaNotAddedToTypeDeclaration6() {
@@ -294,7 +337,7 @@ class GeneralTests: RulesTests {
             ])
         ]]()
         """
-        testFormatting(for: input, rule: FormatRules.trailingCommas)
+        testFormatting(for: input, rule: FormatRules.trailingCommas, exclude: ["propertyType"])
     }
 
     func testTrailingCommaNotAddedToTypeDeclaration7() {
@@ -564,6 +607,25 @@ class GeneralTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
     }
 
+    func testFileHeaderCreatorReplacement() {
+        let name = "Test User"
+        let email = "test@email.com"
+        let input = "let foo = bar"
+        let output = "// Created by \(name) \(email)\n\nlet foo = bar"
+        let fileInfo = FileInfo(replacements: [.createdName: .constant(name), .createdEmail: .constant(email)])
+        let options = FormatOptions(fileHeader: "// Created by {created.name} {created.email}", fileInfo: fileInfo)
+        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+    }
+
+    func testFileHeaderMultipleReplacement() {
+        let name = "Test User"
+        let input = "let foo = bar"
+        let output = "// Copyright © \(name)\n// Created by \(name)\n\nlet foo = bar"
+        let fileInfo = FileInfo(replacements: [.createdName: .constant(name)])
+        let options = FormatOptions(fileHeader: "// Copyright © {created.name}\n// Created by {created.name}", fileInfo: fileInfo)
+        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+    }
+
     func testFileHeaderCreationDateReplacement() {
         let input = "let foo = bar"
         let date = Date(timeIntervalSince1970: 0)
@@ -576,6 +638,127 @@ class GeneralTests: RulesTests {
         let fileInfo = FileInfo(creationDate: date)
         let options = FormatOptions(fileHeader: "// Created by Nick Lockwood on {created}.", fileInfo: fileInfo)
         testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+    }
+
+    func testFileHeaderDateFormattingIso() {
+        let date = createTestDate("2023-08-09")
+
+        let input = "let foo = bar"
+        let output = "// 2023-08-09\n\nlet foo = bar"
+        let fileInfo = FileInfo(creationDate: date)
+        let options = FormatOptions(fileHeader: "// {created}", dateFormat: .iso, fileInfo: fileInfo)
+        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+    }
+
+    func testFileHeaderDateFormattingDayMonthYear() {
+        let date = createTestDate("2023-08-09")
+
+        let input = "let foo = bar"
+        let output = "// 09/08/2023\n\nlet foo = bar"
+        let fileInfo = FileInfo(creationDate: date)
+        let options = FormatOptions(fileHeader: "// {created}", dateFormat: .dayMonthYear, fileInfo: fileInfo)
+        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+    }
+
+    func testFileHeaderDateFormattingMonthDayYear() {
+        let date = createTestDate("2023-08-09")
+
+        let input = "let foo = bar"
+        let output = "// 08/09/2023\n\nlet foo = bar"
+        let fileInfo = FileInfo(creationDate: date)
+        let options = FormatOptions(fileHeader: "// {created}",
+                                    dateFormat: .monthDayYear,
+                                    fileInfo: fileInfo)
+        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+    }
+
+    func testFileHeaderDateFormattingCustom() {
+        let date = createTestDate("2023-08-09T12:59:30.345Z", .timestamp)
+
+        let input = "let foo = bar"
+        let output = "// 23.08.09-12.59.30.345\n\nlet foo = bar"
+        let fileInfo = FileInfo(creationDate: date)
+        let options = FormatOptions(fileHeader: "// {created}",
+                                    dateFormat: .custom("yy.MM.dd-HH.mm.ss.SSS"),
+                                    timeZone: .identifier("UTC"),
+                                    fileInfo: fileInfo)
+        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+    }
+
+    private func testTimeZone(
+        timeZone: FormatTimeZone,
+        tests: [String: String]
+    ) {
+        for (input, expected) in tests {
+            let date = createTestDate(input, .time)
+            let input = "let foo = bar"
+            let output = "// \(expected)\n\nlet foo = bar"
+
+            let fileInfo = FileInfo(creationDate: date)
+
+            let options = FormatOptions(
+                fileHeader: "// {created}",
+                dateFormat: .custom("HH:mm"),
+                timeZone: timeZone,
+                fileInfo: fileInfo
+            )
+
+            testFormatting(for: input, output,
+                           rule: FormatRules.fileHeader,
+                           options: options)
+        }
+    }
+
+    func testFileHeaderDateTimeZoneSystem() {
+        let baseDate = createTestDate("15:00Z", .time)
+        let offset = TimeZone.current.secondsFromGMT(for: baseDate)
+
+        let date = baseDate.addingTimeInterval(Double(offset))
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+
+        let expected = formatter.string(from: date)
+
+        testTimeZone(timeZone: .system, tests: [
+            "15:00Z": expected,
+            "16:00+1": expected,
+            "01:00+10": expected,
+            "16:30+0130": expected,
+        ])
+    }
+
+    func testFileHeaderDateTimeZoneAbbreviations() {
+        // GMT+0530
+        testTimeZone(timeZone: FormatTimeZone(rawValue: "IST")!, tests: [
+            "15:00Z": "20:30",
+            "16:00+1": "20:30",
+            "01:00+10": "20:30",
+            "16:30+0130": "20:30",
+        ])
+    }
+
+    func testFileHeaderDateTimeZoneIdentifiers() {
+        // GMT+0845
+        testTimeZone(timeZone: FormatTimeZone(rawValue: "Australia/Eucla")!, tests: [
+            "15:00Z": "23:45",
+            "16:00+1": "23:45",
+            "01:00+10": "23:45",
+            "16:30+0130": "23:45",
+        ])
+    }
+
+    func testGitHelpersReturnsInfo() {
+        let info = GitHelpers.fileInfo(URL(fileURLWithPath: #file), follow: false)
+        XCTAssertNotNil(info?.createdByName)
+        XCTAssertNotNil(info?.createdByEmail)
+        XCTAssertNotNil(info?.createdAt)
+
+        let followInfo = GitHelpers.fileInfo(URL(fileURLWithPath: #file), follow: true)
+        XCTAssertNotNil(followInfo?.createdByName)
+        XCTAssertNotNil(followInfo?.createdByEmail)
+        XCTAssertNotNil(followInfo?.createdAt)
     }
 
     func testFileHeaderRuleThrowsIfCreationDateUnavailable() {

@@ -781,7 +781,7 @@ Error codes
 The swiftformat command-line tool will always exit with one of the following codes:
 
 * 0 - Success. This code will be returned in the event of a successful formatting run or if `--lint` detects no violations.
-* 1 - Lint failure. This code will be returned only when running in `--lint` mode if the input requires formatting.
+* 1 - Lint failure. This code will be returned when running in `--lint` mode, or when autocorrecting in `--strict` mode, if the input requires formatting.
 * 70 - Program error. This code will be returned if there is a problem with the input or configuration arguments.
 
 
@@ -826,6 +826,8 @@ It is common practice to include the file name, creation date and/or the current
 * `{file}` - the name of the file
 * `{year}` - the current year
 * `{created}` - the date on which the file was created
+* `{created.name}` - the name of the user who first committed the file
+* `{created.email}` - the email of the user who first committed the file 
 * `{created.year}` - the year in which the file was created
 
 For example, a header template of:
@@ -842,7 +844,7 @@ Will be formatted as:
 // Created by John Smith on 01/02/2016.
 ```
 
-**NOTE:** the `{year}` value and `{created}` date format are determined from the current locale and timezone of the machine running the script.
+**NOTE:** the `{year}` value and `{created}` date format are determined from the current locale and timezone of the machine running the script. `{created.name}` and `{created.email}` requires the project to be version controlled by git.
 
 
 FAQ
@@ -949,7 +951,13 @@ Known issues
 
 * If you have a generic typealias that defines a closure (e.g. `typealias ResultCompletion<T> = (Result<T, Error>) -> Void`) and use this closure as an argument in a generic function (e.g. `func handle<T: Decodable>(_ completion: ResultCompletion<T>)`), the `opaqueGenericParameters` rule may update the function definition to use `some` syntax (e.g. `func handle(_ completion: ResultCompletion<some Decodable>)`). `some` syntax is not permitted in closure parameters, so this will no longer compile. Workarounds include spelling out the closure explicitly in the generic function (instead of using a `typealias`) or disabling the `opaqueGenericParameters` rule (e.g. with `// swiftformat:disable:next opaqueGenericParameters`).
 
-* If compiling for macOS with Xcode 14.0 and configuring SwiftFormat with `--swift-version 5.7`, the `genericExtensions` rule may cause a build failure by updating extensions of the format `extension Collection where Element == Foo` to `extension Collection<Foo>`. This fails to compile for macOS in Xcode 14.0, because the macOS SDK in that version of Xcode [does not include](https://forums.swift.org/t/xcode-14-rc-cannot-specialize-protocol-type/60171) the Swift 5.7 standard library. Workarounds include using `--swift-version 5.6` instead, updating to Xcode 14.1+, or disabling the `genericExtensions` rule (e.g. with `// swiftformat:next:disable genericExtensions`).
+* If compiling for macOS with Xcode 14.0 and configuring SwiftFormat with `--swift-version 5.7`, the `genericExtensions` rule may cause a build failure by updating extensions of the format `extension Collection where Element == Foo` to `extension Collection<Foo>`. This fails to compile for macOS in Xcode 14.0, because the macOS SDK in that version of Xcode [does not include](https://forums.swift.org/t/xcode-14-rc-cannot-specialize-protocol-type/60171) the Swift 5.7 standard library. Workarounds include using `--swift-version 5.6` instead, updating to Xcode 14.1+, or disabling the `genericExtensions` rule (e.g. with `// swiftformat:disable:next genericExtensions`).
+
+* The `propertyType` rule can cause a build failure in cases where there are multiple static overloads with the same name but different return types. As a workaround you can rename the overloads to no longer conflict, or exclude the property name with `--preservesymbols propertyName,otherPropertyName,etc`.
+
+* The `propertyType` rule can cause a build failure in cases where the property's type is a protocol / existential like `let shapeStyle: ShapeStyle = .myShapeStyle`, and the value used on the right-hand side is defined in an extension like `extension ShapeStyle where Self == MyShapeStyle { static var myShapeStyle: MyShapeStyle { ... } }`. As a workaround you can use the existential `any` syntax (`let shapeStyle: any ShapeStyle = .myShapeStyle`), which the rule will preserve as-is, or exclude the type name and/or property name with `--preservesymbols ShapeStyle,myShapeStyle,etc`.
+
+* The `propertyType` rule can cause a build failure in cases like `let foo = Foo.bar` where the value is a static member that doesn't return the same time. For example, `let foo: Foo = .bar` would be invalid if the `bar` property was defined as `static var bar: Bar`. As a workaround you can write the name of the type explicitly, like `let foo: Bar = Foo.bar`, or exclude the type name and/or property name with `--preservesymbols Bar,bar,etc`.
 
 
 Tip Jar

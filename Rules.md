@@ -14,6 +14,7 @@
 * [conditionalAssignment](#conditionalAssignment)
 * [consecutiveBlankLines](#consecutiveBlankLines)
 * [consecutiveSpaces](#consecutiveSpaces)
+* [consistentSwitchStatementSpacing](#consistentSwitchStatementSpacing)
 * [duplicateImports](#duplicateImports)
 * [elseOnSameLine](#elseOnSameLine)
 * [emptyBraces](#emptyBraces)
@@ -91,6 +92,7 @@
 # Opt-in Rules (disabled by default)
 
 * [acronyms](#acronyms)
+* [blankLineAfterMultilineSwitchCase](#blankLineAfterMultilineSwitchCase)
 * [blankLinesBetweenImports](#blankLinesBetweenImports)
 * [blockComments](#blockComments)
 * [docComments](#docComments)
@@ -98,6 +100,8 @@
 * [markTypes](#markTypes)
 * [noExplicitOwnership](#noExplicitOwnership)
 * [organizeDeclarations](#organizeDeclarations)
+* [propertyType](#propertyType)
+* [redundantProperty](#redundantProperty)
 * [sortSwitchCases](#sortSwitchCases)
 * [wrapConditionalBodies](#wrapConditionalBodies)
 * [wrapEnumCases](#wrapEnumCases)
@@ -232,6 +236,38 @@ Insert blank line after import statements.
 +
   class Foo {
     // foo
+  }
+```
+
+</details>
+<br/>
+
+## blankLineAfterMultilineSwitchCase
+
+Insert a blank line after multiline switch cases (excluding the last case,
+which is followed by a closing brace).
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  func handle(_ action: SpaceshipAction) {
+      switch action {
+      case .engageWarpDrive:
+          navigationComputer.destination = targetedDestination
+          await warpDrive.spinUp()
+          warpDrive.activate()
++
+      case let .scanPlanet(planet):
+          scanner.target = planet
+          scanner.scanAtmosphere()
+          scanner.scanBiosphere()
+          scanner.scanForArticialLife()
++
+      case .handleIncomingEnergyBlast:
+          await energyShields.prepare()
+          energyShields.engage()
+      }
   }
 ```
 
@@ -472,6 +508,10 @@ Option | Description
 
 Assign properties using if / switch expressions.
 
+Option | Description
+--- | ---
+`--condassignment` | Use cond. assignment: "after-property" (default) or "always".
+
 <details>
 <summary>Examples</summary>
 
@@ -485,7 +525,6 @@ Assign properties using if / switch expressions.
 -     bar = "bar"
 +     "bar"
   }
-```
 
 ```diff
 - let foo: String
@@ -497,6 +536,18 @@ Assign properties using if / switch expressions.
   case false:
 -     foo = "bar"
 +     "bar"
+  }
+```
+
+// With --condassignment always (disabled by default)
+- switch condition {
++ foo.bar = switch condition {
+  case true:
+-     foo.bar = "baaz"
++     "baaz"
+  case false:
+-     foo.bar = "quux"
++     "quux"
   }
 ```
 
@@ -538,6 +589,63 @@ Replace consecutive spaces with a single space.
 ```diff
 - let     foo = 5
 + let foo = 5
+```
+
+</details>
+<br/>
+
+## consistentSwitchStatementSpacing
+
+Ensures consistent spacing among all of the cases in a switch statement.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  func handle(_ action: SpaceshipAction) {
+      switch action {
+      case .engageWarpDrive:
+          navigationComputer.destination = targetedDestination
+          await warpDrive.spinUp()
+          warpDrive.activate()
+
+      case .enableArtificialGravity:
+          artificialGravityEngine.enable(strength: .oneG)
++
+      case let .scanPlanet(planet):
+          scanner.target = planet
+          scanner.scanAtmosphere()
+          scanner.scanBiosphere()
+          scanner.scanForArtificialLife()
+
+      case .handleIncomingEnergyBlast:
+          energyShields.engage()
+      }
+  }
+```
+
+```diff
+  var name: PlanetType {
+  switch self {
+  case .mercury:
+      "Mercury"
+-
+  case .venus:
+      "Venus"
+  case .earth:
+      "Earth"
+  case .mars:
+      "Mars"
+-
+  case .jupiter:
+      "Jupiter"
+  case .saturn:
+      "Saturn"
+  case .uranus:
+      "Uranus"
+  case .neptune:
+      "Neptune"
+  }
 ```
 
 </details>
@@ -737,6 +845,8 @@ Use specified source file header template for all files.
 Option | Description
 --- | ---
 `--header` | Header comments: "strip", "ignore", or the text you wish use
+`--dateformat` | "system" (default), "iso", "dmy", "mdy" or custom
+`--timezone` | "system" (default) or a valid identifier/abbreviation
 
 <details>
 <summary>Examples</summary>
@@ -748,7 +858,16 @@ Token | Description
 `{file}` | File name
 `{year}` | Current year
 `{created}` | File creation date
+`{created.name}` | Name of the user who first committed the file
+`{created.email}` | Email of the user who first committed the file
 `{created.year}` | File creation year
+`{created.follow}` | `{created}` but followed in git
+
+All `{created*}` options also have a `.follow` option to follow the file across
+renames in the git history (e.g `{created.follow}` and `{created.name.follow}`).
+
+**Note**: `{created.follow*}, `{created.name}` and `{created.email}` requires
+the project to be version controlled by git.
 
 **Example**:
 
@@ -761,6 +880,66 @@ Token | Description
 + //  SomeFile.swift
 + //  Copyright © 2023 CompanyName.
 + //
+```
+
+You can use the following built-in formats for `--dateformat`:
+
+Token | Description
+--- | ---
+system | Use the local system locale
+iso | ISO 8601 (yyyy-MM-dd)
+dmy | Date/Month/Year (dd/MM/yyyy)
+mdy | Month/Day/Year (MM/dd/yyyy)
+
+Custom formats are defined using
+[Unicode symbols](https://www.unicode.org/reports/tr35/tr35-31/tr35-dates.html#Date_Field_Symbol_Table).
+
+`--dateformat iso`
+
+```diff
+- // Created {created}
++ // Created 2023-08-10
+```
+
+`--dateformat dmy`
+
+```diff
+- // Created {created}
++ // Created 10/08/2023
+```
+
+`--dateformat mdy`
+
+```diff
+- // Created {created}
++ // Created 08/10/2023
+```
+
+`--dateformat 'yyyy.MM.dd.HH.mm'`
+
+```diff
+- // Created {created}
++ // Created 2023.08.10.11.00
+```
+
+Setting a time zone enforces consistent date formatting across environments
+around the world. By default the local system locale is used and for convenience
+`gmt` and `utc` can be used. The time zone can be further customized by
+setting it to a abbreviation/time zone identifier supported by the Swift
+standard library.
+
+`--dateformat 'yyyy-MM-dd HH:mm ZZZZ' --timezone utc`
+
+```diff
+- // Created {created}
++ // Created 2023-08-10 11:00 GMT
+```
+
+`--dateformat 'yyyy-MM-dd HH:mm ZZZZ' --timezone Pacific/Fiji`
+
+```diff
+- // Created 2023-08-10 11:00 GMT
++ // Created 2023-08-10 23:00 GMT+12:00
 ```
 
 </details>
@@ -954,6 +1133,10 @@ Option | Description
 
 Add `@available(*, unavailable)` attribute to required `init(coder:)` when
 it hasn't been implemented.
+
+Option | Description
+--- | ---
+`--initcodernil` | Replace fatalError with nil inside unavailable init
 
 <details>
 <summary>Examples</summary>
@@ -1299,6 +1482,47 @@ Convert trivial `map { $0.foo }` closures to keyPath-based syntax.
 </details>
 <br/>
 
+## propertyType
+
+Convert property declarations to use inferred types (`let foo = Foo()`) or explicit types (`let foo: Foo = .init()`).
+
+Option | Description
+--- | ---
+`--inferredtypes` | "exclude-cond-exprs" (default) or "always"
+`--preservesymbols` | Comma-delimited list of symbol names to preserve
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- let foo: Foo = .init()
++ let foo: Foo = .init()
+
+- let bar: Bar = .defaultValue
++ let bar = .defaultValue
+
+- let baaz: Baaz = .buildBaaz(foo: foo, bar: bar)
++ let baaz = Baaz.buildBaaz(foo: foo, bar: bar)
+
+  let float: CGFloat = 10.0
+  let array: [String] = []
+  let anyFoo: AnyFoo = foo
+
+  // with --inferredtypes always:
+- let foo: Foo =
++ let foo =
+    if condition {
+-     .init(bar)
++     Foo(bar)
+    } else {
+-     .init(baaz)
++     Foo(baaz)
+    }
+```
+
+</details>
+<br/>
+
 ## redundantBackticks
 
 Remove redundant backticks around identifiers.
@@ -1639,6 +1863,24 @@ Remove redundant pattern matching parameter syntax.
 ```diff
 - let (_, _) = bar
 + let _ = bar
+```
+
+</details>
+<br/>
+
+## redundantProperty
+
+Simplifies redundant property definitions that are immediately returned.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  func foo() -> Foo {
+-   let foo = Foo()
+-   return foo
++   return Foo()
+  }
 ```
 
 </details>
@@ -2074,6 +2316,7 @@ Option | Description
 `--operatorfunc` | Spacing for operator funcs: "spaced" (default) or "no-space"
 `--nospaceoperators` | Comma-delimited list of operators without surrounding space
 `--ranges` | Spacing for ranges: "spaced" (default) or "no-space"
+`--typedelimiter` | "trailing" (default) or "leading-trailing"
 
 <details>
 <summary>Examples</summary>
@@ -2453,10 +2696,12 @@ Option | Description
 `--wrapparameters` | Wrap func params: "before-first", "after-first", "preserve"
 `--wrapcollections` | Wrap array/dict: "before-first", "after-first", "preserve"
 `--closingparen` | Closing paren position: "balanced" (default) or "same-line"
+`--callsiteparen` | Closing paren at callsite: "inherit" (default) or "same-line"
 `--wrapreturntype` | Wrap return type: "if-multiline", "preserve" (default)
 `--wrapconditions` | Wrap conditions: "before-first", "after-first", "preserve"
 `--wraptypealiases` | Wrap typealiases: "before-first", "after-first", "preserve"
 `--wrapeffects` | Wrap effects: "if-multiline", "never", "preserve"
+`--conditionswrap` | Wrap conditions as Xcode 12:"auto", "always", "disabled"
 
 <details>
 <summary>Examples</summary>
@@ -2517,6 +2762,17 @@ provided for `--wrapparameters`, the value for `--wraparguments` will be used.
 + ]
 ```
 
+`--conditionswrap auto`:
+
+```diff
+- guard let foo = foo, let bar = bar, let third = third
++ guard let foo = foo,
++       let bar = bar,
++       let third = third
+  else {}
+```
+
+
 </details>
 <br/>
 
@@ -2528,7 +2784,10 @@ Option | Description
 --- | ---
 `--funcattributes` | Function @attributes: "preserve", "prev-line", or "same-line"
 `--typeattributes` | Type @attributes: "preserve", "prev-line", or "same-line"
-`--varattributes` | Property @attributes: "preserve", "prev-line", or "same-line"
+`--storedvarattrs` | Stored var @attribs: "preserve", "prev-line", or "same-line"
+`--computedvarattrs` | Computed var @attribs: "preserve", "prev-line", "same-line"
+`--complexattrs` | Complex @attributes: "preserve", "prev-line", or "same-line"
+`--noncomplexattrs` | List of @attributes to exclude from complexattrs rule
 
 <details>
 <summary>Examples</summary>

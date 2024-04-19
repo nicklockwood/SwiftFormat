@@ -496,6 +496,12 @@ struct _Descriptors {
         help: "Wrap ternary operators: \"default\", \"before-operators\"",
         keyPath: \.wrapTernaryOperators
     )
+    let conditionsWrap = OptionDescriptor(
+        argumentName: "conditionswrap",
+        displayName: "Conditions Wrap",
+        help: "Wrap conditions as Xcode 12:\"auto\", \"always\", \"disabled\"",
+        keyPath: \.conditionsWrap
+    )
     let closingParenOnSameLine = OptionDescriptor(
         argumentName: "closingparen",
         displayName: "Closing Paren Position",
@@ -503,6 +509,14 @@ struct _Descriptors {
         keyPath: \.closingParenOnSameLine,
         trueValues: ["same-line"],
         falseValues: ["balanced"]
+    )
+    let closingCallSiteParenOnSameLine = OptionDescriptor(
+        argumentName: "callsiteparen",
+        displayName: "Call Site Closing Paren",
+        help: "Closing paren at callsite: \"inherit\" (default) or \"same-line\"",
+        keyPath: \.closingCallSiteParenOnSameLine,
+        trueValues: ["same-line"],
+        falseValues: ["inherit"]
     )
     let uppercaseHex = OptionDescriptor(
         argumentName: "hexliteralcase",
@@ -692,6 +706,12 @@ struct _Descriptors {
             }
         }
     )
+    let spaceAroundDelimiter = OptionDescriptor(
+        argumentName: "typedelimiter",
+        displayName: "Spacing around delimiter",
+        help: "\"trailing\" (default) or \"leading-trailing\"",
+        keyPath: \.spaceAroundDelimiter
+    )
     let spaceAroundRangeOperators = OptionDescriptor(
         argumentName: "ranges",
         displayName: "Ranges",
@@ -845,11 +865,29 @@ struct _Descriptors {
         help: "Type @attributes: \"preserve\", \"prev-line\", or \"same-line\"",
         keyPath: \.typeAttributes
     )
-    let varAttributes = OptionDescriptor(
-        argumentName: "varattributes",
-        displayName: "Var Attributes",
-        help: "Property @attributes: \"preserve\", \"prev-line\", or \"same-line\"",
-        keyPath: \.varAttributes
+    let storedVarAttributes = OptionDescriptor(
+        argumentName: "storedvarattrs",
+        displayName: "Stored Property Attributes",
+        help: "Stored var @attribs: \"preserve\", \"prev-line\", or \"same-line\"",
+        keyPath: \.storedVarAttributes
+    )
+    let computedVarAttributes = OptionDescriptor(
+        argumentName: "computedvarattrs",
+        displayName: "Computed Property Attributes",
+        help: "Computed var @attribs: \"preserve\", \"prev-line\", \"same-line\"",
+        keyPath: \.computedVarAttributes
+    )
+    let complexAttributes = OptionDescriptor(
+        argumentName: "complexattrs",
+        displayName: "Complex Attributes",
+        help: "Complex @attributes: \"preserve\", \"prev-line\", or \"same-line\"",
+        keyPath: \.complexAttributes
+    )
+    let complexAttributesExceptions = OptionDescriptor(
+        argumentName: "noncomplexattrs",
+        displayName: "Complex Attribute exceptions",
+        help: "List of @attributes to exclude from complexattrs rule",
+        keyPath: \.complexAttributesExceptions
     )
     let yodaSwap = OptionDescriptor(
         argumentName: "yodaswap",
@@ -868,6 +906,14 @@ struct _Descriptors {
         displayName: "Redundant Type",
         help: "\"inferred\", \"explicit\", or \"infer-locals-only\" (default)",
         keyPath: \.redundantType
+    )
+    let inferredTypesInConditionalExpressions = OptionDescriptor(
+        argumentName: "inferredtypes",
+        displayName: "Prefer Inferred Types",
+        help: "\"exclude-cond-exprs\" (default) or \"always\"",
+        keyPath: \.inferredTypesInConditionalExpressions,
+        trueValues: ["exclude-cond-exprs"],
+        falseValues: ["always"]
     )
     let emptyBracesSpacing = OptionDescriptor(
         argumentName: "emptybraces",
@@ -949,6 +995,38 @@ struct _Descriptors {
         trueValues: ["preserve"],
         falseValues: ["before-declarations", "declarations"]
     )
+    let conditionalAssignmentOnlyAfterNewProperties = OptionDescriptor(
+        argumentName: "condassignment",
+        displayName: "Apply conditionalAssignment rule",
+        help: "Use cond. assignment: \"after-property\" (default) or \"always\".",
+        keyPath: \.preserveSingleLineForEach,
+        trueValues: ["after-property"],
+        falseValues: ["always"]
+    )
+    let initCoderNil = OptionDescriptor(
+        argumentName: "initcodernil",
+        displayName: "nil for initWithCoder",
+        help: "Replace fatalError with nil inside unavailable init",
+        keyPath: \.initCoderNil,
+        trueValues: ["true", "enabled"],
+        falseValues: ["false", "disabled"]
+    )
+    let dateFormat = OptionDescriptor(
+        argumentName: "dateformat",
+        displayName: "Date format",
+        help: "\"system\" (default), \"iso\", \"dmy\", \"mdy\" or custom",
+        keyPath: \.dateFormat,
+        fromArgument: { DateFormat(rawValue: $0) },
+        toArgument: { $0.rawValue }
+    )
+    let timeZone = OptionDescriptor(
+        argumentName: "timezone",
+        displayName: "Date formatting timezone",
+        help: "\"system\" (default) or a valid identifier/abbreviation",
+        keyPath: \.timeZone,
+        fromArgument: { FormatTimeZone(rawValue: $0) },
+        toArgument: { $0.rawValue }
+    )
 
     // MARK: - Internal
 
@@ -973,6 +1051,12 @@ struct _Descriptors {
         displayName: "Swift Version",
         help: "The version of Swift used in the files being formatted",
         keyPath: \.swiftVersion
+    )
+    let preserveSymbols = OptionDescriptor(
+        argumentName: "preservesymbols",
+        displayName: "Preserve Symbols",
+        help: "Comma-delimited list of symbol names to preserve",
+        keyPath: \.preserveSymbols
     )
 
     // MARK: - DEPRECATED
@@ -1012,6 +1096,13 @@ struct _Descriptors {
         keyPath: \.experimentalRules,
         trueValues: ["enabled", "true"],
         falseValues: ["disabled", "false"]
+    )
+    let varAttributes = OptionDescriptor(
+        argumentName: "varattributes",
+        displayName: "Var Attributes",
+        help: "Property @attributes: \"preserve\", \"prev-line\", or \"same-line\"",
+        deprecationMessage: "Use with `--storedvarattrs` or `--computedvarattrs` instead.",
+        keyPath: \.varAttributes
     )
 
     // MARK: - RENAMED

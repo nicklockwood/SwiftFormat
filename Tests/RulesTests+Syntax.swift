@@ -1803,17 +1803,17 @@ class SyntaxTests: RulesTests {
 
     func testAvoidSwiftParserBugWithClosuresInsideArrays() {
         let input = "var foo = Array<(_ image: Data?) -> Void>()"
-        testFormatting(for: input, rule: FormatRules.typeSugar, options: FormatOptions(shortOptionals: .always))
+        testFormatting(for: input, rule: FormatRules.typeSugar, options: FormatOptions(shortOptionals: .always), exclude: ["propertyType"])
     }
 
     func testAvoidSwiftParserBugWithClosuresInsideDictionaries() {
         let input = "var foo = Dictionary<String, (_ image: Data?) -> Void>()"
-        testFormatting(for: input, rule: FormatRules.typeSugar, options: FormatOptions(shortOptionals: .always))
+        testFormatting(for: input, rule: FormatRules.typeSugar, options: FormatOptions(shortOptionals: .always), exclude: ["propertyType"])
     }
 
     func testAvoidSwiftParserBugWithClosuresInsideOptionals() {
         let input = "var foo = Optional<(_ image: Data?) -> Void>()"
-        testFormatting(for: input, rule: FormatRules.typeSugar, options: FormatOptions(shortOptionals: .always))
+        testFormatting(for: input, rule: FormatRules.typeSugar, options: FormatOptions(shortOptionals: .always), exclude: ["propertyType"])
     }
 
     func testDontOverApplyBugWorkaround() {
@@ -1841,21 +1841,21 @@ class SyntaxTests: RulesTests {
         let input = "var foo = Array<(image: Data?) -> Void>()"
         let output = "var foo = [(image: Data?) -> Void]()"
         let options = FormatOptions(shortOptionals: .always)
-        testFormatting(for: input, output, rule: FormatRules.typeSugar, options: options)
+        testFormatting(for: input, output, rule: FormatRules.typeSugar, options: options, exclude: ["propertyType"])
     }
 
     func testDontOverApplyBugWorkaround5() {
         let input = "var foo = Array<(Data?) -> Void>()"
         let output = "var foo = [(Data?) -> Void]()"
         let options = FormatOptions(shortOptionals: .always)
-        testFormatting(for: input, output, rule: FormatRules.typeSugar, options: options)
+        testFormatting(for: input, output, rule: FormatRules.typeSugar, options: options, exclude: ["propertyType"])
     }
 
     func testDontOverApplyBugWorkaround6() {
         let input = "var foo = Dictionary<Int, Array<(_ image: Data?) -> Void>>()"
         let output = "var foo = [Int: Array<(_ image: Data?) -> Void>]()"
         let options = FormatOptions(shortOptionals: .always)
-        testFormatting(for: input, output, rule: FormatRules.typeSugar, options: options)
+        testFormatting(for: input, output, rule: FormatRules.typeSugar, options: options, exclude: ["propertyType"])
     }
 
     // MARK: - preferKeyPath
@@ -2050,7 +2050,7 @@ class SyntaxTests: RulesTests {
         struct ScreenID {}
         """
 
-        testFormatting(for: input, output, rule: FormatRules.acronyms)
+        testFormatting(for: input, output, rule: FormatRules.acronyms, exclude: ["propertyType"])
     }
 
     func testUppercaseCustomAcronym() {
@@ -3195,7 +3195,7 @@ class SyntaxTests: RulesTests {
         """
 
         testFormatting(for: input, output, rule: FormatRules.docComments,
-                       exclude: ["spaceInsideComments"])
+                       exclude: ["spaceInsideComments", "propertyType"])
     }
 
     func testConvertDocCommentsToComments() {
@@ -3270,7 +3270,7 @@ class SyntaxTests: RulesTests {
         """
 
         testFormatting(for: input, output, rule: FormatRules.docComments,
-                       exclude: ["spaceInsideComments"])
+                       exclude: ["spaceInsideComments", "redundantProperty", "propertyType"])
     }
 
     func testPreservesDocComments() {
@@ -3347,7 +3347,7 @@ class SyntaxTests: RulesTests {
         """
 
         let options = FormatOptions(preserveDocComments: true)
-        testFormatting(for: input, output, rule: FormatRules.docComments, options: options, exclude: ["spaceInsideComments"])
+        testFormatting(for: input, output, rule: FormatRules.docComments, options: options, exclude: ["spaceInsideComments", "redundantProperty", "propertyType"])
     }
 
     func testDoesntConvertCommentBeforeConsecutivePropertiesToDocComment() {
@@ -3628,6 +3628,7 @@ class SyntaxTests: RulesTests {
         case .bar:
             // bar
             let bar = baz()
+
         default:
             // baz
             let baz = quux()
@@ -3762,10 +3763,12 @@ class SyntaxTests: RulesTests {
             } else {
                 foo = Foo("bar")
             }
+
         case false:
             switch condition {
             case true:
                 foo = Foo("baaz")
+
             case false:
                 if condition {
                     foo = Foo("quux")
@@ -3783,10 +3786,12 @@ class SyntaxTests: RulesTests {
             } else {
                 Foo("bar")
             }
+
         case false:
             switch condition {
             case true:
                 Foo("baaz")
+
             case false:
                 if condition {
                     Foo("quux")
@@ -3902,6 +3907,7 @@ class SyntaxTests: RulesTests {
         case true:
             foo = Foo("foo")
             print("Multi-statement")
+
         case false:
             foo = Foo("bar")
         }
@@ -3939,6 +3945,7 @@ class SyntaxTests: RulesTests {
                 foo = Foo("baaz")
             }
             print("Multi-statement")
+
         case false:
             foo = Foo("bar")
         }
@@ -4260,6 +4267,233 @@ class SyntaxTests: RulesTests {
         """
         let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, rule: FormatRules.conditionalAssignment, options: options)
+    }
+
+    func testConvertsIfStatementNotFollowingPropertyDefinition() {
+        let input = """
+        if condition {
+            property = Foo("foo")
+        } else {
+            property = Foo("bar")
+        }
+        """
+
+        let output = """
+        property =
+            if condition {
+                Foo("foo")
+            } else {
+                Foo("bar")
+            }
+        """
+
+        let options = FormatOptions(conditionalAssignmentOnlyAfterNewProperties: false, swiftVersion: "5.9")
+        testFormatting(for: input, [output], rules: [FormatRules.conditionalAssignment, FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent], options: options)
+    }
+
+    func testPreservesIfStatementNotFollowingPropertyDefinitionWithInvalidBranch() {
+        let input = """
+        if condition {
+            property = Foo("foo")
+        } else {
+            property = Foo("bar")
+            print("A second expression on this branch")
+        }
+
+        if condition {
+            property = Foo("foo")
+        } else {
+            if otherCondition {
+                property = Foo("foo")
+            }
+        }
+        """
+
+        let options = FormatOptions(conditionalAssignmentOnlyAfterNewProperties: false, swiftVersion: "5.9")
+        testFormatting(for: input, rules: [FormatRules.conditionalAssignment, FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent], options: options)
+    }
+
+    func testPreservesNonExhaustiveIfStatementNotFollowingPropertyDefinition() {
+        let input = """
+        if condition {
+            property = Foo("foo")
+        }
+
+        if condition {
+            property = Foo("foo")
+        } else if otherCondition {
+            property = Foo("foo")
+        }
+        """
+
+        let options = FormatOptions(conditionalAssignmentOnlyAfterNewProperties: false, swiftVersion: "5.9")
+        testFormatting(for: input, rules: [FormatRules.conditionalAssignment, FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent], options: options)
+    }
+
+    func testConvertsSwitchStatementNotFollowingPropertyDefinition() {
+        let input = """
+        switch condition {
+        case true:
+            property = Foo("foo")
+        case false:
+            property = Foo("bar")
+        }
+        """
+
+        let output = """
+        property =
+            switch condition {
+            case true:
+                Foo("foo")
+            case false:
+                Foo("bar")
+            }
+        """
+
+        let options = FormatOptions(conditionalAssignmentOnlyAfterNewProperties: false, swiftVersion: "5.9")
+        testFormatting(for: input, [output], rules: [FormatRules.conditionalAssignment, FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent], options: options)
+    }
+
+    func testConvertsSwitchStatementWithComplexLValueNotFollowingPropertyDefinition() {
+        let input = """
+        switch condition {
+        case true:
+            property?.foo!.bar["baaz"] = Foo("foo")
+        case false:
+            property?.foo!.bar["baaz"] = Foo("bar")
+        }
+        """
+
+        let output = """
+        property?.foo!.bar["baaz"] =
+            switch condition {
+            case true:
+                Foo("foo")
+            case false:
+                Foo("bar")
+            }
+        """
+
+        let options = FormatOptions(conditionalAssignmentOnlyAfterNewProperties: false, swiftVersion: "5.9")
+        testFormatting(for: input, [output], rules: [FormatRules.conditionalAssignment, FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent], options: options)
+    }
+
+    func testDoesntMergePropertyWithUnrelatedCondition() {
+        let input = """
+        let differentProperty: Foo
+        switch condition {
+        case true:
+            property = Foo("foo")
+        case false:
+            property = Foo("bar")
+        }
+        """
+
+        let output = """
+        let differentProperty: Foo
+        property =
+            switch condition {
+            case true:
+                Foo("foo")
+            case false:
+                Foo("bar")
+            }
+        """
+
+        let options = FormatOptions(conditionalAssignmentOnlyAfterNewProperties: false, swiftVersion: "5.9")
+        testFormatting(for: input, [output], rules: [FormatRules.conditionalAssignment, FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent], options: options)
+    }
+
+    func testConvertsNestedIfSwitchStatementNotFollowingPropertyDefinition() {
+        let input = """
+        switch firstCondition {
+        case true:
+            if secondCondition {
+                property = Foo("foo")
+            } else {
+                property = Foo("bar")
+            }
+
+        case false:
+            if thirdCondition {
+                property = Foo("baaz")
+            } else {
+                property = Foo("quux")
+            }
+        }
+        """
+
+        let output = """
+        property =
+            switch firstCondition {
+            case true:
+                if secondCondition {
+                    Foo("foo")
+                } else {
+                    Foo("bar")
+                }
+
+            case false:
+                if thirdCondition {
+                    Foo("baaz")
+                } else {
+                    Foo("quux")
+                }
+            }
+        """
+
+        let options = FormatOptions(conditionalAssignmentOnlyAfterNewProperties: false, swiftVersion: "5.9")
+        testFormatting(for: input, [output], rules: [FormatRules.conditionalAssignment, FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent], options: options)
+    }
+
+    func testPreservesSwitchConditionWithIneligibleBranch() {
+        let input = """
+        switch firstCondition {
+        case true:
+            // Even though this condition is eligible to be converted,
+            // we leave it as-is because it's nested in an ineligible condition.
+            if secondCondition {
+                property = Foo("foo")
+            } else {
+                property = Foo("bar")
+            }
+
+        case false:
+            if thirdCondition {
+                property = Foo("baaz")
+            } else {
+                property = Foo("quux")
+                print("A second expression on this branch")
+            }
+        }
+        """
+
+        let options = FormatOptions(conditionalAssignmentOnlyAfterNewProperties: false, swiftVersion: "5.9")
+        testFormatting(for: input, rules: [FormatRules.conditionalAssignment, FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent], options: options)
+    }
+
+    func testPreservesIfConditionWithIneligibleBranch() {
+        let input = """
+        if firstCondition {
+            // Even though this condition is eligible to be converted,
+            // we leave it as-is because it's nested in an ineligible condition.
+            if secondCondition {
+                property = Foo("foo")
+            } else {
+                property = Foo("bar")
+            }
+        } else {
+            if thirdCondition {
+                property = Foo("baaz")
+            } else {
+                property = Foo("quux")
+                print("A second expression on this branch")
+            }
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rules: [FormatRules.conditionalAssignment, FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent], options: options)
     }
 
     // MARK: - preferForLoop
@@ -4619,5 +4853,555 @@ class SyntaxTests: RulesTests {
         }
         """
         testFormatting(for: input, rule: FormatRules.preferForLoop)
+    }
+
+    // MARK: propertyType
+
+    func testConvertsExplicitTypeToInferredType() {
+        let input = """
+        let foo: Foo = .init()
+        let bar: Bar = .staticBar
+        let baaz: Baaz = .Example.default
+        let quux: Quux = .quuxBulder(foo: .foo, bar: .bar)
+
+        let dictionary: [Foo: Bar] = .init()
+        let array: [Foo] = .init()
+        let genericType: MyGenericType<Foo, Bar> = .init()
+        """
+
+        let output = """
+        let foo = Foo()
+        let bar = Bar.staticBar
+        let baaz = Baaz.Example.default
+        let quux = Quux.quuxBulder(foo: .foo, bar: .bar)
+
+        let dictionary = [Foo: Bar]()
+        let array = [Foo]()
+        let genericType = MyGenericType<Foo, Bar>()
+        """
+
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, [output], rules: [FormatRules.propertyType, FormatRules.redundantInit], options: options)
+    }
+
+    func testConvertsInferredTypeToExplicitType() {
+        let input = """
+        let foo = Foo()
+        let bar = Bar.staticBar
+        let quux = Quux.quuxBulder(foo: .foo, bar: .bar)
+
+        let dictionary = [Foo: Bar]()
+        let array = [Foo]()
+        let genericType = MyGenericType<Foo, Bar>()
+        """
+
+        let output = """
+        let foo: Foo = .init()
+        let bar: Bar = .staticBar
+        let quux: Quux = .quuxBulder(foo: .foo, bar: .bar)
+
+        let dictionary: [Foo: Bar] = .init()
+        let array: [Foo] = .init()
+        let genericType: MyGenericType<Foo, Bar> = .init()
+        """
+
+        let options = FormatOptions(redundantType: .explicit)
+        testFormatting(for: input, output, rule: FormatRules.propertyType, options: options)
+    }
+
+    func testConvertsTypeMembersToExplicitType() {
+        let input = """
+        struct Foo {
+            let foo = Foo()
+            let bar = Bar.staticBar
+            let quux = Quux.quuxBulder(foo: .foo, bar: .bar)
+
+            let dictionary = [Foo: Bar]()
+            let array = [Foo]()
+            let genericType = MyGenericType<Foo, Bar>()
+        }
+        """
+
+        let output = """
+        struct Foo {
+            let foo: Foo = .init()
+            let bar: Bar = .staticBar
+            let quux: Quux = .quuxBulder(foo: .foo, bar: .bar)
+
+            let dictionary: [Foo: Bar] = .init()
+            let array: [Foo] = .init()
+            let genericType: MyGenericType<Foo, Bar> = .init()
+        }
+        """
+
+        let options = FormatOptions(redundantType: .inferLocalsOnly)
+        testFormatting(for: input, output, rule: FormatRules.propertyType, options: options)
+    }
+
+    func testConvertsLocalsToImplicitType() {
+        let input = """
+        struct Foo {
+            let foo = Foo()
+
+            func bar() {
+                let bar: Bar = .staticBar
+                let quux: Quux = .quuxBulder(foo: .foo, bar: .bar)
+
+                let dictionary: [Foo: Bar] = .init()
+                let array: [Foo] = .init()
+                let genericType: MyGenericType<Foo, Bar> = .init()
+            }
+        }
+        """
+
+        let output = """
+        struct Foo {
+            let foo: Foo = .init()
+
+            func bar() {
+                let bar = Bar.staticBar
+                let quux = Quux.quuxBulder(foo: .foo, bar: .bar)
+
+                let dictionary = [Foo: Bar]()
+                let array = [Foo]()
+                let genericType = MyGenericType<Foo, Bar>()
+            }
+        }
+        """
+
+        let options = FormatOptions(redundantType: .inferLocalsOnly)
+        testFormatting(for: input, [output], rules: [FormatRules.propertyType, FormatRules.redundantInit], options: options)
+    }
+
+    func testPreservesInferredTypeFollowingTypeWithDots() {
+        let input = """
+        let baaz = Baaz.Example.default
+        let color = Color.Theme.default
+        """
+
+        let options = FormatOptions(redundantType: .explicit)
+        testFormatting(for: input, rule: FormatRules.propertyType, options: options)
+    }
+
+    func testPreservesExplicitTypeIfNoRHS() {
+        let input = """
+        let foo: Foo
+        let bar: Bar
+        """
+
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, rule: FormatRules.propertyType, options: options)
+    }
+
+    func testPreservesImplicitTypeIfNoRHSType() {
+        let input = """
+        let foo = foo()
+        let bar = bar
+        let int = 24
+        let array = ["string"]
+        """
+
+        let options = FormatOptions(redundantType: .explicit)
+        testFormatting(for: input, rule: FormatRules.propertyType, options: options)
+    }
+
+    func testPreservesImplicitForVoidAndTuples() {
+        let input = """
+        let foo = Void()
+        let foo = (foo: "foo", bar: "bar").foo
+        let foo = ["bar", "baz"].quux(quuz)
+        let foo = [bar].first
+        let foo = [bar, baaz].first
+        let foo = ["foo": "bar"].first
+        let foo = [foo: bar].first
+        """
+
+        let options = FormatOptions(redundantType: .explicit)
+        testFormatting(for: input, rule: FormatRules.propertyType, options: options, exclude: ["void"])
+    }
+
+    func testPreservesExplicitTypeIfUsingLocalValueOrLiteral() {
+        let input = """
+        let foo: Foo = localFoo
+        let bar: Bar = localBar
+        let int: Int64 = 1234
+        let number: CGFloat = 12.345
+        let array: [String] = []
+        let dictionary: [String: Int] = [:]
+        let tuple: (String, Int) = ("foo", 123)
+        """
+
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, rule: FormatRules.propertyType, options: options, exclude: ["redundantType"])
+    }
+
+    func testCompatibleWithRedundantTypeInferred() {
+        let input = """
+        let foo: Foo = Foo()
+        """
+
+        let output = """
+        let foo = Foo()
+        """
+
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, [output], rules: [FormatRules.redundantType, FormatRules.propertyType], options: options)
+    }
+
+    func testCompatibleWithRedundantTypeExplicit() {
+        let input = """
+        let foo: Foo = Foo()
+        """
+
+        let output = """
+        let foo: Foo = .init()
+        """
+
+        let options = FormatOptions(redundantType: .explicit)
+        testFormatting(for: input, [output], rules: [FormatRules.redundantType, FormatRules.propertyType], options: options)
+    }
+
+    func testCompatibleWithRedundantTypeInferLocalsOnly() {
+        let input = """
+        let foo: Foo = Foo.init()
+        let foo: Foo = .init()
+
+        func bar() {
+            let baaz: Baaz = Baaz.init()
+            let baaz: Baaz = .init()
+        }
+        """
+
+        let output = """
+        let foo: Foo = .init()
+        let foo: Foo = .init()
+
+        func bar() {
+            let baaz = Baaz()
+            let baaz = Baaz()
+        }
+        """
+
+        let options = FormatOptions(redundantType: .inferLocalsOnly)
+        testFormatting(for: input, [output], rules: [FormatRules.redundantType, FormatRules.propertyType, FormatRules.redundantInit], options: options)
+    }
+
+    func testPropertyTypeWithIfExpressionDisabledByDefault() {
+        let input = """
+        let foo: SomeTypeWithALongGenrericName<AndGenericArgument> =
+            if condition {
+                .init(bar)
+            } else {
+                .init(baaz)
+            }
+        """
+
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, rule: FormatRules.propertyType, options: options)
+    }
+
+    func testPropertyTypeWithIfExpression() {
+        let input = """
+        let foo: Foo =
+            if condition {
+                .init(bar)
+            } else {
+                .init(baaz)
+            }
+        """
+
+        let output = """
+        let foo =
+            if condition {
+                Foo(bar)
+            } else {
+                Foo(baaz)
+            }
+        """
+
+        let options = FormatOptions(redundantType: .inferred, inferredTypesInConditionalExpressions: true)
+        testFormatting(for: input, [output], rules: [FormatRules.propertyType, FormatRules.redundantInit], options: options)
+    }
+
+    func testPropertyTypeWithSwitchExpression() {
+        let input = """
+        let foo: Foo =
+            switch condition {
+            case true:
+                .init(bar)
+            case false:
+                .init(baaz)
+            }
+        """
+
+        let output = """
+        let foo =
+            switch condition {
+            case true:
+                Foo(bar)
+            case false:
+                Foo(baaz)
+            }
+        """
+
+        let options = FormatOptions(redundantType: .inferred, inferredTypesInConditionalExpressions: true)
+        testFormatting(for: input, [output], rules: [FormatRules.propertyType, FormatRules.redundantInit], options: options)
+    }
+
+    func testPreservesNonMatchingIfExpression() {
+        let input = """
+        let foo: Foo =
+            if condition {
+                .init(bar)
+            } else {
+                [] // e.g. using ExpressibleByArrayLiteral
+            }
+        """
+
+        let options = FormatOptions(redundantType: .inferred, inferredTypesInConditionalExpressions: true)
+        testFormatting(for: input, rule: FormatRules.propertyType, options: options)
+    }
+
+    func testPreservesExplicitOptionalType() {
+        // `let foo = Foo?.foo` doesn't work if `.foo` is defined on `Foo` but not `Foo?`
+        let input = """
+        let optionalFoo1: Foo? = .foo
+        let optionalFoo2: Foo? = Foo.foo
+        let optionalFoo3: Foo! = .foo
+        let optionalFoo4: Foo! = Foo.foo
+        """
+
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, rule: FormatRules.propertyType, options: options)
+    }
+
+    func testPreservesTypeWithSeparateDeclarationAndProperty() {
+        let input = """
+        var foo: Foo!
+        foo = Foo(afterDelay: {
+            print(foo)
+        })
+        """
+
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, rule: FormatRules.propertyType, options: options)
+    }
+
+    func testPreservesTypeWithExistentialAny() {
+        let input = """
+        protocol ShapeStyle {}
+        struct MyShapeStyle: ShapeStyle {}
+
+        extension ShapeStyle where Self == MyShapeStyle {
+            static var myShape: MyShapeStyle { MyShapeStyle() }
+        }
+
+        /// This compiles
+        let myShape1: any ShapeStyle = .myShape
+
+        // This would fail with "error: static member 'myShape' cannot be used on protocol metatype '(any ShapeStyle).Type'"
+        // let myShape2 = (any ShapeStyle).myShape
+        """
+
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, rule: FormatRules.propertyType, options: options)
+    }
+
+    func testPreservesExplicitRightHandSideWithOperator() {
+        let input = """
+        let value: ClosedRange<Int> = .zero ... 10
+        let dynamicTypeSizeRange: ClosedRange<DynamicTypeSize> = .large ... .xxxLarge
+        let dynamicTypeSizeRange: ClosedRange<DynamicTypeSize> = .large() ... .xxxLarge()
+        let dynamicTypeSizeRange: ClosedRange<DynamicTypeSize> = .convertFromLiteral(.large ... .xxxLarge)
+        """
+
+        let output = """
+        let value: ClosedRange<Int> = .zero ... 10
+        let dynamicTypeSizeRange: ClosedRange<DynamicTypeSize> = .large ... .xxxLarge
+        let dynamicTypeSizeRange: ClosedRange<DynamicTypeSize> = .large() ... .xxxLarge()
+        let dynamicTypeSizeRange = ClosedRange<DynamicTypeSize>.convertFromLiteral(.large ... .xxxLarge)
+        """
+
+        let options = FormatOptions(redundantType: .inferred)
+        testFormatting(for: input, output, rule: FormatRules.propertyType, options: options)
+    }
+
+    func testPreservesInferredRightHandSideWithOperators() {
+        let input = """
+        let foo = Foo().bar
+        let foo = Foo.bar.baaz.quux
+        let foo = Foo.bar ... baaz
+        """
+
+        let options = FormatOptions(redundantType: .explicit)
+        testFormatting(for: input, rule: FormatRules.propertyType, options: options)
+    }
+
+    func testPreservesUserProvidedSymbolTypes() {
+        let input = """
+        class Foo {
+            let foo = Foo()
+            let bar = Bar()
+
+            func bar() {
+                let foo: Foo = .foo
+                let bar: Bar = .bar
+                let baaz: Baaz = .baaz
+                let quux: Quux = .quux
+            }
+        }
+        """
+
+        let output = """
+        class Foo {
+            let foo = Foo()
+            let bar: Bar = .init()
+
+            func bar() {
+                let foo: Foo = .foo
+                let bar = Bar.bar
+                let baaz: Baaz = .baaz
+                let quux: Quux = .quux
+            }
+        }
+        """
+
+        let options = FormatOptions(redundantType: .inferLocalsOnly, preserveSymbols: ["Foo", "Baaz", "quux"])
+        testFormatting(for: input, output, rule: FormatRules.propertyType, options: options)
+    }
+
+    func testPreserveInitIfExplicitlyExcluded() {
+        let input = """
+        class Foo {
+            let foo = Foo()
+            let bar = Bar.init()
+            let baaz = Baaz.baaz()
+
+            func bar() {
+                let foo: Foo = .init()
+                let bar: Bar = .init()
+                let baaz: Baaz = .baaz()
+            }
+        }
+        """
+
+        let output = """
+        class Foo {
+            let foo = Foo()
+            let bar = Bar.init()
+            let baaz: Baaz = .baaz()
+
+            func bar() {
+                let foo: Foo = .init()
+                let bar: Bar = .init()
+                let baaz = Baaz.baaz()
+            }
+        }
+        """
+
+        let options = FormatOptions(redundantType: .inferLocalsOnly, preserveSymbols: ["init"])
+        testFormatting(for: input, output, rule: FormatRules.propertyType, options: options, exclude: ["redundantInit"])
+    }
+
+    func testClosureBodyIsConsideredLocal() {
+        let input = """
+        foo {
+            let bar = Bar()
+            let baaz: Baaz = .init()
+        }
+
+        foo(bar: bar, baaz: baaz, quux: {
+            let bar = Bar()
+            let baaz: Baaz = .init()
+        })
+
+        foo {
+            let bar = Bar()
+            let baaz: Baaz = .init()
+        } bar: {
+            let bar = Bar()
+            let baaz: Baaz = .init()
+        }
+
+        class Foo {
+            let foo = Foo.bar {
+                let baaz = Baaz()
+                let baaz: Baaz = .init()
+            }
+        }
+        """
+
+        let output = """
+        foo {
+            let bar = Bar()
+            let baaz = Baaz()
+        }
+
+        foo(bar: bar, baaz: baaz, quux: {
+            let bar = Bar()
+            let baaz = Baaz()
+        })
+
+        foo {
+            let bar = Bar()
+            let baaz = Baaz()
+        } bar: {
+            let bar = Bar()
+            let baaz = Baaz()
+        }
+
+        class Foo {
+            let foo: Foo = .bar {
+                let baaz = Baaz()
+                let baaz = Baaz()
+            }
+        }
+        """
+
+        let options = FormatOptions(redundantType: .inferLocalsOnly)
+        testFormatting(for: input, [output], rules: [FormatRules.propertyType, FormatRules.redundantInit], options: options)
+    }
+
+    func testIfGuardConditionsPreserved() {
+        let input = """
+        if let foo = Foo(bar) {
+            let foo = Foo(bar)
+        } else if let foo = Foo(bar) {
+            let foo = Foo(bar)
+        } else {
+            let foo = Foo(bar)
+        }
+
+        guard let foo = Foo(bar) else {
+            return
+        }
+        """
+
+        let options = FormatOptions(redundantType: .inferLocalsOnly)
+        testFormatting(for: input, rule: FormatRules.propertyType, options: options)
+    }
+
+    func testPropertyObserversConsideredLocal() {
+        let input = """
+        class Foo {
+            var foo: Foo {
+                get {
+                    let foo = Foo(bar)
+                }
+                set {
+                    let foo = Foo(bar)
+                }
+                willSet {
+                    let foo = Foo(bar)
+                }
+                didSet {
+                    let foo = Foo(bar)
+                }
+            }
+        }
+        """
+
+        let options = FormatOptions(redundantType: .inferLocalsOnly)
+        testFormatting(for: input, rule: FormatRules.propertyType, options: options)
     }
 }

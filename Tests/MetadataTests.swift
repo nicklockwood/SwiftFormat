@@ -86,8 +86,11 @@ class MetadataTests: XCTestCase {
             if !rule.options.isEmpty {
                 result += "\n\nOption | Description\n--- | ---"
                 for option in rule.options {
-                    let help = Descriptors.byName[option]!.help
-                    result += "\n`--\(option)` | \(help)"
+                    let descriptor = Descriptors.byName[option]!
+                    guard !descriptor.isDeprecated else {
+                        continue
+                    }
+                    result += "\n`--\(option)` | \(descriptor.help)"
                 }
             }
             if let examples = rule.examples {
@@ -195,10 +198,11 @@ class MetadataTests: XCTestCase {
                 case .identifier("wrapCollectionsAndArguments"):
                     referencedOptions += [
                         Descriptors.wrapArguments, Descriptors.wrapParameters, Descriptors.wrapCollections,
-                        Descriptors.closingParenOnSameLine, Descriptors.linebreak, Descriptors.truncateBlankLines,
+                        Descriptors.closingParenOnSameLine, Descriptors.closingCallSiteParenOnSameLine,
+                        Descriptors.linebreak, Descriptors.truncateBlankLines,
                         Descriptors.indent, Descriptors.tabWidth, Descriptors.smartTabs, Descriptors.maxWidth,
                         Descriptors.assetLiteralWidth, Descriptors.wrapReturnType, Descriptors.wrapEffects,
-                        Descriptors.wrapConditions, Descriptors.wrapTypealiases, Descriptors.wrapTernaryOperators,
+                        Descriptors.wrapConditions, Descriptors.wrapTypealiases, Descriptors.wrapTernaryOperators, Descriptors.conditionsWrap,
                     ]
                 case .identifier("wrapStatementBody"):
                     referencedOptions += [Descriptors.indent, Descriptors.linebreak]
@@ -236,6 +240,7 @@ class MetadataTests: XCTestCase {
                     continue
                 }
             }
+
             for option in referencedOptions {
                 XCTAssert(ruleOptions.contains(option.argumentName) || option.isDeprecated,
                           "\(option.argumentName) not listed in \(name) rule")
@@ -271,7 +276,10 @@ class MetadataTests: XCTestCase {
     func testArgumentNamesAreValidLength() {
         let arguments = Set(commandLineArguments).subtracting(deprecatedArguments)
         for argument in arguments {
-            XCTAssert(argument.count <= Options.maxArgumentNameLength)
+            XCTAssert(
+                argument.count <= Options.maxArgumentNameLength,
+                "\"\(argument)\" (length=\(argument.count)) longer than maximum allowed argument name length \(Options.maxArgumentNameLength)"
+            )
         }
     }
 

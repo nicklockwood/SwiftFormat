@@ -494,7 +494,7 @@ public struct _FormatRules {
     ///   preceded by a space, unless it appears at the beginning of a line.
     public let spaceAroundOperators = FormatRule(
         help: "Add or remove space around operators or delimiters.",
-        options: ["operatorfunc", "nospaceoperators", "ranges"]
+        options: ["operatorfunc", "nospaceoperators", "ranges", "typedelimiter"]
     ) { formatter in
         formatter.forEachToken { i, token in
             switch token {
@@ -601,11 +601,15 @@ public struct _FormatRules {
                     // Ensure there is a space after the token
                     formatter.insert(.space(" "), at: i + 1)
                 }
-                if formatter.token(at: i - 1)?.isSpace == true,
-                   formatter.token(at: i - 2)?.isLinebreak == false
-                {
+
+                let spaceBeforeToken = formatter.token(at: i - 1)?.isSpace == true
+                    && formatter.token(at: i - 2)?.isLinebreak == false
+
+                if spaceBeforeToken, formatter.options.spaceAroundDelimiter == .trailing {
                     // Remove space before the token
                     formatter.removeToken(at: i - 1)
+                } else if !spaceBeforeToken, formatter.options.spaceAroundDelimiter == .leadingTrailing {
+                    formatter.insertSpace(" ", at: i)
                 }
             default:
                 break
@@ -1650,7 +1654,6 @@ public struct _FormatRules {
                 linewrapStack.append(false)
                 scopeStack.append(.operator("=", .infix))
                 scopeStartLineIndexes.append(lineIndex)
-
             default:
                 // If this is the final `endOfScope` in a conditional assignment,
                 // we have to end the scope introduced by that assignment operator.
@@ -2108,7 +2111,6 @@ public struct _FormatRules {
                 if linewrapped, shouldIndentNextLine(at: i) {
                     indentStack[indentStack.count - 1] += formatter.options.indent
                 }
-
             default:
                 break
             }
@@ -2157,7 +2159,7 @@ public struct _FormatRules {
         Add `@available(*, unavailable)` attribute to required `init(coder:)` when
         it hasn't been implemented.
         """,
-        options: [],
+        options: ["initcodernil"],
         sharedOptions: ["linebreaks"]
     ) { formatter in
         let unavailableTokens = tokenize("@available(*, unavailable)")
@@ -2179,9 +2181,16 @@ public struct _FormatRules {
             else { return }
 
             // make sure the implementation is empty or fatalError
-            guard let firstToken = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: braceIndex, if: {
+            guard let firstTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: braceIndex, if: {
                 [.endOfScope("}"), .identifier("fatalError")].contains($0)
             }) else { return }
+
+            if formatter.options.initCoderNil,
+               formatter.token(at: firstTokenIndex) == .identifier("fatalError"),
+               let fatalParenEndOfScope = formatter.index(of: .endOfScope, after: firstTokenIndex + 1)
+            {
+                formatter.replaceTokens(in: firstTokenIndex ... fatalParenEndOfScope, with: [.identifier("nil")])
+            }
 
             // avoid adding attribute if it's already there
             if formatter.modifiersForDeclaration(at: i, contains: "@available") { return }
@@ -2737,10 +2746,10 @@ public struct _FormatRules {
                    }) == nil,
                    let scopeIndex = formatter.startOfScope(at: i)
                 {
-                    isClosure = formatter.isStartOfClosure(at: scopeIndex)
+                    isClosure = formatter.isStartOfClosure(at: scopeIndex) && formatter.isInClosureArguments(at: i)
                 }
                 if !isClosure, nextToken != .keyword("in") {
-                    return // It's a closure type or function declaration
+                    return // It's a closure type, function declaration or for loop
                 }
             case .operator:
                 if case let .operator(inner, _)? = formatter.last(.nonSpace, before: closingIndex),
@@ -3873,8 +3882,9 @@ public struct _FormatRules {
     public let wrap = FormatRule(
         help: "Wrap lines that exceed the specified maximum width.",
         options: ["maxwidth", "nowrapoperators", "assetliterals", "wrapternary"],
-        sharedOptions: ["wraparguments", "wrapparameters", "wrapcollections", "closingparen", "indent",
-                        "trimwhitespace", "linebreaks", "tabwidth", "maxwidth", "smarttabs", "wrapreturntype", "wrapconditions", "wraptypealiases", "wrapternary", "wrapeffects"]
+        sharedOptions: ["wraparguments", "wrapparameters", "wrapcollections", "closingparen", "callsiteparen", "indent",
+                        "trimwhitespace", "linebreaks", "tabwidth", "maxwidth", "smarttabs", "wrapreturntype",
+                        "wrapconditions", "wraptypealiases", "wrapternary", "wrapeffects", "conditionswrap"]
     ) { formatter in
         let maxWidth = formatter.options.maxWidth
         guard maxWidth > 0 else { return }
@@ -3930,8 +3940,9 @@ public struct _FormatRules {
     public let wrapArguments = FormatRule(
         help: "Align wrapped function arguments or collection elements.",
         orderAfter: ["wrap"],
-        options: ["wraparguments", "wrapparameters", "wrapcollections", "closingparen",
-                  "wrapreturntype", "wrapconditions", "wraptypealiases", "wrapeffects"],
+        options: ["wraparguments", "wrapparameters", "wrapcollections", "closingparen", "callsiteparen",
+                  "wrapreturntype", "wrapconditions", "wraptypealiases", "wrapeffects",
+                  "conditionswrap"],
         sharedOptions: ["indent", "trimwhitespace", "linebreaks",
                         "tabwidth", "maxwidth", "smarttabs", "assetliterals", "wrapternary"]
     ) { formatter in
@@ -4322,7 +4333,7 @@ public struct _FormatRules {
     public let fileHeader = FormatRule(
         help: "Use specified source file header template for all files.",
         runOnceOnly: true,
-        options: ["header"],
+        options: ["header", "dateformat", "timezone"],
         sharedOptions: ["linebreaks"]
     ) { formatter in
         var headerTokens = [Token]()
@@ -4331,23 +4342,18 @@ public struct _FormatRules {
         case .ignore:
             return
         case var .replace(string):
-            if let range = string.range(of: "{file}"),
-               let file = formatter.options.fileInfo.fileName
-            {
-                string.replaceSubrange(range, with: file)
-            }
-            if let range = string.range(of: "{year}") {
-                string.replaceSubrange(range, with: currentYear)
-            }
-            if let range = string.range(of: "{created}"),
-               let date = formatter.options.fileInfo.creationDate
-            {
-                string.replaceSubrange(range, with: shortDateFormatter(date))
-            }
-            if let range = string.range(of: "{created.year}"),
-               let date = formatter.options.fileInfo.creationDate
-            {
-                string.replaceSubrange(range, with: yearFormatter(date))
+            let file = formatter.options.fileInfo
+            let options = ReplacementOptions(
+                dateFormat: formatter.options.dateFormat,
+                timeZone: formatter.options.timeZone
+            )
+
+            for (key, replacement) in formatter.options.fileInfo.replacements {
+                if let replacementStr = replacement.resolve(file, options) {
+                    while let range = string.range(of: "{\(key.rawValue)}") {
+                        string.replaceSubrange(range, with: replacementStr)
+                    }
+                }
             }
             headerTokens = tokenize(string)
             directives = headerTokens.compactMap {
@@ -4420,7 +4426,8 @@ public struct _FormatRules {
 
     /// Strip redundant `.init` from type instantiations
     public let redundantInit = FormatRule(
-        help: "Remove explicit `init` if not required."
+        help: "Remove explicit `init` if not required.",
+        orderAfter: ["propertyType"]
     ) { formatter in
         formatter.forEach(.identifier("init")) { initIndex, _ in
             guard let dotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: initIndex, if: {
@@ -5468,7 +5475,7 @@ public struct _FormatRules {
 
     public let wrapAttributes = FormatRule(
         help: "Wrap @attributes onto a separate line, or keep them on the same line.",
-        options: ["funcattributes", "typeattributes", "varattributes"],
+        options: ["funcattributes", "typeattributes", "varattributes", "storedvarattrs", "computedvarattrs", "complexattrs", "noncomplexattrs"],
         sharedOptions: ["linebreaks", "maxwidth"]
     ) { formatter in
         formatter.forEach(.attribute) { i, _ in
@@ -5490,16 +5497,39 @@ public struct _FormatRules {
             }
 
             // Check which `AttributeMode` option to use
-            let attributeMode: AttributeMode
+            var attributeMode: AttributeMode
             switch formatter.tokens[keywordIndex].string {
             case "func", "init", "subscript":
                 attributeMode = formatter.options.funcAttributes
             case "class", "actor", "struct", "enum", "protocol", "extension":
                 attributeMode = formatter.options.typeAttributes
             case "var", "let":
-                attributeMode = formatter.options.varAttributes
+                let storedOrComputedAttributeMode: AttributeMode
+                if formatter.isStoredProperty(atIntroducerIndex: keywordIndex) {
+                    storedOrComputedAttributeMode = formatter.options.storedVarAttributes
+                } else {
+                    storedOrComputedAttributeMode = formatter.options.computedVarAttributes
+                }
+
+                // If the relevant `storedvarattrs` or `computedvarattrs` option hasn't been configured,
+                // fall back to the previous (now deprecated) `varattributes` option.
+                if storedOrComputedAttributeMode == .preserve {
+                    attributeMode = formatter.options.varAttributes
+                } else {
+                    attributeMode = storedOrComputedAttributeMode
+                }
             default:
                 return
+            }
+
+            // If the complexAttributes option is configured, it takes precedence over other options
+            // if this is a complex attributes with arguments.
+            let attributeName = formatter.tokens[i].string
+            let isComplexAttribute = formatter.isComplexAttribute(at: i)
+                && !formatter.options.complexAttributesExceptions.contains(attributeName)
+
+            if isComplexAttribute, formatter.options.complexAttributes != .preserve {
+                attributeMode = formatter.options.complexAttributes
             }
 
             // Apply the `AttributeMode`
@@ -7102,31 +7132,35 @@ public struct _FormatRules {
 
     public let conditionalAssignment = FormatRule(
         help: "Assign properties using if / switch expressions.",
-        orderAfter: ["redundantReturn"]
+        orderAfter: ["redundantReturn"],
+        options: ["condassignment"]
     ) { formatter in
         // If / switch expressions were added in Swift 5.9 (SE-0380)
         guard formatter.options.swiftVersion >= "5.9" else {
             return
         }
 
-        formatter.forEach(.keyword) { introducerIndex, introducerToken in
-            // Look for declarations of the pattern:
-            //
-            // let foo: Foo
-            // if/switch...
-            //
-            guard ["let", "var"].contains(introducerToken.string),
-                  let identifierIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: introducerIndex),
-                  let identifier = formatter.token(at: identifierIndex),
-                  identifier.isIdentifier,
-                  let colonIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: identifierIndex),
-                  formatter.tokens[colonIndex] == .delimiter(":"),
-                  let startOfTypeIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: colonIndex)
+        formatter.forEach(.keyword) { startOfConditional, keywordToken in
+            // Look for an if/switch expression where the first branch starts with `identifier =`
+            guard ["if", "switch"].contains(keywordToken.string),
+                  let conditionalBranches = formatter.conditionalBranches(at: startOfConditional),
+                  var startOfFirstBranch = conditionalBranches.first?.startOfBranch
             else { return }
 
-            guard let (typeName, typeRange) = formatter.parseType(at: startOfTypeIndex),
-                  let startOfConditional = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: typeRange.upperBound),
-                  let conditionalBranches = formatter.conditionalBranches(at: startOfConditional)
+            // Traverse any nested if/switch branches until we find the first code branch
+            while let firstTokenInBranch = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: startOfFirstBranch),
+                  ["if", "switch"].contains(formatter.tokens[firstTokenInBranch].string),
+                  let nestedConditionalBranches = formatter.conditionalBranches(at: firstTokenInBranch),
+                  let startOfNestedBranch = nestedConditionalBranches.first?.startOfBranch
+            {
+                startOfFirstBranch = startOfNestedBranch
+            }
+
+            // Check if the first branch starts with the pattern `lvalue =`.
+            guard let firstTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: startOfFirstBranch),
+                  let lvalueRange = formatter.parseExpressionRange(startingAt: firstTokenIndex),
+                  let equalsIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: lvalueRange.upperBound),
+                  formatter.tokens[equalsIndex] == .operator("=", .infix)
             else { return }
 
             // Whether or not the conditional statement that starts at the given index
@@ -7156,7 +7190,7 @@ public struct _FormatRules {
 
             // Whether or not the given conditional branch body qualifies as a single statement
             // that assigns a value to `identifier`. This is either:
-            //  1. a single assignment to `identifier =`
+            //  1. a single assignment to `lvalue =`
             //  2. a single `if` or `switch` statement where each of the branches also qualify,
             //     and the statement is exhaustive.
             func isExhaustiveSingleStatementAssignment(_ branch: Formatter.ConditionalBranch) -> Bool {
@@ -7183,9 +7217,10 @@ public struct _FormatRules {
                         && isExhaustive
                 }
 
-                // Otherwise we expect this to be of the pattern `identifier = (statement)`
-                else if formatter.tokens[firstTokenIndex] == identifier,
-                        let equalsIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: firstTokenIndex),
+                // Otherwise we expect this to be of the pattern `lvalue = (statement)`
+                else if let firstExpressionRange = formatter.parseExpressionRange(startingAt: firstTokenIndex),
+                        formatter.tokens[firstExpressionRange] == formatter.tokens[lvalueRange],
+                        let equalsIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: firstExpressionRange.upperBound),
                         formatter.tokens[equalsIndex] == .operator("=", .infix),
                         let valueStartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex)
                 {
@@ -7233,42 +7268,102 @@ public struct _FormatRules {
                 return
             }
 
-            // Remove the `identifier =` from each conditional branch,
-            formatter.forEachRecursiveConditionalBranch(in: conditionalBranches) { branch in
-                guard let firstTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: branch.startOfBranch),
-                      let equalsIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: firstTokenIndex),
-                      formatter.tokens[equalsIndex] == .operator("=", .infix),
-                      let valueStartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex)
-                else { return }
+            // Removes the `identifier =` from each conditional branch
+            func removeAssignmentFromAllBranches() {
+                formatter.forEachRecursiveConditionalBranch(in: conditionalBranches) { branch in
+                    guard let firstTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: branch.startOfBranch),
+                          let firstExpressionRange = formatter.parseExpressionRange(startingAt: firstTokenIndex),
+                          let equalsIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: firstExpressionRange.upperBound),
+                          formatter.tokens[equalsIndex] == .operator("=", .infix),
+                          let valueStartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex)
+                    else { return }
 
-                formatter.removeTokens(in: firstTokenIndex ..< valueStartIndex)
+                    formatter.removeTokens(in: firstTokenIndex ..< valueStartIndex)
+                }
             }
 
-            // Lastly we have to insert an `=` between the type and the conditional
-            let rangeBetweenTypeAndConditional = (typeRange.upperBound + 1) ..< startOfConditional
+            // If this expression follows a property like `let identifier: Type`, we just
+            // have to insert an `=` between property and the conditional.
+            //  - Find the introducer (let/var), parse the property, and verify that the identifier
+            //    matches the identifier assigned on each conditional branch.
+            if let introducerIndex = formatter.indexOfLastSignificantKeyword(at: startOfConditional, excluding: ["if", "switch"]),
+               ["let", "var"].contains(formatter.tokens[introducerIndex].string),
+               let property = formatter.parsePropertyDeclaration(atIntroducerIndex: introducerIndex),
+               formatter.tokens[lvalueRange.lowerBound].string == property.identifier,
+               property.value == nil,
+               let typeRange = property.type?.range,
+               let nextTokenAfterProperty = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: typeRange.upperBound),
+               nextTokenAfterProperty == startOfConditional
+            {
+                removeAssignmentFromAllBranches()
 
-            // If there are no comments between the type and conditional,
-            // we reformat it from:
-            //
-            // let foo: Foo\n
-            // if condition {
-            //
-            // to:
-            //
-            // let foo: Foo = if condition {
-            //
-            if formatter.tokens[rangeBetweenTypeAndConditional].allSatisfy(\.isSpaceOrLinebreak) {
-                formatter.replaceTokens(in: rangeBetweenTypeAndConditional, with: [
+                let rangeBetweenTypeAndConditional = (typeRange.upperBound + 1) ..< startOfConditional
+
+                // If there are no comments between the type and conditional,
+                // we reformat it from:
+                //
+                // let foo: Foo\n
+                // if condition {
+                //
+                // to:
+                //
+                // let foo: Foo = if condition {
+                //
+                if formatter.tokens[rangeBetweenTypeAndConditional].allSatisfy(\.isSpaceOrLinebreak) {
+                    formatter.replaceTokens(in: rangeBetweenTypeAndConditional, with: [
+                        .space(" "),
+                        .operator("=", .infix),
+                        .space(" "),
+                    ])
+                }
+
+                // But if there are comments, then we shouldn't just delete them.
+                // Instead we just insert `= ` after the type.
+                else {
+                    formatter.insert([.operator("=", .infix), .space(" ")], at: startOfConditional)
+                }
+            }
+
+            // Otherwise we insert an `identifier =` before the if/switch expression
+            else if !formatter.options.conditionalAssignmentOnlyAfterNewProperties {
+                // In this case we should only apply the conversion if this is a top-level condition,
+                // and not nested in some parent condition. In large complex if/switch conditions
+                // with multiple layers of nesting, for example, this prevents us from making any
+                // changes unless the entire set of nested conditions can be converted as a unit.
+                //  - First attempt to find and parse a parent if / switch condition.
+                var startOfParentScope = formatter.startOfScope(at: startOfConditional)
+
+                // If we're inside a switch case, expand to look at the whole switch statement
+                while let currentStartOfParentScope = startOfParentScope,
+                      formatter.tokens[currentStartOfParentScope] == .startOfScope(":"),
+                      let caseToken = formatter.index(of: .endOfScope("case"), before: currentStartOfParentScope)
+                {
+                    startOfParentScope = formatter.startOfScope(at: caseToken)
+                }
+
+                if let startOfParentScope = startOfParentScope,
+                   let mostRecentIfOrSwitch = formatter.index(of: .keyword, before: startOfParentScope, if: { ["if", "switch"].contains($0.string) }),
+                   let conditionalBranches = formatter.conditionalBranches(at: mostRecentIfOrSwitch),
+                   let startOfFirstParentBranch = conditionalBranches.first?.startOfBranch,
+                   let endOfLastParentBranch = conditionalBranches.last?.endOfBranch,
+                   // If this condition is contained within a parent condition, do nothing.
+                   // We should only convert the entire set of nested conditions together as a unit.
+                   (startOfFirstParentBranch ... endOfLastParentBranch).contains(startOfConditional)
+                { return }
+
+                let lvalueTokens = formatter.tokens[lvalueRange]
+
+                // Now we can remove the `identifier =` from each branch,
+                // and instead add it before the if / switch expression.
+                removeAssignmentFromAllBranches()
+
+                let identifierEqualsTokens = lvalueTokens + [
                     .space(" "),
                     .operator("=", .infix),
                     .space(" "),
-                ])
-            }
+                ]
 
-            // But if there are comments, then we shouldn't just delete them.
-            // Instead we just insert `= ` after the type.
-            else {
-                formatter.insert([.operator("=", .infix), .space(" ")], at: startOfConditional)
+                formatter.insert(identifierEqualsTokens, at: startOfConditional)
             }
         }
     }
@@ -7748,34 +7843,12 @@ public struct _FormatRules {
         orderAfter: ["conditionalAssignment"],
         sharedOptions: ["linebreaks"]
     ) { formatter in
-        formatter.forEach(.keyword) { introducerIndex, introducerToken in
-            guard [.keyword("let"), .keyword("var")].contains(introducerToken),
-                  let identifierIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: introducerIndex),
-                  let identifier = formatter.token(at: identifierIndex),
-                  identifier.isIdentifier
+        formatter.forEach(.keyword) { startOfCondition, keywordToken in
+            guard [.keyword("if"), .keyword("switch")].contains(keywordToken),
+                  let assignmentIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startOfCondition),
+                  formatter.tokens[assignmentIndex] == .operator("=", .infix),
+                  let endOfPropertyDefinition = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: assignmentIndex)
             else { return }
-
-            // Find the `=` index for this variable, if present
-            let assignmentIndex: Int
-            if let colonIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: identifierIndex),
-               formatter.tokens[colonIndex] == .delimiter(":"),
-               let startOfTypeIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: colonIndex),
-               let typeRange = formatter.parseType(at: startOfTypeIndex)?.range,
-               let tokenAfterType = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: typeRange.upperBound),
-               formatter.tokens[tokenAfterType] == .operator("=", .infix)
-            {
-                assignmentIndex = tokenAfterType
-            }
-
-            else if let tokenAfterIdentifier = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: identifierIndex),
-                    formatter.tokens[tokenAfterIdentifier] == .operator("=", .infix)
-            {
-                assignmentIndex = tokenAfterIdentifier
-            }
-
-            else {
-                return
-            }
 
             // Verify the RHS of the assignment is an if/switch expression
             guard let startOfConditionalExpression = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: assignmentIndex),
@@ -7789,11 +7862,11 @@ public struct _FormatRules {
                 return
             }
 
-            // The `=` should be on the same line as the `let`/`var` introducer
-            if !formatter.onSameLine(introducerIndex, assignmentIndex),
+            // The `=` should be on the same line as the rest of the property
+            if !formatter.onSameLine(endOfPropertyDefinition, assignmentIndex),
                formatter.last(.nonSpaceOrComment, before: assignmentIndex)?.isLinebreak == true,
                let previousToken = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: assignmentIndex),
-               formatter.onSameLine(introducerIndex, previousToken)
+               formatter.onSameLine(endOfPropertyDefinition, previousToken)
             {
                 // Move the assignment operator to follow the previous token.
                 // Also remove any trailing space after the previous position
@@ -7810,6 +7883,312 @@ public struct _FormatRules {
             else if !formatter.tokens[(assignmentIndex + 1) ..< startOfConditionalExpression].contains(where: \.isLinebreak) {
                 formatter.insertLinebreak(at: startOfConditionalExpression - 1)
             }
+        }
+    }
+
+    public let blankLineAfterMultilineSwitchCase = FormatRule(
+        help: """
+        Insert a blank line after multiline switch cases (excluding the last case,
+        which is followed by a closing brace).
+        """,
+        disabledByDefault: true,
+        orderAfter: ["redundantBreak"]
+    ) { formatter in
+        formatter.forEach(.keyword("switch")) { switchIndex, _ in
+            guard let switchCases = formatter.switchStatementBranchesWithSpacingInfo(at: switchIndex) else { return }
+
+            for switchCase in switchCases.reversed() {
+                // Any switch statement that spans multiple lines should be followed by a blank line
+                // (excluding the last case, which is followed by a closing brace).
+                if switchCase.spansMultipleLines,
+                   !switchCase.isLastCase,
+                   !switchCase.isFollowedByBlankLine
+                {
+                    switchCase.insertTrailingBlankLine(using: formatter)
+                }
+
+                // The last case should never be followed by a blank line, since it's
+                // already followed by a closing brace.
+                if switchCase.isLastCase,
+                   switchCase.isFollowedByBlankLine
+                {
+                    switchCase.removeTrailingBlankLine(using: formatter)
+                }
+            }
+        }
+    }
+
+    public let consistentSwitchStatementSpacing = FormatRule(
+        help: "Ensures consistent spacing among all of the cases in a switch statement.",
+        orderAfter: ["blankLineAfterMultilineSwitchCase"]
+    ) { formatter in
+        formatter.forEach(.keyword("switch")) { switchIndex, _ in
+            guard let switchCases = formatter.switchStatementBranchesWithSpacingInfo(at: switchIndex) else { return }
+
+            // When counting the switch cases, exclude the last case (which should never have a trailing blank line).
+            let countWithTrailingBlankLine = switchCases.filter { $0.isFollowedByBlankLine && !$0.isLastCase }.count
+            let countWithoutTrailingBlankLine = switchCases.filter { !$0.isFollowedByBlankLine && !$0.isLastCase }.count
+
+            // We want the spacing to be consistent for all switch cases,
+            // so use whichever formatting is used for the majority of cases.
+            var allCasesShouldHaveBlankLine = countWithTrailingBlankLine >= countWithoutTrailingBlankLine
+
+            // When the `blankLinesBetweenChainedFunctions` rule is enabled, and there is a switch case
+            // that is required to span multiple lines, then all cases must span multiple lines.
+            // (Since if this rule removed the blank line from that case, it would contradict the other rule)
+            if formatter.options.enabledRules.contains(FormatRules.blankLineAfterMultilineSwitchCase.name),
+               switchCases.contains(where: { $0.spansMultipleLines && !$0.isLastCase })
+            {
+                allCasesShouldHaveBlankLine = true
+            }
+
+            for switchCase in switchCases.reversed() {
+                if !switchCase.isFollowedByBlankLine, allCasesShouldHaveBlankLine, !switchCase.isLastCase {
+                    switchCase.insertTrailingBlankLine(using: formatter)
+                }
+
+                if switchCase.isFollowedByBlankLine, !allCasesShouldHaveBlankLine || switchCase.isLastCase {
+                    switchCase.removeTrailingBlankLine(using: formatter)
+                }
+            }
+        }
+    }
+
+    public let propertyType = FormatRule(
+        help: "Convert property declarations to use inferred types (`let foo = Foo()`) or explicit types (`let foo: Foo = .init()`).",
+        disabledByDefault: true,
+        orderAfter: ["redundantType"],
+        options: ["inferredtypes", "preservesymbols"],
+        sharedOptions: ["redundanttype"]
+    ) { formatter in
+        formatter.forEach(.operator("=", .infix)) { equalsIndex, _ in
+            // Preserve all properties in conditional statements like `if let foo = Bar() { ... }`
+            guard !formatter.isConditionalStatement(at: equalsIndex) else { return }
+
+            // Determine whether the type should use the inferred syntax (`let foo = Foo()`)
+            // of the explicit syntax (`let foo: Foo = .init()`).
+            let useInferredType: Bool
+            switch formatter.options.redundantType {
+            case .inferred:
+                useInferredType = true
+
+            case .explicit:
+                useInferredType = false
+
+            case .inferLocalsOnly:
+                switch formatter.declarationScope(at: equalsIndex) {
+                case .global, .type:
+                    useInferredType = false
+                case .local:
+                    useInferredType = true
+                }
+            }
+
+            guard let introducerIndex = formatter.indexOfLastSignificantKeyword(at: equalsIndex),
+                  ["var", "let"].contains(formatter.tokens[introducerIndex].string),
+                  let property = formatter.parsePropertyDeclaration(atIntroducerIndex: introducerIndex),
+                  let rhsExpressionRange = property.value?.expressionRange
+            else { return }
+
+            let rhsStartIndex = rhsExpressionRange.lowerBound
+
+            if useInferredType {
+                guard let type = property.type else { return }
+                let typeTokens = formatter.tokens[type.range]
+
+                // Preserve the existing formatting if the LHS type is optional.
+                //  - `let foo: Foo? = .foo` is valid, but `let foo = Foo?.foo`
+                //    is invalid if `.foo` is defined on `Foo` but not `Foo?`.
+                guard !["?", "!"].contains(typeTokens.last?.string ?? "") else { return }
+
+                // Preserve the existing formatting if the LHS type is an existential (indicated with `any`).
+                //  - The `extension MyProtocol where Self == MyType { ... }` syntax
+                //    creates static members where `let foo: any MyProtocol = .myType`
+                //    is valid, but `let foo = (any MyProtocol).myType` isn't.
+                guard typeTokens.first?.string != "any" else { return }
+
+                // Preserve the existing formatting if the RHS expression has a top-level infix operator.
+                //  - `let value: ClosedRange<Int> = .zero ... 10` would not be valid to convert to
+                //    `let value = ClosedRange<Int>.zero ... 10`.
+                if let nextInfixOperatorIndex = formatter.index(after: rhsStartIndex, where: { token in
+                    token.isOperator(ofType: .infix) && token != .operator(".", .infix)
+                }),
+                    rhsExpressionRange.contains(nextInfixOperatorIndex)
+                {
+                    return
+                }
+
+                // Preserve the formatting as-is if the type is manually excluded
+                if formatter.options.preserveSymbols.contains(type.name) {
+                    return
+                }
+
+                // If the RHS starts with a leading dot, then we know its accessing some static member on this type.
+                if formatter.tokens[rhsStartIndex].isOperator(".") {
+                    // Preserve the formatting as-is if the identifier is manually excluded
+                    if let identifierAfterDot = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: rhsStartIndex),
+                       formatter.options.preserveSymbols.contains(formatter.tokens[identifierAfterDot].string)
+                    { return }
+
+                    // Update the . token from a prefix operator to an infix operator.
+                    formatter.replaceToken(at: rhsStartIndex, with: .operator(".", .infix))
+
+                    // Insert a copy of the type on the RHS before the dot
+                    formatter.insert(typeTokens, at: rhsStartIndex)
+                }
+
+                // If the RHS is an if/switch expression, check that each branch starts with a leading dot
+                else if formatter.options.inferredTypesInConditionalExpressions,
+                        ["if", "switch"].contains(formatter.tokens[rhsStartIndex].string),
+                        let conditonalBranches = formatter.conditionalBranches(at: rhsStartIndex)
+                {
+                    var hasInvalidConditionalBranch = false
+                    formatter.forEachRecursiveConditionalBranch(in: conditonalBranches) { branch in
+                        guard let firstTokenInBranch = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: branch.startOfBranch) else {
+                            hasInvalidConditionalBranch = true
+                            return
+                        }
+
+                        if !formatter.tokens[firstTokenInBranch].isOperator(".") {
+                            hasInvalidConditionalBranch = true
+                        }
+
+                        // Preserve the formatting as-is if the identifier is manually excluded
+                        if let identifierAfterDot = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: rhsStartIndex),
+                           formatter.options.preserveSymbols.contains(formatter.tokens[identifierAfterDot].string)
+                        {
+                            hasInvalidConditionalBranch = true
+                        }
+                    }
+
+                    guard !hasInvalidConditionalBranch else { return }
+
+                    // Insert a copy of the type on the RHS before the dot in each branch
+                    formatter.forEachRecursiveConditionalBranch(in: conditonalBranches) { branch in
+                        guard let dotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: branch.startOfBranch) else { return }
+
+                        // Update the . token from a prefix operator to an infix operator.
+                        formatter.replaceToken(at: dotIndex, with: .operator(".", .infix))
+
+                        // Insert a copy of the type on the RHS before the dot
+                        formatter.insert(typeTokens, at: dotIndex)
+                    }
+                }
+
+                else {
+                    return
+                }
+
+                // Remove the colon and explicit type before the equals token
+                formatter.removeTokens(in: type.colonIndex ... type.range.upperBound)
+            }
+
+            // If using explicit types, convert properties to the format `let foo: Foo = .init()`.
+            else {
+                guard // When parsing the type, exclude lowercase identifiers so `foo` isn't parsed as a type,
+                    // and so `Foo.init` is parsed as `Foo` instead of `Foo.init`.
+                    let rhsType = formatter.parseType(at: rhsStartIndex, excludeLowercaseIdentifiers: true),
+                    property.type == nil,
+                    let indexAfterIdentifier = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: property.identifierIndex),
+                    formatter.tokens[indexAfterIdentifier] != .delimiter(":"),
+                    let indexAfterType = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: rhsType.range.upperBound),
+                    [.operator(".", .infix), .startOfScope("(")].contains(formatter.tokens[indexAfterType]),
+                    !rhsType.name.contains(".")
+                else { return }
+
+                // Preserve the existing formatting if the RHS expression has a top-level operator.
+                //  - `let foo = Foo.foo.bar` would not be valid to convert to `let foo: Foo = .foo.bar`.
+                let operatorSearchIndex = formatter.tokens[indexAfterType].isStartOfScope ? (indexAfterType - 1) : indexAfterType
+                if let nextInfixOperatorIndex = formatter.index(after: operatorSearchIndex, where: { token in
+                    token.isOperator(ofType: .infix)
+                }),
+                    rhsExpressionRange.contains(nextInfixOperatorIndex)
+                {
+                    return
+                }
+
+                // Preserve any types that have been manually excluded.
+                // Preserve any `Void` types and tuples, since they're special and don't support things like `.init`
+                guard !(formatter.options.preserveSymbols + ["Void"]).contains(rhsType.name),
+                      !rhsType.name.hasPrefix("(")
+                else { return }
+
+                // A type name followed by a `(` is an implicit `.init(`. Insert a `.init`
+                // so that the init call stays valid after we move the type to the LHS.
+                if formatter.tokens[indexAfterType] == .startOfScope("(") {
+                    // Preserve the existing format if `init` is manually excluded
+                    if formatter.options.preserveSymbols.contains("init") {
+                        return
+                    }
+
+                    formatter.insert([.operator(".", .prefix), .identifier("init")], at: indexAfterType)
+                }
+
+                // If the type name is followed by an infix `.` operator, convert it to a prefix operator.
+                else if formatter.tokens[indexAfterType] == .operator(".", .infix) {
+                    // Exclude types with dots followed by a member access.
+                    //  - For example with something like `Color.Theme.themeColor`, we don't know
+                    //    if the property is `static var themeColor: Color` or `static var themeColor: Color.Theme`.
+                    //  - This isn't a problem with something like `Color.Theme()`, which we can reasonably assume
+                    //    is an initializer
+                    if rhsType.name.contains(".") { return }
+
+                    // Preserve the formatting as-is if the identifier is manually excluded.
+                    // Don't convert `let foo = Foo.self` to `let foo: Foo = .self`, since `.self` returns the metatype
+                    let symbolsToExclude = formatter.options.preserveSymbols + ["self"]
+                    if let indexAfterDot = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: indexAfterType),
+                       symbolsToExclude.contains(formatter.tokens[indexAfterDot].string)
+                    { return }
+
+                    formatter.replaceToken(at: indexAfterType, with: .operator(".", .prefix))
+                }
+
+                // Move the type name to the LHS of the property, followed by a colon
+                let typeTokens = formatter.tokens[rhsType.range]
+                formatter.removeTokens(in: rhsType.range)
+                formatter.insert([.delimiter(":"), .space(" ")] + typeTokens, at: property.identifierIndex + 1)
+            }
+        }
+    }
+
+    public let redundantProperty = FormatRule(
+        help: "Simplifies redundant property definitions that are immediately returned.",
+        disabledByDefault: true,
+        orderAfter: ["propertyType"]
+    ) { formatter in
+        formatter.forEach(.keyword) { introducerIndex, introducerToken in
+            // Find properties like `let identifier = value` followed by `return identifier`
+            guard ["let", "var"].contains(introducerToken.string),
+                  let property = formatter.parsePropertyDeclaration(atIntroducerIndex: introducerIndex),
+                  let (assignmentIndex, expressionRange) = property.value,
+                  let returnIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: expressionRange.upperBound),
+                  formatter.tokens[returnIndex] == .keyword("return"),
+                  let returnedValueIndex = formatter.index(of: .nonSpaceOrComment, after: returnIndex),
+                  let returnedExpression = formatter.parseExpressionRange(startingAt: returnedValueIndex, allowConditionalExpressions: true),
+                  formatter.tokens[returnedExpression] == [.identifier(property.identifier)]
+            else { return }
+
+            let returnRange = formatter.startOfLine(at: returnIndex) ... formatter.endOfLine(at: returnedExpression.upperBound)
+            let propertyRange = introducerIndex ... expressionRange.upperBound
+
+            guard !propertyRange.overlaps(returnRange) else { return }
+
+            // Remove the line with the `return identifier` statement.
+            formatter.removeTokens(in: returnRange)
+
+            // If there's nothing but whitespace between the end of the expression
+            // and the return statement, we can remove all of it. But if there's a comment,
+            // we should preserve it.
+            let rangeBetweenExpressionAndReturn = (expressionRange.upperBound + 1) ..< (returnRange.lowerBound - 1)
+            if formatter.tokens[rangeBetweenExpressionAndReturn].allSatisfy(\.isSpaceOrLinebreak) {
+                formatter.removeTokens(in: rangeBetweenExpressionAndReturn)
+            }
+
+            // Replace the `let identifier = value` with `return value`
+            formatter.replaceTokens(
+                in: introducerIndex ..< expressionRange.lowerBound,
+                with: [.keyword("return"), .space(" ")]
+            )
         }
     }
 }

@@ -56,6 +56,8 @@ public enum WrapMode: String, CaseIterable {
     case beforeFirst = "before-first"
     case afterFirst = "after-first"
     case preserve
+    case auto
+    case always
     case disabled
     case `default`
 
@@ -71,6 +73,10 @@ public enum WrapMode: String, CaseIterable {
             self = .disabled
         case "default":
             self = .default
+        case "auto":
+            self = .auto
+        case "always":
+            self = .always
         default:
             return nil
         }
@@ -197,6 +203,19 @@ public struct Version: RawRepresentable, Comparable, ExpressibleByStringLiteral,
     }
 }
 
+public enum ReplacementKey: String, CaseIterable {
+    case fileName = "file"
+    case currentYear = "year"
+    case createdDate = "created"
+    case createdName = "created.name"
+    case createdEmail = "created.email"
+    case createdYear = "created.year"
+    case followedCreatedDate = "created.follow"
+    case followedCreatedName = "created.name.follow"
+    case followedCreatedEmail = "created.email.follow"
+    case followedCreatedYear = "created.year.follow"
+}
+
 /// Argument type for stripping
 public enum HeaderStrippingMode: Equatable, RawRepresentable, ExpressibleByStringLiteral {
     case ignore
@@ -239,24 +258,129 @@ public enum HeaderStrippingMode: Equatable, RawRepresentable, ExpressibleByStrin
             return string.isEmpty ? "strip" : string.replacingOccurrences(of: "\n", with: "\\n")
         }
     }
+
+    public func hasTemplateKey(_ keys: ReplacementKey...) -> Bool {
+        guard case let .replace(str) = self else {
+            return false
+        }
+
+        return keys.contains(where: { str.contains("{\($0.rawValue)}") })
+    }
+
+    public var needsGitInfo: Bool {
+        hasTemplateKey(.createdDate, .createdYear,
+                       .createdName, .createdEmail)
+    }
+
+    public var needsFollowGitInfo: Bool {
+        hasTemplateKey(.followedCreatedDate, .followedCreatedYear,
+                       .followedCreatedName, .followedCreatedEmail)
+    }
+}
+
+public struct ReplacementOptions {
+    var dateFormat: DateFormat
+    var timeZone: FormatTimeZone
+
+    init(dateFormat: DateFormat, timeZone: FormatTimeZone) {
+        self.dateFormat = dateFormat
+        self.timeZone = timeZone
+    }
+
+    init(_ options: FormatOptions) {
+        self.init(dateFormat: options.dateFormat, timeZone: options.timeZone)
+    }
+}
+
+public enum ReplacementType: Equatable {
+    case constant(String)
+    case dynamic((FileInfo, ReplacementOptions) -> String?)
+
+    init?(_ value: String?) {
+        guard let val = value else { return nil }
+        self = .constant(val)
+    }
+
+    public static func == (lhs: ReplacementType, rhs: ReplacementType) -> Bool {
+        switch (lhs, rhs) {
+        case let (.constant(lhsVal), .constant(rhsVal)):
+            return lhsVal == rhsVal
+        case let (.dynamic(lhsClosure), .dynamic(rhsClosure)):
+            return lhsClosure as AnyObject === rhsClosure as AnyObject
+        default:
+            return false
+        }
+    }
+
+    public func resolve(_ info: FileInfo, _ options: ReplacementOptions) -> String? {
+        switch self {
+        case let .constant(value):
+            return value
+        case let .dynamic(fn):
+            return fn(info, options)
+        }
+    }
 }
 
 /// File info, used for constructing header comments
 public struct FileInfo: Equatable, CustomStringConvertible {
-    var filePath: String?
+    static var defaultReplacements: [ReplacementKey: ReplacementType] = [
+        .createdDate: .dynamic { info, options in
+            info.creationDate?.format(with: options.dateFormat,
+                                      timeZone: options.timeZone)
+        },
+        .createdYear: .dynamic { info, _ in info.creationDate?.yearString },
+        .followedCreatedDate: .dynamic { info, options in
+            info.followedCreationDate?.format(with: options.dateFormat,
+                                              timeZone: options.timeZone)
+        },
+        .followedCreatedYear: .dynamic { info, _ in
+            info.followedCreationDate?.yearString
+        },
+        .currentYear: .constant(Date.currentYear),
+    ]
+
+    let filePath: String?
     var creationDate: Date?
+    var followedCreationDate: Date?
+    var replacements: [ReplacementKey: ReplacementType] = Self.defaultReplacements
 
     var fileName: String? {
         filePath.map { URL(fileURLWithPath: $0).lastPathComponent }
     }
 
-    public init(filePath: String? = nil, creationDate: Date? = nil) {
+    public init(
+        filePath: String? = nil,
+        creationDate: Date? = nil,
+        followedCreationDate: Date? = nil,
+        replacements: [ReplacementKey: ReplacementType] = [:]
+    ) {
         self.filePath = filePath
         self.creationDate = creationDate
+        self.followedCreationDate = followedCreationDate
+
+        self.replacements.merge(replacements, uniquingKeysWith: { $1 })
+
+        if let fileName = fileName {
+            self.replacements[.fileName] = .constant(fileName)
+        }
     }
 
     public var description: String {
-        "\(fileName ?? "");\(creationDate.map { "\($0)" } ?? "")"
+        replacements.enumerated()
+            .map { "\($0)=\($1)" }
+            .joined(separator: ";")
+    }
+
+    public func hasReplacement(for key: ReplacementKey, options: FormatOptions) -> Bool {
+        switch replacements[key] {
+        case nil:
+            return false
+        case .constant:
+            return true
+        case let .dynamic(fn):
+            return fn(self, ReplacementOptions(options)) != nil
+        }
     }
 }
 
@@ -348,6 +472,104 @@ public enum EnumNamespacesMode: String, CaseIterable {
     case structsOnly = "structs-only"
 }
 
+/// Whether or not to add spacing around data type delimiter
+public enum SpaceAroundDelimiter: String, CaseIterable {
+    case trailing
+    case leadingTrailing = "leading-trailing"
+}
+
+/// Format to use when printing dates
+public enum DateFormat: Equatable, RawRepresentable, CustomStringConvertible {
+    case dayMonthYear
+    case iso
+    case monthDayYear
+    case system
+    case custom(String)
+
+    public init?(rawValue: String) {
+        switch rawValue {
+        case "dmy":
+            self = .dayMonthYear
+        case "iso":
+            self = .iso
+        case "mdy":
+            self = .monthDayYear
+        case "system":
+            self = .system
+        default:
+            self = .custom(rawValue)
+        }
+    }
+
+    public var rawValue: String {
+        switch self {
+        case .dayMonthYear:
+            return "dmy"
+        case .iso:
+            return "iso"
+        case .monthDayYear:
+            return "mdy"
+        case .system:
+            return "system"
+        case let .custom(str):
+            return str
+        }
+    }
+
+    public var description: String {
+        rawValue
+    }
+}
+
+/// Timezone to use when printing dates
+public enum FormatTimeZone: Equatable, RawRepresentable, CustomStringConvertible {
+    case system
+    case abbreviation(String)
+    case identifier(String)
+
+    static let utcNames = ["utc", "gmt"]
+
+    public init?(rawValue: String) {
+        if Self.utcNames.contains(rawValue.lowercased()) {
+            self = .identifier("UTC")
+        } else if TimeZone.knownTimeZoneIdentifiers.contains(rawValue) {
+            self = .identifier(rawValue)
+        } else if TimeZone.abbreviationDictionary.keys.contains(rawValue) {
+            self = .abbreviation(rawValue)
+        } else if rawValue == Self.system.rawValue {
+            self = .system
+        } else {
+            return nil
+        }
+    }
+
+    public var rawValue: String {
+        switch self {
+        case .system:
+            return "system"
+        case let .abbreviation(abbreviation):
+            return abbreviation
+        case let .identifier(identifier):
+            return identifier
+        }
+    }
+
+    public var timeZone: TimeZone? {
+        switch self {
+        case .system:
+            return TimeZone.current
+        case let .abbreviation(abbreviation):
+            return TimeZone(abbreviation: abbreviation)
+        case let .identifier(identifier):
+            return TimeZone(identifier: identifier)
+        }
+    }
+
+    public var description: String {
+        rawValue
+    }
+}
+
 /// When initializing an optional value type,
 /// is it necessary to explicitly declare a default value
 public enum NilInitType: String, CaseIterable {
@@ -382,9 +604,11 @@ public struct FormatOptions: CustomStringConvertible {
     public var wrapTypealiases: WrapMode
     public var wrapEnumCases: WrapEnumCases
     public var closingParenOnSameLine: Bool
+    public var closingCallSiteParenOnSameLine: Bool
     public var wrapReturnType: WrapReturnType
     public var wrapConditions: WrapMode
     public var wrapTernaryOperators: TernaryOperatorWrapMode
+    public var conditionsWrap: WrapMode
     public var uppercaseHex: Bool
     public var uppercaseExponent: Bool
     public var decimalGrouping: Grouping
@@ -417,6 +641,10 @@ public struct FormatOptions: CustomStringConvertible {
     public var funcAttributes: AttributeMode
     public var typeAttributes: AttributeMode
     public var varAttributes: AttributeMode
+    public var storedVarAttributes: AttributeMode
+    public var computedVarAttributes: AttributeMode
+    public var complexAttributes: AttributeMode
+    public var complexAttributesExceptions: Set<String>
     public var markTypes: MarkMode
     public var typeMarkComment: String
     public var markExtensions: MarkMode
@@ -434,6 +662,8 @@ public struct FormatOptions: CustomStringConvertible {
     public var yodaSwap: YodaMode
     public var extensionACLPlacement: ExtensionACLPlacement
     public var redundantType: RedundantType
+    public var preserveSymbols: Set<String>
+    public var inferredTypesInConditionalExpressions: Bool
     public var emptyBracesSpacing: EmptyBracesSpacing
     public var acronyms: Set<String>
     public var indentStrings: Bool
@@ -446,6 +676,11 @@ public struct FormatOptions: CustomStringConvertible {
     public var preserveAnonymousForEach: Bool
     public var preserveSingleLineForEach: Bool
     public var preserveDocComments: Bool
+    public var conditionalAssignmentOnlyAfterNewProperties: Bool
+    public var spaceAroundDelimiter: SpaceAroundDelimiter
+    public var initCoderNil: Bool
+    public var dateFormat: DateFormat
+    public var timeZone: FormatTimeZone
     public var nilInitType: NilInitType
 
     /// Deprecated
@@ -486,9 +721,11 @@ public struct FormatOptions: CustomStringConvertible {
                 wrapTypealiases: WrapMode = .preserve,
                 wrapEnumCases: WrapEnumCases = .always,
                 closingParenOnSameLine: Bool = false,
+                closingCallSiteParenOnSameLine: Bool = false,
                 wrapReturnType: WrapReturnType = .preserve,
                 wrapConditions: WrapMode = .preserve,
                 wrapTernaryOperators: TernaryOperatorWrapMode = .default,
+                conditionsWrap: WrapMode = .disabled,
                 uppercaseHex: Bool = true,
                 uppercaseExponent: Bool = false,
                 decimalGrouping: Grouping = .group(3, 6),
@@ -521,6 +758,10 @@ public struct FormatOptions: CustomStringConvertible {
                 funcAttributes: AttributeMode = .preserve,
                 typeAttributes: AttributeMode = .preserve,
                 varAttributes: AttributeMode = .preserve,
+                storedVarAttributes: AttributeMode = .preserve,
+                computedVarAttributes: AttributeMode = .preserve,
+                complexAttributes: AttributeMode = .preserve,
+                complexAttributesExceptions: Set<String> = [],
                 markTypes: MarkMode = .always,
                 typeMarkComment: String = "MARK: - %t",
                 markExtensions: MarkMode = .always,
@@ -538,6 +779,8 @@ public struct FormatOptions: CustomStringConvertible {
                 yodaSwap: YodaMode = .always,
                 extensionACLPlacement: ExtensionACLPlacement = .onExtension,
                 redundantType: RedundantType = .inferLocalsOnly,
+                preserveSymbols: Set<String> = [],
+                inferredTypesInConditionalExpressions: Bool = false,
                 emptyBracesSpacing: EmptyBracesSpacing = .noSpace,
                 acronyms: Set<String> = ["ID", "URL", "UUID"],
                 indentStrings: Bool = false,
@@ -550,6 +793,11 @@ public struct FormatOptions: CustomStringConvertible {
                 preserveAnonymousForEach: Bool = false,
                 preserveSingleLineForEach: Bool = true,
                 preserveDocComments: Bool = false,
+                conditionalAssignmentOnlyAfterNewProperties: Bool = true,
+                spaceAroundDelimiter: SpaceAroundDelimiter = .trailing,
+                initCoderNil: Bool = false,
+                dateFormat: DateFormat = .system,
+                timeZone: FormatTimeZone = .system,
                 nilInitType: NilInitType = .remove,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
@@ -580,9 +828,11 @@ public struct FormatOptions: CustomStringConvertible {
         self.wrapTypealiases = wrapTypealiases
         self.wrapEnumCases = wrapEnumCases
         self.closingParenOnSameLine = closingParenOnSameLine
+        self.closingCallSiteParenOnSameLine = closingCallSiteParenOnSameLine
         self.wrapReturnType = wrapReturnType
         self.wrapConditions = wrapConditions
         self.wrapTernaryOperators = wrapTernaryOperators
+        self.conditionsWrap = conditionsWrap
         self.uppercaseHex = uppercaseHex
         self.uppercaseExponent = uppercaseExponent
         self.decimalGrouping = decimalGrouping
@@ -615,6 +865,10 @@ public struct FormatOptions: CustomStringConvertible {
         self.funcAttributes = funcAttributes
         self.typeAttributes = typeAttributes
         self.varAttributes = varAttributes
+        self.storedVarAttributes = storedVarAttributes
+        self.computedVarAttributes = computedVarAttributes
+        self.complexAttributes = complexAttributes
+        self.complexAttributesExceptions = complexAttributesExceptions
         self.markTypes = markTypes
         self.typeMarkComment = typeMarkComment
         self.markExtensions = markExtensions
@@ -632,6 +886,8 @@ public struct FormatOptions: CustomStringConvertible {
         self.yodaSwap = yodaSwap
         self.extensionACLPlacement = extensionACLPlacement
         self.redundantType = redundantType
+        self.preserveSymbols = preserveSymbols
+        self.inferredTypesInConditionalExpressions = inferredTypesInConditionalExpressions
         self.emptyBracesSpacing = emptyBracesSpacing
         self.acronyms = acronyms
         self.indentStrings = indentStrings
@@ -644,6 +900,11 @@ public struct FormatOptions: CustomStringConvertible {
         self.preserveAnonymousForEach = preserveAnonymousForEach
         self.preserveSingleLineForEach = preserveSingleLineForEach
         self.preserveDocComments = preserveDocComments
+        self.conditionalAssignmentOnlyAfterNewProperties = conditionalAssignmentOnlyAfterNewProperties
+        self.spaceAroundDelimiter = spaceAroundDelimiter
+        self.initCoderNil = initCoderNil
+        self.dateFormat = dateFormat
+        self.timeZone = timeZone
         self.nilInitType = nilInitType
         // Doesn't really belong here, but hard to put elsewhere
         self.fragment = fragment

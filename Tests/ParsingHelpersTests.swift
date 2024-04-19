@@ -1549,6 +1549,10 @@ class ParsingHelpersTests: XCTestCase {
             }
 
             let instanceMember3 = Bar()
+
+            let instanceMemberClosure = Foo {
+                let localMember2 = Bar()
+            }
         }
         """
 
@@ -1561,6 +1565,8 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(formatter.declarationScope(at: 42), .type) // instanceMethod
         XCTAssertEqual(formatter.declarationScope(at: 51), .local) // localMember1
         XCTAssertEqual(formatter.declarationScope(at: 66), .type) // instanceMember3
+        XCTAssertEqual(formatter.declarationScope(at: 78), .type) // instanceMemberClosure
+        XCTAssertEqual(formatter.declarationScope(at: 89), .local) // localMember2
     }
 
     // MARK: spaceEquivalentToWidth
@@ -1686,6 +1692,48 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(formatter.parseType(at: 5)?.name, "Foo!")
     }
 
+    func testDoesntParseMacroInvocationAsType() {
+        let formatter = Formatter(tokenize("""
+        let foo = #colorLiteral(1, 2, 3)
+        """))
+        XCTAssertNil(formatter.parseType(at: 6))
+    }
+
+    func testDoesntParseSelectorAsType() {
+        let formatter = Formatter(tokenize("""
+        let foo = #selector(Foo.bar)
+        """))
+        XCTAssertNil(formatter.parseType(at: 6))
+    }
+
+    func testDoesntParseArrayAsType() {
+        let formatter = Formatter(tokenize("""
+        let foo = [foo, bar].member()
+        """))
+        XCTAssertNil(formatter.parseType(at: 6))
+    }
+
+    func testDoesntParseDictionaryAsType() {
+        let formatter = Formatter(tokenize("""
+        let foo = [foo: bar, baaz: quux].member()
+        """))
+        XCTAssertNil(formatter.parseType(at: 6))
+    }
+
+    func testParsesArrayAsType() {
+        let formatter = Formatter(tokenize("""
+        let foo = [Foo]()
+        """))
+        XCTAssertEqual(formatter.parseType(at: 6)?.name, "[Foo]")
+    }
+
+    func testParsesDictionaryAsType() {
+        let formatter = Formatter(tokenize("""
+        let foo = [Foo: Bar]()
+        """))
+        XCTAssertEqual(formatter.parseType(at: 6)?.name, "[Foo: Bar]")
+    }
+
     func testParseGenericType() {
         let formatter = Formatter(tokenize("""
         let foo: Foo<Bar, Baaz> = .init()
@@ -1770,6 +1818,13 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(formatter.parseType(at: 5)?.name, "Foo.Bar.Baaz")
     }
 
+    func testDoesntParseLeadingDotAsType() {
+        let formatter = Formatter(tokenize("""
+        let foo: Foo = .Bar.baaz
+        """))
+        XCTAssertEqual(formatter.parseType(at: 9)?.name, nil)
+    }
+
     func testParseCompoundGenericType() {
         let formatter = Formatter(tokenize("""
         let foo: Foo<Bar>.Bar.Baaz<Quux.V2>
@@ -1827,7 +1882,10 @@ class ParsingHelpersTests: XCTestCase {
     // MARK: - parseExpressionRange
 
     func testParseIndividualExpressions() {
+        XCTAssert(isSingleExpression(#"Foo()"#))
         XCTAssert(isSingleExpression(#"Foo("bar")"#))
+        XCTAssert(isSingleExpression(#"Foo.init()"#))
+        XCTAssert(isSingleExpression(#"Foo.init("bar")"#))
         XCTAssert(isSingleExpression(#"foo.bar"#))
         XCTAssert(isSingleExpression(#"foo .bar"#))
         XCTAssert(isSingleExpression(#"foo["bar"]("baaz")"#))
@@ -1881,6 +1939,29 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssert(isSingleExpression(#"try await { try await printAsyncThrows(foo) }()"#))
         XCTAssert(isSingleExpression(#"Foo<Bar>()"#))
         XCTAssert(isSingleExpression(#"Foo<Bar, Baaz>(quux: quux)"#))
+        XCTAssert(!isSingleExpression(#"if foo { "foo" } else { "bar" }"#))
+
+        XCTAssert(isSingleExpression(
+            #"if foo { "foo" } else { "bar" }"#,
+            allowConditionalExpressions: true
+        ))
+
+        XCTAssert(isSingleExpression("""
+        if foo {
+          "foo"
+        } else {
+          "bar"
+        }
+        """, allowConditionalExpressions: true))
+
+        XCTAssert(isSingleExpression("""
+        switch foo {
+        case true:
+            "foo"
+        case false:
+            "bar"
+        }
+        """, allowConditionalExpressions: true))
 
         XCTAssert(isSingleExpression("""
         foo
@@ -1991,9 +2072,9 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(parseExpressions(input), expectedExpressions)
     }
 
-    func isSingleExpression(_ string: String) -> Bool {
+    func isSingleExpression(_ string: String, allowConditionalExpressions: Bool = false) -> Bool {
         let formatter = Formatter(tokenize(string))
-        guard let expressionRange = formatter.parseExpressionRange(startingAt: 0) else { return false }
+        guard let expressionRange = formatter.parseExpressionRange(startingAt: 0, allowConditionalExpressions: allowConditionalExpressions) else { return false }
         return expressionRange.upperBound == formatter.tokens.indices.last!
     }
 
@@ -2014,5 +2095,49 @@ class ParsingHelpersTests: XCTestCase {
         }
 
         return expressions
+    }
+
+    // MARK: isStoredProperty
+
+    func testIsStoredProperty() {
+        XCTAssertTrue(isStoredProperty("var foo: String"))
+        XCTAssertTrue(isStoredProperty("let foo = 42"))
+        XCTAssertTrue(isStoredProperty("let foo: Int = 42"))
+        XCTAssertTrue(isStoredProperty("var foo: Int = 42"))
+        XCTAssertTrue(isStoredProperty("@Environment(\\.myEnvironmentProperty) var foo", at: 7))
+
+        XCTAssertTrue(isStoredProperty("""
+        var foo: String {
+          didSet {
+            print(newValue)
+          }
+        }
+        """))
+
+        XCTAssertTrue(isStoredProperty("""
+        var foo: String {
+          willSet {
+            print(newValue)
+          }
+        }
+        """))
+
+        XCTAssertFalse(isStoredProperty("""
+        var foo: String {
+            "foo"
+        }
+        """))
+
+        XCTAssertFalse(isStoredProperty("""
+        var foo: String {
+            get { "foo" }
+            set { print(newValue} }
+        }
+        """))
+    }
+
+    func isStoredProperty(_ input: String, at index: Int = 0) -> Bool {
+        let formatter = Formatter(tokenize(input))
+        return formatter.isStoredProperty(atIntroducerIndex: index)
     }
 }

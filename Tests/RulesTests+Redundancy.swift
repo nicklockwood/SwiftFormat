@@ -1976,6 +1976,7 @@ class RedundancyTests: RulesTests {
                 case .bar:
                     var foo: String? = nil
                     Text(foo ?? "")
+
                 default:
                     EmptyView()
                 }

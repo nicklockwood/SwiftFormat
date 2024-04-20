@@ -558,4 +558,48 @@ class CommandLineTests: XCTestCase {
             ], in: "")
         }
     }
+
+    func testXMLReporterEndToEnd() throws {
+        try withTmpFiles([
+            "foo.swift": "func foo() {\n}\n",
+        ]) { url in
+            CLI.print = { message, type in
+                switch type {
+                case .raw:
+                    XCTAssert(message.contains("<error line=\"1\" column=\"0\" severity=\"warning\""))
+                case .error, .warning:
+                    break
+                case .info, .success:
+                    break
+                case .content:
+                    XCTFail()
+                }
+            }
+            _ = processArguments([
+                "",
+                "--lint",
+                "--reporter",
+                "xml",
+                url.path,
+            ], in: "")
+        }
+    }
+
+    func testXMLReporterInferredFromURL() throws {
+        let outputURL = try createTmpFile("report.xml", contents: "")
+        try withTmpFiles([
+            "foo.swift": "func foo() {\n}\n",
+        ]) { url in
+            CLI.print = { _, _ in }
+            _ = processArguments([
+                "",
+                "--lint",
+                "--report",
+                outputURL.path,
+                url.path,
+            ], in: "")
+        }
+        let ouput = try String(contentsOf: outputURL)
+        XCTAssert(ouput.contains("<error line=\"1\" column=\"0\" severity=\"warning\""))
+    }
 }

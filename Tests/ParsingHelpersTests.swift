@@ -1686,6 +1686,13 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(formatter.parseType(at: 5)?.name, "Foo!")
     }
 
+    func testDoesntParseTernaryOperatorAsType() {
+        let formatter = Formatter(tokenize("""
+        Foo.bar ? .foo : .bar
+        """))
+        XCTAssertEqual(formatter.parseType(at: 0)?.name, "Foo.bar")
+    }
+
     func testParseGenericType() {
         let formatter = Formatter(tokenize("""
         let foo: Foo<Bar, Baaz> = .init()

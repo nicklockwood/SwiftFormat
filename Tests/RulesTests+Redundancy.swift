@@ -934,6 +934,13 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantInit, exclude: ["typeSugar"])
     }
 
+    func testPreserveNonRedundantInitInTernaryOperator() {
+        let input = """
+        let bar: Bar = (foo.isBar && bar.isBaaz) ? .init() : nil
+        """
+        testFormatting(for: input, rule: FormatRules.redundantInit)
+    }
+
     // MARK: - redundantLetError
 
     func testCatchLetError() {

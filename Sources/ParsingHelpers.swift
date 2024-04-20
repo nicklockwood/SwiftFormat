@@ -1235,11 +1235,18 @@ extension Formatter {
     func parseType(at startOfTypeIndex: Int) -> (name: String, range: ClosedRange<Int>)? {
         guard let baseType = parseNonOptionalType(at: startOfTypeIndex) else { return nil }
 
-        // Any type can be optional, so check for a trailing `?` or `!`
-        if let nextToken = index(of: .nonSpaceOrCommentOrLinebreak, after: baseType.range.upperBound),
-           ["?", "!"].contains(tokens[nextToken].string)
+        // Any type can be optional, so check for a trailing `?` or `!`.
+        // There cannot be any other tokens between the type and the operator:
+        //
+        //   let foo: String? // allowed
+        //   let foo: String ? // not allowed
+        //   let foo: String/*bar*/? // not allowed
+        //
+        let nextTokenIndex = baseType.range.upperBound + 1
+        if let nextToken = token(at: nextTokenIndex),
+           ["?", "!"].contains(nextToken.string)
         {
-            let typeRange = baseType.range.lowerBound ... nextToken
+            let typeRange = baseType.range.lowerBound ... nextTokenIndex
             return (name: tokens[typeRange].string, range: typeRange)
         }
 

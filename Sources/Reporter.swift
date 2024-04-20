@@ -69,13 +69,12 @@ enum Reporters {
     static let all: [Reporter.Type] = [
         JSONReporter.self,
         GithubActionsLogReporter.self,
+        XMLReporter.self,
     ]
 
     static var help: String {
         let names = all.map { "\"\($0.name)\"" }
-        return names.dropLast().joined(separator: ", ") + (names.last.map {
-            " or \($0)"
-        } ?? "")
+        return names.joined(separator: ", ")
     }
 
     static func reporter(named: String, environment: [String: String]) -> Reporter? {

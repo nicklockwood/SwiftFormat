@@ -99,6 +99,10 @@
 		A3DF48252620E03600F45A5F /* JSONReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3DF48242620E03600F45A5F /* JSONReporter.swift */; };
 		A3DF48262620E03600F45A5F /* JSONReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3DF48242620E03600F45A5F /* JSONReporter.swift */; };
 		B9C4F55C2387FA3E0088DBEE /* SupportedContentUTIs.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9C4F55B2387FA3E0088DBEE /* SupportedContentUTIs.swift */; };
+		C2FFD1822BD13C9E00774F55 /* XMLReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FFD1812BD13C9E00774F55 /* XMLReporter.swift */; };
+		C2FFD1832BD13C9E00774F55 /* XMLReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FFD1812BD13C9E00774F55 /* XMLReporter.swift */; };
+		C2FFD1842BD13C9E00774F55 /* XMLReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FFD1812BD13C9E00774F55 /* XMLReporter.swift */; };
+		C2FFD1852BD13C9E00774F55 /* XMLReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FFD1812BD13C9E00774F55 /* XMLReporter.swift */; };
 		D52F6A642A82E04600FE1448 /* GitHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = D52F6A632A82E04600FE1448 /* GitHelpers.swift */; };
 		D52F6A652A82E04600FE1448 /* GitHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = D52F6A632A82E04600FE1448 /* GitHelpers.swift */; };
 		D52F6A662A82E04600FE1448 /* GitHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = D52F6A632A82E04600FE1448 /* GitHelpers.swift */; };
@@ -254,6 +258,7 @@
 		90F16AFA1DA5ED9A00EB4EA1 /* CommandErrors.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CommandErrors.swift; sourceTree = "<group>"; };
 		A3DF48242620E03600F45A5F /* JSONReporter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = JSONReporter.swift; sourceTree = "<group>"; };
 		B9C4F55B2387FA3E0088DBEE /* SupportedContentUTIs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupportedContentUTIs.swift; sourceTree = "<group>"; };
+		C2FFD1812BD13C9E00774F55 /* XMLReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XMLReporter.swift; sourceTree = "<group>"; };
 		D52F6A632A82E04600FE1448 /* GitHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitHelpers.swift; sourceTree = "<group>"; };
 		D52F6A682A82E0DD00FE1448 /* ShellHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShellHelpers.swift; sourceTree = "<group>"; };
 		DD9AD39C2999FCC8001C2C0E /* GithubActionsLogReporter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GithubActionsLogReporter.swift; sourceTree = "<group>"; };
@@ -382,6 +387,7 @@
 				01BBD85821DAA2A000457380 /* Globs.swift */,
 				D52F6A632A82E04600FE1448 /* GitHelpers.swift */,
 				D52F6A682A82E0DD00FE1448 /* ShellHelpers.swift */,
+				C2FFD1812BD13C9E00774F55 /* XMLReporter.swift */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
@@ -809,6 +815,7 @@
 				A3DF48252620E03600F45A5F /* JSONReporter.swift in Sources */,
 				01A0EAC11D5DB4F700A0A8E3 /* Rules.swift in Sources */,
 				01A0EAC51D5DB54A00A0A8E3 /* SwiftFormat.swift in Sources */,
+				C2FFD1822BD13C9E00774F55 /* XMLReporter.swift in Sources */,
 				2E7D30A42A7940C500C32174 /* Singularize.swift in Sources */,
 				01B3987D1D763493009ADE61 /* Formatter.swift in Sources */,
 				01F17E821E25870700DCD359 /* CommandLine.swift in Sources */,
@@ -873,6 +880,7 @@
 				01F17E831E25870700DCD359 /* CommandLine.swift in Sources */,
 				015243E22B04B0A600F65221 /* Singularize.swift in Sources */,
 				01ACAE06220CD914003F3CCF /* Examples.swift in Sources */,
+				C2FFD1832BD13C9E00774F55 /* XMLReporter.swift in Sources */,
 				01A0EACD1D5DB5F500A0A8E3 /* main.swift in Sources */,
 				DD9AD3A42999FCC8001C2C0E /* Reporter.swift in Sources */,
 				01045A9A2119979400D2BE3D /* Arguments.swift in Sources */,
@@ -895,6 +903,7 @@
 				D52F6A6B2A82E0DD00FE1448 /* ShellHelpers.swift in Sources */,
 				E4872112201D3B860014845E /* Rules.swift in Sources */,
 				E4962DE0203F3CD500A02013 /* OptionsStore.swift in Sources */,
+				C2FFD1842BD13C9E00774F55 /* XMLReporter.swift in Sources */,
 				01ACAE07220CD915003F3CCF /* Examples.swift in Sources */,
 				E4872113201D3B890014845E /* Formatter.swift in Sources */,
 				E4E4D3CB2033F17C000D7CB1 /* EnumAssociable.swift in Sources */,
@@ -927,6 +936,7 @@
 				D52F6A6C2A82E0DD00FE1448 /* ShellHelpers.swift in Sources */,
 				9028F7841DA4B435009FE5B4 /* Tokenizer.swift in Sources */,
 				90F16AFB1DA5ED9A00EB4EA1 /* CommandErrors.swift in Sources */,
+				C2FFD1852BD13C9E00774F55 /* XMLReporter.swift in Sources */,
 				01A8320924EC7F7800A9D0EB /* FormattingHelpers.swift in Sources */,
 				018541CF1DBA0F17000F82E3 /* XCSourceTextBuffer+SwiftFormat.swift in Sources */,
 				E4962DE1203F3CD500A02013 /* OptionsStore.swift in Sources */,

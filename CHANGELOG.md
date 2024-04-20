@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.53.8](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.53.8) (2024-04-22)
+
+- Added `--strict` option to emit non-zero exit code after applying changes in formatting mode
+- The `enumNamespaces` rule is no longer applied to structs with macros that have generic arguments
+- The `opaqueGenericParameters` rule is no longer applied to structs with macros or attributes
+- Fixed another case where `redundantParens` spuriously removed parens inside a closure
+- Fixed bug where `redundantInit` mishandled a `.init` after a ternary operator 
+
 ## [0.53.7](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.53.7) (2024-04-14)
 
 - Fixed bug with `redundantParens` where first parens inside a closure were spuriously removed

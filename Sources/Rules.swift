@@ -2944,23 +2944,33 @@ public struct _FormatRules {
         }
     }
 
-    /// Remove redundant `= nil` initialization for Optional properties
+    /// Remove or insert  redundant `= nil` initialization for Optional properties
     public let redundantNilInit = FormatRule(
-        help: "Remove redundant `nil` default value (Optional vars are nil by default)."
+        help: "Remove/insert redundant `nil` default value (Optional vars are nil by default).",
+        options: ["nilinit"]
     ) { formatter in
         func search(from index: Int) {
             if let optionalIndex = formatter.index(of: .unwrapOperator, after: index) {
                 if formatter.index(of: .endOfStatement, in: index + 1 ..< optionalIndex) != nil {
                     return
                 }
-                if !formatter.tokens[optionalIndex - 1].isSpaceOrCommentOrLinebreak,
-                   let equalsIndex = formatter.index(of: .nonSpaceOrLinebreak, after: optionalIndex, if: {
-                       $0 == .operator("=", .infix)
-                   }), let nilIndex = formatter.index(of: .nonSpaceOrLinebreak, after: equalsIndex, if: {
-                       $0 == .identifier("nil")
-                   })
-                {
-                    formatter.removeTokens(in: optionalIndex + 1 ... nilIndex)
+                if !formatter.tokens[optionalIndex - 1].isSpaceOrCommentOrLinebreak {
+                    let equalsIndex = formatter.index(of: .nonSpaceOrLinebreak, after: optionalIndex, if: {
+                        $0 == .operator("=", .infix)
+                    })
+                    switch formatter.options.nilInitType {
+                    case .remove:
+                        if let equalsIndex = equalsIndex, let nilIndex = formatter.index(of: .nonSpaceOrLinebreak, after: equalsIndex, if: {
+                            $0 == .identifier("nil")
+                        }) {
+                            formatter.removeTokens(in: optionalIndex + 1 ... nilIndex)
+                        }
+                    case .insert:
+                        if equalsIndex == nil {
+                            let tokens: [Token] = [.space(" "), .operator("=", .infix), .space(" "), .identifier("nil")]
+                            formatter.insert(tokens, at: optionalIndex + 1)
+                        }
+                    }
                 }
                 search(from: optionalIndex)
             }

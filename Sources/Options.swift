@@ -542,6 +542,16 @@ public enum FormatTimeZone: Equatable, RawRepresentable, CustomStringConvertible
     }
 }
 
+/// When initializing an optional value type,
+/// is it necessary to explicitly declare a default value
+public enum NilInitType: String, CaseIterable {
+    /// Remove redundant `nil` if it is added as default value
+    case remove
+
+    /// Add `nil` as default if not explicitly declared
+    case insert
+}
+
 /// Configuration options for formatting. These aren't actually used by the
 /// Formatter class itself, but it makes them available to the format rules.
 public struct FormatOptions: CustomStringConvertible {
@@ -640,6 +650,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var initCoderNil: Bool
     public var dateFormat: DateFormat
     public var timeZone: FormatTimeZone
+    public var nilInit: NilInitType
 
     /// Deprecated
     public var indentComments: Bool
@@ -753,6 +764,7 @@ public struct FormatOptions: CustomStringConvertible {
                 initCoderNil: Bool = false,
                 dateFormat: DateFormat = .system,
                 timeZone: FormatTimeZone = .system,
+                nilInit: NilInitType = .remove,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -856,6 +868,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.initCoderNil = initCoderNil
         self.dateFormat = dateFormat
         self.timeZone = timeZone
+        self.nilInit = nilInit
         // Doesn't really belong here, but hard to put elsewhere
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

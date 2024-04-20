@@ -1686,10 +1686,16 @@ Remove redundant `let error` from `catch` clause.
 
 ## redundantNilInit
 
-Remove redundant `nil` default value (Optional vars are nil by default).
+Remove/insert redundant `nil` default value (Optional vars are nil by default).
+
+Option | Description
+--- | ---
+`--nilinit` | "remove" (default) redundant nil or "insert" missing nil
 
 <details>
 <summary>Examples</summary>
+
+`--nilinit remove`
 
 ```diff
 - var foo: Int? = nil
@@ -1704,6 +1710,13 @@ let foo: Int? = nil
 ```diff
 // doesn't affect non-nil initialization
 var foo: Int? = 0
+```
+
+`--nilinit insert`
+
+```diff
+- var foo: Int?
++ var foo: Int? = nil
 ```
 
 </details>

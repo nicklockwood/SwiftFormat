@@ -1013,6 +1013,12 @@ struct _Descriptors {
         fromArgument: { FormatTimeZone(rawValue: $0) },
         toArgument: { $0.rawValue }
     )
+    let nilInit = OptionDescriptor(
+        argumentName: "nilinit",
+        displayName: "Nil init type",
+        help: "\"remove\" (default) redundant nil or \"insert\" missing nil",
+        keyPath: \.nilInit
+    )
 
     // MARK: - Internal
 

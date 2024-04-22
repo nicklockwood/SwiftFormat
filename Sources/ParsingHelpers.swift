@@ -413,8 +413,15 @@ extension Formatter {
             case .endOfScope(")"):
                 guard let startIndex = self.index(of: .startOfScope("("), before: prevIndex),
                       last(.nonSpaceOrCommentOrLinebreak, before: startIndex, if: {
-                          $0.isAttribute || _FormatRules.allModifiers.contains($0.string)
+                          $0.isAttribute || _FormatRules.allModifiers.contains($0.string) || $0 == .endOfScope(">")
                       }) != nil
+                else {
+                    return false
+                }
+                prevIndex = startIndex
+            case .endOfScope(">"):
+                guard let startIndex = self.index(of: .startOfScope("<"), before: prevIndex),
+                      last(.nonSpaceOrCommentOrLinebreak, before: startIndex, if: { $0.isAttribute }) != nil
                 else {
                     return false
                 }

@@ -1035,6 +1035,36 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.enumNamespaces)
     }
 
+    func testEnumNamespacesNotAppliedIfParameterizedMacro() {
+        let input = """
+        @FooMacro(arg: "Foo")
+        struct Foo {
+            static let = "A"
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.enumNamespaces)
+    }
+
+    func testEnumNamespacesNotAppliedIfGenericMacro() {
+        let input = """
+        @FooMacro<Int>
+        struct Foo {
+            static let = "A"
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.enumNamespaces)
+    }
+
+    func testEnumNamespacesNotAppliedIfGenericParameterizedMacro() {
+        let input = """
+        @FooMacro<Int>(arg: 5)
+        struct Foo {
+            static let = "A"
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.enumNamespaces)
+    }
+
     // MARK: - numberFormatting
 
     // hex case

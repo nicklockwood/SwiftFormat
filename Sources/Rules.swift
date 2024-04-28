@@ -3413,7 +3413,11 @@ public struct _FormatRules {
             }
             var i = range.lowerBound
             while i < range.upperBound {
-                if formatter.isStartOfStatement(at: i, treatingCollectionKeysAsStart: false) {
+                if formatter.isStartOfStatement(at: i, treatingCollectionKeysAsStart: false),
+                   // Immediately following an `=` operator, if or switch keywords
+                   // are expressions rather than statements.
+                   formatter.lastToken(before: i, where: { !$0.isSpaceOrCommentOrLinebreak })?.isOperator("=") != true
+                {
                     pushLocals()
                     wasDeclaration = false
                 }

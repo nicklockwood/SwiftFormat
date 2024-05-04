@@ -111,7 +111,7 @@ Another option is to include the binary artifactbundle in your `Package.swift`:
 ```swift
 .binaryTarget(
     name: "swiftformat",
-    url: "https://github.com/nicklockwood/SwiftFormat/releases/download/0.49.12/swiftformat-macos.artifactbundle.zip",
+    url: "https://github.com/nicklockwood/SwiftFormat/releases/download/0.53.8/swiftformat-macos.artifactbundle.zip",
     checksum: "CHECKSUM"
 ),
 ``` 
@@ -252,7 +252,7 @@ let package = Package(
     name: "BuildTools",
     platforms: [.macOS(.v10_11)],
     dependencies: [
-        .package(url: "https://github.com/nicklockwood/SwiftFormat", from: "0.49.0"),
+        .package(url: "https://github.com/nicklockwood/SwiftFormat", from: "0.53.8"),
     ],
     targets: [.target(name: "BuildTools", path: "")]
 )
@@ -354,7 +354,7 @@ You can use `SwiftFormat` as a SwiftPM command plugin.
 ```swift
 dependencies: [
     // ...
-    .package(url: "https://github.com/nicklockwood/SwiftFormat", from: "0.50.4"),
+    .package(url: "https://github.com/nicklockwood/SwiftFormat", from: "0.53.8"),
 ]
 ```
 

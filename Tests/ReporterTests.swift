@@ -1,5 +1,5 @@
 //
-//  GithubActionsLogReporterTests.swift
+//  ReporterTests.swift
 //  SwiftFormat
 //
 //  Created by Jonas Boberg on 2023/02/13.
@@ -32,7 +32,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class GithubActionsLogReporterTests: XCTestCase {
+class ReporterTests: XCTestCase {
     func testWrite() throws {
         let reporter = GithubActionsLogReporter(environment: ["GITHUB_WORKSPACE": "/bar"])
         let rule = FormatRules.consecutiveSpaces
@@ -45,7 +45,7 @@ class GithubActionsLogReporterTests: XCTestCase {
         ::warning file=foo.swift,line=2::\(rule.help) (\(rule.name))
 
         """
-        let output = try reporter.write()
+        let output = try XCTUnwrap(reporter.write())
         let outputString = String(decoding: output, as: UTF8.self)
         XCTAssertEqual(outputString, expectedOutput)
     }

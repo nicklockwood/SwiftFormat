@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.53.9](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.53.9) (2024-05-12)
+
+- Fixed bug in `unusedArguments` when shadowing function argument with conditional assignment declaration
+- Individual `--lint` errors are no longer shown in `--quiet` mode (restores pre-0.53.8 behavior)
+
 ## [0.53.8](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.53.8) (2024-04-22)
 
 - Added `--strict` option to emit non-zero exit code after applying changes in formatting mode

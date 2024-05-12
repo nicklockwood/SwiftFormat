@@ -359,7 +359,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
                 var message = "'\(identifier)' is not a valid reporter"
                 let names = Reporters.all.map { $0.name }
                 if let match = identifier.bestMatches(in: names).first {
-                    message += "(did you mean '\(match)'?)"
+                    message += " (did you mean '\(match)'?)"
                 }
                 throw FormatError.options(message)
             }

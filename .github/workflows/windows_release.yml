@@ -22,8 +22,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - branch: swift-5.8.1-release
-            tag: 5.8.1-RELEASE
+          - branch: swift-5.9.2-release
+            tag: 5.9.2-RELEASE
 
           - branch: development
             tag: DEVELOPMENT-SNAPSHOT-2023-06-05-a

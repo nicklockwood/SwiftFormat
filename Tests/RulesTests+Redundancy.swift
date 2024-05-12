@@ -8158,6 +8158,18 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.unusedArguments)
     }
 
+    func testIssue1694() {
+        let input = """
+        listenForUpdates() { [weak self] update, error in
+            guard let update, error == nil else {
+                return
+            }
+            self?.configure(update)
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedArguments, exclude: ["redundantParens"])
+    }
+
     // MARK: redundantClosure
 
     func testRemoveRedundantClosureInSingleLinePropertyDeclaration() {

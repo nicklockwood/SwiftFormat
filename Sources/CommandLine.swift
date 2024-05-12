@@ -347,6 +347,9 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
             print("warning: \(warning)", as: .warning)
         }
 
+        // add args to environment
+        let environment = environment.merging(args) { lhs, _ in lhs }
+
         // Reporter
         var reporter: Reporter? = try args["reporter"].map { identifier in
             guard let reporter = Reporters.reporter(
@@ -375,6 +378,9 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
             }
             return url
         }
+
+        // use default reporter if not set
+        reporter = reporter ?? DefaultReporter(environment: environment)
 
         // Show help
         if args["help"] != nil {
@@ -695,7 +701,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
                     }
                     let output = try applyRules(
                         input, options: options, lineRange: lineRange,
-                        verbose: verbose, lint: lint, lenient: lenient, reporter: reporter
+                        verbose: verbose, lint: lint, reporter: reporter
                     )
                     if let outputURL = outputURL, !useStdout {
                         if !dryrun, (try? String(contentsOf: outputURL)) != output {
@@ -786,8 +792,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
             let inputPaths = inputURLs.map { $0.path }.joined(separator: ", ")
             print("warning: No eligible files found at \(inputPaths).", as: .warning)
         }
-        if let reporter = reporter {
-            let reporterOutput = try reporter.write()
+        if let reporter = reporter, let reporterOutput = try reporter.write() {
             if let reportURL = reportURL {
                 print("Writing report file to \(reportURL.path)")
                 try reporterOutput.write(to: reportURL, options: .atomic)
@@ -899,7 +904,7 @@ func computeHash(_ source: String) -> String {
 }
 
 func applyRules(_ source: String, options: Options, lineRange: ClosedRange<Int>?,
-                verbose: Bool, lint: Bool, lenient: Bool, reporter: Reporter?) throws -> String
+                verbose: Bool, lint: Bool, reporter: Reporter?) throws -> String
 {
     // Parse source
     var tokens = tokenize(source)
@@ -926,7 +931,6 @@ func applyRules(_ source: String, options: Options, lineRange: ClosedRange<Int>?
     // Display info
     let updatedSource = sourceCode(for: tokens)
     if lint, updatedSource != source {
-        changes.forEach { print($0.description(asError: !lenient), as: lenient ? .warning : .error) }
         reporter?.report(changes)
     }
     if verbose {
@@ -953,7 +957,7 @@ func processInput(_ inputURLs: [URL],
                   verbose: Bool,
                   dryrun: Bool,
                   lint: Bool,
-                  lenient: Bool,
+                  lenient _: Bool,
                   cacheURL: URL?,
                   reporter: Reporter?) -> (OutputFlags, [Error])
 {
@@ -1044,8 +1048,7 @@ func processInput(_ inputURLs: [URL],
                     }
                 } else {
                     output = try applyRules(input, options: options, lineRange: lineRange,
-                                            verbose: verbose, lint: lint, lenient: lenient,
-                                            reporter: reporter)
+                                            verbose: verbose, lint: lint, reporter: reporter)
                     if output != input {
                         sourceHash = nil
                     }

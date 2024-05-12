@@ -51,7 +51,7 @@ final class GithubActionsLogReporter: Reporter {
         self.changes.append(contentsOf: changes)
     }
 
-    func write() throws -> Data {
+    func write() throws -> Data? {
         let output = changes.reduce(into: "") { output, change in
             let file = workspaceRelativePath(filePath: change.filePath ?? "")
             output += "::warning file=\(file),line=\(change.line)::\(change.help) (\(change.rule.name))\n"

@@ -341,6 +341,12 @@ class SpacingTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.spaceAroundParens)
     }
 
+    func testAddSpaceBetweenParenAndSending() {
+        let input = "func foo(_: sending(any Foo)) {}"
+        let output = "func foo(_: sending (any Foo)) {}"
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundParens)
+    }
+
     // MARK: - spaceInsideParens
 
     func testSpaceInsideParens() {
@@ -437,6 +443,12 @@ class SpacingTests: RulesTests {
         let output = "func foo(arg _: borrowing [String]) {}"
         testFormatting(for: input, output, rule: FormatRules.spaceAroundBrackets,
                        exclude: ["noExplicitOwnership"])
+    }
+
+    func testAddSpaceBetweenSendingAndStringArray() {
+        let input = "func foo(arg _: sending[String]) {}"
+        let output = "func foo(arg _: sending [String]) {}"
+        testFormatting(for: input, output, rule: FormatRules.spaceAroundBrackets)
     }
 
     // MARK: - spaceInsideBrackets

@@ -840,6 +840,11 @@ class SpacingTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.spaceAroundOperators)
     }
 
+    func testNoSpaceAroundInitWithGenericAndSuppressedConstraint() {
+        let input = "init<T: ~Copyable>()"
+        testFormatting(for: input, rule: FormatRules.spaceAroundOperators)
+    }
+
     func testSpaceAfterOptionalAs() {
         let input = "foo as?[String]"
         let output = "foo as? [String]"
@@ -854,6 +859,11 @@ class SpacingTests: RulesTests {
 
     func testNoSpaceAroundGenerics() {
         let input = "Foo<String>"
+        testFormatting(for: input, rule: FormatRules.spaceAroundOperators)
+    }
+
+    func testNoSpaceAroundGenericsWithSuppressedConstraint() {
+        let input = "Foo<String: ~Copyable>"
         testFormatting(for: input, rule: FormatRules.spaceAroundOperators)
     }
 

@@ -360,11 +360,6 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
 
         // Reporter
         let reporter: Reporter = try args["reporter"].flatMap { identifier in
-            if identifier.lowercased() == "default" {
-                // Avoid errors for explicit `default` added to work around bug in 0.53.9
-                print("warning: Passing 'default' for --reporter is deprecated.", as: .warning)
-                return nil
-            }
             guard let reporter = Reporters.reporter(
                 named: identifier,
                 environment: environment
@@ -380,6 +375,11 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
         } ?? reportURL.flatMap {
             Reporters.reporter(for: $0, environment: environment)
         } ?? DefaultReporter(environment: environment)
+
+        // Throw if default reporter is used with explicit url
+        guard reportURL == nil || !(reporter is DefaultReporter) else {
+            throw FormatError.options("--report requires --reporter to be specified")
+        }
 
         // Show help
         if args["help"] != nil {

@@ -350,8 +350,16 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
         // add args to environment
         let environment = environment.merging(args) { lhs, _ in lhs }
 
+        // Report URL
+        let reportURL: URL? = try args["report"].map { arg in
+            guard !arg.isEmpty else {
+                throw FormatError.options("--report argument expects a path")
+            }
+            return try parsePath(arg, for: "--output", in: directory)
+        }
+
         // Reporter
-        var reporter: Reporter? = try args["reporter"].map { identifier in
+        let reporter: Reporter = try args["reporter"].map { identifier in
             guard let reporter = Reporters.reporter(
                 named: identifier,
                 environment: environment
@@ -364,23 +372,9 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
                 throw FormatError.options(message)
             }
             return reporter
-        }
-
-        // Report URL
-        let reportURL: URL? = try args["report"].map { arg in
-            let url = try parsePath(arg, for: "--output", in: directory)
-            if reporter == nil {
-                reporter = Reporters.reporter(for: url, environment: environment)
-                guard reporter != nil else {
-                    throw FormatError
-                        .options("--report requires --reporter to be specified")
-                }
-            }
-            return url
-        }
-
-        // use default reporter if not set
-        reporter = reporter ?? DefaultReporter(environment: environment)
+        } ?? reportURL.flatMap {
+            Reporters.reporter(for: $0, environment: environment)
+        } ?? DefaultReporter(environment: environment)
 
         // Show help
         if args["help"] != nil {
@@ -542,7 +536,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
             return try parsePath(arg, for: "--output", in: directory)
         }
 
-        guard !useStdout || (reporter == nil || reportURL != nil) else {
+        guard !useStdout || (reporter is DefaultReporter || reportURL != nil) else {
             throw FormatError.options("--report file must be specified when --output is stdout")
         }
 
@@ -792,7 +786,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
             let inputPaths = inputURLs.map { $0.path }.joined(separator: ", ")
             print("warning: No eligible files found at \(inputPaths).", as: .warning)
         }
-        if let reporter = reporter, let reporterOutput = try reporter.write() {
+        if let reporterOutput = try reporter.write() {
             if let reportURL = reportURL {
                 print("Writing report file to \(reportURL.path)")
                 try reporterOutput.write(to: reportURL, options: .atomic)

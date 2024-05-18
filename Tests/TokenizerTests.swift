@@ -4491,6 +4491,30 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testAttributeInsideGenericArguments() {
+        let input = "Foo<(@MainActor () -> Void)?>(nil)"
+        let output: [Token] = [
+            .identifier("Foo"),
+            .startOfScope("<"),
+            .startOfScope("("),
+            .keyword("@MainActor"),
+            .space(" "),
+            .startOfScope("("),
+            .endOfScope(")"),
+            .space(" "),
+            .operator("->", .infix),
+            .space(" "),
+            .identifier("Void"),
+            .endOfScope(")"),
+            .operator("?", .postfix),
+            .endOfScope(">"),
+            .startOfScope("("),
+            .identifier("nil"),
+            .endOfScope(")"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     // MARK: Supressed Conformances
 
     func testNoncopyableStructDeclaration() {

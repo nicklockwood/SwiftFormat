@@ -4917,7 +4917,8 @@ public struct _FormatRules {
             guard formatter.options.swiftVersion >= "4.2",
                   let equalIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i, if: {
                       $0 == .operator("=", .infix)
-                  }), formatter.next(.nonSpaceOrCommentOrLinebreak, after: equalIndex) == .identifier("self")
+                  }), formatter.next(.nonSpaceOrCommentOrLinebreak, after: equalIndex) == .identifier("self"),
+                  formatter.isConditionalStatement(at: i)
             else {
                 return
             }

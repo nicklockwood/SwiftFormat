@@ -1,5 +1,15 @@
 # Change Log
 
+## [0.53.10](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.53.10) (2024-05-18)
+
+- Fixed creation of spurious `stdout` directory when using `--output stdout`
+- Fixed `unusedArguments` false positive for multiline function call arguments
+- Fixed parsing of generic arguments containing attributes or `~` operator
+- Fixed spurious errors about missing `--report` or `--reporter` arguments
+- Fixed `strongifiedSelf` removing required backticks around nonisolated `self`
+- Deprecated explicit `default` value for `--reporter` (introduced in 0.53.9)
+- Added support for `sending` keyword 
+
 ## [0.53.9](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.53.9) (2024-05-12)
 
 - Fixed bug in `unusedArguments` when shadowing function argument with conditional assignment declaration

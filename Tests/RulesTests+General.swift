@@ -839,6 +839,12 @@ class GeneralTests: RulesTests {
                        exclude: ["wrapConditionalBodies"])
     }
 
+    func testBacktickedSelfNotConvertedIfNotConditional() {
+        let input = "nonisolated(unsafe) let `self` = self"
+        let options = FormatOptions(swiftVersion: "4.2")
+        testFormatting(for: input, rule: FormatRules.strongifiedSelf, options: options)
+    }
+
     // MARK: - yodaConditions
 
     func testNumericLiteralEqualYodaCondition() {

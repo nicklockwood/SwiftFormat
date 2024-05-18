@@ -532,9 +532,9 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
                 throw FormatError.options("--output argument expects a value")
             } else if inputURLs.count > 1 {
                 throw FormatError.options("--output argument is only valid for a single input file or directory")
-            } else if arg == "stdout" {
+            } else if arg.lowercased() == "stdout" {
                 useStdout = true
-                return URL(string: arg)
+                return URL(string: "stdout")
             }
             if args["lint"] != nil {
                 print("warning: --output argument is unused when running in --lint mode", as: .warning)
@@ -1057,7 +1057,7 @@ func processInput(_ inputURLs: [URL],
                     // Only bother computing this if cache is enabled
                     cachePrefix + (sourceHash ?? computeHash(output))
                 }
-                if outputURL.lastPathComponent.lowercased() == "stdout" {
+                if outputURL.path.components(separatedBy: "/").contains("stdout") {
                     if !dryrun {
                         // Write to stdout
                         print(output, as: .raw)

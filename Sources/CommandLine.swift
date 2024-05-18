@@ -359,7 +359,12 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
         }
 
         // Reporter
-        let reporter: Reporter = try args["reporter"].map { identifier in
+        let reporter: Reporter = try args["reporter"].flatMap { identifier in
+            if identifier.lowercased() == "default" {
+                // Avoid errors for explicit `default` added to work around bug in 0.53.9
+                print("warning: Passing 'default' for --reporter is deprecated.", as: .warning)
+                return nil
+            }
             guard let reporter = Reporters.reporter(
                 named: identifier,
                 environment: environment

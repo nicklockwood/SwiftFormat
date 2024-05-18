@@ -974,7 +974,7 @@ extension Formatter {
             }
             fallthrough
         case .startOfScope where token.isStringDelimiter && !treatingCollectionKeysAsStart,
-             .identifier:
+             .number where !treatingCollectionKeysAsStart, .identifier:
             if !treatingCollectionKeysAsStart,
                let prevToken = last(.nonSpaceOrCommentOrLinebreak, before: i), [
                    .delimiter(","), .startOfScope("["), .startOfScope("(")

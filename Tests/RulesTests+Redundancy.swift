@@ -8170,6 +8170,19 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.unusedArguments, exclude: ["redundantParens"])
     }
 
+    func testIssue1696() {
+        let input = """
+        func someFunction(with parameter: Int) -> Int {
+            let parameter = max(
+                200,
+                parameter
+            )
+            return parameter
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
     // MARK: redundantClosure
 
     func testRemoveRedundantClosureInSingleLinePropertyDeclaration() {

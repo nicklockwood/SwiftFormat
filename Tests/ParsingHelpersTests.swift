@@ -1663,6 +1663,24 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertFalse(formatter.isStartOfStatement(at: 16))
     }
 
+    func testNumericFunctionArgumentNotTreatedAsStartOfStatement() {
+        let formatter = Formatter(tokenize("""
+        let foo = bar(
+            200
+        )
+        """))
+        XCTAssertFalse(formatter.isStartOfStatement(at: 10, treatingCollectionKeysAsStart: false))
+    }
+
+    func testStringLiteralFunctionArgumentNotTreatedAsStartOfStatement() {
+        let formatter = Formatter(tokenize("""
+        let foo = bar(
+            "baz"
+        )
+        """))
+        XCTAssertFalse(formatter.isStartOfStatement(at: 10, treatingCollectionKeysAsStart: false))
+    }
+
     // MARK: - parseTypes
 
     func testParseSimpleType() {

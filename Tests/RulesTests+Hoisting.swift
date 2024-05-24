@@ -658,6 +658,12 @@ class HoistingTests: RulesTests {
                        options: FormatOptions(asyncCapturing: ["???"], swiftVersion: "5.5"))
     }
 
+    func testNoHoistAwaitInMacroArgument() {
+        let input = "#expect (await monitor.isAvailable == false)"
+        testFormatting(for: input, rule: FormatRules.hoistAwait,
+                       options: FormatOptions(swiftVersion: "5.5"), exclude: ["spaceAroundParens"])
+    }
+
     // MARK: - hoistPatternLet
 
     // hoist = true

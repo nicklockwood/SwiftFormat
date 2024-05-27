@@ -1364,9 +1364,12 @@ Option | Description
 `--classthreshold` | Minimum line count to organize class body. Defaults to 0
 `--enumthreshold` | Minimum line count to organize enum body. Defaults to 0
 `--extensionlength` | Minimum line count to organize extension body. Defaults to 0
+`--organizationmode` | Organize declarations by "visibility" (default) or "type"
 
 <details>
 <summary>Examples</summary>
+
+`--organizationmode visibility` (default)
 
 ```diff
   public class Foo {
@@ -1407,6 +1410,47 @@ Option | Description
 +     // MARK: Private
 +
 +     private let g: Int = 2
++
+ }
+```
+
+`--organizationmode type`
+
+```diff
+  public class Foo {
+-     public func c() -> String {}
+-
+-     public let a: Int = 1
+-     private let g: Int = 2
+-     let e: Int = 2
+-     public let b: Int = 3
+-
+-     public func d() {}
+-     func f() {}
+-     init() {}
+-     deinit() {}
+ }
+
+  public class Foo {
++
++     // MARK: Properties
++
++     public let a: Int = 1
++     public let b: Int = 3
++
++     let e: Int = 2
++
++     private let g: Int = 2
++
++     // MARK: Lifecycle
++
++     init() {}
++     deinit() {}
++
++     // MARK: Functions
++
++     public func c() -> String {}
++     public func d() {}
 +
  }
 ```

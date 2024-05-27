@@ -88,6 +88,328 @@ class OrganizationTests: RulesTests {
         )
     }
 
+    func testOrganizeClassDeclarationsIntoCategoriesInTypeOrder() {
+        let input = """
+        class Foo {
+            private func privateMethod() {}
+
+            private let bar = 1
+            public let baz = 1
+            open var quack = 2
+            package func packageMethod() {}
+            var quux = 2
+
+            /// `open` is the only visibility keyword that
+            /// can also be used as an identifier.
+            var open = 10
+
+            /*
+             * Block comment
+             */
+
+            init() {}
+
+            /// Doc comment
+            public func publicMethod() {}
+        }
+        """
+
+        let output = """
+        class Foo {
+
+            // MARK: Properties
+
+            open var quack = 2
+
+            public let baz = 1
+
+            var quux = 2
+
+            /// `open` is the only visibility keyword that
+            /// can also be used as an identifier.
+            var open = 10
+
+            private let bar = 1
+
+            // MARK: Lifecycle
+
+            /*
+             * Block comment
+             */
+
+            init() {}
+
+            // MARK: Functions
+
+            /// Doc comment
+            public func publicMethod() {}
+
+            package func packageMethod() {}
+
+            private func privateMethod() {}
+
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            options: FormatOptions(categoryMarkComment: "MARK: %c", organizationMode: .type),
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+        )
+    }
+
+    func testOrganizeTypeWithOverridenFieldsInVisibilityOrder() {
+        let input = """
+        class Test {
+
+            var a = ""
+
+            override var b: Any? { nil }
+
+            func foo() -> Foo {
+                Foo()
+            }
+
+            override func bar() -> Bar {
+                Bar()
+            }
+
+            func baaz() -> Baaz {
+                Baaz()
+            }
+
+        }
+        """
+
+        testFormatting(
+            for: input, rule: FormatRules.organizeDeclarations,
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope", "sortImports"]
+        )
+    }
+
+    func testOrganizeTypeWithOverridenFieldsInTypeOrder() {
+        let input = """
+        class Test {
+
+            var a = ""
+
+            override var b: Any? { nil }
+
+            func foo() -> Foo {
+                Foo()
+            }
+
+            override func bar() -> Bar {
+                Bar()
+            }
+
+            func baaz() -> Baaz {
+                Baaz()
+            }
+
+        }
+        """
+
+        let output = """
+        class Test {
+
+            // MARK: Overridden Properties
+
+            override var b: Any? { nil }
+
+            // MARK: Properties
+
+            var a = ""
+
+            // MARK: Overridden Functions
+
+            override func bar() -> Bar {
+                Bar()
+            }
+
+            // MARK: Functions
+
+            func foo() -> Foo {
+                Foo()
+            }
+
+            func baaz() -> Baaz {
+                Baaz()
+            }
+
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            options: FormatOptions(organizationMode: .type),
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope", "sortImports"]
+        )
+    }
+
+    func testOrganizeTypeWithSwiftUIMethodInVisibilityOrder() {
+        let input = """
+        class Test {
+
+            func foo() -> Foo {
+                Foo()
+            }
+
+            func bar() -> some View {
+                EmptyView()
+            }
+
+            func baaz() -> Baaz {
+                Baaz()
+            }
+
+        }
+        """
+
+        testFormatting(
+            for: input, rule: FormatRules.organizeDeclarations,
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope", "sortImports"]
+        )
+    }
+
+    func testOrganizeSwiftUIViewInTypeOrder() {
+        let input = """
+        struct ContentView: View {
+
+            private var label: String
+
+            @State
+            var isOn: Bool = false
+
+            @ViewBuilder
+            private var toggle: some View {
+                Toggle(label, isOn: $isOn)
+                    .fixedSize()
+            }
+
+            init(label: String) {
+                self.label = label
+            }
+
+            @ViewBuilder
+            var body: some View {
+                toggle
+            }
+        }
+        """
+
+        let output = """
+        struct ContentView: View {
+
+            // MARK: Properties
+
+            @State
+            var isOn: Bool = false
+
+            private var label: String
+
+            // MARK: Lifecycle
+
+            init(label: String) {
+                self.label = label
+            }
+
+            // MARK: Content
+
+            @ViewBuilder
+            var body: some View {
+                toggle
+            }
+
+            @ViewBuilder
+            private var toggle: some View {
+                Toggle(label, isOn: $isOn)
+                    .fixedSize()
+            }
+
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            options: FormatOptions(categoryMarkComment: "MARK: %c", organizationMode: .type),
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+        )
+    }
+
+    func testOrganizeSwiftUIViewModifierInTypeOrder() {
+        let input = """
+        struct Modifier: ViewModifier {
+
+            private var label: String
+
+            @State
+            var isOn: Bool = false
+
+            @ViewBuilder
+            private var toggle: some View {
+                Toggle(label, isOn: $isOn)
+                    .fixedSize()
+            }
+
+            func body(content: Content) -> some View {
+                content
+                    .overlay {
+                        toggle
+                    }
+            }
+
+            init(label: String) {
+                self.label = label
+            }
+        }
+        """
+
+        let output = """
+        struct Modifier: ViewModifier {
+
+            // MARK: Properties
+
+            @State
+            var isOn: Bool = false
+
+            private var label: String
+
+            // MARK: Lifecycle
+
+            init(label: String) {
+                self.label = label
+            }
+
+            // MARK: Content
+
+            func body(content: Content) -> some View {
+                content
+                    .overlay {
+                        toggle
+                    }
+            }
+
+            @ViewBuilder
+            private var toggle: some View {
+                Toggle(label, isOn: $isOn)
+                    .fixedSize()
+            }
+
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            options: FormatOptions(categoryMarkComment: "MARK: %c", organizationMode: .type),
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+        )
+    }
+
     func testClassNestedInClassIsOrganized() {
         let input = """
         public class Foo {
@@ -296,6 +618,135 @@ class OrganizationTests: RulesTests {
             for: input, output,
             rule: FormatRules.organizeDeclarations,
             exclude: ["blankLinesAtEndOfScope", "redundantType", "redundantClosure"]
+        )
+    }
+
+    func testSortDeclarationTypesByType() {
+        let input = """
+        class Foo {
+            var a: Int
+            init(a: Int) {
+                self.a = a
+            }
+            private convenience init() {
+                self.init(a: 0)
+            }
+
+            static var a1: Int = 1
+            static var a2: Int = 2
+            var d1: CGFloat {
+                3.141592653589
+            }
+
+            class var b2: String {
+                "class computed property"
+            }
+
+            func g() -> Int {
+                10
+            }
+
+            let c: String = String {
+                "closure body"
+            }()
+
+            static func e() {}
+
+            typealias Bar = Int
+
+            static var b1: String {
+                "static computed property"
+            }
+
+            class func f() -> Foo {
+                Foo()
+            }
+
+            enum NestedEnum {}
+
+            var d2: CGFloat = 3.141592653589 {
+                didSet {}
+            }
+        }
+        """
+
+        let output = """
+        class Foo {
+
+            // MARK: Nested Types
+
+            typealias Bar = Int
+
+            enum NestedEnum {}
+
+            // MARK: Static Properties
+
+            static var a1: Int = 1
+            static var a2: Int = 2
+
+            // MARK: Static Computed Properties
+
+            static var b1: String {
+                "static computed property"
+            }
+
+            // MARK: Class Properties
+
+            class var b2: String {
+                "class computed property"
+            }
+
+            // MARK: Properties
+
+            var a: Int
+            let c: String = String {
+                "closure body"
+            }()
+
+            // MARK: Computed Properties
+
+            var d1: CGFloat {
+                3.141592653589
+            }
+
+            var d2: CGFloat = 3.141592653589 {
+                didSet {}
+            }
+
+            // MARK: Lifecycle
+
+            init(a: Int) {
+                self.a = a
+            }
+
+            private convenience init() {
+                self.init(a: 0)
+            }
+
+            // MARK: Static Functions
+
+            static func e() {}
+
+            // MARK: Class Functions
+
+            class func f() -> Foo {
+                Foo()
+            }
+
+            // MARK: Functions
+
+            func g() -> Int {
+                10
+            }
+
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            options: FormatOptions(categoryMarkComment: "MARK: %c", organizationMode: .type),
+            exclude: ["blankLinesAtEndOfScope", "blankLinesAtStartOfScope", "redundantType", "redundantClosure"]
         )
     }
 

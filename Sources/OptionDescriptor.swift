@@ -692,11 +692,11 @@ struct _Descriptors {
             }
         }
     )
-    let spaceAroundDelimiter = OptionDescriptor(
+    let typeDelimiterSpacing = OptionDescriptor(
         argumentName: "typedelimiter",
-        displayName: "Spacing around delimiter",
-        help: "\"trailing\" (default) or \"leading-trailing\"",
-        keyPath: \.spaceAroundDelimiter
+        displayName: "Type delimiter spacing",
+        help: "\"space-after\" (default), \"spaced\" or \"no-space\"",
+        keyPath: \.typeDelimiterSpacing
     )
     let spaceAroundRangeOperators = OptionDescriptor(
         argumentName: "ranges",

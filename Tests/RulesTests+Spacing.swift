@@ -1265,7 +1265,7 @@ class SpacingTests: RulesTests {
     func testSpaceAroundDataTypeDelimiterLeadingAdded() {
         let input = "class Implementation: ImplementationProtocol {}"
         let output = "class Implementation : ImplementationProtocol {}"
-        let options = FormatOptions(spaceAroundDelimiter: .leadingTrailing)
+        let options = FormatOptions(typeDelimiterSpacing: .spaced)
         testFormatting(
             for: input,
             output,
@@ -1277,7 +1277,7 @@ class SpacingTests: RulesTests {
     func testSpaceAroundDataTypeDelimiterLeadingTrailingAdded() {
         let input = "class Implementation:ImplementationProtocol {}"
         let output = "class Implementation : ImplementationProtocol {}"
-        let options = FormatOptions(spaceAroundDelimiter: .leadingTrailing)
+        let options = FormatOptions(typeDelimiterSpacing: .spaced)
         testFormatting(
             for: input,
             output,
@@ -1288,7 +1288,7 @@ class SpacingTests: RulesTests {
 
     func testSpaceAroundDataTypeDelimiterLeadingTrailingNotModified() {
         let input = "class Implementation : ImplementationProtocol {}"
-        let options = FormatOptions(spaceAroundDelimiter: .leadingTrailing)
+        let options = FormatOptions(typeDelimiterSpacing: .spaced)
         testFormatting(
             for: input,
             rule: FormatRules.spaceAroundOperators,
@@ -1300,7 +1300,7 @@ class SpacingTests: RulesTests {
         let input = "class Implementation:ImplementationProtocol {}"
         let output = "class Implementation: ImplementationProtocol {}"
 
-        let options = FormatOptions(spaceAroundDelimiter: .trailing)
+        let options = FormatOptions(typeDelimiterSpacing: .spaceAfter)
         testFormatting(
             for: input,
             output,
@@ -1311,7 +1311,7 @@ class SpacingTests: RulesTests {
 
     func testSpaceAroundDataTypeDelimiterLeadingNotAdded() {
         let input = "class Implementation: ImplementationProtocol {}"
-        let options = FormatOptions(spaceAroundDelimiter: .trailing)
+        let options = FormatOptions(typeDelimiterSpacing: .spaceAfter)
         testFormatting(
             for: input,
             rule: FormatRules.spaceAroundOperators,

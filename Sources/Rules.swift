@@ -609,10 +609,10 @@ public struct _FormatRules {
                 let spaceBeforeToken = formatter.token(at: i - 1)?.isSpace == true
                     && formatter.token(at: i - 2)?.isLinebreak == false
 
-                if spaceBeforeToken, formatter.options.spaceAroundDelimiter == .trailing {
+                if spaceBeforeToken, formatter.options.typeDelimiterSpacing == .spaceAfter {
                     // Remove space before the token
                     formatter.removeToken(at: i - 1)
-                } else if !spaceBeforeToken, formatter.options.spaceAroundDelimiter == .leadingTrailing {
+                } else if !spaceBeforeToken, formatter.options.typeDelimiterSpacing == .spaced {
                     formatter.insertSpace(" ", at: i)
                 }
             default:

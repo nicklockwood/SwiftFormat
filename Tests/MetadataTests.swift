@@ -231,6 +231,7 @@ class MetadataTests: XCTestCase {
                         Descriptors.organizeEnumThreshold,
                         Descriptors.organizeExtensionThreshold,
                         Descriptors.lineAfterMarks,
+                        Descriptors.organizationMode,
                     ]
                 case .identifier("removeSelf"):
                     referencedOptions += [

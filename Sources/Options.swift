@@ -450,6 +450,14 @@ public enum DelimiterSpacing: String, CaseIterable {
     case noSpace = "no-space"
 }
 
+/// Declaration organization mode
+public enum DeclarationOrganizationMode: String, CaseIterable {
+    /// Organize declarations by visibility
+    case visibility
+    /// Organize declarations by type
+    case type
+}
+
 /// Format to use when printing dates
 public enum DateFormat: Equatable, RawRepresentable, CustomStringConvertible {
     case dayMonthYear
@@ -630,6 +638,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var organizeStructThreshold: Int
     public var organizeEnumThreshold: Int
     public var organizeExtensionThreshold: Int
+    public var organizationMode: DeclarationOrganizationMode
     public var yodaSwap: YodaMode
     public var extensionACLPlacement: ExtensionACLPlacement
     public var redundantType: RedundantType
@@ -744,6 +753,7 @@ public struct FormatOptions: CustomStringConvertible {
                 organizeStructThreshold: Int = 0,
                 organizeEnumThreshold: Int = 0,
                 organizeExtensionThreshold: Int = 0,
+                organizationMode: DeclarationOrganizationMode = .visibility,
                 yodaSwap: YodaMode = .always,
                 extensionACLPlacement: ExtensionACLPlacement = .onExtension,
                 redundantType: RedundantType = .inferLocalsOnly,
@@ -848,6 +858,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.organizeStructThreshold = organizeStructThreshold
         self.organizeEnumThreshold = organizeEnumThreshold
         self.organizeExtensionThreshold = organizeExtensionThreshold
+        self.organizationMode = organizationMode
         self.yodaSwap = yodaSwap
         self.extensionACLPlacement = extensionACLPlacement
         self.redundantType = redundantType

@@ -204,10 +204,6 @@ public enum ReplacementKey: String, CaseIterable {
     case createdName = "created.name"
     case createdEmail = "created.email"
     case createdYear = "created.year"
-    case followedCreatedDate = "created.follow"
-    case followedCreatedName = "created.name.follow"
-    case followedCreatedEmail = "created.email.follow"
-    case followedCreatedYear = "created.year.follow"
 }
 
 /// Argument type for stripping
@@ -261,14 +257,8 @@ public enum HeaderStrippingMode: Equatable, RawRepresentable, ExpressibleByStrin
         return keys.contains(where: { str.contains("{\($0.rawValue)}") })
     }
 
-    public var needsGitInfo: Bool {
-        hasTemplateKey(.createdDate, .createdYear,
-                       .createdName, .createdEmail)
-    }
-
-    public var needsFollowGitInfo: Bool {
-        hasTemplateKey(.followedCreatedDate, .followedCreatedYear,
-                       .followedCreatedName, .followedCreatedEmail)
+    var needsGitInfo: Bool {
+        hasTemplateKey(.createdDate, .createdYear, .createdName, .createdEmail)
     }
 }
 
@@ -324,19 +314,11 @@ public struct FileInfo: Equatable, CustomStringConvertible {
                                       timeZone: options.timeZone)
         },
         .createdYear: .dynamic { info, _ in info.creationDate?.yearString },
-        .followedCreatedDate: .dynamic { info, options in
-            info.followedCreationDate?.format(with: options.dateFormat,
-                                              timeZone: options.timeZone)
-        },
-        .followedCreatedYear: .dynamic { info, _ in
-            info.followedCreationDate?.yearString
-        },
         .currentYear: .constant(Date.currentYear),
     ]
 
     let filePath: String?
     var creationDate: Date?
-    var followedCreationDate: Date?
     var replacements: [ReplacementKey: ReplacementType] = Self.defaultReplacements
 
     var fileName: String? {
@@ -346,18 +328,12 @@ public struct FileInfo: Equatable, CustomStringConvertible {
     public init(
         filePath: String? = nil,
         creationDate: Date? = nil,
-        followedCreationDate: Date? = nil,
         replacements: [ReplacementKey: ReplacementType] = [:]
     ) {
         self.filePath = filePath
         self.creationDate = creationDate
-        self.followedCreationDate = followedCreationDate
-
+        self.replacements[.fileName] = fileName.map { .constant($0) }
         self.replacements.merge(replacements, uniquingKeysWith: { $1 })
-
-        if let fileName = fileName {
-            self.replacements[.fileName] = .constant(fileName)
-        }
     }
 
     public var description: String {

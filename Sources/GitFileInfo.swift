@@ -38,9 +38,9 @@ struct GitFileInfo {
 }
 
 extension GitFileInfo {
-    init?(url: URL, follow: Bool = false) {
+    init?(url: URL) {
         guard let gitRoot = GitHelpers.getGitRoot(url.deletingLastPathComponent()),
-              let commitHash = GitHelpers.getGitCommit(url, root: gitRoot, follow: follow),
+              let commitHash = GitHelpers.getGitCommit(url, root: gitRoot),
               let gitInfo = GitHelpers.getCommitInfo((commitHash, gitRoot))
         else {
             return nil
@@ -71,11 +71,10 @@ private enum GitHelpers {
         return GitFileInfo(createdByName: safeName, createdByEmail: safeEmail)
     }
 
-    static func getGitCommit(_ url: URL, root: URL, follow: Bool) -> String? {
+    static func getGitCommit(_ url: URL, root: URL) -> String? {
         let command = [
             "git log",
-            // --follow to keep tracking the file across renames
-            follow ? "--follow" : "",
+            "--follow", // keep tracking file across renames
             "--diff-filter=A",
             "--author-date-order",
             "--pretty=%H",

@@ -750,15 +750,10 @@ class GeneralTests: RulesTests {
     }
 
     func testGitHelpersReturnsInfo() {
-        let info = GitFileInfo(url: URL(fileURLWithPath: #file), follow: false)
+        let info = GitFileInfo(url: URL(fileURLWithPath: #file))
         XCTAssertNotNil(info?.createdByName)
         XCTAssertNotNil(info?.createdByEmail)
         XCTAssertNotNil(info?.createdAt)
-
-        let followInfo = GitFileInfo(url: URL(fileURLWithPath: #file), follow: true)
-        XCTAssertNotNil(followInfo?.createdByName)
-        XCTAssertNotNil(followInfo?.createdByEmail)
-        XCTAssertNotNil(followInfo?.createdAt)
     }
 
     func testFileHeaderRuleThrowsIfCreationDateUnavailable() {

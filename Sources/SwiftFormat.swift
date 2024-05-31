@@ -184,22 +184,14 @@ public func enumerateFiles(withInputURL inputURL: URL,
                 let shouldGetGitInfo = fileHeaderRuleEnabled &&
                     options.formatOptions?.fileHeader.needsGitInfo == true
 
-                let shouldGetFollowGitInfo = fileHeaderRuleEnabled &&
-                    options.formatOptions?.fileHeader.needsFollowGitInfo == true
-
                 let gitInfo = shouldGetGitInfo ? GitFileInfo(url: inputURL) : nil
-
-                let followedGitInfo = shouldGetFollowGitInfo ? GitFileInfo(url: inputURL, follow: true) : nil
 
                 let fileInfo = FileInfo(
                     filePath: resourceValues.path,
                     creationDate: gitInfo?.createdAt ?? resourceValues.creationDate,
-                    followedCreationDate: followedGitInfo?.createdAt,
                     replacements: [
                         .createdName: ReplacementType(gitInfo?.createdByName),
                         .createdEmail: ReplacementType(gitInfo?.createdByEmail),
-                        .followedCreatedName: ReplacementType(followedGitInfo?.createdByName),
-                        .followedCreatedEmail: ReplacementType(followedGitInfo?.createdByEmail),
                     ].compactMapValues { $0 }
                 )
 

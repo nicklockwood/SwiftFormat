@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="21507" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" initialViewController="B8D-0N-5wS">
+<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="32700.99.1234" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" initialViewController="B8D-0N-5wS">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="21507"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="22689"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
@@ -418,19 +418,19 @@
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
                             <box verticalHuggingPriority="750" boxType="separator" translatesAutoresizingMaskIntoConstraints="NO" id="RZx-Ps-pFP">
-                                <rect key="frame" x="0.0" y="599" width="498" height="5"/>
+                                <rect key="frame" x="0.0" y="603" width="498" height="5"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="1" id="cK6-hE-hqz"/>
                                 </constraints>
                             </box>
                             <scrollView borderType="none" autohidesScrollers="YES" horizontalLineScroll="33" horizontalPageScroll="10" verticalLineScroll="33" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" horizontalScrollElasticity="none" translatesAutoresizingMaskIntoConstraints="NO" id="vVz-rA-tRS">
-                                <rect key="frame" x="0.0" y="0.0" width="498" height="563"/>
+                                <rect key="frame" x="0.0" y="0.0" width="498" height="567"/>
                                 <clipView key="contentView" drawsBackground="NO" copiesOnScroll="NO" id="1nY-Z5-cvR">
-                                    <rect key="frame" x="0.0" y="0.0" width="498" height="563"/>
+                                    <rect key="frame" x="0.0" y="0.0" width="498" height="567"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" selectionHighlightStyle="none" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" typeSelect="NO" rowHeight="30" rowSizeStyle="automatic" usesAutomaticRowHeights="YES" viewBased="YES" id="JTc-wy-tJT">
-                                            <rect key="frame" x="0.0" y="0.0" width="498" height="563"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="498" height="567"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <size key="intercellSpacing" width="3" height="3"/>
                                             <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -574,20 +574,20 @@
                                 </scroller>
                             </scrollView>
                             <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="pHb-Fu-MRN">
-                                <rect key="frame" x="6" y="600" width="190" height="42"/>
-                                <constraints>
-                                    <constraint firstAttribute="height" constant="40" id="qEB-fw-FrU"/>
-                                </constraints>
+                                <rect key="frame" x="6" y="604" width="190" height="42"/>
                                 <buttonCell key="cell" type="check" title="Infer Options Automatically" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="TeM-iN-9EW">
                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                     <font key="font" metaFont="system"/>
                                 </buttonCell>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="40" id="qEB-fw-FrU"/>
+                                </constraints>
                                 <connections>
                                     <action selector="toggleInferOptions:" target="9ZR-Qg-hHT" id="Mri-hh-vbP"/>
                                 </connections>
                             </button>
                             <popUpButton horizontalHuggingPriority="500" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="YId-jI-Kpd">
-                                <rect key="frame" x="416" y="607" width="78" height="25"/>
+                                <rect key="frame" x="416" y="611" width="78" height="25"/>
                                 <popUpButtonCell key="cell" type="push" title="Item 1" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="nhQ-Kk-Ta3" id="JGl-KG-s99">
                                     <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                     <font key="font" metaFont="menu"/>
@@ -604,7 +604,7 @@
                                 </connections>
                             </popUpButton>
                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="8vB-lt-Jpe">
-                                <rect key="frame" x="335" y="613" width="82" height="16"/>
+                                <rect key="frame" x="335" y="617" width="82" height="16"/>
                                 <textFieldCell key="cell" lineBreakMode="clipping" title="Swift version" id="pwb-qe-8jm">
                                     <font key="font" metaFont="system"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -612,7 +612,7 @@
                                 </textFieldCell>
                             </textField>
                             <searchField wantsLayer="YES" verticalHuggingPriority="750" textCompletion="NO" translatesAutoresizingMaskIntoConstraints="NO" id="g0F-OD-16q">
-                                <rect key="frame" x="8" y="571" width="482" height="22"/>
+                                <rect key="frame" x="8" y="575" width="482" height="22"/>
                                 <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" borderStyle="bezel" usesSingleLineMode="YES" bezelStyle="round" id="7UJ-JQ-nkl">
                                     <font key="font" metaFont="system"/>
                                     <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -816,7 +816,7 @@
         </scene>
     </scenes>
     <resources>
-        <image name="NSTouchBarGetInfoTemplate" width="15" height="15"/>
-        <image name="NSTouchBarTextListTemplate" width="16" height="12"/>
+        <image name="NSTouchBarGetInfoTemplate" width="20" height="20"/>
+        <image name="NSTouchBarTextListTemplate" width="21" height="15"/>
     </resources>
 </document>

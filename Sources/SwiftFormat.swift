@@ -187,13 +187,9 @@ public func enumerateFiles(withInputURL inputURL: URL,
                 let shouldGetFollowGitInfo = fileHeaderRuleEnabled &&
                     options.formatOptions?.fileHeader.needsFollowGitInfo == true
 
-                let gitInfo = shouldGetGitInfo
-                    ? GitHelpers.fileInfo(inputURL)
-                    : nil
+                let gitInfo = shouldGetGitInfo ? GitFileInfo(url: inputURL) : nil
 
-                let followedGitInfo = shouldGetFollowGitInfo
-                    ? GitHelpers.fileInfo(inputURL, follow: true)
-                    : nil
+                let followedGitInfo = shouldGetFollowGitInfo ? GitFileInfo(url: inputURL, follow: true) : nil
 
                 let fileInfo = FileInfo(
                     filePath: resourceValues.path,

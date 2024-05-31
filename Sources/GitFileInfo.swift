@@ -1,5 +1,5 @@
 //
-//  GitHelpers.swift
+//  GitFileInfo.swift
 //  SwiftFormat
 //
 //  Created by Hampus Tågerud on 2023-08-08.
@@ -31,36 +31,26 @@
 
 import Foundation
 
-private func memoize<K, T>(_ keyFn: @escaping (K) -> String?,
-                           _ workFn: @escaping (K) -> T) -> (K) -> T
-{
-    let lock = NSLock()
-    var cache: [String: T] = [:]
-
-    return { input in
-        let key = keyFn(input) ?? "@nil"
-
-        lock.lock()
-        defer { lock.unlock() }
-
-        if let value = cache[key] {
-            return value
-        }
-
-        let newValue = workFn(input)
-        cache[key] = newValue
-
-        return newValue
-    }
-}
-
 struct GitFileInfo {
     var createdByName: String?
     var createdByEmail: String?
     var createdAt: Date?
 }
 
-enum GitHelpers {
+extension GitFileInfo {
+    init?(url: URL, follow: Bool = false) {
+        guard let gitRoot = GitHelpers.getGitRoot(url.deletingLastPathComponent()),
+              let commitHash = GitHelpers.getGitCommit(url, root: gitRoot, follow: follow),
+              let gitInfo = GitHelpers.getCommitInfo((commitHash, gitRoot))
+        else {
+            return nil
+        }
+
+        self = gitInfo
+    }
+}
+
+private enum GitHelpers {
     static let getGitRoot: (URL) -> URL? = memoize({ $0.relativePath }) { url in
         let dir = "git rev-parse --show-toplevel".shellOutput(cwd: url)
 
@@ -81,7 +71,7 @@ enum GitHelpers {
         return GitFileInfo(createdByName: safeName, createdByEmail: safeEmail)
     }
 
-    private static func getGitCommit(_ url: URL, root: URL, follow: Bool) -> String? {
+    static func getGitCommit(_ url: URL, root: URL, follow: Bool) -> String? {
         let command = [
             "git log",
             // --follow to keep tracking the file across renames
@@ -109,8 +99,6 @@ enum GitHelpers {
         return safeValue
     }
 
-    static var json: JSONDecoder { JSONDecoder() }
-
     static let getCommitInfo: ((String, URL)) -> GitFileInfo? = memoize(
         { hash, root in hash + root.relativePath },
         { hash, root in
@@ -125,7 +113,7 @@ enum GitHelpers {
             }
 
             let MapType = [String: String].self
-            guard let dict = try? json.decode(MapType, from: commitData) else {
+            guard let dict = try? JSONDecoder().decode(MapType, from: commitData) else {
                 return nil
             }
 
@@ -143,15 +131,58 @@ enum GitHelpers {
                                createdAt: date)
         }
     )
+}
 
-    static func fileInfo(_ url: URL, follow: Bool = false) -> GitFileInfo? {
-        let dir = url.deletingLastPathComponent()
-        guard let gitRoot = getGitRoot(dir) else { return nil }
+private extension String {
+    func shellOutput(cwd: URL? = nil) -> String? {
+        let process = Process()
+        let pipe = Pipe()
 
-        guard let commitHash = getGitCommit(url, root: gitRoot, follow: follow) else {
+        process.executableURL = URL(fileURLWithPath: "/bin/bash")
+        process.arguments = ["-c", self]
+        process.standardOutput = pipe
+        process.standardError = pipe
+
+        if let safeCWD = cwd {
+            process.currentDirectoryURL = safeCWD
+        }
+
+        let file = pipe.fileHandleForReading
+
+        do { try process.run() }
+        catch { return nil }
+
+        process.waitUntilExit()
+
+        guard process.terminationStatus == 0 else {
             return nil
         }
 
-        return getCommitInfo((commitHash, gitRoot))
+        let outputData = file.readDataToEndOfFile()
+        return String(data: outputData, encoding: .utf8)?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+}
+
+private func memoize<K, T>(_ keyFn: @escaping (K) -> String?,
+                           _ workFn: @escaping (K) -> T) -> (K) -> T
+{
+    let lock = NSLock()
+    var cache: [String: T] = [:]
+
+    return { input in
+        let key = keyFn(input) ?? "@nil"
+
+        lock.lock()
+        defer { lock.unlock() }
+
+        if let value = cache[key] {
+            return value
+        }
+
+        let newValue = workFn(input)
+        cache[key] = newValue
+
+        return newValue
     }
 }

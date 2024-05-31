@@ -750,12 +750,12 @@ class GeneralTests: RulesTests {
     }
 
     func testGitHelpersReturnsInfo() {
-        let info = GitHelpers.fileInfo(URL(fileURLWithPath: #file), follow: false)
+        let info = GitFileInfo(url: URL(fileURLWithPath: #file), follow: false)
         XCTAssertNotNil(info?.createdByName)
         XCTAssertNotNil(info?.createdByEmail)
         XCTAssertNotNil(info?.createdAt)
 
-        let followInfo = GitHelpers.fileInfo(URL(fileURLWithPath: #file), follow: true)
+        let followInfo = GitFileInfo(url: URL(fileURLWithPath: #file), follow: true)
         XCTAssertNotNil(followInfo?.createdByName)
         XCTAssertNotNil(followInfo?.createdByEmail)
         XCTAssertNotNil(followInfo?.createdAt)

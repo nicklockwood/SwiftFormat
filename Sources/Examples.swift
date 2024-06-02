@@ -928,6 +928,9 @@ private struct Examples {
     - convenience private init()
     + private convenience init()
     ```
+
+    **NOTE:** If the option value is empty, the following order will be used by default:
+    \(_FormatRules.defaultModifierOrder.flatMap { $0 }.joined(separator: ","))
     """
 
     let strongifiedSelf = """

@@ -1082,6 +1082,9 @@ Option | Description
 + private convenience init()
 ```
 
+**NOTE:** If the option value is empty, the following order will be used by default:
+override,private,fileprivate,internal,package,public,open,private(set),fileprivate(set),internal(set),package(set),public(set),open(set),final,dynamic,optional,required,convenience,indirect,isolated,nonisolated,nonisolated(unsafe),lazy,weak,unowned,static,class,borrowing,consuming,mutating,nonmutating,prefix,infix,postfix
+
 </details>
 <br/>
 

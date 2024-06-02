@@ -4896,6 +4896,28 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.preferForLoop)
     }
 
+    func testForEachOverDictionary() {
+        let input = """
+        let dict = ["a": "b"]
+
+        dict.forEach { (header: (key: String, value: String)) in
+            print(header.key)
+            print(header.value)
+        }
+        """
+
+        let output = """
+        let dict = ["a": "b"]
+
+        for header in dict {
+            print(header.key)
+            print(header.value)
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.preferForLoop)
+    }
+
     // MARK: propertyType
 
     func testConvertsExplicitTypeToInferredType() {

@@ -2867,6 +2867,37 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.opaqueGenericParameters, options: options)
     }
 
+    func testGenericSimplifiedInMethodWithAttributeOrMacro() {
+        let input = """
+        @MyResultBuilder
+        func foo<T: Foo, U: Bar>(foo: T, bar: U) -> MyResult {
+            foo
+            bar
+        }
+
+        @MyFunctionBodyMacro(withArgument: true)
+        func foo<T: Foo, U: Bar>(foo: T, bar: U) {
+            print(foo, bar)
+        }
+        """
+
+        let output = """
+        @MyResultBuilder
+        func foo(foo: some Foo, bar: some Bar) -> MyResult {
+            foo
+            bar
+        }
+
+        @MyFunctionBodyMacro(withArgument: true)
+        func foo(foo: some Foo, bar: some Bar) {
+            print(foo, bar)
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, output, rule: FormatRules.opaqueGenericParameters, options: options)
+    }
+
     // MARK: - genericExtensions
 
     func testGenericExtensionNotModifiedBeforeSwift5_7() {

@@ -6626,9 +6626,7 @@ public struct _FormatRules {
                 genericSignatureStartIndex < paramListStartIndex,
                 genericSignatureEndIndex < paramListStartIndex,
                 let openBraceIndex = formatter.index(of: .startOfScope("{"), after: paramListEndIndex),
-                let closeBraceIndex = formatter.endOfScope(at: openBraceIndex),
-                // Ignore anything with attributes
-                !formatter.modifiersForDeclaration(at: keywordIndex, contains: { $1.hasPrefix("@") })
+                let closeBraceIndex = formatter.endOfScope(at: openBraceIndex)
             else { return }
 
             var genericTypes = [Formatter.GenericType]()
@@ -6696,6 +6694,14 @@ public struct _FormatRules {
 
                 // If the generic type occurs in the body of the function, then it can't be removed
                 if bodyTokens.contains(where: { $0.string == genericType.name }) {
+                    genericType.eligibleToRemove = false
+                    continue
+                }
+
+                // If the generic type is referenced in any attributes, then it can't be removed
+                let startOfModifiers = formatter.startOfModifiers(at: keywordIndex, includingAttributes: true)
+                let modifierTokens = formatter.tokens[startOfModifiers ..< keywordIndex]
+                if modifierTokens.contains(where: { $0.string == genericType.name }) {
                     genericType.eligibleToRemove = false
                     continue
                 }

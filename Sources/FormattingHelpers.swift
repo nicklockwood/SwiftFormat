@@ -66,7 +66,7 @@ extension Formatter {
                 if let prevIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: scopeStart),
                    isSymbol(at: prevIndex, in: staticSelf ? [] : options.selfRequired.union([
                        "expect", // Special case to support autoclosure arguments in the Nimble framework
-                   ]))
+                   ])) || isAttribute(at: prevIndex)
                 {
                     return false
                 }
@@ -3109,6 +3109,12 @@ extension Formatter {
                     }
                     if let lastToken = last(.nonSpaceOrCommentOrLinebreak, before: index),
                        lastToken.isOperator(".")
+                    {
+                        break
+                    }
+                    if lastKeyword.hasPrefix("@"), let startIndex = startOfScope(at: index),
+                       tokens[startIndex] == .startOfScope("("),
+                       lastKeywordIndex == self.index(of: .nonSpaceOrComment, before: startIndex)
                     {
                         break
                     }

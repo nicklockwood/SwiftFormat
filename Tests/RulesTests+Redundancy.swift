@@ -5328,6 +5328,18 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantSelf, options: options)
     }
 
+    func testNoRemoveSelfInMacro() {
+        let input = """
+        struct MyStruct {
+            private var __myVar: String
+            var myVar: String {
+                @storageRestrictions(initializes: self.__myVar)
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantSelf)
+    }
+
     // explicitSelf = .insert
 
     func testInsertSelf() {
@@ -5939,6 +5951,19 @@ class RedundancyTests: RulesTests {
             required init() {}
 
             func set() {}
+        }
+        """
+        let options = FormatOptions(explicitSelf: .insert)
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
+    func testNoInsertSelfInMacro() {
+        let input = """
+        struct MyStruct {
+            private var __myVar: String
+            var myVar: String {
+                @storageRestrictions(initializes: __myVar)
+            }
         }
         """
         let options = FormatOptions(explicitSelf: .insert)

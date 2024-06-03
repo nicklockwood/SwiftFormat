@@ -2020,8 +2020,14 @@ extension Formatter {
                 return .beforeMarks
             }
 
-        case .conditionalCompilation:
-            return .conditionalCompilation
+        case let .conditionalCompilation(_, body, _):
+            // Prefer treating conditional compliation blocks as having
+            // the property type of the first declaration in their body.
+            if let firstDeclarationInBlock = body.first {
+                return type(of: firstDeclarationInBlock, for: mode)
+            } else {
+                return .conditionalCompilation
+            }
         }
     }
 

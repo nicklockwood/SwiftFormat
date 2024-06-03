@@ -1744,8 +1744,19 @@ extension Formatter {
                 return (argumentNames: [], inKeywordIndex: inKeywordIndex)
             }
 
-            let argumentTokens = tokens[firstTokenInArgumentsList ... endOfArgumentsScopeIndex].split(separator: .delimiter(","))
-            argumentNames = argumentTokens.compactMap { $0.first(where: \.isIdentifier)?.string ?? $0[0].string }
+            // Parse the comma-separated list of arguments
+            var currentArgIndex = firstTokenInArgumentsList
+            while tokens[currentArgIndex].isIdentifierOrKeyword {
+                argumentNames.append(tokens[currentArgIndex].string)
+
+                guard let nextComma = index(of: .delimiter(","), in: currentArgIndex ..< endOfArgumentsScopeIndex),
+                      let nextArgLabel = index(of: .identifierOrKeyword, in: nextComma ..< endOfArgumentsScopeIndex)
+                else {
+                    break
+                }
+
+                currentArgIndex = nextArgLabel
+            }
         }
 
         // Otherwise this is an anonymous closure

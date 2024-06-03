@@ -1284,6 +1284,12 @@ class OrganizationTests: RulesTests {
             init() {}
 
             var quuz = "quux"
+
+            #if DEBUG
+            struct Test {
+                let foo: Bar
+            }
+            #endif
         }
         """
 
@@ -1295,8 +1301,6 @@ class OrganizationTests: RulesTests {
             init() {}
 
             // MARK: Public
-
-            public var bar = "bar"
 
             #if DEBUG
             public struct DebugFoo {
@@ -1315,17 +1319,26 @@ class OrganizationTests: RulesTests {
             private let other = "other"
             #endif
 
+            public var bar = "bar"
+
             // MARK: Internal
+
+            #if DEBUG
+            struct Test {
+                let foo: Bar
+            }
+            #endif
 
             var baz = "baz"
 
             var quuz = "quux"
+
         }
         """
 
         testFormatting(for: input, output, rule: FormatRules.organizeDeclarations,
                        options: FormatOptions(ifdefIndent: .noIndent),
-                       exclude: ["blankLinesAtStartOfScope", "propertyType"])
+                       exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope", "propertyType"])
     }
 
     func testOrganizesTypeBelowSymbolImport() {
@@ -1783,6 +1796,52 @@ class OrganizationTests: RulesTests {
             rule: FormatRules.organizeDeclarations,
             options: FormatOptions(markCategories: false)
         )
+    }
+
+    func testOrganizeConditionalInitDeclaration() {
+        let input = """
+        class Foo {
+
+            // MARK: Lifecycle
+
+            init() {}
+
+            #if DEBUG
+            init() {
+                print("Debug")
+            }
+            #endif
+
+            // MARK: Internal
+
+            func test() {}
+        }
+        """
+
+        testFormatting(for: input, rule: FormatRules.organizeDeclarations, options: FormatOptions(ifdefIndent: .noIndent), exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"])
+    }
+
+    func testOrganizeConditionalPublicFunction() {
+        let input = """
+        class Foo {
+
+            // MARK: Lifecycle
+
+            init() {}
+
+            // MARK: Public
+
+            #if DEBUG
+            public func publicTest() {}
+            #endif
+
+            // MARK: Internal
+
+            func internalTest() {}
+        }
+        """
+
+        testFormatting(for: input, rule: FormatRules.organizeDeclarations, options: FormatOptions(ifdefIndent: .noIndent), exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"])
     }
 
     // MARK: extensionAccessControl .onDeclarations

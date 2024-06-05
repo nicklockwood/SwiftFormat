@@ -3921,6 +3921,16 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
     }
 
+    func testNoRemoveSelfInOSLogFunction() {
+        let input = """
+        func testFoo() {
+            os_log("error: \\(self.bar) is nil")
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.4")
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
     func testNoRemoveSelfInExcludedFunction() {
         let input = """
         class Foo {

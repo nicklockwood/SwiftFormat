@@ -625,6 +625,18 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssert(formatter.isAccessorKeyword(at: 34))
     }
 
+    func testInit() {
+        let formatter = Formatter(tokenize("""
+        var foo: Int {
+            init {}
+            get {}
+            set {}
+        }
+        """))
+        XCTAssert(formatter.isAccessorKeyword(at: 10))
+        XCTAssert(formatter.isAccessorKeyword(at: 16))
+    }
+
     func testNotGetter() {
         let formatter = Formatter(tokenize("""
         func foo() {
@@ -642,6 +654,15 @@ class ParsingHelpersTests: XCTestCase {
         }
         """))
         XCTAssert(formatter.isAccessorKeyword(at: 10, checkKeyword: false))
+    }
+
+    func testNotSetterInit() {
+        let formatter = Formatter(tokenize("""
+        class Foo {
+            init() { print("") }
+        }
+        """))
+        XCTAssertFalse(formatter.isAccessorKeyword(at: 7))
     }
 
     // MARK: isEnumCase

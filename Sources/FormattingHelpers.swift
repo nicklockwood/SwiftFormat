@@ -2870,7 +2870,7 @@ extension Formatter {
                         ["static", "class"].contains(string)
                     })
                     if let name = name, classOrStatic || !staticSelf {
-                        processAccessors(["get", "set", "willSet", "didSet"], for: name,
+                        processAccessors(["get", "set", "willSet", "didSet", "init"], for: name,
                                          at: &index, localNames: localNames, members: members,
                                          typeStack: &typeStack, closureStack: &closureStack,
                                          membersByType: &membersByType,
@@ -3160,8 +3160,15 @@ extension Formatter {
             assert(tokens[index] == .startOfScope("{"))
             var foundAccessors = false
             var localNames = localNames
-            while let nextIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index, if: {
-                if case let .identifier(name) = $0, names.contains(name) { return true } else { return false }
+            while var nextIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index, if: {
+                switch $0 {
+                case .keyword where $0.isAttribute:
+                    return true
+                case let .identifier(name), let .keyword(name):
+                    return names.contains(name)
+                default:
+                    return false
+                }
             }), let startIndex = self.index(of: .startOfScope("{"), after: nextIndex) {
                 foundAccessors = true
                 index = startIndex + 1
@@ -3170,10 +3177,18 @@ extension Formatter {
                 }), let varToken = next(.identifier, after: parenStart) {
                     localNames.insert(varToken.unescaped())
                 } else {
-                    switch tokens[nextIndex].string {
+                    var token = tokens[nextIndex]
+                    while token.isAttribute,
+                          let endIndex = endOfAttribute(at: nextIndex),
+                          let index = self.index(of: .nonSpaceOrCommentOrLinebreak, after: endIndex)
+                    {
+                        nextIndex = index
+                        token = tokens[nextIndex]
+                    }
+                    switch token.string {
                     case "get":
                         localNames.insert(name)
-                    case "set":
+                    case "set", "init":
                         localNames.insert(name)
                         localNames.insert("newValue")
                     case "willSet":

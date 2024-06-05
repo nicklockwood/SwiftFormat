@@ -6230,6 +6230,50 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
     }
 
+    func testPropertyInitNotInterpretedAsTypeInit() {
+        let input = """
+        struct MyStruct {
+            private var __myVar: String
+            var myVar: String {
+                @storageRestrictions(initializes: __myVar)
+                init(initialValue) {
+                    __myVar = initialValue
+                }
+                set {
+                    __myVar = newValue
+                }
+                get {
+                    __myVar
+                }
+            }
+        }
+        """
+        let options = FormatOptions(explicitSelf: .initOnly)
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
+    func testPropertyInitNotInterpretedAsTypeInit2() {
+        let input = """
+        struct MyStruct {
+            private var __myVar: String
+            var myVar: String {
+                @storageRestrictions(initializes: __myVar)
+                init {
+                    __myVar = newValue
+                }
+                set {
+                    __myVar = newValue
+                }
+                get {
+                    __myVar
+                }
+            }
+        }
+        """
+        let options = FormatOptions(explicitSelf: .initOnly)
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
     // parsing bugs
 
     func testSelfRemovalParsingBug() {

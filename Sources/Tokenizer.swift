@@ -435,6 +435,15 @@ public extension Token {
         }
     }
 
+    var isCommentBody: Bool {
+        switch self {
+        case .commentBody:
+            return true
+        default:
+            return false
+        }
+    }
+
     var isStringBody: Bool {
         switch self {
         case .stringBody:

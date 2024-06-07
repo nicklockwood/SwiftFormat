@@ -10147,7 +10147,7 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantTypedThrows, options: options)
     }
 
-    func testDontRemovesRegularErrorTypeThrows() {
+    func testDontRemovesNonRedundantErrorTypeThrows() {
         let input = """
         func bar() throws(BarError) -> Foo {
             throw .foo
@@ -10158,17 +10158,7 @@ class RedundancyTests: RulesTests {
         }
         """
 
-        let output = """
-        func bar() throws(BarError) -> Foo {
-            throw .foo
-        }
-
-        func foo() throws(Error) -> Int {
-            throw MyError.foo
-        }
-        """
-
         let options = FormatOptions(swiftVersion: "6.0")
-        testFormatting(for: input, output, rule: FormatRules.redundantTypedThrows, options: options)
+        testFormatting(for: input, rule: FormatRules.redundantTypedThrows, options: options)
     }
 }

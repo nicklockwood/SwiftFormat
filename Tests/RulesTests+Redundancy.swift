@@ -10110,4 +10110,65 @@ class RedundancyTests: RulesTests {
 
         testFormatting(for: input, rule: FormatRules.redundantProperty)
     }
+
+    // MARK: - redundantTypedThrows
+
+    func testRemovesRedundantNeverTypeThrows() {
+        let input = """
+        func foo() throws(Never) -> Int {
+            0
+        }
+        """
+
+        let output = """
+        func foo() -> Int {
+            0
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "6.0")
+        testFormatting(for: input, output, rule: FormatRules.redundantTypedThrows, options: options)
+    }
+
+    func testRemovesRedundantAnyErrorTypeThrows() {
+        let input = """
+        func foo() throws(any Error) -> Int {
+            throw MyError.foo
+        }
+        """
+
+        let output = """
+        func foo() throws -> Int {
+            throw MyError.foo
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "6.0")
+        testFormatting(for: input, output, rule: FormatRules.redundantTypedThrows, options: options)
+    }
+
+    func testDontRemovesRegularErrorTypeThrows() {
+        let input = """
+        func bar() throws(BarError) -> Foo {
+            throw .foo
+        }
+
+        func foo() throws(Error) -> Int {
+            throw MyError.foo
+        }
+        """
+
+        let output = """
+        func bar() throws(BarError) -> Foo {
+            throw .foo
+        }
+
+        func foo() throws(Error) -> Int {
+            throw MyError.foo
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "6.0")
+        testFormatting(for: input, output, rule: FormatRules.redundantTypedThrows, options: options)
+    }
 }

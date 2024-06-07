@@ -1935,4 +1935,18 @@ private struct Examples {
       }
     ```
     """
+
+    let redundantTypedThrows = """
+    ```diff
+    - func foo() throws(Never) -> Int {
+    + func foo() -> Int {
+          return 0
+      }
+
+    - func foo() throws(any Error) -> Int {
+    + func foo() throws -> Int {
+          throw MyError.foo
+      }
+    ```
+    """
 }

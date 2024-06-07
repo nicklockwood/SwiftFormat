@@ -10110,4 +10110,20 @@ class RedundancyTests: RulesTests {
 
         testFormatting(for: input, rule: FormatRules.redundantProperty)
     }
+
+    func testPreservesUnwrapConditionInIfStatement() {
+        let input = """
+        func foo() -> Foo {
+            let foo = Foo(bar: bar, baaz: baaz)
+
+            if let foo = foo.nestedFoo {
+                print(foo)
+            }
+
+            return foo
+        }
+        """
+
+        testFormatting(for: input, rule: FormatRules.redundantProperty)
+    }
 }

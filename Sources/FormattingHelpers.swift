@@ -2210,7 +2210,7 @@ extension Formatter {
         // If this type has a leading :sort directive, we sort alphabetically
         // within the subcategories (where ordering is otherwise undefined)
         let sortAlphabeticallyWithinSubcategories = typeDeclaration.open.contains(where: {
-            $0.isComment && $0.string.contains("swiftformat:sort") && !$0.string.contains(":sort:")
+            $0.isCommentBody && $0.string.contains("swiftformat:sort") && !$0.string.contains(":sort:")
         })
 
         // Sorts the given categoried declarations based on their derived metadata
@@ -2246,7 +2246,7 @@ extension Formatter {
         // The compiler will synthesize a memberwise init for `struct`
         // declarations that don't have an `init` declaration.
         // We have to take care to not reorder any properties (but reordering functions etc is ok!)
-        if typeDeclaration.kind == "struct",
+        if !sortAlphabeticallyWithinSubcategories, typeDeclaration.kind == "struct",
            !typeDeclaration.body.contains(where: { $0.keyword == "init" })
         {
             // Whether or not this declaration is an instance property that can affect

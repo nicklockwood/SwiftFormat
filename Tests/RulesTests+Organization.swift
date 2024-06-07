@@ -4130,6 +4130,46 @@ class OrganizationTests: RulesTests {
                        exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"])
     }
 
+    func testSortStructPropertiesWithAttributes() {
+        let input = """
+        // swiftformat:sort
+        struct BookReaderView {
+          @Namespace private var animation
+          @State private var animationContent: Bool = false
+          @State private var offsetY: CGFloat = 0
+          @Bindable var model: Book
+          @Query(
+            filter: #Predicate<TextContent> { $0.progress_ < 1 },
+            sort: \\.updatedAt_,
+            order: .reverse
+          ) private var incompleteTextContents: [TextContent]
+        }
+        """
+        let output = """
+        // swiftformat:sort
+        struct BookReaderView {
+
+          // MARK: Internal
+
+          @Bindable var model: Book
+
+          // MARK: Private
+
+          @Namespace private var animation
+          @State private var animationContent: Bool = false
+          @Query(
+            filter: #Predicate<TextContent> { $0.progress_ < 1 },
+            sort: \\.updatedAt_,
+            order: .reverse
+          ) private var incompleteTextContents: [TextContent]
+          @State private var offsetY: CGFloat = 0
+        }
+        """
+        let options = FormatOptions(indent: "  ", organizeTypes: ["struct"])
+        testFormatting(for: input, output, rule: FormatRules.organizeDeclarations,
+                       options: options, exclude: ["blankLinesAtStartOfScope"])
+    }
+
     // MARK: - sortTypealiases
 
     func testSortSingleLineTypealias() {

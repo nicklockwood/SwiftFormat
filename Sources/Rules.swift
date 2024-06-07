@@ -6041,7 +6041,7 @@ public struct _FormatRules {
         sharedOptions: ["organizetypes"]
     ) { formatter in
         formatter.forEachToken(
-            where: { $0.isComment && $0.string.contains("swiftformat:sort") }
+            where: { $0.isCommentBody && $0.string.contains("swiftformat:sort") }
         ) { commentIndex, commentToken in
 
             let rangeToSort: ClosedRange<Int>
@@ -6073,7 +6073,7 @@ public struct _FormatRules {
                       lastTypeBodyToken > typeOpenBrace
                 else { return }
 
-                // Sorting the body of a type conflicts with the `organizeDeclaration`
+                // Sorting the body of a type conflicts with the `organizeDeclarations`
                 // keyword if enabled for this type of declaration. In that case,
                 // defer to the sorting implementation in `organizeDeclarations`.
                 if formatter.options.enabledRules.contains(FormatRules.organizeDeclarations.name),

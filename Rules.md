@@ -750,20 +750,21 @@ Token | Description
 `{file}` | File name
 `{year}` | Current year
 `{created}` | File creation date
-`{created.name}` | Name of the user who first committed the file
-`{created.email}` | Email of the user who first committed the file
 `{created.year}` | File creation year
+`{author}` | Name and email of the user who first committed the file
+`{author.name}` | Name of the user who first committed the file
+`{author.email}` | Email of the user who first committed the file
 
 **Example**:
 
-`--header \n {file}\n\n Copyright © {created.year} CompanyName.\n`
+`--header \n {file}\n\n Copyright © {created.year} {author.name}.\n`
 
 ```diff
 - // SomeFile.swift
 
 + //
 + //  SomeFile.swift
-+ //  Copyright © 2023 CompanyName.
++ //  Copyright © 2023 Tim Apple.
 + //
 ```
 

@@ -188,10 +188,11 @@ public func enumerateFiles(withInputURL inputURL: URL,
 
                 let fileInfo = FileInfo(
                     filePath: resourceValues.path,
-                    creationDate: gitInfo?.createdAt ?? resourceValues.creationDate,
+                    creationDate: gitInfo?.creationDate ?? resourceValues.creationDate,
                     replacements: [
-                        .createdName: ReplacementType(gitInfo?.createdByName),
-                        .createdEmail: ReplacementType(gitInfo?.createdByEmail),
+                        .author: ReplacementType(gitInfo?.author),
+                        .authorName: ReplacementType(gitInfo?.authorName),
+                        .authorEmail: ReplacementType(gitInfo?.authorEmail),
                     ].compactMapValues { $0 }
                 )
 

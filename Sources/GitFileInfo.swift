@@ -32,104 +32,32 @@
 import Foundation
 
 struct GitFileInfo {
-    var createdByName: String?
-    var createdByEmail: String?
-    var createdAt: Date?
+    var authorName: String?
+    var authorEmail: String?
+    var creationDate: Date?
 }
 
 extension GitFileInfo {
     init?(url: URL) {
-        guard let gitRoot = GitHelpers.getGitRoot(url.deletingLastPathComponent()),
-              let commitHash = GitHelpers.getGitCommit(url, root: gitRoot),
-              let gitInfo = GitHelpers.getCommitInfo((commitHash, gitRoot))
+        guard let gitRoot = getGitRoot(url.deletingLastPathComponent()),
+              let commitHash = getCommitHash(url, root: gitRoot),
+              let gitInfo = getCommitInfo((commitHash, gitRoot))
         else {
             return nil
         }
 
         self = gitInfo
     }
-}
 
-private enum GitHelpers {
-    static let getGitRoot: (URL) -> URL? = memoize({ $0.relativePath }) { url in
-        let dir = "git rev-parse --show-toplevel".shellOutput(cwd: url)
-
-        guard let root = dir, FileManager.default.fileExists(atPath: root) else {
-            return nil
+    var author: String? {
+        if let authorName = authorName {
+            if let authorEmail = authorEmail {
+                return "\(authorName) <\(authorEmail)>"
+            }
+            return authorName
         }
-
-        return URL(fileURLWithPath: root, isDirectory: true)
+        return authorEmail
     }
-
-    // If a file has never been committed, default to the local git user for the repository
-    static let getDefaultGitInfo: (URL) -> GitFileInfo? = memoize({ $0.relativePath }) { url in
-        let name = "git config user.name".shellOutput(cwd: url)
-        let email = "git config user.email".shellOutput(cwd: url)
-
-        guard let safeName = name, let safeEmail = email else { return nil }
-
-        return GitFileInfo(createdByName: safeName, createdByEmail: safeEmail)
-    }
-
-    static func getGitCommit(_ url: URL, root: URL) -> String? {
-        let command = [
-            "git log",
-            "--follow", // keep tracking file across renames
-            "--diff-filter=A",
-            "--author-date-order",
-            "--pretty=%H",
-            url.relativePath,
-        ]
-        .filter { ($0?.count ?? 0) > 0 }
-        .joined(separator: " ")
-
-        let output = command.shellOutput(cwd: root)
-
-        guard let safeValue = output, !safeValue.isEmpty else { return nil }
-
-        if safeValue.contains("\n") {
-            let parts = safeValue.split(separator: "\n")
-
-            if parts.count > 1, let first = parts.first {
-                return String(first)
-            }
-        }
-
-        return safeValue
-    }
-
-    static let getCommitInfo: ((String, URL)) -> GitFileInfo? = memoize(
-        { hash, root in hash + root.relativePath },
-        { hash, root in
-            let format = #"{"name":"%an","email":"%ae","time":"%at"}"#
-            let command = "git show --format='\(format)' -s \(hash)"
-            guard let commitInfo = command.shellOutput(cwd: root) else {
-                return nil
-            }
-
-            guard let commitData = commitInfo.data(using: .utf8) else {
-                return nil
-            }
-
-            let MapType = [String: String].self
-            guard let dict = try? JSONDecoder().decode(MapType, from: commitData) else {
-                return nil
-            }
-
-            let (name, email) = (dict["name"], dict["email"])
-
-            var date: Date?
-            if let createdAtString = dict["time"],
-               let interval = TimeInterval(createdAtString)
-            {
-                date = Date(timeIntervalSince1970: interval)
-            }
-
-            return GitFileInfo(createdByName: name,
-                               createdByEmail: email,
-                               createdAt: date)
-        }
-    )
 }
 
 private extension String {
@@ -162,6 +90,80 @@ private extension String {
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
+
+private let getGitRoot: (URL) -> URL? = memoize({ $0.relativePath }) { url in
+    let dir = "git rev-parse --show-toplevel".shellOutput(cwd: url)
+
+    guard let root = dir, FileManager.default.fileExists(atPath: root) else {
+        return nil
+    }
+
+    return URL(fileURLWithPath: root, isDirectory: true)
+}
+
+// If a file has never been committed, default to the local git user for the repository
+private let getDefaultGitInfo: (URL) -> GitFileInfo = memoize({ $0.relativePath }) { url in
+    let name = "git config user.name".shellOutput(cwd: url)
+    let email = "git config user.email".shellOutput(cwd: url)
+
+    return GitFileInfo(authorName: name, authorEmail: email)
+}
+
+private func getCommitHash(_ url: URL, root: URL) -> String? {
+    let command = [
+        "git log",
+        "--follow", // keep tracking file across renames
+        "--diff-filter=A",
+        "--author-date-order",
+        "--pretty=%H",
+        url.relativePath,
+    ]
+    .filter { ($0?.count ?? 0) > 0 }
+    .joined(separator: " ")
+
+    let output = command.shellOutput(cwd: root)
+
+    guard let safeValue = output, !safeValue.isEmpty else { return nil }
+
+    if safeValue.contains("\n") {
+        let parts = safeValue.split(separator: "\n")
+
+        if parts.count > 1, let first = parts.first {
+            return String(first)
+        }
+    }
+
+    return safeValue
+}
+
+private let getCommitInfo: ((String, URL)) -> GitFileInfo? = memoize(
+    { hash, root in hash + root.relativePath },
+    { hash, root in
+        let format = #"{"name":"%an","email":"%ae","time":"%at"}"#
+        let command = "git show --format='\(format)' -s \(hash)"
+        guard let commitInfo = command.shellOutput(cwd: root),
+              let commitData = commitInfo.data(using: .utf8),
+              let dict = try? JSONDecoder().decode([String: String].self, from: commitData)
+        else {
+            return nil
+        }
+
+        let defaultInfo = getDefaultGitInfo(root)
+
+        let (name, email) = (dict["name"] ?? defaultInfo.authorName, dict["email"] ?? defaultInfo.authorEmail)
+
+        var date: Date?
+        if let createdAtString = dict["time"],
+           let interval = TimeInterval(createdAtString)
+        {
+            date = Date(timeIntervalSince1970: interval)
+        }
+
+        return GitFileInfo(authorName: name,
+                           authorEmail: email,
+                           creationDate: date)
+    }
+)
 
 private func memoize<K, T>(_ keyFn: @escaping (K) -> String?,
                            _ workFn: @escaping (K) -> T) -> (K) -> T

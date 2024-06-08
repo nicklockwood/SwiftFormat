@@ -607,13 +607,22 @@ class GeneralTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
     }
 
-    func testFileHeaderCreatorReplacement() {
+    func testFileHeaderAuthorReplacement() {
         let name = "Test User"
         let email = "test@email.com"
         let input = "let foo = bar"
         let output = "// Created by \(name) \(email)\n\nlet foo = bar"
-        let fileInfo = FileInfo(replacements: [.createdName: .constant(name), .createdEmail: .constant(email)])
-        let options = FormatOptions(fileHeader: "// Created by {created.name} {created.email}", fileInfo: fileInfo)
+        let fileInfo = FileInfo(replacements: [.authorName: .constant(name), .authorEmail: .constant(email)])
+        let options = FormatOptions(fileHeader: "// Created by {author.name} {author.email}", fileInfo: fileInfo)
+        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+    }
+
+    func testFileHeaderAuthorReplacement2() {
+        let author = "Test User <test@email.com>"
+        let input = "let foo = bar"
+        let output = "// Created by \(author)\n\nlet foo = bar"
+        let fileInfo = FileInfo(replacements: [.author: .constant(author)])
+        let options = FormatOptions(fileHeader: "// Created by {author}", fileInfo: fileInfo)
         testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
     }
 
@@ -621,8 +630,8 @@ class GeneralTests: RulesTests {
         let name = "Test User"
         let input = "let foo = bar"
         let output = "// Copyright © \(name)\n// Created by \(name)\n\nlet foo = bar"
-        let fileInfo = FileInfo(replacements: [.createdName: .constant(name)])
-        let options = FormatOptions(fileHeader: "// Copyright © {created.name}\n// Created by {created.name}", fileInfo: fileInfo)
+        let fileInfo = FileInfo(replacements: [.authorName: .constant(name)])
+        let options = FormatOptions(fileHeader: "// Copyright © {author.name}\n// Created by {author.name}", fileInfo: fileInfo)
         testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
     }
 
@@ -751,9 +760,9 @@ class GeneralTests: RulesTests {
 
     func testGitHelpersReturnsInfo() {
         let info = GitFileInfo(url: URL(fileURLWithPath: #file))
-        XCTAssertNotNil(info?.createdByName)
-        XCTAssertNotNil(info?.createdByEmail)
-        XCTAssertNotNil(info?.createdAt)
+        XCTAssertNotNil(info?.authorName)
+        XCTAssertNotNil(info?.authorEmail)
+        XCTAssertNotNil(info?.creationDate)
     }
 
     func testFileHeaderRuleThrowsIfCreationDateUnavailable() {

@@ -201,9 +201,10 @@ public enum ReplacementKey: String, CaseIterable {
     case fileName = "file"
     case currentYear = "year"
     case createdDate = "created"
-    case createdName = "created.name"
-    case createdEmail = "created.email"
     case createdYear = "created.year"
+    case author
+    case authorName = "author.name"
+    case authorEmail = "author.email"
 }
 
 /// Argument type for stripping
@@ -258,7 +259,7 @@ public enum HeaderStrippingMode: Equatable, RawRepresentable, ExpressibleByStrin
     }
 
     var needsGitInfo: Bool {
-        hasTemplateKey(.createdDate, .createdYear, .createdName, .createdEmail)
+        hasTemplateKey(.createdDate, .createdYear, .author, .authorName, .authorEmail)
     }
 }
 

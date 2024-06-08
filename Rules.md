@@ -56,6 +56,7 @@
 * [redundantSelf](#redundantSelf)
 * [redundantStaticSelf](#redundantStaticSelf)
 * [redundantType](#redundantType)
+* [redundantTypedThrows](#redundantTypedThrows)
 * [redundantVoidReturnType](#redundantVoidReturnType)
 * [semicolons](#semicolons)
 * [sortDeclarations](#sortDeclarations)
@@ -2041,6 +2042,28 @@ Option | Description
   } else {
 -     Foo("bar")
 +     .init("foo")
+  }
+```
+
+</details>
+<br/>
+
+## redundantTypedThrows
+
+Converts `throws(any Error)` to `throws`, and converts `throws(Never)` to non-throwing.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- func foo() throws(Never) -> Int {
++ func foo() -> Int {
+      return 0
+  }
+
+- func foo() throws(any Error) -> Int {
++ func foo() throws -> Int {
+      throw MyError.foo
   }
 ```
 

@@ -1986,6 +1986,7 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssert(isSingleExpression(#"Foo<Bar>()"#))
         XCTAssert(isSingleExpression(#"Foo<Bar, Baaz>(quux: quux)"#))
         XCTAssert(!isSingleExpression(#"if foo { "foo" } else { "bar" }"#))
+        XCTAssert(!isSingleExpression(#"foo.bar, baaz.quux"#))
 
         XCTAssert(isSingleExpression(
             #"if foo { "foo" } else { "bar" }"#,
@@ -2118,6 +2119,35 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(parseExpressions(input), expectedExpressions)
     }
 
+    func testParsedExpressionInIfConditionExcludesConditionBody() {
+        let input = """
+        if let bar = foo.bar {
+          print(bar)
+        }
+
+        if foo.contains(where: { $0.isEmpty }) {
+          print("Empty foo")
+        }
+        """
+
+        XCTAssertEqual(parseExpression(in: input, at: 8), "foo.bar")
+        XCTAssertEqual(parseExpression(in: input, at: 25), "foo.contains(where: { $0.isEmpty })")
+    }
+
+    func testParsedExpressionInIfConditionExcludesConditionBody_trailingClosureEdgeCase() {
+        // This code is generally considered an anti-pattern, and outputs the following warning when compiled:
+        // warning: trailing closure in this context is confusable with the body of the statement; pass as a parenthesized argument to silence this warning
+        let input = """
+        if foo.contains { $0.isEmpty } {
+          print("Empty foo")
+        }
+        """
+
+        // We don't bother supporting this, since it would increase the complexity of the parser.
+        // A more correct result would be `foo.contains { $0.isEmpty }`.
+        XCTAssertEqual(parseExpression(in: input, at: 2), "foo.contains")
+    }
+
     func isSingleExpression(_ string: String, allowConditionalExpressions: Bool = false) -> Bool {
         let formatter = Formatter(tokenize(string))
         guard let expressionRange = formatter.parseExpressionRange(startingAt: 0, allowConditionalExpressions: allowConditionalExpressions) else { return false }
@@ -2141,6 +2171,12 @@ class ParsingHelpersTests: XCTestCase {
         }
 
         return expressions
+    }
+
+    func parseExpression(in input: String, at index: Int) -> String {
+        let formatter = Formatter(tokenize(input))
+        guard let expressionRange = formatter.parseExpressionRange(startingAt: index) else { return "" }
+        return formatter.tokens[expressionRange].map { $0.string }.joined()
     }
 
     // MARK: isStoredProperty

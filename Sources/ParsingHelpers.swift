@@ -1516,7 +1516,7 @@ extension Formatter {
         case .identifier, .number:
             endOfExpression = startIndex
 
-        case .startOfScope:
+        case let .startOfScope(startOfScope):
             // All types of scopes (tuples, arrays, closures, strings) are considered expressions
             // _except_ for conditional complication blocks.
             if ["#if", "#elseif", "#else"].contains(tokens[startIndex].string) {
@@ -1540,6 +1540,7 @@ extension Formatter {
         default:
             return nil
         }
+
         while let nextTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfExpression),
               let nextToken = token(at: nextTokenIndex)
         {
@@ -1596,6 +1597,13 @@ extension Formatter {
             /// Any value can be followed by a trailing closure
             case .startOfScope("{"):
                 guard let endOfScope = endOfScope(at: nextTokenIndex) else { return nil }
+
+                // Within a conditional statement, an open brace is most likely
+                // to instead represent the body of the condition.
+                if isConditionalStatement(at: startIndex) {
+                    return startIndex ... endOfExpression
+                }
+
                 endOfExpression = endOfScope
 
             /// Some values can be followed by a labeled trailing closure,

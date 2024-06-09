@@ -448,7 +448,7 @@ class IndentTests: RulesTests {
         }
         """
         testFormatting(for: input, rule: FormatRules.indent,
-                       exclude: ["braces", "wrapMultilineStatementBraces"])
+                       exclude: ["braces", "wrapMultilineStatementBraces", "redundantProperty"])
     }
 
     func testIndentLineAfterIndentedInlineClosure() {
@@ -460,7 +460,7 @@ class IndentTests: RulesTests {
             return viewController
         }
         """
-        testFormatting(for: input, rule: FormatRules.indent)
+        testFormatting(for: input, rule: FormatRules.indent, exclude: ["redundantProperty"])
     }
 
     func testIndentLineAfterNonIndentedClosure() {
@@ -473,7 +473,7 @@ class IndentTests: RulesTests {
             return viewController
         }
         """
-        testFormatting(for: input, rule: FormatRules.indent)
+        testFormatting(for: input, rule: FormatRules.indent, exclude: ["redundantProperty"])
     }
 
     func testIndentMultilineStatementDoesntFailToTerminate() {
@@ -3885,7 +3885,7 @@ class IndentTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, output, rule: FormatRules.indent)
+        testFormatting(for: input, output, rule: FormatRules.indent, exclude: ["redundantProperty"])
     }
 
     func testIndentNestedSwitchExpressionAssignment() {

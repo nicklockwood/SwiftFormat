@@ -1873,7 +1873,10 @@ class ParsingHelpersTests: XCTestCase {
     // MARK: - parseExpressionRange
 
     func testParseIndividualExpressions() {
+        XCTAssert(isSingleExpression(#"Foo()"#))
         XCTAssert(isSingleExpression(#"Foo("bar")"#))
+        XCTAssert(isSingleExpression(#"Foo.init()"#))
+        XCTAssert(isSingleExpression(#"Foo.init("bar")"#))
         XCTAssert(isSingleExpression(#"foo.bar"#))
         XCTAssert(isSingleExpression(#"foo .bar"#))
         XCTAssert(isSingleExpression(#"foo["bar"]("baaz")"#))
@@ -1927,6 +1930,29 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssert(isSingleExpression(#"try await { try await printAsyncThrows(foo) }()"#))
         XCTAssert(isSingleExpression(#"Foo<Bar>()"#))
         XCTAssert(isSingleExpression(#"Foo<Bar, Baaz>(quux: quux)"#))
+        XCTAssert(!isSingleExpression(#"if foo { "foo" } else { "bar" }"#))
+
+        XCTAssert(isSingleExpression(
+            #"if foo { "foo" } else { "bar" }"#,
+            allowConditionalExpressions: true
+        ))
+
+        XCTAssert(isSingleExpression("""
+        if foo {
+          "foo"
+        } else {
+          "bar"
+        }
+        """, allowConditionalExpressions: true))
+
+        XCTAssert(isSingleExpression("""
+        switch foo {
+        case true:
+            "foo"
+        case false:
+            "bar"
+        }
+        """, allowConditionalExpressions: true))
 
         XCTAssert(isSingleExpression("""
         foo
@@ -2037,9 +2063,9 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(parseExpressions(input), expectedExpressions)
     }
 
-    func isSingleExpression(_ string: String) -> Bool {
+    func isSingleExpression(_ string: String, allowConditionalExpressions: Bool = false) -> Bool {
         let formatter = Formatter(tokenize(string))
-        guard let expressionRange = formatter.parseExpressionRange(startingAt: 0) else { return false }
+        guard let expressionRange = formatter.parseExpressionRange(startingAt: 0, allowConditionalExpressions: allowConditionalExpressions) else { return false }
         return expressionRange.upperBound == formatter.tokens.indices.last!
     }
 

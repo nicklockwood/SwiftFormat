@@ -994,7 +994,7 @@ private struct Inference {
                         prevIndex -= 1
                     }
                     if let name = name {
-                        processAccessors(["get", "set", "willSet", "didSet", "init"], for: name,
+                        processAccessors(["get", "set", "willSet", "didSet", "init", "_modify"], for: name,
                                          at: &index, localNames: localNames, members: members,
                                          typeStack: &typeStack, membersByType: &membersByType,
                                          classMembersByType: &classMembersByType,

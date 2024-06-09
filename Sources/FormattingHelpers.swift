@@ -2870,7 +2870,7 @@ extension Formatter {
                         ["static", "class"].contains(string)
                     })
                     if let name = name, classOrStatic || !staticSelf {
-                        processAccessors(["get", "set", "willSet", "didSet", "init"], for: name,
+                        processAccessors(["get", "set", "willSet", "didSet", "init", "_modify"], for: name,
                                          at: &index, localNames: localNames, members: members,
                                          typeStack: &typeStack, closureStack: &closureStack,
                                          membersByType: &membersByType,
@@ -3186,7 +3186,7 @@ extension Formatter {
                         token = tokens[nextIndex]
                     }
                     switch token.string {
-                    case "get":
+                    case "get", "_modify":
                         localNames.insert(name)
                     case "set", "init":
                         localNames.insert(name)

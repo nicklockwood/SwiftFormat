@@ -1887,4 +1887,14 @@ private struct Examples {
       }
     ```
     """#
+
+    let redundantProperty = """
+    ```diff
+      func foo() -> Foo {
+    -   let foo = Foo()
+    -   return foo
+    +   return Foo()
+      }
+    ```
+    """
 }

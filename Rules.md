@@ -14,7 +14,7 @@
 * [conditionalAssignment](#conditionalAssignment)
 * [consecutiveBlankLines](#consecutiveBlankLines)
 * [consecutiveSpaces](#consecutiveSpaces)
-* [consistentSwitchStatementSpacing](#consistentSwitchStatementSpacing)
+* [consistentSwitchCaseSpacing](#consistentSwitchCaseSpacing)
 * [duplicateImports](#duplicateImports)
 * [elseOnSameLine](#elseOnSameLine)
 * [emptyBraces](#emptyBraces)
@@ -577,7 +577,7 @@ Replace consecutive spaces with a single space.
 </details>
 <br/>
 
-## consistentSwitchStatementSpacing
+## consistentSwitchCaseSpacing
 
 Ensures consistent spacing among all of the cases in a switch statement.
 

@@ -1776,7 +1776,7 @@ private struct Examples {
     ```
     """#
 
-    let consistentSwitchStatementSpacing = #"""
+    let consistentSwitchCaseSpacing = #"""
     ```diff
       func handle(_ action: SpaceshipAction) {
           switch action {

@@ -92,7 +92,7 @@
 # Opt-in Rules (disabled by default)
 
 * [acronyms](#acronyms)
-* [blankLineAfterMultilineSwitchCase](#blankLineAfterMultilineSwitchCase)
+* [blankLineAfterSwitchCase](#blankLineAfterSwitchCase)
 * [blankLinesBetweenImports](#blankLinesBetweenImports)
 * [blockComments](#blockComments)
 * [docComments](#docComments)
@@ -240,7 +240,7 @@ Insert blank line after import statements.
 </details>
 <br/>
 
-## blankLineAfterMultilineSwitchCase
+## blankLineAfterSwitchCase
 
 Insert a blank line after multiline switch cases (excluding the last case,
 which is followed by a closing brace).

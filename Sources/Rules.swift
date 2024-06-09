@@ -7842,7 +7842,7 @@ public struct _FormatRules {
         }
     }
 
-    public let blankLineAfterMultilineSwitchCase = FormatRule(
+    public let blankLineAfterSwitchCase = FormatRule(
         help: """
         Insert a blank line after multiline switch cases (excluding the last case,
         which is followed by a closing brace).
@@ -7876,7 +7876,7 @@ public struct _FormatRules {
 
     public let consistentSwitchStatementSpacing = FormatRule(
         help: "Ensures consistent spacing among all of the cases in a switch statement.",
-        orderAfter: ["blankLineAfterMultilineSwitchCase"]
+        orderAfter: ["blankLineAfterSwitchCase"]
     ) { formatter in
         formatter.forEach(.keyword("switch")) { switchIndex, _ in
             guard let switchCases = formatter.switchStatementBranchesWithSpacingInfo(at: switchIndex) else { return }
@@ -7892,7 +7892,7 @@ public struct _FormatRules {
             // When the `blankLinesBetweenChainedFunctions` rule is enabled, and there is a switch case
             // that is required to span multiple lines, then all cases must span multiple lines.
             // (Since if this rule removed the blank line from that case, it would contradict the other rule)
-            if formatter.options.enabledRules.contains(FormatRules.blankLineAfterMultilineSwitchCase.name),
+            if formatter.options.enabledRules.contains(FormatRules.blankLineAfterSwitchCase.name),
                switchCases.contains(where: { $0.spansMultipleLines && !$0.isLastCase })
             {
                 allCasesShouldHaveBlankLine = true

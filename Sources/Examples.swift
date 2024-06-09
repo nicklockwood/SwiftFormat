@@ -1737,7 +1737,7 @@ private struct Examples {
     ```
     """
 
-    let blankLineAfterMultilineSwitchCase = #"""
+    let blankLineAfterSwitchCase = #"""
     ```diff
       func handle(_ action: SpaceshipAction) {
           switch action {

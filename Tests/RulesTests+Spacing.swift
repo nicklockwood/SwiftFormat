@@ -1649,7 +1649,7 @@ class SpacingTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.emptyBraces, options: options)
     }
 
-    // MARK: - blankLineAfterMultilineSwitchCase
+    // MARK: - blankLineAfterSwitchCase
 
     func testAddsBlankLineAfterMultilineSwitchCases() {
         let input = """
@@ -1684,7 +1684,7 @@ class SpacingTests: RulesTests {
             }
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.blankLineAfterMultilineSwitchCase)
+        testFormatting(for: input, output, rule: FormatRules.blankLineAfterSwitchCase)
     }
 
     func testRemovesBlankLineAfterLastSwitchCase() {
@@ -1730,7 +1730,7 @@ class SpacingTests: RulesTests {
             }
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.blankLineAfterMultilineSwitchCase)
+        testFormatting(for: input, output, rule: FormatRules.blankLineAfterSwitchCase)
     }
 
     func testDoesntAddBlankLineAfterSingleLineSwitchCase() {
@@ -1788,7 +1788,7 @@ class SpacingTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, rule: FormatRules.blankLineAfterMultilineSwitchCase, exclude: ["sortSwitchCases", "wrapSwitchCases", "blockComments"])
+        testFormatting(for: input, rule: FormatRules.blankLineAfterSwitchCase, exclude: ["sortSwitchCases", "wrapSwitchCases", "blockComments"])
     }
 
     func testMixedSingleLineAndMultiLineCases() {
@@ -1829,7 +1829,7 @@ class SpacingTests: RulesTests {
             energyShields.engage()
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.blankLineAfterMultilineSwitchCase, exclude: ["consistentSwitchStatementSpacing"])
+        testFormatting(for: input, output, rule: FormatRules.blankLineAfterSwitchCase, exclude: ["consistentSwitchStatementSpacing"])
     }
 
     func testAllowsBlankLinesAfterSingleLineCases() {
@@ -1849,7 +1849,7 @@ class SpacingTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, rule: FormatRules.blankLineAfterMultilineSwitchCase)
+        testFormatting(for: input, rule: FormatRules.blankLineAfterSwitchCase)
     }
 
     // MARK: - consistentSwitchStatementSpacing
@@ -2093,7 +2093,7 @@ class SpacingTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, [output], rules: [FormatRules.blankLineAfterMultilineSwitchCase, FormatRules.consistentSwitchStatementSpacing])
+        testFormatting(for: input, [output], rules: [FormatRules.blankLineAfterSwitchCase, FormatRules.consistentSwitchStatementSpacing])
     }
 
     func testSingleLineAndMultiLineSwitchCase2() {
@@ -2113,7 +2113,7 @@ class SpacingTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.consistentSwitchStatementSpacing)
     }
 
-    func testSwitchStatementWithSingleMultilineCase_blankLineAfterMultilineSwitchCaseEnabled() {
+    func testSwitchStatementWithSingleMultilineCase_blankLineAfterSwitchCaseEnabled() {
         let input = """
         switch action {
         case .enableArtificialGravity:
@@ -2147,10 +2147,10 @@ class SpacingTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, [output], rules: [FormatRules.consistentSwitchStatementSpacing, FormatRules.blankLineAfterMultilineSwitchCase])
+        testFormatting(for: input, [output], rules: [FormatRules.consistentSwitchStatementSpacing, FormatRules.blankLineAfterSwitchCase])
     }
 
-    func testSwitchStatementWithSingleMultilineCase_blankLineAfterMultilineSwitchCaseDisabled() {
+    func testSwitchStatementWithSingleMultilineCase_blankLineAfterSwitchCaseDisabled() {
         let input = """
         switch action {
         case .enableArtificialGravity:
@@ -2166,6 +2166,6 @@ class SpacingTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, rule: FormatRules.consistentSwitchStatementSpacing, exclude: ["blankLineAfterMultilineSwitchCase"])
+        testFormatting(for: input, rule: FormatRules.consistentSwitchStatementSpacing, exclude: ["blankLineAfterSwitchCase"])
     }
 }

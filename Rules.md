@@ -100,6 +100,7 @@
 * [markTypes](#markTypes)
 * [noExplicitOwnership](#noExplicitOwnership)
 * [organizeDeclarations](#organizeDeclarations)
+* [redundantProperty](#redundantProperty)
 * [sortSwitchCases](#sortSwitchCases)
 * [wrapConditionalBodies](#wrapConditionalBodies)
 * [wrapEnumCases](#wrapEnumCases)
@@ -1858,6 +1859,24 @@ Remove redundant pattern matching parameter syntax.
 ```diff
 - let (_, _) = bar
 + let _ = bar
+```
+
+</details>
+<br/>
+
+## redundantProperty
+
+Simplifies redundant property definitions that are immediately returned.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  func foo() -> Foo {
+-   let foo = Foo()
+-   return foo
++   return Foo()
+  }
 ```
 
 </details>

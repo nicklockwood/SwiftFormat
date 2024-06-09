@@ -208,7 +208,7 @@ public enum ReplacementKey: String, CaseIterable {
 }
 
 /// Argument type for stripping
-public enum HeaderStrippingMode: Equatable, RawRepresentable, ExpressibleByStringLiteral {
+public enum FileHeaderMode: Equatable, RawRepresentable, ExpressibleByStringLiteral {
     case ignore
     case replace(String)
 
@@ -583,7 +583,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var insertBlankLines: Bool
     public var removeBlankLines: Bool
     public var allmanBraces: Bool
-    public var fileHeader: HeaderStrippingMode
+    public var fileHeader: FileHeaderMode
     public var ifdefIndent: IndentMode
     public var wrapArguments: WrapMode
     public var wrapParameters: WrapMode
@@ -698,7 +698,7 @@ public struct FormatOptions: CustomStringConvertible {
                 insertBlankLines: Bool = true,
                 removeBlankLines: Bool = true,
                 allmanBraces: Bool = false,
-                fileHeader: HeaderStrippingMode = .ignore,
+                fileHeader: FileHeaderMode = .ignore,
                 ifdefIndent: IndentMode = .indent,
                 wrapArguments: WrapMode = .preserve,
                 wrapParameters: WrapMode = .default,

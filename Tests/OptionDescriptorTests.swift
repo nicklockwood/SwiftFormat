@@ -179,13 +179,13 @@ class OptionDescriptorTests: XCTestCase {
             (input: "/*\n\n\n*/", isValid: true),
             (input: "\n\n\n", isValid: true),
         ]
-        let fromOptionExpectations: [OptionArgumentMapping<HeaderStrippingMode>] = [
+        let fromOptionExpectations: [OptionArgumentMapping<FileHeaderMode>] = [
             (optionValue: "", argumentValue: "strip"),
             (optionValue: "// Header", argumentValue: "// Header"),
             (optionValue: .ignore, argumentValue: "ignore"),
             (optionValue: "/*\n\n\n*/", argumentValue: "/*\\n\\n\\n*/"),
         ]
-        let fromArgumentExpectations: [OptionArgumentMapping<HeaderStrippingMode>] = [
+        let fromArgumentExpectations: [OptionArgumentMapping<FileHeaderMode>] = [
             (optionValue: "", argumentValue: "strip"),
             (optionValue: "// Header", argumentValue: "// Header"),
             (optionValue: .ignore, argumentValue: "ignore"),

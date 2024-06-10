@@ -1366,6 +1366,7 @@ Option | Description
 `--enumthreshold` | Minimum line count to organize enum body. Defaults to 0
 `--extensionlength` | Minimum line count to organize extension body. Defaults to 0
 `--organizationmode` | Organize declarations by "visibility" (default) or "type"
+`--sortedpatterns` | List of patterns to sort alphabetically without `:sort` mark.
 
 <details>
 <summary>Examples</summary>

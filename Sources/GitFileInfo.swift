@@ -62,32 +62,36 @@ extension GitFileInfo {
 
 private extension String {
     func shellOutput(cwd: URL? = nil) -> String? {
-        let process = Process()
-        let pipe = Pipe()
+        #if os(macOS) || os(Linux) || os(Windows)
+            let process = Process()
+            let pipe = Pipe()
 
-        process.executableURL = URL(fileURLWithPath: "/bin/bash")
-        process.arguments = ["-c", self]
-        process.standardOutput = pipe
-        process.standardError = pipe
+            process.executableURL = URL(fileURLWithPath: "/bin/bash")
+            process.arguments = ["-c", self]
+            process.standardOutput = pipe
+            process.standardError = pipe
 
-        if let safeCWD = cwd {
-            process.currentDirectoryURL = safeCWD
-        }
+            if let safeCWD = cwd {
+                process.currentDirectoryURL = safeCWD
+            }
 
-        let file = pipe.fileHandleForReading
+            let file = pipe.fileHandleForReading
 
-        do { try process.run() }
-        catch { return nil }
+            do { try process.run() }
+            catch { return nil }
 
-        process.waitUntilExit()
+            process.waitUntilExit()
 
-        guard process.terminationStatus == 0 else {
+            guard process.terminationStatus == 0 else {
+                return nil
+            }
+
+            let outputData = file.readDataToEndOfFile()
+            return String(data: outputData, encoding: .utf8)?
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+        #else
             return nil
-        }
-
-        let outputData = file.readDataToEndOfFile()
-        return String(data: outputData, encoding: .utf8)?
-            .trimmingCharacters(in: .whitespacesAndNewlines)
+        #endif
     }
 }
 

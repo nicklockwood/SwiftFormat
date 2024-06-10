@@ -496,21 +496,17 @@ struct _Descriptors {
         help: "Wrap ternary operators: \"default\", \"before-operators\"",
         keyPath: \.wrapTernaryOperators
     )
-    let closingParenOnSameLine = OptionDescriptor(
+    let closingParenPosition = OptionDescriptor(
         argumentName: "closingparen",
         displayName: "Closing Paren Position",
         help: "Closing paren position: \"balanced\" (default) or \"same-line\"",
-        keyPath: \.closingParenOnSameLine,
-        trueValues: ["same-line"],
-        falseValues: ["balanced"]
+        keyPath: \.closingParenPosition
     )
-    let closingCallSiteParenOnSameLine = OptionDescriptor(
+    let callSiteClosingParenPosition = OptionDescriptor(
         argumentName: "callsiteparen",
         displayName: "Call Site Closing Paren",
-        help: "Closing paren at callsite: \"inherit\" (default) or \"same-line\"",
-        keyPath: \.closingCallSiteParenOnSameLine,
-        trueValues: ["same-line"],
-        falseValues: ["inherit"]
+        help: "Closing paren at call sites: \"balanced\" or \"same-line\"",
+        keyPath: \.callSiteClosingParenPosition
     )
     let uppercaseHex = OptionDescriptor(
         argumentName: "hexliteralcase",

@@ -378,7 +378,7 @@ private struct Inference {
         options.wrapCollections = formatter.wrapMode(for: "[")
     }
 
-    let closingParenOnSameLine = OptionInferrer { formatter, options in
+    let closingParenPosition = OptionInferrer { formatter, options in
         var functionCallSameLine = 0, functionCallBalanced = 0
         var functionDeclarationSameLine = 0, functionDeclarationBalanced = 0
 
@@ -407,20 +407,24 @@ private struct Inference {
             }
         }
 
-        // Decide on closingCallSiteParenOnSameLine
+        // Decide on callSiteClosingParenPosition
         if functionCallSameLine > functionCallBalanced && functionDeclarationBalanced > functionDeclarationSameLine {
-            options.closingCallSiteParenOnSameLine = true
+            options.callSiteClosingParenPosition = .sameLine
         } else {
-            options.closingCallSiteParenOnSameLine = false
+            options.callSiteClosingParenPosition = .balanced
         }
 
-        // If closingCallSiteParenOnSameLine is true, trust only the declarations to infer closingParenOnSameLine
-        if options.closingCallSiteParenOnSameLine {
-            options.closingParenOnSameLine = functionDeclarationSameLine > functionDeclarationBalanced
+        // If callSiteClosingParenPosition is sameLine, trust only the declarations to infer closingParenPosition
+        if options.callSiteClosingParenPosition == .sameLine {
+            options.closingParenPosition = functionDeclarationSameLine > functionDeclarationBalanced ? .sameLine : .balanced
         } else {
             let balanced = functionDeclarationBalanced + functionCallBalanced
             let sameLine = functionDeclarationSameLine + functionCallSameLine
-            options.closingParenOnSameLine = sameLine > balanced
+            options.closingParenPosition = sameLine > balanced ? .sameLine : .balanced
+        }
+
+        if options.closingParenPosition == options.callSiteClosingParenPosition {
+            options.callSiteClosingParenPosition = .default
         }
     }
 

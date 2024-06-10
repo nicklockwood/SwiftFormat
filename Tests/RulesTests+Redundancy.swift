@@ -8695,7 +8695,7 @@ class RedundancyTests: RulesTests {
             bar: bar)
         """
 
-        let options = FormatOptions(wrapArguments: .beforeFirst, closingParenOnSameLine: true)
+        let options = FormatOptions(wrapArguments: .beforeFirst, closingParenPosition: .sameLine)
         testFormatting(for: input, [output],
                        rules: [FormatRules.redundantClosure, FormatRules.wrapArguments],
                        options: options)
@@ -8714,7 +8714,7 @@ class RedundancyTests: RulesTests {
                              bar: bar)
         """
 
-        let options = FormatOptions(wrapArguments: .afterFirst, closingParenOnSameLine: true)
+        let options = FormatOptions(wrapArguments: .afterFirst, closingParenPosition: .sameLine)
         testFormatting(for: input, [output],
                        rules: [FormatRules.redundantClosure, FormatRules.wrapArguments],
                        options: options)

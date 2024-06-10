@@ -397,7 +397,13 @@ extension Formatter {
             keepParameterLabelsOnSameLine(startOfScope: i,
                                           endOfScope: &endOfScope)
 
-            if options.closingCallSiteParenOnSameLine, isFunctionCall(at: i) {
+            let closingParenOnSameLine: Bool
+            switch options.callSiteClosingParenPosition {
+            case .balanced: closingParenOnSameLine = false
+            case .sameLine: closingParenOnSameLine = true
+            case .default: closingParenOnSameLine = options.closingParenPosition == .sameLine
+            }
+            if closingParenOnSameLine, isFunctionCall(at: i) {
                 removeLinebreakBeforeEndOfScope(at: &endOfScope)
             } else if endOfScopeOnSameLine {
                 removeLinebreakBeforeEndOfScope(at: &endOfScope)
@@ -556,7 +562,7 @@ extension Formatter {
                     return
                 }
 
-                endOfScopeOnSameLine = options.closingParenOnSameLine
+                endOfScopeOnSameLine = options.closingParenPosition == .sameLine
                 isParameters = isParameterList(at: i)
                 if isParameters, options.wrapParameters != .default {
                     mode = options.wrapParameters

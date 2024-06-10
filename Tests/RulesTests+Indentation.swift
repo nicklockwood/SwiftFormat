@@ -184,7 +184,7 @@ class IndentTests: RulesTests {
                 .build()
         }
         """
-        let options = FormatOptions(closingParenOnSameLine: true)
+        let options = FormatOptions(closingParenPosition: .sameLine)
         testFormatting(for: input, rule: FormatRules.indent, options: options)
     }
 
@@ -372,7 +372,7 @@ class IndentTests: RulesTests {
                 self?.viewportLoggingRegistry.logViewportSessionEnd(with: viewportLoggingContext)
             }
         """
-        let options = FormatOptions(closingParenOnSameLine: true)
+        let options = FormatOptions(closingParenPosition: .sameLine)
         testFormatting(for: input, rule: FormatRules.indent, options: options)
     }
 
@@ -483,10 +483,7 @@ class IndentTests: RulesTests {
             "one"
         }
         """
-        let options = FormatOptions(
-            wrapArguments: .afterFirst,
-            closingParenOnSameLine: true
-        )
+        let options = FormatOptions(wrapArguments: .afterFirst, closingParenPosition: .sameLine)
         testFormatting(for: input, rule: FormatRules.indent, options: options)
     }
 
@@ -1469,7 +1466,7 @@ class IndentTests: RulesTests {
             },
             baz: baz)
         """
-        let options = FormatOptions(closingParenOnSameLine: true)
+        let options = FormatOptions(closingParenPosition: .sameLine)
         testFormatting(for: input, rule: FormatRules.indent, options: options)
     }
 
@@ -1528,7 +1525,7 @@ class IndentTests: RulesTests {
             }
         }
         """
-        let options = FormatOptions(wrapArguments: .disabled, closingParenOnSameLine: false)
+        let options = FormatOptions(wrapArguments: .disabled, closingParenPosition: .balanced)
         testFormatting(for: input, rule: FormatRules.indent, options: options,
                        exclude: ["wrapConditionalBodies"])
     }
@@ -1543,7 +1540,7 @@ class IndentTests: RulesTests {
             }
         }
         """
-        let options = FormatOptions(wrapArguments: .disabled, closingParenOnSameLine: true)
+        let options = FormatOptions(wrapArguments: .disabled, closingParenPosition: .sameLine)
         testFormatting(for: input, rule: FormatRules.indent, options: options,
                        exclude: ["wrapConditionalBodies", "wrapMultilineStatementBraces"])
     }
@@ -1559,7 +1556,7 @@ class IndentTests: RulesTests {
                 }
         }
         """
-        let options = FormatOptions(wrapArguments: .disabled, closingParenOnSameLine: true)
+        let options = FormatOptions(wrapArguments: .disabled, closingParenPosition: .sameLine)
         testFormatting(for: input, rule: FormatRules.indent, options: options,
                        exclude: ["wrapConditionalBodies", "wrapMultilineStatementBraces"])
     }
@@ -1575,7 +1572,7 @@ class IndentTests: RulesTests {
             }
         }
         """
-        let options = FormatOptions(wrapArguments: .disabled, closingParenOnSameLine: true)
+        let options = FormatOptions(wrapArguments: .disabled, closingParenPosition: .sameLine)
         testFormatting(for: input, rule: FormatRules.indent, options: options,
                        exclude: ["wrapMultilineStatementBraces"])
     }
@@ -1588,7 +1585,7 @@ class IndentTests: RulesTests {
             cancelBlock()
         }
         """
-        let options = FormatOptions(wrapArguments: .disabled, closingParenOnSameLine: true)
+        let options = FormatOptions(wrapArguments: .disabled, closingParenPosition: .sameLine)
         testFormatting(for: input, rule: FormatRules.indent, options: options)
     }
 
@@ -1604,7 +1601,7 @@ class IndentTests: RulesTests {
             }
         }
         """
-        let options = FormatOptions(wrapArguments: .disabled, closingParenOnSameLine: true)
+        let options = FormatOptions(wrapArguments: .disabled, closingParenPosition: .sameLine)
         testFormatting(for: input, rule: FormatRules.indent, options: options,
                        exclude: ["braces", "wrapConditionalBodies"])
     }
@@ -1616,7 +1613,7 @@ class IndentTests: RulesTests {
             print("and a trailing closure")
         }
         """
-        let options = FormatOptions(wrapArguments: .disabled, closingParenOnSameLine: true)
+        let options = FormatOptions(wrapArguments: .disabled, closingParenPosition: .sameLine)
         testFormatting(for: input, rule: FormatRules.indent, options: options,
                        exclude: ["wrapConditionalBodies"])
     }
@@ -3706,7 +3703,7 @@ class IndentTests: RulesTests {
             bar _: String)
             async throws -> String {}
         """
-        let options = FormatOptions(closingParenOnSameLine: true)
+        let options = FormatOptions(closingParenPosition: .sameLine)
         testFormatting(for: input, rule: FormatRules.indent, options: options)
     }
 
@@ -3717,7 +3714,7 @@ class IndentTests: RulesTests {
             bar _: String)
             async throws(Foo) -> String {}
         """
-        let options = FormatOptions(closingParenOnSameLine: true)
+        let options = FormatOptions(closingParenPosition: .sameLine)
         testFormatting(for: input, rule: FormatRules.indent, options: options)
     }
 
@@ -3767,7 +3764,7 @@ class IndentTests: RulesTests {
             async _: String)
             -> String {}
         """
-        let options = FormatOptions(closingParenOnSameLine: true)
+        let options = FormatOptions(closingParenPosition: .sameLine)
         testFormatting(for: input, rule: FormatRules.indent, options: options)
     }
 

@@ -1486,7 +1486,7 @@ class WrappingTests: RulesTests {
             bar _: Int,
             baz _: String) {}
         """
-        let options = FormatOptions(wrapArguments: .beforeFirst, closingParenOnSameLine: true)
+        let options = FormatOptions(wrapArguments: .beforeFirst, closingParenPosition: .sameLine)
         testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
     }
 
@@ -1502,7 +1502,7 @@ class WrappingTests: RulesTests {
             baz _: String
         ) {}
         """
-        let options = FormatOptions(wrapArguments: .beforeFirst, closingParenOnSameLine: false)
+        let options = FormatOptions(wrapArguments: .beforeFirst, closingParenPosition: .balanced)
         testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
     }
 
@@ -1518,7 +1518,7 @@ class WrappingTests: RulesTests {
             bar _: Int,
             baz _: String) {}
         """
-        let options = FormatOptions(wrapArguments: .beforeFirst, closingParenOnSameLine: true, closingCallSiteParenOnSameLine: true)
+        let options = FormatOptions(wrapArguments: .beforeFirst, closingParenPosition: .sameLine, callSiteClosingParenPosition: .sameLine)
         testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
     }
 
@@ -1534,7 +1534,7 @@ class WrappingTests: RulesTests {
             baz _: String
         ) {}
         """
-        let options = FormatOptions(wrapArguments: .beforeFirst, closingParenOnSameLine: false, closingCallSiteParenOnSameLine: true)
+        let options = FormatOptions(wrapArguments: .beforeFirst, closingParenPosition: .balanced, callSiteClosingParenPosition: .sameLine)
         testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
     }
 
@@ -1550,7 +1550,7 @@ class WrappingTests: RulesTests {
             bar: 42,
             baz: "foo")
         """
-        let options = FormatOptions(wrapArguments: .beforeFirst, closingParenOnSameLine: false, closingCallSiteParenOnSameLine: true)
+        let options = FormatOptions(wrapArguments: .beforeFirst, closingParenPosition: .balanced, callSiteClosingParenPosition: .sameLine)
         testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
     }
 
@@ -2238,26 +2238,26 @@ class WrappingTests: RulesTests {
                        exclude: ["wrap", "blankLinesAtStartOfScope", "blankLinesAtEndOfScope"])
     }
 
-    // MARK: closingParenOnSameLine = true
+    // MARK: closingParenPosition = true
 
     func testParenOnSameLineWhenWrapAfterFirstConvertedToWrapBefore() {
         let input = "func foo(bar _: Int,\n    baz _: String) {}"
         let output = "func foo(\n    bar _: Int,\n    baz _: String) {}"
-        let options = FormatOptions(wrapParameters: .beforeFirst, closingParenOnSameLine: true)
+        let options = FormatOptions(wrapParameters: .beforeFirst, closingParenPosition: .sameLine)
         testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
     }
 
     func testParenOnSameLineWhenWrapBeforeFirstUnchanged() {
         let input = "func foo(\n    bar _: Int,\n    baz _: String\n) {}"
         let output = "func foo(\n    bar _: Int,\n    baz _: String) {}"
-        let options = FormatOptions(wrapParameters: .beforeFirst, closingParenOnSameLine: true)
+        let options = FormatOptions(wrapParameters: .beforeFirst, closingParenPosition: .sameLine)
         testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
     }
 
     func testParenOnSameLineWhenWrapBeforeFirstPreserved() {
         let input = "func foo(\n    bar _: Int,\n    baz _: String\n) {}"
         let output = "func foo(\n    bar _: Int,\n    baz _: String) {}"
-        let options = FormatOptions(wrapParameters: .preserve, closingParenOnSameLine: true)
+        let options = FormatOptions(wrapParameters: .preserve, closingParenPosition: .sameLine)
         testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
     }
 
@@ -3053,7 +3053,7 @@ class WrappingTests: RulesTests {
 
         let options = FormatOptions(
             wrapArguments: .beforeFirst,
-            closingParenOnSameLine: true,
+            closingParenPosition: .sameLine,
             wrapReturnType: .ifMultiline
         )
 
@@ -3076,7 +3076,7 @@ class WrappingTests: RulesTests {
 
         let options = FormatOptions(
             wrapArguments: .beforeFirst,
-            closingParenOnSameLine: true,
+            closingParenPosition: .sameLine,
             wrapReturnType: .ifMultiline,
             wrapEffects: .ifMultiline
         )
@@ -3091,7 +3091,7 @@ class WrappingTests: RulesTests {
 
         let options = FormatOptions(
             wrapArguments: .beforeFirst,
-            closingParenOnSameLine: true,
+            closingParenPosition: .sameLine,
             wrapReturnType: .ifMultiline,
             wrapEffects: .ifMultiline
         )
@@ -3106,7 +3106,7 @@ class WrappingTests: RulesTests {
 
         let options = FormatOptions(
             wrapArguments: .beforeFirst,
-            closingParenOnSameLine: true,
+            closingParenPosition: .sameLine,
             wrapReturnType: .ifMultiline,
             wrapEffects: .ifMultiline
         )
@@ -3131,7 +3131,7 @@ class WrappingTests: RulesTests {
 
         let options = FormatOptions(
             wrapArguments: .beforeFirst,
-            closingParenOnSameLine: true,
+            closingParenPosition: .sameLine,
             wrapReturnType: .ifMultiline,
             wrapEffects: .ifMultiline
         )
@@ -3156,7 +3156,7 @@ class WrappingTests: RulesTests {
 
         let options = FormatOptions(
             wrapArguments: .beforeFirst,
-            closingParenOnSameLine: true,
+            closingParenPosition: .sameLine,
             wrapReturnType: .ifMultiline,
             wrapEffects: .never
         )
@@ -3178,7 +3178,7 @@ class WrappingTests: RulesTests {
 
         let options = FormatOptions(
             wrapArguments: .afterFirst,
-            closingParenOnSameLine: true,
+            closingParenPosition: .sameLine,
             wrapReturnType: .ifMultiline
         )
 
@@ -3202,7 +3202,7 @@ class WrappingTests: RulesTests {
 
         let options = FormatOptions(
             wrapArguments: .afterFirst,
-            closingParenOnSameLine: true,
+            closingParenPosition: .sameLine,
             wrapReturnType: .ifMultiline
         )
 
@@ -3226,7 +3226,7 @@ class WrappingTests: RulesTests {
 
         let options = FormatOptions(
             wrapArguments: .afterFirst,
-            closingParenOnSameLine: true,
+            closingParenPosition: .sameLine,
             wrapReturnType: .ifMultiline,
             wrapEffects: .ifMultiline
         )
@@ -3246,7 +3246,7 @@ class WrappingTests: RulesTests {
 
         let options = FormatOptions(
             wrapArguments: .afterFirst,
-            closingParenOnSameLine: true,
+            closingParenPosition: .sameLine,
             wrapReturnType: .ifMultiline
         )
 
@@ -3263,7 +3263,7 @@ class WrappingTests: RulesTests {
 
         let options = FormatOptions(
             wrapArguments: .beforeFirst,
-            closingParenOnSameLine: true,
+            closingParenPosition: .sameLine,
             wrapReturnType: .ifMultiline
         )
 
@@ -3283,7 +3283,7 @@ class WrappingTests: RulesTests {
 
         let options = FormatOptions(
             wrapArguments: .beforeFirst,
-            closingParenOnSameLine: true,
+            closingParenPosition: .sameLine,
             wrapReturnType: .ifMultiline
         )
 
@@ -3305,7 +3305,7 @@ class WrappingTests: RulesTests {
 
         let options = FormatOptions(
             wrapArguments: .beforeFirst,
-            closingParenOnSameLine: true,
+            closingParenPosition: .sameLine,
             wrapReturnType: .ifMultiline
         )
 
@@ -3322,7 +3322,7 @@ class WrappingTests: RulesTests {
 
         let options = FormatOptions(
             wrapArguments: .beforeFirst,
-            closingParenOnSameLine: true
+            closingParenPosition: .sameLine
         )
 
         testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
@@ -3573,7 +3573,7 @@ class WrappingTests: RulesTests {
 
         let options = FormatOptions(
             wrapArguments: .beforeFirst,
-            closingParenOnSameLine: true
+            closingParenPosition: .sameLine
         )
         testFormatting(for: input, output, rule: FormatRules.wrapMultilineStatementBraces,
                        options: options, exclude: ["indent"])
@@ -3601,7 +3601,7 @@ class WrappingTests: RulesTests {
 
         let options = FormatOptions(
             wrapArguments: .beforeFirst,
-            closingParenOnSameLine: true
+            closingParenPosition: .sameLine
         )
         testFormatting(for: input, [output], rules: [
             FormatRules.wrapMultilineStatementBraces,
@@ -3629,7 +3629,7 @@ class WrappingTests: RulesTests {
 
         let options = FormatOptions(
             wrapArguments: .beforeFirst,
-            closingParenOnSameLine: true
+            closingParenPosition: .sameLine
         )
         testFormatting(for: input, [output], rules: [
             FormatRules.wrapMultilineStatementBraces,
@@ -3655,7 +3655,7 @@ class WrappingTests: RulesTests {
 
         let options = FormatOptions(
             wrapArguments: .afterFirst,
-            closingParenOnSameLine: true
+            closingParenPosition: .sameLine
         )
         testFormatting(for: input, output, rule: FormatRules.wrapMultilineStatementBraces,
                        options: options, exclude: ["indent"])
@@ -3672,7 +3672,7 @@ class WrappingTests: RulesTests {
 
         let options = FormatOptions(
             wrapArguments: .afterFirst,
-            closingParenOnSameLine: true
+            closingParenPosition: .sameLine
         )
         testFormatting(for: input, [], rules: [
             FormatRules.wrapMultilineStatementBraces,
@@ -3692,7 +3692,7 @@ class WrappingTests: RulesTests {
         """
         let options = FormatOptions(
             wrapArguments: .beforeFirst,
-            closingParenOnSameLine: true
+            closingParenPosition: .sameLine
         )
         testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces,
                        options: options, exclude: ["trailingClosures"])
@@ -3719,7 +3719,7 @@ class WrappingTests: RulesTests {
 
         let options = FormatOptions(
             wrapArguments: .beforeFirst,
-            closingParenOnSameLine: true,
+            closingParenPosition: .sameLine,
             wrapReturnType: .ifMultiline,
             wrapEffects: .ifMultiline
         )
@@ -3750,7 +3750,7 @@ class WrappingTests: RulesTests {
 
         let options = FormatOptions(
             wrapArguments: .beforeFirst,
-            closingParenOnSameLine: true,
+            closingParenPosition: .sameLine,
             wrapReturnType: .ifMultiline,
             wrapEffects: .ifMultiline
         )
@@ -3781,7 +3781,7 @@ class WrappingTests: RulesTests {
 
         let options = FormatOptions(
             wrapArguments: .beforeFirst,
-            closingParenOnSameLine: true,
+            closingParenPosition: .sameLine,
             wrapReturnType: .ifMultiline,
             wrapEffects: .ifMultiline
         )
@@ -3812,7 +3812,7 @@ class WrappingTests: RulesTests {
 
         let options = FormatOptions(
             wrapArguments: .beforeFirst,
-            closingParenOnSameLine: true,
+            closingParenPosition: .sameLine,
             wrapReturnType: .ifMultiline,
             wrapEffects: .ifMultiline
         )
@@ -3843,7 +3843,7 @@ class WrappingTests: RulesTests {
 
         let options = FormatOptions(
             wrapArguments: .beforeFirst,
-            closingParenOnSameLine: true,
+            closingParenPosition: .sameLine,
             wrapReturnType: .ifMultiline,
             wrapEffects: .ifMultiline
         )
@@ -3873,7 +3873,7 @@ class WrappingTests: RulesTests {
 
         let options = FormatOptions(
             wrapArguments: .beforeFirst,
-            closingParenOnSameLine: false
+            closingParenPosition: .balanced
         )
         testFormatting(for: input, [output], rules: [
             FormatRules.wrapMultilineStatementBraces,
@@ -3901,7 +3901,7 @@ class WrappingTests: RulesTests {
 
         let options = FormatOptions(
             wrapArguments: .beforeFirst,
-            closingParenOnSameLine: false,
+            closingParenPosition: .balanced,
             wrapEffects: .never
         )
         testFormatting(for: input, [output], rules: [
@@ -3930,7 +3930,7 @@ class WrappingTests: RulesTests {
 
         let options = FormatOptions(
             wrapArguments: .beforeFirst,
-            closingParenOnSameLine: false,
+            closingParenPosition: .balanced,
             wrapEffects: .never
         )
         testFormatting(for: input, [output], rules: [
@@ -3952,7 +3952,7 @@ class WrappingTests: RulesTests {
         let options = FormatOptions(
             //            wrapMultilineStatementBraces: true,
             wrapArguments: .beforeFirst,
-            closingParenOnSameLine: false
+            closingParenPosition: .balanced
         )
 
         testFormatting(for: input, [], rules: [
@@ -3982,7 +3982,7 @@ class WrappingTests: RulesTests {
 
         let options = FormatOptions(
             wrapArguments: .beforeFirst,
-            closingParenOnSameLine: true
+            closingParenPosition: .sameLine
         )
         testFormatting(for: input, [output], rules: [
             FormatRules.wrapMultilineStatementBraces,
@@ -4000,7 +4000,7 @@ class WrappingTests: RulesTests {
         """
         let options = FormatOptions(
             wrapArguments: .beforeFirst,
-            closingParenOnSameLine: true
+            closingParenPosition: .sameLine
         )
         testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces,
                        options: options, exclude: ["trailingClosures"])
@@ -4018,7 +4018,7 @@ class WrappingTests: RulesTests {
 
         let options = FormatOptions(
             wrapArguments: .beforeFirst,
-            closingParenOnSameLine: true
+            closingParenPosition: .sameLine
         )
         testFormatting(for: input, rules: [FormatRules.wrapMultilineStatementBraces, FormatRules.wrap],
                        options: options, exclude: ["indent", "redundantClosure", "wrapConditionalBodies"])
@@ -4052,7 +4052,7 @@ class WrappingTests: RulesTests {
         """
         testFormatting(
             for: input, rules: [FormatRules.wrapArguments, FormatRules.indent],
-            options: FormatOptions(closingParenOnSameLine: true, wrapConditions: .beforeFirst)
+            options: FormatOptions(closingParenPosition: .sameLine, wrapConditions: .beforeFirst)
         )
     }
 
@@ -4615,7 +4615,7 @@ class WrappingTests: RulesTests {
             help: "Long help text for my example arg from Swift argument parser")
         var foo: WrappedType
         """
-        let options = FormatOptions(closingParenOnSameLine: true, varAttributes: .prevLine, storedVarAttributes: .sameLine, complexAttributes: .prevLine)
+        let options = FormatOptions(closingParenPosition: .sameLine, varAttributes: .prevLine, storedVarAttributes: .sameLine, complexAttributes: .prevLine)
         testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
     }
 

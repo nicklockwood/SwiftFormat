@@ -552,6 +552,13 @@ public enum NilInitType: String, CaseIterable {
     case insert
 }
 
+/// Placement for closing paren in a function call or definition
+public enum ClosingParenPosition: String, CaseIterable {
+    case balanced
+    case sameLine = "same-line"
+    case `default`
+}
+
 /// Configuration options for formatting. These aren't actually used by the
 /// Formatter class itself, but it makes them available to the format rules.
 public struct FormatOptions: CustomStringConvertible {
@@ -575,8 +582,8 @@ public struct FormatOptions: CustomStringConvertible {
     public var wrapCollections: WrapMode
     public var wrapTypealiases: WrapMode
     public var wrapEnumCases: WrapEnumCases
-    public var closingParenOnSameLine: Bool
-    public var closingCallSiteParenOnSameLine: Bool
+    public var closingParenPosition: ClosingParenPosition
+    public var callSiteClosingParenPosition: ClosingParenPosition
     public var wrapReturnType: WrapReturnType
     public var wrapConditions: WrapMode
     public var wrapTernaryOperators: TernaryOperatorWrapMode
@@ -689,8 +696,8 @@ public struct FormatOptions: CustomStringConvertible {
                 wrapCollections: WrapMode = .preserve,
                 wrapTypealiases: WrapMode = .preserve,
                 wrapEnumCases: WrapEnumCases = .always,
-                closingParenOnSameLine: Bool = false,
-                closingCallSiteParenOnSameLine: Bool = false,
+                closingParenPosition: ClosingParenPosition = .balanced,
+                callSiteClosingParenPosition: ClosingParenPosition = .default,
                 wrapReturnType: WrapReturnType = .preserve,
                 wrapConditions: WrapMode = .preserve,
                 wrapTernaryOperators: TernaryOperatorWrapMode = .default,
@@ -793,8 +800,8 @@ public struct FormatOptions: CustomStringConvertible {
         self.wrapCollections = wrapCollections
         self.wrapTypealiases = wrapTypealiases
         self.wrapEnumCases = wrapEnumCases
-        self.closingParenOnSameLine = closingParenOnSameLine
-        self.closingCallSiteParenOnSameLine = closingCallSiteParenOnSameLine
+        self.closingParenPosition = closingParenPosition
+        self.callSiteClosingParenPosition = callSiteClosingParenPosition
         self.wrapReturnType = wrapReturnType
         self.wrapConditions = wrapConditions
         self.wrapTernaryOperators = wrapTernaryOperators

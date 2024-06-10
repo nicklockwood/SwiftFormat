@@ -542,7 +542,7 @@ class BracesTests: RulesTests {
         }
         """
 
-        let options = FormatOptions(wrapArguments: .beforeFirst, closingParenOnSameLine: true)
+        let options = FormatOptions(wrapArguments: .beforeFirst, closingParenPosition: .sameLine)
         testFormatting(for: input, rules: [FormatRules.braces, FormatRules.wrapMultilineStatementBraces], options: options)
     }
 
@@ -557,7 +557,7 @@ class BracesTests: RulesTests {
         }
         """
 
-        let options = FormatOptions(wrapArguments: .beforeFirst, closingParenOnSameLine: true)
+        let options = FormatOptions(wrapArguments: .beforeFirst, closingParenPosition: .sameLine)
         testFormatting(for: input, rules: [FormatRules.braces, FormatRules.wrapMultilineStatementBraces], options: options)
     }
 }

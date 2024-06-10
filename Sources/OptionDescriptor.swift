@@ -194,6 +194,9 @@ class OptionDescriptor {
         self.argumentName = argumentName
         self.displayName = displayName
         self.help = help
+        for option in help.quotedValues {
+            assert(T(rawValue: option) ?? altOptions[option] != nil, "Option \(option) doesn't exist")
+        }
         self.deprecationMessage = deprecationMessage
         self.type = type
         toOptions = { rawValue, options in
@@ -292,6 +295,17 @@ class OptionDescriptor {
         }
         fromOptions = { options in
             options[keyPath: keyPath].sorted().joined(separator: ",")
+        }
+    }
+}
+
+private extension String {
+    var quotedValues: [String] {
+        let parts = components(separatedBy: "\"")
+        var even = false
+        return parts.compactMap {
+            defer { even = !even }
+            return even ? $0.components(separatedBy: "/").first : nil
         }
     }
 }

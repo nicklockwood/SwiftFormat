@@ -1188,10 +1188,11 @@ public struct _FormatRules {
     ) { formatter in
         formatter.forEach(.operator(".", .infix)) { i, _ in
             let endOfLine = formatter.endOfLine(at: i)
-            if let nextIndex = formatter.index(of: .nonSpaceOrLinebreak, after: endOfLine, if: {
-                $0 == .operator(".", .infix)
-            }) {
-                let startOfLine = formatter.startOfLine(at: nextIndex)
+            if let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: endOfLine),
+               formatter.tokens[nextIndex] == .operator(".", .infix),
+               let commentIndex = formatter.index(of: .nonSpaceOrLinebreak, after: endOfLine)
+            {
+                let startOfLine = formatter.startOfLine(at: commentIndex)
                 formatter.removeTokens(in: endOfLine + 1 ..< startOfLine)
             }
         }

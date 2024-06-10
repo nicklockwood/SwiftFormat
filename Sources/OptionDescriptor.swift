@@ -863,6 +863,12 @@ struct _Descriptors {
         help: "Organize declarations by \"visibility\" (default) or \"type\"",
         keyPath: \.organizationMode
     )
+    let alphabeticallySortedDeclarationPatterns = OptionDescriptor(
+        argumentName: "sortedpatterns",
+        displayName: "Declaration Name Patterns To Sort Alphabetically",
+        help: "List of patterns to sort alphabetically without `:sort` mark.",
+        keyPath: \.alphabeticallySortedDeclarationPatterns
+    )
     let funcAttributes = OptionDescriptor(
         argumentName: "funcattributes",
         displayName: "Function Attributes",

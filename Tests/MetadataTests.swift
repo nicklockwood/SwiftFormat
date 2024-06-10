@@ -232,6 +232,7 @@ class MetadataTests: XCTestCase {
                         Descriptors.organizeExtensionThreshold,
                         Descriptors.lineAfterMarks,
                         Descriptors.organizationMode,
+                        Descriptors.alphabeticallySortedDeclarationPatterns,
                     ]
                 case .identifier("removeSelf"):
                     referencedOptions += [

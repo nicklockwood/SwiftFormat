@@ -4041,6 +4041,127 @@ class OrganizationTests: RulesTests {
                        exclude: ["blankLinesAtEndOfScope"])
     }
 
+    func testSortsWithinOrganizeDeclarationsByClassName() {
+        let input = """
+        enum FeatureFlags {
+            case fooFeature
+            case barFeature
+            case upsellB
+            case upsellA
+
+            // MARK: Internal
+
+            var sortedProperty: Foo {
+                Foo()
+            }
+
+            var aSortedProperty: Foo {
+                Foo()
+            }
+        }
+        """
+
+        let output = """
+        enum FeatureFlags {
+            case barFeature
+            case fooFeature
+            case upsellA
+
+            case upsellB
+
+            // MARK: Internal
+
+            var aSortedProperty: Foo {
+                Foo()
+            }
+
+            var sortedProperty: Foo {
+                Foo()
+            }
+
+        }
+        """
+
+        testFormatting(for: input, [output],
+                       rules: [FormatRules.organizeDeclarations, FormatRules.blankLinesBetweenScopes],
+                       options: .init(alphabeticallySortedDeclarationPatterns: ["FeatureFlags"]),
+                       exclude: ["blankLinesAtEndOfScope"])
+    }
+
+    func testSortsWithinOrganizeDeclarationsByPartialClassName() {
+        let input = """
+        enum FeatureFlags {
+            case fooFeature
+            case barFeature
+            case upsellB
+            case upsellA
+
+            // MARK: Internal
+
+            var sortedProperty: Foo {
+                Foo()
+            }
+
+            var aSortedProperty: Foo {
+                Foo()
+            }
+        }
+        """
+
+        let output = """
+        enum FeatureFlags {
+            case barFeature
+            case fooFeature
+            case upsellA
+
+            case upsellB
+
+            // MARK: Internal
+
+            var aSortedProperty: Foo {
+                Foo()
+            }
+
+            var sortedProperty: Foo {
+                Foo()
+            }
+
+        }
+        """
+
+        testFormatting(for: input, [output],
+                       rules: [FormatRules.organizeDeclarations, FormatRules.blankLinesBetweenScopes],
+                       options: .init(alphabeticallySortedDeclarationPatterns: ["ureFla"]),
+                       exclude: ["blankLinesAtEndOfScope"])
+    }
+
+    func testDontSortsWithinOrganizeDeclarationsByClassNameInComment() {
+        let input = """
+        /// Comment
+        enum FeatureFlags {
+            case fooFeature
+            case barFeature
+            case upsellB
+            case upsellA
+
+            // MARK: Internal
+
+            var sortedProperty: Foo {
+                Foo()
+            }
+
+            var aSortedProperty: Foo {
+                Foo()
+            }
+        }
+        """
+
+        testFormatting(for: input,
+                       rules: [FormatRules.organizeDeclarations, FormatRules.blankLinesBetweenScopes],
+                       options: .init(alphabeticallySortedDeclarationPatterns: ["Comment"]),
+                       exclude: ["blankLinesAtEndOfScope"])
+    }
+
     func testSortDeclarationsUsesLocalizedCompare() {
         let input = """
         // swiftformat:sort

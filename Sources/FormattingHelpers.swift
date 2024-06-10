@@ -2298,9 +2298,25 @@ extension Formatter {
 
         // If this type has a leading :sort directive, we sort alphabetically
         // within the subcategories (where ordering is otherwise undefined)
-        let sortAlphabeticallyWithinSubcategories = typeDeclaration.open.contains(where: {
+        let shouldSortAlphabeticallyBySortingMark = typeDeclaration.open.contains(where: {
             $0.isCommentBody && $0.string.contains("swiftformat:sort") && !$0.string.contains(":sort:")
         })
+        // If this type declaration name contains pattern — sort as well
+        let shouldSortAlphabeticallyByDeclarationPattern: Bool = {
+            let parser = Formatter(typeDeclaration.open)
+
+            guard let kindIndex = parser.index(of: .keyword(typeDeclaration.kind), in: 0 ..< typeDeclaration.open.count),
+                  let identifier = parser.next(.identifier, after: kindIndex)
+            else {
+                return false
+            }
+
+            return options.alphabeticallySortedDeclarationPatterns.contains {
+                identifier.string.contains($0)
+            }
+        }()
+        let sortAlphabeticallyWithinSubcategories = shouldSortAlphabeticallyBySortingMark
+            || shouldSortAlphabeticallyByDeclarationPattern
 
         // Sorts the given categoried declarations based on their derived metadata
         func sortDeclarations(_ declarations: CategorizedDeclarations) -> CategorizedDeclarations {

@@ -660,6 +660,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var organizeEnumThreshold: Int
     public var organizeExtensionThreshold: Int
     public var organizationMode: DeclarationOrganizationMode
+    public var alphabeticallySortedDeclarationPatterns: Set<String>
     public var yodaSwap: YodaMode
     public var extensionACLPlacement: ExtensionACLPlacement
     public var redundantType: RedundantType
@@ -778,6 +779,7 @@ public struct FormatOptions: CustomStringConvertible {
                 organizeEnumThreshold: Int = 0,
                 organizeExtensionThreshold: Int = 0,
                 organizationMode: DeclarationOrganizationMode = .visibility,
+                alphabeticallySortedDeclarationPatterns: Set<String> = [],
                 yodaSwap: YodaMode = .always,
                 extensionACLPlacement: ExtensionACLPlacement = .onExtension,
                 redundantType: RedundantType = .inferLocalsOnly,
@@ -886,6 +888,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.organizeEnumThreshold = organizeEnumThreshold
         self.organizeExtensionThreshold = organizeExtensionThreshold
         self.organizationMode = organizationMode
+        self.alphabeticallySortedDeclarationPatterns = alphabeticallySortedDeclarationPatterns
         self.yodaSwap = yodaSwap
         self.extensionACLPlacement = extensionACLPlacement
         self.redundantType = redundantType

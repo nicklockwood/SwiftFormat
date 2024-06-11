@@ -1190,9 +1190,10 @@ public struct _FormatRules {
             let endOfLine = formatter.endOfLine(at: i)
             if let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: endOfLine),
                formatter.tokens[nextIndex] == .operator(".", .infix),
-               let commentIndex = formatter.index(of: .nonSpaceOrLinebreak, after: endOfLine)
+               // Make sure to preserve any code comment between the two lines
+               let nextTokenOrComment = formatter.index(of: .nonSpaceOrLinebreak, after: endOfLine)
             {
-                let startOfLine = formatter.startOfLine(at: commentIndex)
+                let startOfLine = formatter.startOfLine(at: nextTokenOrComment)
                 formatter.removeTokens(in: endOfLine + 1 ..< startOfLine)
             }
         }

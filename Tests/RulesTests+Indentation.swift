@@ -2393,6 +2393,25 @@ class IndentTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.indent)
     }
 
+    func testCommentedCodeAfterBracketNotIndented() {
+        let input = """
+        let foo = [
+        //    first,
+            second,
+        ]
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
+    func testCommentedCodeAfterBracketNotIndented2() {
+        let input = """
+        let foo = [first,
+        //           second,
+                   third]
+        """
+        testFormatting(for: input, rule: FormatRules.indent)
+    }
+
     // TODO: maybe need special case handling for this?
     func testIndentWrappedTrailingComment() {
         let input = """

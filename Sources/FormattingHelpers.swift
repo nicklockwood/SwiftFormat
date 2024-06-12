@@ -453,7 +453,10 @@ extension Formatter {
                 }
                 if nextIndex + 1 < endOfScope, next(.nonSpace, after: nextIndex)?.isLinebreak == false {
                     var indent = indent
-                    if (self.index(of: .nonSpace, after: nextIndex) ?? 0) < endOfScope {
+                    if let nextNonSpaceIndex = self.index(of: .nonSpace, after: nextIndex),
+                       nextNonSpaceIndex < endOfScope,
+                       !isCommentedCode(at: nextNonSpaceIndex)
+                    {
                         indent += options.indent
                     }
                     endOfScope += insertSpace(indent, at: nextIndex + 1)

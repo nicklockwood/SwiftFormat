@@ -1510,6 +1510,27 @@ private struct Examples {
     +     case upsellB
       }
 
+    config:
+    ```
+        sortedtypes: 'enum'
+        sortedpatterns: 'Feature'
+    ```
+
+      enum FeatureFlags {
+    -     case upsellB
+    -     case fooFeature
+    -     case barFeature
+    -     case upsellA(
+    -         fooConfiguration: Foo,
+    -         barConfiguration: Bar)
+    +     case barFeature
+    +     case fooFeature
+    +     case upsellA(
+    +         fooConfiguration: Foo,
+    +         barConfiguration: Bar)
+    +     case upsellB
+      }
+
       enum FeatureFlags {
           // swiftformat:sort:begin
     -     case upsellB

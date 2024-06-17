@@ -2949,7 +2949,7 @@ public struct _FormatRules {
         help: "Remove/insert redundant `nil` default value (Optional vars are nil by default).",
         options: ["nilinit"]
     ) { formatter in
-        func search(from index: Int) {
+        func search(from index: Int, isStoredProperty: Bool) {
             if let optionalIndex = formatter.index(of: .unwrapOperator, after: index) {
                 if formatter.index(of: .endOfStatement, in: index + 1 ..< optionalIndex) != nil {
                     return
@@ -2966,13 +2966,13 @@ public struct _FormatRules {
                             formatter.removeTokens(in: optionalIndex + 1 ... nilIndex)
                         }
                     case .insert:
-                        if formatter.isStoredProperty(atIntroducerIndex: index) && equalsIndex == nil {
+                        if isStoredProperty && equalsIndex == nil {
                             let tokens: [Token] = [.space(" "), .operator("=", .infix), .space(" "), .identifier("nil")]
                             formatter.insert(tokens, at: optionalIndex + 1)
                         }
                     }
                 }
-                search(from: optionalIndex)
+                search(from: optionalIndex, isStoredProperty: isStoredProperty)
             }
         }
 
@@ -3004,7 +3004,7 @@ public struct _FormatRules {
                 }
             }
             // Find the nil
-            search(from: i)
+            search(from: i, isStoredProperty: formatter.isStoredProperty(atIntroducerIndex: i))
         }
     }
 

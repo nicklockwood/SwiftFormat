@@ -2211,6 +2211,61 @@ class RedundancyTests: RulesTests {
                        options: options)
     }
 
+    func testNoInsertNilInitInSingleLineComputedProperty() {
+        let input = """
+        var bar: String? { "some string" }
+        var foo: String? { nil }
+        """
+        let options = FormatOptions(nilInit: .insert)
+        testFormatting(for: input, rule: FormatRules.redundantNilInit,
+                       options: options)
+    }
+
+    func testNoInsertNilInitInMultilineComputedProperty() {
+        let input = """
+        var foo: String? {
+            print("some")
+        }
+
+        var bar: String? {
+            nil
+        }
+        """
+        let options = FormatOptions(nilInit: .insert)
+        testFormatting(for: input, rule: FormatRules.redundantNilInit,
+                       options: options)
+    }
+
+    func testNoInsertNilInitInCustomGetterAndSetterProperty() {
+        let input = """
+        var _foo: String? = nil
+        var foo: String? {
+            set { _foo = newValue }
+            get { newValue }
+        }
+        """
+        let options = FormatOptions(nilInit: .insert)
+        testFormatting(for: input, rule: FormatRules.redundantNilInit,
+                       options: options)
+    }
+
+    func testInsertNilInitInInstancePropertyWithBody() {
+        let input = """
+        var foo: String? {
+            didSet { print(foo) }
+        }
+        """
+
+        let output = """
+        var foo: String? = nil {
+            didSet { print(foo) }
+        }
+        """
+        let options = FormatOptions(nilInit: .insert)
+        testFormatting(for: input, output, rule: FormatRules.redundantNilInit,
+                       options: options)
+    }
+
     // MARK: - redundantLet
 
     func testRemoveRedundantLet() {

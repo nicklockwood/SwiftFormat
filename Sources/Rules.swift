@@ -2966,7 +2966,7 @@ public struct _FormatRules {
                             formatter.removeTokens(in: optionalIndex + 1 ... nilIndex)
                         }
                     case .insert:
-                        if equalsIndex == nil {
+                        if formatter.isStoredProperty(atIntroducerIndex: index) && equalsIndex == nil {
                             let tokens: [Token] = [.space(" "), .operator("=", .infix), .space(" "), .identifier("nil")]
                             formatter.insert(tokens, at: optionalIndex + 1)
                         }

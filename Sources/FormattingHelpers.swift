@@ -3356,6 +3356,18 @@ extension Formatter {
                     return false
                 }
             }), let startIndex = self.index(of: .startOfScope("{"), after: nextIndex) {
+                if tokens[nextIndex].isAttribute {
+                    guard let startIndex = self.index(of: .nonSpaceOrComment, after: nextIndex),
+                          tokens[startIndex] == .startOfScope("("),
+                          let endIndex = endOfScope(at: startIndex)
+                    else {
+                        // Not an accessor
+                        break
+                    }
+                    // Could be an attribute on an accessor
+                    index = endIndex
+                    continue
+                }
                 foundAccessors = true
                 index = startIndex + 1
                 if let parenStart = self.index(of: .nonSpaceOrCommentOrLinebreak, after: nextIndex, if: {

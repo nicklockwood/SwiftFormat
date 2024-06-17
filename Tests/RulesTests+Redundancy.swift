@@ -6291,6 +6291,25 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
     }
 
+    func testNoInsertSelfBeforeBinding() {
+        let input = """
+        struct MyView: View {
+            @Environment(ViewModel.self) var viewModel
+
+            var body: some View {
+                @Bindable var viewModel = self.viewModel
+                ZStack {
+                    MySubview(
+                        navigationPath: $viewModel.navigationPath
+                    )
+                }
+            }
+        }
+        """
+        let options = FormatOptions(explicitSelf: .insert, swiftVersion: "5.10")
+        testFormatting(for: input, rule: FormatRules.redundantSelf, options: options)
+    }
+
     // explicitSelf = .initOnly
 
     func testPreserveSelfInsideClassInit() {

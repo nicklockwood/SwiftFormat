@@ -233,6 +233,10 @@ class MetadataTests: XCTestCase {
                         Descriptors.lineAfterMarks,
                         Descriptors.organizationMode,
                         Descriptors.alphabeticallySortedDeclarationPatterns,
+                        Descriptors.visibilityOrder,
+                        Descriptors.typeOrder,
+                        Descriptors.customVisibilityMarks,
+                        Descriptors.customTypeMarks,
                     ]
                 case .identifier("removeSelf"):
                     referencedOptions += [

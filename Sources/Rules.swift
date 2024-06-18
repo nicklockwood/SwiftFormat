@@ -5662,7 +5662,7 @@ public struct _FormatRules {
             "categorymark", "markcategories", "beforemarks",
             "lifecycle", "organizetypes", "structthreshold", "classthreshold",
             "enumthreshold", "extensionlength", "organizationmode",
-            "sortedpatterns",
+            "sortedpatterns", "visibilityorder", "typeorder", "visibilitymarks", "typemarks",
         ],
         sharedOptions: ["lineaftermarks"]
     ) { formatter in

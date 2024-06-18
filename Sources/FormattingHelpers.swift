@@ -1793,6 +1793,7 @@ extension Formatter {
         var visibility: VisibilityType
         var type: DeclarationType
         var order: Int
+        var comment: String? = nil
 
         func shouldBeMarked(in categories: Set<Category>, for mode: DeclarationOrganizationMode) -> Bool {
             guard type != .beforeMarks else {
@@ -1812,7 +1813,7 @@ extension Formatter {
             "// " + template
                 .replacingOccurrences(
                     of: "%c",
-                    with: mode == .type ? type.rawValue : visibility.rawValue
+                    with: comment ?? (mode == .type ? type.markComment : visibility.markComment)
                 )
         }
     }
@@ -1832,16 +1833,35 @@ extension Formatter {
     }
 
     /// The visibility category of a declaration
-    enum VisibilityType: CaseIterable, Hashable {
+    enum VisibilityType: CaseIterable, Hashable, RawRepresentable {
         case visibility(Visibility)
         case explicit(DeclarationType)
 
+        init?(rawValue: String) {
+            if let visibility = Visibility(rawValue: rawValue) {
+                self = .visibility(visibility)
+            } else if let type = DeclarationType(rawValue: rawValue) {
+                self = .explicit(type)
+            } else {
+                return nil
+            }
+        }
+
         var rawValue: String {
+            switch self {
+            case let .visibility(visibility):
+                visibility.rawValue
+            case let .explicit(declarationType):
+                declarationType.rawValue
+            }
+        }
+
+        var markComment: String {
             switch self {
             case let .visibility(type):
                 return type.rawValue.capitalized
             case let .explicit(type):
-                return type.rawValue
+                return type.markComment
             }
         }
 
@@ -1870,7 +1890,7 @@ extension Formatter {
         case instanceMethod
         case conditionalCompilation
 
-        var rawValue: String {
+        var markComment: String {
             switch self {
             case .beforeMarks:
                 return "Before Marks"
@@ -1888,8 +1908,10 @@ extension Formatter {
                 return "Lifecycle"
             case .overriddenMethod:
                 return "Overridden Functions"
-            case .swiftUIProperty, .swiftUIMethod:
-                return "Content"
+            case .swiftUIProperty:
+                return "Content Properties"
+            case .swiftUIMethod:
+                return "Content Methods"
             case .instanceProperty:
                 return "Properties"
             case .instancePropertyWithBody:
@@ -1905,19 +1927,21 @@ extension Formatter {
             }
         }
 
-        func shouldBeMarked(in declarationTypes: [DeclarationType]) -> Bool {
+        func shouldBeMarked(in _: [DeclarationType]) -> Bool {
             switch self {
             case .beforeMarks, .classPropertyWithBody:
                 return false
-            case .swiftUIMethod:
-                return !declarationTypes.contains(.swiftUIProperty)
             default:
                 return true
             }
         }
     }
 
-    func category(of declaration: Declaration, for mode: DeclarationOrganizationMode) -> Category {
+    func category(
+        of declaration: Declaration,
+        for mode: DeclarationOrganizationMode,
+        using order: ParsedOrder
+    ) -> Category {
         let visibility = self.visibility(of: declaration) ?? .internal
         let type = self.type(of: declaration, for: mode)
 
@@ -1933,21 +1957,90 @@ extension Formatter {
             visibilityType = .visibility(visibility)
         }
 
-        let order: Int
-        switch mode {
-        case .visibility:
-            order = VisibilityType.allCases.firstIndex(of: visibilityType)! * DeclarationType.allCases.count
-                + DeclarationType.allCases.firstIndex(of: type)!
-        case .type:
-            order = DeclarationType.allCases.firstIndex(of: type)! * VisibilityType.allCases.count
-                + VisibilityType.allCases.firstIndex(of: visibilityType)!
+        return category(from: order, for: visibilityType, with: type)
+    }
+
+    typealias ParsedOrder = [Category]
+    func categoryOrder(for mode: DeclarationOrganizationMode) -> ParsedOrder {
+        typealias ParsedVisibilityMarks = [VisibilityType: String]
+        typealias ParsedTypeMarks = [DeclarationType: String]
+
+        let visibilityTypes = options.visibilityOrder
+            .map { VisibilityType(rawValue: $0) }
+            .compactMap { $0 }
+        let declarationTypes = options.typeOrder
+            .map { DeclarationType(rawValue: $0) }
+            .compactMap { $0 }
+        let customVisibilityMarks = options.customVisibilityMarks
+        let customTypeMarks = options.customTypeMarks
+
+        func parseMarks<T: RawRepresentable>(
+            for options: Set<String>
+        ) -> [T: String] where T.RawValue == String {
+            options.map { customMarkEntry -> (T, String)? in
+                let split = customMarkEntry.split(separator: "_", maxSplits: 1)
+
+                guard split.count == 2,
+                      let rawValue = split.first,
+                      let mark = split.last,
+                      let concreteType = T(rawValue: String(rawValue))
+                else { return nil }
+
+                return (concreteType, String(mark))
+            }
+            .compactMap { $0 }
+            .reduce(into: [:]) { dictionary, option in
+                dictionary[option.0] = option.1
+            }
         }
 
-        return Category(
-            visibility: visibilityType,
-            type: type,
-            order: order
-        )
+        let parsedVisibilityMarks: ParsedVisibilityMarks = parseMarks(for: customVisibilityMarks)
+        let parsedTypeMarks: ParsedTypeMarks = parseMarks(for: customTypeMarks)
+
+        func flatten<C1: Collection, C2: Collection>(
+            primary: C1,
+            using secondary: C2
+        ) -> EnumeratedSequence<[(C1.Element, C2.Element)]> {
+            primary
+                .map { p in
+                    secondary.map { s in
+                        (p, s)
+                    }
+                }
+                .reduce([], +)
+                .enumerated()
+        }
+
+        return switch mode {
+        case .visibility:
+            flatten(primary: visibilityTypes, using: declarationTypes)
+                .map { offset, element in
+                    Category(
+                        visibility: element.0,
+                        type: element.1,
+                        order: offset,
+                        comment: parsedVisibilityMarks[element.0]
+                    )
+                }
+        case .type:
+            flatten(primary: declarationTypes, using: visibilityTypes)
+                .map { offset, element in
+                    Category(
+                        visibility: element.1,
+                        type: element.0,
+                        order: offset,
+                        comment: parsedTypeMarks[element.0]
+                    )
+                }
+        }
+    }
+
+    func category(
+        from order: ParsedOrder,
+        for visibility: VisibilityType,
+        with type: DeclarationType
+    ) -> Category {
+        order.first { $0.visibility == visibility && $0.type == type }!
     }
 
     func visibility(of declaration: Declaration) -> Visibility? {
@@ -2151,7 +2244,11 @@ extension Formatter {
     }
 
     /// Removes any existing category separators from the given declarations
-    func removeExistingCategorySeparators(from typeBody: [Declaration], with mode: DeclarationOrganizationMode) -> [Declaration] {
+    func removeExistingCategorySeparators(
+        from typeBody: [Declaration],
+        with mode: DeclarationOrganizationMode,
+        using order: ParsedOrder
+    ) -> [Declaration] {
         var typeBody = typeBody
 
         for (declarationIndex, declaration) in typeBody.enumerated() {
@@ -2171,7 +2268,7 @@ extension Formatter {
                     Category(visibility: $0, type: .classMethod, order: 0)
                 } + DeclarationType.allCases.map {
                     Category(visibility: .visibility(.open), type: $0, order: 0)
-                }
+                } + order.filter { $0.comment != nil }
             ).flatMap {
                 Array(Set([
                     // The user's specific category separator template
@@ -2285,15 +2382,22 @@ extension Formatter {
         var typeOpeningTokens = typeDeclaration.open
         let typeClosingTokens = typeDeclaration.close
 
+        // Parse category order from options
+        let categoryOrder = categoryOrder(for: mode)
+
         // Remove all of the existing category separators, so they can be readded
         // at the correct location after sorting the declarations.
-        let bodyWithoutCategorySeparators = removeExistingCategorySeparators(from: typeDeclaration.body, with: mode)
+        let bodyWithoutCategorySeparators = removeExistingCategorySeparators(
+            from: typeDeclaration.body,
+            with: mode,
+            using: categoryOrder
+        )
 
         // Categorize each of the declarations into their primary groups
         typealias CategorizedDeclarations = [(declaration: Declaration, category: Category)]
 
         let categorizedDeclarations = bodyWithoutCategorySeparators.map {
-            (declaration: $0, category: category(of: $0, for: mode))
+            (declaration: $0, category: category(of: $0, for: mode, using: categoryOrder))
         }
 
         // If this type has a leading :sort directive, we sort alphabetically

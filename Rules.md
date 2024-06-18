@@ -1369,7 +1369,6 @@ Option | Description
 `--enumthreshold` | Minimum line count to organize enum body. Defaults to 0
 `--extensionlength` | Minimum line count to organize extension body. Defaults to 0
 `--organizationmode` | Organize declarations by "visibility" (default) or "type"
-`--sortedpatterns` | List of patterns to sort alphabetically without `:sort` mark.
 
 <details>
 <summary>Examples</summary>
@@ -2175,11 +2174,35 @@ Sorts the body of declarations with // swiftformat:sort
 and declarations between // swiftformat:sort:begin and
 // swiftformat:sort:end comments.
 
+Option | Description
+--- | ---
+`--sortedpatterns` | List of patterns to sort alphabetically without `:sort` mark.
+
 <details>
 <summary>Examples</summary>
 
 ```diff
   // swiftformat:sort
+  enum FeatureFlags {
+-     case upsellB
+-     case fooFeature
+-     case barFeature
+-     case upsellA(
+-         fooConfiguration: Foo,
+-         barConfiguration: Bar)
++     case barFeature
++     case fooFeature
++     case upsellA(
++         fooConfiguration: Foo,
++         barConfiguration: Bar)
++     case upsellB
+  }
+
+config:
+```
+    sortedpatterns: 'Feature'
+```
+
   enum FeatureFlags {
 -     case upsellB
 -     case fooFeature

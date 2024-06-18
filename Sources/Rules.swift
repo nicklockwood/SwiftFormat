@@ -5720,9 +5720,8 @@ public struct _FormatRules {
             "categorymark", "markcategories", "beforemarks",
             "lifecycle", "organizetypes", "structthreshold", "classthreshold",
             "enumthreshold", "extensionlength", "organizationmode",
-            "sortedpatterns",
         ],
-        sharedOptions: ["lineaftermarks"]
+        sharedOptions: ["sortedpatterns", "lineaftermarks"]
     ) { formatter in
         guard !formatter.options.fragment else { return }
 
@@ -6104,34 +6103,45 @@ public struct _FormatRules {
         and declarations between // swiftformat:sort:begin and
         // swiftformat:sort:end comments.
         """,
+        options: ["sortedpatterns"],
         sharedOptions: ["organizetypes"]
     ) { formatter in
         formatter.forEachToken(
-            where: { $0.isCommentBody && $0.string.contains("swiftformat:sort") }
-        ) { commentIndex, commentToken in
+            where: {
+                $0.isCommentBody && $0.string.contains("swiftformat:sort")
+                    || $0.isDeclarationTypeKeyword(including: Array(Token.swiftTypeKeywords))
+            }
+        ) { index, token in
 
             let rangeToSort: ClosedRange<Int>
             let numberOfLeadingLinebreaks: Int
 
             // For `:sort:begin`, directives, we sort the declarations
             // between the `:begin` and and `:end` comments
-            if commentToken.string.contains("swiftformat:sort:begin") {
-                guard let endCommentIndex = formatter.tokens[commentIndex...].firstIndex(where: {
+            let shouldBePartiallySorted = token.string.contains("swiftformat:sort:begin")
+
+            let identifier = formatter.next(.identifier, after: index)
+            let shouldBeSortedByNamePattern = formatter.options.alphabeticallySortedDeclarationPatterns.contains {
+                identifier?.string.contains($0) ?? false
+            }
+            let shouldBeSortedByMarkComment = token.isCommentBody && !token.string.contains(":sort:")
+            // For `:sort` directives and types with matching name pattern, we sort the declarations
+            // between the open and close brace of the following type
+            let shouldBeFullySorted = shouldBeSortedByNamePattern || shouldBeSortedByMarkComment
+
+            if shouldBePartiallySorted {
+                guard let endCommentIndex = formatter.tokens[index...].firstIndex(where: {
                     $0.isComment && $0.string.contains("swiftformat:sort:end")
                 }),
-                    let sortRangeStart = formatter.index(of: .nonSpaceOrComment, after: commentIndex),
+                    let sortRangeStart = formatter.index(of: .nonSpaceOrComment, after: index),
                     let firstRangeToken = formatter.index(of: .nonLinebreak, after: sortRangeStart),
                     let lastRangeToken = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: endCommentIndex - 2)
                 else { return }
 
                 rangeToSort = sortRangeStart ... lastRangeToken
                 numberOfLeadingLinebreaks = firstRangeToken - sortRangeStart
-            }
-
-            // For `:sort` directives, we sort the declarations
-            // between the open and close brace of the following type
-            else if !commentToken.string.contains(":sort:") {
-                guard let typeOpenBrace = formatter.index(of: .startOfScope("{"), after: commentIndex),
+            } else if shouldBeFullySorted {
+                guard let typeOpenBrace = formatter.index(of: .startOfScope("{"), after: index),
                       let typeCloseBrace = formatter.endOfScope(at: typeOpenBrace),
                       let firstTypeBodyToken = formatter.index(of: .nonLinebreak, after: typeOpenBrace),
                       let lastTypeBodyToken = formatter.index(of: .nonLinebreak, before: typeCloseBrace),

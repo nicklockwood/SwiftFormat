@@ -4162,6 +4162,48 @@ class OrganizationTests: RulesTests {
                        exclude: ["blankLinesAtEndOfScope"])
     }
 
+    func testSortDeclarationsSortsByNamePattern() {
+        let input = """
+        enum Namespace {}
+
+        extension Namespace {
+            static let foo = "foo"
+            public static let bar = "bar"
+            static let baaz = "baaz"
+        }
+        """
+
+        let output = """
+        enum Namespace {}
+
+        extension Namespace {
+            static let baaz = "baaz"
+            public static let bar = "bar"
+            static let foo = "foo"
+        }
+        """
+
+        let options = FormatOptions(alphabeticallySortedDeclarationPatterns: ["Namespace"])
+        testFormatting(for: input, [output], rules: [FormatRules.sortDeclarations, FormatRules.blankLinesBetweenScopes], options: options)
+    }
+
+    func testSortDeclarationsWontSortByNamePatternInComment() {
+        let input = """
+        enum Namespace {}
+
+        /// Constants
+        /// enum Constants
+        extension Namespace {
+            static let foo = "foo"
+            public static let bar = "bar"
+            static let baaz = "baaz"
+        }
+        """
+
+        let options = FormatOptions(alphabeticallySortedDeclarationPatterns: ["Constants"])
+        testFormatting(for: input, rules: [FormatRules.sortDeclarations, FormatRules.blankLinesBetweenScopes], options: options)
+    }
+
     func testSortDeclarationsUsesLocalizedCompare() {
         let input = """
         // swiftformat:sort

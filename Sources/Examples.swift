@@ -1291,6 +1291,42 @@ private struct Examples {
     """
 
     let organizeDeclarations = """
+    default value for `--visibilityorder`:
+    ```
+        [
+            beforeMarks,
+            instanceLifecycle,
+            open,
+            public,
+            package,
+            internal,
+            fileprivate,
+            private
+        ]
+    ```
+
+    default value for `--typeorder`:
+    ```
+        [
+            beforeMarks,
+            nestedType,
+            staticProperty,
+            staticPropertyWithBody,
+            classPropertyWithBody,
+            overriddenProperty,
+            instanceProperty,
+            instancePropertyWithBody,
+            instanceLifecycle,
+            swiftUIProperty,
+            swiftUIMethod,
+            overriddenMethod,
+            staticMethod,
+            classMethod,
+            instanceMethod,
+            conditionalCompilation
+        ]
+    ```
+
     `--organizationmode visibility` (default)
 
     ```diff

@@ -869,6 +869,30 @@ struct _Descriptors {
         help: "Organize declarations by \"visibility\" (default) or \"type\"",
         keyPath: \.organizationMode
     )
+    let visibilityOrder = OptionDescriptor(
+        argumentName: "visibilityorder",
+        displayName: "Organization Order For Visibility",
+        help: "Order for visibility groups inside declaration",
+        keyPath: \.visibilityOrder
+    )
+    let typeOrder = OptionDescriptor(
+        argumentName: "typeorder",
+        displayName: "Organization Order For Declaration Types",
+        help: "Order for declaration type groups inside declaration",
+        keyPath: \.typeOrder
+    )
+    let customVisibilityMarks = OptionDescriptor(
+        argumentName: "visibilitymarks",
+        displayName: "Custom Visibility Marks",
+        help: "Mark for concrete visibility group (public_Public Fields)",
+        keyPath: \.organizationMode
+    )
+    let customTypeMarks = OptionDescriptor(
+        argumentName: "typemarks",
+        displayName: "Custom Type Marks",
+        help: "Mark for concrete declaration type group (classMethod_Baaz)",
+        keyPath: \.organizationMode
+    )
     let alphabeticallySortedDeclarationPatterns = OptionDescriptor(
         argumentName: "sortedpatterns",
         displayName: "Declaration Name Patterns To Sort Alphabetically",

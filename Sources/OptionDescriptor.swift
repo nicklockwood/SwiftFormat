@@ -875,12 +875,6 @@ struct _Descriptors {
         help: "List of patterns to sort alphabetically without `:sort` mark.",
         keyPath: \.alphabeticallySortedDeclarationPatterns
     )
-    let sortTypes = OptionDescriptor(
-        argumentName: "sortedtypes",
-        displayName: "Declaration Types To Auto Sort Alphabetically",
-        help: "default: `class,actor,struct,enum,protocol,extension`",
-        keyPath: \.sortTypes
-    )
     let funcAttributes = OptionDescriptor(
         argumentName: "funcattributes",
         displayName: "Function Attributes",

@@ -2176,7 +2176,6 @@ and declarations between // swiftformat:sort:begin and
 Option | Description
 --- | ---
 `--sortedpatterns` | List of patterns to sort alphabetically without `:sort` mark.
-`--sortedtypes` | default: `class,actor,struct,enum,protocol,extension`
 
 <details>
 <summary>Examples</summary>
@@ -2200,7 +2199,6 @@ Option | Description
 
 config:
 ```
-    sortedtypes: 'enum'
     sortedpatterns: 'Feature'
 ```
 

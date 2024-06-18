@@ -1512,7 +1512,6 @@ private struct Examples {
 
     config:
     ```
-        sortedtypes: 'enum'
         sortedpatterns: 'Feature'
     ```
 

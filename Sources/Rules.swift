@@ -6044,13 +6044,13 @@ public struct _FormatRules {
         and declarations between // swiftformat:sort:begin and
         // swiftformat:sort:end comments.
         """,
-        options: ["sortedpatterns", "sortedtypes"],
+        options: ["sortedpatterns"],
         sharedOptions: ["organizetypes"]
     ) { formatter in
         formatter.forEachToken(
             where: {
                 $0.isCommentBody && $0.string.contains("swiftformat:sort")
-                    || $0.isDeclarationTypeKeyword(including: Array(formatter.options.sortTypes))
+                    || $0.isDeclarationTypeKeyword(including: Array(Token.swiftTypeKeywords))
             }
         ) { index, token in
 

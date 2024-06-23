@@ -3600,6 +3600,16 @@ class IndentTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.indent, options: options)
     }
 
+    func testDontCorruptPartialFragment3() {
+        let input = """
+            foo: bar,
+            foo1: bar2,
+            foo2: bar3
+        """
+        let options = FormatOptions(fragment: true)
+        testFormatting(for: input, rule: FormatRules.indent, options: options)
+    }
+
     // indent with tabs
 
     func testTabIndentWrappedTupleWithSmartTabs() {

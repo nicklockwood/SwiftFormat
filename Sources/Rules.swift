@@ -2109,6 +2109,9 @@ public struct _FormatRules {
                     {
                         indent = formatter.currentIndentForLine(at: lastIndex)
                     }
+                    if formatter.options.fragment, lastToken == .delimiter(",") {
+                        break // Can't reliably indent
+                    }
                     formatter.insertSpaceIfEnabled(indent, at: i + 1)
                 }
 

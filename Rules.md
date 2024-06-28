@@ -525,7 +525,7 @@ Option | Description
 -     bar = "bar"
 +     "bar"
   }
-
+```
 ```diff
 - let foo: String
 - switch condition {
@@ -538,7 +538,7 @@ Option | Description
 +     "bar"
   }
 ```
-
+``` diff
 // With --condassignment always (disabled by default)
 - switch condition {
 + foo.bar = switch condition {

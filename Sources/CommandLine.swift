@@ -707,9 +707,18 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
                         if !dryrun, (try? String(contentsOf: outputURL)) != output {
                             try write(output, to: outputURL)
                         }
-                    } else {
+                    } else if !lint {
                         // Write to stdout
                         print(dryrun ? input : output, as: .raw)
+                    } else {
+                        if let reporterOutput = try reporter.write() {
+                            if let reportURL = reportURL {
+                                print("Writing report file to \(reportURL.path)")
+                                try reporterOutput.write(to: reportURL, options: .atomic)
+                            } else {
+                                print(String(decoding: reporterOutput, as: UTF8.self), as: .raw)
+                            }
+                        }
                     }
                     let exitCode: ExitCode
                     if lint, output != input {

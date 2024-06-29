@@ -1705,7 +1705,6 @@ private struct Examples {
     +     "bar"
       }
 
-    ```diff
     - let foo: String
     - switch condition {
     + let foo = switch condition {
@@ -1716,7 +1715,6 @@ private struct Examples {
     -     foo = "bar"
     +     "bar"
       }
-    ```
 
     // With --condassignment always (disabled by default)
     - switch condition {

@@ -1859,6 +1859,7 @@ extension Formatter {
         case staticPropertyWithBody
         case classPropertyWithBody
         case overriddenProperty
+        case swiftUIDynamicProperty
         case instanceProperty
         case instancePropertyWithBody
         case instanceLifecycle
@@ -1890,6 +1891,8 @@ extension Formatter {
                 return "Overridden Functions"
             case .swiftUIProperty, .swiftUIMethod:
                 return "Content"
+            case .swiftUIDynamicProperty:
+                return "SwiftUI Dynamic Properties"
             case .instanceProperty:
                 return "Properties"
             case .instancePropertyWithBody:
@@ -1915,6 +1918,15 @@ extension Formatter {
                 return true
             }
         }
+    }
+
+    /// Represents all the native  instance properties that rely on the `DynamicProperty` to cause a SwiftUI view to re-render.
+    enum SwiftUIDynamicProperty: String, CaseIterable {
+        case state = "@State"
+        case stateObject = "@StateObject"
+        case binding = "@Binding"
+        case environment = "@Environment"
+        case environmentObject = "@EnvironmentObject"
     }
 
     func category(of declaration: Declaration, for mode: DeclarationOrganizationMode) -> Category {
@@ -2029,6 +2041,18 @@ extension Formatter {
                 return declarationParser.index(of: .identifier("View"), after: someKeywordIndex) != nil
             }()
 
+            let isSwiftUIDynamicProperty = mode == .type && {
+                for dynamicProperty in SwiftUIDynamicProperty.allCases {
+                    if declarationParser.index(
+                        of: .keyword(dynamicProperty.rawValue),
+                        before: declarationTypeTokenIndex
+                    ) != nil {
+                        return true
+                    }
+                }
+                return false
+            }()
+
             switch declarationTypeToken {
             // Properties and property-like declarations
             case .keyword("let"), .keyword("var"),
@@ -2065,6 +2089,9 @@ extension Formatter {
                     return .classPropertyWithBody
                 } else if isViewDeclaration {
                     return .swiftUIProperty
+                } else if !hasBody, isSwiftUIDynamicProperty {
+                    declarationParser.token(at: declarationTypeTokenIndex)
+                    return .swiftUIDynamicProperty
                 } else {
                     if hasBody {
                         return .instancePropertyWithBody

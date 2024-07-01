@@ -4338,4 +4338,76 @@ class OrganizationTests: RulesTests {
 
         testFormatting(for: input, output, rule: FormatRules.sortTypealiases)
     }
+
+    func testSortSwiftUIDynamicProperties() {
+        let input = """
+        struct ContentView: View {
+
+            private var label: String
+
+            @State
+            private var isOn: Bool = false
+
+            private var foo = true
+
+            @ViewBuilder
+            private var toggle: some View {
+                Toggle(label, isOn: $isOn)
+                    .fixedSize()
+            }
+
+            init(label: String) {
+                self.label = label
+            }
+
+            @ViewBuilder
+            var body: some View {
+                toggle
+            }
+        }
+        """
+
+        let output = """
+        struct ContentView: View {
+
+            // MARK: SwiftUI Dynamic Properties
+
+            @State
+            private var isOn: Bool = false
+
+            // MARK: Properties
+
+            private var label: String
+
+            private var foo = true
+
+            // MARK: Lifecycle
+
+            init(label: String) {
+                self.label = label
+            }
+
+            // MARK: Content
+
+            @ViewBuilder
+            var body: some View {
+                toggle
+            }
+
+            @ViewBuilder
+            private var toggle: some View {
+                Toggle(label, isOn: $isOn)
+                    .fixedSize()
+            }
+
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            options: FormatOptions(categoryMarkComment: "MARK: %c", organizeTypes: ["struct"], organizationMode: .type),
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+        )
+    }
 }

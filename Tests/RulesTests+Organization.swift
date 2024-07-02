@@ -4516,11 +4516,6 @@ class OrganizationTests: RulesTests {
             @ViewBuilder
             private var toggle: some View {
                 Toggle(label, isOn: $isOn)
-                    .fixedSize()
-            }
-
-            init(label: String) {
-                self.label = label
             }
 
             @ViewBuilder
@@ -4533,34 +4528,25 @@ class OrganizationTests: RulesTests {
         let output = """
         struct ContentView: View {
 
-            // MARK: SwiftUI Dynamic Properties
-
-            @State
-            private var isOn: Bool = false
-
-            // MARK: Properties
-
-            private var label: String
-
-            private var foo = true
-
-            // MARK: Lifecycle
-
-            init(label: String) {
-                self.label = label
-            }
-
-            // MARK: Content
+            // MARK: Internal
 
             @ViewBuilder
             var body: some View {
                 toggle
             }
 
+            // MARK: Private
+
+            @State
+            private var isOn: Bool = false
+
+            private var label: String
+
+            private var foo = true
+
             @ViewBuilder
             private var toggle: some View {
                 Toggle(label, isOn: $isOn)
-                    .fixedSize()
             }
 
         }
@@ -4569,7 +4555,7 @@ class OrganizationTests: RulesTests {
         testFormatting(
             for: input, output,
             rule: FormatRules.organizeDeclarations,
-            options: FormatOptions(categoryMarkComment: "MARK: %c", organizeTypes: ["struct"], organizationMode: .type),
+            options: FormatOptions(organizeTypes: ["struct"], organizationMode: .visibility),
             exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
         )
     }

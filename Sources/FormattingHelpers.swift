@@ -1937,6 +1937,7 @@ extension Formatter {
         case namespace = "@Namespace"
         case observedObject = "@ObservedObject"
         case physicalMetric = "@PhysicalMetric"
+        case query = "@Query"
         case scaledMetric = "@ScaledMetric"
         case sceneStorage = "@SceneStorage"
         case sectionedFetchRequest = "@SectionedFetchRequest"
@@ -2058,7 +2059,7 @@ extension Formatter {
                 return declarationParser.index(of: .identifier("View"), after: someKeywordIndex) != nil
             }()
 
-            let isSwiftUIPropertyWrapper = { () -> Bool in
+            let isSwiftUIPropertyWrapper = mode == .visibility && { () -> Bool in
                 for dynamicProperty in SwiftUIPropertyWrapper.allCases {
                     if declarationParser.index(
                         of: .keyword(dynamicProperty.rawValue),

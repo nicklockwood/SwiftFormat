@@ -1859,7 +1859,7 @@ extension Formatter {
         case staticPropertyWithBody
         case classPropertyWithBody
         case overriddenProperty
-        case swiftUIDynamicProperty
+        case swiftUIPropertyWrapper
         case instanceProperty
         case instancePropertyWithBody
         case instanceLifecycle
@@ -1891,8 +1891,8 @@ extension Formatter {
                 return "Overridden Functions"
             case .swiftUIProperty, .swiftUIMethod:
                 return "Content"
-            case .swiftUIDynamicProperty:
-                return "SwiftUI Dynamic Properties"
+            case .swiftUIPropertyWrapper:
+                return "SwiftUI Properties"
             case .instanceProperty:
                 return "Properties"
             case .instancePropertyWithBody:
@@ -1920,13 +1920,30 @@ extension Formatter {
         }
     }
 
-    /// Represents all the native  instance properties that rely on the `DynamicProperty` to cause a SwiftUI view to re-render.
-    enum SwiftUIDynamicProperty: String, CaseIterable {
-        case state = "@State"
-        case stateObject = "@StateObject"
+    /// Represents all the native SwiftUI property wrappers that conform to `DynamicProperty` and cause a SwiftUI view to re-render.
+    enum SwiftUIProperty: String, CaseIterable {
+        case accessibilityFocusState = "@AccessibilityFocusState"
+        case appStorage = "@AppStorage"
         case binding = "@Binding"
         case environment = "@Environment"
         case environmentObject = "@EnvironmentObject"
+        case nsApplicationDelegateAdaptor = "@NSApplicationDelegateAdaptor"
+        case fetchRequest = "@FetchRequest"
+        case focusedBinding = "@FocusedBinding"
+        case focusedState = "@FocusedState"
+        case focusedValue = "@FocusedValue"
+        case focusedObject = "@FocusedObject"
+        case gestureState = "@GestureState"
+        case namespace = "@Namespace"
+        case observedObject = "@ObservedObject"
+        case physicalMetric = "@PhysicalMetric"
+        case scaledMetric = "@ScaledMetric"
+        case sceneStorage = "@SceneStorage"
+        case sectionedFetchRequest = "@SectionedFetchRequest"
+        case state = "@State"
+        case stateObject = "@StateObject"
+        case uiApplicationDelegateAdaptor = "@UIApplicationDelegateAdaptor"
+        case wkExtensionDelegateAdaptor = "@WKExtensionDelegateAdaptor"
     }
 
     func category(of declaration: Declaration, for mode: DeclarationOrganizationMode) -> Category {
@@ -2041,8 +2058,8 @@ extension Formatter {
                 return declarationParser.index(of: .identifier("View"), after: someKeywordIndex) != nil
             }()
 
-            let isSwiftUIDynamicProperty = mode == .type && {
-                for dynamicProperty in SwiftUIDynamicProperty.allCases {
+            let isSwiftUIDynamicProperty = {
+                for dynamicProperty in SwiftUIProperty.allCases {
                     if declarationParser.index(
                         of: .keyword(dynamicProperty.rawValue),
                         before: declarationTypeTokenIndex
@@ -2090,8 +2107,7 @@ extension Formatter {
                 } else if isViewDeclaration {
                     return .swiftUIProperty
                 } else if !hasBody, isSwiftUIDynamicProperty {
-                    declarationParser.token(at: declarationTypeTokenIndex)
-                    return .swiftUIDynamicProperty
+                    return .swiftUIPropertyWrapper
                 } else {
                     if hasBody {
                         return .instancePropertyWithBody

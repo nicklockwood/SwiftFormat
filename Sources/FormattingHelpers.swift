@@ -1921,7 +1921,7 @@ extension Formatter {
     }
 
     /// Represents all the native SwiftUI property wrappers that conform to `DynamicProperty` and cause a SwiftUI view to re-render.
-    enum SwiftUIProperty: String, CaseIterable {
+    enum SwiftUIPropertyWrapper: String, CaseIterable {
         case accessibilityFocusState = "@AccessibilityFocusState"
         case appStorage = "@AppStorage"
         case binding = "@Binding"
@@ -2058,8 +2058,8 @@ extension Formatter {
                 return declarationParser.index(of: .identifier("View"), after: someKeywordIndex) != nil
             }()
 
-            let isSwiftUIDynamicProperty = {
-                for dynamicProperty in SwiftUIProperty.allCases {
+            let isSwiftUIPropertyWrapper = { () -> Bool in
+                for dynamicProperty in SwiftUIPropertyWrapper.allCases {
                     if declarationParser.index(
                         of: .keyword(dynamicProperty.rawValue),
                         before: declarationTypeTokenIndex
@@ -2106,7 +2106,7 @@ extension Formatter {
                     return .classPropertyWithBody
                 } else if isViewDeclaration {
                     return .swiftUIProperty
-                } else if !hasBody, isSwiftUIDynamicProperty {
+                } else if !hasBody, isSwiftUIPropertyWrapper {
                     return .swiftUIPropertyWrapper
                 } else {
                     if hasBody {

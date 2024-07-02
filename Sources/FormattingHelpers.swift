@@ -1859,6 +1859,7 @@ extension Formatter {
         case staticPropertyWithBody
         case classPropertyWithBody
         case overriddenProperty
+        case swiftUIPropertyWrapper
         case instanceProperty
         case instancePropertyWithBody
         case instanceLifecycle
@@ -1890,6 +1891,8 @@ extension Formatter {
                 return "Overridden Functions"
             case .swiftUIProperty, .swiftUIMethod:
                 return "Content"
+            case .swiftUIPropertyWrapper:
+                return "SwiftUI Properties"
             case .instanceProperty:
                 return "Properties"
             case .instancePropertyWithBody:
@@ -1915,6 +1918,32 @@ extension Formatter {
                 return true
             }
         }
+    }
+
+    /// Represents all the native SwiftUI property wrappers that conform to `DynamicProperty` and cause a SwiftUI view to re-render.
+    enum SwiftUIPropertyWrapper: String, CaseIterable {
+        case accessibilityFocusState = "@AccessibilityFocusState"
+        case appStorage = "@AppStorage"
+        case binding = "@Binding"
+        case environment = "@Environment"
+        case environmentObject = "@EnvironmentObject"
+        case nsApplicationDelegateAdaptor = "@NSApplicationDelegateAdaptor"
+        case fetchRequest = "@FetchRequest"
+        case focusedBinding = "@FocusedBinding"
+        case focusedState = "@FocusedState"
+        case focusedValue = "@FocusedValue"
+        case focusedObject = "@FocusedObject"
+        case gestureState = "@GestureState"
+        case namespace = "@Namespace"
+        case observedObject = "@ObservedObject"
+        case physicalMetric = "@PhysicalMetric"
+        case scaledMetric = "@ScaledMetric"
+        case sceneStorage = "@SceneStorage"
+        case sectionedFetchRequest = "@SectionedFetchRequest"
+        case state = "@State"
+        case stateObject = "@StateObject"
+        case uiApplicationDelegateAdaptor = "@UIApplicationDelegateAdaptor"
+        case wkExtensionDelegateAdaptor = "@WKExtensionDelegateAdaptor"
     }
 
     func category(of declaration: Declaration, for mode: DeclarationOrganizationMode) -> Category {
@@ -2029,6 +2058,18 @@ extension Formatter {
                 return declarationParser.index(of: .identifier("View"), after: someKeywordIndex) != nil
             }()
 
+            let isSwiftUIPropertyWrapper = { () -> Bool in
+                for dynamicProperty in SwiftUIPropertyWrapper.allCases {
+                    if declarationParser.index(
+                        of: .keyword(dynamicProperty.rawValue),
+                        before: declarationTypeTokenIndex
+                    ) != nil {
+                        return true
+                    }
+                }
+                return false
+            }()
+
             switch declarationTypeToken {
             // Properties and property-like declarations
             case .keyword("let"), .keyword("var"),
@@ -2065,6 +2106,8 @@ extension Formatter {
                     return .classPropertyWithBody
                 } else if isViewDeclaration {
                     return .swiftUIProperty
+                } else if !hasBody, isSwiftUIPropertyWrapper {
+                    return .swiftUIPropertyWrapper
                 } else {
                     if hasBody {
                         return .instancePropertyWithBody

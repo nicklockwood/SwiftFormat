@@ -2062,11 +2062,10 @@ extension Formatter {
                 return declarationParser.index(of: .identifier("View"), after: someKeywordIndex) != nil
             }()
 
-            let isSwiftUIPropertyWrapper = mode == .visibility && { () -> Bool in
+            let isSwiftUIPropertyWrapper = mode == .visibility &&
                 declarationParser.modifiersForDeclaration(at: declarationTypeTokenIndex, contains: { _, modifier in
                     swiftUIPropertyWrappers.contains(modifier)
                 })
-            }()
 
             switch declarationTypeToken {
             // Properties and property-like declarations

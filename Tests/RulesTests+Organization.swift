@@ -4517,4 +4517,229 @@ class OrganizationTests: RulesTests {
 
         testFormatting(for: input, output, rule: FormatRules.sortTypealiases)
     }
+
+    func testSortSingleSwiftUIPropertyWrapper() {
+        let input = """
+        struct ContentView: View {
+
+            private var label: String
+
+            @State
+            private var isOn: Bool = false
+
+            private var foo = true
+
+            @ViewBuilder
+            private var toggle: some View {
+                Toggle(label, isOn: $isOn)
+            }
+
+            @ViewBuilder
+            var body: some View {
+                toggle
+            }
+        }
+        """
+
+        let output = """
+        struct ContentView: View {
+
+            // MARK: Internal
+
+            @ViewBuilder
+            var body: some View {
+                toggle
+            }
+
+            // MARK: Private
+
+            @State
+            private var isOn: Bool = false
+
+            private var label: String
+
+            private var foo = true
+
+            @ViewBuilder
+            private var toggle: some View {
+                Toggle(label, isOn: $isOn)
+            }
+
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            options: FormatOptions(organizeTypes: ["struct"], organizationMode: .visibility),
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+        )
+    }
+
+    func testSortMultipleSwiftUIPropertyWrappers() {
+        let input = """
+        struct ContentView: View {
+
+            let foo: Foo
+            @State var bar: Bar
+            let baaz: Baaz
+            @State var quux: Quux
+
+            @ViewBuilder
+            private var toggle: some View {
+                Toggle(label, isOn: $isOn)
+            }
+
+            @ViewBuilder
+            var body: some View {
+                toggle
+            }
+        }
+        """
+
+        let output = """
+        struct ContentView: View {
+
+            // MARK: Internal
+
+            @State var bar: Bar
+            @State var quux: Quux
+
+            let foo: Foo
+            let baaz: Baaz
+
+            @ViewBuilder
+            var body: some View {
+                toggle
+            }
+
+            // MARK: Private
+
+            @ViewBuilder
+            private var toggle: some View {
+                Toggle(label, isOn: $isOn)
+            }
+
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            options: FormatOptions(organizeTypes: ["struct"], organizationMode: .visibility),
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+        )
+    }
+
+    func testSortSwiftUIPropertyWrappersWithDifferentVisibility() {
+        let input = """
+        struct ContentView: View {
+
+            let foo: Foo
+            @State private var bar: Bar
+            private let baaz: Baaz
+            @Binding var isOn: Bool
+
+            @ViewBuilder
+            private var toggle: some View {
+                Toggle(label, isOn: $isOn)
+            }
+
+            @ViewBuilder
+            var body: some View {
+                toggle
+            }
+        }
+        """
+
+        let output = """
+        struct ContentView: View {
+
+            // MARK: Internal
+
+            @Binding var isOn: Bool
+
+            let foo: Foo
+
+            @ViewBuilder
+            var body: some View {
+                toggle
+            }
+
+            // MARK: Private
+
+            @State private var bar: Bar
+
+            private let baaz: Baaz
+
+            @ViewBuilder
+            private var toggle: some View {
+                Toggle(label, isOn: $isOn)
+            }
+
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            options: FormatOptions(organizeTypes: ["struct"], organizationMode: .visibility),
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+        )
+    }
+
+    func testSortSwiftUIPropertyWrappersWithArguments() {
+        let input = """
+        struct ContentView: View {
+
+            let foo: Foo
+            @Environment(\\.colorScheme) var colorScheme
+            let baaz: Baaz
+            @Environment(\\.quux) let quux: Quux
+
+            @ViewBuilder
+            private var toggle: some View {
+                Toggle(label, isOn: $isOn)
+            }
+
+            @ViewBuilder
+            var body: some View {
+                toggle
+            }
+        }
+        """
+
+        let output = """
+        struct ContentView: View {
+
+            // MARK: Internal
+
+            @Environment(\\.colorScheme) var colorScheme
+            @Environment(\\.quux) let quux: Quux
+
+            let foo: Foo
+            let baaz: Baaz
+
+            @ViewBuilder
+            var body: some View {
+                toggle
+            }
+
+            // MARK: Private
+
+            @ViewBuilder
+            private var toggle: some View {
+                Toggle(label, isOn: $isOn)
+            }
+
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            options: FormatOptions(organizeTypes: ["struct"], organizationMode: .visibility),
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+        )
+    }
 }

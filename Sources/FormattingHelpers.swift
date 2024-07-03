@@ -1374,6 +1374,36 @@ extension Formatter {
         return branches
     }
 
+    /// Represents all the native SwiftUI property wrappers that conform to `DynamicProperty` and cause a SwiftUI view to re-render.
+    /// Most of these are listed here: https://developer.apple.com/documentation/swiftui/dynamicproperty
+    private var swiftUIPropertyWrappers: Set<String> {
+        [
+            "@AccessibilityFocusState",
+            "@AppStorage",
+            "@Binding",
+            "@Environment",
+            "@EnvironmentObject",
+            "@NSApplicationDelegateAdaptor",
+            "@FetchRequest",
+            "@FocusedBinding",
+            "@FocusState",
+            "@FocusedValue",
+            "@FocusedObject",
+            "@GestureState",
+            "@Namespace",
+            "@ObservedObject",
+            "@PhysicalMetric",
+            "@Query",
+            "@ScaledMetric",
+            "@SceneStorage",
+            "@SectionedFetchRequest",
+            "@State",
+            "@StateObject",
+            "@UIApplicationDelegateAdaptor",
+            "@WKExtensionDelegateAdaptor",
+        ]
+    }
+
     /// Parses the switch statement case starting at the given index,
     /// which should be one of: `case`, `default`, or `@unknown`.
     private func parseSwitchStatementCase(caseOrDefaultIndex: Int) -> (startOfBody: Int, endOfBody: Int)? {
@@ -1863,6 +1893,7 @@ extension Formatter {
         case staticPropertyWithBody
         case classPropertyWithBody
         case overriddenProperty
+        case swiftUIPropertyWrapper
         case instanceProperty
         case instancePropertyWithBody
         case instanceLifecycle
@@ -1894,6 +1925,8 @@ extension Formatter {
                 return "Overridden Functions"
             case .swiftUIProperty, .swiftUIMethod:
                 return "Content"
+            case .swiftUIPropertyWrapper:
+                return "SwiftUI Properties"
             case .instanceProperty:
                 return "Properties"
             case .instancePropertyWithBody:
@@ -2033,6 +2066,11 @@ extension Formatter {
                 return declarationParser.index(of: .identifier("View"), after: someKeywordIndex) != nil
             }()
 
+            let isSwiftUIPropertyWrapper = mode == .visibility &&
+                declarationParser.modifiersForDeclaration(at: declarationTypeTokenIndex, contains: { _, modifier in
+                    swiftUIPropertyWrappers.contains(modifier)
+                })
+
             switch declarationTypeToken {
             // Properties and property-like declarations
             case .keyword("let"), .keyword("var"),
@@ -2069,6 +2107,8 @@ extension Formatter {
                     return .classPropertyWithBody
                 } else if isViewDeclaration {
                     return .swiftUIProperty
+                } else if !hasBody, isSwiftUIPropertyWrapper {
+                    return .swiftUIPropertyWrapper
                 } else {
                     if hasBody {
                         return .instancePropertyWithBody

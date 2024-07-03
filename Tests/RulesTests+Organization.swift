@@ -4565,9 +4565,9 @@ class OrganizationTests: RulesTests {
         struct ContentView: View {
 
             let foo: Foo
-            @State let bar: Bar
+            @State var bar: Bar
             let baaz: Baaz
-            @State let quux: Quux
+            @State var quux: Quux
 
             @ViewBuilder
             private var toggle: some View {
@@ -4586,8 +4586,8 @@ class OrganizationTests: RulesTests {
 
             // MARK: Internal
 
-            @State let bar: Bar
-            @State let quux: Quux
+            @State var bar: Bar
+            @State var quux: Quux
 
             let foo: Foo
             let baaz: Baaz
@@ -4620,7 +4620,7 @@ class OrganizationTests: RulesTests {
         struct ContentView: View {
 
             let foo: Foo
-            @State private let bar: Bar
+            @State private var bar: Bar
             private let baaz: Baaz
             @Binding var isOn: Bool
 
@@ -4652,9 +4652,64 @@ class OrganizationTests: RulesTests {
 
             // MARK: Private
 
-            @State private let bar: Bar
+            @State private var bar: Bar
 
             private let baaz: Baaz
+
+            @ViewBuilder
+            private var toggle: some View {
+                Toggle(label, isOn: $isOn)
+            }
+
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            options: FormatOptions(organizeTypes: ["struct"], organizationMode: .visibility),
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+        )
+    }
+
+    func testSortSwiftUIPropertyWrappersWithArguments() {
+        let input = """
+        struct ContentView: View {
+
+            let foo: Foo
+            @Environment(\\.colorScheme) var colorScheme
+            let baaz: Baaz
+            @Environment(\\.quux) let quux: Quux
+
+            @ViewBuilder
+            private var toggle: some View {
+                Toggle(label, isOn: $isOn)
+            }
+
+            @ViewBuilder
+            var body: some View {
+                toggle
+            }
+        }
+        """
+
+        let output = """
+        struct ContentView: View {
+
+            // MARK: Internal
+
+            @Environment(\\.colorScheme) var colorScheme
+            @Environment(\\.quux) let quux: Quux
+
+            let foo: Foo
+            let baaz: Baaz
+
+            @ViewBuilder
+            var body: some View {
+                toggle
+            }
+
+            // MARK: Private
 
             @ViewBuilder
             private var toggle: some View {

@@ -1370,6 +1370,36 @@ extension Formatter {
         return branches
     }
 
+    /// Represents all the native SwiftUI property wrappers that conform to `DynamicProperty` and cause a SwiftUI view to re-render.
+    /// Most of these are listed here: https://developer.apple.com/documentation/swiftui/dynamicproperty
+    private var swiftUIPropertyWrappers: Set<String> {
+        [
+            "@AccessibilityFocusState",
+            "@AppStorage",
+            "@Binding",
+            "@Environment",
+            "@EnvironmentObject",
+            "@NSApplicationDelegateAdaptor",
+            "@FetchRequest",
+            "@FocusedBinding",
+            "@FocusedState",
+            "@FocusedValue",
+            "@FocusedObject",
+            "@GestureState",
+            "@Namespace",
+            "@ObservedObject",
+            "@PhysicalMetric",
+            "@Query",
+            "@ScaledMetric",
+            "@SceneStorage",
+            "@SectionedFetchRequest",
+            "@State",
+            "@StateObject",
+            "@UIApplicationDelegateAdaptor",
+            "@WKExtensionDelegateAdaptor",
+        ]
+    }
+
     /// Parses the switch statement case starting at the given index,
     /// which should be one of: `case`, `default`, or `@unknown`.
     private func parseSwitchStatementCase(caseOrDefaultIndex: Int) -> (startOfBody: Int, endOfBody: Int)? {
@@ -1920,33 +1950,6 @@ extension Formatter {
         }
     }
 
-    /// Represents all the native SwiftUI property wrappers that conform to `DynamicProperty` and cause a SwiftUI view to re-render.
-    enum SwiftUIPropertyWrapper: String, CaseIterable {
-        case accessibilityFocusState = "@AccessibilityFocusState"
-        case appStorage = "@AppStorage"
-        case binding = "@Binding"
-        case environment = "@Environment"
-        case environmentObject = "@EnvironmentObject"
-        case nsApplicationDelegateAdaptor = "@NSApplicationDelegateAdaptor"
-        case fetchRequest = "@FetchRequest"
-        case focusedBinding = "@FocusedBinding"
-        case focusedState = "@FocusedState"
-        case focusedValue = "@FocusedValue"
-        case focusedObject = "@FocusedObject"
-        case gestureState = "@GestureState"
-        case namespace = "@Namespace"
-        case observedObject = "@ObservedObject"
-        case physicalMetric = "@PhysicalMetric"
-        case query = "@Query"
-        case scaledMetric = "@ScaledMetric"
-        case sceneStorage = "@SceneStorage"
-        case sectionedFetchRequest = "@SectionedFetchRequest"
-        case state = "@State"
-        case stateObject = "@StateObject"
-        case uiApplicationDelegateAdaptor = "@UIApplicationDelegateAdaptor"
-        case wkExtensionDelegateAdaptor = "@WKExtensionDelegateAdaptor"
-    }
-
     func category(of declaration: Declaration, for mode: DeclarationOrganizationMode) -> Category {
         let visibility = self.visibility(of: declaration) ?? .internal
         let type = self.type(of: declaration, for: mode)
@@ -2060,15 +2063,9 @@ extension Formatter {
             }()
 
             let isSwiftUIPropertyWrapper = mode == .visibility && { () -> Bool in
-                for dynamicProperty in SwiftUIPropertyWrapper.allCases {
-                    if declarationParser.index(
-                        of: .keyword(dynamicProperty.rawValue),
-                        before: declarationTypeTokenIndex
-                    ) != nil {
-                        return true
-                    }
-                }
-                return false
+                declarationParser.modifiersForDeclaration(at: declarationTypeTokenIndex, contains: { _, modifier in
+                    swiftUIPropertyWrappers.contains(modifier)
+                })
             }()
 
             switch declarationTypeToken {

@@ -5144,6 +5144,62 @@ public struct _FormatRules {
         }
     }
 
+    /// Remove unused fileprivate properties
+    public let unusedFileprivate = FormatRule(
+        help: "Remove unused fileprivate"
+    ) { formatter in
+        var fileprivatePropertyUsage: [String: Int] = [:]
+        var propertyTokens: [(name: String, range: ClosedRange<Int>)] = []
+        var indexToSkip: [Int] = []
+
+        func collectFileprivateDeclarations() {
+            formatter.forEach(.keyword("fileprivate")) { i, _ in
+                guard !indexToSkip.contains(i) else { return }
+                if let identifierIndex = formatter.index(of: .identifier, after: i) {
+                    // Skip this token because it is name of the fileprivate var
+                    // TODO: For functions, check that this is the name of the function?
+                    indexToSkip.append(identifierIndex)
+
+                    let identifier = formatter.tokens[identifierIndex].string
+                    fileprivatePropertyUsage[identifier] = 1
+
+                    let startOfLine = formatter.startOfLine(at: identifierIndex)
+                    let endOfLine = formatter.endOfLine(at: identifierIndex)
+                    propertyTokens.append((name: identifier, range: startOfLine ... endOfLine))
+                }
+            }
+        }
+
+        func fileprivateUsage() {
+            formatter.forEach(.identifier) { i, token in
+                guard !indexToSkip.contains(i) else { return }
+                if fileprivatePropertyUsage.keys.contains(token.string) {
+                    if let count = fileprivatePropertyUsage[token.string] {
+                        fileprivatePropertyUsage[token.string] = count + 1
+                    }
+                }
+            }
+        }
+
+        func removeUnusedFileprivateDeclarations() {
+            // Sort property tokens in reverse order of their range's start index so that when tokens are deleted, it does not shift the index of previous tokens
+            let sortedPropertyTokens = propertyTokens.sorted(by: { $0.range.lowerBound > $1.range.lowerBound })
+
+            for property in sortedPropertyTokens {
+                if let count = fileprivatePropertyUsage[property.name], count == 1 {
+                    formatter.removeTokens(in: property.range)
+                }
+            }
+        }
+
+        // 1. First pass: collect fileprivate name and index
+        collectFileprivateDeclarations()
+        // 2. Second pass: Identify usage of fileprivate properties
+        fileprivateUsage()
+        // 3. Remove unused fileprivate declarations
+        removeUnusedFileprivateDeclarations()
+    }
+
     /// Replace `fileprivate` with `private` where possible
     public let redundantFileprivate = FormatRule(
         help: "Prefer `private` over `fileprivate` where equivalent."

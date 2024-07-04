@@ -10291,4 +10291,204 @@ class RedundancyTests: RulesTests {
         let options = FormatOptions(swiftVersion: "6.0")
         testFormatting(for: input, rule: FormatRules.redundantTypedThrows, options: options)
     }
+
+    // MARK: - unusedFileprivate
+
+    func testRemoveUnusedFilePrivate() {
+        let input = """
+        struct Foo {
+            fileprivate var foo = "foo"
+            var bar = "bar"
+        }
+        """
+        let output = """
+        struct Foo {
+            var bar = "bar"
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.unusedFileprivate)
+    }
+
+    func testDoNotRemoveUsedFilePrivate() {
+        let input = """
+        struct Foo {
+            fileprivate var foo = "foo"
+            var bar = "bar"
+        }
+
+        struct Hello {
+            let localFoo = Foo().foo
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedFileprivate)
+    }
+
+    func testRemoveMultipleUnusedFilePrivate() {
+        let input = """
+        struct Foo {
+            fileprivate var foo = "foo"
+            fileprivate var baz = "baz"
+            var bar = "bar"
+        }
+        """
+        let output = """
+        struct Foo {
+            var bar = "bar"
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.unusedFileprivate)
+    }
+
+    func testRemoveMixedUsedAndUnusedFilePrivate() {
+        let input = """
+        struct Foo {
+            fileprivate var foo = "foo"
+            var bar = "bar"
+            fileprivate var baz = "baz"
+        }
+
+        struct Hello {
+            let localFoo = Foo().foo
+        }
+        """
+        let output = """
+        struct Foo {
+            fileprivate var foo = "foo"
+            var bar = "bar"
+        }
+
+        struct Hello {
+            let localFoo = Foo().foo
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.unusedFileprivate)
+    }
+
+    func testDoNotRemoveFilePrivateUsedInSameStruct() {
+        let input = """
+        struct Foo {
+            fileprivate var foo = "foo"
+            var bar = "bar"
+
+            func useFoo() {
+                print(foo)
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedFileprivate)
+    }
+
+    // Question: How to make this pass?
+    // With
+    /*
+     let output = """
+     struct Foo {
+         var bar = "bar"
+
+         struct Inner {}
+     }
+     """
+     */
+
+    // The test fails with diff
+    /*
+     struct Foo {
+         var bar = "bar"
+
+         struct Inner {
+         }
+     }
+     */
+
+    // And if I edit output to
+    /*
+     let output = """
+     struct Foo {
+         var bar = "bar"
+
+         struct Inner {
+         }
+     }
+     """
+     */
+
+    // then I get error:
+    // XCTAssertEqual failed: ("[SwiftFormat.Formatter.Change(line: 4, rule: emptyBraces, filePath: nil), SwiftFormat.Formatter.Change(line: 5, rule: emptyBraces, filePath: nil)]") is not equal to ("[]")
+    // with diff:
+    /*
+     XCTAssertEqual failed: ("struct Foo {
+         var bar = "bar"
+
+         struct Inner {}
+     }
+     */
+    func testRemoveUnusedFilePrivateInNestedStruct() {
+        let input = """
+        struct Foo {
+            var bar = "bar"
+
+            struct Inner {
+                fileprivate var foo = "foo"
+            }
+        }
+        """
+        let output = """
+        struct Foo {
+            var bar = "bar"
+
+            struct Inner {}
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.unusedFileprivate)
+    }
+
+    func testDoNotRemoveFilePrivateUsedInNestedStruct() {
+        let input = """
+        struct Foo {
+            var bar = "bar"
+
+            struct Inner {
+                fileprivate var foo = "foo"
+                func useFoo() {
+                    print(foo)
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedFileprivate)
+    }
+
+    // Question: How to delete function body as well?
+    // Currently, the output is:
+    /*
+     struct Foo {
+         var bar = "bar"
+
+             print("hi")
+         }
+     */
+
+    // Using `formatter.endOfScope(at:)` instead of `formatter.endOfLine(at:)`
+    /*
+     struct Foo {
+         var bar = "bar"
+
+     */
+    func testRemoveUnusedFileprivateFunction() {
+        let input = """
+        struct Foo {
+            var bar = "bar"
+
+            fileprivate func sayHi() {
+                print("hi")
+            }
+        }
+        """
+        let output = """
+        struct Foo {
+            var bar = "bar"
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.unusedFileprivate)
+    }
 }

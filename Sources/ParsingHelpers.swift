@@ -557,8 +557,7 @@ extension Formatter {
                 default:
                     return true
                 }
-            case .operator("->", .infix), .keyword("init"),
-                 .keyword("subscript"):
+            case .operator("->", .infix), .keyword("init"), .keyword("subscript"), .keyword("throws"):
                 return false
             case .endOfScope(">"):
                 guard let startIndex = index(of: .startOfScope("<"), before: prev) else {
@@ -721,7 +720,8 @@ extension Formatter {
             guard let nextToken = next(.nonSpaceOrComment, after: braceIndex),
                   !nextToken.isOperator(ofType: .infix),
                   !nextToken.isOperator(ofType: .postfix),
-                  nextToken != .startOfScope("(")
+                  nextToken != .startOfScope("("),
+                  nextToken != .startOfScope("{")
             else {
                 return isAfterBrace(index, braceIndex)
             }

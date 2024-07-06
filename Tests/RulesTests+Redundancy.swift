@@ -3008,6 +3008,43 @@ class RedundancyTests: RulesTests {
                        options: FormatOptions(swiftVersion: "5.1"), exclude: ["redundantProperty"])
     }
 
+    func testNoRemoveRequiredReturnInIfClosure() {
+        let input = """
+        func findButton() -> Button? {
+            let btns = [top, content, bottom]
+            if let btn = btns.first { !$0.isHidden && $0.alpha > 0.01 } {
+                return btn
+            }
+            return btns.first
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.1")
+        testFormatting(for: input, rule: FormatRules.redundantReturn, options: options)
+    }
+
+    func testRemoveRedundantReturnInIfClosure() {
+        let input = """
+        func findButton() -> Button? {
+            let btns = [top, content, bottom]
+            if let btn = btns.first { return !$0.isHidden && $0.alpha > 0.01 } {
+                print("hello")
+            }
+            return btns.first
+        }
+        """
+        let output = """
+        func findButton() -> Button? {
+            let btns = [top, content, bottom]
+            if let btn = btns.first { !$0.isHidden && $0.alpha > 0.01 } {
+                print("hello")
+            }
+            return btns.first
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.1")
+        testFormatting(for: input, output, rule: FormatRules.redundantReturn, options: options)
+    }
+
     func testDisableNextRedundantReturn() {
         let input = """
         func foo() -> Foo {

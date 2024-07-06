@@ -3283,12 +3283,13 @@ public struct _FormatRules {
         formatter.forEach(.startOfScope("{")) { startOfScopeIndex, _ in
             // Closures always supported implicit returns, but other types of scopes
             // only support implicit return in Swift 5.1+ (SE-0255)
-            if formatter.options.swiftVersion < "5.1", !formatter.isStartOfClosure(at: startOfScopeIndex) {
+            let isClosure = formatter.isStartOfClosure(at: startOfScopeIndex)
+            if formatter.options.swiftVersion < "5.1", !isClosure {
                 return
             }
 
             // Make sure this is a type of scope that supports implicit returns
-            if formatter.isConditionalStatement(at: startOfScopeIndex) ||
+            if !isClosure, formatter.isConditionalStatement(at: startOfScopeIndex) ||
                 ["do", "else", "catch"].contains(formatter.lastSignificantKeyword(at: startOfScopeIndex, excluding: ["throws"]))
             {
                 return
@@ -3304,7 +3305,7 @@ public struct _FormatRules {
             }
 
             // Make sure we aren't in a failable `init?`, where explicit return is required
-            if let lastSignificantKeywordIndex = formatter.indexOfLastSignificantKeyword(at: startOfScopeIndex),
+            if !isClosure, let lastSignificantKeywordIndex = formatter.indexOfLastSignificantKeyword(at: startOfScopeIndex),
                formatter.tokens[lastSignificantKeywordIndex] == .keyword("init"),
                let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: lastSignificantKeywordIndex),
                nextToken == .operator("?", .postfix)

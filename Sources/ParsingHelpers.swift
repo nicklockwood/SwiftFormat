@@ -696,14 +696,14 @@ extension Formatter {
     }
 
     /// Returns true if the token at the specified index is part of a conditional statement
-    func isConditionalStatement(at i: Int) -> Bool {
-        startOfConditionalStatement(at: i) != nil
+    func isConditionalStatement(at i: Int, excluding: Set<String> = []) -> Bool {
+        startOfConditionalStatement(at: i, excluding: excluding) != nil
     }
 
     /// If the token at the specified index is part of a conditional statement, returns the index of the first
     /// token in the statement (e.g. `if`, `guard`, `while`, etc.), otherwise returns nil
-    func startOfConditionalStatement(at i: Int) -> Int? {
-        guard var index = indexOfLastSignificantKeyword(at: i, excluding: ["else"]) else {
+    func startOfConditionalStatement(at i: Int, excluding: Set<String> = []) -> Int? {
+        guard var index = indexOfLastSignificantKeyword(at: i, excluding: excluding.union(["else"])) else {
             return nil
         }
 
@@ -762,7 +762,7 @@ extension Formatter {
         }
     }
 
-    func lastSignificantKeyword(at i: Int, excluding: [String] = []) -> String? {
+    func lastSignificantKeyword(at i: Int, excluding: Set<String> = []) -> String? {
         guard let index = indexOfLastSignificantKeyword(at: i, excluding: excluding),
               case let .keyword(keyword) = tokens[index]
         else {
@@ -771,7 +771,7 @@ extension Formatter {
         return keyword
     }
 
-    func indexOfLastSignificantKeyword(at i: Int, excluding: [String] = []) -> Int? {
+    func indexOfLastSignificantKeyword(at i: Int, excluding: Set<String> = []) -> Int? {
         guard let token = token(at: i),
               let index = token.isKeyword ? i : index(of: .keyword, before: i),
               case let .keyword(keyword) = tokens[index]

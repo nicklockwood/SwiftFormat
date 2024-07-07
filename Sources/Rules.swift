@@ -3258,8 +3258,10 @@ public struct _FormatRules {
                     return
                 }
             }
-            let endIndex = formatter.endOfScope(at: i)
-            if let endIndex = endIndex, formatter.tokens[i + 1 ..< endIndex].contains(.keyword("return")) {
+            // Don't remove return if it's followed by more code
+            guard let endIndex = formatter.endOfScope(at: i),
+                  formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i) == endIndex
+            else {
                 return
             }
             if formatter.index(of: .nonSpaceOrLinebreak, after: i) == endIndex,
@@ -3289,7 +3291,7 @@ public struct _FormatRules {
             }
 
             // Make sure this is a type of scope that supports implicit returns
-            if !isClosure, formatter.isConditionalStatement(at: startOfScopeIndex) ||
+            if !isClosure, formatter.isConditionalStatement(at: startOfScopeIndex, excluding: ["where"]) ||
                 ["do", "else", "catch"].contains(formatter.lastSignificantKeyword(at: startOfScopeIndex, excluding: ["throws"]))
             {
                 return
@@ -3304,8 +3306,9 @@ public struct _FormatRules {
                 return
             }
 
-            // Make sure we aren't in a failable `init?`, where explicit return is required
+            // Make sure we aren't in a failable `init?`, where explicit return is required unless it's the only statement
             if !isClosure, let lastSignificantKeywordIndex = formatter.indexOfLastSignificantKeyword(at: startOfScopeIndex),
+               formatter.next(.nonSpaceOrCommentOrLinebreak, after: startOfScopeIndex) != .keyword("return"),
                formatter.tokens[lastSignificantKeywordIndex] == .keyword("init"),
                let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: lastSignificantKeywordIndex),
                nextToken == .operator("?", .postfix)

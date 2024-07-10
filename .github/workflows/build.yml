@@ -9,7 +9,7 @@ jobs:
       fail-fast: false
       matrix:
         macos:
-          - 11
+          - 12
           - 13
         xcode:
           - latest-stable

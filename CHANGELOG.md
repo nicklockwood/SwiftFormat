@@ -1,5 +1,15 @@
 # Change Log
 
+## [0.54.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.54.1) (2024-07-10)
+
+- The `--nilInit insert` option is no longer applied to lazy or attributed properties
+- The `blankLinesBetweenChainedFunctions` rule now correctly handles comments in the chain
+- Fixed indenting of wrapped arguments in `--fragment` mode
+- Fixed bug where attributes were mistaken for an accessor in a computer property
+- Fixed indenting of commented code after an opening bracket
+- Fixed spurious removal of `return` in conditional blocks
+- Fixed `--lint` mode reporter output when using `stdin`
+
 ## [0.54.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.54.0) (2024-06-11)
 
 - Added `blankLineAfterSwitchCase` rule for inserting blank lines after switch cases

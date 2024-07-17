@@ -1369,50 +1369,25 @@ Option | Description
 `--enumthreshold` | Minimum line count to organize enum body. Defaults to 0
 `--extensionlength` | Minimum line count to organize extension body. Defaults to 0
 `--organizationmode` | Organize declarations by "visibility" (default) or "type"
-`--sortedpatterns` | List of patterns to sort alphabetically without `:sort` mark.
 `--visibilityorder` | Order for visibility groups inside declaration
 `--typeorder` | Order for declaration type groups inside declaration
-`--visibilitymarks` | Mark for concrete visibility group (public_Public Fields)
-`--typemarks` | Mark for concrete declaration type group (classMethod_Baaz)
+`--visibilitymarks` | Marks for concrete visibility groups (public:Public Fields,..)
+`--typemarks` | Marks for concrete declaration type groups (classMethod:Baaz,..)
 
 <details>
 <summary>Examples</summary>
 
-default value for `--visibilityorder`:
-```
-    [
-        beforeMarks,
-        instanceLifecycle,
-        open,
-        public,
-        package,
-        internal,
-        fileprivate,
-        private
-    ]
-```
+Default value for `--visibilityorder`:
+`["beforeMarks", "instanceLifecycle", "open", "public", "package", "internal", "fileprivate", "private"]`
 
-default value for `--typeorder`:
-```
-    [
-        beforeMarks,
-        nestedType,
-        staticProperty,
-        staticPropertyWithBody,
-        classPropertyWithBody,
-        overriddenProperty,
-        instanceProperty,
-        instancePropertyWithBody,
-        instanceLifecycle,
-        swiftUIProperty,
-        swiftUIMethod,
-        overriddenMethod,
-        staticMethod,
-        classMethod,
-        instanceMethod,
-        conditionalCompilation
-    ]
-```
+**NOTE:** When providing custom arguments for `--visibilityorder` the following entries **should** be included:
+`["open", "public", "package", "internal", "fileprivate", "private"]`
+
+Default value for `--typeorder`:
+`["beforeMarks", "nestedType", "staticProperty", "staticPropertyWithBody", "classPropertyWithBody", "overriddenProperty", "swiftUIPropertyWrapper", "instanceProperty", "instancePropertyWithBody", "instanceLifecycle", "swiftUIProperty", "swiftUIMethod", "overriddenMethod", "staticMethod", "classMethod", "instanceMethod", "conditionalCompilation"]`
+
+**NOTE:** When providing custom arguments for `--typeorder` the following entries **should** be included:
+`["beforeMarks", "nestedType", "instanceProperty", "instanceLifecycle", "instanceMethod", "conditionalCompilation"]`
 
 `--organizationmode visibility` (default)
 

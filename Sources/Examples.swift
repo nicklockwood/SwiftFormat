@@ -1291,41 +1291,17 @@ private struct Examples {
     """
 
     let organizeDeclarations = """
-    default value for `--visibilityorder`:
-    ```
-        [
-            beforeMarks,
-            instanceLifecycle,
-            open,
-            public,
-            package,
-            internal,
-            fileprivate,
-            private
-        ]
-    ```
+    Default value for `--visibilityorder`:
+    `\(Formatter.VisibilityType.allCases.map(\.rawValue))`
 
-    default value for `--typeorder`:
-    ```
-        [
-            beforeMarks,
-            nestedType,
-            staticProperty,
-            staticPropertyWithBody,
-            classPropertyWithBody,
-            overriddenProperty,
-            instanceProperty,
-            instancePropertyWithBody,
-            instanceLifecycle,
-            swiftUIProperty,
-            swiftUIMethod,
-            overriddenMethod,
-            staticMethod,
-            classMethod,
-            instanceMethod,
-            conditionalCompilation
-        ]
-    ```
+    **NOTE:** When providing custom arguments for `--visibilityorder` the following entries **should** be included:
+    `\(Formatter.VisibilityType.essentialCases.map(\.rawValue))`
+
+    Default value for `--typeorder`:
+    `\(Formatter.DeclarationType.allCases.map(\.rawValue))`
+
+    **NOTE:** When providing custom arguments for `--typeorder` the following entries **should** be included:
+    `\(Formatter.DeclarationType.essentialCases.map(\.rawValue))`
 
     `--organizationmode visibility` (default)
 

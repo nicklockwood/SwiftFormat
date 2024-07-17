@@ -254,7 +254,7 @@ class OptionDescriptor {
          help: String,
          deprecationMessage: String? = nil,
          keyPath: WritableKeyPath<FormatOptions, [String]>,
-         validate: @escaping (String) throws -> Void = { _ in })
+         validateArray: @escaping ([String]) throws -> Void = { _ in })
     {
         self.argumentName = argumentName
         self.displayName = displayName
@@ -263,16 +263,33 @@ class OptionDescriptor {
         type = .array
         toOptions = { value, options in
             let values = parseCommaDelimitedList(value)
+            try validateArray(values)
+            options[keyPath: keyPath] = values
+        }
+        fromOptions = { options in
+            options[keyPath: keyPath].joined(separator: ",")
+        }
+    }
+
+    convenience init(argumentName: String,
+                     displayName: String,
+                     help: String,
+                     deprecationMessage _: String? = nil,
+                     keyPath: WritableKeyPath<FormatOptions, [String]>,
+                     validate: @escaping (String) throws -> Void = { _ in })
+    {
+        self.init(
+            argumentName: argumentName,
+            displayName: displayName,
+            help: help,
+            keyPath: keyPath
+        ) { values in
             for (index, value) in values.enumerated() {
                 if values[0 ..< index].contains(value) {
                     throw FormatError.options("Duplicate value '\(value)'")
                 }
                 try validate(value)
             }
-            options[keyPath: keyPath] = values
-        }
-        fromOptions = { options in
-            options[keyPath: keyPath].joined(separator: ",")
         }
     }
 
@@ -873,24 +890,58 @@ struct _Descriptors {
         argumentName: "visibilityorder",
         displayName: "Organization Order For Visibility",
         help: "Order for visibility groups inside declaration",
-        keyPath: \.visibilityOrder
+        keyPath: \.visibilityOrder,
+        validateArray: { order in
+            let essentials = Formatter.VisibilityType.essentialCases.map(\.rawValue)
+            for type in essentials {
+                guard order.contains(type) else {
+                    throw FormatError.options("--visibilityorder expects \(type) to be included")
+                }
+            }
+            for type in order {
+                guard let concrete = Formatter.VisibilityType(rawValue: type) else {
+                    let errorMessage = "'\(type)' is not a valid parameter for --visibilityorder"
+                    guard let match = type.bestMatches(in: essentials).first else {
+                        throw FormatError.options(errorMessage)
+                    }
+                    throw FormatError.options(errorMessage + ". Did you mean '\(match)?'")
+                }
+            }
+        }
     )
     let typeOrder = OptionDescriptor(
         argumentName: "typeorder",
         displayName: "Organization Order For Declaration Types",
         help: "Order for declaration type groups inside declaration",
-        keyPath: \.typeOrder
+        keyPath: \.typeOrder,
+        validateArray: { order in
+            let essentials = Formatter.DeclarationType.essentialCases.map(\.rawValue)
+            for type in essentials {
+                guard order.contains(type) else {
+                    throw FormatError.options("--typeorder expects \(type) to be included")
+                }
+            }
+            for type in order {
+                guard let concrete = Formatter.DeclarationType(rawValue: type) else {
+                    let errorMessage = "'\(type)' is not a valid parameter for --typeorder"
+                    guard let match = type.bestMatches(in: essentials).first else {
+                        throw FormatError.options(errorMessage)
+                    }
+                    throw FormatError.options(errorMessage + ". Did you mean '\(match)?'")
+                }
+            }
+        }
     )
     let customVisibilityMarks = OptionDescriptor(
         argumentName: "visibilitymarks",
         displayName: "Custom Visibility Marks",
-        help: "Mark for concrete visibility group (public_Public Fields)",
+        help: "Marks for concrete visibility groups (public:Public Fields,..)",
         keyPath: \.organizationMode
     )
     let customTypeMarks = OptionDescriptor(
         argumentName: "typemarks",
         displayName: "Custom Type Marks",
-        help: "Mark for concrete declaration type group (classMethod_Baaz)",
+        help: "Marks for concrete declaration type groups (classMethod:Baaz,..)",
         keyPath: \.organizationMode
     )
     let alphabeticallySortedDeclarationPatterns = OptionDescriptor(

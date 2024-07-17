@@ -259,6 +259,54 @@ class OptionDescriptorTests: XCTestCase {
         XCTAssertNoThrow(try descriptor.toOptions(swiftLintDefaults, &options))
     }
 
+    func testVisibilityOrder() {
+        let argument = "instanceLifecycle, beforeMarks, open, public, package, internal, private, fileprivate"
+
+        let descriptor = Descriptors.visibilityOrder
+        var options = FormatOptions()
+        XCTAssertNoThrow(try descriptor.toOptions(argument, &options))
+    }
+
+    func testVisibilityOrderUnparseableArgument() {
+        let argument = "_instanceLifecycle, lifecycle, open, public, package, internal, private, fileprivate"
+
+        let descriptor = Descriptors.visibilityOrder
+        var options = FormatOptions()
+        XCTAssertThrowsError(try descriptor.toOptions(argument, &options))
+    }
+
+    func testVisibilityOrderMissingEssentials() {
+        let argument = "beforemarks, lifecycle, open, public, internal, private, fileprivate"
+
+        let descriptor = Descriptors.visibilityOrder
+        var options = FormatOptions()
+        XCTAssertThrowsError(try descriptor.toOptions(argument, &options))
+    }
+
+    func testTypeOrder() {
+        let argument = "beforeMarks, nestedType, instanceProperty, instanceLifecycle, instanceMethod, conditionalCompilation"
+
+        let descriptor = Descriptors.typeOrder
+        var options = FormatOptions()
+        XCTAssertNoThrow(try descriptor.toOptions(argument, &options))
+    }
+
+    func testTypeOrderUnparseableArgument() {
+        let argument = "_beforeMarks, nestedType, instanceProperty, instanceLifecycle, instanceMethod, conditionalCompilation"
+
+        let descriptor = Descriptors.typeOrder
+        var options = FormatOptions()
+        XCTAssertThrowsError(try descriptor.toOptions(argument, &options))
+    }
+
+    func testTypeOrderMissingEssentials() {
+        let argument = "beforeMarks, nestedType, instanceProperty, instanceLifecycle, instanceMethod"
+
+        let descriptor = Descriptors.typeOrder
+        var options = FormatOptions()
+        XCTAssertThrowsError(try descriptor.toOptions(argument, &options))
+    }
+
     func testFormatOptionsDescriptionConsistency() {
         let options1 = FormatOptions(selfRequired: ["foo", "bar", "baz"])
         let options2 = FormatOptions(selfRequired: ["baz", "bar", "foo"])

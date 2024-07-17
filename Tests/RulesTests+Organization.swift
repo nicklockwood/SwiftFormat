@@ -163,16 +163,16 @@ class OrganizationTests: RulesTests {
         let input = """
         class Test {
 
-            var a = ""
-
             override var b: Any? { nil }
 
-            func foo() -> Foo {
-                Foo()
-            }
+            var a = ""
 
             override func bar() -> Bar {
                 Bar()
+            }
+
+            func foo() -> Foo {
+                Foo()
             }
 
             func baaz() -> Baaz {
@@ -253,12 +253,12 @@ class OrganizationTests: RulesTests {
         let input = """
         class Test {
 
-            func foo() -> Foo {
-                Foo()
-            }
-
             func bar() -> some View {
                 EmptyView()
+            }
+
+            func foo() -> Foo {
+                Foo()
             }
 
             func baaz() -> Baaz {
@@ -303,10 +303,12 @@ class OrganizationTests: RulesTests {
         let output = """
         struct ContentView: View {
 
-            // MARK: Properties
+            // MARK: SwiftUI Properties
 
             @State
             var isOn: Bool = false
+
+            // MARK: Properties
 
             private var label: String
 
@@ -371,10 +373,12 @@ class OrganizationTests: RulesTests {
         let output = """
         struct Modifier: ViewModifier {
 
-            // MARK: Properties
+            // MARK: SwiftUI Properties
 
             @State
             var isOn: Bool = false
+
+            // MARK: Properties
 
             private var label: String
 
@@ -546,6 +550,51 @@ class OrganizationTests: RulesTests {
         )
     }
 
+    func testOrganizeDeclarationsIgnoresNotDefinedCategories() {
+        let input = """
+        class Foo {
+            private func quux() {}
+            var baaz: Baaz
+            func baz() {}
+            init()
+            override public func baar()
+            public func bar() {}
+        }
+        """
+
+        let output = """
+        class Foo {
+
+            // MARK: Lifecycle
+
+            init()
+
+            // MARK: Functions
+
+            override public func baar()
+            public func bar() {}
+
+            func baz() {}
+
+            private func quux() {}
+
+            // MARK: Properties
+
+            var baaz: Baaz
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            options: FormatOptions(
+                organizationMode: .type,
+                typeOrder: ["instanceLifecycle", "instanceMethod", "instanceProperty"]
+            ),
+            exclude: ["blankLinesAtStartOfScope"]
+        )
+    }
+
     func testCustomOrganizationInTypeOrderWithParametrizedVisibilityOrder() {
         let input = """
         class Foo {
@@ -633,7 +682,7 @@ class OrganizationTests: RulesTests {
             rule: FormatRules.organizeDeclarations,
             options: FormatOptions(
                 organizationMode: .visibility,
-                customVisibilityMarks: ["instanceLifecycle_Init", "public_Public_Group"]
+                customVisibilityMarks: ["instanceLifecycle:Init", "public:Public_Group"]
             ),
             exclude: ["blankLinesAtStartOfScope"]
         )
@@ -674,7 +723,7 @@ class OrganizationTests: RulesTests {
             rule: FormatRules.organizeDeclarations,
             options: FormatOptions(
                 organizationMode: .type,
-                customTypeMarks: ["instanceLifecycle_Init", "instanceProperty_Bar_Bar", "instanceMethod_Buuuz Lightyeeeaaar"]
+                customTypeMarks: ["instanceLifecycle:Init", "instanceProperty:Bar_Bar", "instanceMethod:Buuuz Lightyeeeaaar"]
             ),
             exclude: ["blankLinesAtStartOfScope"]
         )

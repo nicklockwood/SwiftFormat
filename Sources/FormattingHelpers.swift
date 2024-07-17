@@ -1849,7 +1849,7 @@ extension Formatter {
     }
 
     /// The visibility of a declaration
-    enum Visibility: String, CaseIterable, Comparable {
+    public enum Visibility: String, CaseIterable, Comparable {
         case open
         case `public`
         case package
@@ -1857,17 +1857,19 @@ extension Formatter {
         case `fileprivate`
         case `private`
 
-        static func < (lhs: Visibility, rhs: Visibility) -> Bool {
+        public static func < (lhs: Visibility, rhs: Visibility) -> Bool {
             allCases.firstIndex(of: lhs)! > allCases.firstIndex(of: rhs)!
         }
     }
 
     /// The visibility category of a declaration
-    enum VisibilityType: CaseIterable, Hashable, RawRepresentable {
+    ///
+    /// - Note: When adding a new visibility type, remember to also update the list in `Examples.swift`.
+    public enum VisibilityType: CaseIterable, Hashable, RawRepresentable {
         case visibility(Visibility)
         case explicit(DeclarationType)
 
-        init?(rawValue: String) {
+        public init?(rawValue: String) {
             if let visibility = Visibility(rawValue: rawValue) {
                 self = .visibility(visibility)
             } else if let type = DeclarationType(rawValue: rawValue) {
@@ -1877,7 +1879,7 @@ extension Formatter {
             }
         }
 
-        var rawValue: String {
+        public var rawValue: String {
             switch self {
             case let .visibility(visibility):
                 visibility.rawValue
@@ -1889,20 +1891,26 @@ extension Formatter {
         var markComment: String {
             switch self {
             case let .visibility(type):
-                return type.rawValue.capitalized
+                type.rawValue.capitalized
             case let .explicit(type):
-                return type.markComment
+                type.markComment
             }
         }
 
-        static var allCases: [VisibilityType] {
+        public static var allCases: [VisibilityType] {
             [.explicit(.beforeMarks), .explicit(.instanceLifecycle)] + Visibility.allCases
                 .map { .visibility($0) }
         }
+
+        public static var essentialCases: [VisibilityType] {
+            Visibility.allCases.map { .visibility($0) }
+        }
     }
 
-    /// The type of a declaration
-    enum DeclarationType: String, CaseIterable {
+    /// The type of a declaration.
+    ///
+    /// - Note: When adding a new declaration type, remember to also update the list in `Examples.swift`.
+    public enum DeclarationType: String, CaseIterable {
         case beforeMarks
         case nestedType
         case staticProperty
@@ -1924,47 +1932,51 @@ extension Formatter {
         var markComment: String {
             switch self {
             case .beforeMarks:
-                return "Before Marks"
+                "Before Marks"
             case .nestedType:
-                return "Nested Types"
+                "Nested Types"
             case .staticProperty:
-                return "Static Properties"
+                "Static Properties"
             case .staticPropertyWithBody:
-                return "Static Computed Properties"
+                "Static Computed Properties"
             case .classPropertyWithBody:
-                return "Class Properties"
+                "Class Properties"
             case .overriddenProperty:
-                return "Overridden Properties"
+                "Overridden Properties"
             case .instanceLifecycle:
-                return "Lifecycle"
+                "Lifecycle"
             case .overriddenMethod:
-                return "Overridden Functions"
-            case .swiftUIProperty, .swiftUIMethod:
-                return "Content"
+                "Overridden Functions"
+            case .swiftUIProperty:
+                "Content Properties"
+            case .swiftUIMethod:
+                "Content Methods"
             case .swiftUIPropertyWrapper:
-                return "SwiftUI Properties"
+                "SwiftUI Properties"
             case .instanceProperty:
-                return "Properties"
+                "Properties"
             case .instancePropertyWithBody:
-                return "Computed Properties"
+                "Computed Properties"
             case .staticMethod:
-                return "Static Functions"
+                "Static Functions"
             case .classMethod:
-                return "Class Functions"
+                "Class Functions"
             case .instanceMethod:
-                return "Functions"
+                "Functions"
             case .conditionalCompilation:
-                return "Conditional Compilation"
+                "Conditional Compilation"
             }
         }
 
-        func shouldBeMarked(in _: [DeclarationType]) -> Bool {
-            switch self {
-            case .beforeMarks, .classPropertyWithBody:
-                return false
-            default:
-                return true
-            }
+        public static var essentialCases: [DeclarationType] {
+            [
+                .beforeMarks,
+                .nestedType,
+                .instanceProperty,
+                .instanceLifecycle,
+                .instanceMethod,
+                .conditionalCompilation,
+            ]
         }
     }
 
@@ -1974,7 +1986,7 @@ extension Formatter {
         using order: ParsedOrder
     ) -> Category {
         let visibility = self.visibility(of: declaration) ?? .internal
-        let type = self.type(of: declaration, for: mode)
+        let type = self.type(of: declaration, for: mode, mapping: order.map(\.type))
 
         let visibilityType: VisibilityType
         switch mode {
@@ -2009,7 +2021,7 @@ extension Formatter {
             for options: Set<String>
         ) -> [T: String] where T.RawValue == String {
             options.map { customMarkEntry -> (T, String)? in
-                let split = customMarkEntry.split(separator: "_", maxSplits: 1)
+                let split = customMarkEntry.split(separator: ":", maxSplits: 1)
 
                 guard split.count == 2,
                       let rawValue = split.first,
@@ -2109,145 +2121,158 @@ extension Formatter {
         }
     }
 
-    func type(of declaration: Declaration, for mode: DeclarationOrganizationMode) -> DeclarationType {
+    func type(
+        of declaration: Declaration,
+        for mode: DeclarationOrganizationMode,
+        mapping availableTypes: [DeclarationType]
+    ) -> DeclarationType {
         switch declaration {
         case let .type(keyword, _, _, _):
             return options.beforeMarks.contains(keyword) ? .beforeMarks : .nestedType
 
         case let .declaration(keyword, tokens):
-            guard let declarationTypeTokenIndex = tokens.firstIndex(of: .keyword(keyword)) else {
-                return .beforeMarks
-            }
-
-            let declarationParser = Formatter(tokens)
-            let declarationTypeToken = declarationParser.tokens[declarationTypeTokenIndex]
-
-            if keyword == "case" || options.beforeMarks.contains(keyword) {
-                return .beforeMarks
-            }
-
-            for token in declarationParser.tokens {
-                if options.beforeMarks.contains(token.string) { return .beforeMarks }
-            }
-
-            let isStaticDeclaration = declarationParser.index(
-                of: .keyword("static"),
-                before: declarationTypeTokenIndex
-            ) != nil
-
-            let isClassDeclaration = declarationParser.index(
-                of: .keyword("class"),
-                before: declarationTypeTokenIndex
-            ) != nil
-
-            let isOverriddenDeclaration = mode == .type && declarationParser.index(
-                of: .identifier("override"),
-                before: declarationTypeTokenIndex
-            ) != nil
-
-            let isViewDeclaration = mode == .type && {
-                guard let someKeywordIndex = declarationParser.index(
-                    of: .identifier("some"), after: declarationTypeTokenIndex
-                ) else { return false }
-
-                return declarationParser.index(of: .identifier("View"), after: someKeywordIndex) != nil
-            }()
-
-            let isSwiftUIPropertyWrapper = mode == .visibility &&
-                declarationParser.modifiersForDeclaration(at: declarationTypeTokenIndex, contains: { _, modifier in
-                    swiftUIPropertyWrappers.contains(modifier)
-                })
-
-            switch declarationTypeToken {
-            // Properties and property-like declarations
-            case .keyword("let"), .keyword("var"),
-                 .keyword("operator"), .keyword("precedencegroup"):
-
-                if isOverriddenDeclaration {
-                    return .overriddenProperty
-                }
-
-                var hasBody: Bool
-                // If there is a code block at the end of the declaration that is _not_ a closure,
-                // then this declaration has a body.
-                if let lastClosingBraceIndex = declarationParser.index(of: .endOfScope("}"), before: declarationParser.tokens.count),
-                   let lastOpeningBraceIndex = declarationParser.index(of: .startOfScope("{"), before: lastClosingBraceIndex),
-                   declarationTypeTokenIndex < lastOpeningBraceIndex,
-                   declarationTypeTokenIndex < lastClosingBraceIndex,
-                   !declarationParser.isStartOfClosure(at: lastOpeningBraceIndex)
-                {
-                    hasBody = true
-                } else {
-                    hasBody = false
-                }
-
-                if isStaticDeclaration {
-                    if hasBody {
-                        return .staticPropertyWithBody
-                    } else {
-                        return .staticProperty
-                    }
-                } else if isClassDeclaration {
-                    // Interestingly, Swift does not support stored class properties
-                    // so there's no such thing as a class property without a body.
-                    // https://forums.swift.org/t/class-properties/16539/11
-                    return .classPropertyWithBody
-                } else if isViewDeclaration {
-                    return .swiftUIProperty
-                } else if !hasBody, isSwiftUIPropertyWrapper {
-                    return .swiftUIPropertyWrapper
-                } else {
-                    if hasBody {
-                        return .instancePropertyWithBody
-                    } else {
-                        return .instanceProperty
-                    }
-                }
-
-            // Functions and function-like declarations
-            case .keyword("func"), .keyword("subscript"):
-                // The user can also provide specific instance method names to place in Lifecycle
-                //  - In the function declaration grammar, the function name always
-                //    immediately follows the `func` keyword:
-                //    https://docs.swift.org/swift-book/ReferenceManual/Declarations.html#grammar_function-name
-                if let methodName = declarationParser.next(.nonSpaceOrCommentOrLinebreak, after: declarationTypeTokenIndex),
-                   options.lifecycleMethods.contains(methodName.string)
-                {
-                    return .instanceLifecycle
-                } else if isOverriddenDeclaration {
-                    return .overriddenMethod
-                } else if isStaticDeclaration {
-                    return .staticMethod
-                } else if isClassDeclaration {
-                    return .classMethod
-                } else if isViewDeclaration {
-                    return .swiftUIMethod
-                } else {
-                    return .instanceMethod
-                }
-
-            case .keyword("init"), .keyword("deinit"):
-                return .instanceLifecycle
-
-            // Type-like declarations
-            case .keyword("typealias"):
-                return .nestedType
-
-            case .keyword("case"):
-                return .beforeMarks
-
-            default:
-                return .beforeMarks
-            }
+            return type(of: keyword, with: tokens, mapping: availableTypes)
 
         case let .conditionalCompilation(_, body, _):
             // Prefer treating conditional compliation blocks as having
             // the property type of the first declaration in their body.
-            if let firstDeclarationInBlock = body.first {
-                return type(of: firstDeclarationInBlock, for: mode)
-            } else {
+            guard let firstDeclarationInBlock = body.first else {
                 return .conditionalCompilation
             }
+
+            return type(of: firstDeclarationInBlock, for: mode, mapping: availableTypes)
+        }
+    }
+
+    func type(
+        of keyword: String,
+        with tokens: [Token],
+        mapping availableTypes: [DeclarationType]
+    ) -> DeclarationType {
+        guard let declarationTypeTokenIndex = tokens.firstIndex(of: .keyword(keyword)) else {
+            return .beforeMarks
+        }
+
+        let declarationParser = Formatter(tokens)
+        let declarationTypeToken = declarationParser.tokens[declarationTypeTokenIndex]
+
+        if keyword == "case" || options.beforeMarks.contains(keyword) {
+            return .beforeMarks
+        }
+
+        for token in declarationParser.tokens {
+            if options.beforeMarks.contains(token.string) { return .beforeMarks }
+        }
+
+        let isStaticDeclaration = declarationParser.index(
+            of: .keyword("static"),
+            before: declarationTypeTokenIndex
+        ) != nil
+
+        let isClassDeclaration = declarationParser.index(
+            of: .keyword("class"),
+            before: declarationTypeTokenIndex
+        ) != nil
+
+        let isOverriddenDeclaration = declarationParser.index(
+            of: .identifier("override"),
+            before: declarationTypeTokenIndex
+        ) != nil
+
+        let isDeclarationWithBody: Bool = {
+            // If there is a code block at the end of the declaration that is _not_ a closure,
+            // then this declaration has a body.
+            if let lastClosingBraceIndex = declarationParser.index(of: .endOfScope("}"), before: declarationParser.tokens.count),
+               let lastOpeningBraceIndex = declarationParser.index(of: .startOfScope("{"), before: lastClosingBraceIndex),
+               declarationTypeTokenIndex < lastOpeningBraceIndex,
+               declarationTypeTokenIndex < lastClosingBraceIndex,
+               !declarationParser.isStartOfClosure(at: lastOpeningBraceIndex) { return true }
+
+            return false
+        }()
+
+        let isViewDeclaration = {
+            guard let someKeywordIndex = declarationParser.index(
+                of: .identifier("some"), after: declarationTypeTokenIndex
+            ) else { return false }
+
+            return declarationParser.index(of: .identifier("View"), after: someKeywordIndex) != nil
+        }()
+
+        let isSwiftUIPropertyWrapper = declarationParser
+            .modifiersForDeclaration(at: declarationTypeTokenIndex) { _, modifier in
+                swiftUIPropertyWrappers.contains(modifier)
+            }
+
+        switch declarationTypeToken {
+        // Properties and property-like declarations
+        case .keyword("let"), .keyword("var"),
+             .keyword("operator"), .keyword("precedencegroup"):
+
+            if isOverriddenDeclaration && availableTypes.contains(.overriddenProperty) {
+                return .overriddenProperty
+            }
+            if isStaticDeclaration && isDeclarationWithBody && availableTypes.contains(.staticPropertyWithBody) {
+                return .staticPropertyWithBody
+            }
+            if isStaticDeclaration && availableTypes.contains(.staticProperty) {
+                return .staticProperty
+            }
+            if isClassDeclaration && availableTypes.contains(.classPropertyWithBody) {
+                // Interestingly, Swift does not support stored class properties
+                // so there's no such thing as a class property without a body.
+                // https://forums.swift.org/t/class-properties/16539/11
+                return .classPropertyWithBody
+            }
+            if isViewDeclaration && availableTypes.contains(.swiftUIProperty) {
+                return .swiftUIProperty
+            }
+            if !isDeclarationWithBody && isSwiftUIPropertyWrapper && availableTypes.contains(.swiftUIPropertyWrapper) {
+                return .swiftUIPropertyWrapper
+            }
+            if isDeclarationWithBody && availableTypes.contains(.instancePropertyWithBody) {
+                return .instancePropertyWithBody
+            }
+
+            return .instanceProperty
+
+        // Functions and function-like declarations
+        case .keyword("func"), .keyword("subscript"):
+            // The user can also provide specific instance method names to place in Lifecycle
+            //  - In the function declaration grammar, the function name always
+            //    immediately follows the `func` keyword:
+            //    https://docs.swift.org/swift-book/ReferenceManual/Declarations.html#grammar_function-name
+            let methodName = declarationParser.next(.nonSpaceOrCommentOrLinebreak, after: declarationTypeTokenIndex)
+            if let methodName, options.lifecycleMethods.contains(methodName.string) {
+                return .instanceLifecycle
+            }
+            if isOverriddenDeclaration && availableTypes.contains(.overriddenMethod) {
+                return .overriddenMethod
+            }
+            if isStaticDeclaration && availableTypes.contains(.staticMethod) {
+                return .staticMethod
+            }
+            if isClassDeclaration && availableTypes.contains(.classMethod) {
+                return .classMethod
+            }
+            if isViewDeclaration && availableTypes.contains(.swiftUIMethod) {
+                return .swiftUIMethod
+            }
+
+            return .instanceMethod
+
+        case .keyword("init"), .keyword("deinit"):
+            return .instanceLifecycle
+
+        // Type-like declarations
+        case .keyword("typealias"):
+            return .nestedType
+
+        case .keyword("case"):
+            return .beforeMarks
+
+        default:
+            return .beforeMarks
         }
     }
 

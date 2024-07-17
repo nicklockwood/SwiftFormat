@@ -936,13 +936,23 @@ struct _Descriptors {
         argumentName: "visibilitymarks",
         displayName: "Custom Visibility Marks",
         help: "Marks for concrete visibility groups (public:Public Fields,..)",
-        keyPath: \.organizationMode
+        keyPath: \.customVisibilityMarks,
+        validate: {
+            if $0.split(separator: ":", maxSplits: 1).count != 2 {
+                throw FormatError.options("--visibilitymarks expects <visibility>:<mark> argument")
+            }
+        }
     )
     let customTypeMarks = OptionDescriptor(
         argumentName: "typemarks",
         displayName: "Custom Type Marks",
         help: "Marks for concrete declaration type groups (classMethod:Baaz,..)",
-        keyPath: \.organizationMode
+        keyPath: \.customTypeMarks,
+        validate: {
+            if $0.split(separator: ":", maxSplits: 1).count != 2 {
+                throw FormatError.options("--visibilitymarks expects <visibility>:<mark> argument")
+            }
+        }
     )
     let alphabeticallySortedDeclarationPatterns = OptionDescriptor(
         argumentName: "sortedpatterns",

@@ -1668,19 +1668,21 @@ extension Formatter {
         declarations.map { declaration in
             let mapped = transform(declaration, stack)
             switch mapped {
-            case let .type(kind, open, body, close):
+            case let .type(kind, open, body, close, originalRange):
                 return .type(
                     kind: kind,
                     open: open,
                     body: mapRecursiveDeclarations(body, in: stack + [mapped], with: transform),
-                    close: close
+                    close: close,
+                    originalRange: originalRange
                 )
 
-            case let .conditionalCompilation(open, body, close):
+            case let .conditionalCompilation(open, body, close, originalRange):
                 return .conditionalCompilation(
                     open: open,
                     body: mapRecursiveDeclarations(body, in: stack + [mapped], with: transform),
-                    close: close
+                    close: close,
+                    originalRange: originalRange
                 )
 
             case .declaration:
@@ -1697,19 +1699,21 @@ extension Formatter {
         with transform: (Declaration) -> Declaration
     ) -> Declaration {
         switch declaration {
-        case let .type(kind, open, body, close):
+        case let .type(kind, open, body, close, originalRange):
             return .type(
                 kind: kind,
                 open: open,
                 body: mapBodyDeclarations(body, with: transform),
-                close: close
+                close: close,
+                originalRange: originalRange
             )
 
-        case let .conditionalCompilation(open, body, close):
+        case let .conditionalCompilation(open, body, close, originalRange):
             return .conditionalCompilation(
                 open: open,
                 body: mapBodyDeclarations(body, with: transform),
-                close: close
+                close: close,
+                originalRange: originalRange
             )
 
         case .declaration:
@@ -1747,7 +1751,7 @@ extension Formatter {
             switch declaration {
             case .declaration, .type:
                 return [transform(declaration)]
-            case let .conditionalCompilation(_, body, _):
+            case let .conditionalCompilation(_, body, _, _):
                 return mapDeclarations(body, with: transform)
             }
         }
@@ -1761,25 +1765,28 @@ extension Formatter {
         with transform: ([Token]) -> [Token]
     ) -> Declaration {
         switch declaration {
-        case let .type(kind, open, body, close):
+        case let .type(kind, open, body, close, originalRange):
             return .type(
                 kind: kind,
                 open: transform(open),
                 body: body,
-                close: close
+                close: close,
+                originalRange: originalRange
             )
 
-        case let .conditionalCompilation(open, body, close):
+        case let .conditionalCompilation(open, body, close, originalRange):
             return .conditionalCompilation(
                 open: transform(open),
                 body: body,
-                close: close
+                close: close,
+                originalRange: originalRange
             )
 
-        case let .declaration(kind, tokens):
+        case let .declaration(kind, tokens, originalRange):
             return .declaration(
                 kind: kind,
-                tokens: transform(tokens)
+                tokens: transform(tokens),
+                originalRange: originalRange
             )
         }
     }
@@ -1792,25 +1799,28 @@ extension Formatter {
         with transform: ([Token]) -> [Token]
     ) -> Declaration {
         switch declaration {
-        case let .type(kind, open, body, close):
+        case let .type(kind, open, body, close, originalRange):
             return .type(
                 kind: kind,
                 open: open,
                 body: body,
-                close: transform(close)
+                close: transform(close),
+                originalRange: originalRange
             )
 
-        case let .conditionalCompilation(open, body, close):
+        case let .conditionalCompilation(open, body, close, originalRange):
             return .conditionalCompilation(
                 open: open,
                 body: body,
-                close: transform(close)
+                close: transform(close),
+                originalRange: originalRange
             )
 
-        case let .declaration(kind, tokens):
+        case let .declaration(kind, tokens, originalRange):
             return .declaration(
                 kind: kind,
-                tokens: transform(tokens)
+                tokens: transform(tokens),
+                originalRange: originalRange
             )
         }
     }
@@ -1985,7 +1995,7 @@ extension Formatter {
 
     func visibility(of declaration: Declaration) -> Visibility? {
         switch declaration {
-        case let .declaration(keyword, tokens), let .type(keyword, open: tokens, _, _):
+        case let .declaration(keyword, tokens, _), let .type(keyword, open: tokens, _, _, _):
             guard let keywordIndex = tokens.firstIndex(of: .keyword(keyword)) else {
                 return nil
             }
@@ -2005,7 +2015,7 @@ extension Formatter {
             }
 
             return nil
-        case let .conditionalCompilation(_, body, _):
+        case let .conditionalCompilation(_, body, _, _):
             // Conditional compilation blocks themselves don't have a category or visbility-level,
             // but we still have to assign them a category for the sorting algorithm to function.
             // A reasonable heuristic here is to simply use the category of the first declaration
@@ -2020,10 +2030,10 @@ extension Formatter {
 
     func type(of declaration: Declaration, for mode: DeclarationOrganizationMode) -> DeclarationType {
         switch declaration {
-        case let .type(keyword, _, _, _):
+        case let .type(keyword, _, _, _, _):
             return options.beforeMarks.contains(keyword) ? .beforeMarks : .nestedType
 
-        case let .declaration(keyword, tokens):
+        case let .declaration(keyword, tokens, _):
             guard let declarationTypeTokenIndex = tokens.firstIndex(of: .keyword(keyword)) else {
                 return .beforeMarks
             }
@@ -2149,7 +2159,7 @@ extension Formatter {
                 return .beforeMarks
             }
 
-        case let .conditionalCompilation(_, body, _):
+        case let .conditionalCompilation(_, body, _, _):
             // Prefer treating conditional compliation blocks as having
             // the property type of the first declaration in their body.
             if let firstDeclarationInBlock = body.first {
@@ -2197,9 +2207,9 @@ extension Formatter {
         for (declarationIndex, declaration) in typeBody.enumerated() {
             let tokensToInspect: [Token]
             switch declaration {
-            case let .declaration(_, tokens):
+            case let .declaration(_, tokens, _):
                 tokensToInspect = tokens
-            case let .type(_, open, _, _), let .conditionalCompilation(open, _, _):
+            case let .type(_, open, _, _, _), let .conditionalCompilation(open, _, _, _):
                 // Only inspect the opening tokens of declarations with a body
                 tokensToInspect = open
             }
@@ -2493,7 +2503,11 @@ extension Formatter {
                     typeOpeningTokens = endingWithBlankLine(typeOpeningTokens)
                 }
 
-                markedDeclarations.append(.declaration(kind: "comment", tokens: markDeclaration))
+                markedDeclarations.append(.declaration(
+                    kind: "comment",
+                    tokens: markDeclaration,
+                    originalRange: 0 ... 1 // placeholder value
+                ))
             }
 
             if let lastIndexOfSameDeclaration = sortedDeclarations.map(\.category).lastIndex(of: category),

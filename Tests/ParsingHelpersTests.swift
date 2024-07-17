@@ -1551,6 +1551,68 @@ class ParsingHelpersTests: XCTestCase {
         _ = Formatter(tokens).parseDeclarations()
     }
 
+    func testParseDeclarationRangesInType() {
+        let input = """
+        class Foo {
+            let bar = "bar"
+            let baaz = "baaz"
+        }
+        """
+
+        let formatter = Formatter(tokenize(input))
+        let declarations = formatter.parseDeclarations()
+
+        XCTAssertEqual(declarations.count, 1)
+        XCTAssertEqual(declarations[0].originalRange, 0 ... 28)
+
+        XCTAssertEqual(declarations[0].body?.count, 2)
+
+        let barDeclarationRange = declarations[0].body![0].originalRange
+        XCTAssertEqual(barDeclarationRange, 6 ... 16)
+        XCTAssertEqual(
+            sourceCode(for: Array(formatter.tokens[barDeclarationRange])),
+            "    let bar = \"bar\"\n"
+        )
+
+        let baazDeclarationRange = declarations[0].body![1].originalRange
+        XCTAssertEqual(baazDeclarationRange, 17 ... 27)
+        XCTAssertEqual(
+            sourceCode(for: Array(formatter.tokens[baazDeclarationRange])),
+            "    let baaz = \"baaz\"\n"
+        )
+    }
+
+    func testParseDeclarationRangesInConditionalCompilation() {
+        let input = """
+        #if DEBUG
+        let bar = "bar"
+        let baaz = "baaz"
+        #endif
+        """
+
+        let formatter = Formatter(tokenize(input))
+        let declarations = formatter.parseDeclarations()
+
+        XCTAssertEqual(declarations.count, 1)
+        XCTAssertEqual(declarations[0].originalRange, 0 ... 24)
+
+        XCTAssertEqual(declarations[0].body?.count, 2)
+
+        let barDeclarationRange = declarations[0].body![0].originalRange
+        XCTAssertEqual(barDeclarationRange, 4 ... 13)
+        XCTAssertEqual(
+            sourceCode(for: Array(formatter.tokens[barDeclarationRange])),
+            "let bar = \"bar\"\n"
+        )
+
+        let baazDeclarationRange = declarations[0].body![1].originalRange
+        XCTAssertEqual(baazDeclarationRange, 14 ... 23)
+        XCTAssertEqual(
+            sourceCode(for: Array(formatter.tokens[baazDeclarationRange])),
+            "let baaz = \"baaz\"\n"
+        )
+    }
+
     // MARK: declarationScope
 
     func testDeclarationScope_classAndGlobals() {

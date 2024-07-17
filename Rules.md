@@ -2725,7 +2725,7 @@ Option | Description
 
 ## unusedPrivateDeclaration
 
-Remove unused private and fileprivate declarations
+Remove unused private and fileprivate declarations.
 
 ## void
 

@@ -5149,9 +5149,7 @@ public struct _FormatRules {
         help: "Remove unused private and fileprivate declarations."
     ) { formatter in
         guard !formatter.options.fragment else { return }
-        let parsedDeclarations = formatter.parseDeclarations()
         var privateDeclarations: [Formatter.Declaration] = []
-
         var usage: [String: Int] = [:]
 
         formatter.forEachRecursiveDeclarations { declaration in

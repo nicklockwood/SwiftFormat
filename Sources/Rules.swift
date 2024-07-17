@@ -5146,7 +5146,7 @@ public struct _FormatRules {
 
     /// Remove unused private and fileprivate declarations
     public let unusedPrivateDeclaration = FormatRule(
-        help: "Remove unused private and fileprivate declarations"
+        help: "Remove unused private and fileprivate declarations."
     ) { formatter in
         guard !formatter.options.fragment else { return }
         let parsedDeclarations = formatter.parseDeclarations()

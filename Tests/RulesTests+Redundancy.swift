@@ -10292,7 +10292,22 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantTypedThrows, options: options)
     }
 
-    // MARK: - unusedFileprivate
+    // MARK: - unusedPrivateDeclaration
+
+    func testRemoveUnusedPrivate() {
+        let input = """
+        struct Foo {
+            private var foo = "foo"
+            var bar = "bar"
+        }
+        """
+        let output = """
+        struct Foo {
+            var bar = "bar"
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.unusedPrivateDeclaration)
+    }
 
     func testRemoveUnusedFilePrivate() {
         let input = """
@@ -10306,7 +10321,7 @@ class RedundancyTests: RulesTests {
             var bar = "bar"
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.unusedFileprivate)
+        testFormatting(for: input, output, rule: FormatRules.unusedPrivateDeclaration)
     }
 
     func testDoNotRemoveUsedFilePrivate() {
@@ -10320,7 +10335,7 @@ class RedundancyTests: RulesTests {
             let localFoo = Foo().foo
         }
         """
-        testFormatting(for: input, rule: FormatRules.unusedFileprivate)
+        testFormatting(for: input, rule: FormatRules.unusedPrivateDeclaration)
     }
 
     func testRemoveMultipleUnusedFilePrivate() {
@@ -10336,7 +10351,7 @@ class RedundancyTests: RulesTests {
             var bar = "bar"
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.unusedFileprivate)
+        testFormatting(for: input, output, rule: FormatRules.unusedPrivateDeclaration)
     }
 
     func testRemoveMixedUsedAndUnusedFilePrivate() {
@@ -10361,7 +10376,7 @@ class RedundancyTests: RulesTests {
             let localFoo = Foo().foo
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.unusedFileprivate)
+        testFormatting(for: input, output, rule: FormatRules.unusedPrivateDeclaration)
     }
 
     func testDoNotRemoveFilePrivateUsedInSameStruct() {
@@ -10375,53 +10390,9 @@ class RedundancyTests: RulesTests {
             }
         }
         """
-        testFormatting(for: input, rule: FormatRules.unusedFileprivate)
+        testFormatting(for: input, rule: FormatRules.unusedPrivateDeclaration)
     }
 
-    // Question: How to make this pass?
-    // With
-    /*
-     let output = """
-     struct Foo {
-         var bar = "bar"
-
-         struct Inner {}
-     }
-     """
-     */
-
-    // The test fails with diff
-    /*
-     struct Foo {
-         var bar = "bar"
-
-         struct Inner {
-         }
-     }
-     */
-
-    // And if I edit output to
-    /*
-     let output = """
-     struct Foo {
-         var bar = "bar"
-
-         struct Inner {
-         }
-     }
-     """
-     */
-
-    // then I get error:
-    // XCTAssertEqual failed: ("[SwiftFormat.Formatter.Change(line: 4, rule: emptyBraces, filePath: nil), SwiftFormat.Formatter.Change(line: 5, rule: emptyBraces, filePath: nil)]") is not equal to ("[]")
-    // with diff:
-    /*
-     XCTAssertEqual failed: ("struct Foo {
-         var bar = "bar"
-
-         struct Inner {}
-     }
-     */
     func testRemoveUnusedFilePrivateInNestedStruct() {
         let input = """
         struct Foo {
@@ -10436,10 +10407,11 @@ class RedundancyTests: RulesTests {
         struct Foo {
             var bar = "bar"
 
-            struct Inner {}
+            struct Inner {
+            }
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.unusedFileprivate)
+        testFormatting(for: input, output, rule: FormatRules.unusedPrivateDeclaration, exclude: ["emptyBraces"])
     }
 
     func testDoNotRemoveFilePrivateUsedInNestedStruct() {
@@ -10455,25 +10427,9 @@ class RedundancyTests: RulesTests {
             }
         }
         """
-        testFormatting(for: input, rule: FormatRules.unusedFileprivate)
+        testFormatting(for: input, rule: FormatRules.unusedPrivateDeclaration)
     }
 
-    // Question: How to delete function body as well?
-    // Currently, the output is:
-    /*
-     struct Foo {
-         var bar = "bar"
-
-             print("hi")
-         }
-     */
-
-    // Using `formatter.endOfScope(at:)` instead of `formatter.endOfLine(at:)`
-    /*
-     struct Foo {
-         var bar = "bar"
-
-     */
     func testRemoveUnusedFileprivateFunction() {
         let input = """
         struct Foo {
@@ -10489,6 +10445,6 @@ class RedundancyTests: RulesTests {
             var bar = "bar"
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.unusedFileprivate)
+        testFormatting(for: input, [output], rules: [FormatRules.unusedPrivateDeclaration, FormatRules.blankLinesAtEndOfScope])
     }
 }

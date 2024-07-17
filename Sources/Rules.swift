@@ -5144,49 +5144,36 @@ public struct _FormatRules {
         }
     }
 
-    /// Remove unused fileprivate properties
-    public let unusedFileprivate = FormatRule(
-        help: "Remove unused fileprivate"
+    /// Remove unused private and fileprivate declarations
+    public let unusedPrivateDeclaration = FormatRule(
+        help: "Remove unused private and fileprivate declarations"
     ) { formatter in
-        var fileprivatePropertyUsage: [String: Int] = [:]
-        var propertyTokens: [(name: String, range: ClosedRange<Int>)] = []
-        var indexToSkip: [Int] = []
-
-        var fileprivateDeclarations: [Formatter.Declaration] = []
-        // 1 collect fileprivate declarations
-        func collectFileprivateDeclarations() {
-//            formatter.forEachRecursiveDeclarations { declaration in
-//                if case .fileprivate = formatter.visibility(of: declaration) {
-//                    fileprivateDeclarations.append(declaration)
-//                }
-//            }
-        }
-
-        // 2 Count usage and delete
-        func fileprivateUsage() {
-//            for fileprivateDeclaration in fileprivateDeclarations {
-//                if let filePrivateName = fileprivateDeclaration.name {
-//                    let usageCount = formatter.tokens.filter { token in
-//                        token == .identifier(filePrivateName)
-//                    }.count
-//
-//                    if usageCount < 2 {
-//                        // delete
-//                        print("declaration.originalRange:", fileprivateDeclaration.originalRange)
-//                        formatter.removeTokens(in: fileprivateDeclaration.originalRange)
-//                    }
-//                }
-//            }
-        }
-
-        // 0. Parse declarations
+        guard !formatter.options.fragment else { return }
         let parsedDeclarations = formatter.parseDeclarations()
-        // 1. First pass: collect fileprivate declaration name and index
-        collectFileprivateDeclarations()
-        // 2. Second pass: Identify usage of fileprivate properties
-        fileprivateUsage()
-        // 3. Remove unused fileprivate declarations
-//        removeUnusedFileprivateDeclarations()
+        var privateDeclarations: [Formatter.Declaration] = []
+
+        var usage: [String: Int] = [:]
+
+        formatter.forEachRecursiveDeclarations { declaration in
+            switch formatter.visibility(of: declaration) {
+            case .fileprivate, .private:
+                privateDeclarations.append(declaration)
+            case .none, .open, .public, .package, .internal:
+                break
+            }
+        }
+
+        formatter.forEach(.identifier) { _, token in
+            usage[token.string, default: 0] += 1
+        }
+
+        for declaration in privateDeclarations.reversed() {
+            if let name = declaration.name, let count = usage[name] {
+                if count < 2 {
+                    formatter.removeTokens(in: declaration.originalRange)
+                }
+            }
+        }
     }
 
     /// Replace `fileprivate` with `private` where possible

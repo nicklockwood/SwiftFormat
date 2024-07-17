@@ -81,6 +81,7 @@
 * [trailingSpace](#trailingSpace)
 * [typeSugar](#typeSugar)
 * [unusedArguments](#unusedArguments)
+* [unusedPrivateDeclaration](#unusedPrivateDeclaration)
 * [void](#void)
 * [wrap](#wrap)
 * [wrapArguments](#wrapArguments)
@@ -2721,6 +2722,10 @@ Option | Description
 
 </details>
 <br/>
+
+## unusedPrivateDeclaration
+
+Remove unused private and fileprivate declarations
 
 ## void
 

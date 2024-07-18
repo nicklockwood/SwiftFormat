@@ -1651,8 +1651,8 @@ extension Formatter {
 
 /// Helpers for recursively traversing the declaration hierarchy
 extension Formatter {
-    /// Applies `forEachRecursiveDeclarations` in place
-    func forEachRecursiveDeclarations(_ operation: (Declaration) -> Void) {
+    /// Recursively calls the `operation` for every declaration in the source file
+    func forEachRecursiveDeclaration(_ operation: (Declaration) -> Void) {
         forEachRecursiveDeclarations(parseDeclarations(), operation)
     }
 

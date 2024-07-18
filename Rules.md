@@ -81,7 +81,6 @@
 * [trailingSpace](#trailingSpace)
 * [typeSugar](#typeSugar)
 * [unusedArguments](#unusedArguments)
-* [unusedPrivateDeclaration](#unusedPrivateDeclaration)
 * [void](#void)
 * [wrap](#wrap)
 * [wrapArguments](#wrapArguments)
@@ -105,6 +104,7 @@
 * [propertyType](#propertyType)
 * [redundantProperty](#redundantProperty)
 * [sortSwitchCases](#sortSwitchCases)
+* [unusedPrivateDeclaration](#unusedPrivateDeclaration)
 * [wrapConditionalBodies](#wrapConditionalBodies)
 * [wrapEnumCases](#wrapEnumCases)
 * [wrapMultilineConditionalAssignment](#wrapMultilineConditionalAssignment)
@@ -2726,6 +2726,20 @@ Option | Description
 ## unusedPrivateDeclaration
 
 Remove unused private and fileprivate declarations.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+struct Foo {
+--    fileprivate var foo = "foo"
+--    fileprivate var baz = "baz"
+    var bar = "bar"
+}
+```
+
+</details>
+<br/>
 
 ## void
 

@@ -5146,13 +5146,14 @@ public struct _FormatRules {
 
     /// Remove unused private and fileprivate declarations
     public let unusedPrivateDeclaration = FormatRule(
-        help: "Remove unused private and fileprivate declarations."
+        help: "Remove unused private and fileprivate declarations.",
+        disabledByDefault: true
     ) { formatter in
         guard !formatter.options.fragment else { return }
         var privateDeclarations: [Formatter.Declaration] = []
         var usage: [String: Int] = [:]
 
-        formatter.forEachRecursiveDeclarations { declaration in
+        formatter.forEachRecursiveDeclaration { declaration in
             switch formatter.visibility(of: declaration) {
             case .fileprivate, .private:
                 privateDeclarations.append(declaration)

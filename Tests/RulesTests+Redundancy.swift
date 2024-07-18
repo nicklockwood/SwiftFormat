@@ -10447,4 +10447,15 @@ class RedundancyTests: RulesTests {
         """
         testFormatting(for: input, [output], rules: [FormatRules.unusedPrivateDeclaration, FormatRules.blankLinesAtEndOfScope])
     }
+
+    func testDoNotRemoveUnusedFileprivateOperatorDefinition() {
+        let input = """
+        private class Foo: Equatable {
+            fileprivate static func == (_: Foo, _: Foo) -> Bool {
+                return true
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedPrivateDeclaration)
+    }
 }

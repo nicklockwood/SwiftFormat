@@ -5196,6 +5196,43 @@ public struct _FormatRules {
         }
     }
 
+    /// Remove unused private and fileprivate declarations
+    public let unusedPrivateDeclaration = FormatRule(
+        help: "Remove unused private and fileprivate declarations.",
+        disabledByDefault: true
+    ) { formatter in
+        guard !formatter.options.fragment else { return }
+        var privateDeclarations: [Formatter.Declaration] = []
+        var usage: [String: Int] = [:]
+
+        formatter.forEachRecursiveDeclaration { declaration in
+            switch formatter.visibility(of: declaration) {
+            case .fileprivate, .private:
+                privateDeclarations.append(declaration)
+            case .none, .open, .public, .package, .internal:
+                break
+            }
+        }
+
+        formatter.forEach(.identifier) { _, token in
+            usage[token.string, default: 0] += 1
+        }
+
+        for declaration in privateDeclarations.reversed() {
+            if let name = declaration.name,
+               let count = usage[name],
+               count < 2
+            {
+                switch declaration {
+                case let .declaration(_, _, originalRange):
+                    formatter.removeTokens(in: originalRange)
+                case .type, .conditionalCompilation:
+                    break
+                }
+            }
+        }
+    }
+
     /// Replace `fileprivate` with `private` where possible
     public let redundantFileprivate = FormatRule(
         help: "Prefer `private` over `fileprivate` where equivalent."

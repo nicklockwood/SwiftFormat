@@ -1974,11 +1974,11 @@ private struct Examples {
 
     let unusedPrivateDeclaration = """
     ```diff
-    struct Foo {
-    --    fileprivate var foo = "foo"
-    --    fileprivate var baz = "baz"
-        var bar = "bar"
-    }
+      struct Foo {
+    -     fileprivate var foo = "foo"
+    -     fileprivate var baz = "baz"
+          var bar = "bar"
+      }
     ```
     """
 }

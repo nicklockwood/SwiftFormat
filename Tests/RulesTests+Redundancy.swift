@@ -10474,4 +10474,20 @@ class RedundancyTests: RulesTests {
 
         testFormatting(for: input, output, rule: FormatRules.unusedPrivateDeclaration, exclude: ["emptyBraces"])
     }
+
+    func testRemovePrivateDeclarationButDoNotRemovePrivateExtension() {
+        let input = """
+        private extension Foo {
+            private func doSomething() {}
+            func anotherFunction() {}
+        }
+        """
+        let output = """
+        private extension Foo {
+            func anotherFunction() {}
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.unusedPrivateDeclaration)
+    }
 }

@@ -1135,6 +1135,12 @@ struct _Descriptors {
         help: "\"remove\" (default) redundant nil or \"insert\" missing nil",
         keyPath: \.nilInit
     )
+    let preservedPrivateDeclarations = OptionDescriptor(
+        argumentName: "preservedecls",
+        displayName: "Private Declarations to Exclude",
+        help: "Comma separated list of declaration names to exclude",
+        keyPath: \.preservedPrivateDeclarations
+    )
 
     // MARK: - Internal
 

@@ -1976,7 +1976,8 @@ extension Formatter {
         var name: String? {
             let parser = Formatter(openTokens)
             guard let keywordIndex = openTokens.firstIndex(of: .keyword(keyword)),
-                  let nameIndex = parser.index(of: .identifier, after: keywordIndex)
+                  let nameIndex = parser.index(of: .nonSpaceOrCommentOrLinebreak, after: keywordIndex),
+                  parser.tokens[nameIndex].isIdentifierOrKeyword
             else {
                 return nil
             }
@@ -1992,6 +1993,20 @@ extension Formatter {
                  let .conditionalCompilation(_, _, _, originalRange):
                 return originalRange
             }
+        }
+
+        var modifiers: [String] {
+            let parser = Formatter(openTokens)
+            guard let keywordIndex = parser.index(of: .keyword(keyword), after: 0) else {
+                return []
+            }
+
+            var allModifiers = [String]()
+            _ = parser.modifiersForDeclaration(at: keywordIndex, contains: { _, modifier in
+                allModifiers.append(modifier)
+                return false
+            })
+            return allModifiers
         }
     }
 

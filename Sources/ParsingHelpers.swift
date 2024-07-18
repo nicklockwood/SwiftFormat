@@ -1971,7 +1971,8 @@ extension Formatter {
         var name: String? {
             let parser = Formatter(openTokens)
             guard let keywordIndex = openTokens.firstIndex(of: .keyword(keyword)),
-                  let nameIndex = parser.index(of: .identifier, after: keywordIndex)
+                  let nameIndex = parser.index(of: .nonSpaceOrCommentOrLinebreak, after: keywordIndex),
+                  parser.tokens[nameIndex].isIdentifierOrKeyword
             else {
                 return nil
             }

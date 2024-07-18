@@ -2731,11 +2731,11 @@ Remove unused private and fileprivate declarations.
 <summary>Examples</summary>
 
 ```diff
-struct Foo {
---    fileprivate var foo = "foo"
---    fileprivate var baz = "baz"
-    var bar = "bar"
-}
+  struct Foo {
+-     fileprivate var foo = "foo"
+-     fileprivate var baz = "baz"
+      var bar = "bar"
+  }
 ```
 
 </details>

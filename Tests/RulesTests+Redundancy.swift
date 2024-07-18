@@ -10291,4 +10291,203 @@ class RedundancyTests: RulesTests {
         let options = FormatOptions(swiftVersion: "6.0")
         testFormatting(for: input, rule: FormatRules.redundantTypedThrows, options: options)
     }
+
+    // MARK: - unusedPrivateDeclaration
+
+    func testRemoveUnusedPrivate() {
+        let input = """
+        struct Foo {
+            private var foo = "foo"
+            var bar = "bar"
+        }
+        """
+        let output = """
+        struct Foo {
+            var bar = "bar"
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.unusedPrivateDeclaration)
+    }
+
+    func testRemoveUnusedFilePrivate() {
+        let input = """
+        struct Foo {
+            fileprivate var foo = "foo"
+            var bar = "bar"
+        }
+        """
+        let output = """
+        struct Foo {
+            var bar = "bar"
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.unusedPrivateDeclaration)
+    }
+
+    func testDoNotRemoveUsedFilePrivate() {
+        let input = """
+        struct Foo {
+            fileprivate var foo = "foo"
+            var bar = "bar"
+        }
+
+        struct Hello {
+            let localFoo = Foo().foo
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedPrivateDeclaration)
+    }
+
+    func testRemoveMultipleUnusedFilePrivate() {
+        let input = """
+        struct Foo {
+            fileprivate var foo = "foo"
+            fileprivate var baz = "baz"
+            var bar = "bar"
+        }
+        """
+        let output = """
+        struct Foo {
+            var bar = "bar"
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.unusedPrivateDeclaration)
+    }
+
+    func testRemoveMixedUsedAndUnusedFilePrivate() {
+        let input = """
+        struct Foo {
+            fileprivate var foo = "foo"
+            var bar = "bar"
+            fileprivate var baz = "baz"
+        }
+
+        struct Hello {
+            let localFoo = Foo().foo
+        }
+        """
+        let output = """
+        struct Foo {
+            fileprivate var foo = "foo"
+            var bar = "bar"
+        }
+
+        struct Hello {
+            let localFoo = Foo().foo
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.unusedPrivateDeclaration)
+    }
+
+    func testDoNotRemoveFilePrivateUsedInSameStruct() {
+        let input = """
+        struct Foo {
+            fileprivate var foo = "foo"
+            var bar = "bar"
+
+            func useFoo() {
+                print(foo)
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedPrivateDeclaration)
+    }
+
+    func testRemoveUnusedFilePrivateInNestedStruct() {
+        let input = """
+        struct Foo {
+            var bar = "bar"
+
+            struct Inner {
+                fileprivate var foo = "foo"
+            }
+        }
+        """
+        let output = """
+        struct Foo {
+            var bar = "bar"
+
+            struct Inner {
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.unusedPrivateDeclaration, exclude: ["emptyBraces"])
+    }
+
+    func testDoNotRemoveFilePrivateUsedInNestedStruct() {
+        let input = """
+        struct Foo {
+            var bar = "bar"
+
+            struct Inner {
+                fileprivate var foo = "foo"
+                func useFoo() {
+                    print(foo)
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedPrivateDeclaration)
+    }
+
+    func testRemoveUnusedFileprivateFunction() {
+        let input = """
+        struct Foo {
+            var bar = "bar"
+
+            fileprivate func sayHi() {
+                print("hi")
+            }
+        }
+        """
+        let output = """
+        struct Foo {
+            var bar = "bar"
+        }
+        """
+        testFormatting(for: input, [output], rules: [FormatRules.unusedPrivateDeclaration, FormatRules.blankLinesAtEndOfScope])
+    }
+
+    func testDoNotRemoveUnusedFileprivateOperatorDefinition() {
+        let input = """
+        private class Foo: Equatable {
+            fileprivate static func == (_: Foo, _: Foo) -> Bool {
+                return true
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedPrivateDeclaration)
+    }
+
+    func testRemovePrivateDeclarationButDoNotRemoveUnusedPrivateType() {
+        let input = """
+        private struct Foo {
+            private func bar() {
+                print("test")
+            }
+        }
+        """
+        let output = """
+        private struct Foo {
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.unusedPrivateDeclaration, exclude: ["emptyBraces"])
+    }
+
+    func testRemovePrivateDeclarationButDoNotRemovePrivateExtension() {
+        let input = """
+        private extension Foo {
+            private func doSomething() {}
+            func anotherFunction() {}
+        }
+        """
+        let output = """
+        private extension Foo {
+            func anotherFunction() {}
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.unusedPrivateDeclaration)
+    }
 }

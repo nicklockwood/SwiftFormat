@@ -10458,4 +10458,20 @@ class RedundancyTests: RulesTests {
         """
         testFormatting(for: input, rule: FormatRules.unusedPrivateDeclaration)
     }
+
+    func testRemovePrivateDeclarationButDoNotRemoveUnusedPrivateType() {
+        let input = """
+        private struct Foo {
+            private func bar() {
+                print("test")
+            }
+        }
+        """
+        let output = """
+        private struct Foo {
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.unusedPrivateDeclaration, exclude: ["emptyBraces"])
+    }
 }

@@ -5167,9 +5167,15 @@ public struct _FormatRules {
         }
 
         for declaration in privateDeclarations.reversed() {
-            if let name = declaration.name, let count = usage[name] {
-                if count < 2 {
-                    formatter.removeTokens(in: declaration.originalRange)
+            if let name = declaration.name,
+               let count = usage[name],
+               count < 2
+            {
+                switch declaration {
+                case let .declaration(_, _, originalRange):
+                    formatter.removeTokens(in: originalRange)
+                case .type, .conditionalCompilation:
+                    break
                 }
             }
         }

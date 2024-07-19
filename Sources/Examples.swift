@@ -1280,6 +1280,18 @@ private struct Examples {
     """
 
     let organizeDeclarations = """
+    Default value for `--visibilityorder`:
+    `\(Formatter.VisibilityType.allCases.reduce(into: "") { $0 += ", \($1.rawValue)" }.dropFirst(2))`
+
+    **NOTE:** When providing custom arguments for `--visibilityorder` the following entries **should** be included:
+    `\(Formatter.VisibilityType.essentialCases.reduce(into: "") { $0 += ", \($1.rawValue)" }.dropFirst(2))`
+
+    Default value for `--typeorder`:
+    `\(Formatter.DeclarationType.allCases.reduce(into: "") { $0 += ", \($1.rawValue)" }.dropFirst(2))`
+
+    **NOTE:** When providing custom arguments for `--typeorder` the following entries **should** be included:
+    `\(Formatter.DeclarationType.essentialCases.reduce(into: "") { $0 += ", \($1.rawValue)" }.dropFirst(2))`
+
     `--organizationmode visibility` (default)
 
     ```diff

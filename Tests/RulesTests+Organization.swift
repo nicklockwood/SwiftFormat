@@ -163,16 +163,16 @@ class OrganizationTests: RulesTests {
         let input = """
         class Test {
 
-            var a = ""
-
             override var b: Any? { nil }
 
-            func foo() -> Foo {
-                Foo()
-            }
+            var a = ""
 
             override func bar() -> Bar {
                 Bar()
+            }
+
+            func foo() -> Foo {
+                Foo()
             }
 
             func baaz() -> Baaz {
@@ -253,12 +253,12 @@ class OrganizationTests: RulesTests {
         let input = """
         class Test {
 
-            func foo() -> Foo {
-                Foo()
-            }
-
             func bar() -> some View {
                 EmptyView()
+            }
+
+            func foo() -> Foo {
+                Foo()
             }
 
             func baaz() -> Baaz {
@@ -303,10 +303,12 @@ class OrganizationTests: RulesTests {
         let output = """
         struct ContentView: View {
 
-            // MARK: Properties
+            // MARK: SwiftUI Properties
 
             @State
             var isOn: Bool = false
+
+            // MARK: Properties
 
             private var label: String
 
@@ -316,7 +318,7 @@ class OrganizationTests: RulesTests {
                 self.label = label
             }
 
-            // MARK: Content
+            // MARK: Content Properties
 
             @ViewBuilder
             var body: some View {
@@ -371,10 +373,12 @@ class OrganizationTests: RulesTests {
         let output = """
         struct Modifier: ViewModifier {
 
-            // MARK: Properties
+            // MARK: SwiftUI Properties
 
             @State
             var isOn: Bool = false
+
+            // MARK: Properties
 
             private var label: String
 
@@ -384,19 +388,21 @@ class OrganizationTests: RulesTests {
                 self.label = label
             }
 
-            // MARK: Content
+            // MARK: Content Properties
+
+            @ViewBuilder
+            private var toggle: some View {
+                Toggle(label, isOn: $isOn)
+                    .fixedSize()
+            }
+
+            // MARK: Content Methods
 
             func body(content: Content) -> some View {
                 content
                     .overlay {
                         toggle
                     }
-            }
-
-            @ViewBuilder
-            private var toggle: some View {
-                Toggle(label, isOn: $isOn)
-                    .fixedSize()
             }
 
         }
@@ -407,6 +413,319 @@ class OrganizationTests: RulesTests {
             rule: FormatRules.organizeDeclarations,
             options: FormatOptions(categoryMarkComment: "MARK: %c", organizationMode: .type),
             exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+        )
+    }
+
+    func testCustomOrganizationInVisibilityOrder() {
+        let input = """
+        class Foo {
+            public func bar() {}
+            func baz() {}
+            private func quux() {}
+        }
+        """
+
+        let output = """
+        class Foo {
+
+            // MARK: Private
+
+            private func quux() {}
+
+            // MARK: Internal
+
+            func baz() {}
+
+            // MARK: Public
+
+            public func bar() {}
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            options: FormatOptions(
+                visibilityOrder: ["private", "internal", "public"]
+            ),
+            exclude: ["blankLinesAtStartOfScope"]
+        )
+    }
+
+    func testCustomOrganizationInVisibilityOrderWithParametrizedTypeOrder() {
+        let input = """
+        class Foo {
+
+            // MARK: Private
+
+            private func quux() {}
+
+            // MARK: Internal
+
+            var baaz: Baaz
+
+            func baz() {}
+
+            // MARK: Public
+
+            public func bar() {}
+        }
+        """
+
+        let output = """
+        class Foo {
+
+            // MARK: Private
+
+            private func quux() {}
+
+            // MARK: Internal
+
+            func baz() {}
+
+            var baaz: Baaz
+
+            // MARK: Public
+
+            public func bar() {}
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            options: FormatOptions(
+                visibilityOrder: ["private", "internal", "public"],
+                typeOrder: ["instanceMethod", "instanceProperty"]
+            ),
+            exclude: ["blankLinesAtStartOfScope"]
+        )
+    }
+
+    func testCustomOrganizationInTypeOrder() {
+        let input = """
+        class Foo {
+            private func quux() {}
+            var baaz: Baaz
+            func baz() {}
+            init()
+            override public func baar()
+            public func bar() {}
+        }
+        """
+
+        let output = """
+        class Foo {
+
+            // MARK: Lifecycle
+
+            init()
+
+            // MARK: Functions
+
+            public func bar() {}
+
+            func baz() {}
+
+            private func quux() {}
+
+            // MARK: Properties
+
+            var baaz: Baaz
+
+            // MARK: Overridden Functions
+
+            override public func baar()
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            options: FormatOptions(
+                organizationMode: .type,
+                typeOrder: ["instanceLifecycle", "instanceMethod", "instanceProperty", "overriddenMethod"]
+            ),
+            exclude: ["blankLinesAtStartOfScope"]
+        )
+    }
+
+    func testOrganizeDeclarationsIgnoresNotDefinedCategories() {
+        let input = """
+        class Foo {
+            private func quux() {}
+            var baaz: Baaz
+            func baz() {}
+            init()
+            override public func baar()
+            public func bar() {}
+        }
+        """
+
+        let output = """
+        class Foo {
+
+            // MARK: Lifecycle
+
+            init()
+
+            // MARK: Functions
+
+            override public func baar()
+            public func bar() {}
+
+            func baz() {}
+
+            private func quux() {}
+
+            // MARK: Properties
+
+            var baaz: Baaz
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            options: FormatOptions(
+                organizationMode: .type,
+                typeOrder: ["instanceLifecycle", "instanceMethod", "instanceProperty"]
+            ),
+            exclude: ["blankLinesAtStartOfScope"]
+        )
+    }
+
+    func testCustomOrganizationInTypeOrderWithParametrizedVisibilityOrder() {
+        let input = """
+        class Foo {
+            private func quux() {}
+            var baaz: Baaz
+            private var fooo: Fooo
+            func baz() {}
+            init()
+            override public func baar()
+            public func bar() {}
+        }
+        """
+
+        let output = """
+        class Foo {
+
+            // MARK: Lifecycle
+
+            init()
+
+            // MARK: Functions
+
+            private func quux() {}
+
+            func baz() {}
+
+            public func bar() {}
+
+            // MARK: Properties
+
+            private var fooo: Fooo
+
+            var baaz: Baaz
+
+            // MARK: Overridden Functions
+
+            override public func baar()
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            options: FormatOptions(
+                organizationMode: .type,
+                visibilityOrder: ["private", "internal", "public"],
+                typeOrder: ["instanceLifecycle", "instanceMethod", "instanceProperty", "overriddenMethod"]
+            ),
+            exclude: ["blankLinesAtStartOfScope"]
+        )
+    }
+
+    func testCustomCategoryNamesInVisibilityOrder() {
+        let input = """
+        class Foo {
+            public var bar: Bar
+            init(bar: Bar) {
+                self.bar = bar
+            }
+            func baaz() {}
+        }
+        """
+
+        let output = """
+        class Foo {
+
+            // MARK: Init
+
+            init(bar: Bar) {
+                self.bar = bar
+            }
+
+            // MARK: Public_Group
+
+            public var bar: Bar
+
+            // MARK: Internal
+
+            func baaz() {}
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            options: FormatOptions(
+                organizationMode: .visibility,
+                customVisibilityMarks: ["instanceLifecycle:Init", "public:Public_Group"]
+            ),
+            exclude: ["blankLinesAtStartOfScope"]
+        )
+    }
+
+    func testCustomCategoryNamesInTypeOrder() {
+        let input = """
+        class Foo {
+            public var bar: Bar
+            init(bar: Bar) {
+                self.bar = bar
+            }
+            func baaz() {}
+        }
+        """
+
+        let output = """
+        class Foo {
+
+            // MARK: Bar_Bar
+
+            public var bar: Bar
+
+            // MARK: Init
+
+            init(bar: Bar) {
+                self.bar = bar
+            }
+
+            // MARK: Buuuz Lightyeeeaaar
+
+            func baaz() {}
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            options: FormatOptions(
+                organizationMode: .type,
+                customTypeMarks: ["instanceLifecycle:Init", "instanceProperty:Bar_Bar", "instanceMethod:Buuuz Lightyeeeaaar"]
+            ),
+            exclude: ["blankLinesAtStartOfScope"]
         )
     }
 

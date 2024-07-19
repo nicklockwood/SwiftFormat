@@ -262,7 +262,7 @@ class CommandLineTests: XCTestCase {
     func testHelpLineLength() {
         CLI.print = { message, _ in
             for line in message.components(separatedBy: "\n") {
-                XCTAssertLessThanOrEqual(line.count, 100, line)
+                XCTAssertLessThanOrEqual(line.count, 80, line)
             }
         }
         printHelp(as: .content)

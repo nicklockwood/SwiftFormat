@@ -935,7 +935,7 @@ struct _Descriptors {
     let customVisibilityMarks = OptionDescriptor(
         argumentName: "visibilitymarks",
         displayName: "Custom Visibility Marks",
-        help: "Marks for concrete visibility groups (public:Public Fields,..)",
+        help: "Marks for visibility groups (public:Public Fields,..)",
         keyPath: \.customVisibilityMarks,
         validate: {
             if $0.split(separator: ":", maxSplits: 1).count != 2 {
@@ -946,7 +946,7 @@ struct _Descriptors {
     let customTypeMarks = OptionDescriptor(
         argumentName: "typemarks",
         displayName: "Custom Type Marks",
-        help: "Marks for concrete declaration type groups (classMethod:Baaz,..)",
+        help: "Marks for declaration type groups (classMethod:Baaz,..)",
         keyPath: \.customTypeMarks,
         validate: {
             if $0.split(separator: ":", maxSplits: 1).count != 2 {

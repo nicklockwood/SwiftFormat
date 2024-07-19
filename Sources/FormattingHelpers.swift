@@ -1932,39 +1932,39 @@ extension Formatter {
         var markComment: String {
             switch self {
             case .beforeMarks:
-                "Before Marks"
+                return "Before Marks"
             case .nestedType:
-                "Nested Types"
+                return "Nested Types"
             case .staticProperty:
-                "Static Properties"
+                return "Static Properties"
             case .staticPropertyWithBody:
-                "Static Computed Properties"
+                return "Static Computed Properties"
             case .classPropertyWithBody:
-                "Class Properties"
+                return "Class Properties"
             case .overriddenProperty:
-                "Overridden Properties"
+                return "Overridden Properties"
             case .instanceLifecycle:
-                "Lifecycle"
+                return "Lifecycle"
             case .overriddenMethod:
-                "Overridden Functions"
+                return "Overridden Functions"
             case .swiftUIProperty:
-                "Content Properties"
+                return "Content Properties"
             case .swiftUIMethod:
-                "Content Methods"
+                return "Content Methods"
             case .swiftUIPropertyWrapper:
-                "SwiftUI Properties"
+                return "SwiftUI Properties"
             case .instanceProperty:
-                "Properties"
+                return "Properties"
             case .instancePropertyWithBody:
-                "Computed Properties"
+                return "Computed Properties"
             case .staticMethod:
-                "Static Functions"
+                return "Static Functions"
             case .classMethod:
-                "Class Functions"
+                return "Class Functions"
             case .instanceMethod:
-                "Functions"
+                return "Functions"
             case .conditionalCompilation:
-                "Conditional Compilation"
+                return "Conditional Compilation"
             }
         }
 
@@ -2014,45 +2014,12 @@ extension Formatter {
         let declarationTypes = options.typeOrder
             .map { DeclarationType(rawValue: $0) }
             .compactMap { $0 }
+
         let customVisibilityMarks = options.customVisibilityMarks
         let customTypeMarks = options.customTypeMarks
 
-        func parseMarks<T: RawRepresentable>(
-            for options: Set<String>
-        ) -> [T: String] where T.RawValue == String {
-            options.map { customMarkEntry -> (T, String)? in
-                let split = customMarkEntry.split(separator: ":", maxSplits: 1)
-
-                guard split.count == 2,
-                      let rawValue = split.first,
-                      let mark = split.last,
-                      let concreteType = T(rawValue: String(rawValue))
-                else { return nil }
-
-                return (concreteType, String(mark))
-            }
-            .compactMap { $0 }
-            .reduce(into: [:]) { dictionary, option in
-                dictionary[option.0] = option.1
-            }
-        }
-
         let parsedVisibilityMarks: ParsedVisibilityMarks = parseMarks(for: customVisibilityMarks)
         let parsedTypeMarks: ParsedTypeMarks = parseMarks(for: customTypeMarks)
-
-        func flatten<C1: Collection, C2: Collection>(
-            primary: C1,
-            using secondary: C2
-        ) -> EnumeratedSequence<[(C1.Element, C2.Element)]> {
-            primary
-                .map { p in
-                    secondary.map { s in
-                        (p, s)
-                    }
-                }
-                .reduce([], +)
-                .enumerated()
-        }
 
         return switch mode {
         case .visibility:
@@ -2076,6 +2043,40 @@ extension Formatter {
                     )
                 }
         }
+    }
+
+    func parseMarks<T: RawRepresentable>(
+        for options: Set<String>
+    ) -> [T: String] where T.RawValue == String {
+        options.map { customMarkEntry -> (T, String)? in
+            let split = customMarkEntry.split(separator: ":", maxSplits: 1)
+
+            guard split.count == 2,
+                  let rawValue = split.first,
+                  let mark = split.last,
+                  let concreteType = T(rawValue: String(rawValue))
+            else { return nil }
+
+            return (concreteType, String(mark))
+        }
+        .compactMap { $0 }
+        .reduce(into: [:]) { dictionary, option in
+            dictionary[option.0] = option.1
+        }
+    }
+
+    func flatten<C1: Collection, C2: Collection>(
+        primary: C1,
+        using secondary: C2
+    ) -> EnumeratedSequence<[(C1.Element, C2.Element)]> {
+        primary
+            .map { p in
+                secondary.map { s in
+                    (p, s)
+                }
+            }
+            .reduce([], +)
+            .enumerated()
     }
 
     func category(

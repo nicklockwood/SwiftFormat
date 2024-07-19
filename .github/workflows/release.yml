@@ -37,7 +37,7 @@ jobs:
           retention-days: 5
 
   upload:
-    name: Upload release artifactsts
+    name: Upload release artifacts
     runs-on: ubuntu-latest
     needs: [macos, linux]
     steps:

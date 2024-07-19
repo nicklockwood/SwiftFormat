@@ -254,7 +254,7 @@ class OptionDescriptor {
          help: String,
          deprecationMessage: String? = nil,
          keyPath: WritableKeyPath<FormatOptions, [String]>,
-         validate: @escaping (String) throws -> Void = { _ in })
+         validateArray: @escaping ([String]) throws -> Void = { _ in })
     {
         self.argumentName = argumentName
         self.displayName = displayName
@@ -263,17 +263,35 @@ class OptionDescriptor {
         type = .array
         toOptions = { value, options in
             let values = parseCommaDelimitedList(value)
-            for (index, value) in values.enumerated() {
-                if values[0 ..< index].contains(value) {
-                    throw FormatError.options("Duplicate value '\(value)'")
-                }
-                try validate(value)
-            }
+            try validateArray(values)
             options[keyPath: keyPath] = values
         }
         fromOptions = { options in
             options[keyPath: keyPath].joined(separator: ",")
         }
+    }
+
+    convenience init(argumentName: String,
+                     displayName: String,
+                     help: String,
+                     deprecationMessage _: String? = nil,
+                     keyPath: WritableKeyPath<FormatOptions, [String]>,
+                     validate: @escaping (String) throws -> Void = { _ in })
+    {
+        self.init(
+            argumentName: argumentName,
+            displayName: displayName,
+            help: help,
+            keyPath: keyPath,
+            validateArray: { values in
+                for (index, value) in values.enumerated() {
+                    if values[0 ..< index].contains(value) {
+                        throw FormatError.options("Duplicate value '\(value)'")
+                    }
+                    try validate(value)
+                }
+            }
+        )
     }
 
     init(argumentName: String,
@@ -862,6 +880,74 @@ struct _Descriptors {
         displayName: "Declaration Organization Mode",
         help: "Organize declarations by \"visibility\" (default) or \"type\"",
         keyPath: \.organizationMode
+    )
+    let visibilityOrder = OptionDescriptor(
+        argumentName: "visibilityorder",
+        displayName: "Organization Order For Visibility",
+        help: "Order for visibility groups inside declaration",
+        keyPath: \.visibilityOrder,
+        validateArray: { order in
+            let essentials = Formatter.VisibilityType.essentialCases.map(\.rawValue)
+            for type in essentials {
+                guard order.contains(type) else {
+                    throw FormatError.options("--visibilityorder expects \(type) to be included")
+                }
+            }
+            for type in order {
+                guard let concrete = Formatter.VisibilityType(rawValue: type) else {
+                    let errorMessage = "'\(type)' is not a valid parameter for --visibilityorder"
+                    guard let match = type.bestMatches(in: essentials).first else {
+                        throw FormatError.options(errorMessage)
+                    }
+                    throw FormatError.options(errorMessage + ". Did you mean '\(match)?'")
+                }
+            }
+        }
+    )
+    let typeOrder = OptionDescriptor(
+        argumentName: "typeorder",
+        displayName: "Organization Order For Declaration Types",
+        help: "Order for declaration type groups inside declaration",
+        keyPath: \.typeOrder,
+        validateArray: { order in
+            let essentials = Formatter.DeclarationType.essentialCases.map(\.rawValue)
+            for type in essentials {
+                guard order.contains(type) else {
+                    throw FormatError.options("--typeorder expects \(type) to be included")
+                }
+            }
+            for type in order {
+                guard let concrete = Formatter.DeclarationType(rawValue: type) else {
+                    let errorMessage = "'\(type)' is not a valid parameter for --typeorder"
+                    guard let match = type.bestMatches(in: essentials).first else {
+                        throw FormatError.options(errorMessage)
+                    }
+                    throw FormatError.options(errorMessage + ". Did you mean '\(match)?'")
+                }
+            }
+        }
+    )
+    let customVisibilityMarks = OptionDescriptor(
+        argumentName: "visibilitymarks",
+        displayName: "Custom Visibility Marks",
+        help: "Marks for visibility groups (public:Public Fields,..)",
+        keyPath: \.customVisibilityMarks,
+        validate: {
+            if $0.split(separator: ":", maxSplits: 1).count != 2 {
+                throw FormatError.options("--visibilitymarks expects <visibility>:<mark> argument")
+            }
+        }
+    )
+    let customTypeMarks = OptionDescriptor(
+        argumentName: "typemarks",
+        displayName: "Custom Type Marks",
+        help: "Marks for declaration type groups (classMethod:Baaz,..)",
+        keyPath: \.customTypeMarks,
+        validate: {
+            if $0.split(separator: ":", maxSplits: 1).count != 2 {
+                throw FormatError.options("--visibilitymarks expects <visibility>:<mark> argument")
+            }
+        }
     )
     let alphabeticallySortedDeclarationPatterns = OptionDescriptor(
         argumentName: "sortedpatterns",

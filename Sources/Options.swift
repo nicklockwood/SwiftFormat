@@ -653,6 +653,10 @@ public struct FormatOptions: CustomStringConvertible {
     public var organizeEnumThreshold: Int
     public var organizeExtensionThreshold: Int
     public var organizationMode: DeclarationOrganizationMode
+    public var visibilityOrder: [String]
+    public var typeOrder: [String]
+    public var customVisibilityMarks: Set<String>
+    public var customTypeMarks: Set<String>
     public var alphabeticallySortedDeclarationPatterns: Set<String>
     public var yodaSwap: YodaMode
     public var extensionACLPlacement: ExtensionACLPlacement
@@ -771,6 +775,10 @@ public struct FormatOptions: CustomStringConvertible {
                 organizeEnumThreshold: Int = 0,
                 organizeExtensionThreshold: Int = 0,
                 organizationMode: DeclarationOrganizationMode = .visibility,
+                visibilityOrder: [String] = Formatter.VisibilityType.allCases.map(\.rawValue),
+                typeOrder: [String] = Formatter.DeclarationType.allCases.map(\.rawValue),
+                customVisibilityMarks: Set<String> = [],
+                customTypeMarks: Set<String> = [],
                 alphabeticallySortedDeclarationPatterns: Set<String> = [],
                 yodaSwap: YodaMode = .always,
                 extensionACLPlacement: ExtensionACLPlacement = .onExtension,
@@ -879,6 +887,10 @@ public struct FormatOptions: CustomStringConvertible {
         self.organizeEnumThreshold = organizeEnumThreshold
         self.organizeExtensionThreshold = organizeExtensionThreshold
         self.organizationMode = organizationMode
+        self.visibilityOrder = visibilityOrder
+        self.typeOrder = typeOrder
+        self.customVisibilityMarks = customVisibilityMarks
+        self.customTypeMarks = customTypeMarks
         self.alphabeticallySortedDeclarationPatterns = alphabeticallySortedDeclarationPatterns
         self.yodaSwap = yodaSwap
         self.extensionACLPlacement = extensionACLPlacement

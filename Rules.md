@@ -1370,9 +1370,25 @@ Option | Description
 `--enumthreshold` | Minimum line count to organize enum body. Defaults to 0
 `--extensionlength` | Minimum line count to organize extension body. Defaults to 0
 `--organizationmode` | Organize declarations by "visibility" (default) or "type"
+`--visibilityorder` | Order for visibility groups inside declaration
+`--typeorder` | Order for declaration type groups inside declaration
+`--visibilitymarks` | Marks for visibility groups (public:Public Fields,..)
+`--typemarks` | Marks for declaration type groups (classMethod:Baaz,..)
 
 <details>
 <summary>Examples</summary>
+
+Default value for `--visibilityorder`:
+`beforeMarks, instanceLifecycle, open, public, package, internal, fileprivate, private`
+
+**NOTE:** When providing custom arguments for `--visibilityorder` the following entries **should** be included:
+`open, public, package, internal, fileprivate, private`
+
+Default value for `--typeorder`:
+`beforeMarks, nestedType, staticProperty, staticPropertyWithBody, classPropertyWithBody, overriddenProperty, swiftUIPropertyWrapper, instanceProperty, instancePropertyWithBody, instanceLifecycle, swiftUIProperty, swiftUIMethod, overriddenMethod, staticMethod, classMethod, instanceMethod, conditionalCompilation`
+
+**NOTE:** When providing custom arguments for `--typeorder` the following entries **should** be included:
+`beforeMarks, nestedType, instanceProperty, instanceLifecycle, instanceMethod, conditionalCompilation`
 
 `--organizationmode visibility` (default)
 

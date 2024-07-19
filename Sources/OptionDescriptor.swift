@@ -290,7 +290,8 @@ class OptionDescriptor {
                     }
                     try validate(value)
                 }
-            })
+            }
+        )
     }
 
     init(argumentName: String,

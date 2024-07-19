@@ -1893,21 +1893,36 @@ extension Formatter {
 
     enum Declaration: Equatable {
         /// A type-like declaration with body of additional declarations (`class`, `struct`, etc)
-        indirect case type(kind: String, open: [Token], body: [Declaration], close: [Token])
+        indirect case type(
+            kind: String,
+            open: [Token],
+            body: [Declaration],
+            close: [Token],
+            originalRange: ClosedRange<Int>
+        )
 
         /// A simple declaration (like a property or function)
-        case declaration(kind: String, tokens: [Token])
+        case declaration(
+            kind: String,
+            tokens: [Token],
+            originalRange: ClosedRange<Int>
+        )
 
         /// A #if ... #endif conditional compilation block with a body of additional declarations
-        indirect case conditionalCompilation(open: [Token], body: [Declaration], close: [Token])
+        indirect case conditionalCompilation(
+            open: [Token],
+            body: [Declaration],
+            close: [Token],
+            originalRange: ClosedRange<Int>
+        )
 
         /// The tokens in this declaration
         var tokens: [Token] {
             switch self {
-            case let .declaration(_, tokens):
+            case let .declaration(_, tokens, _):
                 return tokens
-            case let .type(_, openTokens, bodyDeclarations, closeTokens),
-                 let .conditionalCompilation(openTokens, bodyDeclarations, closeTokens):
+            case let .type(_, openTokens, bodyDeclarations, closeTokens, _),
+                 let .conditionalCompilation(openTokens, bodyDeclarations, closeTokens, _):
                 return openTokens + bodyDeclarations.flatMap { $0.tokens } + closeTokens
             }
         }
@@ -1917,8 +1932,8 @@ extension Formatter {
             switch self {
             case .declaration:
                 return tokens
-            case let .type(_, open, _, _),
-                 let .conditionalCompilation(open, _, _):
+            case let .type(_, open, _, _, _),
+                 let .conditionalCompilation(open, _, _, _):
                 return open
             }
         }
@@ -1928,8 +1943,8 @@ extension Formatter {
             switch self {
             case .declaration:
                 return nil
-            case let .type(_, _, body, _),
-                 let .conditionalCompilation(_, body, _):
+            case let .type(_, _, body, _, _),
+                 let .conditionalCompilation(_, body, _, _):
                 return body
             }
         }
@@ -1939,8 +1954,8 @@ extension Formatter {
             switch self {
             case .declaration:
                 return []
-            case let .type(_, _, _, close),
-                 let .conditionalCompilation(_, _, close):
+            case let .type(_, _, _, close, _),
+                 let .conditionalCompilation(_, _, close, _):
                 return close
             }
         }
@@ -1949,8 +1964,8 @@ extension Formatter {
         /// (`class`, `func`, `let`, `var`, etc.)
         var keyword: String {
             switch self {
-            case let .declaration(kind, _),
-                 let .type(kind, _, _, _):
+            case let .declaration(kind, _, _),
+                 let .type(kind, _, _, _, _):
                 return kind
             case .conditionalCompilation:
                 return "#if"
@@ -1966,12 +1981,23 @@ extension Formatter {
         var name: String? {
             let parser = Formatter(openTokens)
             guard let keywordIndex = openTokens.firstIndex(of: .keyword(keyword)),
-                  let nameIndex = parser.index(of: .identifier, after: keywordIndex)
+                  let nameIndex = parser.index(of: .nonSpaceOrCommentOrLinebreak, after: keywordIndex),
+                  parser.tokens[nameIndex].isIdentifierOrKeyword
             else {
                 return nil
             }
 
             return parser.fullyQualifiedName(startingAt: nameIndex).name
+        }
+
+        /// The original range of the tokens of this declaration in the original source file
+        var originalRange: ClosedRange<Int> {
+            switch self {
+            case let .type(_, _, _, _, originalRange),
+                 let .declaration(_, _, originalRange),
+                 let .conditionalCompilation(_, _, _, originalRange):
+                return originalRange
+            }
         }
     }
 
@@ -2124,12 +2150,19 @@ extension Formatter {
         return nil
     }
 
-    /// Parse all declarations in the formatter's token range
+    /// Parses all of the declarations in the file
     func parseDeclarations() -> [Declaration] {
+        guard !tokens.isEmpty else { return [] }
+        return parseDeclarations(in: ClosedRange(0 ..< tokens.count))
+    }
+
+    /// Parses the declarations in the given range.
+    func parseDeclarations(in range: ClosedRange<Int>) -> [Declaration] {
         var declarations = [Declaration]()
-        var startOfDeclaration = 0
+        var startOfDeclaration = range.lowerBound
         forEachToken(onlyWhereEnabled: false) { i, token in
-            guard i >= startOfDeclaration,
+            guard range.contains(i),
+                  i >= startOfDeclaration,
                   token.isDeclarationTypeKeyword || token == .startOfScope("#if")
             else {
                 return
@@ -2138,76 +2171,109 @@ extension Formatter {
             let declarationKeyword = declarationType(at: i) ?? "#if"
             let endOfDeclaration = self.endOfDeclaration(atDeclarationKeyword: i, fallBackToEndOfScope: false)
 
-            let declarationRange = startOfDeclaration ... min(endOfDeclaration ?? .max, tokens.count - 1)
+            let declarationRange = startOfDeclaration ... min(endOfDeclaration ?? .max, range.upperBound)
             startOfDeclaration = declarationRange.upperBound + 1
-            let declaration = Array(tokens[declarationRange])
-            declarations.append(.declaration(kind: isEnabled ? declarationKeyword : "", tokens: declaration))
+
+            declarations.append(.declaration(
+                kind: isEnabled ? declarationKeyword : "",
+                tokens: Array(tokens[declarationRange]),
+                originalRange: declarationRange
+            ))
         }
-        if startOfDeclaration < tokens.count {
-            let declaration = Array(tokens[startOfDeclaration...])
-            declarations.append(.declaration(kind: "", tokens: declaration))
+        if startOfDeclaration < range.upperBound {
+            let declarationRange = startOfDeclaration ..< tokens.count
+            declarations.append(.declaration(
+                kind: "",
+                tokens: Array(tokens[declarationRange]),
+                originalRange: ClosedRange(declarationRange)
+            ))
         }
 
         return declarations.map { declaration in
-            let declarationParser = Formatter(declaration.tokens)
-
             // Parses this declaration into a body of declarations separate from the start and end tokens
-            func parseBody(in bodyRange: ClosedRange<Int>) -> (start: [Token], body: [Declaration], end: [Token]) {
-                var startTokens = declarationParser.tokens[...bodyRange.lowerBound]
-                var bodyTokens = declarationParser.tokens[bodyRange.lowerBound + 1 ..< bodyRange.upperBound]
-                var endTokens = declarationParser.tokens[bodyRange.upperBound...]
+            func parseBody(in bodyRange: Range<Int>) -> (start: [Token], body: [Declaration], end: [Token]) {
+                var startTokens = Array(tokens[declaration.originalRange.lowerBound ..< bodyRange.lowerBound])
+                var endTokens = Array(tokens[bodyRange.upperBound ... declaration.originalRange.upperBound])
+
+                guard !bodyRange.isEmpty else {
+                    return (start: startTokens, body: [], end: endTokens)
+                }
+
+                var bodyRange = ClosedRange(bodyRange)
 
                 // Move the leading newlines from the `body` into the `start` tokens
                 // so the first body token is the start of the first declaration
-                while bodyTokens.first?.isLinebreak == true {
-                    startTokens.append(bodyTokens.removeFirst())
+                while tokens[bodyRange].first?.isLinebreak == true {
+                    startTokens.append(tokens[bodyRange.lowerBound])
+
+                    if bodyRange.count > 1 {
+                        bodyRange = (bodyRange.lowerBound + 1) ... bodyRange.upperBound
+                    } else {
+                        // If this was the last remaining token in the body, just return now.
+                        // We can't have an empty `bodyRange`.
+                        return (start: startTokens, body: [], end: endTokens)
+                    }
                 }
 
                 // Move the closing brace's indentation token from the `body` into the `end` tokens
-                if bodyTokens.last?.isSpace == true {
-                    endTokens.insert(bodyTokens.removeLast(), at: endTokens.startIndex)
+                if tokens[bodyRange].last?.isSpace == true {
+                    endTokens.insert(tokens[bodyRange.upperBound], at: endTokens.startIndex)
+
+                    if bodyRange.count > 1 {
+                        bodyRange = bodyRange.lowerBound ... (bodyRange.upperBound - 1)
+                    } else {
+                        // If this was the last remaining token in the body, just return now.
+                        // We can't have an empty `bodyRange`.
+                        return (start: startTokens, body: [], end: endTokens)
+                    }
                 }
 
                 // Parse the inner body declarations of the type
-                let bodyDeclarations = Formatter(Array(bodyTokens)).parseDeclarations()
+                let bodyDeclarations = parseDeclarations(in: bodyRange)
 
-                return (Array(startTokens), bodyDeclarations, Array(endTokens))
+                return (startTokens, bodyDeclarations, endTokens)
             }
 
             // If this declaration represents a type, we need to parse its inner declarations as well.
             let typelikeKeywords = ["class", "actor", "struct", "enum", "protocol", "extension"]
 
             if typelikeKeywords.contains(declaration.keyword),
-               let declarationTypeKeywordIndex = declarationParser
-               .index(after: -1, where: { $0.string == declaration.keyword }),
-               let startOfBody = declarationParser
-               .index(of: .startOfScope("{"), after: declarationTypeKeywordIndex),
-               let endOfBody = declarationParser.endOfScope(at: startOfBody)
+               let declarationTypeKeywordIndex = index(
+                   in: Range(declaration.originalRange),
+                   where: { $0.string == declaration.keyword }
+               ),
+               let bodyOpenBrace = index(of: .startOfScope("{"), after: declarationTypeKeywordIndex),
+               let bodyClosingBrace = endOfScope(at: bodyOpenBrace)
             {
-                let (startTokens, bodyDeclarations, endTokens) = parseBody(in: startOfBody ... endOfBody)
+                let bodyRange = (bodyOpenBrace + 1) ..< bodyClosingBrace
+                let (startTokens, bodyDeclarations, endTokens) = parseBody(in: bodyRange)
 
                 return .type(
                     kind: declaration.keyword,
                     open: startTokens,
                     body: bodyDeclarations,
-                    close: endTokens
+                    close: endTokens,
+                    originalRange: declaration.originalRange
                 )
             }
 
             // If this declaration represents a conditional compilation block,
             // we also have to parse its inner declarations.
             else if declaration.keyword == "#if",
-                    let declarationTypeKeywordIndex = declarationParser
-                    .index(after: -1, where: { $0.string == declaration.keyword }),
-                    let endOfBody = declarationParser.endOfScope(at: declarationTypeKeywordIndex)
+                    let declarationTypeKeywordIndex = index(
+                        in: Range(declaration.originalRange),
+                        where: { $0.string == "#if" }
+                    ),
+                    let endOfBody = endOfScope(at: declarationTypeKeywordIndex)
             {
-                let startOfBody = declarationParser.endOfLine(at: declarationTypeKeywordIndex)
-                let (startTokens, bodyDeclarations, endTokens) = parseBody(in: startOfBody ... endOfBody)
+                let startOfBody = endOfLine(at: declarationTypeKeywordIndex)
+                let (startTokens, bodyDeclarations, endTokens) = parseBody(in: startOfBody ..< endOfBody)
 
                 return .conditionalCompilation(
                     open: startTokens,
                     body: bodyDeclarations,
-                    close: endTokens
+                    close: endTokens,
+                    originalRange: declaration.originalRange
                 )
             } else {
                 return declaration

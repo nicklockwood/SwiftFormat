@@ -5144,6 +5144,43 @@ public struct _FormatRules {
         }
     }
 
+    /// Remove unused private and fileprivate declarations
+    public let unusedPrivateDeclaration = FormatRule(
+        help: "Remove unused private and fileprivate declarations.",
+        disabledByDefault: true
+    ) { formatter in
+        guard !formatter.options.fragment else { return }
+        var privateDeclarations: [Formatter.Declaration] = []
+        var usage: [String: Int] = [:]
+
+        formatter.forEachRecursiveDeclaration { declaration in
+            switch formatter.visibility(of: declaration) {
+            case .fileprivate, .private:
+                privateDeclarations.append(declaration)
+            case .none, .open, .public, .package, .internal:
+                break
+            }
+        }
+
+        formatter.forEach(.identifier) { _, token in
+            usage[token.string, default: 0] += 1
+        }
+
+        for declaration in privateDeclarations.reversed() {
+            if let name = declaration.name,
+               let count = usage[name],
+               count < 2
+            {
+                switch declaration {
+                case let .declaration(_, _, originalRange):
+                    formatter.removeTokens(in: originalRange)
+                case .type, .conditionalCompilation:
+                    break
+                }
+            }
+        }
+    }
+
     /// Replace `fileprivate` with `private` where possible
     public let redundantFileprivate = FormatRule(
         help: "Prefer `private` over `fileprivate` where equivalent."
@@ -5678,13 +5715,14 @@ public struct _FormatRules {
         formatter.mapRecursiveDeclarations { declaration in
             switch declaration {
             // Organize the body of type declarations
-            case let .type(kind, open, body, close):
+            case let .type(kind, open, body, close, originalRange):
                 let organizedType = formatter.organizeType((kind, open, body, close))
                 return .type(
                     kind: organizedType.kind,
                     open: organizedType.open,
                     body: organizedType.body,
-                    close: organizedType.close
+                    close: organizedType.close,
+                    originalRange: originalRange
                 )
 
             case .conditionalCompilation, .declaration:
@@ -5701,7 +5739,7 @@ public struct _FormatRules {
 
         let declarations = formatter.parseDeclarations()
         let updatedDeclarations = formatter.mapRecursiveDeclarations(declarations) { declaration, _ in
-            guard case let .type("extension", open, body, close) = declaration else {
+            guard case let .type("extension", open, body, close, _) = declaration else {
                 return declaration
             }
 
@@ -5744,7 +5782,7 @@ public struct _FormatRules {
                 if memberVisibility > extensionVisibility ?? .internal {
                     // Check type being extended does not have lower visibility
                     for d in declarations where d.name == declaration.name {
-                        if case let .type(kind, _, _, _) = d {
+                        if case let .type(kind, _, _, _, _) = d {
                             if kind != "extension", formatter.visibility(of: d) ?? .internal < memberVisibility {
                                 // Cannot make extension with greater visibility than type being extended
                                 return declaration
@@ -5819,7 +5857,7 @@ public struct _FormatRules {
         }
 
         for (index, declaration) in declarations.enumerated() {
-            guard case let .type(kind, open, body, close) = declaration else { continue }
+            guard case let .type(kind, open, body, close, _) = declaration else { continue }
 
             guard var typeName = declaration.name else {
                 continue

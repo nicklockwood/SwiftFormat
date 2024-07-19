@@ -104,6 +104,7 @@
 * [propertyType](#propertyType)
 * [redundantProperty](#redundantProperty)
 * [sortSwitchCases](#sortSwitchCases)
+* [unusedPrivateDeclaration](#unusedPrivateDeclaration)
 * [wrapConditionalBodies](#wrapConditionalBodies)
 * [wrapEnumCases](#wrapEnumCases)
 * [wrapMultilineConditionalAssignment](#wrapMultilineConditionalAssignment)
@@ -2732,6 +2733,24 @@ Option | Description
 
 + request { _, data in
     self.data += data
+  }
+```
+
+</details>
+<br/>
+
+## unusedPrivateDeclaration
+
+Remove unused private and fileprivate declarations.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  struct Foo {
+-     fileprivate var foo = "foo"
+-     fileprivate var baz = "baz"
+      var bar = "bar"
   }
 ```
 

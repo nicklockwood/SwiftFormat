@@ -1910,18 +1910,18 @@ extension Formatter {
         public var rawValue: String {
             switch self {
             case let .visibility(visibility):
-                visibility.rawValue
+                return visibility.rawValue
             case let .explicit(declarationType):
-                declarationType.rawValue
+                return declarationType.rawValue
             }
         }
 
         var markComment: String {
             switch self {
             case let .visibility(type):
-                type.rawValue.capitalized
+                return type.rawValue.capitalized
             case let .explicit(type):
-                type.markComment
+                return type.markComment
             }
         }
 
@@ -2220,7 +2220,7 @@ extension Formatter {
             return false
         }()
 
-        let isViewDeclaration = {
+        let isViewDeclaration: Bool = {
             guard let someKeywordIndex = declarationParser.index(
                 of: .identifier("some"), after: declarationTypeTokenIndex
             ) else { return false }
@@ -2272,7 +2272,7 @@ extension Formatter {
             //    immediately follows the `func` keyword:
             //    https://docs.swift.org/swift-book/ReferenceManual/Declarations.html#grammar_function-name
             let methodName = declarationParser.next(.nonSpaceOrCommentOrLinebreak, after: declarationTypeTokenIndex)
-            if let methodName, options.lifecycleMethods.contains(methodName.string) {
+            if let methodName = methodName, options.lifecycleMethods.contains(methodName.string) {
                 return .instanceLifecycle
             }
             if isOverriddenDeclaration && availableTypes.contains(.overriddenMethod) {
@@ -2475,7 +2475,7 @@ extension Formatter {
         let typeClosingTokens = typeDeclaration.close
 
         // Parse category order from options
-        let categoryOrder = categoryOrder(for: mode)
+        let categoryOrder = self.categoryOrder(for: mode)
 
         // Remove all of the existing category separators, so they can be readded
         // at the correct location after sorting the declarations.

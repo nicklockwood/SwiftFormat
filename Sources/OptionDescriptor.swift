@@ -282,15 +282,15 @@ class OptionDescriptor {
             argumentName: argumentName,
             displayName: displayName,
             help: help,
-            keyPath: keyPath
-        ) { values in
-            for (index, value) in values.enumerated() {
-                if values[0 ..< index].contains(value) {
-                    throw FormatError.options("Duplicate value '\(value)'")
+            keyPath: keyPath,
+            validateArray: { values in
+                for (index, value) in values.enumerated() {
+                    if values[0 ..< index].contains(value) {
+                        throw FormatError.options("Duplicate value '\(value)'")
+                    }
+                    try validate(value)
                 }
-                try validate(value)
-            }
-        }
+            })
     }
 
     init(argumentName: String,

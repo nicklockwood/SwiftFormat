@@ -2049,9 +2049,9 @@ extension Formatter {
         let parsedVisibilityMarks: ParsedVisibilityMarks = parseMarks(for: customVisibilityMarks)
         let parsedTypeMarks: ParsedTypeMarks = parseMarks(for: customTypeMarks)
 
-        return switch mode {
+        switch mode {
         case .visibility:
-            flatten(primary: visibilityTypes, using: declarationTypes)
+            return flatten(primary: visibilityTypes, using: declarationTypes)
                 .map { offset, element in
                     Category(
                         visibility: element.0,
@@ -2061,7 +2061,7 @@ extension Formatter {
                     )
                 }
         case .type:
-            flatten(primary: declarationTypes, using: visibilityTypes)
+            return flatten(primary: declarationTypes, using: visibilityTypes)
                 .map { offset, element in
                     Category(
                         visibility: element.1,

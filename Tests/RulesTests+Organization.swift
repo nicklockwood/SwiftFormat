@@ -35,6 +35,15 @@ class OrganizationTests: RulesTests {
 
             /// Doc comment
             public func publicMethod() {}
+
+            #if DEBUG
+                private var foo: Foo? { nil }
+            #endif
+        }
+
+        enum Bar {
+            private var bar: Bar { Bar() }
+            case enumCase
         }
         """
 
@@ -76,14 +85,132 @@ class OrganizationTests: RulesTests {
 
             private let bar = 1
 
+            #if DEBUG
+                private var foo: Foo? { nil }
+            #endif
+
             private func privateMethod() {}
 
+        }
+
+        enum Bar {
+            case enumCase
+
+            // MARK: Private
+
+            private var bar: Bar { Bar() }
         }
         """
 
         testFormatting(
             for: input, output,
             rule: FormatRules.organizeDeclarations,
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+        )
+    }
+
+    func testOrganizeClassDeclarationsIntoCategoriesWithCustomTypeOrder() {
+        let input = """
+        class Foo {
+            private func privateMethod() {}
+
+            private let bar = 1
+            public let baz = 1
+            open var quack = 2
+            package func packageMethod() {}
+            var quux = 2
+
+            /// `open` is the only visibility keyword that
+            /// can also be used as an identifier.
+            var open = 10
+
+            /*
+             * Block comment
+             */
+
+            init() {}
+
+            /// Doc comment
+            public func publicMethod() {}
+
+            #if DEBUG
+                private var foo: Foo? { nil }
+            #endif
+        }
+
+        enum Bar {
+            private var bar: Bar { Bar() }
+            case enumCase
+        }
+        """
+
+        let output = """
+        class Foo {
+
+            // MARK: Lifecycle
+
+            /*
+             * Block comment
+             */
+
+            init() {}
+
+            // MARK: Open
+
+            open var quack = 2
+
+            // MARK: Public
+
+            public let baz = 1
+
+            /// Doc comment
+            public func publicMethod() {}
+
+            // MARK: Package
+
+            package func packageMethod() {}
+
+            // MARK: Internal
+
+            var quux = 2
+
+            /// `open` is the only visibility keyword that
+            /// can also be used as an identifier.
+            var open = 10
+
+            // MARK: Private
+
+            private let bar = 1
+
+            #if DEBUG
+                private var foo: Foo? { nil }
+            #endif
+
+            private func privateMethod() {}
+
+        }
+
+        enum Bar {
+            case enumCase
+
+            // MARK: Private
+
+            private var bar: Bar { Bar() }
+        }
+        """
+
+        // The configuration used in Airbnb's Swift Style Guide,
+        // as defined here: https://github.com/airbnb/swift#subsection-organization
+        let airbnbVisibilityOrder = "beforeMarks,instanceLifecycle,open,public,package,internal,private,fileprivate"
+        let airbnbTypeOrder = "nestedType,staticProperty,staticPropertyWithBody,classPropertyWithBody,instanceProperty,instancePropertyWithBody,staticMethod,classMethod,instanceMethod"
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            options: FormatOptions(
+                visibilityOrder: airbnbVisibilityOrder.components(separatedBy: ","),
+                typeOrder: airbnbTypeOrder.components(separatedBy: ",")
+            ),
             exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
         )
     }
@@ -446,7 +573,8 @@ class OrganizationTests: RulesTests {
             for: input, output,
             rule: FormatRules.organizeDeclarations,
             options: FormatOptions(
-                visibilityOrder: ["private", "internal", "public"]
+                visibilityOrder: ["private", "internal", "public"],
+                typeOrder: Formatter.DeclarationType.allCases.map(\.rawValue)
             ),
             exclude: ["blankLinesAtStartOfScope"]
         )
@@ -496,7 +624,7 @@ class OrganizationTests: RulesTests {
             rule: FormatRules.organizeDeclarations,
             options: FormatOptions(
                 visibilityOrder: ["private", "internal", "public"],
-                typeOrder: ["instanceMethod", "instanceProperty"]
+                typeOrder: ["beforeMarks", "nestedType", "instanceLifecycle", "instanceMethod", "instanceProperty"]
             ),
             exclude: ["blankLinesAtStartOfScope"]
         )
@@ -544,7 +672,7 @@ class OrganizationTests: RulesTests {
             rule: FormatRules.organizeDeclarations,
             options: FormatOptions(
                 organizationMode: .type,
-                typeOrder: ["instanceLifecycle", "instanceMethod", "instanceProperty", "overriddenMethod"]
+                typeOrder: ["beforeMarks", "instanceLifecycle", "instanceMethod", "nestedType", "instanceProperty", "overriddenMethod"]
             ),
             exclude: ["blankLinesAtStartOfScope"]
         )
@@ -589,7 +717,7 @@ class OrganizationTests: RulesTests {
             rule: FormatRules.organizeDeclarations,
             options: FormatOptions(
                 organizationMode: .type,
-                typeOrder: ["instanceLifecycle", "instanceMethod", "instanceProperty"]
+                typeOrder: ["beforeMarks", "nestedType", "instanceLifecycle", "instanceMethod", "instanceProperty"]
             ),
             exclude: ["blankLinesAtStartOfScope"]
         )
@@ -641,7 +769,73 @@ class OrganizationTests: RulesTests {
             options: FormatOptions(
                 organizationMode: .type,
                 visibilityOrder: ["private", "internal", "public"],
-                typeOrder: ["instanceLifecycle", "instanceMethod", "instanceProperty", "overriddenMethod"]
+                typeOrder: ["beforeMarks", "nestedType", "instanceLifecycle", "instanceMethod", "instanceProperty", "overriddenMethod"]
+            ),
+            exclude: ["blankLinesAtStartOfScope"]
+        )
+    }
+
+    func testCustomDeclarationTypeUsedAsTopLevelCategory() {
+        let input = """
+        class Test {
+            private let foo = "foo"
+            func bar() {}
+        }
+        """
+
+        let output = """
+        class Test {
+
+            // MARK: Functions
+
+            func bar() {}
+
+            // MARK: Private
+
+            private let foo = "foo"
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            options: FormatOptions(
+                organizationMode: .visibility,
+                visibilityOrder: ["instanceMethod"] + Formatter.Visibility.allCases.map(\.rawValue),
+                typeOrder: Formatter.DeclarationType.allCases.map(\.rawValue).filter { $0 != "instanceMethod" }
+            ),
+            exclude: ["blankLinesAtStartOfScope"]
+        )
+    }
+
+    func testVisibilityModeWithoutInstanceLifecycle() {
+        let input = """
+        class Test {
+            init() {}
+            private func bar() {}
+        }
+        """
+
+        let output = """
+        class Test {
+
+            // MARK: Internal
+
+            init() {}
+
+            // MARK: Private
+
+            private func bar() {}
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            options: FormatOptions(
+                organizationMode: .visibility,
+                visibilityOrder: Formatter.Visibility.allCases.map(\.rawValue),
+                typeOrder: Formatter.DeclarationType.allCases.map(\.rawValue)
             ),
             exclude: ["blankLinesAtStartOfScope"]
         )

@@ -298,6 +298,56 @@ class OptionDescriptor {
          displayName: String,
          help: String,
          deprecationMessage: String? = nil,
+         keyPath: WritableKeyPath<FormatOptions, [String]?>,
+         validateArray: @escaping ([String]) throws -> Void = { _ in })
+    {
+        self.argumentName = argumentName
+        self.displayName = displayName
+        self.help = help
+        self.deprecationMessage = deprecationMessage
+        type = .array
+        toOptions = { value, options in
+            let values = parseCommaDelimitedList(value)
+
+            if values.isEmpty {
+                options[keyPath: keyPath] = nil
+            } else {
+                try validateArray(values)
+                options[keyPath: keyPath] = values
+            }
+        }
+        fromOptions = { options in
+            options[keyPath: keyPath]?.joined(separator: ",") ?? ""
+        }
+    }
+
+    convenience init(argumentName: String,
+                     displayName: String,
+                     help: String,
+                     deprecationMessage _: String? = nil,
+                     keyPath: WritableKeyPath<FormatOptions, [String]?>,
+                     validate: @escaping (String) throws -> Void = { _ in })
+    {
+        self.init(
+            argumentName: argumentName,
+            displayName: displayName,
+            help: help,
+            keyPath: keyPath,
+            validateArray: { values in
+                for (index, value) in values.enumerated() {
+                    if values[0 ..< index].contains(value) {
+                        throw FormatError.options("Duplicate value '\(value)'")
+                    }
+                    try validate(value)
+                }
+            }
+        )
+    }
+
+    init(argumentName: String,
+         displayName: String,
+         help: String,
+         deprecationMessage: String? = nil,
          keyPath: WritableKeyPath<FormatOptions, Set<String>>,
          validate: @escaping (String) throws -> Void = { _ in })
     {
@@ -902,7 +952,7 @@ struct _Descriptors {
             for type in order {
                 guard let concrete = Formatter.VisibilityType(rawValue: type) else {
                     let errorMessage = "'\(type)' is not a valid parameter for --visibilityorder"
-                    guard let match = type.bestMatches(in: essentials).first else {
+                    guard let match = type.bestMatches(in: Formatter.VisibilityType.allCases.map(\.rawValue)).first else {
                         throw FormatError.options(errorMessage)
                     }
                     throw FormatError.options(errorMessage + ". Did you mean '\(match)?'")
@@ -916,16 +966,10 @@ struct _Descriptors {
         help: "Order for declaration type groups inside declaration",
         keyPath: \.typeOrder,
         validateArray: { order in
-            let essentials = Formatter.DeclarationType.essentialCases.map(\.rawValue)
-            for type in essentials {
-                guard order.contains(type) else {
-                    throw FormatError.options("--typeorder expects \(type) to be included")
-                }
-            }
             for type in order {
                 guard let concrete = Formatter.DeclarationType(rawValue: type) else {
                     let errorMessage = "'\(type)' is not a valid parameter for --typeorder"
-                    guard let match = type.bestMatches(in: essentials).first else {
+                    guard let match = type.bestMatches(in: Formatter.DeclarationType.allCases.map(\.rawValue)).first else {
                         throw FormatError.options(errorMessage)
                     }
                     throw FormatError.options(errorMessage + ". Did you mean '\(match)?'")

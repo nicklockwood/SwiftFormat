@@ -10491,13 +10491,39 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.unusedPrivateDeclaration)
     }
 
-    func testDoNotRemovePrivateTypealias() {
+    func testRemovesPrivateTypealias() {
         let input = """
         enum Foo {
             struct Bar {}
             private typealias Baz = Bar
         }
         """
+        let output = """
+        enum Foo {
+            struct Bar {}
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.unusedPrivateDeclaration)
+    }
+
+    func testDoesntRemoveFileprivateInit() {
+        let input = """
+        struct Foo {
+            fileprivate init() {}
+            static let foo = Foo()
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedPrivateDeclaration, exclude: ["propertyType"])
+    }
+
+    func testCanDisableUnusedPrivateDeclarationRule() {
+        let input = """
+        private enum Foo {
+            // swiftformat:disable:next unusedPrivateDeclaration
+            fileprivate static func bar() {}
+        }
+        """
+
         testFormatting(for: input, rule: FormatRules.unusedPrivateDeclaration)
     }
 }

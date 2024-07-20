@@ -653,8 +653,8 @@ public struct FormatOptions: CustomStringConvertible {
     public var organizeEnumThreshold: Int
     public var organizeExtensionThreshold: Int
     public var organizationMode: DeclarationOrganizationMode
-    public var visibilityOrder: [String]
-    public var typeOrder: [String]
+    public var visibilityOrder: [String]?
+    public var typeOrder: [String]?
     public var customVisibilityMarks: Set<String>
     public var customTypeMarks: Set<String>
     public var alphabeticallySortedDeclarationPatterns: Set<String>
@@ -776,8 +776,8 @@ public struct FormatOptions: CustomStringConvertible {
                 organizeEnumThreshold: Int = 0,
                 organizeExtensionThreshold: Int = 0,
                 organizationMode: DeclarationOrganizationMode = .visibility,
-                visibilityOrder: [String] = Formatter.VisibilityType.allCases.map(\.rawValue),
-                typeOrder: [String] = Formatter.DeclarationType.allCases.map(\.rawValue),
+                visibilityOrder: [String]? = nil,
+                typeOrder: [String]? = nil,
                 customVisibilityMarks: Set<String> = [],
                 customTypeMarks: Set<String> = [],
                 alphabeticallySortedDeclarationPatterns: Set<String> = [],

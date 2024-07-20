@@ -284,7 +284,7 @@ class OptionDescriptorTests: XCTestCase {
     }
 
     func testTypeOrder() {
-        let argument = "beforeMarks, nestedType, instanceProperty, instanceLifecycle, instanceMethod, conditionalCompilation"
+        let argument = "beforeMarks, nestedType, instanceProperty, instanceLifecycle, instanceMethod"
 
         let descriptor = Descriptors.typeOrder
         var options = FormatOptions()
@@ -292,19 +292,31 @@ class OptionDescriptorTests: XCTestCase {
     }
 
     func testTypeOrderUnparseableArgument() {
-        let argument = "_beforeMarks, nestedType, instanceProperty, instanceLifecycle, instanceMethod, conditionalCompilation"
+        let argument = "_beforeMarks, nestedType, instanceProperty, instanceLifecycle, instanceMethod"
 
         let descriptor = Descriptors.typeOrder
         var options = FormatOptions()
         XCTAssertThrowsError(try descriptor.toOptions(argument, &options))
     }
 
-    func testTypeOrderMissingEssentials() {
-        let argument = "beforeMarks, nestedType, instanceProperty, instanceLifecycle, instanceMethod"
+    func testAcceptsAirbnbSwiftStyleGuideVisibilityOrder() {
+        // The `visibilityorder` configuration used in Airbnb's Swift Style Guide,
+        // as defined here: https://github.com/airbnb/swift#subsection-organization
+        let argument = "beforeMarks,instanceLifecycle,open,public,package,internal,private,fileprivate"
+
+        let descriptor = Descriptors.visibilityOrder
+        var options = FormatOptions()
+        XCTAssertNoThrow(try descriptor.toOptions(argument, &options))
+    }
+
+    func testAcceptsAirbnbSwiftStyleGuideTypeOrder() {
+        // The `typeorder` configuration used in Airbnb's Swift Style Guide,
+        // as defined here: https://github.com/airbnb/swift#subsection-organization
+        let argument = "nestedType,staticProperty,staticPropertyWithBody,classPropertyWithBody,instanceProperty,instancePropertyWithBody,staticMethod,classMethod,instanceMethod"
 
         let descriptor = Descriptors.typeOrder
         var options = FormatOptions()
-        XCTAssertThrowsError(try descriptor.toOptions(argument, &options))
+        XCTAssertNoThrow(try descriptor.toOptions(argument, &options))
     }
 
     func testFormatOptionsDescriptionConsistency() {

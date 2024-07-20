@@ -5202,11 +5202,18 @@ public struct _FormatRules {
         disabledByDefault: true
     ) { formatter in
         guard !formatter.options.fragment else { return }
-        let allowList = ["let", "var", "func"]
-        var privateDeclarations: [Formatter.Declaration] = []
-        var usage: [String: Int] = [:]
 
+        // Only remove unused properties, functions, or typealiases.
+        //  - This rule doesn't currently support removing unused types,
+        //    and it's more difficult to track the usage of other declaration
+        //    types like `init`, `subscript`, `operator`, etc.
+        let allowlist = ["let", "var", "func", "typealias"]
+
+        // Collect all of the `private` or `fileprivate` declarations in the file
+        var privateDeclarations: [Formatter.Declaration] = []
         formatter.forEachRecursiveDeclaration { declaration in
+            guard allowlist.contains(declaration.keyword) else { return }
+
             switch formatter.visibility(of: declaration) {
             case .fileprivate, .private:
                 privateDeclarations.append(declaration)
@@ -5215,23 +5222,21 @@ public struct _FormatRules {
             }
         }
 
+        // Count the usage of each identifier in the file
+        var usage: [String: Int] = [:]
         formatter.forEach(.identifier) { _, token in
             usage[token.string, default: 0] += 1
         }
 
+        // Remove any private or fileprivate declaration whose name only
+        // appears a single time in the source file
         for declaration in privateDeclarations.reversed() {
-            if let name = declaration.name,
-               let count = usage[name],
-               count < 2
-            {
-                switch declaration {
-                case let .declaration(kind, _, originalRange):
-                    guard allowList.contains(kind) else { break }
-                    formatter.removeTokens(in: originalRange)
-                case .type, .conditionalCompilation:
-                    break
-                }
-            }
+            guard let name = declaration.name,
+                  let count = usage[name],
+                  count <= 1
+            else { continue }
+
+            formatter.removeTokens(in: declaration.originalRange)
         }
     }
 

@@ -1291,17 +1291,23 @@ private struct Examples {
     """
 
     let organizeDeclarations = """
-    Default value for `--visibilityorder`:
-    `\(Formatter.VisibilityType.allCases.reduce(into: "") { $0 += ", \($1.rawValue)" }.dropFirst(2))`
+    Default value for `--visibilityorder` when using `--organizationmode visibility`:
+    `\(Formatter.VisibilityType.defaultOrdering(for: .visibility).map { $0.rawValue }.joined(separator: ", "))`
 
-    **NOTE:** When providing custom arguments for `--visibilityorder` the following entries **should** be included:
-    `\(Formatter.VisibilityType.essentialCases.reduce(into: "") { $0 += ", \($1.rawValue)" }.dropFirst(2))`
+    Default value for `--visibilityorder` when using `--organizationmode type`:
+    `\(Formatter.VisibilityType.defaultOrdering(for: .type).map { $0.rawValue }.joined(separator: ", "))`
 
-    Default value for `--typeorder`:
-    `\(Formatter.DeclarationType.allCases.reduce(into: "") { $0 += ", \($1.rawValue)" }.dropFirst(2))`
+    **NOTE:** When providing custom arguments for `--visibilityorder` the following entries must be included:
+    `\(Formatter.VisibilityType.essentialCases.map { $0.rawValue }.joined(separator: ", "))`
 
-    **NOTE:** When providing custom arguments for `--typeorder` the following entries **should** be included:
-    `\(Formatter.DeclarationType.essentialCases.reduce(into: "") { $0 += ", \($1.rawValue)" }.dropFirst(2))`
+    Default value for `--typeorder` when using `--organizationmode visibility`:
+    `\(Formatter.DeclarationType.defaultOrdering(for: .visibility).map { $0.rawValue }.joined(separator: ", "))`
+
+    Default value for `--typeorder` when using `--organizationmode type`:
+    `\(Formatter.DeclarationType.defaultOrdering(for: .type).map { $0.rawValue }.joined(separator: ", "))`
+
+    **NOTE:** The follow declaration types must be included in either `--typeorder` or `--visibilityorder`:
+    `\(Formatter.DeclarationType.essentialCases.map { $0.rawValue }.joined(separator: ", "))`
 
     `--organizationmode visibility` (default)
 

@@ -10015,6 +10015,21 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantInternal)
     }
 
+    func testPreservesInternalInPublicExtensionWithWhereClause() {
+        let input = """
+        public extension SomeProtocol where SomeAssociatedType == SomeOtherType {
+            internal func fun1() {}
+            func fun2() {}
+        }
+
+        public extension OtherProtocol<GenericArgument> {
+            internal func fun1() {}
+            func fun2() {}
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.redundantInternal)
+    }
+
     // MARK: - noExplicitOwnership
 
     func testRemovesOwnershipKeywordsFromFunc() {

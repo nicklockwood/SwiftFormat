@@ -2266,6 +2266,16 @@ class RedundancyTests: RulesTests {
                        options: options)
     }
 
+    func testNoInsertNilInitInAs() {
+        let input = """
+        let json: Any = ["key": 1]
+        var jsonObject = json as? [String: Int]
+        """
+        let options = FormatOptions(nilInit: .insert)
+        testFormatting(for: input, rule: FormatRules.redundantNilInit,
+                       options: options)
+    }
+
     // MARK: - redundantLet
 
     func testRemoveRedundantLet() {

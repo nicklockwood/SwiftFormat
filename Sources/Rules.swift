@@ -2959,7 +2959,8 @@ public struct _FormatRules {
                 if formatter.index(of: .endOfStatement, in: index + 1 ..< optionalIndex) != nil {
                     return
                 }
-                if !formatter.tokens[optionalIndex - 1].isSpaceOrCommentOrLinebreak {
+                let previousToken = formatter.tokens[optionalIndex - 1]
+                if !previousToken.isSpaceOrCommentOrLinebreak && previousToken != .keyword("as") {
                     let equalsIndex = formatter.index(of: .nonSpaceOrLinebreak, after: optionalIndex, if: {
                         $0 == .operator("=", .infix)
                     })

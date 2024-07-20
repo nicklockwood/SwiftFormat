@@ -10504,4 +10504,14 @@ class RedundancyTests: RulesTests {
 
         testFormatting(for: input, output, rule: FormatRules.unusedPrivateDeclaration)
     }
+
+    func testDoNotRemovePrivateTypealias() {
+        let input = """
+        enum Foo {
+            struct Bar {}
+            private typealias Baz = Bar
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedPrivateDeclaration)
+    }
 }

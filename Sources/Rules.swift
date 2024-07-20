@@ -5150,6 +5150,7 @@ public struct _FormatRules {
         disabledByDefault: true
     ) { formatter in
         guard !formatter.options.fragment else { return }
+        let allowList = ["let", "var", "func"]
         var privateDeclarations: [Formatter.Declaration] = []
         var usage: [String: Int] = [:]
 
@@ -5172,7 +5173,8 @@ public struct _FormatRules {
                count < 2
             {
                 switch declaration {
-                case let .declaration(_, _, originalRange):
+                case let .declaration(kind, _, originalRange):
+                    guard allowList.contains(kind) else { break }
                     formatter.removeTokens(in: originalRange)
                 case .type, .conditionalCompilation:
                     break

@@ -707,27 +707,6 @@ extension Formatter {
             return nil
         }
 
-        func isAfterBrace(_ index: Int, _ i: Int) -> Bool {
-            if let scopeStart = lastIndex(of: .startOfScope, in: index ..< i) {
-                return isAfterBrace(index, scopeStart)
-            }
-            guard let braceIndex = lastIndex(
-                of: .endOfScope("}"),
-                in: index ..< i
-            ) else {
-                return false
-            }
-            guard let nextToken = next(.nonSpaceOrComment, after: braceIndex),
-                  !nextToken.isOperator(ofType: .infix),
-                  !nextToken.isOperator(ofType: .postfix),
-                  nextToken != .startOfScope("("),
-                  nextToken != .startOfScope("{")
-            else {
-                return isAfterBrace(index, braceIndex)
-            }
-            return true
-        }
-
         if tokens[index] == .keyword("case"), let i = self.index(
             of: .nonSpaceOrCommentOrLinebreak,
             before: index,
@@ -746,16 +725,13 @@ extension Formatter {
             switch tokens[prevIndex] {
             case let .keyword(name) where
                 ["if", "guard", "while", "for", "case", "catch"].contains(name):
-                fallthrough
+                return prevIndex
             case .delimiter(","):
-                return isAfterBrace(prevIndex, i) ? nil : prevIndex
+                return startOfConditionalStatement(at: prevIndex)
             default:
                 return nil
             }
         case "if", "guard", "while", "for", "case", "where", "switch":
-            if isAfterBrace(index, i) {
-                return nil
-            }
             return index
         default:
             return nil
@@ -778,25 +754,39 @@ extension Formatter {
         else {
             return nil
         }
+
+        func isAfterBrace(_ index: Int, _ i: Int) -> Bool {
+            if let scopeStart = lastIndex(of: .startOfScope, in: index ..< i) {
+                return isAfterBrace(index, scopeStart)
+            }
+            guard let braceIndex = lastIndex(
+                of: .endOfScope("}"),
+                in: index ..< i
+            ) else {
+                return false
+            }
+            guard let nextToken = next(.nonSpaceOrComment, after: braceIndex),
+                  !nextToken.isOperator(ofType: .infix),
+                  !nextToken.isOperator(ofType: .postfix),
+                  nextToken != .startOfScope("("),
+                  nextToken != .startOfScope("{")
+            else {
+                return isAfterBrace(index, braceIndex)
+            }
+            return true
+        }
+
+        if isAfterBrace(index, i) {
+            return nil
+        }
+
         switch keyword {
         case let name where name.hasPrefix("#") || excluding.contains(name):
             fallthrough
         case "in", "is", "as", "try", "await":
             return indexOfLastSignificantKeyword(at: index - 1, excluding: excluding)
         default:
-            guard let braceIndex = self.index(of: .startOfScope("{"), in: index ..< i),
-                  let endIndex = endOfScope(at: braceIndex),
-                  next(.nonSpaceOrComment, after: endIndex) != .startOfScope("(")
-            else {
-                return index
-            }
-            if keyword == "if" || ["var", "let"].contains(keyword) &&
-                last(.nonSpaceOrCommentOrLinebreak, before: index) == .keyword("if"),
-                self.index(of: .startOfScope("{"), in: endIndex ..< i) == nil
-            {
-                return index
-            }
-            return nil
+            return index
         }
     }
 

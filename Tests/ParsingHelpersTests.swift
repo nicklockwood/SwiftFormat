@@ -134,6 +134,14 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertFalse(formatter.isStartOfClosure(at: 21))
     }
 
+    func testClosureInIfCondition2() {
+        let formatter = Formatter(tokenize("""
+        if let foo, let btn = btns.first { !$0.isHidden } {}
+        """))
+        XCTAssertTrue(formatter.isStartOfClosure(at: 17))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 26))
+    }
+
     // functions
 
     func testFunctionBracesNotTreatedAsClosure() {
@@ -473,6 +481,14 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertFalse(formatter.isStartOfClosure(at: 22))
     }
 
+    func testClosureInsideIfCondition3() {
+        let formatter = Formatter(tokenize("""
+        if baz, let foo = bar(), { x == y }() {}
+        """))
+        XCTAssert(formatter.isStartOfClosure(at: 16))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 28))
+    }
+
     func testClosureAfterGenericType() {
         let formatter = Formatter(tokenize("let foo = Foo<String> {}"))
         XCTAssert(formatter.isStartOfClosure(at: 11))
@@ -588,6 +604,24 @@ class ParsingHelpersTests: XCTestCase {
         """))
         XCTAssertFalse(formatter.isStartOfClosure(at: 7))
         XCTAssertFalse(formatter.isStartOfClosure(at: 12))
+    }
+
+    // MARK: isConditionalStatement
+
+    func testIfConditionContainingClosure() {
+        let formatter = Formatter(tokenize("""
+        if let btn = btns.first { !$0.isHidden } {}
+        """))
+        XCTAssertTrue(formatter.isConditionalStatement(at: 12))
+        XCTAssertTrue(formatter.isConditionalStatement(at: 21))
+    }
+
+    func testIfConditionContainingClosure2() {
+        let formatter = Formatter(tokenize("""
+        if let foo, let btn = btns.first { !$0.isHidden } {}
+        """))
+        XCTAssertTrue(formatter.isConditionalStatement(at: 17))
+        XCTAssertTrue(formatter.isConditionalStatement(at: 26))
     }
 
     // MARK: isAccessorKeyword

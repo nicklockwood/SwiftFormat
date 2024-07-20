@@ -3022,6 +3022,20 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantReturn, options: options)
     }
 
+    func testNoRemoveRequiredReturnInIfClosure2() {
+        let input = """
+        func findButton() -> Button? {
+            let btns = [top, content, bottom]
+            if let foo, let btn = btns.first { !$0.isHidden && $0.alpha > 0.01 } {
+                return btn
+            }
+            return btns.first
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.1")
+        testFormatting(for: input, rule: FormatRules.redundantReturn, options: options)
+    }
+
     func testRemoveRedundantReturnInIfClosure() {
         let input = """
         func findButton() -> Button? {

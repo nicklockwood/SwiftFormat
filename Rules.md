@@ -1378,17 +1378,23 @@ Option | Description
 <details>
 <summary>Examples</summary>
 
-Default value for `--visibilityorder`:
+Default value for `--visibilityorder` when using `--organizationmode visibility`:
 `beforeMarks, instanceLifecycle, open, public, package, internal, fileprivate, private`
 
-**NOTE:** When providing custom arguments for `--visibilityorder` the following entries **should** be included:
+Default value for `--visibilityorder` when using `--organizationmode type`:
 `open, public, package, internal, fileprivate, private`
 
-Default value for `--typeorder`:
-`beforeMarks, nestedType, staticProperty, staticPropertyWithBody, classPropertyWithBody, overriddenProperty, swiftUIPropertyWrapper, instanceProperty, instancePropertyWithBody, instanceLifecycle, swiftUIProperty, swiftUIMethod, overriddenMethod, staticMethod, classMethod, instanceMethod, conditionalCompilation`
+**NOTE:** When providing custom arguments for `--visibilityorder` the following entries must be included:
+`open, public, package, internal, fileprivate, private`
 
-**NOTE:** When providing custom arguments for `--typeorder` the following entries **should** be included:
-`beforeMarks, nestedType, instanceProperty, instanceLifecycle, instanceMethod, conditionalCompilation`
+Default value for `--typeorder` when using `--organizationmode visibility`:
+`nestedType, staticProperty, staticPropertyWithBody, classPropertyWithBody, overriddenProperty, swiftUIPropertyWrapper, instanceProperty, instancePropertyWithBody, swiftUIProperty, swiftUIMethod, overriddenMethod, staticMethod, classMethod, instanceMethod`
+
+Default value for `--typeorder` when using `--organizationmode type`:
+`beforeMarks, nestedType, staticProperty, staticPropertyWithBody, classPropertyWithBody, overriddenProperty, swiftUIPropertyWrapper, instanceProperty, instancePropertyWithBody, instanceLifecycle, swiftUIProperty, swiftUIMethod, overriddenMethod, staticMethod, classMethod, instanceMethod`
+
+**NOTE:** The follow declaration types must be included in either `--typeorder` or `--visibilityorder`:
+`beforeMarks, nestedType, instanceLifecycle, instanceProperty, instanceMethod`
 
 `--organizationmode visibility` (default)
 

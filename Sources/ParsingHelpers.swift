@@ -847,6 +847,34 @@ extension Formatter {
         }
     }
 
+    /// Parses the list of attributes on a declaration, starting at the given index.
+    func attributes(startingAt index: Int) -> [(startIndex: Int, endIndex: Int, tokens: [Token])] {
+        assert(tokens[index].isAttribute)
+
+        var attributes: [(startIndex: Int, endIndex: Int, tokens: [Token])] = []
+
+        var nextAttributeStartIndex = index
+        while tokens[nextAttributeStartIndex].isAttribute {
+            guard let endOfAttribute = endOfAttribute(at: nextAttributeStartIndex) else {
+                return attributes
+            }
+
+            attributes.append((
+                startIndex: nextAttributeStartIndex,
+                endIndex: endOfAttribute,
+                tokens: Array(tokens[nextAttributeStartIndex ... endOfAttribute])
+            ))
+
+            guard let nextIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: endOfAttribute) else {
+                return attributes
+            }
+
+            nextAttributeStartIndex = nextIndex
+        }
+
+        return attributes
+    }
+
     /// Whether or not this property at the given introducer index (either `var` or `let`)
     /// is a stored property or a computed property.
     func isStoredProperty(atIntroducerIndex introducerIndex: Int) -> Bool {

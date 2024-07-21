@@ -1193,6 +1193,19 @@ public struct _FormatRules {
                // Make sure to preserve any code comment between the two lines
                let nextTokenOrComment = formatter.index(of: .nonSpaceOrLinebreak, after: endOfLine)
             {
+                if formatter.tokens[nextTokenOrComment].isComment {
+                    if formatter.options.enabledRules.contains(FormatRules.blankLinesAroundMark.name),
+                       case let .commentBody(body)? = formatter.next(.nonSpace, after: nextTokenOrComment),
+                       body.hasPrefix("MARK:")
+                    {
+                        return
+                    }
+                    if let endOfComment = formatter.index(of: .comment, before: nextIndex) {
+                        let endOfLine = formatter.endOfLine(at: endOfComment)
+                        let startOfLine = formatter.startOfLine(at: nextIndex)
+                        formatter.removeTokens(in: endOfLine + 1 ..< startOfLine)
+                    }
+                }
                 let startOfLine = formatter.startOfLine(at: nextTokenOrComment)
                 formatter.removeTokens(in: endOfLine + 1 ..< startOfLine)
             }

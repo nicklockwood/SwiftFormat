@@ -400,6 +400,7 @@ class LinebreakTests: RulesTests {
             .map { $0 * 2 }
 
             // Multiplies by 3
+
             .map { $0 * 3 }
         """
         let output = """
@@ -409,6 +410,18 @@ class LinebreakTests: RulesTests {
             .map { $0 * 3 }
         """
         testFormatting(for: input, output, rule: FormatRules.blankLinesBetweenChainedFunctions)
+    }
+
+    func testBlankLinesWithMarkCommentBetweenChainedFunctions() {
+        let input = """
+        [0, 1, 2]
+            .map { $0 * 2 }
+
+            // MARK: hello
+
+            .map { $0 * 3 }
+        """
+        testFormatting(for: input, rules: [FormatRules.blankLinesBetweenChainedFunctions, FormatRules.blankLinesAroundMark])
     }
 
     // MARK: - blankLineAfterImports

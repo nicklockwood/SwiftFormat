@@ -83,6 +83,7 @@ public extension String {
 /// Classes of token used for matching
 public enum TokenType {
     case space
+    case comment
     case linebreak
     case endOfStatement
     case startOfScope
@@ -325,6 +326,8 @@ public extension Token {
         switch type {
         case .space:
             return isSpace
+        case .comment:
+            return isComment
         case .spaceOrComment:
             return isSpaceOrComment
         case .spaceOrLinebreak:

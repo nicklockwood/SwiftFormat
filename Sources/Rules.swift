@@ -8380,4 +8380,39 @@ public struct _FormatRules {
             }
         }
     }
+
+    public let docCommentBeforeAttributes = FormatRule(
+        help: "Place doc comments on declarations before any attributes."
+    ) { formatter in
+        formatter.forEachToken(where: \.isDeclarationTypeKeyword) { keywordIndex, _ in
+            // Parse the attributes on this declaration if present
+            let startOfAttributes = formatter.startOfModifiers(at: keywordIndex, includingAttributes: true)
+            guard formatter.tokens[startOfAttributes].isAttribute else { return }
+
+            let attributes = formatter.attributes(startingAt: startOfAttributes)
+            guard !attributes.isEmpty else { return }
+
+            let tokenBeforeAttributes = formatter.lastToken(before: startOfAttributes, where: { !$0.isSpaceOrLinebreak })
+            let attributesRange = attributes.first!.startIndex ... attributes.last!.endIndex
+
+            // Make sure there are no comments immediately before, or within, the set of attributes.
+            guard tokenBeforeAttributes?.isComment != true,
+                  !formatter.tokens[attributesRange].contains(where: \.isComment)
+            else { return }
+
+            // If there's a comment between the attributes and the rest of the declaration,
+            // move it above the attributes.
+            guard let indexAfterAttributes = formatter.index(of: .nonSpaceOrLinebreak, after: attributesRange.upperBound),
+                  let restOfDeclaration = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: attributesRange.upperBound),
+                  formatter.tokens[indexAfterAttributes].isComment,
+                  formatter.tokens[indexAfterAttributes ..< restOfDeclaration].allSatisfy(\.isSpaceOrCommentOrLinebreak)
+            else { return }
+
+            let commentRange = indexAfterAttributes ..< restOfDeclaration
+            let comment = formatter.tokens[commentRange]
+
+            formatter.removeTokens(in: commentRange)
+            formatter.insert(comment, at: startOfAttributes)
+        }
+    }
 }

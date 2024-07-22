@@ -5498,4 +5498,88 @@ class SyntaxTests: RulesTests {
         let options = FormatOptions(redundantType: .inferLocalsOnly)
         testFormatting(for: input, rule: FormatRules.propertyType, options: options)
     }
+
+    // MARK: - docCommentsBeforeAttributes
+
+    func testDocCommentsBeforeAttributes() {
+        let input = """
+        @MainActor
+        /// Doc comment on this type declaration
+        public struct Baaz {
+            @available(*, deprecated)
+            /// Doc comment on this property declaration.
+            /// This comment spans multiple lines.
+            private var bar: Bar
+
+            @FooBarMacro(arg1: true, arg2: .baaz)
+            /**
+             * Doc comment on this function declaration
+             */
+            func foo() {}
+        }
+        """
+
+        let output = """
+        /// Doc comment on this type declaration
+        @MainActor
+        public struct Baaz {
+            /// Doc comment on this property declaration.
+            /// This comment spans multiple lines.
+            @available(*, deprecated)
+            private var bar: Bar
+
+            /**
+             * Doc comment on this function declaration
+             */
+            @FooBarMacro(arg1: true, arg2: .baaz)
+            func foo() {}
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.docCommentBeforeAttributes)
+    }
+
+    func testDocCommentsBeforeMultipleAttributes() {
+        let input = """
+        @MainActor @Macro(argument: true) @available(*, deprecated)
+        /// Doc comment on this function declaration after several attributes
+        public func foo() {}
+
+        @MainActor
+        @Macro(argument: true)
+        @available(*, deprecated)
+        // Comment on this function declaration after several attributes
+        public func bar() {}
+        """
+
+        let output = """
+        /// Doc comment on this function declaration after several attributes
+        @MainActor @Macro(argument: true) @available(*, deprecated)
+        public func foo() {}
+
+        // Comment on this function declaration after several attributes
+        @MainActor
+        @Macro(argument: true)
+        @available(*, deprecated)
+        public func bar() {}
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.docCommentBeforeAttributes, exclude: ["docComments"])
+    }
+
+    func testPreserveComplexCommentsBetweenAttributes() {
+        let input = """
+        // Comment before attribute
+        @MainActor
+        // Comment after attribute
+        func foo() {}
+
+        @MainActor
+        // Comment between attributes
+        @available(*, deprecated)
+        func bar() {}
+        """
+
+        testFormatting(for: input, rule: FormatRules.docCommentBeforeAttributes, exclude: ["docComments"])
+    }
 }

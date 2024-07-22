@@ -2786,6 +2786,30 @@ class OrganizationTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.extensionAccessControl)
     }
 
+    func testExtensionAccessControlRuleTerminatesInFileWithConditionalCompilation() {
+        let input = """
+        #if os(Linux)
+            #error("Linux is currently not supported")
+        #endif
+        """
+
+        testFormatting(for: input, rule: FormatRules.extensionAccessControl)
+    }
+
+    func testExtensionAccessControlRuleTerminatesInFileWithEmptyType() {
+        let input = """
+        struct Foo {
+            // This type is empty
+        }
+
+        extension Foo {
+            // This extension is empty
+        }
+        """
+
+        testFormatting(for: input, rule: FormatRules.extensionAccessControl)
+    }
+
     // MARK: markTypes
 
     func testAddsMarkBeforeTypes() {

@@ -5210,7 +5210,7 @@ public struct _FormatRules {
         let allowlist = ["let", "var", "func", "typealias"]
 
         // Collect all of the `private` or `fileprivate` declarations in the file
-        var privateDeclarations: [Formatter.Declaration] = []
+        var privateDeclarations: [Declaration] = []
         formatter.forEachRecursiveDeclaration { declaration in
             guard allowlist.contains(declaration.keyword) else { return }
 
@@ -5775,7 +5775,7 @@ public struct _FormatRules {
             switch declaration {
             // Organize the body of type declarations
             case let .type(kind, open, body, close, originalRange):
-                let organizedType = formatter.organizeType((kind, open, body, close))
+                let organizedType = formatter.organizeDeclaration((kind, open, body, close))
                 return .type(
                     kind: organizedType.kind,
                     open: organizedType.open,
@@ -5851,7 +5851,7 @@ public struct _FormatRules {
                     }
                 }
 
-                let extensionWithUpdatedVisibility: Formatter.Declaration
+                let extensionWithUpdatedVisibility: Declaration
                 if memberVisibility == extensionVisibility ||
                     (memberVisibility == .internal && visibilityKeyword == nil)
                 {

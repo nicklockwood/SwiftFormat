@@ -1999,4 +1999,13 @@ private struct Examples {
       }
     ```
     """
+
+    let docCommentBeforeAttributes = """
+    ```diff
+    + /// Doc comment on this function declaration
+      @MainActor
+    - /// Doc comment on this function declaration
+      func foo() {}
+    ```
+    """
 }

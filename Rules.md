@@ -15,6 +15,7 @@
 * [consecutiveBlankLines](#consecutiveBlankLines)
 * [consecutiveSpaces](#consecutiveSpaces)
 * [consistentSwitchCaseSpacing](#consistentSwitchCaseSpacing)
+* [docCommentsBeforeAttributes](#docCommentsBeforeAttributes)
 * [duplicateImports](#duplicateImports)
 * [elseOnSameLine](#elseOnSameLine)
 * [emptyBraces](#emptyBraces)
@@ -673,6 +674,23 @@ Option | Description
 +         // TODO: implement Foo.bar() algorithm
       }
   }
+```
+
+</details>
+<br/>
+
+## docCommentsBeforeAttributes
+
+Place doc comments on declarations before any attributes.
+
+<details>
+<summary>Examples</summary>
+
+```diff
++ /// Doc comment on this function declaration
+  @MainActor
+- /// Doc comment on this function declaration
+  func foo() {}
 ```
 
 </details>

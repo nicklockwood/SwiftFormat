@@ -1643,7 +1643,7 @@ class OrganizationTests: RulesTests {
         """
 
         testFormatting(for: input, rule: FormatRules.organizeDeclarations,
-                       exclude: ["blankLinesAtStartOfScope"])
+                       exclude: ["blankLinesAtStartOfScope", "docCommentsBeforeAttributes"])
     }
 
     func testHandlesTrailingCommentCorrectly() {

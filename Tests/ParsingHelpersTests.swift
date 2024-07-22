@@ -1629,6 +1629,7 @@ class ParsingHelpersTests: XCTestCase {
 
         XCTAssertEqual(declarations.count, 1)
         XCTAssertEqual(declarations[0].originalRange, 0 ... 24)
+        XCTAssertEqual(declarations[0].tokens.map(\.string).joined(), input)
 
         XCTAssertEqual(declarations[0].body?.count, 2)
 
@@ -1645,6 +1646,53 @@ class ParsingHelpersTests: XCTestCase {
             sourceCode(for: Array(formatter.tokens[baazDeclarationRange])),
             "let baaz = \"baaz\"\n"
         )
+    }
+
+    func testParseConditionalCompilationWithNoInnerDeclarations() {
+        let input = """
+        struct Foo {
+            // This type is empty
+        }
+        extension Foo {
+            // This extension is empty
+        }
+        """
+
+        let formatter = Formatter(tokenize(input))
+        let declarations = formatter.parseDeclarations()
+        XCTAssertEqual(declarations.count, 2)
+
+        XCTAssertEqual(
+            declarations[0].tokens.map(\.string).joined(),
+            """
+            struct Foo {
+                // This type is empty
+            }
+
+            """
+        )
+
+        XCTAssertEqual(
+            declarations[1].tokens.map(\.string).joined(),
+            """
+            extension Foo {
+                // This extension is empty
+            }
+            """
+        )
+    }
+
+    func testParseConditionalCompilationWithArgument() {
+        let input = """
+        #if os(Linux)
+        #error("Linux is currently not supported")
+        #endif
+        """
+
+        let formatter = Formatter(tokenize(input))
+        let declarations = formatter.parseDeclarations()
+        XCTAssertEqual(declarations.count, 1)
+        XCTAssertEqual(declarations[0].tokens.map(\.string).joined(), input)
     }
 
     // MARK: declarationScope

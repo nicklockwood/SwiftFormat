@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.54.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.54.2) (2024-07-22)
+
+- Fixed broken formatter cache, which caused a significant performance regression since 0.54.0
+- The `blankLinesBetweenChainedFunctions` rule now removes blank line after comments in the chain
+- The `blankLinesBetweenChainedFunctions` rule no longer conflicts with `blankLinesAroundMark`
+- Fixed`redundantInternal` removing required `internal` keyword in extensions with `where` clause
+- Fixed another case of spurious `return` removal in conditional blocks
+- Fixed `redundantNilInit` rule inserting `nil` after `as` keyword
+
 ## [0.54.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.54.1) (2024-07-10)
 
 - The `--nilInit insert` option is no longer applied to lazy or attributed properties

@@ -15,7 +15,7 @@
 * [consecutiveBlankLines](#consecutiveBlankLines)
 * [consecutiveSpaces](#consecutiveSpaces)
 * [consistentSwitchCaseSpacing](#consistentSwitchCaseSpacing)
-* [docCommentBeforeAttributes](#docCommentBeforeAttributes)
+* [docCommentsBeforeAttributes](#docCommentsBeforeAttributes)
 * [duplicateImports](#duplicateImports)
 * [elseOnSameLine](#elseOnSameLine)
 * [emptyBraces](#emptyBraces)
@@ -652,23 +652,6 @@ Ensures consistent spacing among all of the cases in a switch statement.
 </details>
 <br/>
 
-## docCommentBeforeAttributes
-
-Place doc comments on declarations before any attributes.
-
-<details>
-<summary>Examples</summary>
-
-```diff
-+ /// Doc comment on this function declaration
-  @MainActor
-- /// Doc comment on this function declaration
-  func foo() {}
-```
-
-</details>
-<br/>
-
 ## docComments
 
 Use doc comments for API declarations, otherwise use regular comments.
@@ -691,6 +674,23 @@ Option | Description
 +         // TODO: implement Foo.bar() algorithm
       }
   }
+```
+
+</details>
+<br/>
+
+## docCommentsBeforeAttributes
+
+Place doc comments on declarations before any attributes.
+
+<details>
+<summary>Examples</summary>
+
+```diff
++ /// Doc comment on this function declaration
+  @MainActor
+- /// Doc comment on this function declaration
+  func foo() {}
 ```
 
 </details>

@@ -5185,28 +5185,20 @@ public struct _FormatRules {
         }
 
         // Count the usage of each identifier in the file
-        let propertyWrapperPrefixes: [Character] = ["_", "$"]
         var usage: [String: Int] = [:]
         formatter.forEach(.identifier) { _, token in
-            var identifier = token.string
-            // Handle property wrapper prefixes, such as `_showButton = .init(initialValue: false)`, and remove the prefix to count the usage properly
-            if let firstChar = token.string.first,
-               propertyWrapperPrefixes.contains(firstChar)
-            {
-                identifier.removeFirst()
-            }
-            usage[identifier, default: 0] += 1
+            usage[token.string, default: 0] += 1
         }
 
         // Remove any private or fileprivate declaration whose name only
         // appears a single time in the source file
         for declaration in privateDeclarations.reversed() {
-            guard let name = declaration.name,
-                  let count = usage[name],
-                  count <= 1
-            else { continue }
-
-            formatter.removeTokens(in: declaration.originalRange)
+            guard let name = declaration.name else { continue }
+            // Check for common property wrapper prefixes as well as regular usage
+            let count = (usage[name] ?? 0) + (usage["_\(name)"] ?? 0) + (usage["$\(name)"] ?? 0)
+            if count <= 1 {
+                formatter.removeTokens(in: declaration.originalRange)
+            }
         }
     }
 

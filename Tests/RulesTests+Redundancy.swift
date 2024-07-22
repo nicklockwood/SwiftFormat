@@ -10568,12 +10568,22 @@ class RedundancyTests: RulesTests {
 
     func testDoesNotRemovePropertyWrapperPrefixesIfUsed() {
         let input = """
-        struct ContentView {
+        struct ContentView: View {
             public init() {
                 _showButton = .init(initialValue: false)
             }
 
             @State private var showButton: Bool
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedPrivateDeclaration)
+    }
+
+    func testDoesNotRemoveUnderscoredDeclarationIfUsed() {
+        let input = """
+        struct Foo {
+            private var _showButton: Bool = true
+            print(_showButton)
         }
         """
         testFormatting(for: input, rule: FormatRules.unusedPrivateDeclaration)

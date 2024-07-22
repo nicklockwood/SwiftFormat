@@ -263,7 +263,7 @@ public enum FileHeaderMode: Equatable, RawRepresentable, ExpressibleByStringLite
     }
 }
 
-public struct ReplacementOptions {
+public struct ReplacementOptions: CustomStringConvertible {
     var dateFormat: DateFormat
     var timeZone: FormatTimeZone
 
@@ -275,9 +275,13 @@ public struct ReplacementOptions {
     init(_ options: FormatOptions) {
         self.init(dateFormat: options.dateFormat, timeZone: options.timeZone)
     }
+
+    public var description: String {
+        "\(dateFormat)@\(timeZone)"
+    }
 }
 
-public enum ReplacementType: Equatable {
+public enum ReplacementType: Equatable, CustomStringConvertible {
     case constant(String)
     case dynamic((FileInfo, ReplacementOptions) -> String?)
 
@@ -303,6 +307,15 @@ public enum ReplacementType: Equatable {
             return value
         case let .dynamic(fn):
             return fn(info, options)
+        }
+    }
+
+    public var description: String {
+        switch self {
+        case let .constant(value):
+            return value
+        case .dynamic:
+            return "dynamic"
         }
     }
 }
@@ -338,7 +351,8 @@ public struct FileInfo: Equatable, CustomStringConvertible {
     }
 
     public var description: String {
-        replacements.enumerated()
+        replacements
+            .sorted(by: { $0.key.rawValue < $1.key.rawValue })
             .map { "\($0)=\($1)" }
             .joined(separator: ";")
     }
@@ -916,7 +930,15 @@ public struct FormatOptions: CustomStringConvertible {
     public var description: String {
         let allowedCharacters = CharacterSet.newlines.inverted
         return Mirror(reflecting: self).children.compactMap { child in
-            let value = (child.value as? Set<AnyHashable>).map { $0.sorted as Any } ?? child.value
+            var value = child.value
+            switch value {
+            case let array as [String]:
+                value = array.joined(separator: ",")
+            case let set as Set<String>:
+                value = set.sorted().joined(separator: ",")
+            default:
+                break
+            }
             return "\(value);".addingPercentEncoding(withAllowedCharacters: allowedCharacters)
         }.joined()
     }

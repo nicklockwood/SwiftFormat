@@ -37,6 +37,26 @@ class ZRegressionTests: XCTestCase {
 
     // MARK: snapshot/regression tests
 
+    func testCache() {
+        CLI.print = { message, _ in
+            Swift.print(message)
+        }
+        // NOTE: to update regression suite, run again without `--lint` argument
+        let result = CLI.run(in: projectDirectory.path, with: "Tests --cache clear --lint")
+        XCTAssertEqual(result, .ok)
+
+        // Test cache
+        if result == .ok {
+            var messages = [String]()
+            CLI.print = { message, _ in
+                Swift.print(message)
+                messages.append(message)
+            }
+            XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "Tests --symlinks follow --lint --verbose"), .ok)
+            XCTAssert(messages.contains("-- no changes (cached)"))
+        }
+    }
+
     func testRegressionSuite() {
         CLI.print = { message, _ in
             Swift.print(message)

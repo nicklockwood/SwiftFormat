@@ -10565,4 +10565,17 @@ class RedundancyTests: RulesTests {
 
         testFormatting(for: input, rule: FormatRules.unusedPrivateDeclaration)
     }
+
+    func testDoesNotRemovePropertyWrapperPrefixesIfUsed() {
+        let input = """
+        struct ContentView {
+            public init() {
+                _showButton = .init(initialValue: false)
+            }
+
+            @State private var showButton: Bool
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedPrivateDeclaration)
+    }
 }

@@ -2139,11 +2139,11 @@ extension Formatter {
             ))
         }
         if startOfDeclaration < range.upperBound {
-            let declarationRange = startOfDeclaration ..< tokens.count
+            let declarationRange = startOfDeclaration ... range.upperBound
             declarations.append(.declaration(
                 kind: "",
                 tokens: Array(tokens[declarationRange]),
-                originalRange: ClosedRange(declarationRange)
+                originalRange: declarationRange
             ))
         }
 

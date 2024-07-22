@@ -80,6 +80,9 @@
 		01F3DF8D1DB9FD3F00454944 /* Options.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01F3DF8B1DB9FD3F00454944 /* Options.swift */; };
 		01F3DF8E1DB9FD3F00454944 /* Options.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01F3DF8B1DB9FD3F00454944 /* Options.swift */; };
 		01F3DF901DBA003E00454944 /* InferenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01F3DF8F1DBA003E00454944 /* InferenceTests.swift */; };
+		08180DCF2C4EB67F00FD60FF /* DeclarationHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E230CA12C4C1C0700A16E2E /* DeclarationHelpers.swift */; };
+		08180DD02C4EB67F00FD60FF /* DeclarationHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E230CA12C4C1C0700A16E2E /* DeclarationHelpers.swift */; };
+		08180DD12C4EB68000FD60FF /* DeclarationHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E230CA12C4C1C0700A16E2E /* DeclarationHelpers.swift */; };
 		2E230CA22C4C1C0700A16E2E /* DeclarationHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E230CA12C4C1C0700A16E2E /* DeclarationHelpers.swift */; };
 		2E7D30A42A7940C500C32174 /* Singularize.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E7D30A32A7940C500C32174 /* Singularize.swift */; };
 		37D828AB24BF77DA0012FC0A /* XcodeKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 37D828AA24BF77DA0012FC0A /* XcodeKit.framework */; };
@@ -873,6 +876,7 @@
 				DD9AD39F2999FCC8001C2C0E /* GithubActionsLogReporter.swift in Sources */,
 				E4E4D3CA2033F17C000D7CB1 /* EnumAssociable.swift in Sources */,
 				01BBD85A21DAA2A600457380 /* Globs.swift in Sources */,
+				08180DCF2C4EB67F00FD60FF /* DeclarationHelpers.swift in Sources */,
 				01045A92211988F100D2BE3D /* Inference.swift in Sources */,
 				01F3DF8D1DB9FD3F00454944 /* Options.swift in Sources */,
 				E4FABAD6202FEF060065716E /* OptionDescriptor.swift in Sources */,
@@ -906,6 +910,7 @@
 				E4962DE0203F3CD500A02013 /* OptionsStore.swift in Sources */,
 				01ACAE07220CD915003F3CCF /* Examples.swift in Sources */,
 				E4872113201D3B890014845E /* Formatter.swift in Sources */,
+				08180DD02C4EB67F00FD60FF /* DeclarationHelpers.swift in Sources */,
 				E4E4D3CB2033F17C000D7CB1 /* EnumAssociable.swift in Sources */,
 				01BBD85B21DAA2A700457380 /* Globs.swift in Sources */,
 				01A8320824EC7F7700A9D0EB /* FormattingHelpers.swift in Sources */,
@@ -937,6 +942,7 @@
 				90F16AFB1DA5ED9A00EB4EA1 /* CommandErrors.swift in Sources */,
 				01A8320924EC7F7800A9D0EB /* FormattingHelpers.swift in Sources */,
 				018541CF1DBA0F17000F82E3 /* XCSourceTextBuffer+SwiftFormat.swift in Sources */,
+				08180DD12C4EB68000FD60FF /* DeclarationHelpers.swift in Sources */,
 				E4962DE1203F3CD500A02013 /* OptionsStore.swift in Sources */,
 				9028F7851DA4B435009FE5B4 /* Formatter.swift in Sources */,
 				E487212A201E3DD50014845E /* RulesStore.swift in Sources */,

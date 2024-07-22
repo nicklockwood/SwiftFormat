@@ -15,6 +15,7 @@
 * [consecutiveBlankLines](#consecutiveBlankLines)
 * [consecutiveSpaces](#consecutiveSpaces)
 * [consistentSwitchCaseSpacing](#consistentSwitchCaseSpacing)
+* [docCommentBeforeAttributes](#docCommentBeforeAttributes)
 * [duplicateImports](#duplicateImports)
 * [elseOnSameLine](#elseOnSameLine)
 * [emptyBraces](#emptyBraces)
@@ -646,6 +647,23 @@ Ensures consistent spacing among all of the cases in a switch statement.
   case .neptune:
       "Neptune"
   }
+```
+
+</details>
+<br/>
+
+## docCommentBeforeAttributes
+
+Place doc comments on declarations before any attributes.
+
+<details>
+<summary>Examples</summary>
+
+```diff
++ /// Doc comment on this function declaration
+  @MainActor
+- /// Doc comment on this function declaration
+  func foo() {}
 ```
 
 </details>

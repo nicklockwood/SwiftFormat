@@ -574,7 +574,7 @@ class OrganizationTests: RulesTests {
             rule: FormatRules.organizeDeclarations,
             options: FormatOptions(
                 visibilityOrder: ["private", "internal", "public"],
-                typeOrder: Formatter.DeclarationType.allCases.map(\.rawValue)
+                typeOrder: DeclarationType.allCases.map(\.rawValue)
             ),
             exclude: ["blankLinesAtStartOfScope"]
         )
@@ -801,8 +801,8 @@ class OrganizationTests: RulesTests {
             rule: FormatRules.organizeDeclarations,
             options: FormatOptions(
                 organizationMode: .visibility,
-                visibilityOrder: ["instanceMethod"] + Formatter.Visibility.allCases.map(\.rawValue),
-                typeOrder: Formatter.DeclarationType.allCases.map(\.rawValue).filter { $0 != "instanceMethod" }
+                visibilityOrder: ["instanceMethod"] + Visibility.allCases.map(\.rawValue),
+                typeOrder: DeclarationType.allCases.map(\.rawValue).filter { $0 != "instanceMethod" }
             ),
             exclude: ["blankLinesAtStartOfScope"]
         )
@@ -834,8 +834,8 @@ class OrganizationTests: RulesTests {
             rule: FormatRules.organizeDeclarations,
             options: FormatOptions(
                 organizationMode: .visibility,
-                visibilityOrder: Formatter.Visibility.allCases.map(\.rawValue),
-                typeOrder: Formatter.DeclarationType.allCases.map(\.rawValue)
+                visibilityOrder: Visibility.allCases.map(\.rawValue),
+                typeOrder: DeclarationType.allCases.map(\.rawValue)
             ),
             exclude: ["blankLinesAtStartOfScope"]
         )

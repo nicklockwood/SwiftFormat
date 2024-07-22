@@ -937,16 +937,16 @@ struct _Descriptors {
         help: "Order for visibility groups inside declaration",
         keyPath: \.visibilityOrder,
         validateArray: { order in
-            let essentials = Formatter.VisibilityType.essentialCases.map(\.rawValue)
+            let essentials = VisibilityCategory.essentialCases.map(\.rawValue)
             for type in essentials {
                 guard order.contains(type) else {
                     throw FormatError.options("--visibilityorder expects \(type) to be included")
                 }
             }
             for type in order {
-                guard let concrete = Formatter.VisibilityType(rawValue: type) else {
+                guard let concrete = VisibilityCategory(rawValue: type) else {
                     let errorMessage = "'\(type)' is not a valid parameter for --visibilityorder"
-                    guard let match = type.bestMatches(in: Formatter.VisibilityType.allCases.map(\.rawValue)).first else {
+                    guard let match = type.bestMatches(in: VisibilityCategory.allCases.map(\.rawValue)).first else {
                         throw FormatError.options(errorMessage)
                     }
                     throw FormatError.options(errorMessage + ". Did you mean '\(match)?'")
@@ -961,9 +961,9 @@ struct _Descriptors {
         keyPath: \.typeOrder,
         validateArray: { order in
             for type in order {
-                guard let concrete = Formatter.DeclarationType(rawValue: type) else {
+                guard let concrete = DeclarationType(rawValue: type) else {
                     let errorMessage = "'\(type)' is not a valid parameter for --typeorder"
-                    guard let match = type.bestMatches(in: Formatter.DeclarationType.allCases.map(\.rawValue)).first else {
+                    guard let match = type.bestMatches(in: DeclarationType.allCases.map(\.rawValue)).first else {
                         throw FormatError.options(errorMessage)
                     }
                     throw FormatError.options(errorMessage + ". Did you mean '\(match)?'")

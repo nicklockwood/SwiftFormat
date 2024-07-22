@@ -2000,7 +2000,7 @@ private struct Examples {
     ```
     """
 
-    let docCommentBeforeAttributes = """
+    let docCommentsBeforeAttributes = """
     ```diff
     + /// Doc comment on this function declaration
       @MainActor

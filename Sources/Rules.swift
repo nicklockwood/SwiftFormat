@@ -8320,7 +8320,7 @@ public struct _FormatRules {
         }
     }
 
-    public let docCommentBeforeAttributes = FormatRule(
+    public let docCommentsBeforeAttributes = FormatRule(
         help: "Place doc comments on declarations before any attributes."
     ) { formatter in
         formatter.forEachToken(where: \.isDeclarationTypeKeyword) { keywordIndex, _ in
@@ -8331,20 +8331,15 @@ public struct _FormatRules {
             let attributes = formatter.attributes(startingAt: startOfAttributes)
             guard !attributes.isEmpty else { return }
 
-            let tokenBeforeAttributes = formatter.lastToken(before: startOfAttributes, where: { !$0.isSpaceOrLinebreak })
             let attributesRange = attributes.first!.startIndex ... attributes.last!.endIndex
-
-            // Make sure there are no comments immediately before, or within, the set of attributes.
-            guard tokenBeforeAttributes?.isComment != true,
-                  !formatter.tokens[attributesRange].contains(where: \.isComment)
-            else { return }
 
             // If there's a comment between the attributes and the rest of the declaration,
             // move it above the attributes.
-            guard let indexAfterAttributes = formatter.index(of: .nonSpaceOrLinebreak, after: attributesRange.upperBound),
+            guard let linebreakAfterAttributes = formatter.index(of: .linebreak, after: attributesRange.upperBound),
+                  let indexAfterAttributes = formatter.index(of: .nonSpaceOrLinebreak, after: linebreakAfterAttributes),
+                  indexAfterAttributes < keywordIndex,
                   let restOfDeclaration = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: attributesRange.upperBound),
-                  formatter.tokens[indexAfterAttributes].isComment,
-                  formatter.tokens[indexAfterAttributes ..< restOfDeclaration].allSatisfy(\.isSpaceOrCommentOrLinebreak)
+                  formatter.tokens[indexAfterAttributes].isComment
             else { return }
 
             let commentRange = indexAfterAttributes ..< restOfDeclaration

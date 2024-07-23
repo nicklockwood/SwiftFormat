@@ -819,13 +819,13 @@ public struct FormatOptions: CustomStringConvertible {
                 dateFormat: DateFormat = .system,
                 timeZone: FormatTimeZone = .system,
                 nilInit: NilInitType = .remove,
+                preservedPrivateDeclarations: Set<String> = [],
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
                 swiftVersion: Version = .undefined,
                 fileInfo: FileInfo = FileInfo(),
-                timeout: TimeInterval = 1,
-                preservedPrivateDeclarations: Set<String> = [])
+                timeout: TimeInterval = 1)
     {
         self.lineAfterMarks = lineAfterMarks
         self.indent = indent
@@ -933,13 +933,13 @@ public struct FormatOptions: CustomStringConvertible {
         self.dateFormat = dateFormat
         self.timeZone = timeZone
         self.nilInit = nilInit
+        self.preservedPrivateDeclarations = preservedPrivateDeclarations
         // Doesn't really belong here, but hard to put elsewhere
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers
         self.swiftVersion = swiftVersion
         self.fileInfo = fileInfo
         self.timeout = timeout
-        self.preservedPrivateDeclarations = preservedPrivateDeclarations
     }
 
     public var useTabs: Bool {

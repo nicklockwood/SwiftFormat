@@ -10600,4 +10600,14 @@ class RedundancyTests: RulesTests {
         """
         testFormatting(for: input, rule: FormatRules.unusedPrivateDeclaration)
     }
+
+    func testDoNotRemovePreservedPrivateDeclarations() {
+        let input = """
+        enum Foo {
+            private static let registryAssociation = false
+        }
+        """
+        let options = FormatOptions(preservedPrivateDeclarations: ["registryAssociation", "hello"])
+        testFormatting(for: input, rule: FormatRules.unusedPrivateDeclaration, options: options)
+    }
 }

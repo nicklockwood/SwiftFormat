@@ -5161,7 +5161,8 @@ public struct _FormatRules {
     /// Remove unused private and fileprivate declarations
     public let unusedPrivateDeclaration = FormatRule(
         help: "Remove unused private and fileprivate declarations.",
-        disabledByDefault: true
+        disabledByDefault: true,
+        options: ["preservedecls"]
     ) { formatter in
         guard !formatter.options.fragment else { return }
 
@@ -5174,7 +5175,10 @@ public struct _FormatRules {
         // Collect all of the `private` or `fileprivate` declarations in the file
         var privateDeclarations: [Declaration] = []
         formatter.forEachRecursiveDeclaration { declaration in
-            guard allowlist.contains(declaration.keyword) else { return }
+            guard allowlist.contains(declaration.keyword),
+                  let name = declaration.name,
+                  !(formatter.options.preservedPrivateDeclarations.contains(name))
+            else { return }
 
             switch formatter.visibility(of: declaration) {
             case .fileprivate, .private:

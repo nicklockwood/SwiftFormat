@@ -10826,4 +10826,61 @@ class RedundancyTests: RulesTests {
 
         testFormatting(for: input, rule: FormatRules.unusedPrivateDeclaration)
     }
+
+    func testDoesNotRemovePropertyWrapperPrefixesIfUsed() {
+        let input = """
+        struct ContentView: View {
+            public init() {
+                _showButton = .init(initialValue: false)
+            }
+
+            @State private var showButton: Bool
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedPrivateDeclaration)
+    }
+
+    func testDoesNotRemoveUnderscoredDeclarationIfUsed() {
+        let input = """
+        struct Foo {
+            private var _showButton: Bool = true
+            print(_showButton)
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedPrivateDeclaration)
+    }
+
+    func testDoesNotRemoveBacktickDeclarationIfUsed() {
+        let input = """
+        struct Foo {
+            fileprivate static var `default`: Bool = true
+            func printDefault() {
+                print(Foo.default)
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedPrivateDeclaration)
+    }
+
+    func testDoesNotRemoveBacktickUsage() {
+        let input = """
+        struct Foo {
+            fileprivate static var foo = true
+            func printDefault() {
+                print(Foo.`foo`)
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedPrivateDeclaration, exclude: ["redundantBackticks"])
+    }
+
+    func testDoNotRemovePreservedPrivateDeclarations() {
+        let input = """
+        enum Foo {
+            private static let registryAssociation = false
+        }
+        """
+        let options = FormatOptions(preservedPrivateDeclarations: ["registryAssociation", "hello"])
+        testFormatting(for: input, rule: FormatRules.unusedPrivateDeclaration, options: options)
+    }
 }

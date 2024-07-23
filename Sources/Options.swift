@@ -695,6 +695,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var dateFormat: DateFormat
     public var timeZone: FormatTimeZone
     public var nilInit: NilInitType
+    public var preservedPrivateDeclarations: Set<String>
 
     /// Deprecated
     public var indentComments: Bool
@@ -823,7 +824,8 @@ public struct FormatOptions: CustomStringConvertible {
                 ignoreConflictMarkers: Bool = false,
                 swiftVersion: Version = .undefined,
                 fileInfo: FileInfo = FileInfo(),
-                timeout: TimeInterval = 1)
+                timeout: TimeInterval = 1,
+                preservedPrivateDeclarations: Set<String> = [])
     {
         self.lineAfterMarks = lineAfterMarks
         self.indent = indent
@@ -937,6 +939,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.swiftVersion = swiftVersion
         self.fileInfo = fileInfo
         self.timeout = timeout
+        self.preservedPrivateDeclarations = preservedPrivateDeclarations
     }
 
     public var useTabs: Bool {

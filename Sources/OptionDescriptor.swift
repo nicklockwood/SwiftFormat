@@ -1301,4 +1301,10 @@ struct _Descriptors {
             }
         }
     ).renamed(to: "modifierOrder")
+    let preservedPrivateDeclarations = OptionDescriptor(
+        argumentName: "preservedecls",
+        displayName: "Private Declarations to Exclude",
+        help: "Comma separated list of declaration names to exclude",
+        keyPath: \.preservedPrivateDeclarations
+    )
 }

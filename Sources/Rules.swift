@@ -5194,8 +5194,13 @@ public struct _FormatRules {
         // appears a single time in the source file
         for declaration in privateDeclarations.reversed() {
             guard let name = declaration.name else { continue }
-            // Check for common property wrapper prefixes as well as regular usage
-            let count = (usage[name] ?? 0) + (usage["_\(name)"] ?? 0) + (usage["$\(name)"] ?? 0)
+            // Strip backticks from name for a normalized base name
+            let baseName = name.trimmingCharacters(in: CharacterSet(charactersIn: "`"))
+            // Check for regular usage, common property wrapper prefixes, and protected names
+            let count = (usage[baseName] ?? 0)
+                + (usage["_\(baseName)"] ?? 0)
+                + (usage["$\(baseName)"] ?? 0)
+                + (usage["`\(baseName)`"] ?? 0)
             if count <= 1 {
                 formatter.removeTokens(in: declaration.originalRange)
             }

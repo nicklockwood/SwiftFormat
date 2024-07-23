@@ -10601,6 +10601,18 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.unusedPrivateDeclaration)
     }
 
+    func testDoesNotRemoveBacktickUsage() {
+        let input = """
+        struct Foo {
+            fileprivate static var foo = true
+            func printDefault() {
+                print(Foo.`foo`)
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedPrivateDeclaration, exclude: ["redundantBackticks"])
+    }
+
     func testDoNotRemovePreservedPrivateDeclarations() {
         let input = """
         enum Foo {

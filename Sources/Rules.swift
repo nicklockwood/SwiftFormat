@@ -5161,7 +5161,8 @@ public struct _FormatRules {
     /// Remove unused private and fileprivate declarations
     public let unusedPrivateDeclaration = FormatRule(
         help: "Remove unused private and fileprivate declarations.",
-        disabledByDefault: true
+        disabledByDefault: true,
+        options: ["preservedecls"]
     ) { formatter in
         guard !formatter.options.fragment else { return }
 
@@ -5174,7 +5175,10 @@ public struct _FormatRules {
         // Collect all of the `private` or `fileprivate` declarations in the file
         var privateDeclarations: [Declaration] = []
         formatter.forEachRecursiveDeclaration { declaration in
-            guard allowlist.contains(declaration.keyword) else { return }
+            guard allowlist.contains(declaration.keyword),
+                  let name = declaration.name,
+                  !(formatter.options.preservedPrivateDeclarations.contains(name))
+            else { return }
 
             switch formatter.visibility(of: declaration) {
             case .fileprivate, .private:
@@ -5193,12 +5197,14 @@ public struct _FormatRules {
         // Remove any private or fileprivate declaration whose name only
         // appears a single time in the source file
         for declaration in privateDeclarations.reversed() {
-            guard let name = declaration.name,
-                  let count = usage[name],
-                  count <= 1
-            else { continue }
-
-            formatter.removeTokens(in: declaration.originalRange)
+            // Strip backticks from name for a normalized base name for cases like `default`
+            guard let name = declaration.name?.trimmingCharacters(in: CharacterSet(charactersIn: "`")) else { continue }
+            // Check for regular usage, common property wrapper prefixes, and protected names
+            let variants = [name, "_\(name)", "$\(name)", "`\(name)`"]
+            let count = variants.compactMap { usage[$0] }.reduce(0, +)
+            if count <= 1 {
+                formatter.removeTokens(in: declaration.originalRange)
+            }
         }
     }
 

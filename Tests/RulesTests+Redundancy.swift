@@ -10589,7 +10589,7 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.unusedPrivateDeclaration)
     }
 
-    func testDoesNotRemoveUBacktickDeclarationIfUsed() {
+    func testDoesNotRemoveBacktickDeclarationIfUsed() {
         let input = """
         struct Foo {
             fileprivate static var `default`: Bool = true

@@ -324,6 +324,17 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		015687472C4F8B2800E3CE76 /* Reporters */ = {
+			isa = PBXGroup;
+			children = (
+				DD9AD39D2999FCC8001C2C0E /* Reporter.swift */,
+				DD9AD39C2999FCC8001C2C0E /* GithubActionsLogReporter.swift */,
+				A3DF48242620E03600F45A5F /* JSONReporter.swift */,
+				C2FFD1812BD13C9E00774F55 /* XMLReporter.swift */,
+			);
+			path = Reporters;
+			sourceTree = "<group>";
+		};
 		018A47052200D3220012E41B /* PerformanceTests */ = {
 			isa = PBXGroup;
 			children = (
@@ -363,9 +374,7 @@
 		01A0EAA61D5DB4CF00A0A8E3 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
-				DD9AD39D2999FCC8001C2C0E /* Reporter.swift */,
-				DD9AD39C2999FCC8001C2C0E /* GithubActionsLogReporter.swift */,
-				A3DF48242620E03600F45A5F /* JSONReporter.swift */,
+				015687472C4F8B2800E3CE76 /* Reporters */,
 				01F17E811E25870700DCD359 /* CommandLine.swift */,
 				E4E4D3C82033F17C000D7CB1 /* EnumAssociable.swift */,
 				01B3987C1D763493009ADE61 /* Formatter.swift */,
@@ -385,7 +394,6 @@
 				01A0EABF1D5DB4F700A0A8E3 /* Tokenizer.swift */,
 				01BBD85821DAA2A000457380 /* Globs.swift */,
 				D52F6A632A82E04600FE1448 /* GitFileInfo.swift */,
-				C2FFD1812BD13C9E00774F55 /* XMLReporter.swift */,
 			);
 			path = Sources;
 			sourceTree = "<group>";

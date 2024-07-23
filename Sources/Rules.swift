@@ -5193,14 +5193,11 @@ public struct _FormatRules {
         // Remove any private or fileprivate declaration whose name only
         // appears a single time in the source file
         for declaration in privateDeclarations.reversed() {
-            guard let name = declaration.name else { continue }
-            // Strip backticks from name for a normalized base name
-            let baseName = name.trimmingCharacters(in: CharacterSet(charactersIn: "`"))
+            // Strip backticks from name for a normalized base name for cases like `default`
+            guard let name = declaration.name?.trimmingCharacters(in: CharacterSet(charactersIn: "`")) else { continue }
             // Check for regular usage, common property wrapper prefixes, and protected names
-            let count = (usage[baseName] ?? 0)
-                + (usage["_\(baseName)"] ?? 0)
-                + (usage["$\(baseName)"] ?? 0)
-                + (usage["`\(baseName)`"] ?? 0)
+            let variants = [name, "_\(name)", "$\(name)", "`\(name)`"]
+            let count = variants.compactMap { usage[$0] }.reduce(0, +)
             if count <= 1 {
                 formatter.removeTokens(in: declaration.originalRange)
             }

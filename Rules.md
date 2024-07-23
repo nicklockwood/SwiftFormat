@@ -2767,6 +2767,10 @@ Option | Description
 
 Remove unused private and fileprivate declarations.
 
+Option | Description
+--- | ---
+`--preservedecls` | Comma separated list of declaration names to exclude
+
 <details>
 <summary>Examples</summary>
 

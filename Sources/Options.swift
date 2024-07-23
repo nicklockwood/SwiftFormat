@@ -695,6 +695,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var dateFormat: DateFormat
     public var timeZone: FormatTimeZone
     public var nilInit: NilInitType
+    public var preservedPrivateDeclarations: Set<String>
 
     /// Deprecated
     public var indentComments: Bool
@@ -818,6 +819,7 @@ public struct FormatOptions: CustomStringConvertible {
                 dateFormat: DateFormat = .system,
                 timeZone: FormatTimeZone = .system,
                 nilInit: NilInitType = .remove,
+                preservedPrivateDeclarations: Set<String> = [],
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -931,6 +933,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.dateFormat = dateFormat
         self.timeZone = timeZone
         self.nilInit = nilInit
+        self.preservedPrivateDeclarations = preservedPrivateDeclarations
         // Doesn't really belong here, but hard to put elsewhere
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

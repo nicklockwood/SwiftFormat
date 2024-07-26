@@ -3164,6 +3164,39 @@ class WrappingTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
     }
 
+    func testWrapArgumentsDoesntBreakFunctionDeclaration_issue_1776() {
+        let input = """
+        struct OpenAPIController: RouteCollection {
+            let info = InfoObject(title: "Swagger {{cookiecutter.service_name}} - OpenAPI",
+                                  description: "{{cookiecutter.description}}",
+                                  contact: .init(email: "{{cookiecutter.email}}"),
+                                  version: Version(0, 0, 1))
+            func boot(routes: RoutesBuilder) throws {
+                routes.get("swagger", "swagger.json") {
+                    $0.application.routes.openAPI(info: info)
+                }
+                .excludeFromOpenAPI()
+            }
+        }
+        """
+
+        let options = FormatOptions(wrapEffects: .never)
+        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+    }
+
+    func testWrapEffectsNeverPreservesComments() {
+        let input = """
+        func multilineFunction(
+            foo _: String,
+            bar _: String)
+            // Comment here between the parameters and effects
+            async throws -> String {}
+        """
+
+        let options = FormatOptions(closingParenPosition: .sameLine, wrapEffects: .never)
+        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+    }
+
     func testWrapReturnOnMultilineFunctionDeclarationWithAfterFirst() {
         let input = """
         func multilineFunction(foo _: String,

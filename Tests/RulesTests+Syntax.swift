@@ -5559,7 +5559,7 @@ class SyntaxTests: RulesTests {
         @MainActor
         @Macro(argument: true)
         @available(*, deprecated)
-        // Comment on this function declaration after several attributes
+        /// Doc comment on this function declaration after several attributes
         public func bar() {}
         """
 
@@ -5568,14 +5568,14 @@ class SyntaxTests: RulesTests {
         @MainActor @Macro(argument: true) @available(*, deprecated)
         public func foo() {}
 
-        // Comment on this function declaration after several attributes
+        /// Doc comment on this function declaration after several attributes
         @MainActor
         @Macro(argument: true)
         @available(*, deprecated)
         public func bar() {}
         """
 
-        testFormatting(for: input, output, rule: FormatRules.docCommentsBeforeAttributes, exclude: ["docComments"])
+        testFormatting(for: input, output, rule: FormatRules.docCommentsBeforeAttributes)
     }
 
     func testUpdatesCommentsAfterMark() {
@@ -5598,7 +5598,7 @@ class SyntaxTests: RulesTests {
 
             // TODO: This function also has a TODO comment.
             @MainActor
-            // Comment on this function declaration.
+            /// Doc comment on this function declaration.
             private func bar() {}
 
         }
@@ -5622,40 +5622,40 @@ class SyntaxTests: RulesTests {
             // MARK: Private
 
             // TODO: This function also has a TODO comment.
-            // Comment on this function declaration.
+            /// Doc comment on this function declaration.
             @MainActor
             private func bar() {}
 
         }
         """
 
-        testFormatting(for: input, output, rule: FormatRules.docCommentsBeforeAttributes, exclude: ["docComments", "blankLinesAtStartOfScope", "blankLinesAtEndOfScope"])
+        testFormatting(for: input, output, rule: FormatRules.docCommentsBeforeAttributes, exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"])
     }
 
     func testPreservesCommentsBetweenAttributes() {
         let input = """
         @MainActor
-        // Comment between attributes
+        /// Doc comment between attributes
         @available(*, deprecated)
-        /// Comment before declaration
+        /// Doc comment before declaration
         func bar() {}
 
-        @MainActor // Comment after main actor attribute
-        @available(*, deprecated) // Comment after deprecation attribute
-        /// Comment before declaration
+        @MainActor /// Doc comment after main actor attribute
+        @available(*, deprecated) /// Doc comment after deprecation attribute
+        /// Doc comment before declaration
         func bar() {}
         """
 
         let output = """
-        /// Comment before declaration
+        /// Doc comment before declaration
         @MainActor
-        // Comment between attributes
+        /// Doc comment between attributes
         @available(*, deprecated)
         func bar() {}
 
-        /// Comment before declaration
-        @MainActor // Comment after main actor attribute
-        @available(*, deprecated) // Comment after deprecation attribute
+        /// Doc comment before declaration
+        @MainActor /// Doc comment after main actor attribute
+        @available(*, deprecated) /// Doc comment after deprecation attribute
         func bar() {}
         """
 
@@ -5664,10 +5664,36 @@ class SyntaxTests: RulesTests {
 
     func testPreservesCommentOnSameLineAsAttribute() {
         let input = """
-        @MainActor // comment trailing attributes
+        @MainActor /// Doc comment trailing attributes
         func foo() {}
         """
 
-        testFormatting(for: input, rule: FormatRules.docCommentsBeforeAttributes)
+        testFormatting(for: input, rule: FormatRules.docCommentsBeforeAttributes, exclude: ["docComments"])
+    }
+
+    func testPreservesRegularComments() {
+        let input = """
+        @MainActor
+        // Comment after attribute
+        func foo() {}
+        """
+
+        testFormatting(for: input, rule: FormatRules.docCommentsBeforeAttributes, exclude: ["docComments"])
+    }
+
+    func testCombinesWithDocCommentsRule() {
+        let input = """
+        @MainActor
+        // Comment after attribute
+        func foo() {}
+        """
+
+        let output = """
+        /// Comment after attribute
+        @MainActor
+        func foo() {}
+        """
+
+        testFormatting(for: input, [output], rules: [FormatRules.docComments, FormatRules.docCommentsBeforeAttributes])
     }
 }

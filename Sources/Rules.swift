@@ -7210,10 +7210,12 @@ public struct _FormatRules {
                 return
             }
 
-            if let commentBody = formatter.token(at: index + 1),
-               case .commentBody = commentBody
+            let isDocComment = formatter.isDocComment(startOfComment: index)
+
+            if isDocComment,
+               let commentBody = formatter.token(at: index + 1),
+               commentBody.isCommentBody
             {
-                let isDocComment = commentBody.string.hasPrefix(startOfDocCommentBody)
                 if useDocComment, !isDocComment, !preserveRegularComments {
                     let updatedCommentBody = "\(startOfDocCommentBody)\(commentBody.string)"
                     formatter.replaceToken(at: index + 1, with: .commentBody(updatedCommentBody))
@@ -8332,7 +8334,8 @@ public struct _FormatRules {
     }
 
     public let docCommentsBeforeAttributes = FormatRule(
-        help: "Place doc comments on declarations before any attributes."
+        help: "Place doc comments on declarations before any attributes.",
+        orderAfter: ["docComments"]
     ) { formatter in
         formatter.forEachToken(where: \.isDeclarationTypeKeyword) { keywordIndex, _ in
             // Parse the attributes on this declaration if present
@@ -8344,13 +8347,13 @@ public struct _FormatRules {
 
             let attributesRange = attributes.first!.startIndex ... attributes.last!.endIndex
 
-            // If there's a comment between the attributes and the rest of the declaration,
+            // If there's a doc comment between the attributes and the rest of the declaration,
             // move it above the attributes.
             guard let linebreakAfterAttributes = formatter.index(of: .linebreak, after: attributesRange.upperBound),
                   let indexAfterAttributes = formatter.index(of: .nonSpaceOrLinebreak, after: linebreakAfterAttributes),
                   indexAfterAttributes < keywordIndex,
                   let restOfDeclaration = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: attributesRange.upperBound),
-                  formatter.tokens[indexAfterAttributes].isComment
+                  formatter.isDocComment(startOfComment: indexAfterAttributes)
             else { return }
 
             let commentRange = indexAfterAttributes ..< restOfDeclaration

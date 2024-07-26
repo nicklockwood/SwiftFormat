@@ -1644,6 +1644,34 @@ extension Formatter {
         return startIndex ... endOfExpression
     }
 
+    /// Whether or not the comment starting at the given index is a doc comment
+    func isDocComment(startOfComment: Int) -> Bool {
+        let commentToken = tokens[startOfComment]
+        guard commentToken == .startOfScope("//") || commentToken == .startOfScope("/*") else {
+            return false
+        }
+
+        // Doc comment tokens like `///` and `/**` aren't parsed as a
+        // single `.startOfScope` token -- they're parsed as:
+        // `.startOfScope("//"), .commentBody("/ ...")` or
+        // `.startOfScope("/*"), .commentBody("* ...")`
+        let startOfDocCommentBody: String
+        switch commentToken.string {
+        case "//":
+            startOfDocCommentBody = "/"
+        case "/*":
+            startOfDocCommentBody = "*"
+        default:
+            return false
+        }
+
+        guard let commentBody = token(at: startOfComment + 1),
+              commentBody.isCommentBody
+        else { return false }
+
+        return commentBody.string.hasPrefix(startOfDocCommentBody)
+    }
+
     struct ImportRange: Comparable {
         var module: String
         var range: Range<Int>

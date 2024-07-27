@@ -10622,4 +10622,26 @@ class RedundancyTests: RulesTests {
         let options = FormatOptions(preservedPrivateDeclarations: ["registryAssociation", "hello"])
         testFormatting(for: input, rule: FormatRules.unusedPrivateDeclaration, options: options)
     }
+
+    func testDoNotRemoveOverridePrivateMethodDeclarations() {
+        let input = """
+        class Poodle: Dog {
+            override private func makeNoise() {
+                print("Yip!")
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedPrivateDeclaration)
+    }
+
+    func testDoNotRemoveOverridePrivatePropertyDeclarations() {
+        let input = """
+        class Poodle: Dog {
+            override private var age: Int {
+                7
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedPrivateDeclaration)
+    }
 }

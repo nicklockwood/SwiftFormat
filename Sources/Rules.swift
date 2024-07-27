@@ -5171,6 +5171,7 @@ public struct _FormatRules {
         //    and it's more difficult to track the usage of other declaration
         //    types like `init`, `subscript`, `operator`, etc.
         let allowlist = ["let", "var", "func", "typealias"]
+        let overrideList: [DeclarationType] = [.overriddenProperty, .overriddenMethod]
 
         // Collect all of the `private` or `fileprivate` declarations in the file
         var privateDeclarations: [Declaration] = []
@@ -5179,6 +5180,10 @@ public struct _FormatRules {
                   let name = declaration.name,
                   !(formatter.options.preservedPrivateDeclarations.contains(name))
             else { return }
+
+            // Do not collect any `override` method or property declarations
+            let declarationType = formatter.declarationType(of: declaration.keyword, with: declaration.tokens, allowlist: overrideList)
+            guard !(overrideList.contains(declarationType)) else { return }
 
             switch formatter.visibility(of: declaration) {
             case .fileprivate, .private:

@@ -5179,7 +5179,7 @@ public struct _FormatRules {
             guard allowlist.contains(declaration.keyword),
                   let name = declaration.name,
                   !(formatter.options.preservedPrivateDeclarations.contains(name)),
-                  !formatter.hasObjcAttribute(declaration)
+                  !formatter.declarationContainsKeywords(declaration, keywords: ["@objc", "@IBAction"])
             else { return }
 
             // Do not collect any `override` method or property declarations

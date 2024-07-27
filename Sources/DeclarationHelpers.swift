@@ -1562,8 +1562,11 @@ extension Formatter {
         }
     }
 
-    /// Check if the declaration has the `@objc`attribute
-    func hasObjcAttribute(_ declaration: Declaration) -> Bool {
-        declaration.tokens.contains { $0 == .keyword("@objc") }
+    func declarationContainsKeywords(_ declaration: Declaration, keywords: [String]) -> Bool {
+        keywords.contains { declarationContainsKeyword(declaration, keyword: $0) }
+    }
+
+    func declarationContainsKeyword(_ declaration: Declaration, keyword: String) -> Bool {
+        declaration.tokens.contains { $0 == .keyword(keyword) }
     }
 }

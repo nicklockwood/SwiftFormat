@@ -10664,4 +10664,15 @@ class RedundancyTests: RulesTests {
         """
         testFormatting(for: input, rule: FormatRules.unusedPrivateDeclaration)
     }
+
+    func testDoNotRemoveIBActionPrivateFunctionDeclaration() {
+        let input = """
+        class FooViewController: UIViewController {
+            @IBAction private func buttonPressed(_: UIButton) {
+                print("Button pressed!")
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedPrivateDeclaration)
+    }
 }

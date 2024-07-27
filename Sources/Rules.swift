@@ -86,11 +86,6 @@ public final class FormatRule: Equatable, Comparable, CustomStringConvertible {
     public static func < (lhs: FormatRule, rhs: FormatRule) -> Bool {
         lhs.index < rhs.index
     }
-
-    func named(_ name: String) -> FormatRule {
-        self.name = name
-        return self
-    }
 }
 
 public let FormatRules = _FormatRules()
@@ -105,8 +100,10 @@ private let rulesByName: [String: FormatRule] = {
         rules[name] = rule
     }
 
-    for rule in SwiftFormat.rules {
-        rules[rule.name] = rule
+    let alphabetizedRuleRegistry = ruleRegistry.sorted(by: { $0.key < $1.key })
+    for (name, rule) in alphabetizedRuleRegistry {
+        rule.name = name
+        rules[name] = rule
     }
 
     let values = rules.values.sorted(by: { $0.name < $1.name })

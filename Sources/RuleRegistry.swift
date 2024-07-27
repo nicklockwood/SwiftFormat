@@ -8,14 +8,14 @@
 
 /// All of the rules defined in the Rules directory.
 /// **Generated automatically when building. Do not modify.**
-let rules: [FormatRule] = [
-    indent.named("indent"),
-    preferForLoop.named("preferForLoop"),
-    spaceAroundComments.named("spaceAroundComments"),
+let ruleRegistry: [String: FormatRule] = [
+    "indent": indent,
+    "preferForLoop": preferForLoop,
+    "spaceAroundComments": spaceAroundComments,
 ]
 
 public extension _FormatRules {
-    var indent: FormatRule { SwiftFormat.indent }
-    var preferForLoop: FormatRule { SwiftFormat.preferForLoop }
-    var spaceAroundComments: FormatRule { SwiftFormat.spaceAroundComments }
+    var indent: FormatRule { ruleRegistry["indent"]! }
+    var preferForLoop: FormatRule { ruleRegistry["preferForLoop"]! }
+    var spaceAroundComments: FormatRule { ruleRegistry["spaceAroundComments"]! }
 }

@@ -35,24 +35,24 @@ fileContents="//
 
 /// All of the rules defined in the Rules directory.
 /// **Generated automatically when building. Do not modify.**
-let rules: [FormatRule] = ["
+let ruleRegistry: [String: FormatRule] = ["
 
 for ruleName in ${rules[*]}; do
-fileContents="$fileContents
-    ${ruleName}.named(\"${ruleName}\"),"
+fileContents+="
+    \"${ruleName}\": ${ruleName},"
 done
 
-fileContents="$fileContents
+fileContents+="
 ]
 
 public extension _FormatRules {"
 
 for ruleName in ${rules[*]}; do
-fileContents="$fileContents
-    var ${ruleName}: FormatRule { SwiftFormat.${ruleName} }"
+fileContents+="
+    var ${ruleName}: FormatRule { ruleRegistry[\"${ruleName}\"]! }"
 done
 
-fileContents="$fileContents
+fileContents+="
 }"
 
 echo "$fileContents" > "${SRCROOT}/Sources/RuleRegistry.swift"

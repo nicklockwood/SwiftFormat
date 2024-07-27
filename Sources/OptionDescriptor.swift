@@ -1000,7 +1000,7 @@ struct _Descriptors {
     let conditionalAssignmentOnlyAfterNewProperties = OptionDescriptor(
         argumentName: "condassignment",
         displayName: "Apply conditionalAssignment rule",
-        help: "Use cond. assignment: \"after-property\" (default) or \"always\".",
+        help: "Use cond. assignment: \"after-property\" (default) or \"always\"",
         keyPath: \.preserveSingleLineForEach,
         trueValues: ["after-property"],
         falseValues: ["always"]

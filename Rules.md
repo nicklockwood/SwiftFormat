@@ -510,7 +510,7 @@ Assign properties using if / switch expressions.
 
 Option | Description
 --- | ---
-`--condassignment` | Use cond. assignment: "after-property" (default) or "always".
+`--condassignment` | Use cond. assignment: "after-property" (default) or "always"
 
 <details>
 <summary>Examples</summary>

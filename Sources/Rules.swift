@@ -5178,7 +5178,8 @@ public struct _FormatRules {
         formatter.forEachRecursiveDeclaration { declaration in
             guard allowlist.contains(declaration.keyword),
                   let name = declaration.name,
-                  !(formatter.options.preservedPrivateDeclarations.contains(name))
+                  !(formatter.options.preservedPrivateDeclarations.contains(name)),
+                  !formatter.hasObjcAttribute(declaration)
             else { return }
 
             // Do not collect any `override` method or property declarations

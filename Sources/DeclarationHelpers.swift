@@ -1561,4 +1561,9 @@ extension Formatter {
             return openTokensFormatter.tokens
         }
     }
+
+    /// Check if the declaration has the `@objc`attribute
+    func hasObjcAttribute(_ declaration: Declaration) -> Bool {
+        declaration.tokens.contains { $0 == .keyword("@objc") }
+    }
 }

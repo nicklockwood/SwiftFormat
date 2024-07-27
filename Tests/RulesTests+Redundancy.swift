@@ -10644,4 +10644,24 @@ class RedundancyTests: RulesTests {
         """
         testFormatting(for: input, rule: FormatRules.unusedPrivateDeclaration)
     }
+
+    func testDoNotRemoveObjcPrivatePropertyDeclaration() {
+        let input = """
+        struct Foo {
+            @objc
+            private var bar = "bar"
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedPrivateDeclaration)
+    }
+
+    func testDoNotRemoveObjcPrivateFunctionDeclaration() {
+        let input = """
+        struct Foo {
+            @objc
+            private func doSomething() {}
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedPrivateDeclaration)
+    }
 }

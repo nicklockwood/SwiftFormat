@@ -139,6 +139,10 @@ enum Declaration: Equatable {
         })
         return allModifiers
     }
+
+    var swiftUIPropertyWrapper: String? {
+        modifiers.first(where: Formatter.swiftUIPropertyWrappers.contains)
+    }
 }
 
 extension Formatter {
@@ -525,7 +529,7 @@ extension Formatter {
 
         let isSwiftUIPropertyWrapper = declarationParser
             .modifiersForDeclaration(at: declarationTypeTokenIndex) { _, modifier in
-                swiftUIPropertyWrappers.contains(modifier)
+                Self.swiftUIPropertyWrappers.contains(modifier)
             }
 
         switch declarationTypeToken {
@@ -602,7 +606,7 @@ extension Formatter {
 
     /// Represents all the native SwiftUI property wrappers that conform to `DynamicProperty` and cause a SwiftUI view to re-render.
     /// Most of these are listed here: https://developer.apple.com/documentation/swiftui/dynamicproperty
-    private var swiftUIPropertyWrappers: Set<String> {
+    fileprivate static var swiftUIPropertyWrappers: Set<String> {
         [
             "@AccessibilityFocusState",
             "@AppStorage",
@@ -1052,6 +1056,14 @@ extension Formatter {
                    lhsName != rhsName
                 {
                     return lhsName.localizedCompare(rhsName) == .orderedAscending
+                }
+
+                if options.alphabetizeSwiftUIPropertyTypes,
+                   lhs.category.type == rhs.category.type,
+                   let lhsSwiftUIProperty = lhs.declaration.swiftUIPropertyWrapper,
+                   let rhsSwiftUIProperty = rhs.declaration.swiftUIPropertyWrapper
+                {
+                    return lhsSwiftUIProperty.localizedCompare(rhsSwiftUIProperty) == .orderedAscending
                 }
 
                 // Respect the original declaration ordering when the categories and types are the same

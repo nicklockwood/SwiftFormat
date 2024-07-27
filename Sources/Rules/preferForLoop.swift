@@ -67,65 +67,11 @@ let preferForLoop = FormatRule(
         // Parse a functional chain backwards from the `forEach` token
         var currentIndex = forEachIndex
 
-        // Returns the start index of the chain component ending at the given index
-        func startOfChainComponent(at index: Int) -> Int? {
-            // The previous item in a dot chain can either be:
-            //  1. an identifier like `foo.`
-            //  2. a function call like `foo(...).`
-            //  3. a subscript like `foo[...].
-            //  4. a trailing closure like `map { ... }`
-            //  5. Some other combination of parens / subscript like `(foo).`
-            //     or even `foo["bar"]()()`.
-            // And any of these can be preceeded by one of the others
-            switch formatter.tokens[index] {
-            case let .identifier(identifierName):
-                // Allowlist certain dot chain elements that should be ignored.
-                // For example, in `foos.reversed().forEach { ... }` we want
-                // `forLoopSubjectIdentifier` to be `foos` rather than `reversed`.
-                let chainElementsToIgnore = Set([
-                    "reversed", "sorted", "shuffled", "enumerated", "dropFirst", "dropLast",
-                    "map", "flatMap", "compactMap", "filter", "reduce", "lazy",
-                ])
-
-                if forLoopSubjectIdentifier == nil || chainElementsToIgnore.contains(forLoopSubjectIdentifier ?? "") {
-                    // Since we have to pick a single identifier to represent the subject of the for loop,
-                    // just use the last identifier in the chain
-                    forLoopSubjectIdentifier = identifierName
-                }
-
-                return index
-
-            case .endOfScope(")"), .endOfScope("]"):
-                let closingParenIndex = index
-                guard let startOfScopeIndex = formatter.startOfScope(at: closingParenIndex),
-                      let previousNonSpaceNonCommentIndex = formatter.index(of: .nonSpaceOrComment, before: startOfScopeIndex)
-                else { return nil }
-
-                // When we find parens for a function call or braces for a subscript,
-                // continue parsing at the previous non-space non-comment token.
-                //  - If the previous token is a newline then this isn't a function call
-                //    and we'd stop parsing. `foo   ()` is a function call but `foo\n()` isn't.
-                return startOfChainComponent(at: previousNonSpaceNonCommentIndex) ?? startOfScopeIndex
-
-            case .endOfScope("}"):
-                // Stop parsing if we reach a trailing closure.
-                // Converting this to a for loop would result in unusual looking syntax like
-                // `for string in strings.map { $0.uppercased() } { print(string) }`
-                // which causes a warning to be emitted: "trailing closure in this context is
-                // confusable with the body of the statement; pass as a parenthesized argument
-                // to silence this warning".
-                return nil
-
-            default:
-                return nil
-            }
-        }
-
         while let previousDotIndex = formatter.index(of: .nonSpaceOrLinebreak, before: currentIndex),
               formatter.tokens[previousDotIndex] == .operator(".", .infix),
               let tokenBeforeDotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: previousDotIndex)
         {
-            guard let startOfChainComponent = startOfChainComponent(at: tokenBeforeDotIndex) else {
+            guard let startOfChainComponent = formatter.startOfChainComponent(at: tokenBeforeDotIndex, forLoopSubjectIdentifier: &forLoopSubjectIdentifier) else {
                 // If we parse a dot we expect to parse at least one additional component in the chain.
                 // Otherwise we'd have a malformed chain that starts with a dot, so abort.
                 return
@@ -281,5 +227,61 @@ let preferForLoop = FormatRule(
             in: (forLoopSubjectRange.lowerBound) ... (inKeywordIndex ?? closureOpenBraceIndex),
             with: newTokens
         )
+    }
+}
+
+private extension Formatter {
+    // Returns the start index of the chain component ending at the given index
+    func startOfChainComponent(at index: Int, forLoopSubjectIdentifier: inout String?) -> Int? {
+        // The previous item in a dot chain can either be:
+        //  1. an identifier like `foo.`
+        //  2. a function call like `foo(...).`
+        //  3. a subscript like `foo[...].
+        //  4. a trailing closure like `map { ... }`
+        //  5. Some other combination of parens / subscript like `(foo).`
+        //     or even `foo["bar"]()()`.
+        // And any of these can be preceeded by one of the others
+        switch tokens[index] {
+        case let .identifier(identifierName):
+            // Allowlist certain dot chain elements that should be ignored.
+            // For example, in `foos.reversed().forEach { ... }` we want
+            // `forLoopSubjectIdentifier` to be `foos` rather than `reversed`.
+            let chainElementsToIgnore = Set([
+                "reversed", "sorted", "shuffled", "enumerated", "dropFirst", "dropLast",
+                "map", "flatMap", "compactMap", "filter", "reduce", "lazy",
+            ])
+
+            if forLoopSubjectIdentifier == nil || chainElementsToIgnore.contains(forLoopSubjectIdentifier ?? "") {
+                // Since we have to pick a single identifier to represent the subject of the for loop,
+                // just use the last identifier in the chain
+                forLoopSubjectIdentifier = identifierName
+            }
+
+            return index
+
+        case .endOfScope(")"), .endOfScope("]"):
+            let closingParenIndex = index
+            guard let startOfScopeIndex = startOfScope(at: closingParenIndex),
+                  let previousNonSpaceNonCommentIndex = self.index(of: .nonSpaceOrComment, before: startOfScopeIndex)
+            else { return nil }
+
+            // When we find parens for a function call or braces for a subscript,
+            // continue parsing at the previous non-space non-comment token.
+            //  - If the previous token is a newline then this isn't a function call
+            //    and we'd stop parsing. `foo   ()` is a function call but `foo\n()` isn't.
+            return startOfChainComponent(at: previousNonSpaceNonCommentIndex, forLoopSubjectIdentifier: &forLoopSubjectIdentifier) ?? startOfScopeIndex
+
+        case .endOfScope("}"):
+            // Stop parsing if we reach a trailing closure.
+            // Converting this to a for loop would result in unusual looking syntax like
+            // `for string in strings.map { $0.uppercased() } { print(string) }`
+            // which causes a warning to be emitted: "trailing closure in this context is
+            // confusable with the body of the statement; pass as a parenthesized argument
+            // to silence this warning".
+            return nil
+
+        default:
+            return nil
+        }
     }
 }

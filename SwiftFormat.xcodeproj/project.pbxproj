@@ -651,6 +651,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 01A0EACE1D5DB5F500A0A8E3 /* Build configuration list for PBXNativeTarget "CommandLineTool" */;
 			buildPhases = (
+				2E4351D82C55941900BCBB5E /* Generate Rules Registry */,
 				01A0EAC61D5DB5F500A0A8E3 /* Sources */,
 				01A0EAC71D5DB5F500A0A8E3 /* Frameworks */,
 			);
@@ -667,6 +668,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 90C4B6D81DA4B04A009EB000 /* Build configuration list for PBXNativeTarget "SwiftFormat for Xcode" */;
 			buildPhases = (
+				2E4351D92C55942E00BCBB5E /* Generate Rules Registry */,
 				90C4B6C61DA4B04A009EB000 /* Sources */,
 				90C4B6C71DA4B04A009EB000 /* Frameworks */,
 				90C4B6C81DA4B04A009EB000 /* Resources */,
@@ -686,6 +688,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 90C4B6EC1DA4B059009EB000 /* Build configuration list for PBXNativeTarget "Editor Extension" */;
 			buildPhases = (
+				2E4351DB2C55944C00BCBB5E /* Generate Rules Registry */,
 				90C4B6D91DA4B059009EB000 /* Sources */,
 				90C4B6DA1DA4B059009EB000 /* Frameworks */,
 				90C4B6DB1DA4B059009EB000 /* Resources */,
@@ -835,6 +838,66 @@
 			inputPaths = (
 			);
 			name = "Generate Rule Registry";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/generateRulesRegistry.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		2E4351D82C55941900BCBB5E /* Generate Rules Registry */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Generate Rules Registry";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/generateRulesRegistry.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		2E4351D92C55942E00BCBB5E /* Generate Rules Registry */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Generate Rules Registry";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/generateRulesRegistry.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		2E4351DB2C55944C00BCBB5E /* Generate Rules Registry */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Generate Rules Registry";
 			outputFileListPaths = (
 			);
 			outputPaths = (

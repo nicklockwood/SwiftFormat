@@ -367,7 +367,7 @@ extension Formatter {
                     if startOfLine(at: endOfFunctionScope) != startOfLine(at: effectIndex) {
                         let rangeToRemove = endOfLine(at: endOfFunctionScope) ..< effectIndex
 
-                        if tokens[rangeToRemove].allSatisfy(\.isSpaceOrCommentOrLinebreak) {
+                        if tokens[rangeToRemove].allSatisfy(\.isSpaceOrLinebreak) {
                             replaceTokens(in: rangeToRemove, with: [.space(" ")])
                         }
                     }

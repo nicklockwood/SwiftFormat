@@ -5171,20 +5171,19 @@ public struct _FormatRules {
         //    and it's more difficult to track the usage of other declaration
         //    types like `init`, `subscript`, `operator`, etc.
         let allowlist = ["let", "var", "func", "typealias"]
-        let overrideList: [DeclarationType] = [.overriddenProperty, .overriddenMethod]
+        let disallowedModifiers = ["override", "@objc", "@IBAction", "@IBSegueAction", "@IBOutlet", "@IBDesignable", "@IBInspectable", "@NSManaged", "@GKInspectable"]
 
         // Collect all of the `private` or `fileprivate` declarations in the file
         var privateDeclarations: [Declaration] = []
         formatter.forEachRecursiveDeclaration { declaration in
+            let declarationModifiers = Set(declaration.modifiers)
+            let hasDisallowedModifiers = disallowedModifiers.contains(where: { declarationModifiers.contains($0) })
+
             guard allowlist.contains(declaration.keyword),
                   let name = declaration.name,
-                  !(formatter.options.preservedPrivateDeclarations.contains(name)),
-                  !formatter.declarationContainsKeywords(declaration, keywords: ["@objc", "@IBAction"])
+                  !formatter.options.preservedPrivateDeclarations.contains(name),
+                  !hasDisallowedModifiers
             else { return }
-
-            // Do not collect any `override` method or property declarations
-            let declarationType = formatter.declarationType(of: declaration.keyword, with: declaration.tokens, allowlist: overrideList)
-            guard !(overrideList.contains(declarationType)) else { return }
 
             switch formatter.visibility(of: declaration) {
             case .fileprivate, .private:

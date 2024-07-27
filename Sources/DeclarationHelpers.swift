@@ -125,6 +125,20 @@ enum Declaration: Equatable {
             return originalRange
         }
     }
+
+    var modifiers: [String] {
+        let parser = Formatter(openTokens)
+        guard let keywordIndex = parser.index(of: .keyword(keyword), after: 0) else {
+            return []
+        }
+
+        var allModifiers = [String]()
+        _ = parser.modifiersForDeclaration(at: keywordIndex, contains: { _, modifier in
+            allModifiers.append(modifier)
+            return false
+        })
+        return allModifiers
+    }
 }
 
 extension Formatter {
@@ -1560,13 +1574,5 @@ extension Formatter {
 
             return openTokensFormatter.tokens
         }
-    }
-
-    func declarationContainsKeywords(_ declaration: Declaration, keywords: [String]) -> Bool {
-        keywords.contains { declarationContainsKeyword(declaration, keyword: $0) }
-    }
-
-    func declarationContainsKeyword(_ declaration: Declaration, keyword: String) -> Bool {
-        declaration.tokens.contains { $0 == .keyword(keyword) }
     }
 }

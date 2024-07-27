@@ -10710,4 +10710,57 @@ class RedundancyTests: RulesTests {
         let options = FormatOptions(preservedPrivateDeclarations: ["registryAssociation", "hello"])
         testFormatting(for: input, rule: FormatRules.unusedPrivateDeclaration, options: options)
     }
+
+    func testDoNotRemoveOverridePrivateMethodDeclarations() {
+        let input = """
+        class Poodle: Dog {
+            override private func makeNoise() {
+                print("Yip!")
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedPrivateDeclaration)
+    }
+
+    func testDoNotRemoveOverridePrivatePropertyDeclarations() {
+        let input = """
+        class Poodle: Dog {
+            override private var age: Int {
+                7
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedPrivateDeclaration)
+    }
+
+    func testDoNotRemoveObjcPrivatePropertyDeclaration() {
+        let input = """
+        struct Foo {
+            @objc
+            private var bar = "bar"
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedPrivateDeclaration)
+    }
+
+    func testDoNotRemoveObjcPrivateFunctionDeclaration() {
+        let input = """
+        struct Foo {
+            @objc
+            private func doSomething() {}
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedPrivateDeclaration)
+    }
+
+    func testDoNotRemoveIBActionPrivateFunctionDeclaration() {
+        let input = """
+        class FooViewController: UIViewController {
+            @IBAction private func buttonPressed(_: UIButton) {
+                print("Button pressed!")
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedPrivateDeclaration)
+    }
 }

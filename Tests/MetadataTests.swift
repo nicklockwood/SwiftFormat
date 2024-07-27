@@ -143,119 +143,131 @@ class MetadataTests: XCTestCase {
     // MARK: options
 
     func testRulesOptions() throws {
+        var allOptions = Set(formattingArguments).subtracting(deprecatedArguments)
+        var allSharedOptions = allOptions
         var optionsByProperty = [String: OptionDescriptor]()
         for descriptor in Descriptors.formatting.reversed() {
             optionsByProperty[descriptor.propertyName] = descriptor
         }
-        let rulesFile = projectDirectory.appendingPathComponent("Sources/Rules.swift")
-        let rulesSource = try String(contentsOf: rulesFile, encoding: .utf8)
-        let tokens = tokenize(rulesSource)
-        let formatter = Formatter(tokens)
-        var rulesByOption = [String: String]()
-        var allOptions = Set(formattingArguments).subtracting(deprecatedArguments)
-        var allSharedOptions = allOptions
-        formatter.forEach(.identifier("FormatRule")) { i, _ in
-            guard formatter.next(.nonSpaceOrLinebreak, after: i) == .startOfScope("("),
-                  case let .identifier(name)? = formatter.last(.identifier, before: i),
-                  let scopeStart = formatter.index(of: .startOfScope("{"), after: i),
-                  let scopeEnd = formatter.index(of: .endOfScope("}"), after: scopeStart),
-                  let rule = FormatRules.byName[name]
-            else {
-                return
-            }
-            for option in rule.options where !rule.isDeprecated {
-                if let oldName = rulesByOption[option] {
-                    XCTFail("\(option) set as (non-shared) option for both \(name) and \(oldName)")
-                }
-                rulesByOption[option] = name
-            }
-            let ruleOptions = rule.options + rule.sharedOptions
-            allOptions.subtract(rule.options)
-            allSharedOptions.subtract(ruleOptions)
-            var referencedOptions = [OptionDescriptor]()
-            for index in scopeStart + 1 ..< scopeEnd {
-                guard formatter.token(at: index - 1) == .operator(".", .infix),
-                      formatter.token(at: index - 2) == .identifier("formatter")
-                else {
-                    continue
-                }
-                switch formatter.tokens[index] {
-                case .identifier("spaceEquivalentToWidth"),
-                     .identifier("spaceEquivalentToTokens"):
-                    referencedOptions += [
-                        Descriptors.indent, Descriptors.tabWidth, Descriptors.smartTabs,
-                    ]
-                case .identifier("tokenLength"):
-                    referencedOptions += [Descriptors.indent, Descriptors.tabWidth]
-                case .identifier("lineLength"):
-                    referencedOptions += [
-                        Descriptors.indent, Descriptors.tabWidth, Descriptors.assetLiteralWidth,
-                    ]
-                case .identifier("isCommentedCode"):
-                    referencedOptions.append(Descriptors.indent)
-                case .identifier("insertLinebreak"), .identifier("linebreakToken"):
-                    referencedOptions.append(Descriptors.linebreak)
-                case .identifier("wrapCollectionsAndArguments"):
-                    referencedOptions += [
-                        Descriptors.wrapArguments, Descriptors.wrapParameters, Descriptors.wrapCollections,
-                        Descriptors.closingParenPosition, Descriptors.callSiteClosingParenPosition,
-                        Descriptors.linebreak, Descriptors.truncateBlankLines,
-                        Descriptors.indent, Descriptors.tabWidth, Descriptors.smartTabs, Descriptors.maxWidth,
-                        Descriptors.assetLiteralWidth, Descriptors.wrapReturnType, Descriptors.wrapEffects,
-                        Descriptors.wrapConditions, Descriptors.wrapTypealiases, Descriptors.wrapTernaryOperators, Descriptors.conditionsWrap,
-                    ]
-                case .identifier("wrapStatementBody"):
-                    referencedOptions += [Descriptors.indent, Descriptors.linebreak]
-                case .identifier("indexWhereLineShouldWrapInLine"), .identifier("indexWhereLineShouldWrap"):
-                    referencedOptions += [
-                        Descriptors.indent, Descriptors.tabWidth, Descriptors.assetLiteralWidth,
-                        Descriptors.noWrapOperators,
-                    ]
-                case .identifier("modifierOrder"):
-                    referencedOptions.append(Descriptors.modifierOrder)
-                case .identifier("options") where formatter.token(at: index + 1) == .operator(".", .infix):
-                    if case let .identifier(property)? = formatter.token(at: index + 2),
-                       let option = optionsByProperty[property]
-                    {
-                        referencedOptions.append(option)
-                    }
-                case .identifier("organizeDeclaration"):
-                    referencedOptions += [
-                        Descriptors.categoryMarkComment,
-                        Descriptors.markCategories,
-                        Descriptors.beforeMarks,
-                        Descriptors.lifecycleMethods,
-                        Descriptors.organizeTypes,
-                        Descriptors.organizeStructThreshold,
-                        Descriptors.organizeClassThreshold,
-                        Descriptors.organizeEnumThreshold,
-                        Descriptors.organizeExtensionThreshold,
-                        Descriptors.lineAfterMarks,
-                        Descriptors.organizationMode,
-                        Descriptors.alphabeticallySortedDeclarationPatterns,
-                        Descriptors.visibilityOrder,
-                        Descriptors.typeOrder,
-                        Descriptors.customVisibilityMarks,
-                        Descriptors.customTypeMarks,
-                    ]
-                case .identifier("removeSelf"):
-                    referencedOptions += [
-                        Descriptors.selfRequired,
-                    ]
-                default:
-                    continue
-                }
-            }
 
-            for option in referencedOptions {
-                XCTAssert(ruleOptions.contains(option.argumentName) || option.isDeprecated,
-                          "\(option.argumentName) not listed in \(name) rule")
-            }
-            for argName in ruleOptions {
-                XCTAssert(referencedOptions.contains { $0.argumentName == argName },
-                          "\(argName) not used in \(name) rule")
+        var rulesFiles: [URL] = [
+            projectDirectory.appendingPathComponent("Sources/Rules.swift"),
+        ]
+
+        let rulesDirectory = projectDirectory.appendingPathComponent("Sources/Rules")
+        _ = enumerateFiles(withInputURL: rulesDirectory) { ruleFileURL, _, _ in
+            { rulesFiles.append(ruleFileURL) }
+        }
+
+        for rulesFile in rulesFiles {
+            let rulesSource = try String(contentsOf: rulesFile, encoding: .utf8)
+            let tokens = tokenize(rulesSource)
+            let formatter = Formatter(tokens)
+            var rulesByOption = [String: String]()
+            formatter.forEach(.identifier("FormatRule")) { i, _ in
+                guard formatter.next(.nonSpaceOrLinebreak, after: i) == .startOfScope("("),
+                      case let .identifier(name)? = formatter.last(.identifier, before: i),
+                      let scopeStart = formatter.index(of: .startOfScope("{"), after: i),
+                      let scopeEnd = formatter.index(of: .endOfScope("}"), after: scopeStart),
+                      let rule = FormatRules.byName[name]
+                else {
+                    return
+                }
+                for option in rule.options where !rule.isDeprecated {
+                    if let oldName = rulesByOption[option] {
+                        XCTFail("\(option) set as (non-shared) option for both \(name) and \(oldName)")
+                    }
+                    rulesByOption[option] = name
+                }
+                let ruleOptions = rule.options + rule.sharedOptions
+                allOptions.subtract(rule.options)
+                allSharedOptions.subtract(ruleOptions)
+                var referencedOptions = [OptionDescriptor]()
+                for index in scopeStart + 1 ..< scopeEnd {
+                    guard formatter.token(at: index - 1) == .operator(".", .infix),
+                          formatter.token(at: index - 2) == .identifier("formatter")
+                    else {
+                        continue
+                    }
+                    switch formatter.tokens[index] {
+                    case .identifier("spaceEquivalentToWidth"),
+                         .identifier("spaceEquivalentToTokens"):
+                        referencedOptions += [
+                            Descriptors.indent, Descriptors.tabWidth, Descriptors.smartTabs,
+                        ]
+                    case .identifier("tokenLength"):
+                        referencedOptions += [Descriptors.indent, Descriptors.tabWidth]
+                    case .identifier("lineLength"):
+                        referencedOptions += [
+                            Descriptors.indent, Descriptors.tabWidth, Descriptors.assetLiteralWidth,
+                        ]
+                    case .identifier("isCommentedCode"):
+                        referencedOptions.append(Descriptors.indent)
+                    case .identifier("insertLinebreak"), .identifier("linebreakToken"):
+                        referencedOptions.append(Descriptors.linebreak)
+                    case .identifier("wrapCollectionsAndArguments"):
+                        referencedOptions += [
+                            Descriptors.wrapArguments, Descriptors.wrapParameters, Descriptors.wrapCollections,
+                            Descriptors.closingParenPosition, Descriptors.callSiteClosingParenPosition,
+                            Descriptors.linebreak, Descriptors.truncateBlankLines,
+                            Descriptors.indent, Descriptors.tabWidth, Descriptors.smartTabs, Descriptors.maxWidth,
+                            Descriptors.assetLiteralWidth, Descriptors.wrapReturnType, Descriptors.wrapEffects,
+                            Descriptors.wrapConditions, Descriptors.wrapTypealiases, Descriptors.wrapTernaryOperators, Descriptors.conditionsWrap,
+                        ]
+                    case .identifier("wrapStatementBody"):
+                        referencedOptions += [Descriptors.indent, Descriptors.linebreak]
+                    case .identifier("indexWhereLineShouldWrapInLine"), .identifier("indexWhereLineShouldWrap"):
+                        referencedOptions += [
+                            Descriptors.indent, Descriptors.tabWidth, Descriptors.assetLiteralWidth,
+                            Descriptors.noWrapOperators,
+                        ]
+                    case .identifier("modifierOrder"):
+                        referencedOptions.append(Descriptors.modifierOrder)
+                    case .identifier("options") where formatter.token(at: index + 1) == .operator(".", .infix):
+                        if case let .identifier(property)? = formatter.token(at: index + 2),
+                           let option = optionsByProperty[property]
+                        {
+                            referencedOptions.append(option)
+                        }
+                    case .identifier("organizeDeclaration"):
+                        referencedOptions += [
+                            Descriptors.categoryMarkComment,
+                            Descriptors.markCategories,
+                            Descriptors.beforeMarks,
+                            Descriptors.lifecycleMethods,
+                            Descriptors.organizeTypes,
+                            Descriptors.organizeStructThreshold,
+                            Descriptors.organizeClassThreshold,
+                            Descriptors.organizeEnumThreshold,
+                            Descriptors.organizeExtensionThreshold,
+                            Descriptors.lineAfterMarks,
+                            Descriptors.organizationMode,
+                            Descriptors.alphabeticallySortedDeclarationPatterns,
+                            Descriptors.visibilityOrder,
+                            Descriptors.typeOrder,
+                            Descriptors.customVisibilityMarks,
+                            Descriptors.customTypeMarks,
+                        ]
+                    case .identifier("removeSelf"):
+                        referencedOptions += [
+                            Descriptors.selfRequired,
+                        ]
+                    default:
+                        continue
+                    }
+                }
+
+                for option in referencedOptions {
+                    XCTAssert(ruleOptions.contains(option.argumentName) || option.isDeprecated,
+                              "\(option.argumentName) not listed in \(name) rule")
+                }
+                for argName in ruleOptions {
+                    XCTAssert(referencedOptions.contains { $0.argumentName == argName },
+                              "\(argName) not used in \(name) rule")
+                }
             }
         }
+
         XCTAssert(allSharedOptions.isEmpty, "Options \(allSharedOptions.joined(separator: ",")) not shared by any rule)")
         XCTAssert(allOptions.isEmpty, "Options \(allSharedOptions.joined(separator: ",")) not owned by any rule)")
     }

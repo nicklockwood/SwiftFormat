@@ -84,6 +84,22 @@
 		08180DD02C4EB67F00FD60FF /* DeclarationHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E230CA12C4C1C0700A16E2E /* DeclarationHelpers.swift */; };
 		08180DD12C4EB68000FD60FF /* DeclarationHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E230CA12C4C1C0700A16E2E /* DeclarationHelpers.swift */; };
 		2E230CA22C4C1C0700A16E2E /* DeclarationHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E230CA12C4C1C0700A16E2E /* DeclarationHelpers.swift */; };
+		2E2BF34B2C554E6400AB08D2 /* preferForLoop.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BF34A2C554E6400AB08D2 /* preferForLoop.swift */; };
+		2E2BF34C2C554E6400AB08D2 /* preferForLoop.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BF34A2C554E6400AB08D2 /* preferForLoop.swift */; };
+		2E2BF34D2C554E6400AB08D2 /* preferForLoop.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BF34A2C554E6400AB08D2 /* preferForLoop.swift */; };
+		2E2BF34E2C554E6400AB08D2 /* preferForLoop.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BF34A2C554E6400AB08D2 /* preferForLoop.swift */; };
+		2E2BF3552C554FDA00AB08D2 /* RuleRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BF3542C554FDA00AB08D2 /* RuleRegistry.swift */; };
+		2E2BF3562C554FDA00AB08D2 /* RuleRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BF3542C554FDA00AB08D2 /* RuleRegistry.swift */; };
+		2E2BF3572C554FDA00AB08D2 /* RuleRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BF3542C554FDA00AB08D2 /* RuleRegistry.swift */; };
+		2E2BF3582C554FDA00AB08D2 /* RuleRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BF3542C554FDA00AB08D2 /* RuleRegistry.swift */; };
+		2E2BF35B2C555CB700AB08D2 /* spaceAroundComments.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BF35A2C555CB700AB08D2 /* spaceAroundComments.swift */; };
+		2E2BF35C2C555CB700AB08D2 /* spaceAroundComments.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BF35A2C555CB700AB08D2 /* spaceAroundComments.swift */; };
+		2E2BF35D2C555CB700AB08D2 /* spaceAroundComments.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BF35A2C555CB700AB08D2 /* spaceAroundComments.swift */; };
+		2E2BF35E2C555CB700AB08D2 /* spaceAroundComments.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BF35A2C555CB700AB08D2 /* spaceAroundComments.swift */; };
+		2E2BF3602C555CE500AB08D2 /* indent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BF35F2C555CE500AB08D2 /* indent.swift */; };
+		2E2BF3612C555CE500AB08D2 /* indent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BF35F2C555CE500AB08D2 /* indent.swift */; };
+		2E2BF3622C555CE500AB08D2 /* indent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BF35F2C555CE500AB08D2 /* indent.swift */; };
+		2E2BF3632C555CE500AB08D2 /* indent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BF35F2C555CE500AB08D2 /* indent.swift */; };
 		2E7D30A42A7940C500C32174 /* Singularize.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E7D30A32A7940C500C32174 /* Singularize.swift */; };
 		37D828AB24BF77DA0012FC0A /* XcodeKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 37D828AA24BF77DA0012FC0A /* XcodeKit.framework */; };
 		37D828AC24BF77DA0012FC0A /* XcodeKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 37D828AA24BF77DA0012FC0A /* XcodeKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -239,6 +255,10 @@
 		01F3DF8B1DB9FD3F00454944 /* Options.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Options.swift; sourceTree = "<group>"; };
 		01F3DF8F1DBA003E00454944 /* InferenceTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InferenceTests.swift; sourceTree = "<group>"; };
 		2E230CA12C4C1C0700A16E2E /* DeclarationHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeclarationHelpers.swift; sourceTree = "<group>"; };
+		2E2BF34A2C554E6400AB08D2 /* preferForLoop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = preferForLoop.swift; sourceTree = "<group>"; };
+		2E2BF3542C554FDA00AB08D2 /* RuleRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuleRegistry.swift; sourceTree = "<group>"; };
+		2E2BF35A2C555CB700AB08D2 /* spaceAroundComments.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = spaceAroundComments.swift; sourceTree = "<group>"; };
+		2E2BF35F2C555CE500AB08D2 /* indent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = indent.swift; sourceTree = "<group>"; };
 		2E7D30A32A7940C500C32174 /* Singularize.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Singularize.swift; sourceTree = "<group>"; };
 		37D828AA24BF77DA0012FC0A /* XcodeKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XcodeKit.framework; path = Library/Frameworks/XcodeKit.framework; sourceTree = DEVELOPER_DIR; };
 		90C4B6CA1DA4B04A009EB000 /* SwiftFormat for Xcode.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "SwiftFormat for Xcode.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -374,7 +394,8 @@
 		01A0EAA61D5DB4CF00A0A8E3 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
-				012939DB2C56A3AA00BD0A24 /* Reporters */,
+				2E2BF3492C554E2E00AB08D2 /* Rules */,
+				015687472C4F8B2800E3CE76 /* Reporters */,
 				01F17E811E25870700DCD359 /* CommandLine.swift */,
 				E4E4D3C82033F17C000D7CB1 /* EnumAssociable.swift */,
 				01B3987C1D763493009ADE61 /* Formatter.swift */,
@@ -384,6 +405,7 @@
 				01045A982119979400D2BE3D /* Arguments.swift */,
 				01045A90211988F100D2BE3D /* Inference.swift */,
 				01A0EABE1D5DB4F700A0A8E3 /* Rules.swift */,
+				2E2BF3542C554FDA00AB08D2 /* RuleRegistry.swift */,
 				01567D2E225B2BFD00B22D41 /* ParsingHelpers.swift */,
 				01D3B28524E9C9C700888DE0 /* FormattingHelpers.swift */,
 				2E230CA12C4C1C0700A16E2E /* DeclarationHelpers.swift */,
@@ -448,6 +470,16 @@
 				E4962DDF203F3CD500A02013 /* OptionsStore.swift */,
 			);
 			path = Shared;
+			sourceTree = "<group>";
+		};
+		2E2BF3492C554E2E00AB08D2 /* Rules */ = {
+			isa = PBXGroup;
+			children = (
+				2E2BF34A2C554E6400AB08D2 /* preferForLoop.swift */,
+				2E2BF35A2C555CB700AB08D2 /* spaceAroundComments.swift */,
+				2E2BF35F2C555CE500AB08D2 /* indent.swift */,
+			);
+			path = Rules;
 			sourceTree = "<group>";
 		};
 		9016DEFD1DA5042E008A4E36 /* Resources */ = {
@@ -579,6 +611,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 01A0EAB81D5DB4D000A0A8E3 /* Build configuration list for PBXNativeTarget "SwiftFormat" */;
 			buildPhases = (
+				2E2BF3592C5552ED00AB08D2 /* Generate Rule Registry */,
 				01A0EA9F1D5DB4CF00A0A8E3 /* Sources */,
 				0142F06D1D72B4A6007D66CC /* Format Code */,
 				01A0EAA01D5DB4CF00A0A8E3 /* Frameworks */,
@@ -791,6 +824,26 @@
 			shellPath = /bin/sh;
 			shellScript = "\"${SRCROOT}/format.sh\"\n";
 		};
+		2E2BF3592C5552ED00AB08D2 /* Generate Rule Registry */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Generate Rule Registry";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/generateRulesRegistry.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -821,12 +874,16 @@
 				01A0EAC11D5DB4F700A0A8E3 /* Rules.swift in Sources */,
 				01A0EAC51D5DB54A00A0A8E3 /* SwiftFormat.swift in Sources */,
 				C2FFD1822BD13C9E00774F55 /* XMLReporter.swift in Sources */,
+				2E2BF35B2C555CB700AB08D2 /* spaceAroundComments.swift in Sources */,
 				2E7D30A42A7940C500C32174 /* Singularize.swift in Sources */,
 				01B3987D1D763493009ADE61 /* Formatter.swift in Sources */,
 				2E230CA22C4C1C0700A16E2E /* DeclarationHelpers.swift in Sources */,
 				01F17E821E25870700DCD359 /* CommandLine.swift in Sources */,
 				01F3DF8C1DB9FD3F00454944 /* Options.swift in Sources */,
+				2E2BF3552C554FDA00AB08D2 /* RuleRegistry.swift in Sources */,
 				01A0EAC21D5DB4F700A0A8E3 /* Tokenizer.swift in Sources */,
+				2E2BF34B2C554E6400AB08D2 /* preferForLoop.swift in Sources */,
+				2E2BF3602C555CE500AB08D2 /* indent.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -877,7 +934,9 @@
 				E4E4D3CA2033F17C000D7CB1 /* EnumAssociable.swift in Sources */,
 				01BBD85A21DAA2A600457380 /* Globs.swift in Sources */,
 				08180DCF2C4EB67F00FD60FF /* DeclarationHelpers.swift in Sources */,
+				2E2BF3612C555CE500AB08D2 /* indent.swift in Sources */,
 				01045A92211988F100D2BE3D /* Inference.swift in Sources */,
+				2E2BF34C2C554E6400AB08D2 /* preferForLoop.swift in Sources */,
 				01F3DF8D1DB9FD3F00454944 /* Options.swift in Sources */,
 				E4FABAD6202FEF060065716E /* OptionDescriptor.swift in Sources */,
 				D52F6A652A82E04600FE1448 /* GitFileInfo.swift in Sources */,
@@ -885,10 +944,12 @@
 				01A8320724EC7F7600A9D0EB /* FormattingHelpers.swift in Sources */,
 				01F17E831E25870700DCD359 /* CommandLine.swift in Sources */,
 				015243E22B04B0A600F65221 /* Singularize.swift in Sources */,
+				2E2BF35C2C555CB700AB08D2 /* spaceAroundComments.swift in Sources */,
 				01ACAE06220CD914003F3CCF /* Examples.swift in Sources */,
 				C2FFD1832BD13C9E00774F55 /* XMLReporter.swift in Sources */,
 				01A0EACD1D5DB5F500A0A8E3 /* main.swift in Sources */,
 				DD9AD3A42999FCC8001C2C0E /* Reporter.swift in Sources */,
+				2E2BF3562C554FDA00AB08D2 /* RuleRegistry.swift in Sources */,
 				01045A9A2119979400D2BE3D /* Arguments.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -904,6 +965,8 @@
 				E4872125201D980D0014845E /* BinarySelectionTableCellView.swift in Sources */,
 				E487211D201D885A0014845E /* RulesViewController.swift in Sources */,
 				01045A9B2119979400D2BE3D /* Arguments.swift in Sources */,
+				2E2BF35D2C555CB700AB08D2 /* spaceAroundComments.swift in Sources */,
+				2E2BF3622C555CE500AB08D2 /* indent.swift in Sources */,
 				E4872114201D3B8C0014845E /* Tokenizer.swift in Sources */,
 				015243E32B04B0A600F65221 /* Singularize.swift in Sources */,
 				E4872112201D3B860014845E /* Rules.swift in Sources */,
@@ -914,7 +977,9 @@
 				E4E4D3CB2033F17C000D7CB1 /* EnumAssociable.swift in Sources */,
 				01BBD85B21DAA2A700457380 /* Globs.swift in Sources */,
 				01A8320824EC7F7700A9D0EB /* FormattingHelpers.swift in Sources */,
+				2E2BF34D2C554E6400AB08D2 /* preferForLoop.swift in Sources */,
 				01045A93211988F100D2BE3D /* Inference.swift in Sources */,
+				2E2BF3572C554FDA00AB08D2 /* RuleRegistry.swift in Sources */,
 				E41CB5C32026CACD00C1BEDE /* ListSelectionTableCellView.swift in Sources */,
 				E4872129201E3DD50014845E /* RulesStore.swift in Sources */,
 				E41CB5BF2025761D00C1BEDE /* UserSelection.swift in Sources */,
@@ -936,6 +1001,8 @@
 				90C4B6E51DA4B059009EB000 /* SourceEditorExtension.swift in Sources */,
 				0142C77023C3FB6D005D5832 /* LintFileCommand.swift in Sources */,
 				E4E4D3CC2033F17C000D7CB1 /* EnumAssociable.swift in Sources */,
+				2E2BF35E2C555CB700AB08D2 /* spaceAroundComments.swift in Sources */,
+				2E2BF3632C555CE500AB08D2 /* indent.swift in Sources */,
 				E4FABAD8202FEF060065716E /* OptionDescriptor.swift in Sources */,
 				015243E42B04B0A700F65221 /* Singularize.swift in Sources */,
 				9028F7841DA4B435009FE5B4 /* Tokenizer.swift in Sources */,
@@ -946,7 +1013,9 @@
 				E4962DE1203F3CD500A02013 /* OptionsStore.swift in Sources */,
 				9028F7851DA4B435009FE5B4 /* Formatter.swift in Sources */,
 				E487212A201E3DD50014845E /* RulesStore.swift in Sources */,
+				2E2BF34E2C554E6400AB08D2 /* preferForLoop.swift in Sources */,
 				01F3DF8E1DB9FD3F00454944 /* Options.swift in Sources */,
+				2E2BF3582C554FDA00AB08D2 /* RuleRegistry.swift in Sources */,
 				9028F7831DA4B435009FE5B4 /* SwiftFormat.swift in Sources */,
 				B9C4F55C2387FA3E0088DBEE /* SupportedContentUTIs.swift in Sources */,
 				90C4B6E71DA4B059009EB000 /* FormatSelectionCommand.swift in Sources */,

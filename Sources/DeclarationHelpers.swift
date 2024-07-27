@@ -125,6 +125,20 @@ enum Declaration: Equatable {
             return originalRange
         }
     }
+
+    var modifiers: [String] {
+        let parser = Formatter(openTokens)
+        guard let keywordIndex = parser.index(of: .keyword(keyword), after: 0) else {
+            return []
+        }
+
+        var allModifiers = [String]()
+        _ = parser.modifiersForDeclaration(at: keywordIndex, contains: { _, modifier in
+            allModifiers.append(modifier)
+            return false
+        })
+        return allModifiers
+    }
 }
 
 extension Formatter {

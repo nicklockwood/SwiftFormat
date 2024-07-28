@@ -1001,7 +1001,7 @@ struct _Descriptors {
         argumentName: "condassignment",
         displayName: "Apply conditionalAssignment rule",
         help: "Use cond. assignment: \"after-property\" (default) or \"always\"",
-        keyPath: \.preserveSingleLineForEach,
+        keyPath: \.conditionalAssignmentOnlyAfterNewProperties,
         trueValues: ["after-property"],
         falseValues: ["always"]
     )

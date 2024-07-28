@@ -9,6 +9,9 @@
 import XCTest
 @testable import SwiftFormat
 
+private let projectDirectory = URL(fileURLWithPath: #file)
+    .deletingLastPathComponent().deletingLastPathComponent()
+
 class OptionDescriptorTests: XCTestCase {
     private typealias OptionArgumentMapping<T> = (optionValue: T, argumentValue: String)
 
@@ -113,6 +116,31 @@ class OptionDescriptorTests: XCTestCase {
     }
 
     // MARK: All options
+
+    func testAllDescriptorsHaveCorrectKeypath() throws {
+        let rulesFile = projectDirectory.appendingPathComponent("Sources/OptionDescriptor.swift")
+        let rulesSource = try String(contentsOf: rulesFile, encoding: .utf8)
+        let tokens = tokenize(rulesSource)
+        let formatter = Formatter(tokens)
+        formatter.forEach(.identifier("OptionDescriptor")) { i, _ in
+            guard formatter.token(at: i + 1) == .startOfScope("("),
+                  let endOfScope = formatter.endOfScope(at: i + 1),
+                  !formatter.tokens[i ..< endOfScope].contains(.stringBody("deprecated")),
+                  let nameIndex = formatter.index(of: .identifier, before: i),
+                  case let .identifier(name) = formatter.tokens[nameIndex]
+            else {
+                return
+            }
+            guard let keypathIndex = formatter.tokens[i ..< endOfScope].firstIndex(of: .identifier(name)),
+                  formatter.tokens[keypathIndex - 1].isOperator("."),
+                  let prevToken = formatter.token(at: keypathIndex - 2),
+                  [.operator("\\", .prefix), .identifier("FormatOptions")].contains(prevToken)
+            else {
+                XCTFail("Descriptor for \(name) has incorrect keyPath (must match descriptor name)")
+                return
+            }
+        }
+    }
 
     func testAllDescriptorsHaveProperty() {
         let allProperties = Set(FormatOptions.default.allOptions.keys)

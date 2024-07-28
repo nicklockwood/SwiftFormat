@@ -39,7 +39,7 @@ let ruleRegistry: [String: FormatRule] = ["
 
 for ruleName in ${rules[*]}; do
 fileContents+="
-    \"${ruleName}\": ${ruleName},"
+    \"${ruleName}\": .${ruleName},"
 done
 
 fileContents+="
@@ -49,7 +49,7 @@ public extension _FormatRules {"
 
 for ruleName in ${rules[*]}; do
 fileContents+="
-    var ${ruleName}: FormatRule { ruleRegistry[\"${ruleName}\"]! }"
+    var ${ruleName}: FormatRule { .${ruleName} }"
 done
 
 fileContents+="

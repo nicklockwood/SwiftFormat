@@ -9,13 +9,13 @@
 /// All of the rules defined in the Rules directory.
 /// **Generated automatically when building. Do not modify.**
 let ruleRegistry: [String: FormatRule] = [
-    "indent": indent,
-    "preferForLoop": preferForLoop,
-    "spaceAroundComments": spaceAroundComments,
+    "indent": .indent,
+    "preferForLoop": .preferForLoop,
+    "spaceAroundComments": .spaceAroundComments,
 ]
 
 public extension _FormatRules {
-    var indent: FormatRule { ruleRegistry["indent"]! }
-    var preferForLoop: FormatRule { ruleRegistry["preferForLoop"]! }
-    var spaceAroundComments: FormatRule { ruleRegistry["spaceAroundComments"]! }
+    var indent: FormatRule { .indent }
+    var preferForLoop: FormatRule { .preferForLoop }
+    var spaceAroundComments: FormatRule { .spaceAroundComments }
 }

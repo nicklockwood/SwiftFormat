@@ -612,7 +612,7 @@ extension Formatter {
             "@NSApplicationDelegateAdaptor",
             "@FetchRequest",
             "@FocusedBinding",
-            "@FocusedState",
+            "@FocusState",
             "@FocusedValue",
             "@FocusedObject",
             "@GestureState",

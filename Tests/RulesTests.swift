@@ -36,7 +36,7 @@ class RulesTests: XCTestCase {
     // MARK: - shared test infra
 
     func testFormatting(for input: String, _ output: String? = nil, rule: FormatRule,
-                        options: FormatOptions = .default, exclude: [String] = [],
+                        options: FormatOptions = .default, exclude: [FormatRule] = [],
                         file: StaticString = #file, line: UInt = #line)
     {
         testFormatting(for: input, output.map { [$0] } ?? [], rules: [rule],
@@ -44,7 +44,7 @@ class RulesTests: XCTestCase {
     }
 
     func testFormatting(for input: String, _ outputs: [String] = [], rules: [FormatRule],
-                        options: FormatOptions = .default, exclude: [String] = [],
+                        options: FormatOptions = .default, exclude: [FormatRule] = [],
                         file: StaticString = #file, line: UInt = #line)
     {
         var options = options
@@ -68,9 +68,9 @@ class RulesTests: XCTestCase {
 
         precondition(input != outputs.first || input != outputs.last, "Redundant output parameter")
         precondition((0 ... 2).contains(outputs.count), "Only 0, 1 or 2 output parameters permitted")
-        precondition(Set(exclude).intersection(rules.map { $0.name }).isEmpty, "Cannot exclude rule under test")
+        precondition(Set(exclude.map(\.name)).intersection(rules.map(\.name)).isEmpty, "Cannot exclude rule under test")
         let output = outputs.first ?? input, output2 = outputs.last ?? input
-        let exclude = exclude + FormatRules.deprecated
+        let exclude = exclude.map(\.name) + FormatRules.deprecated
             + (rules.first?.name == "linebreakAtEndOfFile" ? [] : ["linebreakAtEndOfFile"])
             + (rules.first?.name == "organizeDeclarations" ? [] : ["organizeDeclarations"])
             + (rules.first?.name == "extensionAccessControl" ? [] : ["extensionAccessControl"])

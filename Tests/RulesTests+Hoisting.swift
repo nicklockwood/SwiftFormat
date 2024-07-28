@@ -39,7 +39,7 @@ class HoistingTests: RulesTests {
         """
         testFormatting(for: input, output, rule: .hoistTry,
                        options: FormatOptions(swiftVersion: "5.5"),
-                       exclude: ["hoistAwait"])
+                       exclude: [.hoistAwait])
     }
 
     func testHoistTryInsideStringInterpolation3() {
@@ -111,7 +111,7 @@ class HoistingTests: RulesTests {
         let output = """
         try array.append(contentsOf: await asyncFunction(param1: param1))
         """
-        testFormatting(for: input, output, rule: .hoistTry, exclude: ["hoistAwait"])
+        testFormatting(for: input, output, rule: .hoistTry, exclude: [.hoistAwait])
     }
 
     func testNoHoistTryInsideXCTAssert() {
@@ -160,21 +160,21 @@ class HoistingTests: RulesTests {
         let input = "let foo=bar(contentsOf:try baz())"
         let output = "let foo=try bar(contentsOf:baz())"
         testFormatting(for: input, output, rule: .hoistTry,
-                       exclude: ["spaceAroundOperators"])
+                       exclude: [.spaceAroundOperators])
     }
 
     func testHoistTryInExpressionWithExcessSpaces() {
         let input = "let foo = bar ( contentsOf: try baz() )"
         let output = "let foo = try bar ( contentsOf: baz() )"
         testFormatting(for: input, output, rule: .hoistTry,
-                       exclude: ["spaceAroundParens", "spaceInsideParens"])
+                       exclude: [.spaceAroundParens, .spaceInsideParens])
     }
 
     func testHoistTryWithReturn() {
         let input = "return .enumCase(try await service.greet())"
         let output = "return try .enumCase(await service.greet())"
         testFormatting(for: input, output, rule: .hoistTry,
-                       exclude: ["hoistAwait"])
+                       exclude: [.hoistAwait])
     }
 
     func testHoistDeeplyNestedTrys() {
@@ -205,14 +205,14 @@ class HoistingTests: RulesTests {
         let input = "let variable = String(try await asyncFunction())"
         let output = "let variable = try String(await asyncFunction())"
         testFormatting(for: input, output, rule: .hoistTry,
-                       exclude: ["hoistAwait"])
+                       exclude: [.hoistAwait])
     }
 
     func testHoistTryWithAssignment() {
         let input = "let variable = (try await asyncFunction())"
         let output = "let variable = try (await asyncFunction())"
         testFormatting(for: input, output, rule: .hoistTry,
-                       exclude: ["hoistAwait"])
+                       exclude: [.hoistAwait])
     }
 
     func testHoistTryOnlyOne() {
@@ -454,7 +454,7 @@ class HoistingTests: RulesTests {
         let output = "if await !(isSomething()) {}"
         testFormatting(for: input, output, rule: .hoistAwait,
                        options: FormatOptions(swiftVersion: "5.5"),
-                       exclude: ["redundantParens"])
+                       exclude: [.redundantParens])
     }
 
     func testHoistAwaitInsideArgument() {
@@ -465,7 +465,7 @@ class HoistingTests: RulesTests {
         await array.append(contentsOf: try asyncFunction(param1: param1))
         """
         testFormatting(for: input, output, rule: .hoistAwait,
-                       options: FormatOptions(swiftVersion: "5.5"), exclude: ["hoistTry"])
+                       options: FormatOptions(swiftVersion: "5.5"), exclude: [.hoistTry])
     }
 
     func testHoistAwaitInsideStringInterpolation() {
@@ -483,7 +483,7 @@ class HoistingTests: RulesTests {
         await "Hello \\(try someValue())"
         """
         testFormatting(for: input, output, rule: .hoistAwait,
-                       options: FormatOptions(swiftVersion: "5.5"), exclude: ["hoistTry"])
+                       options: FormatOptions(swiftVersion: "5.5"), exclude: [.hoistTry])
     }
 
     func testNoHoistAwaitInsideDo() {
@@ -520,7 +520,7 @@ class HoistingTests: RulesTests {
         let input = "let foo=bar(contentsOf:await baz())"
         let output = "let foo=await bar(contentsOf:baz())"
         testFormatting(for: input, output, rule: .hoistAwait,
-                       options: FormatOptions(swiftVersion: "5.5"), exclude: ["spaceAroundOperators"])
+                       options: FormatOptions(swiftVersion: "5.5"), exclude: [.spaceAroundOperators])
     }
 
     func testHoistAwaitInExpressionWithExcessSpaces() {
@@ -528,14 +528,14 @@ class HoistingTests: RulesTests {
         let output = "let foo = await bar ( contentsOf: baz() )"
         testFormatting(for: input, output, rule: .hoistAwait,
                        options: FormatOptions(swiftVersion: "5.5"),
-                       exclude: ["spaceAroundParens", "spaceInsideParens"])
+                       exclude: [.spaceAroundParens, .spaceInsideParens])
     }
 
     func testHoistAwaitWithReturn() {
         let input = "return .enumCase(try await service.greet())"
         let output = "return await .enumCase(try service.greet())"
         testFormatting(for: input, output, rule: .hoistAwait,
-                       options: FormatOptions(swiftVersion: "5.5"), exclude: ["hoistTry"])
+                       options: FormatOptions(swiftVersion: "5.5"), exclude: [.hoistTry])
     }
 
     func testHoistDeeplyNestedAwaits() {
@@ -576,14 +576,14 @@ class HoistingTests: RulesTests {
         let input = "let variable = String(try await asyncFunction())"
         let output = "let variable = await String(try asyncFunction())"
         testFormatting(for: input, output, rule: .hoistAwait,
-                       options: FormatOptions(swiftVersion: "5.5"), exclude: ["hoistTry"])
+                       options: FormatOptions(swiftVersion: "5.5"), exclude: [.hoistTry])
     }
 
     func testHoistAwaitWithAssignment() {
         let input = "let variable = (try await asyncFunction())"
         let output = "let variable = await (try asyncFunction())"
         testFormatting(for: input, output, rule: .hoistAwait,
-                       options: FormatOptions(swiftVersion: "5.5"), exclude: ["hoistTry"])
+                       options: FormatOptions(swiftVersion: "5.5"), exclude: [.hoistTry])
     }
 
     func testHoistAwaitInRedundantScopePriorToNumber() {
@@ -642,14 +642,14 @@ class HoistingTests: RulesTests {
         let input = "let foo = bar + (await baz)"
         let output = "let foo = await bar + (baz)"
         testFormatting(for: input, output, rule: .hoistAwait,
-                       options: FormatOptions(swiftVersion: "5.5"), exclude: ["redundantParens"])
+                       options: FormatOptions(swiftVersion: "5.5"), exclude: [.redundantParens])
     }
 
     func testHoistAwaitAfterUnknownOperator() {
         let input = "let foo = bar ??? (await baz)"
         let output = "let foo = await bar ??? (baz)"
         testFormatting(for: input, output, rule: .hoistAwait,
-                       options: FormatOptions(swiftVersion: "5.5"), exclude: ["redundantParens"])
+                       options: FormatOptions(swiftVersion: "5.5"), exclude: [.redundantParens])
     }
 
     func testNoHoistAwaitAfterCapturingOperator() {
@@ -661,7 +661,7 @@ class HoistingTests: RulesTests {
     func testNoHoistAwaitInMacroArgument() {
         let input = "#expect (await monitor.isAvailable == false)"
         testFormatting(for: input, rule: .hoistAwait,
-                       options: FormatOptions(swiftVersion: "5.5"), exclude: ["spaceAroundParens"])
+                       options: FormatOptions(swiftVersion: "5.5"), exclude: [.spaceAroundParens])
     }
 
     // MARK: - hoistPatternLet
@@ -716,7 +716,7 @@ class HoistingTests: RulesTests {
     func testHoistIfArgIsNamespacedEnumCaseLiteralInParens() {
         let input = "switch foo {\ncase (Foo.bar(let baz)):\n}"
         let output = "switch foo {\ncase let (Foo.bar(baz)):\n}"
-        testFormatting(for: input, output, rule: .hoistPatternLet, exclude: ["redundantParens"])
+        testFormatting(for: input, output, rule: .hoistPatternLet, exclude: [.redundantParens])
     }
 
     func testHoistIfFirstArgIsUnderscore() {
@@ -741,7 +741,7 @@ class HoistingTests: RulesTests {
         let input = "switch foo {\ncase .foo(let bar), .bar(let bar):\n}"
         let output = "switch foo {\ncase let .foo(bar), let .bar(bar):\n}"
         testFormatting(for: input, output, rule: .hoistPatternLet,
-                       exclude: ["wrapSwitchCases", "sortSwitchCases"])
+                       exclude: [.wrapSwitchCases, .sortSwitchCases])
     }
 
     func testHoistNewlineSeparatedSwitchCaseLets() {
@@ -760,7 +760,7 @@ class HoistingTests: RulesTests {
         """
 
         testFormatting(for: input, output, rule: .hoistPatternLet,
-                       exclude: ["wrapSwitchCases", "sortSwitchCases"])
+                       exclude: [.wrapSwitchCases, .sortSwitchCases])
     }
 
     func testHoistCatchLet() {
@@ -776,7 +776,7 @@ class HoistingTests: RulesTests {
 
     func testNoHoistClosureVariables() {
         let input = "foo({ let bar = 5 })"
-        testFormatting(for: input, rule: .hoistPatternLet, exclude: ["trailingClosures"])
+        testFormatting(for: input, rule: .hoistPatternLet, exclude: [.trailingClosures])
     }
 
     // TODO: this should actually hoist the let, but that's tricky to implement without
@@ -784,20 +784,20 @@ class HoistingTests: RulesTests {
     func testHoistSwitchCaseWithNestedParens() {
         let input = "import Foo\nswitch (foo, bar) {\ncase (.baz(let quux), Foo.bar): break\n}"
         testFormatting(for: input, rule: .hoistPatternLet,
-                       exclude: ["blankLineAfterImports"])
+                       exclude: [.blankLineAfterImports])
     }
 
     // TODO: this could actually hoist the let by one level, but that's tricky to implement
     func testNoOverHoistSwitchCaseWithNestedParens() {
         let input = "import Foo\nswitch (foo, bar) {\ncase (.baz(let quux), bar): break\n}"
         testFormatting(for: input, rule: .hoistPatternLet,
-                       exclude: ["blankLineAfterImports"])
+                       exclude: [.blankLineAfterImports])
     }
 
     func testNoHoistLetWithEmptArg() {
         let input = "if .foo(let _) = bar {}"
         testFormatting(for: input, rule: .hoistPatternLet,
-                       exclude: ["redundantLet", "redundantPattern"])
+                       exclude: [.redundantLet, .redundantPattern])
     }
 
     func testHoistLetWithNoSpaceAfterCase() {
@@ -828,7 +828,7 @@ class HoistingTests: RulesTests {
         // Hoisting in this case causes a compilation error as-of Swift 5.3
         // See: https://github.com/nicklockwood/SwiftFormat/issues/768
         let input = "if case .some(Optional<Any>.some(let foo)) = bar else {}"
-        testFormatting(for: input, rule: .hoistPatternLet, exclude: ["typeSugar"])
+        testFormatting(for: input, rule: .hoistPatternLet, exclude: [.typeSugar])
     }
 
     // hoist = false
@@ -878,7 +878,7 @@ class HoistingTests: RulesTests {
         """
         let options = FormatOptions(hoistPatternLet: false)
         testFormatting(for: input, rule: .hoistPatternLet, options: options,
-                       exclude: ["wrapConditionalBodies"])
+                       exclude: [.wrapConditionalBodies])
     }
 
     func testNoUnhoistSwitchCaseLetFollowedByWhere() {
@@ -922,7 +922,7 @@ class HoistingTests: RulesTests {
         let output = "switch foo {\ncase (.bar(let baz)):\n}"
         let options = FormatOptions(hoistPatternLet: false)
         testFormatting(for: input, output, rule: .hoistPatternLet, options: options,
-                       exclude: ["redundantParens"])
+                       exclude: [.redundantParens])
     }
 
     func testUnhoistIfArgIsNamespacedEnumCaseLiteral() {
@@ -937,7 +937,7 @@ class HoistingTests: RulesTests {
         let output = "switch foo {\ncase (Foo.bar(let baz)):\n}"
         let options = FormatOptions(hoistPatternLet: false)
         testFormatting(for: input, output, rule: .hoistPatternLet, options: options,
-                       exclude: ["redundantParens"])
+                       exclude: [.redundantParens])
     }
 
     func testUnhoistIfArgIsUnderscore() {
@@ -959,7 +959,7 @@ class HoistingTests: RulesTests {
         let output = "switch foo {\ncase .foo(let bar), .bar(let bar):\n}"
         let options = FormatOptions(hoistPatternLet: false)
         testFormatting(for: input, output, rule: .hoistPatternLet, options: options,
-                       exclude: ["wrapSwitchCases", "sortSwitchCases"])
+                       exclude: [.wrapSwitchCases, .sortSwitchCases])
     }
 
     func testUnhoistCommaSeparatedSwitchCaseLets2() {
@@ -967,7 +967,7 @@ class HoistingTests: RulesTests {
         let output = "switch foo {\ncase Foo.foo(let bar), Foo.bar(let bar):\n}"
         let options = FormatOptions(hoistPatternLet: false)
         testFormatting(for: input, output, rule: .hoistPatternLet, options: options,
-                       exclude: ["wrapSwitchCases", "sortSwitchCases"])
+                       exclude: [.wrapSwitchCases, .sortSwitchCases])
     }
 
     func testUnhoistCatchLet() {
@@ -999,7 +999,7 @@ class HoistingTests: RulesTests {
         let input = "switch foo {\ncase (Foo.bar(let baz)):\n}"
         let options = FormatOptions(hoistPatternLet: false)
         testFormatting(for: input, rule: .hoistPatternLet, options: options,
-                       exclude: ["redundantParens"])
+                       exclude: [.redundantParens])
     }
 
     func testNoDeleteCommentWhenUnhoistingWrappedLet() {
@@ -1017,7 +1017,7 @@ class HoistingTests: RulesTests {
 
         let options = FormatOptions(hoistPatternLet: false)
         testFormatting(for: input, output, rule: .hoistPatternLet,
-                       options: options, exclude: ["wrapSwitchCases", "sortSwitchCases"])
+                       options: options, exclude: [.wrapSwitchCases, .sortSwitchCases])
     }
 
     func testMultilineGuardLet() {

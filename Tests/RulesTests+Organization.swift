@@ -105,7 +105,7 @@ class OrganizationTests: RulesTests {
         testFormatting(
             for: input, output,
             rule: .organizeDeclarations,
-            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
         )
     }
 
@@ -211,7 +211,7 @@ class OrganizationTests: RulesTests {
                 visibilityOrder: airbnbVisibilityOrder.components(separatedBy: ","),
                 typeOrder: airbnbTypeOrder.components(separatedBy: ",")
             ),
-            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
         )
     }
 
@@ -282,7 +282,7 @@ class OrganizationTests: RulesTests {
             for: input, output,
             rule: .organizeDeclarations,
             options: FormatOptions(categoryMarkComment: "MARK: %c", organizationMode: .type),
-            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
         )
     }
 
@@ -311,7 +311,7 @@ class OrganizationTests: RulesTests {
 
         testFormatting(
             for: input, rule: .organizeDeclarations,
-            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope", "sortImports"]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .sortImports]
         )
     }
 
@@ -372,7 +372,7 @@ class OrganizationTests: RulesTests {
             for: input, output,
             rule: .organizeDeclarations,
             options: FormatOptions(organizationMode: .type),
-            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope", "sortImports"]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .sortImports]
         )
     }
 
@@ -397,7 +397,7 @@ class OrganizationTests: RulesTests {
 
         testFormatting(
             for: input, rule: .organizeDeclarations,
-            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope", "sortImports"]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .sortImports]
         )
     }
 
@@ -465,7 +465,7 @@ class OrganizationTests: RulesTests {
             for: input, output,
             rule: .organizeDeclarations,
             options: FormatOptions(categoryMarkComment: "MARK: %c", organizationMode: .type),
-            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
         )
     }
 
@@ -539,7 +539,7 @@ class OrganizationTests: RulesTests {
             for: input, output,
             rule: .organizeDeclarations,
             options: FormatOptions(categoryMarkComment: "MARK: %c", organizationMode: .type),
-            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
         )
     }
 
@@ -576,7 +576,7 @@ class OrganizationTests: RulesTests {
                 visibilityOrder: ["private", "internal", "public"],
                 typeOrder: DeclarationType.allCases.map(\.rawValue)
             ),
-            exclude: ["blankLinesAtStartOfScope"]
+            exclude: [.blankLinesAtStartOfScope]
         )
     }
 
@@ -626,7 +626,7 @@ class OrganizationTests: RulesTests {
                 visibilityOrder: ["private", "internal", "public"],
                 typeOrder: ["beforeMarks", "nestedType", "instanceLifecycle", "instanceMethod", "instanceProperty"]
             ),
-            exclude: ["blankLinesAtStartOfScope"]
+            exclude: [.blankLinesAtStartOfScope]
         )
     }
 
@@ -674,7 +674,7 @@ class OrganizationTests: RulesTests {
                 organizationMode: .type,
                 typeOrder: ["beforeMarks", "instanceLifecycle", "instanceMethod", "nestedType", "instanceProperty", "overriddenMethod"]
             ),
-            exclude: ["blankLinesAtStartOfScope"]
+            exclude: [.blankLinesAtStartOfScope]
         )
     }
 
@@ -719,7 +719,7 @@ class OrganizationTests: RulesTests {
                 organizationMode: .type,
                 typeOrder: ["beforeMarks", "nestedType", "instanceLifecycle", "instanceMethod", "instanceProperty"]
             ),
-            exclude: ["blankLinesAtStartOfScope"]
+            exclude: [.blankLinesAtStartOfScope]
         )
     }
 
@@ -771,7 +771,7 @@ class OrganizationTests: RulesTests {
                 visibilityOrder: ["private", "internal", "public"],
                 typeOrder: ["beforeMarks", "nestedType", "instanceLifecycle", "instanceMethod", "instanceProperty", "overriddenMethod"]
             ),
-            exclude: ["blankLinesAtStartOfScope"]
+            exclude: [.blankLinesAtStartOfScope]
         )
     }
 
@@ -804,7 +804,7 @@ class OrganizationTests: RulesTests {
                 visibilityOrder: ["instanceMethod"] + Visibility.allCases.map(\.rawValue),
                 typeOrder: DeclarationType.allCases.map(\.rawValue).filter { $0 != "instanceMethod" }
             ),
-            exclude: ["blankLinesAtStartOfScope"]
+            exclude: [.blankLinesAtStartOfScope]
         )
     }
 
@@ -837,7 +837,7 @@ class OrganizationTests: RulesTests {
                 visibilityOrder: Visibility.allCases.map(\.rawValue),
                 typeOrder: DeclarationType.allCases.map(\.rawValue)
             ),
-            exclude: ["blankLinesAtStartOfScope"]
+            exclude: [.blankLinesAtStartOfScope]
         )
     }
 
@@ -878,7 +878,7 @@ class OrganizationTests: RulesTests {
                 organizationMode: .visibility,
                 customVisibilityMarks: ["instanceLifecycle:Init", "public:Public_Group"]
             ),
-            exclude: ["blankLinesAtStartOfScope"]
+            exclude: [.blankLinesAtStartOfScope]
         )
     }
 
@@ -919,7 +919,7 @@ class OrganizationTests: RulesTests {
                 organizationMode: .type,
                 customTypeMarks: ["instanceLifecycle:Init", "instanceProperty:Bar_Bar", "instanceMethod:Buuuz Lightyeeeaaar"]
             ),
-            exclude: ["blankLinesAtStartOfScope"]
+            exclude: [.blankLinesAtStartOfScope]
         )
     }
 
@@ -958,7 +958,7 @@ class OrganizationTests: RulesTests {
         testFormatting(
             for: input, output,
             rule: .organizeDeclarations,
-            exclude: ["blankLinesAtStartOfScope", "enumNamespaces"]
+            exclude: [.blankLinesAtStartOfScope, .enumNamespaces]
         )
     }
 
@@ -1010,7 +1010,7 @@ class OrganizationTests: RulesTests {
         testFormatting(
             for: input, output,
             rule: .organizeDeclarations,
-            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
         )
     }
 
@@ -1040,7 +1040,7 @@ class OrganizationTests: RulesTests {
         testFormatting(
             for: input, output,
             rule: .organizeDeclarations,
-            exclude: ["blankLinesAtStartOfScope", "redundantInternal"]
+            exclude: [.blankLinesAtStartOfScope, .redundantInternal]
         )
     }
 
@@ -1130,7 +1130,7 @@ class OrganizationTests: RulesTests {
         testFormatting(
             for: input, output,
             rule: .organizeDeclarations,
-            exclude: ["blankLinesAtEndOfScope", "redundantType", "redundantClosure"]
+            exclude: [.blankLinesAtEndOfScope, .redundantType, .redundantClosure]
         )
     }
 
@@ -1259,7 +1259,7 @@ class OrganizationTests: RulesTests {
             for: input, output,
             rule: .organizeDeclarations,
             options: FormatOptions(categoryMarkComment: "MARK: %c", organizationMode: .type),
-            exclude: ["blankLinesAtEndOfScope", "blankLinesAtStartOfScope", "redundantType", "redundantClosure"]
+            exclude: [.blankLinesAtEndOfScope, .blankLinesAtStartOfScope, .redundantType, .redundantClosure]
         )
     }
 
@@ -1294,7 +1294,7 @@ class OrganizationTests: RulesTests {
         testFormatting(
             for: input, output,
             rule: .organizeDeclarations,
-            exclude: ["blankLinesAtEndOfScope", "unusedArguments"]
+            exclude: [.blankLinesAtEndOfScope, .unusedArguments]
         )
     }
 
@@ -1329,7 +1329,7 @@ class OrganizationTests: RulesTests {
             for: input, output,
             rule: .organizeDeclarations,
             options: FormatOptions(beforeMarks: ["typealias", "struct"]),
-            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
         )
     }
 
@@ -1382,7 +1382,7 @@ class OrganizationTests: RulesTests {
             for: input, output,
             rule: .organizeDeclarations,
             options: FormatOptions(lifecycleMethods: ["viewDidLoad", "viewWillAppear", "viewDidAppear"]),
-            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
         )
     }
 
@@ -1411,7 +1411,7 @@ class OrganizationTests: RulesTests {
             for: input, output,
             rule: .organizeDeclarations,
             options: FormatOptions(categoryMarkComment: "- %c"),
-            exclude: ["blankLinesAtStartOfScope"]
+            exclude: [.blankLinesAtStartOfScope]
         )
     }
 
@@ -1454,7 +1454,7 @@ class OrganizationTests: RulesTests {
             for: input, output,
             rule: .organizeDeclarations,
             options: FormatOptions(organizeStructThreshold: 2),
-            exclude: ["blankLinesAtStartOfScope"]
+            exclude: [.blankLinesAtStartOfScope]
         )
     }
 
@@ -1535,7 +1535,7 @@ class OrganizationTests: RulesTests {
             options: FormatOptions(
                 organizeTypes: ["class", "struct", "enum", "extension"],
                 organizeExtensionThreshold: 2
-            ), exclude: ["blankLinesAtStartOfScope"]
+            ), exclude: [.blankLinesAtStartOfScope]
         )
     }
 
@@ -1557,7 +1557,7 @@ class OrganizationTests: RulesTests {
         }
         """
         testFormatting(for: input, rule: .organizeDeclarations,
-                       exclude: ["blankLinesAtStartOfScope"])
+                       exclude: [.blankLinesAtStartOfScope])
     }
 
     func testUpdatesMalformedMarks() {
@@ -1612,7 +1612,7 @@ class OrganizationTests: RulesTests {
         """
 
         testFormatting(for: input, output, rule: .organizeDeclarations,
-                       exclude: ["blankLinesAtStartOfScope"])
+                       exclude: [.blankLinesAtStartOfScope])
     }
 
     func testDoesntAttemptToUpdateMarksNotAtTopLevel() {
@@ -1643,7 +1643,7 @@ class OrganizationTests: RulesTests {
         """
 
         testFormatting(for: input, rule: .organizeDeclarations,
-                       exclude: ["blankLinesAtStartOfScope", "docCommentsBeforeAttributes"])
+                       exclude: [.blankLinesAtStartOfScope, .docCommentsBeforeAttributes])
     }
 
     func testHandlesTrailingCommentCorrectly() {
@@ -1672,7 +1672,7 @@ class OrganizationTests: RulesTests {
         """
 
         testFormatting(for: input, output, rule: .organizeDeclarations,
-                       exclude: ["blankLinesAtStartOfScope"])
+                       exclude: [.blankLinesAtStartOfScope])
     }
 
     func testDoesntInsertMarkWhenOnlyOneCategory() {
@@ -1739,7 +1739,7 @@ class OrganizationTests: RulesTests {
 
         testFormatting(for: input, output, rule: .organizeDeclarations,
                        options: FormatOptions(ifdefIndent: .noIndent),
-                       exclude: ["blankLinesAtStartOfScope"])
+                       exclude: [.blankLinesAtStartOfScope])
     }
 
     func testOrganizesTypesBelowConditionalCompilationBlock() {
@@ -1773,7 +1773,7 @@ class OrganizationTests: RulesTests {
 
         testFormatting(for: input, output, rule: .organizeDeclarations,
                        options: FormatOptions(ifdefIndent: .noIndent),
-                       exclude: ["blankLinesAtStartOfScope"])
+                       exclude: [.blankLinesAtStartOfScope])
     }
 
     func testOrganizesNestedTypesWithinConditionalCompilationBlock() {
@@ -1851,7 +1851,7 @@ class OrganizationTests: RulesTests {
 
         testFormatting(for: input, output, rule: .organizeDeclarations,
                        options: FormatOptions(ifdefIndent: .noIndent),
-                       exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope", "propertyType"])
+                       exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .propertyType])
     }
 
     func testOrganizesTypeBelowSymbolImport() {
@@ -1895,7 +1895,7 @@ class OrganizationTests: RulesTests {
 
         testFormatting(
             for: input, output, rule: .organizeDeclarations,
-            exclude: ["blankLinesAtStartOfScope", "sortImports"]
+            exclude: [.blankLinesAtStartOfScope, .sortImports]
         )
     }
 
@@ -1967,7 +1967,7 @@ class OrganizationTests: RulesTests {
 
         testFormatting(
             for: input, output, rule: .organizeDeclarations,
-            exclude: ["blankLinesAtStartOfScope"]
+            exclude: [.blankLinesAtStartOfScope]
         )
     }
 
@@ -1993,7 +1993,7 @@ class OrganizationTests: RulesTests {
 
         testFormatting(
             for: input, rule: .organizeDeclarations,
-            exclude: ["blankLinesAtStartOfScope"]
+            exclude: [.blankLinesAtStartOfScope]
         )
     }
 
@@ -2015,7 +2015,7 @@ class OrganizationTests: RulesTests {
 
         testFormatting(
             for: input, rule: .organizeDeclarations,
-            exclude: ["blankLinesAtStartOfScope"]
+            exclude: [.blankLinesAtStartOfScope]
         )
     }
 
@@ -2063,7 +2063,7 @@ class OrganizationTests: RulesTests {
 
         testFormatting(
             for: input, output, rule: .organizeDeclarations,
-            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
         )
     }
 
@@ -2095,7 +2095,7 @@ class OrganizationTests: RulesTests {
         testFormatting(
             for: input, rule: .organizeDeclarations,
             options: FormatOptions(organizeStructThreshold: 20),
-            exclude: ["blankLinesAtStartOfScope"]
+            exclude: [.blankLinesAtStartOfScope]
         )
     }
 
@@ -2142,7 +2142,7 @@ class OrganizationTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, rule: .organizeDeclarations, exclude: ["redundantClosure"])
+        testFormatting(for: input, rule: .organizeDeclarations, exclude: [.redundantClosure])
     }
 
     func testFuncWithNestedInitNotTreatedAsLifecycle() {
@@ -2166,7 +2166,7 @@ class OrganizationTests: RulesTests {
         """
 
         testFormatting(for: input, rule: .organizeDeclarations,
-                       exclude: ["blankLinesAtStartOfScope"])
+                       exclude: [.blankLinesAtStartOfScope])
     }
 
     func testOrganizeRuleNotConfusedByClassProtocol() {
@@ -2199,7 +2199,7 @@ class OrganizationTests: RulesTests {
         """
 
         testFormatting(for: input, output, rule: .organizeDeclarations,
-                       exclude: ["blankLinesAtStartOfScope"])
+                       exclude: [.blankLinesAtStartOfScope])
     }
 
     func testOrganizeClassDeclarationsIntoCategoriesWithNoBlankLineAfterMark() {
@@ -2249,7 +2249,7 @@ class OrganizationTests: RulesTests {
             for: input, output,
             rule: .organizeDeclarations,
             options: options,
-            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
         )
     }
 
@@ -2331,7 +2331,7 @@ class OrganizationTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, rule: .organizeDeclarations, options: FormatOptions(ifdefIndent: .noIndent), exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"])
+        testFormatting(for: input, rule: .organizeDeclarations, options: FormatOptions(ifdefIndent: .noIndent), exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope])
     }
 
     func testOrganizeConditionalPublicFunction() {
@@ -2354,7 +2354,7 @@ class OrganizationTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, rule: .organizeDeclarations, options: FormatOptions(ifdefIndent: .noIndent), exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"])
+        testFormatting(for: input, rule: .organizeDeclarations, options: FormatOptions(ifdefIndent: .noIndent), exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope])
     }
 
     // MARK: extensionAccessControl .onDeclarations
@@ -2385,7 +2385,7 @@ class OrganizationTests: RulesTests {
         testFormatting(
             for: input, output, rule: .extensionAccessControl,
             options: FormatOptions(extensionACLPlacement: .onDeclarations),
-            exclude: ["redundantInternal"]
+            exclude: [.redundantInternal]
         )
     }
 
@@ -2532,7 +2532,7 @@ class OrganizationTests: RulesTests {
         testFormatting(
             for: input, output, rule: .extensionAccessControl,
             options: FormatOptions(extensionACLPlacement: .onDeclarations, swiftVersion: "4"),
-            exclude: ["propertyType"]
+            exclude: [.propertyType]
         )
     }
 
@@ -2671,7 +2671,7 @@ class OrganizationTests: RulesTests {
         """
 
         testFormatting(for: input, output, rule: .extensionAccessControl,
-                       exclude: ["redundantFileprivate"])
+                       exclude: [.redundantFileprivate])
     }
 
     func testDoesntHoistPrivateVisibilityFromExtensionBodyDeclarations() {
@@ -2749,7 +2749,7 @@ class OrganizationTests: RulesTests {
             func bar() {}
         }
         """
-        testFormatting(for: input, rule: .extensionAccessControl, exclude: ["redundantInternal"])
+        testFormatting(for: input, rule: .extensionAccessControl, exclude: [.redundantInternal])
     }
 
     func testNoHoistAccessModifierForExtensionThatAddsProtocolConformance() {
@@ -3268,7 +3268,7 @@ class OrganizationTests: RulesTests {
         let options = FormatOptions(markTypes: .never)
         testFormatting(
             for: input, rule: .markTypes, options: options,
-            exclude: ["emptyBraces", "blankLinesAtStartOfScope", "blankLinesAtEndOfScope", "blankLinesBetweenScopes"]
+            exclude: [.emptyBraces, .blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .blankLinesBetweenScopes]
         )
     }
 
@@ -3301,7 +3301,7 @@ class OrganizationTests: RulesTests {
         let options = FormatOptions(markTypes: .ifNotEmpty)
         testFormatting(
             for: input, output, rule: .markTypes, options: options,
-            exclude: ["emptyBraces", "blankLinesAtStartOfScope", "blankLinesAtEndOfScope", "blankLinesBetweenScopes"]
+            exclude: [.emptyBraces, .blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .blankLinesBetweenScopes]
         )
     }
 
@@ -3320,7 +3320,7 @@ class OrganizationTests: RulesTests {
         let options = FormatOptions(markExtensions: .never)
         testFormatting(
             for: input, rule: .markTypes, options: options,
-            exclude: ["emptyBraces", "blankLinesAtStartOfScope", "blankLinesAtEndOfScope", "blankLinesBetweenScopes"]
+            exclude: [.emptyBraces, .blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .blankLinesBetweenScopes]
         )
     }
 
@@ -3353,7 +3353,7 @@ class OrganizationTests: RulesTests {
         let options = FormatOptions(markExtensions: .ifNotEmpty)
         testFormatting(
             for: input, output, rule: .markTypes, options: options,
-            exclude: ["emptyBraces", "blankLinesAtStartOfScope", "blankLinesAtEndOfScope", "blankLinesBetweenScopes"]
+            exclude: [.emptyBraces, .blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .blankLinesBetweenScopes]
         )
     }
 
@@ -3650,14 +3650,14 @@ class OrganizationTests: RulesTests {
         let input = "import Foo\n// important comment\n// (very important)\nimport Bar"
         let output = "// important comment\n// (very important)\nimport Bar\nimport Foo"
         testFormatting(for: input, output, rule: .sortImports,
-                       exclude: ["blankLineAfterImports"])
+                       exclude: [.blankLineAfterImports])
     }
 
     func testSortImportsKeepsPreviousCommentWithImport2() {
         let input = "// important comment\n// (very important)\nimport Foo\nimport Bar"
         let output = "import Bar\n// important comment\n// (very important)\nimport Foo"
         testFormatting(for: input, output, rule: .sortImports,
-                       exclude: ["blankLineAfterImports"])
+                       exclude: [.blankLineAfterImports])
     }
 
     func testSortImportsDoesntMoveHeaderComment() {
@@ -3670,7 +3670,7 @@ class OrganizationTests: RulesTests {
         let input = "// header comment\n\n// important comment\nimport Foo\nimport Bar"
         let output = "// header comment\n\nimport Bar\n// important comment\nimport Foo"
         testFormatting(for: input, output, rule: .sortImports,
-                       exclude: ["blankLineAfterImports"])
+                       exclude: [.blankLineAfterImports])
     }
 
     func testSortImportsOnSameLine() {
@@ -3682,7 +3682,7 @@ class OrganizationTests: RulesTests {
     func testSortImportsWithSemicolonAndCommentOnSameLine() {
         let input = "import Foo; // foobar\nimport Bar\nimport Baz"
         let output = "import Bar\nimport Baz\nimport Foo; // foobar"
-        testFormatting(for: input, output, rule: .sortImports, exclude: ["semicolons"])
+        testFormatting(for: input, output, rule: .sortImports, exclude: [.semicolons])
     }
 
     func testSortImportEnum() {
@@ -3756,14 +3756,14 @@ class OrganizationTests: RulesTests {
     func testNoDeleteCodeBetweenImports() {
         let input = "import Foo\nfunc bar() {}\nimport Bar"
         testFormatting(for: input, rule: .sortImports,
-                       exclude: ["blankLineAfterImports"])
+                       exclude: [.blankLineAfterImports])
     }
 
     func testNoDeleteCodeBetweenImports2() {
         let input = "import Foo\nimport Bar\nfoo = bar\nimport Bar"
         let output = "import Bar\nimport Foo\nfoo = bar\nimport Bar"
         testFormatting(for: input, output, rule: .sortImports,
-                       exclude: ["blankLineAfterImports"])
+                       exclude: [.blankLineAfterImports])
     }
 
     func testNoDeleteCodeBetweenImports3() {
@@ -3785,7 +3785,7 @@ class OrganizationTests: RulesTests {
         let input = "import Foo\nimport Bar\nfunc bar() {}\nimport Quux\nimport Baz"
         let output = "import Bar\nimport Foo\nfunc bar() {}\nimport Baz\nimport Quux"
         testFormatting(for: input, output, rule: .sortImports,
-                       exclude: ["blankLineAfterImports"])
+                       exclude: [.blankLineAfterImports])
     }
 
     func testNoMangleImportsPrecededByComment() {
@@ -3864,7 +3864,7 @@ class OrganizationTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, rule: .sortSwitchCases, exclude: ["redundantSelf"])
+        testFormatting(for: input, rule: .sortSwitchCases, exclude: [.redundantSelf])
     }
 
     func testSortedSwitchCaseMultilineWithOneComment() {
@@ -3900,7 +3900,7 @@ class OrganizationTests: RulesTests {
             break
         }
         """
-        testFormatting(for: input, output, rule: .sortSwitchCases, exclude: ["indent"])
+        testFormatting(for: input, output, rule: .sortSwitchCases, exclude: [.indent])
     }
 
     func testSortedSwitchCaseMultilineWithCommentsAndMoreThanOneCasePerLine() {
@@ -3956,7 +3956,7 @@ class OrganizationTests: RulesTests {
         }
         """
         testFormatting(for: input, output, rule: .sortSwitchCases,
-                       exclude: ["wrapSwitchCases"])
+                       exclude: [.wrapSwitchCases])
     }
 
     func testSortedSwitchCaseOneLineWithoutSpaces() {
@@ -3973,7 +3973,7 @@ class OrganizationTests: RulesTests {
         }
         """
         testFormatting(for: input, output, rule: .sortSwitchCases,
-                       exclude: ["wrapSwitchCases", "spaceAroundOperators"])
+                       exclude: [.wrapSwitchCases, .spaceAroundOperators])
     }
 
     func testSortedSwitchCaseLet() {
@@ -3990,7 +3990,7 @@ class OrganizationTests: RulesTests {
         }
         """
         testFormatting(for: input, output, rule: .sortSwitchCases,
-                       exclude: ["wrapSwitchCases"])
+                       exclude: [.wrapSwitchCases])
     }
 
     func testSortedSwitchCaseOneCaseDoesNothing() {
@@ -4017,7 +4017,7 @@ class OrganizationTests: RulesTests {
         }
         """
         testFormatting(for: input, output, rule: .sortSwitchCases,
-                       exclude: ["wrapSwitchCases"])
+                       exclude: [.wrapSwitchCases])
     }
 
     func testSortedSwitchWhereConditionNotLastCase() {
@@ -4029,7 +4029,7 @@ class OrganizationTests: RulesTests {
         """
         testFormatting(for: input,
                        rule: .sortSwitchCases,
-                       exclude: ["wrapSwitchCases"])
+                       exclude: [.wrapSwitchCases])
     }
 
     func testSortedSwitchWhereConditionLastCase() {
@@ -4046,7 +4046,7 @@ class OrganizationTests: RulesTests {
         }
         """
         testFormatting(for: input, output, rule: .sortSwitchCases,
-                       exclude: ["wrapSwitchCases"])
+                       exclude: [.wrapSwitchCases])
     }
 
     func testSortNumericSwitchCases() {
@@ -4063,7 +4063,7 @@ class OrganizationTests: RulesTests {
         }
         """
         testFormatting(for: input, output, rule: .sortSwitchCases,
-                       exclude: ["wrapSwitchCases"])
+                       exclude: [.wrapSwitchCases])
     }
 
     func testSortedSwitchTuples() {
@@ -4169,7 +4169,7 @@ class OrganizationTests: RulesTests {
         }
         """
         testFormatting(for: input, output, rule: .sortSwitchCases,
-                       exclude: ["wrapSwitchCases"])
+                       exclude: [.wrapSwitchCases])
     }
 
     // MARK: - modifierOrder
@@ -4236,7 +4236,7 @@ class OrganizationTests: RulesTests {
         let input = "consuming public func close()"
         let output = "public consuming func close()"
         let options = FormatOptions(modifierOrder: ["public", "consuming"])
-        testFormatting(for: input, output, rule: .modifierOrder, options: options, exclude: ["noExplicitOwnership"])
+        testFormatting(for: input, output, rule: .modifierOrder, options: options, exclude: [.noExplicitOwnership])
     }
 
     func testNoConfusePostfixIdentifierWithKeyword() {
@@ -4378,7 +4378,7 @@ class OrganizationTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, output, rule: .sortDeclarations, exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"])
+        testFormatting(for: input, output, rule: .sortDeclarations, exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope])
     }
 
     func testSortClassWithMixedDeclarationTypes() {
@@ -4416,7 +4416,7 @@ class OrganizationTests: RulesTests {
 
         testFormatting(for: input, [output],
                        rules: [.sortDeclarations, .consecutiveBlankLines],
-                       exclude: ["blankLinesBetweenScopes", "propertyType"])
+                       exclude: [.blankLinesBetweenScopes, .propertyType])
     }
 
     func testSortBetweenDirectiveCommentsInType() {
@@ -4552,7 +4552,7 @@ class OrganizationTests: RulesTests {
 
         testFormatting(for: input, [output],
                        rules: [.organizeDeclarations, .blankLinesBetweenScopes],
-                       exclude: ["blankLinesAtEndOfScope"])
+                       exclude: [.blankLinesAtEndOfScope])
     }
 
     func testSortsWithinOrganizeDeclarationsByClassName() {
@@ -4599,7 +4599,7 @@ class OrganizationTests: RulesTests {
         testFormatting(for: input, [output],
                        rules: [.organizeDeclarations, .blankLinesBetweenScopes],
                        options: .init(alphabeticallySortedDeclarationPatterns: ["FeatureFlags"]),
-                       exclude: ["blankLinesAtEndOfScope"])
+                       exclude: [.blankLinesAtEndOfScope])
     }
 
     func testSortsWithinOrganizeDeclarationsByPartialClassName() {
@@ -4646,7 +4646,7 @@ class OrganizationTests: RulesTests {
         testFormatting(for: input, [output],
                        rules: [.organizeDeclarations, .blankLinesBetweenScopes],
                        options: .init(alphabeticallySortedDeclarationPatterns: ["ureFla"]),
-                       exclude: ["blankLinesAtEndOfScope"])
+                       exclude: [.blankLinesAtEndOfScope])
     }
 
     func testDontSortsWithinOrganizeDeclarationsByClassNameInComment() {
@@ -4673,7 +4673,7 @@ class OrganizationTests: RulesTests {
         testFormatting(for: input,
                        rules: [.organizeDeclarations, .blankLinesBetweenScopes],
                        options: .init(alphabeticallySortedDeclarationPatterns: ["Comment"]),
-                       exclude: ["blankLinesAtEndOfScope"])
+                       exclude: [.blankLinesAtEndOfScope])
     }
 
     func testSortDeclarationsSortsByNamePattern() {
@@ -4807,7 +4807,7 @@ class OrganizationTests: RulesTests {
 
         let options = FormatOptions(organizeTypes: ["extension"])
         testFormatting(for: input, output, rule: .organizeDeclarations, options: options,
-                       exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"])
+                       exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope])
     }
 
     func testOrganizeDeclarationsContainingNonisolated() {
@@ -4844,7 +4844,7 @@ class OrganizationTests: RulesTests {
         }
         """
         testFormatting(for: input, output, rule: .organizeDeclarations,
-                       exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"])
+                       exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope])
     }
 
     func testSortStructPropertiesWithAttributes() {
@@ -4884,7 +4884,7 @@ class OrganizationTests: RulesTests {
         """
         let options = FormatOptions(indent: "  ", organizeTypes: ["struct"])
         testFormatting(for: input, output, rule: .organizeDeclarations,
-                       options: options, exclude: ["blankLinesAtStartOfScope"])
+                       options: options, exclude: [.blankLinesAtStartOfScope])
     }
 
     // MARK: - sortTypealiases
@@ -5109,7 +5109,7 @@ class OrganizationTests: RulesTests {
             for: input, output,
             rule: .organizeDeclarations,
             options: FormatOptions(organizeTypes: ["struct"], organizationMode: .visibility),
-            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
         )
     }
 
@@ -5164,7 +5164,7 @@ class OrganizationTests: RulesTests {
             for: input, output,
             rule: .organizeDeclarations,
             options: FormatOptions(organizeTypes: ["struct"], organizationMode: .visibility),
-            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
         )
     }
 
@@ -5221,7 +5221,7 @@ class OrganizationTests: RulesTests {
             for: input, output,
             rule: .organizeDeclarations,
             options: FormatOptions(organizeTypes: ["struct"], organizationMode: .visibility),
-            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
         )
     }
 
@@ -5276,7 +5276,7 @@ class OrganizationTests: RulesTests {
             for: input, output,
             rule: .organizeDeclarations,
             options: FormatOptions(organizeTypes: ["struct"], organizationMode: .visibility),
-            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
         )
     }
 }

@@ -41,7 +41,7 @@ class GeneralTests: RulesTests {
             required init?(coder aDecoder: NSCoder) {}
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.initCoderUnavailable,
+        testFormatting(for: input, output, rule: .initCoderUnavailable,
                        exclude: ["unusedArguments"])
     }
 
@@ -66,7 +66,7 @@ class GeneralTests: RulesTests {
         }
         """
         let options = FormatOptions(initCoderNil: false)
-        testFormatting(for: input, output, rule: FormatRules.initCoderUnavailable, options: options)
+        testFormatting(for: input, output, rule: .initCoderUnavailable, options: options)
     }
 
     func testInitCoderUnavailableFatalErrorNilEnabled() {
@@ -90,7 +90,7 @@ class GeneralTests: RulesTests {
         }
         """
         let options = FormatOptions(initCoderNil: true)
-        testFormatting(for: input, output, rule: FormatRules.initCoderUnavailable, options: options)
+        testFormatting(for: input, output, rule: .initCoderUnavailable, options: options)
     }
 
     func testInitCoderUnavailableAlreadyPresent() {
@@ -104,7 +104,7 @@ class GeneralTests: RulesTests {
             }
         }
         """
-        testFormatting(for: input, rule: FormatRules.initCoderUnavailable)
+        testFormatting(for: input, rule: .initCoderUnavailable)
     }
 
     func testInitCoderUnavailableImplemented() {
@@ -117,7 +117,7 @@ class GeneralTests: RulesTests {
             }
         }
         """
-        testFormatting(for: input, rule: FormatRules.initCoderUnavailable)
+        testFormatting(for: input, rule: .initCoderUnavailable)
     }
 
     func testPublicInitCoderUnavailable() {
@@ -136,7 +136,7 @@ class GeneralTests: RulesTests {
             }
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.initCoderUnavailable)
+        testFormatting(for: input, output, rule: .initCoderUnavailable)
     }
 
     func testPublicInitCoderUnavailable2() {
@@ -156,7 +156,7 @@ class GeneralTests: RulesTests {
         }
         """
         let options = FormatOptions(initCoderNil: true)
-        testFormatting(for: input, output, rule: FormatRules.initCoderUnavailable,
+        testFormatting(for: input, output, rule: .initCoderUnavailable,
                        options: options, exclude: ["modifierOrder"])
     }
 
@@ -165,77 +165,77 @@ class GeneralTests: RulesTests {
     func testCommaAddedToSingleItem() {
         let input = "[\n    foo\n]"
         let output = "[\n    foo,\n]"
-        testFormatting(for: input, output, rule: FormatRules.trailingCommas)
+        testFormatting(for: input, output, rule: .trailingCommas)
     }
 
     func testCommaAddedToLastItem() {
         let input = "[\n    foo,\n    bar\n]"
         let output = "[\n    foo,\n    bar,\n]"
-        testFormatting(for: input, output, rule: FormatRules.trailingCommas)
+        testFormatting(for: input, output, rule: .trailingCommas)
     }
 
     func testCommaAddedToDictionary() {
         let input = "[\n    foo: bar\n]"
         let output = "[\n    foo: bar,\n]"
-        testFormatting(for: input, output, rule: FormatRules.trailingCommas)
+        testFormatting(for: input, output, rule: .trailingCommas)
     }
 
     func testCommaNotAddedToInlineArray() {
         let input = "[foo, bar]"
-        testFormatting(for: input, rule: FormatRules.trailingCommas)
+        testFormatting(for: input, rule: .trailingCommas)
     }
 
     func testCommaNotAddedToInlineDictionary() {
         let input = "[foo: bar]"
-        testFormatting(for: input, rule: FormatRules.trailingCommas)
+        testFormatting(for: input, rule: .trailingCommas)
     }
 
     func testCommaNotAddedToSubscript() {
         let input = "foo[bar]"
-        testFormatting(for: input, rule: FormatRules.trailingCommas)
+        testFormatting(for: input, rule: .trailingCommas)
     }
 
     func testCommaAddedBeforeComment() {
         let input = "[\n    foo // comment\n]"
         let output = "[\n    foo, // comment\n]"
-        testFormatting(for: input, output, rule: FormatRules.trailingCommas)
+        testFormatting(for: input, output, rule: .trailingCommas)
     }
 
     func testCommaNotAddedAfterComment() {
         let input = "[\n    foo, // comment\n]"
-        testFormatting(for: input, rule: FormatRules.trailingCommas)
+        testFormatting(for: input, rule: .trailingCommas)
     }
 
     func testCommaNotAddedInsideEmptyArrayLiteral() {
         let input = "foo = [\n]"
-        testFormatting(for: input, rule: FormatRules.trailingCommas)
+        testFormatting(for: input, rule: .trailingCommas)
     }
 
     func testCommaNotAddedInsideEmptyDictionaryLiteral() {
         let input = "foo = [:\n]"
         let options = FormatOptions(wrapCollections: .disabled)
-        testFormatting(for: input, rule: FormatRules.trailingCommas, options: options)
+        testFormatting(for: input, rule: .trailingCommas, options: options)
     }
 
     func testTrailingCommaRemovedInInlineArray() {
         let input = "[foo,]"
         let output = "[foo]"
-        testFormatting(for: input, output, rule: FormatRules.trailingCommas)
+        testFormatting(for: input, output, rule: .trailingCommas)
     }
 
     func testTrailingCommaNotAddedToSubscript() {
         let input = "foo[\n    bar\n]"
-        testFormatting(for: input, rule: FormatRules.trailingCommas)
+        testFormatting(for: input, rule: .trailingCommas)
     }
 
     func testTrailingCommaNotAddedToSubscript2() {
         let input = "foo?[\n    bar\n]"
-        testFormatting(for: input, rule: FormatRules.trailingCommas)
+        testFormatting(for: input, rule: .trailingCommas)
     }
 
     func testTrailingCommaNotAddedToSubscript3() {
         let input = "foo()[\n    bar\n]"
-        testFormatting(for: input, rule: FormatRules.trailingCommas)
+        testFormatting(for: input, rule: .trailingCommas)
     }
 
     func testTrailingCommaNotAddedToSubscriptInsideArrayLiteral() {
@@ -248,7 +248,7 @@ class GeneralTests: RulesTests {
                 .baz,
         ]
         """
-        testFormatting(for: input, rule: FormatRules.trailingCommas)
+        testFormatting(for: input, rule: .trailingCommas)
     }
 
     func testTrailingCommaAddedToArrayLiteralInsideTuple() {
@@ -266,7 +266,7 @@ class GeneralTests: RulesTests {
             bar,
         ])
         """
-        testFormatting(for: input, output, rule: FormatRules.trailingCommas)
+        testFormatting(for: input, output, rule: .trailingCommas)
     }
 
     func testNoTrailingCommaAddedToArrayLiteralInsideTuple() {
@@ -277,7 +277,7 @@ class GeneralTests: RulesTests {
             Int
         ]).self
         """
-        testFormatting(for: input, rule: FormatRules.trailingCommas, exclude: ["propertyType"])
+        testFormatting(for: input, rule: .trailingCommas, exclude: ["propertyType"])
     }
 
     func testTrailingCommaNotAddedToTypeDeclaration() {
@@ -287,7 +287,7 @@ class GeneralTests: RulesTests {
                 String
         ]
         """
-        testFormatting(for: input, rule: FormatRules.trailingCommas)
+        testFormatting(for: input, rule: .trailingCommas)
     }
 
     func testTrailingCommaNotAddedToTypeDeclaration2() {
@@ -297,7 +297,7 @@ class GeneralTests: RulesTests {
                 String
         ])
         """
-        testFormatting(for: input, rule: FormatRules.trailingCommas)
+        testFormatting(for: input, rule: .trailingCommas)
     }
 
     func testTrailingCommaNotAddedToTypeDeclaration3() {
@@ -306,7 +306,7 @@ class GeneralTests: RulesTests {
             String: String
         ]
         """
-        testFormatting(for: input, rule: FormatRules.trailingCommas)
+        testFormatting(for: input, rule: .trailingCommas)
     }
 
     func testTrailingCommaNotAddedToTypeDeclaration4() {
@@ -315,7 +315,7 @@ class GeneralTests: RulesTests {
             String: Int
         ]]
         """
-        testFormatting(for: input, rule: FormatRules.trailingCommas)
+        testFormatting(for: input, rule: .trailingCommas)
     }
 
     func testTrailingCommaNotAddedToTypeDeclaration5() {
@@ -324,7 +324,7 @@ class GeneralTests: RulesTests {
             String: Int
         ]]()
         """
-        testFormatting(for: input, rule: FormatRules.trailingCommas, exclude: ["propertyType"])
+        testFormatting(for: input, rule: .trailingCommas, exclude: ["propertyType"])
     }
 
     func testTrailingCommaNotAddedToTypeDeclaration6() {
@@ -337,7 +337,7 @@ class GeneralTests: RulesTests {
             ])
         ]]()
         """
-        testFormatting(for: input, rule: FormatRules.trailingCommas, exclude: ["propertyType"])
+        testFormatting(for: input, rule: .trailingCommas, exclude: ["propertyType"])
     }
 
     func testTrailingCommaNotAddedToTypeDeclaration7() {
@@ -346,7 +346,7 @@ class GeneralTests: RulesTests {
             String: Int
         ]]>
         """
-        testFormatting(for: input, rule: FormatRules.trailingCommas)
+        testFormatting(for: input, rule: .trailingCommas)
     }
 
     func testTrailingCommaNotAddedToTypeDeclaration8() {
@@ -359,7 +359,7 @@ class GeneralTests: RulesTests {
             }
         }
         """
-        testFormatting(for: input, rule: FormatRules.trailingCommas)
+        testFormatting(for: input, rule: .trailingCommas)
     }
 
     func testTrailingCommaNotAddedToTypealias() {
@@ -368,7 +368,7 @@ class GeneralTests: RulesTests {
             Int
         ]
         """
-        testFormatting(for: input, rule: FormatRules.trailingCommas)
+        testFormatting(for: input, rule: .trailingCommas)
     }
 
     func testTrailingCommaNotAddedToCaptureList() {
@@ -377,7 +377,7 @@ class GeneralTests: RulesTests {
             self
         ] in }
         """
-        testFormatting(for: input, rule: FormatRules.trailingCommas)
+        testFormatting(for: input, rule: .trailingCommas)
     }
 
     func testTrailingCommaNotAddedToCaptureListWithComment() {
@@ -386,7 +386,7 @@ class GeneralTests: RulesTests {
             self // captures self
         ] in }
         """
-        testFormatting(for: input, rule: FormatRules.trailingCommas)
+        testFormatting(for: input, rule: .trailingCommas)
     }
 
     func testTrailingCommaNotAddedToCaptureListWithMainActor() {
@@ -396,7 +396,7 @@ class GeneralTests: RulesTests {
             baz = state.baz
         ] _ in }
         """
-        testFormatting(for: input, rule: FormatRules.trailingCommas)
+        testFormatting(for: input, rule: .trailingCommas)
     }
 
     // trailingCommas = false
@@ -404,14 +404,14 @@ class GeneralTests: RulesTests {
     func testCommaNotAddedToLastItem() {
         let input = "[\n    foo,\n    bar\n]"
         let options = FormatOptions(trailingCommas: false)
-        testFormatting(for: input, rule: FormatRules.trailingCommas, options: options)
+        testFormatting(for: input, rule: .trailingCommas, options: options)
     }
 
     func testCommaRemovedFromLastItem() {
         let input = "[\n    foo,\n    bar,\n]"
         let output = "[\n    foo,\n    bar\n]"
         let options = FormatOptions(trailingCommas: false)
-        testFormatting(for: input, output, rule: FormatRules.trailingCommas, options: options)
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
     // MARK: - fileHeader
@@ -420,7 +420,7 @@ class GeneralTests: RulesTests {
         let input = "//\n//  test.swift\n//  SwiftFormat\n//\n//  Created by Nick Lockwood on 08/11/2016.\n//  Copyright © 2016 Nick Lockwood. All rights reserved.\n//\n\n/// func\nfunc foo() {}"
         let output = "/// func\nfunc foo() {}"
         let options = FormatOptions(fileHeader: "")
-        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+        testFormatting(for: input, output, rule: .fileHeader, options: options)
     }
 
     func testStripHeaderWithWhenHeaderContainsUrl() {
@@ -439,110 +439,110 @@ class GeneralTests: RulesTests {
         """
         let output = "/// func\nfunc foo() {}"
         let options = FormatOptions(fileHeader: "")
-        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+        testFormatting(for: input, output, rule: .fileHeader, options: options)
     }
 
     func testReplaceHeaderWhenFileContainsNoCode() {
         let input = "// foobar"
         let options = FormatOptions(fileHeader: "// foobar")
-        testFormatting(for: input, rule: FormatRules.fileHeader, options: options,
+        testFormatting(for: input, rule: .fileHeader, options: options,
                        exclude: ["linebreakAtEndOfFile"])
     }
 
     func testReplaceHeaderWhenFileContainsNoCode2() {
         let input = "// foobar\n"
         let options = FormatOptions(fileHeader: "// foobar")
-        testFormatting(for: input, rule: FormatRules.fileHeader, options: options)
+        testFormatting(for: input, rule: .fileHeader, options: options)
     }
 
     func testMultilineCommentHeader() {
         let input = "/****************************/\n/* Created by Nick Lockwood */\n/****************************/\n\n\n/// func\nfunc foo() {}"
         let output = "/// func\nfunc foo() {}"
         let options = FormatOptions(fileHeader: "")
-        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+        testFormatting(for: input, output, rule: .fileHeader, options: options)
     }
 
     func testNoStripHeaderWhenDisabled() {
         let input = "//\n//  test.swift\n//  SwiftFormat\n//\n//  Created by Nick Lockwood on 08/11/2016.\n//  Copyright © 2016 Nick Lockwood. All rights reserved.\n//\n\n/// func\nfunc foo() {}"
         let options = FormatOptions(fileHeader: .ignore)
-        testFormatting(for: input, rule: FormatRules.fileHeader, options: options)
+        testFormatting(for: input, rule: .fileHeader, options: options)
     }
 
     func testNoStripComment() {
         let input = "\n/// func\nfunc foo() {}"
         let options = FormatOptions(fileHeader: "")
-        testFormatting(for: input, rule: FormatRules.fileHeader, options: options)
+        testFormatting(for: input, rule: .fileHeader, options: options)
     }
 
     func testNoStripPackageHeader() {
         let input = "// swift-tools-version:4.2\n\nimport PackageDescription"
         let options = FormatOptions(fileHeader: "")
-        testFormatting(for: input, rule: FormatRules.fileHeader, options: options)
+        testFormatting(for: input, rule: .fileHeader, options: options)
     }
 
     func testNoStripFormatDirective() {
         let input = "// swiftformat:options --swiftversion 5.2\n\nimport PackageDescription"
         let options = FormatOptions(fileHeader: "")
-        testFormatting(for: input, rule: FormatRules.fileHeader, options: options)
+        testFormatting(for: input, rule: .fileHeader, options: options)
     }
 
     func testNoStripFormatDirectiveAfterHeader() {
         let input = "// header\n// swiftformat:options --swiftversion 5.2\n\nimport PackageDescription"
         let options = FormatOptions(fileHeader: "")
-        testFormatting(for: input, rule: FormatRules.fileHeader, options: options)
+        testFormatting(for: input, rule: .fileHeader, options: options)
     }
 
     func testNoReplaceFormatDirective() {
         let input = "// swiftformat:options --swiftversion 5.2\n\nimport PackageDescription"
         let output = "// Hello World\n\n// swiftformat:options --swiftversion 5.2\n\nimport PackageDescription"
         let options = FormatOptions(fileHeader: "// Hello World")
-        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+        testFormatting(for: input, output, rule: .fileHeader, options: options)
     }
 
     func testSetSingleLineHeader() {
         let input = "//\n//  test.swift\n//  SwiftFormat\n//\n//  Created by Nick Lockwood on 08/11/2016.\n//  Copyright © 2016 Nick Lockwood. All rights reserved.\n//\n\n/// func\nfunc foo() {}"
         let output = "// Hello World\n\n/// func\nfunc foo() {}"
         let options = FormatOptions(fileHeader: "// Hello World")
-        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+        testFormatting(for: input, output, rule: .fileHeader, options: options)
     }
 
     func testSetMultilineHeader() {
         let input = "//\n//  test.swift\n//  SwiftFormat\n//\n//  Created by Nick Lockwood on 08/11/2016.\n//  Copyright © 2016 Nick Lockwood. All rights reserved.\n//\n\n/// func\nfunc foo() {}"
         let output = "// Hello\n// World\n\n/// func\nfunc foo() {}"
         let options = FormatOptions(fileHeader: "// Hello\n// World")
-        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+        testFormatting(for: input, output, rule: .fileHeader, options: options)
     }
 
     func testSetMultilineHeaderWithMarkup() {
         let input = "//\n//  test.swift\n//  SwiftFormat\n//\n//  Created by Nick Lockwood on 08/11/2016.\n//  Copyright © 2016 Nick Lockwood. All rights reserved.\n//\n\n/// func\nfunc foo() {}"
         let output = "/*--- Hello ---*/\n/*--- World ---*/\n\n/// func\nfunc foo() {}"
         let options = FormatOptions(fileHeader: "/*--- Hello ---*/\n/*--- World ---*/")
-        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+        testFormatting(for: input, output, rule: .fileHeader, options: options)
     }
 
     func testNoStripHeaderIfRuleDisabled() {
         let input = "// swiftformat:disable fileHeader\n// test\n// swiftformat:enable fileHeader\n\nfunc foo() {}"
         let options = FormatOptions(fileHeader: "")
-        testFormatting(for: input, rule: FormatRules.fileHeader, options: options)
+        testFormatting(for: input, rule: .fileHeader, options: options)
     }
 
     func testNoStripHeaderIfNextRuleDisabled() {
         let input = "// swiftformat:disable:next fileHeader\n// test\n\nfunc foo() {}"
         let options = FormatOptions(fileHeader: "")
-        testFormatting(for: input, rule: FormatRules.fileHeader, options: options)
+        testFormatting(for: input, rule: .fileHeader, options: options)
     }
 
     func testNoStripHeaderDocWithNewlineBeforeCode() {
         let input = "/// Header doc\n\nclass Foo {}"
         let options = FormatOptions(fileHeader: "")
-        testFormatting(for: input, rule: FormatRules.fileHeader, options: options, exclude: ["docComments"])
+        testFormatting(for: input, rule: .fileHeader, options: options, exclude: ["docComments"])
     }
 
     func testNoDuplicateHeaderIfMissingTrailingBlankLine() {
         let input = "// Header comment\nclass Foo {}"
         let output = "// Header comment\n\nclass Foo {}"
         let options = FormatOptions(fileHeader: "Header comment")
-        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+        testFormatting(for: input, output, rule: .fileHeader, options: options)
     }
 
     func testNoDuplicateHeaderContainingPossibleCommentDirective() {
@@ -561,7 +561,7 @@ class GeneralTests: RulesTests {
         class Foo {}
         """
         let options = FormatOptions(fileHeader: "// Copyright (c) 2010-2024 Foobar\n//\n// SPDX-License-Identifier: EPL-2.0")
-        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+        testFormatting(for: input, output, rule: .fileHeader, options: options)
     }
 
     func testNoDuplicateHeaderContainingCommentDirective() {
@@ -580,7 +580,7 @@ class GeneralTests: RulesTests {
         class Foo {}
         """
         let options = FormatOptions(fileHeader: "// Copyright (c) 2010-2024 Foobar\n//\n// swiftformat:disable all")
-        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+        testFormatting(for: input, output, rule: .fileHeader, options: options)
     }
 
     func testFileHeaderYearReplacement() {
@@ -591,7 +591,7 @@ class GeneralTests: RulesTests {
             return "// Copyright © \(formatter.string(from: Date()))\n\nlet foo = bar"
         }()
         let options = FormatOptions(fileHeader: "// Copyright © {year}")
-        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+        testFormatting(for: input, output, rule: .fileHeader, options: options)
     }
 
     func testFileHeaderCreationYearReplacement() {
@@ -604,7 +604,7 @@ class GeneralTests: RulesTests {
         }()
         let fileInfo = FileInfo(creationDate: date)
         let options = FormatOptions(fileHeader: "// Copyright © {created.year}", fileInfo: fileInfo)
-        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+        testFormatting(for: input, output, rule: .fileHeader, options: options)
     }
 
     func testFileHeaderAuthorReplacement() {
@@ -614,7 +614,7 @@ class GeneralTests: RulesTests {
         let output = "// Created by \(name) \(email)\n\nlet foo = bar"
         let fileInfo = FileInfo(replacements: [.authorName: .constant(name), .authorEmail: .constant(email)])
         let options = FormatOptions(fileHeader: "// Created by {author.name} {author.email}", fileInfo: fileInfo)
-        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+        testFormatting(for: input, output, rule: .fileHeader, options: options)
     }
 
     func testFileHeaderAuthorReplacement2() {
@@ -623,7 +623,7 @@ class GeneralTests: RulesTests {
         let output = "// Created by \(author)\n\nlet foo = bar"
         let fileInfo = FileInfo(replacements: [.author: .constant(author)])
         let options = FormatOptions(fileHeader: "// Created by {author}", fileInfo: fileInfo)
-        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+        testFormatting(for: input, output, rule: .fileHeader, options: options)
     }
 
     func testFileHeaderMultipleReplacement() {
@@ -632,7 +632,7 @@ class GeneralTests: RulesTests {
         let output = "// Copyright © \(name)\n// Created by \(name)\n\nlet foo = bar"
         let fileInfo = FileInfo(replacements: [.authorName: .constant(name)])
         let options = FormatOptions(fileHeader: "// Copyright © {author.name}\n// Created by {author.name}", fileInfo: fileInfo)
-        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+        testFormatting(for: input, output, rule: .fileHeader, options: options)
     }
 
     func testFileHeaderCreationDateReplacement() {
@@ -646,7 +646,7 @@ class GeneralTests: RulesTests {
         }()
         let fileInfo = FileInfo(creationDate: date)
         let options = FormatOptions(fileHeader: "// Created by Nick Lockwood on {created}.", fileInfo: fileInfo)
-        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+        testFormatting(for: input, output, rule: .fileHeader, options: options)
     }
 
     func testFileHeaderDateFormattingIso() {
@@ -656,7 +656,7 @@ class GeneralTests: RulesTests {
         let output = "// 2023-08-09\n\nlet foo = bar"
         let fileInfo = FileInfo(creationDate: date)
         let options = FormatOptions(fileHeader: "// {created}", dateFormat: .iso, fileInfo: fileInfo)
-        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+        testFormatting(for: input, output, rule: .fileHeader, options: options)
     }
 
     func testFileHeaderDateFormattingDayMonthYear() {
@@ -666,7 +666,7 @@ class GeneralTests: RulesTests {
         let output = "// 09/08/2023\n\nlet foo = bar"
         let fileInfo = FileInfo(creationDate: date)
         let options = FormatOptions(fileHeader: "// {created}", dateFormat: .dayMonthYear, fileInfo: fileInfo)
-        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+        testFormatting(for: input, output, rule: .fileHeader, options: options)
     }
 
     func testFileHeaderDateFormattingMonthDayYear() {
@@ -678,7 +678,7 @@ class GeneralTests: RulesTests {
         let options = FormatOptions(fileHeader: "// {created}",
                                     dateFormat: .monthDayYear,
                                     fileInfo: fileInfo)
-        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+        testFormatting(for: input, output, rule: .fileHeader, options: options)
     }
 
     func testFileHeaderDateFormattingCustom() {
@@ -691,7 +691,7 @@ class GeneralTests: RulesTests {
                                     dateFormat: .custom("yy.MM.dd-HH.mm.ss.SSS"),
                                     timeZone: .identifier("UTC"),
                                     fileInfo: fileInfo)
-        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+        testFormatting(for: input, output, rule: .fileHeader, options: options)
     }
 
     private func testTimeZone(
@@ -713,7 +713,7 @@ class GeneralTests: RulesTests {
             )
 
             testFormatting(for: input, output,
-                           rule: FormatRules.fileHeader,
+                           rule: .fileHeader,
                            options: options)
         }
     }
@@ -768,7 +768,7 @@ class GeneralTests: RulesTests {
     func testFileHeaderRuleThrowsIfCreationDateUnavailable() {
         let input = "let foo = bar"
         let options = FormatOptions(fileHeader: "// Created by Nick Lockwood on {created}.", fileInfo: FileInfo())
-        XCTAssertThrowsError(try format(input, rules: [FormatRules.fileHeader], options: options))
+        XCTAssertThrowsError(try format(input, rules: [.fileHeader], options: options))
     }
 
     func testFileHeaderFileReplacement() {
@@ -776,20 +776,20 @@ class GeneralTests: RulesTests {
         let output = "// MyFile.swift\n\nlet foo = bar"
         let fileInfo = FileInfo(filePath: "~/MyFile.swift")
         let options = FormatOptions(fileHeader: "// {file}", fileInfo: fileInfo)
-        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+        testFormatting(for: input, output, rule: .fileHeader, options: options)
     }
 
     func testFileHeaderRuleThrowsIfFileNameUnavailable() {
         let input = "let foo = bar"
         let options = FormatOptions(fileHeader: "// {file}.", fileInfo: FileInfo())
-        XCTAssertThrowsError(try format(input, rules: [FormatRules.fileHeader], options: options))
+        XCTAssertThrowsError(try format(input, rules: [.fileHeader], options: options))
     }
 
     func testEdgeCaseHeaderEndIndexPlusNewHeaderTokensCountEqualsFileTokensEndIndex() {
         let input = "// Header comment\n\nclass Foo {}"
         let output = "// Header line1\n// Header line2\n\nclass Foo {}"
         let options = FormatOptions(fileHeader: "// Header line1\n// Header line2")
-        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+        testFormatting(for: input, output, rule: .fileHeader, options: options)
     }
 
     func testFileHeaderBlankLineNotRemovedBeforeFollowingComment() {
@@ -801,7 +801,7 @@ class GeneralTests: RulesTests {
         // Something else...
         """
         let options = FormatOptions(fileHeader: "//\n// Header\n//")
-        testFormatting(for: input, rule: FormatRules.fileHeader, options: options)
+        testFormatting(for: input, rule: .fileHeader, options: options)
     }
 
     func testFileHeaderBlankLineNotRemovedBeforeFollowingComment2() {
@@ -815,7 +815,7 @@ class GeneralTests: RulesTests {
         //
         """
         let options = FormatOptions(fileHeader: "//\n// Header\n//")
-        testFormatting(for: input, rule: FormatRules.fileHeader, options: options)
+        testFormatting(for: input, rule: .fileHeader, options: options)
     }
 
     func testFileHeaderRemovedAfterHashbang() {
@@ -833,7 +833,7 @@ class GeneralTests: RulesTests {
         let foo = 5
         """
         let options = FormatOptions(fileHeader: "")
-        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+        testFormatting(for: input, output, rule: .fileHeader, options: options)
     }
 
     func testFileHeaderPlacedAfterHashbang() {
@@ -851,7 +851,7 @@ class GeneralTests: RulesTests {
         let foo = 5
         """
         let options = FormatOptions(fileHeader: "// Header line1\n// Header line2")
-        testFormatting(for: input, output, rule: FormatRules.fileHeader, options: options)
+        testFormatting(for: input, output, rule: .fileHeader, options: options)
     }
 
     func testBlankLineAfterHashbangNotRemovedByFileHeader() {
@@ -861,7 +861,7 @@ class GeneralTests: RulesTests {
         let foo = 5
         """
         let options = FormatOptions(fileHeader: "")
-        testFormatting(for: input, rule: FormatRules.fileHeader, options: options)
+        testFormatting(for: input, rule: .fileHeader, options: options)
     }
 
     func testLineAfterHashbangNotAffectedByFileHeaderRemoval() {
@@ -870,7 +870,7 @@ class GeneralTests: RulesTests {
         let foo = 5
         """
         let options = FormatOptions(fileHeader: "")
-        testFormatting(for: input, rule: FormatRules.fileHeader, options: options)
+        testFormatting(for: input, rule: .fileHeader, options: options)
     }
 
     func testDisableFileHeaderCommentRespectedAfterHashbang() {
@@ -884,7 +884,7 @@ class GeneralTests: RulesTests {
         let foo = 5
         """
         let options = FormatOptions(fileHeader: "")
-        testFormatting(for: input, rule: FormatRules.fileHeader, options: options)
+        testFormatting(for: input, rule: .fileHeader, options: options)
     }
 
     func testDisableFileHeaderCommentRespectedAfterHashbang2() {
@@ -898,7 +898,7 @@ class GeneralTests: RulesTests {
         let foo = 5
         """
         let options = FormatOptions(fileHeader: "")
-        testFormatting(for: input, rule: FormatRules.fileHeader, options: options)
+        testFormatting(for: input, rule: .fileHeader, options: options)
     }
 
     // MARK: - headerFileName
@@ -915,7 +915,7 @@ class GeneralTests: RulesTests {
         let foo = bar
         """
         let options = FormatOptions(fileInfo: FileInfo(filePath: "~/YourFile.swift"))
-        testFormatting(for: input, output, rule: FormatRules.headerFileName, options: options)
+        testFormatting(for: input, output, rule: .headerFileName, options: options)
     }
 
     // MARK: - strongOutlets
@@ -923,52 +923,52 @@ class GeneralTests: RulesTests {
     func testRemoveWeakFromOutlet() {
         let input = "@IBOutlet weak var label: UILabel!"
         let output = "@IBOutlet var label: UILabel!"
-        testFormatting(for: input, output, rule: FormatRules.strongOutlets)
+        testFormatting(for: input, output, rule: .strongOutlets)
     }
 
     func testRemoveWeakFromPrivateOutlet() {
         let input = "@IBOutlet private weak var label: UILabel!"
         let output = "@IBOutlet private var label: UILabel!"
-        testFormatting(for: input, output, rule: FormatRules.strongOutlets)
+        testFormatting(for: input, output, rule: .strongOutlets)
     }
 
     func testRemoveWeakFromOutletOnSplitLine() {
         let input = "@IBOutlet\nweak var label: UILabel!"
         let output = "@IBOutlet\nvar label: UILabel!"
-        testFormatting(for: input, output, rule: FormatRules.strongOutlets)
+        testFormatting(for: input, output, rule: .strongOutlets)
     }
 
     func testNoRemoveWeakFromNonOutlet() {
         let input = "weak var label: UILabel!"
-        testFormatting(for: input, rule: FormatRules.strongOutlets)
+        testFormatting(for: input, rule: .strongOutlets)
     }
 
     func testNoRemoveWeakFromNonOutletAfterOutlet() {
         let input = "@IBOutlet weak var label1: UILabel!\nweak var label2: UILabel!"
         let output = "@IBOutlet var label1: UILabel!\nweak var label2: UILabel!"
-        testFormatting(for: input, output, rule: FormatRules.strongOutlets)
+        testFormatting(for: input, output, rule: .strongOutlets)
     }
 
     func testNoRemoveWeakFromDelegateOutlet() {
         let input = "@IBOutlet weak var delegate: UITableViewDelegate?"
-        testFormatting(for: input, rule: FormatRules.strongOutlets)
+        testFormatting(for: input, rule: .strongOutlets)
     }
 
     func testNoRemoveWeakFromDataSourceOutlet() {
         let input = "@IBOutlet weak var dataSource: UITableViewDataSource?"
-        testFormatting(for: input, rule: FormatRules.strongOutlets)
+        testFormatting(for: input, rule: .strongOutlets)
     }
 
     func testRemoveWeakFromOutletAfterDelegateOutlet() {
         let input = "@IBOutlet weak var delegate: UITableViewDelegate?\n@IBOutlet weak var label1: UILabel!"
         let output = "@IBOutlet weak var delegate: UITableViewDelegate?\n@IBOutlet var label1: UILabel!"
-        testFormatting(for: input, output, rule: FormatRules.strongOutlets)
+        testFormatting(for: input, output, rule: .strongOutlets)
     }
 
     func testRemoveWeakFromOutletAfterDataSourceOutlet() {
         let input = "@IBOutlet weak var dataSource: UITableViewDataSource?\n@IBOutlet weak var label1: UILabel!"
         let output = "@IBOutlet weak var dataSource: UITableViewDataSource?\n@IBOutlet var label1: UILabel!"
-        testFormatting(for: input, output, rule: FormatRules.strongOutlets)
+        testFormatting(for: input, output, rule: .strongOutlets)
     }
 
     // MARK: - strongifiedSelf
@@ -985,7 +985,7 @@ class GeneralTests: RulesTests {
         }
         """
         let options = FormatOptions(swiftVersion: "4.2")
-        testFormatting(for: input, output, rule: FormatRules.strongifiedSelf, options: options,
+        testFormatting(for: input, output, rule: .strongifiedSelf, options: options,
                        exclude: ["wrapConditionalBodies"])
     }
 
@@ -1001,7 +1001,7 @@ class GeneralTests: RulesTests {
         }
         """
         let options = FormatOptions(swiftVersion: "4.2")
-        testFormatting(for: input, output, rule: FormatRules.strongifiedSelf, options: options,
+        testFormatting(for: input, output, rule: .strongifiedSelf, options: options,
                        exclude: ["wrapConditionalBodies"])
     }
 
@@ -1012,7 +1012,7 @@ class GeneralTests: RulesTests {
         }
         """
         let options = FormatOptions(swiftVersion: "4.1.5")
-        testFormatting(for: input, rule: FormatRules.strongifiedSelf, options: options,
+        testFormatting(for: input, rule: .strongifiedSelf, options: options,
                        exclude: ["wrapConditionalBodies"])
     }
 
@@ -1022,14 +1022,14 @@ class GeneralTests: RulesTests {
             guard let `self` = self else { return }
         }
         """
-        testFormatting(for: input, rule: FormatRules.strongifiedSelf,
+        testFormatting(for: input, rule: .strongifiedSelf,
                        exclude: ["wrapConditionalBodies"])
     }
 
     func testBacktickedSelfNotConvertedIfNotConditional() {
         let input = "nonisolated(unsafe) let `self` = self"
         let options = FormatOptions(swiftVersion: "4.2")
-        testFormatting(for: input, rule: FormatRules.strongifiedSelf, options: options)
+        testFormatting(for: input, rule: .strongifiedSelf, options: options)
     }
 
     // MARK: - yodaConditions
@@ -1037,274 +1037,274 @@ class GeneralTests: RulesTests {
     func testNumericLiteralEqualYodaCondition() {
         let input = "5 == foo"
         let output = "foo == 5"
-        testFormatting(for: input, output, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, output, rule: .yodaConditions)
     }
 
     func testNumericLiteralGreaterYodaCondition() {
         let input = "5.1 > foo"
         let output = "foo < 5.1"
-        testFormatting(for: input, output, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, output, rule: .yodaConditions)
     }
 
     func testStringLiteralNotEqualYodaCondition() {
         let input = "\"foo\" != foo"
         let output = "foo != \"foo\""
-        testFormatting(for: input, output, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, output, rule: .yodaConditions)
     }
 
     func testNilNotEqualYodaCondition() {
         let input = "nil != foo"
         let output = "foo != nil"
-        testFormatting(for: input, output, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, output, rule: .yodaConditions)
     }
 
     func testTrueNotEqualYodaCondition() {
         let input = "true != foo"
         let output = "foo != true"
-        testFormatting(for: input, output, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, output, rule: .yodaConditions)
     }
 
     func testEnumCaseNotEqualYodaCondition() {
         let input = ".foo != foo"
         let output = "foo != .foo"
-        testFormatting(for: input, output, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, output, rule: .yodaConditions)
     }
 
     func testArrayLiteralNotEqualYodaCondition() {
         let input = "[5, 6] != foo"
         let output = "foo != [5, 6]"
-        testFormatting(for: input, output, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, output, rule: .yodaConditions)
     }
 
     func testNestedArrayLiteralNotEqualYodaCondition() {
         let input = "[5, [6, 7]] != foo"
         let output = "foo != [5, [6, 7]]"
-        testFormatting(for: input, output, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, output, rule: .yodaConditions)
     }
 
     func testDictionaryLiteralNotEqualYodaCondition() {
         let input = "[foo: 5, bar: 6] != foo"
         let output = "foo != [foo: 5, bar: 6]"
-        testFormatting(for: input, output, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, output, rule: .yodaConditions)
     }
 
     func testSubscriptNotTreatedAsYodaCondition() {
         let input = "foo[5] != bar"
-        testFormatting(for: input, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, rule: .yodaConditions)
     }
 
     func testSubscriptOfParenthesizedExpressionNotTreatedAsYodaCondition() {
         let input = "(foo + bar)[5] != baz"
-        testFormatting(for: input, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, rule: .yodaConditions)
     }
 
     func testSubscriptOfUnwrappedValueNotTreatedAsYodaCondition() {
         let input = "foo![5] != bar"
-        testFormatting(for: input, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, rule: .yodaConditions)
     }
 
     func testSubscriptOfExpressionWithInlineCommentNotTreatedAsYodaCondition() {
         let input = "foo /* foo */ [5] != bar"
-        testFormatting(for: input, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, rule: .yodaConditions)
     }
 
     func testSubscriptOfCollectionNotTreatedAsYodaCondition() {
         let input = "[foo][5] != bar"
-        testFormatting(for: input, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, rule: .yodaConditions)
     }
 
     func testSubscriptOfTrailingClosureNotTreatedAsYodaCondition() {
         let input = "foo { [5] }[0] != bar"
-        testFormatting(for: input, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, rule: .yodaConditions)
     }
 
     func testSubscriptOfRhsNotMangledInYodaCondition() {
         let input = "[1] == foo[0]"
         let output = "foo[0] == [1]"
-        testFormatting(for: input, output, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, output, rule: .yodaConditions)
     }
 
     func testTupleYodaCondition() {
         let input = "(5, 6) != bar"
         let output = "bar != (5, 6)"
-        testFormatting(for: input, output, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, output, rule: .yodaConditions)
     }
 
     func testLabeledTupleYodaCondition() {
         let input = "(foo: 5, bar: 6) != baz"
         let output = "baz != (foo: 5, bar: 6)"
-        testFormatting(for: input, output, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, output, rule: .yodaConditions)
     }
 
     func testNestedTupleYodaCondition() {
         let input = "(5, (6, 7)) != baz"
         let output = "baz != (5, (6, 7))"
-        testFormatting(for: input, output, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, output, rule: .yodaConditions)
     }
 
     func testFunctionCallNotTreatedAsYodaCondition() {
         let input = "foo(5) != bar"
-        testFormatting(for: input, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, rule: .yodaConditions)
     }
 
     func testCallOfParenthesizedExpressionNotTreatedAsYodaCondition() {
         let input = "(foo + bar)(5) != baz"
-        testFormatting(for: input, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, rule: .yodaConditions)
     }
 
     func testCallOfUnwrappedValueNotTreatedAsYodaCondition() {
         let input = "foo!(5) != bar"
-        testFormatting(for: input, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, rule: .yodaConditions)
     }
 
     func testCallOfExpressionWithInlineCommentNotTreatedAsYodaCondition() {
         let input = "foo /* foo */ (5) != bar"
-        testFormatting(for: input, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, rule: .yodaConditions)
     }
 
     func testCallOfRhsNotMangledInYodaCondition() {
         let input = "(1, 2) == foo(0)"
         let output = "foo(0) == (1, 2)"
-        testFormatting(for: input, output, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, output, rule: .yodaConditions)
     }
 
     func testTrailingClosureOnRhsNotMangledInYodaCondition() {
         let input = "(1, 2) == foo { $0 }"
         let output = "foo { $0 } == (1, 2)"
-        testFormatting(for: input, output, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, output, rule: .yodaConditions)
     }
 
     func testYodaConditionInIfStatement() {
         let input = "if 5 != foo {}"
         let output = "if foo != 5 {}"
-        testFormatting(for: input, output, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, output, rule: .yodaConditions)
     }
 
     func testSubscriptYodaConditionInIfStatementWithBraceOnNextLine() {
         let input = "if [0] == foo.bar[0]\n{ baz() }"
         let output = "if foo.bar[0] == [0]\n{ baz() }"
-        testFormatting(for: input, output, rule: FormatRules.yodaConditions,
+        testFormatting(for: input, output, rule: .yodaConditions,
                        exclude: ["wrapConditionalBodies"])
     }
 
     func testYodaConditionInSecondClauseOfIfStatement() {
         let input = "if foo, 5 != bar {}"
         let output = "if foo, bar != 5 {}"
-        testFormatting(for: input, output, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, output, rule: .yodaConditions)
     }
 
     func testYodaConditionInExpression() {
         let input = "let foo = 5 < bar\nbaz()"
         let output = "let foo = bar > 5\nbaz()"
-        testFormatting(for: input, output, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, output, rule: .yodaConditions)
     }
 
     func testYodaConditionInExpressionWithTrailingClosure() {
         let input = "let foo = 5 < bar { baz() }"
         let output = "let foo = bar { baz() } > 5"
-        testFormatting(for: input, output, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, output, rule: .yodaConditions)
     }
 
     func testYodaConditionInFunctionCall() {
         let input = "foo(5 < bar)"
         let output = "foo(bar > 5)"
-        testFormatting(for: input, output, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, output, rule: .yodaConditions)
     }
 
     func testYodaConditionFollowedByExpression() {
         let input = "5 == foo + 6"
         let output = "foo + 6 == 5"
-        testFormatting(for: input, output, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, output, rule: .yodaConditions)
     }
 
     func testPrefixExpressionYodaCondition() {
         let input = "!false == foo"
         let output = "foo == !false"
-        testFormatting(for: input, output, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, output, rule: .yodaConditions)
     }
 
     func testPrefixExpressionYodaCondition2() {
         let input = "true == !foo"
         let output = "!foo == true"
-        testFormatting(for: input, output, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, output, rule: .yodaConditions)
     }
 
     func testPostfixExpressionYodaCondition() {
         let input = "5<*> == foo"
         let output = "foo == 5<*>"
-        testFormatting(for: input, output, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, output, rule: .yodaConditions)
     }
 
     func testDoublePostfixExpressionYodaCondition() {
         let input = "5!! == foo"
         let output = "foo == 5!!"
-        testFormatting(for: input, output, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, output, rule: .yodaConditions)
     }
 
     func testPostfixExpressionNonYodaCondition() {
         let input = "5 == 5<*>"
-        testFormatting(for: input, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, rule: .yodaConditions)
     }
 
     func testPostfixExpressionNonYodaCondition2() {
         let input = "5<*> == 5"
-        testFormatting(for: input, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, rule: .yodaConditions)
     }
 
     func testStringEqualsStringNonYodaCondition() {
         let input = "\"foo\" == \"bar\""
-        testFormatting(for: input, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, rule: .yodaConditions)
     }
 
     func testConstantAfterNullCoalescingNonYodaCondition() {
         let input = "foo.last ?? -1 < bar"
-        testFormatting(for: input, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, rule: .yodaConditions)
     }
 
     func testNoMangleYodaConditionFollowedByAndOperator() {
         let input = "5 <= foo && foo <= 7"
         let output = "foo >= 5 && foo <= 7"
-        testFormatting(for: input, output, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, output, rule: .yodaConditions)
     }
 
     func testNoMangleYodaConditionFollowedByOrOperator() {
         let input = "5 <= foo || foo <= 7"
         let output = "foo >= 5 || foo <= 7"
-        testFormatting(for: input, output, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, output, rule: .yodaConditions)
     }
 
     func testNoMangleYodaConditionFollowedByParentheses() {
         let input = "0 <= (foo + bar)"
         let output = "(foo + bar) >= 0"
-        testFormatting(for: input, output, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, output, rule: .yodaConditions)
     }
 
     func testNoMangleYodaConditionInTernary() {
         let input = "let z = 0 < y ? 3 : 4"
         let output = "let z = y > 0 ? 3 : 4"
-        testFormatting(for: input, output, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, output, rule: .yodaConditions)
     }
 
     func testNoMangleYodaConditionInTernary2() {
         let input = "let z = y > 0 ? 0 < x : 4"
         let output = "let z = y > 0 ? x > 0 : 4"
-        testFormatting(for: input, output, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, output, rule: .yodaConditions)
     }
 
     func testNoMangleYodaConditionInTernary3() {
         let input = "let z = y > 0 ? 3 : 0 < x"
         let output = "let z = y > 0 ? 3 : x > 0"
-        testFormatting(for: input, output, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, output, rule: .yodaConditions)
     }
 
     func testKeyPathNotMangledAndNotTreatedAsYodaCondition() {
         let input = "\\.foo == bar"
-        testFormatting(for: input, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, rule: .yodaConditions)
     }
 
     func testEnumCaseLessThanEnumCase() {
         let input = "XCTAssertFalse(.never < .never)"
-        testFormatting(for: input, rule: FormatRules.yodaConditions)
+        testFormatting(for: input, rule: .yodaConditions)
     }
 
     // yodaSwap = literalsOnly
@@ -1312,7 +1312,7 @@ class GeneralTests: RulesTests {
     func testNoSwapYodaDotMember() {
         let input = "foo(where: .bar == baz)"
         let options = FormatOptions(yodaSwap: .literalsOnly)
-        testFormatting(for: input, rule: FormatRules.yodaConditions, options: options)
+        testFormatting(for: input, rule: .yodaConditions, options: options)
     }
 
     // MARK: - leadingDelimiters
@@ -1326,7 +1326,7 @@ class GeneralTests: RulesTests {
         let foo = 5,
             bar = 6
         """
-        testFormatting(for: input, output, rule: FormatRules.leadingDelimiters)
+        testFormatting(for: input, output, rule: .leadingDelimiters)
     }
 
     func testLeadingColonFollowedByCommentMovedToPreviousLine() {
@@ -1338,7 +1338,7 @@ class GeneralTests: RulesTests {
         let foo:
             /* string */ String
         """
-        testFormatting(for: input, output, rule: FormatRules.leadingDelimiters)
+        testFormatting(for: input, output, rule: .leadingDelimiters)
     }
 
     func testCommaMovedBeforeCommentIfLineEndsInComment() {
@@ -1350,6 +1350,6 @@ class GeneralTests: RulesTests {
         let foo = 5, // first
             bar = 6
         """
-        testFormatting(for: input, output, rule: FormatRules.leadingDelimiters)
+        testFormatting(for: input, output, rule: .leadingDelimiters)
     }
 }

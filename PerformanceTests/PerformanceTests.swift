@@ -137,7 +137,7 @@ class PerformanceTests: XCTestCase {
         let files = PerformanceTests.files
         let tokens = files.map { tokenize($0) }
         measure {
-            _ = tokens.map { try! format($0, rules: [FormatRules.indent]) }
+            _ = tokens.map { try! format($0, rules: [.indent]) }
         }
     }
 
@@ -146,7 +146,7 @@ class PerformanceTests: XCTestCase {
         let tokens = files.map { tokenize($0) }
         let options = FormatOptions(indent: "\t", allmanBraces: true)
         measure {
-            _ = tokens.map { try! format($0, rules: [FormatRules.indent], options: options) }
+            _ = tokens.map { try! format($0, rules: [.indent], options: options) }
         }
     }
 

@@ -32,7 +32,7 @@
 import Foundation
 
 // Inspired by https://github.com/Cosmo/GrammaticalNumber
-private let rules: [(String, replacement: String)] = [
+private let grammarRules: [(String, replacement: String)] = [
     ("s$", ""),
     ("eaux$", "eau"),
     ("ae$", "a"),
@@ -79,7 +79,7 @@ private let rules: [(String, replacement: String)] = [
 
 extension String {
     func singularized() -> String? {
-        guard let (rule, replacement) = (rules.reversed().first { rule, _ in
+        guard let (rule, replacement) = (grammarRules.reversed().first { rule, _ in
             range(of: rule, options: [.regularExpression, .caseInsensitive], range: nil, locale: nil) != nil
         }) else {
             return nil

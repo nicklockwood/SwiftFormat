@@ -4973,10 +4973,11 @@ public struct _FormatRules {
         help: "Remove redundant `@objc` annotations."
     ) { formatter in
         let objcAttributes = [
-            "@IBOutlet", "@IBAction",
+            "@IBOutlet", "@IBAction", "@IBSegueAction",
             "@IBDesignable", "@IBInspectable", "@GKInspectable",
             "@NSManaged",
         ]
+
         formatter.forEach(.keyword("@objc")) { i, _ in
             guard formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) != .startOfScope("(") else {
                 return

@@ -5302,7 +5302,7 @@ class OrganizationTests: RulesTests {
             options: FormatOptions(
                 organizeTypes: ["struct"],
                 organizationMode: .visibility,
-                alphabeticallySortedDeclarationSubcategoryTypes: ["swiftUIPropertyWrapper"]
+                alphabetizeSwiftUIPropertyTypes: true
             ),
             exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
         )

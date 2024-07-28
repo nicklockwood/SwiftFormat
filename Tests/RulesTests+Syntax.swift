@@ -4360,7 +4360,7 @@ class SyntaxTests: RulesTests {
         """
 
         let options = FormatOptions(conditionalAssignmentOnlyAfterNewProperties: false, swiftVersion: "5.9")
-        testFormatting(for: input, [output], rules: [FormatRules.conditionalAssignment, FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent], options: options)
+        testFormatting(for: input, [output], rules: [FormatRules.conditionalAssignment, FormatRules.wrapMultilineConditionalAssignment, .indent], options: options)
     }
 
     func testPreservesIfStatementNotFollowingPropertyDefinitionWithInvalidBranch() {
@@ -4382,7 +4382,7 @@ class SyntaxTests: RulesTests {
         """
 
         let options = FormatOptions(conditionalAssignmentOnlyAfterNewProperties: false, swiftVersion: "5.9")
-        testFormatting(for: input, rules: [FormatRules.conditionalAssignment, FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent], options: options)
+        testFormatting(for: input, rules: [FormatRules.conditionalAssignment, FormatRules.wrapMultilineConditionalAssignment, .indent], options: options)
     }
 
     func testPreservesNonExhaustiveIfStatementNotFollowingPropertyDefinition() {
@@ -4399,7 +4399,7 @@ class SyntaxTests: RulesTests {
         """
 
         let options = FormatOptions(conditionalAssignmentOnlyAfterNewProperties: false, swiftVersion: "5.9")
-        testFormatting(for: input, rules: [FormatRules.conditionalAssignment, FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent], options: options)
+        testFormatting(for: input, rules: [FormatRules.conditionalAssignment, FormatRules.wrapMultilineConditionalAssignment, .indent], options: options)
     }
 
     func testConvertsSwitchStatementNotFollowingPropertyDefinition() {
@@ -4423,7 +4423,7 @@ class SyntaxTests: RulesTests {
         """
 
         let options = FormatOptions(conditionalAssignmentOnlyAfterNewProperties: false, swiftVersion: "5.9")
-        testFormatting(for: input, [output], rules: [FormatRules.conditionalAssignment, FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent], options: options)
+        testFormatting(for: input, [output], rules: [FormatRules.conditionalAssignment, FormatRules.wrapMultilineConditionalAssignment, .indent], options: options)
     }
 
     func testConvertsSwitchStatementWithComplexLValueNotFollowingPropertyDefinition() {
@@ -4447,7 +4447,7 @@ class SyntaxTests: RulesTests {
         """
 
         let options = FormatOptions(conditionalAssignmentOnlyAfterNewProperties: false, swiftVersion: "5.9")
-        testFormatting(for: input, [output], rules: [FormatRules.conditionalAssignment, FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent], options: options)
+        testFormatting(for: input, [output], rules: [FormatRules.conditionalAssignment, FormatRules.wrapMultilineConditionalAssignment, .indent], options: options)
     }
 
     func testDoesntMergePropertyWithUnrelatedCondition() {
@@ -4473,7 +4473,7 @@ class SyntaxTests: RulesTests {
         """
 
         let options = FormatOptions(conditionalAssignmentOnlyAfterNewProperties: false, swiftVersion: "5.9")
-        testFormatting(for: input, [output], rules: [FormatRules.conditionalAssignment, FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent], options: options)
+        testFormatting(for: input, [output], rules: [FormatRules.conditionalAssignment, FormatRules.wrapMultilineConditionalAssignment, .indent], options: options)
     }
 
     func testConvertsNestedIfSwitchStatementNotFollowingPropertyDefinition() {
@@ -4515,7 +4515,7 @@ class SyntaxTests: RulesTests {
         """
 
         let options = FormatOptions(conditionalAssignmentOnlyAfterNewProperties: false, swiftVersion: "5.9")
-        testFormatting(for: input, [output], rules: [FormatRules.conditionalAssignment, FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent], options: options)
+        testFormatting(for: input, [output], rules: [FormatRules.conditionalAssignment, FormatRules.wrapMultilineConditionalAssignment, .indent], options: options)
     }
 
     func testPreservesSwitchConditionWithIneligibleBranch() {
@@ -4541,7 +4541,7 @@ class SyntaxTests: RulesTests {
         """
 
         let options = FormatOptions(conditionalAssignmentOnlyAfterNewProperties: false, swiftVersion: "5.9")
-        testFormatting(for: input, rules: [FormatRules.conditionalAssignment, FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent], options: options)
+        testFormatting(for: input, rules: [FormatRules.conditionalAssignment, FormatRules.wrapMultilineConditionalAssignment, .indent], options: options)
     }
 
     func testPreservesIfConditionWithIneligibleBranch() {
@@ -4565,7 +4565,7 @@ class SyntaxTests: RulesTests {
         """
 
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, rules: [FormatRules.conditionalAssignment, FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent], options: options)
+        testFormatting(for: input, rules: [FormatRules.conditionalAssignment, FormatRules.wrapMultilineConditionalAssignment, .indent], options: options)
     }
 
     // MARK: - preferForLoop
@@ -4595,7 +4595,7 @@ class SyntaxTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, output, rule: FormatRules.preferForLoop)
+        testFormatting(for: input, output, rule: .preferForLoop)
     }
 
     func testConvertAnonymousForEachToForLoop() {
@@ -4617,7 +4617,7 @@ class SyntaxTests: RulesTests {
         potatoes.forEach({ $0.bake() })
         """
 
-        testFormatting(for: input, output, rule: FormatRules.preferForLoop, exclude: ["trailingClosures"])
+        testFormatting(for: input, output, rule: .preferForLoop, exclude: ["trailingClosures"])
     }
 
     func testNoConvertAnonymousForEachToForLoop() {
@@ -4631,7 +4631,7 @@ class SyntaxTests: RulesTests {
         """
 
         let options = FormatOptions(preserveAnonymousForEach: true, preserveSingleLineForEach: false)
-        testFormatting(for: input, rule: FormatRules.preferForLoop, options: options, exclude: ["trailingClosures"])
+        testFormatting(for: input, rule: .preferForLoop, options: options, exclude: ["trailingClosures"])
     }
 
     func testConvertSingleLineForEachToForLoop() {
@@ -4639,7 +4639,7 @@ class SyntaxTests: RulesTests {
         let output = "for item in potatoes { item.bake() }"
 
         let options = FormatOptions(preserveSingleLineForEach: false)
-        testFormatting(for: input, output, rule: FormatRules.preferForLoop, options: options,
+        testFormatting(for: input, output, rule: .preferForLoop, options: options,
                        exclude: ["wrapLoopBodies"])
     }
 
@@ -4648,7 +4648,7 @@ class SyntaxTests: RulesTests {
         let output = "for potato in potatoes { potato.bake() }"
 
         let options = FormatOptions(preserveSingleLineForEach: false)
-        testFormatting(for: input, output, rule: FormatRules.preferForLoop, options: options,
+        testFormatting(for: input, output, rule: .preferForLoop, options: options,
                        exclude: ["wrapLoopBodies"])
     }
 
@@ -4675,7 +4675,7 @@ class SyntaxTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, output, rule: FormatRules.preferForLoop)
+        testFormatting(for: input, output, rule: .preferForLoop)
     }
 
     func testDefaultNameAlreadyUsedInLoopBody() {
@@ -4695,7 +4695,7 @@ class SyntaxTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, output, rule: FormatRules.preferForLoop)
+        testFormatting(for: input, output, rule: .preferForLoop)
     }
 
     func testIgnoreLoopsWithCaptureListForNow() {
@@ -4705,7 +4705,7 @@ class SyntaxTests: RulesTests {
             print($0, someCapturedValue)
         }
         """
-        testFormatting(for: input, rule: FormatRules.preferForLoop)
+        testFormatting(for: input, rule: .preferForLoop)
     }
 
     func testRemoveAllPrefixFromLoopIdentifier() {
@@ -4721,7 +4721,7 @@ class SyntaxTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, output, rule: FormatRules.preferForLoop)
+        testFormatting(for: input, output, rule: .preferForLoop)
     }
 
     func testConvertsReturnToContinue() {
@@ -4754,7 +4754,7 @@ class SyntaxTests: RulesTests {
             }
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.preferForLoop)
+        testFormatting(for: input, output, rule: .preferForLoop)
     }
 
     func testHandlesForEachOnChainedProperties() {
@@ -4771,7 +4771,7 @@ class SyntaxTests: RulesTests {
             print(string)
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.preferForLoop)
+        testFormatting(for: input, output, rule: .preferForLoop)
     }
 
     func testHandlesForEachOnFunctionCallResult() {
@@ -4788,7 +4788,7 @@ class SyntaxTests: RulesTests {
             print(baazValue)
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.preferForLoop)
+        testFormatting(for: input, output, rule: .preferForLoop)
     }
 
     func testHandlesForEachOnSubscriptResult() {
@@ -4805,7 +4805,7 @@ class SyntaxTests: RulesTests {
             print(item)
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.preferForLoop)
+        testFormatting(for: input, output, rule: .preferForLoop)
     }
 
     func testHandlesForEachOnArrayLiteral() {
@@ -4822,7 +4822,7 @@ class SyntaxTests: RulesTests {
             print(item)
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.preferForLoop)
+        testFormatting(for: input, output, rule: .preferForLoop)
     }
 
     func testHandlesForEachOnCurriedFunctionWithSubscript() {
@@ -4839,7 +4839,7 @@ class SyntaxTests: RulesTests {
             print(item)
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.preferForLoop)
+        testFormatting(for: input, output, rule: .preferForLoop)
     }
 
     func testHandlesForEachOnArrayLiteralInParens() {
@@ -4856,7 +4856,7 @@ class SyntaxTests: RulesTests {
             print(item)
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.preferForLoop, exclude: ["redundantParens"])
+        testFormatting(for: input, output, rule: .preferForLoop, exclude: ["redundantParens"])
     }
 
     func testPreservesForEachAfterMultilineChain() {
@@ -4871,7 +4871,7 @@ class SyntaxTests: RulesTests {
             .map({ $0.uppercased() })
             .forEach({ print($0) })
         """
-        testFormatting(for: input, rule: FormatRules.preferForLoop, exclude: ["trailingClosures"])
+        testFormatting(for: input, rule: .preferForLoop, exclude: ["trailingClosures"])
     }
 
     func testPreservesChainWithClosure() {
@@ -4883,7 +4883,7 @@ class SyntaxTests: RulesTests {
         // to silence this warning".
         strings.map { $0.uppercased() }.forEach { print($0) }
         """
-        testFormatting(for: input, rule: FormatRules.preferForLoop)
+        testFormatting(for: input, rule: .preferForLoop)
     }
 
     func testForLoopVariableNotUsedIfClashesWithKeyword() {
@@ -4897,7 +4897,7 @@ class SyntaxTests: RulesTests {
             print(item)
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.preferForLoop)
+        testFormatting(for: input, output, rule: .preferForLoop)
     }
 
     func testTryNotRemovedInThrowingForEach() {
@@ -4906,7 +4906,7 @@ class SyntaxTests: RulesTests {
             print($0)
         }
         """
-        testFormatting(for: input, rule: FormatRules.preferForLoop)
+        testFormatting(for: input, rule: .preferForLoop)
     }
 
     func testOptionalTryNotRemovedInThrowingForEach() {
@@ -4915,7 +4915,7 @@ class SyntaxTests: RulesTests {
             print($0)
         }
         """
-        testFormatting(for: input, rule: FormatRules.preferForLoop)
+        testFormatting(for: input, rule: .preferForLoop)
     }
 
     func testAwaitNotRemovedInAsyncForEach() {
@@ -4924,7 +4924,7 @@ class SyntaxTests: RulesTests {
             print($0)
         }
         """
-        testFormatting(for: input, rule: FormatRules.preferForLoop)
+        testFormatting(for: input, rule: .preferForLoop)
     }
 
     func testForEachOverDictionary() {
@@ -4946,7 +4946,7 @@ class SyntaxTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, output, rule: FormatRules.preferForLoop)
+        testFormatting(for: input, output, rule: .preferForLoop)
     }
 
     // MARK: propertyType

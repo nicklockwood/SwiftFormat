@@ -693,7 +693,7 @@ class RedundancyTests: RulesTests {
     func testRemoveMultilineIsolatedGet() {
         let input = "var foo: Int {\n    get {\n        return 5\n    }\n}"
         let output = "var foo: Int {\n    return 5\n}"
-        testFormatting(for: input, [output], rules: [FormatRules.redundantGet, FormatRules.indent])
+        testFormatting(for: input, [output], rules: [FormatRules.redundantGet, .indent])
     }
 
     func testNoRemoveMultilineGetSet() {
@@ -709,7 +709,7 @@ class RedundancyTests: RulesTests {
     func testRemoveSubscriptGet() {
         let input = "subscript(_ index: Int) {\n    get {\n        return lookup(index)\n    }\n}"
         let output = "subscript(_ index: Int) {\n    return lookup(index)\n}"
-        testFormatting(for: input, [output], rules: [FormatRules.redundantGet, FormatRules.indent])
+        testFormatting(for: input, [output], rules: [FormatRules.redundantGet, .indent])
     }
 
     func testGetNotRemovedInFunction() {
@@ -3245,7 +3245,7 @@ class RedundancyTests: RulesTests {
         let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, [output],
                        rules: [FormatRules.redundantReturn, FormatRules.conditionalAssignment,
-                               FormatRules.redundantClosure, FormatRules.indent],
+                               FormatRules.redundantClosure, .indent],
                        options: options, exclude: ["wrapMultilineConditionalAssignment"])
     }
 
@@ -8924,7 +8924,7 @@ class RedundancyTests: RulesTests {
         """
         """#
 
-        testFormatting(for: input, [output], rules: [FormatRules.redundantClosure, FormatRules.indent])
+        testFormatting(for: input, [output], rules: [FormatRules.redundantClosure, .indent])
     }
 
     func testRemoveRedundantClosureInMultiLinePropertyDeclarationInClass() {
@@ -9046,7 +9046,7 @@ class RedundancyTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, [output], rules: [FormatRules.redundantClosure, FormatRules.indent])
+        testFormatting(for: input, [output], rules: [FormatRules.redundantClosure, .indent])
     }
 
     func testKeepsClosureWithIfStatement() {
@@ -9098,7 +9098,7 @@ class RedundancyTests: RulesTests {
         """
 
         testFormatting(for: input, [output],
-                       rules: [FormatRules.redundantClosure, FormatRules.indent])
+                       rules: [FormatRules.redundantClosure, .indent])
     }
 
     func testKeepsClosureWithSwitchStatement() {
@@ -9185,7 +9185,7 @@ class RedundancyTests: RulesTests {
         })
         """
 
-        testFormatting(for: input, [output], rules: [FormatRules.redundantClosure, FormatRules.indent], exclude: ["redundantType"])
+        testFormatting(for: input, [output], rules: [FormatRules.redundantClosure, .indent], exclude: ["redundantType"])
     }
 
     func testKeepsClosureThatThrowsError() {
@@ -10240,7 +10240,7 @@ class RedundancyTests: RulesTests {
         """
 
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, [output], rules: [FormatRules.redundantProperty, FormatRules.redundantReturn, FormatRules.indent], options: options)
+        testFormatting(for: input, [output], rules: [FormatRules.redundantProperty, FormatRules.redundantReturn, .indent], options: options)
     }
 
     func testRemovesRedundantPropertyWithSwitchExpression() {
@@ -10270,7 +10270,7 @@ class RedundancyTests: RulesTests {
         """
 
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, [output], rules: [FormatRules.conditionalAssignment, FormatRules.redundantProperty, FormatRules.redundantReturn, FormatRules.indent], options: options)
+        testFormatting(for: input, [output], rules: [FormatRules.conditionalAssignment, FormatRules.redundantProperty, FormatRules.redundantReturn, .indent], options: options)
     }
 
     func testRemovesRedundantPropertyWithPreferInferredType() {

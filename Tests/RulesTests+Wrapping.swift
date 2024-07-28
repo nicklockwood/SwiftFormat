@@ -1270,7 +1270,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(wrapTernaryOperators: .beforeOperators, maxWidth: 60)
-        testFormatting(for: input, rule: FormatRules.indent, options: options)
+        testFormatting(for: input, rule: .indent, options: options)
     }
 
     func testWrapsSimpleNestedTernaryOperator() {
@@ -1391,7 +1391,7 @@ class WrappingTests: RulesTests {
         ]
         """
         let options = FormatOptions(truncateBlankLines: false, maxWidth: 40)
-        let changes = try lint(input, rules: [FormatRules.wrap, FormatRules.indent], options: options)
+        let changes = try lint(input, rules: [FormatRules.wrap, .indent], options: options)
         XCTAssertEqual(changes, [.init(line: 2, rule: FormatRules.wrap, filePath: nil)])
     }
 
@@ -3638,7 +3638,7 @@ class WrappingTests: RulesTests {
         )
         testFormatting(for: input, [output], rules: [
             FormatRules.wrapMultilineStatementBraces,
-            FormatRules.indent, FormatRules.braces,
+            .indent, FormatRules.braces,
         ], options: options)
     }
 
@@ -3666,7 +3666,7 @@ class WrappingTests: RulesTests {
         )
         testFormatting(for: input, [output], rules: [
             FormatRules.wrapMultilineStatementBraces,
-            FormatRules.indent,
+            .indent,
         ], options: options, exclude: ["propertyType"])
     }
 
@@ -4084,7 +4084,7 @@ class WrappingTests: RulesTests {
         {}
         """
         testFormatting(
-            for: input, rules: [FormatRules.wrapArguments, FormatRules.indent],
+            for: input, rules: [FormatRules.wrapArguments, .indent],
             options: FormatOptions(closingParenPosition: .sameLine, wrapConditions: .beforeFirst),
             exclude: ["propertyType"]
         )
@@ -4242,7 +4242,7 @@ class WrappingTests: RulesTests {
         else { return }
         """
         testFormatting(
-            for: input, [output], rules: [FormatRules.wrapArguments, FormatRules.indent],
+            for: input, [output], rules: [FormatRules.wrapArguments, .indent],
             options: FormatOptions(wrapConditions: .afterFirst),
             exclude: ["wrapConditionalBodies"]
         )
@@ -4297,7 +4297,7 @@ class WrappingTests: RulesTests {
         testFormatting(
             for: input,
             [output],
-            rules: [FormatRules.wrapArguments, FormatRules.indent],
+            rules: [FormatRules.wrapArguments, .indent],
             options: FormatOptions(indent: "  ", conditionsWrap: .auto, maxWidth: 40)
         )
     }
@@ -4481,7 +4481,7 @@ class WrappingTests: RulesTests {
         testFormatting(
             for: input,
             [output],
-            rules: [FormatRules.wrapArguments, FormatRules.indent],
+            rules: [FormatRules.wrapArguments, .indent],
             options: FormatOptions(indent: "  ", conditionsWrap: .auto, maxWidth: 25)
         )
     }
@@ -4501,7 +4501,7 @@ class WrappingTests: RulesTests {
         testFormatting(
             for: input,
             [output],
-            rules: [FormatRules.wrapArguments, FormatRules.indent],
+            rules: [FormatRules.wrapArguments, .indent],
             options: FormatOptions(indent: "  ", conditionsWrap: .auto, maxWidth: 25)
         )
     }
@@ -5595,7 +5595,7 @@ class WrappingTests: RulesTests {
             }
         """
 
-        testFormatting(for: input, [output], rules: [FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent])
+        testFormatting(for: input, [output], rules: [FormatRules.wrapMultilineConditionalAssignment, .indent])
     }
 
     func testUnwrapsAssignmentOperatorInIfExpressionAssignment() {
@@ -5617,7 +5617,7 @@ class WrappingTests: RulesTests {
             }
         """
 
-        testFormatting(for: input, [output], rules: [FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent])
+        testFormatting(for: input, [output], rules: [FormatRules.wrapMultilineConditionalAssignment, .indent])
     }
 
     func testUnwrapsAssignmentOperatorInIfExpressionFollowingComment() {
@@ -5643,7 +5643,7 @@ class WrappingTests: RulesTests {
             }
         """
 
-        testFormatting(for: input, [output], rules: [FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent])
+        testFormatting(for: input, [output], rules: [FormatRules.wrapMultilineConditionalAssignment, .indent])
     }
 
     func testWrapIfAssignmentWithoutIntroducer() {
@@ -5664,7 +5664,7 @@ class WrappingTests: RulesTests {
             }
         """
 
-        testFormatting(for: input, [output], rules: [FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent])
+        testFormatting(for: input, [output], rules: [FormatRules.wrapMultilineConditionalAssignment, .indent])
     }
 
     func testWrapSwitchAssignmentWithoutIntroducer() {
@@ -5687,7 +5687,7 @@ class WrappingTests: RulesTests {
             }
         """
 
-        testFormatting(for: input, [output], rules: [FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent])
+        testFormatting(for: input, [output], rules: [FormatRules.wrapMultilineConditionalAssignment, .indent])
     }
 
     func testWrapSwitchAssignmentWithComplexLValue() {
@@ -5710,6 +5710,6 @@ class WrappingTests: RulesTests {
             }
         """
 
-        testFormatting(for: input, [output], rules: [FormatRules.wrapMultilineConditionalAssignment, FormatRules.indent])
+        testFormatting(for: input, [output], rules: [FormatRules.wrapMultilineConditionalAssignment, .indent])
     }
 }

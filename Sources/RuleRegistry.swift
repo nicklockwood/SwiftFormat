@@ -13,9 +13,3 @@ let ruleRegistry: [String: FormatRule] = [
     "preferForLoop": .preferForLoop,
     "spaceAroundComments": .spaceAroundComments,
 ]
-
-public extension _FormatRules {
-    var indent: FormatRule { .indent }
-    var preferForLoop: FormatRule { .preferForLoop }
-    var spaceAroundComments: FormatRule { .spaceAroundComments }
-}

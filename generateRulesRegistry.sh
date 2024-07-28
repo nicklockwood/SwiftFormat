@@ -43,16 +43,6 @@ fileContents+="
 done
 
 fileContents+="
-]
-
-public extension _FormatRules {"
-
-for ruleName in ${rules[*]}; do
-fileContents+="
-    var ${ruleName}: FormatRule { .${ruleName} }"
-done
-
-fileContents+="
-}"
+]"
 
 echo "$fileContents" > "${SRCROOT}/Sources/RuleRegistry.swift"

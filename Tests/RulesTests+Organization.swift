@@ -4930,7 +4930,7 @@ class OrganizationTests: RulesTests {
             & Quux
         """
 
-        testFormatting(for: input, [output], rules: [FormatRules.sortTypealiases, FormatRules.indent, FormatRules.trailingSpace])
+        testFormatting(for: input, [output], rules: [FormatRules.sortTypealiases, .indent, FormatRules.trailingSpace])
     }
 
     func testSortWrappedMultilineTypealias1() {

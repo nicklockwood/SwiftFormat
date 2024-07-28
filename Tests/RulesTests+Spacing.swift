@@ -1324,25 +1324,25 @@ class SpacingTests: RulesTests {
     func testSpaceAroundCommentInParens() {
         let input = "(/* foo */)"
         let output = "( /* foo */ )"
-        testFormatting(for: input, output, rule: FormatRules.spaceAroundComments,
+        testFormatting(for: input, output, rule: .spaceAroundComments,
                        exclude: ["redundantParens"])
     }
 
     func testNoSpaceAroundCommentAtStartAndEndOfFile() {
         let input = "/* foo */"
-        testFormatting(for: input, rule: FormatRules.spaceAroundComments)
+        testFormatting(for: input, rule: .spaceAroundComments)
     }
 
     func testNoSpaceAroundCommentBeforeComma() {
         let input = "(foo /* foo */ , bar)"
         let output = "(foo /* foo */, bar)"
-        testFormatting(for: input, output, rule: FormatRules.spaceAroundComments)
+        testFormatting(for: input, output, rule: .spaceAroundComments)
     }
 
     func testSpaceAroundSingleLineComment() {
         let input = "func foo() {// comment\n}"
         let output = "func foo() { // comment\n}"
-        testFormatting(for: input, output, rule: FormatRules.spaceAroundComments)
+        testFormatting(for: input, output, rule: .spaceAroundComments)
     }
 
     // MARK: - spaceInsideComments

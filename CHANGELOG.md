@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.54.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.54.3) (2024-07-28)
+
+- Fixed issue where `--wrapeffects never` could unexpectedly remove unrelated code
+- Fixed `--condassignment` option (setting this previously had no effect)
+- The `redundantReturn` rule no longer removes conditional `return`s if `conditionalAssignment` is disabled
+- The `redundantObjc` rule now strips implicit `@objc` attribute for `@IBSegueAction` functions
+- Fixed bug where violations for rules that insert new lines were sometimes ignored in lint output
+
 ## [0.54.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.54.2) (2024-07-22)
 
 - Fixed broken formatter cache, which caused a significant performance regression since 0.54.0

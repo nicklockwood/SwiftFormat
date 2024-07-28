@@ -8,7 +8,7 @@
 
 extension FormatRule {
     /// Add space around comments, except at the start or end of a line
-    static let spaceAroundComments = FormatRule(
+    public static let spaceAroundComments = FormatRule(
         help: "Add space before and/or after comments."
     ) { formatter in
         formatter.forEach(.startOfScope("//")) { i, _ in

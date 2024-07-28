@@ -13,6 +13,7 @@ for filePathToRule in ${SRCROOT}/Sources/Rules/*.swift; do
         lineNumber=$(echo $formatRuleDefinition | cut -d : -f 1)
 
         if [[ ! $formatRuleDefinition =~ "let $ruleName =" ]]; then
+            echo "let $ruleName ="
             echo "${filePathToRule}:${lineNumber}: error: ${ruleFileName} must contain a single FormatRule named ${ruleName}"
             exit 1
         fi

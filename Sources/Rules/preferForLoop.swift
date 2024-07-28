@@ -7,7 +7,7 @@
 //
 
 extension FormatRule {
-    static let preferForLoop = FormatRule(
+    public static let preferForLoop = FormatRule(
         help: "Convert functional `forEach` calls to for loops.",
         options: ["anonymousforeach", "onelineforeach"]
     ) { formatter in

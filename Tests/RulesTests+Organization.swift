@@ -3084,6 +3084,22 @@ class OrganizationTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.markTypes)
     }
 
+    func testMarkTypeLintReturnsErrorAsExpected() throws {
+        let input = """
+        struct MyStruct {}
+
+        extension MyStruct {}
+        """
+
+        // Initialize rule names
+        let _ = FormatRules.byName
+        let changes = try lint(input, rules: [FormatRules.markTypes])
+        XCTAssertEqual(changes, [
+            .init(line: 1, rule: FormatRules.markTypes, filePath: nil),
+            .init(line: 2, rule: FormatRules.markTypes, filePath: nil),
+        ])
+    }
+
     // MARK: - sortImports
 
     func testSortImportsSimpleCase() {

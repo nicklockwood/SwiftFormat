@@ -513,17 +513,22 @@ private func applyRules(
     }
 
     // Split tokens into lines
-    func getLines(in tokens: [Token], includingLinebreaks: Bool) -> [Int: ArraySlice<Token>?] {
-        var lines: [Int: ArraySlice<Token>?] = [:]
-        var start = 0, nextLine = 1
+    func getLines(in tokens: [Token], includingLinebreaks: Bool) -> [Int: ArraySlice<Token>] {
+        var lines: [Int: ArraySlice<Token>] = [:]
+        var startIndex = 0, nextLine = 1
         for (i, token) in tokens.enumerated() {
             if case let .linebreak(_, line) = token {
-                lines[line] = tokens[start ..< i + (includingLinebreaks ? 1 : 0)]
+                let endIndex = i + (includingLinebreaks ? 1 : 0)
+                if let existing = lines[line] {
+                    lines[line] = tokens[existing.startIndex ..< endIndex]
+                } else {
+                    lines[line] = tokens[startIndex ..< endIndex]
+                }
                 nextLine = line + 1
-                start = i + 1
+                startIndex = i + 1
             }
         }
-        lines[nextLine] = tokens[start...]
+        lines[nextLine] = tokens[startIndex...]
         return lines
     }
 

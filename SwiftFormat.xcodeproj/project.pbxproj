@@ -530,20 +530,12 @@
 		2E2CD0AE2C56BA8700D70FB0 /* docCommentsBeforeAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2CD0AA2C56BA8700D70FB0 /* docCommentsBeforeAttributes.swift */; };
 		2E2CD0B12C56BBDE00D70FB0 /* Reporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2CD0B02C56BBDE00D70FB0 /* Reporter.swift */; };
 		2E2CD0B22C56BBDE00D70FB0 /* Reporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2CD0B02C56BBDE00D70FB0 /* Reporter.swift */; };
-		2E2CD0B32C56BBDE00D70FB0 /* Reporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2CD0B02C56BBDE00D70FB0 /* Reporter.swift */; };
-		2E2CD0B42C56BBDE00D70FB0 /* Reporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2CD0B02C56BBDE00D70FB0 /* Reporter.swift */; };
 		2E2CD0B62C56BBE300D70FB0 /* JSONReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2CD0B52C56BBE300D70FB0 /* JSONReporter.swift */; };
 		2E2CD0B72C56BBE300D70FB0 /* JSONReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2CD0B52C56BBE300D70FB0 /* JSONReporter.swift */; };
-		2E2CD0B82C56BBE300D70FB0 /* JSONReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2CD0B52C56BBE300D70FB0 /* JSONReporter.swift */; };
-		2E2CD0B92C56BBE300D70FB0 /* JSONReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2CD0B52C56BBE300D70FB0 /* JSONReporter.swift */; };
 		2E2CD0BB2C56BBE700D70FB0 /* XMLReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2CD0BA2C56BBE700D70FB0 /* XMLReporter.swift */; };
 		2E2CD0BC2C56BBE700D70FB0 /* XMLReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2CD0BA2C56BBE700D70FB0 /* XMLReporter.swift */; };
-		2E2CD0BD2C56BBE700D70FB0 /* XMLReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2CD0BA2C56BBE700D70FB0 /* XMLReporter.swift */; };
-		2E2CD0BE2C56BBE700D70FB0 /* XMLReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2CD0BA2C56BBE700D70FB0 /* XMLReporter.swift */; };
 		2E2CD0C02C56BBEF00D70FB0 /* GithubActionsLogReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2CD0BF2C56BBEF00D70FB0 /* GithubActionsLogReporter.swift */; };
 		2E2CD0C12C56BBEF00D70FB0 /* GithubActionsLogReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2CD0BF2C56BBEF00D70FB0 /* GithubActionsLogReporter.swift */; };
-		2E2CD0C22C56BBEF00D70FB0 /* GithubActionsLogReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2CD0BF2C56BBEF00D70FB0 /* GithubActionsLogReporter.swift */; };
-		2E2CD0C32C56BBEF00D70FB0 /* GithubActionsLogReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2CD0BF2C56BBEF00D70FB0 /* GithubActionsLogReporter.swift */; };
 		2E7D30A42A7940C500C32174 /* Singularize.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E7D30A32A7940C500C32174 /* Singularize.swift */; };
 		37D828AB24BF77DA0012FC0A /* XcodeKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 37D828AA24BF77DA0012FC0A /* XcodeKit.framework */; };
 		37D828AC24BF77DA0012FC0A /* XcodeKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 37D828AA24BF77DA0012FC0A /* XcodeKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -1926,7 +1918,6 @@
 				2E2CD0AD2C56BA8700D70FB0 /* docCommentsBeforeAttributes.swift in Sources */,
 				2E2CCFF92C56B51100D70FB0 /* isEmpty.swift in Sources */,
 				2E2CCF952C56B2E100D70FB0 /* hoistPatternLet.swift in Sources */,
-				2E2CD0B32C56BBDE00D70FB0 /* Reporter.swift in Sources */,
 				2E2CCFC22C56B41600D70FB0 /* fileHeader.swift in Sources */,
 				2E2CCEC32C56ADC000D70FB0 /* spaceInsideGenerics.swift in Sources */,
 				2E2CD0082C56B55200D70FB0 /* redundantBreak.swift in Sources */,
@@ -1955,7 +1946,6 @@
 				01ACAE07220CD915003F3CCF /* Examples.swift in Sources */,
 				2E2CD0172C56B59C00D70FB0 /* typeSugar.swift in Sources */,
 				2E2CCEC82C56ADE600D70FB0 /* spaceAroundOperators.swift in Sources */,
-				2E2CD0C22C56BBEF00D70FB0 /* GithubActionsLogReporter.swift in Sources */,
 				2E2CCF042C56AF8300D70FB0 /* blankLinesBetweenScopes.swift in Sources */,
 				2E2CCF9F2C56B31000D70FB0 /* wrapArguments.swift in Sources */,
 				2E2CD0122C56B58300D70FB0 /* redundantObjc.swift in Sources */,
@@ -1984,7 +1974,6 @@
 				E4E4D3CB2033F17C000D7CB1 /* EnumAssociable.swift in Sources */,
 				2E2CD0A32C56BA4D00D70FB0 /* redundantTypedThrows.swift in Sources */,
 				2E2CD01C2C56B5B500D70FB0 /* redundantExtensionACL.swift in Sources */,
-				2E2CD0B82C56BBE300D70FB0 /* JSONReporter.swift in Sources */,
 				2E2CD02B2C56B5FE00D70FB0 /* yodaConditions.swift in Sources */,
 				2E2CD0942C56BA0D00D70FB0 /* blankLineAfterSwitchCase.swift in Sources */,
 				2E2CCFE02C56B4A000D70FB0 /* sortImports.swift in Sources */,
@@ -2005,7 +1994,6 @@
 				2E2CCF592C56B18100D70FB0 /* redundantNilInit.swift in Sources */,
 				2E2CCEFF2C56AF5A00D70FB0 /* blankLineAfterImports.swift in Sources */,
 				01045A93211988F100D2BE3D /* Inference.swift in Sources */,
-				2E2CD0BD2C56BBE700D70FB0 /* XMLReporter.swift in Sources */,
 				2E2CCEAF2C56AD3900D70FB0 /* spaceInsideBrackets.swift in Sources */,
 				2E2BF3572C554FDA00AB08D2 /* RuleRegistry.swift in Sources */,
 				2E2CCFD12C56B45500D70FB0 /* sortedSwitchCases.swift in Sources */,
@@ -2073,7 +2061,6 @@
 				2E2CD0AE2C56BA8700D70FB0 /* docCommentsBeforeAttributes.swift in Sources */,
 				2E2CCFFA2C56B51100D70FB0 /* isEmpty.swift in Sources */,
 				2E2CCF962C56B2E100D70FB0 /* hoistPatternLet.swift in Sources */,
-				2E2CD0B42C56BBDE00D70FB0 /* Reporter.swift in Sources */,
 				2E2CCFC32C56B41600D70FB0 /* fileHeader.swift in Sources */,
 				2E2CCEC42C56ADC000D70FB0 /* spaceInsideGenerics.swift in Sources */,
 				2E2CD0092C56B55200D70FB0 /* redundantBreak.swift in Sources */,
@@ -2102,7 +2089,6 @@
 				01A8320924EC7F7800A9D0EB /* FormattingHelpers.swift in Sources */,
 				2E2CD0182C56B59C00D70FB0 /* typeSugar.swift in Sources */,
 				2E2CCEC92C56ADE600D70FB0 /* spaceAroundOperators.swift in Sources */,
-				2E2CD0C32C56BBEF00D70FB0 /* GithubActionsLogReporter.swift in Sources */,
 				2E2CCF052C56AF8300D70FB0 /* blankLinesBetweenScopes.swift in Sources */,
 				2E2CCFA02C56B31000D70FB0 /* wrapArguments.swift in Sources */,
 				2E2CD0132C56B58300D70FB0 /* redundantObjc.swift in Sources */,
@@ -2131,7 +2117,6 @@
 				E4962DE1203F3CD500A02013 /* OptionsStore.swift in Sources */,
 				2E2CD0A42C56BA4D00D70FB0 /* redundantTypedThrows.swift in Sources */,
 				2E2CD01D2C56B5B500D70FB0 /* redundantExtensionACL.swift in Sources */,
-				2E2CD0B92C56BBE300D70FB0 /* JSONReporter.swift in Sources */,
 				2E2CD02C2C56B5FF00D70FB0 /* yodaConditions.swift in Sources */,
 				2E2CD0952C56BA0D00D70FB0 /* blankLineAfterSwitchCase.swift in Sources */,
 				2E2CCFE12C56B4A000D70FB0 /* sortImports.swift in Sources */,
@@ -2152,7 +2137,6 @@
 				2E2CCF5A2C56B18100D70FB0 /* redundantNilInit.swift in Sources */,
 				2E2CCF002C56AF5A00D70FB0 /* blankLineAfterImports.swift in Sources */,
 				01F3DF8E1DB9FD3F00454944 /* Options.swift in Sources */,
-				2E2CD0BE2C56BBE700D70FB0 /* XMLReporter.swift in Sources */,
 				2E2CCEB02C56AD3900D70FB0 /* spaceInsideBrackets.swift in Sources */,
 				2E2BF3582C554FDA00AB08D2 /* RuleRegistry.swift in Sources */,
 				2E2CCFD22C56B45500D70FB0 /* sortedSwitchCases.swift in Sources */,

@@ -17,7 +17,7 @@ public extension FormatRule {
         Place `else`, `catch` or `while` keyword in accordance with current style (same or
         next line).
         """,
-        orderAfter: ["wrapMultilineStatementBraces"],
+        orderAfter: [.wrapMultilineStatementBraces],
         options: ["elseposition", "guardelse"],
         sharedOptions: ["allman", "linebreaks"]
     ) { formatter in

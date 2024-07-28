@@ -14,7 +14,7 @@ public extension FormatRule {
     /// indenting can be configured with the `options` parameter of the formatter.
     static let indent = FormatRule(
         help: "Indent code in accordance with the scope level.",
-        orderAfter: ["trailingSpace", "wrap", "wrapArguments"],
+        orderAfter: [.trailingSpace, .wrap, .wrapArguments],
         options: ["indent", "tabwidth", "smarttabs", "indentcase", "ifdef", "xcodeindentation", "indentstrings"],
         sharedOptions: ["trimwhitespace", "allman", "wrapconditions", "wrapternary"]
     ) { formatter in

@@ -12,7 +12,7 @@ public extension FormatRule {
     static let docComments = FormatRule(
         help: "Use doc comments for API declarations, otherwise use regular comments.",
         disabledByDefault: true,
-        orderAfter: ["fileHeader"],
+        orderAfter: [.fileHeader],
         options: ["doccomments"]
     ) { formatter in
         formatter.forEach(.startOfScope) { index, token in

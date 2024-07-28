@@ -13,7 +13,7 @@ public extension FormatRule {
     static let headerFileName = FormatRule(
         help: "Ensure file name in header comment matches the actual file name.",
         runOnceOnly: true,
-        orderAfter: ["fileHeader"]
+        orderAfter: [.fileHeader]
     ) { formatter in
         guard let fileName = formatter.options.fileInfo.fileName,
               let headerRange = formatter.headerCommentTokenRange(includingDirectives: ["*"]),

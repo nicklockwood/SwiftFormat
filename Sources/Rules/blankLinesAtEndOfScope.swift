@@ -13,7 +13,7 @@ public extension FormatRule {
     /// unless it's followed by more code on the same line (e.g. } else { )
     static let blankLinesAtEndOfScope = FormatRule(
         help: "Remove trailing blank line at the end of a scope.",
-        orderAfter: ["organizeDeclarations"],
+        orderAfter: [.organizeDeclarations],
         sharedOptions: ["typeblanklines"]
     ) { formatter in
         formatter.forEach(.startOfScope) { startOfScopeIndex, _ in

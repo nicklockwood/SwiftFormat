@@ -75,8 +75,9 @@ public extension FormatRule {
                 }
 
                 // Avoid conflicts with wrapMultilineStatementBraces
-                let ruleName = FormatRule.wrapMultilineStatementBraces.name
-                if formatter.options.enabledRules.contains(ruleName),
+                // (Can't refer to `FormatRule.wrapMultilineStatementBraces` directly
+                // because it creates a cicrcular reference)
+                if formatter.options.enabledRules.contains("wrapMultilineStatementBraces"),
                    formatter.shouldWrapMultilineStatementBrace(at: i)
                 {
                     return

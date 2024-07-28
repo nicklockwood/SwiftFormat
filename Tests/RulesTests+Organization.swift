@@ -5216,7 +5216,7 @@ class OrganizationTests: RulesTests {
             let foo: Foo
             @Environment(\\.colorScheme) var colorScheme
             let baaz: Baaz
-            @Environment(\\.quux) let quux: Quux
+            @Environment(\\.quux) var quux: Quux
 
             @ViewBuilder
             private var toggle: some View {
@@ -5236,7 +5236,7 @@ class OrganizationTests: RulesTests {
             // MARK: Internal
 
             @Environment(\\.colorScheme) var colorScheme
-            @Environment(\\.quux) let quux: Quux
+            @Environment(\\.quux) var quux: Quux
 
             let foo: Foo
             let baaz: Baaz
@@ -5260,6 +5260,50 @@ class OrganizationTests: RulesTests {
             for: input, output,
             rule: FormatRules.organizeDeclarations,
             options: FormatOptions(organizeTypes: ["struct"], organizationMode: .visibility),
+            exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
+        )
+    }
+
+    func testSortSwiftUIPropertyWrappersGroup() {
+        let input = """
+        struct ContentView: View {
+
+            @Environment(\\.colorScheme) var colorScheme
+            @State var foo: Foo
+            @Binding var isOn: Bool
+            @Environment(\\.quux) var quux: Quux
+
+            @ViewBuilder
+            var body: some View {
+                Toggle(label, isOn: $isOn)
+            }
+        }
+        """
+
+        let output = """
+        struct ContentView: View {
+
+            @Binding var isOn: Bool
+            @Environment(\\.colorScheme) var colorScheme
+            @Environment(\\.quux) var quux: Quux
+
+            @State var foo: Foo
+
+            @ViewBuilder
+            var body: some View {
+                Toggle(label, isOn: $isOn)
+            }
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: FormatRules.organizeDeclarations,
+            options: FormatOptions(
+                organizeTypes: ["struct"],
+                organizationMode: .visibility,
+                alphabeticallySortedDeclarationSubcategoryTypes: ["swiftUIPropertyWrapper"]
+            ),
             exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"]
         )
     }

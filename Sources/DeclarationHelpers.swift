@@ -1054,6 +1054,15 @@ extension Formatter {
                     return lhsName.localizedCompare(rhsName) == .orderedAscending
                 }
 
+                if options.alphabeticallySortedDeclarationSubcategoryTypes
+                    .contains(lhs.category.type.rawValue),
+                    lhs.category.type == rhs.category.type,
+                    let lhsModifier = lhs.declaration.modifiers.first,
+                    let rhsModifier = rhs.declaration.modifiers.first
+                {
+                    return lhsModifier.localizedCompare(rhsModifier) == .orderedAscending
+                }
+
                 // Respect the original declaration ordering when the categories and types are the same
                 return lhsOriginalIndex < rhsOriginalIndex
             })

@@ -672,6 +672,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var customVisibilityMarks: Set<String>
     public var customTypeMarks: Set<String>
     public var alphabeticallySortedDeclarationPatterns: Set<String>
+    public var alphabeticallySortedDeclarationSubcategoryTypes: Set<String>
     public var yodaSwap: YodaMode
     public var extensionACLPlacement: ExtensionACLPlacement
     public var redundantType: RedundantType
@@ -796,6 +797,7 @@ public struct FormatOptions: CustomStringConvertible {
                 customVisibilityMarks: Set<String> = [],
                 customTypeMarks: Set<String> = [],
                 alphabeticallySortedDeclarationPatterns: Set<String> = [],
+                alphabeticallySortedDeclarationSubcategoryTypes: Set<String> = [],
                 yodaSwap: YodaMode = .always,
                 extensionACLPlacement: ExtensionACLPlacement = .onExtension,
                 redundantType: RedundantType = .inferLocalsOnly,
@@ -910,6 +912,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.customVisibilityMarks = customVisibilityMarks
         self.customTypeMarks = customTypeMarks
         self.alphabeticallySortedDeclarationPatterns = alphabeticallySortedDeclarationPatterns
+        self.alphabeticallySortedDeclarationSubcategoryTypes = alphabeticallySortedDeclarationSubcategoryTypes
         self.yodaSwap = yodaSwap
         self.extensionACLPlacement = extensionACLPlacement
         self.redundantType = redundantType

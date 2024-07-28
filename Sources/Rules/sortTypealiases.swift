@@ -6,8 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
-    public static let sortTypealiases = FormatRule(
+public extension FormatRule {
+    static let sortTypealiases = FormatRule(
         help: "Sort protocol composition typealiases alphabetically."
     ) { formatter in
         formatter.forEach(.keyword("typealias")) { typealiasIndex, _ in

@@ -1,14 +1,14 @@
 //
-//  unusedArgument.swift
+//  unusedArguments.swift
 //  SwiftFormat
 //
 //  Created by Cal Stephens on 7/28/24.
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Replace unused arguments with an underscore
-    public static let unusedArguments = FormatRule(
+    static let unusedArguments = FormatRule(
         help: "Mark unused function arguments with `_`.",
         options: ["stripunusedargs"]
     ) { formatter in

@@ -6,8 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
-    public static let redundantOptionalBinding = FormatRule(
+public extension FormatRule {
+    static let redundantOptionalBinding = FormatRule(
         help: "Remove redundant identifiers in optional binding conditions.",
         // We can convert `if let foo = self.foo` to just `if let foo`,
         // but only if `redundantSelf` can first remove the `self.`.

@@ -6,8 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
-    public static let docComments = FormatRule(
+public extension FormatRule {
+    static let docComments = FormatRule(
         help: "Use doc comments for API declarations, otherwise use regular comments.",
         disabledByDefault: true,
         orderAfter: ["fileHeader"],

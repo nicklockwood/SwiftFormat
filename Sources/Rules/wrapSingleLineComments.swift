@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Wrap single-line comments that exceed given `FormatOptions.maxWidth` setting.
-    public let wrapSingleLineComments = FormatRule(
+    static let wrapSingleLineComments = FormatRule(
         help: "Wrap single line `//` comments that exceed the specified `--maxwidth`.",
         sharedOptions: ["maxwidth", "indent", "tabwidth", "assetliterals", "linebreaks"]
     ) { formatter in

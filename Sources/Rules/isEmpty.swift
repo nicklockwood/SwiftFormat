@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Replace count == 0 with isEmpty
-    public static let isEmpty = FormatRule(
+    static let isEmpty = FormatRule(
         help: "Prefer `isEmpty` over comparing `count` against zero.",
         disabledByDefault: true
     ) { formatter in

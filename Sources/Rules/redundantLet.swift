@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Remove redundant let/var for unnamed variables
-    public static let redundantLet = FormatRule(
+    static let redundantLet = FormatRule(
         help: "Remove redundant `let`/`var` from ignored variables."
     ) { formatter in
         formatter.forEach(.identifier("_")) { i, _ in

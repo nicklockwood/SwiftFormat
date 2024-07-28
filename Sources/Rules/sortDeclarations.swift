@@ -6,8 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
-    public static let sortDeclarations = FormatRule(
+public extension FormatRule {
+    static let sortDeclarations = FormatRule(
         help: """
         Sorts the body of declarations with // swiftformat:sort
         and declarations between // swiftformat:sort:begin and
@@ -62,7 +62,7 @@ extension FormatRule {
                 // Sorting the body of a type conflicts with the `organizeDeclarations`
                 // keyword if enabled for this type of declaration. In that case,
                 // defer to the sorting implementation in `organizeDeclarations`.
-                if formatter.options.enabledRules.contains(FormatRules.organizeDeclarations.name),
+                if formatter.options.enabledRules.contains(FormatRule.organizeDeclarations.name),
                    formatter.options.organizeTypes.contains(declarationKeyword)
                 {
                     return

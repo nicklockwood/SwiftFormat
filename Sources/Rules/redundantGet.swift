@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Remove redundant `get {}` clause inside read-only computed property
-    public static let redundantGet = FormatRule(
+    static let redundantGet = FormatRule(
         help: "Remove unneeded `get` clause inside computed properties."
     ) { formatter in
         formatter.forEach(.identifier("get")) { i, _ in

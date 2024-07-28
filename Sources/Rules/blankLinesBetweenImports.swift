@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Remove blank lines between import statements
-    public static let blankLinesBetweenImports = FormatRule(
+    static let blankLinesBetweenImports = FormatRule(
         help: """
         Remove blank lines between import statements.
         """,

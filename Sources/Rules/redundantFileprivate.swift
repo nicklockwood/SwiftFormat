@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Replace `fileprivate` with `private` where possible
-    public static let redundantFileprivate = FormatRule(
+    static let redundantFileprivate = FormatRule(
         help: "Prefer `private` over `fileprivate` where equivalent."
     ) { formatter in
         guard !formatter.options.fragment else { return }

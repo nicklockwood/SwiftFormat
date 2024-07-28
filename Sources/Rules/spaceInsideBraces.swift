@@ -1,14 +1,14 @@
 //
-//  spaceAroundGenerics.swift
+//  spaceInsideBraces.swift
 //  SwiftFormat
 //
 //  Created by Cal Stephens on 7/28/24.
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Ensure that there is space immediately inside braces
-    public static let spaceInsideBraces = FormatRule(
+    static let spaceInsideBraces = FormatRule(
         help: "Add space inside curly braces."
     ) { formatter in
         formatter.forEach(.startOfScope("{")) { i, _ in

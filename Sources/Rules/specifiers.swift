@@ -6,14 +6,14 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Deprecated
-    public static let specifiers = FormatRule(
+    static let specifiers = FormatRule(
         help: "Use consistent ordering for member modifiers.",
         deprecationMessage: "Use modifierOrder instead.",
         options: ["modifierorder"]
     ) { formatter in
         _ = formatter.options.modifierOrder
-        FormatRules.modifierOrder.apply(with: formatter)
+        FormatRule.modifierOrder.apply(with: formatter)
     }
 }

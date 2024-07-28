@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Prefer `AnyObject` over `class` for class-based protocols
-    public static let anyObjectProtocol = FormatRule(
+    static let anyObjectProtocol = FormatRule(
         help: "Prefer `AnyObject` over `class` in protocol definitions."
     ) { formatter in
         formatter.forEach(.keyword("protocol")) { i, _ in

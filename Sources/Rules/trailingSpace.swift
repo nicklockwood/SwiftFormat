@@ -6,10 +6,10 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Remove trailing space from the end of lines, as it has no semantic
     /// meaning and leads to noise in commits.
-    public static let trailingSpace = FormatRule(
+    static let trailingSpace = FormatRule(
         help: "Remove trailing space at end of a line.",
         orderAfter: ["wrap", "wrapArguments"],
         options: ["trimwhitespace"]

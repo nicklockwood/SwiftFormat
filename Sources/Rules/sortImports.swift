@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Sort import statements
-    public static let sortImports = FormatRule(
+    static let sortImports = FormatRule(
         help: "Sort import statements alphabetically.",
         options: ["importgrouping"],
         sharedOptions: ["linebreaks"]

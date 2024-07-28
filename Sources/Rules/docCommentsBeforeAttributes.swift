@@ -6,8 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
-    public static let docCommentsBeforeAttributes = FormatRule(
+public extension FormatRule {
+    static let docCommentsBeforeAttributes = FormatRule(
         help: "Place doc comments on declarations before any attributes.",
         orderAfter: ["docComments"]
     ) { formatter in

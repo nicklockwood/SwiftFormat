@@ -1,13 +1,13 @@
 //
-//  redundantOptionalBinding.swift
+//  redundantClosure.swift
 //  SwiftFormat
 //
 //  Created by Cal Stephens on 7/28/24.
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
-    public static let redundantClosure = FormatRule(
+public extension FormatRule {
+    static let redundantClosure = FormatRule(
         help: """
         Removes redundant closures bodies, containing a single statement,
         which are called immediately.

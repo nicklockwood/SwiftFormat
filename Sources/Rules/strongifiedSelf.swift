@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Removed backticks from `self` when strongifying
-    public static let strongifiedSelf = FormatRule(
+    static let strongifiedSelf = FormatRule(
         help: "Remove backticks around `self` in Optional unwrap expressions."
     ) { formatter in
         formatter.forEach(.identifier("`self`")) { i, _ in
@@ -23,5 +23,4 @@ extension FormatRule {
             formatter.replaceToken(at: i, with: .identifier("self"))
         }
     }
-
 }

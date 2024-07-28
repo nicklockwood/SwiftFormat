@@ -1,14 +1,14 @@
 //
-//  blankLinesAroundMarks.swift
+//  blankLinesAroundMark.swift
 //  SwiftFormat
 //
 //  Created by Cal Stephens on 7/28/24.
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Adds a blank line around MARK: comments
-    public static let blankLinesAroundMark = FormatRule(
+    static let blankLinesAroundMark = FormatRule(
         help: "Insert blank line before and after `MARK:` comments.",
         options: ["lineaftermarks"],
         sharedOptions: ["linebreaks"]

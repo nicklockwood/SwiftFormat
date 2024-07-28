@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Reorders "yoda conditions" where constant is placed on lhs of a comparison
-    public static let yodaConditions = FormatRule(
+    static let yodaConditions = FormatRule(
         help: "Prefer constant values to be on the right-hand-side of expressions.",
         options: ["yodaswap"]
     ) { formatter in

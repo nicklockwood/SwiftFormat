@@ -6,11 +6,11 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Ensure that an `else` statement following `if { ... }` appears on the same line
     /// as the closing brace. This has no effect on the `else` part of a `guard` statement.
     /// Also applies to `catch` after `try` and `while` after `repeat`.
-    public static let elseOnSameLine = FormatRule(
+    static let elseOnSameLine = FormatRule(
         help: """
         Place `else`, `catch` or `while` keyword in accordance with current style (same or
         next line).

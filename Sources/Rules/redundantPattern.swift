@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Remove redundant pattern in case statements
-    public static let redundantPattern = FormatRule(
+    static let redundantPattern = FormatRule(
         help: "Remove redundant pattern matching parameter syntax."
     ) { formatter in
         func redundantBindings(in range: Range<Int>) -> Bool {

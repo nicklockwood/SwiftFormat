@@ -6,8 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
-    public static let conditionalAssignment = FormatRule(
+public extension FormatRule {
+    static let conditionalAssignment = FormatRule(
         help: "Assign properties using if / switch expressions.",
         orderAfter: ["redundantReturn"],
         options: ["condassignment"]
@@ -40,8 +40,8 @@ extension FormatRule {
                   formatter.tokens[equalsIndex] == .operator("=", .infix)
             else { return }
 
-            guard conditionalBranches.allSatisfy(isExhaustiveSingleStatementAssignment),
-                  conditionalBranchesAreExhaustive(conditionKeywordIndex: startOfConditional, branches: conditionalBranches)
+            guard conditionalBranches.allSatisfy({ formatter.isExhaustiveSingleStatementAssignment($0, lvalueRange: lvalueRange) }),
+                  formatter.conditionalBranchesAreExhaustive(conditionKeywordIndex: startOfConditional, branches: conditionalBranches)
             else {
                 return
             }
@@ -59,7 +59,7 @@ extension FormatRule {
                let nextTokenAfterProperty = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: typeRange.upperBound),
                nextTokenAfterProperty == startOfConditional
             {
-                removeAssignmentFromAllBranches(of: conditionalBranches)
+                formatter.removeAssignmentFromAllBranches(of: conditionalBranches)
 
                 let rangeBetweenTypeAndConditional = (typeRange.upperBound + 1) ..< startOfConditional
 
@@ -119,7 +119,7 @@ extension FormatRule {
 
                 // Now we can remove the `identifier =` from each branch,
                 // and instead add it before the if / switch expression.
-                removeAssignmentFromAllBranches(of: conditionalBranches)
+                formatter.removeAssignmentFromAllBranches(of: conditionalBranches)
 
                 let identifierEqualsTokens = lvalueTokens + [
                     .space(" "),
@@ -164,7 +164,7 @@ private extension Formatter {
     //  1. a single assignment to `lvalue =`
     //  2. a single `if` or `switch` statement where each of the branches also qualify,
     //     and the statement is exhaustive.
-    func isExhaustiveSingleStatementAssignment(_ branch: Formatter.ConditionalBranch) -> Bool {
+    func isExhaustiveSingleStatementAssignment(_ branch: Formatter.ConditionalBranch, lvalueRange: ClosedRange<Int>) -> Bool {
         guard let firstTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: branch.startOfBranch) else { return false }
 
         // If this is an if/switch statement, verify that all of the branches are also
@@ -173,7 +173,7 @@ private extension Formatter {
            let lastConditionalStatement = conditionalBranches.last
         {
             let allBranchesAreExhaustiveSingleStatement = conditionalBranches.allSatisfy { branch in
-                isExhaustiveSingleStatementAssignment(branch)
+                isExhaustiveSingleStatementAssignment(branch, lvalueRange: lvalueRange)
             }
 
             let isOnlyStatementInScope = next(.nonSpaceOrCommentOrLinebreak, after: lastConditionalStatement.endOfBranch)?.isEndOfScope == true
@@ -232,9 +232,9 @@ private extension Formatter {
 
         return false
     }
-    
+
     // Removes the `identifier =` from each conditional branch
-    func removeAssignmentFromAllBranches(of conditionBrances: [ConditionalBranch]) {
+    func removeAssignmentFromAllBranches(of conditionalBranches: [ConditionalBranch]) {
         forEachRecursiveConditionalBranch(in: conditionalBranches) { branch in
             guard let firstTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: branch.startOfBranch),
                   let firstExpressionRange = parseExpressionRange(startingAt: firstTokenIndex),

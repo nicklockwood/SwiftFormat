@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Remove semicolons, except where doing so would change the meaning of the code
-    public static let semicolons = FormatRule(
+    static let semicolons = FormatRule(
         help: "Remove semicolons.",
         options: ["semicolons"],
         sharedOptions: ["linebreaks"]

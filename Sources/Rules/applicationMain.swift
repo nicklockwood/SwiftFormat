@@ -6,10 +6,10 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Replace the obsolete `@UIApplicationMain` and `@NSApplicationMain`
     /// attributes with `@main` in Swift 5.3 and above, per SE-0383
-    public static let applicationMain = FormatRule(
+    static let applicationMain = FormatRule(
         help: """
         Replace obsolete @UIApplicationMain and @NSApplicationMain attributes
         with @main for Swift 5.3 and above.

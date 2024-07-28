@@ -6,8 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
-    public static let blankLineAfterSwitchCase = FormatRule(
+public extension FormatRule {
+    static let blankLineAfterSwitchCase = FormatRule(
         help: """
         Insert a blank line after multiline switch cases (excluding the last case,
         which is followed by a closing brace).

@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Replace the `&&` operator with `,` where applicable
-    public static let andOperator = FormatRule(
+    static let andOperator = FormatRule(
         help: "Prefer comma over `&&` in `if`, `guard` or `while` conditions."
     ) { formatter in
         formatter.forEachToken { i, token in

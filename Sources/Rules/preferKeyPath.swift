@@ -6,8 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
-    public static let preferKeyPath = FormatRule(
+public extension FormatRule {
+    static let preferKeyPath = FormatRule(
         help: "Convert trivial `map { $0.foo }` closures to keyPath-based syntax."
     ) { formatter in
         formatter.forEach(.startOfScope("{")) { i, _ in

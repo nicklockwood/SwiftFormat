@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Normalize the use of void in closure arguments and return values
-    public static let void = FormatRule(
+    static let void = FormatRule(
         help: "Use `Void` for type declarations and `()` for values.",
         options: ["voidtype"]
     ) { formatter in
@@ -30,7 +30,7 @@ extension FormatRule {
                 }
                 return token == .startOfScope("(")
             }() {
-                if isArgumentToken(at: nextIndex) || formatter.last(
+                if formatter.isArgumentToken(at: nextIndex) || formatter.last(
                     .nonSpaceOrLinebreak,
                     before: prevIndex
                 )?.isIdentifier == true {
@@ -60,7 +60,7 @@ extension FormatRule {
                 if !hasLocalVoid {
                     formatter.removeToken(at: i)
                 }
-            } else if !formatter.options.useVoid || isArgumentToken(at: i), !hasLocalVoid {
+            } else if !formatter.options.useVoid || formatter.isArgumentToken(at: i), !hasLocalVoid {
                 // Convert to parens
                 formatter.replaceToken(at: i, with: [.startOfScope("("), .endOfScope(")")])
             }
@@ -72,7 +72,7 @@ extension FormatRule {
             guard let endIndex = formatter.index(of: .nonSpaceOrLinebreak, after: i, if: {
                 $0 == .endOfScope(")")
             }), let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: i),
-            !isArgumentToken(at: endIndex) else {
+            !formatter.isArgumentToken(at: endIndex) else {
                 return
             }
             if formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) == .operator("->", .infix) {
@@ -100,8 +100,8 @@ private extension Formatter {
             return true
         case .startOfScope("{"):
             if tokens[index] == .endOfScope(")"),
-               let index = index(of: .startOfScope("("), before: index),
-               let nameIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: index, if: {
+               let index = self.index(of: .startOfScope("("), before: index),
+               let nameIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: index, if: {
                    $0.isIdentifier
                }), last(.nonSpaceOrCommentOrLinebreak, before: nameIndex) == .keyword("func")
             {
@@ -110,7 +110,7 @@ private extension Formatter {
             return false
         case .keyword("in"):
             if tokens[index] == .endOfScope(")"),
-               let index = index(of: .startOfScope("("), before: index)
+               let index = self.index(of: .startOfScope("("), before: index)
             {
                 return last(.nonSpaceOrCommentOrLinebreak, before: index) == .startOfScope("{")
             }
@@ -119,7 +119,7 @@ private extension Formatter {
             return false
         }
     }
-    
+
     func hasLocalVoid() -> Bool {
         for (i, token) in tokens.enumerated() where token == .identifier("Void") {
             if let prevToken = last(.nonSpaceOrCommentOrLinebreak, before: i) {

@@ -6,11 +6,11 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Collapse all consecutive space characters to a single space, except at
     /// the start of a line or inside a comment or string, as these have no semantic
     /// meaning and lead to noise in commits.
-    public static let consecutiveSpaces = FormatRule(
+    static let consecutiveSpaces = FormatRule(
         help: "Replace consecutive spaces with a single space."
     ) { formatter in
         formatter.forEach(.space) { i, token in

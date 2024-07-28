@@ -6,8 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
-    public static let genericExtensions = FormatRule(
+public extension FormatRule {
+    static let genericExtensions = FormatRule(
         help: """
         Use angle brackets (`extension Array<Foo>`) for generic type extensions
         instead of type constraints (`extension Array where Element == Foo`).

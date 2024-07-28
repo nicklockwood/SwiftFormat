@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Ensure there is no space between an opening chevron and the preceding identifier
-    public static let spaceAroundGenerics = FormatRule(
+    static let spaceAroundGenerics = FormatRule(
         help: "Remove space around angle brackets."
     ) { formatter in
         formatter.forEach(.startOfScope("<")) { i, _ in

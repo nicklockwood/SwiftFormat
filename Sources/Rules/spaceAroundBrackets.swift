@@ -6,7 +6,7 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Implement the following rules with respect to the spacing around square brackets:
     /// * There is no space between an opening bracket and the preceding identifier,
     ///   unless the identifier is one of the specified keywords
@@ -14,7 +14,7 @@ extension FormatRule {
     /// * There is no space between an opening bracket and the preceding closing square bracket
     /// * There is space between a closing bracket and following identifier
     /// * There is space between a closing bracket and following opening brace
-    public static let spaceAroundBrackets = FormatRule(
+    static let spaceAroundBrackets = FormatRule(
         help: "Add or remove space around square brackets."
     ) { formatter in
         formatter.forEach(.startOfScope("[")) { i, _ in

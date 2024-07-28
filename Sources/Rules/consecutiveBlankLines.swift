@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Collapse all consecutive blank lines into a single blank line
-    public static let consecutiveBlankLines = FormatRule(
+    static let consecutiveBlankLines = FormatRule(
         help: "Replace consecutive blank lines with a single blank line."
     ) { formatter in
         formatter.forEach(.linebreak) { i, _ in

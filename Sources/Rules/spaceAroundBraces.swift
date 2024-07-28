@@ -6,10 +6,10 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Ensure that there is space between an opening brace and the preceding
     /// identifier, and between a closing brace and the following identifier.
-    public static let spaceAroundBraces = FormatRule(
+    static let spaceAroundBraces = FormatRule(
         help: "Add or remove space around curly braces."
     ) { formatter in
         formatter.forEach(.startOfScope("{")) { i, _ in

@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Remove white-space between empty braces
-    public static let emptyBraces = FormatRule(
+    static let emptyBraces = FormatRule(
         help: "Remove whitespace inside empty braces.",
         options: ["emptybraces"],
         sharedOptions: ["linebreaks"]

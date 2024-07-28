@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Strip redundant `.init` from type instantiations
-    public static let redundantInit = FormatRule(
+    static let redundantInit = FormatRule(
         help: "Remove explicit `init` if not required.",
         orderAfter: ["propertyType"]
     ) { formatter in

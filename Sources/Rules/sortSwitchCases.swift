@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Sorts switch cases alphabetically
-    public static let sortSwitchCases = FormatRule(
+    static let sortSwitchCases = FormatRule(
         help: "Sort switch cases alphabetically.",
         disabledByDefault: true
     ) { formatter in

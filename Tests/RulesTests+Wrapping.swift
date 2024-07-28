@@ -15,25 +15,25 @@ class WrappingTests: RulesTests {
     func testElseOnSameLine() {
         let input = "if true {\n    1\n}\nelse { 2 }"
         let output = "if true {\n    1\n} else { 2 }"
-        testFormatting(for: input, output, rule: FormatRules.elseOnSameLine,
+        testFormatting(for: input, output, rule: .elseOnSameLine,
                        exclude: ["wrapConditionalBodies"])
     }
 
     func testElseOnSameLineOnlyAppliedToDanglingBrace() {
         let input = "if true { 1 }\nelse { 2 }"
-        testFormatting(for: input, rule: FormatRules.elseOnSameLine,
+        testFormatting(for: input, rule: .elseOnSameLine,
                        exclude: ["wrapConditionalBodies"])
     }
 
     func testGuardNotAffectedByElseOnSameLine() {
         let input = "guard true\nelse { return }"
-        testFormatting(for: input, rule: FormatRules.elseOnSameLine,
+        testFormatting(for: input, rule: .elseOnSameLine,
                        exclude: ["wrapConditionalBodies"])
     }
 
     func testElseOnSameLineDoesntEatPreviousStatement() {
         let input = "if true {}\nguard true else { return }"
-        testFormatting(for: input, rule: FormatRules.elseOnSameLine,
+        testFormatting(for: input, rule: .elseOnSameLine,
                        exclude: ["wrapConditionalBodies"])
     }
 
@@ -41,7 +41,7 @@ class WrappingTests: RulesTests {
         let input = "if true\n{\n    1\n} else { 2 }"
         let output = "if true\n{\n    1\n}\nelse { 2 }"
         let options = FormatOptions(allmanBraces: true)
-        testFormatting(for: input, output, rule: FormatRules.elseOnSameLine,
+        testFormatting(for: input, output, rule: .elseOnSameLine,
                        options: options, exclude: ["wrapConditionalBodies"])
     }
 
@@ -49,14 +49,14 @@ class WrappingTests: RulesTests {
         let input = "if true {\n    1\n} else { 2 }"
         let output = "if true {\n    1\n}\nelse { 2 }"
         let options = FormatOptions(elseOnNextLine: true)
-        testFormatting(for: input, output, rule: FormatRules.elseOnSameLine,
+        testFormatting(for: input, output, rule: .elseOnSameLine,
                        options: options, exclude: ["wrapConditionalBodies"])
     }
 
     func testGuardNotAffectedByElseOnSameLineForAllman() {
         let input = "guard true else { return }"
         let options = FormatOptions(allmanBraces: true)
-        testFormatting(for: input, rule: FormatRules.elseOnSameLine,
+        testFormatting(for: input, rule: .elseOnSameLine,
                        options: options, exclude: ["wrapConditionalBodies"])
     }
 
@@ -64,17 +64,17 @@ class WrappingTests: RulesTests {
         let input = "repeat\n{\n    foo\n} while x"
         let output = "repeat\n{\n    foo\n}\nwhile x"
         let options = FormatOptions(allmanBraces: true)
-        testFormatting(for: input, output, rule: FormatRules.elseOnSameLine, options: options)
+        testFormatting(for: input, output, rule: .elseOnSameLine, options: options)
     }
 
     func testWhileNotAffectedByElseOnSameLineIfNotRepeatWhile() {
         let input = "func foo(x) {}\n\nwhile true {}"
-        testFormatting(for: input, rule: FormatRules.elseOnSameLine)
+        testFormatting(for: input, rule: .elseOnSameLine)
     }
 
     func testCommentsNotDiscardedByElseOnSameLineRule() {
         let input = "if true {\n    1\n}\n\n// comment\nelse {}"
-        testFormatting(for: input, rule: FormatRules.elseOnSameLine)
+        testFormatting(for: input, rule: .elseOnSameLine)
     }
 
     func testElseOnSameLineInferenceEdgeCase() {
@@ -112,7 +112,7 @@ class WrappingTests: RulesTests {
         }
         """
         let options = FormatOptions(elseOnNextLine: false)
-        testFormatting(for: input, rule: FormatRules.elseOnSameLine, options: options,
+        testFormatting(for: input, rule: .elseOnSameLine, options: options,
                        exclude: ["braces"])
     }
 
@@ -120,20 +120,20 @@ class WrappingTests: RulesTests {
 
     func testSingleLineGuardElseNotWrappedByDefault() {
         let input = "guard foo = bar else {}"
-        testFormatting(for: input, rule: FormatRules.elseOnSameLine,
+        testFormatting(for: input, rule: .elseOnSameLine,
                        exclude: ["wrapConditionalBodies"])
     }
 
     func testSingleLineGuardElseNotUnwrappedByDefault() {
         let input = "guard foo = bar\nelse {}"
-        testFormatting(for: input, rule: FormatRules.elseOnSameLine,
+        testFormatting(for: input, rule: .elseOnSameLine,
                        exclude: ["wrapConditionalBodies"])
     }
 
     func testSingleLineGuardElseWrappedByDefaultIfBracesOnNextLine() {
         let input = "guard foo = bar else\n{}"
         let output = "guard foo = bar\nelse {}"
-        testFormatting(for: input, output, rule: FormatRules.elseOnSameLine,
+        testFormatting(for: input, output, rule: .elseOnSameLine,
                        exclude: ["wrapConditionalBodies"])
     }
 
@@ -144,7 +144,7 @@ class WrappingTests: RulesTests {
             return
         }
         """
-        testFormatting(for: input, rule: FormatRules.elseOnSameLine,
+        testFormatting(for: input, rule: .elseOnSameLine,
                        exclude: ["wrapMultilineStatementBraces"])
     }
 
@@ -163,7 +163,7 @@ class WrappingTests: RulesTests {
             return
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.elseOnSameLine)
+        testFormatting(for: input, output, rule: .elseOnSameLine)
     }
 
     func testWrappedMultilineGuardElseCorrectlyIndented() {
@@ -185,7 +185,7 @@ class WrappingTests: RulesTests {
             }
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.elseOnSameLine)
+        testFormatting(for: input, output, rule: .elseOnSameLine)
     }
 
     // guardelse = nextLine
@@ -193,14 +193,14 @@ class WrappingTests: RulesTests {
     func testSingleLineGuardElseNotWrapped() {
         let input = "guard foo = bar else {}"
         let options = FormatOptions(guardElsePosition: .nextLine)
-        testFormatting(for: input, rule: FormatRules.elseOnSameLine,
+        testFormatting(for: input, rule: .elseOnSameLine,
                        options: options, exclude: ["wrapConditionalBodies"])
     }
 
     func testSingleLineGuardElseNotUnwrapped() {
         let input = "guard foo = bar\nelse {}"
         let options = FormatOptions(guardElsePosition: .nextLine)
-        testFormatting(for: input, rule: FormatRules.elseOnSameLine,
+        testFormatting(for: input, rule: .elseOnSameLine,
                        options: options, exclude: ["wrapConditionalBodies"])
     }
 
@@ -208,7 +208,7 @@ class WrappingTests: RulesTests {
         let input = "guard foo = bar else\n{}"
         let output = "guard foo = bar\nelse {}"
         let options = FormatOptions(guardElsePosition: .nextLine)
-        testFormatting(for: input, output, rule: FormatRules.elseOnSameLine,
+        testFormatting(for: input, output, rule: .elseOnSameLine,
                        options: options, exclude: ["wrapConditionalBodies"])
     }
 
@@ -227,7 +227,7 @@ class WrappingTests: RulesTests {
         }
         """
         let options = FormatOptions(guardElsePosition: .nextLine)
-        testFormatting(for: input, output, rule: FormatRules.elseOnSameLine,
+        testFormatting(for: input, output, rule: .elseOnSameLine,
                        options: options, exclude: ["wrapMultilineStatementBraces"])
     }
 
@@ -247,7 +247,7 @@ class WrappingTests: RulesTests {
         }
         """
         let options = FormatOptions(guardElsePosition: .auto)
-        testFormatting(for: input, output, rule: FormatRules.elseOnSameLine,
+        testFormatting(for: input, output, rule: .elseOnSameLine,
                        options: options)
     }
 
@@ -268,7 +268,7 @@ class WrappingTests: RulesTests {
         }
         """
         let options = FormatOptions(guardElsePosition: .sameLine)
-        testFormatting(for: input, output, rule: FormatRules.elseOnSameLine,
+        testFormatting(for: input, output, rule: .elseOnSameLine,
                        options: options, exclude: ["wrapMultilineStatementBraces"])
     }
 
@@ -276,7 +276,7 @@ class WrappingTests: RulesTests {
         let input = "guard foo = bar\nelse {}"
         let output = "guard foo = bar else {}"
         let options = FormatOptions(guardElsePosition: .sameLine)
-        testFormatting(for: input, output, rule: FormatRules.elseOnSameLine,
+        testFormatting(for: input, output, rule: .elseOnSameLine,
                        options: options)
     }
 
@@ -295,7 +295,7 @@ class WrappingTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, rule: FormatRules.elseOnSameLine)
+        testFormatting(for: input, rule: .elseOnSameLine)
     }
 
     func testPreserveBlankLineBeforeElseOnSameLine() {
@@ -314,7 +314,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(elseOnNextLine: false)
-        testFormatting(for: input, rule: FormatRules.elseOnSameLine, options: options)
+        testFormatting(for: input, rule: .elseOnSameLine, options: options)
     }
 
     func testPreserveBlankLineBeforeElseWithComments() {
@@ -333,7 +333,7 @@ class WrappingTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, rule: FormatRules.elseOnSameLine)
+        testFormatting(for: input, rule: .elseOnSameLine)
     }
 
     func testPreserveBlankLineBeforeElseDoesntAffectOtherCases() {
@@ -379,7 +379,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(elseOnNextLine: false, guardElsePosition: .nextLine)
-        testFormatting(for: input, output, rule: FormatRules.elseOnSameLine, options: options)
+        testFormatting(for: input, output, rule: .elseOnSameLine, options: options)
     }
 
     // MARK: - wrapConditionalBodies
@@ -391,18 +391,18 @@ class WrappingTests: RulesTests {
             return
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.wrapConditionalBodies)
+        testFormatting(for: input, output, rule: .wrapConditionalBodies)
     }
 
     func testEmptyGuardReturnWithSpaceDoesNothing() {
         let input = "guard let foo = bar else { }"
-        testFormatting(for: input, rule: FormatRules.wrapConditionalBodies,
+        testFormatting(for: input, rule: .wrapConditionalBodies,
                        exclude: ["emptyBraces"])
     }
 
     func testEmptyGuardReturnWithoutSpaceDoesNothing() {
         let input = "guard let foo = bar else {}"
-        testFormatting(for: input, rule: FormatRules.wrapConditionalBodies,
+        testFormatting(for: input, rule: .wrapConditionalBodies,
                        exclude: ["emptyBraces"])
     }
 
@@ -413,7 +413,7 @@ class WrappingTests: RulesTests {
             return baz
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.wrapConditionalBodies)
+        testFormatting(for: input, output, rule: .wrapConditionalBodies)
     }
 
     func testGuardBodyWithClosingBraceAlreadyOnNewlineWraps() {
@@ -426,7 +426,7 @@ class WrappingTests: RulesTests {
             return
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.wrapConditionalBodies)
+        testFormatting(for: input, output, rule: .wrapConditionalBodies)
     }
 
     func testGuardContinueWithNoSpacesToCleanupWraps() {
@@ -436,7 +436,7 @@ class WrappingTests: RulesTests {
             continue
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.wrapConditionalBodies)
+        testFormatting(for: input, output, rule: .wrapConditionalBodies)
     }
 
     func testGuardReturnWrapsSemicolonDelimitedStatements() {
@@ -446,7 +446,7 @@ class WrappingTests: RulesTests {
             var baz = 0; let boo = 1; fatalError()
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.wrapConditionalBodies)
+        testFormatting(for: input, output, rule: .wrapConditionalBodies)
     }
 
     func testGuardReturnWrapsSemicolonDelimitedStatementsWithNoSpaces() {
@@ -456,7 +456,7 @@ class WrappingTests: RulesTests {
             var baz=0;let boo=1;fatalError()
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.wrapConditionalBodies,
+        testFormatting(for: input, output, rule: .wrapConditionalBodies,
                        exclude: ["spaceAroundOperators"])
     }
 
@@ -466,7 +466,7 @@ class WrappingTests: RulesTests {
             return
         }
         """
-        testFormatting(for: input, rule: FormatRules.wrapConditionalBodies)
+        testFormatting(for: input, rule: .wrapConditionalBodies)
     }
 
     func testGuardCommentSameLineUnchanged() {
@@ -475,7 +475,7 @@ class WrappingTests: RulesTests {
             return
         }
         """
-        testFormatting(for: input, rule: FormatRules.wrapConditionalBodies)
+        testFormatting(for: input, rule: .wrapConditionalBodies)
     }
 
     func testGuardMultilineCommentSameLineUnchanged() {
@@ -485,7 +485,7 @@ class WrappingTests: RulesTests {
             return
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.wrapConditionalBodies)
+        testFormatting(for: input, output, rule: .wrapConditionalBodies)
     }
 
     func testGuardTwoMultilineCommentsSameLine() {
@@ -495,7 +495,7 @@ class WrappingTests: RulesTests {
             return /* Test comment 2 */
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.wrapConditionalBodies)
+        testFormatting(for: input, output, rule: .wrapConditionalBodies)
     }
 
     func testNestedGuardElseIfStatementsPutOnNewline() {
@@ -509,7 +509,7 @@ class WrappingTests: RulesTests {
             }
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.wrapConditionalBodies)
+        testFormatting(for: input, output, rule: .wrapConditionalBodies)
     }
 
     func testNestedGuardElseGuardStatementPutOnNewline() {
@@ -521,7 +521,7 @@ class WrappingTests: RulesTests {
             }
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.wrapConditionalBodies)
+        testFormatting(for: input, output, rule: .wrapConditionalBodies)
     }
 
     func testGuardWithClosureOnlyWrapsElseBody() {
@@ -531,7 +531,7 @@ class WrappingTests: RulesTests {
             return true
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.wrapConditionalBodies)
+        testFormatting(for: input, output, rule: .wrapConditionalBodies)
     }
 
     func testIfElseReturnsWrap() {
@@ -545,7 +545,7 @@ class WrappingTests: RulesTests {
             return quux
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.wrapConditionalBodies)
+        testFormatting(for: input, output, rule: .wrapConditionalBodies)
     }
 
     func testIfElseBodiesWrap() {
@@ -559,7 +559,7 @@ class WrappingTests: RulesTests {
             quux
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.wrapConditionalBodies)
+        testFormatting(for: input, output, rule: .wrapConditionalBodies)
     }
 
     func testIfElsesWithClosuresDontWrapClosures() {
@@ -573,18 +573,18 @@ class WrappingTests: RulesTests {
             corge
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.wrapConditionalBodies)
+        testFormatting(for: input, output, rule: .wrapConditionalBodies)
     }
 
     func testEmptyIfElseBodiesWithSpaceDoNothing() {
         let input = "if foo { } else if baz { } else { }"
-        testFormatting(for: input, rule: FormatRules.wrapConditionalBodies,
+        testFormatting(for: input, rule: .wrapConditionalBodies,
                        exclude: ["emptyBraces"])
     }
 
     func testEmptyIfElseBodiesWithoutSpaceDoNothing() {
         let input = "if foo {} else if baz {} else {}"
-        testFormatting(for: input, rule: FormatRules.wrapConditionalBodies,
+        testFormatting(for: input, rule: .wrapConditionalBodies,
                        exclude: ["emptyBraces"])
     }
 
@@ -600,7 +600,7 @@ class WrappingTests: RulesTests {
             }
         """
 
-        testFormatting(for: input, output, rule: FormatRules.wrapConditionalBodies,
+        testFormatting(for: input, output, rule: .wrapConditionalBodies,
                        exclude: ["braces", "indent", "elseOnSameLine"])
     }
 
@@ -627,7 +627,7 @@ class WrappingTests: RulesTests {
                 return quux
             }
         """
-        testFormatting(for: input, output, rule: FormatRules.wrapConditionalBodies,
+        testFormatting(for: input, output, rule: .wrapConditionalBodies,
                        exclude: ["braces", "indent", "elseOnSameLine"])
     }
 
@@ -640,7 +640,7 @@ class WrappingTests: RulesTests {
             print(foo)
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.wrapLoopBodies)
+        testFormatting(for: input, output, rule: .wrapLoopBodies)
     }
 
     func testWrapWhileLoop() {
@@ -650,7 +650,7 @@ class WrappingTests: RulesTests {
             print(foo)
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.wrapLoopBodies)
+        testFormatting(for: input, output, rule: .wrapLoopBodies)
     }
 
     func testWrapRepeatWhileLoop() {
@@ -660,7 +660,7 @@ class WrappingTests: RulesTests {
             print(foo)
         } while condition()
         """
-        testFormatting(for: input, output, rule: FormatRules.wrapLoopBodies)
+        testFormatting(for: input, output, rule: .wrapLoopBodies)
     }
 
     // MARK: - wrap
@@ -675,7 +675,7 @@ class WrappingTests: RulesTests {
            let baz = baz {}
         """
         let options = FormatOptions(maxWidth: 20)
-        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+        testFormatting(for: input, output, rule: .wrap, options: options)
     }
 
     func testWrapIfElseStatement() {
@@ -693,7 +693,7 @@ class WrappingTests: RulesTests {
             bar {}
         """
         let options = FormatOptions(maxWidth: 20)
-        testFormatting(for: input, [output, output2], rules: [FormatRules.wrap], options: options)
+        testFormatting(for: input, [output, output2], rules: [.wrap], options: options)
     }
 
     func testWrapGuardStatement() {
@@ -717,7 +717,7 @@ class WrappingTests: RulesTests {
         }
         """
         let options = FormatOptions(maxWidth: 20)
-        testFormatting(for: input, [output, output2], rules: [FormatRules.wrap], options: options, exclude: ["wrapMultilineStatementBraces"])
+        testFormatting(for: input, [output, output2], rules: [.wrap], options: options, exclude: ["wrapMultilineStatementBraces"])
     }
 
     func testWrapClosure() {
@@ -736,7 +736,7 @@ class WrappingTests: RulesTests {
             }
         """
         let options = FormatOptions(maxWidth: 20)
-        testFormatting(for: input, [output, output2], rules: [FormatRules.wrap], options: options)
+        testFormatting(for: input, [output, output2], rules: [.wrap], options: options)
     }
 
     func testWrapClosure2() {
@@ -755,7 +755,7 @@ class WrappingTests: RulesTests {
             }
         """
         let options = FormatOptions(maxWidth: 20)
-        testFormatting(for: input, [output, output2], rules: [FormatRules.wrap], options: options)
+        testFormatting(for: input, [output, output2], rules: [.wrap], options: options)
     }
 
     func testWrapClosureWithAllmanBraces() {
@@ -774,7 +774,7 @@ class WrappingTests: RulesTests {
         }
         """
         let options = FormatOptions(allmanBraces: true, maxWidth: 20)
-        testFormatting(for: input, [output, output2], rules: [FormatRules.wrap], options: options)
+        testFormatting(for: input, [output, output2], rules: [.wrap], options: options)
     }
 
     func testWrapClosure3() {
@@ -789,7 +789,7 @@ class WrappingTests: RulesTests {
         }
         """
         let options = FormatOptions(maxWidth: 20)
-        testFormatting(for: input, [output, output2], rules: [FormatRules.wrap], options: options)
+        testFormatting(for: input, [output, output2], rules: [.wrap], options: options)
     }
 
     func testWrapFunctionIfReturnTypeExceedsMaxWidth() {
@@ -807,7 +807,7 @@ class WrappingTests: RulesTests {
         }
         """
         let options = FormatOptions(maxWidth: 25)
-        testFormatting(for: input, output, rule: FormatRules.wrap, options: options, exclude: ["wrapMultilineStatementBraces"])
+        testFormatting(for: input, output, rule: .wrap, options: options, exclude: ["wrapMultilineStatementBraces"])
     }
 
     func testWrapFunctionIfReturnTypeExceedsMaxWidthWithXcodeIndentation() {
@@ -832,7 +832,7 @@ class WrappingTests: RulesTests {
         }
         """
         let options = FormatOptions(xcodeIndentation: true, maxWidth: 25)
-        testFormatting(for: input, [output, output2], rules: [FormatRules.wrap], options: options, exclude: ["wrapMultilineStatementBraces"])
+        testFormatting(for: input, [output, output2], rules: [.wrap], options: options, exclude: ["wrapMultilineStatementBraces"])
     }
 
     func testWrapFunctionIfReturnTypeExceedsMaxWidth2() {
@@ -848,7 +848,7 @@ class WrappingTests: RulesTests {
         }
         """
         let options = FormatOptions(maxWidth: 35)
-        testFormatting(for: input, output, rule: FormatRules.wrap, options: options, exclude: ["wrapMultilineStatementBraces"])
+        testFormatting(for: input, output, rule: .wrap, options: options, exclude: ["wrapMultilineStatementBraces"])
     }
 
     func testWrapFunctionIfReturnTypeExceedsMaxWidth2WithXcodeIndentation() {
@@ -870,7 +870,7 @@ class WrappingTests: RulesTests {
         }
         """
         let options = FormatOptions(xcodeIndentation: true, maxWidth: 35)
-        testFormatting(for: input, [output, output2], rules: [FormatRules.wrap], options: options, exclude: ["wrapMultilineStatementBraces"])
+        testFormatting(for: input, [output, output2], rules: [.wrap], options: options, exclude: ["wrapMultilineStatementBraces"])
     }
 
     func testWrapFunctionIfReturnTypeExceedsMaxWidth2WithXcodeIndentation2() {
@@ -892,7 +892,7 @@ class WrappingTests: RulesTests {
         }
         """
         let options = FormatOptions(xcodeIndentation: true, maxWidth: 35)
-        testFormatting(for: input, [output, output2], rules: [FormatRules.wrap], options: options, exclude: ["wrapMultilineStatementBraces"])
+        testFormatting(for: input, [output, output2], rules: [.wrap], options: options, exclude: ["wrapMultilineStatementBraces"])
     }
 
     func testWrapFunctionIfReturnTypeExceedsMaxWidth3() {
@@ -908,7 +908,7 @@ class WrappingTests: RulesTests {
         }
         """
         let options = FormatOptions(maxWidth: 35)
-        testFormatting(for: input, output, rule: FormatRules.wrap, options: options, exclude: ["wrapMultilineStatementBraces"])
+        testFormatting(for: input, output, rule: .wrap, options: options, exclude: ["wrapMultilineStatementBraces"])
     }
 
     func testWrapFunctionIfReturnTypeExceedsMaxWidth3WithXcodeIndentation() {
@@ -930,7 +930,7 @@ class WrappingTests: RulesTests {
         }
         """
         let options = FormatOptions(xcodeIndentation: true, maxWidth: 35)
-        testFormatting(for: input, [output, output2], rules: [FormatRules.wrap], options: options, exclude: ["wrapMultilineStatementBraces"])
+        testFormatting(for: input, [output, output2], rules: [.wrap], options: options, exclude: ["wrapMultilineStatementBraces"])
     }
 
     func testWrapFunctionIfReturnTypeExceedsMaxWidth4() {
@@ -946,7 +946,7 @@ class WrappingTests: RulesTests {
         }
         """
         let options = FormatOptions(maxWidth: 35)
-        testFormatting(for: input, output, rule: FormatRules.wrap, options: options, exclude: ["wrapMultilineStatementBraces"])
+        testFormatting(for: input, output, rule: .wrap, options: options, exclude: ["wrapMultilineStatementBraces"])
     }
 
     func testWrapFunctionIfReturnTypeExceedsMaxWidth4WithXcodeIndentation() {
@@ -968,7 +968,7 @@ class WrappingTests: RulesTests {
         }
         """
         let options = FormatOptions(xcodeIndentation: true, maxWidth: 35)
-        testFormatting(for: input, [output, output2], rules: [FormatRules.wrap], options: options, exclude: ["wrapMultilineStatementBraces"])
+        testFormatting(for: input, [output, output2], rules: [.wrap], options: options, exclude: ["wrapMultilineStatementBraces"])
     }
 
     func testWrapChainedFunctionAfterSubscriptCollection() {
@@ -980,7 +980,7 @@ class WrappingTests: RulesTests {
             .quuz()
         """
         let options = FormatOptions(maxWidth: 20)
-        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+        testFormatting(for: input, output, rule: .wrap, options: options)
     }
 
     func testWrapChainedFunctionInSubscriptCollection() {
@@ -992,7 +992,7 @@ class WrappingTests: RulesTests {
             bar[baz.quuz()]
         """
         let options = FormatOptions(maxWidth: 20)
-        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+        testFormatting(for: input, output, rule: .wrap, options: options)
     }
 
     func testWrapThrowingFunctionIfReturnTypeExceedsMaxWidth() {
@@ -1008,7 +1008,7 @@ class WrappingTests: RulesTests {
         }
         """
         let options = FormatOptions(maxWidth: 42)
-        testFormatting(for: input, output, rule: FormatRules.wrap, options: options, exclude: ["wrapMultilineStatementBraces"])
+        testFormatting(for: input, output, rule: .wrap, options: options, exclude: ["wrapMultilineStatementBraces"])
     }
 
     func testWrapTypedThrowingFunctionIfReturnTypeExceedsMaxWidth() {
@@ -1024,7 +1024,7 @@ class WrappingTests: RulesTests {
         }
         """
         let options = FormatOptions(maxWidth: 42)
-        testFormatting(for: input, output, rule: FormatRules.wrap, options: options, exclude: ["wrapMultilineStatementBraces"])
+        testFormatting(for: input, output, rule: .wrap, options: options, exclude: ["wrapMultilineStatementBraces"])
     }
 
     func testNoWrapInterpolatedStringLiteral() {
@@ -1032,21 +1032,21 @@ class WrappingTests: RulesTests {
         "a very long \\(string) literal"
         """
         let options = FormatOptions(maxWidth: 20)
-        testFormatting(for: input, rule: FormatRules.wrap, options: options)
+        testFormatting(for: input, rule: .wrap, options: options)
     }
 
     func testNoWrapAtUnspacedOperator() {
         let input = "let foo = bar+baz+quux"
         let output = "let foo =\n    bar+baz+quux"
         let options = FormatOptions(maxWidth: 15)
-        testFormatting(for: input, output, rule: FormatRules.wrap, options: options,
+        testFormatting(for: input, output, rule: .wrap, options: options,
                        exclude: ["spaceAroundOperators"])
     }
 
     func testNoWrapAtUnspacedEquals() {
         let input = "let foo=bar+baz+quux"
         let options = FormatOptions(maxWidth: 15)
-        testFormatting(for: input, rule: FormatRules.wrap, options: options,
+        testFormatting(for: input, rule: .wrap, options: options,
                        exclude: ["spaceAroundOperators"])
     }
 
@@ -1057,7 +1057,7 @@ class WrappingTests: RulesTests {
             .decode(FooBar.self)
         """
         let options = FormatOptions(maxWidth: 50)
-        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+        testFormatting(for: input, output, rule: .wrap, options: options)
     }
 
     func testWrapSingleParameter() {
@@ -1068,7 +1068,7 @@ class WrappingTests: RulesTests {
         )
         """
         let options = FormatOptions(maxWidth: 50, noWrapOperators: [".", "="])
-        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+        testFormatting(for: input, output, rule: .wrap, options: options)
     }
 
     func testWrapFunctionArrow() {
@@ -1078,7 +1078,7 @@ class WrappingTests: RulesTests {
             -> Int {}
         """
         let options = FormatOptions(maxWidth: 14)
-        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+        testFormatting(for: input, output, rule: .wrap, options: options)
     }
 
     func testNoWrapFunctionArrow() {
@@ -1088,7 +1088,7 @@ class WrappingTests: RulesTests {
         ) -> Int {}
         """
         let options = FormatOptions(maxWidth: 14, noWrapOperators: ["->"])
-        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+        testFormatting(for: input, output, rule: .wrap, options: options)
     }
 
     func testNoCrashWrap() {
@@ -1108,7 +1108,7 @@ class WrappingTests: RulesTests {
         }
         """
         let options = FormatOptions(maxWidth: 10)
-        testFormatting(for: input, output, rule: FormatRules.wrap, options: options,
+        testFormatting(for: input, output, rule: .wrap, options: options,
                        exclude: ["unusedArguments"])
     }
 
@@ -1136,7 +1136,7 @@ class WrappingTests: RulesTests {
         }
         """
         let options = FormatOptions(wrapParameters: .preserve, maxWidth: 80)
-        testFormatting(for: input, output, rule: FormatRules.wrap, options: options,
+        testFormatting(for: input, output, rule: .wrap, options: options,
                        exclude: ["indent", "wrapArguments"])
     }
 
@@ -1149,7 +1149,7 @@ class WrappingTests: RulesTests {
         }
         """
         let options = FormatOptions(wrapArguments: .afterFirst, maxWidth: 100)
-        let rules = [FormatRules.wrap, FormatRules.wrapArguments]
+        let rules: [FormatRule] = [.wrap, .wrapArguments]
         XCTAssertNoThrow(try format(input, rules: rules, options: options))
     }
 
@@ -1158,13 +1158,13 @@ class WrappingTests: RulesTests {
         button.setTitleColor(#colorLiteral(red: 0.2392156863, green: 0.6470588235, blue: 0.3647058824, alpha: 1), for: .normal)
         """
         let options = FormatOptions(maxWidth: 80, assetLiteralWidth: .visualWidth)
-        testFormatting(for: input, rule: FormatRules.wrap, options: options)
+        testFormatting(for: input, rule: .wrap, options: options)
     }
 
     func testWrapImageLiteral() {
         let input = "if let image = #imageLiteral(resourceName: \"abc.png\") {}"
         let options = FormatOptions(maxWidth: 40, assetLiteralWidth: .visualWidth)
-        testFormatting(for: input, rule: FormatRules.wrap, options: options)
+        testFormatting(for: input, rule: .wrap, options: options)
     }
 
     func testNoWrapBeforeFirstArgumentInSingleLineStringInterpolation() {
@@ -1172,7 +1172,7 @@ class WrappingTests: RulesTests {
         "a very long string literal with \\(interpolation) inside"
         """
         let options = FormatOptions(maxWidth: 40)
-        testFormatting(for: input, rule: FormatRules.wrap, options: options)
+        testFormatting(for: input, rule: .wrap, options: options)
     }
 
     func testWrapBeforeFirstArgumentInMultineStringInterpolation() {
@@ -1189,7 +1189,7 @@ class WrappingTests: RulesTests {
         \"""
         """
         let options = FormatOptions(maxWidth: 40)
-        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+        testFormatting(for: input, output, rule: .wrap, options: options)
     }
 
     // ternary expressions
@@ -1206,7 +1206,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(wrapTernaryOperators: .beforeOperators, maxWidth: 60)
-        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+        testFormatting(for: input, output, rule: .wrap, options: options)
     }
 
     func testRewrapsSimpleTernaryOperator() {
@@ -1222,7 +1222,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(wrapTernaryOperators: .beforeOperators, maxWidth: 60)
-        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+        testFormatting(for: input, output, rule: .wrap, options: options)
     }
 
     func testWrapComplexTernaryOperator() {
@@ -1237,7 +1237,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(wrapTernaryOperators: .beforeOperators, maxWidth: 60)
-        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+        testFormatting(for: input, output, rule: .wrap, options: options)
     }
 
     func testRewrapsComplexTernaryOperator() {
@@ -1253,7 +1253,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(wrapTernaryOperators: .beforeOperators, maxWidth: 60)
-        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+        testFormatting(for: input, output, rule: .wrap, options: options)
     }
 
     func testWrappedTernaryOperatorIndentsChainedCalls() {
@@ -1285,7 +1285,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(wrapTernaryOperators: .beforeOperators, maxWidth: 60)
-        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+        testFormatting(for: input, output, rule: .wrap, options: options)
     }
 
     func testWrapsDoubleNestedTernaryOperation() {
@@ -1304,7 +1304,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(wrapTernaryOperators: .beforeOperators, maxWidth: 60)
-        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+        testFormatting(for: input, output, rule: .wrap, options: options)
     }
 
     func testWrapsTripleNestedTernaryOperation() {
@@ -1327,7 +1327,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(wrapTernaryOperators: .beforeOperators, maxWidth: 60)
-        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+        testFormatting(for: input, output, rule: .wrap, options: options)
     }
 
     func testNoWrapTernaryWrappedWithinChildExpression() {
@@ -1340,7 +1340,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(wrapTernaryOperators: .beforeOperators, maxWidth: 0)
-        testFormatting(for: input, rule: FormatRules.wrap, options: options)
+        testFormatting(for: input, rule: .wrap, options: options)
     }
 
     func testNoWrapTernaryWrappedWithinChildExpression2() {
@@ -1354,7 +1354,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(wrapTernaryOperators: .beforeOperators, maxWidth: 0)
-        testFormatting(for: input, rule: FormatRules.wrap, options: options)
+        testFormatting(for: input, rule: .wrap, options: options)
     }
 
     func testNoWrapTernaryInsideStringLiteral() {
@@ -1362,7 +1362,7 @@ class WrappingTests: RulesTests {
         "\\(true ? "Some string literal" : "Some other string")"
         """
         let options = FormatOptions(wrapTernaryOperators: .beforeOperators, maxWidth: 50)
-        testFormatting(for: input, rule: FormatRules.wrap, options: options)
+        testFormatting(for: input, rule: .wrap, options: options)
     }
 
     func testWrapTernaryInsideMultilineStringLiteral() {
@@ -1379,7 +1379,7 @@ class WrappingTests: RulesTests {
         \"""
         """
         let options = FormatOptions(wrapTernaryOperators: .beforeOperators, maxWidth: 50)
-        testFormatting(for: input, output, rule: FormatRules.wrap, options: options)
+        testFormatting(for: input, output, rule: .wrap, options: options)
     }
 
     func testErrorNotReportedOnBlankLineAfterWrap() throws {
@@ -1391,8 +1391,8 @@ class WrappingTests: RulesTests {
         ]
         """
         let options = FormatOptions(truncateBlankLines: false, maxWidth: 40)
-        let changes = try lint(input, rules: [FormatRules.wrap, .indent], options: options)
-        XCTAssertEqual(changes, [.init(line: 2, rule: FormatRules.wrap, filePath: nil)])
+        let changes = try lint(input, rules: [.wrap, .indent], options: options)
+        XCTAssertEqual(changes, [.init(line: 2, rule: .wrap, filePath: nil)])
     }
 
     // MARK: - wrapArguments
@@ -1410,7 +1410,7 @@ class WrappingTests: RulesTests {
             Thing(),
         ])
         """
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, exclude: ["propertyType"])
+        testFormatting(for: input, output, rule: .wrapArguments, exclude: ["propertyType"])
     }
 
     func testWrapArgumentsDoesntIndentTrailingComment() {
@@ -1424,7 +1424,7 @@ class WrappingTests: RulesTests {
             bar: Int
         )
         """
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments)
+        testFormatting(for: input, output, rule: .wrapArguments)
     }
 
     func testWrapArgumentsDoesntIndentClosingBracket() {
@@ -1434,13 +1434,13 @@ class WrappingTests: RulesTests {
             ],
         ]
         """
-        testFormatting(for: input, rule: FormatRules.wrapArguments)
+        testFormatting(for: input, rule: .wrapArguments)
     }
 
     func testWrapParametersDoesNotAffectFunctionDeclaration() {
         let input = "foo(\n    bar _: Int,\n    baz _: String\n)"
         let options = FormatOptions(wrapArguments: .preserve, wrapParameters: .afterFirst)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, rule: .wrapArguments, options: options)
     }
 
     func testWrapParametersClosureAfterParameterListDoesNotWrapClosureArguments() {
@@ -1450,28 +1450,28 @@ class WrappingTests: RulesTests {
                quuz: 10)
         """
         let options = FormatOptions(wrapArguments: .preserve, wrapParameters: .beforeFirst)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, rule: .wrapArguments, options: options)
     }
 
     func testWrapParametersNotSetWrapArgumentsAfterFirstDefaultsToAfterFirst() {
         let input = "func foo(\n    bar _: Int,\n    baz _: String\n) {}"
         let output = "func foo(bar _: Int,\n         baz _: String) {}"
         let options = FormatOptions(wrapArguments: .afterFirst)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
     func testWrapParametersNotSetWrapArgumentsBeforeFirstDefaultsToBeforeFirst() {
         let input = "func foo(bar _: Int,\n    baz _: String) {}"
         let output = "func foo(\n    bar _: Int,\n    baz _: String\n) {}"
         let options = FormatOptions(wrapArguments: .beforeFirst)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
     func testWrapParametersNotSetWrapArgumentsPreserveDefaultsToPreserve() {
         let input = "func foo(\n    bar _: Int,\n    baz _: String) {}"
         let output = "func foo(\n    bar _: Int,\n    baz _: String\n) {}"
         let options = FormatOptions(wrapArguments: .preserve)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
     func testWrapParametersFunctionDeclarationClosingParenOnSameLine() {
@@ -1487,7 +1487,7 @@ class WrappingTests: RulesTests {
             baz _: String) {}
         """
         let options = FormatOptions(wrapArguments: .beforeFirst, closingParenPosition: .sameLine)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
     func testWrapParametersFunctionDeclarationClosingParenOnNextLine() {
@@ -1503,7 +1503,7 @@ class WrappingTests: RulesTests {
         ) {}
         """
         let options = FormatOptions(wrapArguments: .beforeFirst, closingParenPosition: .balanced)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
     func testWrapParametersFunctionDeclarationClosingParenOnSameLineAndForce() {
@@ -1519,7 +1519,7 @@ class WrappingTests: RulesTests {
             baz _: String) {}
         """
         let options = FormatOptions(wrapArguments: .beforeFirst, closingParenPosition: .sameLine, callSiteClosingParenPosition: .sameLine)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
     func testWrapParametersFunctionDeclarationClosingParenOnNextLineAndForce() {
@@ -1535,7 +1535,7 @@ class WrappingTests: RulesTests {
         ) {}
         """
         let options = FormatOptions(wrapArguments: .beforeFirst, closingParenPosition: .balanced, callSiteClosingParenPosition: .sameLine)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
     func testWrapParametersFunctionCallClosingParenOnNextLineAndForce() {
@@ -1551,7 +1551,7 @@ class WrappingTests: RulesTests {
             baz: "foo")
         """
         let options = FormatOptions(wrapArguments: .beforeFirst, closingParenPosition: .balanced, callSiteClosingParenPosition: .sameLine)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
     func testIndentMultilineStringWhenWrappingArguments() {
@@ -1564,7 +1564,7 @@ class WrappingTests: RulesTests {
                \"\"")
         """
         let options = FormatOptions(wrapArguments: .afterFirst)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, rule: .wrapArguments, options: options)
     }
 
     func testHandleXcodeTokenApplyingWrap() {
@@ -1579,7 +1579,7 @@ class WrappingTests: RulesTests {
         )
         """
         let options = FormatOptions(wrapArguments: .beforeFirst, maxWidth: 20)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
     func testIssue1530() {
@@ -1593,7 +1593,7 @@ class WrappingTests: RulesTests {
         }
         """
         let options = FormatOptions(wrapArguments: .beforeFirst)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options, exclude: ["propertyType"])
+        testFormatting(for: input, rule: .wrapArguments, options: options, exclude: ["propertyType"])
     }
 
     // MARK: wrapParameters
@@ -1603,41 +1603,41 @@ class WrappingTests: RulesTests {
     func testAfterFirstPreserved() {
         let input = "func foo(bar _: Int,\n         baz _: String) {}"
         let options = FormatOptions(wrapParameters: .preserve)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, rule: .wrapArguments, options: options)
     }
 
     func testAfterFirstPreservedIndentFixed() {
         let input = "func foo(bar _: Int,\n baz _: String) {}"
         let output = "func foo(bar _: Int,\n         baz _: String) {}"
         let options = FormatOptions(wrapParameters: .preserve)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
     func testAfterFirstPreservedNewlineRemoved() {
         let input = "func foo(bar _: Int,\n         baz _: String\n) {}"
         let output = "func foo(bar _: Int,\n         baz _: String) {}"
         let options = FormatOptions(wrapParameters: .preserve)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
     func testBeforeFirstPreserved() {
         let input = "func foo(\n    bar _: Int,\n    baz _: String\n) {}"
         let options = FormatOptions(wrapParameters: .preserve)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, rule: .wrapArguments, options: options)
     }
 
     func testBeforeFirstPreservedIndentFixed() {
         let input = "func foo(\n    bar _: Int,\n baz _: String\n) {}"
         let output = "func foo(\n    bar _: Int,\n    baz _: String\n) {}"
         let options = FormatOptions(wrapParameters: .preserve)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
     func testBeforeFirstPreservedNewlineAdded() {
         let input = "func foo(\n    bar _: Int,\n    baz _: String) {}"
         let output = "func foo(\n    bar _: Int,\n    baz _: String\n) {}"
         let options = FormatOptions(wrapParameters: .preserve)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
     func testWrapParametersAfterMultilineComment() {
@@ -1651,7 +1651,7 @@ class WrappingTests: RulesTests {
         )
         """
         let options = FormatOptions(wrapParameters: .preserve)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, rule: .wrapArguments, options: options)
     }
 
     // MARK: afterFirst
@@ -1660,14 +1660,14 @@ class WrappingTests: RulesTests {
         let input = "func foo(\n    bar _: Int,\n    baz _: String\n) {}"
         let output = "func foo(bar _: Int,\n         baz _: String) {}"
         let options = FormatOptions(wrapParameters: .afterFirst)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
     func testNoWrapInnerArguments() {
         let input = "func foo(\n    bar _: Int,\n    baz _: foo(bar, baz)\n) {}"
         let output = "func foo(bar _: Int,\n         baz _: foo(bar, baz)) {}"
         let options = FormatOptions(wrapParameters: .afterFirst)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
     // MARK: afterFirst, maxWidth
@@ -1681,7 +1681,7 @@ class WrappingTests: RulesTests {
                  baz: String) -> Bool {}
         """
         let options = FormatOptions(wrapParameters: .afterFirst, maxWidth: 20)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options,
+        testFormatting(for: input, output, rule: .wrapArguments, options: options,
                        exclude: ["unusedArguments", "wrap"])
     }
 
@@ -1695,7 +1695,7 @@ class WrappingTests: RulesTests {
                  quux: Bool) -> Bool {}
         """
         let options = FormatOptions(wrapParameters: .afterFirst, maxWidth: 20)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options,
+        testFormatting(for: input, output, rule: .wrapArguments, options: options,
                        exclude: ["unusedArguments", "wrap"])
     }
 
@@ -1708,7 +1708,7 @@ class WrappingTests: RulesTests {
                  aVeryLongLastArgumentThatExceedsTheMaxWidthByItself: Bool) -> Bool {}
         """
         let options = FormatOptions(wrapParameters: .afterFirst, maxWidth: 32)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options,
+        testFormatting(for: input, output, rule: .wrapArguments, options: options,
                        exclude: ["unusedArguments", "wrap"])
     }
 
@@ -1728,7 +1728,7 @@ class WrappingTests: RulesTests {
         """
         let options = FormatOptions(wrapParameters: .afterFirst, maxWidth: 32)
         testFormatting(for: input, [output, output2],
-                       rules: [FormatRules.wrapArguments, FormatRules.wrap],
+                       rules: [.wrapArguments, .wrap],
                        options: options, exclude: ["unusedArguments"])
     }
 
@@ -1743,7 +1743,7 @@ class WrappingTests: RulesTests {
         """
         let options = FormatOptions(wrapParameters: .afterFirst, maxWidth: 31)
         testFormatting(for: input, [output],
-                       rules: [FormatRules.wrapArguments, FormatRules.wrap],
+                       rules: [.wrapArguments, .wrap],
                        options: options, exclude: ["unusedArguments"])
     }
 
@@ -1771,7 +1771,7 @@ class WrappingTests: RulesTests {
         """
         let options = FormatOptions(wrapParameters: .afterFirst, maxWidth: 31)
         testFormatting(for: input, [output, output2],
-                       rules: [FormatRules.wrapArguments, FormatRules.wrap],
+                       rules: [.wrapArguments, .wrap],
                        options: options, exclude: ["unusedArguments"])
     }
 
@@ -1799,7 +1799,7 @@ class WrappingTests: RulesTests {
         """
         let options = FormatOptions(wrapParameters: .afterFirst, maxWidth: 30)
         testFormatting(for: input, [output, output2],
-                       rules: [FormatRules.wrapArguments],
+                       rules: [.wrapArguments],
                        options: options)
     }
 
@@ -1812,7 +1812,7 @@ class WrappingTests: RulesTests {
                  quux: Bool) -> LongReturnType {}
         """
         let options = FormatOptions(wrapParameters: .afterFirst, maxWidth: 50)
-        testFormatting(for: input, [input, output2], rules: [FormatRules.wrapArguments],
+        testFormatting(for: input, [input, output2], rules: [.wrapArguments],
                        options: options, exclude: ["unusedArguments"])
     }
 
@@ -1830,7 +1830,7 @@ class WrappingTests: RulesTests {
                  and quux: Bool) -> LongReturnType {}
         """
         let options = FormatOptions(wrapParameters: .afterFirst)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments,
+        testFormatting(for: input, output, rule: .wrapArguments,
                        options: options, exclude: ["unusedArguments"])
     }
 
@@ -1840,21 +1840,21 @@ class WrappingTests: RulesTests {
         let input = "func foo(bar _: Int,\n    baz _: String) {}"
         let output = "func foo(\n    bar _: Int,\n    baz _: String\n) {}"
         let options = FormatOptions(wrapParameters: .beforeFirst)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
     func testLinebreakInsertedAtEndOfWrappedFunction() {
         let input = "func foo(\n    bar _: Int,\n    baz _: String) {}"
         let output = "func foo(\n    bar _: Int,\n    baz _: String\n) {}"
         let options = FormatOptions(wrapParameters: .beforeFirst)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
     func testAfterFirstConvertedToBeforeFirst() {
         let input = "func foo(bar _: Int,\n         baz _: String) {}"
         let output = "func foo(\n    bar _: Int,\n    baz _: String\n) {}"
         let options = FormatOptions(wrapParameters: .beforeFirst)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
     func testWrapParametersListBeforeFirstInClosureType() {
@@ -1875,7 +1875,7 @@ class WrappingTests: RulesTests {
         """
         let options = FormatOptions(wrapParameters: .beforeFirst)
         testFormatting(for: input, [output],
-                       rules: [FormatRules.wrapArguments],
+                       rules: [.wrapArguments],
                        options: options)
     }
 
@@ -1897,7 +1897,7 @@ class WrappingTests: RulesTests {
         """
         let options = FormatOptions(wrapParameters: .beforeFirst)
         testFormatting(for: input, [output],
-                       rules: [FormatRules.wrapArguments],
+                       rules: [.wrapArguments],
                        options: options)
     }
 
@@ -1919,7 +1919,7 @@ class WrappingTests: RulesTests {
         """
         let options = FormatOptions(wrapParameters: .beforeFirst)
         testFormatting(for: input, [output],
-                       rules: [FormatRules.wrapArguments],
+                       rules: [.wrapArguments],
                        options: options)
     }
 
@@ -1941,7 +1941,7 @@ class WrappingTests: RulesTests {
         """
         let options = FormatOptions(wrapParameters: .beforeFirst)
         testFormatting(for: input, [output],
-                       rules: [FormatRules.wrapArguments],
+                       rules: [.wrapArguments],
                        options: options)
     }
 
@@ -1959,7 +1959,7 @@ class WrappingTests: RulesTests {
         """
         let options = FormatOptions(wrapParameters: .beforeFirst)
         testFormatting(for: input, [output],
-                       rules: [FormatRules.wrapArguments],
+                       rules: [.wrapArguments],
                        options: options,
                        exclude: ["unusedArguments"])
     }
@@ -1978,7 +1978,7 @@ class WrappingTests: RulesTests {
         """
         let options = FormatOptions(wrapParameters: .beforeFirst)
         testFormatting(for: input, [output],
-                       rules: [FormatRules.wrapArguments],
+                       rules: [.wrapArguments],
                        options: options,
                        exclude: ["unusedArguments"])
     }
@@ -1997,7 +1997,7 @@ class WrappingTests: RulesTests {
         """
         let options = FormatOptions(wrapParameters: .beforeFirst)
         testFormatting(for: input, [output],
-                       rules: [FormatRules.wrapArguments],
+                       rules: [.wrapArguments],
                        options: options,
                        exclude: ["unusedArguments"])
     }
@@ -2016,7 +2016,7 @@ class WrappingTests: RulesTests {
         """
         let options = FormatOptions(wrapParameters: .beforeFirst)
         testFormatting(for: input, [output],
-                       rules: [FormatRules.wrapArguments],
+                       rules: [.wrapArguments],
                        options: options,
                        exclude: ["unusedArguments"])
     }
@@ -2035,7 +2035,7 @@ class WrappingTests: RulesTests {
         """
         let options = FormatOptions(wrapParameters: .beforeFirst)
         testFormatting(for: input, [output],
-                       rules: [FormatRules.wrapArguments],
+                       rules: [.wrapArguments],
                        options: options,
                        exclude: ["unusedArguments"])
     }
@@ -2054,7 +2054,7 @@ class WrappingTests: RulesTests {
         """
         let options = FormatOptions(wrapParameters: .beforeFirst)
         testFormatting(for: input, [output],
-                       rules: [FormatRules.wrapArguments],
+                       rules: [.wrapArguments],
                        options: options,
                        exclude: ["unusedArguments"])
     }
@@ -2072,7 +2072,7 @@ class WrappingTests: RulesTests {
         ) -> Bool {}
         """
         let options = FormatOptions(wrapParameters: .beforeFirst, maxWidth: 20)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options,
+        testFormatting(for: input, output, rule: .wrapArguments, options: options,
                        exclude: ["unusedArguments"])
     }
 
@@ -2081,7 +2081,7 @@ class WrappingTests: RulesTests {
         func foo(bar: Int, baz: String) -> Bool {}
         """
         let options = FormatOptions(wrapParameters: .beforeFirst, maxWidth: 42)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options,
+        testFormatting(for: input, rule: .wrapArguments, options: options,
                        exclude: ["unusedArguments"])
     }
 
@@ -2096,7 +2096,7 @@ class WrappingTests: RulesTests {
         ) -> Bool {}
         """
         let options = FormatOptions(wrapParameters: .beforeFirst, maxWidth: 20)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options,
+        testFormatting(for: input, output, rule: .wrapArguments, options: options,
                        exclude: ["unusedArguments"])
     }
 
@@ -2113,7 +2113,7 @@ class WrappingTests: RulesTests {
         ) -> Bool {}
         """
         let options = FormatOptions(wrapParameters: .beforeFirst, maxWidth: 26)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options,
+        testFormatting(for: input, output, rule: .wrapArguments, options: options,
                        exclude: ["unusedArguments"])
     }
 
@@ -2129,7 +2129,7 @@ class WrappingTests: RulesTests {
         ) -> LongReturnType {}
         """
         let options = FormatOptions(wrapParameters: .beforeFirst, maxWidth: 50)
-        testFormatting(for: input, [input, output2], rules: [FormatRules.wrapArguments],
+        testFormatting(for: input, [input, output2], rules: [.wrapArguments],
                        options: options, exclude: ["unusedArguments"])
     }
 
@@ -2147,7 +2147,7 @@ class WrappingTests: RulesTests {
         ) -> LongReturnType {}
         """
         let options = FormatOptions(wrapParameters: .beforeFirst)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments,
+        testFormatting(for: input, output, rule: .wrapArguments,
                        options: options, exclude: ["unusedArguments"])
     }
 
@@ -2167,7 +2167,7 @@ class WrappingTests: RulesTests {
         }
         """
         let options = FormatOptions(wrapParameters: .beforeFirst, maxWidth: 30)
-        testFormatting(for: input, [output], rules: [FormatRules.wrapArguments],
+        testFormatting(for: input, [output], rules: [.wrapArguments],
                        options: options)
     }
 
@@ -2184,35 +2184,35 @@ class WrappingTests: RulesTests {
         }
         """
         let options = FormatOptions(wrapParameters: .beforeFirst, maxWidth: 37)
-        testFormatting(for: input, rule: FormatRules.wrapArguments,
+        testFormatting(for: input, rule: .wrapArguments,
                        options: options, exclude: ["unusedArguments"])
     }
 
     func testNoWrapSubscriptWithSingleElement() {
         let input = "guard let foo = bar[0] {}"
         let options = FormatOptions(wrapCollections: .beforeFirst, maxWidth: 20)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options,
+        testFormatting(for: input, rule: .wrapArguments, options: options,
                        exclude: ["wrap"])
     }
 
     func testNoWrapArrayWithSingleElement() {
         let input = "let foo = [0]"
         let options = FormatOptions(wrapCollections: .beforeFirst, maxWidth: 11)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options,
+        testFormatting(for: input, rule: .wrapArguments, options: options,
                        exclude: ["wrap"])
     }
 
     func testNoWrapDictionaryWithSingleElement() {
         let input = "let foo = [bar: baz]"
         let options = FormatOptions(wrapCollections: .beforeFirst, maxWidth: 15)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options,
+        testFormatting(for: input, rule: .wrapArguments, options: options,
                        exclude: ["wrap"])
     }
 
     func testNoWrapImageLiteral() {
         let input = "if let image = #imageLiteral(resourceName: \"abc.png\") {}"
         let options = FormatOptions(wrapCollections: .beforeFirst, maxWidth: 30)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options,
+        testFormatting(for: input, rule: .wrapArguments, options: options,
                        exclude: ["wrap"])
     }
 
@@ -2221,7 +2221,7 @@ class WrappingTests: RulesTests {
         if let color = #colorLiteral(red: 0.2392156863, green: 0.6470588235, blue: 0.3647058824, alpha: 1) {}
         """
         let options = FormatOptions(wrapCollections: .beforeFirst, maxWidth: 30)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options,
+        testFormatting(for: input, rule: .wrapArguments, options: options,
                        exclude: ["wrap"])
     }
 
@@ -2234,7 +2234,7 @@ class WrappingTests: RulesTests {
         ]
         """
         let options = FormatOptions(wrapCollections: .beforeFirst)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options,
+        testFormatting(for: input, rule: .wrapArguments, options: options,
                        exclude: ["wrap", "blankLinesAtStartOfScope", "blankLinesAtEndOfScope"])
     }
 
@@ -2244,21 +2244,21 @@ class WrappingTests: RulesTests {
         let input = "func foo(bar _: Int,\n    baz _: String) {}"
         let output = "func foo(\n    bar _: Int,\n    baz _: String) {}"
         let options = FormatOptions(wrapParameters: .beforeFirst, closingParenPosition: .sameLine)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
     func testParenOnSameLineWhenWrapBeforeFirstUnchanged() {
         let input = "func foo(\n    bar _: Int,\n    baz _: String\n) {}"
         let output = "func foo(\n    bar _: Int,\n    baz _: String) {}"
         let options = FormatOptions(wrapParameters: .beforeFirst, closingParenPosition: .sameLine)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
     func testParenOnSameLineWhenWrapBeforeFirstPreserved() {
         let input = "func foo(\n    bar _: Int,\n    baz _: String\n) {}"
         let output = "func foo(\n    bar _: Int,\n    baz _: String) {}"
         let options = FormatOptions(wrapParameters: .preserve, closingParenPosition: .sameLine)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
     // MARK: indent with tabs
@@ -2269,7 +2269,7 @@ class WrappingTests: RulesTests {
                  baz: Int) {}
         """
         let options = FormatOptions(indent: "\t", wrapParameters: .afterFirst, tabWidth: 2)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options,
+        testFormatting(for: input, rule: .wrapArguments, options: options,
                        exclude: ["unusedArguments"])
     }
 
@@ -2284,7 +2284,7 @@ class WrappingTests: RulesTests {
         """
         let options = FormatOptions(indent: "\t", wrapParameters: .afterFirst,
                                     tabWidth: 2, smartTabs: false)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options,
+        testFormatting(for: input, output, rule: .wrapArguments, options: options,
                        exclude: ["unusedArguments"])
     }
 
@@ -2293,19 +2293,19 @@ class WrappingTests: RulesTests {
     func testWrapArgumentsDoesNotAffectFunctionDeclaration() {
         let input = "func foo(\n    bar _: Int,\n    baz _: String\n) {}"
         let options = FormatOptions(wrapArguments: .afterFirst, wrapParameters: .preserve)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, rule: .wrapArguments, options: options)
     }
 
     func testWrapArgumentsDoesNotAffectInit() {
         let input = "init(\n    bar _: Int,\n    baz _: String\n) {}"
         let options = FormatOptions(wrapArguments: .afterFirst, wrapParameters: .preserve)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, rule: .wrapArguments, options: options)
     }
 
     func testWrapArgumentsDoesNotAffectSubscript() {
         let input = "subscript(\n    bar _: Int,\n    baz _: String\n) -> Int {}"
         let options = FormatOptions(wrapArguments: .afterFirst, wrapParameters: .preserve)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, rule: .wrapArguments, options: options)
     }
 
     // MARK: afterFirst
@@ -2322,20 +2322,20 @@ class WrappingTests: RulesTests {
             baz _: String)
         """
         let options = FormatOptions(wrapArguments: .afterFirst)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
     func testCorrectWrapIndentForNestedArguments() {
         let input = "foo(\nbar: (\nx: 0,\ny: 0\n),\nbaz: (\nx: 0,\ny: 0\n)\n)"
         let output = "foo(bar: (x: 0,\n          y: 0),\n    baz: (x: 0,\n          y: 0))"
         let options = FormatOptions(wrapArguments: .afterFirst)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
     func testNoRemoveLinebreakAfterCommentInArguments() {
         let input = "a(b // comment\n)"
         let options = FormatOptions(wrapArguments: .afterFirst)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, rule: .wrapArguments, options: options)
     }
 
     func testNoRemoveLinebreakAfterCommentInArguments2() {
@@ -2346,7 +2346,7 @@ class WrappingTests: RulesTests {
             ) {}
         """
         let options = FormatOptions(wrapArguments: .afterFirst)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options, exclude: ["indent"])
+        testFormatting(for: input, rule: .wrapArguments, options: options, exclude: ["indent"])
     }
 
     func testConsecutiveCodeCommentsNotIndented() {
@@ -2357,7 +2357,7 @@ class WrappingTests: RulesTests {
             quux)
         """
         let options = FormatOptions(wrapArguments: .afterFirst)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, rule: .wrapArguments, options: options)
     }
 
     // MARK: afterFirst maxWidth
@@ -2372,7 +2372,7 @@ class WrappingTests: RulesTests {
             quux: Bool)
         """
         let options = FormatOptions(wrapArguments: .afterFirst, maxWidth: 20)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options,
+        testFormatting(for: input, output, rule: .wrapArguments, options: options,
                        exclude: ["unusedArguments", "wrap"])
     }
 
@@ -2381,7 +2381,7 @@ class WrappingTests: RulesTests {
     func testClosureInsideParensNotWrappedOntoNextLine() {
         let input = "foo({\n    bar()\n})"
         let options = FormatOptions(wrapArguments: .beforeFirst)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options,
+        testFormatting(for: input, rule: .wrapArguments, options: options,
                        exclude: ["trailingClosures"])
     }
 
@@ -2400,7 +2400,7 @@ class WrappingTests: RulesTests {
         ) {}
         """
         let options = FormatOptions(wrapArguments: .beforeFirst)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
     func testNoMangleCommentedLinesWhenWrappingArgumentsWithNoCommas() {
@@ -2416,7 +2416,7 @@ class WrappingTests: RulesTests {
         ) {}
         """
         let options = FormatOptions(wrapArguments: .beforeFirst)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
     // MARK: preserve
@@ -2428,7 +2428,7 @@ class WrappingTests: RulesTests {
         }
         """
         let options = FormatOptions(wrapArguments: .preserve)
-        testFormatting(for: input, rule: FormatRules.wrapArguments,
+        testFormatting(for: input, rule: .wrapArguments,
                        options: options, exclude: ["wrapConditionalBodies"])
     }
 
@@ -2443,7 +2443,7 @@ class WrappingTests: RulesTests {
             baz)
         """
         let options = FormatOptions(wrapArguments: .beforeFirst, wrapParameters: .beforeFirst)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options,
+        testFormatting(for: input, rule: .wrapArguments, options: options,
                        exclude: ["redundantParens"])
     }
 
@@ -2456,7 +2456,7 @@ class WrappingTests: RulesTests {
         let options = FormatOptions(wrapArguments: .beforeFirst,
                                     wrapParameters: .beforeFirst,
                                     maxWidth: 40)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, rule: .wrapArguments, options: options)
     }
 
     func testNoWrapBeforeFirstArgumentInStringInterpolation2() {
@@ -2466,7 +2466,7 @@ class WrappingTests: RulesTests {
         let options = FormatOptions(wrapArguments: .beforeFirst,
                                     wrapParameters: .beforeFirst,
                                     maxWidth: 50)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, rule: .wrapArguments, options: options)
     }
 
     func testNoWrapBeforeFirstArgumentInStringInterpolation3() {
@@ -2476,7 +2476,7 @@ class WrappingTests: RulesTests {
         let options = FormatOptions(wrapArguments: .beforeFirst,
                                     wrapParameters: .beforeFirst,
                                     maxWidth: 40)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, rule: .wrapArguments, options: options)
     }
 
     func testNoWrapBeforeNestedFirstArgumentInStringInterpolation() {
@@ -2486,7 +2486,7 @@ class WrappingTests: RulesTests {
         let options = FormatOptions(wrapArguments: .beforeFirst,
                                     wrapParameters: .beforeFirst,
                                     maxWidth: 45)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, rule: .wrapArguments, options: options)
     }
 
     func testNoWrapBeforeNestedFirstArgumentInStringInterpolation2() {
@@ -2496,7 +2496,7 @@ class WrappingTests: RulesTests {
         let options = FormatOptions(wrapArguments: .beforeFirst,
                                     wrapParameters: .beforeFirst,
                                     maxWidth: 45)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, rule: .wrapArguments, options: options)
     }
 
     func testWrapProtocolFuncParametersBeforeFirst() {
@@ -2514,7 +2514,7 @@ class WrappingTests: RulesTests {
         }
         """
         let options = FormatOptions(wrapParameters: .beforeFirst, maxWidth: 30)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments,
+        testFormatting(for: input, output, rule: .wrapArguments,
                        options: options)
     }
 
@@ -2527,7 +2527,7 @@ class WrappingTests: RulesTests {
         let options = FormatOptions(wrapArguments: .afterFirst,
                                     wrapParameters: .afterFirst,
                                     maxWidth: 46)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, rule: .wrapArguments, options: options)
     }
 
     func testNoWrapAfterFirstArgumentInStringInterpolation2() {
@@ -2537,7 +2537,7 @@ class WrappingTests: RulesTests {
         let options = FormatOptions(wrapArguments: .afterFirst,
                                     wrapParameters: .afterFirst,
                                     maxWidth: 50)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, rule: .wrapArguments, options: options)
     }
 
     func testNoWrapAfterNestedFirstArgumentInStringInterpolation() {
@@ -2547,7 +2547,7 @@ class WrappingTests: RulesTests {
         let options = FormatOptions(wrapArguments: .afterFirst,
                                     wrapParameters: .afterFirst,
                                     maxWidth: 55)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, rule: .wrapArguments, options: options)
     }
 
     // macros
@@ -2565,7 +2565,7 @@ class WrappingTests: RulesTests {
         ) -> (T, String)
         """
         let options = FormatOptions(wrapParameters: .beforeFirst, maxWidth: 30)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments,
+        testFormatting(for: input, output, rule: .wrapArguments,
                        options: options)
     }
 
@@ -2577,7 +2577,7 @@ class WrappingTests: RulesTests {
         let input = "[ foo,\n    bar ]"
         let output = "[\n    foo,\n    bar\n]"
         let options = FormatOptions(trailingCommas: false, wrapCollections: .beforeFirst)
-        testFormatting(for: input, [output], rules: [FormatRules.wrapArguments, FormatRules.spaceInsideBrackets],
+        testFormatting(for: input, [output], rules: [.wrapArguments, .spaceInsideBrackets],
                        options: options)
     }
 
@@ -2585,7 +2585,7 @@ class WrappingTests: RulesTests {
         let input = "[foo,\n    bar]"
         let output = "[\n    foo,\n    bar,\n]"
         let options = FormatOptions(trailingCommas: true, wrapCollections: .beforeFirst)
-        testFormatting(for: input, [output], rules: [FormatRules.wrapArguments, FormatRules.trailingCommas],
+        testFormatting(for: input, [output], rules: [.wrapArguments, .trailingCommas],
                        options: options)
     }
 
@@ -2593,7 +2593,7 @@ class WrappingTests: RulesTests {
         let input = "[foo: [bar: baz,\n    bar2: baz2]]"
         let output = "[foo: [\n    bar: baz,\n    bar2: baz2,\n]]"
         let options = FormatOptions(trailingCommas: true, wrapCollections: .beforeFirst)
-        testFormatting(for: input, [output], rules: [FormatRules.wrapArguments, FormatRules.trailingCommas],
+        testFormatting(for: input, [output], rules: [.wrapArguments, .trailingCommas],
                        options: options)
     }
 
@@ -2601,7 +2601,7 @@ class WrappingTests: RulesTests {
         let input = "[\n    foo: [bar: baz, bar2: baz2]]"
         let output = "[\n    foo: [bar: baz, bar2: baz2],\n]"
         let options = FormatOptions(trailingCommas: true, wrapCollections: .beforeFirst)
-        testFormatting(for: input, [output], rules: [FormatRules.wrapArguments, FormatRules.trailingCommas],
+        testFormatting(for: input, [output], rules: [.wrapArguments, .trailingCommas],
                        options: options)
     }
 
@@ -2609,14 +2609,14 @@ class WrappingTests: RulesTests {
         let input = "[foo: [bar: baz,\n    bar2: baz2],\n    foo2: [bar: baz,\n    bar2: baz2]]"
         let output = "[\n    foo: [\n        bar: baz,\n        bar2: baz2,\n    ],\n    foo2: [\n        bar: baz,\n        bar2: baz2,\n    ],\n]"
         let options = FormatOptions(trailingCommas: true, wrapCollections: .beforeFirst)
-        testFormatting(for: input, [output], rules: [FormatRules.wrapArguments, FormatRules.trailingCommas],
+        testFormatting(for: input, [output], rules: [.wrapArguments, .trailingCommas],
                        options: options)
     }
 
     func testSpaceAroundEnumValuesInArray() {
         let input = "[\n    .foo,\n    .bar, .baz,\n]"
         let options = FormatOptions(wrapCollections: .beforeFirst)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, rule: .wrapArguments, options: options)
     }
 
     // MARK: beforeFirst maxWidth
@@ -2631,7 +2631,7 @@ class WrappingTests: RulesTests {
         """
         let options = FormatOptions(wrapCollections: .beforeFirst, maxWidth: 26)
         testFormatting(for: input, [input, output2],
-                       rules: [FormatRules.wrapArguments], options: options)
+                       rules: [.wrapArguments], options: options)
     }
 
     // MARK: afterFirst
@@ -2640,13 +2640,13 @@ class WrappingTests: RulesTests {
         let input = "[\n    .foo,\n    .bar,\n    .baz,\n]"
         let output = "[.foo,\n .bar,\n .baz]"
         let options = FormatOptions(wrapCollections: .afterFirst)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
     func testNoRemoveLinebreakAfterCommentInElements() {
         let input = "[a, // comment\n]"
         let options = FormatOptions(wrapCollections: .afterFirst)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, rule: .wrapArguments, options: options)
     }
 
     func testWrapCollectionsConsecutiveCodeCommentsNotIndented() {
@@ -2657,7 +2657,7 @@ class WrappingTests: RulesTests {
                  quux]
         """
         let options = FormatOptions(wrapCollections: .afterFirst)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, rule: .wrapArguments, options: options)
     }
 
     func testWrapCollectionsConsecutiveCodeCommentsNotIndentedInWrapBeforeFirst() {
@@ -2670,7 +2670,7 @@ class WrappingTests: RulesTests {
         ]
         """
         let options = FormatOptions(wrapCollections: .beforeFirst)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, rule: .wrapArguments, options: options)
     }
 
     // MARK: preserve
@@ -2679,7 +2679,7 @@ class WrappingTests: RulesTests {
         let input = "[foo: [bar: baz,\n    bar2: baz2]]"
         let output = "[foo: [bar: baz,\n       bar2: baz2]]"
         let options = FormatOptions(trailingCommas: true, wrapCollections: .preserve)
-        testFormatting(for: input, [output], rules: [FormatRules.wrapArguments, FormatRules.trailingCommas],
+        testFormatting(for: input, [output], rules: [.wrapArguments, .trailingCommas],
                        options: options)
     }
 
@@ -2687,7 +2687,7 @@ class WrappingTests: RulesTests {
         let input = "[\n    foo: [bar: baz, bar2: baz2]]"
         let output = "[\n    foo: [bar: baz, bar2: baz2],\n]"
         let options = FormatOptions(trailingCommas: true, wrapCollections: .preserve)
-        testFormatting(for: input, [output], rules: [FormatRules.wrapArguments, FormatRules.trailingCommas],
+        testFormatting(for: input, [output], rules: [.wrapArguments, .trailingCommas],
                        options: options)
     }
 
@@ -2695,7 +2695,7 @@ class WrappingTests: RulesTests {
         let input = "[\n    foo: [bar: baz]]"
         let output = "[\n    foo: [bar: baz],\n]"
         let options = FormatOptions(trailingCommas: true, wrapCollections: .preserve)
-        testFormatting(for: input, [output], rules: [FormatRules.wrapArguments, FormatRules.trailingCommas],
+        testFormatting(for: input, [output], rules: [.wrapArguments, .trailingCommas],
                        options: options)
     }
 
@@ -2717,7 +2717,7 @@ class WrappingTests: RulesTests {
                                     wrapCollections: .beforeFirst,
                                     maxWidth: 26)
         testFormatting(for: input, [output],
-                       rules: [FormatRules.wrapArguments], options: options)
+                       rules: [.wrapArguments], options: options)
     }
 
     // MARK: afterFirst maxWidth
@@ -2734,7 +2734,7 @@ class WrappingTests: RulesTests {
                                     wrapCollections: .beforeFirst,
                                     maxWidth: 26)
         testFormatting(for: input, [output],
-                       rules: [FormatRules.wrapArguments], options: options)
+                       rules: [.wrapArguments], options: options)
     }
 
     // MARK: - wrapArguments Multiple Wraps On Same Line
@@ -2752,7 +2752,7 @@ class WrappingTests: RulesTests {
                                     wrapCollections: .afterFirst,
                                     maxWidth: 28)
         testFormatting(for: input, [output],
-                       rules: [FormatRules.wrapArguments, FormatRules.wrap], options: options)
+                       rules: [.wrapArguments, .wrap], options: options)
     }
 
     func testWrapAfterFirstWrapCollectionsBeforeFirstWhenChainedFunctionAndThenArgumentsExceedMaxWidth() {
@@ -2768,7 +2768,7 @@ class WrappingTests: RulesTests {
                                     wrapCollections: .beforeFirst,
                                     maxWidth: 28)
         testFormatting(for: input, [output],
-                       rules: [FormatRules.wrapArguments, FormatRules.wrap], options: options)
+                       rules: [.wrapArguments, .wrap], options: options)
     }
 
     func testNoMangleNestedFunctionCalls() {
@@ -2796,7 +2796,7 @@ class WrappingTests: RulesTests {
         """
         let options = FormatOptions(wrapArguments: .beforeFirst, maxWidth: 40)
         testFormatting(for: input, [output],
-                       rules: [FormatRules.wrapArguments, FormatRules.wrap], options: options)
+                       rules: [.wrapArguments, .wrap], options: options)
     }
 
     func testWrapArguments_typealias_beforeFirst() {
@@ -2813,7 +2813,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(wrapTypealiases: .beforeFirst, maxWidth: 40)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options, exclude: ["sortTypealiases"])
+        testFormatting(for: input, output, rule: .wrapArguments, options: options, exclude: ["sortTypealiases"])
     }
 
     func testWrapArguments_multipleTypealiases_beforeFirst() {
@@ -2836,7 +2836,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(wrapTypealiases: .beforeFirst, maxWidth: 45)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options, exclude: ["sortTypealiases"])
+        testFormatting(for: input, output, rule: .wrapArguments, options: options, exclude: ["sortTypealiases"])
     }
 
     func testWrapArguments_typealias_afterFirst() {
@@ -2852,7 +2852,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(wrapTypealiases: .afterFirst, maxWidth: 40)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options, exclude: ["sortTypealiases"])
+        testFormatting(for: input, output, rule: .wrapArguments, options: options, exclude: ["sortTypealiases"])
     }
 
     func testWrapArguments_multipleTypealiases_afterFirst() {
@@ -2873,7 +2873,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(wrapTypealiases: .afterFirst, maxWidth: 45)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options, exclude: ["sortTypealiases"])
+        testFormatting(for: input, output, rule: .wrapArguments, options: options, exclude: ["sortTypealiases"])
     }
 
     func testWrapArguments_typealias_shorterThanMaxWidth() {
@@ -2882,7 +2882,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(wrapTypealiases: .afterFirst, maxWidth: 100)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options, exclude: ["sortTypealiases"])
+        testFormatting(for: input, rule: .wrapArguments, options: options, exclude: ["sortTypealiases"])
     }
 
     func testWrapArguments_typealias_shorterThanMaxWidth_butWrappedInconsistently() {
@@ -2899,7 +2899,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(wrapTypealiases: .afterFirst, maxWidth: 200)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options, exclude: ["sortTypealiases"])
+        testFormatting(for: input, output, rule: .wrapArguments, options: options, exclude: ["sortTypealiases"])
     }
 
     func testWrapArguments_typealias_shorterThanMaxWidth_butWrappedInconsistently2() {
@@ -2921,7 +2921,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(wrapTypealiases: .beforeFirst, maxWidth: 200)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options, exclude: ["sortTypealiases"])
+        testFormatting(for: input, output, rule: .wrapArguments, options: options, exclude: ["sortTypealiases"])
     }
 
     func testWrapArguments_typealias_shorterThanMaxWidth_butWrappedInconsistently3() {
@@ -2939,7 +2939,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(wrapTypealiases: .afterFirst, maxWidth: 200)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options, exclude: ["sortTypealiases"])
+        testFormatting(for: input, output, rule: .wrapArguments, options: options, exclude: ["sortTypealiases"])
     }
 
     func testWrapArguments_typealias_shorterThanMaxWidth_butWrappedInconsistently4() {
@@ -2959,7 +2959,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(wrapTypealiases: .afterFirst, maxWidth: 200)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options, exclude: ["sortTypealiases"])
+        testFormatting(for: input, output, rule: .wrapArguments, options: options, exclude: ["sortTypealiases"])
     }
 
     func testWrapArguments_typealias_shorterThanMaxWidth_butWrappedInconsistentlyWithComment() {
@@ -2979,7 +2979,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(wrapTypealiases: .beforeFirst, maxWidth: 200)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options, exclude: ["sortTypealiases"])
+        testFormatting(for: input, output, rule: .wrapArguments, options: options, exclude: ["sortTypealiases"])
     }
 
     func testWrapArguments_typealias_singleTypePreserved() {
@@ -2988,7 +2988,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(wrapTypealiases: .beforeFirst, maxWidth: 10)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options, exclude: ["wrap"])
+        testFormatting(for: input, rule: .wrapArguments, options: options, exclude: ["wrap"])
     }
 
     func testWrapArguments_typealias_preservesCommentsBetweenTypes() {
@@ -3003,7 +3003,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(wrapTypealiases: .beforeFirst, maxWidth: 100)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options, exclude: ["sortTypealiases"])
+        testFormatting(for: input, rule: .wrapArguments, options: options, exclude: ["sortTypealiases"])
     }
 
     func testWrapArguments_typealias_preservesCommentsAfterTypes() {
@@ -3015,7 +3015,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(wrapTypealiases: .beforeFirst, maxWidth: 100)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options, exclude: ["sortTypealiases"])
+        testFormatting(for: input, rule: .wrapArguments, options: options, exclude: ["sortTypealiases"])
     }
 
     func testWrapArguments_typealias_withAssociatedType() {
@@ -3032,7 +3032,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(wrapTypealiases: .beforeFirst, maxWidth: 50)
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options, exclude: ["sortTypealiases"])
+        testFormatting(for: input, output, rule: .wrapArguments, options: options, exclude: ["sortTypealiases"])
     }
 
     // MARK: - -return wrap-if-multiline
@@ -3057,7 +3057,7 @@ class WrappingTests: RulesTests {
             wrapReturnType: .ifMultiline
         )
 
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
     func testWrapReturnAndEffectOnMultilineFunctionDeclaration() {
@@ -3081,7 +3081,7 @@ class WrappingTests: RulesTests {
             wrapEffects: .ifMultiline
         )
 
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
     func testDoesntWrapReturnAndEffectOnSingleLineFunctionDeclaration() {
@@ -3096,7 +3096,7 @@ class WrappingTests: RulesTests {
             wrapEffects: .ifMultiline
         )
 
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, rule: .wrapArguments, options: options)
     }
 
     func testDoesntWrapReturnAndTypedEffectOnSingleLineFunctionDeclaration() {
@@ -3111,7 +3111,7 @@ class WrappingTests: RulesTests {
             wrapEffects: .ifMultiline
         )
 
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, rule: .wrapArguments, options: options)
     }
 
     func testWrapEffectOnMultilineFunctionDeclaration() {
@@ -3136,7 +3136,7 @@ class WrappingTests: RulesTests {
             wrapEffects: .ifMultiline
         )
 
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
     func testUnwrapEffectOnMultilineFunctionDeclaration() {
@@ -3161,7 +3161,7 @@ class WrappingTests: RulesTests {
             wrapEffects: .never
         )
 
-        testFormatting(for: input, output, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
     func testWrapArgumentsDoesntBreakFunctionDeclaration_issue_1776() {
@@ -3181,7 +3181,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(wrapEffects: .never)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options, exclude: ["propertyType"])
+        testFormatting(for: input, rule: .wrapArguments, options: options, exclude: ["propertyType"])
     }
 
     func testWrapEffectsNeverPreservesComments() {
@@ -3194,7 +3194,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(closingParenPosition: .sameLine, wrapEffects: .never)
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, rule: .wrapArguments, options: options)
     }
 
     func testWrapReturnOnMultilineFunctionDeclarationWithAfterFirst() {
@@ -3216,7 +3216,7 @@ class WrappingTests: RulesTests {
         )
 
         testFormatting(
-            for: input, output, rule: FormatRules.wrapArguments, options: options,
+            for: input, output, rule: .wrapArguments, options: options,
             exclude: ["indent"]
         )
     }
@@ -3240,7 +3240,7 @@ class WrappingTests: RulesTests {
         )
 
         testFormatting(
-            for: input, output, rule: FormatRules.wrapArguments, options: options,
+            for: input, output, rule: .wrapArguments, options: options,
             exclude: ["indent"]
         )
     }
@@ -3265,7 +3265,7 @@ class WrappingTests: RulesTests {
         )
 
         testFormatting(
-            for: input, output, rule: FormatRules.wrapArguments, options: options,
+            for: input, output, rule: .wrapArguments, options: options,
             exclude: ["indent"]
         )
     }
@@ -3284,7 +3284,7 @@ class WrappingTests: RulesTests {
         )
 
         testFormatting(
-            for: input, rule: FormatRules.wrapArguments, options: options,
+            for: input, rule: .wrapArguments, options: options,
             exclude: ["indent"]
         )
     }
@@ -3300,7 +3300,7 @@ class WrappingTests: RulesTests {
             wrapReturnType: .ifMultiline
         )
 
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, rule: .wrapArguments, options: options)
     }
 
     func testDoesntWrapReturnOnSingleLineFunctionDeclarationAfterMultilineArray() {
@@ -3320,7 +3320,7 @@ class WrappingTests: RulesTests {
             wrapReturnType: .ifMultiline
         )
 
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, rule: .wrapArguments, options: options)
     }
 
     func testDoesntWrapReturnOnSingleLineFunctionDeclarationAfterMultilineMethodCall() {
@@ -3342,7 +3342,7 @@ class WrappingTests: RulesTests {
             wrapReturnType: .ifMultiline
         )
 
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options, exclude: ["propertyType"])
+        testFormatting(for: input, rule: .wrapArguments, options: options, exclude: ["propertyType"])
     }
 
     func testPreserveReturnOnMultilineFunctionDeclarationByDefault() {
@@ -3358,7 +3358,7 @@ class WrappingTests: RulesTests {
             closingParenPosition: .sameLine
         )
 
-        testFormatting(for: input, rule: FormatRules.wrapArguments, options: options)
+        testFormatting(for: input, rule: .wrapArguments, options: options)
     }
 
     // MARK: wrapMultilineStatementBraces
@@ -3377,7 +3377,7 @@ class WrappingTests: RulesTests {
             print("statement body")
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.wrapMultilineStatementBraces)
+        testFormatting(for: input, output, rule: .wrapMultilineStatementBraces)
     }
 
     func testMultilineFuncBraceOnNextLine() {
@@ -3396,7 +3396,7 @@ class WrappingTests: RulesTests {
             print("function body")
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.wrapMultilineStatementBraces,
+        testFormatting(for: input, output, rule: .wrapMultilineStatementBraces,
                        exclude: ["wrapArguments", "unusedArguments"])
     }
 
@@ -3414,7 +3414,7 @@ class WrappingTests: RulesTests {
             print("function body")
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.wrapMultilineStatementBraces,
+        testFormatting(for: input, output, rule: .wrapMultilineStatementBraces,
                        exclude: ["wrapArguments", "unusedArguments"])
     }
 
@@ -3432,7 +3432,7 @@ class WrappingTests: RulesTests {
             print(foo)
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.wrapMultilineStatementBraces)
+        testFormatting(for: input, output, rule: .wrapMultilineStatementBraces)
     }
 
     func testMultilineForLoopBraceOnNextLine2() {
@@ -3444,7 +3444,7 @@ class WrappingTests: RulesTests {
             print(foo)
         }
         """
-        testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces)
+        testFormatting(for: input, rule: .wrapMultilineStatementBraces)
     }
 
     func testMultilineForWhereLoopBraceOnNextLine() {
@@ -3461,7 +3461,7 @@ class WrappingTests: RulesTests {
             print(foo)
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.wrapMultilineStatementBraces)
+        testFormatting(for: input, output, rule: .wrapMultilineStatementBraces)
     }
 
     func testMultilineGuardBraceOnNextLine() {
@@ -3478,7 +3478,7 @@ class WrappingTests: RulesTests {
             print("statement body")
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.wrapMultilineStatementBraces,
+        testFormatting(for: input, output, rule: .wrapMultilineStatementBraces,
                        exclude: ["braces", "elseOnSameLine"])
     }
 
@@ -3500,7 +3500,7 @@ class WrappingTests: RulesTests {
             }
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.wrapMultilineStatementBraces)
+        testFormatting(for: input, output, rule: .wrapMultilineStatementBraces)
     }
 
     func testMultilineIfBraceOnSameLine() {
@@ -3512,7 +3512,7 @@ class WrappingTests: RulesTests {
             print("statement body")
         }
         """
-        testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces, exclude: ["propertyType"])
+        testFormatting(for: input, rule: .wrapMultilineStatementBraces, exclude: ["propertyType"])
     }
 
     func testSingleLineIfBraceOnSameLine() {
@@ -3521,7 +3521,7 @@ class WrappingTests: RulesTests {
             print("statement body")
         }
         """
-        testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces)
+        testFormatting(for: input, rule: .wrapMultilineStatementBraces)
     }
 
     func testSingleLineGuardBrace() {
@@ -3530,7 +3530,7 @@ class WrappingTests: RulesTests {
             print("statement body")
         }
         """
-        testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces)
+        testFormatting(for: input, rule: .wrapMultilineStatementBraces)
     }
 
     func testGuardElseOnOwnLineBraceNotWrapped() {
@@ -3541,7 +3541,7 @@ class WrappingTests: RulesTests {
             print("statement body")
         }
         """
-        testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces)
+        testFormatting(for: input, rule: .wrapMultilineStatementBraces)
     }
 
     func testMultilineGuardClosingBraceOnSameLine() {
@@ -3549,7 +3549,7 @@ class WrappingTests: RulesTests {
         guard let foo = bar,
               let baz = quux else { return }
         """
-        testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces,
+        testFormatting(for: input, rule: .wrapMultilineStatementBraces,
                        exclude: ["wrapConditionalBodies"])
     }
 
@@ -3561,7 +3561,7 @@ class WrappingTests: RulesTests {
             return
         }
         """
-        testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces)
+        testFormatting(for: input, rule: .wrapMultilineStatementBraces)
     }
 
     func testMultilineClassBrace() {
@@ -3572,7 +3572,7 @@ class WrappingTests: RulesTests {
             init() {}
         }
         """
-        testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces)
+        testFormatting(for: input, rule: .wrapMultilineStatementBraces)
     }
 
     func testMultilineClassBraceNotAppliedForXcodeIndentationMode() {
@@ -3583,7 +3583,7 @@ class WrappingTests: RulesTests {
         }
         """
         let options = FormatOptions(xcodeIndentation: true)
-        testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces, options: options)
+        testFormatting(for: input, rule: .wrapMultilineStatementBraces, options: options)
     }
 
     func testMultilineBraceAppliedToTrailingClosure_wrapBeforeFirst() {
@@ -3608,7 +3608,7 @@ class WrappingTests: RulesTests {
             wrapArguments: .beforeFirst,
             closingParenPosition: .sameLine
         )
-        testFormatting(for: input, output, rule: FormatRules.wrapMultilineStatementBraces,
+        testFormatting(for: input, output, rule: .wrapMultilineStatementBraces,
                        options: options, exclude: ["indent"])
     }
 
@@ -3637,8 +3637,8 @@ class WrappingTests: RulesTests {
             closingParenPosition: .sameLine
         )
         testFormatting(for: input, [output], rules: [
-            FormatRules.wrapMultilineStatementBraces,
-            .indent, FormatRules.braces,
+            .wrapMultilineStatementBraces,
+            .indent, .braces,
         ], options: options)
     }
 
@@ -3665,7 +3665,7 @@ class WrappingTests: RulesTests {
             closingParenPosition: .sameLine
         )
         testFormatting(for: input, [output], rules: [
-            FormatRules.wrapMultilineStatementBraces,
+            .wrapMultilineStatementBraces,
             .indent,
         ], options: options, exclude: ["propertyType"])
     }
@@ -3690,7 +3690,7 @@ class WrappingTests: RulesTests {
             wrapArguments: .afterFirst,
             closingParenPosition: .sameLine
         )
-        testFormatting(for: input, output, rule: FormatRules.wrapMultilineStatementBraces,
+        testFormatting(for: input, output, rule: .wrapMultilineStatementBraces,
                        options: options, exclude: ["indent"])
     }
 
@@ -3708,8 +3708,8 @@ class WrappingTests: RulesTests {
             closingParenPosition: .sameLine
         )
         testFormatting(for: input, [], rules: [
-            FormatRules.wrapMultilineStatementBraces,
-            FormatRules.wrapArguments,
+            .wrapMultilineStatementBraces,
+            .wrapArguments,
         ], options: options, exclude: ["propertyType"])
     }
 
@@ -3727,7 +3727,7 @@ class WrappingTests: RulesTests {
             wrapArguments: .beforeFirst,
             closingParenPosition: .sameLine
         )
-        testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces,
+        testFormatting(for: input, rule: .wrapMultilineStatementBraces,
                        options: options, exclude: ["trailingClosures"])
     }
 
@@ -3757,8 +3757,8 @@ class WrappingTests: RulesTests {
             wrapEffects: .ifMultiline
         )
         testFormatting(for: input, [output], rules: [
-            FormatRules.wrapMultilineStatementBraces,
-            FormatRules.wrapArguments,
+            .wrapMultilineStatementBraces,
+            .wrapArguments,
         ], options: options)
     }
 
@@ -3788,8 +3788,8 @@ class WrappingTests: RulesTests {
             wrapEffects: .ifMultiline
         )
         testFormatting(for: input, [output], rules: [
-            FormatRules.wrapMultilineStatementBraces,
-            FormatRules.wrapArguments,
+            .wrapMultilineStatementBraces,
+            .wrapArguments,
         ], options: options)
     }
 
@@ -3819,8 +3819,8 @@ class WrappingTests: RulesTests {
             wrapEffects: .ifMultiline
         )
         testFormatting(for: input, [output], rules: [
-            FormatRules.wrapMultilineStatementBraces,
-            FormatRules.wrapArguments,
+            .wrapMultilineStatementBraces,
+            .wrapArguments,
         ], options: options)
     }
 
@@ -3850,8 +3850,8 @@ class WrappingTests: RulesTests {
             wrapEffects: .ifMultiline
         )
         testFormatting(for: input, [output], rules: [
-            FormatRules.wrapMultilineStatementBraces,
-            FormatRules.wrapArguments,
+            .wrapMultilineStatementBraces,
+            .wrapArguments,
         ], options: options)
     }
 
@@ -3881,8 +3881,8 @@ class WrappingTests: RulesTests {
             wrapEffects: .ifMultiline
         )
         testFormatting(for: input, [output], rules: [
-            FormatRules.wrapMultilineStatementBraces,
-            FormatRules.wrapArguments,
+            .wrapMultilineStatementBraces,
+            .wrapArguments,
         ], options: options)
     }
 
@@ -3909,8 +3909,8 @@ class WrappingTests: RulesTests {
             closingParenPosition: .balanced
         )
         testFormatting(for: input, [output], rules: [
-            FormatRules.wrapMultilineStatementBraces,
-            FormatRules.wrapArguments,
+            .wrapMultilineStatementBraces,
+            .wrapArguments,
         ], options: options)
     }
 
@@ -3938,8 +3938,8 @@ class WrappingTests: RulesTests {
             wrapEffects: .never
         )
         testFormatting(for: input, [output], rules: [
-            FormatRules.wrapMultilineStatementBraces,
-            FormatRules.wrapArguments,
+            .wrapMultilineStatementBraces,
+            .wrapArguments,
         ], options: options)
     }
 
@@ -3967,8 +3967,8 @@ class WrappingTests: RulesTests {
             wrapEffects: .never
         )
         testFormatting(for: input, [output], rules: [
-            FormatRules.wrapMultilineStatementBraces,
-            FormatRules.wrapArguments,
+            .wrapMultilineStatementBraces,
+            .wrapArguments,
         ], options: options)
     }
 
@@ -3989,8 +3989,8 @@ class WrappingTests: RulesTests {
         )
 
         testFormatting(for: input, [], rules: [
-            FormatRules.wrapMultilineStatementBraces,
-            FormatRules.wrapArguments,
+            .wrapMultilineStatementBraces,
+            .wrapArguments,
         ], options: options)
     }
 
@@ -4018,8 +4018,8 @@ class WrappingTests: RulesTests {
             closingParenPosition: .sameLine
         )
         testFormatting(for: input, [output], rules: [
-            FormatRules.wrapMultilineStatementBraces,
-            FormatRules.wrapArguments,
+            .wrapMultilineStatementBraces,
+            .wrapArguments,
         ], options: options)
     }
 
@@ -4035,7 +4035,7 @@ class WrappingTests: RulesTests {
             wrapArguments: .beforeFirst,
             closingParenPosition: .sameLine
         )
-        testFormatting(for: input, rule: FormatRules.wrapMultilineStatementBraces,
+        testFormatting(for: input, rule: .wrapMultilineStatementBraces,
                        options: options, exclude: ["trailingClosures"])
     }
 
@@ -4053,7 +4053,7 @@ class WrappingTests: RulesTests {
             wrapArguments: .beforeFirst,
             closingParenPosition: .sameLine
         )
-        testFormatting(for: input, rules: [FormatRules.wrapMultilineStatementBraces, FormatRules.wrap],
+        testFormatting(for: input, rules: [.wrapMultilineStatementBraces, .wrap],
                        options: options, exclude: ["indent", "redundantClosure", "wrapConditionalBodies"])
     }
 
@@ -4084,7 +4084,7 @@ class WrappingTests: RulesTests {
         {}
         """
         testFormatting(
-            for: input, rules: [FormatRules.wrapArguments, .indent],
+            for: input, rules: [.wrapArguments, .indent],
             options: FormatOptions(closingParenPosition: .sameLine, wrapConditions: .beforeFirst),
             exclude: ["propertyType"]
         )
@@ -4128,7 +4128,7 @@ class WrappingTests: RulesTests {
           let bar = bar {}
         """
         testFormatting(
-            for: input, output, rule: FormatRules.wrapArguments,
+            for: input, output, rule: .wrapArguments,
             options: FormatOptions(indent: "  ", wrapConditions: .beforeFirst),
             exclude: ["wrapConditionalBodies"]
         )
@@ -4151,7 +4151,7 @@ class WrappingTests: RulesTests {
         else {}
         """
         testFormatting(
-            for: input, rule: FormatRules.wrapArguments,
+            for: input, rule: .wrapArguments,
             options: FormatOptions(indent: "  ", wrapConditions: .beforeFirst),
             exclude: ["elseOnSameLine", "wrapConditionalBodies"]
         )
@@ -4199,7 +4199,7 @@ class WrappingTests: RulesTests {
               let bar = bar {}
         """
         testFormatting(
-            for: input, output, rule: FormatRules.wrapArguments,
+            for: input, output, rule: .wrapArguments,
             options: FormatOptions(indent: "  ", wrapConditions: .afterFirst),
             exclude: ["wrapConditionalBodies"]
         )
@@ -4242,7 +4242,7 @@ class WrappingTests: RulesTests {
         else { return }
         """
         testFormatting(
-            for: input, [output], rules: [FormatRules.wrapArguments, .indent],
+            for: input, [output], rules: [.wrapArguments, .indent],
             options: FormatOptions(wrapConditions: .afterFirst),
             exclude: ["wrapConditionalBodies"]
         )
@@ -4265,7 +4265,7 @@ class WrappingTests: RulesTests {
         testFormatting(
             for: input,
             [output],
-            rules: [FormatRules.wrapArguments],
+            rules: [.wrapArguments],
             options: FormatOptions(indent: "  ", conditionsWrap: .auto, maxWidth: 40)
         )
     }
@@ -4276,7 +4276,7 @@ class WrappingTests: RulesTests {
         """
         testFormatting(
             for: input,
-            rules: [FormatRules.wrapArguments],
+            rules: [.wrapArguments],
             options: FormatOptions(indent: "  ", conditionsWrap: .auto, maxWidth: 120)
         )
     }
@@ -4297,7 +4297,7 @@ class WrappingTests: RulesTests {
         testFormatting(
             for: input,
             [output],
-            rules: [FormatRules.wrapArguments, .indent],
+            rules: [.wrapArguments, .indent],
             options: FormatOptions(indent: "  ", conditionsWrap: .auto, maxWidth: 40)
         )
     }
@@ -4332,7 +4332,7 @@ class WrappingTests: RulesTests {
         testFormatting(
             for: input,
             [output],
-            rules: [FormatRules.wrapArguments],
+            rules: [.wrapArguments],
             options: FormatOptions(indent: "  ", conditionsWrap: .auto, maxWidth: 40)
         )
     }
@@ -4353,7 +4353,7 @@ class WrappingTests: RulesTests {
         testFormatting(
             for: input,
             [output],
-            rules: [FormatRules.wrapArguments],
+            rules: [.wrapArguments],
             options: FormatOptions(indent: "  ", conditionsWrap: .auto, maxWidth: 40)
         )
     }
@@ -4383,7 +4383,7 @@ class WrappingTests: RulesTests {
         testFormatting(
             for: input,
             [output],
-            rules: [FormatRules.wrapArguments],
+            rules: [.wrapArguments],
             options: FormatOptions(indent: "  ", conditionsWrap: .auto, maxWidth: 40)
         )
     }
@@ -4423,7 +4423,7 @@ class WrappingTests: RulesTests {
         testFormatting(
             for: input,
             [output],
-            rules: [FormatRules.wrapArguments],
+            rules: [.wrapArguments],
             options: FormatOptions(indent: "    ", conditionsWrap: .auto, maxWidth: 120)
         )
     }
@@ -4461,7 +4461,7 @@ class WrappingTests: RulesTests {
         testFormatting(
             for: input,
             [output],
-            rules: [FormatRules.wrapArguments],
+            rules: [.wrapArguments],
             options: FormatOptions(indent: "    ", conditionsWrap: .auto, maxWidth: 120),
             exclude: ["wrapMultilineStatementBraces"]
         )
@@ -4481,7 +4481,7 @@ class WrappingTests: RulesTests {
         testFormatting(
             for: input,
             [output],
-            rules: [FormatRules.wrapArguments, .indent],
+            rules: [.wrapArguments, .indent],
             options: FormatOptions(indent: "  ", conditionsWrap: .auto, maxWidth: 25)
         )
     }
@@ -4501,7 +4501,7 @@ class WrappingTests: RulesTests {
         testFormatting(
             for: input,
             [output],
-            rules: [FormatRules.wrapArguments, .indent],
+            rules: [.wrapArguments, .indent],
             options: FormatOptions(indent: "  ", conditionsWrap: .auto, maxWidth: 25)
         )
     }
@@ -4523,7 +4523,7 @@ class WrappingTests: RulesTests {
         testFormatting(
             for: input,
             [output],
-            rules: [FormatRules.wrapArguments],
+            rules: [.wrapArguments],
             options: FormatOptions(indent: "  ", conditionsWrap: .always, maxWidth: 120)
         )
     }
@@ -4535,14 +4535,14 @@ class WrappingTests: RulesTests {
         @objc
         func foo() {}
         """
-        testFormatting(for: input, rule: FormatRules.wrapAttributes)
+        testFormatting(for: input, rule: .wrapAttributes)
     }
 
     func testPreserveUnwrappedFuncAttributeByDefault() {
         let input = """
         @objc func foo() {}
         """
-        testFormatting(for: input, rule: FormatRules.wrapAttributes)
+        testFormatting(for: input, rule: .wrapAttributes)
     }
 
     func testWrapFuncAttribute() {
@@ -4554,7 +4554,7 @@ class WrappingTests: RulesTests {
         func foo() {}
         """
         let options = FormatOptions(funcAttributes: .prevLine)
-        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(for: input, output, rule: .wrapAttributes, options: options)
     }
 
     func testWrapInitAttribute() {
@@ -4566,7 +4566,7 @@ class WrappingTests: RulesTests {
         init() {}
         """
         let options = FormatOptions(funcAttributes: .prevLine)
-        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(for: input, output, rule: .wrapAttributes, options: options)
     }
 
     func testMultipleAttributesNotSeparated() {
@@ -4578,7 +4578,7 @@ class WrappingTests: RulesTests {
         func foo {}
         """
         let options = FormatOptions(funcAttributes: .prevLine)
-        testFormatting(for: input, output, rule: FormatRules.wrapAttributes,
+        testFormatting(for: input, output, rule: .wrapAttributes,
                        options: options, exclude: ["redundantObjc"])
     }
 
@@ -4588,7 +4588,7 @@ class WrappingTests: RulesTests {
         func foo() {}
         """
         let options = FormatOptions(funcAttributes: .prevLine)
-        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(for: input, rule: .wrapAttributes, options: options)
     }
 
     func testUnwrapFuncAttribute() {
@@ -4600,7 +4600,7 @@ class WrappingTests: RulesTests {
         @available(iOS 14.0, *) func foo() {}
         """
         let options = FormatOptions(funcAttributes: .sameLine)
-        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(for: input, output, rule: .wrapAttributes, options: options)
     }
 
     func testUnwrapFuncAttribute2() {
@@ -4620,7 +4620,7 @@ class WrappingTests: RulesTests {
         }
         """
         let options = FormatOptions(funcAttributes: .sameLine)
-        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(for: input, output, rule: .wrapAttributes, options: options)
     }
 
     func testFuncAttributeStaysUnwrapped() {
@@ -4628,7 +4628,7 @@ class WrappingTests: RulesTests {
         @objc func foo() {}
         """
         let options = FormatOptions(funcAttributes: .sameLine)
-        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(for: input, rule: .wrapAttributes, options: options)
     }
 
     func testVarAttributeIsNotWrapped() {
@@ -4639,7 +4639,7 @@ class WrappingTests: RulesTests {
         func foo() {}
         """
         let options = FormatOptions(funcAttributes: .prevLine)
-        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(for: input, rule: .wrapAttributes, options: options)
     }
 
     func testWrapTypeAttribute() {
@@ -4654,7 +4654,7 @@ class WrappingTests: RulesTests {
         testFormatting(
             for: input,
             output,
-            rule: FormatRules.wrapAttributes,
+            rule: .wrapAttributes,
             options: options
         )
     }
@@ -4671,7 +4671,7 @@ class WrappingTests: RulesTests {
         testFormatting(
             for: input,
             output,
-            rule: FormatRules.wrapAttributes,
+            rule: .wrapAttributes,
             options: options
         )
     }
@@ -4682,7 +4682,7 @@ class WrappingTests: RulesTests {
         struct Foo {}
         """
         let options = FormatOptions(typeAttributes: .prevLine)
-        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(for: input, rule: .wrapAttributes, options: options)
     }
 
     func testUnwrapTypeAttribute() {
@@ -4694,7 +4694,7 @@ class WrappingTests: RulesTests {
         @available(iOS 14.0, *) enum Foo {}
         """
         let options = FormatOptions(typeAttributes: .sameLine)
-        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(for: input, output, rule: .wrapAttributes, options: options)
     }
 
     func testTypeAttributeStaysUnwrapped() {
@@ -4702,7 +4702,7 @@ class WrappingTests: RulesTests {
         @objc class Foo {}
         """
         let options = FormatOptions(typeAttributes: .sameLine)
-        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(for: input, rule: .wrapAttributes, options: options)
     }
 
     func testTestableImportIsNotWrapped() {
@@ -4713,7 +4713,7 @@ class WrappingTests: RulesTests {
         class Foo {}
         """
         let options = FormatOptions(typeAttributes: .prevLine)
-        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(for: input, rule: .wrapAttributes, options: options)
     }
 
     func testModifiersDontAffectAttributeWrapping() {
@@ -4725,7 +4725,7 @@ class WrappingTests: RulesTests {
         override public func foo {}
         """
         let options = FormatOptions(funcAttributes: .prevLine)
-        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(for: input, output, rule: .wrapAttributes, options: options)
     }
 
     func testClassFuncAttributeTreatedAsFunction() {
@@ -4737,7 +4737,7 @@ class WrappingTests: RulesTests {
         class func foo {}
         """
         let options = FormatOptions(funcAttributes: .prevLine, fragment: true)
-        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(for: input, output, rule: .wrapAttributes, options: options)
     }
 
     func testClassFuncAttributeNotTreatedAsType() {
@@ -4745,7 +4745,7 @@ class WrappingTests: RulesTests {
         @objc class func foo {}
         """
         let options = FormatOptions(typeAttributes: .prevLine, fragment: true)
-        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(for: input, rule: .wrapAttributes, options: options)
     }
 
     func testClassAttributeNotMistakenForClassLet() {
@@ -4759,7 +4759,7 @@ class WrappingTests: RulesTests {
         let myClass = MyClass()
         """
         let options = FormatOptions(typeAttributes: .prevLine)
-        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options, exclude: ["propertyType"])
+        testFormatting(for: input, output, rule: .wrapAttributes, options: options, exclude: ["propertyType"])
     }
 
     func testClassImportAttributeNotTreatedAsType() {
@@ -4767,7 +4767,7 @@ class WrappingTests: RulesTests {
         @testable import class Framework.Foo
         """
         let options = FormatOptions(typeAttributes: .prevLine)
-        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(for: input, rule: .wrapAttributes, options: options)
     }
 
     func testWrapPrivateSetComputedVarAttributes() {
@@ -4779,7 +4779,7 @@ class WrappingTests: RulesTests {
         private(set) dynamic var foo = Foo()
         """
         let options = FormatOptions(storedVarAttributes: .prevLine, computedVarAttributes: .prevLine)
-        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options, exclude: ["propertyType"])
+        testFormatting(for: input, output, rule: .wrapAttributes, options: options, exclude: ["propertyType"])
     }
 
     func testWrapPrivateSetVarAttributes() {
@@ -4791,7 +4791,7 @@ class WrappingTests: RulesTests {
         private(set) dynamic var foo = Foo()
         """
         let options = FormatOptions(varAttributes: .prevLine)
-        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options, exclude: ["propertyType"])
+        testFormatting(for: input, output, rule: .wrapAttributes, options: options, exclude: ["propertyType"])
     }
 
     func testDontWrapPrivateSetVarAttributes() {
@@ -4803,7 +4803,7 @@ class WrappingTests: RulesTests {
         @objc private(set) dynamic var foo = Foo()
         """
         let options = FormatOptions(varAttributes: .prevLine, storedVarAttributes: .sameLine)
-        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options, exclude: ["propertyType"])
+        testFormatting(for: input, output, rule: .wrapAttributes, options: options, exclude: ["propertyType"])
     }
 
     func testWrapConvenienceInitAttribute() {
@@ -4815,7 +4815,7 @@ class WrappingTests: RulesTests {
         public convenience init() {}
         """
         let options = FormatOptions(funcAttributes: .prevLine)
-        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(for: input, output, rule: .wrapAttributes, options: options)
     }
 
     func testWrapPropertyWrapperAttributeVarAttributes() {
@@ -4827,7 +4827,7 @@ class WrappingTests: RulesTests {
         var foo: Int
         """
         let options = FormatOptions(varAttributes: .prevLine)
-        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(for: input, output, rule: .wrapAttributes, options: options)
     }
 
     func testWrapPropertyWrapperAttribute() {
@@ -4839,7 +4839,7 @@ class WrappingTests: RulesTests {
         var foo: Int
         """
         let options = FormatOptions(storedVarAttributes: .prevLine, computedVarAttributes: .prevLine)
-        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(for: input, output, rule: .wrapAttributes, options: options)
     }
 
     func testDontWrapPropertyWrapperAttribute() {
@@ -4851,7 +4851,7 @@ class WrappingTests: RulesTests {
         @OuterType.Wrapper var foo: Int
         """
         let options = FormatOptions(varAttributes: .prevLine, storedVarAttributes: .sameLine)
-        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(for: input, output, rule: .wrapAttributes, options: options)
     }
 
     func testWrapGenericPropertyWrapperAttribute() {
@@ -4863,7 +4863,7 @@ class WrappingTests: RulesTests {
         var foo: WrappedType
         """
         let options = FormatOptions(storedVarAttributes: .prevLine, computedVarAttributes: .prevLine)
-        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(for: input, output, rule: .wrapAttributes, options: options)
     }
 
     func testWrapGenericPropertyWrapperAttribute2() {
@@ -4875,7 +4875,7 @@ class WrappingTests: RulesTests {
         var foo: WrappedType
         """
         let options = FormatOptions(storedVarAttributes: .prevLine, computedVarAttributes: .prevLine)
-        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(for: input, output, rule: .wrapAttributes, options: options)
     }
 
     func testAttributeOnComputedProperty() {
@@ -4889,7 +4889,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(varAttributes: .prevLine, storedVarAttributes: .sameLine)
-        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(for: input, rule: .wrapAttributes, options: options)
     }
 
     func testWrapAvailableAttributeUnderMaxWidth() {
@@ -4901,7 +4901,7 @@ class WrappingTests: RulesTests {
         @available(*, unavailable, message: "This property is deprecated.") var foo: WrappedType
         """
         let options = FormatOptions(maxWidth: 100, varAttributes: .prevLine, storedVarAttributes: .sameLine)
-        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(for: input, output, rule: .wrapAttributes, options: options)
     }
 
     func testDoesntWrapAvailableAttributeWithLongMessage() {
@@ -4919,7 +4919,7 @@ class WrappingTests: RulesTests {
         var foo: WrappedType
         """
         let options = FormatOptions(maxWidth: 100, varAttributes: .prevLine, storedVarAttributes: .sameLine)
-        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(for: input, rule: .wrapAttributes, options: options)
     }
 
     func testDoesntWrapComplexAttribute() {
@@ -4930,7 +4930,7 @@ class WrappingTests: RulesTests {
         var foo: WrappedType
         """
         let options = FormatOptions(closingParenPosition: .sameLine, varAttributes: .prevLine, storedVarAttributes: .sameLine, complexAttributes: .prevLine)
-        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(for: input, rule: .wrapAttributes, options: options)
     }
 
     func testDoesntWrapComplexMultilineAttribute() {
@@ -4939,7 +4939,7 @@ class WrappingTests: RulesTests {
         var foo: WrappedType
         """
         let options = FormatOptions(varAttributes: .prevLine, storedVarAttributes: .sameLine, complexAttributes: .prevLine)
-        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(for: input, rule: .wrapAttributes, options: options)
     }
 
     func testWrapsComplexAttribute() {
@@ -4952,7 +4952,7 @@ class WrappingTests: RulesTests {
         var foo: WrappedType
         """
         let options = FormatOptions(varAttributes: .prevLine, storedVarAttributes: .sameLine, complexAttributes: .prevLine)
-        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(for: input, output, rule: .wrapAttributes, options: options)
     }
 
     func testWrapAttributesIndentsLineCorrectly() {
@@ -4968,7 +4968,7 @@ class WrappingTests: RulesTests {
         }
         """
         let options = FormatOptions(storedVarAttributes: .prevLine, computedVarAttributes: .prevLine)
-        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options, exclude: ["propertyType"])
+        testFormatting(for: input, output, rule: .wrapAttributes, options: options, exclude: ["propertyType"])
     }
 
     func testComplexAttributesException() {
@@ -4990,7 +4990,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(varAttributes: .sameLine, storedVarAttributes: .sameLine, computedVarAttributes: .prevLine, complexAttributes: .prevLine, complexAttributesExceptions: ["@SomeCustomAttr"])
-        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(for: input, output, rule: .wrapAttributes, options: options)
     }
 
     func testMixedComplexAndSimpleAttributes() {
@@ -5039,7 +5039,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(storedVarAttributes: .sameLine, complexAttributes: .prevLine)
-        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options, exclude: ["propertyType"])
+        testFormatting(for: input, output, rule: .wrapAttributes, options: options, exclude: ["propertyType"])
     }
 
     func testEscapingClosureNotMistakenForComplexAttribute() {
@@ -5050,7 +5050,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(complexAttributes: .prevLine)
-        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(for: input, rule: .wrapAttributes, options: options)
     }
 
     func testEscapingTypedThrowClosureNotMistakenForComplexAttribute() {
@@ -5061,7 +5061,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(complexAttributes: .prevLine)
-        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(for: input, rule: .wrapAttributes, options: options)
     }
 
     func testWrapOrDontWrapMultipleDeclarationsInClass() {
@@ -5111,7 +5111,7 @@ class WrappingTests: RulesTests {
         }
         """
         let options = FormatOptions(varAttributes: .sameLine, storedVarAttributes: .sameLine, computedVarAttributes: .prevLine, complexAttributes: .prevLine)
-        testFormatting(for: input, output, rule: FormatRules.wrapAttributes, options: options, exclude: ["propertyType"])
+        testFormatting(for: input, output, rule: .wrapAttributes, options: options, exclude: ["propertyType"])
     }
 
     func testWrapOrDontAttributesInSwiftUIView() {
@@ -5131,7 +5131,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(varAttributes: .sameLine, storedVarAttributes: .sameLine, computedVarAttributes: .prevLine)
-        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(for: input, rule: .wrapAttributes, options: options)
     }
 
     func testWrapAttributesInSwiftUIView() {
@@ -5151,7 +5151,7 @@ class WrappingTests: RulesTests {
         """
 
         let options = FormatOptions(varAttributes: .sameLine, complexAttributes: .prevLine)
-        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(for: input, rule: .wrapAttributes, options: options)
     }
 
     func testInlineMainActorAttributeNotWrapped() {
@@ -5160,7 +5160,7 @@ class WrappingTests: RulesTests {
         var bar: @MainActor (Bar) -> Void
         """
         let options = FormatOptions(storedVarAttributes: .prevLine, computedVarAttributes: .prevLine)
-        testFormatting(for: input, rule: FormatRules.wrapAttributes, options: options)
+        testFormatting(for: input, rule: .wrapAttributes, options: options)
     }
 
     // MARK: wrapEnumCases
@@ -5184,7 +5184,7 @@ class WrappingTests: RulesTests {
             case m(String, String)
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.wrapEnumCases)
+        testFormatting(for: input, output, rule: .wrapEnumCases)
     }
 
     func testMultilineEnumCasesWithNestedEnumsDoesNothing() {
@@ -5201,7 +5201,7 @@ class WrappingTests: RulesTests {
             }
         }
         """
-        testFormatting(for: input, rule: FormatRules.wrapEnumCases)
+        testFormatting(for: input, rule: .wrapEnumCases)
     }
 
     func testEnumCaseSplitOverMultipleLines() {
@@ -5222,7 +5222,7 @@ class WrappingTests: RulesTests {
             case baz
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.wrapEnumCases)
+        testFormatting(for: input, output, rule: .wrapEnumCases)
     }
 
     func testEnumCasesAlreadyWrappedOntoMultipleLines() {
@@ -5240,7 +5240,7 @@ class WrappingTests: RulesTests {
             case quux
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.wrapEnumCases)
+        testFormatting(for: input, output, rule: .wrapEnumCases)
     }
 
     func testEnumCasesIfValuesWithoutValuesDoesNothing() {
@@ -5249,7 +5249,7 @@ class WrappingTests: RulesTests {
             case bar, baz, quux
         }
         """
-        testFormatting(for: input, rule: FormatRules.wrapEnumCases,
+        testFormatting(for: input, rule: .wrapEnumCases,
                        options: FormatOptions(wrapEnumCases: .withValues))
     }
 
@@ -5277,7 +5277,7 @@ class WrappingTests: RulesTests {
         testFormatting(
             for: input,
             output,
-            rule: FormatRules.wrapEnumCases,
+            rule: .wrapEnumCases,
             options: FormatOptions(wrapEnumCases: .withValues)
         )
     }
@@ -5298,7 +5298,7 @@ class WrappingTests: RulesTests {
         testFormatting(
             for: input,
             output,
-            rule: FormatRules.wrapEnumCases,
+            rule: .wrapEnumCases,
             options: FormatOptions(wrapEnumCases: .withValues)
         )
     }
@@ -5318,12 +5318,12 @@ class WrappingTests: RulesTests {
             case quux // quux
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.wrapEnumCases)
+        testFormatting(for: input, output, rule: .wrapEnumCases)
     }
 
     func testNoWrapEnumStatementAllOnOneLine() {
         let input = "enum Foo { bar, baz }"
-        testFormatting(for: input, rule: FormatRules.wrapEnumCases)
+        testFormatting(for: input, rule: .wrapEnumCases)
     }
 
     func testNoConfuseIfCaseWithEnum() {
@@ -5342,7 +5342,7 @@ class WrappingTests: RulesTests {
             }
         }
         """
-        testFormatting(for: input, rule: FormatRules.wrapEnumCases,
+        testFormatting(for: input, rule: .wrapEnumCases,
                        exclude: ["hoistPatternLet"])
     }
 
@@ -5358,7 +5358,7 @@ class WrappingTests: RulesTests {
         case bar
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.wrapEnumCases, exclude: ["indent"])
+        testFormatting(for: input, output, rule: .wrapEnumCases, exclude: ["indent"])
     }
 
     func testNoMangleEnumCaseOnOpeningLine() {
@@ -5374,12 +5374,12 @@ class WrappingTests: RulesTests {
         case desc(String)
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.wrapEnumCases, exclude: ["indent"])
+        testFormatting(for: input, output, rule: .wrapEnumCases, exclude: ["indent"])
     }
 
     func testNoWrapSingleLineEnumCases() {
         let input = "enum Foo { case foo, bar }"
-        testFormatting(for: input, rule: FormatRules.wrapEnumCases)
+        testFormatting(for: input, rule: .wrapEnumCases)
     }
 
     // MARK: wrapSwitchCases
@@ -5407,7 +5407,7 @@ class WrappingTests: RulesTests {
             }
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.wrapSwitchCases)
+        testFormatting(for: input, output, rule: .wrapSwitchCases)
     }
 
     func testIfAfterSwitchCaseNotWrapped() {
@@ -5422,7 +5422,7 @@ class WrappingTests: RulesTests {
             throw error
         }
         """
-        testFormatting(for: input, rule: FormatRules.wrapSwitchCases)
+        testFormatting(for: input, rule: .wrapSwitchCases)
     }
 
     // MARK: wrapSingleLineComments
@@ -5437,7 +5437,7 @@ class WrappingTests: RulesTests {
         // fgh
         """
 
-        testFormatting(for: input, output, rule: FormatRules.wrapSingleLineComments,
+        testFormatting(for: input, output, rule: .wrapSingleLineComments,
                        options: FormatOptions(maxWidth: 6))
     }
 
@@ -5450,7 +5450,7 @@ class WrappingTests: RulesTests {
         // h
         """
 
-        testFormatting(for: input, output, rule: FormatRules.wrapSingleLineComments,
+        testFormatting(for: input, output, rule: .wrapSingleLineComments,
                        options: FormatOptions(maxWidth: 14))
     }
 
@@ -5459,7 +5459,7 @@ class WrappingTests: RulesTests {
         // a b cde fg h
         """
 
-        testFormatting(for: input, rule: FormatRules.wrapSingleLineComments,
+        testFormatting(for: input, rule: .wrapSingleLineComments,
                        options: FormatOptions(maxWidth: 15))
     }
 
@@ -5473,7 +5473,7 @@ class WrappingTests: RulesTests {
         //fgh
         """
 
-        testFormatting(for: input, output, rule: FormatRules.wrapSingleLineComments,
+        testFormatting(for: input, output, rule: .wrapSingleLineComments,
                        options: FormatOptions(maxWidth: 6),
                        exclude: ["spaceInsideComments"])
     }
@@ -5488,7 +5488,7 @@ class WrappingTests: RulesTests {
         /// fgh
         """
 
-        testFormatting(for: input, output, rule: FormatRules.wrapSingleLineComments,
+        testFormatting(for: input, output, rule: .wrapSingleLineComments,
                        options: FormatOptions(maxWidth: 7), exclude: ["docComments"])
     }
 
@@ -5502,7 +5502,7 @@ class WrappingTests: RulesTests {
         ///fgh
         """
 
-        testFormatting(for: input, output, rule: FormatRules.wrapSingleLineComments,
+        testFormatting(for: input, output, rule: .wrapSingleLineComments,
                        options: FormatOptions(maxWidth: 6),
                        exclude: ["spaceInsideComments", "docComments"])
     }
@@ -5522,7 +5522,7 @@ class WrappingTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, output, rule: FormatRules.wrapSingleLineComments,
+        testFormatting(for: input, output, rule: .wrapSingleLineComments,
                        options: FormatOptions(maxWidth: 14), exclude: ["docComments"])
     }
 
@@ -5540,7 +5540,7 @@ class WrappingTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, output, rule: FormatRules.wrapSingleLineComments,
+        testFormatting(for: input, output, rule: .wrapSingleLineComments,
                        options: FormatOptions(maxWidth: 29), exclude: ["wrap"])
     }
 
@@ -5549,7 +5549,7 @@ class WrappingTests: RulesTests {
         /// See [Link](https://www.domain.com/pathextension/pathextension/pathextension/pathextension/pathextension/pathextension).
         """
 
-        testFormatting(for: input, rule: FormatRules.wrapSingleLineComments,
+        testFormatting(for: input, rule: .wrapSingleLineComments,
                        options: FormatOptions(maxWidth: 100), exclude: ["docComments"])
     }
 
@@ -5558,7 +5558,7 @@ class WrappingTests: RulesTests {
         /// Link to SDK documentation - https://docs.adyen.com/checkout/3d-secure/native-3ds2/api-integration#collect-the-3d-secure-2-device-fingerprint-from-an-ios-app
         """
 
-        testFormatting(for: input, rule: FormatRules.wrapSingleLineComments,
+        testFormatting(for: input, rule: .wrapSingleLineComments,
                        options: FormatOptions(maxWidth: 80))
     }
 
@@ -5571,7 +5571,7 @@ class WrappingTests: RulesTests {
         /// http://another-very-long-url-that-wont-fit-on-one-line
         """
 
-        testFormatting(for: input, output, rule: FormatRules.wrapSingleLineComments,
+        testFormatting(for: input, output, rule: .wrapSingleLineComments,
                        options: FormatOptions(maxWidth: 40), exclude: ["docComments"])
     }
 
@@ -5595,7 +5595,7 @@ class WrappingTests: RulesTests {
             }
         """
 
-        testFormatting(for: input, [output], rules: [FormatRules.wrapMultilineConditionalAssignment, .indent])
+        testFormatting(for: input, [output], rules: [.wrapMultilineConditionalAssignment, .indent])
     }
 
     func testUnwrapsAssignmentOperatorInIfExpressionAssignment() {
@@ -5617,7 +5617,7 @@ class WrappingTests: RulesTests {
             }
         """
 
-        testFormatting(for: input, [output], rules: [FormatRules.wrapMultilineConditionalAssignment, .indent])
+        testFormatting(for: input, [output], rules: [.wrapMultilineConditionalAssignment, .indent])
     }
 
     func testUnwrapsAssignmentOperatorInIfExpressionFollowingComment() {
@@ -5643,7 +5643,7 @@ class WrappingTests: RulesTests {
             }
         """
 
-        testFormatting(for: input, [output], rules: [FormatRules.wrapMultilineConditionalAssignment, .indent])
+        testFormatting(for: input, [output], rules: [.wrapMultilineConditionalAssignment, .indent])
     }
 
     func testWrapIfAssignmentWithoutIntroducer() {
@@ -5664,7 +5664,7 @@ class WrappingTests: RulesTests {
             }
         """
 
-        testFormatting(for: input, [output], rules: [FormatRules.wrapMultilineConditionalAssignment, .indent])
+        testFormatting(for: input, [output], rules: [.wrapMultilineConditionalAssignment, .indent])
     }
 
     func testWrapSwitchAssignmentWithoutIntroducer() {
@@ -5687,7 +5687,7 @@ class WrappingTests: RulesTests {
             }
         """
 
-        testFormatting(for: input, [output], rules: [FormatRules.wrapMultilineConditionalAssignment, .indent])
+        testFormatting(for: input, [output], rules: [.wrapMultilineConditionalAssignment, .indent])
     }
 
     func testWrapSwitchAssignmentWithComplexLValue() {
@@ -5710,6 +5710,6 @@ class WrappingTests: RulesTests {
             }
         """
 
-        testFormatting(for: input, [output], rules: [FormatRules.wrapMultilineConditionalAssignment, .indent])
+        testFormatting(for: input, [output], rules: [.wrapMultilineConditionalAssignment, .indent])
     }
 }

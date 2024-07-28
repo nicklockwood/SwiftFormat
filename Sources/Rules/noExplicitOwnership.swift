@@ -6,8 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
-    public static let noExplicitOwnership = FormatRule(
+public extension FormatRule {
+    static let noExplicitOwnership = FormatRule(
         help: "Don't use explicit ownership modifiers (borrowing / consuming).",
         disabledByDefault: true
     ) { formatter in

@@ -6,16 +6,16 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Remove redundant access control level modifiers in extensions
-    public static let redundantExtensionACL = FormatRule(
+    static let redundantExtensionACL = FormatRule(
         help: "Remove redundant access control modifiers."
     ) { formatter in
         formatter.forEach(.keyword("extension")) { i, _ in
             var acl = ""
             guard formatter.modifiersForDeclaration(at: i, contains: {
                 acl = $1
-                return aclModifiers.contains(acl)
+                return _FormatRules.aclModifiers.contains(acl)
             }), let startIndex = formatter.index(of: .startOfScope("{"), after: i),
             var endIndex = formatter.index(of: .endOfScope("}"), after: startIndex) else {
                 return

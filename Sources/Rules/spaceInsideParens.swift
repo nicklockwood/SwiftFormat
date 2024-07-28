@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Remove space immediately inside parens
-    public static let spaceInsideParens = FormatRule(
+    static let spaceInsideParens = FormatRule(
         help: "Remove space inside parentheses."
     ) { formatter in
         formatter.forEach(.startOfScope("(")) { i, _ in

@@ -6,8 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
-    public static let wrapConditionalBodies = FormatRule(
+public extension FormatRule {
+    static let wrapConditionalBodies = FormatRule(
         help: "Wrap the bodies of inline conditional statements onto a new line.",
         disabledByDefault: true,
         sharedOptions: ["linebreaks", "indent"]

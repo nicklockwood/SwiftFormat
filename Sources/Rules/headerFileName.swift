@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Ensure file name reference in header matches actual file name
-    public static let headerFileName = FormatRule(
+    static let headerFileName = FormatRule(
         help: "Ensure file name in header comment matches the actual file name.",
         runOnceOnly: true,
         orderAfter: ["fileHeader"]

@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Remove redundant raw string values for case statements
-    public static let redundantRawValues = FormatRule(
+    static let redundantRawValues = FormatRule(
         help: "Remove redundant raw string values for enum cases."
     ) { formatter in
         formatter.forEach(.keyword("enum")) { i, _ in

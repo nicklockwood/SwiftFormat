@@ -28,6 +28,15 @@ private let rulesURL =
 private let rulesFile =
     try! String(contentsOf: rulesURL, encoding: .utf8)
 
+private let allRuleFiles: [URL] = {
+    var rulesFiles: [URL] = []
+    let rulesDirectory = projectDirectory.appendingPathComponent("Sources/Rules")
+    _ = enumerateFiles(withInputURL: rulesDirectory) { ruleFileURL, _, _ in
+        { rulesFiles.append(ruleFileURL) }
+    }
+    return rulesFiles
+}()
+
 private let swiftFormatVersion: String = {
     let string = try! String(contentsOf: projectURL)
     let start = string.range(of: "MARKETING_VERSION = ")!.upperBound
@@ -150,16 +159,7 @@ class MetadataTests: XCTestCase {
             optionsByProperty[descriptor.propertyName] = descriptor
         }
 
-        var rulesFiles: [URL] = [
-            projectDirectory.appendingPathComponent("Sources/Rules.swift"),
-        ]
-
-        let rulesDirectory = projectDirectory.appendingPathComponent("Sources/Rules")
-        _ = enumerateFiles(withInputURL: rulesDirectory) { ruleFileURL, _, _ in
-            { rulesFiles.append(ruleFileURL) }
-        }
-
-        for rulesFile in rulesFiles {
+        for rulesFile in allRuleFiles {
             let rulesSource = try String(contentsOf: rulesFile, encoding: .utf8)
             let tokens = tokenize(rulesSource)
             let formatter = Formatter(tokens)
@@ -311,8 +311,12 @@ class MetadataTests: XCTestCase {
     // MARK: keywords
 
     func testContextualKeywordsReferencedCorrectly() throws {
-        for file in ["Rules", "ParsingHelpers", "FormattingHelpers"] {
-            let sourceFile = projectDirectory.appendingPathComponent("Sources/\(file).swift")
+        let filesToVerify = allRuleFiles + [
+            projectDirectory.appendingPathComponent("Sources/ParsingHelpers.swift"),
+            projectDirectory.appendingPathComponent("Sources/FormattingHelpers.swift"),
+        ]
+
+        for sourceFile in filesToVerify {
             let fileSource = try String(contentsOf: sourceFile, encoding: .utf8)
             let tokens = tokenize(fileSource)
             let formatter = Formatter(tokens)
@@ -335,7 +339,7 @@ class MetadataTests: XCTestCase {
                 }
                 guard keywords.contains(keyword) || keyword.hasPrefix("#") || keyword.hasPrefix("@") else {
                     let line = formatter.originalLine(at: i)
-                    XCTFail("'\(keyword)' referenced on line \(line) of '\(file).swift' is not a valid Swift keyword. "
+                    XCTFail("'\(keyword)' referenced on line \(line) of '\(sourceFile)' is not a valid Swift keyword. "
                         + "Contextual keywords should be referenced with `.identifier(...)`")
                     return
                 }

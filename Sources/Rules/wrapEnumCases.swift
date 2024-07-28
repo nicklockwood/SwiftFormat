@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Formats enum cases declaration into one case per line
-    public static let wrapEnumCases = FormatRule(
+    static let wrapEnumCases = FormatRule(
         help: "Rewrite comma-delimited enum cases to one case per line.",
         disabledByDefault: true,
         options: ["wrapenumcases"],

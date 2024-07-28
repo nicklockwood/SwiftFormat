@@ -6,7 +6,7 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Implement the following rules with respect to the spacing around parens:
     /// * There is no space between an opening paren and the preceding identifier,
     ///   unless the identifier is one of the specified keywords
@@ -15,7 +15,7 @@ extension FormatRule {
     /// * There is space between a closing paren and following identifier
     /// * There is space between a closing paren and following opening brace
     /// * There is no space between a closing paren and following opening square bracket
-    public static let spaceAroundParens = FormatRule(
+    static let spaceAroundParens = FormatRule(
         help: "Add or remove space around parentheses."
     ) { formatter in
         func spaceAfter(_ keywordOrAttribute: String, index: Int) -> Bool {

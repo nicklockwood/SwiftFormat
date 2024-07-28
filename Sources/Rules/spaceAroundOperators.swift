@@ -6,14 +6,14 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Implement the following rules with respect to the spacing around operators:
     /// * Infix operators are separated from their operands by a space on either
     ///   side. Does not affect prefix/postfix operators, as required by syntax.
     /// * Delimiters, such as commas and colons, are consistently followed by a
     ///   single space, unless it appears at the end of a line, and is not
     ///   preceded by a space, unless it appears at the beginning of a line.
-    public static let spaceAroundOperators = FormatRule(
+    static let spaceAroundOperators = FormatRule(
         help: "Add or remove space around operators or delimiters.",
         options: ["operatorfunc", "nospaceoperators", "ranges", "typedelimiter"]
     ) { formatter in

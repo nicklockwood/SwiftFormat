@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Standardize formatting of numeric literals
-    public static let numberFormatting = FormatRule(
+    static let numberFormatting = FormatRule(
         help: """
         Use consistent grouping for numeric literals. Groups will be separated by `_`
         delimiters to improve readability. For each numeric type you can specify a group

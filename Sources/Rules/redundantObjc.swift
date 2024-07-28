@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Remove redundant @objc annotation
-    public static let redundantObjc = FormatRule(
+    static let redundantObjc = FormatRule(
         help: "Remove redundant `@objc` annotations."
     ) { formatter in
         let objcAttributes = [

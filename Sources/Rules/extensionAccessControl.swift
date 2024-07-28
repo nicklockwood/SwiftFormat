@@ -6,8 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
-    public static let extensionAccessControl = FormatRule(
+public extension FormatRule {
+    static let extensionAccessControl = FormatRule(
         help: "Configure the placement of an extension's access control keyword.",
         options: ["extensionacl"]
     ) { formatter in
@@ -116,5 +116,4 @@ extension FormatRule {
         let updatedTokens = updatedDeclarations.flatMap { $0.tokens }
         formatter.replaceTokens(in: formatter.tokens.indices, with: updatedTokens)
     }
-
 }

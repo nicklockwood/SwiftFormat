@@ -3702,10 +3702,10 @@ class IndentTests: RulesTests {
         \tquux()
         }
         """
-        let rules = [.indent, FormatRules.trailingSpace]
+        let rules: [FormatRule] = [.indent, .trailingSpace]
         let options = FormatOptions(indent: "\t", truncateBlankLines: true, tabWidth: 2)
         XCTAssertEqual(try lint(input, rules: rules, options: options), [
-            Formatter.Change(line: 3, rule: FormatRules.trailingSpace, filePath: nil),
+            Formatter.Change(line: 3, rule: .trailingSpace, filePath: nil),
         ])
     }
 

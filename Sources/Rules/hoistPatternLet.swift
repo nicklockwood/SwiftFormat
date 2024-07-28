@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Move `let` and `var` inside patterns to the beginning
-    public static let hoistPatternLet = FormatRule(
+    static let hoistPatternLet = FormatRule(
         help: "Reposition `let` or `var` bindings within pattern.",
         options: ["patternlet"]
     ) { formatter in

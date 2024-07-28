@@ -6,8 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
-    public static let hoistTry = FormatRule(
+public extension FormatRule {
+    static let hoistTry = FormatRule(
         help: "Move inline `try` keyword(s) to start of expression.",
         options: ["throwcapturing"]
     ) { formatter in

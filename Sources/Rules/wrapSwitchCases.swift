@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Writes one switch case per line
-    public static let wrapSwitchCases = FormatRule(
+    static let wrapSwitchCases = FormatRule(
         help: "Wrap comma-delimited switch cases onto multiple lines.",
         disabledByDefault: true,
         sharedOptions: ["linebreaks", "tabwidth", "indent", "smarttabs"]

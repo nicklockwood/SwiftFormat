@@ -1,14 +1,14 @@
 //
-//  redundantVoidReturnType..swift
+//  redundantVoidReturnType.swift
 //  SwiftFormat
 //
 //  Created by Cal Stephens on 7/28/24.
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Remove redundant void return values for function and closure declarations
-    public static let redundantVoidReturnType = FormatRule(
+    static let redundantVoidReturnType = FormatRule(
         help: "Remove explicit `Void` return type.",
         options: ["closurevoid"]
     ) { formatter in

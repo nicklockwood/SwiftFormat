@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Add @available(*, unavailable) to init?(coder aDecoder: NSCoder)
-    public static let initCoderUnavailable = FormatRule(
+    static let initCoderUnavailable = FormatRule(
         help: """
         Add `@available(*, unavailable)` attribute to required `init(coder:)` when
         it hasn't been implemented.

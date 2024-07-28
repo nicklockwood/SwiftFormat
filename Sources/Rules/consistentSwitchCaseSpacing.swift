@@ -6,8 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
-    public static let consistentSwitchCaseSpacing = FormatRule(
+public extension FormatRule {
+    static let consistentSwitchCaseSpacing = FormatRule(
         help: "Ensures consistent spacing among all of the cases in a switch statement.",
         orderAfter: ["blankLineAfterSwitchCase"]
     ) { formatter in
@@ -25,7 +25,7 @@ extension FormatRule {
             // When the `blankLinesBetweenChainedFunctions` rule is enabled, and there is a switch case
             // that is required to span multiple lines, then all cases must span multiple lines.
             // (Since if this rule removed the blank line from that case, it would contradict the other rule)
-            if formatter.options.enabledRules.contains(FormatRules.blankLineAfterSwitchCase.name),
+            if formatter.options.enabledRules.contains(FormatRule.blankLineAfterSwitchCase.name),
                switchCases.contains(where: { $0.spansMultipleLines && !$0.isLastCase })
             {
                 allCasesShouldHaveBlankLine = true

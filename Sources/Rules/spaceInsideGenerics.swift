@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Remove space immediately inside chevrons
-    public static let spaceInsideGenerics = FormatRule(
+    static let spaceInsideGenerics = FormatRule(
         help: "Remove space inside angle brackets."
     ) { formatter in
         formatter.forEach(.startOfScope("<")) { i, _ in

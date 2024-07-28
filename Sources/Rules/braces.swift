@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Implement brace-wrapping rules
-    public static let braces = FormatRule(
+    static let braces = FormatRule(
         help: "Wrap braces in accordance with selected style (K&R or Allman).",
         options: ["allman"],
         sharedOptions: ["linebreaks", "maxwidth", "indent", "tabwidth", "assetliterals"]
@@ -73,7 +73,7 @@ extension FormatRule {
                 }
 
                 // Avoid conflicts with wrapMultilineStatementBraces
-                let ruleName = FormatRules.wrapMultilineStatementBraces.name
+                let ruleName = FormatRule.wrapMultilineStatementBraces.name
                 if formatter.options.enabledRules.contains(ruleName),
                    formatter.shouldWrapMultilineStatementBrace(at: i)
                 {

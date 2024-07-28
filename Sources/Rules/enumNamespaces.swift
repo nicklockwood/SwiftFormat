@@ -6,14 +6,13 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-
-extension FormatRule {
+public extension FormatRule {
     /// Converts types used for hosting only static members into enums to avoid instantiation.
-    public static let enumNamespaces = FormatRule(
+    static let enumNamespaces = FormatRule(
         help: """
-    Convert types used for hosting only static members into enums (an empty enum is
-    the canonical way to create a namespace in Swift as it can't be instantiated).
-    """,
+        Convert types used for hosting only static members into enums (an empty enum is
+        the canonical way to create a namespace in Swift as it can't be instantiated).
+        """,
         options: ["enumnamespaces"]
     ) { formatter in
         formatter.forEachToken(where: { [.keyword("class"), .keyword("struct")].contains($0) }) { i, token in
@@ -48,7 +47,7 @@ extension FormatRule {
                !formatter.rangeContainsTypeInit(name, in: range), !formatter.rangeContainsSelfAssignment(range)
             {
                 formatter.replaceToken(at: i, with: .keyword("enum"))
-                
+
                 if let finalIndex = formatter.indexOfModifier("final", forDeclarationAt: i),
                    let nextIndex = formatter.index(of: .nonSpace, after: finalIndex)
                 {
@@ -65,7 +64,7 @@ private extension Formatter {
         guard next(.nonSpaceOrCommentOrLinebreak, in: range) != nil else {
             return false
         }
-        
+
         var j = range.startIndex
         while j < range.endIndex, let token = token(at: j) {
             if token == .startOfScope("{"),
@@ -80,7 +79,7 @@ private extension Formatter {
             } else if [.keyword("let"),
                        .keyword("var"),
                        .keyword("func")].contains(token),
-                      !modifiersForDeclaration(at: j, contains: "static")
+                !modifiersForDeclaration(at: j, contains: "static")
             {
                 return false
             }
@@ -88,7 +87,7 @@ private extension Formatter {
         }
         return true
     }
-    
+
     func rangeContainsTypeInit(_ type: String, in range: Range<Int>) -> Bool {
         for i in range {
             guard case let .identifier(name) = tokens[i],
@@ -98,15 +97,15 @@ private extension Formatter {
             }
             if let nextIndex = index(of: .nonSpaceOrComment, after: i),
                let nextToken = token(at: nextIndex), nextToken == .startOfScope("(") ||
-                (nextToken == .operator(".", .infix) && [.identifier("init"), .identifier("self")]
-                    .contains(next(.nonSpaceOrComment, after: nextIndex) ?? .space("")))
+               (nextToken == .operator(".", .infix) && [.identifier("init"), .identifier("self")]
+                   .contains(next(.nonSpaceOrComment, after: nextIndex) ?? .space("")))
             {
                 return true
             }
         }
         return false
     }
-    
+
     func rangeContainsSelfAssignment(_ range: Range<Int>) -> Bool {
         for i in range {
             guard case .identifier("self") = tokens[i] else {

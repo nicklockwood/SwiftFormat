@@ -6,8 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
-    public static let assertionFailures = FormatRule(
+public extension FormatRule {
+    static let assertionFailures = FormatRule(
         help: """
         Changes all instances of assert(false, ...) to assertionFailure(...)
         and precondition(false, ...) to preconditionFailure(...).

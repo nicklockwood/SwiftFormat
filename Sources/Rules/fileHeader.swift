@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Strip header comments from the file
-    public static let fileHeader = FormatRule(
+    static let fileHeader = FormatRule(
         help: "Use specified source file header template for all files.",
         runOnceOnly: true,
         options: ["header", "dateformat", "timezone"],

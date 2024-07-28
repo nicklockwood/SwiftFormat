@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Remove redundant `let error` from `catch` statements
-    public static let redundantLetError = FormatRule(
+    static let redundantLetError = FormatRule(
         help: "Remove redundant `let error` from `catch` clause."
     ) { formatter in
         formatter.forEach(.keyword("catch")) { i, _ in

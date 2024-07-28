@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Remove redundant `break` keyword from switch cases
-    public static let redundantBreak = FormatRule(
+    static let redundantBreak = FormatRule(
         help: "Remove redundant `break` in switch case."
     ) { formatter in
         formatter.forEach(.keyword("break")) { i, _ in

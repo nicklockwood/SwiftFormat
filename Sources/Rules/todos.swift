@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Ensure that TODO, MARK and FIXME comments are followed by a : as required
-    public static let todos = FormatRule(
+    static let todos = FormatRule(
         help: "Use correct formatting for `TODO:`, `MARK:` or `FIXME:` comments."
     ) { formatter in
         formatter.forEachToken { i, token in

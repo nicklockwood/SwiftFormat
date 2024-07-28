@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Insert blank line after import statements
-    public static let blankLineAfterImports = FormatRule(
+    static let blankLineAfterImports = FormatRule(
         help: """
         Insert blank line after import statements.
         """,

@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Remove redundant return keyword
-    public static let redundantReturn = FormatRule(
+    static let redundantReturn = FormatRule(
         help: "Remove unneeded `return` keyword."
     ) { formatter in
         // indices of returns that are safe to remove

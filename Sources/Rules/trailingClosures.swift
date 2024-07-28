@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Convert closure arguments to trailing closure syntax where possible
-    public static let trailingClosures = FormatRule(
+    static let trailingClosures = FormatRule(
         help: "Use trailing closure syntax where applicable.",
         options: ["trailingclosures", "nevertrailing"]
     ) { formatter in
@@ -63,5 +63,4 @@ extension FormatRule {
                 wasParen ? [.space(" ")] : [.endOfScope(")"), .space(" ")])
         }
     }
-
 }

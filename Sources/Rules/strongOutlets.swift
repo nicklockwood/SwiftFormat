@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Strip unnecessary `weak` from @IBOutlet properties (except delegates and datasources)
-    public static let strongOutlets = FormatRule(
+    static let strongOutlets = FormatRule(
         help: "Remove `weak` modifier from `@IBOutlet` properties."
     ) { formatter in
         formatter.forEach(.keyword("@IBOutlet")) { i, _ in

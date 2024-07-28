@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Replace Array<T>, Dictionary<T, U> and Optional<T> with [T], [T: U] and T?
-    public static let typeSugar = FormatRule(
+    static let typeSugar = FormatRule(
         help: "Prefer shorthand syntax for Arrays, Dictionaries and Optionals.",
         options: ["shortoptionals"]
     ) { formatter in

@@ -6,10 +6,10 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Remove blank lines immediately before a closing brace, bracket, paren or chevron
     /// unless it's followed by more code on the same line (e.g. } else { )
-    public static let blankLinesAtEndOfScope = FormatRule(
+    static let blankLinesAtEndOfScope = FormatRule(
         help: "Remove trailing blank line at the end of a scope.",
         orderAfter: ["organizeDeclarations"],
         sharedOptions: ["typeblanklines"]

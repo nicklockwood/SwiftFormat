@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Remove redundant parens around the arguments for loops, if statements, closures, etc.
-    public static let redundantParens = FormatRule(
+    static let redundantParens = FormatRule(
         help: "Remove redundant parentheses."
     ) { formatter in
         func nestedParens(in range: ClosedRange<Int>) -> ClosedRange<Int>? {

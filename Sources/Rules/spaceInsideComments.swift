@@ -6,10 +6,10 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Add space inside comments, taking care not to mangle headerdoc or
     /// carefully preformatted comments, such as star boxes, etc.
-    public static let spaceInsideComments = FormatRule(
+    static let spaceInsideComments = FormatRule(
         help: "Add leading and/or trailing space inside comments."
     ) { formatter in
         formatter.forEach(.startOfScope("//")) { i, _ in

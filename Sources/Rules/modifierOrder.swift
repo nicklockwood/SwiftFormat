@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Standardise the order of property modifiers
-    public static let modifierOrder = FormatRule(
+    static let modifierOrder = FormatRule(
         help: "Use consistent ordering for member modifiers.",
         options: ["modifierorder"]
     ) { formatter in

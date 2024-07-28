@@ -6,8 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
-    public static let opaqueGenericParameters = FormatRule(
+public extension FormatRule {
+    static let opaqueGenericParameters = FormatRule(
         help: """
         Use opaque generic parameters (`some Protocol`) instead of generic parameters
         with constraints (`T where T: Protocol`, etc) where equivalent. Also supports
@@ -268,5 +268,4 @@ extension FormatRule {
             }
         }
     }
-
 }

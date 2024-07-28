@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Remove redundant backticks around non-keywords, or in places where keywords don't need escaping
-    public static let redundantBackticks = FormatRule(
+    static let redundantBackticks = FormatRule(
         help: "Remove redundant backticks around identifiers."
     ) { formatter in
         formatter.forEach(.identifier) { i, token in

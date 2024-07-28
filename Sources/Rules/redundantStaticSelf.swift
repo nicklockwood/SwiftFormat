@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Remove redundant Self keyword
-    public static let redundantStaticSelf = FormatRule(
+    static let redundantStaticSelf = FormatRule(
         help: "Remove explicit `Self` where applicable."
     ) { formatter in
         formatter.addOrRemoveSelf(static: true)

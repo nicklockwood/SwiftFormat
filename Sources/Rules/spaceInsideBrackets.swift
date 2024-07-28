@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Remove space immediately inside square brackets
-    public static let spaceInsideBrackets = FormatRule(
+    static let spaceInsideBrackets = FormatRule(
         help: "Remove space inside square brackets."
     ) { formatter in
         formatter.forEach(.startOfScope("[")) { i, _ in

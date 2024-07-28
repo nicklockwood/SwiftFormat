@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Removes explicit type declarations from initialization declarations
-    public static let redundantType = FormatRule(
+    static let redundantType = FormatRule(
         help: "Remove redundant type from variable declarations.",
         options: ["redundanttype"]
     ) { formatter in

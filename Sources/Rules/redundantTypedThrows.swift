@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
-    public static let redundantTypedThrows = FormatRule(
-        help: "Converts `throws(any Error)` to `throws`, and converts `throws(Never)` to non-throwing.") 
+public extension FormatRule {
+    static let redundantTypedThrows = FormatRule(
+        help: "Converts `throws(any Error)` to `throws`, and converts `throws(Never)` to non-throwing.")
     { formatter in
         formatter.forEach(.keyword("throws")) { throwsIndex, _ in
             guard // Typed throws was added in Swift 6.0: https://github.com/apple/swift-evolution/blob/main/proposals/0413-typed-throws.md

@@ -6,8 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
-    public static let leadingDelimiters = FormatRule(
+public extension FormatRule {
+    static let leadingDelimiters = FormatRule(
         help: "Move leading delimiters to the end of the previous line.",
         sharedOptions: ["linebreaks"]
     ) { formatter in

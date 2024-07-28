@@ -6,8 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
-    public static let wrapMultilineStatementBraces = FormatRule(
+public extension FormatRule {
+    static let wrapMultilineStatementBraces = FormatRule(
         help: "Wrap the opening brace of multiline statements.",
         orderAfter: ["braces", "indent", "wrapArguments"],
         sharedOptions: ["linebreaks"]

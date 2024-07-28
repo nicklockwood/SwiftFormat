@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Remove duplicate import statements
-    public static let duplicateImports = FormatRule(
+    static let duplicateImports = FormatRule(
         help: "Remove duplicate import statements."
     ) { formatter in
         for var importRanges in formatter.parseImports().reversed() {

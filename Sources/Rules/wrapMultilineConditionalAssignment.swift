@@ -6,8 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
-    public static let wrapMultilineConditionalAssignment = FormatRule(
+public extension FormatRule {
+    static let wrapMultilineConditionalAssignment = FormatRule(
         help: "Wrap multiline conditional assignment expressions after the assignment operator.",
         disabledByDefault: true,
         orderAfter: ["conditionalAssignment"],

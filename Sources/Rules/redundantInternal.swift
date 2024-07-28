@@ -6,8 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
-    public static let redundantInternal = FormatRule(
+public extension FormatRule {
+    static let redundantInternal = FormatRule(
         help: "Remove redundant internal access control."
     ) { formatter in
         formatter.forEach(.keyword("internal")) { internalKeywordIndex, _ in

@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Reposition `await` keyword outside of the current scope.
-    public static let hoistAwait = FormatRule(
+    static let hoistAwait = FormatRule(
         help: "Move inline `await` keyword(s) to start of expression.",
         options: ["asynccapturing"]
     ) { formatter in

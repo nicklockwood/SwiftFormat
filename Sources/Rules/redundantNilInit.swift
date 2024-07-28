@@ -6,9 +6,9 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
-extension FormatRule {
+public extension FormatRule {
     /// Remove or insert  redundant `= nil` initialization for Optional properties
-    public static let redundantNilInit = FormatRule(
+    static let redundantNilInit = FormatRule(
         help: "Remove/insert redundant `nil` default value (Optional vars are nil by default).",
         options: ["nilinit"]
     ) { formatter in

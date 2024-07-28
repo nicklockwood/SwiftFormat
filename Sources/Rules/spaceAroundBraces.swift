@@ -6,6 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
+import Foundation
+
 public extension FormatRule {
     /// Ensure that there is space between an opening brace and the preceding
     /// identifier, and between a closing brace and the following identifier.

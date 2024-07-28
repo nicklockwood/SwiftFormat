@@ -6,6 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
+import Foundation
+
 public extension FormatRule {
     /// Remove semicolons, except where doing so would change the meaning of the code
     static let semicolons = FormatRule(

@@ -6,6 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
+import Foundation
+
 public extension FormatRule {
     static let redundantOptionalBinding = FormatRule(
         help: "Remove redundant identifiers in optional binding conditions.",

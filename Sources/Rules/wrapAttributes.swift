@@ -6,6 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
+import Foundation
+
 public extension FormatRule {
     static let wrapAttributes = FormatRule(
         help: "Wrap @attributes onto a separate line, or keep them on the same line.",

@@ -6,6 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
+import Foundation
+
 public extension FormatRule {
     /// Wrap single-line comments that exceed given `FormatOptions.maxWidth` setting.
     static let wrapSingleLineComments = FormatRule(

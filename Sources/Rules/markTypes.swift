@@ -6,6 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
+import Foundation
+
 public extension FormatRule {
     static let markTypes = FormatRule(
         help: "Add a MARK comment before top-level types and extensions.",

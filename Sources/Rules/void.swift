@@ -6,6 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
+import Foundation
+
 public extension FormatRule {
     /// Normalize the use of void in closure arguments and return values
     static let void = FormatRule(

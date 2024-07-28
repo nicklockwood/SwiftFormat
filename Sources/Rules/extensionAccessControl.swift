@@ -6,6 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
+import Foundation
+
 public extension FormatRule {
     static let extensionAccessControl = FormatRule(
         help: "Configure the placement of an extension's access control keyword.",

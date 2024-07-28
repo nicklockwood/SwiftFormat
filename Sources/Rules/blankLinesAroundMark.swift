@@ -6,6 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
+import Foundation
+
 public extension FormatRule {
     /// Adds a blank line around MARK: comments
     static let blankLinesAroundMark = FormatRule(

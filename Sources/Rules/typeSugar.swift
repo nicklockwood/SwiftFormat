@@ -6,6 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
+import Foundation
+
 public extension FormatRule {
     /// Replace Array<T>, Dictionary<T, U> and Optional<T> with [T], [T: U] and T?
     static let typeSugar = FormatRule(

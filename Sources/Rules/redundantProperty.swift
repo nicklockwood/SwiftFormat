@@ -6,6 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
+import Foundation
+
 public extension FormatRule {
     static let redundantProperty = FormatRule(
         help: "Simplifies redundant property definitions that are immediately returned.",

@@ -6,6 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
+import Foundation
+
 public extension FormatRule {
     /// Strip unnecessary `weak` from @IBOutlet properties (except delegates and datasources)
     static let strongOutlets = FormatRule(

@@ -6,6 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
+import Foundation
+
 public extension FormatRule {
     /// Implement the following rules with respect to the spacing around parens:
     /// * There is no space between an opening paren and the preceding identifier,

@@ -6,6 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
+import Foundation
+
 public extension FormatRule {
     /// Converts types used for hosting only static members into enums to avoid instantiation.
     static let enumNamespaces = FormatRule(

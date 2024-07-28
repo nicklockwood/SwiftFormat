@@ -6,6 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
+import Foundation
+
 public extension FormatRule {
     /// Remove redundant `break` keyword from switch cases
     static let redundantBreak = FormatRule(

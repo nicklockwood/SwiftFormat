@@ -6,6 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
+import Foundation
+
 public extension FormatRule {
     /// Remove redundant parens around the arguments for loops, if statements, closures, etc.
     static let redundantParens = FormatRule(

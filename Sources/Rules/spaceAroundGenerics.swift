@@ -6,6 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
+import Foundation
+
 public extension FormatRule {
     /// Ensure there is no space between an opening chevron and the preceding identifier
     static let spaceAroundGenerics = FormatRule(

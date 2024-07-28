@@ -6,6 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
+import Foundation
+
 public extension FormatRule {
     /// Ensure that the last item in a multi-line array literal is followed by a comma.
     /// This is useful for preventing noise in commits when items are added to end of array.

@@ -6,6 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
+import Foundation
+
 public extension FormatRule {
     /// Implement the following rules with respect to the spacing around operators:
     /// * Infix operators are separated from their operands by a space on either

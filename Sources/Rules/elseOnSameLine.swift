@@ -6,6 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
+import Foundation
+
 public extension FormatRule {
     /// Ensure that an `else` statement following `if { ... }` appears on the same line
     /// as the closing brace. This has no effect on the `else` part of a `guard` statement.

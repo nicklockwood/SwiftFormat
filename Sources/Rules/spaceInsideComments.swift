@@ -6,6 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
+import Foundation
+
 public extension FormatRule {
     /// Add space inside comments, taking care not to mangle headerdoc or
     /// carefully preformatted comments, such as star boxes, etc.

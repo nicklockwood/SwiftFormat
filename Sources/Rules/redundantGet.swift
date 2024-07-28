@@ -6,6 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
+import Foundation
+
 public extension FormatRule {
     /// Remove redundant `get {}` clause inside read-only computed property
     static let redundantGet = FormatRule(

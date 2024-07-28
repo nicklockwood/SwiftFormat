@@ -6,6 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
+import Foundation
+
 public extension FormatRule {
     static let blockComments = FormatRule(
         help: "Convert block comments to consecutive single line comments.",

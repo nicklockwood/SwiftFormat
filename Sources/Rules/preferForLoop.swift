@@ -6,6 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
+import Foundation
+
 public extension FormatRule {
     static let preferForLoop = FormatRule(
         help: "Convert functional `forEach` calls to for loops.",

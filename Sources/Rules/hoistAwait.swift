@@ -6,6 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
+import Foundation
+
 public extension FormatRule {
     /// Reposition `await` keyword outside of the current scope.
     static let hoistAwait = FormatRule(

@@ -6,6 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
+import Foundation
+
 public extension FormatRule {
     static let organizeDeclarations = FormatRule(
         help: "Organize declarations within class, struct, enum, actor, and extension bodies.",

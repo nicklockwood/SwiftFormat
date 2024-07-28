@@ -6,6 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
+import Foundation
+
 public extension FormatRule {
     /// Remove blank lines between chained functions but keep the linebreaks
     static let blankLinesBetweenChainedFunctions = FormatRule(

@@ -6,6 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
+import Foundation
+
 public extension FormatRule {
     /// Removed backticks from `self` when strongifying
     static let strongifiedSelf = FormatRule(

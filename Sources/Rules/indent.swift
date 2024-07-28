@@ -6,6 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
+import Foundation
+
 public extension FormatRule {
     /// Indent code according to standard scope indenting rules.
     /// The type (tab or space) and level (2 spaces, 4 spaces, etc.) of the

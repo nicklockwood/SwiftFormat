@@ -6,6 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
+import Foundation
+
 public extension FormatRule {
     static let acronyms = FormatRule(
         help: "Capitalize acronyms when the first character is capitalized.",

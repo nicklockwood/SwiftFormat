@@ -6,6 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
+import Foundation
+
 public extension FormatRule {
     /// Remove trailing space from the end of lines, as it has no semantic
     /// meaning and leads to noise in commits.

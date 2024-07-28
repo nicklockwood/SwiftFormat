@@ -6,6 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
+import Foundation
+
 public extension FormatRule {
     static let wrapLoopBodies = FormatRule(
         help: "Wrap the bodies of inline loop statements onto a new line.",

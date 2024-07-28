@@ -6,6 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
+import Foundation
+
 public extension FormatRule {
     /// Convert closure arguments to trailing closure syntax where possible
     static let trailingClosures = FormatRule(

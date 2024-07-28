@@ -6,6 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
+import Foundation
+
 public extension FormatRule {
     /// Prefer `AnyObject` over `class` for class-based protocols
     static let anyObjectProtocol = FormatRule(

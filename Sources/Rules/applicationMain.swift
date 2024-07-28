@@ -6,6 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
+import Foundation
+
 public extension FormatRule {
     /// Replace the obsolete `@UIApplicationMain` and `@NSApplicationMain`
     /// attributes with `@main` in Swift 5.3 and above, per SE-0383

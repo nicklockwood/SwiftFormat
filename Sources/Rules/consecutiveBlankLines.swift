@@ -6,6 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
+import Foundation
+
 public extension FormatRule {
     /// Collapse all consecutive blank lines into a single blank line
     static let consecutiveBlankLines = FormatRule(

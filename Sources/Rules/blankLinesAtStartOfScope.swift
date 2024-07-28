@@ -6,6 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
+import Foundation
+
 public extension FormatRule {
     /// Remove blank lines immediately after an opening brace, bracket, paren or chevron
     static let blankLinesAtStartOfScope = FormatRule(

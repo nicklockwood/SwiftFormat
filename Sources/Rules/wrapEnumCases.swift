@@ -6,6 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
+import Foundation
+
 public extension FormatRule {
     /// Formats enum cases declaration into one case per line
     static let wrapEnumCases = FormatRule(

@@ -6,6 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
+import Foundation
+
 public extension FormatRule {
     static let preferKeyPath = FormatRule(
         help: "Convert trivial `map { $0.foo }` closures to keyPath-based syntax."

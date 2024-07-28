@@ -6,6 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
+import Foundation
+
 public extension FormatRule {
     /// Reorders "yoda conditions" where constant is placed on lhs of a comparison
     static let yodaConditions = FormatRule(

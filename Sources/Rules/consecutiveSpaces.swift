@@ -6,6 +6,8 @@
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 
+import Foundation
+
 public extension FormatRule {
     /// Collapse all consecutive space characters to a single space, except at
     /// the start of a line or inside a comment or string, as these have no semantic

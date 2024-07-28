@@ -7,7 +7,7 @@
 //
 
 /// All of the rules defined in the Rules directory.
-/// **Generated automatically when building. Do not modify.**
+/// **Generated automatically when running tests. Do not modify.**
 let ruleRegistry: [String: FormatRule] = [
     "acronyms": .acronyms,
     "andOperator": .andOperator,

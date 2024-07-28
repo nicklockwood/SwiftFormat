@@ -28,11 +28,17 @@ private let rulesURL =
 private let rulesFile =
     try! String(contentsOf: rulesURL, encoding: .utf8)
 
+private let ruleRegistryURL =
+    projectDirectory.appendingPathComponent("Sources/RuleRegistry.swift")
+
 private let allRuleFiles: [URL] = {
     var rulesFiles: [URL] = []
     let rulesDirectory = projectDirectory.appendingPathComponent("Sources/Rules")
     _ = enumerateFiles(withInputURL: rulesDirectory) { ruleFileURL, _, _ in
-        { rulesFiles.append(ruleFileURL) }
+        {
+            guard ruleFileURL.pathExtension == "swift" else { return }
+            rulesFiles.append(ruleFileURL)
+        }
     }
     return rulesFiles
 }()
@@ -399,6 +405,104 @@ class MetadataTests: XCTestCase {
                 return
             }
             lastDate = date
+        }
+    }
+}
+
+/// The cached result from the first run of `generateRuleRegistryIfNecessary()`
+private var cachedGenerateRuleRegistryResult: Result<Void, Error>?
+
+extension _FormatRules {
+    /// Generates `RuleRegistry.swift` if it hasn't been generated yet for this test run.
+    func generateRuleRegistryIfNecessary() throws {
+        switch cachedGenerateRuleRegistryResult {
+        case .success:
+            break
+
+        case let .failure(error):
+            throw error
+
+        case .none:
+            do {
+                try generateRuleRegistry()
+                cachedGenerateRuleRegistryResult = .success(())
+            } catch {
+                cachedGenerateRuleRegistryResult = .failure(error)
+                throw error
+            }
+        }
+    }
+
+    private func generateRuleRegistry() throws {
+        let validatedRules = try validatedRuleNames()
+        let ruleRegistryContent = generateRuleRegistryContent(for: validatedRules)
+        let currentRuleRegistryContent = try String(contentsOf: ruleRegistryURL)
+
+        if ruleRegistryContent != currentRuleRegistryContent {
+            try ruleRegistryContent.write(to: ruleRegistryURL, atomically: true, encoding: .utf8)
+            fatalError("Updated rule registry. You can now re-run the test case or test suite.")
+        }
+    }
+
+    /// Finds all of the rules defines in `Sources/Rules` and validates that it matches the
+    /// expected scheme, where each file defines exactly one `FormatRule` with the same name.
+    private func validatedRuleNames() throws -> [String] {
+        try allRuleFiles.map { ruleFile in
+            let expectedRuleName = ruleFile.lastPathComponent.replacingOccurrences(of: ".swift", with: "")
+            try validateRuleImplementation(for: expectedRuleName, in: ruleFile)
+            return expectedRuleName
+        }
+    }
+
+    /// Generates the content of the `RuleRegistry.swift` file for the given list of rules
+    private func generateRuleRegistryContent(for rules: [String]) -> String {
+        var ruleRegistryContents = """
+        //
+        //  RuleRegistry.swift
+        //  SwiftFormat
+        //
+        //  Created by Cal Stephens on 7/27/24.
+        //  Copyright © 2024 Nick Lockwood. All rights reserved.
+        //
+
+        /// All of the rules defined in the Rules directory.
+        /// **Generated automatically when running tests. Do not modify.**
+        let ruleRegistry: [String: FormatRule] = [\n
+        """
+
+        for rule in rules.sorted() {
+            ruleRegistryContents.append("""
+                "\(rule)": .\(rule),\n
+            """)
+        }
+
+        ruleRegistryContents.append("""
+        ]\n
+        """)
+
+        return ruleRegistryContents
+    }
+
+    /// Validates that the given file defines exactly one `FormatRule` with the expected name
+    private func validateRuleImplementation(for expectedRuleName: String, in file: URL) throws {
+        let fileContents = try String(contentsOf: file)
+        let formatter = Formatter(tokenize(fileContents))
+
+        // Find all of the rules defined in the file, like `let ruleName = FormatRule(`.
+        var definedRules: [String] = []
+        formatter.forEach(.identifier("FormatRule")) { index, _ in
+            guard formatter.next(.nonSpaceOrCommentOrLinebreak, after: index) == .startOfScope("("),
+                  let declarationKeyword = formatter.indexOfLastSignificantKeyword(at: index),
+                  let ruleNameIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: declarationKeyword)
+            else { return }
+
+            definedRules.append(formatter.tokens[ruleNameIndex].string)
+        }
+
+        if definedRules != [expectedRuleName] {
+            fatalError("""
+            \(file.lastPathComponent) must define a single FormatRule named \(expectedRuleName). Currently defines rules: \(definedRules).
+            """)
         }
     }
 }

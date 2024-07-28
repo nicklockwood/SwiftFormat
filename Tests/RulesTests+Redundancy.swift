@@ -3142,7 +3142,30 @@ class RedundancyTests: RulesTests {
         }
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: FormatRules.redundantReturn, options: options)
+        testFormatting(for: input, [output],
+                       rules: [FormatRules.redundantReturn, FormatRules.conditionalAssignment],
+                       options: options)
+    }
+
+    func testNoRemoveRedundantIfStatementReturnInFunction() {
+        let input = """
+        func foo(condition: Bool) -> String {
+            if condition {
+                return "foo"
+            } else if otherCondition {
+                if anotherCondition {
+                    return "bar"
+                } else {
+                    return "baaz"
+                }
+            } else {
+                return "quux"
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: FormatRules.redundantReturn, options: options,
+                       exclude: ["conditionalAssignment"])
     }
 
     func testRedundantIfStatementReturnInClosure() {
@@ -3165,7 +3188,24 @@ class RedundancyTests: RulesTests {
         }
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: FormatRules.redundantReturn, options: options)
+        testFormatting(for: input, [output],
+                       rules: [FormatRules.redundantReturn, FormatRules.conditionalAssignment],
+                       options: options)
+    }
+
+    func testNoRemoveRedundantIfStatementReturnInClosure() {
+        let input = """
+        let closure: (Bool) -> String = { condition in
+            if condition {
+                return "foo"
+            } else {
+                return "bar"
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: FormatRules.redundantReturn, options: options,
+                       exclude: ["conditionalAssignment"])
     }
 
     func testNoRemoveReturnInConsecutiveIfStatements() {
@@ -3203,7 +3243,10 @@ class RedundancyTests: RulesTests {
         }
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, [output], rules: [FormatRules.redundantReturn, FormatRules.redundantClosure, FormatRules.indent], options: options, exclude: ["wrapMultilineConditionalAssignment"])
+        testFormatting(for: input, [output],
+                       rules: [FormatRules.redundantReturn, FormatRules.conditionalAssignment,
+                               FormatRules.redundantClosure, FormatRules.indent],
+                       options: options, exclude: ["wrapMultilineConditionalAssignment"])
     }
 
     func testRedundantSwitchStatementReturnInFunction() {
@@ -3228,7 +3271,25 @@ class RedundancyTests: RulesTests {
         }
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: FormatRules.redundantReturn, options: options)
+        testFormatting(for: input, [output],
+                       rules: [FormatRules.redundantReturn, FormatRules.conditionalAssignment],
+                       options: options)
+    }
+
+    func testNoRemoveRedundantSwitchStatementReturnInFunction() {
+        let input = """
+        func foo(condition: Bool) -> String {
+            switch condition {
+            case true:
+                return "foo"
+            case false:
+                return "bar"
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: FormatRules.redundantReturn, options: options,
+                       exclude: ["conditionalAssignment"])
     }
 
     func testClosureAroundConditionalAssignmentNotRedundantForExplicitReturn() {
@@ -3244,7 +3305,8 @@ class RedundancyTests: RulesTests {
         }()
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, rule: FormatRules.redundantClosure, options: options, exclude: ["redundantReturn"])
+        testFormatting(for: input, rule: FormatRules.redundantClosure, options: options,
+                       exclude: ["redundantReturn"])
     }
 
     func testNonRedundantSwitchStatementReturnInFunction() {
@@ -3284,7 +3346,9 @@ class RedundancyTests: RulesTests {
         }
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: FormatRules.redundantReturn, options: options)
+        testFormatting(for: input, [output],
+                       rules: [FormatRules.redundantReturn, FormatRules.conditionalAssignment],
+                       options: options)
     }
 
     func testRedundantSwitchStatementReturnInFunctionWithComment() {
@@ -3315,7 +3379,9 @@ class RedundancyTests: RulesTests {
         }
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: FormatRules.redundantReturn, options: options)
+        testFormatting(for: input, [output],
+                       rules: [FormatRules.redundantReturn, FormatRules.conditionalAssignment],
+                       options: options)
     }
 
     func testNonRedundantSwitchStatementReturnInFunctionWithDefault() {
@@ -3405,7 +3471,9 @@ class RedundancyTests: RulesTests {
         }
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: FormatRules.redundantReturn, options: options)
+        testFormatting(for: input, [output],
+                       rules: [FormatRules.redundantReturn, FormatRules.conditionalAssignment],
+                       options: options)
     }
 
     func testRedundantSwitchStatementReturnWithAssociatedValueMatchingInFunction() {
@@ -3434,7 +3502,9 @@ class RedundancyTests: RulesTests {
         }
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: FormatRules.redundantReturn, options: options)
+        testFormatting(for: input, [output],
+                       rules: [FormatRules.redundantReturn, FormatRules.conditionalAssignment],
+                       options: options)
     }
 
     func testRedundantReturnDoesntFailToTerminateOnLongSwitch() {
@@ -3527,7 +3597,9 @@ class RedundancyTests: RulesTests {
         }
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: FormatRules.redundantReturn, options: options)
+        testFormatting(for: input, [output],
+                       rules: [FormatRules.redundantReturn, FormatRules.conditionalAssignment],
+                       options: options)
     }
 
     func testNoRemoveDebugReturnFollowedBySwitch() {
@@ -3603,7 +3675,9 @@ class RedundancyTests: RulesTests {
         """
 
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: FormatRules.redundantReturn, options: options)
+        testFormatting(for: input, [output],
+                       rules: [FormatRules.redundantReturn, FormatRules.conditionalAssignment],
+                       options: options)
     }
 
     func testRemovesReturnFromIfExpressionConditionalCastInSwift5_10() {
@@ -3628,7 +3702,9 @@ class RedundancyTests: RulesTests {
         """
 
         let options = FormatOptions(swiftVersion: "5.10")
-        testFormatting(for: input, output, rule: FormatRules.redundantReturn, options: options)
+        testFormatting(for: input, [output],
+                       rules: [FormatRules.redundantReturn, FormatRules.conditionalAssignment],
+                       options: options)
     }
 
     func testRemovesRedundantReturnBeforeIfExpression() {
@@ -9159,7 +9235,9 @@ class RedundancyTests: RulesTests {
             }
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, [output], rules: [FormatRules.redundantReturn, FormatRules.redundantClosure],
+        testFormatting(for: input, [output],
+                       rules: [FormatRules.redundantReturn, FormatRules.conditionalAssignment,
+                               FormatRules.redundantClosure],
                        options: options, exclude: ["indent", "wrapMultilineConditionalAssignment"])
     }
 
@@ -9181,7 +9259,9 @@ class RedundancyTests: RulesTests {
             }
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, [output], rules: [FormatRules.redundantReturn, FormatRules.redundantClosure],
+        testFormatting(for: input, [output],
+                       rules: [FormatRules.redundantReturn, FormatRules.conditionalAssignment,
+                               FormatRules.redundantClosure],
                        options: options, exclude: ["indent", "wrapMultilineConditionalAssignment"])
     }
 
@@ -9697,8 +9777,11 @@ class RedundancyTests: RulesTests {
         """
 
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, [output], rules: [FormatRules.redundantReturn, FormatRules.redundantClosure],
-                       options: options, exclude: ["indent", "blankLinesBetweenScopes", "wrapMultilineConditionalAssignment"])
+        testFormatting(for: input, [output],
+                       rules: [FormatRules.redundantReturn, FormatRules.conditionalAssignment,
+                               FormatRules.redundantClosure],
+                       options: options,
+                       exclude: ["indent", "blankLinesBetweenScopes", "wrapMultilineConditionalAssignment"])
     }
 
     func testRemovesRedundantClosureWithGenericExistentialTypes() {
@@ -9748,7 +9831,9 @@ class RedundancyTests: RulesTests {
         }
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: FormatRules.redundantReturn, options: options)
+        testFormatting(for: input, [output],
+                       rules: [FormatRules.redundantReturn, FormatRules.conditionalAssignment],
+                       options: options)
     }
 
     func testRedundantSwitchStatementReturnInFunctionWithSingleWhereClause() {
@@ -9780,7 +9865,9 @@ class RedundancyTests: RulesTests {
         }
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: FormatRules.redundantReturn, options: options)
+        testFormatting(for: input, [output],
+                       rules: [FormatRules.redundantReturn, FormatRules.conditionalAssignment],
+                       options: options)
     }
 
     // MARK: - redundantOptionalBinding

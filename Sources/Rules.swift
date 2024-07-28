@@ -3311,11 +3311,15 @@ public struct _FormatRules {
                 return
             }
 
+            // Only strip return from conditional block if conditionalAssignment rule is enabled
+            let stripConditionalReturn = formatter.options.enabledRules.contains("conditionalAssignment")
+
             // Make sure the body only has a single statement
             guard formatter.blockBodyHasSingleStatement(
                 atStartOfScope: startOfScopeIndex,
                 includingConditionalStatements: true,
-                includingReturnStatements: true
+                includingReturnStatements: true,
+                includingReturnInConditionalStatements: stripConditionalReturn
             ) else {
                 return
             }

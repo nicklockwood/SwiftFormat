@@ -76,3 +76,62 @@ jobs:
           branch: ${{ matrix.branch }}
       - uses: actions/checkout@v3
       - run: swift test
+
+  command-line-tool:
+    strategy:
+      fail-fast: false
+      matrix:
+        macos:
+          - 13
+        xcode:
+          - latest-stable
+    runs-on: macos-${{ matrix.macos }}
+    steps:
+      - name: Select Xcode version
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: ${{ matrix.xcode }}
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Build Command Line Tool
+        run: xcodebuild -project SwiftFormat.xcodeproj -scheme "SwiftFormat (Command Line Tool)" -sdk macosx clean build
+
+  swiftformat-for-xcode:
+    strategy:
+      fail-fast: false
+      matrix:
+        macos:
+          - 13
+        xcode:
+          - latest-stable
+    runs-on: macos-${{ matrix.macos }}
+    steps:
+      - name: Select Xcode version
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: ${{ matrix.xcode }}
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Build Swift Format for Xcode app
+        run: xcodebuild -project SwiftFormat.xcodeproj -scheme "SwiftFormat for Xcode" -sdk macosx clean build
+
+  editor-extension:
+    strategy:
+      fail-fast: false
+      matrix:
+        macos:
+          - 13
+        xcode:
+          - latest-stable
+    runs-on: macos-${{ matrix.macos }}
+    steps:
+      - name: Select Xcode version
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: ${{ matrix.xcode }}
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Build Editor Extension
+        run: xcodebuild -project SwiftFormat.xcodeproj -scheme "SwiftFormat (Editor Extension)" -sdk macosx clean build
+
+        

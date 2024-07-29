@@ -137,7 +137,7 @@ class PerformanceTests: XCTestCase {
         let files = PerformanceTests.files
         let tokens = files.map { tokenize($0) }
         measure {
-            _ = tokens.map { try! format($0, rules: [FormatRules.indent]) }
+            _ = tokens.map { try! format($0, rules: [indent]) }
         }
     }
 
@@ -146,7 +146,7 @@ class PerformanceTests: XCTestCase {
         let tokens = files.map { tokenize($0) }
         let options = FormatOptions(indent: "\t", allmanBraces: true)
         measure {
-            _ = tokens.map { try! format($0, rules: [FormatRules.indent], options: options) }
+            _ = tokens.map { try! format($0, rules: [indent], options: options) }
         }
     }
 
@@ -154,7 +154,7 @@ class PerformanceTests: XCTestCase {
         let files = PerformanceTests.files
         let tokens = files.map { tokenize($0) }
         measure {
-            _ = tokens.map { try! format($0, rules: [FormatRules.redundantSelf]) }
+            _ = tokens.map { try! format($0, rules: [redundantSelf]) }
         }
     }
 
@@ -163,7 +163,7 @@ class PerformanceTests: XCTestCase {
         let tokens = files.map { tokenize($0) }
         let options = FormatOptions(explicitSelf: .insert)
         measure {
-            _ = tokens.map { try! format($0, rules: [FormatRules.redundantSelf], options: options) }
+            _ = tokens.map { try! format($0, rules: [redundantSelf], options: options) }
         }
     }
 
@@ -171,7 +171,7 @@ class PerformanceTests: XCTestCase {
         let files = PerformanceTests.files
         let tokens = files.map { tokenize($0) }
         measure {
-            _ = tokens.map { try! format($0, rules: [FormatRules.numberFormatting]) }
+            _ = tokens.map { try! format($0, rules: [numberFormatting]) }
         }
     }
 
@@ -187,7 +187,7 @@ class PerformanceTests: XCTestCase {
             hexGrouping: .group(1, 1)
         )
         measure {
-            _ = tokens.map { try! format($0, rules: [FormatRules.numberFormatting], options: options) }
+            _ = tokens.map { try! format($0, rules: [numberFormatting], options: options) }
         }
     }
 }

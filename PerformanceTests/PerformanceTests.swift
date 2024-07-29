@@ -32,25 +32,19 @@
 import SwiftFormat
 import XCTest
 
-private let sourceDirectory = URL(fileURLWithPath: #file)
+private let rulesDirectory = URL(fileURLWithPath: #file)
     .deletingLastPathComponent().deletingLastPathComponent()
-    .appendingPathComponent("Sources")
-
-private let rulesFile = "Rules.swift"
+    .appendingPathComponent("Sources/Rules")
 
 class PerformanceTests: XCTestCase {
     static let files: [String] = {
         var files = [String]()
-//        _ = enumerateFiles(withInputURL: projectDirectory) { url, _, _ in
-//            {
-//                if let source = try? String(contentsOf: url) {
-//                    files.append(source)
-//                }
-//            }
-//        }
-        let url = sourceDirectory.appendingPathComponent(rulesFile)
-        if let source = try? String(contentsOf: url) {
-            files.append(source)
+        _ = enumerateFiles(withInputURL: rulesDirectory) { url, _, _ in
+            {
+                if let source = try? String(contentsOf: url) {
+                    files.append(source)
+                }
+            }
         }
         return files
     }()
@@ -73,23 +67,6 @@ class PerformanceTests: XCTestCase {
             _ = tokens.map { try! format($0) }
         }
     }
-
-//    func testUncachedFormatting() {
-//        CLI.print = { _, _ in }
-//        measure {
-//            XCTAssertEqual(CLI.run(in: sourceDirectory.path, with: "\(rulesFile) --cache ignore --dryrun"), .ok)
-//        }
-//    }
-//
-//    // Not possible to run in dry mode because it won't write to cache
-//    // TODO: find a better way to test this
-//    func testCachedFormatting() {
-//        CLI.print = { _, _ in }
-//        _ = CLI.run(in: sourceDirectory.path, with: rulesFile) // warm the cache
-//        measure {
-//            XCTAssertEqual(CLI.run(in: sourceDirectory.path, with: "\(rulesFile) --dryrun"), .ok)
-//        }
-//    }
 
     func testWorstCaseFormatting() {
         let files = PerformanceTests.files
@@ -137,7 +114,7 @@ class PerformanceTests: XCTestCase {
         let files = PerformanceTests.files
         let tokens = files.map { tokenize($0) }
         measure {
-            _ = tokens.map { try! format($0, rules: [FormatRules.indent]) }
+            _ = tokens.map { try! format($0, rules: [.indent]) }
         }
     }
 
@@ -146,7 +123,7 @@ class PerformanceTests: XCTestCase {
         let tokens = files.map { tokenize($0) }
         let options = FormatOptions(indent: "\t", allmanBraces: true)
         measure {
-            _ = tokens.map { try! format($0, rules: [FormatRules.indent], options: options) }
+            _ = tokens.map { try! format($0, rules: [.indent], options: options) }
         }
     }
 
@@ -154,7 +131,7 @@ class PerformanceTests: XCTestCase {
         let files = PerformanceTests.files
         let tokens = files.map { tokenize($0) }
         measure {
-            _ = tokens.map { try! format($0, rules: [FormatRules.redundantSelf]) }
+            _ = tokens.map { try! format($0, rules: [.redundantSelf]) }
         }
     }
 
@@ -163,7 +140,7 @@ class PerformanceTests: XCTestCase {
         let tokens = files.map { tokenize($0) }
         let options = FormatOptions(explicitSelf: .insert)
         measure {
-            _ = tokens.map { try! format($0, rules: [FormatRules.redundantSelf], options: options) }
+            _ = tokens.map { try! format($0, rules: [.redundantSelf], options: options) }
         }
     }
 
@@ -171,7 +148,7 @@ class PerformanceTests: XCTestCase {
         let files = PerformanceTests.files
         let tokens = files.map { tokenize($0) }
         measure {
-            _ = tokens.map { try! format($0, rules: [FormatRules.numberFormatting]) }
+            _ = tokens.map { try! format($0, rules: [.numberFormatting]) }
         }
     }
 
@@ -187,7 +164,7 @@ class PerformanceTests: XCTestCase {
             hexGrouping: .group(1, 1)
         )
         measure {
-            _ = tokens.map { try! format($0, rules: [FormatRules.numberFormatting], options: options) }
+            _ = tokens.map { try! format($0, rules: [.numberFormatting], options: options) }
         }
     }
 }

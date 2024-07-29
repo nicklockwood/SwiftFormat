@@ -134,7 +134,7 @@ public enum OperatorType {
 public typealias OriginalLine = Int
 
 /// All token types
-public enum Token: Equatable {
+public enum Token: Hashable {
     case number(String, NumberType)
     case linebreak(String, OriginalLine)
     case startOfScope(String)

@@ -690,7 +690,7 @@ extension Formatter {
                     }
                 }
 
-                if currentRule == FormatRules.wrap {
+                if currentRule == .wrap {
                     let nextWrapIndex = indexOfNextWrap() ?? endOfLine(at: i)
                     if nextWrapIndex > lastIndex,
                        maxWidth < lineLength(upTo: nextWrapIndex),

@@ -15,7 +15,7 @@ class GenericExtensionsTests: XCTestCase {
         let output = "extension Array<Foo> {}"
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: [.typeSugar])
+        testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: [.typeSugar, .emptyExtension])
     }
 
     func testUpdatesOptionalGenericExtensionToAngleBracketSyntax() {
@@ -23,7 +23,7 @@ class GenericExtensionsTests: XCTestCase {
         let output = "extension Optional<Foo> {}"
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: [.typeSugar])
+        testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: [.typeSugar, .emptyExtension])
     }
 
     func testUpdatesArrayGenericExtensionToAngleBracketSyntaxWithSelf() {
@@ -31,7 +31,7 @@ class GenericExtensionsTests: XCTestCase {
         let output = "extension Array<Foo> {}"
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: [.typeSugar])
+        testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: [.typeSugar, .emptyExtension])
     }
 
     func testUpdatesArrayWithGenericElement() {
@@ -39,7 +39,7 @@ class GenericExtensionsTests: XCTestCase {
         let output = "extension Array<Foo<Bar>> {}"
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: [.typeSugar])
+        testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: [.typeSugar, .emptyExtension])
     }
 
     func testUpdatesDictionaryGenericExtensionToAngleBracketSyntax() {
@@ -47,7 +47,7 @@ class GenericExtensionsTests: XCTestCase {
         let output = "extension Dictionary<Foo, Bar> {}"
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: [.typeSugar])
+        testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: [.typeSugar, .emptyExtension])
     }
 
     func testRequiresAllGenericTypesToBeProvided() {
@@ -55,7 +55,7 @@ class GenericExtensionsTests: XCTestCase {
         let input = "extension Dictionary where Key == Foo {}"
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, rule: .genericExtensions, options: options)
+        testFormatting(for: input, rule: .genericExtensions, options: options, exclude: [.emptyExtension])
     }
 
     func testHandlesNestedCollectionTypes() {
@@ -63,7 +63,7 @@ class GenericExtensionsTests: XCTestCase {
         let output = "extension Array<[[Foo: Bar]]> {}"
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: [.typeSugar])
+        testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: [.typeSugar, .emptyExtension])
     }
 
     func testDoesntUpdateIneligibleConstraints() {
@@ -80,7 +80,7 @@ class GenericExtensionsTests: XCTestCase {
         let output = "extension Collection<String> where Index == Int {}"
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, output, rule: .genericExtensions, options: options)
+        testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: [.emptyExtension])
     }
 
     func testSupportsUserProvidedGenericTypes() {
@@ -97,7 +97,7 @@ class GenericExtensionsTests: XCTestCase {
             genericTypes: "LinkedList<Element>;StateStore<State, Action>",
             swiftVersion: "5.7"
         )
-        testFormatting(for: input, output, rule: .genericExtensions, options: options)
+        testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: [.emptyExtension])
     }
 
     func testSupportsMultilineUserProvidedGenericTypes() {
@@ -116,6 +116,6 @@ class GenericExtensionsTests: XCTestCase {
             genericTypes: "Reducer<State, Action, Environment>",
             swiftVersion: "5.7"
         )
-        testFormatting(for: input, output, rule: .genericExtensions, options: options)
+        testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: [.emptyExtension])
     }
 }

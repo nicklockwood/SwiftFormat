@@ -10,8 +10,6 @@ import XCTest
 @testable import SwiftFormat
 
 class EmptyExtensionTests: XCTestCase {
-    // MARK: - emptyExtension
-
     func testRemoveEmptyExtension() {
         let input = """
         extension String {}
@@ -29,5 +27,25 @@ class EmptyExtensionTests: XCTestCase {
         extension String: Equatable {}
         """
         testFormatting(for: input, rule: .emptyExtension)
+    }
+
+    func testDoNotRemoveAtModifierEmptyExtension() {
+        let input = """
+        @GenerateBoilerPlate
+        extension Foo {}
+        """
+        testFormatting(for: input, rule: .emptyExtension)
+    }
+
+    func testRemoveEmptyExtensionWithEmptyBody() {
+        let input = """
+        extension Foo { }
+
+        extension Foo {
+
+        }
+        """
+        let output = ""
+        testFormatting(for: input, output, rule: .emptyExtension)
     }
 }

@@ -9,14 +9,20 @@
 import Foundation
 
 public extension FormatRule {
-    /// Remove empty, non-conforming, extensions
-    static let emptyExtension = FormatRule(help: "Remove empty, non-conforming, extensions") { formatter in
+    /// Remove empty, non-conforming, extensions.
+    static let emptyExtension = FormatRule(help: "Remove empty, non-conforming, extensions.") { formatter in
+
         var emptyExtensions = [Declaration]()
+
         formatter.forEachRecursiveDeclaration { declaration in
-            guard case let .type(_, open, body, _, _) = declaration,
+            let declarationModifiers = Set(declaration.modifiers)
+            guard let declarationBody = declaration.body,
                   declaration.keyword == "extension",
-                  body.isEmpty,
-                  !open.contains(where: { $0 == .delimiter(":") })
+                  declarationBody.isEmpty,
+                  // Ensure that the extension does not conform to any protocols
+                  !declaration.openTokens.contains(where: { $0 == .delimiter(":") }),
+                  // Ensure that it is not a macro
+                  !(declarationModifiers.contains { $0.first == "@" })
             else { return }
 
             emptyExtensions.append(declaration)

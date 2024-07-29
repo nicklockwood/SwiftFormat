@@ -525,7 +525,7 @@ Option | Description
 -     foo = "foo"
 +     "foo"
   } else {
--     bar = "bar"
+-     foo = "bar"
 +     "bar"
   }
 

@@ -1753,7 +1753,7 @@ private struct Examples {
     -     foo = "foo"
     +     "foo"
       } else {
-    -     bar = "bar"
+    -     foo = "bar"
     +     "bar"
       }
 

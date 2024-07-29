@@ -958,6 +958,8 @@ extension Formatter {
         )
         else { return typeDeclaration }
 
+        let declaration = removeSeparatorInSwiftUISubCategoryIfNeeded(to: typeDeclaration, sortedDeclarations: sortedDeclarations)
+
         // Add a mark comment for each top-level category
         let sortedAndMarkedType = addCategorySeparators(
             to: typeDeclaration,
@@ -1150,6 +1152,25 @@ extension Formatter {
             .map { $0.declaration }
 
         return lhsPropertiesOrder == rhsPropertiesOrder
+    }
+
+    private func removeSeparatorInSwiftUISubCategoryIfNeeded(
+        to _: TypeDeclaration,
+        sortedDeclarations: [CategorizedDeclaration]
+    ) -> [CategorizedDeclaration] {
+        if options.alphabetizeSwiftUIPropertyTypes {
+            let swiftUIDeclarations = sortedDeclarations.filter { $0.category.type == .swiftUIPropertyWrapper }
+            for (index, declaration) in swiftUIDeclarations.enumerated() {
+                if index != swiftUIDeclarations.count - 1 {
+                    let formatter = Formatter(declaration.declaration.tokens)
+                    if let lastIndex = formatter.tokens.lastIndex(where: \.isLinebreak),
+                       let dupplicatedLineBreakIndex = formatter.index(before: lastIndex, where: \.isLinebreak) {
+                        formatter.removeToken(at: dupplicatedLineBreakIndex)
+                    }
+                }
+            }
+        }
+        return sortedDeclarations
     }
 
     /// Adds MARK category separates to the given type

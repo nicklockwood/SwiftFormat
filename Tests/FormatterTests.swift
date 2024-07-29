@@ -392,7 +392,7 @@ class FormatterTests: XCTestCase {
             .linebreak("\n", 3),
             .endOfScope("}"),
         ])
-        FormatRules.blankLinesAtStartOfScope.apply(with: formatter)
+        FormatRule.blankLinesAtStartOfScope.apply(with: formatter)
         XCTAssertEqual(formatter.tokens, [
             .identifier("foo"),
             .space(" "),
@@ -427,7 +427,7 @@ class FormatterTests: XCTestCase {
         """)
         XCTAssertEqual(try format(
             input,
-            rules: [FormatRules.consecutiveSpaces],
+            rules: [.consecutiveSpaces],
             range: 10 ..< 13
         ), output1)
         let output2 = """
@@ -437,7 +437,7 @@ class FormatterTests: XCTestCase {
         """
         XCTAssertEqual(try sourceCode(for: format(
             input,
-            rules: [FormatRules.blankLinesAtStartOfScope],
+            rules: [.blankLinesAtStartOfScope],
             range: 6 ..< 9
         )), output2)
     }

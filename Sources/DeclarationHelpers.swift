@@ -15,7 +15,7 @@ import Foundation
 ///
 /// Forms a tree of declaratons, since `type` declarations have a body
 /// that contains child declarations.
-enum Declaration: Equatable {
+enum Declaration: Hashable {
     /// A type-like declaration with body of additional declarations (`class`, `struct`, etc)
     indirect case type(
         kind: String,

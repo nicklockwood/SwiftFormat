@@ -62,7 +62,7 @@ class BracesTests: RulesTests {
 
     func testKnRExtraSpaceNotAddedBeforeBrace() {
         let input = "foo({ bar })"
-        testFormatting(for: input, rule: .braces, exclude: ["trailingClosures"])
+        testFormatting(for: input, rule: .braces, exclude: [.trailingClosures])
     }
 
     func testKnRLinebreakNotRemovedBeforeInlineBlockNot() {
@@ -81,7 +81,7 @@ class BracesTests: RulesTests {
             }(),
         ]
         """
-        testFormatting(for: input, rule: .braces, exclude: ["redundantClosure"])
+        testFormatting(for: input, rule: .braces, exclude: [.redundantClosure])
     }
 
     func testKnRNoMangleClosureReturningClosure() {
@@ -142,7 +142,7 @@ class BracesTests: RulesTests {
         }
         """
         let options = FormatOptions(maxWidth: 15)
-        testFormatting(for: input, rule: .braces, options: options, exclude: ["indent"])
+        testFormatting(for: input, rule: .braces, options: options, exclude: [.indent])
     }
 
     func testKnRClosingBraceWrapped() {
@@ -291,7 +291,7 @@ class BracesTests: RulesTests {
         }
         """
         testFormatting(for: input, output, rule: .braces,
-                       exclude: ["wrapMultilineStatementBraces"])
+                       exclude: [.wrapMultilineStatementBraces])
     }
 
     func testBraceNotUnwrappedIfWrapMultilineStatementBracesRuleDisabled() {
@@ -342,7 +342,7 @@ class BracesTests: RulesTests {
         let input = "foo({\n    bar\n})"
         let options = FormatOptions(allmanBraces: true)
         testFormatting(for: input, rule: .braces, options: options,
-                       exclude: ["trailingClosures"])
+                       exclude: [.trailingClosures])
     }
 
     func testAllmanBraceDoClauseIndent() {
@@ -357,7 +357,7 @@ class BracesTests: RulesTests {
         let output = "do\n{\n    try foo\n}\ncatch\n{\n}"
         let options = FormatOptions(allmanBraces: true)
         testFormatting(for: input, output, rule: .braces, options: options,
-                       exclude: ["emptyBraces"])
+                       exclude: [.emptyBraces])
     }
 
     func testAllmanBraceDoThrowsCatchClauseIndent() {
@@ -365,7 +365,7 @@ class BracesTests: RulesTests {
         let output = "do throws(Foo)\n{\n    try foo\n}\ncatch\n{\n}"
         let options = FormatOptions(allmanBraces: true)
         testFormatting(for: input, output, rule: .braces, options: options,
-                       exclude: ["emptyBraces"])
+                       exclude: [.emptyBraces])
     }
 
     func testAllmanBraceRepeatWhileIndent() {

@@ -62,7 +62,7 @@ class SyntaxTests: RulesTests {
         /// TODO: foo
         /// Some more docs
         """
-        testFormatting(for: input, rule: .todos, exclude: ["docComments"])
+        testFormatting(for: input, rule: .todos, exclude: [.docComments])
     }
 
     func testTodoNotReplacedAtStartOfDocBlock() {
@@ -70,7 +70,7 @@ class SyntaxTests: RulesTests {
         /// TODO: foo
         /// Some docs
         """
-        testFormatting(for: input, rule: .todos, exclude: ["docComments"])
+        testFormatting(for: input, rule: .todos, exclude: [.docComments])
     }
 
     func testTodoNotReplacedAtEndOfDocBlock() {
@@ -78,7 +78,7 @@ class SyntaxTests: RulesTests {
         /// Some docs
         /// TODO: foo
         """
-        testFormatting(for: input, rule: .todos, exclude: ["docComments"])
+        testFormatting(for: input, rule: .todos, exclude: [.docComments])
     }
 
     func testMarkWithNoSpaceAfterColon() {
@@ -197,7 +197,7 @@ class SyntaxTests: RulesTests {
 
     func testAnonymousVoidArgumentNotConvertedToEmptyParens() {
         let input = "{ (_: Void) -> Void in }"
-        testFormatting(for: input, rule: .void, exclude: ["redundantVoidReturnType"])
+        testFormatting(for: input, rule: .void, exclude: [.redundantVoidReturnType])
     }
 
     func testFuncWithAnonymousVoidArgumentNotStripped() {
@@ -256,12 +256,12 @@ class SyntaxTests: RulesTests {
     func testEmptyClosureReturnValueConvertedToVoid() {
         let input = "{ () -> () in }"
         let output = "{ () -> Void in }"
-        testFormatting(for: input, output, rule: .void, exclude: ["redundantVoidReturnType"])
+        testFormatting(for: input, output, rule: .void, exclude: [.redundantVoidReturnType])
     }
 
     func testAnonymousVoidClosureNotChanged() {
         let input = "{ (_: Void) in }"
-        testFormatting(for: input, rule: .void, exclude: ["unusedArguments"])
+        testFormatting(for: input, rule: .void, exclude: [.unusedArguments])
     }
 
     func testVoidLiteralConvertedToParens() {
@@ -379,7 +379,7 @@ class SyntaxTests: RulesTests {
         let input = "{ () -> Void in }"
         let output = "{ () -> () in }"
         let options = FormatOptions(useVoid: false)
-        testFormatting(for: input, output, rule: .void, options: options, exclude: ["redundantVoidReturnType"])
+        testFormatting(for: input, output, rule: .void, options: options, exclude: [.redundantVoidReturnType])
     }
 
     func testNoConvertVoidSelfToTuple() {
@@ -437,7 +437,7 @@ class SyntaxTests: RulesTests {
     func testClosureArgumentAfterLinebreakInGuardNotMadeTrailing() {
         let input = "guard let foo =\n    bar({ /* some code */ })\nelse { return }"
         testFormatting(for: input, rule: .trailingClosures,
-                       exclude: ["wrapConditionalBodies"])
+                       exclude: [.wrapConditionalBodies])
     }
 
     func testClosureMadeTrailingForNumericTupleMember() {
@@ -488,7 +488,7 @@ class SyntaxTests: RulesTests {
     func testParensAroundTrailingClosureInGuardCaseLetNotRemoved() {
         let input = "guard case let .foo(bar) = baz.filter({ $0 == quux }).isEmpty else {}"
         testFormatting(for: input, rule: .trailingClosures,
-                       exclude: ["wrapConditionalBodies"])
+                       exclude: [.wrapConditionalBodies])
     }
 
     func testParensAroundTrailingClosureInWhereClauseLetNotRemoved() {
@@ -934,7 +934,7 @@ class SyntaxTests: RulesTests {
         }
         """
         testFormatting(for: input, rule: .enumNamespaces,
-                       exclude: ["modifierOrder"])
+                       exclude: [.modifierOrder])
     }
 
     func testOpenClassNotReplacedByEnum() {
@@ -1270,7 +1270,7 @@ class SyntaxTests: RulesTests {
         let input = "guard true && true\nelse { return }"
         let output = "guard true, true\nelse { return }"
         testFormatting(for: input, output, rule: .andOperator,
-                       exclude: ["wrapConditionalBodies"])
+                       exclude: [.wrapConditionalBodies])
     }
 
     func testWhileAndReplaced() {
@@ -1289,7 +1289,7 @@ class SyntaxTests: RulesTests {
         let input = "if true && (true && true) {}"
         let output = "if true, (true && true) {}"
         testFormatting(for: input, output, rule: .andOperator,
-                       exclude: ["redundantParens"])
+                       exclude: [.redundantParens])
     }
 
     func testIfFunctionAndReplaced() {
@@ -1345,13 +1345,13 @@ class SyntaxTests: RulesTests {
     func testHandleAndAtStartOfLine() {
         let input = "if a == b\n    && b == c {}"
         let output = "if a == b,\n    b == c {}"
-        testFormatting(for: input, output, rule: .andOperator, exclude: ["indent"])
+        testFormatting(for: input, output, rule: .andOperator, exclude: [.indent])
     }
 
     func testHandleAndAtStartOfLineAfterComment() {
         let input = "if a == b // foo\n    && b == c {}"
         let output = "if a == b, // foo\n    b == c {}"
-        testFormatting(for: input, output, rule: .andOperator, exclude: ["indent"])
+        testFormatting(for: input, output, rule: .andOperator, exclude: [.indent])
     }
 
     func testNoReplaceAndOperatorWhereGenericsAmbiguous() {
@@ -1602,7 +1602,7 @@ class SyntaxTests: RulesTests {
         let output = "import Foundation\nprotocol Foo: AnyObject {}"
         let options = FormatOptions(swiftVersion: "4.1")
         testFormatting(for: input, output, rule: .anyObjectProtocol, options: options,
-                       exclude: ["blankLineAfterImports"])
+                       exclude: [.blankLineAfterImports])
     }
 
     func testClassDeclarationNotReplacedByAnyObject() {
@@ -1806,7 +1806,7 @@ class SyntaxTests: RulesTests {
     func testOptionalTypeInsideCaseConvertedToSugar() {
         let input = "if case .some(Optional<Any>.some(let foo)) = bar else {}"
         let output = "if case .some(Any?.some(let foo)) = bar else {}"
-        testFormatting(for: input, output, rule: .typeSugar, exclude: ["hoistPatternLet"])
+        testFormatting(for: input, output, rule: .typeSugar, exclude: [.hoistPatternLet])
     }
 
     func testSwitchCaseOptionalNotReplaced() {
@@ -1833,17 +1833,17 @@ class SyntaxTests: RulesTests {
 
     func testAvoidSwiftParserBugWithClosuresInsideArrays() {
         let input = "var foo = Array<(_ image: Data?) -> Void>()"
-        testFormatting(for: input, rule: .typeSugar, options: FormatOptions(shortOptionals: .always), exclude: ["propertyType"])
+        testFormatting(for: input, rule: .typeSugar, options: FormatOptions(shortOptionals: .always), exclude: [.propertyType])
     }
 
     func testAvoidSwiftParserBugWithClosuresInsideDictionaries() {
         let input = "var foo = Dictionary<String, (_ image: Data?) -> Void>()"
-        testFormatting(for: input, rule: .typeSugar, options: FormatOptions(shortOptionals: .always), exclude: ["propertyType"])
+        testFormatting(for: input, rule: .typeSugar, options: FormatOptions(shortOptionals: .always), exclude: [.propertyType])
     }
 
     func testAvoidSwiftParserBugWithClosuresInsideOptionals() {
         let input = "var foo = Optional<(_ image: Data?) -> Void>()"
-        testFormatting(for: input, rule: .typeSugar, options: FormatOptions(shortOptionals: .always), exclude: ["propertyType"])
+        testFormatting(for: input, rule: .typeSugar, options: FormatOptions(shortOptionals: .always), exclude: [.propertyType])
     }
 
     func testDontOverApplyBugWorkaround() {
@@ -1871,21 +1871,21 @@ class SyntaxTests: RulesTests {
         let input = "var foo = Array<(image: Data?) -> Void>()"
         let output = "var foo = [(image: Data?) -> Void]()"
         let options = FormatOptions(shortOptionals: .always)
-        testFormatting(for: input, output, rule: .typeSugar, options: options, exclude: ["propertyType"])
+        testFormatting(for: input, output, rule: .typeSugar, options: options, exclude: [.propertyType])
     }
 
     func testDontOverApplyBugWorkaround5() {
         let input = "var foo = Array<(Data?) -> Void>()"
         let output = "var foo = [(Data?) -> Void]()"
         let options = FormatOptions(shortOptionals: .always)
-        testFormatting(for: input, output, rule: .typeSugar, options: options, exclude: ["propertyType"])
+        testFormatting(for: input, output, rule: .typeSugar, options: options, exclude: [.propertyType])
     }
 
     func testDontOverApplyBugWorkaround6() {
         let input = "var foo = Dictionary<Int, Array<(_ image: Data?) -> Void>>()"
         let output = "var foo = [Int: Array<(_ image: Data?) -> Void>]()"
         let options = FormatOptions(shortOptionals: .always)
-        testFormatting(for: input, output, rule: .typeSugar, options: options, exclude: ["propertyType"])
+        testFormatting(for: input, output, rule: .typeSugar, options: options, exclude: [.propertyType])
     }
 
     // MARK: - preferKeyPath
@@ -1919,7 +1919,7 @@ class SyntaxTests: RulesTests {
         let output = "let foo = bar.map(\\ . foo . bar)"
         let options = FormatOptions(swiftVersion: "5.2")
         testFormatting(for: input, output, rule: .preferKeyPath,
-                       options: options, exclude: ["spaceAroundOperators"])
+                       options: options, exclude: [.spaceAroundOperators])
     }
 
     func testMultilineMapPropertyToKeyPath() {
@@ -2080,7 +2080,7 @@ class SyntaxTests: RulesTests {
         struct ScreenID {}
         """
 
-        testFormatting(for: input, output, rule: .acronyms, exclude: ["propertyType"])
+        testFormatting(for: input, output, rule: .acronyms, exclude: [.propertyType])
     }
 
     func testUppercaseCustomAcronym() {
@@ -2184,7 +2184,7 @@ class SyntaxTests: RulesTests {
         /// This is a documentation comment,
         /// not a standard comment.
         """
-        testFormatting(for: input, output, rule: .blockComments, exclude: ["docComments"])
+        testFormatting(for: input, output, rule: .blockComments, exclude: [.docComments])
     }
 
     func testBlockDocCommentsWithoutAsterisksOnEachLine() {
@@ -2198,7 +2198,7 @@ class SyntaxTests: RulesTests {
         /// This is a documentation comment,
         /// not a standard comment.
         """
-        testFormatting(for: input, output, rule: .blockComments, exclude: ["docComments"])
+        testFormatting(for: input, output, rule: .blockComments, exclude: [.docComments])
     }
 
     func testBlockCommentWithBulletPoints() {
@@ -2298,7 +2298,7 @@ class SyntaxTests: RulesTests {
             /// bar.
         }
         """
-        testFormatting(for: input, output, rule: .blockComments, exclude: ["docComments"])
+        testFormatting(for: input, output, rule: .blockComments, exclude: [.docComments])
     }
 
     func testLongBlockCommentsWithoutPerLineMarkersFullyConverted() {
@@ -2362,7 +2362,7 @@ class SyntaxTests: RulesTests {
         /// Line 3.
         foo(bar)
         """
-        testFormatting(for: input, output, rule: .blockComments, exclude: ["docComments"])
+        testFormatting(for: input, output, rule: .blockComments, exclude: [.docComments])
     }
 
     func testBlockCommentImmediatelyFollowedByCode3() {
@@ -2376,7 +2376,7 @@ class SyntaxTests: RulesTests {
         // bar
         func foo() {}
         """
-        testFormatting(for: input, output, rule: .blockComments, exclude: ["docComments"])
+        testFormatting(for: input, output, rule: .blockComments, exclude: [.docComments])
     }
 
     func testBlockCommentFollowedByBlankLine() {
@@ -2396,7 +2396,7 @@ class SyntaxTests: RulesTests {
 
         func foo() {}
         """
-        testFormatting(for: input, output, rule: .blockComments, exclude: ["docComments"])
+        testFormatting(for: input, output, rule: .blockComments, exclude: [.docComments])
     }
 
     // MARK: - opaqueGenericParameters
@@ -2912,7 +2912,7 @@ class SyntaxTests: RulesTests {
         let output = "extension Array<Foo> {}"
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: ["typeSugar"])
+        testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: [.typeSugar])
     }
 
     func testUpdatesOptionalGenericExtensionToAngleBracketSyntax() {
@@ -2920,7 +2920,7 @@ class SyntaxTests: RulesTests {
         let output = "extension Optional<Foo> {}"
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: ["typeSugar"])
+        testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: [.typeSugar])
     }
 
     func testUpdatesArrayGenericExtensionToAngleBracketSyntaxWithSelf() {
@@ -2928,7 +2928,7 @@ class SyntaxTests: RulesTests {
         let output = "extension Array<Foo> {}"
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: ["typeSugar"])
+        testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: [.typeSugar])
     }
 
     func testUpdatesArrayWithGenericElement() {
@@ -2936,7 +2936,7 @@ class SyntaxTests: RulesTests {
         let output = "extension Array<Foo<Bar>> {}"
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: ["typeSugar"])
+        testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: [.typeSugar])
     }
 
     func testUpdatesDictionaryGenericExtensionToAngleBracketSyntax() {
@@ -2944,7 +2944,7 @@ class SyntaxTests: RulesTests {
         let output = "extension Dictionary<Foo, Bar> {}"
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: ["typeSugar"])
+        testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: [.typeSugar])
     }
 
     func testRequiresAllGenericTypesToBeProvided() {
@@ -2960,7 +2960,7 @@ class SyntaxTests: RulesTests {
         let output = "extension Array<[[Foo: Bar]]> {}"
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: ["typeSugar"])
+        testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: [.typeSugar])
     }
 
     func testDoesntUpdateIneligibleConstraints() {
@@ -3178,7 +3178,7 @@ class SyntaxTests: RulesTests {
         let output = "func f<T>(x: some B) -> T where T: A {}"
         let options = FormatOptions(swiftVersion: "5.7")
         testFormatting(for: input, output, rule: .opaqueGenericParameters,
-                       options: options, exclude: ["unusedArguments"])
+                       options: options, exclude: [.unusedArguments])
     }
 
     // MARK: docComments
@@ -3267,7 +3267,7 @@ class SyntaxTests: RulesTests {
         """
 
         testFormatting(for: input, output, rule: .docComments,
-                       exclude: ["spaceInsideComments", "propertyType"])
+                       exclude: [.spaceInsideComments, .propertyType])
     }
 
     func testConvertDocCommentsToComments() {
@@ -3342,7 +3342,7 @@ class SyntaxTests: RulesTests {
         """
 
         testFormatting(for: input, output, rule: .docComments,
-                       exclude: ["spaceInsideComments", "redundantProperty", "propertyType"])
+                       exclude: [.spaceInsideComments, .redundantProperty, .propertyType])
     }
 
     func testPreservesDocComments() {
@@ -3419,7 +3419,7 @@ class SyntaxTests: RulesTests {
         """
 
         let options = FormatOptions(preserveDocComments: true)
-        testFormatting(for: input, output, rule: .docComments, options: options, exclude: ["spaceInsideComments", "redundantProperty", "propertyType"])
+        testFormatting(for: input, output, rule: .docComments, options: options, exclude: [.spaceInsideComments, .redundantProperty, .propertyType])
     }
 
     func testDoesntConvertCommentBeforeConsecutivePropertiesToDocComment() {
@@ -3782,7 +3782,7 @@ class SyntaxTests: RulesTests {
         }
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: .conditionalAssignment, options: options, exclude: ["redundantType", "wrapMultilineConditionalAssignment"])
+        testFormatting(for: input, output, rule: .conditionalAssignment, options: options, exclude: [.redundantType, .wrapMultilineConditionalAssignment])
     }
 
     func testConvertsSimpleSwitchStatementAssignment() {
@@ -3804,7 +3804,7 @@ class SyntaxTests: RulesTests {
         }
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: .conditionalAssignment, options: options, exclude: ["redundantType", "wrapMultilineConditionalAssignment"])
+        testFormatting(for: input, output, rule: .conditionalAssignment, options: options, exclude: [.redundantType, .wrapMultilineConditionalAssignment])
     }
 
     func testConvertsTrivialSwitchStatementAssignment() {
@@ -3822,7 +3822,7 @@ class SyntaxTests: RulesTests {
         }
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: .conditionalAssignment, options: options, exclude: ["wrapMultilineConditionalAssignment"])
+        testFormatting(for: input, output, rule: .conditionalAssignment, options: options, exclude: [.wrapMultilineConditionalAssignment])
     }
 
     func testConvertsNestedIfAndStatementAssignments() {
@@ -3874,7 +3874,7 @@ class SyntaxTests: RulesTests {
         }
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: .conditionalAssignment, options: options, exclude: ["redundantType", "wrapMultilineConditionalAssignment"])
+        testFormatting(for: input, output, rule: .conditionalAssignment, options: options, exclude: [.redundantType, .wrapMultilineConditionalAssignment])
     }
 
     func testConvertsIfStatementAssignmentPreservingComment() {
@@ -3897,7 +3897,7 @@ class SyntaxTests: RulesTests {
         }
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: .conditionalAssignment, options: options, exclude: ["indent", "redundantType", "wrapMultilineConditionalAssignment"])
+        testFormatting(for: input, output, rule: .conditionalAssignment, options: options, exclude: [.indent, .redundantType, .wrapMultilineConditionalAssignment])
     }
 
     func testDoesntConvertsIfStatementAssigningMultipleProperties() {
@@ -4153,7 +4153,7 @@ class SyntaxTests: RulesTests {
         """
 
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: .conditionalAssignment, options: options, exclude: ["wrapMultilineConditionalAssignment"])
+        testFormatting(for: input, output, rule: .conditionalAssignment, options: options, exclude: [.wrapMultilineConditionalAssignment])
     }
 
     // TODO: update branches parser to handle this case properly
@@ -4232,7 +4232,7 @@ class SyntaxTests: RulesTests {
         """
 
         let options = FormatOptions(swiftVersion: "5.10")
-        testFormatting(for: input, output, rule: .conditionalAssignment, options: options, exclude: ["wrapMultilineConditionalAssignment"])
+        testFormatting(for: input, output, rule: .conditionalAssignment, options: options, exclude: [.wrapMultilineConditionalAssignment])
     }
 
     func testConvertsSwitchWithDefaultCase() {
@@ -4260,7 +4260,7 @@ class SyntaxTests: RulesTests {
         """
 
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: .conditionalAssignment, options: options, exclude: ["wrapMultilineConditionalAssignment", "redundantType"])
+        testFormatting(for: input, output, rule: .conditionalAssignment, options: options, exclude: [.wrapMultilineConditionalAssignment, .redundantType])
     }
 
     func testConvertsSwitchWithUnknownDefaultCase() {
@@ -4288,7 +4288,7 @@ class SyntaxTests: RulesTests {
         """
 
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, output, rule: .conditionalAssignment, options: options, exclude: ["wrapMultilineConditionalAssignment", "redundantType"])
+        testFormatting(for: input, output, rule: .conditionalAssignment, options: options, exclude: [.wrapMultilineConditionalAssignment, .redundantType])
     }
 
     func testPreservesSwitchWithReturnInDefaultCase() {
@@ -4617,7 +4617,7 @@ class SyntaxTests: RulesTests {
         potatoes.forEach({ $0.bake() })
         """
 
-        testFormatting(for: input, output, rule: .preferForLoop, exclude: ["trailingClosures"])
+        testFormatting(for: input, output, rule: .preferForLoop, exclude: [.trailingClosures])
     }
 
     func testNoConvertAnonymousForEachToForLoop() {
@@ -4631,7 +4631,7 @@ class SyntaxTests: RulesTests {
         """
 
         let options = FormatOptions(preserveAnonymousForEach: true, preserveSingleLineForEach: false)
-        testFormatting(for: input, rule: .preferForLoop, options: options, exclude: ["trailingClosures"])
+        testFormatting(for: input, rule: .preferForLoop, options: options, exclude: [.trailingClosures])
     }
 
     func testConvertSingleLineForEachToForLoop() {
@@ -4640,7 +4640,7 @@ class SyntaxTests: RulesTests {
 
         let options = FormatOptions(preserveSingleLineForEach: false)
         testFormatting(for: input, output, rule: .preferForLoop, options: options,
-                       exclude: ["wrapLoopBodies"])
+                       exclude: [.wrapLoopBodies])
     }
 
     func testConvertSingleLineAnonymousForEachToForLoop() {
@@ -4649,7 +4649,7 @@ class SyntaxTests: RulesTests {
 
         let options = FormatOptions(preserveSingleLineForEach: false)
         testFormatting(for: input, output, rule: .preferForLoop, options: options,
-                       exclude: ["wrapLoopBodies"])
+                       exclude: [.wrapLoopBodies])
     }
 
     func testConvertNestedForEach() {
@@ -4856,7 +4856,7 @@ class SyntaxTests: RulesTests {
             print(item)
         }
         """
-        testFormatting(for: input, output, rule: .preferForLoop, exclude: ["redundantParens"])
+        testFormatting(for: input, output, rule: .preferForLoop, exclude: [.redundantParens])
     }
 
     func testPreservesForEachAfterMultilineChain() {
@@ -4871,7 +4871,7 @@ class SyntaxTests: RulesTests {
             .map({ $0.uppercased() })
             .forEach({ print($0) })
         """
-        testFormatting(for: input, rule: .preferForLoop, exclude: ["trailingClosures"])
+        testFormatting(for: input, rule: .preferForLoop, exclude: [.trailingClosures])
     }
 
     func testPreservesChainWithClosure() {
@@ -5111,7 +5111,7 @@ class SyntaxTests: RulesTests {
         """
 
         let options = FormatOptions(redundantType: .explicit)
-        testFormatting(for: input, rule: .propertyType, options: options, exclude: ["void"])
+        testFormatting(for: input, rule: .propertyType, options: options, exclude: [.void])
     }
 
     func testPreservesExplicitTypeIfUsingLocalValueOrLiteral() {
@@ -5126,7 +5126,7 @@ class SyntaxTests: RulesTests {
         """
 
         let options = FormatOptions(redundantType: .inferred)
-        testFormatting(for: input, rule: .propertyType, options: options, exclude: ["redundantType"])
+        testFormatting(for: input, rule: .propertyType, options: options, exclude: [.redundantType])
     }
 
     func testCompatibleWithRedundantTypeInferred() {
@@ -5394,7 +5394,7 @@ class SyntaxTests: RulesTests {
         """
 
         let options = FormatOptions(redundantType: .inferLocalsOnly, preserveSymbols: ["init"])
-        testFormatting(for: input, output, rule: .propertyType, options: options, exclude: ["redundantInit"])
+        testFormatting(for: input, output, rule: .propertyType, options: options, exclude: [.redundantInit])
     }
 
     func testClosureBodyIsConsideredLocal() {
@@ -5618,7 +5618,7 @@ class SyntaxTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, output, rule: .docCommentsBeforeAttributes, exclude: ["blankLinesAtStartOfScope", "blankLinesAtEndOfScope"])
+        testFormatting(for: input, output, rule: .docCommentsBeforeAttributes, exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope])
     }
 
     func testPreservesCommentsBetweenAttributes() {
@@ -5648,7 +5648,7 @@ class SyntaxTests: RulesTests {
         func bar() {}
         """
 
-        testFormatting(for: input, output, rule: .docCommentsBeforeAttributes, exclude: ["docComments"])
+        testFormatting(for: input, output, rule: .docCommentsBeforeAttributes, exclude: [.docComments])
     }
 
     func testPreservesCommentOnSameLineAsAttribute() {
@@ -5657,7 +5657,7 @@ class SyntaxTests: RulesTests {
         func foo() {}
         """
 
-        testFormatting(for: input, rule: .docCommentsBeforeAttributes, exclude: ["docComments"])
+        testFormatting(for: input, rule: .docCommentsBeforeAttributes, exclude: [.docComments])
     }
 
     func testPreservesRegularComments() {
@@ -5667,7 +5667,7 @@ class SyntaxTests: RulesTests {
         func foo() {}
         """
 
-        testFormatting(for: input, rule: .docCommentsBeforeAttributes, exclude: ["docComments"])
+        testFormatting(for: input, rule: .docCommentsBeforeAttributes, exclude: [.docComments])
     }
 
     func testCombinesWithDocCommentsRule() {

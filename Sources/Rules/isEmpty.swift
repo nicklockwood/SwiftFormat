@@ -1,5 +1,5 @@
 //
-//  isEmpty.swift
+//  IsEmpty.swift
 //  SwiftFormat
 //
 //  Created by Cal Stephens on 7/28/24.

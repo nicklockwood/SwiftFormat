@@ -1,5 +1,5 @@
 //
-//  blankLinesBetweenChainedFunctions.swift
+//  BlankLinesBetweenChainedFunctions.swift
 //  SwiftFormat
 //
 //  Created by Cal Stephens on 7/28/24.

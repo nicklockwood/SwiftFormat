@@ -1,5 +1,5 @@
 //
-//  indent.swift
+//  Indent.swift
 //  SwiftFormat
 //
 //  Created by Cal Stephens on 7/27/24.

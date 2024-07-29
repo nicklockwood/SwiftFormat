@@ -1,5 +1,5 @@
 //
-//  wrapConditionalBodies.swift
+//  WrapConditionalBodies.swift
 //  SwiftFormat
 //
 //  Created by Cal Stephens on 7/28/24.

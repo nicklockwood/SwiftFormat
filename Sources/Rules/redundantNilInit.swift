@@ -1,5 +1,5 @@
 //
-//  redundantNilInit.swift
+//  RedundantNilInit.swift
 //  SwiftFormat
 //
 //  Created by Cal Stephens on 7/28/24.

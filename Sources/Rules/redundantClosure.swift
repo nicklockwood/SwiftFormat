@@ -15,7 +15,7 @@ public extension FormatRule {
         which are called immediately.
         """,
         disabledByDefault: false,
-        orderAfter: ["redundantReturn"]
+        orderAfter: [.redundantReturn]
     ) { formatter in
         formatter.forEach(.startOfScope("{")) { closureStartIndex, _ in
             var startIndex = closureStartIndex

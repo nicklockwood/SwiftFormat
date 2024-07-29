@@ -13,7 +13,7 @@ public extension FormatRule {
     /// meaning and leads to noise in commits.
     static let trailingSpace = FormatRule(
         help: "Remove trailing space at end of a line.",
-        orderAfter: ["wrap", "wrapArguments"],
+        orderAfter: [.wrap, .wrapArguments],
         options: ["trimwhitespace"]
     ) { formatter in
         formatter.forEach(.space) { i, _ in

@@ -11,7 +11,7 @@ import Foundation
 public extension FormatRule {
     static let consistentSwitchCaseSpacing = FormatRule(
         help: "Ensures consistent spacing among all of the cases in a switch statement.",
-        orderAfter: ["blankLineAfterSwitchCase"]
+        orderAfter: [.blankLineAfterSwitchCase]
     ) { formatter in
         formatter.forEach(.keyword("switch")) { switchIndex, _ in
             guard let switchCases = formatter.switchStatementBranchesWithSpacingInfo(at: switchIndex) else { return }

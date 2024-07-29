@@ -11,7 +11,7 @@ import Foundation
 public extension FormatRule {
     static let docCommentsBeforeAttributes = FormatRule(
         help: "Place doc comments on declarations before any attributes.",
-        orderAfter: ["docComments"]
+        orderAfter: [.docComments]
     ) { formatter in
         formatter.forEachToken(where: \.isDeclarationTypeKeyword) { keywordIndex, _ in
             // Parse the attributes on this declaration if present

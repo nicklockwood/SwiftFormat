@@ -12,7 +12,7 @@ public extension FormatRule {
     static let wrapMultilineConditionalAssignment = FormatRule(
         help: "Wrap multiline conditional assignment expressions after the assignment operator.",
         disabledByDefault: true,
-        orderAfter: ["conditionalAssignment"],
+        orderAfter: [.conditionalAssignment],
         sharedOptions: ["linebreaks"]
     ) { formatter in
         formatter.forEach(.keyword) { startOfCondition, keywordToken in

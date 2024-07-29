@@ -42,7 +42,7 @@ class GeneralTests: RulesTests {
         }
         """
         testFormatting(for: input, output, rule: .initCoderUnavailable,
-                       exclude: ["unusedArguments"])
+                       exclude: [.unusedArguments])
     }
 
     func testInitCoderUnavailableFatalErrorNilDisabled() {
@@ -157,7 +157,7 @@ class GeneralTests: RulesTests {
         """
         let options = FormatOptions(initCoderNil: true)
         testFormatting(for: input, output, rule: .initCoderUnavailable,
-                       options: options, exclude: ["modifierOrder"])
+                       options: options, exclude: [.modifierOrder])
     }
 
     // MARK: - trailingCommas
@@ -277,7 +277,7 @@ class GeneralTests: RulesTests {
             Int
         ]).self
         """
-        testFormatting(for: input, rule: .trailingCommas, exclude: ["propertyType"])
+        testFormatting(for: input, rule: .trailingCommas, exclude: [.propertyType])
     }
 
     func testTrailingCommaNotAddedToTypeDeclaration() {
@@ -324,7 +324,7 @@ class GeneralTests: RulesTests {
             String: Int
         ]]()
         """
-        testFormatting(for: input, rule: .trailingCommas, exclude: ["propertyType"])
+        testFormatting(for: input, rule: .trailingCommas, exclude: [.propertyType])
     }
 
     func testTrailingCommaNotAddedToTypeDeclaration6() {
@@ -337,7 +337,7 @@ class GeneralTests: RulesTests {
             ])
         ]]()
         """
-        testFormatting(for: input, rule: .trailingCommas, exclude: ["propertyType"])
+        testFormatting(for: input, rule: .trailingCommas, exclude: [.propertyType])
     }
 
     func testTrailingCommaNotAddedToTypeDeclaration7() {
@@ -446,7 +446,7 @@ class GeneralTests: RulesTests {
         let input = "// foobar"
         let options = FormatOptions(fileHeader: "// foobar")
         testFormatting(for: input, rule: .fileHeader, options: options,
-                       exclude: ["linebreakAtEndOfFile"])
+                       exclude: [.linebreakAtEndOfFile])
     }
 
     func testReplaceHeaderWhenFileContainsNoCode2() {
@@ -535,7 +535,7 @@ class GeneralTests: RulesTests {
     func testNoStripHeaderDocWithNewlineBeforeCode() {
         let input = "/// Header doc\n\nclass Foo {}"
         let options = FormatOptions(fileHeader: "")
-        testFormatting(for: input, rule: .fileHeader, options: options, exclude: ["docComments"])
+        testFormatting(for: input, rule: .fileHeader, options: options, exclude: [.docComments])
     }
 
     func testNoDuplicateHeaderIfMissingTrailingBlankLine() {
@@ -986,7 +986,7 @@ class GeneralTests: RulesTests {
         """
         let options = FormatOptions(swiftVersion: "4.2")
         testFormatting(for: input, output, rule: .strongifiedSelf, options: options,
-                       exclude: ["wrapConditionalBodies"])
+                       exclude: [.wrapConditionalBodies])
     }
 
     func testBacktickedSelfConvertedToSelfInIf() {
@@ -1002,7 +1002,7 @@ class GeneralTests: RulesTests {
         """
         let options = FormatOptions(swiftVersion: "4.2")
         testFormatting(for: input, output, rule: .strongifiedSelf, options: options,
-                       exclude: ["wrapConditionalBodies"])
+                       exclude: [.wrapConditionalBodies])
     }
 
     func testBacktickedSelfNotConvertedIfVersionLessThan4_2() {
@@ -1013,7 +1013,7 @@ class GeneralTests: RulesTests {
         """
         let options = FormatOptions(swiftVersion: "4.1.5")
         testFormatting(for: input, rule: .strongifiedSelf, options: options,
-                       exclude: ["wrapConditionalBodies"])
+                       exclude: [.wrapConditionalBodies])
     }
 
     func testBacktickedSelfNotConvertedIfVersionUnspecified() {
@@ -1023,7 +1023,7 @@ class GeneralTests: RulesTests {
         }
         """
         testFormatting(for: input, rule: .strongifiedSelf,
-                       exclude: ["wrapConditionalBodies"])
+                       exclude: [.wrapConditionalBodies])
     }
 
     func testBacktickedSelfNotConvertedIfNotConditional() {
@@ -1184,7 +1184,7 @@ class GeneralTests: RulesTests {
         let input = "if [0] == foo.bar[0]\n{ baz() }"
         let output = "if foo.bar[0] == [0]\n{ baz() }"
         testFormatting(for: input, output, rule: .yodaConditions,
-                       exclude: ["wrapConditionalBodies"])
+                       exclude: [.wrapConditionalBodies])
     }
 
     func testYodaConditionInSecondClauseOfIfStatement() {

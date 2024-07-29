@@ -38,7 +38,7 @@ public final class FormatRule: Equatable, Comparable, CustomStringConvertible {
     let help: String
     let runOnceOnly: Bool
     let disabledByDefault: Bool
-    let orderAfter: [String]
+    let orderAfter: [FormatRule]
     let options: [String]
     let sharedOptions: [String]
     let deprecationMessage: String?
@@ -58,7 +58,7 @@ public final class FormatRule: Equatable, Comparable, CustomStringConvertible {
          deprecationMessage: String? = nil,
          runOnceOnly: Bool = false,
          disabledByDefault: Bool = false,
-         orderAfter: [String] = [],
+         orderAfter: [FormatRule] = [],
          options: [String] = [],
          sharedOptions: [String] = [],
          _ fn: @escaping (Formatter) -> Void)
@@ -91,19 +91,13 @@ public final class FormatRule: Equatable, Comparable, CustomStringConvertible {
 public let FormatRules = _FormatRules()
 
 private let rulesByName: [String: FormatRule] = {
-    var rules = [String: FormatRule]()
-    for (label, value) in Mirror(reflecting: FormatRules).children {
-        guard let name = label, let rule = value as? FormatRule else {
-            continue
-        }
+    var rules = ruleRegistry
+    for (name, rule) in rules {
         rule.name = name
-        rules[name] = rule
     }
 
-    let alphabetizedRuleRegistry = ruleRegistry.sorted(by: { $0.key < $1.key })
-    for (name, rule) in alphabetizedRuleRegistry {
-        rule.name = name
-        rules[name] = rule
+    for rule in rules.values {
+        assert(rule.name != "[unnamed rule]")
     }
 
     let values = rules.values.sorted(by: { $0.name < $1.name })
@@ -114,10 +108,7 @@ private let rulesByName: [String: FormatRule] = {
     while changedOrder {
         changedOrder = false
         for value in values {
-            for name in value.orderAfter {
-                guard let rule = rules[name] else {
-                    preconditionFailure(name)
-                }
+            for rule in value.orderAfter {
                 if rule.index >= value.index {
                     value.index = rule.index + 1
                     changedOrder = true

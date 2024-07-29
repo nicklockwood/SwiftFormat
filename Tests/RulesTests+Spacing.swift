@@ -73,12 +73,12 @@ class SpacingTests: RulesTests {
 
     func testSpaceBetweenParenAndAs() {
         let input = "(foo.bar) as? String"
-        testFormatting(for: input, rule: .spaceAroundParens, exclude: ["redundantParens"])
+        testFormatting(for: input, rule: .spaceAroundParens, exclude: [.redundantParens])
     }
 
     func testNoSpaceAfterParenAtEndOfFile() {
         let input = "(foo.bar)"
-        testFormatting(for: input, rule: .spaceAroundParens, exclude: ["redundantParens"])
+        testFormatting(for: input, rule: .spaceAroundParens, exclude: [.redundantParens])
     }
 
     func testSpaceBetweenParenAndFoo() {
@@ -160,19 +160,19 @@ class SpacingTests: RulesTests {
     func testAddSpaceBetweenCaptureListAndArguments() {
         let input = "{ [weak self](foo) in print(foo) }"
         let output = "{ [weak self] (foo) in print(foo) }"
-        testFormatting(for: input, output, rule: .spaceAroundParens, exclude: ["redundantParens"])
+        testFormatting(for: input, output, rule: .spaceAroundParens, exclude: [.redundantParens])
     }
 
     func testAddSpaceBetweenCaptureListAndArguments2() {
         let input = "{ [weak self]() -> Void in }"
         let output = "{ [weak self] () -> Void in }"
-        testFormatting(for: input, output, rule: .spaceAroundParens, exclude: ["redundantVoidReturnType"])
+        testFormatting(for: input, output, rule: .spaceAroundParens, exclude: [.redundantVoidReturnType])
     }
 
     func testAddSpaceBetweenCaptureListAndArguments3() {
         let input = "{ [weak self]() throws -> Void in }"
         let output = "{ [weak self] () throws -> Void in }"
-        testFormatting(for: input, output, rule: .spaceAroundParens, exclude: ["redundantVoidReturnType"])
+        testFormatting(for: input, output, rule: .spaceAroundParens, exclude: [.redundantVoidReturnType])
     }
 
     func testAddSpaceBetweenCaptureListAndArguments4() {
@@ -196,13 +196,13 @@ class SpacingTests: RulesTests {
     func testAddSpaceBetweenCaptureListAndArguments7() {
         let input = "Foo<Bar>(0) { [weak self]() -> Void in }"
         let output = "Foo<Bar>(0) { [weak self] () -> Void in }"
-        testFormatting(for: input, output, rule: .spaceAroundParens, exclude: ["redundantVoidReturnType"])
+        testFormatting(for: input, output, rule: .spaceAroundParens, exclude: [.redundantVoidReturnType])
     }
 
     func testAddSpaceBetweenCaptureListAndArguments8() {
         let input = "{ [weak self]() throws(Foo) -> Void in }"
         let output = "{ [weak self] () throws(Foo) -> Void in }"
-        testFormatting(for: input, output, rule: .spaceAroundParens, exclude: ["redundantVoidReturnType"])
+        testFormatting(for: input, output, rule: .spaceAroundParens, exclude: [.redundantVoidReturnType])
     }
 
     func testAddSpaceBetweenEscapingAndParenthesizedClosure() {
@@ -226,13 +226,13 @@ class SpacingTests: RulesTests {
     func testNoSpaceBetweenClosingBraceAndParens() {
         let input = "{ block } ()"
         let output = "{ block }()"
-        testFormatting(for: input, output, rule: .spaceAroundParens, exclude: ["redundantClosure"])
+        testFormatting(for: input, output, rule: .spaceAroundParens, exclude: [.redundantClosure])
     }
 
     func testDontRemoveSpaceBetweenOpeningBraceAndParens() {
         let input = "a = (b + c)"
         testFormatting(for: input, rule: .spaceAroundParens,
-                       exclude: ["redundantParens"])
+                       exclude: [.redundantParens])
     }
 
     func testKeywordAsIdentifierParensSpacing() {
@@ -332,7 +332,7 @@ class SpacingTests: RulesTests {
         let input = "func foo(_: borrowing(any Foo)) {}"
         let output = "func foo(_: borrowing (any Foo)) {}"
         testFormatting(for: input, output, rule: .spaceAroundParens,
-                       exclude: ["noExplicitOwnership"])
+                       exclude: [.noExplicitOwnership])
     }
 
     func testAddSpaceBetweenParenAndIsolated() {
@@ -435,14 +435,14 @@ class SpacingTests: RulesTests {
         let input = "func foo(arg _: consuming[String]) {}"
         let output = "func foo(arg _: consuming [String]) {}"
         testFormatting(for: input, output, rule: .spaceAroundBrackets,
-                       exclude: ["noExplicitOwnership"])
+                       exclude: [.noExplicitOwnership])
     }
 
     func testAddSpaceBetweenBorrowingAndStringArray() {
         let input = "func foo(arg _: borrowing[String]) {}"
         let output = "func foo(arg _: borrowing [String]) {}"
         testFormatting(for: input, output, rule: .spaceAroundBrackets,
-                       exclude: ["noExplicitOwnership"])
+                       exclude: [.noExplicitOwnership])
     }
 
     func testAddSpaceBetweenSendingAndStringArray() {
@@ -478,13 +478,13 @@ class SpacingTests: RulesTests {
         let input = "if x{ y }else{ z }"
         let output = "if x { y } else { z }"
         testFormatting(for: input, output, rule: .spaceAroundBraces,
-                       exclude: ["wrapConditionalBodies"])
+                       exclude: [.wrapConditionalBodies])
     }
 
     func testNoSpaceAroundClosureInsiderParens() {
         let input = "foo({ $0 == 5 })"
         testFormatting(for: input, rule: .spaceAroundBraces,
-                       exclude: ["trailingClosures"])
+                       exclude: [.trailingClosures])
     }
 
     func testNoExtraSpaceAroundBracesAtStartOrEndOfFile() {
@@ -531,17 +531,17 @@ class SpacingTests: RulesTests {
     func testSpaceInsideBraces() {
         let input = "foo({bar})"
         let output = "foo({ bar })"
-        testFormatting(for: input, output, rule: .spaceInsideBraces, exclude: ["trailingClosures"])
+        testFormatting(for: input, output, rule: .spaceInsideBraces, exclude: [.trailingClosures])
     }
 
     func testNoExtraSpaceInsidebraces() {
         let input = "{ foo }"
-        testFormatting(for: input, rule: .spaceInsideBraces, exclude: ["trailingClosures"])
+        testFormatting(for: input, rule: .spaceInsideBraces, exclude: [.trailingClosures])
     }
 
     func testNoSpaceAddedInsideEmptybraces() {
         let input = "foo({})"
-        testFormatting(for: input, rule: .spaceInsideBraces, exclude: ["trailingClosures"])
+        testFormatting(for: input, rule: .spaceInsideBraces, exclude: [.trailingClosures])
     }
 
     func testNoSpaceAddedBetweenDoublebraces() {
@@ -559,7 +559,7 @@ class SpacingTests: RulesTests {
 
     func testSpaceAroundGenericsFollowedByAndOperator() {
         let input = "if foo is Foo<Bar> && baz {}"
-        testFormatting(for: input, rule: .spaceAroundGenerics, exclude: ["andOperator"])
+        testFormatting(for: input, rule: .spaceAroundGenerics, exclude: [.andOperator])
     }
 
     func testSpaceAroundGenericResultBuilder() {
@@ -649,7 +649,7 @@ class SpacingTests: RulesTests {
     func testNoRemoveSpaceAroundEnumInBrackets() {
         let input = "[ .red ]"
         testFormatting(for: input, rule: .spaceAroundOperators,
-                       exclude: ["spaceInsideBrackets"])
+                       exclude: [.spaceInsideBrackets])
     }
 
     func testSpaceBetweenSemicolonAndEnumValue() {
@@ -695,7 +695,7 @@ class SpacingTests: RulesTests {
         let input = "print(foo\n      ,bar)"
         let output = "print(foo\n      , bar)"
         testFormatting(for: input, output, rule: .spaceAroundOperators,
-                       exclude: ["leadingDelimiters"])
+                       exclude: [.leadingDelimiters])
     }
 
     func testSpaceAroundInfixMinus() {
@@ -882,14 +882,14 @@ class SpacingTests: RulesTests {
         let input = "foo/* hello */-bar"
         let output = "foo/* hello */ -bar"
         testFormatting(for: input, output, rule: .spaceAroundOperators,
-                       exclude: ["spaceAroundComments"])
+                       exclude: [.spaceAroundComments])
     }
 
     func testSpaceAroundCommentsInInfixExpression() {
         let input = "a/* */+/* */b"
         let output = "a/* */ + /* */b"
         testFormatting(for: input, output, rule: .spaceAroundOperators,
-                       exclude: ["spaceAroundComments"])
+                       exclude: [.spaceAroundComments])
     }
 
     func testSpaceAroundCommentInPrefixExpression() {
@@ -962,7 +962,7 @@ class SpacingTests: RulesTests {
 
     func testNoAddSpaceAroundOperatorInsideParens() {
         let input = "(!=)"
-        testFormatting(for: input, rule: .spaceAroundOperators, exclude: ["redundantParens"])
+        testFormatting(for: input, rule: .spaceAroundOperators, exclude: [.redundantParens])
     }
 
     func testSpaceAroundPlusBeforeHash() {
@@ -1077,28 +1077,28 @@ class SpacingTests: RulesTests {
         let input = "let range = 0 +\n4"
         let options = FormatOptions(noSpaceOperators: ["+"])
         testFormatting(for: input, rule: .spaceAroundOperators, options: options,
-                       exclude: ["indent"])
+                       exclude: [.indent])
     }
 
     func testSpaceOnOneSideOfPlusMatchedByLinebreakNotRemoved2() {
         let input = "let range = 0\n+ 4"
         let options = FormatOptions(noSpaceOperators: ["+"])
         testFormatting(for: input, rule: .spaceAroundOperators, options: options,
-                       exclude: ["indent"])
+                       exclude: [.indent])
     }
 
     func testSpaceAroundPlusWithLinebreakOnOneSideNotRemoved() {
         let input = "let range = 0 + \n4"
         let options = FormatOptions(noSpaceOperators: ["+"])
         testFormatting(for: input, rule: .spaceAroundOperators, options: options,
-                       exclude: ["indent", "trailingSpace"])
+                       exclude: [.indent, .trailingSpace])
     }
 
     func testSpaceAroundPlusWithLinebreakOnOneSideNotRemoved2() {
         let input = "let range = 0\n + 4"
         let options = FormatOptions(noSpaceOperators: ["+"])
         testFormatting(for: input, rule: .spaceAroundOperators, options: options,
-                       exclude: ["indent"])
+                       exclude: [.indent])
     }
 
     func testAddSpaceEvenAfterLHSClosure() {
@@ -1198,56 +1198,56 @@ class SpacingTests: RulesTests {
         let input = "let range = 0 .../* foo */4"
         let options = FormatOptions(spaceAroundRangeOperators: false)
         testFormatting(for: input, rule: .spaceAroundOperators, options: options,
-                       exclude: ["spaceAroundComments"])
+                       exclude: [.spaceAroundComments])
     }
 
     func testSpaceOnOneSideOfRangeMatchedByCommentNotRemoved2() {
         let input = "let range = 0/* foo */... 4"
         let options = FormatOptions(spaceAroundRangeOperators: false)
         testFormatting(for: input, rule: .spaceAroundOperators, options: options,
-                       exclude: ["spaceAroundComments"])
+                       exclude: [.spaceAroundComments])
     }
 
     func testSpaceAroundRangeWithCommentOnOneSideNotRemoved() {
         let input = "let range = 0 ... /* foo */4"
         let options = FormatOptions(spaceAroundRangeOperators: false)
         testFormatting(for: input, rule: .spaceAroundOperators, options: options,
-                       exclude: ["spaceAroundComments"])
+                       exclude: [.spaceAroundComments])
     }
 
     func testSpaceAroundRangeWithCommentOnOneSideNotRemoved2() {
         let input = "let range = 0/* foo */ ... 4"
         let options = FormatOptions(spaceAroundRangeOperators: false)
         testFormatting(for: input, rule: .spaceAroundOperators, options: options,
-                       exclude: ["spaceAroundComments"])
+                       exclude: [.spaceAroundComments])
     }
 
     func testSpaceOnOneSideOfRangeMatchedByLinebreakNotRemoved() {
         let input = "let range = 0 ...\n4"
         let options = FormatOptions(spaceAroundRangeOperators: false)
         testFormatting(for: input, rule: .spaceAroundOperators, options: options,
-                       exclude: ["indent"])
+                       exclude: [.indent])
     }
 
     func testSpaceOnOneSideOfRangeMatchedByLinebreakNotRemoved2() {
         let input = "let range = 0\n... 4"
         let options = FormatOptions(spaceAroundRangeOperators: false)
         testFormatting(for: input, rule: .spaceAroundOperators, options: options,
-                       exclude: ["indent"])
+                       exclude: [.indent])
     }
 
     func testSpaceAroundRangeWithLinebreakOnOneSideNotRemoved() {
         let input = "let range = 0 ... \n4"
         let options = FormatOptions(spaceAroundRangeOperators: false)
         testFormatting(for: input, rule: .spaceAroundOperators, options: options,
-                       exclude: ["indent", "trailingSpace"])
+                       exclude: [.indent, .trailingSpace])
     }
 
     func testSpaceAroundRangeWithLinebreakOnOneSideNotRemoved2() {
         let input = "let range = 0\n ... 4"
         let options = FormatOptions(spaceAroundRangeOperators: false)
         testFormatting(for: input, rule: .spaceAroundOperators, options: options,
-                       exclude: ["indent"])
+                       exclude: [.indent])
     }
 
     func testSpaceNotRemovedAroundRangeFollowedByPrefixOperator() {
@@ -1325,7 +1325,7 @@ class SpacingTests: RulesTests {
         let input = "(/* foo */)"
         let output = "( /* foo */ )"
         testFormatting(for: input, output, rule: .spaceAroundComments,
-                       exclude: ["redundantParens"])
+                       exclude: [.redundantParens])
     }
 
     func testNoSpaceAroundCommentAtStartAndEndOfFile() {
@@ -1373,7 +1373,7 @@ class SpacingTests: RulesTests {
     func testSpaceInsideMultilineHeaderdocComment() {
         let input = "/**foo\n bar*/"
         let output = "/** foo\n bar */"
-        testFormatting(for: input, output, rule: .spaceInsideComments, exclude: ["docComments"])
+        testFormatting(for: input, output, rule: .spaceInsideComments, exclude: [.docComments])
     }
 
     func testSpaceInsideMultilineHeaderdocCommentType2() {
@@ -1390,7 +1390,7 @@ class SpacingTests: RulesTests {
 
     func testNoExtraSpaceInsideMultilineHeaderdocComment() {
         let input = "/** foo\n bar */"
-        testFormatting(for: input, rule: .spaceInsideComments, exclude: ["docComments"])
+        testFormatting(for: input, rule: .spaceInsideComments, exclude: [.docComments])
     }
 
     func testNoExtraSpaceInsideMultilineHeaderdocCommentType2() {
@@ -1433,7 +1433,7 @@ class SpacingTests: RulesTests {
 
     func testNoSpaceAddedToFirstLineOfDocComment() {
         let input = "/**\n Comment\n */"
-        testFormatting(for: input, rule: .spaceInsideComments, exclude: ["docComments"])
+        testFormatting(for: input, rule: .spaceInsideComments, exclude: [.docComments])
     }
 
     func testNoSpaceAddedToEmptyDocComment() {
@@ -1451,7 +1451,7 @@ class SpacingTests: RulesTests {
             func bar() {}
         }
         """
-        testFormatting(for: input, rule: .spaceInsideComments, exclude: ["indent"])
+        testFormatting(for: input, rule: .spaceInsideComments, exclude: [.indent])
     }
 
     // MARK: - consecutiveSpaces
@@ -1537,7 +1537,7 @@ class SpacingTests: RulesTests {
     func testTrailingSpaceInArray() {
         let input = "let foo = [\n    1,\n    \n    2,\n]"
         let output = "let foo = [\n    1,\n\n    2,\n]"
-        testFormatting(for: input, output, rule: .trailingSpace, exclude: ["redundantSelf"])
+        testFormatting(for: input, output, rule: .trailingSpace, exclude: [.redundantSelf])
     }
 
     // truncateBlankLines = false
@@ -1788,7 +1788,7 @@ class SpacingTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, rule: .blankLineAfterSwitchCase, exclude: ["sortSwitchCases", "wrapSwitchCases", "blockComments"])
+        testFormatting(for: input, rule: .blankLineAfterSwitchCase, exclude: [.sortSwitchCases, .wrapSwitchCases, .blockComments])
     }
 
     func testMixedSingleLineAndMultiLineCases() {
@@ -1829,7 +1829,7 @@ class SpacingTests: RulesTests {
             energyShields.engage()
         }
         """
-        testFormatting(for: input, output, rule: .blankLineAfterSwitchCase, exclude: ["consistentSwitchCaseSpacing"])
+        testFormatting(for: input, output, rule: .blankLineAfterSwitchCase, exclude: [.consistentSwitchCaseSpacing])
     }
 
     func testAllowsBlankLinesAfterSingleLineCases() {
@@ -2166,6 +2166,6 @@ class SpacingTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, rule: .consistentSwitchCaseSpacing, exclude: ["blankLineAfterSwitchCase"])
+        testFormatting(for: input, rule: .consistentSwitchCaseSpacing, exclude: [.blankLineAfterSwitchCase])
     }
 }

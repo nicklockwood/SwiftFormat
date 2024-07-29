@@ -15,7 +15,7 @@ public extension FormatRule {
         which is followed by a closing brace).
         """,
         disabledByDefault: true,
-        orderAfter: ["redundantBreak"]
+        orderAfter: [.redundantBreak]
     ) { formatter in
         formatter.forEach(.keyword("switch")) { switchIndex, _ in
             guard let switchCases = formatter.switchStatementBranchesWithSpacingInfo(at: switchIndex) else { return }

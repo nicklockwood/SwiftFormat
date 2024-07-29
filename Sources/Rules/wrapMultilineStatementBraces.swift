@@ -11,7 +11,7 @@ import Foundation
 public extension FormatRule {
     static let wrapMultilineStatementBraces = FormatRule(
         help: "Wrap the opening brace of multiline statements.",
-        orderAfter: ["braces", "indent", "wrapArguments"],
+        orderAfter: [.braces, .indent, .wrapArguments],
         sharedOptions: ["linebreaks"]
     ) { formatter in
         formatter.forEach(.startOfScope("{")) { i, _ in

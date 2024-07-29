@@ -12,7 +12,7 @@ public extension FormatRule {
     /// Normalize argument wrapping style
     static let wrapArguments = FormatRule(
         help: "Align wrapped function arguments or collection elements.",
-        orderAfter: ["wrap"],
+        orderAfter: [.wrap],
         options: ["wraparguments", "wrapparameters", "wrapcollections", "closingparen", "callsiteparen",
                   "wrapreturntype", "wrapconditions", "wraptypealiases", "wrapeffects", "conditionswrap"],
         sharedOptions: ["indent", "trimwhitespace", "linebreaks",

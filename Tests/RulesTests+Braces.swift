@@ -15,7 +15,7 @@ class BracesTests: RulesTests {
     func testAllmanBracesAreConverted() {
         let input = "func foo()\n{\n    statement\n}"
         let output = "func foo() {\n    statement\n}"
-        testFormatting(for: input, output, rule: FormatRules.braces)
+        testFormatting(for: input, output, rule: .braces)
     }
 
     func testNestedAllmanBracesAreConverted() {
@@ -35,17 +35,17 @@ class BracesTests: RulesTests {
             }
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.braces)
+        testFormatting(for: input, output, rule: .braces)
     }
 
     func testKnRBracesAfterComment() {
         let input = "func foo() // comment\n{\n    statement\n}"
-        testFormatting(for: input, rule: FormatRules.braces)
+        testFormatting(for: input, rule: .braces)
     }
 
     func testKnRBracesAfterMultilineComment() {
         let input = "func foo() /* comment/ncomment */\n{\n    statement\n}"
-        testFormatting(for: input, rule: FormatRules.braces)
+        testFormatting(for: input, rule: .braces)
     }
 
     func testKnRBracesAfterMultilineComment2() {
@@ -57,17 +57,17 @@ class BracesTests: RulesTests {
             // foo
         }
         """
-        testFormatting(for: input, rule: FormatRules.braces)
+        testFormatting(for: input, rule: .braces)
     }
 
     func testKnRExtraSpaceNotAddedBeforeBrace() {
         let input = "foo({ bar })"
-        testFormatting(for: input, rule: FormatRules.braces, exclude: ["trailingClosures"])
+        testFormatting(for: input, rule: .braces, exclude: ["trailingClosures"])
     }
 
     func testKnRLinebreakNotRemovedBeforeInlineBlockNot() {
         let input = "func foo() -> Bool\n{ return false }"
-        testFormatting(for: input, rule: FormatRules.braces)
+        testFormatting(for: input, rule: .braces)
     }
 
     func testKnRNoMangleCommentBeforeClosure() {
@@ -81,7 +81,7 @@ class BracesTests: RulesTests {
             }(),
         ]
         """
-        testFormatting(for: input, rule: FormatRules.braces, exclude: ["redundantClosure"])
+        testFormatting(for: input, rule: .braces, exclude: ["redundantClosure"])
     }
 
     func testKnRNoMangleClosureReturningClosure() {
@@ -92,7 +92,7 @@ class BracesTests: RulesTests {
             }
         }
         """
-        testFormatting(for: input, rule: FormatRules.braces)
+        testFormatting(for: input, rule: .braces)
     }
 
     func testKnRNoMangleClosureReturningClosure2() {
@@ -103,7 +103,7 @@ class BracesTests: RulesTests {
             }
         }
         """
-        testFormatting(for: input, rule: FormatRules.braces)
+        testFormatting(for: input, rule: .braces)
     }
 
     func testAllmanNoMangleClosureReturningClosure() {
@@ -116,7 +116,7 @@ class BracesTests: RulesTests {
         }
         """
         let options = FormatOptions(allmanBraces: true)
-        testFormatting(for: input, rule: FormatRules.braces, options: options)
+        testFormatting(for: input, rule: .braces, options: options)
     }
 
     func testKnRUnwrapClosure() {
@@ -131,7 +131,7 @@ class BracesTests: RulesTests {
             bar()
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.braces)
+        testFormatting(for: input, output, rule: .braces)
     }
 
     func testKnRNoUnwrapClosureIfWidthExceeded() {
@@ -142,18 +142,18 @@ class BracesTests: RulesTests {
         }
         """
         let options = FormatOptions(maxWidth: 15)
-        testFormatting(for: input, rule: FormatRules.braces, options: options, exclude: ["indent"])
+        testFormatting(for: input, rule: .braces, options: options, exclude: ["indent"])
     }
 
     func testKnRClosingBraceWrapped() {
         let input = "func foo() {\n    print(bar) }"
         let output = "func foo() {\n    print(bar)\n}"
-        testFormatting(for: input, output, rule: FormatRules.braces)
+        testFormatting(for: input, output, rule: .braces)
     }
 
     func testKnRInlineBracesNotWrapped() {
         let input = "func foo() { print(bar) }"
-        testFormatting(for: input, rule: FormatRules.braces)
+        testFormatting(for: input, rule: .braces)
     }
 
     func testAllmanComputedPropertyBracesConverted() {
@@ -168,7 +168,7 @@ class BracesTests: RulesTests {
             return 5
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.braces)
+        testFormatting(for: input, output, rule: .braces)
     }
 
     func testAllmanInitBracesConverted() {
@@ -183,7 +183,7 @@ class BracesTests: RulesTests {
             foo = 5
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.braces)
+        testFormatting(for: input, output, rule: .braces)
     }
 
     func testAllmanSubscriptBracesConverted() {
@@ -198,7 +198,7 @@ class BracesTests: RulesTests {
             foo[i]
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.braces)
+        testFormatting(for: input, output, rule: .braces)
     }
 
     func testBracesForStructDeclaration() {
@@ -213,7 +213,7 @@ class BracesTests: RulesTests {
             // foo
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.braces)
+        testFormatting(for: input, output, rule: .braces)
     }
 
     func testBracesForInit() {
@@ -228,7 +228,7 @@ class BracesTests: RulesTests {
             self.foo = foo
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.braces)
+        testFormatting(for: input, output, rule: .braces)
     }
 
     func testBracesForIfStatement() {
@@ -243,7 +243,7 @@ class BracesTests: RulesTests {
             // foo
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.braces)
+        testFormatting(for: input, output, rule: .braces)
     }
 
     func testBracesForExtension() {
@@ -258,7 +258,7 @@ class BracesTests: RulesTests {
             // foo
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.braces)
+        testFormatting(for: input, output, rule: .braces)
     }
 
     func testBracesForOptionalInit() {
@@ -273,7 +273,7 @@ class BracesTests: RulesTests {
             return nil
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.braces)
+        testFormatting(for: input, output, rule: .braces)
     }
 
     func testBraceUnwrappedIfWrapMultilineStatementBracesRuleDisabled() {
@@ -290,7 +290,7 @@ class BracesTests: RulesTests {
             return nil
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.braces,
+        testFormatting(for: input, output, rule: .braces,
                        exclude: ["wrapMultilineStatementBraces"])
     }
 
@@ -303,7 +303,7 @@ class BracesTests: RulesTests {
         }
         """
         testFormatting(for: input, rules: [
-            FormatRules.braces, FormatRules.wrapMultilineStatementBraces,
+            .braces, .wrapMultilineStatementBraces,
         ])
     }
 
@@ -319,7 +319,7 @@ class BracesTests: RulesTests {
         //
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.braces)
+        testFormatting(for: input, output, rule: .braces)
     }
 
     // allman style
@@ -328,20 +328,20 @@ class BracesTests: RulesTests {
         let input = "func foo() {\n    statement\n}"
         let output = "func foo()\n{\n    statement\n}"
         let options = FormatOptions(allmanBraces: true)
-        testFormatting(for: input, output, rule: FormatRules.braces, options: options)
+        testFormatting(for: input, output, rule: .braces, options: options)
     }
 
     func testAllmanBlankLineAfterBraceRemoved() {
         let input = "func foo() {\n    \n    statement\n}"
         let output = "func foo()\n{\n    statement\n}"
         let options = FormatOptions(allmanBraces: true)
-        testFormatting(for: input, output, rule: FormatRules.braces, options: options)
+        testFormatting(for: input, output, rule: .braces, options: options)
     }
 
     func testAllmanBraceInsideParensNotConverted() {
         let input = "foo({\n    bar\n})"
         let options = FormatOptions(allmanBraces: true)
-        testFormatting(for: input, rule: FormatRules.braces, options: options,
+        testFormatting(for: input, rule: .braces, options: options,
                        exclude: ["trailingClosures"])
     }
 
@@ -349,14 +349,14 @@ class BracesTests: RulesTests {
         let input = "do {\n    foo\n}"
         let output = "do\n{\n    foo\n}"
         let options = FormatOptions(allmanBraces: true)
-        testFormatting(for: input, output, rule: FormatRules.braces, options: options)
+        testFormatting(for: input, output, rule: .braces, options: options)
     }
 
     func testAllmanBraceCatchClauseIndent() {
         let input = "do {\n    try foo\n}\ncatch {\n}"
         let output = "do\n{\n    try foo\n}\ncatch\n{\n}"
         let options = FormatOptions(allmanBraces: true)
-        testFormatting(for: input, output, rule: FormatRules.braces, options: options,
+        testFormatting(for: input, output, rule: .braces, options: options,
                        exclude: ["emptyBraces"])
     }
 
@@ -364,7 +364,7 @@ class BracesTests: RulesTests {
         let input = "do throws(Foo) {\n    try foo\n}\ncatch {\n}"
         let output = "do throws(Foo)\n{\n    try foo\n}\ncatch\n{\n}"
         let options = FormatOptions(allmanBraces: true)
-        testFormatting(for: input, output, rule: FormatRules.braces, options: options,
+        testFormatting(for: input, output, rule: .braces, options: options,
                        exclude: ["emptyBraces"])
     }
 
@@ -372,42 +372,42 @@ class BracesTests: RulesTests {
         let input = "repeat {\n    foo\n}\nwhile x"
         let output = "repeat\n{\n    foo\n}\nwhile x"
         let options = FormatOptions(allmanBraces: true)
-        testFormatting(for: input, output, rule: FormatRules.braces, options: options)
+        testFormatting(for: input, output, rule: .braces, options: options)
     }
 
     func testAllmanBraceOptionalComputedPropertyIndent() {
         let input = "var foo: Int? {\n    return 5\n}"
         let output = "var foo: Int?\n{\n    return 5\n}"
         let options = FormatOptions(allmanBraces: true)
-        testFormatting(for: input, output, rule: FormatRules.braces, options: options)
+        testFormatting(for: input, output, rule: .braces, options: options)
     }
 
     func testAllmanBraceThrowsFunctionIndent() {
         let input = "func foo() throws {\n    bar\n}"
         let output = "func foo() throws\n{\n    bar\n}"
         let options = FormatOptions(allmanBraces: true)
-        testFormatting(for: input, output, rule: FormatRules.braces, options: options)
+        testFormatting(for: input, output, rule: .braces, options: options)
     }
 
     func testAllmanBraceAsyncFunctionIndent() {
         let input = "func foo() async {\n    bar\n}"
         let output = "func foo() async\n{\n    bar\n}"
         let options = FormatOptions(allmanBraces: true)
-        testFormatting(for: input, output, rule: FormatRules.braces, options: options)
+        testFormatting(for: input, output, rule: .braces, options: options)
     }
 
     func testAllmanBraceAfterCommentIndent() {
         let input = "func foo() { // foo\n\n    bar\n}"
         let output = "func foo()\n{ // foo\n    bar\n}"
         let options = FormatOptions(allmanBraces: true)
-        testFormatting(for: input, output, rule: FormatRules.braces, options: options)
+        testFormatting(for: input, output, rule: .braces, options: options)
     }
 
     func testAllmanBraceAfterSwitch() {
         let input = "switch foo {\ncase bar: break\n}"
         let output = "switch foo\n{\ncase bar: break\n}"
         let options = FormatOptions(allmanBraces: true)
-        testFormatting(for: input, output, rule: FormatRules.braces, options: options)
+        testFormatting(for: input, output, rule: .braces, options: options)
     }
 
     func testAllmanBracesForStructDeclaration() {
@@ -425,7 +425,7 @@ class BracesTests: RulesTests {
         let options = FormatOptions(allmanBraces: true)
         testFormatting(
             for: input, output,
-            rule: FormatRules.braces,
+            rule: .braces,
             options: options
         )
     }
@@ -443,7 +443,7 @@ class BracesTests: RulesTests {
         }
         """
         let options = FormatOptions(allmanBraces: true)
-        testFormatting(for: input, output, rule: FormatRules.braces, options: options)
+        testFormatting(for: input, output, rule: .braces, options: options)
     }
 
     func testAllmanBracesForOptionalInit() {
@@ -459,7 +459,7 @@ class BracesTests: RulesTests {
         }
         """
         let options = FormatOptions(allmanBraces: true)
-        testFormatting(for: input, output, rule: FormatRules.braces, options: options)
+        testFormatting(for: input, output, rule: .braces, options: options)
     }
 
     func testAllmanBracesForIfStatement() {
@@ -475,7 +475,7 @@ class BracesTests: RulesTests {
         }
         """
         let options = FormatOptions(allmanBraces: true)
-        testFormatting(for: input, output, rule: FormatRules.braces, options: options)
+        testFormatting(for: input, output, rule: .braces, options: options)
     }
 
     func testAllmanBracesForIfStatement2() {
@@ -491,7 +491,7 @@ class BracesTests: RulesTests {
         }
         """
         let options = FormatOptions(allmanBraces: true)
-        testFormatting(for: input, output, rule: FormatRules.braces, options: options)
+        testFormatting(for: input, output, rule: .braces, options: options)
     }
 
     func testAllmanBracesForExtension() {
@@ -507,7 +507,7 @@ class BracesTests: RulesTests {
         }
         """
         let options = FormatOptions(allmanBraces: true)
-        testFormatting(for: input, output, rule: FormatRules.braces, options: options)
+        testFormatting(for: input, output, rule: .braces, options: options)
     }
 
     func testEmptyAllmanIfElseBraces() {
@@ -526,7 +526,7 @@ class BracesTests: RulesTests {
         """
         let options = FormatOptions(allmanBraces: true)
         testFormatting(for: input, [output], rules: [
-            FormatRules.braces, FormatRules.emptyBraces, FormatRules.elseOnSameLine,
+            .braces, .emptyBraces, .elseOnSameLine,
         ], options: options)
     }
 
@@ -543,7 +543,7 @@ class BracesTests: RulesTests {
         """
 
         let options = FormatOptions(wrapArguments: .beforeFirst, closingParenPosition: .sameLine)
-        testFormatting(for: input, rules: [FormatRules.braces, FormatRules.wrapMultilineStatementBraces], options: options)
+        testFormatting(for: input, rules: [.braces, .wrapMultilineStatementBraces], options: options)
     }
 
     func testTrailingClosureWrappingAfterMethodWithPartialWrappingAndClosures() {
@@ -558,6 +558,6 @@ class BracesTests: RulesTests {
         """
 
         let options = FormatOptions(wrapArguments: .beforeFirst, closingParenPosition: .sameLine)
-        testFormatting(for: input, rules: [FormatRules.braces, FormatRules.wrapMultilineStatementBraces], options: options)
+        testFormatting(for: input, rules: [.braces, .wrapMultilineStatementBraces], options: options)
     }
 }

@@ -20,14 +20,14 @@ class GlobsTests: XCTestCase {
     }
 
     func testExpandPathWithWildcardInMiddle() {
-        let path = "Rule*.swift"
+        let path = "FormatRul*.swift"
         let directory = URL(fileURLWithPath: #file)
             .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Sources")
         XCTAssertEqual(try matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 1)
     }
 
     func testExpandPathWithSingleCharacterWildcardInMiddle() {
-        let path = "Rule?.swift"
+        let path = "FormatRul?.swift"
         let directory = URL(fileURLWithPath: #file)
             .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Sources")
         XCTAssertEqual(try matchGlobs(expandGlobs(path, in: directory.path), in: directory.path).count, 1)

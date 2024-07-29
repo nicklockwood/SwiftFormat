@@ -15,25 +15,25 @@ class LinebreakTests: RulesTests {
     func testCarriageReturn() {
         let input = "foo\rbar"
         let output = "foo\nbar"
-        testFormatting(for: input, output, rule: FormatRules.linebreaks)
+        testFormatting(for: input, output, rule: .linebreaks)
     }
 
     func testCarriageReturnLinefeed() {
         let input = "foo\r\nbar"
         let output = "foo\nbar"
-        testFormatting(for: input, output, rule: FormatRules.linebreaks)
+        testFormatting(for: input, output, rule: .linebreaks)
     }
 
     func testVerticalTab() {
         let input = "foo\u{000B}bar"
         let output = "foo\nbar"
-        testFormatting(for: input, output, rule: FormatRules.linebreaks)
+        testFormatting(for: input, output, rule: .linebreaks)
     }
 
     func testFormfeed() {
         let input = "foo\u{000C}bar"
         let output = "foo\nbar"
-        testFormatting(for: input, output, rule: FormatRules.linebreaks)
+        testFormatting(for: input, output, rule: .linebreaks)
     }
 
     // MARK: - consecutiveBlankLines
@@ -41,42 +41,42 @@ class LinebreakTests: RulesTests {
     func testConsecutiveBlankLines() {
         let input = "foo\n\n    \nbar"
         let output = "foo\n\nbar"
-        testFormatting(for: input, output, rule: FormatRules.consecutiveBlankLines)
+        testFormatting(for: input, output, rule: .consecutiveBlankLines)
     }
 
     func testConsecutiveBlankLinesAtEndOfFile() {
         let input = "foo\n\n"
         let output = "foo\n"
-        testFormatting(for: input, output, rule: FormatRules.consecutiveBlankLines)
+        testFormatting(for: input, output, rule: .consecutiveBlankLines)
     }
 
     func testConsecutiveBlankLinesAtStartOfFile() {
         let input = "\n\n\nfoo"
         let output = "\n\nfoo"
-        testFormatting(for: input, output, rule: FormatRules.consecutiveBlankLines)
+        testFormatting(for: input, output, rule: .consecutiveBlankLines)
     }
 
     func testConsecutiveBlankLinesInsideStringLiteral() {
         let input = "\"\"\"\nhello\n\n\nworld\n\"\"\""
-        testFormatting(for: input, rule: FormatRules.consecutiveBlankLines)
+        testFormatting(for: input, rule: .consecutiveBlankLines)
     }
 
     func testConsecutiveBlankLinesAtStartOfStringLiteral() {
         let input = "\"\"\"\n\n\nhello world\n\"\"\""
-        testFormatting(for: input, rule: FormatRules.consecutiveBlankLines)
+        testFormatting(for: input, rule: .consecutiveBlankLines)
     }
 
     func testConsecutiveBlankLinesAfterStringLiteral() {
         let input = "\"\"\"\nhello world\n\"\"\"\n\n\nfoo()"
         let output = "\"\"\"\nhello world\n\"\"\"\n\nfoo()"
-        testFormatting(for: input, output, rule: FormatRules.consecutiveBlankLines)
+        testFormatting(for: input, output, rule: .consecutiveBlankLines)
     }
 
     func testFragmentWithTrailingLinebreaks() {
         let input = "func foo() {}\n\n\n"
         let output = "func foo() {}\n\n"
         let options = FormatOptions(fragment: true)
-        testFormatting(for: input, output, rule: FormatRules.consecutiveBlankLines, options: options)
+        testFormatting(for: input, output, rule: .consecutiveBlankLines, options: options)
     }
 
     func testConsecutiveBlankLinesNoInterpolation() {
@@ -89,7 +89,7 @@ class LinebreakTests: RulesTests {
 
         \"\"\"
         """
-        testFormatting(for: input, rule: FormatRules.consecutiveBlankLines)
+        testFormatting(for: input, rule: .consecutiveBlankLines)
     }
 
     func testConsecutiveBlankLinesAfterInterpolation() {
@@ -102,13 +102,13 @@ class LinebreakTests: RulesTests {
 
         \"\"\"
         """
-        testFormatting(for: input, rule: FormatRules.consecutiveBlankLines)
+        testFormatting(for: input, rule: .consecutiveBlankLines)
     }
 
     func testLintingConsecutiveBlankLinesReportsCorrectLine() {
         let input = "foo\n   \n\nbar"
-        XCTAssertEqual(try lint(input, rules: [FormatRules.consecutiveBlankLines]), [
-            .init(line: 3, rule: FormatRules.consecutiveBlankLines, filePath: nil),
+        XCTAssertEqual(try lint(input, rules: [.consecutiveBlankLines]), [
+            .init(line: 3, rule: .consecutiveBlankLines, filePath: nil),
         ])
     }
 
@@ -117,24 +117,24 @@ class LinebreakTests: RulesTests {
     func testBlankLinesRemovedAtStartOfFunction() {
         let input = "func foo() {\n\n    // code\n}"
         let output = "func foo() {\n    // code\n}"
-        testFormatting(for: input, output, rule: FormatRules.blankLinesAtStartOfScope)
+        testFormatting(for: input, output, rule: .blankLinesAtStartOfScope)
     }
 
     func testBlankLinesRemovedAtStartOfParens() {
         let input = "(\n\n    foo: Int\n)"
         let output = "(\n    foo: Int\n)"
-        testFormatting(for: input, output, rule: FormatRules.blankLinesAtStartOfScope)
+        testFormatting(for: input, output, rule: .blankLinesAtStartOfScope)
     }
 
     func testBlankLinesRemovedAtStartOfBrackets() {
         let input = "[\n\n    foo,\n    bar,\n]"
         let output = "[\n    foo,\n    bar,\n]"
-        testFormatting(for: input, output, rule: FormatRules.blankLinesAtStartOfScope)
+        testFormatting(for: input, output, rule: .blankLinesAtStartOfScope)
     }
 
     func testBlankLinesNotRemovedBetweenElementsInsideBrackets() {
         let input = "[foo,\n\n bar]"
-        testFormatting(for: input, rule: FormatRules.blankLinesAtStartOfScope, exclude: ["wrapArguments"])
+        testFormatting(for: input, rule: .blankLinesAtStartOfScope, exclude: ["wrapArguments"])
     }
 
     func testBlankLineRemovedFromStartOfTypeByDefault() {
@@ -150,7 +150,7 @@ class LinebreakTests: RulesTests {
             func testFoo() {}
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.blankLinesAtStartOfScope)
+        testFormatting(for: input, output, rule: .blankLinesAtStartOfScope)
     }
 
     func testBlankLinesNotRemovedFromStartOfTypeWithOptionEnabled() {
@@ -185,7 +185,7 @@ class LinebreakTests: RulesTests {
             func fooMethod() {}
         }
         """
-        testFormatting(for: input, rule: FormatRules.blankLinesAtStartOfScope, options: .init(removeStartOrEndBlankLinesFromTypes: false))
+        testFormatting(for: input, rule: .blankLinesAtStartOfScope, options: .init(removeStartOrEndBlankLinesFromTypes: false))
     }
 
     func testBlankLineAtStartOfScopeRemovedFromMethodInType() {
@@ -205,7 +205,7 @@ class LinebreakTests: RulesTests {
             }
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.blankLinesAtStartOfScope, options: .init(removeStartOrEndBlankLinesFromTypes: false))
+        testFormatting(for: input, output, rule: .blankLinesAtStartOfScope, options: .init(removeStartOrEndBlankLinesFromTypes: false))
     }
 
     // MARK: - blankLinesAtEndOfScope
@@ -213,25 +213,25 @@ class LinebreakTests: RulesTests {
     func testBlankLinesRemovedAtEndOfFunction() {
         let input = "func foo() {\n    // code\n\n}"
         let output = "func foo() {\n    // code\n}"
-        testFormatting(for: input, output, rule: FormatRules.blankLinesAtEndOfScope)
+        testFormatting(for: input, output, rule: .blankLinesAtEndOfScope)
     }
 
     func testBlankLinesRemovedAtEndOfParens() {
         let input = "(\n    foo: Int\n\n)"
         let output = "(\n    foo: Int\n)"
-        testFormatting(for: input, output, rule: FormatRules.blankLinesAtEndOfScope)
+        testFormatting(for: input, output, rule: .blankLinesAtEndOfScope)
     }
 
     func testBlankLinesRemovedAtEndOfBrackets() {
         let input = "[\n    foo,\n    bar,\n\n]"
         let output = "[\n    foo,\n    bar,\n]"
-        testFormatting(for: input, output, rule: FormatRules.blankLinesAtEndOfScope)
+        testFormatting(for: input, output, rule: .blankLinesAtEndOfScope)
     }
 
     func testBlankLineNotRemovedBeforeElse() {
         let input = "if x {\n\n    // do something\n\n} else if y {\n\n    // do something else\n\n}"
         let output = "if x {\n\n    // do something\n\n} else if y {\n\n    // do something else\n}"
-        testFormatting(for: input, output, rule: FormatRules.blankLinesAtEndOfScope,
+        testFormatting(for: input, output, rule: .blankLinesAtEndOfScope,
                        exclude: ["blankLinesAtStartOfScope"])
     }
 
@@ -248,7 +248,7 @@ class LinebreakTests: RulesTests {
             func testFoo() {}
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.blankLinesAtEndOfScope)
+        testFormatting(for: input, output, rule: .blankLinesAtEndOfScope)
     }
 
     func testBlankLinesNotRemovedFromEndOfTypeWithOptionEnabled() {
@@ -282,7 +282,7 @@ class LinebreakTests: RulesTests {
 
         }
         """
-        testFormatting(for: input, rule: FormatRules.blankLinesAtEndOfScope, options: .init(removeStartOrEndBlankLinesFromTypes: false))
+        testFormatting(for: input, rule: .blankLinesAtEndOfScope, options: .init(removeStartOrEndBlankLinesFromTypes: false))
     }
 
     func testBlankLineAtEndOfScopeRemovedFromMethodInType() {
@@ -302,7 +302,7 @@ class LinebreakTests: RulesTests {
             }
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.blankLinesAtEndOfScope, options: .init(removeStartOrEndBlankLinesFromTypes: false))
+        testFormatting(for: input, output, rule: .blankLinesAtEndOfScope, options: .init(removeStartOrEndBlankLinesFromTypes: false))
     }
 
     // MARK: - blankLinesBetweenImports
@@ -317,7 +317,7 @@ class LinebreakTests: RulesTests {
         import ModuleA
         import ModuleB
         """
-        testFormatting(for: input, output, rule: FormatRules.blankLinesBetweenImports)
+        testFormatting(for: input, output, rule: .blankLinesBetweenImports)
     }
 
     func testBlankLinesBetweenImportsLong() {
@@ -344,7 +344,7 @@ class LinebreakTests: RulesTests {
         import ModuleG
         import ModuleH
         """
-        testFormatting(for: input, output, rule: FormatRules.blankLinesBetweenImports)
+        testFormatting(for: input, output, rule: .blankLinesBetweenImports)
     }
 
     func testBlankLinesBetweenImportsWithTestable() {
@@ -367,7 +367,7 @@ class LinebreakTests: RulesTests {
         @testable import ModuleE
         @testable import ModuleF
         """
-        testFormatting(for: input, output, rule: FormatRules.blankLinesBetweenImports)
+        testFormatting(for: input, output, rule: .blankLinesBetweenImports)
     }
 
     // MARK: - blankLinesBetweenChainedFunctions
@@ -391,7 +391,7 @@ class LinebreakTests: RulesTests {
             .map { $0 * 2 }
             .map { $0 * 3 }
         """
-        testFormatting(for: input, [output1, output2], rules: [FormatRules.blankLinesBetweenChainedFunctions])
+        testFormatting(for: input, [output1, output2], rules: [.blankLinesBetweenChainedFunctions])
     }
 
     func testBlankLinesWithCommentsBetweenChainedFunctions() {
@@ -409,7 +409,7 @@ class LinebreakTests: RulesTests {
             // Multiplies by 3
             .map { $0 * 3 }
         """
-        testFormatting(for: input, output, rule: FormatRules.blankLinesBetweenChainedFunctions)
+        testFormatting(for: input, output, rule: .blankLinesBetweenChainedFunctions)
     }
 
     func testBlankLinesWithMarkCommentBetweenChainedFunctions() {
@@ -421,7 +421,7 @@ class LinebreakTests: RulesTests {
 
             .map { $0 * 3 }
         """
-        testFormatting(for: input, rules: [FormatRules.blankLinesBetweenChainedFunctions, FormatRules.blankLinesAroundMark])
+        testFormatting(for: input, rules: [.blankLinesBetweenChainedFunctions, .blankLinesAroundMark])
     }
 
     // MARK: - blankLineAfterImports
@@ -452,7 +452,7 @@ class LinebreakTests: RulesTests {
 
         class foo {}
         """
-        testFormatting(for: input, output, rule: FormatRules.blankLineAfterImports)
+        testFormatting(for: input, output, rule: .blankLineAfterImports)
     }
 
     func testBlankLinesBetweenConditionalImports() {
@@ -475,7 +475,7 @@ class LinebreakTests: RulesTests {
 
         func foo() {}
         """
-        testFormatting(for: input, output, rule: FormatRules.blankLineAfterImports)
+        testFormatting(for: input, output, rule: .blankLineAfterImports)
     }
 
     func testBlankLinesBetweenNestedConditionalImports() {
@@ -504,7 +504,7 @@ class LinebreakTests: RulesTests {
 
         func foo() {}
         """
-        testFormatting(for: input, output, rule: FormatRules.blankLineAfterImports)
+        testFormatting(for: input, output, rule: .blankLineAfterImports)
     }
 
     func testBlankLineAfterScopedImports() {
@@ -521,7 +521,7 @@ class LinebreakTests: RulesTests {
 
         public class Foo {}
         """
-        testFormatting(for: input, output, rule: FormatRules.blankLineAfterImports)
+        testFormatting(for: input, output, rule: .blankLineAfterImports)
     }
 
     // MARK: - blankLinesBetweenScopes
@@ -529,107 +529,107 @@ class LinebreakTests: RulesTests {
     func testBlankLineBetweenFunctions() {
         let input = "func foo() {\n}\nfunc bar() {\n}"
         let output = "func foo() {\n}\n\nfunc bar() {\n}"
-        testFormatting(for: input, output, rule: FormatRules.blankLinesBetweenScopes,
+        testFormatting(for: input, output, rule: .blankLinesBetweenScopes,
                        exclude: ["emptyBraces"])
     }
 
     func testNoBlankLineBetweenPropertyAndFunction() {
         let input = "var foo: Int\nfunc bar() {\n}"
-        testFormatting(for: input, rule: FormatRules.blankLinesBetweenScopes, exclude: ["emptyBraces"])
+        testFormatting(for: input, rule: .blankLinesBetweenScopes, exclude: ["emptyBraces"])
     }
 
     func testBlankLineBetweenFunctionsIsBeforeComment() {
         let input = "func foo() {\n}\n/// headerdoc\nfunc bar() {\n}"
         let output = "func foo() {\n}\n\n/// headerdoc\nfunc bar() {\n}"
-        testFormatting(for: input, output, rule: FormatRules.blankLinesBetweenScopes,
+        testFormatting(for: input, output, rule: .blankLinesBetweenScopes,
                        exclude: ["emptyBraces"])
     }
 
     func testBlankLineBeforeAtObjcOnLineBeforeProtocol() {
         let input = "@objc\nprotocol Foo {\n}\n@objc\nprotocol Bar {\n}"
         let output = "@objc\nprotocol Foo {\n}\n\n@objc\nprotocol Bar {\n}"
-        testFormatting(for: input, output, rule: FormatRules.blankLinesBetweenScopes,
+        testFormatting(for: input, output, rule: .blankLinesBetweenScopes,
                        exclude: ["emptyBraces"])
     }
 
     func testBlankLineBeforeAtAvailabilityOnLineBeforeClass() {
         let input = "protocol Foo {\n}\n@available(iOS 8.0, OSX 10.10, *)\nclass Bar {\n}"
         let output = "protocol Foo {\n}\n\n@available(iOS 8.0, OSX 10.10, *)\nclass Bar {\n}"
-        testFormatting(for: input, output, rule: FormatRules.blankLinesBetweenScopes,
+        testFormatting(for: input, output, rule: .blankLinesBetweenScopes,
                        exclude: ["emptyBraces"])
     }
 
     func testNoExtraBlankLineBetweenFunctions() {
         let input = "func foo() {\n}\n\nfunc bar() {\n}"
-        testFormatting(for: input, rule: FormatRules.blankLinesBetweenScopes, exclude: ["emptyBraces"])
+        testFormatting(for: input, rule: .blankLinesBetweenScopes, exclude: ["emptyBraces"])
     }
 
     func testNoBlankLineBetweenFunctionsInProtocol() {
         let input = "protocol Foo {\n    func bar() -> Void\n    func baz() -> Int\n}"
-        testFormatting(for: input, rule: FormatRules.blankLinesBetweenScopes)
+        testFormatting(for: input, rule: .blankLinesBetweenScopes)
     }
 
     func testNoBlankLineInsideInitFunction() {
         let input = "init() {\n    super.init()\n}"
-        testFormatting(for: input, rule: FormatRules.blankLinesBetweenScopes)
+        testFormatting(for: input, rule: .blankLinesBetweenScopes)
     }
 
     func testBlankLineAfterProtocolBeforeProperty() {
         let input = "protocol Foo {\n}\nvar bar: String"
         let output = "protocol Foo {\n}\n\nvar bar: String"
-        testFormatting(for: input, output, rule: FormatRules.blankLinesBetweenScopes,
+        testFormatting(for: input, output, rule: .blankLinesBetweenScopes,
                        exclude: ["emptyBraces"])
     }
 
     func testNoExtraBlankLineAfterSingleLineComment() {
         let input = "var foo: Bar? // comment\n\nfunc bar() {}"
-        testFormatting(for: input, rule: FormatRules.blankLinesBetweenScopes)
+        testFormatting(for: input, rule: .blankLinesBetweenScopes)
     }
 
     func testNoExtraBlankLineAfterMultilineComment() {
         let input = "var foo: Bar? /* comment */\n\nfunc bar() {}"
-        testFormatting(for: input, rule: FormatRules.blankLinesBetweenScopes)
+        testFormatting(for: input, rule: .blankLinesBetweenScopes)
     }
 
     func testNoBlankLineBeforeFuncAsIdentifier() {
         let input = "var foo: Bar?\nfoo.func(x) {}"
-        testFormatting(for: input, rule: FormatRules.blankLinesBetweenScopes)
+        testFormatting(for: input, rule: .blankLinesBetweenScopes)
     }
 
     func testNoBlankLineBetweenFunctionsWithInlineBody() {
         let input = "class Foo {\n    func foo() { print(\"foo\") }\n    func bar() { print(\"bar\") }\n}"
-        testFormatting(for: input, rule: FormatRules.blankLinesBetweenScopes)
+        testFormatting(for: input, rule: .blankLinesBetweenScopes)
     }
 
     func testNoBlankLineBetweenIfStatements() {
         let input = "func foo() {\n    if x {\n    }\n    if y {\n    }\n}"
-        testFormatting(for: input, rule: FormatRules.blankLinesBetweenScopes, exclude: ["emptyBraces"])
+        testFormatting(for: input, rule: .blankLinesBetweenScopes, exclude: ["emptyBraces"])
     }
 
     func testNoBlanksInsideClassFunc() {
         let input = "class func foo {\n    if x {\n    }\n    if y {\n    }\n}"
         let options = FormatOptions(fragment: true)
-        testFormatting(for: input, rule: FormatRules.blankLinesBetweenScopes, options: options,
+        testFormatting(for: input, rule: .blankLinesBetweenScopes, options: options,
                        exclude: ["emptyBraces"])
     }
 
     func testNoBlanksInsideClassVar() {
         let input = "class var foo: Int {\n    if x {\n    }\n    if y {\n    }\n}"
         let options = FormatOptions(fragment: true)
-        testFormatting(for: input, rule: FormatRules.blankLinesBetweenScopes, options: options,
+        testFormatting(for: input, rule: .blankLinesBetweenScopes, options: options,
                        exclude: ["emptyBraces"])
     }
 
     func testBlankLineBetweenCalledClosures() {
         let input = "class Foo {\n    var foo = {\n    }()\n    func bar {\n    }\n}"
         let output = "class Foo {\n    var foo = {\n    }()\n\n    func bar {\n    }\n}"
-        testFormatting(for: input, output, rule: FormatRules.blankLinesBetweenScopes,
+        testFormatting(for: input, output, rule: .blankLinesBetweenScopes,
                        exclude: ["emptyBraces"])
     }
 
     func testNoBlankLineAfterCalledClosureAtEndOfScope() {
         let input = "class Foo {\n    var foo = {\n    }()\n}"
-        testFormatting(for: input, rule: FormatRules.blankLinesBetweenScopes, exclude: ["emptyBraces"])
+        testFormatting(for: input, rule: .blankLinesBetweenScopes, exclude: ["emptyBraces"])
     }
 
     func testNoBlankLineBeforeWhileInRepeatWhile() {
@@ -640,14 +640,14 @@ class LinebreakTests: RulesTests {
         { print("bar") }()
         """
         let options = FormatOptions(allmanBraces: true)
-        testFormatting(for: input, rule: FormatRules.blankLinesBetweenScopes, options: options, exclude: ["redundantClosure", "wrapLoopBodies"])
+        testFormatting(for: input, rule: .blankLinesBetweenScopes, options: options, exclude: ["redundantClosure", "wrapLoopBodies"])
     }
 
     func testBlankLineBeforeWhileIfNotRepeatWhile() {
         let input = "func foo(x)\n{\n}\nwhile true\n{\n}"
         let output = "func foo(x)\n{\n}\n\nwhile true\n{\n}"
         let options = FormatOptions(allmanBraces: true)
-        testFormatting(for: input, output, rule: FormatRules.blankLinesBetweenScopes, options: options,
+        testFormatting(for: input, output, rule: .blankLinesBetweenScopes, options: options,
                        exclude: ["emptyBraces"])
     }
 
@@ -663,7 +663,7 @@ class LinebreakTests: RulesTests {
             #endif
         }
         """
-        testFormatting(for: input, rule: FormatRules.blankLinesBetweenScopes,
+        testFormatting(for: input, rule: .blankLinesBetweenScopes,
                        exclude: ["emptyBraces"])
     }
 
@@ -679,7 +679,7 @@ class LinebreakTests: RulesTests {
             // sourcery:end
         }
         """
-        testFormatting(for: input, rule: FormatRules.blankLinesBetweenScopes)
+        testFormatting(for: input, rule: .blankLinesBetweenScopes)
     }
 
     func testNoBlankLineBetweenChainedClosures() {
@@ -696,7 +696,7 @@ class LinebreakTests: RulesTests {
             doBaz($0)
         }
         """
-        testFormatting(for: input, rule: FormatRules.blankLinesBetweenScopes)
+        testFormatting(for: input, rule: .blankLinesBetweenScopes)
     }
 
     func testNoBlankLineBetweenTrailingClosures() {
@@ -708,7 +708,7 @@ class LinebreakTests: RulesTests {
             context.completeTransition(finished)
         }
         """
-        testFormatting(for: input, rule: FormatRules.blankLinesBetweenScopes)
+        testFormatting(for: input, rule: .blankLinesBetweenScopes)
     }
 
     func testBlankLineBetweenTrailingClosureAndLabelledLoop() {
@@ -729,7 +729,7 @@ class LinebreakTests: RulesTests {
             print(foo)
         }
         """
-        testFormatting(for: input, output, rule: FormatRules.blankLinesBetweenScopes)
+        testFormatting(for: input, output, rule: .blankLinesBetweenScopes)
     }
 
     // MARK: - blankLinesAroundMark
@@ -747,7 +747,7 @@ class LinebreakTests: RulesTests {
 
         let bar = "bar"
         """
-        testFormatting(for: input, output, rule: FormatRules.blankLinesAroundMark)
+        testFormatting(for: input, output, rule: .blankLinesAroundMark)
     }
 
     func testNoInsertExtraBlankLinesAroundMark() {
@@ -758,7 +758,7 @@ class LinebreakTests: RulesTests {
 
         let bar = "bar"
         """
-        testFormatting(for: input, rule: FormatRules.blankLinesAroundMark)
+        testFormatting(for: input, rule: .blankLinesAroundMark)
     }
 
     func testInsertBlankLineAfterMarkAtStartOfFile() {
@@ -771,7 +771,7 @@ class LinebreakTests: RulesTests {
 
         let bar = "bar"
         """
-        testFormatting(for: input, output, rule: FormatRules.blankLinesAroundMark)
+        testFormatting(for: input, output, rule: .blankLinesAroundMark)
     }
 
     func testInsertBlankLineBeforeMarkAtEndOfFile() {
@@ -784,7 +784,7 @@ class LinebreakTests: RulesTests {
 
         // MARK: bar
         """
-        testFormatting(for: input, output, rule: FormatRules.blankLinesAroundMark)
+        testFormatting(for: input, output, rule: .blankLinesAroundMark)
     }
 
     func testNoInsertBlankLineBeforeMarkAtStartOfScope() {
@@ -795,7 +795,7 @@ class LinebreakTests: RulesTests {
             let foo = "foo"
         }
         """
-        testFormatting(for: input, rule: FormatRules.blankLinesAroundMark)
+        testFormatting(for: input, rule: .blankLinesAroundMark)
     }
 
     func testNoInsertBlankLineAfterMarkAtEndOfScope() {
@@ -806,7 +806,7 @@ class LinebreakTests: RulesTests {
             // MARK: foo
         }
         """
-        testFormatting(for: input, rule: FormatRules.blankLinesAroundMark)
+        testFormatting(for: input, rule: .blankLinesAroundMark)
     }
 
     func testInsertBlankLinesJustBeforeMarkNotAfter() {
@@ -822,7 +822,7 @@ class LinebreakTests: RulesTests {
         let bar = "bar"
         """
         let options = FormatOptions(lineAfterMarks: false)
-        testFormatting(for: input, output, rule: FormatRules.blankLinesAroundMark, options: options)
+        testFormatting(for: input, output, rule: .blankLinesAroundMark, options: options)
     }
 
     func testNoInsertExtraBlankLinesAroundMarkWithNoBlankLineAfterMark() {
@@ -833,7 +833,7 @@ class LinebreakTests: RulesTests {
         let bar = "bar"
         """
         let options = FormatOptions(lineAfterMarks: false)
-        testFormatting(for: input, rule: FormatRules.blankLinesAroundMark, options: options)
+        testFormatting(for: input, rule: .blankLinesAroundMark, options: options)
     }
 
     func testNoInsertBlankLineAfterMarkAtStartOfFile() {
@@ -842,7 +842,7 @@ class LinebreakTests: RulesTests {
         let bar = "bar"
         """
         let options = FormatOptions(lineAfterMarks: false)
-        testFormatting(for: input, rule: FormatRules.blankLinesAroundMark, options: options)
+        testFormatting(for: input, rule: .blankLinesAroundMark, options: options)
     }
 
     // MARK: - linebreakAtEndOfFile
@@ -850,12 +850,12 @@ class LinebreakTests: RulesTests {
     func testLinebreakAtEndOfFile() {
         let input = "foo\nbar"
         let output = "foo\nbar\n"
-        testFormatting(for: input, output, rule: FormatRules.linebreakAtEndOfFile)
+        testFormatting(for: input, output, rule: .linebreakAtEndOfFile)
     }
 
     func testNoLinebreakAtEndOfFragment() {
         let input = "foo\nbar"
         let options = FormatOptions(fragment: true)
-        testFormatting(for: input, rule: FormatRules.linebreakAtEndOfFile, options: options)
+        testFormatting(for: input, rule: .linebreakAtEndOfFile, options: options)
     }
 }

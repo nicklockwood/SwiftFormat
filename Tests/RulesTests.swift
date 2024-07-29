@@ -47,6 +47,13 @@ class RulesTests: XCTestCase {
                         options: FormatOptions = .default, exclude: [String] = [],
                         file: StaticString = #file, line: UInt = #line)
     {
+        // Always make sure the rule registry is up-to-date before running the tests
+        do {
+            try FormatRules.generateRuleRegistryIfNecessary()
+        } catch {
+            XCTFail("Encountered error generating rule registry: \(error.localizedDescription)", file: file, line: line)
+        }
+
         var options = options
         if options.timeout == FormatOptions.default.timeout {
             // Make breakpoint debugging easier by increasing timeout

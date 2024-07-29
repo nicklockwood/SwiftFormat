@@ -398,12 +398,12 @@ class CommandLineTests: XCTestCase {
         Package.swift #bar
 
         #baz
-        Sources/Rules.swift
+        Sources/FormatRule.swift
         CommandLineTool/*.swift
         """
         XCTAssertEqual(try parseFileList(source, in: projectDirectory.path), [
             URL(fileURLWithPath: "\(projectDirectory.path)/Package.swift"),
-            URL(fileURLWithPath: "\(projectDirectory.path)/Sources/Rules.swift"),
+            URL(fileURLWithPath: "\(projectDirectory.path)/Sources/FormatRule.swift"),
             URL(fileURLWithPath: "\(projectDirectory.path)/CommandLineTool/main.swift"),
         ])
     }

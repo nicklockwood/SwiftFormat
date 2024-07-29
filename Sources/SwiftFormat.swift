@@ -180,7 +180,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
         let fileOptions = options.fileOptions ?? .default
         if resourceValues.isRegularFile == true {
             if fileOptions.supportedFileExtensions.contains(inputURL.pathExtension) {
-                let fileHeaderRuleEnabled = options.rules?.contains(FormatRules.fileHeader.name) ?? false
+                let fileHeaderRuleEnabled = options.rules?.contains(FormatRule.fileHeader.name) ?? false
                 let shouldGetGitInfo = fileHeaderRuleEnabled &&
                     options.formatOptions?.fileHeader.needsGitInfo == true
 
@@ -501,7 +501,7 @@ private func applyRules(
     inferFormatOptions(sharedOptions, from: tokens, into: &options)
 
     // Check if required FileInfo is available
-    if rules.contains(FormatRules.fileHeader) {
+    if rules.contains(.fileHeader) {
         let header = options.fileHeader
         let fileInfo = options.fileInfo
 

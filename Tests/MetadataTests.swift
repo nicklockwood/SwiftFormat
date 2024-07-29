@@ -28,6 +28,21 @@ private let rulesURL =
 private let rulesFile =
     try! String(contentsOf: rulesURL, encoding: .utf8)
 
+private let ruleRegistryURL =
+    projectDirectory.appendingPathComponent("Sources/RuleRegistry.generated.swift")
+
+private let allRuleFiles: [URL] = {
+    var rulesFiles: [URL] = []
+    let rulesDirectory = projectDirectory.appendingPathComponent("Sources/Rules")
+    _ = enumerateFiles(withInputURL: rulesDirectory) { ruleFileURL, _, _ in
+        {
+            guard ruleFileURL.pathExtension == "swift" else { return }
+            rulesFiles.append(ruleFileURL)
+        }
+    }
+    return rulesFiles
+}()
+
 private let swiftFormatVersion: String = {
     let string = try! String(contentsOf: projectURL)
     let start = string.range(of: "MARKETING_VERSION = ")!.upperBound
@@ -143,118 +158,122 @@ class MetadataTests: XCTestCase {
     // MARK: options
 
     func testRulesOptions() throws {
+        var allOptions = Set(formattingArguments).subtracting(deprecatedArguments)
+        var allSharedOptions = allOptions
         var optionsByProperty = [String: OptionDescriptor]()
         for descriptor in Descriptors.formatting.reversed() {
             optionsByProperty[descriptor.propertyName] = descriptor
         }
-        let rulesFile = projectDirectory.appendingPathComponent("Sources/Rules.swift")
-        let rulesSource = try String(contentsOf: rulesFile, encoding: .utf8)
-        let tokens = tokenize(rulesSource)
-        let formatter = Formatter(tokens)
-        var rulesByOption = [String: String]()
-        var allOptions = Set(formattingArguments).subtracting(deprecatedArguments)
-        var allSharedOptions = allOptions
-        formatter.forEach(.identifier("FormatRule")) { i, _ in
-            guard formatter.next(.nonSpaceOrLinebreak, after: i) == .startOfScope("("),
-                  case let .identifier(name)? = formatter.last(.identifier, before: i),
-                  let scopeStart = formatter.index(of: .startOfScope("{"), after: i),
-                  let scopeEnd = formatter.index(of: .endOfScope("}"), after: scopeStart),
-                  let rule = FormatRules.byName[name]
-            else {
-                return
-            }
-            for option in rule.options where !rule.isDeprecated {
-                if let oldName = rulesByOption[option] {
-                    XCTFail("\(option) set as (non-shared) option for both \(name) and \(oldName)")
-                }
-                rulesByOption[option] = name
-            }
-            let ruleOptions = rule.options + rule.sharedOptions
-            allOptions.subtract(rule.options)
-            allSharedOptions.subtract(ruleOptions)
-            var referencedOptions = [OptionDescriptor]()
-            for index in scopeStart + 1 ..< scopeEnd {
-                guard formatter.token(at: index - 1) == .operator(".", .infix),
-                      formatter.token(at: index - 2) == .identifier("formatter")
+        for rulesFile in allRuleFiles {
+            let rulesSource = try String(contentsOf: rulesFile, encoding: .utf8)
+            let tokens = tokenize(rulesSource)
+            let formatter = Formatter(tokens)
+            var rulesByOption = [String: String]()
+            formatter.forEach(.identifier("FormatRule")) { i, _ in
+                guard let nextToken = formatter.next(.nonSpaceOrComment, after: i),
+                      [.startOfScope("("), .operator("=", .infix)].contains(nextToken),
+                      case let .identifier(name)? = formatter.last(.identifier, before: i),
+                      let scopeStart = formatter.index(of: .startOfScope("{"), after: i),
+                      let scopeEnd = formatter.index(of: .endOfScope("}"), after: scopeStart),
+                      let rule = FormatRules.byName[name]
                 else {
-                    continue
+                    return
                 }
-                switch formatter.tokens[index] {
-                case .identifier("spaceEquivalentToWidth"),
-                     .identifier("spaceEquivalentToTokens"):
-                    referencedOptions += [
-                        Descriptors.indent, Descriptors.tabWidth, Descriptors.smartTabs,
-                    ]
-                case .identifier("tokenLength"):
-                    referencedOptions += [Descriptors.indent, Descriptors.tabWidth]
-                case .identifier("lineLength"):
-                    referencedOptions += [
-                        Descriptors.indent, Descriptors.tabWidth, Descriptors.assetLiteralWidth,
-                    ]
-                case .identifier("isCommentedCode"):
-                    referencedOptions.append(Descriptors.indent)
-                case .identifier("insertLinebreak"), .identifier("linebreakToken"):
-                    referencedOptions.append(Descriptors.linebreak)
-                case .identifier("wrapCollectionsAndArguments"):
-                    referencedOptions += [
-                        Descriptors.wrapArguments, Descriptors.wrapParameters, Descriptors.wrapCollections,
-                        Descriptors.closingParenPosition, Descriptors.callSiteClosingParenPosition,
-                        Descriptors.linebreak, Descriptors.truncateBlankLines,
-                        Descriptors.indent, Descriptors.tabWidth, Descriptors.smartTabs, Descriptors.maxWidth,
-                        Descriptors.assetLiteralWidth, Descriptors.wrapReturnType, Descriptors.wrapEffects,
-                        Descriptors.wrapConditions, Descriptors.wrapTypealiases, Descriptors.wrapTernaryOperators,
-                    ]
-                case .identifier("wrapStatementBody"):
-                    referencedOptions += [Descriptors.indent, Descriptors.linebreak]
-                case .identifier("indexWhereLineShouldWrapInLine"), .identifier("indexWhereLineShouldWrap"):
-                    referencedOptions += [
-                        Descriptors.indent, Descriptors.tabWidth, Descriptors.assetLiteralWidth,
-                        Descriptors.noWrapOperators,
-                    ]
-                case .identifier("modifierOrder"):
-                    referencedOptions.append(Descriptors.modifierOrder)
-                case .identifier("options") where formatter.token(at: index + 1) == .operator(".", .infix):
-                    if case let .identifier(property)? = formatter.token(at: index + 2),
-                       let option = optionsByProperty[property]
-                    {
-                        referencedOptions.append(option)
+                for option in rule.options where !rule.isDeprecated {
+                    if let oldName = rulesByOption[option] {
+                        XCTFail("\(option) set as (non-shared) option for both \(name) and \(oldName)")
                     }
-                case .identifier("organizeDeclaration"):
-                    referencedOptions += [
-                        Descriptors.categoryMarkComment,
-                        Descriptors.markCategories,
-                        Descriptors.beforeMarks,
-                        Descriptors.lifecycleMethods,
-                        Descriptors.organizeTypes,
-                        Descriptors.organizeStructThreshold,
-                        Descriptors.organizeClassThreshold,
-                        Descriptors.organizeEnumThreshold,
-                        Descriptors.organizeExtensionThreshold,
-                        Descriptors.lineAfterMarks,
-                        Descriptors.organizationMode,
-                        Descriptors.alphabeticallySortedDeclarationPatterns,
-                        Descriptors.visibilityOrder,
-                        Descriptors.typeOrder,
-                        Descriptors.customVisibilityMarks,
-                        Descriptors.customTypeMarks,
-                    ]
-                case .identifier("removeSelf"):
-                    referencedOptions += [
-                        Descriptors.selfRequired,
-                    ]
-                default:
-                    continue
+                    rulesByOption[option] = name
                 }
-            }
-            for option in referencedOptions {
-                XCTAssert(ruleOptions.contains(option.argumentName) || option.isDeprecated,
-                          "\(option.argumentName) not listed in \(name) rule")
-            }
-            for argName in ruleOptions {
-                XCTAssert(referencedOptions.contains { $0.argumentName == argName },
-                          "\(argName) not used in \(name) rule")
+                let ruleOptions = rule.options + rule.sharedOptions
+                allOptions.subtract(rule.options)
+                allSharedOptions.subtract(ruleOptions)
+                var referencedOptions = [OptionDescriptor]()
+                for index in scopeStart + 1 ..< scopeEnd {
+                    guard formatter.token(at: index - 1) == .operator(".", .infix),
+                          formatter.token(at: index - 2) == .identifier("formatter")
+                    else {
+                        continue
+                    }
+                    switch formatter.tokens[index] {
+                    case .identifier("spaceEquivalentToWidth"),
+                         .identifier("spaceEquivalentToTokens"):
+                        referencedOptions += [
+                            Descriptors.indent, Descriptors.tabWidth, Descriptors.smartTabs,
+                        ]
+                    case .identifier("tokenLength"):
+                        referencedOptions += [Descriptors.indent, Descriptors.tabWidth]
+                    case .identifier("lineLength"):
+                        referencedOptions += [
+                            Descriptors.indent, Descriptors.tabWidth, Descriptors.assetLiteralWidth,
+                        ]
+                    case .identifier("isCommentedCode"):
+                        referencedOptions.append(Descriptors.indent)
+                    case .identifier("insertLinebreak"), .identifier("linebreakToken"):
+                        referencedOptions.append(Descriptors.linebreak)
+                    case .identifier("wrapCollectionsAndArguments"):
+                        referencedOptions += [
+                            Descriptors.wrapArguments, Descriptors.wrapParameters, Descriptors.wrapCollections,
+                            Descriptors.closingParenPosition, Descriptors.callSiteClosingParenPosition,
+                            Descriptors.linebreak, Descriptors.truncateBlankLines,
+                            Descriptors.indent, Descriptors.tabWidth, Descriptors.smartTabs, Descriptors.maxWidth,
+                            Descriptors.assetLiteralWidth, Descriptors.wrapReturnType, Descriptors.wrapEffects,
+                            Descriptors.wrapConditions, Descriptors.wrapTypealiases, Descriptors.wrapTernaryOperators,
+                        ]
+                    case .identifier("wrapStatementBody"):
+                        referencedOptions += [Descriptors.indent, Descriptors.linebreak]
+                    case .identifier("indexWhereLineShouldWrapInLine"), .identifier("indexWhereLineShouldWrap"):
+                        referencedOptions += [
+                            Descriptors.indent, Descriptors.tabWidth, Descriptors.assetLiteralWidth,
+                            Descriptors.noWrapOperators,
+                        ]
+                    case .identifier("modifierOrder"):
+                        referencedOptions.append(Descriptors.modifierOrder)
+                    case .identifier("options") where formatter.token(at: index + 1) == .operator(".", .infix):
+                        if case let .identifier(property)? = formatter.token(at: index + 2),
+                           let option = optionsByProperty[property]
+                        {
+                            referencedOptions.append(option)
+                        }
+                    case .identifier("organizeDeclaration"):
+                        referencedOptions += [
+                            Descriptors.categoryMarkComment,
+                            Descriptors.markCategories,
+                            Descriptors.beforeMarks,
+                            Descriptors.lifecycleMethods,
+                            Descriptors.organizeTypes,
+                            Descriptors.organizeStructThreshold,
+                            Descriptors.organizeClassThreshold,
+                            Descriptors.organizeEnumThreshold,
+                            Descriptors.organizeExtensionThreshold,
+                            Descriptors.lineAfterMarks,
+                            Descriptors.organizationMode,
+                            Descriptors.alphabeticallySortedDeclarationPatterns,
+                            Descriptors.visibilityOrder,
+                            Descriptors.typeOrder,
+                            Descriptors.customVisibilityMarks,
+                            Descriptors.customTypeMarks,
+                        ]
+                    case .identifier("removeSelf"):
+                        referencedOptions += [
+                            Descriptors.selfRequired,
+                        ]
+                    default:
+                        continue
+                    }
+                }
+
+                for option in referencedOptions {
+                    XCTAssert(ruleOptions.contains(option.argumentName) || option.isDeprecated,
+                              "\(option.argumentName) not listed in \(name) rule")
+                }
+                for argName in ruleOptions {
+                    XCTAssert(referencedOptions.contains { $0.argumentName == argName },
+                              "\(argName) not used in \(name) rule")
+                }
             }
         }
+
         XCTAssert(allSharedOptions.isEmpty, "Options \(allSharedOptions.joined(separator: ",")) not shared by any rule)")
         XCTAssert(allOptions.isEmpty, "Options \(allSharedOptions.joined(separator: ",")) not owned by any rule)")
     }
@@ -298,8 +317,12 @@ class MetadataTests: XCTestCase {
     // MARK: keywords
 
     func testContextualKeywordsReferencedCorrectly() throws {
-        for file in ["Rules", "ParsingHelpers", "FormattingHelpers"] {
-            let sourceFile = projectDirectory.appendingPathComponent("Sources/\(file).swift")
+        let filesToVerify = allRuleFiles + [
+            projectDirectory.appendingPathComponent("Sources/ParsingHelpers.swift"),
+            projectDirectory.appendingPathComponent("Sources/FormattingHelpers.swift"),
+        ]
+
+        for sourceFile in filesToVerify {
             let fileSource = try String(contentsOf: sourceFile, encoding: .utf8)
             let tokens = tokenize(fileSource)
             let formatter = Formatter(tokens)
@@ -322,7 +345,7 @@ class MetadataTests: XCTestCase {
                 }
                 guard keywords.contains(keyword) || keyword.hasPrefix("#") || keyword.hasPrefix("@") else {
                     let line = formatter.originalLine(at: i)
-                    XCTFail("'\(keyword)' referenced on line \(line) of '\(file).swift' is not a valid Swift keyword. "
+                    XCTFail("'\(keyword)' referenced on line \(line) of '\(sourceFile)' is not a valid Swift keyword. "
                         + "Contextual keywords should be referenced with `.identifier(...)`")
                     return
                 }
@@ -335,16 +358,6 @@ class MetadataTests: XCTestCase {
     func testAllExamplesMatchRule() {
         for key in FormatRules.examplesByName.keys {
             XCTAssertNotNil(FormatRules.byName[key], "Examples includes entry for unknown rule '\(key)'")
-        }
-    }
-
-    // MARK: order
-
-    func testRuleOrderNamesAreValid() {
-        for rule in FormatRules.all {
-            for name in rule.orderAfter {
-                XCTAssert(FormatRules.byName[name] != nil, "\(name) rule does not exist")
-            }
         }
     }
 
@@ -382,6 +395,106 @@ class MetadataTests: XCTestCase {
                 return
             }
             lastDate = date
+        }
+    }
+}
+
+/// The cached result from the first run of `generateRuleRegistryIfNecessary()`
+private var cachedGenerateRuleRegistryResult: Result<Void, Error>?
+
+extension _FormatRules {
+    /// Generates `RuleRegistry.generated.swift` if it hasn't been generated yet for this test run.
+    func generateRuleRegistryIfNecessary() throws {
+        switch cachedGenerateRuleRegistryResult {
+        case .success:
+            break
+
+        case let .failure(error):
+            throw error
+
+        case .none:
+            do {
+                try generateRuleRegistry()
+                cachedGenerateRuleRegistryResult = .success(())
+            } catch {
+                cachedGenerateRuleRegistryResult = .failure(error)
+                throw error
+            }
+        }
+    }
+
+    private func generateRuleRegistry() throws {
+        let validatedRules = try validatedRuleNames()
+        let ruleRegistryContent = generateRuleRegistryContent(for: validatedRules)
+        let currentRuleRegistryContent = try String(contentsOf: ruleRegistryURL)
+
+        if ruleRegistryContent != currentRuleRegistryContent {
+            try ruleRegistryContent.write(to: ruleRegistryURL, atomically: true, encoding: .utf8)
+            fatalError("Updated rule registry. You can now re-run the test case or test suite.")
+        }
+    }
+
+    /// Finds all of the rules defines in `Sources/Rules` and validates that it matches the
+    /// expected scheme, where each file defines exactly one `FormatRule` with the same name.
+    private func validatedRuleNames() throws -> [String] {
+        try allRuleFiles.map { ruleFile in
+            let titleCaseRuleName = ruleFile.lastPathComponent.replacingOccurrences(of: ".swift", with: "")
+            let camelCaseRuleName = titleCaseRuleName.first!.lowercased() + titleCaseRuleName.dropFirst()
+            try validateRuleImplementation(for: camelCaseRuleName, in: ruleFile)
+            return camelCaseRuleName
+        }
+    }
+
+    /// Generates the content of the `RuleRegistry.generated.swift` file
+    private func generateRuleRegistryContent(for rules: [String]) -> String {
+        var ruleRegistryContents = """
+        //
+        //  RuleRegistry.generated.swift
+        //  SwiftFormat
+        //
+        //  Created by Cal Stephens on 7/27/24.
+        //  Copyright © 2024 Nick Lockwood. All rights reserved.
+        //
+
+        /// All of the rules defined in the Rules directory.
+        /// **Generated automatically when running tests. Do not modify.**
+        let ruleRegistry: [String: FormatRule] = [\n
+        """
+
+        for rule in rules.sorted() {
+            ruleRegistryContents.append("""
+                "\(rule)": .\(rule),\n
+            """)
+        }
+
+        ruleRegistryContents.append("""
+        ]\n
+        """)
+
+        return ruleRegistryContents
+    }
+
+    /// Validates that the given file defines exactly one `FormatRule` with the expected name
+    private func validateRuleImplementation(for expectedRuleName: String, in file: URL) throws {
+        let fileContents = try String(contentsOf: file)
+        let formatter = Formatter(tokenize(fileContents))
+
+        // Find all rules defined in the file, like `let ruleName = FormatRule(` or `let ruleName: FormatRule = ...`.
+        var definedRules: [String] = []
+        formatter.forEach(.identifier("FormatRule")) { index, _ in
+            guard let nextToken = formatter.next(.nonSpaceOrComment, after: index),
+                  [.startOfScope("("), .operator("=", .infix)].contains(nextToken),
+                  let declarationKeyword = formatter.indexOfLastSignificantKeyword(at: index),
+                  let ruleNameIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: declarationKeyword)
+            else { return }
+
+            definedRules.append(formatter.tokens[ruleNameIndex].string)
+        }
+
+        if definedRules != [expectedRuleName] {
+            fatalError("""
+            \(file.lastPathComponent) must define a single FormatRule named \(expectedRuleName). Currently defines rules: \(definedRules).
+            """)
         }
     }
 }

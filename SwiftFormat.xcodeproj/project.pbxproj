@@ -528,14 +528,14 @@
 		2E2CD0AC2C56BA8700D70FB0 /* docCommentsBeforeAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2CD0AA2C56BA8700D70FB0 /* docCommentsBeforeAttributes.swift */; };
 		2E2CD0AD2C56BA8700D70FB0 /* docCommentsBeforeAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2CD0AA2C56BA8700D70FB0 /* docCommentsBeforeAttributes.swift */; };
 		2E2CD0AE2C56BA8700D70FB0 /* docCommentsBeforeAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2CD0AA2C56BA8700D70FB0 /* docCommentsBeforeAttributes.swift */; };
-		2E2CD0B12C56BBDE00D70FB0 /* Reporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2CD0B02C56BBDE00D70FB0 /* Reporter.swift */; };
-		2E2CD0B22C56BBDE00D70FB0 /* Reporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2CD0B02C56BBDE00D70FB0 /* Reporter.swift */; };
-		2E2CD0B62C56BBE300D70FB0 /* JSONReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2CD0B52C56BBE300D70FB0 /* JSONReporter.swift */; };
-		2E2CD0B72C56BBE300D70FB0 /* JSONReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2CD0B52C56BBE300D70FB0 /* JSONReporter.swift */; };
-		2E2CD0BB2C56BBE700D70FB0 /* XMLReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2CD0BA2C56BBE700D70FB0 /* XMLReporter.swift */; };
-		2E2CD0BC2C56BBE700D70FB0 /* XMLReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2CD0BA2C56BBE700D70FB0 /* XMLReporter.swift */; };
-		2E2CD0C02C56BBEF00D70FB0 /* GithubActionsLogReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2CD0BF2C56BBEF00D70FB0 /* GithubActionsLogReporter.swift */; };
-		2E2CD0C12C56BBEF00D70FB0 /* GithubActionsLogReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2CD0BF2C56BBEF00D70FB0 /* GithubActionsLogReporter.swift */; };
+		2E4A8AE92C56DF14005A22B1 /* GithubActionsLogReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E4A8AE52C56DF14005A22B1 /* GithubActionsLogReporter.swift */; };
+		2E4A8AEA2C56DF14005A22B1 /* GithubActionsLogReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E4A8AE52C56DF14005A22B1 /* GithubActionsLogReporter.swift */; };
+		2E4A8AEB2C56DF14005A22B1 /* XMLReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E4A8AE62C56DF14005A22B1 /* XMLReporter.swift */; };
+		2E4A8AEC2C56DF14005A22B1 /* XMLReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E4A8AE62C56DF14005A22B1 /* XMLReporter.swift */; };
+		2E4A8AED2C56DF14005A22B1 /* JSONReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E4A8AE72C56DF14005A22B1 /* JSONReporter.swift */; };
+		2E4A8AEE2C56DF14005A22B1 /* JSONReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E4A8AE72C56DF14005A22B1 /* JSONReporter.swift */; };
+		2E4A8AEF2C56DF14005A22B1 /* Reporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E4A8AE82C56DF14005A22B1 /* Reporter.swift */; };
+		2E4A8AF02C56DF14005A22B1 /* Reporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E4A8AE82C56DF14005A22B1 /* Reporter.swift */; };
 		2E7D30A42A7940C500C32174 /* Singularize.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E7D30A32A7940C500C32174 /* Singularize.swift */; };
 		37D828AB24BF77DA0012FC0A /* XcodeKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 37D828AA24BF77DA0012FC0A /* XcodeKit.framework */; };
 		37D828AC24BF77DA0012FC0A /* XcodeKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 37D828AA24BF77DA0012FC0A /* XcodeKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -794,10 +794,10 @@
 		2E2CD0A02C56BA4D00D70FB0 /* redundantTypedThrows.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = redundantTypedThrows.swift; sourceTree = "<group>"; };
 		2E2CD0A52C56BA6A00D70FB0 /* propertyType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = propertyType.swift; sourceTree = "<group>"; };
 		2E2CD0AA2C56BA8700D70FB0 /* docCommentsBeforeAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = docCommentsBeforeAttributes.swift; sourceTree = "<group>"; };
-		2E2CD0B02C56BBDE00D70FB0 /* Reporter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Reporter.swift; path = Sources/Reporter.swift; sourceTree = SOURCE_ROOT; };
-		2E2CD0B52C56BBE300D70FB0 /* JSONReporter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = JSONReporter.swift; path = Sources/JSONReporter.swift; sourceTree = SOURCE_ROOT; };
-		2E2CD0BA2C56BBE700D70FB0 /* XMLReporter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = XMLReporter.swift; path = Sources/XMLReporter.swift; sourceTree = SOURCE_ROOT; };
-		2E2CD0BF2C56BBEF00D70FB0 /* GithubActionsLogReporter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = GithubActionsLogReporter.swift; path = Sources/GithubActionsLogReporter.swift; sourceTree = SOURCE_ROOT; };
+		2E4A8AE52C56DF14005A22B1 /* GithubActionsLogReporter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GithubActionsLogReporter.swift; sourceTree = "<group>"; };
+		2E4A8AE62C56DF14005A22B1 /* XMLReporter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = XMLReporter.swift; sourceTree = "<group>"; };
+		2E4A8AE72C56DF14005A22B1 /* JSONReporter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = JSONReporter.swift; sourceTree = "<group>"; };
+		2E4A8AE82C56DF14005A22B1 /* Reporter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Reporter.swift; sourceTree = "<group>"; };
 		2E7D30A32A7940C500C32174 /* Singularize.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Singularize.swift; sourceTree = "<group>"; };
 		37D828AA24BF77DA0012FC0A /* XcodeKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XcodeKit.framework; path = Library/Frameworks/XcodeKit.framework; sourceTree = DEVELOPER_DIR; };
 		90C4B6CA1DA4B04A009EB000 /* SwiftFormat for Xcode.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "SwiftFormat for Xcode.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -919,7 +919,6 @@
 			isa = PBXGroup;
 			children = (
 				2E2BF3492C554E2E00AB08D2 /* Rules */,
-				2E2CD0AF2C56BBC600D70FB0 /* Reporters */,
 				01F17E811E25870700DCD359 /* CommandLine.swift */,
 				E4E4D3C82033F17C000D7CB1 /* EnumAssociable.swift */,
 				01B3987C1D763493009ADE61 /* Formatter.swift */,
@@ -940,6 +939,7 @@
 				01A0EABF1D5DB4F700A0A8E3 /* Tokenizer.swift */,
 				01BBD85821DAA2A000457380 /* Globs.swift */,
 				D52F6A632A82E04600FE1448 /* GitFileInfo.swift */,
+				2E4A8AE42C56DF14005A22B1 /* Reporters */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
@@ -1113,13 +1113,13 @@
 			path = Rules;
 			sourceTree = "<group>";
 		};
-		2E2CD0AF2C56BBC600D70FB0 /* Reporters */ = {
+		2E4A8AE42C56DF14005A22B1 /* Reporters */ = {
 			isa = PBXGroup;
 			children = (
-				2E2CD0B02C56BBDE00D70FB0 /* Reporter.swift */,
-				2E2CD0BA2C56BBE700D70FB0 /* XMLReporter.swift */,
-				2E2CD0BF2C56BBEF00D70FB0 /* GithubActionsLogReporter.swift */,
-				2E2CD0B52C56BBE300D70FB0 /* JSONReporter.swift */,
+				2E4A8AE52C56DF14005A22B1 /* GithubActionsLogReporter.swift */,
+				2E4A8AE62C56DF14005A22B1 /* XMLReporter.swift */,
+				2E4A8AE72C56DF14005A22B1 /* JSONReporter.swift */,
+				2E4A8AE82C56DF14005A22B1 /* Reporter.swift */,
 			);
 			path = Reporters;
 			sourceTree = "<group>";
@@ -1253,7 +1253,6 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 01A0EAB81D5DB4D000A0A8E3 /* Build configuration list for PBXNativeTarget "SwiftFormat" */;
 			buildPhases = (
-				2E2BF3592C5552ED00AB08D2 /* Generate Rule Registry */,
 				01A0EA9F1D5DB4CF00A0A8E3 /* Sources */,
 				0142F06D1D72B4A6007D66CC /* Format Code */,
 				01A0EAA01D5DB4CF00A0A8E3 /* Frameworks */,
@@ -1293,7 +1292,6 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 01A0EACE1D5DB5F500A0A8E3 /* Build configuration list for PBXNativeTarget "CommandLineTool" */;
 			buildPhases = (
-				2E4351D82C55941900BCBB5E /* Generate Rules Registry */,
 				01A0EAC61D5DB5F500A0A8E3 /* Sources */,
 				01A0EAC71D5DB5F500A0A8E3 /* Frameworks */,
 			);
@@ -1310,7 +1308,6 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 90C4B6D81DA4B04A009EB000 /* Build configuration list for PBXNativeTarget "SwiftFormat for Xcode" */;
 			buildPhases = (
-				2E4351D92C55942E00BCBB5E /* Generate Rules Registry */,
 				90C4B6C61DA4B04A009EB000 /* Sources */,
 				90C4B6C71DA4B04A009EB000 /* Frameworks */,
 				90C4B6C81DA4B04A009EB000 /* Resources */,
@@ -1330,7 +1327,6 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 90C4B6EC1DA4B059009EB000 /* Build configuration list for PBXNativeTarget "Editor Extension" */;
 			buildPhases = (
-				2E4351DB2C55944C00BCBB5E /* Generate Rules Registry */,
 				90C4B6D91DA4B059009EB000 /* Sources */,
 				90C4B6DA1DA4B059009EB000 /* Frameworks */,
 				90C4B6DB1DA4B059009EB000 /* Resources */,
@@ -1469,86 +1465,6 @@
 			shellPath = /bin/sh;
 			shellScript = "\"${SRCROOT}/format.sh\"\n";
 		};
-		2E2BF3592C5552ED00AB08D2 /* Generate Rule Registry */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "Generate Rule Registry";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/generateRulesRegistry.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		2E4351D82C55941900BCBB5E /* Generate Rules Registry */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "Generate Rules Registry";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/generateRulesRegistry.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		2E4351D92C55942E00BCBB5E /* Generate Rules Registry */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "Generate Rules Registry";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/generateRulesRegistry.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		2E4351DB2C55944C00BCBB5E /* Generate Rules Registry */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "Generate Rules Registry";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/generateRulesRegistry.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -1569,6 +1485,7 @@
 				2E2CD01F2C56B5CC00D70FB0 /* unusedPrivateDeclaration.swift in Sources */,
 				2E2CCF842C56B26E00D70FB0 /* unusedArguments.swift in Sources */,
 				D52F6A642A82E04600FE1448 /* GitFileInfo.swift in Sources */,
+				2E4A8AE92C56DF14005A22B1 /* GithubActionsLogReporter.swift in Sources */,
 				2E2CCFFC2C56B52900D70FB0 /* redundantLetError.swift in Sources */,
 				2E2CD09C2C56BA3900D70FB0 /* redundantProperty.swift in Sources */,
 				2E2CCF4D2C56B12F00D70FB0 /* redundantParens.swift in Sources */,
@@ -1602,7 +1519,6 @@
 				2E2CCF612C56B1B500D70FB0 /* redundantPattern.swift in Sources */,
 				2E2CCEC12C56ADC000D70FB0 /* spaceInsideGenerics.swift in Sources */,
 				2E2CCEB22C56AD5100D70FB0 /* spaceAroundBraces.swift in Sources */,
-				2E2CD0B62C56BBE300D70FB0 /* JSONReporter.swift in Sources */,
 				2E2CD0652C56B8A600D70FB0 /* redundantOptionalBinding.swift in Sources */,
 				2E2CD0A12C56BA4D00D70FB0 /* redundantTypedThrows.swift in Sources */,
 				2E2CD0422C56B67400D70FB0 /* extensionAccessControl.swift in Sources */,
@@ -1621,16 +1537,18 @@
 				E4E4D3C92033F17C000D7CB1 /* EnumAssociable.swift in Sources */,
 				2E2CCF432C56B0F300D70FB0 /* modifierOrder.swift in Sources */,
 				2E2CCF932C56B2E100D70FB0 /* hoistPatternLet.swift in Sources */,
+				2E4A8AED2C56DF14005A22B1 /* JSONReporter.swift in Sources */,
 				2E2CCF392C56B0C300D70FB0 /* linebreaks.swift in Sources */,
 				2E2CCF9D2C56B31000D70FB0 /* wrapArguments.swift in Sources */,
 				2E2CD00B2C56B56B00D70FB0 /* strongifiedSelf.swift in Sources */,
 				2E2CD0742C56B90900D70FB0 /* docComments.swift in Sources */,
 				2E2CD05B2C56B6F900D70FB0 /* blockComments.swift in Sources */,
 				2E2CCF892C56B28C00D70FB0 /* hoistTry.swift in Sources */,
+				2E4A8AEF2C56DF14005A22B1 /* Reporter.swift in Sources */,
 				2E2CD01A2C56B5B500D70FB0 /* redundantExtensionACL.swift in Sources */,
+				2E4A8AEB2C56DF14005A22B1 /* XMLReporter.swift in Sources */,
 				2E2CCEC62C56ADE600D70FB0 /* spaceAroundOperators.swift in Sources */,
 				2E2CD0832C56B9D100D70FB0 /* redundantInternal.swift in Sources */,
-				2E2CD0BB2C56BBE700D70FB0 /* XMLReporter.swift in Sources */,
 				2E2CD06F2C56B8F100D70FB0 /* genericExtensions.swift in Sources */,
 				2E2CCFA22C56B32700D70FB0 /* wrapMultilineStatementBraces.swift in Sources */,
 				2E2CD0012C56B53F00D70FB0 /* anyObjectProtocol.swift in Sources */,
@@ -1650,7 +1568,6 @@
 				2E2BF35B2C555CB700AB08D2 /* spaceAroundComments.swift in Sources */,
 				2E7D30A42A7940C500C32174 /* Singularize.swift in Sources */,
 				2E2CD0472C56B69800D70FB0 /* markTypes.swift in Sources */,
-				2E2CD0C02C56BBEF00D70FB0 /* GithubActionsLogReporter.swift in Sources */,
 				2E2CCFB62C56B38500D70FB0 /* void.swift in Sources */,
 				2E2CD08D2C56B9F900D70FB0 /* wrapMultilineConditionalAssignment.swift in Sources */,
 				2E2CD0AB2C56BA8700D70FB0 /* docCommentsBeforeAttributes.swift in Sources */,
@@ -1672,7 +1589,6 @@
 				01F17E821E25870700DCD359 /* CommandLine.swift in Sources */,
 				2E2CCF752C56B22000D70FB0 /* redundantBackticks.swift in Sources */,
 				2E2CCF482C56B10E00D70FB0 /* trailingClosures.swift in Sources */,
-				2E2CD0B12C56BBDE00D70FB0 /* Reporter.swift in Sources */,
 				01F3DF8C1DB9FD3F00454944 /* Options.swift in Sources */,
 				2E2CCEB72C56AD9700D70FB0 /* spaceInsideBraces.swift in Sources */,
 				2E2CD0972C56BA2100D70FB0 /* consistentSwitchCaseSpacing.swift in Sources */,
@@ -1750,7 +1666,6 @@
 				2E2CD0892C56B9E400D70FB0 /* noExplicitOwnership.swift in Sources */,
 				2E2CCFC62C56B42A00D70FB0 /* headerFileName.swift in Sources */,
 				01567D30225B2BFD00B22D41 /* ParsingHelpers.swift in Sources */,
-				2E2CD0C12C56BBEF00D70FB0 /* GithubActionsLogReporter.swift in Sources */,
 				2E2CCFF32C56B4F900D70FB0 /* andOperator.swift in Sources */,
 				2E2CCFE92C56B4CC00D70FB0 /* strongOutlets.swift in Sources */,
 				2E2CCF3F2C56B0DC00D70FB0 /* specifiers.swift in Sources */,
@@ -1762,13 +1677,13 @@
 				2E2CCF442C56B0F300D70FB0 /* modifierOrder.swift in Sources */,
 				2E2CCEC22C56ADC000D70FB0 /* spaceInsideGenerics.swift in Sources */,
 				01A0EAD41D5DC08A00A0A8E3 /* SwiftFormat.swift in Sources */,
-				2E2CD0BC2C56BBE700D70FB0 /* XMLReporter.swift in Sources */,
 				2E2CD0752C56B90900D70FB0 /* docComments.swift in Sources */,
 				E4E4D3CA2033F17C000D7CB1 /* EnumAssociable.swift in Sources */,
 				2E2CCFE42C56B4B700D70FB0 /* duplicateImports.swift in Sources */,
 				2E2CD07A2C56B92100D70FB0 /* conditionalAssignment.swift in Sources */,
 				2E2CCF802C56B24F00D70FB0 /* redundantSelf.swift in Sources */,
 				2E2CCF262C56B05A00D70FB0 /* wrapLoopBodies.swift in Sources */,
+				2E4A8AEA2C56DF14005A22B1 /* GithubActionsLogReporter.swift in Sources */,
 				2E2CCFD02C56B45500D70FB0 /* sortedSwitchCases.swift in Sources */,
 				2E2CCF532C56B14400D70FB0 /* redundantGet.swift in Sources */,
 				2E2CCFEE2C56B4E000D70FB0 /* emptyBraces.swift in Sources */,
@@ -1817,7 +1732,6 @@
 				2E2CD0842C56B9D100D70FB0 /* redundantInternal.swift in Sources */,
 				2E2CD0482C56B69800D70FB0 /* markTypes.swift in Sources */,
 				2E2CCF212C56B04200D70FB0 /* wrapConditionalBodies.swift in Sources */,
-				2E2CD0B22C56BBDE00D70FB0 /* Reporter.swift in Sources */,
 				2E2CCFDF2C56B4A000D70FB0 /* sortImports.swift in Sources */,
 				2E2CCF992C56B2FA00D70FB0 /* wrap.swift in Sources */,
 				01A8320724EC7F7600A9D0EB /* FormattingHelpers.swift in Sources */,
@@ -1834,6 +1748,7 @@
 				2E2CD0342C56B62C00D70FB0 /* wrapAttributes.swift in Sources */,
 				2E2BF35C2C555CB700AB08D2 /* spaceAroundComments.swift in Sources */,
 				2E2CD0392C56B64300D70FB0 /* preferKeyPath.swift in Sources */,
+				2E4A8AEC2C56DF14005A22B1 /* XMLReporter.swift in Sources */,
 				2E2CCEB32C56AD5100D70FB0 /* spaceAroundBraces.swift in Sources */,
 				01ACAE06220CD914003F3CCF /* Examples.swift in Sources */,
 				2E2CD0522C56B6C900D70FB0 /* assertionFailures.swift in Sources */,
@@ -1847,9 +1762,10 @@
 				2E2CD0572C56B6E000D70FB0 /* acronyms.swift in Sources */,
 				2E2CCEE52C56AECB00D70FB0 /* consecutiveBlankLines.swift in Sources */,
 				2E2CD0932C56BA0D00D70FB0 /* blankLineAfterSwitchCase.swift in Sources */,
+				2E4A8AF02C56DF14005A22B1 /* Reporter.swift in Sources */,
 				2E2CCED62C56AE3C00D70FB0 /* consecutiveSpaces.swift in Sources */,
+				2E4A8AEE2C56DF14005A22B1 /* JSONReporter.swift in Sources */,
 				2E2CCF172C56B00E00D70FB0 /* braces.swift in Sources */,
-				2E2CD0B72C56BBE300D70FB0 /* JSONReporter.swift in Sources */,
 				2E2CD0022C56B53F00D70FB0 /* anyObjectProtocol.swift in Sources */,
 				01A0EACD1D5DB5F500A0A8E3 /* main.swift in Sources */,
 				2E2CCF762C56B22000D70FB0 /* redundantBackticks.swift in Sources */,

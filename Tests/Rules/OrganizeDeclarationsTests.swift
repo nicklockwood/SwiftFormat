@@ -2927,4 +2927,164 @@ class OrganizeDeclarationsTests: XCTestCase {
             exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
         )
     }
+
+    func testPreservesBlockOfConsecutivePropertiesWithoutBlankLinesBetweenSubgroups1() {
+        let input = """
+        class Foo {
+            init() {}
+
+            let foo: Foo
+            let baaz: Baaz
+            static let bar: Bar
+
+        }
+        """
+
+        let output = """
+        class Foo {
+
+            // MARK: Lifecycle
+
+            init() {}
+
+            // MARK: Internal
+
+            static let bar: Bar
+            let foo: Foo
+            let baaz: Baaz
+
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: .organizeDeclarations,
+            options: FormatOptions(blankLineAfterSubgroups: false),
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+        )
+    }
+
+    func testPreservesBlockOfConsecutivePropertiesWithoutBlankLinesBetweenSubgroups2() {
+        let input = """
+        class Foo {
+            init() {}
+
+            let foo: Foo
+            let baaz: Baaz
+            static let bar: Bar
+
+            static let quux: Quux
+            let fooBar: FooBar
+            let baazQuux: BaazQuux
+
+        }
+        """
+
+        let output = """
+        class Foo {
+
+            // MARK: Lifecycle
+
+            init() {}
+
+            // MARK: Internal
+
+            static let bar: Bar
+            static let quux: Quux
+            let foo: Foo
+            let baaz: Baaz
+
+            let fooBar: FooBar
+            let baazQuux: BaazQuux
+
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: .organizeDeclarations,
+            options: FormatOptions(blankLineAfterSubgroups: false),
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+        )
+    }
+
+    func testPreservesBlockOfConsecutiveProperties() {
+        let input = """
+        class Foo {
+            init() {}
+
+            let foo: Foo
+            let baaz: Baaz
+            static let bar: Bar
+
+        }
+        """
+
+        let output = """
+        class Foo {
+
+            // MARK: Lifecycle
+
+            init() {}
+
+            // MARK: Internal
+
+            static let bar: Bar
+
+            let foo: Foo
+            let baaz: Baaz
+
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: .organizeDeclarations,
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+        )
+    }
+
+    func testPreservesBlockOfConsecutiveProperties2() {
+        let input = """
+        class Foo {
+            init() {}
+
+            let foo: Foo
+            let baaz: Baaz
+            static let bar: Bar
+
+            static let quux: Quux
+            let fooBar: FooBar
+            let baazQuux: BaazQuux
+
+        }
+        """
+
+        let output = """
+        class Foo {
+
+            // MARK: Lifecycle
+
+            init() {}
+
+            // MARK: Internal
+
+            static let bar: Bar
+            static let quux: Quux
+
+            let foo: Foo
+            let baaz: Baaz
+
+            let fooBar: FooBar
+            let baazQuux: BaazQuux
+
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: .organizeDeclarations,
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+        )
+    }
 }

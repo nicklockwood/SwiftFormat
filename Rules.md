@@ -815,6 +815,7 @@ Remove empty, non-conforming, extensions.
 - extension String {}
 -
   extension String: Equatable {}
+```
 
 </details>
 <br/>

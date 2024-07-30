@@ -2011,9 +2011,9 @@ private struct Examples {
 
     let emptyExtension = """
     ```diff
-    -- extension String {}
-    --
-    extension String: Equatable {}
+    - extension String {}
+    -
+      extension String: Equatable {}
     ```
     """
 }

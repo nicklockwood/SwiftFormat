@@ -812,10 +812,9 @@ Remove empty, non-conforming, extensions.
 <summary>Examples</summary>
 
 ```diff
--- extension String {}
---
-extension String: Equatable {}
-```
+- extension String {}
+-
+  extension String: Equatable {}
 
 </details>
 <br/>

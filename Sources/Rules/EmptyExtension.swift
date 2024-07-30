@@ -22,7 +22,7 @@ public extension FormatRule {
                   let declarationBody = declaration.body,
                   declarationBody.isEmpty,
                   // Ensure that it is not a macro
-                  !(declarationModifiers.contains { $0.first == "@" })
+                  !declarationModifiers.contains { $0.first == "@" }
             else { return }
 
             // Ensure that the extension does not conform to any protocols
@@ -31,7 +31,7 @@ public extension FormatRule {
                   let typeNameIndex = parser.index(of: .nonSpaceOrLinebreak, after: extensionIndex),
                   let type = parser.parseType(at: typeNameIndex),
                   let indexAfterType = parser.index(of: .nonSpaceOrCommentOrLinebreak, after: type.range.upperBound),
-                  !(parser.tokens[indexAfterType] == .delimiter(":"))
+                  parser.tokens[indexAfterType] != .delimiter(":")
             else { return }
 
             emptyExtensions.append(declaration)

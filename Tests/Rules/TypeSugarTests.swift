@@ -72,7 +72,7 @@ class TypeSugarTests: XCTestCase {
         extension [Foo: Bar] {}
         extension [[Foo: [Bar]]]? {}
         """
-        testFormatting(for: input, output, rule: .typeSugar)
+        testFormatting(for: input, output, rule: .typeSugar, exclude: [.emptyExtension])
     }
 
     // dictionaries

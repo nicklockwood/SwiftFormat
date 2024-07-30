@@ -627,6 +627,11 @@
 		2E8DE7622C57FEB30032BF25 /* WrapSingleLineCommentsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E8DE6F72C57FEB30032BF25 /* WrapSingleLineCommentsTests.swift */; };
 		37D828AB24BF77DA0012FC0A /* XcodeKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 37D828AA24BF77DA0012FC0A /* XcodeKit.framework */; };
 		37D828AC24BF77DA0012FC0A /* XcodeKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 37D828AA24BF77DA0012FC0A /* XcodeKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		580496D52C584E8F004B7DBF /* EmptyExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 580496D42C584E8F004B7DBF /* EmptyExtension.swift */; };
+		580496D62C584E8F004B7DBF /* EmptyExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 580496D42C584E8F004B7DBF /* EmptyExtension.swift */; };
+		580496D72C584E8F004B7DBF /* EmptyExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 580496D42C584E8F004B7DBF /* EmptyExtension.swift */; };
+		580496D82C584E8F004B7DBF /* EmptyExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 580496D42C584E8F004B7DBF /* EmptyExtension.swift */; };
+		580496DE2C584F8C004B7DBF /* EmptyExtensionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 580496D92C584F24004B7DBF /* EmptyExtensionTests.swift */; };
 		9028F7831DA4B435009FE5B4 /* SwiftFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A0EAC41D5DB54A00A0A8E3 /* SwiftFormat.swift */; };
 		9028F7841DA4B435009FE5B4 /* Tokenizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A0EABF1D5DB4F700A0A8E3 /* Tokenizer.swift */; };
 		9028F7851DA4B435009FE5B4 /* Formatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01B3987C1D763493009ADE61 /* Formatter.swift */; };
@@ -988,6 +993,8 @@
 		2E8DE6F62C57FEB30032BF25 /* RedundantFileprivateTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RedundantFileprivateTests.swift; sourceTree = "<group>"; };
 		2E8DE6F72C57FEB30032BF25 /* WrapSingleLineCommentsTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WrapSingleLineCommentsTests.swift; sourceTree = "<group>"; };
 		37D828AA24BF77DA0012FC0A /* XcodeKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XcodeKit.framework; path = Library/Frameworks/XcodeKit.framework; sourceTree = DEVELOPER_DIR; };
+		580496D42C584E8F004B7DBF /* EmptyExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyExtension.swift; sourceTree = "<group>"; };
+		580496D92C584F24004B7DBF /* EmptyExtensionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = EmptyExtensionTests.swift; path = Tests/Rules/EmptyExtensionTests.swift; sourceTree = "<group>"; };
 		90C4B6CA1DA4B04A009EB000 /* SwiftFormat for Xcode.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "SwiftFormat for Xcode.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		90C4B6CC1DA4B04A009EB000 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		90C4B6D01DA4B04A009EB000 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -1093,6 +1100,7 @@
 		01A0EA9A1D5DB4CF00A0A8E3 = {
 			isa = PBXGroup;
 			children = (
+				580496D92C584F24004B7DBF /* EmptyExtensionTests.swift */,
 				01A0EACB1D5DB5F500A0A8E3 /* CommandLineTool */,
 				90C4B6F01DA4B0BF009EB000 /* EditorExtension */,
 				01A0EAA61D5DB4CF00A0A8E3 /* Sources */,
@@ -1201,6 +1209,7 @@
 				2E2BAB932C57F6DD00590239 /* BlankLineAfterSwitchCase.swift */,
 				2E2BABA42C57F6DD00590239 /* BlankLinesAroundMark.swift */,
 				2E2BABC62C57F6DD00590239 /* BlankLinesAtEndOfScope.swift */,
+				580496D42C584E8F004B7DBF /* EmptyExtension.swift */,
 				2E2BABEC2C57F6DD00590239 /* BlankLinesAtStartOfScope.swift */,
 				2E2BABA72C57F6DD00590239 /* BlankLinesBetweenChainedFunctions.swift */,
 				2E2BABD02C57F6DD00590239 /* BlankLinesBetweenImports.swift */,
@@ -1813,6 +1822,7 @@
 				2E2BAC2B2C57F6DD00590239 /* Todos.swift in Sources */,
 				2E2BAC6F2C57F6DD00590239 /* AssertionFailures.swift in Sources */,
 				2E2BAD5B2C57F6DD00590239 /* AnyObjectProtocol.swift in Sources */,
+				580496D52C584E8F004B7DBF /* EmptyExtension.swift in Sources */,
 				2E2BAC072C57F6DD00590239 /* BlankLineAfterSwitchCase.swift in Sources */,
 				2E2BADA32C57F6DD00590239 /* RedundantTypedThrows.swift in Sources */,
 				2E2BAD4B2C57F6DD00590239 /* RedundantVoidReturnType.swift in Sources */,
@@ -2035,6 +2045,7 @@
 				2E8DE6FF2C57FEB30032BF25 /* DuplicateImportsTests.swift in Sources */,
 				2E8DE7112C57FEB30032BF25 /* RedundantStaticSelfTests.swift in Sources */,
 				2E8DE72C2C57FEB30032BF25 /* RedundantLetTests.swift in Sources */,
+				580496DE2C584F8C004B7DBF /* EmptyExtensionTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2165,6 +2176,7 @@
 				2E2BAD502C57F6DD00590239 /* RedundantRawValues.swift in Sources */,
 				2E2BACAC2C57F6DD00590239 /* RedundantLetError.swift in Sources */,
 				01045A9A2119979400D2BE3D /* Arguments.swift in Sources */,
+				580496D62C584E8F004B7DBF /* EmptyExtension.swift in Sources */,
 				2E2BAD482C57F6DD00590239 /* WrapLoopBodies.swift in Sources */,
 				2E2BAD082C57F6DD00590239 /* RedundantPattern.swift in Sources */,
 				2E2BAD042C57F6DD00590239 /* SpaceInsideBraces.swift in Sources */,
@@ -2300,6 +2312,7 @@
 				2E2BAC1D2C57F6DD00590239 /* RedundantExtensionACL.swift in Sources */,
 				2E2BACD12C57F6DD00590239 /* SpaceAroundBrackets.swift in Sources */,
 				2E2BAD312C57F6DD00590239 /* WrapAttributes.swift in Sources */,
+				580496D72C584E8F004B7DBF /* EmptyExtension.swift in Sources */,
 				2E2BAD9D2C57F6DD00590239 /* Specifiers.swift in Sources */,
 				E4872111201D3B830014845E /* Options.swift in Sources */,
 				2E2BACC92C57F6DD00590239 /* HeaderFileName.swift in Sources */,
@@ -2443,6 +2456,7 @@
 				2E2BAC1E2C57F6DD00590239 /* RedundantExtensionACL.swift in Sources */,
 				2E2BACD22C57F6DD00590239 /* SpaceAroundBrackets.swift in Sources */,
 				2E2BAD322C57F6DD00590239 /* WrapAttributes.swift in Sources */,
+				580496D82C584E8F004B7DBF /* EmptyExtension.swift in Sources */,
 				2E2BAD9E2C57F6DD00590239 /* Specifiers.swift in Sources */,
 				90F16AF81DA5EB4600EB4EA1 /* FormatFileCommand.swift in Sources */,
 				2E2BACCA2C57F6DD00590239 /* HeaderFileName.swift in Sources */,

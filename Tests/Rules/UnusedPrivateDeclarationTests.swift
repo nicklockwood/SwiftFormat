@@ -352,4 +352,29 @@ class UnusedPrivateDeclarationTests: XCTestCase {
         """
         testFormatting(for: input, rule: .unusedPrivateDeclaration)
     }
+
+    func testRemoveUnusedRecursivePrivateDeclaration() {
+        let input = """
+        struct Planet {
+            private typealias Dependencies = UniverseBuilderProviding // unused
+            private var mass: Double // unused
+            private func distance(to: Planet) { } // unused
+            private func gravitationalForce(between other: Planet) -> Double {
+                (G * mass * other.mass) / distance(to: other).squared()
+            } // unused
+
+            var ageInBillionYears: Double {
+                ageInMillionYears / 1000
+            }
+        }
+        """
+        let output = """
+        struct Planet {
+            var ageInBillionYears: Double {
+                ageInMillionYears / 1000
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .unusedPrivateDeclaration)
+    }
 }

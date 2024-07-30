@@ -524,7 +524,7 @@ class OpaqueGenericParametersTests: XCTestCase {
         let input = "extension Array where Element == Foo {}"
 
         let options = FormatOptions(swiftVersion: "5.6")
-        testFormatting(for: input, rule: .opaqueGenericParameters, options: options)
+        testFormatting(for: input, rule: .opaqueGenericParameters, options: options, exclude: [.emptyExtension])
     }
 
     func testOpaqueGenericParametersRuleSuccessfullyTerminatesInSampleCode() {

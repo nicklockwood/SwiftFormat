@@ -1137,7 +1137,7 @@ extension Formatter {
         _ category: Category
     ) -> Bool {
         switch category.type {
-        case .instanceProperty:
+        case .swiftUIPropertyWrapper, .instanceProperty:
             return true
 
         case .instancePropertyWithBody:

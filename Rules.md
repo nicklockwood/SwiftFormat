@@ -19,6 +19,7 @@
 * [duplicateImports](#duplicateImports)
 * [elseOnSameLine](#elseOnSameLine)
 * [emptyBraces](#emptyBraces)
+* [emptyExtension](#emptyExtension)
 * [enumNamespaces](#enumNamespaces)
 * [extensionAccessControl](#extensionAccessControl)
 * [fileHeader](#fileHeader)
@@ -825,6 +826,22 @@ Option | Description
 - }
 
 + func foo() {}
+```
+
+</details>
+<br/>
+
+## emptyExtension
+
+Remove empty, non-conforming, extensions.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- extension String {}
+-
+  extension String: Equatable {}
 ```
 
 </details>

@@ -22,7 +22,7 @@ public extension FormatRule {
                   let declarationBody = declaration.body,
                   declarationBody.isEmpty,
                   // Ensure that it is not a macro
-                  !declarationModifiers.contains { $0.first == "@" }
+                  !declarationModifiers.contains(where: { $0.first == "@" })
             else { return }
 
             // Ensure that the extension does not conform to any protocols

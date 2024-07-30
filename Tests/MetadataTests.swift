@@ -253,6 +253,7 @@ class MetadataTests: XCTestCase {
                             Descriptors.typeOrder,
                             Descriptors.customVisibilityMarks,
                             Descriptors.customTypeMarks,
+                            Descriptors.blankLineAfterSubgroups,
                         ]
                     case .identifier("removeSelf"):
                         referencedOptions += [

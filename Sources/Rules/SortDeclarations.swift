@@ -109,7 +109,7 @@ public extension FormatRule {
                 if declaration.tokens.last?.isLinebreak == false,
                    nextDeclaration.tokens.first?.isLinebreak == false
                 {
-                    declarations[i + 1] = formatter.mapOpeningTokens(in: nextDeclaration) { openTokens in
+                    declarations[i + 1] = nextDeclaration.mapOpeningTokens { openTokens in
                         let openFormatter = Formatter(openTokens)
                         openFormatter.insertLinebreak(at: 0)
                         return openFormatter.tokens

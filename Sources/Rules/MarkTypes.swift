@@ -92,7 +92,7 @@ public extension FormatRule {
                 }
             }
 
-            declarations[index] = formatter.mapOpeningTokens(in: declarations[index]) { openingTokens -> [Token] in
+            declarations[index] = declarations[index].mapOpeningTokens { openingTokens -> [Token] in
                 var openingFormatter = Formatter(openingTokens)
 
                 guard let keywordIndex = openingFormatter.index(after: -1, where: {
@@ -239,9 +239,7 @@ public extension FormatRule {
                 // If the previous declaration doesn't end in a blank line,
                 // add an additional linebreak to balance the mark.
                 if index != 0 {
-                    declarations[index - 1] = formatter.mapClosingTokens(in: declarations[index - 1]) {
-                        formatter.endingWithBlankLine($0)
-                    }
+                    declarations[index - 1] = declarations[index - 1].endingWithBlankLine()
                 }
 
                 return openingFormatter.tokens

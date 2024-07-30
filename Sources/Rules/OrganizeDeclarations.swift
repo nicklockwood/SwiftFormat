@@ -19,6 +19,7 @@ public extension FormatRule {
             "lifecycle", "organizetypes", "structthreshold", "classthreshold",
             "enumthreshold", "extensionlength", "organizationmode",
             "visibilityorder", "typeorder", "visibilitymarks", "typemarks",
+            "groupblanklines",
         ],
         sharedOptions: ["sortedpatterns", "lineaftermarks"]
     ) { formatter in

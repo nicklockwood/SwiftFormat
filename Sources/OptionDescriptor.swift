@@ -999,6 +999,14 @@ struct _Descriptors {
             }
         }
     )
+    let blankLineAfterSubgroups = OptionDescriptor(
+        argumentName: "groupblanklines",
+        displayName: "Blank Line After Subgroups",
+        help: "Require a blank line after each subgroup. Default: true",
+        keyPath: \.blankLineAfterSubgroups,
+        trueValues: ["true"],
+        falseValues: ["false"]
+    )
     let alphabeticallySortedDeclarationPatterns = OptionDescriptor(
         argumentName: "sortedpatterns",
         displayName: "Declaration Name Patterns To Sort Alphabetically",

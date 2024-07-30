@@ -103,6 +103,16 @@ enum Declaration: Hashable {
         return typeKeywords.contains(keyword)
     }
 
+    /// Whether or not this is a simple `declaration` (not a `type` or `conditionalCompilation`)
+    var isSimpleDeclaration: Bool {
+        switch self {
+        case .declaration:
+            return true
+        case .type, .conditionalCompilation:
+            return false
+        }
+    }
+
     /// The name of this type or variable
     var name: String? {
         let parser = Formatter(openTokens)
@@ -929,14 +939,37 @@ extension Formatter {
 
         // Remove all of the existing category separators, so they can be re-added
         // at the correct location after sorting the declarations.
-        let typeBodyWithoutCategorySeparators = removeExistingCategorySeparators(
+        var typeBody = removeExistingCategorySeparators(
             from: typeDeclaration.body,
             with: options.organizationMode,
             using: categoryOrder
         )
 
+        // Track the consecutive groups of property declarations so we can avoid inserting
+        // blank lines between elements in the group if possible.
+        var consecutivePropertyGroups = consecutivePropertyDeclarationGroups(in: typeDeclaration.body)
+            .filter { group in
+                // Only track declaration groups where the group as a whole is followed by a
+                // blank line, since otherwise the declarations can be reordered without issues.
+                guard let lastDeclarationInGroup = group.last else { return false }
+                return lastDeclarationInGroup.tokens.numberOfTrailingLinebreaks() > 1
+            }
+
+        // Remove the trailing blank line from the last declaration in each consecutive group
+        for (groupIndex, consecutivePropertyGroup) in consecutivePropertyGroups.enumerated() {
+            guard let lastDeclarationInGroup = consecutivePropertyGroup.last,
+                  let indexOfDeclaration = typeBody.firstIndex(of: lastDeclarationInGroup)
+            else { continue }
+
+            let updatedDeclaration = lastDeclarationInGroup.endingWithoutBlankLine()
+            let indexInGroup = consecutivePropertyGroup.indices.last!
+
+            typeBody[indexOfDeclaration] = updatedDeclaration
+            consecutivePropertyGroups[groupIndex][indexInGroup] = updatedDeclaration
+        }
+
         // Categorize each of the declarations into their primary groups
-        let categorizedDeclarations: [CategorizedDeclaration] = typeBodyWithoutCategorySeparators
+        let categorizedDeclarations: [CategorizedDeclaration] = typeBody
             .map { declaration in
                 let declarationCategory = category(
                     of: declaration,
@@ -948,16 +981,27 @@ extension Formatter {
             }
 
         // Sort the declarations based on their category and type
-        guard let sortedDeclarations = sortCategorizedDeclarations(
+        guard var sortedTypeBody = sortCategorizedDeclarations(
             categorizedDeclarations,
             in: typeDeclaration
         )
         else { return typeDeclaration }
 
+        // Insert a blank line after the last declaration in each original group
+        for consecutivePropertyGroup in consecutivePropertyGroups {
+            let propertiesInGroup = Set(consecutivePropertyGroup)
+
+            guard let lastDeclarationInSortedBody = sortedTypeBody.lastIndex(where: { propertiesInGroup.contains($0.declaration) })
+            else { continue }
+
+            sortedTypeBody[lastDeclarationInSortedBody].declaration =
+                sortedTypeBody[lastDeclarationInSortedBody].declaration.endingWithBlankLine()
+        }
+
         // Add a mark comment for each top-level category
         let sortedAndMarkedType = addCategorySeparators(
             to: typeDeclaration,
-            sortedDeclarations: sortedDeclarations
+            sortedDeclarations: sortedTypeBody
         )
 
         return sortedAndMarkedType
@@ -997,9 +1041,7 @@ extension Formatter {
     private func sortCategorizedDeclarations(
         _ categorizedDeclarations: [CategorizedDeclaration],
         in typeDeclaration: TypeDeclaration
-    )
-        -> [CategorizedDeclaration]?
-    {
+    ) -> [CategorizedDeclaration]? {
         let sortAlphabeticallyWithinSubcategories = shouldSortAlphabeticallyWithinSubcategories(in: typeDeclaration)
 
         var sortedDeclarations = sortDeclarations(
@@ -1140,6 +1182,44 @@ extension Formatter {
         return lhsPropertiesOrder == rhsPropertiesOrder
     }
 
+    // Finds all of the consecutive groups of property declarations in the type body
+    private func consecutivePropertyDeclarationGroups(in body: [Declaration]) -> [[Declaration]] {
+        var declarationGroups: [[Declaration]] = []
+        var currentGroup: [Declaration] = []
+
+        /// Ends the current group, ensuring that groups are only recorded
+        /// when they contain two or more declarations.
+        func endCurrentGroup(addingToExistingGroup declarationToAdd: Declaration? = nil) {
+            if let declarationToAdd = declarationToAdd {
+                currentGroup.append(declarationToAdd)
+            }
+
+            if currentGroup.count >= 2 {
+                declarationGroups.append(currentGroup)
+            }
+
+            currentGroup = []
+        }
+
+        for declaration in body {
+            guard declaration.keyword == "let" || declaration.keyword == "var" else {
+                endCurrentGroup()
+                continue
+            }
+
+            let hasTrailingBlankLine = declaration.tokens.numberOfTrailingLinebreaks() > 1
+
+            if hasTrailingBlankLine {
+                endCurrentGroup(addingToExistingGroup: declaration)
+            } else {
+                currentGroup.append(declaration)
+            }
+        }
+
+        endCurrentGroup()
+        return declarationGroups
+    }
+
     /// Adds MARK category separates to the given type
     private func addCategorySeparators(
         to typeDeclaration: TypeDeclaration,
@@ -1178,7 +1258,7 @@ extension Formatter {
                 // make sure the type's opening sequence of tokens ends with
                 // at least one blank line so the category separator appears balanced
                 if markedDeclarations.isEmpty {
-                    typeDeclaration.open = endingWithBlankLine(typeDeclaration.open)
+                    typeDeclaration.open = typeDeclaration.open.endingWithBlankLine()
                 }
 
                 markedDeclarations.append(.declaration(
@@ -1188,11 +1268,12 @@ extension Formatter {
                 ))
             }
 
-            if let lastIndexOfSameDeclaration = sortedDeclarations.map(\.category).lastIndex(of: category),
+            if options.blankLineAfterSubgroups,
+               let lastIndexOfSameDeclaration = sortedDeclarations.map(\.category).lastIndex(of: category),
                lastIndexOfSameDeclaration == index,
                lastIndexOfSameDeclaration != sortedDeclarations.indices.last
             {
-                markedDeclarations.append(mapClosingTokens(in: declaration, with: { endingWithBlankLine($0) }))
+                markedDeclarations.append(declaration.endingWithBlankLine())
             } else {
                 markedDeclarations.append(declaration)
             }
@@ -1285,13 +1366,13 @@ extension Formatter {
                         parser.removeTokens(in: rangeBeforeComment)
 
                         // ... and append them to the end of the previous declaration
-                        typeBody[declarationIndex - 1] = mapClosingTokens(in: typeBody[declarationIndex - 1]) {
+                        typeBody[declarationIndex - 1] = typeBody[declarationIndex - 1].mapClosingTokens {
                             $0 + tokensBeforeCommentLine
                         }
                     }
 
                     // Apply the updated tokens back to this declaration
-                    typeBody[declarationIndex] = mapOpeningTokens(in: typeBody[declarationIndex]) { _ in
+                    typeBody[declarationIndex] = typeBody[declarationIndex].mapOpeningTokens { _ in
                         parser.tokens
                     }
                 }
@@ -1429,14 +1510,62 @@ extension Formatter {
         }
     }
 
+    /// Removes the given visibility keyword from the given declaration
+    func remove(_ visibilityKeyword: Visibility, from declaration: Declaration) -> Declaration {
+        declaration.mapOpeningTokens { openTokens in
+            guard let visibilityKeywordIndex = openTokens
+                .firstIndex(of: .keyword(visibilityKeyword.rawValue))
+            else {
+                return openTokens
+            }
+
+            let openTokensFormatter = Formatter(openTokens)
+            openTokensFormatter.removeToken(at: visibilityKeywordIndex)
+
+            while openTokensFormatter.token(at: visibilityKeywordIndex)?.isSpace == true {
+                openTokensFormatter.removeToken(at: visibilityKeywordIndex)
+            }
+
+            return openTokensFormatter.tokens
+        }
+    }
+
+    /// Adds the given visibility keyword to the given declaration,
+    /// replacing any existing visibility keyword.
+    func add(_ visibilityKeyword: Visibility, to declaration: Declaration) -> Declaration {
+        var declaration = declaration
+
+        if let existingVisibilityKeyword = visibility(of: declaration) {
+            declaration = remove(existingVisibilityKeyword, from: declaration)
+        }
+
+        return declaration.mapOpeningTokens { openTokens in
+            guard let indexOfKeyword = openTokens
+                .firstIndex(of: .keyword(declaration.keyword))
+            else {
+                return openTokens
+            }
+
+            let openTokensFormatter = Formatter(openTokens)
+            let startOfModifiers = openTokensFormatter
+                .startOfModifiers(at: indexOfKeyword, includingAttributes: false)
+
+            openTokensFormatter.insert(
+                tokenize("\(visibilityKeyword.rawValue) "),
+                at: startOfModifiers
+            )
+
+            return openTokensFormatter.tokens
+        }
+    }
+}
+
+extension Declaration {
     /// Maps the first group of tokens in this declaration
     ///  - For declarations with a body, this maps the `open` tokens
     ///  - For declarations without a body, this maps the entire declaration's tokens
-    func mapOpeningTokens(
-        in declaration: Declaration,
-        with transform: ([Token]) -> [Token]
-    ) -> Declaration {
-        switch declaration {
+    func mapOpeningTokens(with transform: ([Token]) -> [Token]) -> Declaration {
+        switch self {
         case let .type(kind, open, body, close, originalRange):
             return .type(
                 kind: kind,
@@ -1463,14 +1592,27 @@ extension Formatter {
         }
     }
 
+    /// Maps the tokens of this simple `declaration`
+    func mapDeclarationTokens(with transform: ([Token]) -> [Token]) -> Declaration {
+        switch self {
+        case let .declaration(kind, originalTokens, originalRange):
+            return .declaration(
+                kind: kind,
+                tokens: transform(originalTokens),
+                originalRange: originalRange
+            )
+
+        case .type, .conditionalCompilation:
+            assertionFailure("`mapDeclarationTokens` only supports `declaration`s.")
+            return self
+        }
+    }
+
     /// Maps the last group of tokens in this declaration
     ///  - For declarations with a body, this maps the `close` tokens
     ///  - For declarations without a body, this maps the entire declaration's tokens
-    func mapClosingTokens(
-        in declaration: Declaration,
-        with transform: ([Token]) -> [Token]
-    ) -> Declaration {
-        switch declaration {
+    func mapClosingTokens(with transform: ([Token]) -> [Token]) -> Declaration {
+        switch self {
         case let .type(kind, open, body, close, originalRange):
             return .type(
                 kind: kind,
@@ -1499,10 +1641,60 @@ extension Formatter {
 
     /// Updates the given declaration tokens so it ends with at least one blank like
     /// (e.g. so it ends with at least two newlines)
-    func endingWithBlankLine(_ tokens: [Token]) -> [Token] {
-        let parser = Formatter(tokens)
+    func endingWithBlankLine() -> Declaration {
+        mapClosingTokens { tokens in
+            tokens.endingWithBlankLine()
+        }
+    }
 
-        // Determine how many trailing linebreaks there are in this declaration
+    /// Updates the given declaration tokens so it ends with no blank lines
+    /// (e.g. so it ends with one newline)
+    func endingWithoutBlankLine() -> Declaration {
+        mapClosingTokens { tokens in
+            tokens.endingWithoutBlankLine()
+        }
+    }
+}
+
+extension Array where Element == Token {
+    /// Updates the given declaration tokens so it ends with at least one blank like
+    /// (e.g. so it ends with at least two newlines)
+    func endingWithBlankLine() -> [Token] {
+        let parser = Formatter(self)
+
+        var numberOfTrailingLinebreaks = self.numberOfTrailingLinebreaks()
+
+        // Make sure there are at least two newlines,
+        // so we get a blank line between individual declaration types
+        while numberOfTrailingLinebreaks < 2 {
+            parser.insertLinebreak(at: parser.tokens.count)
+            numberOfTrailingLinebreaks += 1
+        }
+
+        return parser.tokens
+    }
+
+    /// Updates the given tokens so it ends with no blank lines
+    /// (e.g. so it ends with one newline)
+    func endingWithoutBlankLine() -> [Token] {
+        let parser = Formatter(self)
+
+        var numberOfTrailingLinebreaks = self.numberOfTrailingLinebreaks()
+
+        // Make sure there are at least two newlines,
+        // so we get a blank line between individual declaration types
+        while numberOfTrailingLinebreaks > 1 {
+            parser.removeLastToken()
+            numberOfTrailingLinebreaks -= 1
+        }
+
+        return parser.tokens
+    }
+
+    // The number of trailing line breaks in this array of tokens
+    func numberOfTrailingLinebreaks() -> Int {
+        let parser = Formatter(self)
+
         var numberOfTrailingLinebreaks = 0
         var searchIndex = parser.tokens.count - 1
 
@@ -1517,62 +1709,6 @@ extension Formatter {
             searchIndex -= 1
         }
 
-        // Make sure there are at least two newlines,
-        // so we get a blank line between individual declaration types
-        while numberOfTrailingLinebreaks < 2 {
-            parser.insertLinebreak(at: parser.tokens.count)
-            numberOfTrailingLinebreaks += 1
-        }
-
-        return parser.tokens
-    }
-
-    /// Removes the given visibility keyword from the given declaration
-    func remove(_ visibilityKeyword: Visibility, from declaration: Declaration) -> Declaration {
-        mapOpeningTokens(in: declaration) { openTokens in
-            guard let visibilityKeywordIndex = openTokens
-                .firstIndex(of: .keyword(visibilityKeyword.rawValue))
-            else {
-                return openTokens
-            }
-
-            let openTokensFormatter = Formatter(openTokens)
-            openTokensFormatter.removeToken(at: visibilityKeywordIndex)
-
-            while openTokensFormatter.token(at: visibilityKeywordIndex)?.isSpace == true {
-                openTokensFormatter.removeToken(at: visibilityKeywordIndex)
-            }
-
-            return openTokensFormatter.tokens
-        }
-    }
-
-    /// Adds the given visibility keyword to the given declaration,
-    /// replacing any existing visibility keyword.
-    func add(_ visibilityKeyword: Visibility, to declaration: Declaration) -> Declaration {
-        var declaration = declaration
-
-        if let existingVisibilityKeyword = visibility(of: declaration) {
-            declaration = remove(existingVisibilityKeyword, from: declaration)
-        }
-
-        return mapOpeningTokens(in: declaration) { openTokens in
-            guard let indexOfKeyword = openTokens
-                .firstIndex(of: .keyword(declaration.keyword))
-            else {
-                return openTokens
-            }
-
-            let openTokensFormatter = Formatter(openTokens)
-            let startOfModifiers = openTokensFormatter
-                .startOfModifiers(at: indexOfKeyword, includingAttributes: false)
-
-            openTokensFormatter.insert(
-                tokenize("\(visibilityKeyword.rawValue) "),
-                at: startOfModifiers
-            )
-
-            return openTokensFormatter.tokens
-        }
+        return numberOfTrailingLinebreaks
     }
 }

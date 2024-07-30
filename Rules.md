@@ -808,6 +808,18 @@ Option | Description
 
 Remove empty, non-conforming, extensions.
 
+<details>
+<summary>Examples</summary>
+
+```diff
+-- extension String {}
+--
+extension String: Equatable {}
+```
+
+</details>
+<br/>
+
 ## enumNamespaces
 
 Convert types used for hosting only static members into enums (an empty enum is

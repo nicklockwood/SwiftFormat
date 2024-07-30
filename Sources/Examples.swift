@@ -2008,4 +2008,12 @@ private struct Examples {
       func foo() {}
     ```
     """
+
+    let emptyExtension = """
+    ```diff
+    -- extension String {}
+    --
+    extension String: Equatable {}
+    ```
+    """
 }

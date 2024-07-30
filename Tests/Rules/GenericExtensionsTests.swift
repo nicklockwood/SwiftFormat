@@ -72,7 +72,7 @@ class GenericExtensionsTests: XCTestCase {
         let input = "extension Optional where Wrapped: Fooable {}"
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, rule: .genericExtensions, options: options)
+        testFormatting(for: input, rule: .genericExtensions, options: options, exclude: [.emptyExtension])
     }
 
     func testPreservesOtherConstraintsInWhereClause() {

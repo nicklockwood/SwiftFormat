@@ -22,6 +22,16 @@ class EmptyExtensionTests: XCTestCase {
         testFormatting(for: input, output, rule: .emptyExtension)
     }
 
+    func testRemoveNonConformingEmptyExtension() {
+        let input = """
+        extension [Foo: Bar] {}
+
+        extension Array where Element: Foo {}
+        """
+        let output = ""
+        testFormatting(for: input, output, rule: .emptyExtension)
+    }
+
     func testDoNotRemoveEmptyConformingExtension() {
         let input = """
         extension String: Equatable {}
@@ -47,5 +57,24 @@ class EmptyExtensionTests: XCTestCase {
         """
         let output = ""
         testFormatting(for: input, output, rule: .emptyExtension)
+    }
+
+    func testRemoveUnusedPrivateDeclarationThenEmptyExtension() {
+        let input = """
+        class Foo {
+            init() {}
+        }
+        extension Foo {
+            private var bar: Bar { "bar" }
+        }
+        """
+
+        let output = """
+        class Foo {
+            init() {}
+        }
+
+        """
+        testFormatting(for: input, [output], rules: [.unusedPrivateDeclaration, .emptyExtension])
     }
 }

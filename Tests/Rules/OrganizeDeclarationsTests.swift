@@ -2707,6 +2707,10 @@ class OrganizeDeclarationsTests: XCTestCase {
         let input = """
         struct ContentView: View {
 
+            init(label: String) {
+                self.label = label
+            }
+
             private var label: String
 
             @State
@@ -2728,6 +2732,12 @@ class OrganizeDeclarationsTests: XCTestCase {
 
         let output = """
         struct ContentView: View {
+
+            // MARK: Lifecycle
+
+            init(label: String) {
+                self.label = label
+            }
 
             // MARK: Internal
 
@@ -2765,10 +2775,15 @@ class OrganizeDeclarationsTests: XCTestCase {
         let input = """
         struct ContentView: View {
 
+            init(foo: Foo, baaz: Baaz) {
+                self.foo = foo
+                self.baaz = baaz
+            }
+
             let foo: Foo
-            @State var bar: Bar
+            @State var bar = true
             let baaz: Baaz
-            @State var quux: Quux
+            @State var quux = true
 
             @ViewBuilder
             private var toggle: some View {
@@ -2785,10 +2800,17 @@ class OrganizeDeclarationsTests: XCTestCase {
         let output = """
         struct ContentView: View {
 
+            // MARK: Lifecycle
+
+            init(foo: Foo, baaz: Baaz) {
+                self.foo = foo
+                self.baaz = baaz
+            }
+
             // MARK: Internal
 
-            @State var bar: Bar
-            @State var quux: Quux
+            @State var bar = true
+            @State var quux = true
 
             let foo: Foo
             let baaz: Baaz
@@ -2820,8 +2842,14 @@ class OrganizeDeclarationsTests: XCTestCase {
         let input = """
         struct ContentView: View {
 
+            init(foo: Foo, baaz: Baaz, isOn: Binding<Bool>) {
+                self.foo = foo
+                self.baaz = baaz
+                self_.isOn = isOn
+            }
+
             let foo: Foo
-            @State private var bar: Bar
+            @State private var bar = 0
             private let baaz: Baaz
             @Binding var isOn: Bool
 
@@ -2840,6 +2868,14 @@ class OrganizeDeclarationsTests: XCTestCase {
         let output = """
         struct ContentView: View {
 
+            // MARK: Lifecycle
+
+            init(foo: Foo, baaz: Baaz, isOn: Binding<Bool>) {
+                self.foo = foo
+                self.baaz = baaz
+                self_.isOn = isOn
+            }
+
             // MARK: Internal
 
             @Binding var isOn: Bool
@@ -2853,7 +2889,7 @@ class OrganizeDeclarationsTests: XCTestCase {
 
             // MARK: Private
 
-            @State private var bar: Bar
+            @State private var bar = 0
 
             private let baaz: Baaz
 
@@ -2877,6 +2913,11 @@ class OrganizeDeclarationsTests: XCTestCase {
         let input = """
         struct ContentView: View {
 
+            init(foo: Foo, baaz: Baaz) {
+                self.foo = foo
+                self.baaz = baaz
+            }
+
             let foo: Foo
             @Environment(\\.colorScheme) var colorScheme
             let baaz: Baaz
@@ -2896,6 +2937,13 @@ class OrganizeDeclarationsTests: XCTestCase {
 
         let output = """
         struct ContentView: View {
+
+            // MARK: Lifecycle
+
+            init(foo: Foo, baaz: Baaz) {
+                self.foo = foo
+                self.baaz = baaz
+            }
 
             // MARK: Internal
 
@@ -2922,6 +2970,35 @@ class OrganizeDeclarationsTests: XCTestCase {
 
         testFormatting(
             for: input, output,
+            rule: .organizeDeclarations,
+            options: FormatOptions(organizeTypes: ["struct"], organizationMode: .visibility),
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+        )
+    }
+
+    func testSwiftUIPropertyWrappersSortDoesntBreakViewSynthesizedMemberwiseInitializer() {
+        let input = """
+        struct ContentView: View {
+
+            let foo: Foo
+            @Environment(\\.colorScheme) var colorScheme
+            let baaz: Baaz
+            @Environment(\\.quux) let quux: Quux
+
+            @ViewBuilder
+            private var toggle: some View {
+                Toggle(label, isOn: $isOn)
+            }
+
+            @ViewBuilder
+            var body: some View {
+                toggle
+            }
+        }
+        """
+
+        testFormatting(
+            for: input,
             rule: .organizeDeclarations,
             options: FormatOptions(organizeTypes: ["struct"], organizationMode: .visibility),
             exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]

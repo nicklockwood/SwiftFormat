@@ -664,6 +664,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var typeOrder: [String]?
     public var customVisibilityMarks: Set<String>
     public var customTypeMarks: Set<String>
+    public var blankLineAfterSubgroups: Bool
     public var alphabeticallySortedDeclarationPatterns: Set<String>
     public var yodaSwap: YodaMode
     public var extensionACLPlacement: ExtensionACLPlacement
@@ -788,6 +789,7 @@ public struct FormatOptions: CustomStringConvertible {
                 typeOrder: [String]? = nil,
                 customVisibilityMarks: Set<String> = [],
                 customTypeMarks: Set<String> = [],
+                blankLineAfterSubgroups: Bool = true,
                 alphabeticallySortedDeclarationPatterns: Set<String> = [],
                 yodaSwap: YodaMode = .always,
                 extensionACLPlacement: ExtensionACLPlacement = .onExtension,
@@ -902,6 +904,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.typeOrder = typeOrder
         self.customVisibilityMarks = customVisibilityMarks
         self.customTypeMarks = customTypeMarks
+        self.blankLineAfterSubgroups = blankLineAfterSubgroups
         self.alphabeticallySortedDeclarationPatterns = alphabeticallySortedDeclarationPatterns
         self.yodaSwap = yodaSwap
         self.extensionACLPlacement = extensionACLPlacement

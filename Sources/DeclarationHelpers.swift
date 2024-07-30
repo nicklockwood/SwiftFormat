@@ -952,13 +952,13 @@ extension Formatter {
             }
 
         // Sort the declarations based on their category and type
-        guard let sortedDeclarations = sortCategorizedDeclarations(
+        guard var sortedDeclarations = sortCategorizedDeclarations(
             categorizedDeclarations,
             in: typeDeclaration
         )
         else { return typeDeclaration }
 
-        let declaration = removeSeparatorInSwiftUISubCategoryIfNeeded(to: typeDeclaration, sortedDeclarations: sortedDeclarations)
+        sortedDeclarations = removeInnerSeparatorInSwiftUISubcategoryIfNeeded(sortedDeclarations: sortedDeclarations)
 
         // Add a mark comment for each top-level category
         let sortedAndMarkedType = addCategorySeparators(
@@ -1154,23 +1154,33 @@ extension Formatter {
         return lhsPropertiesOrder == rhsPropertiesOrder
     }
 
-    private func removeSeparatorInSwiftUISubCategoryIfNeeded(
-        to _: TypeDeclaration,
+    private func removeInnerSeparatorInSwiftUISubcategoryIfNeeded(
         sortedDeclarations: [CategorizedDeclaration]
     ) -> [CategorizedDeclaration] {
-        if options.alphabetizeSwiftUIPropertyTypes {
-            let swiftUIDeclarations = sortedDeclarations.filter { $0.category.type == .swiftUIPropertyWrapper }
-            for (index, declaration) in swiftUIDeclarations.enumerated() {
-                if index != swiftUIDeclarations.count - 1 {
-                    let formatter = Formatter(declaration.declaration.tokens)
-                    if let lastIndex = formatter.tokens.lastIndex(where: \.isLinebreak),
-                       let dupplicatedLineBreakIndex = formatter.index(before: lastIndex, where: \.isLinebreak) {
-                        formatter.removeToken(at: dupplicatedLineBreakIndex)
-                    }
-                }
-            }
-        }
+        guard options.alphabetizeSwiftUIPropertyTypes else { return sortedDeclarations }
         return sortedDeclarations
+            .enumerated()
+            .map { index, categorizedDeclaration -> CategorizedDeclaration in
+                guard categorizedDeclaration.category.type == .swiftUIPropertyWrapper,
+                      index != sortedDeclarations.count - 1
+                else { return categorizedDeclaration }
+
+                let formatter = Formatter(categorizedDeclaration.declaration.tokens)
+
+                guard let lastIndex = formatter.tokens.lastIndex(where: \.isLinebreak),
+                      let dupplicatedLineBreakIndex = formatter.index(before: lastIndex, where: \.isLinebreak)
+                else { return categorizedDeclaration }
+
+                formatter.removeToken(at: dupplicatedLineBreakIndex)
+                return CategorizedDeclaration(
+                    declaration: .declaration(
+                        kind: "var",
+                        tokens: formatter.tokens,
+                        originalRange: 0 ... 1 // placeholder value
+                    ),
+                    category: categorizedDeclaration.category
+                )
+            }
     }
 
     /// Adds MARK category separates to the given type

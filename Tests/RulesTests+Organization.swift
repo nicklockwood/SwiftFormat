@@ -5280,7 +5280,7 @@ class OrganizationTests: RulesTests {
         )
     }
 
-    func testSortSwiftUIPropertyWrappersGroup() {
+    func testSortSwiftUIPropertyWrappersSubCategory() {
         let input = """
         struct ContentView: View {
 
@@ -5302,7 +5302,6 @@ class OrganizationTests: RulesTests {
             @Binding var isOn: Bool
             @Environment(\\.colorScheme) var colorScheme
             @Environment(\\.quux) var quux: Quux
-
             @State var foo: Foo
 
             @ViewBuilder
@@ -5314,7 +5313,7 @@ class OrganizationTests: RulesTests {
 
         testFormatting(
             for: input, output,
-            rule: FormatRules.organizeDeclarations,
+            rule: .organizeDeclarations,
             options: FormatOptions(
                 organizeTypes: ["struct"],
                 organizationMode: .visibility,

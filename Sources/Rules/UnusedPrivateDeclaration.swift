@@ -36,7 +36,7 @@ public extension FormatRule {
                   !hasDisallowedModifiers
             else { return }
 
-            switch formatter.visibility(of: declaration) {
+            switch declaration.visibility() {
             case .fileprivate, .private:
                 privateDeclarations.append(declaration)
             case .none, .open, .public, .package, .internal:

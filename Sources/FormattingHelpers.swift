@@ -365,7 +365,11 @@ extension Formatter {
                     }
                 case .never:
                     if startOfLine(at: endOfFunctionScope) != startOfLine(at: effectIndex) {
-                        replaceTokens(in: endOfLine(at: endOfFunctionScope) ..< effectIndex, with: [.space(" ")])
+                        let rangeToRemove = endOfLine(at: endOfFunctionScope) ..< effectIndex
+
+                        if tokens[rangeToRemove].allSatisfy(\.isSpaceOrLinebreak) {
+                            replaceTokens(in: rangeToRemove, with: [.space(" ")])
+                        }
                     }
                 }
             }

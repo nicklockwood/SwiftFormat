@@ -511,7 +511,7 @@ Assign properties using if / switch expressions.
 
 Option | Description
 --- | ---
-`--condassignment` | Use cond. assignment: "after-property" (default) or "always".
+`--condassignment` | Use cond. assignment: "after-property" (default) or "always"
 
 <details>
 <summary>Examples</summary>
@@ -523,7 +523,7 @@ Option | Description
 -     foo = "foo"
 +     "foo"
   } else {
--     bar = "bar"
+-     foo = "bar"
 +     "bar"
   }
 
@@ -1924,7 +1924,7 @@ Remove unneeded `return` keyword.
 +     "foo"
   }
 
-  // Swift 5.9+ (SE-0380)
+  // Swift 5.9+ (SE-0380) and with conditionalAssignment rule enabled
   func foo(_ condition: Bool) -> String {
       if condition {
 -         return "foo"

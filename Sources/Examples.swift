@@ -653,7 +653,7 @@ private struct Examples {
     +     "foo"
       }
 
-      // Swift 5.9+ (SE-0380)
+      // Swift 5.9+ (SE-0380) and with conditionalAssignment rule enabled
       func foo(_ condition: Bool) -> String {
           if condition {
     -         return "foo"
@@ -1704,7 +1704,7 @@ private struct Examples {
     -     foo = "foo"
     +     "foo"
       } else {
-    -     bar = "bar"
+    -     foo = "bar"
     +     "bar"
       }
 

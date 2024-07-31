@@ -1194,6 +1194,15 @@ struct _Descriptors {
         keyPath: \.preservedPrivateDeclarations
     )
 
+    let alphabetizeSwiftUIPropertyTypes = OptionDescriptor(
+        argumentName: "sortswiftuiprops",
+        displayName: "Alphabetize SwiftUI Properties",
+        help: "Sorts SwiftUI properties alphabetically, defaults to \"false\"",
+        keyPath: \.alphabetizeSwiftUIPropertyTypes,
+        trueValues: ["enabled", "true"],
+        falseValues: ["disabled", "false"]
+    )
+
     // MARK: - Internal
 
     let fragment = OptionDescriptor(

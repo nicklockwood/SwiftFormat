@@ -254,6 +254,7 @@ class MetadataTests: XCTestCase {
                             Descriptors.customVisibilityMarks,
                             Descriptors.customTypeMarks,
                             Descriptors.blankLineAfterSubgroups,
+                            Descriptors.alphabetizeSwiftUIPropertyTypes,
                         ]
                     case .identifier("removeSelf"):
                         referencedOptions += [

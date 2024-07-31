@@ -158,6 +158,10 @@ enum Declaration: Hashable {
         return allModifiers
     }
 
+    var swiftUIPropertyWrapper: String? {
+        modifiers.first(where: Declaration.swiftUIPropertyWrappers.contains)
+    }
+
     /// Whether or not this declaration represents a stored property
     var isStoredProperty: Bool {
         guard keyword == "let" || keyword == "var" else { return false }
@@ -595,7 +599,7 @@ extension Declaration {
 
             let isSwiftUIPropertyWrapper = declarationParser
                 .modifiersForDeclaration(at: declarationTypeTokenIndex) { _, modifier in
-                    swiftUIPropertyWrappers.contains(modifier)
+                    Declaration.swiftUIPropertyWrappers.contains(modifier)
                 }
 
             switch declarationTypeToken {
@@ -676,7 +680,7 @@ extension Declaration {
 
     /// Represents all the native SwiftUI property wrappers that conform to `DynamicProperty` and cause a SwiftUI view to re-render.
     /// Most of these are listed here: https://developer.apple.com/documentation/swiftui/dynamicproperty
-    private var swiftUIPropertyWrappers: Set<String> {
+    fileprivate static var swiftUIPropertyWrappers: Set<String> {
         [
             "@AccessibilityFocusState",
             "@AppStorage",

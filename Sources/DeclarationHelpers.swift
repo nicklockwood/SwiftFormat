@@ -1662,13 +1662,8 @@ extension Array where Element == Token {
     func endingWithBlankLine() -> [Token] {
         let parser = Formatter(self)
 
-        var numberOfTrailingLinebreaks = self.numberOfTrailingLinebreaks()
-
-        // Make sure there are at least two newlines,
-        // so we get a blank line between individual declaration types
-        while numberOfTrailingLinebreaks < 2 {
+        while parser.tokens.numberOfTrailingLinebreaks() < 2 {
             parser.insertLinebreak(at: parser.tokens.count)
-            numberOfTrailingLinebreaks += 1
         }
 
         return parser.tokens
@@ -1679,19 +1674,21 @@ extension Array where Element == Token {
     func endingWithoutBlankLine() -> [Token] {
         let parser = Formatter(self)
 
-        var numberOfTrailingLinebreaks = self.numberOfTrailingLinebreaks()
+        while parser.tokens.numberOfTrailingLinebreaks() > 1 {
+            guard let lastNewlineIndex = parser.lastIndex(
+                of: .linebreak,
+                in: 0 ..< parser.tokens.count
+            )
+            else { break }
 
-        // Make sure there are at least two newlines,
-        // so we get a blank line between individual declaration types
-        while numberOfTrailingLinebreaks > 1 {
-            parser.removeLastToken()
-            numberOfTrailingLinebreaks -= 1
+            parser.removeTokens(in: lastNewlineIndex ..< parser.tokens.count)
         }
 
         return parser.tokens
     }
 
-    // The number of trailing line breaks in this array of tokens
+    // The number of trailing newlines in this array of tokens,
+    // taking into account any spaces that may be between the linebreaks.
     func numberOfTrailingLinebreaks() -> Int {
         let parser = Formatter(self)
 
@@ -1700,7 +1697,7 @@ extension Array where Element == Token {
 
         while searchIndex > 0,
               let token = parser.token(at: searchIndex),
-              token.isSpaceOrCommentOrLinebreak
+              token.isSpaceOrLinebreak
         {
             if token.isLinebreak {
                 numberOfTrailingLinebreaks += 1

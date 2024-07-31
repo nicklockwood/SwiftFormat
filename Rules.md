@@ -107,6 +107,7 @@
 * [wrapEnumCases](#wrapEnumCases)
 * [wrapMultilineConditionalAssignment](#wrapMultilineConditionalAssignment)
 * [wrapSwitchCases](#wrapSwitchCases)
+* [spaceWithGuard](#spaceWithGuard)
 
 # Deprecated Rules (do not use)
 
@@ -3022,6 +3023,28 @@ Wrap comma-delimited switch cases onto multiple lines.
 +        .bar:
       break
   }
+```
+
+</details>
+<br/>
+
+## spaceWithGuard
+
+Remove spaces between guard and add space after last stacked guard.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+    guard let spicy = self.makeSpicy() else {
+        return  
+    }
+-    
+    guard let soap = self.clean() else {
+        return
+    }
++    
+    let doTheJob = nikekov()
 ```
 
 </details>

@@ -19,7 +19,7 @@ public extension FormatRule {
             "lifecycle", "organizetypes", "structthreshold", "classthreshold",
             "enumthreshold", "extensionlength", "organizationmode",
             "visibilityorder", "typeorder", "visibilitymarks", "typemarks",
-            "groupblanklines",
+            "groupblanklines", "sortswiftuiprops",
         ],
         sharedOptions: ["sortedpatterns", "lineaftermarks", "typeblanklines"]
     ) { formatter in
@@ -326,6 +326,14 @@ extension Formatter {
                    lhsName != rhsName
                 {
                     return lhsName.localizedCompare(rhsName) == .orderedAscending
+                }
+
+                if options.alphabetizeSwiftUIPropertyTypes,
+                   lhs.category.type == rhs.category.type,
+                   let lhsSwiftUIProperty = lhs.declaration.swiftUIPropertyWrapper,
+                   let rhsSwiftUIProperty = rhs.declaration.swiftUIPropertyWrapper
+                {
+                    return lhsSwiftUIProperty.localizedCompare(rhsSwiftUIProperty) == .orderedAscending
                 }
 
                 // Respect the original declaration ordering when the categories and types are the same

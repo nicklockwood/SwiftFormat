@@ -1241,6 +1241,14 @@ struct _Descriptors {
         help: "Comma-delimited list of symbols to be ignored by the rule",
         keyPath: \.preservedSymbols
     )
+    let alphabetizeSwiftUIPropertyTypes = OptionDescriptor(
+        argumentName: "sortswiftuiprops",
+        displayName: "Alphabetize SwiftUI Properties",
+        help: "Sorts SwiftUI properties alphabetically, defaults to \"false\"",
+        keyPath: \.alphabetizeSwiftUIPropertyTypes,
+        trueValues: ["enabled", "true"],
+        falseValues: ["disabled", "false"]
+    )
 
     // MARK: - Internal
 

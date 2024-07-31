@@ -16,12 +16,12 @@ public extension FormatRule {
         guard !formatter.options.fragment else { return }
 
         let declarations = formatter.parseDeclarations()
-        let updatedDeclarations = formatter.mapRecursiveDeclarations(declarations) { declaration, _ in
+        let updatedDeclarations = declarations.mapRecursiveDeclarations { declaration in
             guard case let .type("extension", open, body, close, _) = declaration else {
                 return declaration
             }
 
-            let visibilityKeyword = formatter.visibility(of: declaration)
+            let visibilityKeyword = declaration.visibility()
             // `private` visibility at top level of file is equivalent to `fileprivate`
             let extensionVisibility = (visibilityKeyword == .private) ? .fileprivate : visibilityKeyword
 
@@ -39,8 +39,8 @@ public extension FormatRule {
                 }
 
                 let visibilityOfBodyDeclarations = formatter
-                    .mapDeclarations(body) {
-                        formatter.visibility(of: $0) ?? extensionVisibility ?? .internal
+                    .mapDeclarationsExcludingTypeBodies(body) { declaration in
+                        declaration.visibility() ?? extensionVisibility ?? .internal
                     }
                     .compactMap { $0 }
 
@@ -61,7 +61,7 @@ public extension FormatRule {
                     // Check type being extended does not have lower visibility
                     for d in declarations where d.name == declaration.name {
                         if case let .type(kind, _, _, _, _) = d {
-                            if kind != "extension", formatter.visibility(of: d) ?? .internal < memberVisibility {
+                            if kind != "extension", d.visibility() ?? .internal < memberVisibility {
                                 // Cannot make extension with greater visibility than type being extended
                                 return declaration
                             }
@@ -76,18 +76,18 @@ public extension FormatRule {
                 {
                     extensionWithUpdatedVisibility = declaration
                 } else {
-                    extensionWithUpdatedVisibility = formatter.add(memberVisibility, to: declaration)
+                    extensionWithUpdatedVisibility = declaration.add(memberVisibility)
                 }
 
-                return formatter.mapBodyDeclarations(in: extensionWithUpdatedVisibility) { bodyDeclaration in
-                    let visibility = formatter.visibility(of: bodyDeclaration)
+                return formatter.mapBodyDeclarationsExcludingTypeBodies(in: extensionWithUpdatedVisibility) { bodyDeclaration in
+                    let visibility = bodyDeclaration.visibility()
                     if memberVisibility > visibility ?? extensionVisibility ?? .internal {
                         if visibility == nil {
-                            return formatter.add(.internal, to: bodyDeclaration)
+                            return bodyDeclaration.add(.internal)
                         }
                         return bodyDeclaration
                     }
-                    return formatter.remove(memberVisibility, from: bodyDeclaration)
+                    return bodyDeclaration.remove(memberVisibility)
                 }
 
             // Move the extension's visibility keyword to each individual declaration
@@ -98,15 +98,15 @@ public extension FormatRule {
                 }
 
                 // Remove the visibility keyword from the extension declaration itself
-                let extensionWithUpdatedVisibility = formatter.remove(visibilityKeyword!, from: declaration)
+                let extensionWithUpdatedVisibility = declaration.remove(visibilityKeyword!)
 
                 // And apply the extension's visibility to each of its child declarations
                 // that don't have an explicit visibility keyword
-                return formatter.mapBodyDeclarations(in: extensionWithUpdatedVisibility) { bodyDeclaration in
-                    if formatter.visibility(of: bodyDeclaration) == nil {
+                return formatter.mapBodyDeclarationsExcludingTypeBodies(in: extensionWithUpdatedVisibility) { bodyDeclaration in
+                    if bodyDeclaration.visibility() == nil {
                         // If there was no explicit visibility keyword, then this declaration
                         // was using the visibility of the extension itself.
-                        return formatter.add(extensionVisibility, to: bodyDeclaration)
+                        return bodyDeclaration.add(extensionVisibility)
                     } else {
                         // Keep the existing visibility
                         return bodyDeclaration
@@ -117,5 +117,73 @@ public extension FormatRule {
 
         let updatedTokens = updatedDeclarations.flatMap { $0.tokens }
         formatter.replaceTokens(in: formatter.tokens.indices, with: updatedTokens)
+    }
+}
+
+private extension Formatter {
+    /// Performs some generic mapping for each declaration in the given array,
+    /// stepping through conditional compilation blocks (but not into the body
+    /// of other nested types)
+    func mapDeclarationsExcludingTypeBodies<T>(
+        _ declarations: [Declaration],
+        with transform: (Declaration) -> T
+    ) -> [T] {
+        declarations.flatMap { declaration -> [T] in
+            switch declaration {
+            case .declaration, .type:
+                return [transform(declaration)]
+            case let .conditionalCompilation(_, body, _, _):
+                return mapDeclarationsExcludingTypeBodies(body, with: transform)
+            }
+        }
+    }
+
+    /// Performs some declaration mapping for each body declaration in this declaration
+    /// (including any declarations nested in conditional compilation blocks,
+    ///  but not including declarations dested within child types).
+    func mapBodyDeclarationsExcludingTypeBodies(
+        in declaration: Declaration,
+        with transform: (Declaration) -> Declaration
+    ) -> Declaration {
+        switch declaration {
+        case let .type(kind, open, body, close, originalRange):
+            return .type(
+                kind: kind,
+                open: open,
+                body: mapBodyDeclarationsExcludingTypeBodies(body, with: transform),
+                close: close,
+                originalRange: originalRange
+            )
+
+        case let .conditionalCompilation(open, body, close, originalRange):
+            return .conditionalCompilation(
+                open: open,
+                body: mapBodyDeclarationsExcludingTypeBodies(body, with: transform),
+                close: close,
+                originalRange: originalRange
+            )
+
+        case .declaration:
+            // No work to do, because plain declarations don't have bodies
+            return declaration
+        }
+    }
+
+    private func mapBodyDeclarationsExcludingTypeBodies(
+        _ body: [Declaration],
+        with transform: (Declaration) -> Declaration
+    ) -> [Declaration] {
+        body.map { bodyDeclaration in
+            // Apply `mapBodyDeclaration` to each declaration in the body
+            switch bodyDeclaration {
+            case .declaration, .type:
+                return transform(bodyDeclaration)
+
+            // Recursively step through conditional compilation blocks
+            // since their body tokens are effectively body tokens of the parent type
+            case .conditionalCompilation:
+                return mapBodyDeclarationsExcludingTypeBodies(in: bodyDeclaration, with: transform)
+            }
+        }
     }
 }

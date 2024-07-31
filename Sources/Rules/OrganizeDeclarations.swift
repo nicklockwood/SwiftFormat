@@ -217,6 +217,14 @@ extension Formatter {
                     return lhsName.localizedCompare(rhsName) == .orderedAscending
                 }
 
+                if options.alphabetizeSwiftUIPropertyTypes,
+                   lhs.category.type == rhs.category.type,
+                   let lhsSwiftUIProperty = lhs.declaration.swiftUIPropertyWrapper,
+                   let rhsSwiftUIProperty = rhs.declaration.swiftUIPropertyWrapper
+                {
+                    return lhsSwiftUIProperty.localizedCompare(rhsSwiftUIProperty) == .orderedAscending
+                }
+
                 // Respect the original declaration ordering when the categories and types are the same
                 return lhsOriginalIndex < rhsOriginalIndex
             })

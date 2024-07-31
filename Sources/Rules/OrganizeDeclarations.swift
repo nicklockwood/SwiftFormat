@@ -19,7 +19,7 @@ public extension FormatRule {
             "lifecycle", "organizetypes", "structthreshold", "classthreshold",
             "enumthreshold", "extensionlength", "organizationmode",
             "visibilityorder", "typeorder", "visibilitymarks", "typemarks",
-            "groupblanklines",
+            "groupblanklines", "sortswiftuiprops",
         ],
         sharedOptions: ["sortedpatterns", "lineaftermarks"]
     ) { formatter in

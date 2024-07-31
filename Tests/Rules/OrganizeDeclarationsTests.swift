@@ -3026,6 +3026,114 @@ class OrganizeDeclarationsTests: XCTestCase {
         )
     }
 
+    func testSortSwiftUIPropertyWrappersSubCategory() {
+        let input = """
+        struct ContentView: View {
+            init() {}
+
+            @Environment(\\.colorScheme) var colorScheme
+            @State var foo: Foo
+            @Binding var isOn: Bool
+            @Environment(\\.quux) var quux: Quux
+
+            @ViewBuilder
+            var body: some View {
+                Toggle(label, isOn: $isOn)
+            }
+        }
+        """
+
+        let output = """
+        struct ContentView: View {
+
+            // MARK: Lifecycle
+
+            init() {}
+
+            // MARK: Internal
+
+            @Binding var isOn: Bool
+            @Environment(\\.colorScheme) var colorScheme
+            @Environment(\\.quux) var quux: Quux
+            @State var foo: Foo
+
+            @ViewBuilder
+            var body: some View {
+                Toggle(label, isOn: $isOn)
+            }
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: .organizeDeclarations,
+            options: FormatOptions(
+                organizeTypes: ["struct"],
+                organizationMode: .visibility,
+                blankLineAfterSubgroups: false,
+                alphabetizeSwiftUIPropertyTypes: true
+            ),
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+        )
+    }
+
+    func testSortSwiftUIWrappersByTypeAndMaintainGroupSpacing() {
+        let input = """
+        struct ContentView: View {
+            init() {}
+
+            @State var foo: Foo
+            @State var bar: Bar
+
+            @Environment(\\.colorScheme) var colorScheme
+            @Environment(\\.quux) var quux: Quux
+
+            @Binding var isOn: Bool
+
+            @ViewBuilder
+            var body: some View {
+                Toggle(label, isOn: $isOn)
+            }
+        }
+        """
+
+        let output = """
+        struct ContentView: View {
+
+            // MARK: Lifecycle
+
+            init() {}
+
+            // MARK: Internal
+
+            @Binding var isOn: Bool
+
+            @Environment(\\.colorScheme) var colorScheme
+            @Environment(\\.quux) var quux: Quux
+
+            @State var foo: Foo
+            @State var bar: Bar
+
+            @ViewBuilder
+            var body: some View {
+                Toggle(label, isOn: $isOn)
+            }
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: .organizeDeclarations,
+            options: FormatOptions(
+                organizeTypes: ["struct"],
+                organizationMode: .visibility,
+                blankLineAfterSubgroups: false,
+                alphabetizeSwiftUIPropertyTypes: true
+            ),
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+        )
+    }
+
     func testPreservesBlockOfConsecutivePropertiesWithoutBlankLinesBetweenSubgroups1() {
         let input = """
         class Foo {

@@ -133,6 +133,7 @@
 		E4FABAD6202FEF060065716E /* OptionDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4FABAD4202FEF060065716E /* OptionDescriptor.swift */; };
 		E4FABAD7202FEF060065716E /* OptionDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4FABAD4202FEF060065716E /* OptionDescriptor.swift */; };
 		E4FABAD8202FEF060065716E /* OptionDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4FABAD4202FEF060065716E /* OptionDescriptor.swift */; };
+		EBA6E6FC2C54EF4F00CBD360 /* RulesTests+GuardSpacing.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBA6E6FB2C54EF4F00CBD360 /* RulesTests+GuardSpacing.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -267,6 +268,7 @@
 		E4E4D3C82033F17C000D7CB1 /* EnumAssociable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnumAssociable.swift; sourceTree = "<group>"; };
 		E4E4D3CD2033F1EF000D7CB1 /* EnumAssociableTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnumAssociableTests.swift; sourceTree = "<group>"; };
 		E4FABAD4202FEF060065716E /* OptionDescriptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionDescriptor.swift; sourceTree = "<group>"; };
+		EBA6E6FB2C54EF4F00CBD360 /* RulesTests+GuardSpacing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RulesTests+GuardSpacing.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -415,6 +417,7 @@
 				01C209B62502D2FD00E728A2 /* RulesTests+Parens.swift */,
 				01C209BC2502D71F00E728A2 /* RulesTests+Redundancy.swift */,
 				01C209AE2502CD3C00E728A2 /* RulesTests+Spacing.swift */,
+				EBA6E6FB2C54EF4F00CBD360 /* RulesTests+GuardSpacing.swift */,
 				01EF830E25616089003F6F2D /* RulesTests+Syntax.swift */,
 				01C209B82502D3C500E728A2 /* RulesTests+Wrapping.swift */,
 				015CE8B02B448CCE00924504 /* SingularizeTests.swift */,
@@ -828,6 +831,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				01A0EAB41D5DB4D000A0A8E3 /* RulesTests.swift in Sources */,
+				EBA6E6FC2C54EF4F00CBD360 /* RulesTests+GuardSpacing.swift in Sources */,
 				011676A22707D312001CCDCE /* RulesTests+General.swift in Sources */,
 				01C209B92502D3C500E728A2 /* RulesTests+Wrapping.swift in Sources */,
 				01F17E851E258A4900DCD359 /* CommandLineTests.swift in Sources */,

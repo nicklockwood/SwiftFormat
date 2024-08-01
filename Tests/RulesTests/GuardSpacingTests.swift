@@ -1,10 +1,13 @@
+// GuardSpacingTests.swift
+// GuardSpacingTests
+//
 // Created by @NikeKov on 27.07.2024
 // Copyright © 2024 Nick Lockwood. All rights reserved.
 
 import XCTest
 @testable import SwiftFormat
 
-class GuardSpacingTests: RulesTests {
+final class GuardSpacingTests: RulesTests {
     func testSpacesBetweenGuard() {
         let input = """
         guard let one = test.one else {
@@ -48,7 +51,7 @@ class GuardSpacingTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, output, rule: FormatRules.spacesWithGuard)
+        testFormatting(for: input, output, rule: FormatRules.guardSpacing)
     }
 
     func testLinebreakAfterGuard() {
@@ -66,7 +69,7 @@ class GuardSpacingTests: RulesTests {
         let x = test()
         """
 
-        testFormatting(for: input, output, rule: FormatRules.spacesWithGuard)
+        testFormatting(for: input, output, rule: FormatRules.guardSpacing)
     }
 
     func testIncludedGuard() {
@@ -95,7 +98,7 @@ class GuardSpacingTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, output, rule: FormatRules.spacesWithGuard)
+        testFormatting(for: input, output, rule: FormatRules.guardSpacing)
     }
 
     func testEndBracketAndIf() {
@@ -121,7 +124,7 @@ class GuardSpacingTests: RulesTests {
         }
         """
 
-        testFormatting(for: input, output, rule: FormatRules.spacesWithGuard)
+        testFormatting(for: input, output, rule: FormatRules.guardSpacing)
     }
 
     func testComments() {
@@ -151,6 +154,6 @@ class GuardSpacingTests: RulesTests {
         let something = xxx
         """
 
-        testFormatting(for: input, output, rule: FormatRules.spacesWithGuard)
+        testFormatting(for: input, output, rule: FormatRules.guardSpacing, exclude: ["docComments"])
     }
 }

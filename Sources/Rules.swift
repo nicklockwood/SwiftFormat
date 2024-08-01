@@ -8071,59 +8071,30 @@ public struct _FormatRules {
         }
     }
 
-    public let spacesWithGuard = FormatRule(help: "Remove space between guard and add spaces after last guard.",
-                                            disabledByDefault: true)
+    public let guardSpacing = FormatRule(help: "Remove space between guard and add spaces after last guard.",
+                                         disabledByDefault: true)
     { formatter in
-        func leaveOrSetLinebreaksInIndexes(_ indexes: Set<Int>, linebreaksCount: Int) {
-            var alreadyHasLinebreaksCount = 0
-            for index in indexes {
-                guard let token = formatter.token(at: index) else {
-                    return
-                }
-                if token.isLinebreak {
-                    if alreadyHasLinebreaksCount == linebreaksCount {
-                        formatter.removeToken(at: index)
-                    } else {
-                        alreadyHasLinebreaksCount += 1
-                    }
-                }
-            }
-            if alreadyHasLinebreaksCount != linebreaksCount,
-               let firstIndex = indexes.first
-            {
-                formatter.insert(.linebreak("\n", 0), at: firstIndex)
-            }
-        }
-
-        let guardKeyword = Token.keyword("guard")
-        formatter.forEach(guardKeyword) { guardIndex, _ in
-            print("✳️ start \(guardIndex)")
+        formatter.forEach(.keyword("guard")) { guardIndex, _ in
             guard let startOfScopeOfGuard = formatter.index(of: .startOfScope("{"), after: guardIndex),
                   let endOfScopeOfGuard = formatter.endOfScope(at: startOfScopeOfGuard)
             else {
                 return
             }
-            print("✳️ startOfScopeOfGuard: \(startOfScopeOfGuard), endOfScopeOfGuard: \(endOfScopeOfGuard)")
 
             guard let nextNonSpaceAndNonLinebreakIndex = formatter.index(of: .nonSpaceOrLinebreak, after: endOfScopeOfGuard) else {
                 return
             }
+
             let nextNonSpaceAndNonLinebreakToken = formatter.token(at: nextNonSpaceAndNonLinebreakIndex)
-            print("✳️ nextNonSpaceAndNonLinebreakToken: \(nextNonSpaceAndNonLinebreakToken)")
-            switch nextNonSpaceAndNonLinebreakToken {
-            case let .endOfScope(string):
-                if string == "}" {
-                    // Do not add space for end bracket
-                    return
-                }
-            default:
-                break
+
+            if nextNonSpaceAndNonLinebreakToken == .endOfScope("}") {
+                // Do not add space for end bracket
+                return
             }
-            let isGuard = nextNonSpaceAndNonLinebreakToken == guardKeyword
-            print("✳️ isGuard: \(isGuard)")
+
+            let isGuard = nextNonSpaceAndNonLinebreakToken == .keyword("guard")
             let indexesBetween = Set(endOfScopeOfGuard + 1 ... nextNonSpaceAndNonLinebreakIndex - 1)
-            print("✳️ indexesBetweenGuards: \(indexesBetween)")
-            leaveOrSetLinebreaksInIndexes(indexesBetween, linebreaksCount: isGuard ? 1 : 2)
+            formatter.leaveOrSetLinebreaksInIndexes(indexesBetween, linebreaksCount: isGuard ? 1 : 2)
         }
     }
 }

@@ -133,7 +133,7 @@
 		E4FABAD6202FEF060065716E /* OptionDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4FABAD4202FEF060065716E /* OptionDescriptor.swift */; };
 		E4FABAD7202FEF060065716E /* OptionDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4FABAD4202FEF060065716E /* OptionDescriptor.swift */; };
 		E4FABAD8202FEF060065716E /* OptionDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4FABAD4202FEF060065716E /* OptionDescriptor.swift */; };
-		EBA6E6FC2C54EF4F00CBD360 /* RulesTests+GuardSpacing.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBA6E6FB2C54EF4F00CBD360 /* RulesTests+GuardSpacing.swift */; };
+		EBA6E6FC2C54EF4F00CBD360 /* GuardSpacingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBA6E6FB2C54EF4F00CBD360 /* GuardSpacingTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -268,7 +268,7 @@
 		E4E4D3C82033F17C000D7CB1 /* EnumAssociable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnumAssociable.swift; sourceTree = "<group>"; };
 		E4E4D3CD2033F1EF000D7CB1 /* EnumAssociableTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnumAssociableTests.swift; sourceTree = "<group>"; };
 		E4FABAD4202FEF060065716E /* OptionDescriptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionDescriptor.swift; sourceTree = "<group>"; };
-		EBA6E6FB2C54EF4F00CBD360 /* RulesTests+GuardSpacing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RulesTests+GuardSpacing.swift"; sourceTree = "<group>"; };
+		EBA6E6FB2C54EF4F00CBD360 /* GuardSpacingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuardSpacingTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -397,35 +397,9 @@
 		01A0EAB21D5DB4D000A0A8E3 /* Tests */ = {
 			isa = PBXGroup;
 			children = (
-				01BEC5762236E1A700D0DD83 /* MetadataTests.swift */,
-				01045A9C2119A21000D2BE3D /* ArgumentsTests.swift */,
-				01F17E841E258A4900DCD359 /* CommandLineTests.swift */,
-				01B3987A1D763424009ADE61 /* FormatterTests.swift */,
-				01426E4D23AA29B100E7D871 /* ParsingHelpersTests.swift */,
-				015F83FA2BF1448D0060A07E /* ReporterTests.swift */,
 				01A0EAB51D5DB4D000A0A8E3 /* Info.plist */,
-				E4E4D3CD2033F1EF000D7CB1 /* EnumAssociableTests.swift */,
-				E43EF47B202FF47C00E523BD /* OptionDescriptorTests.swift */,
-				01F3DF8F1DBA003E00454944 /* InferenceTests.swift */,
-				01A0EAB31D5DB4D000A0A8E3 /* RulesTests.swift */,
-				01C209B42502D27800E728A2 /* RulesTests+Braces.swift */,
-				011676A12707D312001CCDCE /* RulesTests+General.swift */,
-				01C209B22502CF8300E728A2 /* RulesTests+Indentation.swift */,
-				01EFC8B629CF2B5100222029 /* RulesTests+Hoisting.swift */,
-				01C209B02502CEF700E728A2 /* RulesTests+Linebreaks.swift */,
-				01C209BA2502D62000E728A2 /* RulesTests+Organization.swift */,
-				01C209B62502D2FD00E728A2 /* RulesTests+Parens.swift */,
-				01C209BC2502D71F00E728A2 /* RulesTests+Redundancy.swift */,
-				01C209AE2502CD3C00E728A2 /* RulesTests+Spacing.swift */,
-				EBA6E6FB2C54EF4F00CBD360 /* RulesTests+GuardSpacing.swift */,
-				01EF830E25616089003F6F2D /* RulesTests+Syntax.swift */,
-				01C209B82502D3C500E728A2 /* RulesTests+Wrapping.swift */,
-				015CE8B02B448CCE00924504 /* SingularizeTests.swift */,
-				0142F06E1D72FE10007D66CC /* SwiftFormatTests.swift */,
-				01BBD85D21DAA30700457380 /* GlobsTests.swift */,
-				018E82741D62E730008CA0F8 /* TokenizerTests.swift */,
-				011A53E921FFAA3A00DD9268 /* VersionTests.swift */,
-				01C4D3282BB518D400BDF1AF /* ZRegressionTests.swift */,
+				EBA6E7002C5B79A800CBD360 /* CoreTests */,
+				EBA6E6FF2C5B79A200CBD360 /* RulesTests */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -538,6 +512,48 @@
 				E41CB5BE2025761D00C1BEDE /* UserSelection.swift */,
 			);
 			path = Source;
+			sourceTree = "<group>";
+		};
+		EBA6E6FF2C5B79A200CBD360 /* RulesTests */ = {
+			isa = PBXGroup;
+			children = (
+				EBA6E6FB2C54EF4F00CBD360 /* GuardSpacingTests.swift */,
+				01C209B42502D27800E728A2 /* RulesTests+Braces.swift */,
+				011676A12707D312001CCDCE /* RulesTests+General.swift */,
+				01EFC8B629CF2B5100222029 /* RulesTests+Hoisting.swift */,
+				01C209B22502CF8300E728A2 /* RulesTests+Indentation.swift */,
+				01C209B02502CEF700E728A2 /* RulesTests+Linebreaks.swift */,
+				01C209BA2502D62000E728A2 /* RulesTests+Organization.swift */,
+				01C209B62502D2FD00E728A2 /* RulesTests+Parens.swift */,
+				01C209BC2502D71F00E728A2 /* RulesTests+Redundancy.swift */,
+				01C209AE2502CD3C00E728A2 /* RulesTests+Spacing.swift */,
+				01EF830E25616089003F6F2D /* RulesTests+Syntax.swift */,
+				01C209B82502D3C500E728A2 /* RulesTests+Wrapping.swift */,
+			);
+			path = RulesTests;
+			sourceTree = "<group>";
+		};
+		EBA6E7002C5B79A800CBD360 /* CoreTests */ = {
+			isa = PBXGroup;
+			children = (
+				01045A9C2119A21000D2BE3D /* ArgumentsTests.swift */,
+				01F17E841E258A4900DCD359 /* CommandLineTests.swift */,
+				E4E4D3CD2033F1EF000D7CB1 /* EnumAssociableTests.swift */,
+				01B3987A1D763424009ADE61 /* FormatterTests.swift */,
+				01BBD85D21DAA30700457380 /* GlobsTests.swift */,
+				01F3DF8F1DBA003E00454944 /* InferenceTests.swift */,
+				01BEC5762236E1A700D0DD83 /* MetadataTests.swift */,
+				E43EF47B202FF47C00E523BD /* OptionDescriptorTests.swift */,
+				01426E4D23AA29B100E7D871 /* ParsingHelpersTests.swift */,
+				015F83FA2BF1448D0060A07E /* ReporterTests.swift */,
+				01A0EAB31D5DB4D000A0A8E3 /* RulesTests.swift */,
+				015CE8B02B448CCE00924504 /* SingularizeTests.swift */,
+				0142F06E1D72FE10007D66CC /* SwiftFormatTests.swift */,
+				018E82741D62E730008CA0F8 /* TokenizerTests.swift */,
+				011A53E921FFAA3A00DD9268 /* VersionTests.swift */,
+				01C4D3282BB518D400BDF1AF /* ZRegressionTests.swift */,
+			);
+			path = CoreTests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -831,7 +847,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				01A0EAB41D5DB4D000A0A8E3 /* RulesTests.swift in Sources */,
-				EBA6E6FC2C54EF4F00CBD360 /* RulesTests+GuardSpacing.swift in Sources */,
+				EBA6E6FC2C54EF4F00CBD360 /* GuardSpacingTests.swift in Sources */,
 				011676A22707D312001CCDCE /* RulesTests+General.swift in Sources */,
 				01C209B92502D3C500E728A2 /* RulesTests+Wrapping.swift in Sources */,
 				01F17E851E258A4900DCD359 /* CommandLineTests.swift in Sources */,

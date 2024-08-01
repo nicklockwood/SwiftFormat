@@ -1912,4 +1912,18 @@ private struct Examples {
       }
     ```
     """
+
+    let guardSpacing = """
+    ```diff
+        guard let spicy = self.makeSpicy() else {
+            return
+        }
+    -
+        guard let soap = self.clean() else {
+            return
+        }
+    +
+        let doTheJob = nikekov()
+    ```
+    """
 }

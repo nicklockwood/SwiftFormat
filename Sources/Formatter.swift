@@ -617,6 +617,29 @@ public extension Formatter {
         }
         return .linebreak(options.linebreak, lineNumber)
     }
+
+    /// Formatting linebreaks
+    /// Setting `linebreaksCount` linebreaks in `indexes`
+    func leaveOrSetLinebreaksInIndexes(_ indexes: Set<Int>, linebreaksCount: Int) {
+        var alreadyHasLinebreaksCount = 0
+        for index in indexes {
+            guard let token = token(at: index) else {
+                return
+            }
+            if token.isLinebreak {
+                if alreadyHasLinebreaksCount == linebreaksCount {
+                    removeToken(at: index)
+                } else {
+                    alreadyHasLinebreaksCount += 1
+                }
+            }
+        }
+        if alreadyHasLinebreaksCount != linebreaksCount,
+           let firstIndex = indexes.first
+        {
+            insertLinebreak(at: firstIndex)
+        }
+    }
 }
 
 extension String {

@@ -156,4 +156,29 @@ final class GuardSpacingTests: XCTestCase {
 
         testFormatting(for: input, output, rule: .spacingGuards, exclude: [.docComments])
     }
+
+    func testNotInsertLineBreakWhenInlineFunction() {
+        let input = """
+        let array = [1, 2, 3]
+        guard array.map { String($0) }.isEmpty else {
+            return
+        }
+        """
+        testFormatting(for: input, rule: .spacingGuards, exclude: [.wrapConditionalBodies])
+    }
+
+    func testNotInsertLineBreakInChain() {
+        let input = """
+        guard aBool,
+              anotherBool,
+              aTestArray
+              .map { $0 * 2 }
+              .filter { $0 == 4 }
+              .isEmpty,
+              yetAnotherBool
+        else { return }
+        """
+
+        testFormatting(for: input, rule: .spacingGuards, exclude: [.wrapConditionalBodies])
+    }
 }

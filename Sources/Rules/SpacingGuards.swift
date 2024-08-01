@@ -20,13 +20,15 @@ public extension FormatRule {
 
             let nextNonSpaceAndNonLinebreakToken = formatter.token(at: nextNonSpaceAndNonLinebreakIndex)
 
-            if nextNonSpaceAndNonLinebreakToken == .endOfScope("}") {
-                // Do not add space for end bracket
+            if nextNonSpaceAndNonLinebreakToken == .endOfScope("}")
+                || nextNonSpaceAndNonLinebreakToken?.isOperator == true
+            {
+                // Do not add space in this cases
                 return
             }
 
             let isGuard = nextNonSpaceAndNonLinebreakToken == .keyword("guard")
-            let indexesBetween = Set(endOfScopeOfGuard + 1 ... nextNonSpaceAndNonLinebreakIndex - 1)
+            let indexesBetween = Set(endOfScopeOfGuard + 1 ..< nextNonSpaceAndNonLinebreakIndex)
             formatter.leaveOrSetLinebreaksInIndexes(indexesBetween, linebreaksCount: isGuard ? 1 : 2)
         }
     }

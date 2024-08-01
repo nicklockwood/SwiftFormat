@@ -30,7 +30,7 @@ class SortSwitchCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .sortSwitchCases, exclude: [.redundantSelf])
+        testFormatting(for: input, rule: .sortSwitchCases, exclude: [.redundantSelf, .spacingGuards])
     }
 
     func testSortedSwitchCaseMultilineWithOneComment() {

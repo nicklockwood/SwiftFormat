@@ -1525,7 +1525,7 @@ class IndentTests: XCTestCase {
         """
         let options = FormatOptions(wrapArguments: .disabled, closingParenPosition: .balanced)
         testFormatting(for: input, rule: .indent, options: options,
-                       exclude: [.wrapConditionalBodies])
+                       exclude: [.wrapConditionalBodies, .spacingGuards])
     }
 
     func testSingleIndentTrailingClosureBody2() {
@@ -1540,7 +1540,7 @@ class IndentTests: XCTestCase {
         """
         let options = FormatOptions(wrapArguments: .disabled, closingParenPosition: .sameLine)
         testFormatting(for: input, rule: .indent, options: options,
-                       exclude: [.wrapConditionalBodies, .wrapMultilineStatementBraces])
+                       exclude: [.wrapConditionalBodies, .wrapMultilineStatementBraces, .spacingGuards])
     }
 
     func testDoubleIndentTrailingClosureBody() {
@@ -1556,7 +1556,7 @@ class IndentTests: XCTestCase {
         """
         let options = FormatOptions(wrapArguments: .disabled, closingParenPosition: .sameLine)
         testFormatting(for: input, rule: .indent, options: options,
-                       exclude: [.wrapConditionalBodies, .wrapMultilineStatementBraces])
+                       exclude: [.wrapConditionalBodies, .wrapMultilineStatementBraces, .spacingGuards])
     }
 
     func testDoubleIndentTrailingClosureBody2() {
@@ -1601,7 +1601,7 @@ class IndentTests: XCTestCase {
         """
         let options = FormatOptions(wrapArguments: .disabled, closingParenPosition: .sameLine)
         testFormatting(for: input, rule: .indent, options: options,
-                       exclude: [.braces, .wrapConditionalBodies])
+                       exclude: [.braces, .wrapConditionalBodies, .spacingGuards])
     }
 
     func testSingleIndentTrailingClosureBodyOfShortMethod() {
@@ -1613,7 +1613,7 @@ class IndentTests: XCTestCase {
         """
         let options = FormatOptions(wrapArguments: .disabled, closingParenPosition: .sameLine)
         testFormatting(for: input, rule: .indent, options: options,
-                       exclude: [.wrapConditionalBodies])
+                       exclude: [.wrapConditionalBodies, .spacingGuards])
     }
 
     func testNoDoubleIndentInInsideClosure() {
@@ -1975,7 +1975,7 @@ class IndentTests: XCTestCase {
         """
         let options = FormatOptions(xcodeIndentation: true)
         testFormatting(for: input, output, rule: .indent,
-                       options: options, exclude: [.wrapConditionalBodies])
+                       options: options, exclude: [.wrapConditionalBodies, .spacingGuards])
     }
 
     func testWrappedChainedFunctionsWithNestedScopeIndent() {
@@ -3717,7 +3717,7 @@ class IndentTests: XCTestCase {
         """
         let options = FormatOptions(indent: "\t", truncateBlankLines: false, tabWidth: 2)
         testFormatting(for: input, rule: .indent, options: options,
-                       exclude: [.consecutiveBlankLines, .wrapConditionalBodies])
+                       exclude: [.consecutiveBlankLines, .wrapConditionalBodies, .spacingGuards])
     }
 
     // async

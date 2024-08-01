@@ -222,7 +222,7 @@ class HoistPatternLetTests: XCTestCase {
         """
         let options = FormatOptions(hoistPatternLet: false)
         testFormatting(for: input, rule: .hoistPatternLet, options: options,
-                       exclude: [.wrapConditionalBodies])
+                       exclude: [.wrapConditionalBodies, .spacingGuards])
     }
 
     func testNoUnhoistSwitchCaseLetFollowedByWhere() {

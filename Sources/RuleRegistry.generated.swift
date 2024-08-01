@@ -98,6 +98,7 @@ let ruleRegistry: [String: FormatRule] = [
     "spaceInsideComments": .spaceInsideComments,
     "spaceInsideGenerics": .spaceInsideGenerics,
     "spaceInsideParens": .spaceInsideParens,
+    "spacingGuards": .spacingGuards,
     "specifiers": .specifiers,
     "strongOutlets": .strongOutlets,
     "strongifiedSelf": .strongifiedSelf,

@@ -2070,7 +2070,7 @@ class WrapArgumentsTests: XCTestCase {
         testFormatting(
             for: input, rule: .wrapArguments,
             options: FormatOptions(indent: "  ", wrapConditions: .beforeFirst),
-            exclude: [.elseOnSameLine, .wrapConditionalBodies]
+            exclude: [.elseOnSameLine, .wrapConditionalBodies, .spacingGuards]
         )
     }
 

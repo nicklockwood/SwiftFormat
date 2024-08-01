@@ -915,6 +915,9 @@ Q. I don't want to be surprised by new rules added when I upgrade SwiftFormat. H
 
 > A. Yes, the SwiftFormat framework can be included in an app or test target, and used for many kinds of parsing and processing of Swift source code besides formatting. The SwiftFormat framework is available as a [CocoaPod](https://cocoapods.org/pods/SwiftFormat) for easy integration.
 
+*Q. How to create own rule?*
+
+> A. 1) Open `SwiftFormat.xcodeproj`; 2) Add a rule in `Sources/Rules/..`; 3) Add a test in `Tests/Rules/..`; 4) Add an example in `Sources/Examples.swift`; 5) Run all tests.
 
 Known issues
 ---------------

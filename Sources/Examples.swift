@@ -2016,4 +2016,18 @@ private struct Examples {
       extension String: Equatable {}
     ```
     """
+
+    let spacingGuards = """
+    ```diff
+        guard let spicy = self.makeSpicy() else {
+            return
+        }
+    -
+        guard let soap = self.clean() else {
+            return
+        }
+    +
+        let doTheJob = nikekov()
+    ```
+    """
 }

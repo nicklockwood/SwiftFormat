@@ -340,7 +340,7 @@ class RedundantSelfTests: XCTestCase {
     func testNoRemoveSelfForVarCreatedInGuardScope() {
         let input = "func foo() {\n    guard let bar = 5 else {}\n    let baz = self.bar\n}"
         testFormatting(for: input, rule: .redundantSelf,
-                       exclude: [.wrapConditionalBodies])
+                       exclude: [.wrapConditionalBodies, .spacingGuards])
     }
 
     func testRemoveSelfForVarCreatedInIfScope() {
@@ -1035,7 +1035,7 @@ class RedundantSelfTests: XCTestCase {
         """
         let options = FormatOptions(swiftVersion: "5.8")
         testFormatting(for: input, output, rule: .redundantSelf,
-                       options: options, exclude: [.redundantOptionalBinding])
+                       options: options, exclude: [.redundantOptionalBinding, .spacingGuards])
     }
 
     func testWeakSelfNotRemovedIfNotUnwrapped() {
@@ -1124,7 +1124,7 @@ class RedundantSelfTests: XCTestCase {
         }
         """
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, rule: .redundantSelf, options: options)
+        testFormatting(for: input, rule: .redundantSelf, options: options, exclude: [.spacingGuards])
     }
 
     func testNonRedundantSelfNotRemovedAfterConditionalLet() {
@@ -1199,7 +1199,7 @@ class RedundantSelfTests: XCTestCase {
             self.bar()
         }
         """
-        testFormatting(for: input, rule: .redundantSelf)
+        testFormatting(for: input, rule: .redundantSelf, exclude: [.spacingGuards])
     }
 
     func testNoRemoveSelfInClosureInIfCondition() {
@@ -1343,7 +1343,7 @@ class RedundantSelfTests: XCTestCase {
         }) {}
         """
         testFormatting(for: input, rule: .redundantSelf,
-                       exclude: [.wrapConditionalBodies])
+                       exclude: [.wrapConditionalBodies, .spacingGuards])
     }
 
     func testStructSelfRemovedInTrailingClosureInIfCase() {
@@ -1488,7 +1488,7 @@ class RedundantSelfTests: XCTestCase {
         }
         """
         testFormatting(for: input, rule: .redundantSelf,
-                       exclude: [.wrapConditionalBodies])
+                       exclude: [.wrapConditionalBodies, .spacingGuards])
     }
 
     func testNoRemoveSelfInAssignmentInsideIfAsStatement() {
@@ -1536,7 +1536,7 @@ class RedundantSelfTests: XCTestCase {
         }
         """
         testFormatting(for: input, output, rule: .redundantSelf,
-                       exclude: [.hoistPatternLet])
+                       exclude: [.hoistPatternLet, .spacingGuards])
     }
 
     func testRedundantSelfParsingBug2() {
@@ -1742,7 +1742,7 @@ class RedundantSelfTests: XCTestCase {
         }
         """
         let options = FormatOptions(swiftVersion: "5.0")
-        testFormatting(for: input, output, rule: .redundantSelf, options: options)
+        testFormatting(for: input, output, rule: .redundantSelf, options: options, exclude: [.spacingGuards])
     }
 
     func testShadowedSelfRemovedInGuardLet() {
@@ -1762,7 +1762,7 @@ class RedundantSelfTests: XCTestCase {
             print(optional)
         }
         """
-        testFormatting(for: input, output, rule: .redundantSelf)
+        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.spacingGuards])
     }
 
     func testShadowedStringValueNotRemovedInInit() {
@@ -2813,7 +2813,7 @@ class RedundantSelfTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantSelf)
+        testFormatting(for: input, rule: .redundantSelf, exclude: [.spacingGuards])
     }
 
     func testSelfRemovalParsingBug2() {
@@ -2903,7 +2903,7 @@ class RedundantSelfTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantSelf)
+        testFormatting(for: input, rule: .redundantSelf, exclude: [.spacingGuards])
     }
 
     func testSelfNotRemovedInCaseIfElse() {
@@ -2994,6 +2994,7 @@ class RedundantSelfTests: XCTestCase {
                         print(self.bar)
                         return
                     }
+
                     print(self.bar)
                 }
             }

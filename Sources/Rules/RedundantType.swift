@@ -28,60 +28,6 @@ public extension FormatRule {
             let typeEndIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: equalsIndex)
             else { return }
 
-            // Compares whether or not two types are equivalent
-            func compare(typeStartingAfter j: Int, withTypeStartingAfter i: Int)
-                -> (matches: Bool, i: Int, j: Int, wasValue: Bool)
-            {
-                var i = i, j = j, wasValue = false
-
-                while let typeIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i),
-                      typeIndex <= typeEndIndex,
-                      let valueIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: j)
-                {
-                    let typeToken = formatter.tokens[typeIndex]
-                    let valueToken = formatter.tokens[valueIndex]
-                    if !wasValue {
-                        switch valueToken {
-                        case _ where valueToken.isStringDelimiter, .number,
-                             .identifier("true"), .identifier("false"):
-                            if formatter.options.redundantType == .explicit {
-                                // We never remove the value in this case, so exit early
-                                return (false, i, j, wasValue)
-                            }
-                            wasValue = true
-                        default:
-                            break
-                        }
-                    }
-                    guard typeToken == formatter.typeToken(forValueToken: valueToken) else {
-                        return (false, i, j, wasValue)
-                    }
-                    // Avoid introducing "inferred to have type 'Void'" warning
-                    if formatter.options.redundantType == .inferred, typeToken == .identifier("Void") ||
-                        typeToken == .endOfScope(")") && formatter.tokens[i] == .startOfScope("(")
-                    {
-                        return (false, i, j, wasValue)
-                    }
-                    i = typeIndex
-                    j = valueIndex
-                    if formatter.tokens[j].isStringDelimiter, let next = formatter.endOfScope(at: j) {
-                        j = next
-                    }
-                }
-                guard i == typeEndIndex else {
-                    return (false, i, j, wasValue)
-                }
-
-                // Check for ternary
-                if let endOfExpression = formatter.endOfExpression(at: j, upTo: [.operator("?", .infix)]),
-                   formatter.next(.nonSpaceOrCommentOrLinebreak, after: endOfExpression) == .operator("?", .infix)
-                {
-                    return (false, i, j, wasValue)
-                }
-
-                return (true, i, j, wasValue)
-            }
-
             // The implementation of RedundantType uses inferred or explicit,
             // potentially depending on the context.
             let isInferred: Bool
@@ -157,7 +103,7 @@ public extension FormatRule {
                formatter.allRecursiveConditionalBranches(
                    in: conditionalBranches,
                    satisfy: { branch in
-                       compare(typeStartingAfter: branch.startOfBranch, withTypeStartingAfter: colonIndex).matches
+                       formatter.compare(typeStartingAfter: branch.startOfBranch, withTypeStartingAfter: colonIndex, typeEndIndex: typeEndIndex).matches
                    }
                )
             {
@@ -168,9 +114,10 @@ public extension FormatRule {
                     }
                 } else {
                     formatter.forEachRecursiveConditionalBranch(in: conditionalBranches) { branch in
-                        let (_, i, j, wasValue) = compare(
+                        let (_, i, j, wasValue) = formatter.compare(
                             typeStartingAfter: branch.startOfBranch,
-                            withTypeStartingAfter: colonIndex
+                            withTypeStartingAfter: colonIndex,
+                            typeEndIndex: typeEndIndex
                         )
 
                         removeType(after: branch.startOfBranch, i: i, j: j, wasValue: wasValue)
@@ -180,11 +127,84 @@ public extension FormatRule {
 
             // Otherwise this is just a simple assignment expression where the RHS is a single value
             else {
-                let (matches, i, j, wasValue) = compare(typeStartingAfter: equalsIndex, withTypeStartingAfter: colonIndex)
+                let (matches, i, j, wasValue) = formatter.compare(typeStartingAfter: equalsIndex, withTypeStartingAfter: colonIndex, typeEndIndex: typeEndIndex)
                 if matches {
                     removeType(after: equalsIndex, i: i, j: j, wasValue: wasValue)
                 }
             }
+        }
+    }
+}
+
+extension Formatter {
+    // Compares whether or not two types are equivalent
+    func compare(typeStartingAfter j: Int, withTypeStartingAfter i: Int, typeEndIndex: Int)
+        -> (matches: Bool, i: Int, j: Int, wasValue: Bool)
+    {
+        var i = i, j = j, wasValue = false
+
+        while let typeIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: i),
+              typeIndex <= typeEndIndex,
+              let valueIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: j)
+        {
+            let typeToken = tokens[typeIndex]
+            let valueToken = tokens[valueIndex]
+            if !wasValue {
+                switch valueToken {
+                case _ where valueToken.isStringDelimiter, .number,
+                     .identifier("true"), .identifier("false"):
+                    if options.redundantType == .explicit {
+                        // We never remove the value in this case, so exit early
+                        return (false, i, j, wasValue)
+                    }
+                    wasValue = true
+                default:
+                    break
+                }
+            }
+            guard typeToken == self.typeToken(forValueToken: valueToken) else {
+                return (false, i, j, wasValue)
+            }
+            // Avoid introducing "inferred to have type 'Void'" warning
+            if options.redundantType == .inferred, typeToken == .identifier("Void") ||
+                typeToken == .endOfScope(")") && tokens[i] == .startOfScope("(")
+            {
+                return (false, i, j, wasValue)
+            }
+            i = typeIndex
+            j = valueIndex
+            if tokens[j].isStringDelimiter, let next = endOfScope(at: j) {
+                j = next
+            }
+        }
+        guard i == typeEndIndex else {
+            return (false, i, j, wasValue)
+        }
+
+        // Check for ternary
+        if let endOfExpression = endOfExpression(at: j, upTo: [.operator("?", .infix)]),
+           next(.nonSpaceOrCommentOrLinebreak, after: endOfExpression) == .operator("?", .infix)
+        {
+            return (false, i, j, wasValue)
+        }
+
+        return (true, i, j, wasValue)
+    }
+
+    /// Returns the equivalent type token for a given value token
+    func typeToken(forValueToken token: Token) -> Token {
+        switch token {
+        case let .number(_, type):
+            switch type {
+            case .decimal:
+                return .identifier("Double")
+            default:
+                return .identifier("Int")
+            }
+        case let .identifier(name):
+            return ["true", "false"].contains(name) ? .identifier("Bool") : .identifier(name)
+        case let token:
+            return token.isStringDelimiter ? .identifier("String") : token
         }
     }
 }

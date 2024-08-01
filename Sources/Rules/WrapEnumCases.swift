@@ -16,24 +16,8 @@ public extension FormatRule {
         options: ["wrapenumcases"],
         sharedOptions: ["linebreaks"]
     ) { formatter in
-
-        func shouldWrapCaseRangeGroup(_ caseRangeGroup: [Formatter.EnumCaseRange]) -> Bool {
-            guard let firstIndex = caseRangeGroup.first?.value.lowerBound,
-                  let scopeStart = formatter.startOfScope(at: firstIndex),
-                  formatter.tokens[scopeStart ..< firstIndex].contains(where: { $0.isLinebreak })
-            else {
-                // Don't wrap if first case is on same line as opening `{`
-                return false
-            }
-            return formatter.options.wrapEnumCases == .always || caseRangeGroup.contains(where: {
-                formatter.tokens[$0.value].contains(where: {
-                    [.startOfScope("("), .operator("=", .infix)].contains($0)
-                })
-            })
-        }
-
         formatter.parseEnumCaseRanges()
-            .filter(shouldWrapCaseRangeGroup)
+            .filter(formatter.shouldWrapCaseRangeGroup)
             .flatMap { $0 }
             .filter { $0.endOfCaseRangeToken == .delimiter(",") }
             .reversed()
@@ -112,5 +96,20 @@ extension Formatter {
         }
 
         return Array(indexedRanges.values)
+    }
+
+    func shouldWrapCaseRangeGroup(_ caseRangeGroup: [Formatter.EnumCaseRange]) -> Bool {
+        guard let firstIndex = caseRangeGroup.first?.value.lowerBound,
+              let scopeStart = startOfScope(at: firstIndex),
+              tokens[scopeStart ..< firstIndex].contains(where: { $0.isLinebreak })
+        else {
+            // Don't wrap if first case is on same line as opening `{`
+            return false
+        }
+        return options.wrapEnumCases == .always || caseRangeGroup.contains(where: {
+            tokens[$0.value].contains(where: {
+                [.startOfScope("("), .operator("=", .infix)].contains($0)
+            })
+        })
     }
 }

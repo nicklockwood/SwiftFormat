@@ -21,12 +21,6 @@ public extension FormatRule {
         options: ["elseposition", "guardelse"],
         sharedOptions: ["allman", "linebreaks"]
     ) { formatter in
-        func bracesContainLinebreak(_ endIndex: Int) -> Bool {
-            guard let startIndex = formatter.index(of: .startOfScope("{"), before: endIndex) else {
-                return false
-            }
-            return (startIndex ..< endIndex).contains(where: { formatter.tokens[$0].isLinebreak })
-        }
         formatter.forEachToken { i, token in
             switch token {
             case .keyword("while"):
@@ -97,14 +91,14 @@ public extension FormatRule {
                 if !shouldWrap, formatter.tokens[prevIndex].isLinebreak {
                     if let prevBraceIndex = formatter.index(of: .nonSpaceOrLinebreak, before: prevIndex, if: {
                         $0 == .endOfScope("}")
-                    }), bracesContainLinebreak(prevBraceIndex) {
+                    }), formatter.bracesContainLinebreak(prevBraceIndex) {
                         formatter.replaceTokens(in: prevBraceIndex + 1 ..< i, with: .space(" "))
                     }
                 } else if shouldWrap, let token = formatter.token(at: prevIndex), !token.isLinebreak,
                           let prevBraceIndex = (token == .endOfScope("}")) ? prevIndex :
                           formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex, if: {
                               $0 == .endOfScope("}")
-                          }), bracesContainLinebreak(prevBraceIndex)
+                          }), formatter.bracesContainLinebreak(prevBraceIndex)
                 {
                     formatter.replaceTokens(in: prevIndex + 1 ..< i, with:
                         formatter.linebreakToken(for: prevIndex + 1))
@@ -114,5 +108,14 @@ public extension FormatRule {
                 break
             }
         }
+    }
+}
+
+extension Formatter {
+    func bracesContainLinebreak(_ endIndex: Int) -> Bool {
+        guard let startIndex = index(of: .startOfScope("{"), before: endIndex) else {
+            return false
+        }
+        return (startIndex ..< endIndex).contains(where: { tokens[$0].isLinebreak })
     }
 }

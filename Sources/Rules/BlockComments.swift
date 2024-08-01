@@ -33,37 +33,6 @@ public extension FormatRule {
 
                 var isDocComment = false
                 var stripLeadingStars = true
-                func replaceCommentBody(at index: Int) -> Int {
-                    var delta = 0
-                    var space = ""
-                    if case let .space(s) = formatter.tokens[index] {
-                        formatter.removeToken(at: index)
-                        space = s
-                        delta -= 1
-                    }
-                    if case let .commentBody(body)? = formatter.token(at: index) {
-                        var body = Substring(body)
-                        if stripLeadingStars {
-                            if body.hasPrefix("*") {
-                                body = body.drop(while: { $0 == "*" })
-                            } else {
-                                stripLeadingStars = false
-                            }
-                        }
-                        let prefix = isDocComment ? "/" : ""
-                        if !prefix.isEmpty || !body.isEmpty, !body.hasPrefix(" ") {
-                            space += " "
-                        }
-                        formatter.replaceToken(
-                            at: index,
-                            with: .commentBody(prefix + space + body)
-                        )
-                    } else if isDocComment {
-                        formatter.insert(.commentBody("/"), at: index)
-                        delta += 1
-                    }
-                    return delta
-                }
 
                 // Replace opening delimiter
                 var startIndex = i
@@ -83,7 +52,7 @@ public extension FormatRule {
                     formatter.removeTokens(in: range)
                     endIndex -= range.count
                     startIndex = i + 1
-                    endIndex += replaceCommentBody(at: startIndex)
+                    endIndex += formatter.replaceCommentBody(at: startIndex, isDocComment: isDocComment, stripLeadingStars: &stripLeadingStars)
                 }
 
                 // Replace ending delimiter
@@ -123,7 +92,7 @@ public extension FormatRule {
                         }
                         index = i
                         formatter.insert(.startOfScope("//"), at: index)
-                        var delta = 1 + replaceCommentBody(at: index + 1)
+                        var delta = 1 + formatter.replaceCommentBody(at: index + 1, isDocComment: isDocComment, stripLeadingStars: &stripLeadingStars)
                         index += delta
                         endIndex += delta
                     default:
@@ -134,5 +103,43 @@ public extension FormatRule {
                 break
             }
         }
+    }
+}
+
+extension Formatter {
+    func replaceCommentBody(
+        at index: Int,
+        isDocComment: Bool,
+        stripLeadingStars: inout Bool
+    ) -> Int {
+        var delta = 0
+        var space = ""
+        if case let .space(s) = tokens[index] {
+            removeToken(at: index)
+            space = s
+            delta -= 1
+        }
+        if case let .commentBody(body)? = token(at: index) {
+            var body = Substring(body)
+            if stripLeadingStars {
+                if body.hasPrefix("*") {
+                    body = body.drop(while: { $0 == "*" })
+                } else {
+                    stripLeadingStars = false
+                }
+            }
+            let prefix = isDocComment ? "/" : ""
+            if !prefix.isEmpty || !body.isEmpty, !body.hasPrefix(" ") {
+                space += " "
+            }
+            replaceToken(
+                at: index,
+                with: .commentBody(prefix + space + body)
+            )
+        } else if isDocComment {
+            insert(.commentBody("/"), at: index)
+            delta += 1
+        }
+        return delta
     }
 }

@@ -49,20 +49,12 @@ public extension FormatRule {
                 }
                 index = nextIndex
             }
-            func removeAttribute() {
-                formatter.removeToken(at: i)
-                if formatter.token(at: i)?.isSpace == true {
-                    formatter.removeToken(at: i)
-                } else if formatter.token(at: i - 1)?.isSpace == true {
-                    formatter.removeToken(at: i - 1)
-                }
-            }
             if formatter.last(.nonSpaceOrCommentOrLinebreak, before: i, if: {
                 $0.isAttribute && objcAttributes.contains($0.string)
             }) != nil || formatter.next(.nonSpaceOrCommentOrLinebreak, after: i, if: {
                 $0.isAttribute && objcAttributes.contains($0.string)
             }) != nil {
-                removeAttribute()
+                formatter.removeAttribute(at: i)
                 return
             }
             guard let scopeStart = formatter.index(of: .startOfScope("{"), before: i),
@@ -73,15 +65,26 @@ public extension FormatRule {
             switch formatter.tokens[keywordIndex] {
             case .keyword("class"), .keyword("actor"):
                 if formatter.modifiersForDeclaration(at: keywordIndex, contains: "@objcMembers") {
-                    removeAttribute()
+                    formatter.removeAttribute(at: i)
                 }
             case .keyword("extension"):
                 if formatter.modifiersForDeclaration(at: keywordIndex, contains: "@objc") {
-                    removeAttribute()
+                    formatter.removeAttribute(at: i)
                 }
             default:
                 break
             }
+        }
+    }
+}
+
+extension Formatter {
+    func removeAttribute(at i: Int) {
+        removeToken(at: i)
+        if token(at: i)?.isSpace == true {
+            removeToken(at: i)
+        } else if token(at: i - 1)?.isSpace == true {
+            removeToken(at: i - 1)
         }
     }
 }

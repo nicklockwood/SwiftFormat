@@ -2094,23 +2094,6 @@ extension Formatter {
         return spaceEquivalentToTokens(from: firstToken, upTo: nextTokenIndex)
     }
 
-    /// Returns the equivalent type token for a given value token
-    func typeToken(forValueToken token: Token) -> Token {
-        switch token {
-        case let .number(_, type):
-            switch type {
-            case .decimal:
-                return .identifier("Double")
-            default:
-                return .identifier("Int")
-            }
-        case let .identifier(name):
-            return ["true", "false"].contains(name) ? .identifier("Bool") : .identifier(name)
-        case let token:
-            return token.isStringDelimiter ? .identifier("String") : token
-        }
-    }
-
     /// Returns end of last index of Void type declaration starting at specified index, or nil if not Void
     func endOfVoidType(at index: Int) -> Int? {
         switch tokens[index] {

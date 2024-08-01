@@ -743,7 +743,7 @@ extension Formatter {
         // If there is a linebreak after certain symbols, we should add
         // an additional indentation to the lines at the same indention scope
         // after this line.
-        let endOfLine = endOfLine(at: i)
+        let endOfLine = self.endOfLine(at: i)
         switch token(at: endOfLine - 1) {
         case .keyword("return")?, .operator("=", .infix)?:
             let endOfNextLine = self.endOfLine(at: endOfLine + 1)

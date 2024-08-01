@@ -41,7 +41,7 @@ public extension FormatRule {
 
 extension Formatter {
     func valuesInRangeAreConstant(_ range: CountableRange<Int>) -> Bool {
-        var index = index(of: .nonSpaceOrCommentOrLinebreak, in: range)
+        var index = self.index(of: .nonSpaceOrCommentOrLinebreak, in: range)
         while var i = index {
             switch tokens[i] {
             case .startOfScope where isConstant(at: i):

@@ -680,6 +680,11 @@
 		E4FABAD6202FEF060065716E /* OptionDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4FABAD4202FEF060065716E /* OptionDescriptor.swift */; };
 		E4FABAD7202FEF060065716E /* OptionDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4FABAD4202FEF060065716E /* OptionDescriptor.swift */; };
 		E4FABAD8202FEF060065716E /* OptionDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4FABAD4202FEF060065716E /* OptionDescriptor.swift */; };
+		EBA6E7022C5B7D4800CBD360 /* SpacingGuards.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBA6E7012C5B7D4800CBD360 /* SpacingGuards.swift */; };
+		EBA6E7032C5B7D4800CBD360 /* SpacingGuards.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBA6E7012C5B7D4800CBD360 /* SpacingGuards.swift */; };
+		EBA6E7042C5B7D4800CBD360 /* SpacingGuards.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBA6E7012C5B7D4800CBD360 /* SpacingGuards.swift */; };
+		EBA6E7052C5B7D4800CBD360 /* SpacingGuards.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBA6E7012C5B7D4800CBD360 /* SpacingGuards.swift */; };
+		EBA6E70B2C5B7E8400CBD360 /* SpacingGuardsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBA6E7062C5B7DC400CBD360 /* SpacingGuardsTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -1024,6 +1029,8 @@
 		E4E4D3C82033F17C000D7CB1 /* EnumAssociable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnumAssociable.swift; sourceTree = "<group>"; };
 		E4E4D3CD2033F1EF000D7CB1 /* EnumAssociableTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnumAssociableTests.swift; sourceTree = "<group>"; };
 		E4FABAD4202FEF060065716E /* OptionDescriptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionDescriptor.swift; sourceTree = "<group>"; };
+		EBA6E7012C5B7D4800CBD360 /* SpacingGuards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpacingGuards.swift; sourceTree = "<group>"; };
+		EBA6E7062C5B7DC400CBD360 /* SpacingGuardsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpacingGuardsTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1206,7 +1213,6 @@
 				2E2BAB932C57F6DD00590239 /* BlankLineAfterSwitchCase.swift */,
 				2E2BABA42C57F6DD00590239 /* BlankLinesAroundMark.swift */,
 				2E2BABC62C57F6DD00590239 /* BlankLinesAtEndOfScope.swift */,
-				580496D42C584E8F004B7DBF /* EmptyExtension.swift */,
 				2E2BABEC2C57F6DD00590239 /* BlankLinesAtStartOfScope.swift */,
 				2E2BABA72C57F6DD00590239 /* BlankLinesBetweenChainedFunctions.swift */,
 				2E2BABD02C57F6DD00590239 /* BlankLinesBetweenImports.swift */,
@@ -1222,6 +1228,7 @@
 				2E2BABA12C57F6DD00590239 /* DuplicateImports.swift */,
 				2E2BABA02C57F6DD00590239 /* ElseOnSameLine.swift */,
 				2E2BABAE2C57F6DD00590239 /* EmptyBraces.swift */,
+				580496D42C584E8F004B7DBF /* EmptyExtension.swift */,
 				2E2BABD92C57F6DD00590239 /* EnumNamespaces.swift */,
 				2E2BABC72C57F6DD00590239 /* ExtensionAccessControl.swift */,
 				2E2BABC02C57F6DD00590239 /* FileHeader.swift */,
@@ -1286,6 +1293,7 @@
 				2E2BABB42C57F6DD00590239 /* SpaceInsideComments.swift */,
 				2E2BABAC2C57F6DD00590239 /* SpaceInsideGenerics.swift */,
 				2E2BAB9D2C57F6DD00590239 /* SpaceInsideParens.swift */,
+				EBA6E7012C5B7D4800CBD360 /* SpacingGuards.swift */,
 				2E2BABF82C57F6DD00590239 /* Specifiers.swift */,
 				2E2BABE72C57F6DD00590239 /* StrongifiedSelf.swift */,
 				2E2BABAA2C57F6DD00590239 /* StrongOutlets.swift */,
@@ -1402,6 +1410,7 @@
 				2E8DE6EF2C57FEB30032BF25 /* SpaceInsideCommentsTests.swift */,
 				2E8DE6A52C57FEB30032BF25 /* SpaceInsideGenericsTests.swift */,
 				2E8DE6E82C57FEB30032BF25 /* SpaceInsideParensTests.swift */,
+				EBA6E7062C5B7DC400CBD360 /* SpacingGuardsTests.swift */,
 				2E8DE69C2C57FEB30032BF25 /* StrongifiedSelfTests.swift */,
 				2E8DE6B92C57FEB30032BF25 /* StrongOutletsTests.swift */,
 				2E8DE6952C57FEB30032BF25 /* TodosTests.swift */,
@@ -1848,6 +1857,7 @@
 				2E2BAD2F2C57F6DD00590239 /* WrapAttributes.swift in Sources */,
 				2E2BAC932C57F6DD00590239 /* DocCommentsBeforeModifiers.swift in Sources */,
 				A3DF48252620E03600F45A5F /* JSONReporter.swift in Sources */,
+				EBA6E7022C5B7D4800CBD360 /* SpacingGuards.swift in Sources */,
 				01A0EAC11D5DB4F700A0A8E3 /* FormatRule.swift in Sources */,
 				2E2BAC9F2C57F6DD00590239 /* NoExplicitOwnership.swift in Sources */,
 				2E2BACA72C57F6DD00590239 /* WrapSingleLineComments.swift in Sources */,
@@ -1926,6 +1936,7 @@
 				012242DA2CD355B000B96EF8 /* EmptyExtensionTests.swift in Sources */,
 				2E8DE71B2C57FEB30032BF25 /* NumberFormattingTests.swift in Sources */,
 				2E8DE74C2C57FEB30032BF25 /* WrapConditionalBodiesTests.swift in Sources */,
+				EBA6E70B2C5B7E8400CBD360 /* SpacingGuardsTests.swift in Sources */,
 				2E8DE7332C57FEB30032BF25 /* SpaceAroundCommentsTests.swift in Sources */,
 				2E8DE7342C57FEB30032BF25 /* PropertyTypesTests.swift in Sources */,
 				2E8DE7162C57FEB30032BF25 /* TrailingSpaceTests.swift in Sources */,
@@ -2139,6 +2150,7 @@
 				2E2BAD9C2C57F6DD00590239 /* Specifiers.swift in Sources */,
 				2E2BAD742C57F6DD00590239 /* TrailingClosures.swift in Sources */,
 				2E2BAC4C2C57F6DD00590239 /* BlankLinesAroundMark.swift in Sources */,
+				EBA6E7032C5B7D4800CBD360 /* SpacingGuards.swift in Sources */,
 				2E2BAC602C57F6DD00590239 /* BlockComments.swift in Sources */,
 				2E2BAD0C2C57F6DD00590239 /* ApplicationMain.swift in Sources */,
 				2E2BAD102C57F6DD00590239 /* RedundantProperty.swift in Sources */,
@@ -2284,6 +2296,7 @@
 				2E2BACCD2C57F6DD00590239 /* IsEmpty.swift in Sources */,
 				2E2BAD3D2C57F6DD00590239 /* Braces.swift in Sources */,
 				2E2BAD712C57F6DD00590239 /* OpaqueGenericParameters.swift in Sources */,
+				EBA6E7042C5B7D4800CBD360 /* SpacingGuards.swift in Sources */,
 				2E2BAC9D2C57F6DD00590239 /* RedundantInit.swift in Sources */,
 				2E2BACB52C57F6DD00590239 /* RedundantClosure.swift in Sources */,
 				2E2BAD0D2C57F6DD00590239 /* ApplicationMain.swift in Sources */,
@@ -2428,6 +2441,7 @@
 				2E2BACCE2C57F6DD00590239 /* IsEmpty.swift in Sources */,
 				2E2BAD3E2C57F6DD00590239 /* Braces.swift in Sources */,
 				2E2BAD722C57F6DD00590239 /* OpaqueGenericParameters.swift in Sources */,
+				EBA6E7052C5B7D4800CBD360 /* SpacingGuards.swift in Sources */,
 				2E2BAC9E2C57F6DD00590239 /* RedundantInit.swift in Sources */,
 				2E2BACB62C57F6DD00590239 /* RedundantClosure.swift in Sources */,
 				2E2BAD0E2C57F6DD00590239 /* ApplicationMain.swift in Sources */,

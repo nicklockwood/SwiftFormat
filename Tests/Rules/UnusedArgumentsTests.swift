@@ -529,6 +529,7 @@ class UnusedArgumentsTests: XCTestCase {
             guard num > 0, locations.count >= count else {
                 return
             }
+
             print(locations)
         }
         """
@@ -948,6 +949,7 @@ class UnusedArgumentsTests: XCTestCase {
             else {
                 return nil
             }
+
             return History(firstParameter, secondParameter)
         }
         """
@@ -1122,6 +1124,7 @@ class UnusedArgumentsTests: XCTestCase {
             guard let update, error == nil else {
                 return
             }
+
             self?.configure(update)
         }
         """

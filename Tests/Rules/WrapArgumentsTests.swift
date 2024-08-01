@@ -2070,7 +2070,7 @@ class WrapArgumentsTests: XCTestCase {
         testFormatting(
             for: input, rule: .wrapArguments,
             options: FormatOptions(indent: "  ", wrapConditions: .beforeFirst),
-            exclude: [.elseOnSameLine, .wrapConditionalBodies]
+            exclude: [.elseOnSameLine, .wrapConditionalBodies, .spacingGuards]
         )
     }
 
@@ -2246,12 +2246,11 @@ class WrapArgumentsTests: XCTestCase {
         else {}
         """
 
-        testFormatting(
-            for: input,
-            [output],
-            rules: [.wrapArguments],
-            options: FormatOptions(indent: "  ", conditionsWrap: .auto, maxWidth: 40)
-        )
+        testFormatting(for: input,
+                       [output],
+                       rules: [.wrapArguments],
+                       options: FormatOptions(indent: "  ", conditionsWrap: .auto, maxWidth: 40),
+                       exclude: [.spacingGuards])
     }
 
     func testConditionsWrapAutoOptionForGuardWhenElseOnNewLine() {
@@ -2297,12 +2296,11 @@ class WrapArgumentsTests: XCTestCase {
         else {}
         """
 
-        testFormatting(
-            for: input,
-            [output],
-            rules: [.wrapArguments],
-            options: FormatOptions(indent: "  ", conditionsWrap: .auto, maxWidth: 40)
-        )
+        testFormatting(for: input,
+                       [output],
+                       rules: [.wrapArguments],
+                       options: FormatOptions(indent: "  ", conditionsWrap: .auto, maxWidth: 40),
+                       exclude: [.spacingGuards])
     }
 
     func testConditionsWrapAutoOptionForGuardInMethod() {

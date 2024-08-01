@@ -210,6 +210,7 @@ class RedundantStaticSelfTests: XCTestCase {
                 guard let value = Self.location(for: warnRegion) else {
                     return nil
                 }
+
                 self.init(location: value)
             }
         }

@@ -106,6 +106,7 @@
 * [propertyType](#propertyType)
 * [redundantProperty](#redundantProperty)
 * [sortSwitchCases](#sortSwitchCases)
+* [spacingGuards](#spacingGuards)
 * [unusedPrivateDeclaration](#unusedPrivateDeclaration)
 * [wrapConditionalBodies](#wrapConditionalBodies)
 * [wrapEnumCases](#wrapEnumCases)
@@ -2580,6 +2581,28 @@ Remove space inside parentheses.
 ```diff
 - ( a, b)
 + (a, b)
+```
+
+</details>
+<br/>
+
+## spacingGuards
+
+Remove space between guard and add spaces after last guard.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+    guard let spicy = self.makeSpicy() else {
+        return
+    }
+-
+    guard let soap = self.clean() else {
+        return
+    }
++
+    let doTheJob = nikekov()
 ```
 
 </details>

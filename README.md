@@ -919,6 +919,10 @@ Q. I don't want to be surprised by new rules added when I upgrade SwiftFormat. H
 
 > A. 1) Open `SwiftFormat.xcodeproj`; 2) Add a rule in `Sources/Rules/..`; 3) Add a test in `Tests/Rules/..`; 4) Add an example in `Sources/Examples.swift`; 5) Run all tests.
 
+*Q. How to test own rule?*
+
+> A. Take a look https://github.com/nicklockwood/SwiftFormat/pull/1804#issuecomment-2263079432
+
 Known issues
 ---------------
 

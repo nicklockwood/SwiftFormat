@@ -13,21 +13,6 @@ public extension FormatRule {
     static let redundantPattern = FormatRule(
         help: "Remove redundant pattern matching parameter syntax."
     ) { formatter in
-        func redundantBindings(in range: Range<Int>) -> Bool {
-            var isEmpty = true
-            for token in formatter.tokens[range.lowerBound ..< range.upperBound] {
-                switch token {
-                case .identifier("_"):
-                    isEmpty = false
-                case .space, .linebreak, .delimiter(","), .keyword("let"), .keyword("var"):
-                    break
-                default:
-                    return false
-                }
-            }
-            return !isEmpty
-        }
-
         formatter.forEach(.startOfScope("(")) { i, _ in
             let prevIndex = formatter.index(of: .nonSpaceOrComment, before: i)
             if let prevIndex = prevIndex, let prevToken = formatter.token(at: prevIndex),
@@ -39,7 +24,7 @@ public extension FormatRule {
             guard let endIndex = formatter.index(of: .endOfScope(")"), after: i),
                   let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: endIndex),
                   [.startOfScope(":"), .operator("=", .infix)].contains(nextToken),
-                  redundantBindings(in: i + 1 ..< endIndex)
+                  formatter.redundantBindings(in: i + 1 ..< endIndex)
             else {
                 return
             }
@@ -68,5 +53,22 @@ public extension FormatRule {
                 formatter.insert(.space(" "), at: i)
             }
         }
+    }
+}
+
+extension Formatter {
+    func redundantBindings(in range: Range<Int>) -> Bool {
+        var isEmpty = true
+        for token in tokens[range.lowerBound ..< range.upperBound] {
+            switch token {
+            case .identifier("_"):
+                isEmpty = false
+            case .space, .linebreak, .delimiter(","), .keyword("let"), .keyword("var"):
+                break
+            default:
+                return false
+            }
+        }
+        return !isEmpty
     }
 }

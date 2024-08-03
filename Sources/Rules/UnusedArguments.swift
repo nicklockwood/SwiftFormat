@@ -16,147 +16,6 @@ public extension FormatRule {
     ) { formatter in
         guard !formatter.options.fragment else { return }
 
-        func removeUsed<T>(from argNames: inout [String], with associatedData: inout [T],
-                           locals: Set<String> = [], in range: CountableRange<Int>)
-        {
-            var isDeclaration = false
-            var wasDeclaration = false
-            var isConditional = false
-            var isGuard = false
-            var locals = locals
-            var tempLocals = Set<String>()
-            func pushLocals() {
-                if isDeclaration, isConditional {
-                    for name in tempLocals {
-                        if let index = argNames.firstIndex(of: name),
-                           !locals.contains(name)
-                        {
-                            argNames.remove(at: index)
-                            associatedData.remove(at: index)
-                        }
-                    }
-                }
-                wasDeclaration = isDeclaration
-                isDeclaration = false
-                locals.formUnion(tempLocals)
-                tempLocals.removeAll()
-            }
-            var i = range.lowerBound
-            while i < range.upperBound {
-                if formatter.isStartOfStatement(at: i, treatingCollectionKeysAsStart: false),
-                   // Immediately following an `=` operator, if or switch keywords
-                   // are expressions rather than statements.
-                   formatter.lastToken(before: i, where: { !$0.isSpaceOrCommentOrLinebreak })?.isOperator("=") != true
-                {
-                    pushLocals()
-                    wasDeclaration = false
-                }
-                let token = formatter.tokens[i]
-                outer: switch token {
-                case .keyword("guard"):
-                    isGuard = true
-                case .keyword("let"), .keyword("var"), .keyword("func"), .keyword("for"):
-                    isDeclaration = true
-                    var i = i
-                    while let scopeStart = formatter.index(of: .startOfScope("("), before: i) {
-                        i = scopeStart
-                    }
-                    isConditional = formatter.isConditionalStatement(at: i)
-                case .identifier:
-                    let name = token.unescaped()
-                    guard let index = argNames.firstIndex(of: name), !locals.contains(name) else {
-                        break
-                    }
-                    if formatter.last(.nonSpaceOrCommentOrLinebreak, before: i)?.isOperator(".") == false,
-                       formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) != .delimiter(":") ||
-                       [.startOfScope("("), .startOfScope("[")].contains(formatter.currentScope(at: i) ?? .space(""))
-                    {
-                        if isDeclaration {
-                            switch formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) {
-                            case .endOfScope(")")?, .operator("=", .infix)?,
-                                 .delimiter(",")? where !isConditional:
-                                tempLocals.insert(name)
-                                break outer
-                            default:
-                                break
-                            }
-                        }
-                        argNames.remove(at: index)
-                        associatedData.remove(at: index)
-                        if argNames.isEmpty {
-                            return
-                        }
-                    }
-                case .keyword("if"), .keyword("switch"):
-                    guard formatter.isConditionalAssignment(at: i),
-                          let conditinalBranches = formatter.conditionalBranches(at: i),
-                          let endIndex = conditinalBranches.last?.endOfBranch
-                    else { fallthrough }
-
-                    removeUsed(from: &argNames, with: &associatedData,
-                               locals: locals, in: i + 1 ..< endIndex)
-                case .startOfScope("{"):
-                    guard let endIndex = formatter.endOfScope(at: i) else {
-                        return formatter.fatalError("Expected }", at: i)
-                    }
-                    if formatter.isStartOfClosure(at: i) {
-                        removeUsed(from: &argNames, with: &associatedData,
-                                   locals: locals, in: i + 1 ..< endIndex)
-                    } else if isGuard {
-                        removeUsed(from: &argNames, with: &associatedData,
-                                   locals: locals, in: i + 1 ..< endIndex)
-                        pushLocals()
-                    } else {
-                        let prevLocals = locals
-                        pushLocals()
-                        removeUsed(from: &argNames, with: &associatedData,
-                                   locals: locals, in: i + 1 ..< endIndex)
-                        locals = prevLocals
-                    }
-
-                    isGuard = false
-                    i = endIndex
-                case .endOfScope("case"), .endOfScope("default"):
-                    pushLocals()
-                    guard let colonIndex = formatter.index(of: .startOfScope(":"), after: i) else {
-                        return formatter.fatalError("Expected :", at: i)
-                    }
-                    guard let endIndex = formatter.endOfScope(at: colonIndex) else {
-                        return formatter.fatalError("Expected end of case statement",
-                                                    at: colonIndex)
-                    }
-                    removeUsed(from: &argNames, with: &associatedData,
-                               locals: locals, in: i + 1 ..< endIndex)
-                    i = endIndex - 1
-                case .operator("=", .infix), .delimiter(":"), .startOfScope(":"),
-                     .keyword("in"), .keyword("where"):
-                    wasDeclaration = isDeclaration
-                    isDeclaration = false
-                case .delimiter(","):
-                    if let scope = formatter.currentScope(at: i), [
-                        .startOfScope("("), .startOfScope("["), .startOfScope("<"),
-                    ].contains(scope) {
-                        break
-                    }
-                    if isConditional {
-                        if isGuard, wasDeclaration {
-                            pushLocals()
-                        }
-                        wasDeclaration = false
-                    } else {
-                        let _wasDeclaration = wasDeclaration
-                        pushLocals()
-                        isDeclaration = _wasDeclaration
-                    }
-                case .delimiter(";"):
-                    pushLocals()
-                    wasDeclaration = false
-                default:
-                    break
-                }
-                i += 1
-            }
-        }
         // Closure arguments
         formatter.forEach(.keyword("in")) { i, _ in
             var argNames = [String]()
@@ -222,7 +81,7 @@ public extension FormatRule {
             guard !argNames.isEmpty, let bodyEndIndex = formatter.index(of: .endOfScope("}"), after: i) else {
                 return
             }
-            removeUsed(from: &argNames, with: &nameIndexPairs, in: i + 1 ..< bodyEndIndex)
+            formatter.removeUsed(from: &argNames, with: &nameIndexPairs, in: i + 1 ..< bodyEndIndex)
             for pair in nameIndexPairs {
                 if case .identifier("_") = formatter.tokens[pair.0], pair.0 != pair.1 {
                     formatter.removeToken(at: pair.1)
@@ -292,7 +151,7 @@ public extension FormatRule {
             let bodyEndIndex = formatter.index(of: .endOfScope("}"), after: bodyStartIndex) else {
                 return
             }
-            removeUsed(from: &argNames, with: &nameIndexPairs, in: bodyStartIndex + 1 ..< bodyEndIndex)
+            formatter.removeUsed(from: &argNames, with: &nameIndexPairs, in: bodyStartIndex + 1 ..< bodyEndIndex)
             for pair in nameIndexPairs.reversed() {
                 if pair.0 == pair.1 {
                     if isOperator {
@@ -310,6 +169,150 @@ public extension FormatRule {
                     formatter.replaceToken(at: pair.1, with: .identifier("_"))
                 }
             }
+        }
+    }
+}
+
+extension Formatter {
+    func removeUsed<T>(from argNames: inout [String], with associatedData: inout [T],
+                       locals: Set<String> = [], in range: CountableRange<Int>)
+    {
+        var isDeclaration = false
+        var wasDeclaration = false
+        var isConditional = false
+        var isGuard = false
+        var locals = locals
+        var tempLocals = Set<String>()
+        func pushLocals() {
+            if isDeclaration, isConditional {
+                for name in tempLocals {
+                    if let index = argNames.firstIndex(of: name),
+                       !locals.contains(name)
+                    {
+                        argNames.remove(at: index)
+                        associatedData.remove(at: index)
+                    }
+                }
+            }
+            wasDeclaration = isDeclaration
+            isDeclaration = false
+            locals.formUnion(tempLocals)
+            tempLocals.removeAll()
+        }
+        var i = range.lowerBound
+        while i < range.upperBound {
+            if isStartOfStatement(at: i, treatingCollectionKeysAsStart: false),
+               // Immediately following an `=` operator, if or switch keywords
+               // are expressions rather than statements.
+               lastToken(before: i, where: { !$0.isSpaceOrCommentOrLinebreak })?.isOperator("=") != true
+            {
+                pushLocals()
+                wasDeclaration = false
+            }
+            let token = tokens[i]
+            outer: switch token {
+            case .keyword("guard"):
+                isGuard = true
+            case .keyword("let"), .keyword("var"), .keyword("func"), .keyword("for"):
+                isDeclaration = true
+                var i = i
+                while let scopeStart = index(of: .startOfScope("("), before: i) {
+                    i = scopeStart
+                }
+                isConditional = isConditionalStatement(at: i)
+            case .identifier:
+                let name = token.unescaped()
+                guard let index = argNames.firstIndex(of: name), !locals.contains(name) else {
+                    break
+                }
+                if last(.nonSpaceOrCommentOrLinebreak, before: i)?.isOperator(".") == false,
+                   next(.nonSpaceOrCommentOrLinebreak, after: i) != .delimiter(":") ||
+                   [.startOfScope("("), .startOfScope("[")].contains(currentScope(at: i) ?? .space(""))
+                {
+                    if isDeclaration {
+                        switch next(.nonSpaceOrCommentOrLinebreak, after: i) {
+                        case .endOfScope(")")?, .operator("=", .infix)?,
+                             .delimiter(",")? where !isConditional:
+                            tempLocals.insert(name)
+                            break outer
+                        default:
+                            break
+                        }
+                    }
+                    argNames.remove(at: index)
+                    associatedData.remove(at: index)
+                    if argNames.isEmpty {
+                        return
+                    }
+                }
+            case .keyword("if"), .keyword("switch"):
+                guard isConditionalAssignment(at: i),
+                      let conditinalBranches = conditionalBranches(at: i),
+                      let endIndex = conditinalBranches.last?.endOfBranch
+                else { fallthrough }
+
+                removeUsed(from: &argNames, with: &associatedData,
+                           locals: locals, in: i + 1 ..< endIndex)
+            case .startOfScope("{"):
+                guard let endIndex = endOfScope(at: i) else {
+                    return fatalError("Expected }", at: i)
+                }
+                if isStartOfClosure(at: i) {
+                    removeUsed(from: &argNames, with: &associatedData,
+                               locals: locals, in: i + 1 ..< endIndex)
+                } else if isGuard {
+                    removeUsed(from: &argNames, with: &associatedData,
+                               locals: locals, in: i + 1 ..< endIndex)
+                    pushLocals()
+                } else {
+                    let prevLocals = locals
+                    pushLocals()
+                    removeUsed(from: &argNames, with: &associatedData,
+                               locals: locals, in: i + 1 ..< endIndex)
+                    locals = prevLocals
+                }
+
+                isGuard = false
+                i = endIndex
+            case .endOfScope("case"), .endOfScope("default"):
+                pushLocals()
+                guard let colonIndex = index(of: .startOfScope(":"), after: i) else {
+                    return fatalError("Expected :", at: i)
+                }
+                guard let endIndex = endOfScope(at: colonIndex) else {
+                    return fatalError("Expected end of case statement",
+                                      at: colonIndex)
+                }
+                removeUsed(from: &argNames, with: &associatedData,
+                           locals: locals, in: i + 1 ..< endIndex)
+                i = endIndex - 1
+            case .operator("=", .infix), .delimiter(":"), .startOfScope(":"),
+                 .keyword("in"), .keyword("where"):
+                wasDeclaration = isDeclaration
+                isDeclaration = false
+            case .delimiter(","):
+                if let scope = currentScope(at: i), [
+                    .startOfScope("("), .startOfScope("["), .startOfScope("<"),
+                ].contains(scope) {
+                    break
+                }
+                if isConditional {
+                    if isGuard, wasDeclaration {
+                        pushLocals()
+                    }
+                    wasDeclaration = false
+                } else {
+                    let _wasDeclaration = wasDeclaration
+                    pushLocals()
+                    isDeclaration = _wasDeclaration
+                }
+            case .delimiter(";"):
+                pushLocals()
+                wasDeclaration = false
+            default:
+                break
+            }
+            i += 1
         }
     }
 }

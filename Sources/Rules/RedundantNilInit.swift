@@ -14,34 +14,6 @@ public extension FormatRule {
         help: "Remove/insert redundant `nil` default value (Optional vars are nil by default).",
         options: ["nilinit"]
     ) { formatter in
-        func search(from index: Int, isStoredProperty: Bool) {
-            if let optionalIndex = formatter.index(of: .unwrapOperator, after: index) {
-                if formatter.index(of: .endOfStatement, in: index + 1 ..< optionalIndex) != nil {
-                    return
-                }
-                let previousToken = formatter.tokens[optionalIndex - 1]
-                if !previousToken.isSpaceOrCommentOrLinebreak && previousToken != .keyword("as") {
-                    let equalsIndex = formatter.index(of: .nonSpaceOrLinebreak, after: optionalIndex, if: {
-                        $0 == .operator("=", .infix)
-                    })
-                    switch formatter.options.nilInit {
-                    case .remove:
-                        if let equalsIndex = equalsIndex, let nilIndex = formatter.index(of: .nonSpaceOrLinebreak, after: equalsIndex, if: {
-                            $0 == .identifier("nil")
-                        }) {
-                            formatter.removeTokens(in: optionalIndex + 1 ... nilIndex)
-                        }
-                    case .insert:
-                        if isStoredProperty && equalsIndex == nil {
-                            let tokens: [Token] = [.space(" "), .operator("=", .infix), .space(" "), .identifier("nil")]
-                            formatter.insert(tokens, at: optionalIndex + 1)
-                        }
-                    }
-                }
-                search(from: optionalIndex, isStoredProperty: isStoredProperty)
-            }
-        }
-
         // Check modifiers don't include `lazy`
         formatter.forEach(.keyword("var")) { i, _ in
             if formatter.modifiersForDeclaration(at: i, contains: {
@@ -70,7 +42,37 @@ public extension FormatRule {
                 }
             }
             // Find the nil
-            search(from: i, isStoredProperty: formatter.isStoredProperty(atIntroducerIndex: i))
+            formatter.search(from: i, isStoredProperty: formatter.isStoredProperty(atIntroducerIndex: i))
+        }
+    }
+}
+
+extension Formatter {
+    func search(from index: Int, isStoredProperty: Bool) {
+        if let optionalIndex = self.index(of: .unwrapOperator, after: index) {
+            if self.index(of: .endOfStatement, in: index + 1 ..< optionalIndex) != nil {
+                return
+            }
+            let previousToken = tokens[optionalIndex - 1]
+            if !previousToken.isSpaceOrCommentOrLinebreak, previousToken != .keyword("as") {
+                let equalsIndex = self.index(of: .nonSpaceOrLinebreak, after: optionalIndex, if: {
+                    $0 == .operator("=", .infix)
+                })
+                switch options.nilInit {
+                case .remove:
+                    if let equalsIndex = equalsIndex, let nilIndex = self.index(of: .nonSpaceOrLinebreak, after: equalsIndex, if: {
+                        $0 == .identifier("nil")
+                    }) {
+                        removeTokens(in: optionalIndex + 1 ... nilIndex)
+                    }
+                case .insert:
+                    if isStoredProperty, equalsIndex == nil {
+                        let tokens: [Token] = [.space(" "), .operator("=", .infix), .space(" "), .identifier("nil")]
+                        insert(tokens, at: optionalIndex + 1)
+                    }
+                }
+            }
+            search(from: optionalIndex, isStoredProperty: isStoredProperty)
         }
     }
 }

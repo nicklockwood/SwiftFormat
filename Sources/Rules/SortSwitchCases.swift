@@ -23,33 +23,11 @@ public extension FormatRule {
                 let indentCounts = switchCaseRanges.map { formatter.currentIndentForLine(at: $0.beforeDelimiterRange.lowerBound).count }
                 let maxIndentCount = indentCounts.max() ?? 0
 
-                func sortableValue(for token: Token) -> String? {
-                    switch token {
-                    case let .identifier(name):
-                        return name
-                    case let .stringBody(body):
-                        return body
-                    case let .number(value, .hex):
-                        return Int(value.dropFirst(2), radix: 16)
-                            .map(String.init) ?? value
-                    case let .number(value, .octal):
-                        return Int(value.dropFirst(2), radix: 8)
-                            .map(String.init) ?? value
-                    case let .number(value, .binary):
-                        return Int(value.dropFirst(2), radix: 2)
-                            .map(String.init) ?? value
-                    case let .number(value, _):
-                        return value
-                    default:
-                        return nil
-                    }
-                }
-
                 let sorted = switchCaseRanges.sorted { case1, case2 -> Bool in
                     let lhs = formatter.tokens[case1.beforeDelimiterRange]
-                        .compactMap(sortableValue)
+                        .compactMap(formatter.sortableValue)
                     let rhs = formatter.tokens[case2.beforeDelimiterRange]
-                        .compactMap(sortableValue)
+                        .compactMap(formatter.sortableValue)
                     for (lhs, rhs) in zip(lhs, rhs) {
                         switch lhs.localizedStandardCompare(rhs) {
                         case .orderedAscending:
@@ -88,5 +66,96 @@ public extension FormatRule {
                     formatter.replaceTokens(in: switchCaseRanges[switchCase.offset].beforeDelimiterRange, with: newTokens)
                 }
             }
+    }
+}
+
+extension Formatter {
+    struct SwitchCaseRange {
+        let beforeDelimiterRange: Range<Int>
+        let delimiterToken: Token
+        let afterDelimiterRange: Range<Int>
+    }
+
+    func parseSwitchCaseRanges() -> [[SwitchCaseRange]] {
+        var result: [[SwitchCaseRange]] = []
+
+        forEach(.endOfScope("case")) { i, _ in
+            var switchCaseRanges: [SwitchCaseRange] = []
+            guard let lastDelimiterIndex = index(of: .startOfScope(":"), after: i),
+                  let endIndex = index(after: lastDelimiterIndex, where: { $0.isLinebreak }) else { return }
+
+            var idx = i
+            while idx < endIndex,
+                  let startOfCaseIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: idx),
+                  let delimiterIndex = index(after: idx, where: {
+                      $0 == .delimiter(",") || $0 == .startOfScope(":")
+                  }),
+                  let delimiterToken = token(at: delimiterIndex),
+                  let endOfCaseIndex = lastIndex(
+                      of: .nonSpaceOrCommentOrLinebreak,
+                      in: startOfCaseIndex ..< delimiterIndex
+                  )
+            {
+                let afterDelimiterRange: Range<Int>
+
+                let startOfCommentIdx = delimiterIndex + 1
+                if startOfCommentIdx <= endIndex,
+                   token(at: startOfCommentIdx)?.isSpaceOrCommentOrLinebreak == true,
+                   let nextNonSpaceOrComment = index(of: .nonSpaceOrComment, after: startOfCommentIdx)
+                {
+                    if token(at: startOfCommentIdx)?.isLinebreak == true
+                        || token(at: nextNonSpaceOrComment)?.isSpaceOrCommentOrLinebreak == false
+                    {
+                        afterDelimiterRange = startOfCommentIdx ..< (startOfCommentIdx + 1)
+                    } else if endIndex > startOfCommentIdx {
+                        afterDelimiterRange = startOfCommentIdx ..< (nextNonSpaceOrComment + 1)
+                    } else {
+                        afterDelimiterRange = endIndex ..< (endIndex + 1)
+                    }
+                } else {
+                    afterDelimiterRange = 0 ..< 0
+                }
+
+                let switchCaseRange = SwitchCaseRange(
+                    beforeDelimiterRange: Range(startOfCaseIndex ... endOfCaseIndex),
+                    delimiterToken: delimiterToken,
+                    afterDelimiterRange: afterDelimiterRange
+                )
+
+                switchCaseRanges.append(switchCaseRange)
+
+                if afterDelimiterRange.isEmpty {
+                    idx = delimiterIndex
+                } else if afterDelimiterRange.count > 1 {
+                    idx = afterDelimiterRange.upperBound
+                } else {
+                    idx = afterDelimiterRange.lowerBound
+                }
+            }
+            result.append(switchCaseRanges)
+        }
+        return result
+    }
+
+    func sortableValue(for token: Token) -> String? {
+        switch token {
+        case let .identifier(name):
+            return name
+        case let .stringBody(body):
+            return body
+        case let .number(value, .hex):
+            return Int(value.dropFirst(2), radix: 16)
+                .map(String.init) ?? value
+        case let .number(value, .octal):
+            return Int(value.dropFirst(2), radix: 8)
+                .map(String.init) ?? value
+        case let .number(value, .binary):
+            return Int(value.dropFirst(2), radix: 2)
+                .map(String.init) ?? value
+        case let .number(value, _):
+            return value
+        default:
+            return nil
+        }
     }
 }

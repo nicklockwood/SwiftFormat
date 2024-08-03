@@ -375,6 +375,6 @@ class UnusedPrivateDeclarationTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .unusedPrivateDeclarations)
+        testFormatting(for: input, output, rule: .unusedPrivateDeclaration)
     }
 }

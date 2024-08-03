@@ -14,40 +14,6 @@ public extension FormatRule {
         help: "Reposition `let` or `var` bindings within pattern.",
         options: ["patternlet"]
     ) { formatter in
-        func indicesOf(_ keyword: String, in range: CountableRange<Int>) -> [Int]? {
-            var indices = [Int]()
-            var keywordFound = false, identifierFound = false
-            var count = 0
-            for index in range {
-                switch formatter.tokens[index] {
-                case .keyword(keyword):
-                    indices.append(index)
-                    keywordFound = true
-                case .identifier("_"):
-                    break
-                case .identifier where formatter.last(.nonSpaceOrComment, before: index) != .operator(".", .prefix):
-                    identifierFound = true
-                    if keywordFound {
-                        count += 1
-                    }
-                case .delimiter(","):
-                    guard keywordFound || !identifierFound else {
-                        return nil
-                    }
-                    keywordFound = false
-                    identifierFound = false
-                case .startOfScope("{"):
-                    return nil
-                case .startOfScope("<"):
-                    // See: https://github.com/nicklockwood/SwiftFormat/issues/768
-                    return nil
-                default:
-                    break
-                }
-            }
-            return (keywordFound || !identifierFound) && count > 0 ? indices : nil
-        }
-
         formatter.forEach(.startOfScope("(")) { i, _ in
             let hoist = formatter.options.hoistPatternLet
             // Check if pattern already starts with let/var
@@ -136,9 +102,9 @@ public extension FormatRule {
                 // Find let/var keyword indices
                 var keyword = "let"
                 guard let indices: [Int] = {
-                    guard let indices = indicesOf(keyword, in: i + 1 ..< endIndex) else {
+                    guard let indices = formatter.indicesOf(keyword, in: i + 1 ..< endIndex) else {
                         keyword = "var"
-                        return indicesOf(keyword, in: i + 1 ..< endIndex)
+                        return formatter.indicesOf(keyword, in: i + 1 ..< endIndex)
                     }
                     return indices
                 }() else {
@@ -163,5 +129,41 @@ public extension FormatRule {
                 }
             }
         }
+    }
+}
+
+extension Formatter {
+    func indicesOf(_ keyword: String, in range: CountableRange<Int>) -> [Int]? {
+        var indices = [Int]()
+        var keywordFound = false, identifierFound = false
+        var count = 0
+        for index in range {
+            switch tokens[index] {
+            case .keyword(keyword):
+                indices.append(index)
+                keywordFound = true
+            case .identifier("_"):
+                break
+            case .identifier where last(.nonSpaceOrComment, before: index) != .operator(".", .prefix):
+                identifierFound = true
+                if keywordFound {
+                    count += 1
+                }
+            case .delimiter(","):
+                guard keywordFound || !identifierFound else {
+                    return nil
+                }
+                keywordFound = false
+                identifierFound = false
+            case .startOfScope("{"):
+                return nil
+            case .startOfScope("<"):
+                // See: https://github.com/nicklockwood/SwiftFormat/issues/768
+                return nil
+            default:
+                break
+            }
+        }
+        return (keywordFound || !identifierFound) && count > 0 ? indices : nil
     }
 }

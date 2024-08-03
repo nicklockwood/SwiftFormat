@@ -13,17 +13,6 @@ public extension FormatRule {
     static let redundantParens = FormatRule(
         help: "Remove redundant parentheses."
     ) { formatter in
-        func nestedParens(in range: ClosedRange<Int>) -> ClosedRange<Int>? {
-            guard let startIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: range.lowerBound, if: {
-                $0 == .startOfScope("(")
-            }), let endIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: range.upperBound, if: {
-                $0 == .endOfScope(")")
-            }), formatter.index(of: .endOfScope(")"), after: startIndex) == endIndex else {
-                return nil
-            }
-            return startIndex ... endIndex
-        }
-
         // TODO: unify with conditionals logic in trailingClosures
         let conditionals = Set(["in", "while", "if", "case", "switch", "where", "for", "guard"])
 
@@ -33,14 +22,14 @@ public extension FormatRule {
             else {
                 return
             }
-            var innerParens = nestedParens(in: i ... closingIndex)
-            while let range = innerParens, nestedParens(in: range) != nil {
+            var innerParens = formatter.nestedParens(in: i ... closingIndex)
+            while let range = innerParens, formatter.nestedParens(in: range) != nil {
                 // TODO: this could be a lot more efficient if we kept track of the
                 // removed token indices instead of recalculating paren positions every time
                 formatter.removeParen(at: range.upperBound)
                 formatter.removeParen(at: range.lowerBound)
                 closingIndex = formatter.index(of: .endOfScope(")"), after: i)!
-                innerParens = nestedParens(in: i ... closingIndex)
+                innerParens = formatter.nestedParens(in: i ... closingIndex)
             }
             var isClosure = false
             let previousIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i) ?? -1
@@ -224,5 +213,18 @@ public extension FormatRule {
                 formatter.removeParen(at: i)
             }
         }
+    }
+}
+
+extension Formatter {
+    func nestedParens(in range: ClosedRange<Int>) -> ClosedRange<Int>? {
+        guard let startIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: range.lowerBound, if: {
+            $0 == .startOfScope("(")
+        }), let endIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: range.upperBound, if: {
+            $0 == .endOfScope(")")
+        }), index(of: .endOfScope(")"), after: startIndex) == endIndex else {
+            return nil
+        }
+        return startIndex ... endIndex
     }
 }

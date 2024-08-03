@@ -2258,6 +2258,76 @@ extension Formatter {
 
         return (equalsIndex, andTokenIndices, lastTypeEndIndex)
     }
+
+    /// Parses the external parameter labels of the function with its `(` start of scope
+    /// token at the given index.
+    func parseFunctionDeclarationArgumentLabels(startOfScope: Int) -> [String?] {
+        assert(tokens[startOfScope] == .startOfScope("("))
+        guard let endOfScope = endOfScope(at: startOfScope) else { return [] }
+
+        var argumentLabels: [String?] = []
+
+        var currentIndex = startOfScope
+        while let nextArgumentColon = index(of: .delimiter(":"), in: (currentIndex + 1) ..< endOfScope) {
+            currentIndex = nextArgumentColon
+
+            // If there is only one label, the param has the same internal and external label.
+            // If there are two labels, the first one is the external label.
+            guard let internalLabelIndex = index(of: .nonSpaceOrComment, before: nextArgumentColon),
+                  tokens[internalLabelIndex].isIdentifier || tokens[internalLabelIndex].string == "_"
+            else { continue }
+
+            var externalLabelToken = tokens[internalLabelIndex]
+
+            if let externalLabelIndex = index(of: .nonSpaceOrComment, before: internalLabelIndex),
+               tokens[externalLabelIndex].isIdentifier || tokens[externalLabelIndex].string == "_"
+            {
+                externalLabelToken = tokens[externalLabelIndex]
+            }
+
+            if externalLabelToken.string == "_" {
+                argumentLabels.append(nil)
+            } else {
+                argumentLabels.append(externalLabelToken.string)
+            }
+        }
+
+        return argumentLabels
+    }
+
+    /// Parses the parameter labels of the function call with its `(` start of scope
+    /// token at the given index.
+    func parseFunctionCallArgumentLabels(startOfScope: Int) -> [String?] {
+        assert(tokens[startOfScope] == .startOfScope("("))
+        guard let endOfScope = endOfScope(at: startOfScope),
+              index(of: .nonSpaceOrCommentOrLinebreak, after: startOfScope) != endOfScope
+        else { return [] }
+
+        var argumentLabels: [String?] = []
+
+        var currentIndex = startOfScope
+        repeat {
+            let endOfPreviousArgument = currentIndex
+            let endOfCurrentArgument = index(of: .delimiter(","), in: endOfPreviousArgument + 1 ..< endOfScope) ?? endOfScope
+
+            if let colonIndex = index(of: .delimiter(":"), in: (endOfPreviousArgument + 1) ..< endOfCurrentArgument),
+               let argumentLabelIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: colonIndex),
+               tokens[argumentLabelIndex].isIdentifier
+            {
+                argumentLabels.append(tokens[argumentLabelIndex].string)
+            } else {
+                argumentLabels.append(nil)
+            }
+
+            if endOfCurrentArgument >= endOfScope {
+                break
+            } else {
+                currentIndex = endOfCurrentArgument
+            }
+        } while true
+
+        return argumentLabels
+    }
 }
 
 extension _FormatRules {

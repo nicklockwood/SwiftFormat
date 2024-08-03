@@ -20,29 +20,6 @@ public extension FormatRule {
         options: ["decimalgrouping", "binarygrouping", "octalgrouping", "hexgrouping",
                   "fractiongrouping", "exponentgrouping", "hexliteralcase", "exponentcase"]
     ) { formatter in
-        func applyGrouping(_ grouping: Grouping, to number: inout String) {
-            switch grouping {
-            case .none, .group:
-                number = number.replacingOccurrences(of: "_", with: "")
-            case .ignore:
-                return
-            }
-            guard case let .group(group, threshold) = grouping, group > 0, number.count >= threshold else {
-                return
-            }
-            var output = Substring()
-            var index = number.endIndex
-            var count = 0
-            repeat {
-                index = number.index(before: index)
-                if count > 0, count % group == 0 {
-                    output.insert("_", at: output.startIndex)
-                }
-                count += 1
-                output.insert(number[index], at: output.startIndex)
-            } while index != number.startIndex
-            number = String(output)
-        }
         formatter.forEachToken { i, token in
             guard case let .number(number, type) = token else {
                 return
@@ -85,12 +62,12 @@ public extension FormatRule {
             default:
                 break
             }
-            applyGrouping(grouping, to: &main)
+            formatter.applyGrouping(grouping, to: &main)
             if formatter.options.fractionGrouping {
-                applyGrouping(grouping, to: &fraction)
+                formatter.applyGrouping(grouping, to: &fraction)
             }
             if formatter.options.exponentGrouping {
-                applyGrouping(grouping, to: &exponent)
+                formatter.applyGrouping(grouping, to: &exponent)
             }
             var result = prefix + main
             if !fraction.isEmpty {
@@ -101,5 +78,31 @@ public extension FormatRule {
             }
             formatter.replaceToken(at: i, with: .number(result, type))
         }
+    }
+}
+
+extension Formatter {
+    func applyGrouping(_ grouping: Grouping, to number: inout String) {
+        switch grouping {
+        case .none, .group:
+            number = number.replacingOccurrences(of: "_", with: "")
+        case .ignore:
+            return
+        }
+        guard case let .group(group, threshold) = grouping, group > 0, number.count >= threshold else {
+            return
+        }
+        var output = Substring()
+        var index = number.endIndex
+        var count = 0
+        repeat {
+            index = number.index(before: index)
+            if count > 0, count % group == 0 {
+                output.insert("_", at: output.startIndex)
+            }
+            count += 1
+            output.insert(number[index], at: output.startIndex)
+        } while index != number.startIndex
+        number = String(output)
     }
 }

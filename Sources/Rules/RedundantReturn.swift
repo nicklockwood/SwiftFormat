@@ -152,67 +152,66 @@ public extension FormatRule {
 
             // Find all of the return keywords to remove before we remove any of them,
             // so we can apply additional validation first.
-            var returnKeywordRangesToRemove = [Range<Int>]()
-            var hasReturnThatCantBeRemoved = false
-
-            /// Finds the return keywords to remove and stores them in `returnKeywordRangesToRemove`
-            func removeReturn(atStartOfScope startOfScopeIndex: Int) {
-                // If this scope is a single-statement if or switch statement then we have to recursively
-                // remove the return from each branch of the if statement
-                let startOfBody = formatter.startOfBody(atStartOfScope: startOfScopeIndex)
-
-                if let firstTokenInBody = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: startOfBody),
-                   let conditionalBranches = formatter.conditionalBranches(at: firstTokenInBody)
-                {
-                    for branch in conditionalBranches.reversed() {
-                        // In Swift 5.9, there's a bug that prevents you from writing an
-                        // if or switch expression using an `as?` on one of the branches:
-                        // https://github.com/apple/swift/issues/68764
-                        //
-                        //  if condition {
-                        //    foo as? String
-                        //  } else {
-                        //    "bar"
-                        //  }
-                        //
-                        if formatter.conditionalBranchHasUnsupportedCastOperator(
-                            startOfScopeIndex: branch.startOfBranch)
-                        {
-                            hasReturnThatCantBeRemoved = true
-                            return
-                        }
-
-                        removeReturn(atStartOfScope: branch.startOfBranch)
-                    }
-                }
-
-                // Otherwise this is a simple case with a single return at the start of the scope
-                else if let endOfScopeIndex = formatter.endOfScope(at: startOfScopeIndex),
-                        let returnIndex = formatter.index(of: .keyword("return"), after: startOfScopeIndex),
-                        returnIndices.contains(returnIndex),
-                        returnIndex < endOfScopeIndex,
-                        let nextIndex = formatter.index(of: .nonSpaceOrLinebreak, after: returnIndex),
-                        formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: returnIndex)! < endOfScopeIndex
-                {
-                    let range = returnIndex ..< nextIndex
-                    for (i, index) in returnIndices.enumerated().reversed() {
-                        if range.contains(index) {
-                            returnIndices.remove(at: i)
-                        } else if index > returnIndex {
-                            returnIndices[i] -= range.count
-                        }
-                    }
-                    returnKeywordRangesToRemove.append(range)
-                }
-            }
-
-            removeReturn(atStartOfScope: startOfScopeIndex)
-
-            guard !hasReturnThatCantBeRemoved else { return }
+            guard let returnKeywordRangesToRemove = formatter.returnKeywordRangesToRemove(atStartOfScope: startOfScopeIndex, returnIndices: &returnIndices) else { return }
 
             for returnKeywordRangeToRemove in returnKeywordRangesToRemove.sorted(by: { $0.startIndex > $1.startIndex }) {
                 formatter.removeTokens(in: returnKeywordRangeToRemove)
             }
         }
+    }
+}
+
+extension Formatter {
+    func returnKeywordRangesToRemove(atStartOfScope startOfScopeIndex: Int, returnIndices: inout [Int]) -> [Range<Int>]? {
+        var returnKeywordRangesToRemove = [Range<Int>]()
+
+        // If this scope is a single-statement if or switch statement then we have to recursively
+        // remove the return from each branch of the if statement
+        let startOfBody = self.startOfBody(atStartOfScope: startOfScopeIndex)
+
+        if let firstTokenInBody = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfBody),
+           let conditionalBranches = conditionalBranches(at: firstTokenInBody)
+        {
+            for branch in conditionalBranches.reversed() {
+                // In Swift 5.9, there's a bug that prevents you from writing an
+                // if or switch expression using an `as?` on one of the branches:
+                // https://github.com/apple/swift/issues/68764
+                //
+                //  if condition {
+                //    foo as? String
+                //  } else {
+                //    "bar"
+                //  }
+                //
+                if conditionalBranchHasUnsupportedCastOperator(
+                    startOfScopeIndex: branch.startOfBranch)
+                {
+                    return nil
+                }
+
+                returnKeywordRangesToRemove.append(contentsOf: self.returnKeywordRangesToRemove(atStartOfScope: branch.startOfBranch, returnIndices: &returnIndices) ?? [])
+            }
+        }
+
+        // Otherwise this is a simple case with a single return at the start of the scope
+        else if let endOfScopeIndex = endOfScope(at: startOfScopeIndex),
+                let returnIndex = index(of: .keyword("return"), after: startOfScopeIndex),
+                returnIndices.contains(returnIndex),
+                returnIndex < endOfScopeIndex,
+                let nextIndex = index(of: .nonSpaceOrLinebreak, after: returnIndex),
+                index(of: .nonSpaceOrCommentOrLinebreak, after: returnIndex)! < endOfScopeIndex
+        {
+            let range = returnIndex ..< nextIndex
+            for (i, index) in returnIndices.enumerated().reversed() {
+                if range.contains(index) {
+                    returnIndices.remove(at: i)
+                } else if index > returnIndex {
+                    returnIndices[i] -= range.count
+                }
+            }
+            returnKeywordRangesToRemove.append(range)
+        }
+
+        return returnKeywordRangesToRemove
     }
 }

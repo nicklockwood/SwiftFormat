@@ -20,42 +20,13 @@ public extension FormatRule {
     static let spaceAroundParens = FormatRule(
         help: "Add or remove space around parentheses."
     ) { formatter in
-        func spaceAfter(_ keywordOrAttribute: String, index: Int) -> Bool {
-            switch keywordOrAttribute {
-            case "@autoclosure":
-                if formatter.options.swiftVersion < "3",
-                   let nextIndex = formatter.index(of: .nonSpaceOrLinebreak, after: index),
-                   formatter.next(.nonSpaceOrCommentOrLinebreak, after: nextIndex) == .identifier("escaping")
-                {
-                    assert(formatter.tokens[nextIndex] == .startOfScope("("))
-                    return false
-                }
-                return true
-            case "@escaping", "@noescape", "@Sendable":
-                return true
-            case _ where keywordOrAttribute.hasPrefix("@"):
-                if let i = formatter.index(of: .startOfScope("("), after: index) {
-                    return formatter.isParameterList(at: i)
-                }
-                return false
-            case "private", "fileprivate", "internal",
-                 "init", "subscript", "throws":
-                return false
-            case "await":
-                return formatter.options.swiftVersion >= "5.5" ||
-                    formatter.options.swiftVersion == .undefined
-            default:
-                return keywordOrAttribute.first.map { !"@#".contains($0) } ?? true
-            }
-        }
-
         formatter.forEach(.startOfScope("(")) { i, _ in
             let index = i - 1
             guard let prevToken = formatter.token(at: index) else {
                 return
             }
             switch prevToken {
-            case let .keyword(string) where spaceAfter(string, index: index):
+            case let .keyword(string) where formatter.spaceAfter(string, index: index):
                 fallthrough
             case .endOfScope("]") where formatter.isInClosureArguments(at: index),
                  .endOfScope(")") where formatter.isAttribute(at: index),
@@ -79,7 +50,7 @@ public extension FormatRule {
                      .identifier("isolated") where formatter.isTypePosition(at: index),
                      .identifier("sending") where formatter.isTypePosition(at: index):
                     break
-                case let .keyword(string) where !spaceAfter(string, index: index):
+                case let .keyword(string) where !formatter.spaceAfter(string, index: index):
                     fallthrough
                 case .number, .identifier:
                     fallthrough
@@ -106,6 +77,37 @@ public extension FormatRule {
             default:
                 break
             }
+        }
+    }
+}
+
+extension Formatter {
+    func spaceAfter(_ keywordOrAttribute: String, index: Int) -> Bool {
+        switch keywordOrAttribute {
+        case "@autoclosure":
+            if options.swiftVersion < "3",
+               let nextIndex = self.index(of: .nonSpaceOrLinebreak, after: index),
+               next(.nonSpaceOrCommentOrLinebreak, after: nextIndex) == .identifier("escaping")
+            {
+                assert(tokens[nextIndex] == .startOfScope("("))
+                return false
+            }
+            return true
+        case "@escaping", "@noescape", "@Sendable":
+            return true
+        case _ where keywordOrAttribute.hasPrefix("@"):
+            if let i = self.index(of: .startOfScope("("), after: index) {
+                return isParameterList(at: i)
+            }
+            return false
+        case "private", "fileprivate", "internal",
+             "init", "subscript", "throws":
+            return false
+        case "await":
+            return options.swiftVersion >= "5.5" ||
+                options.swiftVersion == .undefined
+        default:
+            return keywordOrAttribute.first.map { !"@#".contains($0) } ?? true
         }
     }
 }

@@ -174,7 +174,6 @@ class MetadataTests: XCTestCase {
                 guard formatter.next(.nonSpaceOrLinebreak, after: i) == .startOfScope("("),
                       case let .identifier(name)? = formatter.last(.identifier, before: i),
                       let scopeStart = formatter.index(of: .startOfScope("{"), after: i),
-                      let scopeEnd = formatter.index(of: .endOfScope("}"), after: scopeStart),
                       let rule = FormatRules.byName[name]
                 else {
                     return
@@ -189,13 +188,22 @@ class MetadataTests: XCTestCase {
                 allOptions.subtract(rule.options)
                 allSharedOptions.subtract(ruleOptions)
                 var referencedOptions = [OptionDescriptor]()
-                for index in scopeStart + 1 ..< scopeEnd {
-                    guard formatter.token(at: index - 1) == .operator(".", .infix),
-                          formatter.token(at: index - 2) == .identifier("formatter")
+                for index in scopeStart + 1 ..< formatter.tokens.count {
+                    guard (formatter.token(at: index - 1) == .operator(".", .infix)
+                        && formatter.token(at: index - 2) == .identifier("formatter"))
+                        || (formatter.token(at: index) == .identifier("options") && formatter.token(at: index - 1)?.isOperator(".") == false)
                     else {
                         continue
                     }
                     switch formatter.tokens[index] {
+                    // Find all of the options called via `options.optionName`
+                    case .identifier("options") where formatter.token(at: index + 1) == .operator(".", .infix):
+                        if case let .identifier(property)? = formatter.token(at: index + 2),
+                           let option = optionsByProperty[property]
+                        {
+                            referencedOptions.append(option)
+                        }
+                    // Special-case shared helpers that also access options on the formatter
                     case .identifier("spaceEquivalentToWidth"),
                          .identifier("spaceEquivalentToTokens"):
                         referencedOptions += [
@@ -222,40 +230,6 @@ class MetadataTests: XCTestCase {
                         ]
                     case .identifier("wrapStatementBody"):
                         referencedOptions += [Descriptors.indent, Descriptors.linebreak]
-                    case .identifier("indexWhereLineShouldWrapInLine"), .identifier("indexWhereLineShouldWrap"):
-                        referencedOptions += [
-                            Descriptors.indent, Descriptors.tabWidth, Descriptors.assetLiteralWidth,
-                            Descriptors.noWrapOperators,
-                        ]
-                    case .identifier("modifierOrder"):
-                        referencedOptions.append(Descriptors.modifierOrder)
-                    case .identifier("options") where formatter.token(at: index + 1) == .operator(".", .infix):
-                        if case let .identifier(property)? = formatter.token(at: index + 2),
-                           let option = optionsByProperty[property]
-                        {
-                            referencedOptions.append(option)
-                        }
-                    case .identifier("organizeDeclaration"):
-                        referencedOptions += [
-                            Descriptors.categoryMarkComment,
-                            Descriptors.markCategories,
-                            Descriptors.beforeMarks,
-                            Descriptors.lifecycleMethods,
-                            Descriptors.organizeTypes,
-                            Descriptors.organizeStructThreshold,
-                            Descriptors.organizeClassThreshold,
-                            Descriptors.organizeEnumThreshold,
-                            Descriptors.organizeExtensionThreshold,
-                            Descriptors.lineAfterMarks,
-                            Descriptors.organizationMode,
-                            Descriptors.alphabeticallySortedDeclarationPatterns,
-                            Descriptors.visibilityOrder,
-                            Descriptors.typeOrder,
-                            Descriptors.customVisibilityMarks,
-                            Descriptors.customTypeMarks,
-                            Descriptors.blankLineAfterSubgroups,
-                            Descriptors.alphabetizeSwiftUIPropertyTypes,
-                        ]
                     case .identifier("removeSelf"):
                         referencedOptions += [
                             Descriptors.selfRequired,

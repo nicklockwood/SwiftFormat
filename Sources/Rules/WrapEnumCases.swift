@@ -16,24 +16,8 @@ public extension FormatRule {
         options: ["wrapenumcases"],
         sharedOptions: ["linebreaks"]
     ) { formatter in
-
-        func shouldWrapCaseRangeGroup(_ caseRangeGroup: [Formatter.EnumCaseRange]) -> Bool {
-            guard let firstIndex = caseRangeGroup.first?.value.lowerBound,
-                  let scopeStart = formatter.startOfScope(at: firstIndex),
-                  formatter.tokens[scopeStart ..< firstIndex].contains(where: { $0.isLinebreak })
-            else {
-                // Don't wrap if first case is on same line as opening `{`
-                return false
-            }
-            return formatter.options.wrapEnumCases == .always || caseRangeGroup.contains(where: {
-                formatter.tokens[$0.value].contains(where: {
-                    [.startOfScope("("), .operator("=", .infix)].contains($0)
-                })
-            })
-        }
-
         formatter.parseEnumCaseRanges()
-            .filter(shouldWrapCaseRangeGroup)
+            .filter(formatter.shouldWrapCaseRangeGroup)
             .flatMap { $0 }
             .filter { $0.endOfCaseRangeToken == .delimiter(",") }
             .reversed()
@@ -66,5 +50,66 @@ public extension FormatRule {
                 formatter.insert([.keyword("case")], at: nextNonSpaceIndex + 1 + offset)
                 formatter.insertSpace(" ", at: nextNonSpaceIndex + 2 + offset)
             }
+    }
+}
+
+extension Formatter {
+    struct EnumCaseRange: Comparable {
+        let value: Range<Int>
+        let endOfCaseRangeToken: Token
+
+        static func < (lhs: Formatter.EnumCaseRange, rhs: Formatter.EnumCaseRange) -> Bool {
+            lhs.value.lowerBound < rhs.value.lowerBound
+        }
+    }
+
+    func parseEnumCaseRanges() -> [[EnumCaseRange]] {
+        var indexedRanges: [Int: [EnumCaseRange]] = [:]
+
+        forEach(.keyword("case")) { i, _ in
+            guard isEnumCase(at: i) else { return }
+
+            var idx = i
+            while let starOfCaseRangeIdx = index(of: .identifier, after: idx),
+                  lastSignificantKeyword(at: starOfCaseRangeIdx) == "case",
+                  let lastCaseIndex = lastIndex(of: .keyword("case"), in: i ..< starOfCaseRangeIdx),
+                  lastCaseIndex == i,
+                  let endOfCaseRangeIdx = index(
+                      after: starOfCaseRangeIdx,
+                      where: { $0 == .delimiter(",") || $0.isLinebreak }
+                  ),
+                  let endOfCaseRangeToken = token(at: endOfCaseRangeIdx)
+            {
+                let startOfScopeIdx = index(of: .startOfScope, before: starOfCaseRangeIdx) ?? 0
+
+                var indexedCase = indexedRanges[startOfScopeIdx, default: []]
+                indexedCase.append(
+                    EnumCaseRange(
+                        value: starOfCaseRangeIdx ..< endOfCaseRangeIdx,
+                        endOfCaseRangeToken: endOfCaseRangeToken
+                    )
+                )
+                indexedRanges[startOfScopeIdx] = indexedCase
+
+                idx = endOfCaseRangeIdx
+            }
+        }
+
+        return Array(indexedRanges.values)
+    }
+
+    func shouldWrapCaseRangeGroup(_ caseRangeGroup: [Formatter.EnumCaseRange]) -> Bool {
+        guard let firstIndex = caseRangeGroup.first?.value.lowerBound,
+              let scopeStart = startOfScope(at: firstIndex),
+              tokens[scopeStart ..< firstIndex].contains(where: { $0.isLinebreak })
+        else {
+            // Don't wrap if first case is on same line as opening `{`
+            return false
+        }
+        return options.wrapEnumCases == .always || caseRangeGroup.contains(where: {
+            tokens[$0.value].contains(where: {
+                [.startOfScope("("), .operator("=", .infix)].contains($0)
+            })
+        })
     }
 }

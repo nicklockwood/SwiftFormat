@@ -999,7 +999,7 @@
 		2E8DE6F72C57FEB30032BF25 /* WrapSingleLineCommentsTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WrapSingleLineCommentsTests.swift; sourceTree = "<group>"; };
 		37D828AA24BF77DA0012FC0A /* XcodeKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XcodeKit.framework; path = Library/Frameworks/XcodeKit.framework; sourceTree = DEVELOPER_DIR; };
 		580496D42C584E8F004B7DBF /* EmptyExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyExtension.swift; sourceTree = "<group>"; };
-		580496D92C584F24004B7DBF /* EmptyExtensionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = EmptyExtensionTests.swift; path = Tests/Rules/EmptyExtensionTests.swift; sourceTree = "<group>"; };
+		580496D92C584F24004B7DBF /* EmptyExtensionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyExtensionTests.swift; sourceTree = "<group>"; };
 		90C4B6CA1DA4B04A009EB000 /* SwiftFormat for Xcode.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "SwiftFormat for Xcode.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		90C4B6CC1DA4B04A009EB000 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		90C4B6D01DA4B04A009EB000 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -1107,7 +1107,6 @@
 		01A0EA9A1D5DB4CF00A0A8E3 = {
 			isa = PBXGroup;
 			children = (
-				580496D92C584F24004B7DBF /* EmptyExtensionTests.swift */,
 				01A0EACB1D5DB5F500A0A8E3 /* CommandLineTool */,
 				90C4B6F01DA4B0BF009EB000 /* EditorExtension */,
 				01A0EAA61D5DB4CF00A0A8E3 /* Sources */,
@@ -1350,6 +1349,7 @@
 				2E8DE6942C57FEB30032BF25 /* DuplicateImportsTests.swift */,
 				2E8DE6E42C57FEB30032BF25 /* ElseOnSameLineTests.swift */,
 				2E8DE6B62C57FEB30032BF25 /* EmptyBracesTests.swift */,
+				580496D92C584F24004B7DBF /* EmptyExtensionTests.swift */,
 				2E8DE6972C57FEB30032BF25 /* EnumNamespacesTests.swift */,
 				2E8DE6992C57FEB30032BF25 /* ExtensionAccessControlTests.swift */,
 				2E8DE6962C57FEB30032BF25 /* FileHeaderTests.swift */,

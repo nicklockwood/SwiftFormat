@@ -59,6 +59,12 @@
             ReferencedContainer = "container:SwiftFormat.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <CommandLineArguments>
+         <CommandLineArgument
+            argument = "/Users/cal/Downloads/Test.swift --classthreshold 1 --rules organizeDeclarations --lint"
+            isEnabled = "YES">
+         </CommandLineArgument>
+      </CommandLineArguments>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"

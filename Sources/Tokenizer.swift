@@ -114,7 +114,7 @@ public enum TokenType {
 }
 
 /// Numeric literal types
-public enum NumberType {
+public enum NumberType: String {
     case integer
     case decimal
     case binary
@@ -123,7 +123,7 @@ public enum NumberType {
 }
 
 /// Operator/operator types
-public enum OperatorType {
+public enum OperatorType: String {
     case none
     case infix
     case prefix
@@ -1990,4 +1990,50 @@ public func tokenize(_ source: String) -> [Token] {
     }
 
     return tokens
+}
+
+extension Token: Encodable {
+    private enum CodingKeys: CodingKey {
+        // Properties shared by all tokens
+        case type
+        case string
+        // Properties unique to individual tokens
+        case originalLine
+        case numberType
+        case operatorType
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(typeName, forKey: .type)
+        try container.encode(string, forKey: .string)
+
+        switch self {
+        case let .linebreak(_, originalLine):
+            try container.encode(originalLine, forKey: .originalLine)
+        case let .number(_, numberType):
+            try container.encode(numberType.rawValue, forKey: .numberType)
+        case let .operator(_, operatorType):
+            try container.encode(operatorType.rawValue, forKey: .operatorType)
+        default:
+            break
+        }
+    }
+
+    private var typeName: String {
+        switch self {
+        case .number: return "number"
+        case .linebreak: return "linebreak"
+        case .startOfScope: return "startOfScope"
+        case .endOfScope: return "endOfScope"
+        case .delimiter: return "delimiter"
+        case .operator: return "operator"
+        case .stringBody: return "stringBody"
+        case .keyword: return "keyword"
+        case .identifier: return "identifier"
+        case .space: return "space"
+        case .commentBody: return "commentBody"
+        case .error: return "error"
+        }
+    }
 }

@@ -92,7 +92,7 @@ public extension FormatRule {
     }
 }
 
-private extension Formatter {
+extension Formatter {
     func isArgumentToken(at index: Int) -> Bool {
         guard let nextToken = next(.nonSpaceOrCommentOrLinebreak, after: index) else {
             return false

@@ -9,9 +9,6 @@
 import XCTest
 @testable import SwiftFormat
 
-private let projectDirectory = URL(fileURLWithPath: #file)
-    .deletingLastPathComponent().deletingLastPathComponent()
-
 private let projectFiles: [String] = {
     var files = [String]()
     _ = enumerateFiles(withInputURL: projectDirectory) { url, _, _ in

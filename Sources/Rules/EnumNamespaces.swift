@@ -60,7 +60,7 @@ public extension FormatRule {
     }
 }
 
-private extension Formatter {
+extension Formatter {
     func rangeHostsOnlyStaticMembersAtTopLevel(_ range: Range<Int>) -> Bool {
         // exit for empty declarations
         guard next(.nonSpaceOrCommentOrLinebreak, in: range) != nil else {

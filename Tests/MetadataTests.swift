@@ -9,40 +9,6 @@
 import XCTest
 @testable import SwiftFormat
 
-private let projectDirectory = URL(fileURLWithPath: #file)
-    .deletingLastPathComponent().deletingLastPathComponent()
-
-private let projectURL = projectDirectory
-    .appendingPathComponent("SwiftFormat.xcodeproj")
-    .appendingPathComponent("project.pbxproj")
-
-private let changeLogURL =
-    projectDirectory.appendingPathComponent("CHANGELOG.md")
-
-private let podspecURL =
-    projectDirectory.appendingPathComponent("SwiftFormat.podspec.json")
-
-private let rulesURL =
-    projectDirectory.appendingPathComponent("Rules.md")
-
-private let rulesFile =
-    try! String(contentsOf: rulesURL, encoding: .utf8)
-
-private let ruleRegistryURL =
-    projectDirectory.appendingPathComponent("Sources/RuleRegistry.generated.swift")
-
-private let allRuleFiles: [URL] = {
-    var rulesFiles: [URL] = []
-    let rulesDirectory = projectDirectory.appendingPathComponent("Sources/Rules")
-    _ = enumerateFiles(withInputURL: rulesDirectory) { ruleFileURL, _, _ in
-        {
-            guard ruleFileURL.pathExtension == "swift" else { return }
-            rulesFiles.append(ruleFileURL)
-        }
-    }
-    return rulesFiles
-}()
-
 private let swiftFormatVersion: String = {
     let string = try! String(contentsOf: projectURL)
     let start = string.range(of: "MARKETING_VERSION = ")!.upperBound
@@ -230,6 +196,11 @@ class MetadataTests: XCTestCase {
                         ]
                     case .identifier("wrapStatementBody"):
                         referencedOptions += [Descriptors.indent, Descriptors.linebreak]
+                    case .identifier("indexWhereLineShouldWrapInLine"), .identifier("indexWhereLineShouldWrap"):
+                        referencedOptions += [
+                            Descriptors.indent, Descriptors.tabWidth, Descriptors.assetLiteralWidth,
+                            Descriptors.noWrapOperators,
+                        ]
                     case .identifier("removeSelf"):
                         referencedOptions += [
                             Descriptors.selfRequired,

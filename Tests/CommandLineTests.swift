@@ -32,9 +32,6 @@
 import XCTest
 @testable import SwiftFormat
 
-private let projectDirectory = URL(fileURLWithPath: #file)
-    .deletingLastPathComponent().deletingLastPathComponent()
-
 private func createTmpFile(_ path: String? = nil, contents: String) throws -> URL {
     let path = path ?? (UUID().uuidString + ".swift")
     let url = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(path)

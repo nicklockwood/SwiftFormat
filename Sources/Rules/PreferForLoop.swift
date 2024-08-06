@@ -234,7 +234,7 @@ public extension FormatRule {
     }
 }
 
-private extension Formatter {
+extension Formatter {
     // Returns the start index of the chain component ending at the given index
     func startOfChainComponent(at index: Int, forLoopSubjectIdentifier: inout String?) -> Int? {
         // The previous item in a dot chain can either be:

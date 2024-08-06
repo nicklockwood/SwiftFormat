@@ -204,6 +204,7 @@ func printHelp(as type: CLI.OutputType) {
     --strict           Emit errors for unformatted code when formatting
     --verbose          Display detailed formatting output and warnings/errors
     --quiet            Disables non-critical output messages and warnings
+    --outputtokens     Outputs an array of tokens instead of text when using stdin
 
     SwiftFormat has a number of rules that can be enabled or disabled. By default
     most rules are enabled. Use --rules to display all enabled/disabled rules.
@@ -341,6 +342,9 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
 
         // Dry run
         let dryrun = lint || (args["dryrun"] != nil)
+
+        // Whether or not to output tokens instead of source code
+        let printTokens = args["outputtokens"] != nil
 
         // Warnings
         for warning in warningsForArguments(args) {
@@ -699,17 +703,23 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
                             return
                         }
                     }
-                    let output = try applyRules(
+                    let outputTokens = try applyRules(
                         input, options: options, lineRange: lineRange,
                         verbose: verbose, lint: lint, reporter: reporter
                     )
+                    let output = sourceCode(for: outputTokens)
                     if let outputURL = outputURL, !useStdout {
                         if !dryrun, (try? String(contentsOf: outputURL)) != output {
                             try write(output, to: outputURL)
                         }
                     } else if !lint {
                         // Write to stdout
-                        print(dryrun ? input : output, as: .raw)
+                        if printTokens {
+                            let tokensToPrint = dryrun ? tokenize(input) : outputTokens
+                            try print(OutputTokensData.encodedString(for: tokensToPrint), as: .raw)
+                        } else {
+                            print(dryrun ? input : output, as: .raw)
+                        }
                     } else if let reporterOutput = try reporter.write() {
                         if let reportURL = reportURL {
                             print("Writing report file to \(reportURL.path)", as: .info)
@@ -911,7 +921,7 @@ func computeHash(_ source: String) -> String {
 }
 
 func applyRules(_ source: String, options: Options, lineRange: ClosedRange<Int>?,
-                verbose: Bool, lint: Bool, reporter: Reporter?) throws -> String
+                verbose: Bool, lint: Bool, reporter: Reporter?) throws -> [Token]
 {
     // Parse source
     var tokens = tokenize(source)
@@ -953,7 +963,7 @@ func applyRules(_ source: String, options: Options, lineRange: ClosedRange<Int>?
     }
 
     // Output
-    return updatedSource
+    return tokens
 }
 
 func processInput(_ inputURLs: [URL],
@@ -1054,8 +1064,9 @@ func processInput(_ inputURLs: [URL],
                         print("-- no changes (cached)", as: .success)
                     }
                 } else {
-                    output = try applyRules(input, options: options, lineRange: lineRange,
-                                            verbose: verbose, lint: lint, reporter: reporter)
+                    let outputTokens = try applyRules(input, options: options, lineRange: lineRange,
+                                                      verbose: verbose, lint: lint, reporter: reporter)
+                    output = sourceCode(for: outputTokens)
                     if output != input {
                         sourceHash = nil
                     }
@@ -1170,4 +1181,28 @@ func processInput(_ inputURLs: [URL],
         }
     }
     return (outputFlags, errors)
+}
+
+/// The data format used with `--outputtokens`
+private struct OutputTokensData: Encodable {
+    init(tokens: [Token]) {
+        self.tokens = tokens
+        version = swiftFormatVersion
+    }
+
+    /// The SwiftFormat version that this data originated from
+    let version: String
+    /// A representation of the output in `Tokens`
+    let tokens: [Token]
+
+    /// Creates the `OutputTokensData` and encodes it to a JSON string
+    static func encodedString(for tokens: [Token]) throws -> String {
+        let outputData = OutputTokensData(tokens: tokens)
+
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .sortedKeys
+
+        let encodedData = try encoder.encode(outputData)
+        return String(data: encodedData, encoding: .utf8)!
+    }
 }

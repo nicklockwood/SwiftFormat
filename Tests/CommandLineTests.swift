@@ -107,6 +107,63 @@ class CommandLineTests: XCTestCase {
         _ = processArguments(["", "stdin"], in: "")
     }
 
+    func testStdinOutputTokens() {
+        CLI.print = { message, type in
+            switch type {
+            case .raw, .content:
+                XCTAssertEqual(message, """
+                [{"string":"func","type":"keyword"},\
+                {"string":" ","type":"space"},\
+                {"string":"foo","type":"identifier"},\
+                {"string":"(","type":"startOfScope"},\
+                {"string":")","type":"endOfScope"},\
+                {"string":" ","type":"space"},\
+                {"string":"{","type":"startOfScope"},\
+                {"originalLine":2,"string":"\\n","type":"linebreak"},\
+                {"string":"    ","type":"space"},\
+                {"string":"bar","type":"identifier"},\
+                {"string":"(","type":"startOfScope"},\
+                {"string":")","type":"endOfScope"},\
+                {"string":" ","type":"space"},\
+                {"operatorType":"infix","string":"+","type":"operator"},\
+                {"string":" ","type":"space"},\
+                {"string":"baaz","type":"identifier"},\
+                {"string":"(","type":"startOfScope"},\
+                {"string":")","type":"endOfScope"},\
+                {"string":" ","type":"space"},\
+                {"operatorType":"infix","string":"+","type":"operator"},\
+                {"string":" ","type":"space"},\
+                {"numberType":"integer","string":"25","type":"number"},\
+                {"originalLine":3,"string":"\\n","type":"linebreak"},\
+                {"string":"}","type":"endOfScope"},\
+                {"originalLine":4,"string":"\\n","type":"linebreak"}]
+                """)
+            case .error, .warning:
+                XCTFail()
+            case .info, .success:
+                break
+            }
+        }
+        var readCount = 0
+        CLI.readLine = {
+            readCount += 1
+            switch readCount {
+            case 1:
+                return "func foo()\n"
+            case 2:
+                return "{\n"
+            case 3:
+                return "bar() + baaz() + 25\n"
+            case 4:
+                return "}"
+            default:
+                return nil
+            }
+        }
+
+        _ = processArguments(["", "stdin", "--outputtokens"], in: "")
+    }
+
     func testExcludeStdinPath() throws {
         CLI.print = { message, type in
             switch type {

@@ -716,11 +716,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
                         // Write to stdout
                         if printTokens {
                             let tokensToPrint = dryrun ? tokenize(input) : outputTokens
-                            let encoder = JSONEncoder()
-                            encoder.outputFormatting = .sortedKeys
-                            let encodedTokens = try encoder.encode(tokensToPrint)
-                            let tokensJsonString = String(data: encodedTokens, encoding: .utf8)!
-                            print(tokensJsonString, as: .raw)
+                            try print(OutputTokensData.encodedString(for: tokensToPrint), as: .raw)
                         } else {
                             print(dryrun ? input : output, as: .raw)
                         }
@@ -1185,4 +1181,28 @@ func processInput(_ inputURLs: [URL],
         }
     }
     return (outputFlags, errors)
+}
+
+/// The data format used with `--outputtokens`
+private struct OutputTokensData: Encodable {
+    init(tokens: [Token]) {
+        self.tokens = tokens
+        version = swiftFormatVersion
+    }
+
+    /// The SwiftFormat version that this data originated from
+    let version: String
+    /// A representation of the output in `Tokens`
+    let tokens: [Token]
+
+    /// Creates the `OutputTokensData` and encodes it to a JSON string
+    static func encodedString(for tokens: [Token]) throws -> String {
+        let outputData = OutputTokensData(tokens: tokens)
+
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .sortedKeys
+
+        let encodedData = try encoder.encode(outputData)
+        return String(data: encodedData, encoding: .utf8)!
+    }
 }

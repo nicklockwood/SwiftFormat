@@ -112,7 +112,8 @@ class CommandLineTests: XCTestCase {
             switch type {
             case .raw, .content:
                 XCTAssertEqual(message, """
-                [{"string":"func","type":"keyword"},\
+                {"tokens":[\
+                {"string":"func","type":"keyword"},\
                 {"string":" ","type":"space"},\
                 {"string":"foo","type":"identifier"},\
                 {"string":"(","type":"startOfScope"},\
@@ -136,7 +137,8 @@ class CommandLineTests: XCTestCase {
                 {"numberType":"integer","string":"25","type":"number"},\
                 {"originalLine":3,"string":"\\n","type":"linebreak"},\
                 {"string":"}","type":"endOfScope"},\
-                {"originalLine":4,"string":"\\n","type":"linebreak"}]
+                {"originalLine":4,"string":"\\n","type":"linebreak"}\
+                ],"version":"\(swiftFormatVersion)"}
                 """)
             case .error, .warning:
                 XCTFail()

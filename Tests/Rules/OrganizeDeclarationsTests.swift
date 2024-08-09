@@ -3112,4 +3112,54 @@ class OrganizeDeclarationsTests: XCTestCase {
             exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
         )
     }
+
+    func testDoesntAddUnexpectedBlankLinesDueToBlankLinesWithSpaces() {
+        // The blank lines in this input code are indented with four spaces.
+        // Done using string interpolation in the input code to make this
+        // more clear, and to prevent the spaces from being removed automatically.
+        let input = """
+        public class TestClass {
+            var variable01 = 1
+            var variable02 = 2
+            var variable03 = 3
+            var variable04 = 4
+            var variable05 = 5
+        \("    ")
+            public func foo() {}
+        \("    ")
+            func bar() {}
+        \("    ")
+            private func baz() {}
+        }
+        """
+
+        let output = """
+        public class TestClass {
+
+            // MARK: Public
+
+            public func foo() {}
+        \("    ")
+            // MARK: Internal
+
+            var variable01 = 1
+            var variable02 = 2
+            var variable03 = 3
+            var variable04 = 4
+            var variable05 = 5
+        \("    ")
+            func bar() {}
+        \("    ")
+            // MARK: Private
+
+            private func baz() {}
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: .organizeDeclarations,
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .consecutiveBlankLines, .trailingSpace, .consecutiveSpaces, .indent]
+        )
+    }
 }

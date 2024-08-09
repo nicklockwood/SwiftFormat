@@ -353,9 +353,7 @@ extension Formatter {
     func addCategorySeparators(
         to typeDeclaration: TypeDeclaration,
         sortedDeclarations: [CategorizedDeclaration]
-    )
-        -> TypeDeclaration
-    {
+    ) -> TypeDeclaration {
         let numberOfCategories: Int = {
             switch options.organizationMode {
             case .visibility:

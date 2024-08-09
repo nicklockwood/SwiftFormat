@@ -2080,10 +2080,19 @@ extension Formatter {
         }
 
         // Prefer keeping linebreaks at the end of a declaration's tokens,
-        // instead of the start of the next delaration's tokens
+        // instead of the start of the next delaration's tokens.
+        //  - This inclues any spaces on blank lines, but doesn't include the
+        //    indentation associated with the next declaration.
         while let linebreakSearchIndex = endOfDeclaration,
-              token(at: linebreakSearchIndex + 1)?.isLinebreak == true
+              token(at: linebreakSearchIndex + 1)?.isSpaceOrLinebreak == true
         {
+            // Only spaces between linebreaks (e.g. spaces on blank lines) are included
+            if token(at: linebreakSearchIndex + 1)?.isSpace == true {
+                guard token(at: linebreakSearchIndex)?.isLinebreak == true,
+                      token(at: linebreakSearchIndex + 2)?.isLinebreak == true
+                else { break }
+            }
+
             endOfDeclaration = linebreakSearchIndex + 1
         }
 

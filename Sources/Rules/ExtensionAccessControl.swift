@@ -120,7 +120,7 @@ public extension FormatRule {
     }
 }
 
-private extension Formatter {
+extension Formatter {
     /// Performs some generic mapping for each declaration in the given array,
     /// stepping through conditional compilation blocks (but not into the body
     /// of other nested types)
@@ -169,7 +169,7 @@ private extension Formatter {
         }
     }
 
-    private func mapBodyDeclarationsExcludingTypeBodies(
+    func mapBodyDeclarationsExcludingTypeBodies(
         _ body: [Declaration],
         with transform: (Declaration) -> Declaration
     ) -> [Declaration] {

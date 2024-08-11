@@ -135,15 +135,13 @@ public extension FormatRule {
     }
 }
 
-private extension Formatter {
+extension Formatter {
     // Whether or not the conditional statement that starts at the given index
     // has branches that are exhaustive
     func conditionalBranchesAreExhaustive(
         conditionKeywordIndex: Int,
         branches: [Formatter.ConditionalBranch]
-    )
-        -> Bool
-    {
+    ) -> Bool {
         // Switch statements are compiler-guaranteed to be exhaustive
         if tokens[conditionKeywordIndex] == .keyword("switch") {
             return true

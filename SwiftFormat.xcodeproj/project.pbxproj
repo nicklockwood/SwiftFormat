@@ -604,7 +604,6 @@
 		2E8DE74B2C57FEB30032BF25 /* LeadingDelimitersTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E8DE6E02C57FEB30032BF25 /* LeadingDelimitersTests.swift */; };
 		2E8DE74C2C57FEB30032BF25 /* WrapConditionalBodiesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E8DE6E12C57FEB30032BF25 /* WrapConditionalBodiesTests.swift */; };
 		2E8DE74D2C57FEB30032BF25 /* OrganizeDeclarationsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E8DE6E22C57FEB30032BF25 /* OrganizeDeclarationsTests.swift */; };
-		2E8DE74E2C57FEB30032BF25 /* DocCommentsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E8DE6E32C57FEB30032BF25 /* DocCommentsTests.swift */; };
 		2E8DE74F2C57FEB30032BF25 /* ElseOnSameLineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E8DE6E42C57FEB30032BF25 /* ElseOnSameLineTests.swift */; };
 		2E8DE7502C57FEB30032BF25 /* RedundantReturnTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E8DE6E52C57FEB30032BF25 /* RedundantReturnTests.swift */; };
 		2E8DE7512C57FEB30032BF25 /* LinebreaksTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E8DE6E62C57FEB30032BF25 /* LinebreaksTests.swift */; };
@@ -625,6 +624,9 @@
 		2E8DE7602C57FEB30032BF25 /* InitCoderUnavailableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E8DE6F52C57FEB30032BF25 /* InitCoderUnavailableTests.swift */; };
 		2E8DE7612C57FEB30032BF25 /* RedundantFileprivateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E8DE6F62C57FEB30032BF25 /* RedundantFileprivateTests.swift */; };
 		2E8DE7622C57FEB30032BF25 /* WrapSingleLineCommentsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E8DE6F72C57FEB30032BF25 /* WrapSingleLineCommentsTests.swift */; };
+		2EF737522C5E881C00128F91 /* CodeOrganizationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EF737512C5E881C00128F91 /* CodeOrganizationTests.swift */; };
+		2EF737542C5E897800128F91 /* ProjectFilePaths.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EF737532C5E897800128F91 /* ProjectFilePaths.swift */; };
+		2EF737562C5ED19600128F91 /* DocCommentsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EF737552C5ED19600128F91 /* DocCommentsTests.swift */; };
 		37D828AB24BF77DA0012FC0A /* XcodeKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 37D828AA24BF77DA0012FC0A /* XcodeKit.framework */; };
 		37D828AC24BF77DA0012FC0A /* XcodeKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 37D828AA24BF77DA0012FC0A /* XcodeKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		580496D52C584E8F004B7DBF /* EmptyExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 580496D42C584E8F004B7DBF /* EmptyExtension.swift */; };
@@ -759,7 +761,6 @@
 		01A0EAA91D5DB4CF00A0A8E3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		01A0EAAE1D5DB4D000A0A8E3 /* SwiftFormatTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SwiftFormatTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		01A0EAB31D5DB4D000A0A8E3 /* XCTestCase+testFormatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "XCTestCase+testFormatting.swift"; sourceTree = "<group>"; };
-		01A0EAB51D5DB4D000A0A8E3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		01A0EABE1D5DB4F700A0A8E3 /* FormatRule.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FormatRule.swift; sourceTree = "<group>"; };
 		01A0EABF1D5DB4F700A0A8E3 /* Tokenizer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Tokenizer.swift; sourceTree = "<group>"; };
 		01A0EAC41D5DB54A00A0A8E3 /* SwiftFormat.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SwiftFormat.swift; sourceTree = "<group>"; };
@@ -976,7 +977,6 @@
 		2E8DE6E02C57FEB30032BF25 /* LeadingDelimitersTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LeadingDelimitersTests.swift; sourceTree = "<group>"; };
 		2E8DE6E12C57FEB30032BF25 /* WrapConditionalBodiesTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WrapConditionalBodiesTests.swift; sourceTree = "<group>"; };
 		2E8DE6E22C57FEB30032BF25 /* OrganizeDeclarationsTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OrganizeDeclarationsTests.swift; sourceTree = "<group>"; };
-		2E8DE6E32C57FEB30032BF25 /* DocCommentsTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DocCommentsTests.swift; sourceTree = "<group>"; };
 		2E8DE6E42C57FEB30032BF25 /* ElseOnSameLineTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ElseOnSameLineTests.swift; sourceTree = "<group>"; };
 		2E8DE6E52C57FEB30032BF25 /* RedundantReturnTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RedundantReturnTests.swift; sourceTree = "<group>"; };
 		2E8DE6E62C57FEB30032BF25 /* LinebreaksTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LinebreaksTests.swift; sourceTree = "<group>"; };
@@ -997,6 +997,9 @@
 		2E8DE6F52C57FEB30032BF25 /* InitCoderUnavailableTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InitCoderUnavailableTests.swift; sourceTree = "<group>"; };
 		2E8DE6F62C57FEB30032BF25 /* RedundantFileprivateTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RedundantFileprivateTests.swift; sourceTree = "<group>"; };
 		2E8DE6F72C57FEB30032BF25 /* WrapSingleLineCommentsTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WrapSingleLineCommentsTests.swift; sourceTree = "<group>"; };
+		2EF737512C5E881C00128F91 /* CodeOrganizationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeOrganizationTests.swift; sourceTree = "<group>"; };
+		2EF737532C5E897800128F91 /* ProjectFilePaths.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectFilePaths.swift; sourceTree = "<group>"; };
+		2EF737552C5ED19600128F91 /* DocCommentsTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DocCommentsTests.swift; sourceTree = "<group>"; };
 		37D828AA24BF77DA0012FC0A /* XcodeKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XcodeKit.framework; path = Library/Frameworks/XcodeKit.framework; sourceTree = DEVELOPER_DIR; };
 		580496D42C584E8F004B7DBF /* EmptyExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyExtension.swift; sourceTree = "<group>"; };
 		580496D92C584F24004B7DBF /* EmptyExtensionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyExtensionTests.swift; sourceTree = "<group>"; };
@@ -1165,23 +1168,24 @@
 			isa = PBXGroup;
 			children = (
 				2E8DE68C2C57FEB30032BF25 /* Rules */,
-				01BEC5762236E1A700D0DD83 /* MetadataTests.swift */,
 				01045A9C2119A21000D2BE3D /* ArgumentsTests.swift */,
+				2EF737512C5E881C00128F91 /* CodeOrganizationTests.swift */,
 				01F17E841E258A4900DCD359 /* CommandLineTests.swift */,
-				01B3987A1D763424009ADE61 /* FormatterTests.swift */,
-				01426E4D23AA29B100E7D871 /* ParsingHelpersTests.swift */,
-				015F83FA2BF1448D0060A07E /* ReporterTests.swift */,
-				01A0EAB51D5DB4D000A0A8E3 /* Info.plist */,
 				E4E4D3CD2033F1EF000D7CB1 /* EnumAssociableTests.swift */,
-				E43EF47B202FF47C00E523BD /* OptionDescriptorTests.swift */,
+				01B3987A1D763424009ADE61 /* FormatterTests.swift */,
+				01BBD85D21DAA30700457380 /* GlobsTests.swift */,
 				01F3DF8F1DBA003E00454944 /* InferenceTests.swift */,
+				01BEC5762236E1A700D0DD83 /* MetadataTests.swift */,
+				E43EF47B202FF47C00E523BD /* OptionDescriptorTests.swift */,
+				01426E4D23AA29B100E7D871 /* ParsingHelpersTests.swift */,
+				2EF737532C5E897800128F91 /* ProjectFilePaths.swift */,
+				015F83FA2BF1448D0060A07E /* ReporterTests.swift */,
 				015CE8B02B448CCE00924504 /* SingularizeTests.swift */,
 				0142F06E1D72FE10007D66CC /* SwiftFormatTests.swift */,
-				01BBD85D21DAA30700457380 /* GlobsTests.swift */,
 				018E82741D62E730008CA0F8 /* TokenizerTests.swift */,
 				011A53E921FFAA3A00DD9268 /* VersionTests.swift */,
-				01C4D3282BB518D400BDF1AF /* ZRegressionTests.swift */,
 				01A0EAB31D5DB4D000A0A8E3 /* XCTestCase+testFormatting.swift */,
+				01C4D3282BB518D400BDF1AF /* ZRegressionTests.swift */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -1345,7 +1349,7 @@
 				2E8DE6D72C57FEB30032BF25 /* ConsecutiveSpacesTests.swift */,
 				2E8DE6D12C57FEB30032BF25 /* ConsistentSwitchCaseSpacingTests.swift */,
 				2E8DE6F32C57FEB30032BF25 /* DocCommentsBeforeAttributesTests.swift */,
-				2E8DE6E32C57FEB30032BF25 /* DocCommentsTests.swift */,
+				2EF737552C5ED19600128F91 /* DocCommentsTests.swift */,
 				2E8DE6942C57FEB30032BF25 /* DuplicateImportsTests.swift */,
 				2E8DE6E42C57FEB30032BF25 /* ElseOnSameLineTests.swift */,
 				2E8DE6B62C57FEB30032BF25 /* EmptyBracesTests.swift */,
@@ -1956,6 +1960,7 @@
 				2E8DE6FD2C57FEB30032BF25 /* RedundantSelfTests.swift in Sources */,
 				018E82751D62E730008CA0F8 /* TokenizerTests.swift in Sources */,
 				2E8DE74D2C57FEB30032BF25 /* OrganizeDeclarationsTests.swift in Sources */,
+				2EF737562C5ED19600128F91 /* DocCommentsTests.swift in Sources */,
 				2E8DE71E2C57FEB30032BF25 /* SpaceAroundBracesTests.swift in Sources */,
 				2E8DE73C2C57FEB30032BF25 /* ConsistentSwitchCaseSpacingTests.swift in Sources */,
 				2E8DE75B2C57FEB30032BF25 /* AndOperatorTests.swift in Sources */,
@@ -1977,12 +1982,14 @@
 				2E8DE7272C57FEB30032BF25 /* RedundantBreakTests.swift in Sources */,
 				2E8DE7232C57FEB30032BF25 /* BlockCommentsTests.swift in Sources */,
 				2E8DE75A2C57FEB30032BF25 /* SpaceInsideCommentsTests.swift in Sources */,
+				2EF737542C5E897800128F91 /* ProjectFilePaths.swift in Sources */,
 				2E8DE75D2C57FEB30032BF25 /* SpaceInsideBracketsTests.swift in Sources */,
 				2E8DE72D2C57FEB30032BF25 /* VoidTests.swift in Sources */,
 				2E8DE72B2C57FEB30032BF25 /* SpaceAroundParensTests.swift in Sources */,
 				2E8DE73F2C57FEB30032BF25 /* NoExplicitOwnershipTests.swift in Sources */,
 				01C4D3292BB518D400BDF1AF /* ZRegressionTests.swift in Sources */,
 				2E8DE7092C57FEB30032BF25 /* OpaqueGenericParametersTests.swift in Sources */,
+				2EF737522C5E881C00128F91 /* CodeOrganizationTests.swift in Sources */,
 				2E8DE7202C57FEB30032BF25 /* SortSwitchCasesTests.swift in Sources */,
 				2E8DE7452C57FEB30032BF25 /* WrapMultilineStatementBracesTests.swift in Sources */,
 				2E8DE7242C57FEB30032BF25 /* StrongOutletsTests.swift in Sources */,
@@ -2050,7 +2057,6 @@
 				2E8DE7042C57FEB30032BF25 /* ExtensionAccessControlTests.swift in Sources */,
 				015F83FB2BF1448D0060A07E /* ReporterTests.swift in Sources */,
 				2E8DE70E2C57FEB30032BF25 /* HoistPatternLetTests.swift in Sources */,
-				2E8DE74E2C57FEB30032BF25 /* DocCommentsTests.swift in Sources */,
 				2E8DE7522C57FEB30032BF25 /* MarkTypesTests.swift in Sources */,
 				2E8DE75E2C57FEB30032BF25 /* DocCommentsBeforeAttributesTests.swift in Sources */,
 				2E8DE6FF2C57FEB30032BF25 /* DuplicateImportsTests.swift in Sources */,
@@ -2532,7 +2538,7 @@
 				DEAD_CODE_STRIPPING = YES;
 				"DEVELOPMENT_TEAM[sdk=macosx*]" = "";
 				ENABLE_TESTABILITY = YES;
-				INFOPLIST_FILE = Tests/Info.plist;
+				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -2555,7 +2561,7 @@
 				DEAD_CODE_STRIPPING = YES;
 				"DEVELOPMENT_TEAM[sdk=macosx*]" = "";
 				ENABLE_TESTABILITY = YES;
-				INFOPLIST_FILE = Tests/Info.plist;
+				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -2758,7 +2764,7 @@
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
-				INFOPLIST_FILE = Tests/Info.plist;
+				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -2777,7 +2783,7 @@
 				CLANG_ENABLE_CODE_COVERAGE = NO;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
-				INFOPLIST_FILE = Tests/Info.plist;
+				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",

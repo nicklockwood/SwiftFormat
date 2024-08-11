@@ -7,7 +7,7 @@
 import XCTest
 @testable import SwiftFormat
 
-final class GuardSpacingTests: XCTestCase {
+final class SpacingGuardsTests: XCTestCase {
     func testSpacesBetweenGuard() {
         let input = """
         guard let one = test.one else {

@@ -245,6 +245,14 @@ extension Formatter {
                         return
                     }
                 }
+            case .keyword("if"), .keyword("switch"):
+                guard isConditionalAssignment(at: i),
+                      let conditinalBranches = conditionalBranches(at: i),
+                      let endIndex = conditinalBranches.last?.endOfBranch
+                else { fallthrough }
+
+                removeUsed(from: &argNames, with: &associatedData,
+                           locals: locals, in: i + 1 ..< endIndex)
             case .startOfScope("{"):
                 guard let endIndex = endOfScope(at: i) else {
                     return fatalError("Expected }", at: i)

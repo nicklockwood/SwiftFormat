@@ -1092,6 +1092,32 @@ class UnusedArgumentsTests: XCTestCase {
         testFormatting(for: input, rule: .unusedArguments)
     }
 
+    func testIssue1688_1() {
+        let input = #"""
+        func urlTestContains(path: String, strict _: Bool = true) -> Bool {
+            let path = if path.hasSuffix("/") { path } else { "\(path)/" }
+
+            return false
+        }
+        """#
+        testFormatting(for: input, rule: .unusedArguments, exclude: [.wrapConditionalBodies])
+    }
+
+    func testIssue1688_2() {
+        let input = """
+        enum Sample {
+            func invite(lang: String, randomValue: Int) -> String {
+                let flag: String? = if randomValue > 0 { "hello" } else { nil }
+
+                let lang = if let flag { flag } else { lang }
+
+                return lang
+            }
+        }
+        """
+        testFormatting(for: input, rule: .unusedArguments, exclude: [.wrapConditionalBodies, .redundantProperty])
+    }
+
     func testIssue1694() {
         let input = """
         listenForUpdates() { [weak self] update, error in

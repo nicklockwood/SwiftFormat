@@ -3507,6 +3507,14 @@ public struct _FormatRules {
                             return
                         }
                     }
+                case .keyword("if"), .keyword("switch"):
+                    guard formatter.isConditionalAssignment(at: i),
+                          let conditinalBranches = formatter.conditionalBranches(at: i),
+                          let endIndex = conditinalBranches.last?.endOfBranch
+                    else { fallthrough }
+
+                    removeUsed(from: &argNames, with: &associatedData,
+                               locals: locals, in: i + 1 ..< endIndex)
                 case .startOfScope("{"):
                     guard let endIndex = formatter.endOfScope(at: i) else {
                         return formatter.fatalError("Expected }", at: i)

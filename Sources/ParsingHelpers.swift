@@ -700,6 +700,16 @@ extension Formatter {
         startOfConditionalStatement(at: i, excluding: excluding) != nil
     }
 
+    /// Returns true if the token at the specified index is part of a conditional assignment
+    /// (e.g. an if or switch expression following an `=` token)
+    func isConditionalAssignment(at i: Int) -> Bool {
+        guard let startOfConditional = startOfConditionalStatement(at: i),
+              let previousToken = lastToken(before: startOfConditional, where: { !$0.isSpaceOrCommentOrLinebreak })
+        else { return false }
+
+        return previousToken.isOperator("=")
+    }
+
     /// If the token at the specified index is part of a conditional statement, returns the index of the first
     /// token in the statement (e.g. `if`, `guard`, `while`, etc.), otherwise returns nil
     func startOfConditionalStatement(at i: Int, excluding: Set<String> = []) -> Int? {

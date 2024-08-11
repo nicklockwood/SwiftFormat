@@ -787,7 +787,7 @@ class ParsingHelpersTests: XCTestCase {
     func testModifierOrder() {
         let options = FormatOptions(modifierOrder: ["convenience", "override"])
         let formatter = Formatter([], options: options)
-        XCTAssertEqual(formatter.modifierOrder, [
+        XCTAssertEqual(formatter.preferredModifierOrder, [
             "private", "fileprivate", "internal", "package", "public", "open",
             "private(set)", "fileprivate(set)", "internal(set)", "package(set)", "public(set)", "open(set)",
             "final",
@@ -811,7 +811,7 @@ class ParsingHelpersTests: XCTestCase {
             "lazy", "final", "required", "convenience", "typeMethods", "owned",
         ])
         let formatter = Formatter([], options: options)
-        XCTAssertEqual(formatter.modifierOrder, [
+        XCTAssertEqual(formatter.preferredModifierOrder, [
             "override",
             "private", "fileprivate", "internal", "package", "public", "open",
             "private(set)", "fileprivate(set)", "internal(set)", "package(set)", "public(set)", "open(set)",
@@ -2443,5 +2443,59 @@ class ParsingHelpersTests: XCTestCase {
         let input = "extension [Int] {}"
         let formatter = Formatter(tokenize(input))
         XCTAssertEqual(formatter.scopeType(at: 2), .arrayType)
+    }
+
+    // MARK: parseFunctionDeclarationArgumentLabels
+
+    func testParseFunctionDeclarationArgumentLabels() {
+        let input = """
+        func foo(_ foo: Foo, bar: Bar, quux _: Quux, last baaz: Baaz) {}
+        func bar() {}
+        """
+
+        let formatter = Formatter(tokenize(input))
+        XCTAssertEqual(
+            formatter.parseFunctionDeclarationArgumentLabels(startOfScope: 3), // foo(...)
+            [nil, "bar", "quux", "last"]
+        )
+
+        XCTAssertEqual(
+            formatter.parseFunctionDeclarationArgumentLabels(startOfScope: 40), // bar()
+            []
+        )
+    }
+
+    func testParseFunctionCallArgumentLabels() {
+        let input = """
+        foo(Foo(foo: foo), bar: Bar(bar), foo, quux: Quux(), last: Baaz(foo: foo))
+
+        print(formatter.isOperator(at: 0))
+        """
+
+        let formatter = Formatter(tokenize(input))
+        XCTAssertEqual(
+            formatter.parseFunctionCallArgumentLabels(startOfScope: 1), // foo(...)
+            [nil, "bar", nil, "quux", "last"]
+        )
+
+        XCTAssertEqual(
+            formatter.parseFunctionCallArgumentLabels(startOfScope: 3), // Foo(...)
+            ["foo"]
+        )
+
+        XCTAssertEqual(
+            formatter.parseFunctionCallArgumentLabels(startOfScope: 15), // Bar(...)
+            [nil]
+        )
+
+        XCTAssertEqual(
+            formatter.parseFunctionCallArgumentLabels(startOfScope: 27), // Quux()
+            []
+        )
+
+        XCTAssertEqual(
+            formatter.parseFunctionCallArgumentLabels(startOfScope: 49), // isOperator(...)
+            ["at"]
+        )
     }
 }

@@ -9,9 +9,6 @@
 import XCTest
 @testable import SwiftFormat
 
-private let projectDirectory = URL(fileURLWithPath: #file)
-    .deletingLastPathComponent().deletingLastPathComponent()
-
 class OptionDescriptorTests: XCTestCase {
     private typealias OptionArgumentMapping<T> = (optionValue: T, argumentValue: String)
 

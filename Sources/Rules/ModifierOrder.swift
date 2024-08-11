@@ -63,7 +63,7 @@ public extension FormatRule {
             pushModifier()
             guard !modifiers.isEmpty else { return }
             var sortedModifiers = [Token]()
-            for modifier in formatter.modifierOrder {
+            for modifier in formatter.preferredModifierOrder {
                 if let tokens = modifiers[modifier] {
                     sortedModifiers += tokens
                 }
@@ -75,7 +75,7 @@ public extension FormatRule {
 
 extension Formatter {
     /// Swift modifier keywords, in preferred order
-    var modifierOrder: [String] {
+    var preferredModifierOrder: [String] {
         var priorities = [String: Int]()
         for (i, modifiers) in _FormatRules.defaultModifierOrder.enumerated() {
             for modifier in modifiers {

@@ -713,7 +713,7 @@ extension Formatter {
         return category
     }
 
-    private func parseMarks<T: RawRepresentable>(
+    func parseMarks<T: RawRepresentable>(
         for options: Set<String>
     ) -> [T: String] where T.RawValue == String {
         options.map { customMarkEntry -> (T, String)? in

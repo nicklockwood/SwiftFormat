@@ -702,7 +702,7 @@ class ArgumentsTests: XCTestCase {
 
     func testParseDeprecatedOption() throws {
         let options = try Options(["ranges": "nospace"], in: "")
-        XCTAssertEqual(options.formatOptions?.spaceAroundRangeOperators, false)
+        XCTAssertEqual(options.formatOptions?.spaceAroundRangeOperators, .remove)
     }
 
     func testParseNoSpaceOperatorsOption() throws {

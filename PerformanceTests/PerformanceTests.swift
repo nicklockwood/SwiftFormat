@@ -96,8 +96,8 @@ class PerformanceTests: XCTestCase {
         let tokens = files.map { tokenize($0) }
         let options = FormatOptions(
             linebreak: "\r\n",
-            spaceAroundRangeOperators: false,
-            spaceAroundOperatorDeclarations: false,
+            spaceAroundRangeOperators: .remove,
+            spaceAroundOperatorDeclarations: .remove,
             useVoid: false,
             indentCase: true,
             trailingCommas: false,

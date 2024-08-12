@@ -166,6 +166,13 @@ public enum ClosureVoidReturn: String, CaseIterable {
     case preserve
 }
 
+/// Whether to insert, remove, or preserve spaces around operators
+public enum OperatorSpacingMode: String, CaseIterable {
+    case insert = "spaced"
+    case remove = "no-space"
+    case preserve
+}
+
 /// Version number wrapper
 public struct Version: RawRepresentable, Comparable, ExpressibleByStringLiteral, CustomStringConvertible {
     public let rawValue: String
@@ -581,8 +588,8 @@ public struct FormatOptions: CustomStringConvertible {
     public var indent: String
     public var linebreak: String
     public var allowInlineSemicolons: Bool
-    public var spaceAroundRangeOperators: Bool
-    public var spaceAroundOperatorDeclarations: Bool
+    public var spaceAroundRangeOperators: OperatorSpacingMode
+    public var spaceAroundOperatorDeclarations: OperatorSpacingMode
     public var useVoid: Bool
     public var indentCase: Bool
     public var trailingCommas: Bool
@@ -705,8 +712,8 @@ public struct FormatOptions: CustomStringConvertible {
                 indent: String = "    ",
                 linebreak: String = "\n",
                 allowInlineSemicolons: Bool = true,
-                spaceAroundRangeOperators: Bool = true,
-                spaceAroundOperatorDeclarations: Bool = true,
+                spaceAroundRangeOperators: OperatorSpacingMode = .insert,
+                spaceAroundOperatorDeclarations: OperatorSpacingMode = .insert,
                 useVoid: Bool = true,
                 indentCase: Bool = false,
                 trailingCommas: Bool = true,

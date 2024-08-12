@@ -2442,9 +2442,9 @@ Add or remove space around operators or delimiters.
 
 Option | Description
 --- | ---
-`--operatorfunc` | Spacing for operator funcs: "spaced" (default) or "no-space"
+`--operatorfunc` | Operator funcs: "spaced" (default), "no-space", or "preserve"
 `--nospaceoperators` | Comma-delimited list of operators without surrounding space
-`--ranges` | Spacing for ranges: "spaced" (default) or "no-space"
+`--ranges` | Range spaces: "spaced" (default) or "no-space", or "preserve"
 `--typedelimiter` | "space-after" (default), "spaced" or "no-space"
 
 <details>

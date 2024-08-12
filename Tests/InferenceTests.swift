@@ -567,13 +567,13 @@ class InferenceTests: XCTestCase {
     func testInferSpaceAfterOperatorFunc() {
         let input = "func == (lhs: Int, rhs: Int) -> Bool {}"
         let options = inferFormatOptions(from: tokenize(input))
-        XCTAssertTrue(options.spaceAroundOperatorDeclarations)
+        XCTAssertEqual(options.spaceAroundOperatorDeclarations, .insert)
     }
 
     func testInferNoSpaceAfterOperatorFunc() {
         let input = "func ==(lhs: Int, rhs: Int) -> Bool {}"
         let options = inferFormatOptions(from: tokenize(input))
-        XCTAssertFalse(options.spaceAroundOperatorDeclarations)
+        XCTAssertEqual(options.spaceAroundOperatorDeclarations, .remove)
     }
 
     // MARK: elseOnNextLine

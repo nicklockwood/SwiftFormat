@@ -466,10 +466,23 @@ struct _Descriptors {
     let spaceAroundOperatorDeclarations = OptionDescriptor(
         argumentName: "operatorfunc",
         displayName: "Operator Functions",
-        help: "Spacing for operator funcs: \"spaced\" (default) or \"no-space\"",
+        help: "Operator funcs: \"spaced\" (default), \"no-space\", or \"preserve\"",
         keyPath: \.spaceAroundOperatorDeclarations,
-        trueValues: ["spaced", "space", "spaces"],
-        falseValues: ["no-space", "nospace"]
+        fromArgument: { argument in
+            switch argument {
+            case "spaced", "space", "spaces":
+                return .insert
+            case "no-space", "nospace":
+                return .remove
+            case "preserve", "preserve-spaces", "preservespaces":
+                return .preserve
+            default:
+                return nil
+            }
+        },
+        toArgument: { value in
+            value.rawValue
+        }
     )
     let useVoid = OptionDescriptor(
         argumentName: "voidtype",
@@ -787,10 +800,23 @@ struct _Descriptors {
     let spaceAroundRangeOperators = OptionDescriptor(
         argumentName: "ranges",
         displayName: "Ranges",
-        help: "Spacing for ranges: \"spaced\" (default) or \"no-space\"",
+        help: "Range spaces: \"spaced\" (default) or \"no-space\", or \"preserve\"",
         keyPath: \.spaceAroundRangeOperators,
-        trueValues: ["spaced", "space", "spaces"],
-        falseValues: ["no-space", "nospace"]
+        fromArgument: { argument in
+            switch argument {
+            case "spaced", "space", "spaces":
+                return .insert
+            case "no-space", "nospace":
+                return .remove
+            case "preserve", "preserve-spaces", "preservespaces":
+                return .preserve
+            default:
+                return nil
+            }
+        },
+        toArgument: { value in
+            value.rawValue
+        }
     )
     let noWrapOperators = OptionDescriptor(
         argumentName: "nowrapoperators",

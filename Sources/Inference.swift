@@ -1273,7 +1273,11 @@ private struct Inference {
                 nospace += 1
             }
         }
-        options.spaceAroundOperatorDeclarations = (nospace <= space)
+        if nospace <= space {
+            options.spaceAroundOperatorDeclarations = .insert
+        } else {
+            options.spaceAroundOperatorDeclarations = .remove
+        }
     }
 
     let elseOnNextLine = OptionInferrer { formatter, options in

@@ -24,12 +24,12 @@ public extension FormatRule {
             case .operator(_, .none):
                 switch formatter.token(at: i + 1) {
                 case nil, .linebreak?, .endOfScope?, .operator?, .delimiter?,
-                     .startOfScope("(")? where !formatter.options.spaceAroundOperatorDeclarations:
+                     .startOfScope("(")? where formatter.options.spaceAroundOperatorDeclarations != .insert:
                     break
                 case .space?:
                     switch formatter.next(.nonSpaceOrLinebreak, after: i) {
                     case nil, .linebreak?, .endOfScope?, .delimiter?,
-                         .startOfScope("(")? where !formatter.options.spaceAroundOperatorDeclarations:
+                         .startOfScope("(")? where formatter.options.spaceAroundOperatorDeclarations == .remove:
                         formatter.removeToken(at: i + 1)
                     default:
                         break
@@ -79,7 +79,7 @@ public extension FormatRule {
             case .operator("?", .infix):
                 break // Spacing around ternary ? is not optional
             case let .operator(name, .infix) where formatter.options.noSpaceOperators.contains(name) ||
-                (!formatter.options.spaceAroundRangeOperators && token.isRangeOperator):
+                (formatter.options.spaceAroundRangeOperators == .remove && token.isRangeOperator):
                 if formatter.token(at: i + 1)?.isSpace == true,
                    formatter.token(at: i - 1)?.isSpace == true,
                    let nextToken = formatter.next(.nonSpace, after: i),
@@ -91,6 +91,9 @@ public extension FormatRule {
                     formatter.removeToken(at: i - 1)
                 }
             case .operator(_, .infix):
+                if token.isRangeOperator, formatter.options.spaceAroundRangeOperators != .insert {
+                    break
+                }
                 if formatter.token(at: i + 1)?.isSpaceOrLinebreak == false {
                     formatter.insert(.space(" "), at: i + 1)
                 }

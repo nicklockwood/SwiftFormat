@@ -372,8 +372,17 @@ class SpaceAroundOperatorsTests: XCTestCase {
     func testRemoveSpaceAfterFuncEquals() {
         let input = "func == (lhs: Int, rhs: Int) -> Bool { return lhs === rhs }"
         let output = "func ==(lhs: Int, rhs: Int) -> Bool { return lhs === rhs }"
-        let options = FormatOptions(spaceAroundOperatorDeclarations: false)
+        let options = FormatOptions(spaceAroundOperatorDeclarations: .remove)
         testFormatting(for: input, output, rule: .spaceAroundOperators, options: options)
+    }
+
+    func testPreserveSpaceAfterFuncEquals() {
+        let input = """
+        func == (lhs: Int, rhs: Int) -> Bool { return lhs === rhs }
+        func !=(lhs: Int, rhs: Int) -> Bool { return lhs !== rhs }
+        """
+        let options = FormatOptions(spaceAroundOperatorDeclarations: .preserve)
+        testFormatting(for: input, rule: .spaceAroundOperators, options: options)
     }
 
     func testAddSpaceAfterOperatorEquals() {
@@ -384,7 +393,7 @@ class SpaceAroundOperatorsTests: XCTestCase {
 
     func testNoRemoveSpaceAfterOperatorEqualsWhenSpaceAroundOperatorDeclarationsFalse() {
         let input = "operator == {}"
-        let options = FormatOptions(spaceAroundOperatorDeclarations: false)
+        let options = FormatOptions(spaceAroundOperatorDeclarations: .remove)
         testFormatting(for: input, rule: .spaceAroundOperators, options: options)
     }
 
@@ -612,86 +621,99 @@ class SpaceAroundOperatorsTests: XCTestCase {
         testFormatting(for: input, output, rule: .spaceAroundOperators, options: options)
     }
 
-    // spaceAroundRangeOperators = false
+    // spaceAroundRangeOperators: .remove
 
     func testNoSpaceAroundRangeOperatorsWithCustomOptions() {
         let input = "foo ..< bar"
         let output = "foo..<bar"
-        let options = FormatOptions(spaceAroundRangeOperators: false)
+        let options = FormatOptions(spaceAroundRangeOperators: .remove)
         testFormatting(for: input, output, rule: .spaceAroundOperators, options: options)
     }
 
     func testSpaceNotRemovedBeforeLeadingRangeOperatorWithSpaceAroundRangeOperatorsFalse() {
         let input = "let range = ..<foo.endIndex"
-        let options = FormatOptions(spaceAroundRangeOperators: false)
+        let options = FormatOptions(spaceAroundRangeOperators: .remove)
         testFormatting(for: input, rule: .spaceAroundOperators, options: options)
     }
 
     func testSpaceOnOneSideOfRangeMatchedByCommentNotRemoved() {
         let input = "let range = 0 .../* foo */4"
-        let options = FormatOptions(spaceAroundRangeOperators: false)
+        let options = FormatOptions(spaceAroundRangeOperators: .remove)
         testFormatting(for: input, rule: .spaceAroundOperators, options: options,
                        exclude: [.spaceAroundComments])
     }
 
     func testSpaceOnOneSideOfRangeMatchedByCommentNotRemoved2() {
         let input = "let range = 0/* foo */... 4"
-        let options = FormatOptions(spaceAroundRangeOperators: false)
+        let options = FormatOptions(spaceAroundRangeOperators: .remove)
         testFormatting(for: input, rule: .spaceAroundOperators, options: options,
                        exclude: [.spaceAroundComments])
     }
 
     func testSpaceAroundRangeWithCommentOnOneSideNotRemoved() {
         let input = "let range = 0 ... /* foo */4"
-        let options = FormatOptions(spaceAroundRangeOperators: false)
+        let options = FormatOptions(spaceAroundRangeOperators: .remove)
         testFormatting(for: input, rule: .spaceAroundOperators, options: options,
                        exclude: [.spaceAroundComments])
     }
 
     func testSpaceAroundRangeWithCommentOnOneSideNotRemoved2() {
         let input = "let range = 0/* foo */ ... 4"
-        let options = FormatOptions(spaceAroundRangeOperators: false)
+        let options = FormatOptions(spaceAroundRangeOperators: .remove)
         testFormatting(for: input, rule: .spaceAroundOperators, options: options,
                        exclude: [.spaceAroundComments])
     }
 
     func testSpaceOnOneSideOfRangeMatchedByLinebreakNotRemoved() {
         let input = "let range = 0 ...\n4"
-        let options = FormatOptions(spaceAroundRangeOperators: false)
+        let options = FormatOptions(spaceAroundRangeOperators: .remove)
         testFormatting(for: input, rule: .spaceAroundOperators, options: options,
                        exclude: [.indent])
     }
 
     func testSpaceOnOneSideOfRangeMatchedByLinebreakNotRemoved2() {
         let input = "let range = 0\n... 4"
-        let options = FormatOptions(spaceAroundRangeOperators: false)
+        let options = FormatOptions(spaceAroundRangeOperators: .remove)
         testFormatting(for: input, rule: .spaceAroundOperators, options: options,
                        exclude: [.indent])
     }
 
     func testSpaceAroundRangeWithLinebreakOnOneSideNotRemoved() {
         let input = "let range = 0 ... \n4"
-        let options = FormatOptions(spaceAroundRangeOperators: false)
+        let options = FormatOptions(spaceAroundRangeOperators: .remove)
         testFormatting(for: input, rule: .spaceAroundOperators, options: options,
                        exclude: [.indent, .trailingSpace])
     }
 
     func testSpaceAroundRangeWithLinebreakOnOneSideNotRemoved2() {
         let input = "let range = 0\n ... 4"
-        let options = FormatOptions(spaceAroundRangeOperators: false)
+        let options = FormatOptions(spaceAroundRangeOperators: .remove)
         testFormatting(for: input, rule: .spaceAroundOperators, options: options,
                        exclude: [.indent])
     }
 
     func testSpaceNotRemovedAroundRangeFollowedByPrefixOperator() {
         let input = "let range = 0 ... -4"
-        let options = FormatOptions(spaceAroundRangeOperators: false)
+        let options = FormatOptions(spaceAroundRangeOperators: .remove)
         testFormatting(for: input, rule: .spaceAroundOperators, options: options)
     }
 
     func testSpaceNotRemovedAroundRangePreceededByPostfixOperator() {
         let input = "let range = 0>> ... 4"
-        let options = FormatOptions(spaceAroundRangeOperators: false)
+        let options = FormatOptions(spaceAroundRangeOperators: .remove)
+        testFormatting(for: input, rule: .spaceAroundOperators, options: options)
+    }
+
+    // spaceAroundRangeOperators: .preserve
+
+    func testPreserveSpaceAroundRangeOperators() {
+        let input = """
+        let a = foo ..< bar
+        let b = foo..<bar
+        let c = foo ... bar
+        let d = foo...bar
+        """
+        let options = FormatOptions(spaceAroundRangeOperators: .preserve)
         testFormatting(for: input, rule: .spaceAroundOperators, options: options)
     }
 

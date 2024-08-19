@@ -198,7 +198,15 @@ extension Formatter {
         _ categorizedDeclarations: [CategorizedDeclaration],
         sortAlphabeticallyWithinSubcategories: Bool
     ) -> [CategorizedDeclaration] {
-        categorizedDeclarations.enumerated()
+        let customSwiftUIPropertyOrder: [String] = if options.swiftUIPropertiesSortMode == .firstAppearanceSort {
+            categorizedDeclarations
+                .compactMap(\.declaration.swiftUIPropertyWrapper)
+                .firstElementAppearanceOrder()
+        } else {
+            []
+        }
+
+        return categorizedDeclarations.enumerated()
             .sorted(by: { lhs, rhs in
                 let (lhsOriginalIndex, lhs) = lhs
                 let (rhsOriginalIndex, rhs) = rhs
@@ -217,16 +225,23 @@ extension Formatter {
                     return lhsName.localizedCompare(rhsName) == .orderedAscending
                 }
 
-                if options.alphabetizeSwiftUIPropertyTypes,
+                if options.swiftUIPropertiesSortMode != .none,
                    lhs.category.type == rhs.category.type,
                    let lhsSwiftUIProperty = lhs.declaration.swiftUIPropertyWrapper,
                    let rhsSwiftUIProperty = rhs.declaration.swiftUIPropertyWrapper
                 {
-                    return lhsSwiftUIProperty.localizedCompare(rhsSwiftUIProperty) == .orderedAscending
+                    switch options.swiftUIPropertiesSortMode {
+                    case .alphabetize:
+                        return lhsSwiftUIProperty.localizedCompare(rhsSwiftUIProperty) == .orderedAscending
+                    case .firstAppearanceSort:
+                        return customSwiftUIPropertyOrder.sortOrder(lhs: lhsSwiftUIProperty, rhs: rhsSwiftUIProperty)
+                    case .none:
+                        Swift.fatalError("None case should be handled in the else branch")
+                    }
+                } else {
+                    return lhsOriginalIndex < rhsOriginalIndex
                 }
 
-                // Respect the original declaration ordering when the categories and types are the same
-                return lhsOriginalIndex < rhsOriginalIndex
             })
             .map { $0.element }
     }
@@ -739,5 +754,33 @@ extension Formatter {
         .reduce(into: [:]) { dictionary, option in
             dictionary[option.0] = option.1
         }
+    }
+}
+
+extension Array where Element: Equatable {
+    /// Sort function to sort an array based on the order of the elements on Self
+    /// - Parameters:
+    ///   - lhs: Sort closure left hand side element
+    ///   - rhs: Sort closure right hand side element
+    /// - Returns: Whether the elements are sorted or not.
+    func sortOrder(lhs: Element, rhs: Element) -> Bool {
+        guard let lhsIndex = firstIndex(of: lhs) else { return false }
+        guard let rhsIndex = firstIndex(of: rhs) else { return true }
+        return lhsIndex < rhsIndex
+    }
+
+    /// Creates a list without duplicates and ordered by the first time the element appeared in Self
+    /// For example, this function would transform [1,2,3,1,2] into [1,2,3]
+    func firstElementAppearanceOrder() -> [Element] where Element: Hashable {
+        var appeared: Set<Element> = []
+        var appearedList: [Element] = []
+
+        for element in self {
+            if !appeared.contains(element) {
+                appeared.insert(element)
+                appearedList.append(element)
+            }
+        }
+        return appearedList
     }
 }

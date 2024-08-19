@@ -594,6 +594,16 @@ public enum ClosingParenPosition: String, CaseIterable {
     case `default`
 }
 
+public enum SwiftUIPropertiesSortMode: String, CaseIterable {
+    /// Sorts all SwiftUI dynamic properties alphabetically
+    case alphabetize
+    /// Sorts SwiftUI dynamic properties by grouping all dynamic properties of the same type by using the first time each property appears
+    /// as the sort order.
+    case firstAppearanceSort
+    /// No sort
+    case none
+}
+
 /// Configuration options for formatting. These aren't actually used by the
 /// Formatter class itself, but it makes them available to the format rules.
 public struct FormatOptions: CustomStringConvertible {
@@ -680,7 +690,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var customTypeMarks: Set<String>
     public var blankLineAfterSubgroups: Bool
     public var alphabeticallySortedDeclarationPatterns: Set<String>
-    public var alphabetizeSwiftUIPropertyTypes: Bool
+    public var swiftUIPropertiesSortMode: SwiftUIPropertiesSortMode
     public var yodaSwap: YodaMode
     public var extensionACLPlacement: ExtensionACLPlacement
     public var redundantType: RedundantType
@@ -806,7 +816,7 @@ public struct FormatOptions: CustomStringConvertible {
                 customTypeMarks: Set<String> = [],
                 blankLineAfterSubgroups: Bool = true,
                 alphabeticallySortedDeclarationPatterns: Set<String> = [],
-                alphabetizeSwiftUIPropertyTypes: Bool = false,
+                swiftUIPropertiesSortMode: SwiftUIPropertiesSortMode = .none,
                 yodaSwap: YodaMode = .always,
                 extensionACLPlacement: ExtensionACLPlacement = .onExtension,
                 redundantType: RedundantType = .inferLocalsOnly,
@@ -922,7 +932,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.customTypeMarks = customTypeMarks
         self.blankLineAfterSubgroups = blankLineAfterSubgroups
         self.alphabeticallySortedDeclarationPatterns = alphabeticallySortedDeclarationPatterns
-        self.alphabetizeSwiftUIPropertyTypes = alphabetizeSwiftUIPropertyTypes
+        self.swiftUIPropertiesSortMode = swiftUIPropertiesSortMode
         self.yodaSwap = yodaSwap
         self.extensionACLPlacement = extensionACLPlacement
         self.redundantType = redundantType

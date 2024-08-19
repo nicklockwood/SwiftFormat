@@ -1229,7 +1229,7 @@ struct _Descriptors {
     let swiftUIPropertiesSortMode = OptionDescriptor(
         argumentName: "sortswiftuiprops",
         displayName: "Sort SwiftUI Dynamic Properties",
-        help: "Sorts SwiftUI dynamic properties using different strategies, doesn't sorts by default",
+        help: "Sorts SwiftUI dynamic properties, doesn't sorts by default",
         keyPath: \.swiftUIPropertiesSortMode
     )
 

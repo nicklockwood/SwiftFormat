@@ -239,6 +239,7 @@ extension Formatter {
                         Swift.fatalError("None case should be handled in the else branch")
                     }
                 } else {
+                    // Respect the original declaration ordering when the categories and types are the same
                     return lhsOriginalIndex < rhsOriginalIndex
                 }
 

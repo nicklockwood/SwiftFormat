@@ -234,7 +234,7 @@ extension Formatter {
                     case .alphabetize:
                         return lhsSwiftUIProperty.localizedCompare(rhsSwiftUIProperty) == .orderedAscending
                     case .firstAppearanceSort:
-                        return customSwiftUIPropertyOrder.sortOrder(lhs: lhsSwiftUIProperty, rhs: rhsSwiftUIProperty)
+                        return customSwiftUIPropertyOrder.areInRelativeOrder(lhs: lhsSwiftUIProperty, rhs: rhsSwiftUIProperty)
                     case .none:
                         Swift.fatalError("None case should be handled in the else branch")
                     }
@@ -763,7 +763,7 @@ extension Array where Element: Equatable {
     ///   - lhs: Sort closure left hand side element
     ///   - rhs: Sort closure right hand side element
     /// - Returns: Whether the elements are sorted or not.
-    func sortOrder(lhs: Element, rhs: Element) -> Bool {
+    func areInRelativeOrder(lhs: Element, rhs: Element) -> Bool {
         guard let lhsIndex = firstIndex(of: lhs) else { return false }
         guard let rhsIndex = firstIndex(of: rhs) else { return true }
         return lhsIndex < rhsIndex

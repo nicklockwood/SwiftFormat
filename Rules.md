@@ -1483,7 +1483,7 @@ Option | Description
 `--visibilitymarks` | Marks for visibility groups (public:Public Fields,..)
 `--typemarks` | Marks for declaration type groups (classMethod:Baaz,..)
 `--groupblanklines` | Require a blank line after each subgroup. Default: true
-`--sortswiftuiprops` | Sorts SwiftUI properties alphabetically, defaults to "false"
+`--sortswiftuiprops` | Sort SwiftUI props: none, alphabetize, first-appearance-sort
 
 <details>
 <summary>Examples</summary>

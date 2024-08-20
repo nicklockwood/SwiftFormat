@@ -239,13 +239,10 @@ extension Formatter {
     }
 
     func customDeclarationSortOrderList(from categorizedDeclarations: [CategorizedDeclaration]) -> [String] {
-        if options.swiftUIPropertiesSortMode == .firstAppearanceSort {
-            categorizedDeclarations
-                .compactMap(\.declaration.swiftUIPropertyWrapper)
-                .firstElementAppearanceOrder()
-        } else {
-            []
-        }
+        guard options.swiftUIPropertiesSortMode == .firstAppearanceSort else { return [] }
+        return categorizedDeclarations
+            .compactMap(\.declaration.swiftUIPropertyWrapper)
+            .firstElementAppearanceOrder()
     }
 
     /// Whether or not type members should additionally be sorted alphabetically

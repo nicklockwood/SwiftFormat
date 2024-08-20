@@ -198,14 +198,7 @@ extension Formatter {
         _ categorizedDeclarations: [CategorizedDeclaration],
         sortAlphabeticallyWithinSubcategories: Bool
     ) -> [CategorizedDeclaration] {
-        let customSwiftUIPropertyOrder: [String] = if options.swiftUIPropertiesSortMode == .firstAppearanceSort {
-            categorizedDeclarations
-                .compactMap(\.declaration.swiftUIPropertyWrapper)
-                .firstElementAppearanceOrder()
-        } else {
-            []
-        }
-
+        let customDeclarationSortOrder = customDeclarationSortOrderList(from: categorizedDeclarations)
         return categorizedDeclarations.enumerated()
             .sorted(by: { lhs, rhs in
                 let (lhsOriginalIndex, lhs) = lhs
@@ -234,7 +227,7 @@ extension Formatter {
                     case .alphabetize:
                         return lhsSwiftUIProperty.localizedCompare(rhsSwiftUIProperty) == .orderedAscending
                     case .firstAppearanceSort:
-                        return customSwiftUIPropertyOrder.areInRelativeOrder(lhs: lhsSwiftUIProperty, rhs: rhsSwiftUIProperty)
+                        return customDeclarationSortOrder.areInRelativeOrder(lhs: lhsSwiftUIProperty, rhs: rhsSwiftUIProperty)
                     case .none:
                         Swift.fatalError("None case should be handled in the else branch")
                     }
@@ -245,6 +238,16 @@ extension Formatter {
 
             })
             .map { $0.element }
+    }
+
+    func customDeclarationSortOrderList(from categorizedDeclarations: [CategorizedDeclaration]) -> [String] {
+        if options.swiftUIPropertiesSortMode == .firstAppearanceSort {
+            categorizedDeclarations
+                .compactMap(\.declaration.swiftUIPropertyWrapper)
+                .firstElementAppearanceOrder()
+        } else {
+            []
+        }
     }
 
     /// Whether or not type members should additionally be sorted alphabetically

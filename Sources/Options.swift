@@ -599,7 +599,7 @@ public enum SwiftUIPropertiesSortMode: String, CaseIterable {
     case alphabetize
     /// Sorts SwiftUI dynamic properties by grouping all dynamic properties of the same type by using the first time each property appears
     /// as the sort order.
-    case firstAppearanceSort
+    case firstAppearanceSort = "first-appearance-sort"
     /// No sort
     case none
 }

@@ -756,7 +756,7 @@ extension Formatter {
     }
 }
 
-extension Array where Element: Equatable {
+extension Array where Element: Equatable & Hashable {
     /// Sort function to sort an array based on the order of the elements on Self
     /// - Parameters:
     ///   - lhs: Sort closure left hand side element
@@ -770,7 +770,7 @@ extension Array where Element: Equatable {
 
     /// Creates a list without duplicates and ordered by the first time the element appeared in Self
     /// For example, this function would transform [1,2,3,1,2] into [1,2,3]
-    func firstElementAppearanceOrder() -> [Element] where Element: Hashable {
+    func firstElementAppearanceOrder() -> [Element] {
         var appeared: Set<Element> = []
         var appearedList: [Element] = []
 

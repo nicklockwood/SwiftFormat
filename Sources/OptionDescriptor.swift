@@ -1236,13 +1236,11 @@ struct _Descriptors {
         keyPath: \.preservedPrivateDeclarations
     )
 
-    let alphabetizeSwiftUIPropertyTypes = OptionDescriptor(
+    let swiftUIPropertiesSortMode = OptionDescriptor(
         argumentName: "sortswiftuiprops",
-        displayName: "Alphabetize SwiftUI Properties",
-        help: "Sorts SwiftUI properties alphabetically, defaults to \"false\"",
-        keyPath: \.alphabetizeSwiftUIPropertyTypes,
-        trueValues: ["enabled", "true"],
-        falseValues: ["disabled", "false"]
+        displayName: "Sort SwiftUI Dynamic Properties",
+        help: "Sort SwiftUI props: none, alphabetize, first-appearance-sort",
+        keyPath: \.swiftUIPropertiesSortMode
     )
 
     // MARK: - Internal

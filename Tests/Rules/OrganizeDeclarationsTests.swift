@@ -3005,7 +3005,7 @@ class OrganizeDeclarationsTests: XCTestCase {
         )
     }
 
-    func testSortSwiftUIPropertyWrappersSubCategory() {
+    func testSortSwiftUIPropertyWrappersSubCategoryAlphabetically() {
         let input = """
         struct ContentView: View {
             init() {}
@@ -3050,13 +3050,13 @@ class OrganizeDeclarationsTests: XCTestCase {
                 organizeTypes: ["struct"],
                 organizationMode: .visibility,
                 blankLineAfterSubgroups: false,
-                alphabetizeSwiftUIPropertyTypes: true
+                swiftUIPropertiesSortMode: .alphabetize
             ),
             exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
         )
     }
 
-    func testSortSwiftUIWrappersByTypeAndMaintainGroupSpacing() {
+    func testSortSwiftUIWrappersByTypeAndMaintainGroupSpacingAlphabetically() {
         let input = """
         struct ContentView: View {
             init() {}
@@ -3107,7 +3107,115 @@ class OrganizeDeclarationsTests: XCTestCase {
                 organizeTypes: ["struct"],
                 organizationMode: .visibility,
                 blankLineAfterSubgroups: false,
-                alphabetizeSwiftUIPropertyTypes: true
+                swiftUIPropertiesSortMode: .alphabetize
+            ),
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+        )
+    }
+
+    func testSortSwiftUIPropertyWrappersSubCategoryPreservingGroupPosition() {
+        let input = """
+        struct ContentView: View {
+            init() {}
+
+            @Environment(\\.colorScheme) var colorScheme
+            @State var foo: Foo
+            @Binding var isOn: Bool
+            @Environment(\\.quux) var quux: Quux
+
+            @ViewBuilder
+            var body: some View {
+                Toggle(label, isOn: $isOn)
+            }
+        }
+        """
+
+        let output = """
+        struct ContentView: View {
+
+            // MARK: Lifecycle
+
+            init() {}
+
+            // MARK: Internal
+
+            @Environment(\\.colorScheme) var colorScheme
+            @Environment(\\.quux) var quux: Quux
+            @State var foo: Foo
+            @Binding var isOn: Bool
+
+            @ViewBuilder
+            var body: some View {
+                Toggle(label, isOn: $isOn)
+            }
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: .organizeDeclarations,
+            options: FormatOptions(
+                organizeTypes: ["struct"],
+                organizationMode: .visibility,
+                blankLineAfterSubgroups: false,
+                swiftUIPropertiesSortMode: .firstAppearanceSort
+            ),
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+        )
+    }
+
+    func testSortSwiftUIWrappersByTypeAndMaintainGroupSpacingAndPosition() {
+        let input = """
+        struct ContentView: View {
+            init() {}
+
+            @State var foo: Foo
+            @State var bar: Bar
+
+            @Environment(\\.colorScheme) var colorScheme
+            @Environment(\\.quux) var quux: Quux
+
+            @Binding var isOn: Bool
+
+            @ViewBuilder
+            var body: some View {
+                Toggle(label, isOn: $isOn)
+            }
+        }
+        """
+
+        let output = """
+        struct ContentView: View {
+
+            // MARK: Lifecycle
+
+            init() {}
+
+            // MARK: Internal
+
+            @State var foo: Foo
+            @State var bar: Bar
+
+            @Environment(\\.colorScheme) var colorScheme
+            @Environment(\\.quux) var quux: Quux
+
+            @Binding var isOn: Bool
+
+            @ViewBuilder
+            var body: some View {
+                Toggle(label, isOn: $isOn)
+            }
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: .organizeDeclarations,
+            options: FormatOptions(
+                organizeTypes: ["struct"],
+                organizationMode: .visibility,
+                blankLineAfterSubgroups: false,
+                swiftUIPropertiesSortMode: .firstAppearanceSort
             ),
             exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
         )

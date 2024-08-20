@@ -218,18 +218,16 @@ extension Formatter {
                     return lhsName.localizedCompare(rhsName) == .orderedAscending
                 }
 
-                if options.swiftUIPropertiesSortMode != .none,
+                if let swiftUIPropertiesSortMode = options.swiftUIPropertiesSortMode,
                    lhs.category.type == rhs.category.type,
                    let lhsSwiftUIProperty = lhs.declaration.swiftUIPropertyWrapper,
                    let rhsSwiftUIProperty = rhs.declaration.swiftUIPropertyWrapper
                 {
-                    switch options.swiftUIPropertiesSortMode {
+                    switch swiftUIPropertiesSortMode {
                     case .alphabetize:
                         return lhsSwiftUIProperty.localizedCompare(rhsSwiftUIProperty) == .orderedAscending
                     case .firstAppearanceSort:
                         return customDeclarationSortOrder.areInRelativeOrder(lhs: lhsSwiftUIProperty, rhs: rhsSwiftUIProperty)
-                    case .none:
-                        Swift.fatalError("None case should be handled in the else branch")
                     }
                 } else {
                     // Respect the original declaration ordering when the categories and types are the same

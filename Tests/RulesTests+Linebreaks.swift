@@ -565,7 +565,7 @@ class LinebreakTests: RulesTests {
     }
 
     func testNoBlankLineBetweenFunctionsInProtocol() {
-        let input = "protocol Foo {\n    func bar() -> Void\n    func baz() -> Int\n}"
+        let input = "protocol Foo {\n    func bar()\n    func baz() -> Int\n}"
         testFormatting(for: input, rule: FormatRules.blankLinesBetweenScopes)
     }
 

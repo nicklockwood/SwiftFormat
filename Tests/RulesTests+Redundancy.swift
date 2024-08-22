@@ -2558,6 +2558,27 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.redundantVoidReturnType, options: options)
     }
 
+    func testRemoveRedundantVoidInProtocolDeclaration() {
+        let input = """
+        protocol Foo {
+            func foo() -> Void
+            func bar() -> ()
+            var baz: Int { get }
+            func bazz() -> ( )
+        }
+        """
+
+        let output = """
+        protocol Foo {
+            func foo()
+            func bar()
+            var baz: Int { get }
+            func bazz()
+        }
+        """
+        testFormatting(for: input, output, rule: FormatRules.redundantVoidReturnType)
+    }
+
     // MARK: - redundantReturn
 
     func testRemoveRedundantReturnInClosure() {

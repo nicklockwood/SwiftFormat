@@ -30,8 +30,13 @@ public extension FormatRule {
                 return
             }
 
-            guard formatter.next(.nonSpaceOrCommentOrLinebreak, after: endIndex) == .startOfScope("{")
-            else { return }
+            guard let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: endIndex) else { return }
+
+            let isInProtocol = nextToken == .endOfScope("}") || (nextToken.isKeywordOrAttribute && nextToken != .keyword("in"))
+
+            // After a `Void` we could see the start of a function's body, or if the function is inside a protocol declaration
+            // we can find an identifier related to another func, var, etc declared in the protocol or the end of the protocol definition.
+            guard nextToken == .startOfScope("{") || isInProtocol else { return }
 
             guard let prevIndex = formatter.index(of: .endOfScope(")"), before: i),
                   let parenIndex = formatter.index(of: .startOfScope("("), before: prevIndex),
@@ -40,7 +45,14 @@ public extension FormatRule {
             else {
                 return
             }
-            formatter.removeTokens(in: i ..< formatter.index(of: .nonSpace, after: endIndex)!)
+
+            let startRemoveIndex: Int
+            if isInProtocol, formatter.token(at: i - 1)?.isSpace == true {
+                startRemoveIndex = i - 1
+            } else {
+                startRemoveIndex = i
+            }
+            formatter.removeTokens(in: startRemoveIndex ..< formatter.index(of: .nonSpace, after: endIndex)!)
         }
     }
 }

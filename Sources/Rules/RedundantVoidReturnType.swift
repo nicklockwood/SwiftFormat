@@ -35,7 +35,7 @@ public extension FormatRule {
             let isInProtocol = nextToken == .endOfScope("}") || (nextToken.isKeywordOrAttribute && nextToken != .keyword("in"))
 
             // After a `Void` we could see the start of a function's body, or if the function is inside a protocol declaration
-            // we can find an identifier related to another func, var, etc declared in the protocol or the end of the protocol definition.
+            // we can find a keyword related to other declarations or the end scope of the protocol definition.
             guard nextToken == .startOfScope("{") || isInProtocol else { return }
 
             guard let prevIndex = formatter.index(of: .endOfScope(")"), before: i),

@@ -11,7 +11,13 @@ import Foundation
 public extension FormatRule {
     /// Remove redundant let/var for unnamed variables
     static let redundantLet = FormatRule(
-        help: "Remove redundant `let`/`var` from ignored variables."
+        help: "Remove redundant `let`/`var` from ignored variables.",
+        examples: """
+        ```diff
+        - let _ = foo()
+        + _ = foo()
+        ```
+        """
     ) { formatter in
         formatter.forEach(.identifier("_")) { i, _ in
             guard formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) != .delimiter(":"),

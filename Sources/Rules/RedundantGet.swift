@@ -11,7 +11,20 @@ import Foundation
 public extension FormatRule {
     /// Remove redundant `get {}` clause inside read-only computed property
     static let redundantGet = FormatRule(
-        help: "Remove unneeded `get` clause inside computed properties."
+        help: "Remove unneeded `get` clause inside computed properties.",
+        examples: """
+        ```diff
+          var foo: Int {
+        -   get {
+        -     return 5
+        -   }
+          }
+
+          var foo: Int {
+        +   return 5
+          }
+        ```
+        """
     ) { formatter in
         formatter.forEach(.identifier("get")) { i, _ in
             if formatter.isAccessorKeyword(at: i, checkKeyword: false),

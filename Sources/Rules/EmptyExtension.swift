@@ -12,6 +12,13 @@ public extension FormatRule {
     /// Remove empty, non-conforming, extensions.
     static let emptyExtension = FormatRule(
         help: "Remove empty, non-conforming, extensions.",
+        examples: """
+        ```diff
+        - extension String {}
+        -
+          extension String: Equatable {}
+        ```
+        """,
         orderAfter: [.unusedPrivateDeclaration]
     ) { formatter in
         var emptyExtensions = [Declaration]()

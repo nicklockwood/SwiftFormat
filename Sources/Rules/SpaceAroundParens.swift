@@ -18,7 +18,18 @@ public extension FormatRule {
     /// * There is space between a closing paren and following opening brace
     /// * There is no space between a closing paren and following opening square bracket
     static let spaceAroundParens = FormatRule(
-        help: "Add or remove space around parentheses."
+        help: "Add or remove space around parentheses.",
+        examples: """
+        ```diff
+        - init (foo)
+        + init(foo)
+        ```
+
+        ```diff
+        - switch(x){
+        + switch (x) {
+        ```
+        """
     ) { formatter in
         formatter.forEach(.startOfScope("(")) { i, _ in
             let index = i - 1

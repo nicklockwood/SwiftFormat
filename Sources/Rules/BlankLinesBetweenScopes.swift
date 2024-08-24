@@ -15,6 +15,29 @@ public extension FormatRule {
         Insert blank line before class, struct, enum, extension, protocol or function
         declarations.
         """,
+        examples: """
+        ```diff
+          func foo() {
+            // foo
+          }
+          func bar() {
+            // bar
+          }
+          var baz: Bool
+          var quux: Int
+
+          func foo() {
+            // foo
+          }
+        +
+          func bar() {
+            // bar
+          }
+        +
+          var baz: Bool
+          var quux: Int
+        ```
+        """,
         sharedOptions: ["linebreaks"]
     ) { formatter in
         var spaceableScopeStack = [true]

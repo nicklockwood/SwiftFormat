@@ -12,6 +12,12 @@ public extension FormatRule {
     /// Strip redundant `.init` from type instantiations
     static let redundantInit = FormatRule(
         help: "Remove explicit `init` if not required.",
+        examples: """
+        ```diff
+        - String.init("text")
+        + String("text")
+        ```
+        """,
         orderAfter: [.propertyType]
     ) { formatter in
         formatter.forEach(.identifier("init")) { initIndex, _ in

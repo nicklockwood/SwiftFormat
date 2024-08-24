@@ -15,6 +15,14 @@ public extension FormatRule {
         Add `@available(*, unavailable)` attribute to required `init(coder:)` when
         it hasn't been implemented.
         """,
+        examples: """
+        ```diff
+        + @available(*, unavailable)
+          required init?(coder aDecoder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+          }
+        ```
+        """,
         options: ["initcodernil"],
         sharedOptions: ["linebreaks"]
     ) { formatter in

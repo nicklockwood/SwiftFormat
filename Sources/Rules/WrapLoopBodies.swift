@@ -11,6 +11,21 @@ import Foundation
 public extension FormatRule {
     static let wrapLoopBodies = FormatRule(
         help: "Wrap the bodies of inline loop statements onto a new line.",
+        examples: """
+        ```diff
+        - for foo in array { print(foo) }
+        + for foo in array {
+        +     print(foo)
+        + }
+        ```
+
+        ```diff
+        - while let foo = bar.next() { print(foo) }
+        + while let foo = bar.next() {
+        +     print(foo)
+        + }
+        ```
+        """,
         orderAfter: [.preferForLoop],
         sharedOptions: ["linebreaks", "indent"]
     ) { formatter in

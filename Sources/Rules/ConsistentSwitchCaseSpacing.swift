@@ -11,6 +11,54 @@ import Foundation
 public extension FormatRule {
     static let consistentSwitchCaseSpacing = FormatRule(
         help: "Ensures consistent spacing among all of the cases in a switch statement.",
+        examples: #"""
+        ```diff
+          func handle(_ action: SpaceshipAction) {
+              switch action {
+              case .engageWarpDrive:
+                  navigationComputer.destination = targetedDestination
+                  await warpDrive.spinUp()
+                  warpDrive.activate()
+
+              case .enableArtificialGravity:
+                  artificialGravityEngine.enable(strength: .oneG)
+        +
+              case let .scanPlanet(planet):
+                  scanner.target = planet
+                  scanner.scanAtmosphere()
+                  scanner.scanBiosphere()
+                  scanner.scanForArtificialLife()
+
+              case .handleIncomingEnergyBlast:
+                  energyShields.engage()
+              }
+          }
+        ```
+
+        ```diff
+          var name: PlanetType {
+          switch self {
+          case .mercury:
+              "Mercury"
+        -
+          case .venus:
+              "Venus"
+          case .earth:
+              "Earth"
+          case .mars:
+              "Mars"
+        -
+          case .jupiter:
+              "Jupiter"
+          case .saturn:
+              "Saturn"
+          case .uranus:
+              "Uranus"
+          case .neptune:
+              "Neptune"
+          }
+        ```
+        """#,
         orderAfter: [.blankLineAfterSwitchCase]
     ) { formatter in
         formatter.forEach(.keyword("switch")) { switchIndex, _ in

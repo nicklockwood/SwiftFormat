@@ -2588,7 +2588,7 @@ Remove space inside parentheses.
 
 ## spacingGuards
 
-Remove space between guard and add spaces after last guard.
+Remove space between guard statements, and add spaces after last guard.
 
 <details>
 <summary>Examples</summary>

@@ -10,7 +10,21 @@ import Foundation
 
 public extension FormatRule {
     static let sortTypealiases = FormatRule(
-        help: "Sort protocol composition typealiases alphabetically."
+        help: "Sort protocol composition typealiases alphabetically.",
+        examples: """
+        ```diff
+        - typealias Placeholders = Foo & Bar & Baaz & Quux
+        + typealias Placeholders = Baaz & Bar & Foo & Quux
+
+          typealias Dependencies
+        -     = FooProviding
+        +     = BaazProviding
+              & BarProviding
+        -     & BaazProviding
+        +     & FooProviding
+              & QuuxProviding
+        ```
+        """
     ) { formatter in
         formatter.forEach(.keyword("typealias")) { typealiasIndex, _ in
             guard let (equalsIndex, andTokenIndices, endIndex) = formatter.parseProtocolCompositionTypealias(at: typealiasIndex),

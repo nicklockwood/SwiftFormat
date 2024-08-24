@@ -14,6 +14,28 @@ public extension FormatRule {
         Insert a blank line after multiline switch cases (excluding the last case,
         which is followed by a closing brace).
         """,
+        examples: #"""
+        ```diff
+          func handle(_ action: SpaceshipAction) {
+              switch action {
+              case .engageWarpDrive:
+                  navigationComputer.destination = targetedDestination
+                  await warpDrive.spinUp()
+                  warpDrive.activate()
+        +
+              case let .scanPlanet(planet):
+                  scanner.target = planet
+                  scanner.scanAtmosphere()
+                  scanner.scanBiosphere()
+                  scanner.scanForArticialLife()
+        +
+              case .handleIncomingEnergyBlast:
+                  await energyShields.prepare()
+                  energyShields.engage()
+              }
+          }
+        ```
+        """#,
         disabledByDefault: true,
         orderAfter: [.redundantBreak]
     ) { formatter in

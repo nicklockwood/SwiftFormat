@@ -11,6 +11,61 @@ import Foundation
 public extension FormatRule {
     static let wrapMultilineStatementBraces = FormatRule(
         help: "Wrap the opening brace of multiline statements.",
+        examples: """
+        ```diff
+          if foo,
+        -   bar {
+            // ...
+          }
+
+          if foo,
+        +   bar
+        + {
+            // ...
+          }
+        ```
+
+        ```diff
+          guard foo,
+        -   bar else {
+            // ...
+          }
+
+          guard foo,
+        +   bar else
+        + {
+            // ...
+          }
+        ```
+
+        ```diff
+          func foo(
+            bar: Int,
+        -   baz: Int) {
+            // ...
+          }
+
+          func foo(
+            bar: Int,
+        +   baz: Int)
+        + {
+            // ...
+          }
+        ```
+
+        ```diff
+          class Foo: NSObject,
+        -   BarProtocol {
+            // ...
+          }
+
+          class Foo: NSObject,
+        +   BarProtocol
+        + {
+            // ...
+          }
+        ```
+        """,
         orderAfter: [.braces, .indent, .wrapArguments],
         sharedOptions: ["linebreaks"]
     ) { formatter in

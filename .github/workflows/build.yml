@@ -20,7 +20,7 @@ jobs:
         with:
           xcode-version: ${{ matrix.xcode }}
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Build and Test
         run: |
           xcodebuild -project SwiftFormat.xcodeproj -scheme "SwiftFormat (Framework)" -sdk macosx clean build test -enableCodeCoverage YES -derivedDataPath Build/
@@ -31,7 +31,7 @@ jobs:
           cd ../../../../
           xcrun llvm-cov export -format="lcov" -instr-profile $pathCoverage Build/Build/Products/Debug/SwiftFormat.framework/SwiftFormat > info.lcov
       - name: Codecov
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v4
         with:
           # the token is optional for a public repo, but including it anyway
           token: a47579fa-9a2a-4c48-b557-aa725c6b5f92
@@ -52,7 +52,7 @@ jobs:
       options: --cap-add=SYS_PTRACE --security-opt seccomp=unconfined --security-opt apparmor=unconfined
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Build and Test
         run: |
           # Needed to be allowed to run git commands in the tests
@@ -74,7 +74,7 @@ jobs:
         with:
           tag: ${{ matrix.tag }}
           branch: ${{ matrix.branch }}
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: swift test
 
   command-line-tool:
@@ -92,7 +92,7 @@ jobs:
         with:
           xcode-version: ${{ matrix.xcode }}
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Build Command Line Tool
         run: xcodebuild -project SwiftFormat.xcodeproj -scheme "SwiftFormat (Command Line Tool)" -sdk macosx clean build
 
@@ -111,7 +111,7 @@ jobs:
         with:
           xcode-version: ${{ matrix.xcode }}
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Build Swift Format for Xcode app
         run: xcodebuild -project SwiftFormat.xcodeproj -scheme "SwiftFormat for Xcode" -sdk macosx clean build
 
@@ -130,7 +130,7 @@ jobs:
         with:
           xcode-version: ${{ matrix.xcode }}
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Build Editor Extension
         run: xcodebuild -project SwiftFormat.xcodeproj -scheme "SwiftFormat (Editor Extension)" -sdk macosx clean build
 

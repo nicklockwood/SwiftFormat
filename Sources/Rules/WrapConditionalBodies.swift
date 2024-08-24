@@ -11,6 +11,21 @@ import Foundation
 public extension FormatRule {
     static let wrapConditionalBodies = FormatRule(
         help: "Wrap the bodies of inline conditional statements onto a new line.",
+        examples: """
+        ```diff
+        - guard let foo = bar else { return baz }
+        + guard let foo = bar else {
+        +     return baz
+        + }
+        ```
+
+        ```diff
+        - if foo { return bar }
+        + if foo {
+        +    return bar
+        + }
+        ```
+        """,
         disabledByDefault: true,
         sharedOptions: ["linebreaks", "indent"]
     ) { formatter in

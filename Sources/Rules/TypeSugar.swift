@@ -12,6 +12,22 @@ public extension FormatRule {
     /// Replace Array<T>, Dictionary<T, U> and Optional<T> with [T], [T: U] and T?
     static let typeSugar = FormatRule(
         help: "Prefer shorthand syntax for Arrays, Dictionaries and Optionals.",
+        examples: """
+        ```diff
+        - var foo: Array<String>
+        + var foo: [String]
+        ```
+
+        ```diff
+        - var foo: Dictionary<String, Int>
+        + var foo: [String: Int]
+        ```
+
+        ```diff
+        - var foo: Optional<(Int) -> Void>
+        + var foo: ((Int) -> Void)?
+        ```
+        """,
         options: ["shortoptionals"]
     ) { formatter in
         formatter.forEach(.startOfScope("<")) { i, _ in

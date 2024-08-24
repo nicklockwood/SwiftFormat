@@ -12,6 +12,92 @@ public extension FormatRule {
     /// Strip header comments from the file
     static let fileHeader = FormatRule(
         help: "Use specified source file header template for all files.",
+        examples: """
+        You can use the following tokens in the text:
+
+        Token | Description
+        --- | ---
+        `{file}` | File name
+        `{year}` | Current year
+        `{created}` | File creation date
+        `{created.year}` | File creation year
+        `{author}` | Name and email of the user who first committed the file
+        `{author.name}` | Name of the user who first committed the file
+        `{author.email}` | Email of the user who first committed the file
+
+        **Example**:
+
+        `--header \\n {file}\\n\\n Copyright © {created.year} {author.name}.\\n`
+
+        ```diff
+        - // SomeFile.swift
+
+        + //
+        + //  SomeFile.swift
+        + //  Copyright © 2023 Tim Apple.
+        + //
+        ```
+
+        You can use the following built-in formats for `--dateformat`:
+
+        Token | Description
+        --- | ---
+        system | Use the local system locale
+        iso | ISO 8601 (yyyy-MM-dd)
+        dmy | Date/Month/Year (dd/MM/yyyy)
+        mdy | Month/Day/Year (MM/dd/yyyy)
+
+        Custom formats are defined using
+        [Unicode symbols](https://www.unicode.org/reports/tr35/tr35-31/tr35-dates.html#Date_Field_Symbol_Table).
+
+        `--dateformat iso`
+
+        ```diff
+        - // Created {created}
+        + // Created 2023-08-10
+        ```
+
+        `--dateformat dmy`
+
+        ```diff
+        - // Created {created}
+        + // Created 10/08/2023
+        ```
+
+        `--dateformat mdy`
+
+        ```diff
+        - // Created {created}
+        + // Created 08/10/2023
+        ```
+
+        `--dateformat 'yyyy.MM.dd.HH.mm'`
+
+        ```diff
+        - // Created {created}
+        + // Created 2023.08.10.11.00
+        ```
+
+        Setting a time zone enforces consistent date formatting across environments
+        around the world. By default the local system locale is used and for convenience
+        `gmt` and `utc` can be used. The time zone can be further customized by
+        setting it to a abbreviation/time zone identifier supported by the Swift
+        standard library.
+
+        `--dateformat 'yyyy-MM-dd HH:mm ZZZZ' --timezone utc`
+
+        ```diff
+        - // Created {created}
+        + // Created 2023-08-10 11:00 GMT
+        ```
+
+        `--dateformat 'yyyy-MM-dd HH:mm ZZZZ' --timezone Pacific/Fiji`
+
+        ```diff
+        - // Created 2023-08-10 11:00 GMT
+        + // Created 2023-08-10 23:00 GMT+12:00
+        ```
+        """,
         runOnceOnly: true,
         options: ["header", "dateformat", "timezone"],
         sharedOptions: ["linebreaks"]

@@ -12,6 +12,25 @@ public extension FormatRule {
     /// Standardise the order of property modifiers
     static let modifierOrder = FormatRule(
         help: "Use consistent ordering for member modifiers.",
+        examples: """
+        ```diff
+        - lazy public weak private(set) var foo: UIView?
+        + public private(set) lazy weak var foo: UIView?
+        ```
+
+        ```diff
+        - final public override func foo()
+        + override public final func foo()
+        ```
+
+        ```diff
+        - convenience private init()
+        + private convenience init()
+        ```
+
+        **NOTE:** If the `--modifierorder` option isn't set, the default order will be:
+        `\(_FormatRules.defaultModifierOrder.flatMap { $0 }.joined(separator: "`, `"))`
+        """,
         options: ["modifierorder"]
     ) { formatter in
         formatter.forEach(.keyword) { i, token in

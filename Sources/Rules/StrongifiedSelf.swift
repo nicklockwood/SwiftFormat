@@ -11,7 +11,17 @@ import Foundation
 public extension FormatRule {
     /// Removed backticks from `self` when strongifying
     static let strongifiedSelf = FormatRule(
-        help: "Remove backticks around `self` in Optional unwrap expressions."
+        help: "Remove backticks around `self` in Optional unwrap expressions.",
+        examples: """
+        ```diff
+        - guard let `self` = self else { return }
+        + guard let self = self else { return }
+        ```
+
+        **NOTE:** assignment to un-escaped `self` is only supported in Swift 4.2 and
+        above, so the `strongifiedSelf` rule is disabled unless the Swift version is
+        set to 4.2 or above.
+        """
     ) { formatter in
         formatter.forEach(.identifier("`self`")) { i, _ in
             guard formatter.options.swiftVersion >= "4.2",

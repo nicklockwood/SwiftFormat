@@ -11,7 +11,28 @@ import Foundation
 public extension FormatRule {
     /// Remove redundant parens around the arguments for loops, if statements, closures, etc.
     static let redundantParens = FormatRule(
-        help: "Remove redundant parentheses."
+        help: "Remove redundant parentheses.",
+        examples: """
+        ```diff
+        - if (foo == true) {}
+        + if foo == true {}
+        ```
+
+        ```diff
+        - while (i < bar.count) {}
+        + while i < bar.count {}
+        ```
+
+        ```diff
+        - queue.async() { ... }
+        + queue.async { ... }
+        ```
+
+        ```diff
+        - let foo: Int = ({ ... })()
+        + let foo: Int = { ... }()
+        ```
+        """
     ) { formatter in
         // TODO: unify with conditionals logic in trailingClosures
         let conditionals = Set(["in", "while", "if", "case", "switch", "where", "for", "guard"])

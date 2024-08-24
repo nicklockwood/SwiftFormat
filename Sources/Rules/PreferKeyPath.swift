@@ -10,7 +10,16 @@ import Foundation
 
 public extension FormatRule {
     static let preferKeyPath = FormatRule(
-        help: "Convert trivial `map { $0.foo }` closures to keyPath-based syntax."
+        help: "Convert trivial `map { $0.foo }` closures to keyPath-based syntax.",
+        examples: """
+        ```diff
+        - let barArray = fooArray.map { $0.bar }
+        + let barArray = fooArray.map(\\.bar)
+
+        - let barArray = fooArray.compactMap { $0.optionalBar }
+        + let barArray = fooArray.compactMap(\\.optionalBar)
+        ```
+        """
     ) { formatter in
         formatter.forEach(.startOfScope("{")) { i, _ in
             guard formatter.options.swiftVersion >= "5.2",

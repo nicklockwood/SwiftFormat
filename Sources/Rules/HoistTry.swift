@@ -11,6 +11,17 @@ import Foundation
 public extension FormatRule {
     static let hoistTry = FormatRule(
         help: "Move inline `try` keyword(s) to start of expression.",
+        examples: """
+        ```diff
+        - foo(try bar(), try baz())
+        + try foo(bar(), baz())
+        ```
+
+        ```diff
+        - let foo = String(try await getFoo())
+        + let foo = try String(await getFoo())
+        ```
+        """,
         options: ["throwcapturing"]
     ) { formatter in
         let names = formatter.options.throwCapturing.union(["expect"])

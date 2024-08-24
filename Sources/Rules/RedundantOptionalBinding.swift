@@ -13,6 +13,19 @@ public extension FormatRule {
         help: "Remove redundant identifiers in optional binding conditions.",
         // We can convert `if let foo = self.foo` to just `if let foo`,
         // but only if `redundantSelf` can first remove the `self.`.
+        examples: """
+        ```diff
+        - if let foo = foo {
+        + if let foo {
+              print(foo)
+          }
+
+        - guard let self = self else {
+        + guard let self else {
+              return
+          }
+        ```
+        """,
         orderAfter: [.redundantSelf]
     ) { formatter in
         formatter.forEachToken { i, token in

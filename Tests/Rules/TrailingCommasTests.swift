@@ -247,6 +247,17 @@ class TrailingCommasTests: XCTestCase {
         testFormatting(for: input, rule: .trailingCommas)
     }
 
+    func testTrailingCommaNotAddedToArrayExtension() {
+        let input = """
+        extension [
+            Int
+        ] {
+            func foo() {}
+        }
+        """
+        testFormatting(for: input, rule: .trailingCommas)
+    }
+
     // trailingCommas = false
 
     func testCommaNotAddedToLastItem() {

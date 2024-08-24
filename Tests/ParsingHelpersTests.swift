@@ -2444,4 +2444,12 @@ class ParsingHelpersTests: XCTestCase {
             ["at"]
         )
     }
+
+    // MARK: scopeType
+
+    func testScopeTypeForArrayExtension() {
+        let input = "extension [Int] {}"
+        let formatter = Formatter(tokenize(input))
+        XCTAssertEqual(formatter.scopeType(at: 2), .arrayType)
+    }
 }

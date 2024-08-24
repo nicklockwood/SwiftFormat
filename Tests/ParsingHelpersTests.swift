@@ -2225,4 +2225,12 @@ class ParsingHelpersTests: XCTestCase {
         let formatter = Formatter(tokenize(input))
         return formatter.isStoredProperty(atIntroducerIndex: index)
     }
+
+    // MARK: scopeType
+
+    func testScopeTypeForArrayExtension() {
+        let input = "extension [Int] {}"
+        let formatter = Formatter(tokenize(input))
+        XCTAssertEqual(formatter.scopeType(at: 2), .arrayType)
+    }
 }

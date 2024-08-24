@@ -361,7 +361,7 @@ extension Formatter {
                     {
                         isType = true
                     }
-                case .operator("->", _), .startOfScope("<"):
+                case .operator("->", _), .startOfScope("<"), .keyword("extension"):
                     isType = true
                 case .startOfScope("["), .startOfScope("("):
                     guard let type = scopeType(at: prevIndex) else {

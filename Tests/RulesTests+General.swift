@@ -399,6 +399,17 @@ class GeneralTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.trailingCommas)
     }
 
+    func testTrailingCommaNotAddedToArrayExtension() {
+        let input = """
+        extension [
+            Int
+        ] {
+            func foo() {}
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.trailingCommas)
+    }
+
     // trailingCommas = false
 
     func testCommaNotAddedToLastItem() {

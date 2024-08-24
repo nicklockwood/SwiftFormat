@@ -5,10 +5,7 @@
 
   <PropertyGroup>
     <ProductArchitecture Condition=" '$(ProductArchitecture)' == '' ">amd64</ProductArchitecture>
-    <ProductArchitecture>$(ProductArchitecture)</ProductArchitecture>
-
     <ProductVersion Condition=" '$(ProductVersion)' == '' ">0.0.0</ProductVersion>
-    <ProductVersion>$(ProductVersion)</ProductVersion>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -19,7 +16,12 @@
   <Import Project="WiXCodeSigning.targets" />
 
   <PropertyGroup>
-    <DefineConstants>ProductArchitecture=$(ProductArchitecture);ProductVersion=$(ProductVersion);SWIFTFORMAT_BUILD=$(SWIFTFORMAT_BUILD)</DefineConstants>
+    <DefineConstants>
+      ProductArchitecture=$(ProductArchitecture);
+      ProductVersion=$(ProductVersion);
+      SwiftFormatBuildDir=$(SwiftFormatBuildDir);
+      SwiftRedistDir=$(SwiftRedistDir)
+      </DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(ProductArchitecture)' == 'amd64' ">

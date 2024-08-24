@@ -12,7 +12,18 @@ public extension FormatRule {
     /// Ensure that there is space between an opening brace and the preceding
     /// identifier, and between a closing brace and the following identifier.
     static let spaceAroundBraces = FormatRule(
-        help: "Add or remove space around curly braces."
+        help: "Add or remove space around curly braces.",
+        examples: """
+        ```diff
+        - foo.filter{ return true }.map{ $0 }
+        + foo.filter { return true }.map { $0 }
+        ```
+
+        ```diff
+        - foo( {} )
+        + foo({})
+        ```
+        """
     ) { formatter in
         formatter.forEach(.startOfScope("{")) { i, _ in
             if let prevToken = formatter.token(at: i - 1) {

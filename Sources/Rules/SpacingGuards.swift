@@ -4,9 +4,23 @@
 import Foundation
 
 public extension FormatRule {
-    static let spacingGuards = FormatRule(help: "Remove space between guard and add spaces after last guard.",
-                                          disabledByDefault: true)
-    { formatter in
+    static let spacingGuards = FormatRule(
+        help: "Remove space between guard statements, and add spaces after last guard.",
+        examples: """
+        ```diff
+            guard let spicy = self.makeSpicy() else {
+                return
+            }
+        -
+            guard let soap = self.clean() else {
+                return
+            }
+        +
+            let doTheJob = nikekov()
+        ```
+        """,
+        disabledByDefault: true
+    ) { formatter in
         formatter.forEach(.keyword("guard")) { guardIndex, _ in
             guard let startOfScopeOfGuard = formatter.index(of: .startOfScope("{"), after: guardIndex),
                   let endOfScopeOfGuard = formatter.endOfScope(at: startOfScopeOfGuard)

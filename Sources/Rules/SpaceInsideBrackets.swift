@@ -11,7 +11,13 @@ import Foundation
 public extension FormatRule {
     /// Remove space immediately inside square brackets
     static let spaceInsideBrackets = FormatRule(
-        help: "Remove space inside square brackets."
+        help: "Remove space inside square brackets.",
+        examples: """
+        ```diff
+        - [ 1, 2, 3 ]
+        + [1, 2, 3]
+        ```
+        """
     ) { formatter in
         formatter.forEach(.startOfScope("[")) { i, _ in
             if formatter.token(at: i + 1)?.isSpace == true,

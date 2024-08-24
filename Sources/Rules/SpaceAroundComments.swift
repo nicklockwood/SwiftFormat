@@ -11,7 +11,18 @@ import Foundation
 public extension FormatRule {
     /// Add space around comments, except at the start or end of a line
     static let spaceAroundComments = FormatRule(
-        help: "Add space before and/or after comments."
+        help: "Add space before and/or after comments.",
+        examples: """
+        ```diff
+        - let a = 5// assignment
+        + let a = 5 // assignment
+        ```
+
+        ```diff
+        - func foo() {/* ... */}
+        + func foo() { /* ... */ }
+        ```
+        """
     ) { formatter in
         formatter.forEach(.startOfScope("//")) { i, _ in
             if let prevToken = formatter.token(at: i - 1), !prevToken.isSpaceOrLinebreak {

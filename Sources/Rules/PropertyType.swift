@@ -11,6 +11,33 @@ import Foundation
 public extension FormatRule {
     static let propertyType = FormatRule(
         help: "Convert property declarations to use inferred types (`let foo = Foo()`) or explicit types (`let foo: Foo = .init()`).",
+        examples: """
+        ```diff
+        - let foo: Foo = .init()
+        + let foo: Foo = .init()
+
+        - let bar: Bar = .defaultValue
+        + let bar = .defaultValue
+
+        - let baaz: Baaz = .buildBaaz(foo: foo, bar: bar)
+        + let baaz = Baaz.buildBaaz(foo: foo, bar: bar)
+
+          let float: CGFloat = 10.0
+          let array: [String] = []
+          let anyFoo: AnyFoo = foo
+
+          // with --inferredtypes always:
+        - let foo: Foo =
+        + let foo =
+            if condition {
+        -     .init(bar)
+        +     Foo(bar)
+            } else {
+        -     .init(baaz)
+        +     Foo(baaz)
+            }
+        ```
+        """,
         disabledByDefault: true,
         orderAfter: [.redundantType],
         options: ["inferredtypes", "preservesymbols"],

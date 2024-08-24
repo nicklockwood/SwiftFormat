@@ -11,9 +11,7 @@ import Foundation
 public extension FormatRule {
     /// Remove blank lines between chained functions but keep the linebreaks
     static let blankLinesBetweenChainedFunctions = FormatRule(
-        help: """
-        Remove blank lines between chained functions but keep the linebreaks.
-        """
+        help: "Remove blank lines between chained functions but keep the linebreaks."
     ) { formatter in
         formatter.forEach(.operator(".", .infix)) { i, _ in
             let endOfLine = formatter.endOfLine(at: i)

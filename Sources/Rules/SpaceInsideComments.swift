@@ -12,7 +12,18 @@ public extension FormatRule {
     /// Add space inside comments, taking care not to mangle headerdoc or
     /// carefully preformatted comments, such as star boxes, etc.
     static let spaceInsideComments = FormatRule(
-        help: "Add leading and/or trailing space inside comments."
+        help: "Add leading and/or trailing space inside comments.",
+        examples: """
+        ```diff
+        - let a = 5 //assignment
+        + let a = 5 // assignment
+        ```
+
+        ```diff
+        - func foo() { /*...*/ }
+        + func foo() { /* ... */ }
+        ```
+        """
     ) { formatter in
         formatter.forEach(.startOfScope("//")) { i, _ in
             guard case let .commentBody(string)? = formatter.token(at: i + 1),

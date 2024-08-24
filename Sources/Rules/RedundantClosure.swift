@@ -14,6 +14,21 @@ public extension FormatRule {
         Removes redundant closures bodies, containing a single statement,
         which are called immediately.
         """,
+        examples: """
+        ```diff
+        - let foo = { Foo() }()
+        + let foo = Foo()
+        ```
+
+        ```diff
+        - lazy var bar = {
+        -     Bar(baaz: baaz,
+        -         quux: quux)
+        - }()
+        + lazy var bar = Bar(baaz: baaz,
+        +                    quux: quux)
+        ```
+        """,
         disabledByDefault: false,
         orderAfter: [.redundantReturn]
     ) { formatter in

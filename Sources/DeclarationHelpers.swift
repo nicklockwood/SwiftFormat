@@ -13,7 +13,7 @@ import Foundation
 /// A declaration, like a property, function, or type.
 /// https://docs.swift.org/swift-book/documentation/the-swift-programming-language/declarations/
 ///
-/// Forms a tree of declaratons, since `type` declarations have a body
+/// Forms a tree of declarations, since `type` declarations have a body
 /// that contains child declarations.
 enum Declaration: Hashable {
     /// A type-like declaration with body of additional declarations (`class`, `struct`, etc)
@@ -345,7 +345,7 @@ extension Formatter {
 
         // Prefer keeping linebreaks at the end of a declaration's tokens,
         // instead of the start of the next delaration's tokens.
-        //  - This inclues any spaces on blank lines, but doesn't include the
+        //  - This includes any spaces on blank lines, but doesn't include the
         //    indentation associated with the next declaration.
         while let linebreakSearchIndex = endOfDeclaration,
               token(at: linebreakSearchIndex + 1)?.isSpaceOrLinebreak == true

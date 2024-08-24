@@ -3702,7 +3702,7 @@ class IndentTests: XCTestCase {
         """
         let options = FormatOptions(indent: "\t", truncateBlankLines: true, tabWidth: 2)
         XCTAssertEqual(try lint(input, rules: [.indent, .trailingSpace], options: options), [
-            Formatter.Change(line: 3, rule: .trailingSpace, filePath: nil),
+            Formatter.Change(line: 3, rule: .trailingSpace, filePath: nil, isMove: false),
         ])
     }
 

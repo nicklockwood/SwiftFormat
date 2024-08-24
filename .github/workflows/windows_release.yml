@@ -22,11 +22,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - branch: swift-5.9.2-release
-            tag: 5.9.2-RELEASE
-
-          - branch: development
-            tag: DEVELOPMENT-SNAPSHOT-2023-06-05-a
+          - branch: swift-5.10.1-release
+            tag: 5.10.1-RELEASE
 
     steps:
       - uses: compnerd/gha-setup-swift@main
@@ -42,7 +39,28 @@ jobs:
 
       - uses: microsoft/setup-msbuild@v2.0.0
 
-      - run: msbuild -nologo -restore Platforms\Windows\SwiftFormat.wixproj -p:Configuration=Release -p:ProductVersion=${{ github.event.inputs.version }} -p:SWIFTFORMAT_BUILD=${{ github.workspace }}\.build\release -p:OutputPath=${{ github.workspace }}\artifacts -p:RunWixToolsOutOfProc=true
+      - shell: pwsh
+        run: |
+          # Bundle the Swift runtime if the version we're using ships with a redistributable
+          $SwiftExePath = (& where.exe swift.exe)
+          if (-not ($SwiftExePath -match "(.+)\\Toolchains\\(\d+\.\d+\.\d+)[^\\]*\\.*")) {
+            throw "Unexpected Swift installation path format"
+          }
+
+          $SwiftInstallRoot = $Matches[1]
+          $SwiftRuntimeVersion = $Matches[2]
+          $SwiftRedistDir = "$SwiftInstallRoot\Redistributables\$SwiftRuntimeVersion"
+          if (-not (Test-Path $SwiftRedistDir)) {
+            throw "Swift redistributable not found at $SwiftRedistDir"
+          }
+
+          & msbuild -nologo -restore Platforms\Windows\SwiftFormat.wixproj `
+            -p:Configuration=Release `
+            -p:ProductVersion=${{ github.event.inputs.version }} `
+            -p:SwiftFormatBuildDir=${{ github.workspace }}\.build\release `
+            -p:SwiftRedistDir=$SwiftRedistDir `
+            -p:OutputPath=${{ github.workspace }}\artifacts `
+            -p:RunWixToolsOutOfProc=true
 
       - run: |
           $MSI_PATH = cygpath -m ${{ github.workspace }}\artifacts\SwiftFormat.msi

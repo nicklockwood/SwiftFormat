@@ -579,7 +579,7 @@ public struct AnyExpression: CustomStringConvertible {
     /// All symbols used in the expression
     public var symbols: Set<Symbol> { return expression.symbols }
 
-    /// Returns the optmized, pretty-printed expression if it was valid
+    /// Returns the optimized, pretty-printed expression if it was valid
     /// Otherwise, returns the original (invalid) expression string
     public var description: String { return describer() }
 }

@@ -1,6 +1,13 @@
 <Wix
     xmlns="http://wixtoolset.org/schemas/v4/wxs"
     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+
+  <?if $(sys.BUILDARCH) == x64 ?>
+    <?define MergeModuleFileName = "rtl.amd64.msm" ?>
+  <?else?>
+    <?define MergeModuleFileName = "rtl.$(sys.BUILDARCH).msm" ?>
+  <?endif?>
+
   <Package
       Language="1033"
       Manufacturer="nicklockwood"
@@ -16,14 +23,16 @@
       <Directory Id="ManufacturerFolder" Name="nicklockwood">
         <Directory Id="INSTALLDIR" Name="SwiftFormat">
           <Directory Id="_usr" Name="usr">
-            <Directory Id="_usr_bin" Name="bin" />
+            <Directory Id="_usr_bin" Name="bin">
+              <Merge Id="SwiftRuntime" DiskId="1" Language="0" SourceFile="$(SwiftRedistDir)\$(MergeModuleFileName)" />
+            </Directory>
           </Directory>
         </Directory>
       </Directory>
     </StandardDirectory>
 
     <Component Directory="_usr_bin" Id="swiftformat.exe">
-      <File Id="swiftformat.exe" Source="$(var.SWIFTFORMAT_BUILD)\swiftformat.exe" Checksum="yes" KeyPath="yes" />
+      <File Id="swiftformat.exe" Source="$(var.SwiftFormatBuildDir)\swiftformat.exe" Checksum="yes" KeyPath="yes" />
     </Component>
 
     <ComponentGroup Id="EnvironmentVariables">
@@ -36,6 +45,7 @@
     </ComponentGroup>
 
     <Feature Id="SwiftFormat" Level="1">
+      <MergeRef Id="SwiftRuntime" />
       <ComponentRef Id="swiftformat.exe" />
       <ComponentGroupRef Id="EnvironmentVariables" />
     </Feature>

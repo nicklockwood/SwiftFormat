@@ -11,7 +11,13 @@ import Foundation
 public extension FormatRule {
     /// Remove space immediately inside parens
     static let spaceInsideParens = FormatRule(
-        help: "Remove space inside parentheses."
+        help: "Remove space inside parentheses.",
+        examples: """
+        ```diff
+        - ( a, b)
+        + (a, b)
+        ```
+        """
     ) { formatter in
         formatter.forEach(.startOfScope("(")) { i, _ in
             if formatter.token(at: i + 1)?.isSpace == true,

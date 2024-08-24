@@ -12,6 +12,32 @@ public extension FormatRule {
     /// Normalize the use of void in closure arguments and return values
     static let void = FormatRule(
         help: "Use `Void` for type declarations and `()` for values.",
+        examples: """
+        ```diff
+        - let foo: () -> ()
+        + let foo: () -> Void
+        ```
+
+        ```diff
+        - let bar: Void -> Void
+        + let bar: () -> Void
+        ```
+
+        ```diff
+        - let baz: (Void) -> Void
+        + let baz: () -> Void
+        ```
+
+        ```diff
+        - func quux() -> (Void)
+        + func quux() -> Void
+        ```
+
+        ```diff
+        - callback = { _ in Void() }
+        + callback = { _ in () }
+        ```
+        """,
         options: ["voidtype"]
     ) { formatter in
         let hasLocalVoid = formatter.hasLocalVoid()

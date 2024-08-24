@@ -11,7 +11,23 @@ import Foundation
 public extension FormatRule {
     /// Remove redundant @objc annotation
     static let redundantObjc = FormatRule(
-        help: "Remove redundant `@objc` annotations."
+        help: "Remove redundant `@objc` annotations.",
+        examples: """
+        ```diff
+        - @objc @IBOutlet var label: UILabel!
+        + @IBOutlet var label: UILabel!
+        ```
+
+        ```diff
+        - @IBAction @objc func goBack() {}
+        + @IBAction func goBack() {}
+        ```
+
+        ```diff
+        - @objc @NSManaged private var foo: String?
+        + @NSManaged private var foo: String?
+        ```
+        """
     ) { formatter in
         let objcAttributes = [
             "@IBOutlet", "@IBAction", "@IBSegueAction",

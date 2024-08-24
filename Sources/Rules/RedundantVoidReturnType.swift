@@ -12,6 +12,17 @@ public extension FormatRule {
     /// Remove redundant void return values for function and closure declarations
     static let redundantVoidReturnType = FormatRule(
         help: "Remove explicit `Void` return type.",
+        examples: """
+        ```diff
+        - func foo() -> Void {
+            // returns nothing
+          }
+
+        + func foo() {
+            // returns nothing
+          }
+        ```
+        """,
         options: ["closurevoid"]
     ) { formatter in
         formatter.forEach(.operator("->", .infix)) { i, _ in

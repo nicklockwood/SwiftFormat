@@ -17,6 +17,17 @@ public extension FormatRule {
         size (the number of digits in each group) and a threshold (the minimum number of
         digits in a number before grouping is applied).
         """,
+        examples: """
+        ```diff
+        - let color = 0xFF77A5
+        + let color = 0xff77a5
+        ```
+
+        ```diff
+        - let big = 123456.123
+        + let big = 123_456.123
+        ```
+        """,
         options: ["decimalgrouping", "binarygrouping", "octalgrouping", "hexgrouping",
                   "fractiongrouping", "exponentgrouping", "hexliteralcase", "exponentcase"]
     ) { formatter in

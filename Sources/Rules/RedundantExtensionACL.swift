@@ -11,7 +11,18 @@ import Foundation
 public extension FormatRule {
     /// Remove redundant access control level modifiers in extensions
     static let redundantExtensionACL = FormatRule(
-        help: "Remove redundant access control modifiers."
+        help: "Remove redundant access control modifiers.",
+        examples: """
+        ```diff
+          public extension URL {
+        -   public func queryParameter(_ name: String) -> String { ... }
+          }
+
+          public extension URL {
+        +   func queryParameter(_ name: String) -> String { ... }
+          }
+        ```
+        """
     ) { formatter in
         formatter.forEach(.keyword("extension")) { i, _ in
             var acl = ""

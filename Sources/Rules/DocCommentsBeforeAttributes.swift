@@ -11,6 +11,14 @@ import Foundation
 public extension FormatRule {
     static let docCommentsBeforeAttributes = FormatRule(
         help: "Place doc comments on declarations before any attributes.",
+        examples: """
+        ```diff
+        + /// Doc comment on this function declaration
+          @MainActor
+        - /// Doc comment on this function declaration
+          func foo() {}
+        ```
+        """,
         orderAfter: [.docComments]
     ) { formatter in
         formatter.forEachToken(where: \.isDeclarationTypeKeyword) { keywordIndex, _ in

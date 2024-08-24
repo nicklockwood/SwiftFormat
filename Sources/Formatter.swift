@@ -351,29 +351,6 @@ public extension Formatter {
                 }
             }
         }
-
-        // An implementation that used https://github.com/GilesHammond/DifferenceTracker
-//        for step in difference {
-//            switch step {
-//            case let .insert(line, at: lineIndex):
-//                let lineRanges = tokens.lineRanges
-//                if lineIndex >= lineRanges.count {
-//                    insert(line, at: tokens.endIndex)
-//                } else {
-//                    insert(line, at: lineRanges[lineIndex].lowerBound)
-//                }
-//
-//            case let .remove(_, at: lineIndex):
-//                removeTokens(in: tokens.lineRanges[lineIndex])
-//
-//            case let .move(line, fromLineIndex, to: toLineIndex):
-//                for indexToRemove in tokens.lineRanges[fromLineIndex].reversed() {
-//                    removeToken(at: indexToRemove, isMove: true)
-//                }
-//
-//                insert(line, at: tokens.lineRanges[toLineIndex].lowerBound, isMove: true)
-//            }
-//        }
     }
 
     /// Removes the token at the specified index

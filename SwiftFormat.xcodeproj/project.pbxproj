@@ -513,10 +513,6 @@
 		2E2BADB42C57F6DD00590239 /* SortDeclarations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BABFE2C57F6DD00590239 /* SortDeclarations.swift */; };
 		2E2BADB52C57F6DD00590239 /* SortDeclarations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BABFE2C57F6DD00590239 /* SortDeclarations.swift */; };
 		2E2BADB62C57F6DD00590239 /* SortDeclarations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BABFE2C57F6DD00590239 /* SortDeclarations.swift */; };
-		2E36D20B2C7A47BE007DD79F /* DifferenceTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E36D20A2C7A47BE007DD79F /* DifferenceTracker.swift */; };
-		2E36D20C2C7A47BE007DD79F /* DifferenceTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E36D20A2C7A47BE007DD79F /* DifferenceTracker.swift */; };
-		2E36D20D2C7A47BE007DD79F /* DifferenceTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E36D20A2C7A47BE007DD79F /* DifferenceTracker.swift */; };
-		2E36D20E2C7A47BE007DD79F /* DifferenceTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E36D20A2C7A47BE007DD79F /* DifferenceTracker.swift */; };
 		2E7D30A42A7940C500C32174 /* Singularize.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E7D30A32A7940C500C32174 /* Singularize.swift */; };
 		2E8DE6F82C57FEB30032BF25 /* RedundantClosureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E8DE68D2C57FEB30032BF25 /* RedundantClosureTests.swift */; };
 		2E8DE6F92C57FEB30032BF25 /* BlankLinesBetweenChainedFunctionsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E8DE68E2C57FEB30032BF25 /* BlankLinesBetweenChainedFunctionsTests.swift */; };
@@ -889,7 +885,6 @@
 		2E2BABFC2C57F6DD00590239 /* SortSwitchCases.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SortSwitchCases.swift; sourceTree = "<group>"; };
 		2E2BABFD2C57F6DD00590239 /* RedundantType.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RedundantType.swift; sourceTree = "<group>"; };
 		2E2BABFE2C57F6DD00590239 /* SortDeclarations.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SortDeclarations.swift; sourceTree = "<group>"; };
-		2E36D20A2C7A47BE007DD79F /* DifferenceTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DifferenceTracker.swift; sourceTree = "<group>"; };
 		2E7D30A32A7940C500C32174 /* Singularize.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Singularize.swift; sourceTree = "<group>"; };
 		2E8DE68D2C57FEB30032BF25 /* RedundantClosureTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RedundantClosureTests.swift; sourceTree = "<group>"; };
 		2E8DE68E2C57FEB30032BF25 /* BlankLinesBetweenChainedFunctionsTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BlankLinesBetweenChainedFunctionsTests.swift; sourceTree = "<group>"; };
@@ -1158,7 +1153,6 @@
 				01A0EABF1D5DB4F700A0A8E3 /* Tokenizer.swift */,
 				01BBD85821DAA2A000457380 /* Globs.swift */,
 				D52F6A632A82E04600FE1448 /* GitFileInfo.swift */,
-				2E36D20A2C7A47BE007DD79F /* DifferenceTracker.swift */,
 				012939DB2C56A3AA00BD0A24 /* Reporters */,
 			);
 			path = Sources;
@@ -1828,7 +1822,6 @@
 				2E2BAD6F2C57F6DD00590239 /* OpaqueGenericParameters.swift in Sources */,
 				2E2BACD32C57F6DD00590239 /* BlankLinesAtEndOfScope.swift in Sources */,
 				2E2BACF72C57F6DD00590239 /* RedundantStaticSelf.swift in Sources */,
-				2E36D20B2C7A47BE007DD79F /* DifferenceTracker.swift in Sources */,
 				2E2BAC4B2C57F6DD00590239 /* BlankLinesAroundMark.swift in Sources */,
 				2E2BAC372C57F6DD00590239 /* HoistPatternLet.swift in Sources */,
 				2E2BAD672C57F6DD00590239 /* HoistAwait.swift in Sources */,
@@ -2182,7 +2175,6 @@
 				2E2BAC102C57F6DD00590239 /* WrapMultilineConditionalAssignment.swift in Sources */,
 				2E2BACC02C57F6DD00590239 /* TypeSugar.swift in Sources */,
 				2E2BACEC2C57F6DD00590239 /* RedundantObjc.swift in Sources */,
-				2E36D20C2C7A47BE007DD79F /* DifferenceTracker.swift in Sources */,
 				2E2BACE02C57F6DD00590239 /* RedundantReturn.swift in Sources */,
 				2E2BAC142C57F6DD00590239 /* ConsecutiveSpaces.swift in Sources */,
 				2E2BAC702C57F6DD00590239 /* AssertionFailures.swift in Sources */,
@@ -2330,7 +2322,6 @@
 				2E2BAC1D2C57F6DD00590239 /* RedundantExtensionACL.swift in Sources */,
 				2E2BACD12C57F6DD00590239 /* SpaceAroundBrackets.swift in Sources */,
 				2E2BAD312C57F6DD00590239 /* WrapAttributes.swift in Sources */,
-				2E36D20D2C7A47BE007DD79F /* DifferenceTracker.swift in Sources */,
 				580496D72C584E8F004B7DBF /* EmptyExtension.swift in Sources */,
 				2E2BAD9D2C57F6DD00590239 /* Specifiers.swift in Sources */,
 				E4872111201D3B830014845E /* Options.swift in Sources */,
@@ -2476,7 +2467,6 @@
 				2E2BAC1E2C57F6DD00590239 /* RedundantExtensionACL.swift in Sources */,
 				2E2BACD22C57F6DD00590239 /* SpaceAroundBrackets.swift in Sources */,
 				2E2BAD322C57F6DD00590239 /* WrapAttributes.swift in Sources */,
-				2E36D20E2C7A47BE007DD79F /* DifferenceTracker.swift in Sources */,
 				580496D82C584E8F004B7DBF /* EmptyExtension.swift in Sources */,
 				2E2BAD9E2C57F6DD00590239 /* Specifiers.swift in Sources */,
 				90F16AF81DA5EB4600EB4EA1 /* FormatFileCommand.swift in Sources */,

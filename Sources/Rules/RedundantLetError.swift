@@ -11,7 +11,14 @@ import Foundation
 public extension FormatRule {
     /// Remove redundant `let error` from `catch` statements
     static let redundantLetError = FormatRule(
-        help: "Remove redundant `let error` from `catch` clause."
+        help: "Remove redundant `let error` from `catch` clause.",
+        examples: """
+        ```diff
+        - do { ... } catch let error { log(error) }
+        + do { ... } catch { log(error) }
+        ```
+        """
+
     ) { formatter in
         formatter.forEach(.keyword("catch")) { i, _ in
             if let letIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i, if: {

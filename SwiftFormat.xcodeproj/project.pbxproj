@@ -47,10 +47,6 @@
 		01A8320924EC7F7800A9D0EB /* FormattingHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01D3B28524E9C9C700888DE0 /* FormattingHelpers.swift */; };
 		01A95BD2225BEDE300744931 /* ParsingHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01567D2E225B2BFD00B22D41 /* ParsingHelpers.swift */; };
 		01A95BD3225BEDE400744931 /* ParsingHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01567D2E225B2BFD00B22D41 /* ParsingHelpers.swift */; };
-		01ACAE05220CD90F003F3CCF /* Examples.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01ACAE04220CD90F003F3CCF /* Examples.swift */; };
-		01ACAE06220CD914003F3CCF /* Examples.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01ACAE04220CD90F003F3CCF /* Examples.swift */; };
-		01ACAE07220CD915003F3CCF /* Examples.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01ACAE04220CD90F003F3CCF /* Examples.swift */; };
-		01ACAE08220CD916003F3CCF /* Examples.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01ACAE04220CD90F003F3CCF /* Examples.swift */; };
 		01B3987B1D763424009ADE61 /* FormatterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01B3987A1D763424009ADE61 /* FormatterTests.swift */; };
 		01B3987D1D763493009ADE61 /* Formatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01B3987C1D763493009ADE61 /* Formatter.swift */; };
 		01B3987F1D7634A0009ADE61 /* Formatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01B3987C1D763493009ADE61 /* Formatter.swift */; };
@@ -766,7 +762,6 @@
 		01A0EAC41D5DB54A00A0A8E3 /* SwiftFormat.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SwiftFormat.swift; sourceTree = "<group>"; };
 		01A0EACA1D5DB5F500A0A8E3 /* swiftformat */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = swiftformat; sourceTree = BUILT_PRODUCTS_DIR; };
 		01A0EACC1D5DB5F500A0A8E3 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
-		01ACAE04220CD90F003F3CCF /* Examples.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Examples.swift; sourceTree = "<group>"; };
 		01B3987A1D763424009ADE61 /* FormatterTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FormatterTests.swift; sourceTree = "<group>"; };
 		01B3987C1D763493009ADE61 /* Formatter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Formatter.swift; sourceTree = "<group>"; };
 		01BBD85821DAA2A000457380 /* Globs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Globs.swift; sourceTree = "<group>"; };
@@ -1152,7 +1147,6 @@
 				01567D2E225B2BFD00B22D41 /* ParsingHelpers.swift */,
 				01D3B28524E9C9C700888DE0 /* FormattingHelpers.swift */,
 				2E230CA12C4C1C0700A16E2E /* DeclarationHelpers.swift */,
-				01ACAE04220CD90F003F3CCF /* Examples.swift */,
 				2E7D30A32A7940C500C32174 /* Singularize.swift */,
 				01A0EAA71D5DB4CF00A0A8E3 /* SwiftFormat.h */,
 				01A0EAC41D5DB54A00A0A8E3 /* SwiftFormat.swift */,
@@ -1846,7 +1840,6 @@
 				2E2BAC172C57F6DD00590239 /* ConsistentSwitchCaseSpacing.swift in Sources */,
 				2E2BACE32C57F6DD00590239 /* GenericExtensions.swift in Sources */,
 				01BBD85921DAA2A000457380 /* Globs.swift in Sources */,
-				01ACAE05220CD90F003F3CCF /* Examples.swift in Sources */,
 				01D3B28624E9C9C700888DE0 /* FormattingHelpers.swift in Sources */,
 				2E2BAD532C57F6DD00590239 /* TrailingCommas.swift in Sources */,
 				2E2BAD5F2C57F6DD00590239 /* RedundantBackticks.swift in Sources */,
@@ -2160,7 +2153,6 @@
 				EBA6E7032C5B7D4800CBD360 /* SpacingGuards.swift in Sources */,
 				2E2BAC602C57F6DD00590239 /* BlockComments.swift in Sources */,
 				2E2BAD0C2C57F6DD00590239 /* ApplicationMain.swift in Sources */,
-				01ACAE06220CD914003F3CCF /* Examples.swift in Sources */,
 				2E2BAD102C57F6DD00590239 /* RedundantProperty.swift in Sources */,
 				2E2BAC9C2C57F6DD00590239 /* RedundantInit.swift in Sources */,
 				C2FFD1832BD13C9E00774F55 /* XMLReporter.swift in Sources */,
@@ -2280,7 +2272,6 @@
 				E4962DE0203F3CD500A02013 /* OptionsStore.swift in Sources */,
 				2E2BAD2D2C57F6DD00590239 /* WrapEnumCases.swift in Sources */,
 				2E2BACDD2C57F6DD00590239 /* SpaceAroundBraces.swift in Sources */,
-				01ACAE07220CD915003F3CCF /* Examples.swift in Sources */,
 				2E2BAD692C57F6DD00590239 /* HoistAwait.swift in Sources */,
 				2E2BAD192C57F6DD00590239 /* BlankLineAfterImports.swift in Sources */,
 				2E2BAC052C57F6DD00590239 /* RedundantBreak.swift in Sources */,
@@ -2481,7 +2472,6 @@
 				90F16AF81DA5EB4600EB4EA1 /* FormatFileCommand.swift in Sources */,
 				2E2BACCA2C57F6DD00590239 /* HeaderFileName.swift in Sources */,
 				2E2BAD262C57F6DD00590239 /* RedundantSelf.swift in Sources */,
-				01ACAE08220CD916003F3CCF /* Examples.swift in Sources */,
 				2E2BACE22C57F6DD00590239 /* RedundantReturn.swift in Sources */,
 				D52F6A672A82E04600FE1448 /* GitFileInfo.swift in Sources */,
 				2E2BAD962C57F6DD00590239 /* NumberFormatting.swift in Sources */,

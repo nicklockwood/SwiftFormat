@@ -11,7 +11,18 @@ import Foundation
 public extension FormatRule {
     /// Remove redundant pattern in case statements
     static let redundantPattern = FormatRule(
-        help: "Remove redundant pattern matching parameter syntax."
+        help: "Remove redundant pattern matching parameter syntax.",
+        examples: """
+        ```diff
+        - if case .foo(_, _) = bar {}
+        + if case .foo = bar {}
+        ```
+
+        ```diff
+        - let (_, _) = bar
+        + let _ = bar
+        ```
+        """
     ) { formatter in
         formatter.forEach(.startOfScope("(")) { i, _ in
             let prevIndex = formatter.index(of: .nonSpaceOrComment, before: i)

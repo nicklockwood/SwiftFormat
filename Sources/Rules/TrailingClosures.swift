@@ -12,6 +12,17 @@ public extension FormatRule {
     /// Convert closure arguments to trailing closure syntax where possible
     static let trailingClosures = FormatRule(
         help: "Use trailing closure syntax where applicable.",
+        examples: """
+        ```diff
+        - DispatchQueue.main.async(execute: { ... })
+        + DispatchQueue.main.async {
+        ```
+
+        ```diff
+        - let foo = bar.map({ ... }).joined()
+        + let foo = bar.map { ... }.joined()
+        ```
+        """,
         options: ["trailingclosures", "nevertrailing"]
     ) { formatter in
         let useTrailing = Set([

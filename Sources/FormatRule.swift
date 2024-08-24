@@ -36,6 +36,7 @@ public final class FormatRule: Equatable, Comparable, CustomStringConvertible {
     fileprivate(set) var name = "[unnamed rule]"
     fileprivate(set) var index = 0
     let help: String
+    let examples: String?
     let runOnceOnly: Bool
     let disabledByDefault: Bool
     let orderAfter: [FormatRule]
@@ -55,6 +56,7 @@ public final class FormatRule: Equatable, Comparable, CustomStringConvertible {
     }
 
     init(help: String,
+         examples: String? = nil,
          deprecationMessage: String? = nil,
          runOnceOnly: Bool = false,
          disabledByDefault: Bool = false,
@@ -71,6 +73,7 @@ public final class FormatRule: Equatable, Comparable, CustomStringConvertible {
         self.options = options
         self.sharedOptions = sharedOptions
         self.deprecationMessage = deprecationMessage
+        self.examples = examples
     }
 
     public func apply(with formatter: Formatter) {

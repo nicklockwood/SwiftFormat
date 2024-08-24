@@ -11,7 +11,28 @@ import Foundation
 public extension FormatRule {
     /// Replace the `&&` operator with `,` where applicable
     static let andOperator = FormatRule(
-        help: "Prefer comma over `&&` in `if`, `guard` or `while` conditions."
+        help: "Prefer comma over `&&` in `if`, `guard` or `while` conditions.",
+        examples: """
+        ```diff
+        - if true && true {
+        + if true, true {
+        ```
+
+        ```diff
+        - guard true && true else {
+        + guard true, true else {
+        ```
+
+        ```diff
+        - if functionReturnsBool() && true {
+        + if functionReturnsBool(), true {
+        ```
+
+        ```diff
+        - if functionReturnsBool() && variable {
+        + if functionReturnsBool(), variable {
+        ```
+        """
     ) { formatter in
         formatter.forEachToken { i, token in
             switch token {

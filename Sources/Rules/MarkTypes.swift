@@ -11,6 +11,21 @@ import Foundation
 public extension FormatRule {
     static let markTypes = FormatRule(
         help: "Add a MARK comment before top-level types and extensions.",
+        examples: """
+        ```diff
+        + // MARK: - FooViewController
+        +
+         final class FooViewController: UIViewController { }
+
+        + // MARK: UICollectionViewDelegate
+        +
+         extension FooViewController: UICollectionViewDelegate { }
+
+        + // MARK: - String + FooProtocol
+        +
+         extension String: FooProtocol { }
+        ```
+        """,
         runOnceOnly: true,
         disabledByDefault: true,
         options: ["marktypes", "typemark", "markextensions", "extensionmark", "groupedextension"],

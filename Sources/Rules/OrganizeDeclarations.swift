@@ -11,6 +11,111 @@ import Foundation
 public extension FormatRule {
     static let organizeDeclarations = FormatRule(
         help: "Organize declarations within class, struct, enum, actor, and extension bodies.",
+        examples: """
+        Default value for `--visibilityorder` when using `--organizationmode visibility`:
+        `\(VisibilityCategory.defaultOrdering(for: .visibility).map(\.rawValue).joined(separator: ", "))`
+
+        Default value for `--visibilityorder` when using `--organizationmode type`:
+        `\(VisibilityCategory.defaultOrdering(for: .type).map(\.rawValue).joined(separator: ", "))`
+
+        **NOTE:** When providing custom arguments for `--visibilityorder` the following entries must be included:
+        `\(VisibilityCategory.essentialCases.map(\.rawValue).joined(separator: ", "))`
+
+        Default value for `--typeorder` when using `--organizationmode visibility`:
+        `\(DeclarationType.defaultOrdering(for: .visibility).map(\.rawValue).joined(separator: ", "))`
+
+        Default value for `--typeorder` when using `--organizationmode type`:
+        `\(DeclarationType.defaultOrdering(for: .type).map(\.rawValue).joined(separator: ", "))`
+
+        **NOTE:** The follow declaration types must be included in either `--typeorder` or `--visibilityorder`:
+        `\(DeclarationType.essentialCases.map(\.rawValue).joined(separator: ", "))`
+
+        `--organizationmode visibility` (default)
+
+        ```diff
+          public class Foo {
+        -     public func c() -> String {}
+        -
+        -     public let a: Int = 1
+        -     private let g: Int = 2
+        -     let e: Int = 2
+        -     public let b: Int = 3
+        -
+        -     public func d() {}
+        -     func f() {}
+        -     init() {}
+        -     deinit() {}
+         }
+
+          public class Foo {
+        +
+        +     // MARK: Lifecycle
+        +
+        +     init() {}
+        +     deinit() {}
+        +
+        +     // MARK: Public
+        +
+        +     public let a: Int = 1
+        +     public let b: Int = 3
+        +
+        +     public func c() -> String {}
+        +     public func d() {}
+        +
+        +     // MARK: Internal
+        +
+        +     let e: Int = 2
+        +
+        +     func f() {}
+        +
+        +     // MARK: Private
+        +
+        +     private let g: Int = 2
+        +
+         }
+        ```
+
+        `--organizationmode type`
+
+        ```diff
+          public class Foo {
+        -     public func c() -> String {}
+        -
+        -     public let a: Int = 1
+        -     private let g: Int = 2
+        -     let e: Int = 2
+        -     public let b: Int = 3
+        -
+        -     public func d() {}
+        -     func f() {}
+        -     init() {}
+        -     deinit() {}
+         }
+
+          public class Foo {
+        +
+        +     // MARK: Properties
+        +
+        +     public let a: Int = 1
+        +     public let b: Int = 3
+        +
+        +     let e: Int = 2
+        +
+        +     private let g: Int = 2
+        +
+        +     // MARK: Lifecycle
+        +
+        +     init() {}
+        +     deinit() {}
+        +
+        +     // MARK: Functions
+        +
+        +     public func c() -> String {}
+        +     public func d() {}
+        +
+         }
+        ```
+        """,
         runOnceOnly: true,
         disabledByDefault: true,
         orderAfter: [.extensionAccessControl, .redundantFileprivate],

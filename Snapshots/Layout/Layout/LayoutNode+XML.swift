@@ -11,7 +11,7 @@ public extension LayoutNode {
     }
 
     /// Creates a LayoutNode from a parse XML file
-    /// The optional `url` parameter tells Layout where the node was loded from
+    /// The optional `url` parameter tells Layout where the node was loaded from
     /// The optional` relativeTo` parameter helps to locate the original source file
     convenience init(xmlData: Data, url: URL? = nil, relativeTo: String? = #file) throws {
         try self.init(layout: Layout(xmlData: xmlData, url: url, relativeTo: relativeTo))

@@ -559,8 +559,8 @@ class CommandLineTests: XCTestCase {
                 url.path,
             ], in: "")
         }
-        let ouput = try String(contentsOf: outputURL)
-        XCTAssert(ouput.contains("\"rule_id\" : \"emptyBraces\""))
+        let output = try String(contentsOf: outputURL)
+        XCTAssert(output.contains("\"rule_id\" : \"emptyBraces\""))
     }
 
     func testGithubActionsLogReporterEndToEnd() throws {
@@ -655,8 +655,47 @@ class CommandLineTests: XCTestCase {
                 url.path,
             ], in: "")
         }
-        let ouput = try String(contentsOf: outputURL)
-        XCTAssert(ouput.contains("<error line=\"1\" column=\"0\" severity=\"warning\""))
+        let output = try String(contentsOf: outputURL)
+        XCTAssert(output.contains("<error line=\"1\" column=\"0\" severity=\"warning\""))
+    }
+
+    func testLintCommandOutputsOrganizeDeclarationOrderingViolations() {
+        var output: [String] = []
+        CLI.print = { message, _ in
+            output.append(message)
+        }
+
+        let input = """
+        struct Test {
+            func test() {
+                print("Test")
+            }
+            var foo: Foo
+            func bar() {
+                print("Bar")
+            }
+        }
+        """
+
+        let lines = input.components(separatedBy: "\n").map { $0 + "\n" }
+
+        var readCount = 0
+        CLI.readLine = {
+            guard readCount < lines.count else { return nil }
+            defer { readCount += 1 }
+            return lines[readCount]
+        }
+
+        _ = processArguments(["", "stdin", "--lint", "--rules", "organizeDeclarations"], in: "")
+
+        XCTAssertEqual(output, [
+            "Running SwiftFormat...",
+            "(lint mode - no files will be changed.)",
+            ":2:1: error: (organizeDeclarations) Organize declarations within class, struct, enum, actor, and extension bodies.",
+            ":5:1: error: (organizeDeclarations) Organize declarations within class, struct, enum, actor, and extension bodies.",
+            ":6:1: error: (organizeDeclarations) Organize declarations within class, struct, enum, actor, and extension bodies.",
+            "Source input did not pass lint check.",
+        ])
     }
 
     func testLintCommandOutputsOrganizeDeclarationOrderingViolations() {

@@ -117,13 +117,13 @@ class FormatterTests: XCTestCase {
     func testDisableRule() {
         let input = "//swiftformat:disable spaceAroundOperators\nlet foo : Int=5;"
         let output = "// swiftformat:disable spaceAroundOperators\nlet foo : Int=5\n"
-        XCTAssertEqual(try format(input, rules: FormatRules.default), output)
+        XCTAssertEqual(try format(input, rules: FormatRules.default).output, output)
     }
 
     func testDirectiveInMiddleOfComment() {
         let input = "//fixme: swiftformat:disable spaceAroundOperators - bug\nlet foo : Int=5;"
         let output = "// FIXME: swiftformat:disable spaceAroundOperators - bug\nlet foo : Int=5\n"
-        XCTAssertEqual(try format(input, rules: FormatRules.default), output)
+        XCTAssertEqual(try format(input, rules: FormatRules.default).output, output)
     }
 
     func testDisableAndReEnableRules() {
@@ -159,13 +159,13 @@ class FormatterTests: XCTestCase {
             }
         }
         """
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default).output, output + "\n")
     }
 
     func testDisableAllRules() {
         let input = "//swiftformat:disable all\nlet foo : Int=5;"
         let output = "// swiftformat:disable all\nlet foo : Int=5;"
-        XCTAssertEqual(try format(input, rules: FormatRules.default), output)
+        XCTAssertEqual(try format(input, rules: FormatRules.default).output, output)
     }
 
     func testDisableAndReEnableAllRules() {
@@ -201,49 +201,49 @@ class FormatterTests: XCTestCase {
             }
         }
         """
-        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default), output + "\n")
+        XCTAssertEqual(try format(input + "\n", rules: FormatRules.default).output, output + "\n")
     }
 
     func testDisableAllRulesAndReEnableOneRule() {
         let input = "//swiftformat:disable all\nlet foo : Int=5;\n//swiftformat:enable linebreakAtEndOfFile"
         let output = "// swiftformat:disable all\nlet foo : Int=5;\n//swiftformat:enable linebreakAtEndOfFile\n"
-        XCTAssertEqual(try format(input, rules: FormatRules.default), output)
+        XCTAssertEqual(try format(input, rules: FormatRules.default).output, output)
     }
 
     func testDisableNext() {
         let input = "//swiftformat:disable:next all\nlet foo : Int=5;\nlet foo : Int=5;"
         let output = "// swiftformat:disable:next all\nlet foo : Int=5;\nlet foo: Int = 5\n"
-        XCTAssertEqual(try format(input, rules: FormatRules.default), output)
+        XCTAssertEqual(try format(input, rules: FormatRules.default).output, output)
     }
 
     func testEnableNext() {
         let input = "//swiftformat:disable all\n//swiftformat:enable:next all\nlet foo : Int=5;\nlet foo : Int=5;"
         let output = "// swiftformat:disable all\n//swiftformat:enable:next all\nlet foo: Int = 5\nlet foo : Int=5;"
-        XCTAssertEqual(try format(input, rules: FormatRules.default), output)
+        XCTAssertEqual(try format(input, rules: FormatRules.default).output, output)
     }
 
     func testDisableRuleWithMultilineComment() {
         let input = "/*swiftformat:disable spaceAroundOperators*/let foo : Int=5;"
         let output = "/* swiftformat:disable spaceAroundOperators */ let foo : Int=5\n"
-        XCTAssertEqual(try format(input, rules: FormatRules.default), output)
+        XCTAssertEqual(try format(input, rules: FormatRules.default).output, output)
     }
 
     func testDisableAllRulesWithMultilineComment() {
         let input = "/*swiftformat:disable all*/let foo : Int=5;"
         let output = "/*swiftformat:disable all*/let foo : Int=5;"
-        XCTAssertEqual(try format(input, rules: FormatRules.default), output)
+        XCTAssertEqual(try format(input, rules: FormatRules.default).output, output)
     }
 
     func testDisableNextWithMultilineComment() {
         let input = "/*swiftformat:disable:next all*/\nlet foo : Int=5;\nlet foo : Int=5;"
         let output = "/* swiftformat:disable:next all */\nlet foo : Int=5;\nlet foo: Int = 5\n"
-        XCTAssertEqual(try format(input, rules: FormatRules.default), output)
+        XCTAssertEqual(try format(input, rules: FormatRules.default).output, output)
     }
 
     func testEnableNextWithMultilineComment() {
         let input = "//swiftformat:disable all\n/*swiftformat:enable:next all*/\nlet foo : Int=5;\nlet foo : Int=5;"
         let output = "// swiftformat:disable all\n/*swiftformat:enable:next all*/\nlet foo: Int = 5\nlet foo : Int=5;"
-        XCTAssertEqual(try format(input, rules: FormatRules.default), output)
+        XCTAssertEqual(try format(input, rules: FormatRules.default).output, output)
     }
 
     func testDisableLinewrap() {
@@ -252,19 +252,19 @@ class FormatterTests: XCTestCase {
         let foo = bar.baz(some: param).quux("a string of some sort")
         """
         let options = FormatOptions(maxWidth: 10)
-        XCTAssertEqual(try format(input, rules: FormatRules.default, options: options), input)
+        XCTAssertEqual(try format(input, rules: FormatRules.default, options: options).output, input)
     }
 
     func testMalformedDirective() {
         let input = "// swiftformat:disbible all"
-        XCTAssertThrowsError(try format(input, rules: FormatRules.default)) { error in
+        XCTAssertThrowsError(try format(input, rules: FormatRules.default).output) { error in
             XCTAssert("\(error)".contains("Unknown directive swiftformat:disbible"))
         }
     }
 
     func testMalformedDirective2() {
         let input = "// swiftformat: --disable all"
-        XCTAssertThrowsError(try format(input, rules: FormatRules.default)) { error in
+        XCTAssertThrowsError(try format(input, rules: FormatRules.default).output) { error in
             XCTAssertEqual("\(error)", "Expected directive after \'swiftformat:\' prefix on line 1")
         }
     }
@@ -287,7 +287,7 @@ class FormatterTests: XCTestCase {
         }
 
         """
-        XCTAssertEqual(try format(input, rules: FormatRules.default), output)
+        XCTAssertEqual(try format(input, rules: FormatRules.default).output, output)
     }
 
     func testIndentNext() {
@@ -317,7 +317,7 @@ class FormatterTests: XCTestCase {
         }
 
         """
-        XCTAssertEqual(try format(input, rules: FormatRules.default), output)
+        XCTAssertEqual(try format(input, rules: FormatRules.default).output, output)
     }
 
     func testSwiftVersionNext() {
@@ -333,14 +333,14 @@ class FormatterTests: XCTestCase {
         let foo2 = bar.map { $0.foo }
 
         """
-        XCTAssertEqual(try format(input, rules: FormatRules.default), output)
+        XCTAssertEqual(try format(input, rules: FormatRules.default).output, output)
     }
 
     func testMalformedOption() {
         let input = """
         // swiftformat:options blooblahbleh
         """
-        XCTAssertThrowsError(try format(input, rules: FormatRules.default)) { error in
+        XCTAssertThrowsError(try format(input, rules: FormatRules.default).output) { error in
             XCTAssert("\(error)".contains("Unknown option blooblahbleh"))
         }
     }
@@ -349,7 +349,7 @@ class FormatterTests: XCTestCase {
         let input = """
         // swiftformat:options --foobar baz
         """
-        XCTAssertThrowsError(try format(input, rules: FormatRules.default)) { error in
+        XCTAssertThrowsError(try format(input, rules: FormatRules.default).output) { error in
             XCTAssert("\(error)".contains("Unknown option --foobar"))
         }
     }
@@ -358,7 +358,7 @@ class FormatterTests: XCTestCase {
         let input = """
         // swiftformat:options --indent baz
         """
-        XCTAssertThrowsError(try format(input, rules: FormatRules.default)) { error in
+        XCTAssertThrowsError(try format(input, rules: FormatRules.default).output) { error in
             XCTAssert("\(error)".contains("Unsupported --indent value"))
         }
     }
@@ -367,7 +367,7 @@ class FormatterTests: XCTestCase {
         let input = """
         // swiftformat:options --ranges spaced
         """
-        XCTAssertNoThrow(try format(input, rules: FormatRules.default))
+        XCTAssertNoThrow(try format(input, rules: FormatRules.default).output)
     }
 
     // MARK: linebreaks
@@ -417,7 +417,7 @@ class FormatterTests: XCTestCase {
         for range in [0 ..< 2, 5 ..< 7, 14 ..< 16, 17 ..< 19] {
             XCTAssertEqual(try format(input,
                                       rules: FormatRules.all,
-                                      range: range), input)
+                                      range: range).tokens, input)
         }
         let output1 = tokenize("""
         func foo () {
@@ -429,7 +429,7 @@ class FormatterTests: XCTestCase {
             input,
             rules: [.consecutiveSpaces],
             range: 10 ..< 13
-        ), output1)
+        ).tokens, output1)
         let output2 = """
         func foo () {
             var  bar = 5
@@ -439,7 +439,7 @@ class FormatterTests: XCTestCase {
             input,
             rules: [.blankLinesAtStartOfScope],
             range: 6 ..< 9
-        )), output2)
+        ).tokens), output2)
     }
 
     // MARK: endOfScope
@@ -515,5 +515,51 @@ class FormatterTests: XCTestCase {
         XCTAssertNotEqual(formatter.tokens, tokens)
         XCTAssertEqual(formatter.changes.count, 1)
         XCTAssertEqual(formatter.changes.first?.line, 3)
+    }
+
+    func testMoveTokensToEarlierPositionTrackedAsMoves() {
+        let formatter = Formatter(tokenize("foo()\nbar()\n"), trackChanges: true)
+        formatter.moveTokens(in: 4 ... 7, to: 0)
+        XCTAssertEqual(sourceCode(for: formatter.tokens), "bar()\nfoo()\n")
+        XCTAssert(!formatter.changes.isEmpty)
+        XCTAssert(formatter.changes.allSatisfy(\.isMove))
+    }
+
+    func testMoveTokensToFollowingPositionTrackedAsMoves() {
+        let formatter = Formatter(tokenize("foo()\nbar()\n"), trackChanges: true)
+        formatter.moveTokens(in: 0 ... 3, to: 8)
+        XCTAssertEqual(sourceCode(for: formatter.tokens), "bar()\nfoo()\n")
+        XCTAssert(!formatter.changes.isEmpty)
+        XCTAssert(formatter.changes.allSatisfy(\.isMove))
+    }
+
+    func testReplaceAllTokensTracksMoves() {
+        let input: [Token] = [
+            tokenize("foo()"), [.linebreak("\n", 0)],
+            [.linebreak("\n", 1)],
+            tokenize("foobar()"), [.linebreak("\n", 2)],
+            [.linebreak("\n", 3)],
+            tokenize("bar()"), [.linebreak("\n", 4)],
+            [.linebreak("\n", 5)],
+            tokenize("baaz()"), [.linebreak("\n", 6)],
+        ].flatMap { $0 }
+
+        let output: [Token] = [
+            tokenize("bar()"), [.linebreak("\n", 4)],
+            [.linebreak("\n", 1)],
+            tokenize("barfoo()"), [.linebreak("\n", 2)],
+            [.linebreak("\n", 3)],
+            tokenize("foo()"), [.linebreak("\n", 0)],
+            [.linebreak("\n", 5)],
+            tokenize("quux()"), [.linebreak("\n", 6)],
+        ].flatMap { $0 }
+
+        let formatter = Formatter(input, trackChanges: true)
+        formatter.replaceAllTokens(with: output)
+        XCTAssertEqual(sourceCode(for: formatter.tokens), sourceCode(for: output))
+
+        // The changes should include both moves and non-moves
+        XCTAssert(formatter.changes.contains(where: { $0.isMove }))
+        XCTAssert(formatter.changes.contains(where: { !$0.isMove }))
     }
 }

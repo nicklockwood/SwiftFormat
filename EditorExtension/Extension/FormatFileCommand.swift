@@ -57,7 +57,7 @@ class FormatFileCommand: NSObject, XCSourceEditorCommand {
 
         let output: [Token]
         do {
-            output = try format(input, rules: rules, options: formatOptions)
+            output = try format(input, rules: rules, options: formatOptions).tokens
         } catch {
             return completionHandler(error)
         }

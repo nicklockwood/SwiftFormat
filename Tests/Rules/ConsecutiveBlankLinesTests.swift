@@ -80,7 +80,7 @@ class ConsecutiveBlankLinesTests: XCTestCase {
     func testLintingConsecutiveBlankLinesReportsCorrectLine() {
         let input = "foo\n   \n\nbar"
         XCTAssertEqual(try lint(input, rules: [.consecutiveBlankLines]), [
-            .init(line: 3, rule: .consecutiveBlankLines, filePath: nil),
+            .init(line: 3, rule: .consecutiveBlankLines, filePath: nil, isMove: false),
         ])
     }
 }

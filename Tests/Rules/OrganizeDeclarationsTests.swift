@@ -3455,4 +3455,31 @@ class OrganizeDeclarationsTests: XCTestCase {
             exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
         )
     }
+
+    func testReorderingPropertiesCreatesFormatterChanges() {
+        let input = """
+        struct Test {
+            var bar: Bar { "Bar" }
+
+            var foo: Foo
+
+            func test() {}
+        }
+        """
+
+        let output = """
+        struct Test {
+            var foo: Foo
+
+            var bar: Bar { "Bar" }
+
+            func test() {}
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: .organizeDeclarations
+        )
+    }
 }

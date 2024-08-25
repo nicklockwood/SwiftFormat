@@ -37,8 +37,8 @@ class ReporterTests: XCTestCase {
         let reporter = GithubActionsLogReporter(environment: ["GITHUB_WORKSPACE": "/bar"])
         let rule = FormatRule.consecutiveSpaces
         reporter.report([
-            .init(line: 1, rule: rule, filePath: "/bar/foo.swift"),
-            .init(line: 2, rule: rule, filePath: "/bar/foo.swift"),
+            .init(line: 1, rule: rule, filePath: "/bar/foo.swift", isMove: false),
+            .init(line: 2, rule: rule, filePath: "/bar/foo.swift", isMove: false),
         ])
         let expectedOutput = """
         ::warning file=foo.swift,line=1::\(rule.help) (\(rule.name))

@@ -720,6 +720,6 @@ class WrapTests: XCTestCase {
         """
         let options = FormatOptions(truncateBlankLines: false, maxWidth: 40)
         let changes = try lint(input, rules: [.wrap, .indent], options: options)
-        XCTAssertEqual(changes, [.init(line: 2, rule: .wrap, filePath: nil)])
+        XCTAssertEqual(changes, [.init(line: 2, rule: .wrap, filePath: nil, isMove: false)])
     }
 }

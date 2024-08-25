@@ -272,7 +272,7 @@ extension Formatter {
         //  4. a trailing closure like `map { ... }`
         //  5. Some other combination of parens / subscript like `(foo).`
         //     or even `foo["bar"]()()`.
-        // And any of these can be preceeded by one of the others
+        // And any of these can be preceded by one of the others
         switch tokens[index] {
         case let .identifier(identifierName):
             // Allowlist certain dot chain elements that should be ignored.

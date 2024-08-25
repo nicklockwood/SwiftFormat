@@ -111,7 +111,7 @@ public extension FormatRule {
                 }
 
                 // Make sure there's always a linebreak after any comments, to prevent
-                // them from accidentially commenting out following elements of the typealias
+                // them from accidentally commenting out following elements of the typealias
                 if elementIndex != sortedElements.indices.last,
                    sortedElements[elementIndex].allTokens.last?.isComment == true,
                    let nextToken = formatter.nextToken(after: parsedElements[elementIndex].endIndex),

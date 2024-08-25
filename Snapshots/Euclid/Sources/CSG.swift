@@ -88,7 +88,7 @@ public extension Mesh {
         return reduce(meshes, using: { $0.subtract($1) })
     }
 
-    /// Returns a new mesh reprenting only the volume exclusively occupied by
+    /// Returns a new mesh representing only the volume exclusively occupied by
     /// one shape or the other, but not both.
     ///
     ///     +-------+            +-------+
@@ -124,7 +124,7 @@ public extension Mesh {
         return multimerge(meshes, using: { $0.xor($1) })
     }
 
-    /// Returns a new mesh reprenting the volume shared by both the mesh
+    /// Returns a new mesh representing the volume shared by both the mesh
     /// parameter and the receiver. If these do not intersect, an empty
     /// mesh will be returned.
     ///

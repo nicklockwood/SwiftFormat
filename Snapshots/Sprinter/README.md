@@ -136,7 +136,7 @@ It may seem cumbersome to have to create a `StringFormat` object before printing
 
 2. The expensive string parsing and `NumberFormatter` initialization steps can be performed once and then stored, not repeated each time the string is displayed.
 
-For these reasons, it's recommended that you store and re-use your `FormatString` objects. You can either do this up-front for all strings, or lazily the first time each string is displayed - whichever makes more sense for your app.
+For these reasons, it's recommended that you store and reuse your `FormatString` objects. You can either do this up-front for all strings, or lazily the first time each string is displayed - whichever makes more sense for your app.
 
 A good approach would be to create a wrapper function that encapsulates your app-specific string requirements. For example, you might want to ignore string format errors in production (since it's too late to fix by that point), and just display a blank string instead. Here is an example wrapper that you might use in your app:
 

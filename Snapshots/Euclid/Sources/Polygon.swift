@@ -128,7 +128,7 @@ public extension Polygon {
         return polygons
     }
 
-    /// Tesselates polygon into triangles using the "ear clipping" method
+    /// Tessellates polygon into triangles using the "ear clipping" method
     func triangulate() -> [Polygon] {
         var vertices = self.vertices
         guard vertices.count > 3 else {

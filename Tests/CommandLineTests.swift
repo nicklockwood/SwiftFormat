@@ -559,8 +559,8 @@ class CommandLineTests: XCTestCase {
                 url.path,
             ], in: "")
         }
-        let ouput = try String(contentsOf: outputURL)
-        XCTAssert(ouput.contains("\"rule_id\" : \"emptyBraces\""))
+        let output = try String(contentsOf: outputURL)
+        XCTAssert(output.contains("\"rule_id\" : \"emptyBraces\""))
     }
 
     func testGithubActionsLogReporterEndToEnd() throws {
@@ -655,8 +655,8 @@ class CommandLineTests: XCTestCase {
                 url.path,
             ], in: "")
         }
-        let ouput = try String(contentsOf: outputURL)
-        XCTAssert(ouput.contains("<error line=\"1\" column=\"0\" severity=\"warning\""))
+        let output = try String(contentsOf: outputURL)
+        XCTAssert(output.contains("<error line=\"1\" column=\"0\" severity=\"warning\""))
     }
 
     func testLintCommandOutputsOrganizeDeclarationOrderingViolations() {

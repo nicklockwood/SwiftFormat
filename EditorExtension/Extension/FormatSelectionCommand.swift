@@ -67,7 +67,7 @@ class FormatSelectionCommand: NSObject, XCSourceEditorCommand {
             let start = tokenIndex(for: startOffset, in: output, tabWidth: formatOptions.tabWidth)
             let end = tokenIndex(for: endOffset, in: output, tabWidth: formatOptions.tabWidth)
             do {
-                output = try format(output, rules: rules, options: formatOptions, range: start ..< end)
+                output = try format(output, rules: rules, options: formatOptions, range: start ..< end).tokens
             } catch {
                 return completionHandler(error)
             }

@@ -43,8 +43,10 @@ public extension FormatRule {
             let commentRange = indexAfterAttributes ..< restOfDeclaration
             let comment = formatter.tokens[commentRange]
 
-            formatter.removeTokens(in: commentRange)
-            formatter.insert(comment, at: startOfAttributes)
+            formatter.moveTokens(
+                in: indexAfterAttributes ..< restOfDeclaration,
+                to: startOfAttributes
+            )
         }
     }
 }

@@ -768,7 +768,11 @@ extension Formatter {
         }
 
         let updatedTokens = updatedDeclarations.flatMap { $0.tokens }
-        replaceTokens(in: tokens.indices, with: updatedTokens)
+
+        // Only apply the updated tokens if the source representation changes.
+        if tokens.string != updatedTokens.string {
+            replaceAllTokens(with: updatedTokens)
+        }
     }
 }
 

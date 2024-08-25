@@ -577,7 +577,9 @@ private func applyRules(
                     return false
                 }
                 last = change
-                if newLines[change.line] == oldLines[change.line] {
+                // Filter out lines that haven't changed from their corresponding original line
+                // in the input code, unless the change was explicitly marked as a move.
+                if !change.isMove, newLines[change.line] == oldLines[change.line] {
                     return false
                 }
                 return true
@@ -608,18 +610,19 @@ private func applyRules(
 public func format(
     _ tokens: [Token], rules: [FormatRule] = FormatRules.default,
     options: FormatOptions = .default, range: Range<Int>? = nil
-) throws -> [Token] {
-    try applyRules(rules, to: tokens, with: options, trackChanges: false, range: range).tokens
+) throws -> (tokens: [Token], changes: [Formatter.Change]) {
+    try applyRules(rules, to: tokens, with: options, trackChanges: true, range: range)
 }
 
 /// Format code with specified rules and options
 public func format(
     _ source: String, rules: [FormatRule] = FormatRules.default,
     options: FormatOptions = .default, lineRange: ClosedRange<Int>? = nil
-) throws -> String {
+) throws -> (output: String, changes: [Formatter.Change]) {
     let tokens = tokenize(source)
     let range = lineRange.map { tokenRange(forLineRange: $0, in: tokens) }
-    return try sourceCode(for: format(tokens, rules: rules, options: options, range: range))
+    let output = try format(tokens, rules: rules, options: options, range: range)
+    return (sourceCode(for: output.tokens), output.changes)
 }
 
 /// Lint a pre-parsed token array

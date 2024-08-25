@@ -82,22 +82,37 @@ extension XCTestCase {
             + (rules.first?.name == "markTypes" ? [] : ["markTypes"])
             + (rules.first?.name == "blockComments" ? [] : ["blockComments"])
             + (rules.first?.name == "unusedPrivateDeclaration" ? [] : ["unusedPrivateDeclaration"])
-        XCTAssertEqual(try format(input, rules: rules, options: options), output, file: file, line: line)
-        XCTAssertEqual(try format(input, rules: FormatRules.all(except: exclude), options: options),
+
+        guard let formatResult = try? format(input, rules: rules, options: options) else {
+            XCTFail("Failed to format input, threw error")
+            return
+        }
+        XCTAssertEqual(formatResult.output, output, file: file, line: line)
+
+        if input != output, formatResult.output == output {
+            XCTAssert(!formatResult.changes.isEmpty, """
+            Rules applied changes but unexpectedly produced no `Formatter.Change`s. \
+            This would result in no messages being printed when running with --lint. \
+            This can happen in cases where a rule only moves lines, but doesn't modify their contents. \
+            You can fix this by using `formatter.moveTokens`.
+            """, file: file, line: line)
+        }
+
+        XCTAssertEqual(try format(input, rules: FormatRules.all(except: exclude), options: options).output,
                        output2, file: file, line: line)
         if input != output {
-            XCTAssertEqual(try format(output, rules: rules, options: options),
+            XCTAssertEqual(try format(output, rules: rules, options: options).output,
                            output, file: file, line: line)
             if !input.hasPrefix("#!") {
                 for rule in rules {
                     let disabled = "// swiftformat:disable \(rule.name)\n\(input)"
-                    XCTAssertEqual(try format(disabled, rules: [rule], options: options),
+                    XCTAssertEqual(try format(disabled, rules: [rule], options: options).output,
                                    disabled, "Failed to disable \(rule.name) rule", file: file, line: line)
                 }
             }
         }
         if input != output2, output != output2 {
-            XCTAssertEqual(try format(output2, rules: FormatRules.all(except: exclude), options: options),
+            XCTAssertEqual(try format(output2, rules: FormatRules.all(except: exclude), options: options).output,
                            output2, file: file, line: line)
         }
 

@@ -832,8 +832,8 @@ class MarkTypesTests: XCTestCase {
         let _ = FormatRules.byName
         let changes = try lint(input, rules: [.markTypes])
         XCTAssertEqual(changes, [
-            .init(line: 1, rule: .markTypes, filePath: nil),
-            .init(line: 2, rule: .markTypes, filePath: nil),
+            .init(line: 1, rule: .markTypes, filePath: nil, isMove: false),
+            .init(line: 2, rule: .markTypes, filePath: nil, isMove: false),
         ])
     }
 }

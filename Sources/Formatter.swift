@@ -179,6 +179,7 @@ public class Formatter: NSObject {
         public let line: Int
         public let rule: FormatRule
         public let filePath: String?
+        public let isMove: Bool
 
         public var help: String {
             stripMarkdown(rule.help).replacingOccurrences(of: "\n", with: " ")
@@ -195,12 +196,13 @@ public class Formatter: NSObject {
     /// Should formatter track changes?
     private let trackChanges: Bool
 
-    private func trackChange(at index: Int) {
+    private func trackChange(at index: Int, isMove: Bool = false) {
         guard trackChanges else { return }
         changes.append(Change(
             line: originalLine(at: index),
             rule: currentRule ?? .none,
-            filePath: options.fileInfo.filePath
+            filePath: options.fileInfo.filePath,
+            isMove: isMove
         ))
     }
 
@@ -247,8 +249,13 @@ public extension Formatter {
 
     /// Replaces the token at the specified index with a new token
     func replaceToken(at index: Int, with token: Token) {
+        replaceToken(at: index, with: token, isMove: false)
+    }
+
+    /// Replaces the token at the specified index with a new token
+    private func replaceToken(at index: Int, with token: Token, isMove: Bool) {
         if trackChanges, token.string != tokens[index].string {
-            trackChange(at: index)
+            trackChange(at: index, isMove: isMove)
         }
         tokens[index] = token
     }
@@ -256,14 +263,22 @@ public extension Formatter {
     /// Replaces the tokens in the specified range with new tokens
     @discardableResult
     func replaceTokens(in range: Range<Int>, with tokens: ArraySlice<Token>) -> Int {
+        replaceTokens(in: range, with: tokens, isMove: false)
+    }
+
+    /// Replaces the tokens in the specified range with new tokens
+    @discardableResult
+    private func replaceTokens(in range: Range<Int>, with tokens: ArraySlice<Token>, isMove: Bool) -> Int {
         let max = min(range.count, tokens.count)
         for i in 0 ..< max {
-            replaceToken(at: range.lowerBound + i, with: tokens[tokens.startIndex + i])
+            replaceToken(at: range.lowerBound + i, with: tokens[tokens.startIndex + i], isMove: isMove)
         }
         if range.count > max {
-            removeTokens(in: range.dropFirst(max))
+            for index in range.dropFirst(max).reversed() {
+                removeToken(at: index, isMove: isMove)
+            }
         } else if tokens.count > max {
-            insert(tokens.dropFirst(max), at: range.lowerBound + max)
+            insert(tokens.dropFirst(max), at: range.lowerBound + max, isMove: isMove)
         }
         return tokens.count - range.count
     }
@@ -307,9 +322,44 @@ public extension Formatter {
         replaceTokens(in: range.lowerBound ..< range.upperBound + 1, with: token)
     }
 
+    /// Replaces all of the tokens with the given new tokens,
+    /// diffing the lines and tracking lines that move without changes.
+    func replaceAllTokens(with updatedTokens: [Token]) {
+        guard #available(macOS 10.15, *) else {
+            // Swift's diffing implementation is only available in macOS 10.15+
+            replaceTokens(in: tokens.indices, with: updatedTokens)
+            return
+        }
+
+        let originalLines = tokens.lines
+        let updatedLines = updatedTokens.lines
+        let difference = updatedLines.difference(from: originalLines).inferringMoves()
+
+        for step in difference {
+            switch step {
+            case let .insert(lineIndex, line, movedFromLineIndex):
+                let lineRanges = tokens.lineRanges
+                if lineIndex >= lineRanges.count {
+                    insert(line, at: tokens.endIndex, isMove: movedFromLineIndex != nil)
+                } else {
+                    insert(line, at: lineRanges[lineIndex].lowerBound, isMove: movedFromLineIndex != nil)
+                }
+
+            case let .remove(lineIndex, _, movedToLineIndex):
+                for index in tokens.lineRanges[lineIndex].reversed() {
+                    removeToken(at: index, isMove: movedToLineIndex != nil)
+                }
+            }
+        }
+    }
+
     /// Removes the token at the specified index
     func removeToken(at index: Int) {
-        trackChange(at: index)
+        removeToken(at: index, isMove: false)
+    }
+
+    private func removeToken(at index: Int, isMove: Bool) {
+        trackChange(at: index, isMove: isMove)
         updateRange(at: index, delta: -1)
         tokens.remove(at: index)
         if enumerationIndex >= index {
@@ -342,6 +392,41 @@ public extension Formatter {
         }
     }
 
+    /// Moves the tokens in the given range to the new index.
+    /// Handles additional internal bookkeeping so this change produces
+    /// `Formatter.Change`s that represent moves and won't be filtered out
+    /// as redundant.
+    func moveTokens(in range: ClosedRange<Int>, to newIndex: Int) {
+        let tokensToMove = tokens[range]
+        var newIndex = newIndex
+
+        for index in range.reversed() {
+            removeToken(at: index, isMove: true)
+
+            if index < newIndex {
+                newIndex -= 1
+            }
+        }
+
+        insert(ArraySlice(tokensToMove), at: newIndex, isMove: true)
+    }
+
+    /// Moves the tokens in the given range to the new index.
+    /// Handles additional internal bookkeeping so this change produces
+    /// `Formatter.Change`s that represent moves and won't be filtered out
+    /// as redundant.
+    func moveTokens(in range: Range<Int>, to index: Int) {
+        moveTokens(in: ClosedRange(range), to: index)
+    }
+
+    /// Moves the tokens in the given range to the new index.
+    /// Handles additional internal bookkeeping so this change produces
+    /// `Formatter.Change`s that represent moves and won't be filtered out
+    /// as redundant.
+    func moveToken(at originalIndex: Int, to newIndex: Int) {
+        moveTokens(in: originalIndex ... originalIndex, to: newIndex)
+    }
+
     /// Removes the last token
     func removeLastToken() {
         trackChange(at: tokens.endIndex - 1)
@@ -351,8 +436,12 @@ public extension Formatter {
 
     /// Inserts an array of tokens at the specified index
     func insert(_ tokens: ArraySlice<Token>, at index: Int) {
+        insert(tokens, at: index, isMove: false)
+    }
+
+    private func insert(_ tokens: ArraySlice<Token>, at index: Int, isMove: Bool) {
         if tokens.isEmpty { return }
-        trackChange(at: index)
+        trackChange(at: index, isMove: isMove)
         updateRange(at: index, delta: tokens.count)
         self.tokens.insert(contentsOf: tokens, at: index)
         if enumerationIndex >= index {
@@ -630,5 +719,39 @@ extension String {
                 index(range.lowerBound, offsetBy: 1, limitedBy: endIndex) ?? endIndex
         }
         return result
+    }
+}
+
+private extension Array where Element == Token {
+    /// Ranges of lines within this array of tokens
+    var lineRanges: [ClosedRange<Int>] {
+        var lineRanges: [ClosedRange<Int>] = []
+        var currentLine: ClosedRange<Int>?
+
+        for (index, token) in enumerated() {
+            if currentLine == nil {
+                currentLine = index ... index
+            } else {
+                currentLine = currentLine!.lowerBound ... index
+            }
+
+            if token.isLinebreak {
+                lineRanges.append(currentLine!)
+                currentLine = nil
+            }
+        }
+
+        if let currentLine = currentLine {
+            lineRanges.append(currentLine)
+        }
+
+        return lineRanges
+    }
+
+    /// All of the lines within this array of tokens
+    var lines: [ArraySlice<Token>] {
+        lineRanges.map { lineRange in
+            self[lineRange]
+        }
     }
 }

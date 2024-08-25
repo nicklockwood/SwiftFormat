@@ -356,7 +356,7 @@ public extension UICollectionView {
             }
             let cell = dequeueReusableCell(withReuseIdentifier: identifier, for: indexPath)
             if let node = cell.layoutNode {
-                node.update() // Ensure frame is updated before re-use
+                node.update() // Ensure frame is updated before reuse
                 return node
             }
             switch layoutData {

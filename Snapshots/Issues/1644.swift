@@ -245,7 +245,7 @@ public extension Playdate {
         /// Adds a new menu item that can be checked or unchecked by the player.
         /// - Parameters:
         ///   - title: The title displayed by the menu item.
-        ///   - checked: Wether or not the menu item is checked.
+        ///   - checked: Whether or not the menu item is checked.
         ///   - callback: The callback invoked when the menu item is selected by the user.
         ///   - userdata: The userdata to associate with the menu item.
         /// - Returns: The menu item
@@ -262,7 +262,7 @@ public extension Playdate {
         /// Adds a new menu item that can be checked or unchecked by the player.
         /// - Parameters:
         ///   - title: The title displayed by the menu item.
-        ///   - checked: Wether or not the menu item is checked.
+        ///   - checked: Whether or not the menu item is checked.
         ///   - callback: The callback invoked when the menu item is selected by the user.
         ///   - userdata: The userdata to associate with the menu item.
         /// - Returns: The menu item

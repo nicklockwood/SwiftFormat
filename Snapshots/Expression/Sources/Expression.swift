@@ -508,7 +508,7 @@ public final class Expression: CustomStringConvertible {
         }
     }
 
-    /// Returns the optmized, pretty-printed expression if it was valid
+    /// Returns the optimized, pretty-printed expression if it was valid
     /// Otherwise, returns the original (invalid) expression string
     public var description: String { return root.description }
 

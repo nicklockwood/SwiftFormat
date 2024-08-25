@@ -4548,7 +4548,7 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
-    // MARK: Supressed Conformances
+    // MARK: Suppressed Conformances
 
     func testNoncopyableStructDeclaration() {
         let input = "struct Foo: ~Copyable {}"

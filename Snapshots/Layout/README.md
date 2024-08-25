@@ -1315,7 +1315,7 @@ loadLayout(
 <UISegmentedControl items="firstTwoItems, 'Third'"/>
 ```
 
-You can use the same array literal syntax inside [macros](#macros), if you need to re-use the values:
+You can use the same array literal syntax inside [macros](#macros), if you need to reuse the values:
 
 ```xml
 <UIView>

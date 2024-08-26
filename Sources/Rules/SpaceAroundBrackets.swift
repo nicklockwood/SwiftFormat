@@ -17,18 +17,7 @@ public extension FormatRule {
     /// * There is space between a closing bracket and following identifier
     /// * There is space between a closing bracket and following opening brace
     static let spaceAroundBrackets = FormatRule(
-        help: "Add or remove space around square brackets.",
-        examples: """
-        ```diff
-        - foo as[String]
-        + foo as [String]
-        ```
-
-        ```diff
-        - foo = bar [5]
-        + foo = bar[5]
-        ```
-        """
+        help: "Add or remove space around square brackets."
     ) { formatter in
         formatter.forEach(.startOfScope("[")) { i, _ in
             let index = i - 1
@@ -78,5 +67,17 @@ public extension FormatRule {
                 break
             }
         }
+    } examples: {
+        """
+        ```diff
+        - foo as[String]
+        + foo as [String]
+        ```
+
+        ```diff
+        - foo = bar [5]
+        + foo = bar[5]
+        ```
+        """
     }
 }

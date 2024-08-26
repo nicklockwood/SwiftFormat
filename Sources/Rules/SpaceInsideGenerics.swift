@@ -11,13 +11,7 @@ import Foundation
 public extension FormatRule {
     /// Remove space immediately inside chevrons
     static let spaceInsideGenerics = FormatRule(
-        help: "Remove space inside angle brackets.",
-        examples: """
-        ```diff
-        - Foo< Bar, Baz >
-        + Foo<Bar, Baz>
-        ```
-        """
+        help: "Remove space inside angle brackets."
     ) { formatter in
         formatter.forEach(.startOfScope("<")) { i, _ in
             if formatter.token(at: i + 1)?.isSpace == true {
@@ -31,5 +25,12 @@ public extension FormatRule {
                 formatter.removeToken(at: i - 1)
             }
         }
+    } examples: {
+        """
+        ```diff
+        - Foo< Bar, Baz >
+        + Foo<Bar, Baz>
+        ```
+        """
     }
 }

@@ -11,20 +11,6 @@ import Foundation
 public extension FormatRule {
     static let docComments = FormatRule(
         help: "Use doc comments for API declarations, otherwise use regular comments.",
-        examples: """
-        ```diff
-        - // A placeholder type used to demonstrate syntax rules
-        + /// A placeholder type used to demonstrate syntax rules
-          class Foo {
-        -     // This function doesn't really do anything
-        +     /// This function doesn't really do anything
-              func bar() {
-        -         /// TODO: implement Foo.bar() algorithm
-        +         // TODO: implement Foo.bar() algorithm
-              }
-          }
-        ```
-        """,
         disabledByDefault: true,
         orderAfter: [.fileHeader],
         options: ["doccomments"]
@@ -130,6 +116,21 @@ public extension FormatRule {
                 formatter.insert(.commentBody(startOfDocCommentBody), at: index + 1)
             }
         }
+    } examples: {
+        """
+        ```diff
+        - // A placeholder type used to demonstrate syntax rules
+        + /// A placeholder type used to demonstrate syntax rules
+          class Foo {
+        -     // This function doesn't really do anything
+        +     /// This function doesn't really do anything
+              func bar() {
+        -         /// TODO: implement Foo.bar() algorithm
+        +         // TODO: implement Foo.bar() algorithm
+              }
+          }
+        ```
+        """
     }
 }
 

@@ -11,18 +11,7 @@ import Foundation
 public extension FormatRule {
     /// Ensure that TODO, MARK and FIXME comments are followed by a : as required
     static let todos = FormatRule(
-        help: "Use correct formatting for `TODO:`, `MARK:` or `FIXME:` comments.",
-        examples: """
-        ```diff
-        - /* TODO fix this properly */
-        + /* TODO: fix this properly */
-        ```
-
-        ```diff
-        - // MARK - UIScrollViewDelegate
-        + // MARK: - UIScrollViewDelegate
-        ```
-        """
+        help: "Use correct formatting for `TODO:`, `MARK:` or `FIXME:` comments."
     ) { formatter in
         formatter.forEachToken { i, token in
             guard case var .commentBody(string) = token else {
@@ -76,5 +65,17 @@ public extension FormatRule {
                 formatter.insertSpace(" ", at: i)
             }
         }
+    } examples: {
+        """
+        ```diff
+        - /* TODO fix this properly */
+        + /* TODO: fix this properly */
+        ```
+
+        ```diff
+        - // MARK - UIScrollViewDelegate
+        + // MARK: - UIScrollViewDelegate
+        ```
+        """
     }
 }

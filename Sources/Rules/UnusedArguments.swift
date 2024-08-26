@@ -12,37 +12,6 @@ public extension FormatRule {
     /// Replace unused arguments with an underscore
     static let unusedArguments = FormatRule(
         help: "Mark unused function arguments with `_`.",
-        examples: """
-        ```diff
-        - func foo(bar: Int, baz: String) {
-            print("Hello \\(baz)")
-          }
-
-        + func foo(bar _: Int, baz: String) {
-            print("Hello \\(baz)")
-          }
-        ```
-
-        ```diff
-        - func foo(_ bar: Int) {
-            ...
-          }
-
-        + func foo(_: Int) {
-            ...
-          }
-        ```
-
-        ```diff
-        - request { response, data in
-            self.data += data
-          }
-
-        + request { _, data in
-            self.data += data
-          }
-        ```
-        """,
         options: ["stripunusedargs"]
     ) { formatter in
         guard !formatter.options.fragment else { return }
@@ -201,6 +170,38 @@ public extension FormatRule {
                 }
             }
         }
+    } examples: {
+        """
+        ```diff
+        - func foo(bar: Int, baz: String) {
+            print("Hello \\(baz)")
+          }
+
+        + func foo(bar _: Int, baz: String) {
+            print("Hello \\(baz)")
+          }
+        ```
+
+        ```diff
+        - func foo(_ bar: Int) {
+            ...
+          }
+
+        + func foo(_: Int) {
+            ...
+          }
+        ```
+
+        ```diff
+        - request { response, data in
+            self.data += data
+          }
+
+        + request { _, data in
+            self.data += data
+          }
+        ```
+        """
     }
 }
 

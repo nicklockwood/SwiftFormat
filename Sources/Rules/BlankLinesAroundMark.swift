@@ -12,27 +12,6 @@ public extension FormatRule {
     /// Adds a blank line around MARK: comments
     static let blankLinesAroundMark = FormatRule(
         help: "Insert blank line before and after `MARK:` comments.",
-        examples: """
-        ```diff
-          func foo() {
-            // foo
-          }
-          // MARK: bar
-          func bar() {
-            // bar
-          }
-
-          func foo() {
-            // foo
-          }
-        +
-          // MARK: bar
-        +
-          func bar() {
-            // bar
-          }
-        ```
-        """,
         options: ["lineaftermarks"],
         sharedOptions: ["linebreaks"]
     ) { formatter in
@@ -55,5 +34,27 @@ public extension FormatRule {
                 formatter.insertLinebreak(at: lastIndex)
             }
         }
+    } examples: {
+        """
+        ```diff
+          func foo() {
+            // foo
+          }
+          // MARK: bar
+          func bar() {
+            // bar
+          }
+
+          func foo() {
+            // foo
+          }
+        +
+          // MARK: bar
+        +
+          func bar() {
+            // bar
+          }
+        ```
+        """
     }
 }

@@ -11,21 +11,6 @@ import Foundation
 public extension FormatRule {
     static let wrapMultilineConditionalAssignment = FormatRule(
         help: "Wrap multiline conditional assignment expressions after the assignment operator.",
-        examples: #"""
-        ```diff
-        - let planetLocation = if let star = planet.star {
-        -     "The \(star.name) system"
-        - } else {
-        -     "Rogue planet"
-        - }
-        + let planetLocation =
-        +     if let star = planet.star {
-        +         "The \(star.name) system"
-        +     } else {
-        +         "Rogue planet"
-        +     }
-        ```
-        """#,
         disabledByDefault: true,
         orderAfter: [.conditionalAssignment],
         sharedOptions: ["linebreaks"]
@@ -71,5 +56,21 @@ public extension FormatRule {
                 formatter.insertLinebreak(at: startOfConditionalExpression - 1)
             }
         }
+    } examples: {
+        #"""
+        ```diff
+        - let planetLocation = if let star = planet.star {
+        -     "The \(star.name) system"
+        - } else {
+        -     "Rogue planet"
+        - }
+        + let planetLocation =
+        +     if let star = planet.star {
+        +         "The \(star.name) system"
+        +     } else {
+        +         "Rogue planet"
+        +     }
+        ```
+        """#
     }
 }

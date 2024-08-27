@@ -2,7 +2,7 @@
 //  SpaceAroundComments.swift
 //  SwiftFormat
 //
-//  Created by Cal Stephens on 7/27/24.
+//  Created by Nick Lockwood on 8/31/16.
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 

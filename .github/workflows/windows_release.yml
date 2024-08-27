@@ -60,7 +60,7 @@ jobs:
             -p:Configuration=Release `
             -p:ProductArchitecture=${{ matrix.product-arch }} `
             -p:ProductVersion=${{ github.event.inputs.version }} `
-            -p:SwiftFormatBuildDir=${{ github.workspace }}\.build\release `
+            -p:SwiftFormatBuildDir=${{ github.workspace }}\.build\${{ matrix.target-triple }}\release `
             -p:SwiftRedistDir=$SwiftRedistDir `
             -p:OutputPath=${{ github.workspace }}\artifacts `
             -p:RunWixToolsOutOfProc=true

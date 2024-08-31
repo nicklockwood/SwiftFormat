@@ -559,7 +559,7 @@ class FormatterTests: XCTestCase {
         XCTAssertEqual(sourceCode(for: formatter.tokens), sourceCode(for: output))
 
         // The changes should include both moves and non-moves
-        XCTAssert(formatter.changes.contains(where: { $0.isMove }))
+        XCTAssert(formatter.changes.contains(where: \.isMove))
         XCTAssert(formatter.changes.contains(where: { !$0.isMove }))
     }
 }

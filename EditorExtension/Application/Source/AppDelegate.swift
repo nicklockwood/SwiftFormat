@@ -31,7 +31,7 @@
 
 import Cocoa
 
-@NSApplicationMain
+@main
 class AppDelegate: NSObject, NSApplicationDelegate {
     var window: NSWindow? {
         NSApp.mainWindow

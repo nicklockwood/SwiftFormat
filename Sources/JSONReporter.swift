@@ -51,16 +51,12 @@ final class JSONReporter: Reporter {
             encoder.outputFormatting.insert(.sortedKeys)
         }
         let stripSlashes: Bool
-        #if swift(>=5.2)
-            if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
-                stripSlashes = false
-                encoder.outputFormatting.insert(.withoutEscapingSlashes)
-            } else {
-                stripSlashes = true
-            }
-        #else
+        if #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) {
+            stripSlashes = false
+            encoder.outputFormatting.insert(.withoutEscapingSlashes)
+        } else {
             stripSlashes = true
-        #endif
+        }
         var data = try encoder.encode(changes.map(ReportItem.init))
         if stripSlashes, let string = String(data: data, encoding: .utf8) {
             data = Data(string.replacingOccurrences(of: "\\/", with: "/").utf8)

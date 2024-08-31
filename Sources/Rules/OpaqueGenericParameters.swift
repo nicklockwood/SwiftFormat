@@ -154,7 +154,7 @@ public extension FormatRule {
                 // If the generic type is used in a constraint of any other generic type, then the type
                 // can't be removed without breaking that other type
                 let otherGenericTypes = genericTypes.filter { $0.name != genericType.name }
-                let otherTypeConformances = otherGenericTypes.flatMap { $0.conformances }
+                let otherTypeConformances = otherGenericTypes.flatMap(\.conformances)
                 for otherTypeConformance in otherTypeConformances {
                     let conformanceTokens = formatter.tokens[otherTypeConformance.sourceRange]
                     if conformanceTokens.contains(where: { $0.string == genericType.name }) {
@@ -244,9 +244,9 @@ public extension FormatRule {
                 }
             }
 
-            let genericsEligibleToRemove = genericTypes.filter { $0.eligibleToRemove }
+            let genericsEligibleToRemove = genericTypes.filter(\.eligibleToRemove)
             let sourceRangesToRemove = Set(genericsEligibleToRemove.flatMap { type in
-                [type.definitionSourceRange] + type.conformances.map { $0.sourceRange }
+                [type.definitionSourceRange] + type.conformances.map(\.sourceRange)
             })
 
             // We perform modifications to the function signature in reverse order

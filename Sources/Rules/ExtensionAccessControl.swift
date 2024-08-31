@@ -146,7 +146,7 @@ public extension FormatRule {
             }
         }
 
-        let updatedTokens = updatedDeclarations.flatMap { $0.tokens }
+        let updatedTokens = updatedDeclarations.flatMap(\.tokens)
         formatter.replaceTokens(in: formatter.tokens.indices, with: updatedTokens)
     }
 }

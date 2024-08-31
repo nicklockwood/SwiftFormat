@@ -173,7 +173,7 @@ public extension FormatRule {
                     }
 
                     let innermostExtension = extensions.last!
-                    let extensionNames = extensions.compactMap { $0.name }.joined(separator: ".")
+                    let extensionNames = extensions.compactMap(\.name).joined(separator: ".")
 
                     if let extensionBody = innermostExtension.body,
                        extensionBody.count == 1,
@@ -261,7 +261,7 @@ public extension FormatRule {
             }
         }
 
-        let updatedTokens = declarations.flatMap { $0.tokens }
+        let updatedTokens = declarations.flatMap(\.tokens)
         formatter.replaceTokens(in: 0 ..< formatter.tokens.count, with: updatedTokens)
     }
 }

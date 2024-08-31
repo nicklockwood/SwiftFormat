@@ -2,7 +2,7 @@
 //  AssertionFailures.swift
 //  SwiftFormat
 //
-//  Created by Cal Stephens on 7/28/24.
+//  Created by sanjanapruthi on 9/28/21.
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 

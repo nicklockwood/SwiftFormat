@@ -13,13 +13,7 @@ public extension FormatRule {
     /// the start of a line or inside a comment or string, as these have no semantic
     /// meaning and lead to noise in commits.
     static let consecutiveSpaces = FormatRule(
-        help: "Replace consecutive spaces with a single space.",
-        examples: """
-        ```diff
-        - let     foo = 5
-        + let foo = 5
-        ```
-        """
+        help: "Replace consecutive spaces with a single space."
     ) { formatter in
         formatter.forEach(.space) { i, token in
             switch token {
@@ -50,5 +44,12 @@ public extension FormatRule {
                 }
             }
         }
+    } examples: {
+        """
+        ```diff
+        - let     foo = 5
+        + let foo = 5
+        ```
+        """
     }
 }

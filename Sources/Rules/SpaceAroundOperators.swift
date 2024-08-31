@@ -17,22 +17,6 @@ public extension FormatRule {
     ///   preceded by a space, unless it appears at the beginning of a line.
     static let spaceAroundOperators = FormatRule(
         help: "Add or remove space around operators or delimiters.",
-        examples: """
-        ```diff
-        - foo . bar()
-        + foo.bar()
-        ```
-
-        ```diff
-        - a+b+c
-        + a + b + c
-        ```
-
-        ```diff
-        - func ==(lhs: Int, rhs: Int) -> Bool
-        + func == (lhs: Int, rhs: Int) -> Bool
-        ```
-        """,
         options: ["operatorfunc", "nospaceoperators", "ranges", "typedelimiter"]
     ) { formatter in
         formatter.forEachToken { i, token in
@@ -157,5 +141,22 @@ public extension FormatRule {
                 break
             }
         }
+    } examples: {
+        """
+        ```diff
+        - foo . bar()
+        + foo.bar()
+        ```
+
+        ```diff
+        - a+b+c
+        + a + b + c
+        ```
+
+        ```diff
+        - func ==(lhs: Int, rhs: Int) -> Bool
+        + func == (lhs: Int, rhs: Int) -> Bool
+        ```
+        """
     }
 }

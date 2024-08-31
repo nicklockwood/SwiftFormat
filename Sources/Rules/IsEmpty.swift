@@ -12,23 +12,6 @@ public extension FormatRule {
     /// Replace count == 0 with isEmpty
     static let isEmpty = FormatRule(
         help: "Prefer `isEmpty` over comparing `count` against zero.",
-        examples: """
-        ```diff
-        - if foo.count == 0 {
-        + if foo.isEmpty {
-
-        - if foo.count > 0 {
-        + if !foo.isEmpty {
-
-        - if foo?.count == 0 {
-        + if foo?.isEmpty == true {
-        ```
-
-        ***NOTE:*** In rare cases, the `isEmpty` rule may insert an `isEmpty` call for
-        a type that doesn't implement that property, breaking the program. For this
-        reason, the rule is disabled by default, and must be manually enabled via the
-        `--enable isEmpty` option.
-        """,
         disabledByDefault: true
     ) { formatter in
         formatter.forEach(.identifier("count")) { i, _ in
@@ -108,5 +91,23 @@ public extension FormatRule {
                 }
             }
         }
+    } examples: {
+        """
+        ```diff
+        - if foo.count == 0 {
+        + if foo.isEmpty {
+
+        - if foo.count > 0 {
+        + if !foo.isEmpty {
+
+        - if foo?.count == 0 {
+        + if foo?.isEmpty == true {
+        ```
+
+        ***NOTE:*** In rare cases, the `isEmpty` rule may insert an `isEmpty` call for
+        a type that doesn't implement that property, breaking the program. For this
+        reason, the rule is disabled by default, and must be manually enabled via the
+        `--enable isEmpty` option.
+        """
     }
 }

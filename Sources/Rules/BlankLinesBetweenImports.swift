@@ -14,18 +14,6 @@ public extension FormatRule {
         help: """
         Remove blank lines between import statements.
         """,
-        examples: """
-        ```diff
-          import A
-        -
-          import B
-          import C
-        -
-        -
-          @testable import D
-          import E
-        ```
-        """,
         disabledByDefault: true,
         sharedOptions: ["linebreaks"]
     ) { formatter in
@@ -40,5 +28,18 @@ public extension FormatRule {
 
             formatter.replaceTokens(in: endOfLine ..< nextImportIndex, with: formatter.linebreakToken(for: currentImportIndex + 1))
         }
+    } examples: {
+        """
+        ```diff
+          import A
+        -
+          import B
+          import C
+        -
+        -
+          @testable import D
+          import E
+        ```
+        """
     }
 }

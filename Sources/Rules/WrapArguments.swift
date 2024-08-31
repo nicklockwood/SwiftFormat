@@ -12,7 +12,16 @@ public extension FormatRule {
     /// Normalize argument wrapping style
     static let wrapArguments = FormatRule(
         help: "Align wrapped function arguments or collection elements.",
-        examples: """
+        orderAfter: [.wrap],
+        options: ["wraparguments", "wrapparameters", "wrapcollections", "closingparen", "callsiteparen",
+                  "wrapreturntype", "wrapconditions", "wraptypealiases", "wrapeffects"],
+        sharedOptions: ["indent", "trimwhitespace", "linebreaks",
+                        "tabwidth", "maxwidth", "smarttabs", "assetliterals", "wrapternary"]
+    ) { formatter in
+        formatter.wrapCollectionsAndArguments(completePartialWrapping: true,
+                                              wrapSingleArguments: false)
+    } examples: {
+        """
         **NOTE:** For backwards compatibility with previous versions, if no value is
         provided for `--wrapparameters`, the value for `--wraparguments` will be used.
 
@@ -68,14 +77,6 @@ public extension FormatRule {
         +   quuz
         + ]
         ```
-        """,
-        orderAfter: [.wrap],
-        options: ["wraparguments", "wrapparameters", "wrapcollections", "closingparen", "callsiteparen",
-                  "wrapreturntype", "wrapconditions", "wraptypealiases", "wrapeffects"],
-        sharedOptions: ["indent", "trimwhitespace", "linebreaks",
-                        "tabwidth", "maxwidth", "smarttabs", "assetliterals", "wrapternary"]
-    ) { formatter in
-        formatter.wrapCollectionsAndArguments(completePartialWrapping: true,
-                                              wrapSingleArguments: false)
+        """
     }
 }

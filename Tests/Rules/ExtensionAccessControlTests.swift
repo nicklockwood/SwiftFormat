@@ -2,7 +2,7 @@
 //  ExtensionAccessControlTests.swift
 //  SwiftFormatTests
 //
-//  Created by Cal Stephens on 7/28/2024.
+//  Created by Cal Stephens on 9/25/20.
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 

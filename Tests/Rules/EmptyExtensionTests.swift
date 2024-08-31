@@ -2,7 +2,7 @@
 //  EmptyExtensionTests.swift
 //  SwiftFormatTests
 //
-//  Created by manny_lopez on 7/28/2024.
+//  Created by Manny Lopez on 7/30/24.
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 

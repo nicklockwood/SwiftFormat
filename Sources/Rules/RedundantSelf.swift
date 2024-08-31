@@ -12,7 +12,13 @@ public extension FormatRule {
     /// Insert or remove redundant self keyword
     static let redundantSelf = FormatRule(
         help: "Insert/remove explicit `self` where applicable.",
-        examples: """
+        options: ["self", "selfrequired"]
+    ) { formatter in
+        _ = formatter.options.selfRequired
+        _ = formatter.options.explicitSelf
+        formatter.addOrRemoveSelf(static: false)
+    } examples: {
+        """
         ```diff
           func foobar(foo: Int, bar: Int) {
             self.foo = foo
@@ -52,11 +58,6 @@ public extension FormatRule {
         +   self.baz = 42
           }
         ```
-        """,
-        options: ["self", "selfrequired"]
-    ) { formatter in
-        _ = formatter.options.selfRequired
-        _ = formatter.options.explicitSelf
-        formatter.addOrRemoveSelf(static: false)
+        """
     }
 }

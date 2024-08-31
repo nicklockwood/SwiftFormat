@@ -11,30 +11,7 @@ import Foundation
 public extension FormatRule {
     /// Remove redundant return keyword
     static let redundantReturn = FormatRule(
-        help: "Remove unneeded `return` keyword.",
-        examples: """
-        ```diff
-        - array.filter { return $0.foo == bar }
-        + array.filter { $0.foo == bar }
-
-          // Swift 5.1+ (SE-0255)
-          var foo: String {
-        -     return "foo"
-        +     "foo"
-          }
-
-          // Swift 5.9+ (SE-0380) and with conditionalAssignment rule enabled
-          func foo(_ condition: Bool) -> String {
-              if condition {
-        -         return "foo"
-        +         "foo"
-              } else {
-        -         return "bar"
-        +         "bar"
-              }
-          }
-        ```
-        """
+        help: "Remove unneeded `return` keyword."
     ) { formatter in
         // indices of returns that are safe to remove
         var returnIndices = [Int]()
@@ -195,6 +172,30 @@ public extension FormatRule {
                 formatter.removeTokens(in: returnKeywordRangeToRemove)
             }
         }
+    } examples: {
+        """
+        ```diff
+        - array.filter { return $0.foo == bar }
+        + array.filter { $0.foo == bar }
+
+          // Swift 5.1+ (SE-0255)
+          var foo: String {
+        -     return "foo"
+        +     "foo"
+          }
+
+          // Swift 5.9+ (SE-0380) and with conditionalAssignment rule enabled
+          func foo(_ condition: Bool) -> String {
+              if condition {
+        -         return "foo"
+        +         "foo"
+              } else {
+        -         return "bar"
+        +         "bar"
+              }
+          }
+        ```
+        """
     }
 }
 

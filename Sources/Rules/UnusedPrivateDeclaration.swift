@@ -12,15 +12,6 @@ public extension FormatRule {
     /// Remove unused private and fileprivate declarations
     static let unusedPrivateDeclaration = FormatRule(
         help: "Remove unused private and fileprivate declarations.",
-        examples: """
-        ```diff
-          struct Foo {
-        -     fileprivate var foo = "foo"
-        -     fileprivate var baz = "baz"
-              var bar = "bar"
-          }
-        ```
-        """,
         disabledByDefault: true,
         options: ["preservedecls"]
     ) { formatter in
@@ -72,5 +63,15 @@ public extension FormatRule {
                 formatter.removeTokens(in: declaration.originalRange)
             }
         }
+    } examples: {
+        """
+        ```diff
+          struct Foo {
+        -     fileprivate var foo = "foo"
+        -     fileprivate var baz = "baz"
+              var bar = "bar"
+          }
+        ```
+        """
     }
 }

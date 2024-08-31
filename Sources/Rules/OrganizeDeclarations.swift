@@ -11,7 +11,39 @@ import Foundation
 public extension FormatRule {
     static let organizeDeclarations = FormatRule(
         help: "Organize declarations within class, struct, enum, actor, and extension bodies.",
-        examples: """
+        runOnceOnly: true,
+        disabledByDefault: true,
+        orderAfter: [.extensionAccessControl, .redundantFileprivate],
+        options: [
+            "categorymark", "markcategories", "beforemarks",
+            "lifecycle", "organizetypes", "structthreshold", "classthreshold",
+            "enumthreshold", "extensionlength", "organizationmode",
+            "visibilityorder", "typeorder", "visibilitymarks", "typemarks",
+            "groupblanklines", "sortswiftuiprops",
+        ],
+        sharedOptions: ["sortedpatterns", "lineaftermarks"]
+    ) { formatter in
+        guard !formatter.options.fragment else { return }
+
+        formatter.mapRecursiveDeclarations { declaration in
+            switch declaration {
+            // Organize the body of type declarations
+            case let .type(kind, open, body, close, originalRange):
+                let organizedType = formatter.organizeDeclaration((kind, open, body, close))
+                return .type(
+                    kind: organizedType.kind,
+                    open: organizedType.open,
+                    body: organizedType.body,
+                    close: organizedType.close,
+                    originalRange: originalRange
+                )
+
+            case .conditionalCompilation, .declaration:
+                return declaration
+            }
+        }
+    } examples: {
+        """
         Default value for `--visibilityorder` when using `--organizationmode visibility`:
         `\(VisibilityCategory.defaultOrdering(for: .visibility).map(\.rawValue).joined(separator: ", "))`
 
@@ -115,38 +147,7 @@ public extension FormatRule {
         +
          }
         ```
-        """,
-        runOnceOnly: true,
-        disabledByDefault: true,
-        orderAfter: [.extensionAccessControl, .redundantFileprivate],
-        options: [
-            "categorymark", "markcategories", "beforemarks",
-            "lifecycle", "organizetypes", "structthreshold", "classthreshold",
-            "enumthreshold", "extensionlength", "organizationmode",
-            "visibilityorder", "typeorder", "visibilitymarks", "typemarks",
-            "groupblanklines", "sortswiftuiprops",
-        ],
-        sharedOptions: ["sortedpatterns", "lineaftermarks"]
-    ) { formatter in
-        guard !formatter.options.fragment else { return }
-
-        formatter.mapRecursiveDeclarations { declaration in
-            switch declaration {
-            // Organize the body of type declarations
-            case let .type(kind, open, body, close, originalRange):
-                let organizedType = formatter.organizeDeclaration((kind, open, body, close))
-                return .type(
-                    kind: organizedType.kind,
-                    open: organizedType.open,
-                    body: organizedType.body,
-                    close: organizedType.close,
-                    originalRange: originalRange
-                )
-
-            case .conditionalCompilation, .declaration:
-                return declaration
-            }
-        }
+        """
     }
 }
 

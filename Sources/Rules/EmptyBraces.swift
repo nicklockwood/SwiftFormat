@@ -12,15 +12,6 @@ public extension FormatRule {
     /// Remove white-space between empty braces
     static let emptyBraces = FormatRule(
         help: "Remove whitespace inside empty braces.",
-        examples: """
-        ```diff
-        - func foo() {
-        -
-        - }
-
-        + func foo() {}
-        ```
-        """,
         options: ["emptybraces"],
         sharedOptions: ["linebreaks"]
     ) { formatter in
@@ -46,5 +37,15 @@ public extension FormatRule {
                 formatter.replaceTokens(in: range, with: formatter.linebreakToken(for: i + 1))
             }
         }
+    } examples: {
+        """
+        ```diff
+        - func foo() {
+        -
+        - }
+
+        + func foo() {}
+        ```
+        """
     }
 }

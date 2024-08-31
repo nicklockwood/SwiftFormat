@@ -12,45 +12,6 @@ public extension FormatRule {
     /// Removes explicit type declarations from initialization declarations
     static let redundantType = FormatRule(
         help: "Remove redundant type from variable declarations.",
-        examples: """
-        ```diff
-        // inferred
-        - let view: UIView = UIView()
-        + let view = UIView()
-
-        // explicit
-        - let view: UIView = UIView()
-        + let view: UIView = .init()
-
-        // infer-locals-only
-          class Foo {
-        -     let view: UIView = UIView()
-        +     let view: UIView = .init()
-
-              func method() {
-        -         let view: UIView = UIView()
-        +         let view = UIView()
-              }
-          }
-
-        // Swift 5.9+, inferred (SE-0380)
-        - let foo: Foo = if condition {
-        + let foo = if condition {
-              Foo("foo")
-          } else {
-              Foo("bar")
-          }
-
-        // Swift 5.9+, explicit (SE-0380)
-          let foo: Foo = if condition {
-        -     Foo("foo")
-        +     .init("foo")
-          } else {
-        -     Foo("bar")
-        +     .init("foo")
-          }
-        ```
-        """,
         options: ["redundanttype"]
     ) { formatter in
         formatter.forEach(.operator("=", .infix)) { i, _ in
@@ -172,6 +133,46 @@ public extension FormatRule {
                 }
             }
         }
+    } examples: {
+        """
+        ```diff
+        // inferred
+        - let view: UIView = UIView()
+        + let view = UIView()
+
+        // explicit
+        - let view: UIView = UIView()
+        + let view: UIView = .init()
+
+        // infer-locals-only
+          class Foo {
+        -     let view: UIView = UIView()
+        +     let view: UIView = .init()
+
+              func method() {
+        -         let view: UIView = UIView()
+        +         let view = UIView()
+              }
+          }
+
+        // Swift 5.9+, inferred (SE-0380)
+        - let foo: Foo = if condition {
+        + let foo = if condition {
+              Foo("foo")
+          } else {
+              Foo("bar")
+          }
+
+        // Swift 5.9+, explicit (SE-0380)
+          let foo: Foo = if condition {
+        -     Foo("foo")
+        +     .init("foo")
+          } else {
+        -     Foo("bar")
+        +     .init("foo")
+          }
+        ```
+        """
     }
 }
 

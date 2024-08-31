@@ -11,20 +11,7 @@ import Foundation
 public extension FormatRule {
     /// Remove redundant raw string values for case statements
     static let redundantRawValues = FormatRule(
-        help: "Remove redundant raw string values for enum cases.",
-        examples: """
-        ```diff
-          enum Foo: String {
-        -   case bar = "bar"
-            case baz = "quux"
-          }
-
-          enum Foo: String {
-        +   case bar
-            case baz = "quux"
-          }
-        ```
-        """
+        help: "Remove redundant raw string values for enum cases."
     ) { formatter in
         formatter.forEach(.keyword("enum")) { i, _ in
             guard let nameIndex = formatter.index(
@@ -59,5 +46,19 @@ public extension FormatRule {
                 }) ?? formatter.index(of: .keyword("case"), after: index)
             }
         }
+    } examples: {
+        """
+        ```diff
+          enum Foo: String {
+        -   case bar = "bar"
+            case baz = "quux"
+          }
+
+          enum Foo: String {
+        +   case bar
+            case baz = "quux"
+          }
+        ```
+        """
     }
 }

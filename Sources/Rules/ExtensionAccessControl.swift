@@ -11,37 +11,6 @@ import Foundation
 public extension FormatRule {
     static let extensionAccessControl = FormatRule(
         help: "Configure the placement of an extension's access control keyword.",
-        examples: """
-        `--extensionacl on-extension` (default)
-
-        ```diff
-        - extension Foo {
-        -     public func bar() {}
-        -     public func baz() {}
-          }
-
-        + public extension Foo {
-        +     func bar() {}
-        +     func baz() {}
-          }
-        ```
-
-        `--extensionacl on-declarations`
-
-        ```diff
-        - public extension Foo {
-        -     func bar() {}
-        -     func baz() {}
-        -     internal func quux() {}
-          }
-
-        + extension Foo {
-        +     public func bar() {}
-        +     public func baz() {}
-        +     func quux() {}
-          }
-        ```
-        """,
         options: ["extensionacl"]
     ) { formatter in
         guard !formatter.options.fragment else { return }
@@ -148,6 +117,38 @@ public extension FormatRule {
 
         let updatedTokens = updatedDeclarations.flatMap(\.tokens)
         formatter.replaceTokens(in: formatter.tokens.indices, with: updatedTokens)
+    } examples: {
+        """
+        `--extensionacl on-extension` (default)
+
+        ```diff
+        - extension Foo {
+        -     public func bar() {}
+        -     public func baz() {}
+          }
+
+        + public extension Foo {
+        +     func bar() {}
+        +     func baz() {}
+          }
+        ```
+
+        `--extensionacl on-declarations`
+
+        ```diff
+        - public extension Foo {
+        -     func bar() {}
+        -     func baz() {}
+        -     internal func quux() {}
+          }
+
+        + extension Foo {
+        +     public func bar() {}
+        +     public func baz() {}
+        +     func quux() {}
+          }
+        ```
+        """
     }
 }
 

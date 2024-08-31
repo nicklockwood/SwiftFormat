@@ -11,12 +11,6 @@ import Foundation
 public extension FormatRule {
     static let noExplicitOwnership = FormatRule(
         help: "Don't use explicit ownership modifiers (borrowing / consuming).",
-        examples: """
-        ```diff
-        - borrowing func foo(_ bar: consuming Bar) { ... }
-        + func foo(_ bar: Bar) { ... }
-        ```
-        """,
         disabledByDefault: true
     ) { formatter in
         formatter.forEachToken { keywordIndex, token in
@@ -49,5 +43,12 @@ public extension FormatRule {
                 formatter.removeTokens(in: keywordIndex ..< nextTokenIndex)
             }
         }
+    } examples: {
+        """
+        ```diff
+        - borrowing func foo(_ bar: consuming Bar) { ... }
+        + func foo(_ bar: Bar) { ... }
+        ```
+        """
     }
 }

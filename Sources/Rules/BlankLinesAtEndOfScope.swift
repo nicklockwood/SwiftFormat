@@ -13,33 +13,6 @@ public extension FormatRule {
     /// unless it's followed by more code on the same line (e.g. } else { )
     static let blankLinesAtEndOfScope = FormatRule(
         help: "Remove trailing blank line at the end of a scope.",
-        examples: """
-        ```diff
-          func foo() {
-            // foo
-        -
-          }
-
-          func foo() {
-            // foo
-          }
-        ```
-
-        ```diff
-          array = [
-            foo,
-            bar,
-            baz,
-        -
-          ]
-
-          array = [
-            foo,
-            bar,
-            baz,
-          ]
-        ```
-        """,
         orderAfter: [.organizeDeclarations],
         sharedOptions: ["typeblanklines"]
     ) { formatter in
@@ -86,5 +59,33 @@ public extension FormatRule {
                 return
             }
         }
+    } examples: {
+        """
+        ```diff
+          func foo() {
+            // foo
+        -
+          }
+
+          func foo() {
+            // foo
+          }
+        ```
+
+        ```diff
+          array = [
+            foo,
+            bar,
+            baz,
+        -
+          ]
+
+          array = [
+            foo,
+            bar,
+            baz,
+          ]
+        ```
+        """
     }
 }

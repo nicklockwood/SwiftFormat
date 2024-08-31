@@ -11,15 +11,6 @@ import Foundation
 public extension FormatRule {
     static let redundantProperty = FormatRule(
         help: "Simplifies redundant property definitions that are immediately returned.",
-        examples: """
-        ```diff
-          func foo() -> Foo {
-        -   let foo = Foo()
-        -   return foo
-        +   return Foo()
-          }
-        ```
-        """,
         disabledByDefault: true,
         orderAfter: [.propertyType]
     ) { formatter in
@@ -57,5 +48,15 @@ public extension FormatRule {
                 with: [.keyword("return"), .space(" ")]
             )
         }
+    } examples: {
+        """
+        ```diff
+          func foo() -> Foo {
+        -   let foo = Foo()
+        -   return foo
+        +   return Foo()
+          }
+        ```
+        """
     }
 }

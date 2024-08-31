@@ -11,41 +11,6 @@ import Foundation
 public extension FormatRule {
     static let conditionalAssignment = FormatRule(
         help: "Assign properties using if / switch expressions.",
-        examples: """
-        ```diff
-        - let foo: String
-        - if condition {
-        + let foo = if condition {
-        -     foo = "foo"
-        +     "foo"
-          } else {
-        -     foo = "bar"
-        +     "bar"
-          }
-
-        - let foo: String
-        - switch condition {
-        + let foo = switch condition {
-          case true:
-        -     foo = "foo"
-        +     "foo"
-          case false:
-        -     foo = "bar"
-        +     "bar"
-          }
-
-        // With --condassignment always (disabled by default)
-        - switch condition {
-        + foo.bar = switch condition {
-          case true:
-        -     foo.bar = "baaz"
-        +     "baaz"
-          case false:
-        -     foo.bar = "quux"
-        +     "quux"
-          }
-        ```
-        """,
         orderAfter: [.redundantReturn],
         options: ["condassignment"]
     ) { formatter in
@@ -167,6 +132,42 @@ public extension FormatRule {
                 formatter.insert(identifierEqualsTokens, at: startOfConditional)
             }
         }
+    } examples: {
+        """
+        ```diff
+        - let foo: String
+        - if condition {
+        + let foo = if condition {
+        -     foo = "foo"
+        +     "foo"
+          } else {
+        -     foo = "bar"
+        +     "bar"
+          }
+
+        - let foo: String
+        - switch condition {
+        + let foo = switch condition {
+          case true:
+        -     foo = "foo"
+        +     "foo"
+          case false:
+        -     foo = "bar"
+        +     "bar"
+          }
+
+        // With --condassignment always (disabled by default)
+        - switch condition {
+        + foo.bar = switch condition {
+          case true:
+        -     foo.bar = "baaz"
+        +     "baaz"
+          case false:
+        -     foo.bar = "quux"
+        +     "quux"
+          }
+        ```
+        """
     }
 }
 

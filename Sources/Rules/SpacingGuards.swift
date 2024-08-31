@@ -6,19 +6,6 @@ import Foundation
 public extension FormatRule {
     static let spacingGuards = FormatRule(
         help: "Remove space between guard statements, and add spaces after last guard.",
-        examples: """
-        ```diff
-            guard let spicy = self.makeSpicy() else {
-                return
-            }
-        -
-            guard let soap = self.clean() else {
-                return
-            }
-        +
-            let doTheJob = nikekov()
-        ```
-        """,
         disabledByDefault: true
     ) { formatter in
         formatter.forEach(.keyword("guard")) { guardIndex, _ in
@@ -45,5 +32,19 @@ public extension FormatRule {
             let indexesBetween = Set(endOfScopeOfGuard + 1 ..< nextNonSpaceAndNonLinebreakIndex)
             formatter.leaveOrSetLinebreaksInIndexes(indexesBetween, linebreaksCount: isGuard ? 1 : 2)
         }
+    } examples: {
+        """
+        ```diff
+            guard let spicy = self.makeSpicy() else {
+                return
+            }
+        -
+            guard let soap = self.clean() else {
+                return
+            }
+        +
+            let doTheJob = nikekov()
+        ```
+        """
     }
 }

@@ -12,13 +12,6 @@ public extension FormatRule {
     /// Remove empty, non-conforming, extensions.
     static let emptyExtension = FormatRule(
         help: "Remove empty, non-conforming, extensions.",
-        examples: """
-        ```diff
-        - extension String {}
-        -
-          extension String: Equatable {}
-        ```
-        """,
         orderAfter: [.unusedPrivateDeclaration]
     ) { formatter in
         var emptyExtensions = [Declaration]()
@@ -47,5 +40,13 @@ public extension FormatRule {
         for declaration in emptyExtensions.reversed() {
             formatter.removeTokens(in: declaration.originalRange)
         }
+    } examples: {
+        """
+        ```diff
+        - extension String {}
+        -
+          extension String: Equatable {}
+        ```
+        """
     }
 }

@@ -13,22 +13,6 @@ public extension FormatRule {
         help: """
         Changes all instances of assert(false, ...) to assertionFailure(...)
         and precondition(false, ...) to preconditionFailure(...).
-        """,
-        examples: """
-        ```diff
-        - assert(false)
-        + assertionFailure()
-        ```
-
-        ```diff
-        - assert(false, "message", 2, 1)
-        + assertionFailure("message", 2, 1)
-        ```
-
-        ```diff
-        - precondition(false, "message", 2, 1)
-        + preconditionFailure("message", 2, 1)
-        ```
         """
     ) { formatter in
         formatter.forEachToken { i, token in
@@ -55,5 +39,22 @@ public extension FormatRule {
                 break
             }
         }
+    } examples: {
+        """
+        ```diff
+        - assert(false)
+        + assertionFailure()
+        ```
+
+        ```diff
+        - assert(false, "message", 2, 1)
+        + assertionFailure("message", 2, 1)
+        ```
+
+        ```diff
+        - precondition(false, "message", 2, 1)
+        + preconditionFailure("message", 2, 1)
+        ```
+        """
     }
 }

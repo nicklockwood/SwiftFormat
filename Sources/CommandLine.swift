@@ -286,7 +286,7 @@ private func readConfigArg(
             print("warning: --exclude value '\(exclude)' did not match any files in \(directory).", as: .warning)
             config["exclude"] = nil
         } else {
-            config["exclude"] = excluded.map { $0.description }.sorted().joined(separator: ",")
+            config["exclude"] = excluded.map(\.description).sorted().joined(separator: ",")
         }
     }
     if let unexclude = config["unexclude"] {
@@ -295,7 +295,7 @@ private func readConfigArg(
             print("warning: --unexclude value '\(unexclude)' did not match any files in \(directory).", as: .warning)
             config["unexclude"] = nil
         } else {
-            config["unexclude"] = unexcluded.map { $0.description }.sorted().joined(separator: ",")
+            config["unexclude"] = unexcluded.map(\.description).sorted().joined(separator: ",")
         }
     }
     args = try mergeArguments(args, into: config)
@@ -369,6 +369,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
                 environment: environment
             ) else {
                 var message = "'\(identifier)' is not a valid reporter"
+                // swiftformat:disable:next --preferKeyPath
                 let names = Reporters.all.map { $0.name }
                 if let match = identifier.bestMatches(in: names).first {
                     message += " (did you mean '\(match)'?)"
@@ -806,7 +807,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
             return .error
         }
         if outputFlags.filesChecked == 0, outputFlags.filesSkipped == 0 {
-            let inputPaths = inputURLs.map { $0.path }.joined(separator: ", ")
+            let inputPaths = inputURLs.map(\.path).joined(separator: ", ")
             print("warning: No eligible files found at \(inputPaths).", as: .warning)
         }
         if let reporterOutput = try reporter.write() {

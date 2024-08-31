@@ -11,13 +11,7 @@ import Foundation
 public extension FormatRule {
     /// Remove redundant `let error` from `catch` statements
     static let redundantLetError = FormatRule(
-        help: "Remove redundant `let error` from `catch` clause.",
-        examples: """
-        ```diff
-        - do { ... } catch let error { log(error) }
-        + do { ... } catch { log(error) }
-        ```
-        """
+        help: "Remove redundant `let error` from `catch` clause."
 
     ) { formatter in
         formatter.forEach(.keyword("catch")) { i, _ in
@@ -31,5 +25,12 @@ public extension FormatRule {
                 formatter.removeTokens(in: letIndex ..< scopeIndex)
             }
         }
+    } examples: {
+        """
+        ```diff
+        - do { ... } catch let error { log(error) }
+        + do { ... } catch { log(error) }
+        ```
+        """
     }
 }

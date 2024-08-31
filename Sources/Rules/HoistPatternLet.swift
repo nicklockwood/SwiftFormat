@@ -12,22 +12,6 @@ public extension FormatRule {
     /// Move `let` and `var` inside patterns to the beginning
     static let hoistPatternLet = FormatRule(
         help: "Reposition `let` or `var` bindings within pattern.",
-        examples: """
-        ```diff
-        - (let foo, let bar) = baz()
-        + let (foo, bar) = baz()
-        ```
-
-        ```diff
-        - if case .foo(let bar, let baz) = quux {
-            // inner foo
-          }
-
-        + if case let .foo(bar, baz) = quux {
-            // inner foo
-          }
-        ```
-        """,
         options: ["patternlet"]
     ) { formatter in
         formatter.forEach(.startOfScope("(")) { i, _ in
@@ -145,6 +129,23 @@ public extension FormatRule {
                 }
             }
         }
+    } examples: {
+        """
+        ```diff
+        - (let foo, let bar) = baz()
+        + let (foo, bar) = baz()
+        ```
+
+        ```diff
+        - if case .foo(let bar, let baz) = quux {
+            // inner foo
+          }
+
+        + if case let .foo(bar, baz) = quux {
+            // inner foo
+          }
+        ```
+        """
     }
 }
 

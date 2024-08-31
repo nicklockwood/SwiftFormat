@@ -13,21 +13,6 @@ public extension FormatRule {
     /// This is useful for preventing noise in commits when items are added to end of array.
     static let trailingCommas = FormatRule(
         help: "Add or remove trailing comma from the last item in a collection literal.",
-        examples: """
-        ```diff
-          let array = [
-            foo,
-            bar,
-        -   baz
-          ]
-
-          let array = [
-            foo,
-            bar,
-        +   baz,
-          ]
-        ```
-        """,
         options: ["commas"]
     ) { formatter in
         formatter.forEach(.endOfScope("]")) { i, _ in
@@ -66,5 +51,21 @@ public extension FormatRule {
                 return
             }
         }
+    } examples: {
+        """
+        ```diff
+          let array = [
+            foo,
+            bar,
+        -   baz
+          ]
+
+          let array = [
+            foo,
+            bar,
+        +   baz,
+          ]
+        ```
+        """
     }
 }

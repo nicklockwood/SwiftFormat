@@ -11,8 +11,16 @@ import Foundation
 public extension FormatRule {
     /// Remove redundant backticks around non-keywords, or in places where keywords don't need escaping
     static let redundantBackticks = FormatRule(
-        help: "Remove redundant backticks around identifiers.",
-        examples: """
+        help: "Remove redundant backticks around identifiers."
+    ) { formatter in
+        formatter.forEach(.identifier) { i, token in
+            guard token.string.first == "`", !formatter.backticksRequired(at: i) else {
+                return
+            }
+            formatter.replaceToken(at: i, with: .identifier(token.unescaped()))
+        }
+    } examples: {
+        """
         ```diff
         - let `infix` = bar
         + let infix = bar
@@ -23,12 +31,5 @@ public extension FormatRule {
         + func foo(with default: Int) {}
         ```
         """
-    ) { formatter in
-        formatter.forEach(.identifier) { i, token in
-            guard token.string.first == "`", !formatter.backticksRequired(at: i) else {
-                return
-            }
-            formatter.replaceToken(at: i, with: .identifier(token.unescaped()))
-        }
     }
 }

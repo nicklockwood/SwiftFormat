@@ -17,52 +17,6 @@ public extension FormatRule {
         Place `else`, `catch` or `while` keyword in accordance with current style (same or
         next line).
         """,
-        examples: """
-        ```diff
-          if x {
-            // foo
-        - }
-        - else {
-            // bar
-          }
-
-          if x {
-            // foo
-        + } else {
-            // bar
-          }
-        ```
-
-        ```diff
-          do {
-            // try foo
-        - }
-        - catch {
-            // bar
-          }
-
-          do {
-            // try foo
-        + } catch {
-            // bar
-          }
-        ```
-
-        ```diff
-          repeat {
-            // foo
-        - }
-        - while {
-            // bar
-          }
-
-          repeat {
-            // foo
-        + } while {
-            // bar
-          }
-        ```
-        """,
         orderAfter: [.wrapMultilineStatementBraces],
         options: ["elseposition", "guardelse"],
         sharedOptions: ["allman", "linebreaks"]
@@ -154,6 +108,53 @@ public extension FormatRule {
                 break
             }
         }
+    } examples: {
+        """
+        ```diff
+          if x {
+            // foo
+        - }
+        - else {
+            // bar
+          }
+
+          if x {
+            // foo
+        + } else {
+            // bar
+          }
+        ```
+
+        ```diff
+          do {
+            // try foo
+        - }
+        - catch {
+            // bar
+          }
+
+          do {
+            // try foo
+        + } catch {
+            // bar
+          }
+        ```
+
+        ```diff
+          repeat {
+            // foo
+        - }
+        - while {
+            // bar
+          }
+
+          repeat {
+            // foo
+        + } while {
+            // bar
+          }
+        ```
+        """
     }
 }
 

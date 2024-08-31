@@ -11,27 +11,6 @@ import Foundation
 public extension FormatRule {
     static let blockComments = FormatRule(
         help: "Convert block comments to consecutive single line comments.",
-        examples: """
-        ```diff
-        - /*
-        -  * foo
-        -  * bar
-        -  */
-
-        + // foo
-        + // bar
-        ```
-
-        ```diff
-        - /**
-        -  * foo
-        -  * bar
-        -  */
-
-        + /// foo
-        + /// bar
-        ```
-        """,
         disabledByDefault: true
     ) { formatter in
         formatter.forEachToken { i, token in
@@ -124,6 +103,28 @@ public extension FormatRule {
                 break
             }
         }
+    } examples: {
+        """
+        ```diff
+        - /*
+        -  * foo
+        -  * bar
+        -  */
+
+        + // foo
+        + // bar
+        ```
+
+        ```diff
+        - /**
+        -  * foo
+        -  * bar
+        -  */
+
+        + /// foo
+        + /// bar
+        ```
+        """
     }
 }
 

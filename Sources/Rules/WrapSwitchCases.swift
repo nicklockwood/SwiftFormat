@@ -12,20 +12,6 @@ public extension FormatRule {
     /// Writes one switch case per line
     static let wrapSwitchCases = FormatRule(
         help: "Wrap comma-delimited switch cases onto multiple lines.",
-        examples: """
-        ```diff
-          switch foo {
-        -   case .bar, .baz:
-              break
-          }
-
-          switch foo {
-        +   case .foo,
-        +        .bar:
-              break
-          }
-        ```
-        """,
         disabledByDefault: true,
         sharedOptions: ["linebreaks", "tabwidth", "indent", "smarttabs"]
     ) { formatter in
@@ -46,5 +32,20 @@ public extension FormatRule {
                 startIndex = commaIndex
             }
         }
+    } examples: {
+        """
+        ```diff
+          switch foo {
+        -   case .bar, .baz:
+              break
+          }
+
+          switch foo {
+        +   case .foo,
+        +        .bar:
+              break
+          }
+        ```
+        """
     }
 }

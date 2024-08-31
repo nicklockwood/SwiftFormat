@@ -11,29 +11,7 @@ import Foundation
 public extension FormatRule {
     /// Replace `fileprivate` with `private` where possible
     static let redundantFileprivate = FormatRule(
-        help: "Prefer `private` over `fileprivate` where equivalent.",
-        examples: """
-        ```diff
-        -  fileprivate let someConstant = "someConstant"
-        +  private let someConstant = "someConstant"
-        ```
-
-        In Swift 4 and above, `fileprivate` can also be replaced with `private` for
-        members that are only accessed from extensions in the same file:
-
-        ```diff
-          class Foo {
-        -   fileprivate var foo = "foo"
-        +   private var foo = "foo"
-          }
-
-          extension Foo {
-            func bar() {
-              print(self.foo)
-            }
-          }
-        ```
-        """
+        help: "Prefer `private` over `fileprivate` where equivalent."
     ) { formatter in
         guard !formatter.options.fragment else { return }
 
@@ -117,6 +95,29 @@ public extension FormatRule {
                 formatter.replaceToken(at: i, with: .keyword("private"))
             }
         }
+    } examples: {
+        """
+        ```diff
+        -  fileprivate let someConstant = "someConstant"
+        +  private let someConstant = "someConstant"
+        ```
+
+        In Swift 4 and above, `fileprivate` can also be replaced with `private` for
+        members that are only accessed from extensions in the same file:
+
+        ```diff
+          class Foo {
+        -   fileprivate var foo = "foo"
+        +   private var foo = "foo"
+          }
+
+          extension Foo {
+            func bar() {
+              print(self.foo)
+            }
+          }
+        ```
+        """
     }
 }
 

@@ -12,25 +12,6 @@ public extension FormatRule {
     /// Implement brace-wrapping rules
     static let braces = FormatRule(
         help: "Wrap braces in accordance with selected style (K&R or Allman).",
-        examples: """
-        ```diff
-        - if x
-        - {
-            // foo
-          }
-        - else
-        - {
-            // bar
-          }
-
-        + if x {
-            // foo
-          }
-        + else {
-            // bar
-          }
-        ```
-        """,
         options: ["allman"],
         sharedOptions: ["linebreaks", "maxwidth", "indent", "tabwidth", "assetliterals"]
     ) { formatter in
@@ -104,5 +85,25 @@ public extension FormatRule {
                 formatter.replaceTokens(in: prevIndex + 1 ..< i, with: .space(" "))
             }
         }
+    } examples: {
+        """
+        ```diff
+        - if x
+        - {
+            // foo
+          }
+        - else
+        - {
+            // bar
+          }
+
+        + if x {
+            // foo
+          }
+        + else {
+            // bar
+          }
+        ```
+        """
     }
 }

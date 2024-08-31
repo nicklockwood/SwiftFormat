@@ -11,17 +11,7 @@ import Foundation
 public extension FormatRule {
     /// Prefer `AnyObject` over `class` for class-based protocols
     static let anyObjectProtocol = FormatRule(
-        help: "Prefer `AnyObject` over `class` in protocol definitions.",
-        examples: """
-        ```diff
-        - protocol Foo: class {}
-        + protocol Foo: AnyObject {}
-        ```
-
-        **NOTE:** The guideline to use `AnyObject` instead of `class` was only
-        introduced in Swift 4.1, so the `anyObjectProtocol` rule is disabled unless the
-        swift version is set to 4.1 or above.
-        """
+        help: "Prefer `AnyObject` over `class` in protocol definitions."
     ) { formatter in
         formatter.forEach(.keyword("protocol")) { i, _ in
             guard formatter.options.swiftVersion >= "4.1",
@@ -37,5 +27,16 @@ public extension FormatRule {
             }
             formatter.replaceToken(at: classIndex, with: .identifier("AnyObject"))
         }
+    } examples: {
+        """
+        ```diff
+        - protocol Foo: class {}
+        + protocol Foo: AnyObject {}
+        ```
+
+        **NOTE:** The guideline to use `AnyObject` instead of `class` was only
+        introduced in Swift 4.1, so the `anyObjectProtocol` rule is disabled unless the
+        swift version is set to 4.1 or above.
+        """
     }
 }

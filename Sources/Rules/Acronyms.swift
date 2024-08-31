@@ -11,19 +11,6 @@ import Foundation
 public extension FormatRule {
     static let acronyms = FormatRule(
         help: "Capitalize acronyms when the first character is capitalized.",
-        examples: """
-        ```diff
-        - let destinationUrl: URL
-        - let urlRouter: UrlRouter
-        - let screenId: String
-        - let entityUuid: UUID
-
-        + let destinationURL: URL
-        + let urlRouter: URLRouter
-        + let screenID: String
-        + let entityUUID: UUID
-        ```
-        """,
         disabledByDefault: true,
         options: ["acronyms"]
     ) { formatter in
@@ -85,5 +72,19 @@ public extension FormatRule {
                 formatter.replaceToken(at: index, with: updatedToken)
             }
         }
+    } examples: {
+        """
+        ```diff
+        - let destinationUrl: URL
+        - let urlRouter: UrlRouter
+        - let screenId: String
+        - let entityUuid: UUID
+
+        + let destinationURL: URL
+        + let urlRouter: URLRouter
+        + let screenID: String
+        + let entityUUID: UUID
+        ```
+        """
     }
 }

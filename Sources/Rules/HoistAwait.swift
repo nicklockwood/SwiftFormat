@@ -12,17 +12,6 @@ public extension FormatRule {
     /// Reposition `await` keyword outside of the current scope.
     static let hoistAwait = FormatRule(
         help: "Move inline `await` keyword(s) to start of expression.",
-        examples: """
-        ```diff
-        - greet(await forename, await surname)
-        + await greet(forename, surname)
-        ```
-
-        ```diff
-        - let foo = String(try await getFoo())
-        + let foo = await String(try getFoo())
-        ```
-        """,
         options: ["asynccapturing"]
     ) { formatter in
         guard formatter.options.swiftVersion >= "5.5" else { return }
@@ -34,5 +23,17 @@ public extension FormatRule {
                 formatter.isSymbol(at: prevIndex, in: formatter.options.asyncCapturing)
             }
         }
+    } examples: {
+        """
+        ```diff
+        - greet(await forename, await surname)
+        + await greet(forename, surname)
+        ```
+
+        ```diff
+        - let foo = String(try await getFoo())
+        + let foo = await String(try getFoo())
+        ```
+        """
     }
 }

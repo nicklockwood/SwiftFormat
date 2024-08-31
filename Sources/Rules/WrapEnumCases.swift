@@ -12,18 +12,6 @@ public extension FormatRule {
     /// Formats enum cases declaration into one case per line
     static let wrapEnumCases = FormatRule(
         help: "Rewrite comma-delimited enum cases to one case per line.",
-        examples: """
-        ```diff
-          enum Foo {
-        -   case bar, baz
-          }
-
-          enum Foo {
-        +   case bar
-        +   case baz
-          }
-        ```
-        """,
         disabledByDefault: true,
         options: ["wrapenumcases"],
         sharedOptions: ["linebreaks"]
@@ -62,6 +50,19 @@ public extension FormatRule {
                 formatter.insert([.keyword("case")], at: nextNonSpaceIndex + 1 + offset)
                 formatter.insertSpace(" ", at: nextNonSpaceIndex + 2 + offset)
             }
+    } examples: {
+        """
+        ```diff
+          enum Foo {
+        -   case bar, baz
+          }
+
+          enum Foo {
+        +   case bar
+        +   case baz
+          }
+        ```
+        """
     }
 }
 

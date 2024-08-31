@@ -10,24 +10,7 @@ import Foundation
 
 public extension FormatRule {
     static let redundantInternal = FormatRule(
-        help: "Remove redundant internal access control.",
-        examples: """
-        ```diff
-        - internal class Foo {
-        + class Foo {
-        -     internal let bar: String
-        +     let bar: String
-
-        -     internal func baaz() {}
-        +     func baaz() {}
-
-        -     internal init() {
-        +     init() {
-                  bar = "bar"
-              }
-          }
-        ```
-        """
+        help: "Remove redundant internal access control."
     ) { formatter in
         formatter.forEach(.keyword("internal")) { internalKeywordIndex, _ in
             // Don't remove import acl
@@ -55,5 +38,23 @@ public extension FormatRule {
 
             formatter.removeTokens(in: internalKeywordIndex ... (internalKeywordIndex + 1))
         }
+    } examples: {
+        """
+        ```diff
+        - internal class Foo {
+        + class Foo {
+        -     internal let bar: String
+        +     let bar: String
+
+        -     internal func baaz() {}
+        +     func baaz() {}
+
+        -     internal init() {
+        +     init() {
+                  bar = "bar"
+              }
+          }
+        ```
+        """
     }
 }

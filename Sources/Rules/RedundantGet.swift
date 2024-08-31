@@ -11,20 +11,7 @@ import Foundation
 public extension FormatRule {
     /// Remove redundant `get {}` clause inside read-only computed property
     static let redundantGet = FormatRule(
-        help: "Remove unneeded `get` clause inside computed properties.",
-        examples: """
-        ```diff
-          var foo: Int {
-        -   get {
-        -     return 5
-        -   }
-          }
-
-          var foo: Int {
-        +   return 5
-          }
-        ```
-        """
+        help: "Remove unneeded `get` clause inside computed properties."
     ) { formatter in
         formatter.forEach(.identifier("get")) { i, _ in
             if formatter.isAccessorKeyword(at: i, checkKeyword: false),
@@ -43,5 +30,19 @@ public extension FormatRule {
                 // TODO: fix-up indenting of lines in between removed braces
             }
         }
+    } examples: {
+        """
+        ```diff
+          var foo: Int {
+        -   get {
+        -     return 5
+        -   }
+          }
+
+          var foo: Int {
+        +   return 5
+          }
+        ```
+        """
     }
 }

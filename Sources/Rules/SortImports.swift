@@ -12,29 +12,6 @@ public extension FormatRule {
     /// Sort import statements
     static let sortImports = FormatRule(
         help: "Sort import statements alphabetically.",
-        examples: """
-        ```diff
-        - import Foo
-        - import Bar
-        + import Bar
-        + import Foo
-        ```
-
-        ```diff
-        - import B
-        - import A
-        - #if os(iOS)
-        -   import Foo-iOS
-        -   import Bar-iOS
-        - #endif
-        + import A
-        + import B
-        + #if os(iOS)
-        +   import Bar-iOS
-        +   import Foo-iOS
-        + #endif
-        ```
-        """,
         options: ["importgrouping"],
         sharedOptions: ["linebreaks"]
     ) { formatter in
@@ -56,6 +33,30 @@ public extension FormatRule {
             }
             formatter.replaceTokens(in: range, with: sortedTokens)
         }
+    } examples: {
+        """
+        ```diff
+        - import Foo
+        - import Bar
+        + import Bar
+        + import Foo
+        ```
+
+        ```diff
+        - import B
+        - import A
+        - #if os(iOS)
+        -   import Foo-iOS
+        -   import Bar-iOS
+        - #endif
+        + import A
+        + import B
+        + #if os(iOS)
+        +   import Bar-iOS
+        +   import Foo-iOS
+        + #endif
+        ```
+        """
     }
 }
 

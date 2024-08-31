@@ -12,24 +12,6 @@ public extension FormatRule {
     /// Remove semicolons, except where doing so would change the meaning of the code
     static let semicolons = FormatRule(
         help: "Remove semicolons.",
-        examples: """
-        ```diff
-        - let foo = 5;
-        + let foo = 5
-        ```
-
-        ```diff
-        - let foo = 5; let bar = 6
-        + let foo = 5
-        + let bar = 6
-        ```
-
-        ```diff
-        // semicolon is not removed if it would affect the behavior of the code
-        return;
-        goto(fail)
-        ```
-        """,
         options: ["semicolons"],
         sharedOptions: ["linebreaks"]
     ) { formatter in
@@ -66,5 +48,24 @@ public extension FormatRule {
                 formatter.removeToken(at: i)
             }
         }
+    } examples: {
+        """
+        ```diff
+        - let foo = 5;
+        + let foo = 5
+        ```
+
+        ```diff
+        - let foo = 5; let bar = 6
+        + let foo = 5
+        + let bar = 6
+        ```
+
+        ```diff
+        // semicolon is not removed if it would affect the behavior of the code
+        return;
+        goto(fail)
+        ```
+        """
     }
 }

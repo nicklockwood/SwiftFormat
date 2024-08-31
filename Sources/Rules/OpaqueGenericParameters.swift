@@ -16,30 +16,6 @@ public extension FormatRule {
         primary associated types for common standard library types, so definitions like
         `T where T: Collection, T.Element == Foo` are updated to `some Collection<Foo>`.
         """,
-        examples: """
-        ```diff
-        - func handle<T: Fooable>(_ value: T) {
-        + func handle(_ value: some Fooable) {
-              print(value)
-          }
-
-        - func handle<T>(_ value: T) where T: Fooable, T: Barable {
-        + func handle(_ value: some Fooable & Barable) {
-              print(value)
-          }
-
-        - func handle<T: Collection>(_ value: T) where T.Element == Foo {
-        + func handle(_ value: some Collection<Foo>) {
-              print(value)
-          }
-
-        // With `--someany enabled` (the default)
-        - func handle<T>(_ value: T) {
-        + func handle(_ value: some Any) {
-              print(value)
-          }
-        ```
-        """,
         options: ["someany"]
     ) { formatter in
         formatter.forEach(.keyword) { keywordIndex, keyword in
@@ -316,5 +292,30 @@ public extension FormatRule {
                 formatter.removeTokens(in: genericSignatureStartIndex ... newGenericSignatureEndIndex)
             }
         }
+    } examples: {
+        """
+        ```diff
+        - func handle<T: Fooable>(_ value: T) {
+        + func handle(_ value: some Fooable) {
+              print(value)
+          }
+
+        - func handle<T>(_ value: T) where T: Fooable, T: Barable {
+        + func handle(_ value: some Fooable & Barable) {
+              print(value)
+          }
+
+        - func handle<T: Collection>(_ value: T) where T.Element == Foo {
+        + func handle(_ value: some Collection<Foo>) {
+              print(value)
+          }
+
+        // With `--someany enabled` (the default)
+        - func handle<T>(_ value: T) {
+        + func handle(_ value: some Any) {
+              print(value)
+          }
+        ```
+        """
     }
 }

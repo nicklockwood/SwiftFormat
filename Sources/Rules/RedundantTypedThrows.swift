@@ -12,19 +12,6 @@ public extension FormatRule {
     static let redundantTypedThrows = FormatRule(
         help: """
         Converts `throws(any Error)` to `throws`, and converts `throws(Never)` to non-throwing.
-        """,
-        examples: """
-        ```diff
-        - func foo() throws(Never) -> Int {
-        + func foo() -> Int {
-              return 0
-          }
-
-        - func foo() throws(any Error) -> Int {
-        + func foo() throws -> Int {
-              throw MyError.foo
-          }
-        ```
         """
     ) { formatter in
         formatter.forEach(.keyword("throws")) { throwsIndex, _ in
@@ -52,5 +39,19 @@ public extension FormatRule {
                 formatter.removeTokens(in: startOfScope ... endOfScope)
             }
         }
+    } examples: {
+        """
+        ```diff
+        - func foo() throws(Never) -> Int {
+        + func foo() -> Int {
+              return 0
+          }
+
+        - func foo() throws(any Error) -> Int {
+        + func foo() throws -> Int {
+              throw MyError.foo
+          }
+        ```
+        """
     }
 }

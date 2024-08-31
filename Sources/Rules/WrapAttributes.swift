@@ -11,43 +11,6 @@ import Foundation
 public extension FormatRule {
     static let wrapAttributes = FormatRule(
         help: "Wrap @attributes onto a separate line, or keep them on the same line.",
-        examples: """
-        `--funcattributes prev-line`
-
-        ```diff
-        - @objc func foo() {}
-
-        + @objc
-        + func foo() { }
-        ```
-
-        `--funcattributes same-line`
-
-        ```diff
-        - @objc
-        - func foo() { }
-
-        + @objc func foo() {}
-        ```
-
-        `--typeattributes prev-line`
-
-        ```diff
-        - @objc class Foo {}
-
-        + @objc
-        + class Foo { }
-        ```
-
-        `--typeattributes same-line`
-
-        ```diff
-        - @objc
-        - enum Foo { }
-
-        + @objc enum Foo {}
-        ```
-        """,
         options: ["funcattributes", "typeattributes", "varattributes", "storedvarattrs", "computedvarattrs", "complexattrs", "noncomplexattrs"],
         sharedOptions: ["linebreaks", "maxwidth"]
     ) { formatter in
@@ -146,6 +109,44 @@ public extension FormatRule {
                 }
             }
         }
+    } examples: {
+        """
+        `--funcattributes prev-line`
+
+        ```diff
+        - @objc func foo() {}
+
+        + @objc
+        + func foo() { }
+        ```
+
+        `--funcattributes same-line`
+
+        ```diff
+        - @objc
+        - func foo() { }
+
+        + @objc func foo() {}
+        ```
+
+        `--typeattributes prev-line`
+
+        ```diff
+        - @objc class Foo {}
+
+        + @objc
+        + class Foo { }
+        ```
+
+        `--typeattributes same-line`
+
+        ```diff
+        - @objc
+        - enum Foo { }
+
+        + @objc enum Foo {}
+        ```
+        """
     }
 }
 

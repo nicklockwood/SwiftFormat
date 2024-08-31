@@ -14,35 +14,6 @@ public extension FormatRule {
         Use angle brackets (`extension Array<Foo>`) for generic type extensions
         instead of type constraints (`extension Array where Element == Foo`).
         """,
-        examples: """
-        ```diff
-        - extension Array where Element == Foo {}
-        - extension Optional where Wrapped == Foo {}
-        - extension Dictionary where Key == Foo, Value == Bar {}
-        - extension Collection where Element == Foo {}
-        + extension Array<Foo> {}
-        + extension Optional<Foo> {}
-        + extension Dictionary<Key, Value> {}
-        + extension Collection<Foo> {}
-
-        // With `typeSugar` also enabled:
-        - extension Array where Element == Foo {}
-        - extension Optional where Wrapped == Foo {}
-        - extension Dictionary where Key == Foo, Value == Bar {}
-        + extension [Foo] {}
-        + extension Foo? {}
-        + extension [Key: Value] {}
-
-        // Also supports user-defined types!
-        - extension LinkedList where Element == Foo {}
-        - extension Reducer where
-        -     State == FooState,
-        -     Action == FooAction,
-        -     Environment == FooEnvironment {}
-        + extension LinkedList<Foo> {}
-        + extension Reducer<FooState, FooAction, FooEnvironment> {}
-        ```
-        """,
         options: ["generictypes"]
     ) { formatter in
         formatter.forEach(.keyword("extension")) { extensionIndex, _ in
@@ -152,5 +123,35 @@ public extension FormatRule {
             let fullGenericType = "\(extendedType)<\(genericSubtypes)>"
             formatter.replaceToken(at: typeNameIndex, with: tokenize(fullGenericType))
         }
+    } examples: {
+        """
+        ```diff
+        - extension Array where Element == Foo {}
+        - extension Optional where Wrapped == Foo {}
+        - extension Dictionary where Key == Foo, Value == Bar {}
+        - extension Collection where Element == Foo {}
+        + extension Array<Foo> {}
+        + extension Optional<Foo> {}
+        + extension Dictionary<Key, Value> {}
+        + extension Collection<Foo> {}
+
+        // With `typeSugar` also enabled:
+        - extension Array where Element == Foo {}
+        - extension Optional where Wrapped == Foo {}
+        - extension Dictionary where Key == Foo, Value == Bar {}
+        + extension [Foo] {}
+        + extension Foo? {}
+        + extension [Key: Value] {}
+
+        // Also supports user-defined types!
+        - extension LinkedList where Element == Foo {}
+        - extension Reducer where
+        -     State == FooState,
+        -     Action == FooAction,
+        -     Environment == FooEnvironment {}
+        + extension LinkedList<Foo> {}
+        + extension Reducer<FooState, FooAction, FooEnvironment> {}
+        ```
+        """
     }
 }

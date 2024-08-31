@@ -15,7 +15,7 @@ extension Formatter {
     func shouldWrapMultilineStatementBrace(at index: Int) -> Bool {
         assert(tokens[index] == .startOfScope("{"))
         guard let endIndex = endOfScope(at: index),
-              tokens[index + 1 ..< endIndex].contains(where: { $0.isLinebreak }),
+              tokens[index + 1 ..< endIndex].contains(where: \.isLinebreak),
               let prevIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: index),
               let prevToken = token(at: prevIndex), !prevToken.isStartOfScope,
               !prevToken.isDelimiter
@@ -851,7 +851,7 @@ extension Formatter {
         ) -> Bool {
             // ** Decide whether or not this statement needs to be wrapped / re-wrapped
             let range = startOfLine(at: startIndex) ... endIndex
-            let length = tokens[range].map { $0.string }.joined().count
+            let length = tokens[range].map(\.string).joined().count
 
             // Only wrap if this line if longer than the max width...
             let overMaximumWidth = maxWidth > 0 && length > maxWidth
@@ -1944,12 +1944,12 @@ extension Formatter {
 
             if let delineatorIndex = delineatorIndex, let conformanceType = conformanceType {
                 let constrainedTypeName = tokens[genericTypeNameIndex ..< delineatorIndex]
-                    .map { $0.string }
+                    .map(\.string)
                     .joined()
                     .trimmingCharacters(in: .init(charactersIn: " \n\r,{}"))
 
                 let conformanceName = tokens[(delineatorIndex + 1) ... typeEndIndex]
-                    .map { $0.string }
+                    .map(\.string)
                     .joined()
                     .trimmingCharacters(in: .init(charactersIn: " \n\r,{}"))
 
@@ -2436,7 +2436,7 @@ extension Formatter {
 
                     let captureEntryStrings = captureListEntries.map { captureListEntry in
                         captureListEntry
-                            .map { $0.string }
+                            .map(\.string)
                             .joined()
                             .trimmingCharacters(in: .whitespacesAndNewlines)
                     }
@@ -2447,7 +2447,7 @@ extension Formatter {
 
                     captureListEntries.removeAll(where: { captureListEntry in
                         let text = captureListEntry
-                            .map { $0.string }
+                            .map(\.string)
                             .joined()
                             .trimmingCharacters(in: .whitespacesAndNewlines)
 

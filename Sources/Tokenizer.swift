@@ -557,7 +557,7 @@ extension Token {
 
 extension Collection where Element == Token {
     var string: String {
-        map { $0.string }.joined()
+        map(\.string).joined()
     }
 }
 
@@ -1909,7 +1909,7 @@ public func tokenize(_ source: String) -> [Token] {
         token = tokens[count - 1]
         switch token {
         case .startOfScope("/"):
-            if characters.first.map({ $0.isSpaceOrLinebreak }) ?? true {
+            if characters.first.map(\.isSpaceOrLinebreak) ?? true {
                 // Misidentified as regex
                 token = .operator("/", .none)
                 tokens[count - 1] = token

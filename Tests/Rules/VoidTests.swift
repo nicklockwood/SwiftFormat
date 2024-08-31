@@ -2,7 +2,7 @@
 //  VoidTests.swift
 //  SwiftFormatTests
 //
-//  Created by Cal Stephens on 7/28/2024.
+//  Created by Nick Lockwood on 10/19/16.
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 

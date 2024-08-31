@@ -150,7 +150,7 @@ class OptionDescriptorTests: XCTestCase {
     }
 
     func testAllPropertiesHaveDescriptor() {
-        let allDescriptors = Set(Descriptors.all.map { $0.propertyName })
+        let allDescriptors = Set(Descriptors.all.map(\.propertyName))
         for property in FormatOptions.default.allOptions.keys {
             XCTAssert(
                 allDescriptors.contains(property),

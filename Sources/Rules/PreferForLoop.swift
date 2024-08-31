@@ -82,7 +82,7 @@ public extension FormatRule {
 
             // Abort early for single-line loops
             guard !formatter.options.preserveSingleLineForEach || formatter
-                .tokens[closureOpenBraceIndex ..< closureCloseBraceIndex].contains(where: { $0.isLinebreak })
+                .tokens[closureOpenBraceIndex ..< closureCloseBraceIndex].contains(where: \.isLinebreak)
             else { return }
 
             // Ignore closures with capture lists for now since they're rare

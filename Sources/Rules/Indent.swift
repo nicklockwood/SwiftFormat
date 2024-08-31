@@ -271,11 +271,7 @@ public extension FormatRule {
                 if let startIndex = formatter.index(of: .startOfScope("{"), before: i),
                    formatter.index(of: .keyword("for"), in: startIndex + 1 ..< i) == nil,
                    let paramsIndex = formatter.index(of: .startOfScope, in: startIndex + 1 ..< i),
-                   !formatter.tokens[startIndex + 1 ..< paramsIndex].contains(where: {
-                       $0.isLinebreak
-                   }), formatter.tokens[paramsIndex + 1 ..< i].contains(where: {
-                       $0.isLinebreak
-                   })
+                   !formatter.tokens[startIndex + 1 ..< paramsIndex].contains(where: \.isLinebreak), formatter.tokens[paramsIndex + 1 ..< i].contains(where: \.isLinebreak)
                 {
                     indentStack[indentStack.count - 1] += formatter.options.indent
                 }

@@ -106,7 +106,7 @@ private struct Inference {
         }
         if let indent = indents.sorted(by: {
             $0.count > $1.count
-        }).first.map({ $0.indent }) {
+        }).first.map(\.indent) {
             options.indent = indent
         }
     }
@@ -408,7 +408,7 @@ private struct Inference {
         }
 
         // Decide on callSiteClosingParenPosition
-        if functionCallSameLine > functionCallBalanced && functionDeclarationBalanced > functionDeclarationSameLine {
+        if functionCallSameLine > functionCallBalanced, functionDeclarationBalanced > functionDeclarationSameLine {
             options.callSiteClosingParenPosition = .sameLine
         } else {
             options.callSiteClosingParenPosition = .balanced

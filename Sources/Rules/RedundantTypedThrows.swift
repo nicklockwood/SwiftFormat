@@ -21,7 +21,7 @@ public extension FormatRule {
             else { return }
 
             let throwsTypeRange = (startOfScope + 1) ..< endOfScope
-            let throwsType: String = formatter.tokens[throwsTypeRange].map { $0.string }.joined()
+            let throwsType: String = formatter.tokens[throwsTypeRange].map(\.string).joined()
 
             if throwsType == "Never" {
                 if formatter.tokens[endOfScope + 1].isSpace {

@@ -151,8 +151,8 @@ extension Formatter {
         }
 
         let lineCount = typeDeclaration.body
-            .flatMap { $0.tokens }
-            .filter { $0.isLinebreak }
+            .flatMap(\.tokens)
+            .filter(\.isLinebreak)
             .count
 
         return lineCount >= organizationThreshold
@@ -228,7 +228,7 @@ extension Formatter {
                 // Respect the original declaration ordering when the categories and types are the same
                 return lhsOriginalIndex < rhsOriginalIndex
             })
-            .map { $0.element }
+            .map(\.element)
     }
 
     /// Whether or not type members should additionally be sorted alphabetically
@@ -302,11 +302,11 @@ extension Formatter {
     ) -> Bool {
         let lhsPropertiesOrder = lhs
             .filter { affectsSynthesizedMemberwiseInitializer($0.declaration, $0.category) }
-            .map { $0.declaration }
+            .map(\.declaration)
 
         let rhsPropertiesOrder = rhs
             .filter { affectsSynthesizedMemberwiseInitializer($0.declaration, $0.category) }
-            .map { $0.declaration }
+            .map(\.declaration)
 
         return lhsPropertiesOrder == rhsPropertiesOrder
     }

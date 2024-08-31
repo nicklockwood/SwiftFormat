@@ -22,7 +22,7 @@ public extension FormatRule {
 
             guard ["}", ")", "]", ">"].contains(endOfScope.string),
                   // If there is extra code after the closing scope on the same line, ignore it
-                  (formatter.next(.nonSpaceOrComment, after: endOfScopeIndex).map { $0.isLinebreak }) ?? true
+                  (formatter.next(.nonSpaceOrComment, after: endOfScopeIndex).map(\.isLinebreak)) ?? true
             else { return }
 
             // Consumers can choose whether or not this rule should apply to type bodies

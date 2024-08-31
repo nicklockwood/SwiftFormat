@@ -55,7 +55,7 @@ public extension FormatRule {
                 let tokens = Array(formatter.tokens[elementStartIndex ... elementEndIndex])
                 let typeName = tokens
                     .filter { !$0.isSpaceOrCommentOrLinebreak && !$0.isOperator }
-                    .map { $0.string }.joined()
+                    .map(\.string).joined()
 
                 // While we're here, also filter out any duplicates.
                 // Since we're sorting, duplicates would sit right next to each other

@@ -101,7 +101,7 @@ extension Formatter {
     func shouldWrapCaseRangeGroup(_ caseRangeGroup: [Formatter.EnumCaseRange]) -> Bool {
         guard let firstIndex = caseRangeGroup.first?.value.lowerBound,
               let scopeStart = startOfScope(at: firstIndex),
-              tokens[scopeStart ..< firstIndex].contains(where: { $0.isLinebreak })
+              tokens[scopeStart ..< firstIndex].contains(where: \.isLinebreak)
         else {
             // Don't wrap if first case is on same line as opening `{`
             return false

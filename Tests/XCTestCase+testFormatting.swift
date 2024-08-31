@@ -59,7 +59,7 @@ extension XCTestCase {
         }
         // The `name` property on individual rules is not populated until the first call into `rulesByName`,
         // so we have to make sure to trigger this before checking the names of the given rules.
-        if rules.contains(where: { $0.name.isEmpty }) {
+        if rules.contains(where: \.name.isEmpty) {
             _ = FormatRules.all
         }
 

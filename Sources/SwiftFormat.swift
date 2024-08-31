@@ -446,7 +446,7 @@ public func parsingError(for tokens: [Token], options: FormatOptions) -> FormatE
 
 /// Convert a token array back into a string
 public func sourceCode(for tokens: [Token]?) -> String {
-    (tokens ?? []).map { $0.string }.joined()
+    (tokens ?? []).map(\.string).joined()
 }
 
 /// Apply specified rules to a token array and optionally capture list of changes
@@ -489,12 +489,12 @@ private func applyRules(
 
     // Infer shared options
     var options = options
-    options.enabledRules = Set(rules.map { $0.name })
+    options.enabledRules = Set(rules.map(\.name))
     let sharedOptions = FormatRules
         .sharedOptionsForRules(rules)
         .compactMap { Descriptors.byName[$0] }
         .filter { $0.defaultArgument == $0.fromOptions(options) }
-        .map { $0.propertyName }
+        .map(\.propertyName)
 
     inferFormatOptions(sharedOptions, from: tokens, into: &options)
 
@@ -588,7 +588,7 @@ private func applyRules(
     }
     let formatter = Formatter(tokens, options: options, trackChanges: true, range: range)
     rules.sorted().forEach { $0.apply(with: formatter) }
-    let rulesApplied = Set(formatter.changes.map { $0.rule.name }).sorted()
+    let rulesApplied = Set(formatter.changes.map(\.rule.name)).sorted()
     if rulesApplied.isEmpty {
         throw FormatError.writing("Failed to terminate")
     }

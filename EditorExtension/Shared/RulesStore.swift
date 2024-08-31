@@ -60,7 +60,7 @@ extension Rule: Comparable {
     /// Space-separated, lowercased text terms that this rule might by found by.
     var searchableText: String {
         var items = [name]
-        if let formatRule = formatRule {
+        if let formatRule {
             items.append(formatRule.help.keywords.joined(separator: " "))
             items.append(formatRule.options.joined(separator: " "))
             items.append(formatRule.sharedOptions.joined(separator: " "))

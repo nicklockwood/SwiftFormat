@@ -555,9 +555,9 @@ extension Token {
     }
 }
 
-extension Collection where Element == Token {
+extension Collection<Token> {
     var string: String {
-        map { $0.string }.joined()
+        map(\.string).joined()
     }
 }
 
@@ -712,7 +712,7 @@ private extension UnicodeScalarView {
 
     mutating func read(head: (UnicodeScalar) -> Bool, tail: (UnicodeScalar) -> Bool) -> String? {
         if let c = first, head(c) {
-            var index = self.index(after: startIndex)
+            var index = index(after: startIndex)
             while index < endIndex {
                 if !tail(self[index]) {
                     break
@@ -1907,7 +1907,7 @@ public func tokenize(_ source: String) -> [Token] {
         token = tokens[count - 1]
         switch token {
         case .startOfScope("/"):
-            if characters.first.map({ $0.isSpaceOrLinebreak }) ?? true {
+            if characters.first.map(\.isSpaceOrLinebreak) ?? true {
                 // Misidentified as regex
                 token = .operator("/", .none)
                 tokens[count - 1] = token

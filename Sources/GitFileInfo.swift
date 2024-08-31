@@ -50,8 +50,8 @@ extension GitFileInfo {
     }
 
     var author: String? {
-        if let authorName = authorName {
-            if let authorEmail = authorEmail {
+        if let authorName {
+            if let authorEmail {
                 return "\(authorName) <\(authorEmail)>"
             }
             return authorName

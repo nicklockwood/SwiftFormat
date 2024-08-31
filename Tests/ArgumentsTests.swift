@@ -690,13 +690,13 @@ class ArgumentsTests: XCTestCase {
 
     func testParseExcludedURLsFileOption() throws {
         let options = try Options(["exclude": "foo bar, baz"], in: "/dir")
-        let paths = options.fileOptions?.excludedGlobs.map { $0.description } ?? []
+        let paths = options.fileOptions?.excludedGlobs.map(\.description) ?? []
         XCTAssertEqual(paths, ["/dir/foo bar", "/dir/baz"])
     }
 
     func testParseUnexcludedURLsFileOption() throws {
         let options = try Options(["unexclude": "foo bar, baz"], in: "/dir")
-        let paths = options.fileOptions?.unexcludedGlobs.map { $0.description } ?? []
+        let paths = options.fileOptions?.unexcludedGlobs.map(\.description) ?? []
         XCTAssertEqual(paths, ["/dir/foo bar", "/dir/baz"])
     }
 

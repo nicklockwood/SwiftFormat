@@ -111,7 +111,7 @@ public extension FormatRule {
             case let .keyword(name) where !conditionals.contains(name) && !["let", "var", "return"].contains(name):
                 return
             case .endOfScope("}"), .endOfScope(")"), .endOfScope("]"), .endOfScope(">"):
-                if formatter.tokens[previousIndex + 1 ..< i].contains(where: { $0.isLinebreak }) {
+                if formatter.tokens[previousIndex + 1 ..< i].contains(where: \.isLinebreak) {
                     fallthrough
                 }
                 return // Probably a method invocation

@@ -94,7 +94,7 @@ class OptionDescriptorTests: XCTestCase {
             XCTAssertEqual(descriptor.fromOptions(options), item.argumentValue, "\(testName): Option is transformed to argument")
         }
 
-        if let invalid = invalid {
+        if let invalid {
             options[keyPath: keyPath] = invalid
             XCTAssertEqual(descriptor.fromOptions(options), descriptor.defaultArgument, "\(testName): invalid input return the default value")
         }
@@ -150,7 +150,7 @@ class OptionDescriptorTests: XCTestCase {
     }
 
     func testAllPropertiesHaveDescriptor() {
-        let allDescriptors = Set(Descriptors.all.map { $0.propertyName })
+        let allDescriptors = Set(Descriptors.all.map(\.propertyName))
         for property in FormatOptions.default.allOptions.keys {
             XCTAssert(
                 allDescriptors.contains(property),

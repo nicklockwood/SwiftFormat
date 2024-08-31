@@ -77,7 +77,7 @@ public extension FormatRule {
                let nextDeclarationKeyword = formatter.index(after: endOfDeclaration, where: \.isDeclarationTypeKeyword)
             {
                 let linebreaksBetweenDeclarations = formatter.tokens[declarationKeyword ... nextDeclarationKeyword]
-                    .filter { $0.isLinebreak }.count
+                    .filter(\.isLinebreak).count
 
                 // If there is only a single line break between the start of this declaration and the subsequent declaration,
                 // then they are written sequentially in a block. In this case, don't convert regular comments to doc comments.

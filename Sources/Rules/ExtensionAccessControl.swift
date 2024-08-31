@@ -124,7 +124,7 @@ public extension FormatRule {
             // Move the extension's visibility keyword to each individual declaration
             case .onDeclarations:
                 // If the extension visibility is unspecified then there isn't any work to do
-                guard let extensionVisibility = extensionVisibility else {
+                guard let extensionVisibility else {
                     return declaration
                 }
 
@@ -146,7 +146,7 @@ public extension FormatRule {
             }
         }
 
-        let updatedTokens = updatedDeclarations.flatMap { $0.tokens }
+        let updatedTokens = updatedDeclarations.flatMap(\.tokens)
         formatter.replaceTokens(in: formatter.tokens.indices, with: updatedTokens)
     }
 }

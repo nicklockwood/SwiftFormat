@@ -331,7 +331,7 @@ extension Formatter {
                 case .identifier, .endOfScope(")"), .endOfScope("]"),
                      .operator("?", _), .operator("!", _),
                      .endOfScope where token.isStringDelimiter:
-                    if tokens[prevIndex + 1 ..< index].contains(where: { $0.isLinebreak }) {
+                    if tokens[prevIndex + 1 ..< index].contains(where: \.isLinebreak) {
                         break
                     }
                     return .subscript
@@ -837,7 +837,7 @@ extension Formatter {
             return i
         }
         switch tokens[startIndex] {
-        case .startOfScope("(") where !tokens[i + 1 ..< startIndex].contains(where: { $0.isLinebreak }):
+        case .startOfScope("(") where !tokens[i + 1 ..< startIndex].contains(where: \.isLinebreak):
             guard let closeParenIndex = index(of: .endOfScope(")"), after: startIndex) else {
                 return nil
             }
@@ -1038,7 +1038,7 @@ extension Formatter {
             }
             if [.endOfScope(")"), .endOfScope("]")].contains(prevToken),
                let startIndex = index(of: .startOfScope, before: prevIndex),
-               !tokens[startIndex ..< prevIndex].contains(where: { $0.isLinebreak })
+               !tokens[startIndex ..< prevIndex].contains(where: \.isLinebreak)
                || currentIndentForLine(at: startIndex) == currentIndentForLine(at: prevIndex)
             {
                 return false
@@ -1676,9 +1676,9 @@ extension Formatter {
         let value: (assignmentIndex: Int, expressionRange: ClosedRange<Int>)?
 
         var range: ClosedRange<Int> {
-            if let value = value {
+            if let value {
                 return introducerIndex ... value.expressionRange.upperBound
-            } else if let type = type {
+            } else if let type {
                 return introducerIndex ... type.range.upperBound
             } else {
                 return introducerIndex ... identifierIndex

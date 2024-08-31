@@ -49,7 +49,7 @@ class MetadataTests: XCTestCase {
             result += "\n* [\(rule.name)](#\(rule.name))"
         }
 
-        let deprecatedRules = FormatRules.all.filter { $0.isDeprecated }
+        let deprecatedRules = FormatRules.all.filter(\.isDeprecated)
         if !deprecatedRules.isEmpty {
             result += "\n\n# Deprecated Rules (do not use)\n"
             for rule in deprecatedRules {
@@ -329,7 +329,7 @@ class MetadataTests: XCTestCase {
             let dateRange = try XCTUnwrap(title.range(of: " \\([^)]+\\)$", options: .regularExpression))
             let dateString = String(title[dateRange])
             let date = try XCTUnwrap(dateParser.date(from: dateString))
-            if let lastDate = lastDate, date > lastDate {
+            if let lastDate, date > lastDate {
                 XCTFail("\(title) has newer date than subsequent version (\(date) vs \(lastDate))")
                 return
             }

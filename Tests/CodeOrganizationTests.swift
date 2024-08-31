@@ -116,7 +116,7 @@ class CodeOrganizationTests: XCTestCase {
                 let fullHelperName: String
                 if let argumentLabels = matchingHelper.funcArgLabels {
                     let argumentLabelStrings = argumentLabels.map { label -> String in
-                        if let label = label {
+                        if let label {
                             return label + ":"
                         } else {
                             return "_:"

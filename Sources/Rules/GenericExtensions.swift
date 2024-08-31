@@ -137,7 +137,7 @@ public extension FormatRule {
             }
 
             // Remove the now-unnecessary generic constraints from the where clause
-            let sourceRangesToRemove = providedGenericTypes.map { $0.sourceRange }
+            let sourceRangesToRemove = providedGenericTypes.map(\.sourceRange)
             formatter.removeTokens(in: sourceRangesToRemove)
 
             // if the where clause is completely empty now, we need to the where token as well
@@ -148,7 +148,7 @@ public extension FormatRule {
             }
 
             // Replace the extension typename with the fully-qualified generic angle bracket syntax
-            let genericSubtypes = providedGenericTypes.map { $0.name }.joined(separator: ", ")
+            let genericSubtypes = providedGenericTypes.map(\.name).joined(separator: ", ")
             let fullGenericType = "\(extendedType)<\(genericSubtypes)>"
             formatter.replaceToken(at: typeNameIndex, with: tokenize(fullGenericType))
         }

@@ -47,7 +47,7 @@ enum Declaration: Hashable {
             return tokens
         case let .type(_, openTokens, bodyDeclarations, closeTokens, _),
              let .conditionalCompilation(openTokens, bodyDeclarations, closeTokens, _):
-            return openTokens + bodyDeclarations.flatMap { $0.tokens } + closeTokens
+            return openTokens + bodyDeclarations.flatMap(\.tokens) + closeTokens
         }
     }
 
@@ -362,7 +362,7 @@ extension Formatter {
 
         // If there was another declaration after this one in the same scope,
         // then we know this declaration ends before that one starts
-        if let endOfDeclaration = endOfDeclaration {
+        if let endOfDeclaration {
             return endOfDeclaration
         }
 
@@ -551,28 +551,28 @@ extension Declaration {
             case .keyword("let"), .keyword("var"),
                  .keyword("operator"), .keyword("precedencegroup"):
 
-                if isOverriddenDeclaration && availableTypes.contains(.overriddenProperty) {
+                if isOverriddenDeclaration, availableTypes.contains(.overriddenProperty) {
                     return .overriddenProperty
                 }
-                if isStaticDeclaration && isDeclarationWithBody && availableTypes.contains(.staticPropertyWithBody) {
+                if isStaticDeclaration, isDeclarationWithBody, availableTypes.contains(.staticPropertyWithBody) {
                     return .staticPropertyWithBody
                 }
-                if isStaticDeclaration && availableTypes.contains(.staticProperty) {
+                if isStaticDeclaration, availableTypes.contains(.staticProperty) {
                     return .staticProperty
                 }
-                if isClassDeclaration && availableTypes.contains(.classPropertyWithBody) {
+                if isClassDeclaration, availableTypes.contains(.classPropertyWithBody) {
                     // Interestingly, Swift does not support stored class properties
                     // so there's no such thing as a class property without a body.
                     // https://forums.swift.org/t/class-properties/16539/11
                     return .classPropertyWithBody
                 }
-                if isViewDeclaration && availableTypes.contains(.swiftUIProperty) {
+                if isViewDeclaration, availableTypes.contains(.swiftUIProperty) {
                     return .swiftUIProperty
                 }
-                if !isDeclarationWithBody && isSwiftUIPropertyWrapper && availableTypes.contains(.swiftUIPropertyWrapper) {
+                if !isDeclarationWithBody, isSwiftUIPropertyWrapper, availableTypes.contains(.swiftUIPropertyWrapper) {
                     return .swiftUIPropertyWrapper
                 }
-                if isDeclarationWithBody && availableTypes.contains(.instancePropertyWithBody) {
+                if isDeclarationWithBody, availableTypes.contains(.instancePropertyWithBody) {
                     return .instancePropertyWithBody
                 }
 
@@ -585,19 +585,19 @@ extension Declaration {
                 //    immediately follows the `func` keyword:
                 //    https://docs.swift.org/swift-book/ReferenceManual/Declarations.html#grammar_function-name
                 let methodName = declarationParser.next(.nonSpaceOrCommentOrLinebreak, after: declarationTypeTokenIndex)
-                if let methodName = methodName, lifecycleMethods.contains(methodName.string) {
+                if let methodName, lifecycleMethods.contains(methodName.string) {
                     return .instanceLifecycle
                 }
-                if isOverriddenDeclaration && availableTypes.contains(.overriddenMethod) {
+                if isOverriddenDeclaration, availableTypes.contains(.overriddenMethod) {
                     return .overriddenMethod
                 }
-                if isStaticDeclaration && availableTypes.contains(.staticMethod) {
+                if isStaticDeclaration, availableTypes.contains(.staticMethod) {
                     return .staticMethod
                 }
-                if isClassDeclaration && availableTypes.contains(.classMethod) {
+                if isClassDeclaration, availableTypes.contains(.classMethod) {
                     return .classMethod
                 }
-                if isViewDeclaration && availableTypes.contains(.swiftUIMethod) {
+                if isViewDeclaration, availableTypes.contains(.swiftUIMethod) {
                     return .swiftUIMethod
                 }
 
@@ -767,7 +767,7 @@ extension Formatter {
             transform(declaration)
         }
 
-        let updatedTokens = updatedDeclarations.flatMap { $0.tokens }
+        let updatedTokens = updatedDeclarations.flatMap(\.tokens)
 
         // Only apply the updated tokens if the source representation changes.
         if tokens.string != updatedTokens.string {
@@ -776,7 +776,7 @@ extension Formatter {
     }
 }
 
-extension Array where Element == Declaration {
+extension [Declaration] {
     /// Applies `operation` to every recursive declaration of this array of declarations
     func forEachRecursiveDeclaration(_ operation: (Declaration) -> Void) {
         for declaration in self {
@@ -917,7 +917,7 @@ extension Declaration {
     }
 }
 
-extension Array where Element == Token {
+extension [Token] {
     /// Updates the given declaration tokens so it ends with at least one blank like
     /// (e.g. so it ends with at least two newlines)
     func endingWithBlankLine() -> [Token] {

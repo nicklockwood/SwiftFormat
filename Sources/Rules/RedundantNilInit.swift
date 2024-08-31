@@ -85,7 +85,7 @@ extension Formatter {
                 })
                 switch options.nilInit {
                 case .remove:
-                    if let equalsIndex = equalsIndex, let nilIndex = self.index(of: .nonSpaceOrLinebreak, after: equalsIndex, if: {
+                    if let equalsIndex, let nilIndex = self.index(of: .nonSpaceOrLinebreak, after: equalsIndex, if: {
                         $0 == .identifier("nil")
                     }) {
                         removeTokens(in: optionalIndex + 1 ... nilIndex)

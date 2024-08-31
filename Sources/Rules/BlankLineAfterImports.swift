@@ -12,17 +12,6 @@ public extension FormatRule {
     /// Insert blank line after import statements
     static let blankLineAfterImports = FormatRule(
         help: "Insert blank line after import statements.",
-        examples: """
-        ```diff
-          import A
-          import B
-          @testable import D
-        +
-          class Foo {
-            // foo
-          }
-        ```
-        """,
         sharedOptions: ["linebreaks"]
     ) { formatter in
         formatter.forEach(.keyword("import")) { currentImportIndex, _ in
@@ -45,5 +34,17 @@ public extension FormatRule {
                 formatter.insertLinebreak(at: endOfLine)
             }
         }
+    } examples: {
+        """
+        ```diff
+          import A
+          import B
+          @testable import D
+        +
+          class Foo {
+            // foo
+          }
+        ```
+        """
     }
 }

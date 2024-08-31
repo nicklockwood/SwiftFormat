@@ -11,23 +11,7 @@ import Foundation
 public extension FormatRule {
     /// Collapse all consecutive blank lines into a single blank line
     static let consecutiveBlankLines = FormatRule(
-        help: "Replace consecutive blank lines with a single blank line.",
-        examples: """
-        ```diff
-          func foo() {
-            let x = "bar"
-        -
-
-            print(x)
-          }
-
-          func foo() {
-            let x = "bar"
-
-            print(x)
-          }
-        ```
-        """
+        help: "Replace consecutive blank lines with a single blank line."
     ) { formatter in
         formatter.forEach(.linebreak) { i, _ in
             guard let prevIndex = formatter.index(of: .nonSpace, before: i, if: { $0.isLinebreak }) else {
@@ -44,5 +28,22 @@ public extension FormatRule {
                 formatter.removeTokens(in: i ..< formatter.tokens.count)
             }
         }
+    } examples: {
+        """
+        ```diff
+          func foo() {
+            let x = "bar"
+        -
+
+            print(x)
+          }
+
+          func foo() {
+            let x = "bar"
+
+            print(x)
+          }
+        ```
+        """
     }
 }

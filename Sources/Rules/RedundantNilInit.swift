@@ -12,31 +12,6 @@ public extension FormatRule {
     /// Remove or insert  redundant `= nil` initialization for Optional properties
     static let redundantNilInit = FormatRule(
         help: "Remove/insert redundant `nil` default value (Optional vars are nil by default).",
-        examples: """
-        `--nilinit remove`
-
-        ```diff
-        - var foo: Int? = nil
-        + var foo: Int?
-        ```
-
-        ```diff
-        // doesn't apply to `let` properties
-        let foo: Int? = nil
-        ```
-
-        ```diff
-        // doesn't affect non-nil initialization
-        var foo: Int? = 0
-        ```
-
-        `--nilinit insert`
-
-        ```diff
-        - var foo: Int?
-        + var foo: Int? = nil
-        ```
-        """,
         options: ["nilinit"]
     ) { formatter in
         // Check modifiers don't include `lazy`
@@ -69,6 +44,32 @@ public extension FormatRule {
             // Find the nil
             formatter.search(from: i, isStoredProperty: formatter.isStoredProperty(atIntroducerIndex: i))
         }
+    } examples: {
+        """
+        `--nilinit remove`
+
+        ```diff
+        - var foo: Int? = nil
+        + var foo: Int?
+        ```
+
+        ```diff
+        // doesn't apply to `let` properties
+        let foo: Int? = nil
+        ```
+
+        ```diff
+        // doesn't affect non-nil initialization
+        var foo: Int? = 0
+        ```
+
+        `--nilinit insert`
+
+        ```diff
+        - var foo: Int?
+        + var foo: Int? = nil
+        ```
+        """
     }
 }
 

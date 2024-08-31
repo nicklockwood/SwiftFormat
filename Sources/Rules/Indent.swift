@@ -14,47 +14,6 @@ public extension FormatRule {
     /// indenting can be configured with the `options` parameter of the formatter.
     static let indent = FormatRule(
         help: "Indent code in accordance with the scope level.",
-        examples: """
-        ```diff
-          if x {
-        -     // foo
-          } else {
-        -     // bar
-        -       }
-
-          if x {
-        +   // foo
-          } else {
-        +   // bar
-        + }
-        ```
-
-        ```diff
-          let array = [
-            foo,
-        -     bar,
-        -       baz
-        -   ]
-
-          let array = [
-            foo,
-        +   bar,
-        +   baz
-        + ]
-        ```
-
-        ```diff
-          switch foo {
-        -   case bar: break
-        -   case baz: break
-          }
-
-          switch foo {
-        + case bar: break
-        + case baz: break
-          }
-        ```
-        """,
         orderAfter: [.trailingSpace, .wrap, .wrapArguments],
         options: ["indent", "tabwidth", "smarttabs", "indentcase", "ifdef", "xcodeindentation", "indentstrings"],
         sharedOptions: ["trimwhitespace", "allman", "wrapconditions", "wrapternary"]
@@ -733,6 +692,48 @@ public extension FormatRule {
                 }
             }
         }
+    } examples: {
+        """
+        ```diff
+          if x {
+        -     // foo
+          } else {
+        -     // bar
+        -       }
+
+          if x {
+        +   // foo
+          } else {
+        +   // bar
+        + }
+        ```
+
+        ```diff
+          let array = [
+            foo,
+        -     bar,
+        -       baz
+        -   ]
+
+          let array = [
+            foo,
+        +   bar,
+        +   baz
+        + ]
+        ```
+
+        ```diff
+          switch foo {
+        -   case bar: break
+        -   case baz: break
+          }
+
+          switch foo {
+        + case bar: break
+        + case baz: break
+          }
+        ```
+        """
     }
 }
 

@@ -11,16 +11,7 @@ import Foundation
 public extension FormatRule {
     /// Strip unnecessary `weak` from @IBOutlet properties (except delegates and datasources)
     static let strongOutlets = FormatRule(
-        help: "Remove `weak` modifier from `@IBOutlet` properties.",
-        examples: """
-        As per Apple's recommendation
-        (https://developer.apple.com/videos/play/wwdc2015/407/ @ 32:30).
-
-        ```diff
-        - @IBOutlet weak var label: UILabel!
-        + @IBOutlet var label: UILabel!
-        ```
-        """
+        help: "Remove `weak` modifier from `@IBOutlet` properties."
     ) { formatter in
         formatter.forEach(.keyword("@IBOutlet")) { i, _ in
             guard let varIndex = formatter.index(of: .keyword("var"), after: i),
@@ -40,5 +31,15 @@ public extension FormatRule {
             }
             formatter.removeToken(at: weakIndex)
         }
+    } examples: {
+        """
+        As per Apple's recommendation
+        (https://developer.apple.com/videos/play/wwdc2015/407/ @ 32:30).
+
+        ```diff
+        - @IBOutlet weak var label: UILabel!
+        + @IBOutlet var label: UILabel!
+        ```
+        """
     }
 }

@@ -11,22 +11,7 @@ import Foundation
 public extension FormatRule {
     /// Remove duplicate import statements
     static let duplicateImports = FormatRule(
-        help: "Remove duplicate import statements.",
-        examples: """
-        ```diff
-          import Foo
-          import Bar
-        - import Foo
-        ```
-
-        ```diff
-          import B
-          #if os(iOS)
-            import A
-        -   import B
-          #endif
-        ```
-        """
+        help: "Remove duplicate import statements."
     ) { formatter in
         for var importRanges in formatter.parseImports().reversed() {
             for i in importRanges.indices.reversed() {
@@ -46,5 +31,21 @@ public extension FormatRule {
                 importRanges.append(range)
             }
         }
+    } examples: {
+        """
+        ```diff
+          import Foo
+          import Bar
+        - import Foo
+        ```
+
+        ```diff
+          import B
+          #if os(iOS)
+            import A
+        -   import B
+          #endif
+        ```
+        """
     }
 }

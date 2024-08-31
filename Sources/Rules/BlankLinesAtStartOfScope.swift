@@ -12,33 +12,6 @@ public extension FormatRule {
     /// Remove blank lines immediately after an opening brace, bracket, paren or chevron
     static let blankLinesAtStartOfScope = FormatRule(
         help: "Remove leading blank line at the start of a scope.",
-        examples: """
-        ```diff
-          func foo() {
-        -
-            // foo
-          }
-
-          func foo() {
-            // foo
-          }
-        ```
-
-        ```diff
-          array = [
-        -
-            foo,
-            bar,
-            baz,
-          ]
-
-          array = [
-            foo,
-            bar,
-            baz,
-          ]
-        ```
-        """,
         orderAfter: [.organizeDeclarations],
         options: ["typeblanklines"]
     ) { formatter in
@@ -76,5 +49,33 @@ public extension FormatRule {
                 return
             }
         }
+    } examples: {
+        """
+        ```diff
+          func foo() {
+        -
+            // foo
+          }
+
+          func foo() {
+            // foo
+          }
+        ```
+
+        ```diff
+          array = [
+        -
+            foo,
+            bar,
+            baz,
+          ]
+
+          array = [
+            foo,
+            bar,
+            baz,
+          ]
+        ```
+        """
     }
 }

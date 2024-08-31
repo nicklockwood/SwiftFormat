@@ -11,19 +11,7 @@ import Foundation
 public extension FormatRule {
     /// Remove redundant `break` keyword from switch cases
     static let redundantBreak = FormatRule(
-        help: "Remove redundant `break` in switch case.",
-        examples: """
-        ```diff
-          switch foo {
-            case bar:
-                print("bar")
-        -       break
-            default:
-                print("default")
-        -       break
-          }
-        ```
-        """
+        help: "Remove redundant `break` in switch case."
     ) { formatter in
         formatter.forEach(.keyword("break")) { i, _ in
             guard formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .startOfScope(":"),
@@ -39,5 +27,18 @@ public extension FormatRule {
             }
             formatter.removeTokens(in: startIndex ..< endIndex)
         }
+    } examples: {
+        """
+        ```diff
+          switch foo {
+            case bar:
+                print("bar")
+        -       break
+            default:
+                print("default")
+        -       break
+          }
+        ```
+        """
     }
 }

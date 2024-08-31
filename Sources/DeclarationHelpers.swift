@@ -47,7 +47,7 @@ enum Declaration: Hashable {
             return tokens
         case let .type(_, openTokens, bodyDeclarations, closeTokens, _),
              let .conditionalCompilation(openTokens, bodyDeclarations, closeTokens, _):
-            return openTokens + bodyDeclarations.flatMap { $0.tokens } + closeTokens
+            return openTokens + bodyDeclarations.flatMap(\.tokens) + closeTokens
         }
     }
 
@@ -547,28 +547,28 @@ extension Declaration {
             case .keyword("let"), .keyword("var"),
                  .keyword("operator"), .keyword("precedencegroup"):
 
-                if isOverriddenDeclaration && availableTypes.contains(.overriddenProperty) {
+                if isOverriddenDeclaration, availableTypes.contains(.overriddenProperty) {
                     return .overriddenProperty
                 }
-                if isStaticDeclaration && isDeclarationWithBody && availableTypes.contains(.staticPropertyWithBody) {
+                if isStaticDeclaration, isDeclarationWithBody, availableTypes.contains(.staticPropertyWithBody) {
                     return .staticPropertyWithBody
                 }
-                if isStaticDeclaration && availableTypes.contains(.staticProperty) {
+                if isStaticDeclaration, availableTypes.contains(.staticProperty) {
                     return .staticProperty
                 }
-                if isClassDeclaration && availableTypes.contains(.classPropertyWithBody) {
+                if isClassDeclaration, availableTypes.contains(.classPropertyWithBody) {
                     // Interestingly, Swift does not support stored class properties
                     // so there's no such thing as a class property without a body.
                     // https://forums.swift.org/t/class-properties/16539/11
                     return .classPropertyWithBody
                 }
-                if isViewDeclaration && availableTypes.contains(.swiftUIProperty) {
+                if isViewDeclaration, availableTypes.contains(.swiftUIProperty) {
                     return .swiftUIProperty
                 }
-                if !isDeclarationWithBody && isSwiftUIPropertyWrapper && availableTypes.contains(.swiftUIPropertyWrapper) {
+                if !isDeclarationWithBody, isSwiftUIPropertyWrapper, availableTypes.contains(.swiftUIPropertyWrapper) {
                     return .swiftUIPropertyWrapper
                 }
-                if isDeclarationWithBody && availableTypes.contains(.instancePropertyWithBody) {
+                if isDeclarationWithBody, availableTypes.contains(.instancePropertyWithBody) {
                     return .instancePropertyWithBody
                 }
 
@@ -584,16 +584,16 @@ extension Declaration {
                 if let methodName = methodName, lifecycleMethods.contains(methodName.string) {
                     return .instanceLifecycle
                 }
-                if isOverriddenDeclaration && availableTypes.contains(.overriddenMethod) {
+                if isOverriddenDeclaration, availableTypes.contains(.overriddenMethod) {
                     return .overriddenMethod
                 }
-                if isStaticDeclaration && availableTypes.contains(.staticMethod) {
+                if isStaticDeclaration, availableTypes.contains(.staticMethod) {
                     return .staticMethod
                 }
-                if isClassDeclaration && availableTypes.contains(.classMethod) {
+                if isClassDeclaration, availableTypes.contains(.classMethod) {
                     return .classMethod
                 }
-                if isViewDeclaration && availableTypes.contains(.swiftUIMethod) {
+                if isViewDeclaration, availableTypes.contains(.swiftUIMethod) {
                     return .swiftUIMethod
                 }
 
@@ -763,7 +763,7 @@ extension Formatter {
             transform(declaration)
         }
 
-        let updatedTokens = updatedDeclarations.flatMap { $0.tokens }
+        let updatedTokens = updatedDeclarations.flatMap(\.tokens)
 
         // Only apply the updated tokens if the source representation changes.
         if tokens.string != updatedTokens.string {

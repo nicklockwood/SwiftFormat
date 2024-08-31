@@ -244,7 +244,7 @@ class OptionDescriptor {
             help: help,
             deprecationMessage: deprecationMessage,
             keyPath: keyPath,
-            type: .enum(T.allCases.map { $0.rawValue }),
+            type: .enum(T.allCases.map(\.rawValue)),
             altOptions: altOptions
         )
     }
@@ -397,7 +397,7 @@ private var _allDescriptors: [OptionDescriptor] = {
 private var _descriptorsByName: [String: OptionDescriptor] = Dictionary(uniqueKeysWithValues: _allDescriptors.map { ($0.argumentName, $0) })
 
 private let _formattingDescriptors: [OptionDescriptor] = {
-    let internalDescriptors = Descriptors.internal.map { $0.argumentName }
+    let internalDescriptors = Descriptors.internal.map(\.argumentName)
     return _allDescriptors.filter { !internalDescriptors.contains($0.argumentName) }
 }()
 

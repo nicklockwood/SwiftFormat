@@ -49,7 +49,7 @@ public extension FormatRule {
 
             // Was an assignment
             formatter.insert(.identifier("_"), at: i)
-            if formatter.token(at: i - 1).map({ $0.isSpaceOrLinebreak }) != true {
+            if formatter.token(at: i - 1).map(\.isSpaceOrLinebreak) != true {
                 formatter.insert(.space(" "), at: i)
             }
         }

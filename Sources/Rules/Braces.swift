@@ -55,7 +55,7 @@ public extension FormatRule {
             } else {
                 // Implement K&R-style braces, where opening brace appears on the same line
                 guard let prevIndex = formatter.index(of: .nonSpaceOrLinebreak, before: i),
-                      formatter.tokens[prevIndex ..< i].contains(where: { $0.isLinebreak }),
+                      formatter.tokens[prevIndex ..< i].contains(where: \.isLinebreak),
                       !formatter.tokens[prevIndex].isComment
                 else {
                     return

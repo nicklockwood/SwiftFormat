@@ -87,7 +87,7 @@ public extension FormatRule {
             case .sameLine:
                 // Make sure there isn't a newline immediately following the attribute
                 if let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: endIndex),
-                   formatter.tokens[(endIndex + 1) ..< nextIndex].contains(where: { $0.isLinebreak })
+                   formatter.tokens[(endIndex + 1) ..< nextIndex].contains(where: \.isLinebreak)
                 {
                     // If unwrapping the attribute causes the line to exceed the max width,
                     // leave it as-is. The existing formatting is likely better than how
@@ -96,8 +96,8 @@ public extension FormatRule {
                     let endOfLine = formatter.endOfLine(at: i)
                     let startOfNextLine = formatter.startOfLine(at: nextIndex, excludingIndent: true)
                     let endOfNextLine = formatter.endOfLine(at: nextIndex)
-                    let combinedLine = formatter.tokens[startOfLine ... endOfLine].map { $0.string }.joined()
-                        + formatter.tokens[startOfNextLine ..< endOfNextLine].map { $0.string }.joined()
+                    let combinedLine = formatter.tokens[startOfLine ... endOfLine].map(\.string).joined()
+                        + formatter.tokens[startOfNextLine ..< endOfNextLine].map(\.string).joined()
 
                     if formatter.options.maxWidth > 0, combinedLine.count > formatter.options.maxWidth {
                         return

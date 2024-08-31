@@ -66,9 +66,7 @@ public extension FormatRule {
         if lastHeaderTokenIndex < formatter.tokens.count - 1 {
             headerTokens.append(.linebreak(formatter.options.linebreak, headerLinebreaks + 1))
             if lastHeaderTokenIndex < formatter.tokens.count - 2,
-               !formatter.tokens[lastHeaderTokenIndex + 1 ... lastHeaderTokenIndex + 2].allSatisfy({
-                   $0.isLinebreak
-               })
+               !formatter.tokens[lastHeaderTokenIndex + 1 ... lastHeaderTokenIndex + 2].allSatisfy(\.isLinebreak)
             {
                 headerTokens.append(.linebreak(formatter.options.linebreak, headerLinebreaks + 2))
             }

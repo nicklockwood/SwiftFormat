@@ -1170,7 +1170,7 @@ class ParsingHelpersTests: XCTestCase {
         let declarations = Formatter(originalTokens).parseDeclarations()
 
         // Verify we didn't lose any tokens
-        XCTAssertEqual(originalTokens, declarations.flatMap { $0.tokens })
+        XCTAssertEqual(originalTokens, declarations.flatMap(\.tokens))
 
         XCTAssertEqual(
             sourceCode(for: declarations[0].tokens),
@@ -2374,7 +2374,7 @@ class ParsingHelpersTests: XCTestCase {
 
         var parseIndex = 0
         while let expressionRange = formatter.parseExpressionRange(startingAt: parseIndex) {
-            let expression = formatter.tokens[expressionRange].map { $0.string }.joined()
+            let expression = formatter.tokens[expressionRange].map(\.string).joined()
             expressions.append(expression)
 
             if let nextExpressionIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: expressionRange.upperBound) {
@@ -2390,7 +2390,7 @@ class ParsingHelpersTests: XCTestCase {
     func parseExpression(in input: String, at index: Int) -> String {
         let formatter = Formatter(tokenize(input))
         guard let expressionRange = formatter.parseExpressionRange(startingAt: index) else { return "" }
-        return formatter.tokens[expressionRange].map { $0.string }.joined()
+        return formatter.tokens[expressionRange].map(\.string).joined()
     }
 
     // MARK: isStoredProperty

@@ -43,8 +43,8 @@ jobs:
       fail-fast: false
       matrix:
         swiftver:
-          - swift:5.2
-          - swift:5.6
+          - swift:5.3
+          - swift:5.10
         swiftos:
           - focal
     runs-on: ubuntu-latest

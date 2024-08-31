@@ -29,7 +29,7 @@
 --self remove
 --semicolons inline
 --stripunusedargs always
---swiftversion 5.1
+--swiftversion 5.3
 --trimwhitespace always
 --wraparguments preserve
 --wrapcollections preserve

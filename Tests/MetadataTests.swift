@@ -49,7 +49,7 @@ class MetadataTests: XCTestCase {
             result += "\n* [\(rule.name)](#\(rule.name))"
         }
 
-        let deprecatedRules = FormatRules.all.filter { $0.isDeprecated }
+        let deprecatedRules = FormatRules.all.filter(\.isDeprecated)
         if !deprecatedRules.isEmpty {
             result += "\n\n# Deprecated Rules (do not use)\n"
             for rule in deprecatedRules {

@@ -76,7 +76,7 @@ extension String {
                 }
                 return $0.distance < $1.distance
             }
-            .map { $0.0 }
+            .map(\.0)
     }
 
     /// The Damerau-Levenshtein edit-distance between two strings
@@ -439,14 +439,14 @@ func argumentsFor(_ options: Options, excludingDefaults: Bool = false) -> [Strin
         do {
             if !fileOptions.excludedGlobs.isEmpty {
                 // TODO: find a better alternative to stringifying url
-                args["exclude"] = fileOptions.excludedGlobs.map { $0.description }.sorted().joined(separator: ",")
+                args["exclude"] = fileOptions.excludedGlobs.map(\.description).sorted().joined(separator: ",")
             }
             arguments.remove("exclude")
         }
         do {
             if !fileOptions.unexcludedGlobs.isEmpty {
                 // TODO: find a better alternative to stringifying url
-                args["unexclude"] = fileOptions.unexcludedGlobs.map { $0.description }.sorted().joined(separator: ",")
+                args["unexclude"] = fileOptions.unexcludedGlobs.map(\.description).sorted().joined(separator: ",")
             }
             arguments.remove("unexclude")
         }
@@ -645,8 +645,8 @@ let rulesArguments = [
     "rules",
 ]
 
-let formattingArguments = Descriptors.formatting.map { $0.argumentName }
-let internalArguments = Descriptors.internal.map { $0.argumentName }
+let formattingArguments = Descriptors.formatting.map(\.argumentName)
+let internalArguments = Descriptors.internal.map(\.argumentName)
 let optionsArguments = fileArguments + rulesArguments + formattingArguments + internalArguments
 
 let commandLineArguments = [

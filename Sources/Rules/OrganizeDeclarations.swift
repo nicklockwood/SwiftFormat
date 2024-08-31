@@ -13,22 +13,22 @@ public extension FormatRule {
         help: "Organize declarations within class, struct, enum, actor, and extension bodies.",
         examples: """
         Default value for `--visibilityorder` when using `--organizationmode visibility`:
-        `\(VisibilityCategory.defaultOrdering(for: .visibility).map { $0.rawValue }.joined(separator: ", "))`
+        `\(VisibilityCategory.defaultOrdering(for: .visibility).map(\.rawValue).joined(separator: ", "))`
 
         Default value for `--visibilityorder` when using `--organizationmode type`:
-        `\(VisibilityCategory.defaultOrdering(for: .type).map { $0.rawValue }.joined(separator: ", "))`
+        `\(VisibilityCategory.defaultOrdering(for: .type).map(\.rawValue).joined(separator: ", "))`
 
         **NOTE:** When providing custom arguments for `--visibilityorder` the following entries must be included:
-        `\(VisibilityCategory.essentialCases.map { $0.rawValue }.joined(separator: ", "))`
+        `\(VisibilityCategory.essentialCases.map(\.rawValue).joined(separator: ", "))`
 
         Default value for `--typeorder` when using `--organizationmode visibility`:
-        `\(DeclarationType.defaultOrdering(for: .visibility).map { $0.rawValue }.joined(separator: ", "))`
+        `\(DeclarationType.defaultOrdering(for: .visibility).map(\.rawValue).joined(separator: ", "))`
 
         Default value for `--typeorder` when using `--organizationmode type`:
-        `\(DeclarationType.defaultOrdering(for: .type).map { $0.rawValue }.joined(separator: ", "))`
+        `\(DeclarationType.defaultOrdering(for: .type).map(\.rawValue).joined(separator: ", "))`
 
         **NOTE:** The follow declaration types must be included in either `--typeorder` or `--visibilityorder`:
-        `\(DeclarationType.essentialCases.map { $0.rawValue }.joined(separator: ", "))`
+        `\(DeclarationType.essentialCases.map(\.rawValue).joined(separator: ", "))`
 
         `--organizationmode visibility` (default)
 
@@ -256,8 +256,8 @@ extension Formatter {
         }
 
         let lineCount = typeDeclaration.body
-            .flatMap { $0.tokens }
-            .filter { $0.isLinebreak }
+            .flatMap(\.tokens)
+            .filter(\.isLinebreak)
             .count
 
         return lineCount >= organizationThreshold
@@ -340,7 +340,7 @@ extension Formatter {
                 }
 
             })
-            .map { $0.element }
+            .map(\.element)
     }
 
     func customDeclarationSortOrderList(from categorizedDeclarations: [CategorizedDeclaration]) -> [String] {
@@ -421,11 +421,11 @@ extension Formatter {
     ) -> Bool {
         let lhsPropertiesOrder = lhs
             .filter { affectsSynthesizedMemberwiseInitializer($0.declaration, $0.category) }
-            .map { $0.declaration }
+            .map(\.declaration)
 
         let rhsPropertiesOrder = rhs
             .filter { affectsSynthesizedMemberwiseInitializer($0.declaration, $0.category) }
-            .map { $0.declaration }
+            .map(\.declaration)
 
         return lhsPropertiesOrder == rhsPropertiesOrder
     }

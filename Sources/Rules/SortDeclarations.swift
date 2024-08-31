@@ -159,7 +159,7 @@ public extension FormatRule {
                     }
 
                 })
-                .map { $0.element }
+                .map(\.element)
 
             // Make sure there's at least one newline between each declaration
             for i in 0 ..< max(0, declarations.count - 1) {
@@ -177,7 +177,7 @@ public extension FormatRule {
                 }
             }
 
-            var sortedFormatter = Formatter(declarations.flatMap { $0.tokens })
+            var sortedFormatter = Formatter(declarations.flatMap(\.tokens))
 
             // Make sure the type has the same number of leading line breaks
             // as it did before sorting

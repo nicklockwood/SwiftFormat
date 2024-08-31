@@ -2,7 +2,7 @@
 //  RedundantOptionalBindingTests.swift
 //  SwiftFormatTests
 //
-//  Created by Cal Stephens on 7/28/2024.
+//  Created by Cal Stephens on 8/1/22.
 //  Copyright © 2024 Nick Lockwood. All rights reserved.
 //
 

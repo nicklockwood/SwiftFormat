@@ -3780,6 +3780,33 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.redundantReturn, options: options)
     }
 
+    func testReturnNotRemovedFromSwitchBodyWithOpaqueReturnType() {
+        // https://github.com/nicklockwood/SwiftFormat/issues/1819
+        let input = """
+        extension View {
+            func foo() -> some View {
+                if #available(iOS 16.0, *) {
+                    return self.scrollIndicators(.hidden)
+                } else {
+                    return self
+                }
+            }
+
+            func bar() -> (some View) {
+                if #available(iOS 16.0, *) {
+                    return self.scrollIndicators(.hidden)
+                } else {
+                    return self
+                }
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input,
+                       rules: [FormatRules.redundantReturn, FormatRules.conditionalAssignment],
+                       options: options)
+    }
+
     // MARK: - redundantBackticks
 
     func testRemoveRedundantBackticksInLet() {

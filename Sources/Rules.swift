@@ -3317,14 +3317,25 @@ public struct _FormatRules {
             }
 
             // Make sure this is a type of scope that supports implicit returns
+            let lastKeyword = isClosure ? "" : formatter.lastSignificantKeyword(at: startOfScopeIndex, excluding: ["throws"])
             if !isClosure, formatter.isConditionalStatement(at: startOfScopeIndex, excluding: ["where"]) ||
-                ["do", "else", "catch"].contains(formatter.lastSignificantKeyword(at: startOfScopeIndex, excluding: ["throws"]))
+                ["do", "else", "catch"].contains(lastKeyword)
             {
                 return
             }
 
             // Only strip return from conditional block if conditionalAssignment rule is enabled
-            let stripConditionalReturn = formatter.options.enabledRules.contains("conditionalAssignment")
+            var stripConditionalReturn = formatter.options.enabledRules.contains("conditionalAssignment")
+
+            // Don't strip return if type is opaque
+            // (https://github.com/nicklockwood/SwiftFormat/issues/1819)
+            if stripConditionalReturn,
+               lastKeyword == "func",
+               let arrowIndex = formatter.index(of: .operator("->", .infix), before: startOfScopeIndex),
+               formatter.tokens[arrowIndex ..< startOfScopeIndex].contains(.identifier("some"))
+            {
+                stripConditionalReturn = false
+            }
 
             // Make sure the body only has a single statement
             guard formatter.blockBodyHasSingleStatement(

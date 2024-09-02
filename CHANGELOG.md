@@ -1,5 +1,20 @@
 # Change Log
 
+## [0.54.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.54.4) (2024-09-07)
+
+- Fixed bug where trailing comma was erroneously inserted into a wrapped array type extension
+- Fixed bug where `return` was incorrectly removed inside `catch` statement with `where` clause
+- Fixed `opaqueGenericParameters` rule being incorrectly applied to functions with typed `throws`
+- Fixed `spaceAroundBrackets` behaving incorrectly inside a macro invocation
+- Fixed `unusedArguments` false positive inside multiline string literal
+- Fixed a case where removing `return` resulted in non-compiling code for opaque return types
+- Redundant `Void` return type is now removed from functions in protocol declarations
+- Fixed a bug where `unusedArguments` didn't handle conditional assignment shadowing correctly
+- Fixed Xcode 16 Beta warnings related to unhandled files when building SwiftFormat package
+- The Swift runtime is now packaged with the installer on Windows as on Linux
+- The Windows installer now uses a more conventional directory structure
+- SwiftFormat for Windows now supports arm64
+
 ## [0.54.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.54.3) (2024-07-28)
 
 - Fixed issue where `--wrapeffects never` could unexpectedly remove unrelated code

@@ -3807,6 +3807,26 @@ class RedundancyTests: RulesTests {
                        options: options)
     }
 
+    func testReturnNotRemovedFromCatchWhere() {
+        // https://github.com/nicklockwood/SwiftFormat/issues/1843
+        let input = """
+        func decodeError(from data: Data, urlResponse: HTTPURLResponse) -> Error {
+            do {
+                let decoder = JSONDecoder()
+                return try decoder.decode(T.self, from: data)
+            } catch where urlResponse.statusCode >= 400 {
+                return CustomError() // <- return removed here, introducing a compile time error.
+            } catch {
+                return error
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input,
+                       rules: [FormatRules.redundantReturn, FormatRules.conditionalAssignment],
+                       options: options)
+    }
+
     // MARK: - redundantBackticks
 
     func testRemoveRedundantBackticksInLet() {

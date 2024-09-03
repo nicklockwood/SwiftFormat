@@ -3317,7 +3317,10 @@ public struct _FormatRules {
             }
 
             // Make sure this is a type of scope that supports implicit returns
-            let lastKeyword = isClosure ? "" : formatter.lastSignificantKeyword(at: startOfScopeIndex, excluding: ["throws"])
+            let lastKeyword = isClosure ? "" : formatter.lastSignificantKeyword(
+                at: startOfScopeIndex,
+                excluding: ["throws", "where"]
+            )
             if !isClosure, formatter.isConditionalStatement(at: startOfScopeIndex, excluding: ["where"]) ||
                 ["do", "else", "catch"].contains(lastKeyword)
             {

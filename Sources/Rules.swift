@@ -4415,9 +4415,7 @@ public struct _FormatRules {
 
             for (key, replacement) in formatter.options.fileInfo.replacements {
                 if let replacementStr = replacement.resolve(file, options) {
-                    while let range = string.range(of: "{\(key.rawValue)}") {
-                        string.replaceSubrange(range, with: replacementStr)
-                    }
+                    string = string.replacingOccurrences(of: key.placeholder, with: replacementStr)
                 }
             }
             headerTokens = tokenize(string)

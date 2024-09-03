@@ -504,9 +504,12 @@ private func applyRules(
         let fileInfo = options.fileInfo
 
         for key in ReplacementKey.allCases {
-            if !fileInfo.hasReplacement(for: key, options: options), header.hasTemplateKey(key) {
+            if case let .replace(string) = header,
+               !fileInfo.hasReplacement(for: key, options: options),
+               string.contains(key.placeholder)
+            {
                 throw FormatError.options(
-                    "Failed to apply {\(key.rawValue)} template in file header as required info is unavailable"
+                    "Failed to apply \(key.placeholder) template in file header as required info is unavailable"
                 )
             }
         }

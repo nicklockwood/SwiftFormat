@@ -205,6 +205,10 @@ public enum ReplacementKey: String, CaseIterable {
     case author
     case authorName = "author.name"
     case authorEmail = "author.email"
+
+    var placeholder: String {
+        "{\(rawValue)}"
+    }
 }
 
 /// Argument type for stripping
@@ -250,16 +254,12 @@ public enum FileHeaderMode: Equatable, RawRepresentable, ExpressibleByStringLite
         }
     }
 
-    public func hasTemplateKey(_ keys: ReplacementKey...) -> Bool {
+    var needsGitInfo: Bool {
         guard case let .replace(str) = self else {
             return false
         }
-
-        return keys.contains(where: { str.contains("{\($0.rawValue)}") })
-    }
-
-    var needsGitInfo: Bool {
-        hasTemplateKey(.createdDate, .createdYear, .author, .authorName, .authorEmail)
+        let keys: [ReplacementKey] = [.createdDate, .createdYear, .author, .authorName, .authorEmail]
+        return keys.contains(where: { str.contains($0.placeholder) })
     }
 }
 
@@ -358,14 +358,7 @@ public struct FileInfo: Equatable, CustomStringConvertible {
     }
 
     public func hasReplacement(for key: ReplacementKey, options: FormatOptions) -> Bool {
-        switch replacements[key] {
-        case nil:
-            return false
-        case .constant:
-            return true
-        case let .dynamic(fn):
-            return fn(self, ReplacementOptions(options)) != nil
-        }
+        replacements[key]?.resolve(self, ReplacementOptions(options)) != nil
     }
 }
 

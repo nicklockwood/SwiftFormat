@@ -6709,12 +6709,27 @@ public struct _FormatRules {
             }
 
             // Parse the return type if present
+            var arrowTokenIndex: Int?
             var returnTypeTokens: [Token]?
-            if let returnIndex = formatter.index(of: .operator("->", .infix), after: paramListEndIndex),
-               returnIndex < openBraceIndex, returnIndex < whereTokenIndex ?? openBraceIndex
+            if let arrowIndex = formatter.index(of: .operator("->", .infix), after: paramListEndIndex),
+               arrowIndex < openBraceIndex, arrowIndex < whereTokenIndex ?? openBraceIndex
             {
-                let returnTypeRange = (returnIndex + 1) ..< (whereTokenIndex ?? openBraceIndex)
+                arrowTokenIndex = arrowIndex
+                let returnTypeRange = (arrowIndex + 1) ..< (whereTokenIndex ?? openBraceIndex)
                 returnTypeTokens = Array(formatter.tokens[returnTypeRange])
+            }
+
+            // Parse thrown error type if present
+            var errorTypeTokens: [Token]?
+            if let throwsIndex = formatter.index(of: .keyword("throws"), after: paramListEndIndex),
+               throwsIndex < arrowTokenIndex ?? whereTokenIndex ?? openBraceIndex,
+               let openParenIndex = formatter.index(of: .nonSpace, after: throwsIndex, if: {
+                   $0 == .startOfScope("(")
+               }),
+               let closeParenIndex = formatter.endOfScope(at: openParenIndex)
+            {
+                let errorTypeRange = (openParenIndex + 1) ..< closeParenIndex
+                errorTypeTokens = Array(formatter.tokens[errorTypeRange])
             }
 
             let genericParameterListRange = (genericSignatureStartIndex + 1) ..< genericSignatureEndIndex
@@ -6793,6 +6808,14 @@ public struct _FormatRules {
                 // so have to mark the generic type as ineligible if it appears in the return type.
                 if let returnTypeTokens = returnTypeTokens,
                    returnTypeTokens.contains(where: { $0.string == genericType.name })
+                {
+                    genericType.eligibleToRemove = false
+                    continue
+                }
+
+                // https://github.com/nicklockwood/SwiftFormat/issues/1845
+                if let errorTypeTokens = errorTypeTokens,
+                   errorTypeTokens.contains(.identifier(genericType.name))
                 {
                     genericType.eligibleToRemove = false
                     continue

@@ -2898,6 +2898,17 @@ class SyntaxTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.opaqueGenericParameters, options: options)
     }
 
+    func testGenericThrowsTypeNotTreatedAsAny() {
+        let input = """
+        func sample<ErrorType>(error: ErrorType) throws(ErrorType) {
+            throw error
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, rule: FormatRules.opaqueGenericParameters, options: options)
+    }
+
     // MARK: - genericExtensions
 
     func testGenericExtensionNotModifiedBeforeSwift5_7() {

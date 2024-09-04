@@ -2196,12 +2196,7 @@ extension Formatter {
     /// and the type (global, type, or local)
     func declarationIndexAndScope(at i: Int) -> (index: Int?, scope: DeclarationScope) {
         // Declarations which have `DeclarationScope.type`
-        let typeDeclarations = Set(["class", "actor", "struct", "enum", "extension"])
-
-        // Declarations which have `DeclarationScope.local`
-        let localDeclarations = Set(["let", "var", "func", "subscript", "init", "deinit"])
-
-        let allDeclarationScopes = typeDeclarations.union(localDeclarations)
+        let typeDeclarations = Set(["class", "actor", "struct", "enum", "protocol", "extension"])
 
         // back track through tokens until we find a startOfScope("{") that isDeclarationTypeKeyword
         //  - we have to skip scopes that sit between this token and the its actual start of scope,
@@ -2233,10 +2228,9 @@ extension Formatter {
             }
         }
 
-        // If this declaration isn't within any scope,
-        // it must be a global.
+        // If this declaration isn't within any scope, it must be a global.
         guard let startOfScopeIndex = startOfScope else {
-            return (nil, .global)
+            return (nil, isConditionalStatement(at: i) ? .local : .global)
         }
 
         // Code within closures and conditionals is always local
@@ -2244,16 +2238,17 @@ extension Formatter {
             return (nil, .local)
         }
 
-        guard let declarationKeywordIndex = index(before: startOfScopeIndex, where: {
-            allDeclarationScopes.contains($0.string)
-        }) else {
-            return (nil, .global)
+        guard let declarationKeywordIndex = indexOfLastSignificantKeyword(
+            at: startOfScopeIndex, excluding: ["where"]
+        ) else {
+            // Probably a contextual keyword like get, set, didSet, willSet, etc
+            return (nil, .local)
         }
 
         if typeDeclarations.contains(tokens[declarationKeywordIndex].string) {
             return (declarationKeywordIndex, .type)
         } else {
-            return (nil, .local)
+            return (declarationKeywordIndex, .local)
         }
     }
 

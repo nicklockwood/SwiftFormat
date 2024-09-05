@@ -451,6 +451,12 @@ class SpacingTests: RulesTests {
         testFormatting(for: input, output, rule: FormatRules.spaceAroundBrackets)
     }
 
+    func testSpaceNotRemovedBetweenAsOperatorAndBracket() {
+        // https://github.com/nicklockwood/SwiftFormat/issues/1846
+        let input = "@Test(arguments: [kSecReturnRef, kSecReturnAttributes] as [String])"
+        testFormatting(for: input, rule: FormatRules.spaceAroundBrackets)
+    }
+
     // MARK: - spaceInsideBrackets
 
     func testSpaceInsideBrackets() {

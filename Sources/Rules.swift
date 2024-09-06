@@ -1828,20 +1828,21 @@ public struct _FormatRules {
             case .linebreak:
                 // Detect linewrap
                 let nextTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i)
+                let _nextToken = nextTokenIndex.map { formatter.tokens[$0] } ?? .space("")
                 let linewrapped = lastNonSpaceOrLinebreakIndex > -1 && (
                     !formatter.isEndOfStatement(at: lastNonSpaceOrLinebreakIndex, in: scopeStack.last) ||
                         (nextTokenIndex.map { formatter.isTrailingClosureLabel(at: $0) } == true) ||
                         !(nextTokenIndex == nil || [
                             .endOfScope("}"), .endOfScope("]"), .endOfScope(")"),
-                        ].contains(formatter.tokens[nextTokenIndex!]) ||
+                        ].contains(_nextToken) || _nextToken.isStringBody ||
                             formatter.isStartOfStatement(at: nextTokenIndex!, in: scopeStack.last) || (
-                                ((formatter.tokens[nextTokenIndex!].isIdentifier && !(formatter.tokens[nextTokenIndex!] == .identifier("async") && formatter.currentScope(at: nextTokenIndex!) != .startOfScope("("))) || [
+                                ((_nextToken.isIdentifier && !(_nextToken == .identifier("async") && formatter.currentScope(at: nextTokenIndex!) != .startOfScope("("))) || [
                                     .keyword("try"), .keyword("await"),
-                                ].contains(formatter.tokens[nextTokenIndex!])) &&
+                                ].contains(_nextToken)) &&
                                     formatter.last(.nonSpaceOrCommentOrLinebreak, before: nextTokenIndex!).map {
                                         $0 != .keyword("return") && !$0.isOperator(ofType: .infix)
                                     } ?? false) || (
-                                formatter.tokens[nextTokenIndex!] == .delimiter(",") && [
+                                _nextToken == .delimiter(",") && [
                                     "<", "[", "(", "case",
                                 ].contains(formatter.currentScope(at: nextTokenIndex!)?.string ?? "")
                             )
@@ -1869,8 +1870,7 @@ public struct _FormatRules {
                         case .endOfScope(")")?:
                             return !formatter.options.xcodeIndentation
                         default:
-                            return formatter.lastIndex(of: .startOfScope,
-                                                       in: i ..< endOfNextLine) == nil
+                            return formatter.lastIndex(of: .startOfScope, in: i ..< endOfNextLine) == nil
                         }
                     default:
                         return false

@@ -8884,6 +8884,46 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.unusedArguments, exclude: ["redundantProperty"])
     }
 
+    func testArgumentUsedInsideMultilineStringLiteral() {
+        // https://github.com/nicklockwood/SwiftFormat/issues/1847
+        let input = #"""
+        public func foo(message: String = "hi") {
+            let message =
+                """
+                Message: \(message)
+                """
+            print(message)
+        }
+        """#
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
+    func testArgumentUsedInsideMultilineStringLiteral2() {
+        let input = #"""
+        func foo(message: String) {
+            let message =
+                """
+                \(1 + 1)
+                Message: \(message)
+                """
+            print(message)
+        }
+        """#
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
+    func testArgumentUsedInsideMultilineArrayLiteral() {
+        let input = #"""
+        func foo(message: String) {
+            let message = [
+                message,
+            ]
+            print(message)
+        }
+        """#
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
     // MARK: redundantClosure
 
     func testRemoveRedundantClosureInSingleLinePropertyDeclaration() {

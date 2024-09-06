@@ -1096,7 +1096,8 @@ extension Formatter {
                 return false
             }
             if let prevToken = last(.nonSpaceOrCommentOrLinebreak, before: i),
-               prevToken == .keyword("return") || prevToken.isOperator(ofType: .infix)
+               prevToken == .keyword("return") || prevToken.isOperator(ofType: .infix) ||
+               currentScope(at: i)?.isMultilineStringDelimiter == true
             {
                 return false
             }

@@ -37,7 +37,7 @@ jobs:
         with:
           ref: ${{ github.event.inputs.revision }}
 
-      - run: swift build -c release -Xswiftc -gnone -Xswiftc -target -Xswiftc ${{ matrix.target-triple }}
+      - run: swift build -c release --triple ${{ matrix.target-triple }} -Xswiftc -gnone
 
       - uses: microsoft/setup-msbuild@v2.0.0
 

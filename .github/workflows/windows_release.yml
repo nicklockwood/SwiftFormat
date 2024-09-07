@@ -30,7 +30,7 @@ jobs:
     steps:
       - uses: compnerd/gha-setup-swift@main
         with:
-          tag: 5.10.1-RELEASE
+          tag: 5.10.1-RELEASE # The 5.10 installer is the first that includes the Swift runtime msm files.
           branch: swift-5.10.1-release
 
       - uses: actions/checkout@v4

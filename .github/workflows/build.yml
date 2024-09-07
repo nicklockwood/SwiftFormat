@@ -66,10 +66,16 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - branch: development
-            tag: DEVELOPMENT-SNAPSHOT-2023-06-05-a
+          # Oldest working version.
+          # 5.6 fails with "error: could not build C module 'CDispatch'"
+          # 5.7 fails with "error: expressions are not allowed at the top level" for "XCTMain(tests)"
+          - branch: swift-5.8-release
+            tag: 5.8-RELEASE
+          # Version used by the release workflow
+          - branch: swift-5.10.1-release
+            tag: 5.10.1-RELEASE
     runs-on: windows-latest
-    name: ${{ matrix.tag }}
+    name: windows (${{ matrix.tag }})
     steps:
       - uses: compnerd/gha-setup-swift@main
         with:

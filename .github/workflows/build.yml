@@ -66,8 +66,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - branch: development
-            tag: DEVELOPMENT-SNAPSHOT-2023-06-05-a
+          - branch: swift-5.6-release
+            tag: 5.6-RELEASE
+          - branch: swift-5.10.1-release # Version used by the release workflow
+            tag: 5.10.1-RELEASE
     runs-on: windows-latest
     name: ${{ matrix.tag }}
     steps:

@@ -9,6 +9,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Set Version Number
+        run: echo "Using version number $GITHUB_REF_NAME" && sed -i '' "s/let swiftFormatVersion = \"[^\"]*\"/let swiftFormatVersion = \"$GITHUB_REF_NAME\"/" Sources/SwiftFormat.swift
       - name: Build macOS binary
         run: swift build -c release --arch arm64 --arch x86_64
       - name: Upload artifacts
@@ -24,7 +26,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Build it
+      - name: Set Version Number
+        run: echo "Using version number $GITHUB_REF_NAME" && sed -i "s/let swiftFormatVersion = \"[^\"]*\"/let swiftFormatVersion = \"$GITHUB_REF_NAME\"/" Sources/SwiftFormat.swift
+      - name: Build Linux binary
         run: |
           swift build --configuration release --static-swift-stdlib --enable-dead-strip
           SWIFTFORMAT_BIN_PATH=`swift build --configuration release --show-bin-path`

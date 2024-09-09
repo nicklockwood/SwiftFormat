@@ -168,8 +168,8 @@ public extension Formatter {
         }
         guard startToken == .startOfScope("{") else {
             var endIndex: Int? = startIndex
-            while let index = endIndex, !tokens[index].isEndOfScope(startToken) {
-                endIndex = self.index(after: index, where: {
+            while let i = endIndex, i < index || !tokens[i].isEndOfScope(startToken) {
+                endIndex = self.index(after: i, where: {
                     $0.isEndOfScope(startToken) || $0 == .endOfScope("#endif")
                 })
             }

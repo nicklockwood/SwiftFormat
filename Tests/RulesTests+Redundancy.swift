@@ -8924,6 +8924,32 @@ class RedundancyTests: RulesTests {
         testFormatting(for: input, rule: FormatRules.unusedArguments)
     }
 
+    func test1850() {
+        let input = """
+        init(a3: A42.ID) {
+            a15.a22
+                .sink {
+                    Task {
+                        switch a23.a27 {
+                        #if !A34
+                            case .a35:
+                                A31.a32(.a33(.a34Failed))
+                        #endif
+                        case .a36:
+                            break
+                        }
+                    }
+                }
+                .store(in: &a14)
+
+            if a4.a57 == nil {
+                a51 = a3.a.b?.a54
+            }
+        }
+        """
+        testFormatting(for: input, rule: FormatRules.unusedArguments)
+    }
+
     // MARK: redundantClosure
 
     func testRemoveRedundantClosureInSingleLinePropertyDeclaration() {

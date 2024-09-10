@@ -167,13 +167,13 @@ public extension FormatRule {
                     return
                 }
 
-                // We can convert `return`s to `continue`, but only when `return` is on its own line.
+                // We can convert `return`s to `continue`, but only when `return` is the last token in the scope.
                 // It's legal to write something like `return print("foo")` in a `forEach` as long as
                 // you're still returning a `Void` value. Since `continue print("foo")` isn't legal,
                 // we should just ignore this closure.
                 if formatter.tokens[closureBodyIndex] == .keyword("return"),
                    let tokenAfterReturnKeyword = formatter.next(.nonSpaceOrComment, after: closureBodyIndex),
-                   !tokenAfterReturnKeyword.isLinebreak
+                   !(tokenAfterReturnKeyword.isLinebreak || tokenAfterReturnKeyword == .endOfScope("}"))
                 {
                     return
                 }

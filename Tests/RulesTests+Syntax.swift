@@ -4959,4 +4959,23 @@ class SyntaxTests: RulesTests {
 
         testFormatting(for: input, output, rule: FormatRules.preferForLoop)
     }
+
+    func testConvertsForEachWithGuardElseReturn() {
+        let input = """
+        strings.forEach { string in
+            guard !string.isEmpty else { return }
+            print(string)
+        }
+        """
+
+        let output = """
+        for string in strings {
+            guard !string.isEmpty else { continue }
+            print(string)
+        }
+        """
+
+        testFormatting(for: input, output, rule: FormatRules.preferForLoop,
+                       exclude: ["wrapConditionalBodies"])
+    }
 }

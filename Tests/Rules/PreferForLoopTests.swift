@@ -388,4 +388,22 @@ class PreferForLoopTests: XCTestCase {
 
         testFormatting(for: input, output, rule: .preferForLoop)
     }
+
+    func testConvertsForEachWithGuardElseReturn() {
+        let input = """
+        strings.forEach { string in
+            guard !string.isEmpty else { return }
+            print(string)
+        }
+        """
+
+        let output = """
+        for string in strings {
+            guard !string.isEmpty else { continue }
+            print(string)
+        }
+        """
+
+        testFormatting(for: input, output, rule: .preferForLoop, exclude: [.wrapConditionalBodies, .spacingGuards])
+    }
 }

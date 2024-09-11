@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.54.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.54.5) (2024-09-11)
+
+- Fixed crash in `unusedArguments` rule
+- Fixed bug where `preferForLoop` failed if `forEach` contains `guard ... else { return }`
+
 ## [0.54.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.54.4) (2024-09-07)
 
 - Fixed bug where trailing comma was erroneously inserted into a wrapped array type extension

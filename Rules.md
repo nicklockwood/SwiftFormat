@@ -103,6 +103,7 @@
 * [markTypes](#markTypes)
 * [noExplicitOwnership](#noExplicitOwnership)
 * [organizeDeclarations](#organizeDeclarations)
+* [privateStateVariables](#privateStateVariables)
 * [propertyType](#propertyType)
 * [redundantProperty](#redundantProperty)
 * [sortSwitchCases](#sortSwitchCases)
@@ -1578,6 +1579,24 @@ Convert trivial `map { $0.foo }` closures to keyPath-based syntax.
 
 - let barArray = fooArray.compactMap { $0.optionalBar }
 + let barArray = fooArray.compactMap(\.optionalBar)
+```
+
+</details>
+<br/>
+
+## privateStateVariables
+
+Adds `private` access control to @State properties without existing access control modifiers.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- @State var anInt: Int
++ @State private var anInt: Int
+
+- @StateObject var myInstance: MyObject
++ @StateObject private var myInstace: MyObject
 ```
 
 </details>

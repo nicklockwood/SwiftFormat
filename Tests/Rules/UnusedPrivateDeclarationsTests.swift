@@ -253,7 +253,7 @@ class UnusedPrivateDeclarationsTests: XCTestCase {
             @State private var showButton: Bool
         }
         """
-        testFormatting(for: input, rule: .unusedPrivateDeclarations)
+        testFormatting(for: input, rule: .unusedPrivateDeclarations, exclude: [.privateStateVariables])
     }
 
     func testDoesNotRemoveUnderscoredDeclarationIfUsed() {

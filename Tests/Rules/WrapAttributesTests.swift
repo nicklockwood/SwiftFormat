@@ -562,7 +562,7 @@ class WrapAttributesTests: XCTestCase {
             var foo
 
             @State
-            var myStoredFoo: String = "myStoredFoo" {
+            private var myStoredFoo: String = "myStoredFoo" {
                 didSet {
                     print(newValue)
                 }
@@ -583,7 +583,7 @@ class WrapAttributesTests: XCTestCase {
 
             @Environment(\\.myEnvironmentVar) var foo
 
-            @State var myStoredFoo: String = "myStoredFoo" {
+            @State private var myStoredFoo: String = "myStoredFoo" {
                 didSet {
                     print(newValue)
                 }
@@ -597,7 +597,7 @@ class WrapAttributesTests: XCTestCase {
     func testWrapOrDontAttributesInSwiftUIView() {
         let input = """
         struct MyView: View {
-            @State var textContent: String
+            @State private var textContent: String
 
             var body: some View {
                 childView
@@ -617,7 +617,7 @@ class WrapAttributesTests: XCTestCase {
     func testWrapAttributesInSwiftUIView() {
         let input = """
         struct MyView: View {
-            @State var textContent: String
+            @State private var textContent: String
             @Environment(\\.myEnvironmentVar) var environmentVar
 
             var body: some View {

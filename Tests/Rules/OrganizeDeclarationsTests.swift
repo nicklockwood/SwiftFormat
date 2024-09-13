@@ -463,7 +463,7 @@ class OrganizeDeclarationsTests: XCTestCase {
             for: input, output,
             rule: .organizeDeclarations,
             options: FormatOptions(categoryMarkComment: "MARK: %c", organizationMode: .type),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateStateVariables]
         )
     }
 
@@ -537,7 +537,7 @@ class OrganizeDeclarationsTests: XCTestCase {
             for: input, output,
             rule: .organizeDeclarations,
             options: FormatOptions(categoryMarkComment: "MARK: %c", organizationMode: .type),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateStateVariables]
         )
     }
 
@@ -574,7 +574,7 @@ class OrganizeDeclarationsTests: XCTestCase {
                 visibilityOrder: ["private", "internal", "public"],
                 typeOrder: DeclarationType.allCases.map(\.rawValue)
             ),
-            exclude: [.blankLinesAtStartOfScope]
+            exclude: [.blankLinesAtStartOfScope, .privateStateVariables]
         )
     }
 
@@ -2767,7 +2767,7 @@ class OrganizeDeclarationsTests: XCTestCase {
             for: input, output,
             rule: .organizeDeclarations,
             options: FormatOptions(organizeTypes: ["struct"], organizationMode: .visibility),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateStateVariables]
         )
     }
 
@@ -2834,7 +2834,7 @@ class OrganizeDeclarationsTests: XCTestCase {
             for: input, output,
             rule: .organizeDeclarations,
             options: FormatOptions(organizeTypes: ["struct"], organizationMode: .visibility),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateStateVariables]
         )
     }
 
@@ -3073,7 +3073,7 @@ class OrganizeDeclarationsTests: XCTestCase {
                 blankLineAfterSubgroups: false,
                 swiftUIPropertiesSortMode: .alphabetize
             ),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateStateVariables]
         )
     }
 
@@ -3130,7 +3130,7 @@ class OrganizeDeclarationsTests: XCTestCase {
                 blankLineAfterSubgroups: false,
                 swiftUIPropertiesSortMode: .alphabetize
             ),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateStateVariables]
         )
     }
 
@@ -3181,7 +3181,7 @@ class OrganizeDeclarationsTests: XCTestCase {
                 blankLineAfterSubgroups: false,
                 swiftUIPropertiesSortMode: .firstAppearanceSort
             ),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateStateVariables]
         )
     }
 
@@ -3238,7 +3238,7 @@ class OrganizeDeclarationsTests: XCTestCase {
                 blankLineAfterSubgroups: false,
                 swiftUIPropertiesSortMode: .firstAppearanceSort
             ),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateStateVariables]
         )
     }
 

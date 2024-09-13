@@ -21,7 +21,7 @@ class DocCommentsTests: XCTestCase {
 
             // Single line comment before property with property wrapper
             @State
-            let bar = Bar()
+            private let bar = Bar()
 
             // Single line comment
             func foo() {}
@@ -62,7 +62,7 @@ class DocCommentsTests: XCTestCase {
 
             /// Single line comment before property with property wrapper
             @State
-            let bar = Bar()
+            private let bar = Bar()
 
             /// Single line comment
             func foo() {}

@@ -428,12 +428,31 @@ class ArgumentsTests: XCTestCase {
         XCTAssertEqual(args["swiftversion"], "5.1")
     }
 
+    func testParseArgumentsContainingLanguageVersion() throws {
+        let config = "--languagemode 6"
+        let data = Data(config.utf8)
+        let args = try parseConfigFile(data)
+        XCTAssertEqual(args.count, 1)
+        XCTAssertEqual(args["languagemode"], "6")
+    }
+
     func testParseArgumentsContainingDisableAll() throws {
         let config = "--disable all"
         let data = Data(config.utf8)
         let args = try parseConfigFile(data)
         let options = try Options(args, in: "/")
         XCTAssertEqual(options.rules, [])
+    }
+
+    func testPopulatesDefaultLanguageMode() throws {
+        let swift5Options = FormatOptions(swiftVersion: "5.0")
+        XCTAssertEqual(swift5Options.languageMode, "5")
+
+        let swift6Options = FormatOptions(swiftVersion: "6.0")
+        XCTAssertEqual(swift6Options.languageMode, "5")
+
+        let swift6LangModeOptions = FormatOptions(swiftVersion: "6.0", languageMode: "6")
+        XCTAssertEqual(swift6LangModeOptions.languageMode, "6")
     }
 
     // MARK: config file serialization

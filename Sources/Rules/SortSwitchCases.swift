@@ -66,6 +66,16 @@ public extension FormatRule {
                     formatter.replaceTokens(in: switchCaseRanges[switchCase.offset].beforeDelimiterRange, with: newTokens)
                 }
             }
+    } examples: {
+        """
+        ```dif
+          switch self {
+        - case .b, .a, .c, .e, .d:
+        + case .a, .b, .c, .d, .e:
+              return nil
+          }
+        ```
+        """
     }
 }
 

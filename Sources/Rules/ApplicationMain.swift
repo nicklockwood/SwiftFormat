@@ -28,5 +28,13 @@ public extension FormatRule {
         }) { i, _ in
             formatter.replaceToken(at: i, with: .keyword("@main"))
         }
+    } examples: {
+        """
+        ```diff
+        - @UIApplicationMain
+        + @main
+          class AppDelegate: UIResponder, UIApplicationDelegate {}
+        ```
+        """
     }
 }

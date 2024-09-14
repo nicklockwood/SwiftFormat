@@ -466,10 +466,15 @@ func argumentsFor(_ options: Options, excludingDefaults: Bool = false) -> [Strin
             else {
                 continue
             }
-            // Special case for swiftVersion
+            // Special case for swiftVersion and languageMode
             // TODO: find a better solution for this
             if descriptor.argumentName == Descriptors.swiftVersion.argumentName,
                value == Version.undefined.rawValue
+            {
+                continue
+            }
+            if descriptor.argumentName == Descriptors.languageMode.argumentName,
+               value == defaultLanguageMode(for: formatOptions.swiftVersion).rawValue
             {
                 continue
             }

@@ -41,12 +41,35 @@ public let swiftFormatConfigurationFile = ".swiftformat"
 /// The standard Swift version file name
 public let swiftVersionFile = ".swift-version"
 
-/// Supported Swift versions
+/// Supported Swift compiler versions
 public let swiftVersions = [
     "3.x", "4.0", "4.1", "4.2",
     "5.0", "5.1", "5.2", "5.3", "5.4", "5.5", "5.6", "5.7", "5.8", "5.9", "5.10",
     "6.0",
 ]
+
+/// Supported Swift language modes
+public let languageModes = [
+    "4", "4.2", "5", "6",
+]
+
+/// The default language mode for the given Swift compiler version
+func defaultLanguageMode(for compilerVersion: Version) -> Version {
+    switch compilerVersion {
+    case "4.0" ..< "4.2":
+        return "4"
+    case "4.2":
+        return "4.2"
+    case "5.0" ..< "6.0":
+        return "5"
+    case "6.0"...:
+        // The default language mode in Swift 6.0 is Swift 5 mode.
+        // https://developer.apple.com/documentation/swift/adoptingswift6
+        return "5"
+    default:
+        return .undefined
+    }
+}
 
 /// An enumeration of the types of error that may be thrown by SwiftFormat
 public enum FormatError: Error, CustomStringConvertible, LocalizedError, CustomNSError {

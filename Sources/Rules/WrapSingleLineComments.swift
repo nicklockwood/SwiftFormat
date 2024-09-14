@@ -61,5 +61,7 @@ public extension FormatRule {
                 .commentBody(commentPrefix + words.joined(separator: " ")),
             ])
         }
+    } examples: {
+        nil
     }
 }

@@ -30,5 +30,15 @@ public extension FormatRule {
         if formatter.isEnabled, !wasLinebreak {
             formatter.insertLinebreak(at: formatter.tokens.count)
         }
+    } examples: {
+        """
+        ```diff
+          struct Foo {↩
+              let bar: Bar↩
+        - }
+        + }↩
+        +
+        ```
+        """
     }
 }

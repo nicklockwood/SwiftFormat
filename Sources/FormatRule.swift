@@ -45,7 +45,7 @@ public final class FormatRule: Equatable, Comparable, CustomStringConvertible {
     let deprecationMessage: String?
 
     /// Null rule, used for testing
-    static let none: FormatRule = .init(help: "") { _ in }
+    static let none: FormatRule = .init(help: "") { _ in } examples: { nil }
 
     var isDeprecated: Bool {
         deprecationMessage != nil
@@ -63,7 +63,7 @@ public final class FormatRule: Equatable, Comparable, CustomStringConvertible {
          options: [String] = [],
          sharedOptions: [String] = [],
          _ fn: @escaping (Formatter) -> Void,
-         examples: (() -> String)? = nil)
+         examples: () -> String?)
     {
         self.fn = fn
         self.help = help
@@ -73,7 +73,7 @@ public final class FormatRule: Equatable, Comparable, CustomStringConvertible {
         self.options = options
         self.sharedOptions = sharedOptions
         self.deprecationMessage = deprecationMessage
-        self.examples = examples?()
+        self.examples = examples()
     }
 
     public func apply(with formatter: Formatter) {

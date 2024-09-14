@@ -17,5 +17,7 @@ public extension FormatRule {
         formatter.forEach(.linebreak) { i, _ in
             formatter.replaceToken(at: i, with: formatter.linebreakToken(for: i))
         }
+    } examples: {
+        nil
     }
 }

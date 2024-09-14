@@ -37,5 +37,16 @@ public extension FormatRule {
                 formatter.removeTokens(in: endOfLine + 1 ..< startOfLine)
             }
         }
+    } examples: {
+        """
+        ```diff
+          [0, 1, 2]
+              .map { $0 * 2 }
+        -
+        -
+        -
+              .map { $0 * 3 }
+        ```
+        """
     }
 }

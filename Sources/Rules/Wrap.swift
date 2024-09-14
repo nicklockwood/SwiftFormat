@@ -64,5 +64,7 @@ public extension FormatRule {
 
         formatter.wrapCollectionsAndArguments(completePartialWrapping: true,
                                               wrapSingleArguments: true)
+    } examples: {
+        nil
     }
 }

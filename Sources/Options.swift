@@ -699,6 +699,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var fragment: Bool
     public var ignoreConflictMarkers: Bool
     public var swiftVersion: Version
+    public var languageMode: Version
     public var fileInfo: FileInfo
     public var timeout: TimeInterval
 
@@ -820,6 +821,7 @@ public struct FormatOptions: CustomStringConvertible {
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
                 swiftVersion: Version = .undefined,
+                languageMode: Version? = nil,
                 fileInfo: FileInfo = FileInfo(),
                 timeout: TimeInterval = 1)
     {
@@ -935,6 +937,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers
         self.swiftVersion = swiftVersion
+        self.languageMode = languageMode ?? defaultLanguageMode(for: swiftVersion)
         self.fileInfo = fileInfo
         self.timeout = timeout
     }

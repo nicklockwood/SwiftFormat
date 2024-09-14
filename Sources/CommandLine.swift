@@ -194,6 +194,7 @@ func printHelp(as type: CLI.OutputType) {
     --fragment         \(stripMarkdown(Descriptors.fragment.help))
     --conflictmarkers  \(stripMarkdown(Descriptors.ignoreConflictMarkers.help))
     --swiftversion     \(stripMarkdown(Descriptors.swiftVersion.help))
+    --languagemode     \(stripMarkdown(Descriptors.languageMode.help))
     --minversion       The minimum SwiftFormat version to be used for these files
     --cache            Path to cache file, or "clear" or "ignore" the default cache
     --dryrun           Run in "dry" mode (without actually changing any files)

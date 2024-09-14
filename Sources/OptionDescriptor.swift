@@ -412,6 +412,7 @@ extension _Descriptors {
             fragment,
             ignoreConflictMarkers,
             swiftVersion,
+            languageMode,
         ]
     }
 
@@ -1250,8 +1251,14 @@ struct _Descriptors {
     let swiftVersion = OptionDescriptor(
         argumentName: "swiftversion",
         displayName: "Swift Version",
-        help: "The version of Swift used in the files being formatted",
+        help: "The Swift compiler version used in the files being formatted",
         keyPath: \.swiftVersion
+    )
+    let languageMode = OptionDescriptor(
+        argumentName: "languagemode",
+        displayName: "Swift Language Mode",
+        help: "The Swift language mode used in the files being formatted",
+        keyPath: \.languageMode
     )
     let preserveSymbols = OptionDescriptor(
         argumentName: "preservesymbols",

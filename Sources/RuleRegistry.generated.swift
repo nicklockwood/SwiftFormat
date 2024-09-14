@@ -51,6 +51,7 @@ let ruleRegistry: [String: FormatRule] = [
     "markTypes": .markTypes,
     "modifierOrder": .modifierOrder,
     "noExplicitOwnership": .noExplicitOwnership,
+    "noFileID": .noFileID,
     "numberFormatting": .numberFormatting,
     "opaqueGenericParameters": .opaqueGenericParameters,
     "organizeDeclarations": .organizeDeclarations,

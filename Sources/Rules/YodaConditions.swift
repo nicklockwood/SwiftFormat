@@ -36,6 +36,18 @@ public extension FormatRule {
             formatter.replaceToken(at: i, with: .operator(inverseOp, .infix))
             formatter.replaceTokens(in: startIndex ... prevIndex, with: expression)
         }
+    } examples: {
+        """
+        ```diff
+        - if 5 == foo,
+        + if foo == 5,
+        -    nil != bar,
+        +    bar != nil,
+        -    .default == baaz,
+        +    baaz == .default,
+          { ... }
+        ```
+        """
     }
 }
 

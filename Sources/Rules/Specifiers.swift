@@ -17,5 +17,7 @@ public extension FormatRule {
     ) { formatter in
         _ = formatter.options.modifierOrder
         FormatRule.modifierOrder.apply(with: formatter)
+    } examples: {
+        nil
     }
 }

@@ -19,5 +19,7 @@ public extension FormatRule {
         _ = formatter.options.importGrouping
         _ = formatter.options.linebreak
         FormatRule.sortImports.apply(with: formatter)
+    } examples: {
+        nil
     }
 }

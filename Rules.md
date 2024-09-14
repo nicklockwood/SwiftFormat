@@ -202,6 +202,18 @@ swift version is set to 4.1 or above.
 Replace obsolete @UIApplicationMain and @NSApplicationMain attributes
 with @main for Swift 5.3 and above.
 
+<details>
+<summary>Examples</summary>
+
+```diff
+- @UIApplicationMain
++ @main
+  class AppDelegate: UIResponder, UIApplicationDelegate {}
+```
+
+</details>
+<br/>
+
 ## assertionFailures
 
 Changes all instances of assert(false, ...) to assertionFailure(...)
@@ -393,6 +405,21 @@ Option | Description
 ## blankLinesBetweenChainedFunctions
 
 Remove blank lines between chained functions but keep the linebreaks.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  [0, 1, 2]
+      .map { $0 * 2 }
+-
+-
+-
+      .map { $0 * 3 }
+```
+
+</details>
+<br/>
 
 ## blankLinesBetweenImports
 
@@ -831,6 +858,19 @@ Option | Description
 --- | ---
 `--enumnamespaces` | Change type to enum: "always" (default) or "structs-only"
 
+<details>
+<summary>Examples</summary>
+
+```diff
+- class FeatureConstants {
++ enum FeatureConstants {
+      static let foo = "foo"
+      static let bar = "bar"
+  }
+
+</details>
+<br/>
+
 ## extensionAccessControl
 
 Configure the placement of an extension's access control keyword.
@@ -1022,6 +1062,24 @@ Option | Description
 ## headerFileName
 
 Ensure file name in header comment matches the actual file name.
+
+<details>
+<summary>Examples</summary>
+
+For a file named `Bar.swift`:
+
+```diff
+- //  Foo.swift
++ //  Bar.swift
+  //  SwiftFormat
+  //
+  //  Created by Nick Lockwood on 5/3/23.
+
+  struct Bar {}
+```
+
+</details>
+<br/>
 
 ## hoistAwait
 
@@ -1229,6 +1287,20 @@ Move leading delimiters to the end of the previous line.
 ## linebreakAtEndOfFile
 
 Add empty blank line at end of file.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  struct Foo {↩
+      let bar: Bar↩
+- }
++ }↩
++
+```
+
+</details>
+<br/>
 
 ## linebreaks
 
@@ -2119,6 +2191,23 @@ by using `--self init-only`:
 
 Remove explicit `Self` where applicable.
 
+<details>
+<summary>Examples</summary>
+
+```diff
+  enum Foo {
+      static let bar = Bar()
+
+      static func baaz() -> Bar {
+-         Self.bar()
++         bar()
+      }
+  }
+```
+
+</details>
+<br/>
+
 ## redundantType
 
 Remove redundant type from variable declarations.
@@ -2362,6 +2451,20 @@ Option | Description
 ## sortSwitchCases
 
 Sort switch cases alphabetically.
+
+<details>
+<summary>Examples</summary>
+
+```dif
+  switch self {
+- case .b, .a, .c, .e, .d:
++ case .a, .b, .c, .d, .e:
+      return nil
+  }
+```
+
+</details>
+<br/>
 
 ## sortTypealiases
 
@@ -2750,6 +2853,23 @@ Remove trailing space at end of a line.
 Option | Description
 --- | ---
 `--trimwhitespace` | Trim trailing space: "always" (default) or "nonblank-lines"
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- let foo: Foo␣
++ let foo: Foo
+- ␣␣␣␣
++
+- func bar() {␣␣
++ func bar() {
+  ␣␣␣␣print("foo")
+  }
+```
+
+</details>
+<br/>
 
 ## typeSugar
 
@@ -3236,3 +3356,19 @@ Prefer constant values to be on the right-hand-side of expressions.
 Option | Description
 --- | ---
 `--yodaswap` | Swap yoda values: "always" (default) or "literals-only"
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- if 5 == foo,
++ if foo == 5,
+-    nil != bar,
++    bar != nil,
+-    .default == baaz,
++    baaz == .default,
+  { ... }
+```
+
+</details>
+<br/>

@@ -449,7 +449,7 @@ class ArgumentsTests: XCTestCase {
         XCTAssertEqual(swift5Options.languageMode, "5")
 
         let swift6Options = FormatOptions(swiftVersion: "6.0")
-        XCTAssertEqual(swift5Options.languageMode, "5")
+        XCTAssertEqual(swift6Options.languageMode, "5")
 
         let swift6LangModeOptions = FormatOptions(swiftVersion: "6.0", languageMode: "6")
         XCTAssertEqual(swift6LangModeOptions.languageMode, "6")

@@ -649,13 +649,23 @@ Swift version
 
 Most SwiftFormat rules are version-agnostic, but some are applicable only to newer Swift versions. These rules will be disabled automatically if the Swift version is not specified, so to make sure that the full functionality is available you should specify the version of Swift that is used by your project.
 
-You can specify the Swift version in one of two ways:
+You can specify the Swift compiler version in one of two ways:
 
-The preferred option is to add a `.swift-version` file to your project directory. This is a text file that should contain the minimum Swift version supported by your project, and is a standard already used by other tools.
+You can specify your project's Swift compiler version using the `--swiftversion` command line argument. You can also add the `--swiftversion` option to your `.swiftformat` file.
 
-The `.swift-version` file applies hierarchically; If you have submodules in your project that use a different Swift version, you can add separate `.swift-version` files to those directories.
+Another option is to add a `.swift-version` file to your project directory. This is a text file that should contain the minimum Swift version supported by your project, and is also supported by some other tools.
 
-The other option to specify the Swift version using the `--swiftversion` command line argument. Note that this will be overridden by any `.swift-version` files encountered while processing. You can also add the `--swiftversion` option to your `.swiftformat` file.
+The `.swift-version` file applies hierarchically; If you have submodules in your project that use a different Swift version, you can add separate `.swift-version` files to those directories. The `--swiftversion` argument takes precedence over any `.swift-version` files.
+
+
+Swift language mode
+-------------------
+
+SwiftFormat also allows you to specify the Swift _language mode_ used by your project. This is distinct from the Swift compiler version. For example, you can use the Swift 6.0 compiler with either the Swift 5 language mode or the Swift 6 language mode. Some SwiftFormat rules will behave differently under different Swift language modes.
+
+You can specify your project's Swift language mode using the `--languagemode` command line argument. You can also add the `--languagemode` option to your `.swiftformat` file.
+
+If not specified, SwiftFormat uses the default language mode of the specified Swift compiler version. The default language mode in Swift 5.x and Swift 6.x is the Swift 5 language mode. If your project uses the Swift 6 language mode, you should specify `--languagemode 6`.
 
 
 Config file
@@ -867,7 +877,7 @@ FAQ
 
 *Q. What versions of Swift are supported?*
 
-> A. The SwiftFormat framework and command-line tool can be compiled using Swift 4.2 and above, and can format programs written in Swift 4.x or 5. Swift 3.x is no longer actively supported. If you are still using Swift 3.x or earlier and find that SwiftFormat breaks your code, the best solution is probably to revert to an earlier SwiftFormat release, or enable only a small subset of rules. Use the `--swiftversion` argument to enable additional rules specific to later Swift versions.
+> A. The SwiftFormat framework and command-line tool can be compiled using Swift 5.3 and above, and can format programs written in Swift 4.x or 5. Swift 3.x is no longer actively supported. If you are still using Swift 3.x or earlier and find that SwiftFormat breaks your code, the best solution is probably to revert to an earlier SwiftFormat release, or enable only a small subset of rules. Use the `--swiftversion` argument to enable additional rules specific to later Swift versions.
 
 
 *Q. SwiftFormat made changes I didn't want it to. How can I find out which rules to disable?*

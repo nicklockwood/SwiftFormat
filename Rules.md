@@ -34,6 +34,7 @@
 * [linebreakAtEndOfFile](#linebreakAtEndOfFile)
 * [linebreaks](#linebreaks)
 * [modifierOrder](#modifierOrder)
+* [noFileID](#noFileID)
 * [numberFormatting](#numberFormatting)
 * [opaqueGenericParameters](#opaqueGenericParameters)
 * [preferForLoop](#preferForLoop)
@@ -1385,6 +1386,24 @@ Don't use explicit ownership modifiers (borrowing / consuming).
 ```diff
 - borrowing func foo(_ bar: consuming Bar) { ... }
 + func foo(_ bar: Bar) { ... }
+```
+
+</details>
+<br/>
+
+## noFileID
+
+Prefer #file over #fileID.
+
+<details>
+<summary>Examples</summary>
+
+In the Swift 6 language mode and later, #file has the same behavior as #fileID.
+In the Swift 5 language mode, #file matches the behavior of #filePath.
+
+```diff
+- func foo(file: StaticString = #fileID) { ... }
++ func foo(file: StaticString = #file) { ... }
 ```
 
 </details>

@@ -57,6 +57,15 @@ public extension FormatRule {
                 }
             }
         }
+    } examples: {
+        """
+        ```diff
+        - class FeatureConstants {
+        + enum FeatureConstants {
+              static let foo = "foo"
+              static let bar = "bar"
+          }
+        """
     }
 }
 

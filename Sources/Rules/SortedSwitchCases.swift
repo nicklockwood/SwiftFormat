@@ -15,5 +15,7 @@ public extension FormatRule {
         deprecationMessage: "Use sortSwitchCases instead."
     ) { formatter in
         FormatRule.sortSwitchCases.apply(with: formatter)
+    } examples: {
+        nil
     }
 }

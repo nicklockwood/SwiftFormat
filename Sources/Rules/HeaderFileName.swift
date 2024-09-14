@@ -30,5 +30,19 @@ public extension FormatRule {
                 formatter.replaceToken(at: i, with: .commentBody(fileName))
             }
         }
+    } examples: {
+        """
+        For a file named `Bar.swift`:
+
+        ```diff
+        - //  Foo.swift
+        + //  Bar.swift
+          //  SwiftFormat
+          //
+          //  Created by Nick Lockwood on 5/3/23.
+
+          struct Bar {}
+        ```
+        """
     }
 }

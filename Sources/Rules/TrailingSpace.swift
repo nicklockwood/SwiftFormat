@@ -23,5 +23,18 @@ public extension FormatRule {
                 formatter.removeToken(at: i)
             }
         }
+    } examples: {
+        """
+        ```diff
+        - let foo: Foo␣
+        + let foo: Foo
+        - ␣␣␣␣
+        +
+        - func bar() {␣␣
+        + func bar() {
+          ␣␣␣␣print("foo")
+          }
+        ```
+        """
     }
 }

@@ -704,6 +704,17 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
                             status = .finished(.ok)
                             return
                         }
+
+                        let resourceValues = try getResourceValues(
+                            for: stdinURL.standardizedFileURL,
+                            keys: [.creationDateKey, .pathKey]
+                        )
+
+                        let fileInfo = collectFileInfo(inputURL: stdinURL,
+                                                       options: options,
+                                                       resourceValues: resourceValues)
+
+                        options.formatOptions?.fileInfo = fileInfo
                     }
                     let outputTokens = try applyRules(
                         input, options: options, lineRange: lineRange,

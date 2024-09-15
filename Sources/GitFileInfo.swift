@@ -39,10 +39,12 @@ struct GitFileInfo {
 
 extension GitFileInfo {
     init?(url: URL) {
-        guard let gitRoot = getGitRoot(url.deletingLastPathComponent()),
-              let commitHash = getCommitHash(url, root: gitRoot),
-              let gitInfo = getCommitInfo((commitHash, gitRoot))
-        else {
+        guard let gitRoot = getGitRoot(url.deletingLastPathComponent()) else {
+            return nil
+        }
+
+        let commitHash = getCommitHash(url, root: gitRoot)
+        guard let gitInfo = getCommitInfo((commitHash, gitRoot)) else {
             return nil
         }
 
@@ -140,9 +142,16 @@ private func getCommitHash(_ url: URL, root: URL) -> String? {
     return safeValue
 }
 
-private let getCommitInfo: ((String, URL)) -> GitFileInfo? = memoize(
-    { hash, root in hash + root.relativePath },
+private let getCommitInfo: ((String?, URL)) -> GitFileInfo? = memoize(
+    { hash, root in (hash ?? "none") + root.relativePath },
     { hash, root in
+        let defaultInfo = getDefaultGitInfo(root)
+
+        guard let hash = hash else {
+            return GitFileInfo(authorName: defaultInfo.authorName,
+                               authorEmail: defaultInfo.authorEmail)
+        }
+
         let format = #"{"name":"%an","email":"%ae","time":"%at"}"#
         let command = "git show --format='\(format)' -s \(hash)"
         guard let commitInfo = command.shellOutput(cwd: root),
@@ -151,8 +160,6 @@ private let getCommitInfo: ((String, URL)) -> GitFileInfo? = memoize(
         else {
             return nil
         }
-
-        let defaultInfo = getDefaultGitInfo(root)
 
         let (name, email) = (dict["name"] ?? defaultInfo.authorName, dict["email"] ?? defaultInfo.authorEmail)
 

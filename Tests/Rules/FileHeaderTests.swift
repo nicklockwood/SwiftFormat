@@ -483,6 +483,15 @@ class FileHeaderTests: XCTestCase {
         XCTAssertNotNil(info?.creationDate)
     }
 
+    func testGitHelpersWorksWithFilesNotCommitedYet() throws {
+        try withTempProjectFile { url in
+            let info = GitFileInfo(url: url)
+            XCTAssertNotNil(info?.authorName)
+            XCTAssertNotNil(info?.authorEmail)
+            XCTAssertNil(info?.creationDate)
+        }
+    }
+
     func testFileHeaderRuleThrowsIfCreationDateUnavailable() {
         let input = "let foo = bar"
         let options = FormatOptions(fileHeader: "// Created by Nick Lockwood on {created}.", fileInfo: FileInfo())
@@ -511,4 +520,27 @@ private func createTestDate(
     formatter.timeZone = .current
 
     return formatter.date(from: input)!
+}
+
+private func withTempProjectFile(fn: (URL) -> Void) throws {
+    let prefix = UUID().uuidString
+
+    var components = URL(fileURLWithPath: #file)
+        .pathComponents
+        .prefix(while: { $0 != "Tests" })
+
+    components.append(".temp")
+
+    let directory = components.joined(separator: "/")
+
+    if !FileManager.default.fileExists(atPath: directory) {
+        try FileManager.default.createDirectory(atPath: directory,
+                                                withIntermediateDirectories: true)
+    }
+
+    let url = URL(fileURLWithPath: directory).appendingPathComponent(prefix + ".swift")
+
+    FileManager.default.createFile(atPath: url.path, contents: nil)
+    fn(url)
+    try FileManager.default.removeItem(at: url)
 }

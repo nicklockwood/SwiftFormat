@@ -24,6 +24,10 @@ jobs:
         uses: actions/checkout@v4
       - name: Build and Test
         run: |
+          # Set up a git user for the git tests
+          git config user.name "test user"
+          git config user.email "test.user@noreply.com"
+
           xcodebuild -project SwiftFormat.xcodeproj -scheme "SwiftFormat (Framework)" -sdk macosx clean build test -enableCodeCoverage YES -derivedDataPath Build/
           cd Build/Build/ProfileData
           cd $(ls -d */|head -n 1)
@@ -56,6 +60,10 @@ jobs:
         uses: actions/checkout@v4
       - name: Build and Test
         run: |
+          # Set up a git user for the git tests
+          git config --global user.name "test user"
+          git config --global user.email "test.user@noreply.com"
+
           # Needed to be allowed to run git commands in the tests
           # https://github.com/actions/runner-images/issues/6775
           git config --global --add safe.directory /__w/SwiftFormat/SwiftFormat
@@ -140,5 +148,3 @@ jobs:
         uses: actions/checkout@v4
       - name: Build Editor Extension
         run: xcodebuild -project SwiftFormat.xcodeproj -scheme "SwiftFormat (Editor Extension)" -sdk macosx clean build
-
-        

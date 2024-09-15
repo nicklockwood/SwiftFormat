@@ -203,21 +203,9 @@ public func enumerateFiles(withInputURL inputURL: URL,
         let fileOptions = options.fileOptions ?? .default
         if resourceValues.isRegularFile == true {
             if fileOptions.supportedFileExtensions.contains(inputURL.pathExtension) {
-                let fileHeaderRuleEnabled = options.rules?.contains(FormatRule.fileHeader.name) ?? false
-                let shouldGetGitInfo = fileHeaderRuleEnabled &&
-                    options.formatOptions?.fileHeader.needsGitInfo == true
-
-                let gitInfo = shouldGetGitInfo ? GitFileInfo(url: inputURL) : nil
-
-                let fileInfo = FileInfo(
-                    filePath: resourceValues.path,
-                    creationDate: gitInfo?.creationDate ?? resourceValues.creationDate,
-                    replacements: [
-                        .author: ReplacementType(gitInfo?.author),
-                        .authorName: ReplacementType(gitInfo?.authorName),
-                        .authorEmail: ReplacementType(gitInfo?.authorEmail),
-                    ].compactMapValues { $0 }
-                )
+                let fileInfo = collectFileInfo(inputURL: inputURL,
+                                               options: options,
+                                               resourceValues: resourceValues)
 
                 var options = options
                 options.formatOptions?.fileInfo = fileInfo
@@ -290,6 +278,24 @@ public func enumerateFiles(withInputURL inputURL: URL,
         }
     }
     return errors
+}
+
+func collectFileInfo(inputURL: URL, options: Options, resourceValues: URLResourceValues) -> FileInfo {
+    let fileHeaderRuleEnabled = options.rules?.contains(FormatRule.fileHeader.name) ?? false
+    let shouldGetGitInfo = fileHeaderRuleEnabled &&
+        options.formatOptions?.fileHeader.needsGitInfo == true
+
+    let gitInfo = shouldGetGitInfo ? GitFileInfo(url: inputURL) : nil
+
+    return FileInfo(
+        filePath: resourceValues.path,
+        creationDate: gitInfo?.creationDate ?? resourceValues.creationDate,
+        replacements: [
+            .author: ReplacementType(gitInfo?.author),
+            .authorName: ReplacementType(gitInfo?.authorName),
+            .authorEmail: ReplacementType(gitInfo?.authorEmail),
+        ].compactMapValues { $0 }
+    )
 }
 
 /// Process configuration in all directories in specified path.

@@ -24,5 +24,8 @@ DerivedData
 /Snapshots/Private
 swiftformat.artifactbundle.zip
 
+# Stores temporary files during tests
+.temp/
+
 # AppCode
 .idea

@@ -1109,6 +1109,11 @@ extension Formatter {
     /// Wrap a single-line statement body onto multiple lines
     func wrapStatementBody(at i: Int) {
         assert(token(at: i) == .startOfScope("{"))
+
+        guard !isInSingleLineStringLiteral(at: i) else {
+            return
+        }
+
         var openBraceIndex = i
 
         // We need to make sure to move past any closures in the conditional

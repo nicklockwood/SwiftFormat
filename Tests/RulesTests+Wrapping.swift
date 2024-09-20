@@ -631,6 +631,31 @@ class WrappingTests: RulesTests {
                        exclude: ["braces", "indent", "elseOnSameLine"])
     }
 
+    func testInsideStringLiteralDoesNothing() {
+        let input = """
+        "\\(list.map { if $0 % 2 == 0 { return 0 } else { return 1 } })"
+        """
+        testFormatting(for: input, rule: FormatRules.wrapConditionalBodies)
+    }
+
+    func testInsideMultilineStringLiteral() {
+        let input = """
+        let foo = \"""
+        \\(list.map { if $0 % 2 == 0 { return 0 } else { return 1 } })
+        \"""
+        """
+        let output = """
+        let foo = \"""
+        \\(list.map { if $0 % 2 == 0 {
+            return 0
+        } else {
+            return 1
+        } })
+        \"""
+        """
+        testFormatting(for: input, output, rule: FormatRules.wrapConditionalBodies)
+    }
+
     // MARK: - wrapLoopBodies
 
     func testWrapForLoop() {

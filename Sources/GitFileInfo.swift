@@ -115,14 +115,36 @@ private let getDefaultGitInfo: (URL) -> GitFileInfo = memoize({ $0.relativePath 
     return GitFileInfo(authorName: name, authorEmail: email)
 }
 
+private let getMovedFiles: (URL) -> [(from: URL, to: URL)] = memoize({ $0.relativePath }) { root in
+    let command = "git diff --diff-filter=R --staged --name-status"
+    let output = command.shellOutput(cwd: root)
+
+    guard let safeValue = output, !safeValue.isEmpty else { return [] }
+
+    return safeValue.split(separator: "\n").compactMap { input -> (URL, URL)? in
+        var parts = input.split(separator: "\t").dropFirst()
+
+        guard let from = parts.popFirst(), let to = parts.popFirst(), from != to else { return nil }
+
+        let fromURL = URL(fileURLWithPath: String(from), relativeTo: root)
+        let toURL = URL(fileURLWithPath: String(to), relativeTo: root)
+
+        return (fromURL, toURL)
+    }
+}
+
 private func getCommitHash(_ url: URL, root: URL) -> String? {
+    let movedFile = getMovedFiles(root).first { $0.to.absoluteString == url.absoluteString }
+    let trackedFile = movedFile?.from ?? url
+
     let command = [
         "git log",
         "--follow", // keep tracking file across renames
         "--diff-filter=A",
         "--author-date-order",
         "--pretty=%H",
-        url.relativePath,
+        "--",
+        trackedFile.relativePath,
     ]
     .filter { ($0?.count ?? 0) > 0 }
     .joined(separator: " ")
@@ -156,12 +178,15 @@ private let getCommitInfo: ((String?, URL)) -> GitFileInfo? = memoize(
         let command = "git show --format='\(format)' -s \(hash)"
         guard let commitInfo = command.shellOutput(cwd: root),
               let commitData = commitInfo.data(using: .utf8),
-              let dict = try? JSONDecoder().decode([String: String].self, from: commitData)
-        else {
+              let dict = try? JSONDecoder().decode([String: String].self, from: commitData) else
+        {
             return nil
         }
 
-        let (name, email) = (dict["name"] ?? defaultInfo.authorName, dict["email"] ?? defaultInfo.authorEmail)
+        let (name, email) = (
+            dict["name"] ?? defaultInfo.authorName,
+            dict["email"] ?? defaultInfo.authorEmail
+        )
 
         var date: Date?
         if let createdAtString = dict["time"],

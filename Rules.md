@@ -42,6 +42,7 @@
 * [redundantBackticks](#redundantBackticks)
 * [redundantBreak](#redundantBreak)
 * [redundantClosure](#redundantClosure)
+* [redundantEquatable](#redundantEquatable)
 * [redundantExtensionACL](#redundantExtensionACL)
 * [redundantFileprivate](#redundantFileprivate)
 * [redundantGet](#redundantGet)
@@ -1796,6 +1797,34 @@ which are called immediately.
 + lazy var bar = Bar(baaz: baaz,
 +                    quux: quux)
 ```
+
+</details>
+<br/>
+
+## redundantEquatable
+
+Omit a hand-written Equatable implementation when the compiler-synthesized conformance would be equivalent.
+
+<details>
+<summary>Examples</summary>
+
+  struct Foo: Equatable {
+      let bar: Bar
+      let baaz: Baaz
+
+-     static func ==(_ lhs: Foo, _ rhs: Foo) -> Bool {
+-         lhs.bar == rhs.bar 
+-             && lhs.baaz == rhs.baaz
+-     }
+  }
+
+  class Bar: Equatable {
+      let baaz: Baaz
+
+      static func ==(_ lhs: Foo, _ rhs: Foo) -> Bool {
+          lhs.baaz == rhs.baaz
+      }
+  }
 
 </details>
 <br/>

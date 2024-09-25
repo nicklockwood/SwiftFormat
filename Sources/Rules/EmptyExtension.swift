@@ -16,7 +16,7 @@ public extension FormatRule {
     ) { formatter in
         var emptyExtensions = [Declaration]()
 
-        formatter.forEachRecursiveDeclaration { declaration in
+        formatter.forEachRecursiveDeclaration { declaration, _ in
             let declarationModifiers = Set(declaration.modifiers)
             guard declaration.keyword == "extension",
                   let declarationBody = declaration.body,

@@ -1235,12 +1235,17 @@ struct _Descriptors {
         help: "Comma separated list of declaration names to exclude",
         keyPath: \.preservedPrivateDeclarations
     )
-
     let swiftUIPropertiesSortMode = OptionDescriptor(
         argumentName: "sortswiftuiprops",
         displayName: "Sort SwiftUI Dynamic Properties",
         help: "Sort SwiftUI props: none, alphabetize, first-appearance-sort",
         keyPath: \.swiftUIPropertiesSortMode
+    )
+    let equatableMacroInfo = OptionDescriptor(
+        argumentName: "equatablemacro",
+        displayName: "The name and module of an Equatable conformance macro",
+        help: "For example: \"@Equatable,EquatableMacroLib\"",
+        keyPath: \.equatableMacroInfo
     )
 
     // MARK: - Internal

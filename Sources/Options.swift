@@ -590,6 +590,24 @@ public enum SwiftUIPropertiesSortMode: String, CaseIterable {
     case firstAppearanceSort = "first-appearance-sort"
 }
 
+public struct EquatableMacroInfo: RawRepresentable {
+    /// The name of this macro, e.g. `@Equatable`
+    let macro: String
+    /// The name of the module defining this macro, e.g. `EquatableMacroLib`
+    let moduleName: String
+
+    public init?(rawValue: String) {
+        let components = rawValue.components(separatedBy: ",")
+        guard components.count == 2 else { return nil }
+        macro = components[0]
+        moduleName = components[1]
+    }
+
+    public var rawValue: String {
+        "\(macro),\(moduleName)"
+    }
+}
+
 /// Configuration options for formatting. These aren't actually used by the
 /// Formatter class itself, but it makes them available to the format rules.
 public struct FormatOptions: CustomStringConvertible {
@@ -700,6 +718,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var timeZone: FormatTimeZone
     public var nilInit: NilInitType
     public var preservedPrivateDeclarations: Set<String>
+    public var equatableMacroInfo: EquatableMacroInfo?
 
     /// Deprecated
     public var indentComments: Bool
@@ -826,6 +845,7 @@ public struct FormatOptions: CustomStringConvertible {
                 timeZone: FormatTimeZone = .system,
                 nilInit: NilInitType = .remove,
                 preservedPrivateDeclarations: Set<String> = [],
+                equatableMacroInfo: EquatableMacroInfo? = nil,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -942,6 +962,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.timeZone = timeZone
         self.nilInit = nilInit
         self.preservedPrivateDeclarations = preservedPrivateDeclarations
+        self.equatableMacroInfo = equatableMacroInfo
         // Doesn't really belong here, but hard to put elsewhere
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

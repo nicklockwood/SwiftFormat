@@ -386,37 +386,8 @@ extension Formatter {
 
     // Whether or not this declaration is an instance property that can affect
     // the parameters struct's synthesized memberwise initializer
-    func affectsSynthesizedMemberwiseInitializer(
-        _ declaration: Declaration,
-        _ category: Category
-    ) -> Bool {
-        switch category.type {
-        case .swiftUIPropertyWrapper, .instanceProperty:
-            return true
-
-        case .instancePropertyWithBody:
-            // `instancePropertyWithBody` represents some stored properties,
-            // but also computed properties. Only stored properties,
-            // not computed properties, affect the synthesized init.
-            //
-            // This is a stored property if and only if
-            // the declaration body has a `didSet` or `willSet` keyword,
-            // based on the grammar for a variable declaration:
-            // https://docs.swift.org/swift-book/ReferenceManual/Declarations.html#grammar_variable-declaration
-            let parser = Formatter(declaration.tokens)
-
-            if let bodyOpenBrace = parser.index(of: .startOfScope("{"), after: -1),
-               let nextToken = parser.next(.nonSpaceOrCommentOrLinebreak, after: bodyOpenBrace),
-               [.identifier("willSet"), .identifier("didSet")].contains(nextToken)
-            {
-                return true
-            }
-
-            return false
-
-        default:
-            return false
-        }
+    func affectsSynthesizedMemberwiseInitializer(_ declaration: Declaration) -> Bool {
+        declaration.isStoredInstanceProperty
     }
 
     // Whether or not the two given declaration orderings preserve
@@ -426,11 +397,11 @@ extension Formatter {
         _ rhs: [CategorizedDeclaration]
     ) -> Bool {
         let lhsPropertiesOrder = lhs
-            .filter { affectsSynthesizedMemberwiseInitializer($0.declaration, $0.category) }
+            .filter { affectsSynthesizedMemberwiseInitializer($0.declaration) }
             .map(\.declaration)
 
         let rhsPropertiesOrder = rhs
-            .filter { affectsSynthesizedMemberwiseInitializer($0.declaration, $0.category) }
+            .filter { affectsSynthesizedMemberwiseInitializer($0.declaration) }
             .map(\.declaration)
 
         return lhsPropertiesOrder == rhsPropertiesOrder

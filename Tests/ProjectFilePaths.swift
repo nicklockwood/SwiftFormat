@@ -40,11 +40,13 @@ let ruleRegistryURL =
 private func allSwiftFiles(inDirectory directory: String) -> [URL] {
     var swiftFiles: [URL] = []
     let directory = projectDirectory.appendingPathComponent(directory)
-    _ = enumerateFiles(withInputURL: directory) { fileURL, _, _ in
+    let errors = enumerateFiles(withInputURL: directory) { fileURL, _, _ in
         {
             guard fileURL.pathExtension == "swift" else { return }
             swiftFiles.append(fileURL)
         }
     }
+    assert(errors.isEmpty, "Encountered errors accessing files in \(directory): \(errors)")
+    assert(!swiftFiles.isEmpty, "Could not load files in \(directory)")
     return swiftFiles
 }

@@ -79,7 +79,7 @@ class CodeOrganizationTests: XCTestCase {
 
                     var helperFuncArgLabels: [String?]? = nil
                     if bodyDeclaration.keyword == "func", let startOfScope = formatter.index(of: .startOfScope("("), after: bodyDeclaration.originalRange.lowerBound) {
-                        helperFuncArgLabels = formatter.parseFunctionDeclarationArgumentLabels(startOfScope: startOfScope)
+                        helperFuncArgLabels = formatter.parseFunctionDeclarationArguments(startOfScope: startOfScope).map(\.externalLabel)
                     }
 
                     allRuleFileHelpers.append((name: helperName, fileName: fileName, funcArgLabels: helperFuncArgLabels))

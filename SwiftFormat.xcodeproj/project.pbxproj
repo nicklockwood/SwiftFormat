@@ -69,6 +69,11 @@
 		08180DCF2C4EB67F00FD60FF /* DeclarationHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E230CA12C4C1C0700A16E2E /* DeclarationHelpers.swift */; };
 		08180DD02C4EB67F00FD60FF /* DeclarationHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E230CA12C4C1C0700A16E2E /* DeclarationHelpers.swift */; };
 		08180DD12C4EB68000FD60FF /* DeclarationHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E230CA12C4C1C0700A16E2E /* DeclarationHelpers.swift */; };
+		082D644B2CA4719E0072DA14 /* RedundantEquatable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 082D644A2CA4719B0072DA14 /* RedundantEquatable.swift */; };
+		082D644C2CA4719E0072DA14 /* RedundantEquatable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 082D644A2CA4719B0072DA14 /* RedundantEquatable.swift */; };
+		082D644D2CA4719E0072DA14 /* RedundantEquatable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 082D644A2CA4719B0072DA14 /* RedundantEquatable.swift */; };
+		082D644E2CA4719E0072DA14 /* RedundantEquatable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 082D644A2CA4719B0072DA14 /* RedundantEquatable.swift */; };
+		082D64502CA471F30072DA14 /* RedundantEquatableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 082D644F2CA471F00072DA14 /* RedundantEquatableTests.swift */; };
 		2E230CA22C4C1C0700A16E2E /* DeclarationHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E230CA12C4C1C0700A16E2E /* DeclarationHelpers.swift */; };
 		2E2BAB8C2C57F6B600590239 /* RuleRegistry.generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BAB8B2C57F6B600590239 /* RuleRegistry.generated.swift */; };
 		2E2BAB8D2C57F6B600590239 /* RuleRegistry.generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BAB8B2C57F6B600590239 /* RuleRegistry.generated.swift */; };
@@ -779,6 +784,8 @@
 		01F17E841E258A4900DCD359 /* CommandLineTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CommandLineTests.swift; sourceTree = "<group>"; };
 		01F3DF8B1DB9FD3F00454944 /* Options.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Options.swift; sourceTree = "<group>"; };
 		01F3DF8F1DBA003E00454944 /* InferenceTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InferenceTests.swift; sourceTree = "<group>"; };
+		082D644A2CA4719B0072DA14 /* RedundantEquatable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RedundantEquatable.swift; sourceTree = "<group>"; };
+		082D644F2CA471F00072DA14 /* RedundantEquatableTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RedundantEquatableTests.swift; sourceTree = "<group>"; };
 		2E230CA12C4C1C0700A16E2E /* DeclarationHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeclarationHelpers.swift; sourceTree = "<group>"; };
 		2E2BAB8B2C57F6B600590239 /* RuleRegistry.generated.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuleRegistry.generated.swift; sourceTree = "<group>"; };
 		2E2BAB912C57F6DD00590239 /* InitCoderUnavailable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InitCoderUnavailable.swift; sourceTree = "<group>"; };
@@ -1211,6 +1218,7 @@
 		2E2BAB902C57F6DD00590239 /* Rules */ = {
 			isa = PBXGroup;
 			children = (
+				082D644A2CA4719B0072DA14 /* RedundantEquatable.swift */,
 				2E2BABF02C57F6DD00590239 /* Acronyms.swift */,
 				2E2BABE22C57F6DD00590239 /* AndOperator.swift */,
 				2E2BABE82C57F6DD00590239 /* AnyObjectProtocol.swift */,
@@ -1331,6 +1339,7 @@
 		2E8DE68C2C57FEB30032BF25 /* Rules */ = {
 			isa = PBXGroup;
 			children = (
+				082D644F2CA471F00072DA14 /* RedundantEquatableTests.swift */,
 				2E8DE6D02C57FEB30032BF25 /* AcronymsTests.swift */,
 				2E8DE6F02C57FEB30032BF25 /* AndOperatorTests.swift */,
 				2E8DE6BB2C57FEB30032BF25 /* AnyObjectProtocolTests.swift */,
@@ -1837,6 +1846,7 @@
 				2E2BAC372C57F6DD00590239 /* HoistPatternLet.swift in Sources */,
 				2E2BAD672C57F6DD00590239 /* HoistAwait.swift in Sources */,
 				2E2BAD832C57F6DD00590239 /* DocComments.swift in Sources */,
+				082D644E2CA4719E0072DA14 /* RedundantEquatable.swift in Sources */,
 				2E2BAC2B2C57F6DD00590239 /* Todos.swift in Sources */,
 				2E2BAC6F2C57F6DD00590239 /* AssertionFailures.swift in Sources */,
 				2E2BAD5B2C57F6DD00590239 /* AnyObjectProtocol.swift in Sources */,
@@ -2032,6 +2042,7 @@
 				2E8DE7422C57FEB30032BF25 /* ConsecutiveSpacesTests.swift in Sources */,
 				2E8DE7312C57FEB30032BF25 /* HoistAwaitTests.swift in Sources */,
 				2E8DE7132C57FEB30032BF25 /* RedundantInitTests.swift in Sources */,
+				082D64502CA471F30072DA14 /* RedundantEquatableTests.swift in Sources */,
 				2E8DE7142C57FEB30032BF25 /* RedundantRawValuesTests.swift in Sources */,
 				2E8DE7262C57FEB30032BF25 /* AnyObjectProtocolTests.swift in Sources */,
 				2E8DE70F2C57FEB30032BF25 /* WrapTests.swift in Sources */,
@@ -2076,6 +2087,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				082D644C2CA4719E0072DA14 /* RedundantEquatable.swift in Sources */,
 				01A0EAD51D5DC08A00A0A8E3 /* FormatRule.swift in Sources */,
 				2E2BAC6C2C57F6DD00590239 /* SpaceInsideGenerics.swift in Sources */,
 				2E2BAD2C2C57F6DD00590239 /* WrapEnumCases.swift in Sources */,
@@ -2322,6 +2334,7 @@
 				01BBD85B21DAA2A700457380 /* Globs.swift in Sources */,
 				2E2BAD112C57F6DD00590239 /* RedundantProperty.swift in Sources */,
 				01A8320824EC7F7700A9D0EB /* FormattingHelpers.swift in Sources */,
+				082D644B2CA4719E0072DA14 /* RedundantEquatable.swift in Sources */,
 				2E2BACFD2C57F6DD00590239 /* BlankLinesBetweenImports.swift in Sources */,
 				2E2BACF12C57F6DD00590239 /* ConditionalAssignment.swift in Sources */,
 				2E2BAD4D2C57F6DD00590239 /* RedundantVoidReturnType.swift in Sources */,
@@ -2467,6 +2480,7 @@
 				2E2BADB22C57F6DD00590239 /* RedundantType.swift in Sources */,
 				9028F7851DA4B435009FE5B4 /* Formatter.swift in Sources */,
 				2E2BAD122C57F6DD00590239 /* RedundantProperty.swift in Sources */,
+				082D644D2CA4719E0072DA14 /* RedundantEquatable.swift in Sources */,
 				E487212A201E3DD50014845E /* RulesStore.swift in Sources */,
 				2E2BACFE2C57F6DD00590239 /* BlankLinesBetweenImports.swift in Sources */,
 				2E2BACF22C57F6DD00590239 /* ConditionalAssignment.swift in Sources */,

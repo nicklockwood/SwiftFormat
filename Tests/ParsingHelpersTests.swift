@@ -2447,20 +2447,26 @@ class ParsingHelpersTests: XCTestCase {
 
     // MARK: parseFunctionDeclarationArgumentLabels
 
-    func testParseFunctionDeclarationArgumentLabels() {
+    func testParseFunctionDeclarationArguments() {
         let input = """
         func foo(_ foo: Foo, bar: Bar, quux _: Quux, last baaz: Baaz) {}
         func bar() {}
         """
 
         let formatter = Formatter(tokenize(input))
+
         XCTAssertEqual(
-            formatter.parseFunctionDeclarationArgumentLabels(startOfScope: 3), // foo(...)
-            [nil, "bar", "quux", "last"]
+            formatter.parseFunctionDeclarationArguments(startOfScope: 3), // foo(...)
+            [
+                Formatter.FunctionArgument(externalLabel: nil, internalLabel: "foo", type: "Foo"),
+                Formatter.FunctionArgument(externalLabel: "bar", internalLabel: "bar", type: "Bar"),
+                Formatter.FunctionArgument(externalLabel: "quux", internalLabel: nil, type: "Quux"),
+                Formatter.FunctionArgument(externalLabel: "last", internalLabel: "baaz", type: "Baaz"),
+            ]
         )
 
         XCTAssertEqual(
-            formatter.parseFunctionDeclarationArgumentLabels(startOfScope: 40), // bar()
+            formatter.parseFunctionDeclarationArguments(startOfScope: 40), // bar()
             []
         )
     }

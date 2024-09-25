@@ -115,10 +115,12 @@ enum Declaration: Hashable {
 
     /// The name of this type or variable
     var name: String? {
+        // Conditional compilation blocks don't have a "name"
+        guard keyword != "#if" else { return nil }
+
         let parser = Formatter(openTokens)
         guard let keywordIndex = openTokens.firstIndex(of: .keyword(keyword)),
-              let nameIndex = parser.index(of: .nonSpaceOrCommentOrLinebreak, after: keywordIndex),
-              parser.tokens[nameIndex].isIdentifierOrKeyword
+              let nameIndex = parser.index(of: .nonSpaceOrCommentOrLinebreak, after: keywordIndex)
         else {
             return nil
         }
@@ -152,6 +154,46 @@ enum Declaration: Hashable {
 
     var swiftUIPropertyWrapper: String? {
         modifiers.first(where: Declaration.swiftUIPropertyWrappers.contains)
+    }
+
+    /// Whether or not this declaration represents a stored instance property
+    var isStoredInstanceProperty: Bool {
+        guard keyword == "let" || keyword == "var" else { return false }
+
+        // A static property is not an instance property
+        if modifiers.contains("static") {
+            return false
+        }
+
+        // If this property has a body, then it's a stored property
+        // if and only if the declaration body has a `didSet` or `willSet` keyword,
+        // based on the grammar for a variable declaration:
+        // https://docs.swift.org/swift-book/ReferenceManual/Declarations.html#grammar_variable-declaration
+        let formatter = Formatter(tokens)
+        if let keywordIndex = formatter.index(of: .keyword(keyword), after: -1),
+           let startOfPropertyBody = formatter.startOfPropertyBody(
+               at: keywordIndex,
+               endOfPropertyIndex: formatter.tokens.count
+           ),
+           let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: startOfPropertyBody)
+        {
+            return [.identifier("willSet"), .identifier("didSet")].contains(nextToken)
+        }
+
+        // Otherwise, if the property doesn't have a body, then it must not be a computed property.
+        return true
+    }
+
+    /// The original index of this declaration's primary keyword in the given formatter
+    func originalKeywordIndex(in formatter: Formatter) -> Int? {
+        formatter.index(of: .keyword(keyword), after: originalRange.lowerBound - 1)
+    }
+
+    /// Computes the fully qualified name of this declaration, given the array of parent declarations.
+    func fullyQualifiedName(parentDeclarations: [Declaration]) -> String? {
+        guard let name = name else { return nil }
+        let typeNames = parentDeclarations.compactMap(\.name) + [name]
+        return typeNames.joined(separator: ".")
     }
 }
 
@@ -521,17 +563,10 @@ extension Declaration {
                 before: declarationTypeTokenIndex
             ) != nil
 
-            let isDeclarationWithBody: Bool = {
-                // If there is a code block at the end of the declaration that is _not_ a closure,
-                // then this declaration has a body.
-                if let lastClosingBraceIndex = declarationParser.index(of: .endOfScope("}"), before: declarationParser.tokens.count),
-                   let lastOpeningBraceIndex = declarationParser.index(of: .startOfScope("{"), before: lastClosingBraceIndex),
-                   declarationTypeTokenIndex < lastOpeningBraceIndex,
-                   declarationTypeTokenIndex < lastClosingBraceIndex,
-                   !declarationParser.isStartOfClosure(at: lastOpeningBraceIndex) { return true }
-
-                return false
-            }()
+            let isDeclarationWithBody = declarationParser.startOfPropertyBody(
+                at: declarationTypeTokenIndex,
+                endOfPropertyIndex: declarationParser.tokens.count
+            ) != nil
 
             let isViewDeclaration: Bool = {
                 guard let someKeywordIndex = declarationParser.index(
@@ -650,6 +685,26 @@ extension Declaration {
     }
 }
 
+private extension Formatter {
+    /// The open `{` for given property declaration's body, if present
+    func startOfPropertyBody(at introducerIndex: Int, endOfPropertyIndex: Int) -> Int? {
+        guard tokens[introducerIndex] == .keyword("let") || tokens[introducerIndex] == .keyword("var") else {
+            return nil
+        }
+
+        // If there is a code block at the end of the declaration that is _not_ a closure,
+        // then this declaration has a body.
+        guard let lastClosingBraceIndex = index(of: .endOfScope("}"), before: endOfPropertyIndex),
+              let lastOpeningBraceIndex = index(of: .startOfScope("{"), before: lastClosingBraceIndex),
+              introducerIndex < lastOpeningBraceIndex,
+              introducerIndex < lastClosingBraceIndex,
+              !isStartOfClosure(at: lastOpeningBraceIndex)
+        else { return nil }
+
+        return lastOpeningBraceIndex
+    }
+}
+
 // MARK: - Visibility
 
 /// The visibility of a declaration
@@ -757,8 +812,8 @@ extension Declaration {
 
 extension Formatter {
     /// Recursively calls the `operation` for every declaration in the source file
-    func forEachRecursiveDeclaration(_ operation: (Declaration) -> Void) {
-        parseDeclarations().forEachRecursiveDeclaration(operation)
+    func forEachRecursiveDeclaration(_ operation: (Declaration, _ parents: [Declaration]) -> Void) {
+        parseDeclarations().forEachRecursiveDeclaration(operation: operation, parents: [])
     }
 
     /// Applies `mapRecursiveDeclarations` in place
@@ -778,11 +833,14 @@ extension Formatter {
 
 extension Array where Element == Declaration {
     /// Applies `operation` to every recursive declaration of this array of declarations
-    func forEachRecursiveDeclaration(_ operation: (Declaration) -> Void) {
+    func forEachRecursiveDeclaration(
+        operation: (Declaration, _ parents: [Declaration]) -> Void,
+        parents: [Declaration] = []
+    ) {
         for declaration in self {
-            operation(declaration)
+            operation(declaration, parents)
             if let body = declaration.body {
-                body.forEachRecursiveDeclaration(operation)
+                body.forEachRecursiveDeclaration(operation: operation, parents: parents + [declaration])
             }
         }
     }

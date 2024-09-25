@@ -2129,7 +2129,7 @@ extension Formatter {
     }
 
     /// Range of tokens forming file header comment
-    func headerCommentTokenRange(includingDirectives directives: [String]) -> Range<Int>? {
+    func headerCommentTokenRange(includingDirectives directives: [String] = []) -> Range<Int>? {
         guard !options.fragment else {
             return nil
         }
@@ -2259,40 +2259,62 @@ extension Formatter {
         return (equalsIndex, andTokenIndices, lastTypeEndIndex)
     }
 
-    /// Parses the external parameter labels of the function with its `(` start of scope
-    /// token at the given index.
-    func parseFunctionDeclarationArgumentLabels(startOfScope: Int) -> [String?] {
+    /// A function argument like `with foo: Foo`.
+    struct FunctionArgument: Equatable {
+        /// The external label of this argument. `nil` if omitted with an `_`.
+        let externalLabel: String?
+        /// The internal label of this argument. `nil` if omitted with an `_`.
+        let internalLabel: String?
+        /// The type of the argument
+        var type: String
+    }
+
+    /// Parses the arguments of the function with its `(` start of scope token at the given index.
+    func parseFunctionDeclarationArguments(startOfScope: Int) -> [FunctionArgument] {
         assert(tokens[startOfScope] == .startOfScope("("))
         guard let endOfScope = endOfScope(at: startOfScope) else { return [] }
 
-        var argumentLabels: [String?] = []
+        var arguments: [FunctionArgument] = []
 
         var currentIndex = startOfScope
         while let nextArgumentColon = index(of: .delimiter(":"), in: (currentIndex + 1) ..< endOfScope) {
+            let colonIndex = nextArgumentColon
             currentIndex = nextArgumentColon
 
             // If there is only one label, the param has the same internal and external label.
             // If there are two labels, the first one is the external label.
-            guard let internalLabelIndex = index(of: .nonSpaceOrComment, before: nextArgumentColon),
+            guard let internalLabelIndex = index(of: .nonSpaceOrComment, before: colonIndex),
                   tokens[internalLabelIndex].isIdentifier || tokens[internalLabelIndex].string == "_"
             else { continue }
 
-            var externalLabelToken = tokens[internalLabelIndex]
+            var externalLabelIndex = internalLabelIndex
 
-            if let externalLabelIndex = index(of: .nonSpaceOrComment, before: internalLabelIndex),
-               tokens[externalLabelIndex].isIdentifier || tokens[externalLabelIndex].string == "_"
+            if let possibleExternalLabelIndex = index(of: .nonSpaceOrComment, before: internalLabelIndex),
+               tokens[possibleExternalLabelIndex].isIdentifier || tokens[possibleExternalLabelIndex].string == "_"
             {
-                externalLabelToken = tokens[externalLabelIndex]
+                externalLabelIndex = possibleExternalLabelIndex
             }
 
-            if externalLabelToken.string == "_" {
-                argumentLabels.append(nil)
-            } else {
-                argumentLabels.append(externalLabelToken.string)
+            guard let startOfType = index(of: .nonSpaceOrComment, after: colonIndex),
+                  let type = parseType(at: startOfType)?.name
+            else { continue }
+
+            let identifierString: (Token) -> String? = { token in
+                if token.string == "_" {
+                    return nil
+                } else {
+                    return token.string
+                }
             }
+
+            arguments.append(FunctionArgument(
+                externalLabel: identifierString(tokens[externalLabelIndex]),
+                internalLabel: identifierString(tokens[internalLabelIndex]),
+                type: type
+            ))
         }
 
-        return argumentLabels
+        return arguments
     }
 
     /// Parses the parameter labels of the function call with its `(` start of scope
@@ -2327,6 +2349,38 @@ extension Formatter {
         } while true
 
         return argumentLabels
+    }
+
+    /// Parses the list of conformances on this type, starting at
+    /// the index of the type keyword (`struct`, `class`, `extension`, etc).
+    func parseConformancesOfType(atKeywordIndex keywordIndex: Int) -> [(conformance: String, index: Int)] {
+        assert(Token.swiftTypeKeywords.contains(tokens[keywordIndex].string))
+
+        guard let startOfTypeBody = index(of: .startOfScope("{"), after: keywordIndex),
+              let startOfConformanceList = index(of: .delimiter(":"), in: keywordIndex ..< startOfTypeBody)
+        else { return [] }
+
+        var conformances = [(conformance: String, index: Int)]()
+        var searchIndex = startOfConformanceList
+
+        while let nextConformanceIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: searchIndex),
+              tokens[nextConformanceIndex].isIdentifier
+        {
+            conformances.append((conformance: tokens[nextConformanceIndex].string, index: nextConformanceIndex))
+
+            if let nextTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: nextConformanceIndex) {
+                searchIndex = nextTokenIndex
+
+                // Skip over any comma tokens that separate conformances
+                if tokens[nextTokenIndex] == .delimiter(","),
+                   let followingConformanceIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: nextTokenIndex)
+                {
+                    searchIndex = followingConformanceIndex
+                }
+            }
+        }
+
+        return conformances
     }
 }
 

@@ -26,7 +26,7 @@ public extension FormatRule {
 
         // Collect all of the `private` or `fileprivate` declarations in the file
         var privateDeclarations: [Declaration] = []
-        formatter.forEachRecursiveDeclaration { declaration in
+        formatter.forEachRecursiveDeclaration { declaration, _ in
             let declarationModifiers = Set(declaration.modifiers)
             let hasDisallowedModifiers = disallowedModifiers.contains(where: { declarationModifiers.contains($0) })
 

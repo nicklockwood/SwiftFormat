@@ -105,6 +105,7 @@
 * [organizeDeclarations](#organizeDeclarations)
 * [privateStateVariables](#privateStateVariables)
 * [propertyTypes](#propertyTypes)
+* [redundantEquatable](#redundantEquatable)
 * [redundantProperty](#redundantProperty)
 * [sortSwitchCases](#sortSwitchCases)
 * [spacingGuards](#spacingGuards)
@@ -1784,6 +1785,61 @@ which are called immediately.
 - }()
 + lazy var bar = Bar(baaz: baaz,
 +                    quux: quux)
+```
+
+</details>
+<br/>
+
+## redundantEquatable
+
+Omit a hand-written Equatable implementation when the compiler-synthesized conformance would be equivalent.
+
+Option | Description
+--- | ---
+`--equatablemacro` | For example: "@Equatable,EquatableMacroLib"
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  struct Foo: Equatable {
+      let bar: Bar
+      let baaz: Baaz
+
+-     static func ==(lhs: Foo, rhs: Foo) -> Bool {
+-         lhs.bar == rhs.bar 
+-             && lhs.baaz == rhs.baaz
+-     }
+  }
+
+  class Bar: Equatable {
+      let baaz: Baaz
+
+      static func ==(lhs: Bar, rhs: Bar) -> Bool {
+          lhs.baaz == rhs.baaz
+      }
+  }
+```
+
+If your project includes a macro that generates the `static func ==` implementation
+for the attached class, you can specify `--equatablemacro @Equatable,MyMacroLib`
+and this rule will also migrate eligible classes to use your macro instead of
+a hand-written Equatable conformance:
+
+```diff
+  // --equatablemacro @Equatable,MyMacroLib
+  import FooLib
++ import MyMacroLib
+
++ @Equatable
++ class Bar {
+- class Bar: Equatable {
+      let baaz: Baaz
+
+-     static func ==(lhs: Bar, rhs: Bar) -> Bool {
+-         lhs.baaz == rhs.baaz
+-     }
+  }
 ```
 
 </details>

@@ -101,26 +101,8 @@ public extension FormatRule {
 
                 // If this declaration is extension, check if it has any conformances
                 var conformanceNames: String?
-                if declaration.keyword == "extension",
-                   var conformanceSearchIndex = openingFormatter.index(of: .delimiter(":"), after: keywordIndex)
-                {
-                    var conformances = [String]()
-
-                    let endOfConformances = openingFormatter.index(of: .keyword("where"), after: keywordIndex)
-                        ?? openingFormatter.index(of: .startOfScope("{"), after: keywordIndex)
-                        ?? openingFormatter.tokens.count
-
-                    while let token = openingFormatter.token(at: conformanceSearchIndex),
-                          conformanceSearchIndex < endOfConformances
-                    {
-                        if token.isIdentifier {
-                            let (fullyQualifiedName, next) = openingFormatter.fullyQualifiedName(startingAt: conformanceSearchIndex)
-                            conformances.append(fullyQualifiedName)
-                            conformanceSearchIndex = next
-                        }
-
-                        conformanceSearchIndex += 1
-                    }
+                if declaration.keyword == "extension" {
+                    var conformances = openingFormatter.parseConformancesOfType(atKeywordIndex: keywordIndex).map(\.conformance)
 
                     if !conformances.isEmpty {
                         conformanceNames = conformances.joined(separator: ", ")

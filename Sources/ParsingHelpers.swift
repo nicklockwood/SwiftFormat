@@ -1335,7 +1335,7 @@ extension Formatter {
            ["?", "!"].contains(nextToken.string)
         {
             let typeRange = baseType.range.lowerBound ... nextTokenIndex
-            return (name: tokens[typeRange].string, range: typeRange)
+            return (name: tokens[typeRange].stringExcludingLinebreaks, range: typeRange)
         }
 
         // Any type can be followed by a `.` which can then continue the type
@@ -1345,7 +1345,7 @@ extension Formatter {
            let followingType = parseType(at: followingToken, excludeLowercaseIdentifiers: excludeLowercaseIdentifiers)
         {
             let typeRange = startOfTypeIndex ... followingType.range.upperBound
-            return (name: tokens[typeRange].string, range: typeRange)
+            return (name: tokens[typeRange].stringExcludingLinebreaks, range: typeRange)
         }
 
         return baseType
@@ -1379,7 +1379,7 @@ extension Formatter {
             }
 
             let typeRange = startOfTypeIndex ... endOfScope
-            return (name: tokens[typeRange].string, range: typeRange)
+            return (name: tokens[typeRange].stringExcludingLinebreaks, range: typeRange)
         }
 
         // Parse types of the form `(...)` or `(...) -> ...`
@@ -1391,12 +1391,12 @@ extension Formatter {
                let returnTypeRange = parseType(at: returnTypeIndex)?.range
             {
                 let typeRange = startOfTypeIndex ... returnTypeRange.upperBound
-                return (name: tokens[typeRange].string, range: typeRange)
+                return (name: tokens[typeRange].stringExcludingLinebreaks, range: typeRange)
             }
 
             // Otherwise this is just `(...)`
             let typeRange = startOfTypeIndex ... endOfScope
-            return (name: tokens[typeRange].string, range: typeRange)
+            return (name: tokens[typeRange].stringExcludingLinebreaks, range: typeRange)
         }
 
         // Parse types of the form `Foo<...>`
@@ -1405,7 +1405,7 @@ extension Formatter {
            let endOfScope = endOfScope(at: nextTokenIndex)
         {
             let typeRange = startOfTypeIndex ... endOfScope
-            return (name: tokens[typeRange].string, range: typeRange)
+            return (name: tokens[typeRange].stringExcludingLinebreaks, range: typeRange)
         }
 
         // Parse types of the form `any ...`, `some ...`, `borrowing ...`, `consuming ...`
@@ -1414,7 +1414,7 @@ extension Formatter {
            let followingType = parseType(at: nextToken)
         {
             let typeRange = startOfTypeIndex ... followingType.range.upperBound
-            return (name: tokens[typeRange].string, range: typeRange)
+            return (name: tokens[typeRange].stringExcludingLinebreaks, range: typeRange)
         }
 
         // Otherwise this is just a single identifier
@@ -1910,25 +1910,6 @@ extension Formatter {
         return (argumentNames: argumentNames, inKeywordIndex: inKeywordIndex)
     }
 
-    /// The fully qualified name starting at the given index
-    func fullyQualifiedName(startingAt index: Int) -> (name: String, endIndex: Int) {
-        // If the identifier is followed by a dot, it's actually the first
-        // part of the fully-qualified name and we should skip through
-        // to the last component of the name.
-        var name = tokens[index].string
-        var index = index
-
-        while token(at: index + 1)?.string == ".",
-              let nextIdentifier = token(at: index + 2),
-              nextIdentifier.is(.identifier) == true
-        {
-            name = "\(name).\(nextIdentifier.string)"
-            index += 2
-        }
-
-        return (name, index)
-    }
-
     /// Get the type of the declaration starting at the index of the declaration keyword
     func declarationType(at index: Int) -> String? {
         guard let token = token(at: index), token.isDeclarationTypeKeyword,
@@ -2327,6 +2308,43 @@ extension Formatter {
         } while true
 
         return argumentLabels
+    }
+
+    /// Parses the list of conformances on this type, starting at
+    /// the index of the type keyword (`struct`, `class`, `extension`, etc).
+    func parseConformancesOfType(atKeywordIndex keywordIndex: Int) -> [(conformance: String, index: Int)] {
+        assert(Token.swiftTypeKeywords.contains(tokens[keywordIndex].string))
+
+        guard let startOfType = index(of: .nonSpaceOrCommentOrLinebreak, after: keywordIndex),
+              let typeName = parseType(at: startOfType),
+              let indexAfterType = index(of: .nonSpaceOrCommentOrLinebreak, after: typeName.range.upperBound),
+              tokens[indexAfterType] == .delimiter(":"),
+              let firstConformanceIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: indexAfterType)
+        else { return [] }
+
+        var conformances = [(conformance: String, index: Int)]()
+        var nextConformanceIndex = firstConformanceIndex
+
+        while let type = parseType(at: nextConformanceIndex) {
+            conformances.append((conformance: type.name, index: nextConformanceIndex))
+
+            if let nextTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: type.range.upperBound) {
+                nextConformanceIndex = nextTokenIndex
+
+                // Skip over any comma tokens that separate conformances.
+                // If we find something other than a comma, like a `where` or `{`,
+                // then we reached the end of the conformance list.
+                guard tokens[nextTokenIndex] == .delimiter(","),
+                      let followingConformanceIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: nextTokenIndex)
+                else {
+                    return conformances
+                }
+
+                nextConformanceIndex = followingConformanceIndex
+            }
+        }
+
+        return conformances
     }
 }
 

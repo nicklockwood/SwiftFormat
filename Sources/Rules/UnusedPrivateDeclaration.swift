@@ -32,6 +32,7 @@ public extension FormatRule {
 
             guard allowlist.contains(declaration.keyword),
                   let name = declaration.name,
+                  !name.isOperator,
                   !formatter.options.preservedPrivateDeclarations.contains(name),
                   !hasDisallowedModifiers
             else { return }

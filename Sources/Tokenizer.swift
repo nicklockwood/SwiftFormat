@@ -555,9 +555,31 @@ extension Token {
     }
 }
 
-extension Collection where Element == Token {
+extension Collection where Element == Token, Index == Int {
     var string: String {
         map(\.string).joined()
+    }
+
+    /// A string representation of this array of tokens,
+    /// excluding any newlines and following indentation.
+    var stringExcludingLinebreaks: String {
+        var tokens: [Token] = []
+
+        var index = indices.startIndex
+        while index < indices.endIndex {
+            // Skip over any linebreaks, and any indentation following the linebreak
+            if self[index].isLinebreak {
+                index += 1
+                while self[index].isSpace, index < indices.endIndex {
+                    index += 1
+                }
+            }
+
+            tokens.append(self[index])
+            index += 1
+        }
+
+        return tokens.string
     }
 }
 

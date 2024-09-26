@@ -115,15 +115,23 @@ enum Declaration: Hashable {
 
     /// The name of this type or variable
     var name: String? {
+        // Conditional compilation blocks don't have a "name"
+        guard keyword != "#if" else { return nil }
+
         let parser = Formatter(openTokens)
         guard let keywordIndex = openTokens.firstIndex(of: .keyword(keyword)),
-              let nameIndex = parser.index(of: .nonSpaceOrCommentOrLinebreak, after: keywordIndex),
-              parser.tokens[nameIndex].isIdentifierOrKeyword
+              let nameIndex = parser.index(of: .nonSpaceOrCommentOrLinebreak, after: keywordIndex)
         else {
             return nil
         }
 
-        return parser.fullyQualifiedName(startingAt: nameIndex).name
+        // An extension can refer to complicated types like `Foo.Bar`, `[Foo]`, `Collection<Foo>`, etc.
+        // Every other declaration type just uses a simple identifier.
+        if keyword == "extension" {
+            return parser.parseType(at: nameIndex)?.name
+        } else {
+            return parser.tokens[nameIndex].string
+        }
     }
 
     /// The original range of the tokens of this declaration in the original source file

@@ -2135,7 +2135,7 @@ extension Formatter {
     }
 
     /// Range of tokens forming file header comment
-    func headerCommentTokenRange(includingDirectives directives: [String]) -> Range<Int>? {
+    func headerCommentTokenRange(includingDirectives directives: [String] = []) -> Range<Int>? {
         guard !options.fragment else {
             return nil
         }

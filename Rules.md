@@ -1805,14 +1805,19 @@ which are called immediately.
 
 Omit a hand-written Equatable implementation when the compiler-synthesized conformance would be equivalent.
 
+Option | Description
+--- | ---
+`--equatablemacro` | For example: "@Equatable,EquatableMacroLib"
+
 <details>
 <summary>Examples</summary>
 
+```diff
   struct Foo: Equatable {
       let bar: Bar
       let baaz: Baaz
 
--     static func ==(_ lhs: Foo, _ rhs: Foo) -> Bool {
+-     static func ==(lhs: Foo, rhs: Foo) -> Bool {
 -         lhs.bar == rhs.bar 
 -             && lhs.baaz == rhs.baaz
 -     }
@@ -1821,10 +1826,32 @@ Omit a hand-written Equatable implementation when the compiler-synthesized confo
   class Bar: Equatable {
       let baaz: Baaz
 
-      static func ==(_ lhs: Foo, _ rhs: Foo) -> Bool {
+      static func ==(lhs: Bar, rhs: Bar) -> Bool {
           lhs.baaz == rhs.baaz
       }
   }
+```
+
+If your project includes a macro that generates the `static func ==` implementation
+for the attached class, you can specify `--equatablemacro @Equatable,MyMacroLib`
+and this rule will also migrate eligible classes to use your macro instead of
+a hand-written Equatable conformance:
+
+```diff
+  // --equatablemacro @Equatable,MyMacroLib
+  import FooLib
++ import MyMacroLib
+
++ @Equatable
++ class Bar {
+- class Bar: Equatable {
+      let baaz: Baaz
+
+-     static func ==(lhs: Bar, rhs: Bar) -> Bool {
+-         lhs.baaz == rhs.baaz
+-     }
+  }
+```
 
 </details>
 <br/>

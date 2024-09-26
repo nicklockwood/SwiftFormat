@@ -122,7 +122,13 @@ enum Declaration: Hashable {
             return nil
         }
 
-        return parser.fullyQualifiedName(startingAt: nameIndex).name
+        // An extension can refer to complicated types like `Foo.Bar`, `[Foo]`, `Collection<Foo>`, etc.
+        // Every other declaration type just uses a simple identifier.
+        if keyword == "extension" {
+            return parser.parseType(at: nameIndex)?.name
+        } else {
+            return parser.tokens[nameIndex].string
+        }
     }
 
     /// The original range of the tokens of this declaration in the original source file

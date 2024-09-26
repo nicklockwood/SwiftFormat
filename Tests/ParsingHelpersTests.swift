@@ -2106,6 +2106,18 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(formatter.parseType(at: 7)?.name, nil)
     }
 
+    func testMultilineType() {
+        let formatter = Formatter(tokenize("""
+        extension Foo.Bar
+            .Baaz.Quux
+            .InnerType1
+            .InnerType2
+        { }
+        """))
+
+        XCTAssertEqual(formatter.parseType(at: 2)?.name, "Foo.Bar.Baaz.Quux.InnerType1.InnerType2")
+    }
+
     func testEndOfDeclaration() {
         let formatter = Formatter(tokenize("""
         public enum MyFeatureCacheStrategy {

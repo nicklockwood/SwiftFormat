@@ -137,14 +137,15 @@ public extension FormatRule {
         + import MyMacroLib
 
         + @Equatable
-        + class Bar {
-        - class Bar: Equatable {
+          class Bar {
               let baaz: Baaz
+          }
 
+        - extension Bar: Equatable {
         -     static func ==(lhs: Bar, rhs: Bar) -> Bool {
         -         lhs.baaz == rhs.baaz
         -     }
-          }
+        - }
         ```
         """
     }

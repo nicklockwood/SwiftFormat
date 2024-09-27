@@ -920,4 +920,64 @@ class MarkTypesTests: XCTestCase {
 
         testFormatting(for: input, output, rule: .markTypes)
     }
+
+    func testSupportsUncheckedSendable() {
+        let input = """
+        struct Foo {}
+
+        extension Foo: @unchecked Sendable {}
+        """
+
+        let output = """
+        // MARK: - Foo
+
+        struct Foo {}
+
+        // MARK: @unchecked Sendable
+
+        extension Foo: @unchecked Sendable {}
+        """
+
+        testFormatting(for: input, output, rule: .markTypes)
+    }
+
+    func testSupportsProtocolCompositions() {
+        let input = """
+        struct Foo {}
+
+        extension Foo: Bar & Baaz {}
+        """
+
+        let output = """
+        // MARK: - Foo
+
+        struct Foo {}
+
+        // MARK: Bar & Baaz
+
+        extension Foo: Bar & Baaz {}
+        """
+
+        testFormatting(for: input, output, rule: .markTypes)
+    }
+
+    func testSupportsMaybeCopiable() {
+        let input = """
+        struct Foo {}
+
+        extension Foo: ~Copyable {}
+        """
+
+        let output = """
+        // MARK: - Foo
+
+        struct Foo {}
+
+        // MARK: ~Copyable
+
+        extension Foo: ~Copyable {}
+        """
+
+        testFormatting(for: input, output, rule: .markTypes)
+    }
 }

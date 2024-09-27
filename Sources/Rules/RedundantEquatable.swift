@@ -317,7 +317,6 @@ extension Formatter {
     /// Adds imports for the given list of modules to this file if not already present
     func addImports(_ importsToAddIfNeeded: Set<String>) {
         let importRanges = parseImports()
-        let firstImport = importRanges.first?.first
         let currentImports = Set(importRanges.flatMap { $0.map(\.module) })
 
         for importToAddIfNeeded in importsToAddIfNeeded {

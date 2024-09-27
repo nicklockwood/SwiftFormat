@@ -113,7 +113,7 @@ enum Declaration: Hashable {
         }
     }
 
-    /// The name of this type or variable, which always follows the
+    /// The name of this type or variable
     var name: String? {
         let parser = Formatter(openTokens)
         guard let keywordIndex = openTokens.firstIndex(of: .keyword(keyword)),

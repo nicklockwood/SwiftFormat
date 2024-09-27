@@ -42,7 +42,6 @@
 * [redundantBackticks](#redundantBackticks)
 * [redundantBreak](#redundantBreak)
 * [redundantClosure](#redundantClosure)
-* [redundantEquatable](#redundantEquatable)
 * [redundantExtensionACL](#redundantExtensionACL)
 * [redundantFileprivate](#redundantFileprivate)
 * [redundantGet](#redundantGet)
@@ -107,6 +106,7 @@
 * [organizeDeclarations](#organizeDeclarations)
 * [privateStateVariables](#privateStateVariables)
 * [propertyType](#propertyType)
+* [redundantEquatable](#redundantEquatable)
 * [redundantProperty](#redundantProperty)
 * [sortSwitchCases](#sortSwitchCases)
 * [spacingGuards](#spacingGuards)
@@ -1843,14 +1843,15 @@ a hand-written Equatable conformance:
 + import MyMacroLib
 
 + @Equatable
-+ class Bar {
-- class Bar: Equatable {
+  class Bar {
       let baaz: Baaz
+  }
 
+- extension Bar: Equatable {
 -     static func ==(lhs: Bar, rhs: Bar) -> Bool {
 -         lhs.baaz == rhs.baaz
 -     }
-  }
+- }
 ```
 
 </details>

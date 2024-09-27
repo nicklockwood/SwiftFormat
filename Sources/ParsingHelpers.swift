@@ -1320,7 +1320,11 @@ extension Formatter {
     ///  - `some ...`
     ///  - `borrowing ...`
     ///  - `consuming ...`
+    ///  - `@escaping ...`
+    ///  - `@unchecked ...`
+    ///  - `~...`
     ///  - `(type).(type)`
+    ///  - `(type) & (type)`
     func parseType(
         at startOfTypeIndex: Int,
         excludeLowercaseIdentifiers: Bool = false
@@ -1344,9 +1348,10 @@ extension Formatter {
             return (name: tokens[typeRange].stringExcludingNewlines, range: typeRange)
         }
 
-        // Any type can be followed by a `.` which can then continue the type
+        // Any type can be followed by a `.` or `&` which can then continue the type
+        let continuationOperators: [Token] = [.operator(".", .infix), .operator("&", .infix)]
         if let nextTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: baseType.range.upperBound),
-           tokens[nextTokenIndex] == .operator(".", .infix),
+           continuationOperators.contains(tokens[nextTokenIndex]),
            let followingToken = index(of: .nonSpaceOrCommentOrLinebreak, after: nextTokenIndex),
            let followingType = parseType(at: followingToken, excludeLowercaseIdentifiers: excludeLowercaseIdentifiers)
         {
@@ -1414,8 +1419,10 @@ extension Formatter {
             return (name: tokens[typeRange].stringExcludingNewlines, range: typeRange)
         }
 
-        // Parse types of the form `any ...`, `some ...`, `borrowing ...`, `consuming ...`
-        if ["any", "some", "borrowing", "consuming"].contains(startToken.string),
+        // Parse types of the form `any ...`, `some ...`, `borrowing ...`, `consuming ...`,
+        // `@unchecked ...`, `@escaping ...`, `~...`,
+        let typePrefixes = Set(["any", "some", "borrowing", "consuming", "@unchecked", "@escaping", "~"])
+        if typePrefixes.contains(startToken.string),
            let nextToken = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfTypeIndex),
            let followingType = parseType(at: nextToken)
         {
@@ -2214,36 +2221,17 @@ extension Formatter {
         -> (equalsIndex: Int, andTokenIndices: [Int], endIndex: Int)?
     {
         guard let equalsIndex = index(of: .operator("=", .infix), after: typealiasIndex),
-              // Any type can follow the equals index of a typealias,
-              // but we're specifically looking for protocol compositions.
-              //  - Valid composite protocols are strictly _only_ prootocol types
-              //    separated by `&` tokens. These always start with identifiers,
-              //    but can be generic (e.g. `Collection<Int>`).
-              //  - `&` tokens in types are also _only valid_ for composite protocol types,
-              //    so if we see one then we know this if what we're looking for.
-              // https://docs.swift.org/swift-book/ReferenceManual/Types.html#grammar_protocol-composition-type
-              let firstIdentifierIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
-              tokens[firstIdentifierIndex].isIdentifier,
-              var lastTypeEndIndex = parseType(at: firstIdentifierIndex)?.range.upperBound,
-              let firstAndIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: lastTypeEndIndex),
-              tokens[firstAndIndex] == .operator("&", .infix)
+              let startOfType = index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
+              let type = parseType(at: startOfType)
         else { return nil }
 
-        // Parse through to the end of the composite protocol type
-        // so we know how long it is (and where the &s are)
-        var andTokenIndices = [Int]()
-
-        while let nextAndIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: lastTypeEndIndex),
-              tokens[nextAndIndex] == .operator("&", .infix),
-              let nextIdentifierIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: nextAndIndex),
-              tokens[nextIdentifierIndex].isIdentifier,
-              let endOfType = parseType(at: nextIdentifierIndex)?.range.upperBound
-        {
-            andTokenIndices.append(nextAndIndex)
-            lastTypeEndIndex = endOfType
+        let andTokenIndices = type.range.filter { index in
+            tokens[index] == .operator("&", .infix)
         }
 
-        return (equalsIndex, andTokenIndices, lastTypeEndIndex)
+        guard !andTokenIndices.isEmpty else { return nil }
+
+        return (equalsIndex, andTokenIndices, type.range.upperBound)
     }
 
     /// A function argument like `with foo: Foo`.

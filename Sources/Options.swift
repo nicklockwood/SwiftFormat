@@ -718,6 +718,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var nilInit: NilInitType
     public var preservedPrivateDeclarations: Set<String>
     public var equatableMacroInfo: EquatableMacroInfo?
+    public var preferFileMacro: Bool
 
     /// Deprecated
     public var indentComments: Bool
@@ -845,6 +846,7 @@ public struct FormatOptions: CustomStringConvertible {
                 nilInit: NilInitType = .remove,
                 preservedPrivateDeclarations: Set<String> = [],
                 equatableMacroInfo: EquatableMacroInfo? = nil,
+                preferFileMacro: Bool = true,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -962,6 +964,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.nilInit = nilInit
         self.preservedPrivateDeclarations = preservedPrivateDeclarations
         self.equatableMacroInfo = equatableMacroInfo
+        self.preferFileMacro = preferFileMacro
         // Doesn't really belong here, but hard to put elsewhere
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

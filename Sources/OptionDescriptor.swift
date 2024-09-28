@@ -1238,6 +1238,20 @@ struct _Descriptors {
         help: "For example: \"@Equatable,EquatableMacroLib\"",
         keyPath: \.equatableMacroInfo
     )
+    let preserveSymbols = OptionDescriptor(
+        argumentName: "preservesymbols",
+        displayName: "Preserve Symbols",
+        help: "Comma-delimited list of symbol names to preserve",
+        keyPath: \.preserveSymbols
+    )
+    let preferFileMacro = OptionDescriptor(
+        argumentName: "filemacro",
+        displayName: "Preferred File Macro",
+        help: "File macro to prefer: \"#file\" (default) or \"#fileID\".",
+        keyPath: \.preferFileMacro,
+        trueValues: ["#file", "file"],
+        falseValues: ["#fileID", "fileID"]
+    )
 
     // MARK: - Internal
 
@@ -1268,12 +1282,6 @@ struct _Descriptors {
         displayName: "Swift Language Mode",
         help: "The Swift language mode used in the files being formatted",
         keyPath: \.languageMode
-    )
-    let preserveSymbols = OptionDescriptor(
-        argumentName: "preservesymbols",
-        displayName: "Preserve Symbols",
-        help: "Comma-delimited list of symbol names to preserve",
-        keyPath: \.preserveSymbols
     )
 
     // MARK: - DEPRECATED

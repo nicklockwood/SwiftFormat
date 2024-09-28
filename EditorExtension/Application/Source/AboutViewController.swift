@@ -36,12 +36,30 @@ final class AboutViewController: NSViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        if ProcessInfo.processInfo.operatingSystemVersion.majorVersion < 13 {
+        switch ProcessInfo.processInfo.operatingSystemVersion.majorVersion {
+        case ..<13:
             instructionsLabel.stringValue = """
             1. Open System Settings
             2. Click on "Extensions"
             3. Select "Xcode Source Editor"
             4. Ensure the checkbox next to "SwiftFormat" is checked
+            5. Relaunch Xcode
+            """
+        case ..<15:
+            instructionsLabel.stringValue = """
+            1. Open System Preferences
+            2. Click on "Privacy & Security"
+            3. Click on "Extensions"
+            4. Select "Xcode Source Editor"
+            5. Ensure the checkbox next to "SwiftFormat" is checked
+            6. Relaunch Xcode
+            """
+        default:
+            instructionsLabel.stringValue = """
+            1. Open System Settings
+            2. In "General", click on "Login Items & Extensions"
+            3. Below "Extensions", click the ⓘ next to "Xcode Source Editor"
+            4. Ensure the checkbox next to "SwiftFormat for Xcode" is checked
             5. Relaunch Xcode
             """
         }

@@ -1797,6 +1797,19 @@ class RedundancyTests: RulesTests {
                        options: options)
     }
 
+    func testClassWithWhereNotMistakenForLocalScope() {
+        let input = """
+        final class Foo<Bar> where Bar: Equatable {
+            var isFoo: Bool = false
+            var fooName: String = "name"
+        }
+        """
+
+        let options = FormatOptions(redundantType: .inferLocalsOnly)
+        testFormatting(for: input, rule: FormatRules.redundantType,
+                       options: options)
+    }
+
     // MARK: - redundantNilInit
 
     func testRemoveRedundantNilInit() {

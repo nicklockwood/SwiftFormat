@@ -560,4 +560,20 @@ class BracesTests: RulesTests {
         let options = FormatOptions(wrapArguments: .beforeFirst, closingParenPosition: .sameLine)
         testFormatting(for: input, rules: [FormatRules.braces, FormatRules.wrapMultilineStatementBraces], options: options)
     }
+
+    func testWrapInitBraceWithComplexWhereClause() {
+        let input = """
+        class Bar {
+            init(
+                foo: Foo
+            ) where
+                Foo: Fooable,
+                Foo.Something == Something
+            {
+                self.foo = foo
+            }
+        }
+        """
+        testFormatting(for: input, rules: [FormatRules.braces, FormatRules.wrapMultilineStatementBraces])
+    }
 }

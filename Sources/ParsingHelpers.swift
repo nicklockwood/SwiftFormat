@@ -587,7 +587,7 @@ extension Formatter {
             {
                 return false
             }
-            guard let prevKeywordIndex = indexOfLastSignificantKeyword(at: prevIndex) else {
+            guard let prevKeywordIndex = indexOfLastSignificantKeyword(at: prevIndex, excluding: ["where"]) else {
                 return true
             }
             switch tokens[prevKeywordIndex].string {
@@ -620,7 +620,7 @@ extension Formatter {
                 }
                 return false
             case "class", "actor", "struct", "enum", "protocol", "extension",
-                 "func", "subscript", "catch":
+                 "func", "init", "subscript", "catch":
                 return false
             case "throws", "rethrows":
                 return next(.keyword, after: prevKeywordIndex) == .keyword("in")
@@ -713,7 +713,7 @@ extension Formatter {
     /// If the token at the specified index is part of a conditional statement, returns the index of the first
     /// token in the statement (e.g. `if`, `guard`, `while`, etc.), otherwise returns nil
     func startOfConditionalStatement(at i: Int, excluding: Set<String> = []) -> Int? {
-        guard var index = indexOfLastSignificantKeyword(at: i, excluding: excluding.union(["else"])) else {
+        guard var index = indexOfLastSignificantKeyword(at: i, excluding: excluding.union(["else", "where"])) else {
             return nil
         }
 
@@ -741,7 +741,7 @@ extension Formatter {
             default:
                 return nil
             }
-        case "if", "guard", "while", "for", "case", "where", "switch":
+        case "if", "guard", "while", "for", "case", "switch":
             return index
         default:
             return nil

@@ -49,6 +49,16 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertFalse(formatter.isStartOfClosure(at: 4))
     }
 
+    func testTypeWhereBracesNotTreatedAsClosure() {
+        let formatter = Formatter(tokenize("class Foo<T> where T: Equatable {}"))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 14))
+    }
+
+    func testInitWhereBracesNotTreatedAsClosure() {
+        let formatter = Formatter(tokenize("init() where T: Equatable {}"))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 11))
+    }
+
     // conditional statements
 
     func testIfBracesNotTreatedAsClosure() {

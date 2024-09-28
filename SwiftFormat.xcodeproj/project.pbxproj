@@ -625,11 +625,11 @@
 		2E8DE7602C57FEB30032BF25 /* InitCoderUnavailableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E8DE6F52C57FEB30032BF25 /* InitCoderUnavailableTests.swift */; };
 		2E8DE7612C57FEB30032BF25 /* RedundantFileprivateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E8DE6F62C57FEB30032BF25 /* RedundantFileprivateTests.swift */; };
 		2E8DE7622C57FEB30032BF25 /* WrapSingleLineCommentsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E8DE6F72C57FEB30032BF25 /* WrapSingleLineCommentsTests.swift */; };
-		2E9DE5062C95F9A1000FEDF8 /* NoFileID.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E9DE5052C95F9A1000FEDF8 /* NoFileID.swift */; };
-		2E9DE5072C95F9A1000FEDF8 /* NoFileID.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E9DE5052C95F9A1000FEDF8 /* NoFileID.swift */; };
-		2E9DE5082C95F9A1000FEDF8 /* NoFileID.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E9DE5052C95F9A1000FEDF8 /* NoFileID.swift */; };
-		2E9DE5092C95F9A1000FEDF8 /* NoFileID.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E9DE5052C95F9A1000FEDF8 /* NoFileID.swift */; };
-		2E9DE50F2C95FBB6000FEDF8 /* NoFileIDTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E9DE50A2C95FB4F000FEDF8 /* NoFileIDTests.swift */; };
+		2E9DE5062C95F9A1000FEDF8 /* FileMacro.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E9DE5052C95F9A1000FEDF8 /* FileMacro.swift */; };
+		2E9DE5072C95F9A1000FEDF8 /* FileMacro.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E9DE5052C95F9A1000FEDF8 /* FileMacro.swift */; };
+		2E9DE5082C95F9A1000FEDF8 /* FileMacro.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E9DE5052C95F9A1000FEDF8 /* FileMacro.swift */; };
+		2E9DE5092C95F9A1000FEDF8 /* FileMacro.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E9DE5052C95F9A1000FEDF8 /* FileMacro.swift */; };
+		2E9DE50F2C95FBB6000FEDF8 /* FileMacroTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E9DE50A2C95FB4F000FEDF8 /* FileMacroTests.swift */; };
 		2EF737522C5E881C00128F91 /* CodeOrganizationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EF737512C5E881C00128F91 /* CodeOrganizationTests.swift */; };
 		2EF737542C5E897800128F91 /* ProjectFilePaths.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EF737532C5E897800128F91 /* ProjectFilePaths.swift */; };
 		2EF737562C5ED19600128F91 /* DocCommentsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EF737552C5ED19600128F91 /* DocCommentsTests.swift */; };
@@ -1009,8 +1009,8 @@
 		2E8DE6F52C57FEB30032BF25 /* InitCoderUnavailableTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InitCoderUnavailableTests.swift; sourceTree = "<group>"; };
 		2E8DE6F62C57FEB30032BF25 /* RedundantFileprivateTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RedundantFileprivateTests.swift; sourceTree = "<group>"; };
 		2E8DE6F72C57FEB30032BF25 /* WrapSingleLineCommentsTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WrapSingleLineCommentsTests.swift; sourceTree = "<group>"; };
-		2E9DE5052C95F9A1000FEDF8 /* NoFileID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoFileID.swift; sourceTree = "<group>"; };
-		2E9DE50A2C95FB4F000FEDF8 /* NoFileIDTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoFileIDTests.swift; sourceTree = "<group>"; };
+		2E9DE5052C95F9A1000FEDF8 /* FileMacro.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileMacro.swift; sourceTree = "<group>"; };
+		2E9DE50A2C95FB4F000FEDF8 /* FileMacroTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileMacroTests.swift; sourceTree = "<group>"; };
 		2EF737512C5E881C00128F91 /* CodeOrganizationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeOrganizationTests.swift; sourceTree = "<group>"; };
 		2EF737532C5E897800128F91 /* ProjectFilePaths.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectFilePaths.swift; sourceTree = "<group>"; };
 		2EF737552C5ED19600128F91 /* DocCommentsTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DocCommentsTests.swift; sourceTree = "<group>"; };
@@ -1225,7 +1225,6 @@
 		2E2BAB902C57F6DD00590239 /* Rules */ = {
 			isa = PBXGroup;
 			children = (
-				082D644A2CA4719B0072DA14 /* RedundantEquatable.swift */,
 				2E2BABF02C57F6DD00590239 /* Acronyms.swift */,
 				2E2BABE22C57F6DD00590239 /* AndOperator.swift */,
 				2E2BABE82C57F6DD00590239 /* AnyObjectProtocol.swift */,
@@ -1254,6 +1253,7 @@
 				2E2BABD92C57F6DD00590239 /* EnumNamespaces.swift */,
 				2E2BABC72C57F6DD00590239 /* ExtensionAccessControl.swift */,
 				2E2BABC02C57F6DD00590239 /* FileHeader.swift */,
+				2E9DE5052C95F9A1000FEDF8 /* FileMacro.swift */,
 				2E2BABCA2C57F6DD00590239 /* GenericExtensions.swift */,
 				2E2BABC32C57F6DD00590239 /* HeaderFileName.swift */,
 				2E2BABEB2C57F6DD00590239 /* HoistAwait.swift */,
@@ -1268,7 +1268,6 @@
 				2E2BABE12C57F6DD00590239 /* MarkTypes.swift */,
 				2E2BABD82C57F6DD00590239 /* ModifierOrder.swift */,
 				2E2BABB92C57F6DD00590239 /* NoExplicitOwnership.swift */,
-				2E9DE5052C95F9A1000FEDF8 /* NoFileID.swift */,
 				2E2BABF62C57F6DD00590239 /* NumberFormatting.swift */,
 				2E2BABED2C57F6DD00590239 /* OpaqueGenericParameters.swift */,
 				2E2BABBF2C57F6DD00590239 /* OrganizeDeclarations.swift */,
@@ -1279,6 +1278,7 @@
 				2E2BABE92C57F6DD00590239 /* RedundantBackticks.swift */,
 				2E2BAB922C57F6DD00590239 /* RedundantBreak.swift */,
 				2E2BABBE2C57F6DD00590239 /* RedundantClosure.swift */,
+				082D644A2CA4719B0072DA14 /* RedundantEquatable.swift */,
 				2E2BAB982C57F6DD00590239 /* RedundantExtensionACL.swift */,
 				2E2BABA82C57F6DD00590239 /* RedundantFileprivate.swift */,
 				2E2BABA22C57F6DD00590239 /* RedundantGet.swift */,
@@ -1347,7 +1347,6 @@
 		2E8DE68C2C57FEB30032BF25 /* Rules */ = {
 			isa = PBXGroup;
 			children = (
-				082D644F2CA471F00072DA14 /* RedundantEquatableTests.swift */,
 				2E8DE6D02C57FEB30032BF25 /* AcronymsTests.swift */,
 				2E8DE6F02C57FEB30032BF25 /* AndOperatorTests.swift */,
 				2E8DE6BB2C57FEB30032BF25 /* AnyObjectProtocolTests.swift */,
@@ -1376,6 +1375,7 @@
 				2E8DE6972C57FEB30032BF25 /* EnumNamespacesTests.swift */,
 				2E8DE6992C57FEB30032BF25 /* ExtensionAccessControlTests.swift */,
 				2E8DE6962C57FEB30032BF25 /* FileHeaderTests.swift */,
+				2E9DE50A2C95FB4F000FEDF8 /* FileMacroTests.swift */,
 				2E8DE6AF2C57FEB30032BF25 /* GenericExtensionsTests.swift */,
 				2E8DE6DE2C57FEB30032BF25 /* HeaderFileNameTests.swift */,
 				2E8DE6C62C57FEB30032BF25 /* HoistAwaitTests.swift */,
@@ -1390,7 +1390,6 @@
 				2E8DE6E72C57FEB30032BF25 /* MarkTypesTests.swift */,
 				2E8DE6A02C57FEB30032BF25 /* ModifierOrderTests.swift */,
 				2E8DE6D42C57FEB30032BF25 /* NoExplicitOwnershipTests.swift */,
-				2E9DE50A2C95FB4F000FEDF8 /* NoFileIDTests.swift */,
 				2E8DE6B02C57FEB30032BF25 /* NumberFormattingTests.swift */,
 				2E8DE69E2C57FEB30032BF25 /* OpaqueGenericParametersTests.swift */,
 				2E8DE6E22C57FEB30032BF25 /* OrganizeDeclarationsTests.swift */,
@@ -1401,6 +1400,7 @@
 				2E8DE6C42C57FEB30032BF25 /* RedundantBackticksTests.swift */,
 				2E8DE6BC2C57FEB30032BF25 /* RedundantBreakTests.swift */,
 				2E8DE68D2C57FEB30032BF25 /* RedundantClosureTests.swift */,
+				082D644F2CA471F00072DA14 /* RedundantEquatableTests.swift */,
 				2E8DE6DF2C57FEB30032BF25 /* RedundantExtensionACLTests.swift */,
 				2E8DE6F62C57FEB30032BF25 /* RedundantFileprivateTests.swift */,
 				2E8DE6DD2C57FEB30032BF25 /* RedundantGetTests.swift */,
@@ -1931,7 +1931,7 @@
 				2E2BAC0F2C57F6DD00590239 /* WrapMultilineConditionalAssignment.swift in Sources */,
 				2E2BAD072C57F6DD00590239 /* RedundantPattern.swift in Sources */,
 				2E2BACE72C57F6DD00590239 /* TrailingSpace.swift in Sources */,
-				2E9DE5062C95F9A1000FEDF8 /* NoFileID.swift in Sources */,
+				2E9DE5062C95F9A1000FEDF8 /* FileMacro.swift in Sources */,
 				2E2BACEF2C57F6DD00590239 /* ConditionalAssignment.swift in Sources */,
 				9BDB4F1E2C9477FF00C93995 /* PrivateStateVariables.swift in Sources */,
 				2E2BAD172C57F6DD00590239 /* BlankLineAfterImports.swift in Sources */,
@@ -1959,7 +1959,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2E9DE50F2C95FBB6000FEDF8 /* NoFileIDTests.swift in Sources */,
+				2E9DE50F2C95FBB6000FEDF8 /* FileMacroTests.swift in Sources */,
 				2E8DE74A2C57FEB30032BF25 /* RedundantExtensionACLTests.swift in Sources */,
 				01A0EAB41D5DB4D000A0A8E3 /* XCTestCase+testFormatting.swift in Sources */,
 				2E8DE7602C57FEB30032BF25 /* InitCoderUnavailableTests.swift in Sources */,
@@ -2221,7 +2221,7 @@
 				2E2BACAC2C57F6DD00590239 /* RedundantLetError.swift in Sources */,
 				01045A9A2119979400D2BE3D /* Arguments.swift in Sources */,
 				580496D62C584E8F004B7DBF /* EmptyExtension.swift in Sources */,
-				2E9DE5072C95F9A1000FEDF8 /* NoFileID.swift in Sources */,
+				2E9DE5072C95F9A1000FEDF8 /* FileMacro.swift in Sources */,
 				2E2BAD482C57F6DD00590239 /* WrapLoopBodies.swift in Sources */,
 				2E2BAD082C57F6DD00590239 /* RedundantPattern.swift in Sources */,
 				2E2BAD042C57F6DD00590239 /* SpaceInsideBraces.swift in Sources */,
@@ -2280,7 +2280,7 @@
 				2E2BACED2C57F6DD00590239 /* RedundantObjc.swift in Sources */,
 				2E2BAC692C57F6DD00590239 /* LinebreakAtEndOfFile.swift in Sources */,
 				E487211D201D885A0014845E /* RulesViewController.swift in Sources */,
-				2E9DE5082C95F9A1000FEDF8 /* NoFileID.swift in Sources */,
+				2E9DE5082C95F9A1000FEDF8 /* FileMacro.swift in Sources */,
 				2E2BAC212C57F6DD00590239 /* RedundantOptionalBinding.swift in Sources */,
 				01045A9B2119979400D2BE3D /* Arguments.swift in Sources */,
 				2E2BAC712C57F6DD00590239 /* AssertionFailures.swift in Sources */,
@@ -2427,7 +2427,7 @@
 				2E2BACEE2C57F6DD00590239 /* RedundantObjc.swift in Sources */,
 				2E2BAC6A2C57F6DD00590239 /* LinebreakAtEndOfFile.swift in Sources */,
 				0142C77023C3FB6D005D5832 /* LintFileCommand.swift in Sources */,
-				2E9DE5092C95F9A1000FEDF8 /* NoFileID.swift in Sources */,
+				2E9DE5092C95F9A1000FEDF8 /* FileMacro.swift in Sources */,
 				2E2BAC222C57F6DD00590239 /* RedundantOptionalBinding.swift in Sources */,
 				E4E4D3CC2033F17C000D7CB1 /* EnumAssociable.swift in Sources */,
 				2E2BAC722C57F6DD00590239 /* AssertionFailures.swift in Sources */,

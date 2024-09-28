@@ -1253,6 +1253,14 @@ struct _Descriptors {
         help: "For example: \"@Equatable,EquatableMacroLib\"",
         keyPath: \.equatableMacroInfo
     )
+    let preferFileMacro = OptionDescriptor(
+        argumentName: "filemacro",
+        displayName: "Preferred File Macro",
+        help: "File macro to prefer: \"#file\" (default) or \"#fileID\".",
+        keyPath: \.preferFileMacro,
+        trueValues: ["#file", "file"],
+        falseValues: ["#fileID", "fileID"]
+    )
 
     // MARK: - Internal
 

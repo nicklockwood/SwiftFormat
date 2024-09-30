@@ -4082,6 +4082,27 @@ class WrappingTests: RulesTests {
                        options: options, exclude: ["indent", "redundantClosure", "wrapConditionalBodies"])
     }
 
+    func testWrapMultilineStatementBraceAfterWhereClauseWithTuple() {
+        let input = """
+        extension Foo {
+            public func testWithWhereClause<A, B, Outcome>(
+                a: A,
+                b: B)
+                -> Outcome where
+                Outcome == (A, B)
+            {
+                return (a, b)
+            }
+        }
+        """
+
+        let options = FormatOptions(
+            wrapArguments: .beforeFirst,
+            closingParenPosition: .sameLine
+        )
+        testFormatting(for: input, rules: [FormatRules.wrapMultilineStatementBraces, FormatRules.braces], options: options)
+    }
+
     // MARK: wrapConditions before-first
 
     func testWrapConditionsBeforeFirstPreservesMultilineStatements() {

@@ -571,13 +571,7 @@ extension Formatter {
                 }
                 return last(.nonSpaceOrCommentOrLinebreak, before: prevIndex) != .keyword("func")
             default:
-                if let nextIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: i),
-                   isAccessorKeyword(at: nextIndex) || isAccessorKeyword(at: prevIndex)
-                {
-                    return false
-                } else {
-                    return !isConditionalStatement(at: startOfScope)
-                }
+                return false
             }
             fallthrough
         case .identifier, .number, .operator("?", .postfix), .operator("!", .postfix),

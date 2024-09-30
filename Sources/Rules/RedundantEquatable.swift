@@ -164,21 +164,23 @@ extension Formatter {
     /// Finds all of the types in the current file with an Equatable conformance,
     /// which also have a manually-implemented `static func ==` method.
     func manuallyImplementedEquatableTypes(in declarations: [Declaration]) -> [EquatableType] {
-        var typeDeclarationsByName: [String: Declaration] = [:]
-        var typesWithEquatableConformances: [(typeName: String, equatableConformanceIndex: Int)] = []
-        var equatableImplementations: [String: Declaration] = [:]
+        var typeDeclarationsByFullyQualifiedName: [String: Declaration] = [:]
+        var typesWithEquatableConformances: [(fullyQualifiedTypeName: String, equatableConformanceIndex: Int)] = []
+        var equatableImplementationsByFullyQualifiedName: [String: Declaration] = [:]
 
-        declarations.forEachRecursiveDeclaration { declaration, parentDeclaration in
+        declarations.forEachRecursiveDeclaration { declaration, parentDeclarations in
             guard let declarationName = declaration.name else { return }
+            let fullyQualifiedName = declaration.fullyQualifiedName(parentDeclarations: parentDeclarations)
 
-            if declaration.definesType {
-                typeDeclarationsByName[declarationName] = declaration
+            if declaration.definesType, let fullyQualifiedName = fullyQualifiedName {
+                typeDeclarationsByFullyQualifiedName[fullyQualifiedName] = declaration
             }
 
             // Support the Equatable conformance being declared in an extension
             // separately from the Equatable
             if declaration.definesType || declaration.keyword == "extension",
-               let keywordIndex = declaration.originalKeywordIndex(in: self)
+               let keywordIndex = declaration.originalKeywordIndex(in: self),
+               let fullyQualifiedName = fullyQualifiedName
             {
                 let conformances = parseConformancesOfType(atKeywordIndex: keywordIndex)
 
@@ -186,8 +188,10 @@ extension Formatter {
                 if let equatableConformance = conformances.first(where: {
                     $0.conformance == "Equatable" || $0.conformance == "Hashable"
                 }) {
-                    typesWithEquatableConformances.append(
-                        (typeName: declarationName, equatableConformanceIndex: equatableConformance.index))
+                    typesWithEquatableConformances.append((
+                        fullyQualifiedTypeName: fullyQualifiedName,
+                        equatableConformanceIndex: equatableConformance.index
+                    ))
                 }
             }
 
@@ -205,21 +209,44 @@ extension Formatter {
                    functionArguments[1].internalLabel == "rhs",
                    functionArguments[0].type == functionArguments[1].type
                 {
-                    var typeName = functionArguments[0].type
+                    var comparedTypeName = functionArguments[0].type
 
-                    // If the function uses `Self`, resolve that to the name of the parent type
-                    if typeName == "Self", let parentDeclarationName = parentDeclaration?.name {
-                        typeName = parentDeclarationName
+                    if let parentDeclaration = parentDeclarations.last {
+                        // If the function uses `Self`, resolve that to the name of the parent type
+                        if comparedTypeName == "Self",
+                           let parentDeclarationName = parentDeclaration.fullyQualifiedName(parentDeclarations: parentDeclarations.dropLast())
+                        {
+                            comparedTypeName = parentDeclarationName
+                        }
+
+                        // If the function uses `Bar` in an extension `Foo.Bar`, then resolve
+                        // the name of the compared type to be the fully-qualified `Foo.Bar` type.
+                        if parentDeclaration.keyword == "extension",
+                           let extendedType = parentDeclaration.name,
+                           comparedTypeName != extendedType,
+                           extendedType.hasSuffix("." + comparedTypeName)
+                        {
+                            comparedTypeName = extendedType
+                        }
+
+                        // If the function uses `Bar` in a type `Bar`, then resolve the
+                        // the name of the compared type to be the fully-qualified parent type.
+                        //  - For example, `Bar` could be defined in a parent `Foo` type.
+                        if comparedTypeName == parentDeclaration.name,
+                           let parentDeclarationName = parentDeclaration.fullyQualifiedName(parentDeclarations: parentDeclarations.dropLast())
+                        {
+                            comparedTypeName = parentDeclarationName
+                        }
                     }
 
-                    equatableImplementations[typeName] = declaration
+                    equatableImplementationsByFullyQualifiedName[comparedTypeName] = declaration
                 }
             }
         }
 
         return typesWithEquatableConformances.compactMap { typeName, equatableConformanceIndex in
-            guard let typeDeclaration = typeDeclarationsByName[typeName],
-                  let equatableImplementation = equatableImplementations[typeName]
+            guard let typeDeclaration = typeDeclarationsByFullyQualifiedName[typeName],
+                  let equatableImplementation = equatableImplementationsByFullyQualifiedName[typeName]
             else { return nil }
 
             return EquatableType(

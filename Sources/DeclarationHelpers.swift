@@ -115,6 +115,9 @@ enum Declaration: Hashable {
 
     /// The name of this type or variable
     var name: String? {
+        // Conditional compilation blocks don't have a "name"
+        guard keyword != "#if" else { return nil }
+
         let parser = Formatter(openTokens)
         guard let keywordIndex = openTokens.firstIndex(of: .keyword(keyword)),
               let nameIndex = parser.index(of: .nonSpaceOrCommentOrLinebreak, after: keywordIndex)
@@ -190,6 +193,13 @@ enum Declaration: Hashable {
     /// The original index of this declaration's primary keyword in the given formatter
     func originalKeywordIndex(in formatter: Formatter) -> Int? {
         formatter.index(of: .keyword(keyword), after: originalRange.lowerBound - 1)
+    }
+
+    /// Computes the fully qualified name of this declaration, given the array of parent declarations.
+    func fullyQualifiedName(parentDeclarations: [Declaration]) -> String? {
+        guard let name = name else { return nil }
+        let typeNames = parentDeclarations.compactMap(\.name) + [name]
+        return typeNames.joined(separator: ".")
     }
 }
 
@@ -808,8 +818,8 @@ extension Declaration {
 
 extension Formatter {
     /// Recursively calls the `operation` for every declaration in the source file
-    func forEachRecursiveDeclaration(_ operation: (Declaration, _ parent: Declaration?) -> Void) {
-        parseDeclarations().forEachRecursiveDeclaration(operation: operation, parent: nil)
+    func forEachRecursiveDeclaration(_ operation: (Declaration, _ parents: [Declaration]) -> Void) {
+        parseDeclarations().forEachRecursiveDeclaration(operation: operation, parents: [])
     }
 
     /// Applies `mapRecursiveDeclarations` in place
@@ -830,13 +840,13 @@ extension Formatter {
 extension Array where Element == Declaration {
     /// Applies `operation` to every recursive declaration of this array of declarations
     func forEachRecursiveDeclaration(
-        operation: (Declaration, _ parent: Declaration?) -> Void,
-        parent: Declaration? = nil
+        operation: (Declaration, _ parents: [Declaration]) -> Void,
+        parents: [Declaration] = []
     ) {
         for declaration in self {
-            operation(declaration, parent)
+            operation(declaration, parents)
             if let body = declaration.body {
-                body.forEachRecursiveDeclaration(operation: operation, parent: declaration)
+                body.forEachRecursiveDeclaration(operation: operation, parents: parents + [declaration])
             }
         }
     }

@@ -376,4 +376,143 @@ final class RedundantEquatableTests: XCTestCase {
             options: options
         )
     }
+
+    func testRemoveSimpleEquatableConformanceOnNestedType() {
+        let input = """
+        enum Foo {
+            enum Bar {
+                struct Baaz: Equatable {
+                    let foo: String
+                    let bar: String
+
+                    static func ==(lhs: Baaz, rhs: Baaz) -> Bool {
+                        lhs.foo == rhs.foo
+                            && lhs.bar == rhs.bar
+                    }
+                }
+            }
+        }
+        """
+
+        let output = """
+        enum Foo {
+            enum Bar {
+                struct Baaz: Equatable {
+                    let foo: String
+                    let bar: String
+                }
+            }
+        }
+        """
+
+        testFormatting(for: input, [output], rules: [.redundantEquatable, .blankLinesAtEndOfScope])
+    }
+
+    func testRemoveSimpleSelfEquatableConformanceOnNestedType() {
+        let input = """
+        enum Foo {
+            enum Bar {
+                struct Baaz: Equatable {
+                    let foo: String
+                    let bar: String
+
+                    static func ==(lhs: Self, rhs: Self) -> Bool {
+                        lhs.foo == rhs.foo
+                            && lhs.bar == rhs.bar
+                    }
+                }
+            }
+        }
+        """
+
+        let output = """
+        enum Foo {
+            enum Bar {
+                struct Baaz: Equatable {
+                    let foo: String
+                    let bar: String
+                }
+            }
+        }
+        """
+
+        testFormatting(for: input, [output], rules: [.redundantEquatable, .blankLinesAtEndOfScope])
+    }
+
+    func testRemoveSimpleEquatableConformanceOnNestedTypeWithExtension() {
+        let input = """
+        enum Foo {
+            enum Bar {
+                struct Baaz {
+                    let foo: String
+                    let bar: String
+                }
+            }
+        }
+
+        extension Foo.Bar.Baaz: Equatable {
+            static func ==(lhs: Baaz, rhs: Baaz) -> Bool {
+                lhs.foo == rhs.foo
+                    && lhs.bar == rhs.bar
+            }
+        }
+        """
+
+        let output = """
+        enum Foo {
+            enum Bar {
+                struct Baaz {
+                    let foo: String
+                    let bar: String
+                }
+            }
+        }
+
+        extension Foo.Bar.Baaz: Equatable {}
+        """
+
+        testFormatting(for: input, [output], rules: [.redundantEquatable, .emptyBraces])
+    }
+
+    func testAdoptsEquatableMacroOnNestedTypeWithExtension() {
+        let input = """
+        enum Foo {
+            enum Bar {
+                final class Baaz {
+                    let foo: String
+                    let bar: String
+                }
+            }
+        }
+
+        extension Foo.Bar.Baaz: Equatable {
+            static func ==(lhs: Self, rhs: Self) -> Bool {
+                lhs.foo == rhs.foo
+                    && lhs.bar == rhs.bar
+            }
+        }
+        """
+
+        let output = """
+        import MyEquatableMacroLib
+
+        enum Foo {
+            enum Bar {
+                @Equatable
+                final class Baaz {
+                    let foo: String
+                    let bar: String
+                }
+            }
+        }
+
+        """
+
+        let options = FormatOptions(
+            typeAttributes: .prevLine,
+            equatableMacroInfo: EquatableMacroInfo(rawValue: "@Equatable,MyEquatableMacroLib")
+        )
+
+        testFormatting(for: input, [output], rules: [.redundantEquatable, .emptyBraces, .wrapAttributes, .emptyExtension, .consecutiveBlankLines], options: options)
+    }
 }

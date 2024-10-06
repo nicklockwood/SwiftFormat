@@ -3459,6 +3459,39 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testGenericThrowingClosure() {
+        let input = "let a = Thing<[(Int) throws -> [Int]]>([])"
+        let output: [Token] = [
+            .keyword("let"),
+            .space(" "),
+            .identifier("a"),
+            .space(" "),
+            .operator("=", .infix),
+            .space(" "),
+            .identifier("Thing"),
+            .startOfScope("<"),
+            .startOfScope("["),
+            .startOfScope("("),
+            .identifier("Int"),
+            .endOfScope(")"),
+            .space(" "),
+            .keyword("throws"),
+            .space(" "),
+            .operator("->", .infix),
+            .space(" "),
+            .startOfScope("["),
+            .identifier("Int"),
+            .endOfScope("]"),
+            .endOfScope("]"),
+            .endOfScope(">"),
+            .startOfScope("("),
+            .startOfScope("["),
+            .endOfScope("]"),
+            .endOfScope(")"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     // MARK: optionals
 
     func testAssignOptional() {

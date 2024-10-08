@@ -8,6 +8,7 @@
 - Fixed tokenizing of a throwing closure type in a generics clause
 - Fixed bug in `parseDeclarations` where incorrect tokens could cause rules to time out
 - Fixed issue where `organizeDeclarations` would add extra blank lines if type had blank lines with spaces
+- Updated SwiftFormat for Xcode installation instructions for macOS 15 Sequoia
 - Added known issue to README for `preferForLoop` rule
 
 ## [0.54.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.54.5) (2024-09-11)

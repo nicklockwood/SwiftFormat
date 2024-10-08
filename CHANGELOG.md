@@ -1,5 +1,15 @@
 # Change Log
 
+## [0.54.6](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.54.6) (2024-10-07)
+
+- Fixed incorrect wrapping of conditional bodies inside single-line string literals
+- Fixed properties inside type with where clause being treated as local scope
+- Fixed regression in `wrapMultilineStatementBraces` rule
+- Fixed tokenizing of a throwing closure type in a generics clause
+- Fixed bug in `parseDeclarations` where incorrect tokens could cause rules to time out
+- Fixed issue where `organizeDeclarations` would add extra blank lines if type had blank lines with spaces
+- Added known issue to README for `preferForLoop` rule
+
 ## [0.54.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.54.5) (2024-09-11)
 
 - Fixed crash in `unusedArguments` rule

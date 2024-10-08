@@ -32,7 +32,7 @@
 import Foundation
 
 /// The current SwiftFormat version
-let swiftFormatVersion = "0.54.5"
+let swiftFormatVersion = "0.54.6"
 public let version = swiftFormatVersion
 
 /// The standard SwiftFormat config file name
@@ -205,13 +205,14 @@ public func enumerateFiles(withInputURL inputURL: URL,
                 }
             }
         } else if resourceValues.isDirectory == true {
-            var options = options
+            var tempOptions = options
             do {
-                try processDirectory(inputURL, with: &options, logger: logger)
+                try processDirectory(inputURL, with: &tempOptions, logger: logger)
             } catch {
                 onComplete { throw error }
                 return
             }
+            let options = tempOptions
             let enumerationOptions: FileManager.DirectoryEnumerationOptions = .skipsHiddenFiles
             guard let files = try? manager.contentsOfDirectory(
                 at: inputURL, includingPropertiesForKeys: keys, options: enumerationOptions
@@ -220,6 +221,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
                 return
             }
             for url in files where !url.path.hasPrefix(".") {
+                let options = options
                 queue.async(group: group) {
                     let outputURL = outputURL.map {
                         URL(fileURLWithPath: $0.path + url.path[inputURL.path.endIndex ..< url.path.endIndex])

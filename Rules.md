@@ -876,7 +876,7 @@ Option | Description
 
 ## environmentEntry
 
-Updates `EnvironmentValues` to use the @Entry macro
+Updates SwiftUI `EnvironmentValues` definitions to use the @Entry macro
 
 <details>
 <summary>Examples</summary>
@@ -888,16 +888,13 @@ Updates `EnvironmentValues` to use the @Entry macro
 -     }
 -   }
 
--  extension EnvironmentValues {
+   extension EnvironmentValues {
 -    var screenName: Identifier? {
 -      get { self[ScreenNameEnvironmentKey.self] }
 -      set { self[ScreenNameEnvironmentKey.self] = newValue }
 -    }
--  }
-
-+  extension EnvironmentValues {
 +    @Entry var screenName: Identifier? = .init("undefined")
-+  }
+   }
 ```
 
 </details>

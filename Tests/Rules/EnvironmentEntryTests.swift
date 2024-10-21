@@ -1,6 +1,7 @@
 // Created by miguel_jimenez on 10/16/24.
 // Copyright © 2024 Airbnb Inc. All rights reserved.
 
+import SwiftFormat
 import XCTest
 
 final class EnvironmentEntryTests: XCTestCase {
@@ -24,7 +25,7 @@ final class EnvironmentEntryTests: XCTestCase {
             @Entry var screenName: Identifier? = .init("undefined")
         }
         """
-        testFormatting(for: input, output, rule: .environmentEntry)
+        testFormatting(for: input, output, rule: .environmentEntry, options: FormatOptions(swiftVersion: "6.0"))
     }
 
     func testReplaceEnvironmentKeyDefinitionForEntryMacroWithKeyDefinitionAfterEnvironmentValue() {
@@ -53,10 +54,11 @@ final class EnvironmentEntryTests: XCTestCase {
             rules: [
                 .environmentEntry,
                 .blankLinesBetweenScopes,
+                .consecutiveBlankLines,
                 .blankLinesAtEndOfScope,
                 .blankLinesAtStartOfScope,
-                .consecutiveBlankLines,
-            ]
+            ],
+            options: FormatOptions(swiftVersion: "6.0")
         )
     }
 
@@ -104,7 +106,8 @@ final class EnvironmentEntryTests: XCTestCase {
                 .blankLinesAtEndOfScope,
                 .blankLinesAtStartOfScope,
                 .consecutiveBlankLines,
-            ]
+            ],
+            options: FormatOptions(swiftVersion: "6.0")
         )
     }
 
@@ -148,7 +151,8 @@ final class EnvironmentEntryTests: XCTestCase {
                 .blankLinesAtEndOfScope,
                 .blankLinesAtStartOfScope,
                 .consecutiveBlankLines,
-            ]
+            ],
+            options: FormatOptions(swiftVersion: "6.0")
         )
     }
 
@@ -165,6 +169,56 @@ final class EnvironmentEntryTests: XCTestCase {
             static var defaultValue: Bool { false }
         }
         """
-        testFormatting(for: input, rule: .environmentEntry)
+        testFormatting(for: input, rule: .environmentEntry, options: FormatOptions(swiftVersion: "6.0"))
+    }
+
+    func testReplaceEnvironmentKeyWithMultipleLinesInDefaultValue() {
+        let input = """
+        struct ScreenNameEnvironmentKey: EnvironmentKey {
+            static var defaultValue: Identifier? {
+                let domain = "com.mycompany.myapp"
+                let base = "undefined"
+                return .init("\\(domain).\\(base)")
+            }
+        }
+
+        extension EnvironmentValues {
+            var screenName: Identifier? {
+                get { self[ScreenNameEnvironmentKey.self] }
+                set { self[ScreenNameEnvironmentKey.self] = newValue }
+            }
+        }
+        """
+        let output = """
+        extension EnvironmentValues {
+            @Entry var screenName: Identifier? = {
+                let domain = "com.mycompany.myapp"
+                let base = "undefined"
+                return .init("\\(domain).\\(base)")
+            }()
+        }
+        """
+        testFormatting(for: input, output, rule: .environmentEntry, options: FormatOptions(swiftVersion: "6.0"))
+    }
+
+    func testReplaceEnvironmentKeyWithImplicitNilDefaultValue() {
+        let input = """
+        struct ScreenNameEnvironmentKey: EnvironmentKey {
+            static var defaultValue: Identifier?
+        }
+
+        extension EnvironmentValues {
+            var screenName: Identifier? {
+                get { self[ScreenNameEnvironmentKey.self] }
+                set { self[ScreenNameEnvironmentKey.self] = newValue }
+            }
+        }
+        """
+        let output = """
+        extension EnvironmentValues {
+            @Entry var screenName: Identifier?
+        }
+        """
+        testFormatting(for: input, output, rule: .environmentEntry, options: FormatOptions(swiftVersion: "6.0"))
     }
 }

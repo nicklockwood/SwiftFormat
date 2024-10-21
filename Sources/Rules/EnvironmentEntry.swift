@@ -9,19 +9,22 @@ public extension FormatRule {
         help: "Updates `EnvironmentValues` to use the @Entry macro",
         disabledByDefault: true
     ) { formatter in
+        // The @Entry macro is only available in Xcode 16 therefore this rule requires the same Xcode version to work.
+        guard formatter.options.swiftVersion >= "6.0" else { return }
+
         let declarations = formatter.parseDeclarations()
 
-        // Find all structs conforming `EnvironmentKey`
+        // Find all structs that conform to `EnvironmentKey`
         let environmentKeys = Dictionary(uniqueKeysWithValues: formatter.findAllEnvironmentKeys(declarations).map { ($0.key, $0) })
 
         // Find all `EnvironmentValues` properties
-        let environmentValuesPropertiesDeclarations = formatter.findAllEnvironmentValuesProperties(declarations, referencing: environmentKeys)
+        let environmentValuesProperties = formatter.findAllEnvironmentValuesProperties(declarations, referencing: environmentKeys)
 
         // Modify `EnvironmentValues` properties by removing its body and adding the @Entry macro
-        formatter.modifyEnvironmentValuesProperties(environmentValuesPropertiesDeclarations)
+        formatter.modifyEnvironmentValuesProperties(environmentValuesProperties)
 
         // Remove `EnvironmentKey`s
-        let updatedEnvironmentKeys = Set(environmentValuesPropertiesDeclarations.map(\.key))
+        let updatedEnvironmentKeys = Set(environmentValuesProperties.map(\.key))
         formatter.removeEnvironmentKeys(updatedEnvironmentKeys)
     } examples: {
         """
@@ -47,19 +50,20 @@ public extension FormatRule {
     }
 }
 
-private struct EnvironmentKey {
+struct EnvironmentKey {
     let key: String
     let declaration: Declaration
-    let defaultValueTokens: ArraySlice<Token>
+    let defaultValueTokens: ArraySlice<Token>?
+    let isMultilineDefaultValue: Bool
 }
 
-private struct EnvironmentValueProperty {
+struct EnvironmentValueProperty {
     let key: String
     let associatedEnvironmentKey: EnvironmentKey
     let declaration: Declaration
 }
 
-private extension Formatter {
+extension Formatter {
     func findAllEnvironmentKeys(_ declarations: [Declaration]) -> [EnvironmentKey] {
         declarations.compactMap { declaration -> EnvironmentKey? in
             guard declaration.keyword == "struct",
@@ -69,15 +73,29 @@ private extension Formatter {
                       $0.keyword == "var" && $0.name == "defaultValue"
                   }),
                   let valueEndOfScopeIndex = endOfScope(at: defaultValueDeclaration.originalRange.upperBound - 1),
-                  let valueStartOfScope = startOfScope(at: valueEndOfScopeIndex),
-                  let valueStartIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: valueStartOfScope),
+                  let valueStartOfScopeIndex = startOfScope(at: valueEndOfScopeIndex),
+                  let valueStartIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: valueStartOfScopeIndex),
                   let valueEndIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: valueEndOfScopeIndex)
             else { return nil }
-            let defaultValueTokens = tokens[valueStartIndex ... valueEndIndex]
+
+            let defaultValueDeclarations = parseDeclarations(in: valueStartIndex ... valueEndIndex)
+            let defaultValueTokens: ArraySlice<Token>?
+
+            if defaultValueDeclarations.count <= 1 {
+                if defaultValueDeclarations.first?.name == "defaultValue" {
+                    // Default value is implicitly `nil`
+                    defaultValueTokens = nil
+                } else {
+                    defaultValueTokens = tokens[valueStartIndex ... valueEndIndex]
+                }
+            } else {
+                defaultValueTokens = tokens[valueStartOfScopeIndex ... valueEndOfScopeIndex]
+            }
             return EnvironmentKey(
                 key: keyName.string,
                 declaration: declaration,
-                defaultValueTokens: defaultValueTokens
+                defaultValueTokens: defaultValueTokens,
+                isMultilineDefaultValue: defaultValueDeclarations.count > 1
             )
         }
     }
@@ -106,8 +124,8 @@ private extension Formatter {
 
     func modifyEnvironmentValuesProperties(_ environmentValuesPropertiesDeclarations: [EnvironmentValueProperty]) {
         // Loop the collection in reverse to avoid invalidating the declaration indexes as we modify the property
-        for envPropertyDeclaration in environmentValuesPropertiesDeclarations.reversed() {
-            let propertyDeclaration = envPropertyDeclaration.declaration
+        for envProperty in environmentValuesPropertiesDeclarations.reversed() {
+            let propertyDeclaration = envProperty.declaration
             guard let propertyBodyStartIndex = index(of: .startOfScope("{"), after: propertyDeclaration.originalRange.lowerBound),
                   let propertyBodyEndIndex = endOfScope(at: propertyBodyStartIndex),
                   let keywordIndex = index(of: .keyword("var"), after: propertyDeclaration.originalRange.lowerBound)
@@ -123,10 +141,14 @@ private extension Formatter {
                 removeTokens(in: propertyBodyStartIndex ... propertyBodyEndIndex)
             }
             // Add `EnvironmentKey.defaultValue` to `EnvironmentValues property`
-            insert(
-                [.space(" "), .keyword("="), .space(" ")] + envPropertyDeclaration.associatedEnvironmentKey.defaultValueTokens,
-                at: endOfLine(at: keywordIndex)
-            )
+            if let defaultValueTokens = envProperty.associatedEnvironmentKey.defaultValueTokens {
+                var defaultValueTokens = [.space(" "), .keyword("="), .space(" ")] + defaultValueTokens
+
+                if envProperty.associatedEnvironmentKey.isMultilineDefaultValue {
+                    defaultValueTokens.append(contentsOf: [.endOfScope("("), .endOfScope(")")])
+                }
+                insert(defaultValueTokens, at: endOfLine(at: keywordIndex))
+            }
             // Add @Entry Macro
             replaceToken(at: keywordIndex, with: [.identifier("@Entry"), .space(" "), .identifier("var")])
         }
@@ -142,5 +164,15 @@ private extension Formatter {
         for declaration in repositionedEnvironmentKeys.reversed() where updatedEnvironmentKeys.contains(declaration.key) {
             removeTokens(in: declaration.declaration.originalRange)
         }
+    }
+}
+
+extension String {
+    fileprivate func removingSuffix(_ suffix: String) -> String? {
+        if hasSuffix(suffix) {
+            let string = dropLast(suffix.count)
+            return string.first.map { "\($0.lowercased())\(string.dropFirst())" }
+        }
+        return self
     }
 }

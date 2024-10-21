@@ -12,7 +12,7 @@ public extension FormatRule {
         let declarations = formatter.parseDeclarations()
 
         // Find all structs conforming `EnvironmentKey`
-        let environmentKeys = Dictionary(uniqueKeysWithValues: formatter.findAllEnvironmentKeyDeclarations(declarations).map { ($0.environmentKey, $0) })
+        let environmentKeys = Dictionary(uniqueKeysWithValues: formatter.findAllEnvironmentKeyDeclarations(declarations).map { ($0.key, $0) })
 
         // Find all `EnvironmentValues` properties
         let environmentValuesPropertiesDeclarations = formatter.findAllEnvironmentValuesPropertyDeclarations(declarations, referencing: environmentKeys)
@@ -20,7 +20,7 @@ public extension FormatRule {
         // Modify `EnvironmentValues` properties by removing its body and adding the @Entry macro
         formatter.modifyEnvironmentValuesProperties(environmentValuesPropertiesDeclarations)
 
-        let updatedEnvironmentKeys = Set(environmentValuesPropertiesDeclarations.map(\.environmentKey))
+        let updatedEnvironmentKeys = Set(environmentValuesPropertiesDeclarations.map(\.key))
         guard !updatedEnvironmentKeys.isEmpty else { return }
 
         // After modifying the EnvironmentValues properties, parse declarations again to delete the Environment keys in their new position.
@@ -28,8 +28,8 @@ public extension FormatRule {
         let newEnvironmentKeyDeclarations = formatter.findAllEnvironmentKeyDeclarations(newDeclarations)
 
         // Loop the collection in reverse to avoid invalidating the declaration indexes as we remove EnvironmentKey
-        for declaration in newEnvironmentKeyDeclarations.reversed() where updatedEnvironmentKeys.contains(declaration.environmentKey) {
-            formatter.removeTokens(in: declaration.keyDeclaration.originalRange)
+        for declaration in newEnvironmentKeyDeclarations.reversed() where updatedEnvironmentKeys.contains(declaration.key) {
+            formatter.removeTokens(in: declaration.declaration.originalRange)
         }
     } examples: {
         """
@@ -56,14 +56,14 @@ public extension FormatRule {
 }
 
 private struct EnvironmentKey {
-    let environmentKey: String
-    let keyDeclaration: Declaration
+    let key: String
+    let declaration: Declaration
     let defaultValueTokens: ArraySlice<Token>
 }
 
 private struct EnvironmentValueProperty {
-    let environmentKey: String
-    let associatedEnvironmentKeyDeclaration: EnvironmentKey
+    let key: String
+    let associatedEnvironmentKey: EnvironmentKey
     let declaration: Declaration
 }
 
@@ -83,8 +83,8 @@ private extension Formatter {
             else { return nil }
             let defaultValueTokens = tokens[valueStartIndex ... valueEndIndex]
             return EnvironmentKey(
-                environmentKey: keyName.string,
-                keyDeclaration: declaration,
+                key: keyName.string,
+                declaration: declaration,
                 defaultValueTokens: defaultValueTokens
             )
         }
@@ -95,17 +95,18 @@ private extension Formatter {
     {
         declarations
             .filter {
-                $0.keyword == "extension" && $0.openTokens.contains(.identifier("EnvironmentValues"))
+                $0.keyword == "extension" &&
+                    $0.openTokens.contains(.identifier("EnvironmentValues")) &&
+                    $0.isSimpleDeclaration &&
+                    $0.keyword == "var"
             }.compactMap { environmentValuesDeclaration -> [EnvironmentValueProperty]? in
                 environmentValuesDeclaration.body?.compactMap { propertyDeclaration -> (EnvironmentValueProperty)? in
-                    guard propertyDeclaration.isSimpleDeclaration,
-                          propertyDeclaration.keyword == "var",
-                          let key = propertyDeclaration.tokens.first(where: { environmentKeys[$0.string] != nil })?.string,
+                    guard let key = propertyDeclaration.tokens.first(where: { environmentKeys[$0.string] != nil })?.string,
                           propertyDeclaration.name == key.removingSuffix("EnvironmentKey")
                     else { return nil }
                     return EnvironmentValueProperty(
-                        environmentKey: key,
-                        associatedEnvironmentKeyDeclaration: environmentKeys[key]!,
+                        key: key,
+                        associatedEnvironmentKey: environmentKeys[key]!,
                         declaration: propertyDeclaration
                     )
                 }
@@ -132,7 +133,7 @@ private extension Formatter {
             }
             // Add `EnvironmentKey.defaultValue` to `EnvironmentValues property`
             insert(
-                [.space(" "), .keyword("="), .space(" ")] + envPropertyDeclaration.associatedEnvironmentKeyDeclaration.defaultValueTokens,
+                [.space(" "), .keyword("="), .space(" ")] + envPropertyDeclaration.associatedEnvironmentKey.defaultValueTokens,
                 at: endOfLine(at: keywordIndex)
             )
             // Add @Entry Macro

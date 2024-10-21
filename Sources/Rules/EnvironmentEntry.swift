@@ -3,8 +3,6 @@
 
 import Foundation
 
-let maxDepth = 5
-
 public extension FormatRule {
     /// Removes types conforming `EnvironmentKey` and replaces them with the @Entry macro
     static let environmentEntry = FormatRule(

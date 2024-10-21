@@ -221,4 +221,54 @@ final class EnvironmentEntryTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .environmentEntry, options: FormatOptions(swiftVersion: "6.0"))
     }
+
+    func testEnvironmentPropertyWithCommentsPreserved() {
+        let input = """
+        struct ScreenNameEnvironmentKey: EnvironmentKey {
+            static var defaultValue: Identifier? {
+                .init("undefined")
+            }
+        }
+
+        extension EnvironmentValues {
+            /// The name provided to the outer most view representing a full screen width
+            var screenName: Identifier? {
+                get { self[ScreenNameEnvironmentKey.self] }
+                set { self[ScreenNameEnvironmentKey.self] = newValue }
+            }
+        }
+        """
+        let output = """
+        extension EnvironmentValues {
+            /// The name provided to the outer most view representing a full screen width
+            @Entry var screenName: Identifier? = .init("undefined")
+        }
+        """
+        testFormatting(
+            for: input, output,
+            rule: .environmentEntry,
+            options: FormatOptions(swiftVersion: "6.0"),
+            exclude: [.docComments]
+        )
+    }
+
+    func testEnvironmentKeyWithMultupleDefinitionsIsNotRemoved() {
+        let input = """
+        extension EnvironmentValues {
+            var isSelected: Bool {
+                get { self[IsSelectedEnvironmentKey.self] }
+                set { self[IsSelectedEnvironmentKey.self] = newValue }
+            }
+
+            var doSomething() {
+                print("do some work")
+            }
+        }
+
+        struct SelectedEnvironmentKey: EnvironmentKey {
+            static var defaultValue: Bool { false }
+        }
+        """
+        testFormatting(for: input, rule: .environmentEntry, options: FormatOptions(swiftVersion: "6.0"))
+    }
 }

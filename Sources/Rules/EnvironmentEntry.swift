@@ -6,7 +6,7 @@ import Foundation
 public extension FormatRule {
     /// Removes types conforming `EnvironmentKey` and replaces them with the @Entry macro
     static let environmentEntry = FormatRule(
-        help: "Updates `EnvironmentValues` to use the @Entry macro",
+        help: "Updates SwiftUI `EnvironmentValues` definitions to use the @Entry macro",
         disabledByDefault: true
     ) { formatter in
         // The @Entry macro is only available in Xcode 16 therefore this rule requires the same Xcode version to work.
@@ -35,16 +35,13 @@ public extension FormatRule {
         -     }
         -   }
 
-        -  extension EnvironmentValues {
+           extension EnvironmentValues {
         -    var screenName: Identifier? {
         -      get { self[ScreenNameEnvironmentKey.self] }
         -      set { self[ScreenNameEnvironmentKey.self] = newValue }
         -    }
-        -  }
-
-        +  extension EnvironmentValues {
         +    @Entry var screenName: Identifier? = .init("undefined")
-        +  }
+           }
         ```
         """
     }
@@ -69,7 +66,9 @@ extension Formatter {
             guard declaration.keyword == "struct",
                   declaration.openTokens.contains(.identifier("EnvironmentKey")),
                   let keyName = declaration.openTokens.first(where: \.isIdentifier),
-                  let defaultValueDeclaration = declaration.body?.first(where: {
+                  let structDeclarationBody = declaration.body,
+                  structDeclarationBody.count == 1,
+                  let defaultValueDeclaration = structDeclarationBody.first(where: {
                       $0.keyword == "var" && $0.name == "defaultValue"
                   }),
                   let valueEndOfScopeIndex = endOfScope(at: defaultValueDeclaration.originalRange.upperBound - 1),
@@ -167,8 +166,8 @@ extension Formatter {
     }
 }
 
-extension String {
-    fileprivate func removingSuffix(_ suffix: String) -> String? {
+private extension String {
+    func removingSuffix(_ suffix: String) -> String? {
         if hasSuffix(suffix) {
             let string = dropLast(suffix.count)
             return string.first.map { "\($0.lowercased())\(string.dropFirst())" }

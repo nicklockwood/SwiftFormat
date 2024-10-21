@@ -13,35 +13,25 @@ public extension FormatRule {
     ) { formatter in
         let declarations = formatter.parseDeclarations()
 
-        // Find all struct conforming `EnvironmentKey`
-        let environmentKeysDict = formatter.findAllEnvironmentKeyDeclarations(declarations)
+        // Find all structs conforming `EnvironmentKey`
+        let environmentKeys = Dictionary(uniqueKeysWithValues: formatter.findAllEnvironmentKeyDeclarations(declarations).map { ($0.environmentKey, $0) })
 
         // Find all `EnvironmentValues` properties
-        let environmentKeys = Set(environmentKeysDict.keys)
         let environmentValuesPropertiesDeclarations = formatter.findAllEnvironmentValuesPropertyDeclarations(declarations, referencing: environmentKeys)
 
-        for (environmentKey, propertyDeclaration) in environmentValuesPropertiesDeclarations {
-            guard let propertyBodyStartIndex = formatter.index(of: .startOfScope("{"), after: propertyDeclaration.originalRange.lowerBound),
-                  let propertyBodyEndIndex = formatter.endOfScope(at: propertyBodyStartIndex),
-                  let keywordIndex = formatter.index(of: .keyword("var"), after: propertyDeclaration.originalRange.lowerBound),
-                  let keyDeclaration = environmentKeysDict[environmentKey]
-            else {
-                continue
-            }
-            // Remove `EnvironmentValues.property` getter and setters
-            formatter.removeTokens(in: propertyBodyStartIndex ... propertyBodyEndIndex)
-            // Add `EnvironmentKey.defaultValue` to `EnvironmentValues.property`
-            formatter.insert(
-                [.space(" "), .keyword("="), .space(" ")] + keyDeclaration.defaultValueTokens,
-                at: formatter.endOfLine(at: keywordIndex) - 1
-            )
-            // Add @Entry Macro
-            formatter.replaceToken(at: keywordIndex, with: [.identifier("@Entry"), .space(" "), .identifier("var")])
-        }
-        // After modifying the EnvironmentValues properties, generate parse declarations again to delete the keys in their new position.
+        // Modify `EnvironmentValues` properties by removing its body and adding the @Entry macro
+        formatter.modifyEnvironmentValuesProperties(environmentValuesPropertiesDeclarations)
+
+        let updatedEnvironmentKeys = Set(environmentValuesPropertiesDeclarations.map(\.environmentKey))
+        guard !updatedEnvironmentKeys.isEmpty else { return }
+
+        // After modifying the EnvironmentValues properties, parse declarations again to delete the Environment keys in their new position.
         let newDeclarations = formatter.parseDeclarations()
-        for declaration in formatter.findAllEnvironmentKeyDeclarations(newDeclarations).reversed() {
-            formatter.removeTokens(in: declaration.value.keyDeclaration.originalRange)
+        let newEnvironmentKeyDeclarations = formatter.findAllEnvironmentKeyDeclarations(newDeclarations)
+
+        // Loop the collection in reverse to avoid invalidating the declaration indexes as we remove EnvironmentKey
+        for declaration in newEnvironmentKeyDeclarations.reversed() where updatedEnvironmentKeys.contains(declaration.environmentKey) {
+            formatter.removeTokens(in: declaration.keyDeclaration.originalRange)
         }
     } examples: {
         """
@@ -68,13 +58,20 @@ public extension FormatRule {
 }
 
 private struct EnvironmentKeyDeclaration {
+    let environmentKey: String
     let keyDeclaration: Declaration
     let defaultValueTokens: ArraySlice<Token>
 }
 
+private struct EnvironmentValueProperty {
+    let environmentKey: String
+    let associatedEnvironmentKeyDeclaration: EnvironmentKeyDeclaration
+    let declaration: Declaration
+}
+
 private extension Formatter {
-    func findAllEnvironmentKeyDeclarations(_ declarations: [Declaration]) -> [String: EnvironmentKeyDeclaration] {
-        let environmentKeyDeclarations = declarations.compactMap { declaration -> (String, EnvironmentKeyDeclaration)? in
+    func findAllEnvironmentKeyDeclarations(_ declarations: [Declaration]) -> [EnvironmentKeyDeclaration] {
+        declarations.compactMap { declaration -> EnvironmentKeyDeclaration? in
             guard declaration.keyword == "struct",
                   declaration.openTokens.contains(.identifier("EnvironmentKey")),
                   let keyName = declaration.openTokens.first(where: \.isIdentifier),
@@ -87,27 +84,61 @@ private extension Formatter {
                   let valueEndIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: valueEndOfScopeIndex)
             else { return nil }
             let defaultValueTokens = tokens[valueStartIndex ... valueEndIndex]
-            return (keyName.string, EnvironmentKeyDeclaration(keyDeclaration: declaration, defaultValueTokens: defaultValueTokens))
+            return EnvironmentKeyDeclaration(
+                environmentKey: keyName.string,
+                keyDeclaration: declaration,
+                defaultValueTokens: defaultValueTokens
+            )
         }
-        return Dictionary(uniqueKeysWithValues: environmentKeyDeclarations)
     }
 
-    func findAllEnvironmentValuesPropertyDeclarations(_ declarations: [Declaration], referencing environmentKeys: Set<String>)
-        -> [(environmentKey: String, propertyDeclaration: Declaration)]
+    func findAllEnvironmentValuesPropertyDeclarations(_ declarations: [Declaration], referencing environmentKeys: [String: EnvironmentKeyDeclaration])
+        -> [EnvironmentValueProperty]
     {
         declarations
             .filter {
                 $0.keyword == "extension" && $0.openTokens.contains(.identifier("EnvironmentValues"))
-            }.compactMap { environmentValuesDeclaration -> [(String, Declaration)]? in
-                guard let body = environmentValuesDeclaration.body else { return nil }
-                return body.compactMap { propertyDeclaration -> (String, Declaration)? in
+            }.compactMap { environmentValuesDeclaration -> [EnvironmentValueProperty]? in
+                environmentValuesDeclaration.body?.compactMap { propertyDeclaration -> (EnvironmentValueProperty)? in
                     guard propertyDeclaration.isSimpleDeclaration,
                           propertyDeclaration.keyword == "var",
-                          let key = propertyDeclaration.tokens.first(where: { environmentKeys.contains($0.string) }),
-                          propertyDeclaration.name == key.string.removingSuffix("EnvironmentKey")
+                          let key = propertyDeclaration.tokens.first(where: { environmentKeys[$0.string] != nil })?.string,
+                          propertyDeclaration.name == key.removingSuffix("EnvironmentKey")
                     else { return nil }
-                    return (key.string, propertyDeclaration)
+                    return EnvironmentValueProperty(
+                        environmentKey: key,
+                        associatedEnvironmentKeyDeclaration: environmentKeys[key]!,
+                        declaration: propertyDeclaration
+                    )
                 }
             }.flatMap { $0 }
+    }
+
+    func modifyEnvironmentValuesProperties(_ environmentValuesPropertiesDeclarations: [EnvironmentValueProperty]) {
+        // Loop the collection in reverse to avoid invalidating the declaration indexes as we modify the property
+        for envPropertyDeclaration in environmentValuesPropertiesDeclarations.reversed() {
+            let propertyDeclaration = envPropertyDeclaration.declaration
+            guard let propertyBodyStartIndex = index(of: .startOfScope("{"), after: propertyDeclaration.originalRange.lowerBound),
+                  let propertyBodyEndIndex = endOfScope(at: propertyBodyStartIndex),
+                  let keywordIndex = index(of: .keyword("var"), after: propertyDeclaration.originalRange.lowerBound)
+            else {
+                continue
+            }
+            // Remove `EnvironmentValues.property` getter and setters
+            if let nonSpaceTokenIndexBeforeBody = index(of: .nonSpaceOrLinebreak, before: propertyBodyStartIndex), nonSpaceTokenIndexBeforeBody != propertyBodyStartIndex {
+                // There are some spaces between the property body and the property type definition, we should remove the extra spaces.
+                let propertyBodyStartIndex = nonSpaceTokenIndexBeforeBody + 1
+                removeTokens(in: propertyBodyStartIndex ... propertyBodyEndIndex)
+            } else {
+                removeTokens(in: propertyBodyStartIndex ... propertyBodyEndIndex)
+            }
+            // Add `EnvironmentKey.defaultValue` to `EnvironmentValues property`
+            insert(
+                [.space(" "), .keyword("="), .space(" ")] + envPropertyDeclaration.associatedEnvironmentKeyDeclaration.defaultValueTokens,
+                at: endOfLine(at: keywordIndex)
+            )
+            // Add @Entry Macro
+            replaceToken(at: keywordIndex, with: [.identifier("@Entry"), .space(" "), .identifier("var")])
+        }
     }
 }

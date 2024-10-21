@@ -100,6 +100,7 @@
 * [blankLinesBetweenImports](#blankLinesBetweenImports)
 * [blockComments](#blockComments)
 * [docComments](#docComments)
+* [environmentEntry](#environmentEntry)
 * [isEmpty](#isEmpty)
 * [markTypes](#markTypes)
 * [noExplicitOwnership](#noExplicitOwnership)
@@ -869,6 +870,35 @@ Option | Description
       static let foo = "foo"
       static let bar = "bar"
   }
+
+</details>
+<br/>
+
+## environmentEntry
+
+Updates `EnvironmentValues` to use the @Entry macro
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- struct ScreenNameEnvironmentKey: EnvironmentKey {
+-   static var defaultValue: Identifier? {
+-      .init("undefined") 
+-     }
+-   }
+
+-  extension EnvironmentValues {
+-    var screenName: Identifier? {
+-      get { self[ScreenNameEnvironmentKey.self] }
+-      set { self[ScreenNameEnvironmentKey.self] = newValue }
+-    }
+-  }
+
++  extension EnvironmentValues {
++    @Entry var screenName: Identifier? = .init("undefined")
++  }
+```
 
 </details>
 <br/>

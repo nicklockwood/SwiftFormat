@@ -3,7 +3,7 @@
 
 import XCTest
 
-final class ReplaceEnvironmentKeyForEntryMacroTests: XCTestCase {
+final class EnvironmentEntryTests: XCTestCase {
     func testReplaceEnvironmentKeyDefinitionForEntryMacro() {
         let input = """
         struct ScreenNameEnvironmentKey: EnvironmentKey {
@@ -24,7 +24,7 @@ final class ReplaceEnvironmentKeyForEntryMacroTests: XCTestCase {
             @Entry var screenName: Identifier? = .init("undefined")
         }
         """
-        testFormatting(for: input, output, rule: .replaceEnvironmentKeyForEntryMacro)
+        testFormatting(for: input, output, rule: .environmentEntry)
     }
 
     func testReplaceEnvironmentKeyDefinitionForEntryMacroWithKeyDefinitionAfterEnvironmentValue() {
@@ -51,7 +51,7 @@ final class ReplaceEnvironmentKeyForEntryMacroTests: XCTestCase {
         testFormatting(
             for: input, [output],
             rules: [
-                .replaceEnvironmentKeyForEntryMacro,
+                .environmentEntry,
                 .blankLinesBetweenScopes,
                 .blankLinesAtEndOfScope,
                 .blankLinesAtStartOfScope,
@@ -99,7 +99,7 @@ final class ReplaceEnvironmentKeyForEntryMacroTests: XCTestCase {
         testFormatting(
             for: input, [output],
             rules: [
-                .replaceEnvironmentKeyForEntryMacro,
+                .environmentEntry,
                 .blankLinesBetweenScopes,
                 .blankLinesAtEndOfScope,
                 .blankLinesAtStartOfScope,
@@ -143,7 +143,7 @@ final class ReplaceEnvironmentKeyForEntryMacroTests: XCTestCase {
         testFormatting(
             for: input, [output],
             rules: [
-                .replaceEnvironmentKeyForEntryMacro,
+                .environmentEntry,
                 .blankLinesBetweenScopes,
                 .blankLinesAtEndOfScope,
                 .blankLinesAtStartOfScope,
@@ -165,6 +165,6 @@ final class ReplaceEnvironmentKeyForEntryMacroTests: XCTestCase {
             static var defaultValue: Bool { false }
         }
         """
-        testFormatting(for: input, rule: .replaceEnvironmentKeyForEntryMacro)
+        testFormatting(for: input, rule: .environmentEntry)
     }
 }

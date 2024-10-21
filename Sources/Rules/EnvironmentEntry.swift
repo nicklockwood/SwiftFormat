@@ -6,9 +6,9 @@ import Foundation
 let maxDepth = 5
 
 public extension FormatRule {
-    /// Remove redundant void return values for function and closure declarations
-    static let replaceEnvironmentKeyForEntryMacro = FormatRule(
-        help: "Replaces EnvironmentKey for @Entry macro",
+    /// Removes types conforming `EnvironmentKey` and replaces them with the @Entry macro
+    static let environmentEntry = FormatRule(
+        help: "Updates `EnvironmentValues` to use the @Entry macro",
         disabledByDefault: true
     ) { formatter in
         let declarations = formatter.parseDeclarations()
@@ -57,7 +57,7 @@ public extension FormatRule {
     }
 }
 
-private struct EnvironmentKeyDeclaration {
+private struct EnvironmentKey {
     let environmentKey: String
     let keyDeclaration: Declaration
     let defaultValueTokens: ArraySlice<Token>
@@ -65,13 +65,13 @@ private struct EnvironmentKeyDeclaration {
 
 private struct EnvironmentValueProperty {
     let environmentKey: String
-    let associatedEnvironmentKeyDeclaration: EnvironmentKeyDeclaration
+    let associatedEnvironmentKeyDeclaration: EnvironmentKey
     let declaration: Declaration
 }
 
 private extension Formatter {
-    func findAllEnvironmentKeyDeclarations(_ declarations: [Declaration]) -> [EnvironmentKeyDeclaration] {
-        declarations.compactMap { declaration -> EnvironmentKeyDeclaration? in
+    func findAllEnvironmentKeyDeclarations(_ declarations: [Declaration]) -> [EnvironmentKey] {
+        declarations.compactMap { declaration -> EnvironmentKey? in
             guard declaration.keyword == "struct",
                   declaration.openTokens.contains(.identifier("EnvironmentKey")),
                   let keyName = declaration.openTokens.first(where: \.isIdentifier),
@@ -84,7 +84,7 @@ private extension Formatter {
                   let valueEndIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: valueEndOfScopeIndex)
             else { return nil }
             let defaultValueTokens = tokens[valueStartIndex ... valueEndIndex]
-            return EnvironmentKeyDeclaration(
+            return EnvironmentKey(
                 environmentKey: keyName.string,
                 keyDeclaration: declaration,
                 defaultValueTokens: defaultValueTokens
@@ -92,7 +92,7 @@ private extension Formatter {
         }
     }
 
-    func findAllEnvironmentValuesPropertyDeclarations(_ declarations: [Declaration], referencing environmentKeys: [String: EnvironmentKeyDeclaration])
+    func findAllEnvironmentValuesPropertyDeclarations(_ declarations: [Declaration], referencing environmentKeys: [String: EnvironmentKey])
         -> [EnvironmentValueProperty]
     {
         declarations

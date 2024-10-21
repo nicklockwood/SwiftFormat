@@ -87,13 +87,12 @@ private extension Formatter {
     {
         declarations
             .filter {
-                $0.keyword == "extension" &&
-                    $0.openTokens.contains(.identifier("EnvironmentValues")) &&
-                    $0.isSimpleDeclaration &&
-                    $0.keyword == "var"
+                $0.keyword == "extension" && $0.openTokens.contains(.identifier("EnvironmentValues"))
             }.compactMap { environmentValuesDeclaration -> [EnvironmentValueProperty]? in
                 environmentValuesDeclaration.body?.compactMap { propertyDeclaration -> (EnvironmentValueProperty)? in
-                    guard let key = propertyDeclaration.tokens.first(where: { environmentKeys[$0.string] != nil })?.string,
+                    guard propertyDeclaration.isSimpleDeclaration,
+                          propertyDeclaration.keyword == "var",
+                          let key = propertyDeclaration.tokens.first(where: { environmentKeys[$0.string] != nil })?.string,
                           propertyDeclaration.name == key.removingSuffix("EnvironmentKey")
                     else { return nil }
                     return EnvironmentValueProperty(

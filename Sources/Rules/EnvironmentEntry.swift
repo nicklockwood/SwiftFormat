@@ -12,25 +12,17 @@ public extension FormatRule {
         let declarations = formatter.parseDeclarations()
 
         // Find all structs conforming `EnvironmentKey`
-        let environmentKeys = Dictionary(uniqueKeysWithValues: formatter.findAllEnvironmentKeyDeclarations(declarations).map { ($0.key, $0) })
+        let environmentKeys = Dictionary(uniqueKeysWithValues: formatter.findAllEnvironmentKeys(declarations).map { ($0.key, $0) })
 
         // Find all `EnvironmentValues` properties
-        let environmentValuesPropertiesDeclarations = formatter.findAllEnvironmentValuesPropertyDeclarations(declarations, referencing: environmentKeys)
+        let environmentValuesPropertiesDeclarations = formatter.findAllEnvironmentValuesProperties(declarations, referencing: environmentKeys)
 
         // Modify `EnvironmentValues` properties by removing its body and adding the @Entry macro
         formatter.modifyEnvironmentValuesProperties(environmentValuesPropertiesDeclarations)
 
+        // Remove `EnvironmentKey`s
         let updatedEnvironmentKeys = Set(environmentValuesPropertiesDeclarations.map(\.key))
-        guard !updatedEnvironmentKeys.isEmpty else { return }
-
-        // After modifying the EnvironmentValues properties, parse declarations again to delete the Environment keys in their new position.
-        let newDeclarations = formatter.parseDeclarations()
-        let newEnvironmentKeyDeclarations = formatter.findAllEnvironmentKeyDeclarations(newDeclarations)
-
-        // Loop the collection in reverse to avoid invalidating the declaration indexes as we remove EnvironmentKey
-        for declaration in newEnvironmentKeyDeclarations.reversed() where updatedEnvironmentKeys.contains(declaration.key) {
-            formatter.removeTokens(in: declaration.declaration.originalRange)
-        }
+        formatter.removeEnvironmentKeys(updatedEnvironmentKeys)
     } examples: {
         """
         ```diff
@@ -68,7 +60,7 @@ private struct EnvironmentValueProperty {
 }
 
 private extension Formatter {
-    func findAllEnvironmentKeyDeclarations(_ declarations: [Declaration]) -> [EnvironmentKey] {
+    func findAllEnvironmentKeys(_ declarations: [Declaration]) -> [EnvironmentKey] {
         declarations.compactMap { declaration -> EnvironmentKey? in
             guard declaration.keyword == "struct",
                   declaration.openTokens.contains(.identifier("EnvironmentKey")),
@@ -90,7 +82,7 @@ private extension Formatter {
         }
     }
 
-    func findAllEnvironmentValuesPropertyDeclarations(_ declarations: [Declaration], referencing environmentKeys: [String: EnvironmentKey])
+    func findAllEnvironmentValuesProperties(_ declarations: [Declaration], referencing environmentKeys: [String: EnvironmentKey])
         -> [EnvironmentValueProperty]
     {
         declarations
@@ -138,6 +130,18 @@ private extension Formatter {
             )
             // Add @Entry Macro
             replaceToken(at: keywordIndex, with: [.identifier("@Entry"), .space(" "), .identifier("var")])
+        }
+    }
+
+    func removeEnvironmentKeys(_ updatedEnvironmentKeys: Set<String>) {
+        guard !updatedEnvironmentKeys.isEmpty else { return }
+
+        // After modifying the EnvironmentValues properties, parse declarations again to delete the Environment keys in their new position.
+        let repositionedEnvironmentKeys = findAllEnvironmentKeys(parseDeclarations())
+
+        // Loop the collection in reverse to avoid invalidating the declaration indexes as we remove EnvironmentKey
+        for declaration in repositionedEnvironmentKeys.reversed() where updatedEnvironmentKeys.contains(declaration.key) {
+            removeTokens(in: declaration.declaration.originalRange)
         }
     }
 }

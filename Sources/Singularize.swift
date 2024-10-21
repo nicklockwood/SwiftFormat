@@ -99,4 +99,20 @@ extension String {
         }
         return self
     }
+
+    func removingSuffix(_ suffix: String) -> String? {
+        if hasSuffix(suffix.lowercased()) {
+            let string = dropLast(suffix.count)
+            return string.first.map { "\($0.lowercased())\(string.dropFirst())" }
+        }
+        if hasSuffix(suffix.capitalized) {
+            let string = dropLast(suffix.count)
+            return string.first.map { "\($0.lowercased())\(string.dropFirst())" }
+        }
+        if hasSuffix(suffix) {
+            let string = dropLast(suffix.count)
+            return string.first.map { "\($0.lowercased())\(string.dropFirst())" }
+        }
+        return self
+    }
 }

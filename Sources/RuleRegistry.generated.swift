@@ -83,6 +83,7 @@ let ruleRegistry: [String: FormatRule] = [
     "redundantType": .redundantType,
     "redundantTypedThrows": .redundantTypedThrows,
     "redundantVoidReturnType": .redundantVoidReturnType,
+    "replaceEnvironmentKeyForEntryMacro": .replaceEnvironmentKeyForEntryMacro,
     "semicolons": .semicolons,
     "sortDeclarations": .sortDeclarations,
     "sortImports": .sortImports,

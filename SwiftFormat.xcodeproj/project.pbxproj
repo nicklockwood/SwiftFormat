@@ -660,6 +660,11 @@
 		9BDB4F212C94780200C93995 /* PrivateStateVariables.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BDB4F1C2C94773600C93995 /* PrivateStateVariables.swift */; };
 		A3DF48252620E03600F45A5F /* JSONReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3DF48242620E03600F45A5F /* JSONReporter.swift */; };
 		A3DF48262620E03600F45A5F /* JSONReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3DF48242620E03600F45A5F /* JSONReporter.swift */; };
+		ABC11AF82CC082D300556471 /* EnvironmentEntryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABC11AF72CC082D300556471 /* EnvironmentEntryTests.swift */; };
+		ABC4BA2C2CB9B094002C6874 /* EnvironmentEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABC4BA2B2CB9B094002C6874 /* EnvironmentEntry.swift */; };
+		ABC4BA2D2CB9B094002C6874 /* EnvironmentEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABC4BA2B2CB9B094002C6874 /* EnvironmentEntry.swift */; };
+		ABC4BA2E2CB9B094002C6874 /* EnvironmentEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABC4BA2B2CB9B094002C6874 /* EnvironmentEntry.swift */; };
+		ABC4BA2F2CB9B094002C6874 /* EnvironmentEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABC4BA2B2CB9B094002C6874 /* EnvironmentEntry.swift */; };
 		B9C4F55C2387FA3E0088DBEE /* SupportedContentUTIs.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9C4F55B2387FA3E0088DBEE /* SupportedContentUTIs.swift */; };
 		C2FFD1822BD13C9E00774F55 /* XMLReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FFD1812BD13C9E00774F55 /* XMLReporter.swift */; };
 		C2FFD1832BD13C9E00774F55 /* XMLReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FFD1812BD13C9E00774F55 /* XMLReporter.swift */; };
@@ -1034,6 +1039,8 @@
 		9BDB4F1A2C94760000C93995 /* PrivateStateVariablesTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PrivateStateVariablesTests.swift; sourceTree = "<group>"; };
 		9BDB4F1C2C94773600C93995 /* PrivateStateVariables.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivateStateVariables.swift; sourceTree = "<group>"; };
 		A3DF48242620E03600F45A5F /* JSONReporter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = JSONReporter.swift; sourceTree = "<group>"; };
+		ABC11AF72CC082D300556471 /* EnvironmentEntryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnvironmentEntryTests.swift; sourceTree = "<group>"; };
+		ABC4BA2B2CB9B094002C6874 /* EnvironmentEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnvironmentEntry.swift; sourceTree = "<group>"; };
 		B9C4F55B2387FA3E0088DBEE /* SupportedContentUTIs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupportedContentUTIs.swift; sourceTree = "<group>"; };
 		C2FFD1812BD13C9E00774F55 /* XMLReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XMLReporter.swift; sourceTree = "<group>"; };
 		D52F6A632A82E04600FE1448 /* GitFileInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitFileInfo.swift; sourceTree = "<group>"; };
@@ -1340,6 +1347,7 @@
 				2E2BABBB2C57F6DD00590239 /* WrapSingleLineComments.swift */,
 				2E2BABDF2C57F6DD00590239 /* WrapSwitchCases.swift */,
 				2E2BABF92C57F6DD00590239 /* YodaConditions.swift */,
+				ABC4BA2B2CB9B094002C6874 /* EnvironmentEntry.swift */,
 			);
 			path = Rules;
 			sourceTree = "<group>";
@@ -1459,6 +1467,7 @@
 				2E8DE6F12C57FEB30032BF25 /* WrapSwitchCasesTests.swift */,
 				2E8DE6A42C57FEB30032BF25 /* WrapTests.swift */,
 				2E8DE6AC2C57FEB30032BF25 /* YodaConditionsTests.swift */,
+				ABC11AF72CC082D300556471 /* EnvironmentEntryTests.swift */,
 			);
 			path = Rules;
 			sourceTree = "<group>";
@@ -1941,6 +1950,7 @@
 				2E2BAC832C57F6DD00590239 /* Linebreaks.swift in Sources */,
 				2E2BAC3F2C57F6DD00590239 /* DuplicateImports.swift in Sources */,
 				2E2BAC1F2C57F6DD00590239 /* RedundantOptionalBinding.swift in Sources */,
+				ABC4BA2F2CB9B094002C6874 /* EnvironmentEntry.swift in Sources */,
 				2E2BACBF2C57F6DD00590239 /* TypeSugar.swift in Sources */,
 				2E2BAD372C57F6DD00590239 /* WrapSwitchCases.swift in Sources */,
 				2E2BAD472C57F6DD00590239 /* WrapLoopBodies.swift in Sources */,
@@ -2021,6 +2031,7 @@
 				0142F06F1D72FE10007D66CC /* SwiftFormatTests.swift in Sources */,
 				2E8DE7432C57FEB30032BF25 /* SpaceAroundBracketsTests.swift in Sources */,
 				2E8DE7612C57FEB30032BF25 /* RedundantFileprivateTests.swift in Sources */,
+				ABC11AF82CC082D300556471 /* EnvironmentEntryTests.swift in Sources */,
 				2E8DE6F82C57FEB30032BF25 /* RedundantClosureTests.swift in Sources */,
 				2E8DE7562C57FEB30032BF25 /* BlankLinesAtStartOfScopeTests.swift in Sources */,
 				2E8DE75F2C57FEB30032BF25 /* BlankLineAfterImportsTests.swift in Sources */,
@@ -2122,6 +2133,7 @@
 				2E2BAD802C57F6DD00590239 /* SortTypealiases.swift in Sources */,
 				2E2BADA02C57F6DD00590239 /* YodaConditions.swift in Sources */,
 				2E2BACA82C57F6DD00590239 /* WrapSingleLineComments.swift in Sources */,
+				ABC4BA2E2CB9B094002C6874 /* EnvironmentEntry.swift in Sources */,
 				2E2BAC742C57F6DD00590239 /* EmptyBraces.swift in Sources */,
 				2E2BAD242C57F6DD00590239 /* RedundantSelf.swift in Sources */,
 				2E2BAC282C57F6DD00590239 /* RedundantNilInit.swift in Sources */,
@@ -2287,6 +2299,7 @@
 				E4872114201D3B8C0014845E /* Tokenizer.swift in Sources */,
 				2E2BAD612C57F6DD00590239 /* RedundantBackticks.swift in Sources */,
 				2E2BAC752C57F6DD00590239 /* EmptyBraces.swift in Sources */,
+				ABC4BA2C2CB9B094002C6874 /* EnvironmentEntry.swift in Sources */,
 				2E2BACF92C57F6DD00590239 /* RedundantStaticSelf.swift in Sources */,
 				2E2BAC512C57F6DD00590239 /* SortImports.swift in Sources */,
 				2E2BAC112C57F6DD00590239 /* WrapMultilineConditionalAssignment.swift in Sources */,
@@ -2434,6 +2447,7 @@
 				E4FABAD8202FEF060065716E /* OptionDescriptor.swift in Sources */,
 				2E2BAD622C57F6DD00590239 /* RedundantBackticks.swift in Sources */,
 				2E2BAC762C57F6DD00590239 /* EmptyBraces.swift in Sources */,
+				ABC4BA2D2CB9B094002C6874 /* EnvironmentEntry.swift in Sources */,
 				2E2BACFA2C57F6DD00590239 /* RedundantStaticSelf.swift in Sources */,
 				2E2BAC522C57F6DD00590239 /* SortImports.swift in Sources */,
 				2E2BAC122C57F6DD00590239 /* WrapMultilineConditionalAssignment.swift in Sources */,

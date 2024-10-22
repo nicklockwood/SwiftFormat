@@ -167,6 +167,11 @@ enum Declaration: Hashable {
         !modifiers.contains("static") && isStoredProperty
     }
 
+    /// Whether or not this declaration represents a static stored instance property
+    var isStaticStoredProperty: Bool {
+        modifiers.contains("static") && isStoredProperty
+    }
+
     /// Whether or not this declaration represents a stored property
     var isStoredProperty: Bool {
         guard keyword == "let" || keyword == "var" else { return false }

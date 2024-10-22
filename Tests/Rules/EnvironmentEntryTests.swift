@@ -252,7 +252,7 @@ final class EnvironmentEntryTests: XCTestCase {
         )
     }
 
-    func testEnvironmentKeyWithMultupleDefinitionsIsNotRemoved() {
+    func testEnvironmentKeyWithMultipleDefinitionsIsNotRemoved() {
         let input = """
         extension EnvironmentValues {
             var isSelected: Bool {
@@ -270,5 +270,119 @@ final class EnvironmentEntryTests: XCTestCase {
         }
         """
         testFormatting(for: input, rule: .environmentEntry, options: FormatOptions(swiftVersion: "6.0"))
+    }
+
+    func testEntryMacroReplacementWhenDefaultValueIsNotComputed() {
+        let input = """
+        struct ScreenStyleEnvironmentKey: EnvironmentKey {
+            static var defaultValue: ScreenStyle = ScreenStyle()
+        }
+
+        extension EnvironmentValues {
+            var screenStyle: ScreenStyle {
+                get { self[ScreenStyleEnvironmentKey.self] }
+                set { self[ScreenStyleEnvironmentKey.self] = newValue }
+            }
+        }
+        """
+        let output = """
+        extension EnvironmentValues {
+            @Entry var screenStyle: ScreenStyle = ScreenStyle()
+        }
+        """
+        testFormatting(
+            for: input, output,
+            rule: .environmentEntry,
+            options: FormatOptions(swiftVersion: "6.0"),
+            exclude: [.redundantType]
+        )
+    }
+
+    func testEntryMacroReplacementWhenPropertyIsPublic() {
+        let input = """
+        struct ScreenStyleEnvironmentKey: EnvironmentKey {
+            static var defaultValue: ScreenStyle { .init() }
+        }
+
+        extension EnvironmentValues {
+            public var screenStyle: ScreenStyle {
+                get { self[ScreenStyleEnvironmentKey.self] }
+                set { self[ScreenStyleEnvironmentKey.self] = newValue }
+            }
+        }
+        """
+        let output = """
+        extension EnvironmentValues {
+            @Entry public var screenStyle: ScreenStyle = .init()
+        }
+        """
+        testFormatting(
+            for: input, output,
+            rule: .environmentEntry,
+            options: FormatOptions(swiftVersion: "6.0")
+        )
+    }
+
+    func testEntryMacroReplacementWhenKeyDoesntHaveEnvironmentKeySuffix() {
+        let input = """
+        struct ScreenStyle: EnvironmentKey {
+            static var defaultValue: Style { .init() }
+        }
+
+        extension EnvironmentValues {
+            public var screenStyle: Style {
+                get { self[ScreenStyle.self] }
+                set { self[ScreenStyle.self] = newValue }
+            }
+        }
+        """
+        let output = """
+        extension EnvironmentValues {
+            @Entry public var screenStyle: Style = .init()
+        }
+        """
+        testFormatting(for: input, output, rule: .environmentEntry, options: FormatOptions(swiftVersion: "6.0"))
+    }
+
+    func testEntryMacroReplacementWhenKeyHasKeySuffix() {
+        let input = """
+        private struct ScreenStyleKey: EnvironmentKey {
+            static var defaultValue: Style { .init() }
+        }
+
+        extension EnvironmentValues {
+            public var screenStyle: Style {
+                get { self[ScreenStyleKey.self] }
+                set { self[ScreenStyleKey.self] = newValue }
+            }
+        }
+        """
+        let output = """
+        extension EnvironmentValues {
+            @Entry public var screenStyle: Style = .init()
+        }
+        """
+        testFormatting(for: input, output, rule: .environmentEntry, options: FormatOptions(swiftVersion: "6.0"))
+    }
+
+    func testEntryMacroReplacementWhenKeyHasAcronymInKeyPrefix() {
+        let input = """
+        private struct DLSScreenStyleEnvironmentKey: EnvironmentKey {
+            static var defaultValue: DLSScreenStyle { .init() }
+        }
+
+        extension EnvironmentValues {
+            private var dlsScreenStyle: DLSScreenStyle {
+                get { self[DLSScreenStyleEnvironmentKey.self] }
+                set { self[DLSScreenStyleEnvironmentKey.self] = newValue }
+            }
+        }
+        """
+        let output = """
+        extension EnvironmentValues {
+            @Entry private var dlsScreenStyle: DLSScreenStyle = .init()
+        }
+        """
+        testFormatting(for: input, output, rule: .environmentEntry, options: FormatOptions(swiftVersion: "6.0"))
     }
 }

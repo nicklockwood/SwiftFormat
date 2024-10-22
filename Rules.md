@@ -876,7 +876,7 @@ Option | Description
 
 ## environmentEntry
 
-Updates SwiftUI `EnvironmentValues` definitions to use the @Entry macro
+Updates SwiftUI `EnvironmentValues` definitions to use the @Entry macro.
 
 <details>
 <summary>Examples</summary>

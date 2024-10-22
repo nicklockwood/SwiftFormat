@@ -6,7 +6,7 @@ import Foundation
 public extension FormatRule {
     /// Removes types conforming `EnvironmentKey` and replaces them with the @Entry macro
     static let environmentEntry = FormatRule(
-        help: "Updates SwiftUI `EnvironmentValues` definitions to use the @Entry macro",
+        help: "Updates SwiftUI `EnvironmentValues` definitions to use the @Entry macro.",
         disabledByDefault: true
     ) { formatter in
         // The @Entry macro is only available in Xcode 16 therefore this rule requires the same Xcode version to work.
@@ -141,7 +141,7 @@ extension Formatter {
             }
             // Add `EnvironmentKey.defaultValue` to `EnvironmentValues property`
             if let defaultValueTokens = envProperty.associatedEnvironmentKey.defaultValueTokens {
-                var defaultValueTokens = [.space(" "), .keyword("="), .space(" ")] + defaultValueTokens
+                var defaultValueTokens = [.space(" "), .operator("=", .infix), .space(" ")] + defaultValueTokens
 
                 if envProperty.associatedEnvironmentKey.isMultilineDefaultValue {
                     defaultValueTokens.append(contentsOf: [.endOfScope("("), .endOfScope(")")])
@@ -166,7 +166,7 @@ extension Formatter {
     }
 }
 
-private extension String {
+extension String {
     func removingSuffix(_ suffix: String) -> String? {
         if hasSuffix(suffix) {
             let string = dropLast(suffix.count)

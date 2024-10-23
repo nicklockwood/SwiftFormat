@@ -252,7 +252,7 @@ final class EnvironmentEntryTests: XCTestCase {
         )
     }
 
-    func testEnvironmentKeyWithMultupleDefinitionsIsNotRemoved() {
+    func testEnvironmentKeyWithMultipleDefinitionsIsNotRemoved() {
         let input = """
         extension EnvironmentValues {
             var isSelected: Bool {
@@ -270,5 +270,169 @@ final class EnvironmentEntryTests: XCTestCase {
         }
         """
         testFormatting(for: input, rule: .environmentEntry, options: FormatOptions(swiftVersion: "6.0"))
+    }
+
+    func testEntryMacroReplacementWhenDefaultValueIsNotComputed() {
+        let input = """
+        struct ScreenStyleEnvironmentKey: EnvironmentKey {
+            static var defaultValue: ScreenStyle = ScreenStyle()
+        }
+
+        extension EnvironmentValues {
+            var screenStyle: ScreenStyle {
+                get { self[ScreenStyleEnvironmentKey.self] }
+                set { self[ScreenStyleEnvironmentKey.self] = newValue }
+            }
+        }
+        """
+        let output = """
+        extension EnvironmentValues {
+            @Entry var screenStyle: ScreenStyle = ScreenStyle()
+        }
+        """
+        testFormatting(
+            for: input, output,
+            rule: .environmentEntry,
+            options: FormatOptions(swiftVersion: "6.0"),
+            exclude: [.redundantType]
+        )
+    }
+
+    func testEntryMacroReplacementWhenPropertyIsPublic() {
+        let input = """
+        struct ScreenStyleEnvironmentKey: EnvironmentKey {
+            static var defaultValue: ScreenStyle { .init() }
+        }
+
+        extension EnvironmentValues {
+            public var screenStyle: ScreenStyle {
+                get { self[ScreenStyleEnvironmentKey.self] }
+                set { self[ScreenStyleEnvironmentKey.self] = newValue }
+            }
+        }
+        """
+        let output = """
+        extension EnvironmentValues {
+            @Entry public var screenStyle: ScreenStyle = .init()
+        }
+        """
+        testFormatting(
+            for: input, output,
+            rule: .environmentEntry,
+            options: FormatOptions(swiftVersion: "6.0")
+        )
+    }
+
+    func testEntryMacroReplacementWhenKeyDoesntHaveEnvironmentKeySuffix() {
+        let input = """
+        struct ScreenStyle: EnvironmentKey {
+            static var defaultValue: Style { .init() }
+        }
+
+        extension EnvironmentValues {
+            public var screenStyle: Style {
+                get { self[ScreenStyle.self] }
+                set { self[ScreenStyle.self] = newValue }
+            }
+        }
+        """
+        let output = """
+        extension EnvironmentValues {
+            @Entry public var screenStyle: Style = .init()
+        }
+        """
+        testFormatting(for: input, output, rule: .environmentEntry, options: FormatOptions(swiftVersion: "6.0"))
+    }
+
+    func testEntryMacroReplacementWithEnumEnvironmentKey() {
+        let input = """
+        private enum InputShouldChangeKey: EnvironmentKey {
+            static var defaultValue: InputShouldChangeHandler { nil }
+        }
+
+        extension EnvironmentValues {
+            public var inputShouldChange: InputShouldChangeHandler {
+                get { self[InputShouldChangeKey.self] }
+                set { self[InputShouldChangeKey.self] = newValue }
+            }
+        }
+        """
+        let output = """
+        extension EnvironmentValues {
+            @Entry public var inputShouldChange: InputShouldChangeHandler = nil
+        }
+        """
+        testFormatting(for: input, output, rule: .environmentEntry, options: FormatOptions(swiftVersion: "6.0"))
+    }
+
+    func testEntryMacroReplacementWhenDefaultValueIsLet() {
+        let input = """
+        private struct ScreenStyleKey: EnvironmentKey {
+            static let defaultValue: Style = .init()
+        }
+
+        extension EnvironmentValues {
+            public var screenStyle: Style {
+                get { self[ScreenStyleKey.self] }
+                set { self[ScreenStyleKey.self] = newValue }
+            }
+        }
+        """
+        let output = """
+        extension EnvironmentValues {
+            @Entry public var screenStyle: Style = .init()
+        }
+        """
+        testFormatting(for: input, output, rule: .environmentEntry, options: FormatOptions(swiftVersion: "6.0"))
+    }
+
+    func testEntryMacroReplacementWithoutExplicitTypeAnnotation() {
+        let input = """
+        private struct ScreenStyleKey: EnvironmentKey {
+            static let defaultValue = Style()
+        }
+
+        extension EnvironmentValues {
+            public var screenStyle: Style {
+                get { self[ScreenStyleKey.self] }
+                set { self[ScreenStyleKey.self] = newValue }
+            }
+        }
+        """
+        let output = """
+        extension EnvironmentValues {
+            @Entry public var screenStyle: Style = Style()
+        }
+        """
+        testFormatting(
+            for: input, output,
+            rule: .environmentEntry,
+            options: FormatOptions(swiftVersion: "6.0"),
+            exclude: [.redundantType]
+        )
+    }
+
+    func testEnvironmentValuesPropertyWithoutSetterIsNotModified() {
+        let input = """
+        struct AEnvironmentKey: EnvironmentKey {
+            static var defaultValue: A = .default
+        }
+
+        extension EnvironmentValues {
+            public var fallbackA: A {
+                if self[AEnvironmentKey.self] {
+                    A()
+                } else {
+                    something()
+                }
+            }
+        }
+        """
+        testFormatting(
+            for: input,
+            rule: .environmentEntry,
+            options: FormatOptions(swiftVersion: "6.0"),
+            exclude: [.redundantType]
+        )
     }
 }

@@ -63,40 +63,60 @@ struct EnvironmentValueProperty {
 extension Formatter {
     func findAllEnvironmentKeys(_ declarations: [Declaration]) -> [EnvironmentKey] {
         declarations.compactMap { declaration -> EnvironmentKey? in
-            guard declaration.keyword == "struct",
+            guard declaration.keyword == "struct" || declaration.keyword == "enum",
                   declaration.openTokens.contains(.identifier("EnvironmentKey")),
                   let keyName = declaration.openTokens.first(where: \.isIdentifier),
                   let structDeclarationBody = declaration.body,
                   structDeclarationBody.count == 1,
                   let defaultValueDeclaration = structDeclarationBody.first(where: {
-                      $0.keyword == "var" && $0.name == "defaultValue"
+                      ($0.keyword == "var" || $0.keyword == "let") && $0.name == "defaultValue"
                   }),
-                  let valueEndOfScopeIndex = endOfScope(at: defaultValueDeclaration.originalRange.upperBound - 1),
-                  let valueStartOfScopeIndex = startOfScope(at: valueEndOfScopeIndex),
-                  let valueStartIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: valueStartOfScopeIndex),
-                  let valueEndIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: valueEndOfScopeIndex)
+                  let (defaultValueTokens, isMultiline) = findEnvironmentKeyDefaultValue(defaultValueDeclaration)
             else { return nil }
-
-            let defaultValueDeclarations = parseDeclarations(in: valueStartIndex ... valueEndIndex)
-            let defaultValueTokens: ArraySlice<Token>?
-
-            if defaultValueDeclarations.count <= 1 {
-                if defaultValueDeclarations.first?.name == "defaultValue" {
-                    // Default value is implicitly `nil`
-                    defaultValueTokens = nil
-                } else {
-                    defaultValueTokens = tokens[valueStartIndex ... valueEndIndex]
-                }
-            } else {
-                defaultValueTokens = tokens[valueStartOfScopeIndex ... valueEndOfScopeIndex]
-            }
             return EnvironmentKey(
                 key: keyName.string,
                 declaration: declaration,
                 defaultValueTokens: defaultValueTokens,
-                isMultilineDefaultValue: defaultValueDeclarations.count > 1
+                isMultilineDefaultValue: isMultiline
             )
         }
+    }
+
+    func findEnvironmentKeyDefaultValue(_ defaultValueDeclaration: Declaration) -> (tokens: ArraySlice<Token>?, isMultiline: Bool)? {
+        if defaultValueDeclaration.isStaticStoredProperty,
+           let equalsIndex = index(of: .operator("=", .infix), after: defaultValueDeclaration.originalRange.lowerBound),
+           equalsIndex <= defaultValueDeclaration.originalRange.upperBound,
+           let valueStartIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
+           let valueEndIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: defaultValueDeclaration.originalRange.upperBound)
+        {
+            // Default value is stored property, not computed (e.g. static var defaultValue: Bool = false)
+            return (tokens[valueStartIndex ... valueEndIndex], false)
+        } else if let valueEndOfScopeIndex = endOfScope(at: defaultValueDeclaration.originalRange.upperBound - 1),
+                  let valueStartOfScopeIndex = startOfScope(at: valueEndOfScopeIndex),
+                  let valueStartIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: valueStartOfScopeIndex),
+                  let valueEndIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: valueEndOfScopeIndex)
+        {
+            let defaultValueDeclarations = parseDeclarations(in: valueStartIndex ... valueEndIndex)
+            let isMultilineDeclaration = defaultValueDeclarations.count > 1
+            if defaultValueDeclarations.count <= 1 {
+                if defaultValueDeclarations.first?.name == "defaultValue" {
+                    // Default value is implicitly `nil` (e.g. static var defaultValue: Bool?)
+                    return (nil, false)
+                } else {
+                    // Default value is a computed property with a single value (e.g. static var defaultValue: Bool { false })
+                    return (tokens[valueStartIndex ... valueEndIndex], isMultilineDeclaration)
+                }
+            } else {
+                // Default value is a multiline computed property:
+                // ```
+                // static var defaultValue: Bool {
+                //   let computedValue = compute()
+                //   return computedValue
+                // }
+                // ```
+                return (tokens[valueStartOfScopeIndex ... valueEndOfScopeIndex], isMultilineDeclaration)
+            }
+        } else { return nil }
     }
 
     func findAllEnvironmentValuesProperties(_ declarations: [Declaration], referencing environmentKeys: [String: EnvironmentKey])
@@ -110,11 +130,19 @@ extension Formatter {
                     guard propertyDeclaration.isSimpleDeclaration,
                           propertyDeclaration.keyword == "var",
                           let key = propertyDeclaration.tokens.first(where: { environmentKeys[$0.string] != nil })?.string,
-                          propertyDeclaration.name == key.removingSuffix("EnvironmentKey")
+                          let environmentKey = environmentKeys[key]
                     else { return nil }
+
+                    // Ensure the property has a setter and a getter, this can avoid edge cases where
+                    // a property references a `EnvironmentKey` and consumes it to perform some computation.
+                    let propertyFormatter = Formatter(propertyDeclaration.tokens)
+                    guard let indexOfSetter = propertyDeclaration.tokens.firstIndex(where: { $0 == .identifier("set") }),
+                          propertyFormatter.isAccessorKeyword(at: indexOfSetter)
+                    else { return nil }
+
                     return EnvironmentValueProperty(
                         key: key,
-                        associatedEnvironmentKey: environmentKeys[key]!,
+                        associatedEnvironmentKey: environmentKey,
                         declaration: propertyDeclaration
                     )
                 }
@@ -127,7 +155,7 @@ extension Formatter {
             let propertyDeclaration = envProperty.declaration
             guard let propertyBodyStartIndex = index(of: .startOfScope("{"), after: propertyDeclaration.originalRange.lowerBound),
                   let propertyBodyEndIndex = endOfScope(at: propertyBodyStartIndex),
-                  let keywordIndex = index(of: .keyword("var"), after: propertyDeclaration.originalRange.lowerBound)
+                  let propertyStartIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: propertyDeclaration.originalRange.lowerBound)
             else {
                 continue
             }
@@ -146,10 +174,10 @@ extension Formatter {
                 if envProperty.associatedEnvironmentKey.isMultilineDefaultValue {
                     defaultValueTokens.append(contentsOf: [.endOfScope("("), .endOfScope(")")])
                 }
-                insert(defaultValueTokens, at: endOfLine(at: keywordIndex))
+                insert(defaultValueTokens, at: endOfLine(at: propertyStartIndex))
             }
             // Add @Entry Macro
-            replaceToken(at: keywordIndex, with: [.identifier("@Entry"), .space(" "), .identifier("var")])
+            insert([.identifier("@Entry"), .space(" ")], at: propertyStartIndex)
         }
     }
 
@@ -163,15 +191,5 @@ extension Formatter {
         for declaration in repositionedEnvironmentKeys.reversed() where updatedEnvironmentKeys.contains(declaration.key) {
             removeTokens(in: declaration.declaration.originalRange)
         }
-    }
-}
-
-extension String {
-    func removingSuffix(_ suffix: String) -> String? {
-        if hasSuffix(suffix) {
-            let string = dropLast(suffix.count)
-            return string.first.map { "\($0.lowercased())\(string.dropFirst())" }
-        }
-        return self
     }
 }

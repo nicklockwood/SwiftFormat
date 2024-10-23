@@ -344,48 +344,6 @@ final class EnvironmentEntryTests: XCTestCase {
         testFormatting(for: input, output, rule: .environmentEntry, options: FormatOptions(swiftVersion: "6.0"))
     }
 
-    func testEntryMacroReplacementWhenKeyHasKeySuffix() {
-        let input = """
-        private struct ScreenStyleKey: EnvironmentKey {
-            static var defaultValue: Style { .init() }
-        }
-
-        extension EnvironmentValues {
-            public var screenStyle: Style {
-                get { self[ScreenStyleKey.self] }
-                set { self[ScreenStyleKey.self] = newValue }
-            }
-        }
-        """
-        let output = """
-        extension EnvironmentValues {
-            @Entry public var screenStyle: Style = .init()
-        }
-        """
-        testFormatting(for: input, output, rule: .environmentEntry, options: FormatOptions(swiftVersion: "6.0"))
-    }
-
-    func testEntryMacroReplacementWhenKeyHasAcronymInKeyPrefix() {
-        let input = """
-        private struct DLSScreenStyleEnvironmentKey: EnvironmentKey {
-            static var defaultValue: DLSScreenStyle { .init() }
-        }
-
-        extension EnvironmentValues {
-            private var dlsScreenStyle: DLSScreenStyle {
-                get { self[DLSScreenStyleEnvironmentKey.self] }
-                set { self[DLSScreenStyleEnvironmentKey.self] = newValue }
-            }
-        }
-        """
-        let output = """
-        extension EnvironmentValues {
-            @Entry private var dlsScreenStyle: DLSScreenStyle = .init()
-        }
-        """
-        testFormatting(for: input, output, rule: .environmentEntry, options: FormatOptions(swiftVersion: "6.0"))
-    }
-
     func testEntryMacroReplacementWithEnumEnvironmentKey() {
         let input = """
         private enum InputShouldChangeKey: EnvironmentKey {

@@ -133,8 +133,10 @@ extension Formatter {
                           let environmentKey = environmentKeys[key]
                     else { return nil }
 
+                    // Ensure the property has a setter and a getter, this can avoid edge cases where
+                    // a property references a `EnvironmentKey` and consumes it to perform some computation.
                     let propertyFormatter = Formatter(propertyDeclaration.tokens)
-                    guard let indexOfSetter = propertyFormatter.index(of: .identifier("set"), after: -1),
+                    guard let indexOfSetter = propertyDeclaration.tokens.firstIndex(where: { $0 == .identifier("set") }),
                           propertyFormatter.isAccessorKeyword(at: indexOfSetter)
                     else { return nil }
 

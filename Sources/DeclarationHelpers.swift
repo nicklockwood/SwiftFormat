@@ -165,12 +165,12 @@ enum Declaration: Hashable {
     /// Whether or not this declaration represents a stored instance property
     var isStoredInstanceProperty: Bool {
         // A static property is not an instance property
-        modifiers.contains("static") ? false : isStoredProperty
+        !modifiers.contains("static") && isStoredProperty
     }
 
     /// Whether or not this declaration represents a static stored instance property
     var isStaticStoredProperty: Bool {
-        modifiers.contains("static") ? isStoredProperty : false
+        modifiers.contains("static") && isStoredProperty
     }
 
     var isStoredProperty: Bool {

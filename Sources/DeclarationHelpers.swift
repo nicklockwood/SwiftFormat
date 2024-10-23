@@ -696,7 +696,7 @@ extension Declaration {
     }
 }
 
-extension Formatter {
+private extension Formatter {
     /// The open `{` for given property declaration's body, if present
     func startOfPropertyBody(at introducerIndex: Int, endOfPropertyIndex: Int) -> Int? {
         guard tokens[introducerIndex] == .keyword("let") || tokens[introducerIndex] == .keyword("var") else {

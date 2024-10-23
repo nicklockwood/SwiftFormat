@@ -129,11 +129,18 @@ extension Formatter {
                 environmentValuesDeclaration.body?.compactMap { propertyDeclaration -> (EnvironmentValueProperty)? in
                     guard propertyDeclaration.isSimpleDeclaration,
                           propertyDeclaration.keyword == "var",
-                          let key = propertyDeclaration.tokens.first(where: { environmentKeys[$0.string] != nil })?.string
+                          let key = propertyDeclaration.tokens.first(where: { environmentKeys[$0.string] != nil })?.string,
+                          let environmentKey = environmentKeys[key]
                     else { return nil }
+
+                    let propertyFormatter = Formatter(propertyDeclaration.tokens)
+                    guard let indexOfSetter = propertyFormatter.index(of: .identifier("set"), after: -1),
+                          propertyFormatter.isAccessorKeyword(at: indexOfSetter)
+                    else { return nil }
+
                     return EnvironmentValueProperty(
                         key: key,
-                        associatedEnvironmentKey: environmentKeys[key]!,
+                        associatedEnvironmentKey: environmentKey,
                         declaration: propertyDeclaration
                     )
                 }

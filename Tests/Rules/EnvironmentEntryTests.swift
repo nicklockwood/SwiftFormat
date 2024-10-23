@@ -411,4 +411,28 @@ final class EnvironmentEntryTests: XCTestCase {
             exclude: [.redundantType]
         )
     }
+
+    func testEnvironmentValuesPropertyWithoutSetterIsNotModified() {
+        let input = """
+        struct AEnvironmentKey: EnvironmentKey {
+            static var defaultValue: A = .default
+        }
+
+        extension EnvironmentValues {
+            public var fallbackA: A {
+                if self[AEnvironmentKey.self] {
+                    A()
+                } else {
+                    something()
+                }
+            }
+        }
+        """
+        testFormatting(
+            for: input,
+            rule: .environmentEntry,
+            options: FormatOptions(swiftVersion: "6.0"),
+            exclude: [.redundantType]
+        )
+    }
 }

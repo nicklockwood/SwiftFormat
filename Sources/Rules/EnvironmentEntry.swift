@@ -63,13 +63,13 @@ struct EnvironmentValueProperty {
 extension Formatter {
     func findAllEnvironmentKeys(_ declarations: [Declaration]) -> [EnvironmentKey] {
         declarations.compactMap { declaration -> EnvironmentKey? in
-            guard declaration.keyword == "struct",
+            guard declaration.keyword == "struct" || declaration.keyword == "enum",
                   declaration.openTokens.contains(.identifier("EnvironmentKey")),
                   let keyName = declaration.openTokens.first(where: \.isIdentifier),
                   let structDeclarationBody = declaration.body,
                   structDeclarationBody.count == 1,
                   let defaultValueDeclaration = structDeclarationBody.first(where: {
-                      $0.keyword == "var" && $0.name == "defaultValue"
+                      ($0.keyword == "var" || $0.keyword == "let") && $0.name == "defaultValue"
                   })
             else { return nil }
 
@@ -179,7 +179,6 @@ extension Formatter {
         }
     }
 }
-
 
 extension Declaration {
     var isStoredStaticProperty: Bool {

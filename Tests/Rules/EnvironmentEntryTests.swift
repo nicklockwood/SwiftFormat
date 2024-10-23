@@ -385,4 +385,25 @@ final class EnvironmentEntryTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .environmentEntry, options: FormatOptions(swiftVersion: "6.0"))
     }
+
+    func testEntryMacroReplacementWithEnumEnvironmentKey() {
+        let input = """
+        private enum InputShouldChangeKey: EnvironmentKey {
+            static var defaultValue: InputShouldChangeHandler { nil }
+        }
+
+        extension EnvironmentValues {
+            public var inputShouldChange: InputShouldChangeHandler {
+                get { self[InputShouldChangeKey.self] }
+                set { self[InputShouldChangeKey.self] = newValue }
+            }
+        }
+        """
+        let output = """
+        extension EnvironmentValues {
+            @Entry public var inputShouldChange: InputShouldChangeHandler = nil
+        }
+        """
+        testFormatting(for: input, output, rule: .environmentEntry, options: FormatOptions(swiftVersion: "6.0"))
+    }
 }

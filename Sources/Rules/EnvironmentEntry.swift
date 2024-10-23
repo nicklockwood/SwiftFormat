@@ -83,7 +83,7 @@ extension Formatter {
     }
 
     func findEnvironmentKeyDefaultValue(_ defaultValueDeclaration: Declaration) -> (tokens: ArraySlice<Token>?, isMultiline: Bool)? {
-        if defaultValueDeclaration.isStoredStaticProperty,
+        if defaultValueDeclaration.isStaticStoredProperty,
            let equalsIndex = index(of: .operator("=", .infix), after: defaultValueDeclaration.originalRange.lowerBound),
            equalsIndex <= defaultValueDeclaration.originalRange.upperBound,
            let valueStartIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),

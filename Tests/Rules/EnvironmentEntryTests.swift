@@ -364,4 +364,51 @@ final class EnvironmentEntryTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .environmentEntry, options: FormatOptions(swiftVersion: "6.0"))
     }
+
+    func testEntryMacroReplacementWhenDefaultValueIsLet() {
+        let input = """
+        private struct ScreenStyleKey: EnvironmentKey {
+            static let defaultValue: Style = .init()
+        }
+
+        extension EnvironmentValues {
+            public var screenStyle: Style {
+                get { self[ScreenStyleKey.self] }
+                set { self[ScreenStyleKey.self] = newValue }
+            }
+        }
+        """
+        let output = """
+        extension EnvironmentValues {
+            @Entry public var screenStyle: Style = .init()
+        }
+        """
+        testFormatting(for: input, output, rule: .environmentEntry, options: FormatOptions(swiftVersion: "6.0"))
+    }
+
+    func testEntryMacroReplacementWithoutExplicitTypeAnnotation() {
+        let input = """
+        private struct ScreenStyleKey: EnvironmentKey {
+            static let defaultValue = Style()
+        }
+
+        extension EnvironmentValues {
+            public var screenStyle: Style {
+                get { self[ScreenStyleKey.self] }
+                set { self[ScreenStyleKey.self] = newValue }
+            }
+        }
+        """
+        let output = """
+        extension EnvironmentValues {
+            @Entry public var screenStyle: Style = Style()
+        }
+        """
+        testFormatting(
+            for: input, output,
+            rule: .environmentEntry,
+            options: FormatOptions(swiftVersion: "6.0"),
+            exclude: [.redundantType]
+        )
+    }
 }

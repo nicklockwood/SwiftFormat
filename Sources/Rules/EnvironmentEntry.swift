@@ -70,41 +70,9 @@ extension Formatter {
                   structDeclarationBody.count == 1,
                   let defaultValueDeclaration = structDeclarationBody.first(where: {
                       ($0.keyword == "var" || $0.keyword == "let") && $0.name == "defaultValue"
-                  })
+                  }),
+                  let (defaultValueTokens, isMultiline) = findEnvironmentKeyDefaultValue(defaultValueDeclaration)
             else { return nil }
-
-            var defaultValueTokens: ArraySlice<Token>?
-            let isMultiline: Bool
-
-            if defaultValueDeclaration.isStoredStaticProperty,
-               let equalsIndex = index(of: .operator("=", .infix), after: defaultValueDeclaration.originalRange.lowerBound),
-               equalsIndex <= defaultValueDeclaration.originalRange.upperBound,
-               let valueStartIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
-               let valueEndIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: defaultValueDeclaration.originalRange.upperBound)
-            {
-                defaultValueTokens = tokens[valueStartIndex ... valueEndIndex]
-                isMultiline = false
-            } else if let valueEndOfScopeIndex = endOfScope(at: defaultValueDeclaration.originalRange.upperBound - 1),
-                      let valueStartOfScopeIndex = startOfScope(at: valueEndOfScopeIndex),
-                      let valueStartIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: valueStartOfScopeIndex),
-                      let valueEndIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: valueEndOfScopeIndex)
-            {
-                let defaultValueDeclarations = parseDeclarations(in: valueStartIndex ... valueEndIndex)
-                if defaultValueDeclarations.count <= 1 {
-                    if defaultValueDeclarations.first?.name == "defaultValue" {
-                        // Default value is implicitly `nil`
-                        defaultValueTokens = nil
-                    } else {
-                        defaultValueTokens = tokens[valueStartIndex ... valueEndIndex]
-                    }
-                } else {
-                    defaultValueTokens = tokens[valueStartOfScopeIndex ... valueEndOfScopeIndex]
-                }
-                isMultiline = defaultValueDeclarations.count > 1
-            } else {
-                return nil
-            }
-
             return EnvironmentKey(
                 key: keyName.string,
                 declaration: declaration,
@@ -112,6 +80,43 @@ extension Formatter {
                 isMultilineDefaultValue: isMultiline
             )
         }
+    }
+
+    func findEnvironmentKeyDefaultValue(_ defaultValueDeclaration: Declaration) -> (tokens: ArraySlice<Token>?, isMultiline: Bool)? {
+        if defaultValueDeclaration.isStoredStaticProperty,
+           let equalsIndex = index(of: .operator("=", .infix), after: defaultValueDeclaration.originalRange.lowerBound),
+           equalsIndex <= defaultValueDeclaration.originalRange.upperBound,
+           let valueStartIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
+           let valueEndIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: defaultValueDeclaration.originalRange.upperBound)
+        {
+            // Default value is stored property, not computed (e.g. static var defaultValue: Bool = false)
+            return (tokens[valueStartIndex ... valueEndIndex], false)
+        } else if let valueEndOfScopeIndex = endOfScope(at: defaultValueDeclaration.originalRange.upperBound - 1),
+                  let valueStartOfScopeIndex = startOfScope(at: valueEndOfScopeIndex),
+                  let valueStartIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: valueStartOfScopeIndex),
+                  let valueEndIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: valueEndOfScopeIndex)
+        {
+            let defaultValueDeclarations = parseDeclarations(in: valueStartIndex ... valueEndIndex)
+            let isMultilineDeclaration = defaultValueDeclarations.count > 1
+            if defaultValueDeclarations.count <= 1 {
+                if defaultValueDeclarations.first?.name == "defaultValue" {
+                    // Default value is implicitly `nil` (e.g. static var defaultValue: Bool?)
+                    return (nil, false)
+                } else {
+                    // Default value is a computed property with a single value (e.g. static var defaultValue: Bool { false })
+                    return (tokens[valueStartIndex ... valueEndIndex], isMultilineDeclaration)
+                }
+            } else {
+                // Default value is a multiline computed property:
+                // ```
+                // static var defaultValue: Bool {
+                //   let computedValue = compute()
+                //   return computedValue
+                // }
+                // ```
+                return (tokens[valueStartOfScopeIndex ... valueEndOfScopeIndex], isMultilineDeclaration)
+            }
+        } else { return nil }
     }
 
     func findAllEnvironmentValuesProperties(_ declarations: [Declaration], referencing environmentKeys: [String: EnvironmentKey])
@@ -177,31 +182,5 @@ extension Formatter {
         for declaration in repositionedEnvironmentKeys.reversed() where updatedEnvironmentKeys.contains(declaration.key) {
             removeTokens(in: declaration.declaration.originalRange)
         }
-    }
-}
-
-extension Declaration {
-    var isStoredStaticProperty: Bool {
-        guard keyword == "let" || keyword == "var" else { return false }
-
-        guard modifiers.contains("static") else { return false }
-
-        // If this property has a body, then it's a stored property
-        // if and only if the declaration body has a `didSet` or `willSet` keyword,
-        // based on the grammar for a variable declaration:
-        // https://docs.swift.org/swift-book/ReferenceManual/Declarations.html#grammar_variable-declaration
-        let formatter = Formatter(tokens)
-        if let keywordIndex = formatter.index(of: .keyword(keyword), after: -1),
-           let startOfPropertyBody = formatter.startOfPropertyBody(
-               at: keywordIndex,
-               endOfPropertyIndex: formatter.tokens.count
-           ),
-           let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: startOfPropertyBody)
-        {
-            return [.identifier("willSet"), .identifier("didSet")].contains(nextToken)
-        }
-
-        // Otherwise, if the property doesn't have a body, then it must not be a computed property.
-        return true
     }
 }

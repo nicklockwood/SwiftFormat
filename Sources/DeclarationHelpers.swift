@@ -164,12 +164,17 @@ enum Declaration: Hashable {
 
     /// Whether or not this declaration represents a stored instance property
     var isStoredInstanceProperty: Bool {
-        guard keyword == "let" || keyword == "var" else { return false }
-
         // A static property is not an instance property
-        if modifiers.contains("static") {
-            return false
-        }
+        modifiers.contains("static") ? false : isStoredProperty
+    }
+
+    /// Whether or not this declaration represents a static stored instance property
+    var isStaticStoredProperty: Bool {
+        modifiers.contains("static") ? isStoredProperty : false
+    }
+
+    var isStoredProperty: Bool {
+        guard keyword == "let" || keyword == "var" else { return false }
 
         // If this property has a body, then it's a stored property
         // if and only if the declaration body has a `didSet` or `willSet` keyword,

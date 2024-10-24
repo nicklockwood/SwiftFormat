@@ -555,10 +555,6 @@ extension Declaration {
                 return .beforeMarks
             }
 
-            for token in declarationParser.tokens {
-                if beforeMarks.contains(token.string) { return .beforeMarks }
-            }
-
             let isStaticDeclaration = declarationParser.index(
                 of: .keyword("static"),
                 before: declarationTypeTokenIndex

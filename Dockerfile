@@ -1,15 +1,19 @@
 # syntax=docker/dockerfile:1
 
-# Swift official image with arm64 support
-# https://hub.docker.com/r/arm64v8/swift/
-ARG SWIFT_IMAGE=swift:focal
-
-FROM $SWIFT_IMAGE AS builder
-COPY . /workspace
+# Base image and static SDK have to be updated together.
+FROM --platform=$BUILDPLATFORM swift:6.0.1 AS builder
 WORKDIR /workspace
-RUN swift build -c release && mv `swift build -c release --show-bin-path`/swiftformat /workspace
+RUN swift sdk install \
+	https://download.swift.org/swift-6.0.1-release/static-sdk/swift-6.0.1-RELEASE/swift-6.0.1-RELEASE_static-linux-0.0.1.artifactbundle.tar.gz \
+	--checksum d4f46ba40e11e697387468e18987ee622908bc350310d8af54eb5e17c2ff5481
 
-FROM $SWIFT_IMAGE-slim AS runner
-COPY --from=builder /workspace/swiftformat /usr/bin
-ENTRYPOINT [ "swiftformat" ]
+COPY . /workspace
+ARG TARGETPLATFORM
+RUN --mount=type=cache,target=/workspace/.build,id=build-$TARGETPLATFORM \
+	./Scripts/build-linux-release.sh && \
+	mv /workspace/.build/release/swiftformat /workspace
+
+FROM scratch AS runner
+COPY --from=builder /workspace/swiftformat /usr/bin/swiftformat
+ENTRYPOINT [ "/usr/bin/swiftformat" ]
 CMD ["."]

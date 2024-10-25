@@ -35,8 +35,10 @@ import Foundation
     import Darwin.POSIX
 #elseif os(Windows)
     import ucrt
-#else
+#elseif canImport(Glibc)
     import Glibc
+#elseif canImport(Musl)
+    import Musl
 #endif
 
 #if SWIFT_PACKAGE

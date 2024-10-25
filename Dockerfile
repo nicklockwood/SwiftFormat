@@ -12,7 +12,6 @@ ARG TARGETPLATFORM
 RUN --mount=type=cache,target=/workspace/.build,id=build-$TARGETPLATFORM \
 	./Scripts/build-linux-release.sh && \
 	cp /workspace/.build/release/swiftformat /workspace
-RUN strip /workspace/swiftformat
 
 FROM scratch AS runner
 COPY --from=builder /workspace/swiftformat /usr/bin/swiftformat

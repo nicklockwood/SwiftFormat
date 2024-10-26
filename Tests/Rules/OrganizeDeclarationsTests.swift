@@ -3266,4 +3266,50 @@ class OrganizeDeclarationsTests: XCTestCase {
             rule: .organizeDeclarations
         )
     }
+
+    func testIssue1907() {
+        let input = """
+        public final class Test: ObservableObject {
+            var someProperty: Int? = 0
+
+            // MARK: - Public -
+
+            public func somePublicFunction() {
+                print("Hello")
+                print("Hello")
+                print("Hello")
+                print("Hello")
+                print("Hello")
+            }
+
+            // MARK: - Internal -
+
+            func someInternalFunction() {
+                guard let someProperty else {
+                    return
+                }
+
+                print("Hello")
+                print("Hello")
+                print("Hello")
+                print("Hello")
+                print("Hello")
+            }
+
+            // MARK: - Private -
+
+            private func somePrivateFunction() {
+                print("Hello")
+                print("Hello")
+            }
+        }
+        """
+
+        let options = FormatOptions(
+            categoryMarkComment: "MARK: - %c -",
+            beforeMarks: ["class", "let", "var"]
+        )
+
+        testFormatting(for: input, rule: .organizeDeclarations, options: options)
+    }
 }

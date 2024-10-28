@@ -15,13 +15,14 @@ public extension FormatRule {
     ) { formatter in
         guard !formatter.options.fragment else { return }
 
-        let declarations = formatter.parseDeclarations()
-        let updatedDeclarations = declarations.mapRecursiveDeclarations { declaration in
-            guard case let .type("extension", open, body, close, _) = declaration else {
-                return declaration
-            }
+        let declarations = formatter.parseDeclarationsV2()
+        declarations.forEachRecursiveDeclaration { declaration in
+            guard let extensionDeclaration = declaration as? TypeDeclaration,
+                  extensionDeclaration.keyword == "extension"
+            else { return }
 
             let visibilityKeyword = declaration.visibility()
+
             // `private` visibility at top level of file is equivalent to `fileprivate`
             let extensionVisibility = (visibilityKeyword == .private) ? .fileprivate : visibilityKeyword
 
@@ -30,19 +31,16 @@ public extension FormatRule {
             // remove the keyword from the individual declarations and
             // place it on the extension itself.
             case .onExtension:
-                if extensionVisibility == nil,
-                   let delimiterIndex = declaration.openTokens.firstIndex(of: .delimiter(":")),
-                   declaration.openTokens.firstIndex(of: .keyword("where")).map({ $0 > delimiterIndex }) ?? true
-                {
-                    // Extension adds protocol conformance so can't have visibility modifier
-                    return declaration
+                // If this type has any conformances, then we shouldn't change its visibility.
+                if extensionVisibility == nil, !extensionDeclaration.conformances.isEmpty {
+                    return
                 }
 
-                let visibilityOfBodyDeclarations = formatter
-                    .mapDeclarationsExcludingTypeBodies(body) { declaration in
-                        declaration.visibility() ?? extensionVisibility ?? .internal
-                    }
-                    .compactMap { $0 }
+                var visibilityOfBodyDeclarations = [Visibility]()
+                extensionDeclaration.body.forEachRecursiveDeclarationExcludingTypeBodies { childDeclaration in
+                    let visibility = childDeclaration.visibility() ?? extensionVisibility ?? .internal
+                    visibilityOfBodyDeclarations.append(visibility)
+                }
 
                 let counts = Set(visibilityOfBodyDeclarations).sorted().map { visibility in
                     (visibility, count: visibilityOfBodyDeclarations.filter { $0 == visibility }.count)
@@ -55,68 +53,61 @@ public extension FormatRule {
                       // `private` can't be hoisted without changing code behavior
                       // (private applied at extension level is equivalent to `fileprivate`)
                       memberVisibility > .private
-                else { return declaration }
+                else { return }
 
                 if memberVisibility > extensionVisibility ?? .internal {
                     // Check type being extended does not have lower visibility
-                    for d in declarations where d.name == declaration.name {
-                        if case let .type(kind, _, _, _, _) = d {
-                            if kind != "extension", d.visibility() ?? .internal < memberVisibility {
-                                // Cannot make extension with greater visibility than type being extended
-                                return declaration
-                            }
-                            break
+                    for extendedType in declarations where extendedType.name == extensionDeclaration.name {
+                        guard let type = extendedType as? TypeDeclaration else { continue }
+
+                        if extendedType.keyword != "extension",
+                           extendedType.visibility() ?? .internal < memberVisibility
+                        {
+                            // Cannot make extension with greater visibility than type being extended
+                            return
                         }
+
+                        break
                     }
                 }
 
-                let extensionWithUpdatedVisibility: Declaration
-                if memberVisibility == extensionVisibility ||
-                    (memberVisibility == .internal && visibilityKeyword == nil)
+                if memberVisibility != extensionVisibility,
+                   !(memberVisibility == .internal && visibilityKeyword == nil)
                 {
-                    extensionWithUpdatedVisibility = declaration
-                } else {
-                    extensionWithUpdatedVisibility = declaration.add(memberVisibility)
+                    extensionDeclaration.add(memberVisibility)
                 }
 
-                return formatter.mapBodyDeclarationsExcludingTypeBodies(in: extensionWithUpdatedVisibility) { bodyDeclaration in
+                extensionDeclaration.body.forEachRecursiveDeclarationExcludingTypeBodies { bodyDeclaration in
+
                     let visibility = bodyDeclaration.visibility()
                     if memberVisibility > visibility ?? extensionVisibility ?? .internal {
                         if visibility == nil {
-                            return bodyDeclaration.add(.internal)
+                            bodyDeclaration.add(.internal)
                         }
-                        return bodyDeclaration
+                        return
                     }
-                    return bodyDeclaration.remove(memberVisibility)
+                    bodyDeclaration.remove(memberVisibility)
                 }
 
             // Move the extension's visibility keyword to each individual declaration
             case .onDeclarations:
                 // If the extension visibility is unspecified then there isn't any work to do
-                guard let extensionVisibility = extensionVisibility else {
-                    return declaration
-                }
+                guard let extensionVisibility = extensionVisibility else { return }
 
                 // Remove the visibility keyword from the extension declaration itself
-                let extensionWithUpdatedVisibility = declaration.remove(visibilityKeyword!)
+                extensionDeclaration.remove(visibilityKeyword!)
 
                 // And apply the extension's visibility to each of its child declarations
                 // that don't have an explicit visibility keyword
-                return formatter.mapBodyDeclarationsExcludingTypeBodies(in: extensionWithUpdatedVisibility) { bodyDeclaration in
+                extensionDeclaration.body.forEachRecursiveDeclarationExcludingTypeBodies { bodyDeclaration in
                     if bodyDeclaration.visibility() == nil {
                         // If there was no explicit visibility keyword, then this declaration
                         // was using the visibility of the extension itself.
-                        return bodyDeclaration.add(extensionVisibility)
-                    } else {
-                        // Keep the existing visibility
-                        return bodyDeclaration
+                        bodyDeclaration.add(extensionVisibility)
                     }
                 }
             }
         }
-
-        let updatedTokens = updatedDeclarations.flatMap(\.tokens)
-        formatter.replaceTokens(in: formatter.tokens.indices, with: updatedTokens)
     } examples: {
         """
         `--extensionacl on-extension` (default)
@@ -149,5 +140,26 @@ public extension FormatRule {
           }
         ```
         """
+    }
+}
+
+extension Collection where Element == DeclarationV2 {
+    // Performs the given operation for each declaration in this tree of declarations,
+    // including the body of any child conditional compilation blocks,
+    // but not the body of any child types. All of the iterated declarations belong
+    // directly to the parent scope holding this array of declarations.
+    func forEachRecursiveDeclarationExcludingTypeBodies(_ operation: (DeclarationV2) -> Void) {
+        for declaration in self {
+            switch declaration.kind {
+            case let .declaration(declaration):
+                operation(declaration)
+
+            case let .type(type):
+                operation(type)
+
+            case let .conditionalCompilation(conditionalCompilation):
+                conditionalCompilation.body.forEachRecursiveDeclarationExcludingTypeBodies(operation)
+            }
+        }
     }
 }

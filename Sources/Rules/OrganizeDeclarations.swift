@@ -155,10 +155,10 @@ public extension FormatRule {
 
 extension Formatter {
     /// A `Declaration` that represents a Swift type
-    typealias TypeDeclaration = (kind: String, open: [Token], body: [Declaration], close: [Token])
+    typealias TypeDeclarationV1 = (kind: String, open: [Token], body: [Declaration], close: [Token])
 
     /// Organizes the given type declaration into sorted categories
-    func organizeDeclaration(_ typeDeclaration: TypeDeclaration) -> TypeDeclaration {
+    func organizeDeclaration(_ typeDeclaration: TypeDeclarationV1) -> TypeDeclarationV1 {
         guard options.organizeTypes.contains(typeDeclaration.kind),
               typeLengthExceedsOrganizationThreshold(typeDeclaration)
         else { return typeDeclaration }
@@ -237,7 +237,7 @@ extension Formatter {
     }
 
     /// Whether or not the length of this types exceeds the minimum threshold to be organized
-    func typeLengthExceedsOrganizationThreshold(_ typeDeclaration: TypeDeclaration) -> Bool {
+    func typeLengthExceedsOrganizationThreshold(_ typeDeclaration: TypeDeclarationV1) -> Bool {
         let organizationThreshold: Int
         switch typeDeclaration.kind {
         case "class", "actor":
@@ -269,7 +269,7 @@ extension Formatter {
     /// Sorts the given categorized declarations based on the defined category ordering
     func sortCategorizedDeclarations(
         _ categorizedDeclarations: [CategorizedDeclaration],
-        in typeDeclaration: TypeDeclaration
+        in typeDeclaration: TypeDeclarationV1
     ) -> [CategorizedDeclaration]? {
         let sortAlphabeticallyWithinSubcategories = shouldSortAlphabeticallyWithinSubcategories(in: typeDeclaration)
 
@@ -353,7 +353,7 @@ extension Formatter {
 
     /// Whether or not type members should additionally be sorted alphabetically
     /// within individual subcategories
-    func shouldSortAlphabeticallyWithinSubcategories(in typeDeclaration: TypeDeclaration) -> Bool {
+    func shouldSortAlphabeticallyWithinSubcategories(in typeDeclaration: TypeDeclarationV1) -> Bool {
         // If this type has a leading :sort directive, we sort alphabetically
         // within the subcategories (where ordering is otherwise undefined)
         let shouldSortAlphabeticallyBySortingMark = typeDeclaration.open.contains(where: {
@@ -442,9 +442,9 @@ extension Formatter {
 
     /// Adds MARK category separates to the given type
     func addCategorySeparators(
-        to typeDeclaration: TypeDeclaration,
+        to typeDeclaration: TypeDeclarationV1,
         sortedDeclarations: [CategorizedDeclaration]
-    ) -> TypeDeclaration {
+    ) -> TypeDeclarationV1 {
         let numberOfCategories: Int = {
             switch options.organizationMode {
             case .visibility:

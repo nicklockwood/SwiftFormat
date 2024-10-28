@@ -115,23 +115,9 @@ enum Declaration: Hashable {
 
     /// The name of this type or variable
     var name: String? {
-        // Conditional compilation blocks don't have a "name"
-        guard keyword != "#if" else { return nil }
-
         let parser = Formatter(openTokens)
-        guard let keywordIndex = openTokens.firstIndex(of: .keyword(keyword)),
-              let nameIndex = parser.index(of: .nonSpaceOrCommentOrLinebreak, after: keywordIndex)
-        else {
-            return nil
-        }
-
-        // An extension can refer to complicated types like `Foo.Bar`, `[Foo]`, `Collection<Foo>`, etc.
-        // Every other declaration type just uses a simple identifier.
-        if keyword == "extension" {
-            return parser.parseType(at: nameIndex)?.name
-        } else {
-            return parser.tokens[nameIndex].string
-        }
+        guard let keywordIndex = openTokens.firstIndex(of: .keyword(keyword)) else { return nil }
+        return parser.declarationName(keywordIndex: keywordIndex)
     }
 
     /// The original range of the tokens of this declaration in the original source file
@@ -209,6 +195,13 @@ enum Declaration: Hashable {
 }
 
 extension Formatter {
+    /// Parses all of the declarations in the file
+    func parseDeclarationsV2() -> [DeclarationV2] {
+        parseDeclarations().compactMap { v1Declaration in
+            v1Declaration.makeDeclarationV2(formatter: self)
+        }
+    }
+
     /// Parses all of the declarations in the file
     func parseDeclarations() -> [Declaration] {
         guard !tokens.isEmpty else { return [] }
@@ -737,21 +730,8 @@ extension Declaration {
                 return nil
             }
 
-            // Search for a visibility keyword in the tokens before the primary keyword,
-            // making sure we exclude groups like private(set).
-            var searchIndex = 0
-            let parser = Formatter(tokens)
-            while searchIndex < keywordIndex {
-                if let visibility = Visibility(rawValue: parser.tokens[searchIndex].string),
-                   parser.next(.nonSpaceOrComment, after: searchIndex) != .startOfScope("(")
-                {
-                    return visibility
-                }
+            return Formatter(tokens).declarationVisibility(keywordIndex: keywordIndex)
 
-                searchIndex += 1
-            }
-
-            return nil
         case let .conditionalCompilation(_, body, _, _):
             // Conditional compilation blocks themselves don't have a category or visbility-level,
             // but we still have to assign them a category for the sorting algorithm to function.
@@ -768,28 +748,13 @@ extension Declaration {
     /// Adds the given visibility keyword to the given declaration,
     /// replacing any existing visibility keyword.
     func add(_ visibilityKeyword: Visibility) -> Declaration {
-        var declaration = self
-
-        if let existingVisibilityKeyword = declaration.visibility() {
-            declaration = declaration.remove(existingVisibilityKeyword)
-        }
-
-        return declaration.mapOpeningTokens { openTokens in
-            guard let indexOfKeyword = openTokens
-                .firstIndex(of: .keyword(declaration.keyword))
-            else {
+        mapOpeningTokens { openTokens in
+            guard let indexOfKeyword = openTokens.firstIndex(of: .keyword(keyword)) else {
                 return openTokens
             }
 
             let openTokensFormatter = Formatter(openTokens)
-            let startOfModifiers = openTokensFormatter
-                .startOfModifiers(at: indexOfKeyword, includingAttributes: false)
-
-            openTokensFormatter.insert(
-                tokenize("\(visibilityKeyword.rawValue) "),
-                at: startOfModifiers
-            )
-
+            openTokensFormatter.addDeclarationVisibility(visibilityKeyword, declarationKeywordIndex: indexOfKeyword)
             return openTokensFormatter.tokens
         }
     }
@@ -797,19 +762,12 @@ extension Declaration {
     /// Removes the given visibility keyword from the given declaration
     func remove(_ visibilityKeyword: Visibility) -> Declaration {
         mapOpeningTokens { openTokens in
-            guard let visibilityKeywordIndex = openTokens
-                .firstIndex(of: .keyword(visibilityKeyword.rawValue))
-            else {
+            guard let indexOfKeyword = openTokens.firstIndex(of: .keyword(keyword)) else {
                 return openTokens
             }
 
             let openTokensFormatter = Formatter(openTokens)
-            openTokensFormatter.removeToken(at: visibilityKeywordIndex)
-
-            while openTokensFormatter.token(at: visibilityKeywordIndex)?.isSpace == true {
-                openTokensFormatter.removeToken(at: visibilityKeywordIndex)
-            }
-
+            openTokensFormatter.removeDeclarationVisibility(visibilityKeyword, declarationKeywordIndex: indexOfKeyword)
             return openTokensFormatter.tokens
         }
     }
@@ -1033,5 +991,38 @@ extension Array where Element == Token {
         }
 
         return numberOfTrailingLinebreaks
+    }
+}
+
+extension Declaration {
+    /// Initializes a `DeclarationV2` from this legacy `DeclarationV1` value.
+    func makeDeclarationV2(formatter: Formatter) -> DeclarationV2? {
+        // DeclarationV2 requires that every declaration has a valid keyword.
+        // DeclarationV1 handles disabling rules by setting the keyword to an empty string.
+        guard !keyword.isEmpty else { return nil }
+
+        switch self {
+        case let .type(kind, _, body, _, originalRange):
+            return TypeDeclaration(
+                keyword: kind,
+                range: originalRange,
+                body: body.compactMap { $0.makeDeclarationV2(formatter: formatter) },
+                formatter: formatter
+            )
+
+        case let .declaration(kind, _, originalRange):
+            return SimpleDeclaration(
+                keyword: kind,
+                range: originalRange,
+                formatter: formatter
+            )
+
+        case let .conditionalCompilation(_, body, _, originalRange):
+            return ConditionalCompilationDeclaration(
+                range: originalRange,
+                body: body.compactMap { $0.makeDeclarationV2(formatter: formatter) },
+                formatter: formatter
+            )
+        }
     }
 }

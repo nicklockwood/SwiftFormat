@@ -2383,6 +2383,80 @@ extension Formatter {
 
         return conformances
     }
+
+    /// The explicit `Visibility` of the `Declaration` with its keyword at the given index
+    func declarationVisibility(keywordIndex: Int) -> Visibility? {
+        let startOfModifiers = startOfModifiers(at: keywordIndex, includingAttributes: false)
+
+        // Search for a visibility keyword in the tokens before the primary keyword,
+        // making sure we exclude groups like private(set).
+        var searchIndex = startOfModifiers
+        while searchIndex < keywordIndex {
+            if let visibility = Visibility(rawValue: tokens[searchIndex].string),
+               next(.nonSpaceOrComment, after: searchIndex) != .startOfScope("(")
+            {
+                return visibility
+            }
+
+            searchIndex += 1
+        }
+
+        return nil
+    }
+
+    /// Adds the given visibility keyword to the given declaration,
+    /// replacing any existing visibility keyword.
+    func addDeclarationVisibility(_ visibilityKeyword: Visibility, declarationKeywordIndex: Int) {
+        var declarationKeywordIndex = declarationKeywordIndex
+
+        if let existingVisibility = declarationVisibility(keywordIndex: declarationKeywordIndex),
+           let visibilityKeywordIndex = indexOfModifier(existingVisibility.rawValue, forDeclarationAt: declarationKeywordIndex)
+        {
+            removeToken(at: visibilityKeywordIndex)
+            declarationKeywordIndex -= 1
+
+            while token(at: visibilityKeywordIndex)?.isSpace == true {
+                removeToken(at: visibilityKeywordIndex)
+                declarationKeywordIndex -= 1
+            }
+        }
+
+        let startOfModifiers = startOfModifiers(at: declarationKeywordIndex, includingAttributes: false)
+
+        insert(
+            [.keyword(visibilityKeyword.rawValue), .space(" ")],
+            at: startOfModifiers
+        )
+    }
+
+    /// Removes the given visibility keyword from the given declaration
+    func removeDeclarationVisibility(_ visibilityKeyword: Visibility, declarationKeywordIndex: Int) {
+        guard let visibilityKeywordIndex = indexOfModifier(visibilityKeyword.rawValue, forDeclarationAt: declarationKeywordIndex) else { return }
+
+        removeToken(at: visibilityKeywordIndex)
+
+        while token(at: visibilityKeywordIndex)?.isSpace == true {
+            removeToken(at: visibilityKeywordIndex)
+        }
+    }
+
+    /// The name of the declaration defined at the given index
+    func declarationName(keywordIndex: Int) -> String? {
+        // Conditional compilation blocks don't have a "name"
+        guard tokens[keywordIndex].string != "#if" else { return nil }
+
+        guard let nameIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: keywordIndex) else {
+            return nil
+        }
+
+        // An extension can refer to complicated types like `Foo.Bar`, `[Foo]`, `Collection<Foo>`, etc.
+        // Every other declaration type just uses a simple identifier.
+        if tokens[keywordIndex].string == "extension" {
+            return parseType(at: nameIndex)?.name
+        } else {
+            return tokens[nameIndex].string
+        }
+    }
 }
 
 extension _FormatRules {

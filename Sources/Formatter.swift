@@ -44,6 +44,7 @@ public class Formatter: NSObject {
     private var ruleDisabled = false
     private var tempOptions: FormatOptions?
     private var wasNextDirective = false
+    private var activeDeclarations = [WeakDeclarationReference]()
 
     /// Formatting range
     public var range: Range<Int>?
@@ -207,6 +208,8 @@ public class Formatter: NSObject {
     }
 
     private func updateRange(at index: Int, delta: Int) {
+        activeDeclarations.updateRanges(at: index, delta: delta)
+
         guard let range = range, range.contains(index) else {
             return
         }
@@ -735,6 +738,13 @@ public extension Formatter {
             insertLinebreak(at: firstIndex)
         }
     }
+
+    /// Registers the given declaration to receive range updates as tokens are modified
+    /// in this formatter. The registration is automatically cleared after the declaration
+    /// is deallocated.
+    internal func registerDeclaration(_ declaration: DeclarationV2) {
+        activeDeclarations.append(WeakDeclarationReference(declaration: declaration))
+    }
 }
 
 extension String {
@@ -781,6 +791,40 @@ private extension Array where Element == Token {
     var lines: [ArraySlice<Token>] {
         lineRanges.map { lineRange in
             self[lineRange]
+        }
+    }
+}
+
+struct WeakDeclarationReference {
+    weak var declaration: DeclarationV2?
+}
+
+extension Array where Element == WeakDeclarationReference {
+    /// Updates the `range` value of the declarations in this array
+    /// to account for the given addition or removal of tokens.
+    mutating func updateRanges(at modifiedIndex: Int, delta: Int) {
+        for (tokenIndex, reference) in zip(indices, self).reversed() {
+            guard let declaration = reference.declaration else {
+                // If we encounter a declaration that no longer exists
+                // (the weak reference is nil), clean up the entry.
+                remove(at: tokenIndex)
+                continue
+            }
+
+            var startIndex = declaration.range.lowerBound
+            var endIndex = declaration.range.upperBound
+
+            if modifiedIndex < startIndex {
+                startIndex += delta
+                endIndex += delta
+            } else if modifiedIndex <= endIndex {
+                endIndex += delta
+            } else {
+                // The modification comes after this declaration
+                // so doesn't invalidate the indices.
+            }
+
+            declaration.range = startIndex ... endIndex
         }
     }
 }

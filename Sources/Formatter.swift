@@ -325,7 +325,7 @@ public extension Formatter {
     /// Replaces all of the tokens with the given new tokens,
     /// diffing the lines and tracking lines that move without changes.
     func replaceAllTokens(with updatedTokens: [Token]) {
-        guard #available(macOS 10.15, *) else {
+        guard #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) else {
             // Swift's diffing implementation is only available in macOS 10.15+
             replaceTokens(in: tokens.indices, with: updatedTokens)
             return

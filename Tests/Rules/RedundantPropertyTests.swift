@@ -99,7 +99,7 @@ class RedundantPropertyTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, [output], rules: [.propertyType, .redundantProperty, .redundantInit], exclude: [.redundantReturn])
+        testFormatting(for: input, [output], rules: [.propertyTypes, .redundantProperty, .redundantInit], exclude: [.redundantReturn])
     }
 
     func testRemovesRedundantPropertyWithComments() {

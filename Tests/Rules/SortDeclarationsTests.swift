@@ -164,7 +164,7 @@ class SortDeclarationsTests: XCTestCase {
 
         testFormatting(for: input, [output],
                        rules: [.sortDeclarations, .consecutiveBlankLines],
-                       exclude: [.blankLinesBetweenScopes, .propertyType])
+                       exclude: [.blankLinesBetweenScopes, .propertyTypes])
     }
 
     func testSortBetweenDirectiveCommentsInType() {

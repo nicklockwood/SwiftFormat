@@ -109,7 +109,7 @@ class RedundantInitTests: XCTestCase {
         let Foo = Foo.self
         let foo = Foo.init()
         """
-        testFormatting(for: input, rule: .redundantInit, exclude: [.propertyType])
+        testFormatting(for: input, rule: .redundantInit, exclude: [.propertyTypes])
     }
 
     func testNoRemoveInitForLocalLetType2() {
@@ -165,7 +165,7 @@ class RedundantInitTests: XCTestCase {
         let tupleArray = [(key: String, value: Int)]()
         let dictionary = [String: Int]()
         """
-        testFormatting(for: input, output, rule: .redundantInit, exclude: [.propertyType])
+        testFormatting(for: input, output, rule: .redundantInit, exclude: [.propertyTypes])
     }
 
     func testPreservesInitAfterTypeOfCall() {
@@ -186,7 +186,7 @@ class RedundantInitTests: XCTestCase {
         // (String!.init("Foo") isn't valid Swift code, so we don't test for it)
         """
 
-        testFormatting(for: input, output, rule: .redundantInit, exclude: [.propertyType])
+        testFormatting(for: input, output, rule: .redundantInit, exclude: [.propertyTypes])
     }
 
     func testPreservesTryBeforeInit() {
@@ -211,7 +211,7 @@ class RedundantInitTests: XCTestCase {
         let atomicDictionary = Atomic<[String: Int]>()
         """
 
-        testFormatting(for: input, output, rule: .redundantInit, exclude: [.typeSugar, .propertyType])
+        testFormatting(for: input, output, rule: .redundantInit, exclude: [.typeSugar, .propertyTypes])
     }
 
     func testPreserveNonRedundantInitInTernaryOperator() {

@@ -179,7 +179,7 @@ class UnusedArgumentsTests: XCTestCase {
             return parser
         }
         """
-        testFormatting(for: input, rule: .unusedArguments, exclude: [.redundantProperty, .propertyType])
+        testFormatting(for: input, rule: .unusedArguments, exclude: [.redundantProperty, .propertyTypes])
     }
 
     func testShadowedClosureArgument2() {

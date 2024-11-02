@@ -139,7 +139,7 @@ class RedundantStaticSelfTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantStaticSelf, exclude: [.propertyType])
+        testFormatting(for: input, rule: .redundantStaticSelf, exclude: [.propertyTypes])
     }
 
     func testPreserveStaticSelfInInstanceFunction() {

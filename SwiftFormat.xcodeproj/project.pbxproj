@@ -469,10 +469,10 @@
 		2E2BAD882C57F6DD00590239 /* UnusedPrivateDeclaration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BABF32C57F6DD00590239 /* UnusedPrivateDeclaration.swift */; };
 		2E2BAD892C57F6DD00590239 /* UnusedPrivateDeclaration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BABF32C57F6DD00590239 /* UnusedPrivateDeclaration.swift */; };
 		2E2BAD8A2C57F6DD00590239 /* UnusedPrivateDeclaration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BABF32C57F6DD00590239 /* UnusedPrivateDeclaration.swift */; };
-		2E2BAD8B2C57F6DD00590239 /* PropertyType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BABF42C57F6DD00590239 /* PropertyType.swift */; };
-		2E2BAD8C2C57F6DD00590239 /* PropertyType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BABF42C57F6DD00590239 /* PropertyType.swift */; };
-		2E2BAD8D2C57F6DD00590239 /* PropertyType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BABF42C57F6DD00590239 /* PropertyType.swift */; };
-		2E2BAD8E2C57F6DD00590239 /* PropertyType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BABF42C57F6DD00590239 /* PropertyType.swift */; };
+		2E2BAD8B2C57F6DD00590239 /* PropertyTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BABF42C57F6DD00590239 /* PropertyTypes.swift */; };
+		2E2BAD8C2C57F6DD00590239 /* PropertyTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BABF42C57F6DD00590239 /* PropertyTypes.swift */; };
+		2E2BAD8D2C57F6DD00590239 /* PropertyTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BABF42C57F6DD00590239 /* PropertyTypes.swift */; };
+		2E2BAD8E2C57F6DD00590239 /* PropertyTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BABF42C57F6DD00590239 /* PropertyTypes.swift */; };
 		2E2BAD8F2C57F6DD00590239 /* HoistTry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BABF52C57F6DD00590239 /* HoistTry.swift */; };
 		2E2BAD902C57F6DD00590239 /* HoistTry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BABF52C57F6DD00590239 /* HoistTry.swift */; };
 		2E2BAD912C57F6DD00590239 /* HoistTry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BABF52C57F6DD00590239 /* HoistTry.swift */; };
@@ -574,7 +574,7 @@
 		2E8DE7312C57FEB30032BF25 /* HoistAwaitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E8DE6C62C57FEB30032BF25 /* HoistAwaitTests.swift */; };
 		2E8DE7322C57FEB30032BF25 /* RedundantLetErrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E8DE6C72C57FEB30032BF25 /* RedundantLetErrorTests.swift */; };
 		2E8DE7332C57FEB30032BF25 /* SpaceAroundCommentsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E8DE6C82C57FEB30032BF25 /* SpaceAroundCommentsTests.swift */; };
-		2E8DE7342C57FEB30032BF25 /* PropertyTypeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E8DE6C92C57FEB30032BF25 /* PropertyTypeTests.swift */; };
+		2E8DE7342C57FEB30032BF25 /* PropertyTypesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E8DE6C92C57FEB30032BF25 /* PropertyTypesTests.swift */; };
 		2E8DE7352C57FEB30032BF25 /* SpaceAroundOperatorsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E8DE6CA2C57FEB30032BF25 /* SpaceAroundOperatorsTests.swift */; };
 		2E8DE7362C57FEB30032BF25 /* SemicolonsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E8DE6CB2C57FEB30032BF25 /* SemicolonsTests.swift */; };
 		2E8DE7372C57FEB30032BF25 /* RedundantPatternTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E8DE6CC2C57FEB30032BF25 /* RedundantPatternTests.swift */; };
@@ -864,7 +864,7 @@
 		2E2BABF12C57F6DD00590239 /* SortTypealiases.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SortTypealiases.swift; sourceTree = "<group>"; };
 		2E2BABF22C57F6DD00590239 /* DocComments.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DocComments.swift; sourceTree = "<group>"; };
 		2E2BABF32C57F6DD00590239 /* UnusedPrivateDeclaration.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UnusedPrivateDeclaration.swift; sourceTree = "<group>"; };
-		2E2BABF42C57F6DD00590239 /* PropertyType.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PropertyType.swift; sourceTree = "<group>"; };
+		2E2BABF42C57F6DD00590239 /* PropertyTypes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PropertyTypes.swift; sourceTree = "<group>"; };
 		2E2BABF52C57F6DD00590239 /* HoistTry.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HoistTry.swift; sourceTree = "<group>"; };
 		2E2BABF62C57F6DD00590239 /* NumberFormatting.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NumberFormatting.swift; sourceTree = "<group>"; };
 		2E2BABF72C57F6DD00590239 /* WrapArguments.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WrapArguments.swift; sourceTree = "<group>"; };
@@ -936,7 +936,7 @@
 		2E8DE6C62C57FEB30032BF25 /* HoistAwaitTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HoistAwaitTests.swift; sourceTree = "<group>"; };
 		2E8DE6C72C57FEB30032BF25 /* RedundantLetErrorTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RedundantLetErrorTests.swift; sourceTree = "<group>"; };
 		2E8DE6C82C57FEB30032BF25 /* SpaceAroundCommentsTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SpaceAroundCommentsTests.swift; sourceTree = "<group>"; };
-		2E8DE6C92C57FEB30032BF25 /* PropertyTypeTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PropertyTypeTests.swift; sourceTree = "<group>"; };
+		2E8DE6C92C57FEB30032BF25 /* PropertyTypesTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PropertyTypesTests.swift; sourceTree = "<group>"; };
 		2E8DE6CA2C57FEB30032BF25 /* SpaceAroundOperatorsTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SpaceAroundOperatorsTests.swift; sourceTree = "<group>"; };
 		2E8DE6CB2C57FEB30032BF25 /* SemicolonsTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SemicolonsTests.swift; sourceTree = "<group>"; };
 		2E8DE6CC2C57FEB30032BF25 /* RedundantPatternTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RedundantPatternTests.swift; sourceTree = "<group>"; };
@@ -1236,7 +1236,7 @@
 				2E2BABBF2C57F6DD00590239 /* OrganizeDeclarations.swift */,
 				2E2BABCE2C57F6DD00590239 /* PreferForLoop.swift */,
 				2E2BABDB2C57F6DD00590239 /* PreferKeyPath.swift */,
-				2E2BABF42C57F6DD00590239 /* PropertyType.swift */,
+				2E2BABF42C57F6DD00590239 /* PropertyTypes.swift */,
 				2E2BABE92C57F6DD00590239 /* RedundantBackticks.swift */,
 				2E2BAB922C57F6DD00590239 /* RedundantBreak.swift */,
 				2E2BABBE2C57F6DD00590239 /* RedundantClosure.swift */,
@@ -1353,7 +1353,7 @@
 				2E8DE6E22C57FEB30032BF25 /* OrganizeDeclarationsTests.swift */,
 				2E8DE6982C57FEB30032BF25 /* PreferForLoopTests.swift */,
 				2E8DE6BF2C57FEB30032BF25 /* PreferKeyPathTests.swift */,
-				2E8DE6C92C57FEB30032BF25 /* PropertyTypeTests.swift */,
+				2E8DE6C92C57FEB30032BF25 /* PropertyTypesTests.swift */,
 				2E8DE6C42C57FEB30032BF25 /* RedundantBackticksTests.swift */,
 				2E8DE6BC2C57FEB30032BF25 /* RedundantBreakTests.swift */,
 				2E8DE68D2C57FEB30032BF25 /* RedundantClosureTests.swift */,
@@ -1827,7 +1827,7 @@
 				2E2BAC272C57F6DD00590239 /* RedundantNilInit.swift in Sources */,
 				2E2BACDB2C57F6DD00590239 /* SpaceAroundBraces.swift in Sources */,
 				2E2BAC772C57F6DD00590239 /* SpaceAroundComments.swift in Sources */,
-				2E2BAD8B2C57F6DD00590239 /* PropertyType.swift in Sources */,
+				2E2BAD8B2C57F6DD00590239 /* PropertyTypes.swift in Sources */,
 				2E2BAD3F2C57F6DD00590239 /* MarkTypes.swift in Sources */,
 				2E2BAC972C57F6DD00590239 /* ConsecutiveBlankLines.swift in Sources */,
 				2E2BAC132C57F6DD00590239 /* ConsecutiveSpaces.swift in Sources */,
@@ -1916,7 +1916,7 @@
 				2E8DE71B2C57FEB30032BF25 /* NumberFormattingTests.swift in Sources */,
 				2E8DE74C2C57FEB30032BF25 /* WrapConditionalBodiesTests.swift in Sources */,
 				2E8DE7332C57FEB30032BF25 /* SpaceAroundCommentsTests.swift in Sources */,
-				2E8DE7342C57FEB30032BF25 /* PropertyTypeTests.swift in Sources */,
+				2E8DE7342C57FEB30032BF25 /* PropertyTypesTests.swift in Sources */,
 				2E8DE7162C57FEB30032BF25 /* TrailingSpaceTests.swift in Sources */,
 				2E8DE7472C57FEB30032BF25 /* ConditionalAssignmentTests.swift in Sources */,
 				01F17E851E258A4900DCD359 /* CommandLineTests.swift in Sources */,
@@ -2169,7 +2169,7 @@
 				2E2BADB02C57F6DD00590239 /* RedundantType.swift in Sources */,
 				2E2BACD42C57F6DD00590239 /* BlankLinesAtEndOfScope.swift in Sources */,
 				2E2BAC542C57F6DD00590239 /* SortedImports.swift in Sources */,
-				2E2BAD8C2C57F6DD00590239 /* PropertyType.swift in Sources */,
+				2E2BAD8C2C57F6DD00590239 /* PropertyTypes.swift in Sources */,
 				2E2BAC202C57F6DD00590239 /* RedundantOptionalBinding.swift in Sources */,
 				2E2BAD6C2C57F6DD00590239 /* BlankLinesAtStartOfScope.swift in Sources */,
 				2E2BAC302C57F6DD00590239 /* SpaceInsideParens.swift in Sources */,
@@ -2235,7 +2235,7 @@
 				2E2BAD652C57F6DD00590239 /* SpaceAroundParens.swift in Sources */,
 				2E2BAC412C57F6DD00590239 /* DuplicateImports.swift in Sources */,
 				2E2BADA12C57F6DD00590239 /* YodaConditions.swift in Sources */,
-				2E2BAD8D2C57F6DD00590239 /* PropertyType.swift in Sources */,
+				2E2BAD8D2C57F6DD00590239 /* PropertyTypes.swift in Sources */,
 				E4872112201D3B860014845E /* FormatRule.swift in Sources */,
 				2E2BAB8E2C57F6B600590239 /* RuleRegistry.generated.swift in Sources */,
 				2E2BAC892C57F6DD00590239 /* LeadingDelimiters.swift in Sources */,
@@ -2377,7 +2377,7 @@
 				2E2BAD662C57F6DD00590239 /* SpaceAroundParens.swift in Sources */,
 				2E2BAC422C57F6DD00590239 /* DuplicateImports.swift in Sources */,
 				2E2BADA22C57F6DD00590239 /* YodaConditions.swift in Sources */,
-				2E2BAD8E2C57F6DD00590239 /* PropertyType.swift in Sources */,
+				2E2BAD8E2C57F6DD00590239 /* PropertyTypes.swift in Sources */,
 				9028F7841DA4B435009FE5B4 /* Tokenizer.swift in Sources */,
 				2E2BAB8F2C57F6B600590239 /* RuleRegistry.generated.swift in Sources */,
 				2E2BAC8A2C57F6DD00590239 /* LeadingDelimiters.swift in Sources */,

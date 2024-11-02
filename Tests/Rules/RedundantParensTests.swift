@@ -784,12 +784,12 @@ class RedundantParensTests: XCTestCase {
 
     func testParensNotRemovedInGenericInstantiation() {
         let input = "let foo = Foo<T>()"
-        testFormatting(for: input, rule: .redundantParens, exclude: [.propertyType])
+        testFormatting(for: input, rule: .redundantParens, exclude: [.propertyTypes])
     }
 
     func testParensNotRemovedInGenericInstantiation2() {
         let input = "let foo = Foo<T>(bar)"
-        testFormatting(for: input, rule: .redundantParens, exclude: [.propertyType])
+        testFormatting(for: input, rule: .redundantParens, exclude: [.propertyTypes])
     }
 
     func testRedundantParensRemovedAfterGenerics() {

@@ -1,5 +1,5 @@
 //
-//  PropertyTypeTests.swift
+//  PropertyTypesTests.swift
 //  SwiftFormatTests
 //
 //  Created by Cal Stephens on 3/29/24.
@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class PropertyTypeTests: XCTestCase {
+class PropertyTypesTests: XCTestCase {
     func testConvertsExplicitTypeToInferredType() {
         let input = """
         let foo: Foo = .init()
@@ -34,7 +34,7 @@ class PropertyTypeTests: XCTestCase {
         """
 
         let options = FormatOptions(redundantType: .inferred)
-        testFormatting(for: input, [output], rules: [.propertyType, .redundantInit], options: options)
+        testFormatting(for: input, [output], rules: [.propertyTypes, .redundantInit], options: options)
     }
 
     func testConvertsInferredTypeToExplicitType() {
@@ -59,7 +59,7 @@ class PropertyTypeTests: XCTestCase {
         """
 
         let options = FormatOptions(redundantType: .explicit)
-        testFormatting(for: input, output, rule: .propertyType, options: options)
+        testFormatting(for: input, output, rule: .propertyTypes, options: options)
     }
 
     func testConvertsTypeMembersToExplicitType() {
@@ -88,7 +88,7 @@ class PropertyTypeTests: XCTestCase {
         """
 
         let options = FormatOptions(redundantType: .inferLocalsOnly)
-        testFormatting(for: input, output, rule: .propertyType, options: options)
+        testFormatting(for: input, output, rule: .propertyTypes, options: options)
     }
 
     func testConvertsLocalsToImplicitType() {
@@ -123,7 +123,7 @@ class PropertyTypeTests: XCTestCase {
         """
 
         let options = FormatOptions(redundantType: .inferLocalsOnly)
-        testFormatting(for: input, [output], rules: [.propertyType, .redundantInit], options: options)
+        testFormatting(for: input, [output], rules: [.propertyTypes, .redundantInit], options: options)
     }
 
     func testPreservesInferredTypeFollowingTypeWithDots() {
@@ -133,7 +133,7 @@ class PropertyTypeTests: XCTestCase {
         """
 
         let options = FormatOptions(redundantType: .explicit)
-        testFormatting(for: input, rule: .propertyType, options: options)
+        testFormatting(for: input, rule: .propertyTypes, options: options)
     }
 
     func testPreservesExplicitTypeIfNoRHS() {
@@ -143,7 +143,7 @@ class PropertyTypeTests: XCTestCase {
         """
 
         let options = FormatOptions(redundantType: .inferred)
-        testFormatting(for: input, rule: .propertyType, options: options)
+        testFormatting(for: input, rule: .propertyTypes, options: options)
     }
 
     func testPreservesImplicitTypeIfNoRHSType() {
@@ -155,7 +155,7 @@ class PropertyTypeTests: XCTestCase {
         """
 
         let options = FormatOptions(redundantType: .explicit)
-        testFormatting(for: input, rule: .propertyType, options: options)
+        testFormatting(for: input, rule: .propertyTypes, options: options)
     }
 
     func testPreservesImplicitForVoidAndTuples() {
@@ -170,7 +170,7 @@ class PropertyTypeTests: XCTestCase {
         """
 
         let options = FormatOptions(redundantType: .explicit)
-        testFormatting(for: input, rule: .propertyType, options: options, exclude: [.void])
+        testFormatting(for: input, rule: .propertyTypes, options: options, exclude: [.void])
     }
 
     func testPreservesExplicitTypeIfUsingLocalValueOrLiteral() {
@@ -185,7 +185,7 @@ class PropertyTypeTests: XCTestCase {
         """
 
         let options = FormatOptions(redundantType: .inferred)
-        testFormatting(for: input, rule: .propertyType, options: options, exclude: [.redundantType])
+        testFormatting(for: input, rule: .propertyTypes, options: options, exclude: [.redundantType])
     }
 
     func testCompatibleWithRedundantTypeInferred() {
@@ -198,7 +198,7 @@ class PropertyTypeTests: XCTestCase {
         """
 
         let options = FormatOptions(redundantType: .inferred)
-        testFormatting(for: input, [output], rules: [.redundantType, .propertyType], options: options)
+        testFormatting(for: input, [output], rules: [.redundantType, .propertyTypes], options: options)
     }
 
     func testCompatibleWithRedundantTypeExplicit() {
@@ -211,7 +211,7 @@ class PropertyTypeTests: XCTestCase {
         """
 
         let options = FormatOptions(redundantType: .explicit)
-        testFormatting(for: input, [output], rules: [.redundantType, .propertyType], options: options)
+        testFormatting(for: input, [output], rules: [.redundantType, .propertyTypes], options: options)
     }
 
     func testCompatibleWithRedundantTypeInferLocalsOnly() {
@@ -236,7 +236,7 @@ class PropertyTypeTests: XCTestCase {
         """
 
         let options = FormatOptions(redundantType: .inferLocalsOnly)
-        testFormatting(for: input, [output], rules: [.redundantType, .propertyType, .redundantInit], options: options)
+        testFormatting(for: input, [output], rules: [.redundantType, .propertyTypes, .redundantInit], options: options)
     }
 
     func testPropertyTypeWithIfExpressionDisabledByDefault() {
@@ -250,7 +250,7 @@ class PropertyTypeTests: XCTestCase {
         """
 
         let options = FormatOptions(redundantType: .inferred)
-        testFormatting(for: input, rule: .propertyType, options: options)
+        testFormatting(for: input, rule: .propertyTypes, options: options)
     }
 
     func testPropertyTypeWithIfExpression() {
@@ -273,7 +273,7 @@ class PropertyTypeTests: XCTestCase {
         """
 
         let options = FormatOptions(redundantType: .inferred, inferredTypesInConditionalExpressions: true)
-        testFormatting(for: input, [output], rules: [.propertyType, .redundantInit], options: options)
+        testFormatting(for: input, [output], rules: [.propertyTypes, .redundantInit], options: options)
     }
 
     func testPropertyTypeWithSwitchExpression() {
@@ -298,7 +298,7 @@ class PropertyTypeTests: XCTestCase {
         """
 
         let options = FormatOptions(redundantType: .inferred, inferredTypesInConditionalExpressions: true)
-        testFormatting(for: input, [output], rules: [.propertyType, .redundantInit], options: options)
+        testFormatting(for: input, [output], rules: [.propertyTypes, .redundantInit], options: options)
     }
 
     func testPreservesNonMatchingIfExpression() {
@@ -312,7 +312,7 @@ class PropertyTypeTests: XCTestCase {
         """
 
         let options = FormatOptions(redundantType: .inferred, inferredTypesInConditionalExpressions: true)
-        testFormatting(for: input, rule: .propertyType, options: options)
+        testFormatting(for: input, rule: .propertyTypes, options: options)
     }
 
     func testPreservesExplicitOptionalType() {
@@ -325,7 +325,7 @@ class PropertyTypeTests: XCTestCase {
         """
 
         let options = FormatOptions(redundantType: .inferred)
-        testFormatting(for: input, rule: .propertyType, options: options)
+        testFormatting(for: input, rule: .propertyTypes, options: options)
     }
 
     func testPreservesTypeWithSeparateDeclarationAndProperty() {
@@ -337,7 +337,7 @@ class PropertyTypeTests: XCTestCase {
         """
 
         let options = FormatOptions(redundantType: .inferred)
-        testFormatting(for: input, rule: .propertyType, options: options)
+        testFormatting(for: input, rule: .propertyTypes, options: options)
     }
 
     func testPreservesTypeWithExistentialAny() {
@@ -357,7 +357,7 @@ class PropertyTypeTests: XCTestCase {
         """
 
         let options = FormatOptions(redundantType: .inferred)
-        testFormatting(for: input, rule: .propertyType, options: options)
+        testFormatting(for: input, rule: .propertyTypes, options: options)
     }
 
     func testPreservesExplicitRightHandSideWithOperator() {
@@ -376,7 +376,7 @@ class PropertyTypeTests: XCTestCase {
         """
 
         let options = FormatOptions(redundantType: .inferred)
-        testFormatting(for: input, output, rule: .propertyType, options: options)
+        testFormatting(for: input, output, rule: .propertyTypes, options: options)
     }
 
     func testPreservesInferredRightHandSideWithOperators() {
@@ -387,7 +387,7 @@ class PropertyTypeTests: XCTestCase {
         """
 
         let options = FormatOptions(redundantType: .explicit)
-        testFormatting(for: input, rule: .propertyType, options: options)
+        testFormatting(for: input, rule: .propertyTypes, options: options)
     }
 
     func testPreservesUserProvidedSymbolTypes() {
@@ -420,7 +420,7 @@ class PropertyTypeTests: XCTestCase {
         """
 
         let options = FormatOptions(redundantType: .inferLocalsOnly, preserveSymbols: ["Foo", "Baaz", "quux"])
-        testFormatting(for: input, output, rule: .propertyType, options: options)
+        testFormatting(for: input, output, rule: .propertyTypes, options: options)
     }
 
     func testPreserveInitIfExplicitlyExcluded() {
@@ -453,7 +453,7 @@ class PropertyTypeTests: XCTestCase {
         """
 
         let options = FormatOptions(redundantType: .inferLocalsOnly, preserveSymbols: ["init"])
-        testFormatting(for: input, output, rule: .propertyType, options: options, exclude: [.redundantInit])
+        testFormatting(for: input, output, rule: .propertyTypes, options: options, exclude: [.redundantInit])
     }
 
     func testClosureBodyIsConsideredLocal() {
@@ -512,7 +512,7 @@ class PropertyTypeTests: XCTestCase {
         """
 
         let options = FormatOptions(redundantType: .inferLocalsOnly)
-        testFormatting(for: input, [output], rules: [.propertyType, .redundantInit], options: options)
+        testFormatting(for: input, [output], rules: [.propertyTypes, .redundantInit], options: options)
     }
 
     func testIfGuardConditionsPreserved() {
@@ -531,7 +531,7 @@ class PropertyTypeTests: XCTestCase {
         """
 
         let options = FormatOptions(redundantType: .inferLocalsOnly)
-        testFormatting(for: input, rule: .propertyType, options: options)
+        testFormatting(for: input, rule: .propertyTypes, options: options)
     }
 
     func testPropertyObserversConsideredLocal() {
@@ -555,6 +555,6 @@ class PropertyTypeTests: XCTestCase {
         """
 
         let options = FormatOptions(redundantType: .inferLocalsOnly)
-        testFormatting(for: input, rule: .propertyType, options: options)
+        testFormatting(for: input, rule: .propertyTypes, options: options)
     }
 }

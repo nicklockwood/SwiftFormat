@@ -229,7 +229,7 @@ class UnusedPrivateDeclarationTests: XCTestCase {
             static let foo = Foo()
         }
         """
-        testFormatting(for: input, rule: .unusedPrivateDeclaration, exclude: [.propertyType])
+        testFormatting(for: input, rule: .unusedPrivateDeclaration, exclude: [.propertyTypes])
     }
 
     func testCanDisableUnusedPrivateDeclarationRule() {

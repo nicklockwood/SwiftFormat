@@ -23,7 +23,7 @@ class WrapArgumentsTests: XCTestCase {
             Thing(),
         ])
         """
-        testFormatting(for: input, output, rule: .wrapArguments, exclude: [.propertyType])
+        testFormatting(for: input, output, rule: .wrapArguments, exclude: [.propertyTypes])
     }
 
     func testWrapArgumentsDoesntIndentTrailingComment() {
@@ -206,7 +206,7 @@ class WrapArgumentsTests: XCTestCase {
         }
         """
         let options = FormatOptions(wrapArguments: .beforeFirst)
-        testFormatting(for: input, rule: .wrapArguments, options: options, exclude: [.propertyType])
+        testFormatting(for: input, rule: .wrapArguments, options: options, exclude: [.propertyTypes])
     }
 
     // MARK: wrapParameters
@@ -1794,7 +1794,7 @@ class WrapArgumentsTests: XCTestCase {
         """
 
         let options = FormatOptions(wrapEffects: .never)
-        testFormatting(for: input, rule: .wrapArguments, options: options, exclude: [.propertyType])
+        testFormatting(for: input, rule: .wrapArguments, options: options, exclude: [.propertyTypes])
     }
 
     func testWrapEffectsNeverPreservesComments() {
@@ -1955,7 +1955,7 @@ class WrapArgumentsTests: XCTestCase {
             wrapReturnType: .ifMultiline
         )
 
-        testFormatting(for: input, rule: .wrapArguments, options: options, exclude: [.propertyType])
+        testFormatting(for: input, rule: .wrapArguments, options: options, exclude: [.propertyTypes])
     }
 
     func testPreserveReturnOnMultilineFunctionDeclarationByDefault() {
@@ -2003,7 +2003,7 @@ class WrapArgumentsTests: XCTestCase {
         testFormatting(
             for: input, rules: [.wrapArguments, .indent],
             options: FormatOptions(closingParenPosition: .sameLine, wrapConditions: .beforeFirst),
-            exclude: [.propertyType]
+            exclude: [.propertyTypes]
         )
     }
 

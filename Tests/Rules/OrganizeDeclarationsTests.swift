@@ -1849,7 +1849,7 @@ class OrganizeDeclarationsTests: XCTestCase {
 
         testFormatting(for: input, output, rule: .organizeDeclarations,
                        options: FormatOptions(ifdefIndent: .noIndent),
-                       exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .propertyType])
+                       exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .propertyTypes])
     }
 
     func testOrganizesTypeBelowSymbolImport() {

@@ -117,7 +117,7 @@ class RedundantFileprivateTests: XCTestCase {
         let kFoo = Foo().foo
         """
         let options = FormatOptions(swiftVersion: "4")
-        testFormatting(for: input, rule: .redundantFileprivate, options: options, exclude: [.propertyType])
+        testFormatting(for: input, rule: .redundantFileprivate, options: options, exclude: [.propertyTypes])
     }
 
     func testFileprivateVarNotChangedToPrivateIfAccessedFromAVar() {
@@ -273,7 +273,7 @@ class RedundantFileprivateTests: XCTestCase {
         let foo = Foo()
         """
         let options = FormatOptions(swiftVersion: "4")
-        testFormatting(for: input, rule: .redundantFileprivate, options: options, exclude: [.propertyType])
+        testFormatting(for: input, rule: .redundantFileprivate, options: options, exclude: [.propertyTypes])
     }
 
     func testFileprivateInitNotChangedToPrivateIfConstructorCalledOutsideType2() {
@@ -287,7 +287,7 @@ class RedundantFileprivateTests: XCTestCase {
         }
         """
         let options = FormatOptions(swiftVersion: "4")
-        testFormatting(for: input, rule: .redundantFileprivate, options: options, exclude: [.propertyType])
+        testFormatting(for: input, rule: .redundantFileprivate, options: options, exclude: [.propertyTypes])
     }
 
     func testFileprivateStructMemberNotChangedToPrivateIfConstructorCalledOutsideType() {
@@ -299,7 +299,7 @@ class RedundantFileprivateTests: XCTestCase {
         let foo = Foo(bar: "test")
         """
         let options = FormatOptions(swiftVersion: "4")
-        testFormatting(for: input, rule: .redundantFileprivate, options: options, exclude: [.propertyType])
+        testFormatting(for: input, rule: .redundantFileprivate, options: options, exclude: [.propertyTypes])
     }
 
     func testFileprivateClassMemberChangedToPrivateEvenIfConstructorCalledOutsideType() {
@@ -318,7 +318,7 @@ class RedundantFileprivateTests: XCTestCase {
         let foo = Foo()
         """
         let options = FormatOptions(swiftVersion: "4")
-        testFormatting(for: input, output, rule: .redundantFileprivate, options: options, exclude: [.propertyType])
+        testFormatting(for: input, output, rule: .redundantFileprivate, options: options, exclude: [.propertyTypes])
     }
 
     func testFileprivateExtensionFuncNotChangedToPrivateIfPartOfProtocolConformance() {
@@ -422,7 +422,7 @@ class RedundantFileprivateTests: XCTestCase {
         }
         """
         let options = FormatOptions(swiftVersion: "4")
-        testFormatting(for: input, rule: .redundantFileprivate, options: options, exclude: [.propertyType])
+        testFormatting(for: input, rule: .redundantFileprivate, options: options, exclude: [.propertyTypes])
     }
 
     func testFileprivateInitNotChangedToPrivateWhenUsingTrailingClosureInit() {

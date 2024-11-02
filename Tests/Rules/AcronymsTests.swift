@@ -45,7 +45,7 @@ class AcronymsTests: XCTestCase {
         struct ScreenID {}
         """
 
-        testFormatting(for: input, output, rule: .acronyms, exclude: [.propertyType])
+        testFormatting(for: input, output, rule: .acronyms, exclude: [.propertyTypes])
     }
 
     func testUppercaseCustomAcronym() {

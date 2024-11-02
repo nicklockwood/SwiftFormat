@@ -1,5 +1,5 @@
 //
-//  PropertyType.swift
+//  PropertyTypes.swift
 //  SwiftFormat
 //
 //  Created by Cal Stephens on 3/29/24.
@@ -9,7 +9,7 @@
 import Foundation
 
 public extension FormatRule {
-    static let propertyType = FormatRule(
+    static let propertyTypes = FormatRule(
         help: "Convert property declarations to use inferred types (`let foo = Foo()`) or explicit types (`let foo: Foo = .init()`).",
         disabledByDefault: true,
         orderAfter: [.redundantType],

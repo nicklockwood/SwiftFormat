@@ -239,7 +239,7 @@ class WrapAttributesTests: XCTestCase {
         let myClass = MyClass()
         """
         let options = FormatOptions(typeAttributes: .prevLine)
-        testFormatting(for: input, output, rule: .wrapAttributes, options: options, exclude: [.propertyType])
+        testFormatting(for: input, output, rule: .wrapAttributes, options: options, exclude: [.propertyTypes])
     }
 
     func testClassImportAttributeNotTreatedAsType() {
@@ -259,7 +259,7 @@ class WrapAttributesTests: XCTestCase {
         private(set) dynamic var foo = Foo()
         """
         let options = FormatOptions(storedVarAttributes: .prevLine, computedVarAttributes: .prevLine)
-        testFormatting(for: input, output, rule: .wrapAttributes, options: options, exclude: [.propertyType])
+        testFormatting(for: input, output, rule: .wrapAttributes, options: options, exclude: [.propertyTypes])
     }
 
     func testWrapPrivateSetVarAttributes() {
@@ -271,7 +271,7 @@ class WrapAttributesTests: XCTestCase {
         private(set) dynamic var foo = Foo()
         """
         let options = FormatOptions(varAttributes: .prevLine)
-        testFormatting(for: input, output, rule: .wrapAttributes, options: options, exclude: [.propertyType])
+        testFormatting(for: input, output, rule: .wrapAttributes, options: options, exclude: [.propertyTypes])
     }
 
     func testDontWrapPrivateSetVarAttributes() {
@@ -283,7 +283,7 @@ class WrapAttributesTests: XCTestCase {
         @objc private(set) dynamic var foo = Foo()
         """
         let options = FormatOptions(varAttributes: .prevLine, storedVarAttributes: .sameLine)
-        testFormatting(for: input, output, rule: .wrapAttributes, options: options, exclude: [.propertyType])
+        testFormatting(for: input, output, rule: .wrapAttributes, options: options, exclude: [.propertyTypes])
     }
 
     func testWrapConvenienceInitAttribute() {
@@ -448,7 +448,7 @@ class WrapAttributesTests: XCTestCase {
         }
         """
         let options = FormatOptions(storedVarAttributes: .prevLine, computedVarAttributes: .prevLine)
-        testFormatting(for: input, output, rule: .wrapAttributes, options: options, exclude: [.propertyType])
+        testFormatting(for: input, output, rule: .wrapAttributes, options: options, exclude: [.propertyTypes])
     }
 
     func testComplexAttributesException() {
@@ -519,7 +519,7 @@ class WrapAttributesTests: XCTestCase {
         """
 
         let options = FormatOptions(storedVarAttributes: .sameLine, complexAttributes: .prevLine)
-        testFormatting(for: input, output, rule: .wrapAttributes, options: options, exclude: [.propertyType])
+        testFormatting(for: input, output, rule: .wrapAttributes, options: options, exclude: [.propertyTypes])
     }
 
     func testEscapingClosureNotMistakenForComplexAttribute() {
@@ -591,7 +591,7 @@ class WrapAttributesTests: XCTestCase {
         }
         """
         let options = FormatOptions(varAttributes: .sameLine, storedVarAttributes: .sameLine, computedVarAttributes: .prevLine, complexAttributes: .prevLine)
-        testFormatting(for: input, output, rule: .wrapAttributes, options: options, exclude: [.propertyType])
+        testFormatting(for: input, output, rule: .wrapAttributes, options: options, exclude: [.propertyTypes])
     }
 
     func testWrapOrDontAttributesInSwiftUIView() {

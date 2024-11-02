@@ -181,17 +181,17 @@ class TypeSugarTests: XCTestCase {
 
     func testAvoidSwiftParserBugWithClosuresInsideArrays() {
         let input = "var foo = Array<(_ image: Data?) -> Void>()"
-        testFormatting(for: input, rule: .typeSugar, options: FormatOptions(shortOptionals: .always), exclude: [.propertyType])
+        testFormatting(for: input, rule: .typeSugar, options: FormatOptions(shortOptionals: .always), exclude: [.propertyTypes])
     }
 
     func testAvoidSwiftParserBugWithClosuresInsideDictionaries() {
         let input = "var foo = Dictionary<String, (_ image: Data?) -> Void>()"
-        testFormatting(for: input, rule: .typeSugar, options: FormatOptions(shortOptionals: .always), exclude: [.propertyType])
+        testFormatting(for: input, rule: .typeSugar, options: FormatOptions(shortOptionals: .always), exclude: [.propertyTypes])
     }
 
     func testAvoidSwiftParserBugWithClosuresInsideOptionals() {
         let input = "var foo = Optional<(_ image: Data?) -> Void>()"
-        testFormatting(for: input, rule: .typeSugar, options: FormatOptions(shortOptionals: .always), exclude: [.propertyType])
+        testFormatting(for: input, rule: .typeSugar, options: FormatOptions(shortOptionals: .always), exclude: [.propertyTypes])
     }
 
     func testDontOverApplyBugWorkaround() {
@@ -219,20 +219,20 @@ class TypeSugarTests: XCTestCase {
         let input = "var foo = Array<(image: Data?) -> Void>()"
         let output = "var foo = [(image: Data?) -> Void]()"
         let options = FormatOptions(shortOptionals: .always)
-        testFormatting(for: input, output, rule: .typeSugar, options: options, exclude: [.propertyType])
+        testFormatting(for: input, output, rule: .typeSugar, options: options, exclude: [.propertyTypes])
     }
 
     func testDontOverApplyBugWorkaround5() {
         let input = "var foo = Array<(Data?) -> Void>()"
         let output = "var foo = [(Data?) -> Void]()"
         let options = FormatOptions(shortOptionals: .always)
-        testFormatting(for: input, output, rule: .typeSugar, options: options, exclude: [.propertyType])
+        testFormatting(for: input, output, rule: .typeSugar, options: options, exclude: [.propertyTypes])
     }
 
     func testDontOverApplyBugWorkaround6() {
         let input = "var foo = Dictionary<Int, Array<(_ image: Data?) -> Void>>()"
         let output = "var foo = [Int: Array<(_ image: Data?) -> Void>]()"
         let options = FormatOptions(shortOptionals: .always)
-        testFormatting(for: input, output, rule: .typeSugar, options: options, exclude: [.propertyType])
+        testFormatting(for: input, output, rule: .typeSugar, options: options, exclude: [.propertyTypes])
     }
 }

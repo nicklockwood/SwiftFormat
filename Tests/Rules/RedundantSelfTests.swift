@@ -526,7 +526,7 @@ class RedundantSelfTests: XCTestCase {
         let vc = UIHostingController(rootView: InspectionView(inspection: self.inspection))
         """
         let options = FormatOptions(selfRequired: ["InspectionView"])
-        testFormatting(for: input, rule: .redundantSelf, options: options, exclude: [.propertyType])
+        testFormatting(for: input, rule: .redundantSelf, options: options, exclude: [.propertyTypes])
     }
 
     func testSelfRemovedFromSwitchCaseWhere() {

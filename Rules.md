@@ -102,7 +102,7 @@
 * [markTypes](#markTypes)
 * [noExplicitOwnership](#noExplicitOwnership)
 * [organizeDeclarations](#organizeDeclarations)
-* [propertyType](#propertyType)
+* [propertyTypes](#propertyTypes)
 * [redundantProperty](#redundantProperty)
 * [sortSwitchCases](#sortSwitchCases)
 * [unusedPrivateDeclaration](#unusedPrivateDeclaration)
@@ -1637,7 +1637,7 @@ Convert trivial `map { $0.foo }` closures to keyPath-based syntax.
 </details>
 <br/>
 
-## propertyType
+## propertyTypes
 
 Convert property declarations to use inferred types (`let foo = Foo()`) or explicit types (`let foo: Foo = .init()`).
 

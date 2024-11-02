@@ -94,7 +94,7 @@ class DocCommentsTests: XCTestCase {
         """
 
         testFormatting(for: input, output, rule: .docComments,
-                       exclude: [.spaceInsideComments, .propertyType])
+                       exclude: [.spaceInsideComments, .propertyTypes])
     }
 
     func testConvertDocCommentsToComments() {
@@ -169,7 +169,7 @@ class DocCommentsTests: XCTestCase {
         """
 
         testFormatting(for: input, output, rule: .docComments,
-                       exclude: [.spaceInsideComments, .redundantProperty, .propertyType])
+                       exclude: [.spaceInsideComments, .redundantProperty, .propertyTypes])
     }
 
     func testPreservesDocComments() {
@@ -246,7 +246,7 @@ class DocCommentsTests: XCTestCase {
         """
 
         let options = FormatOptions(preserveDocComments: true)
-        testFormatting(for: input, output, rule: .docComments, options: options, exclude: [.spaceInsideComments, .redundantProperty, .propertyType])
+        testFormatting(for: input, output, rule: .docComments, options: options, exclude: [.spaceInsideComments, .redundantProperty, .propertyTypes])
     }
 
     func testDoesntConvertCommentBeforeConsecutivePropertiesToDocComment() {

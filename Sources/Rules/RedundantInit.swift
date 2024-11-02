@@ -12,7 +12,7 @@ public extension FormatRule {
     /// Strip redundant `.init` from type instantiations
     static let redundantInit = FormatRule(
         help: "Remove explicit `init` if not required.",
-        orderAfter: [.propertyType]
+        orderAfter: [.propertyTypes]
     ) { formatter in
         formatter.forEach(.identifier("init")) { initIndex, _ in
             guard let dotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: initIndex, if: {

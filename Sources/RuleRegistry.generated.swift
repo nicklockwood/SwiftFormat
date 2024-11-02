@@ -55,7 +55,7 @@ let ruleRegistry: [String: FormatRule] = [
     "organizeDeclarations": .organizeDeclarations,
     "preferForLoop": .preferForLoop,
     "preferKeyPath": .preferKeyPath,
-    "propertyType": .propertyType,
+    "propertyTypes": .propertyTypes,
     "redundantBackticks": .redundantBackticks,
     "redundantBreak": .redundantBreak,
     "redundantClosure": .redundantClosure,

@@ -24,7 +24,7 @@ class RedundantClosureTests: XCTestCase {
         """
         let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, rule: .redundantClosure, options: options,
-                       exclude: [.redundantReturn, .propertyType])
+                       exclude: [.redundantReturn, .propertyTypes])
     }
 
     // MARK: redundantClosure
@@ -143,7 +143,7 @@ class RedundantClosureTests: XCTestCase {
         lazy var bar = Bar()
         """
 
-        testFormatting(for: input, output, rule: .redundantClosure, exclude: [.propertyType])
+        testFormatting(for: input, output, rule: .redundantClosure, exclude: [.propertyTypes])
     }
 
     func testRemoveRedundantClosureInMultiLinePropertyDeclarationWithString() {
@@ -180,7 +180,7 @@ class RedundantClosureTests: XCTestCase {
         """
 
         testFormatting(for: input, [output], rules: [.redundantReturn, .redundantClosure,
-                                                     .semicolons], exclude: [.propertyType])
+                                                     .semicolons], exclude: [.propertyTypes])
     }
 
     func testRemoveRedundantClosureInWrappedPropertyDeclaration_beforeFirst() {
@@ -201,7 +201,7 @@ class RedundantClosureTests: XCTestCase {
         let options = FormatOptions(wrapArguments: .beforeFirst, closingParenPosition: .sameLine)
         testFormatting(for: input, [output],
                        rules: [.redundantClosure, .wrapArguments],
-                       options: options, exclude: [.propertyType])
+                       options: options, exclude: [.propertyTypes])
     }
 
     func testRemoveRedundantClosureInWrappedPropertyDeclaration_afterFirst() {
@@ -220,7 +220,7 @@ class RedundantClosureTests: XCTestCase {
         let options = FormatOptions(wrapArguments: .afterFirst, closingParenPosition: .sameLine)
         testFormatting(for: input, [output],
                        rules: [.redundantClosure, .wrapArguments],
-                       options: options, exclude: [.propertyType])
+                       options: options, exclude: [.propertyTypes])
     }
 
     func testRedundantClosureKeepsMultiStatementClosureThatSetsProperty() {
@@ -388,7 +388,7 @@ class RedundantClosureTests: XCTestCase {
         lazy var foo = Foo(handle: { fatalError() })
         """
 
-        testFormatting(for: input, output, rule: .redundantClosure, exclude: [.propertyType])
+        testFormatting(for: input, output, rule: .redundantClosure, exclude: [.propertyTypes])
     }
 
     func testPreservesClosureWithMultipleVoidMethodCalls() {
@@ -978,7 +978,7 @@ class RedundantClosureTests: XCTestCase {
 
         let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, output, rule: .redundantClosure, options: options,
-                       exclude: [.redundantReturn, .blankLinesBetweenScopes, .propertyType])
+                       exclude: [.redundantReturn, .blankLinesBetweenScopes, .propertyTypes])
     }
 
     func testRedundantClosureWithSwitchExpressionDoesntBreakBuildWithRedundantReturnRuleDisabled() {
@@ -1019,7 +1019,7 @@ class RedundantClosureTests: XCTestCase {
                                .redundantClosure],
                        options: options,
                        exclude: [.indent, .blankLinesBetweenScopes, .wrapMultilineConditionalAssignment,
-                                 .propertyType])
+                                 .propertyTypes])
     }
 
     func testRemovesRedundantClosureWithGenericExistentialTypes() {

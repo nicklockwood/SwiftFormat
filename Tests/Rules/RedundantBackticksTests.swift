@@ -112,19 +112,19 @@ class RedundantBackticksTests: XCTestCase {
         let input = "var type = Foo.`true`"
         let output = "var type = Foo.true"
         let options = FormatOptions(swiftVersion: "4")
-        testFormatting(for: input, output, rule: .redundantBackticks, options: options, exclude: [.propertyType])
+        testFormatting(for: input, output, rule: .redundantBackticks, options: options, exclude: [.propertyTypes])
     }
 
     func testRemoveBackticksAroundProperty() {
         let input = "var type = Foo.`bar`"
         let output = "var type = Foo.bar"
-        testFormatting(for: input, output, rule: .redundantBackticks, exclude: [.propertyType])
+        testFormatting(for: input, output, rule: .redundantBackticks, exclude: [.propertyTypes])
     }
 
     func testRemoveBackticksAroundKeywordProperty() {
         let input = "var type = Foo.`default`"
         let output = "var type = Foo.default"
-        testFormatting(for: input, output, rule: .redundantBackticks, exclude: [.propertyType])
+        testFormatting(for: input, output, rule: .redundantBackticks, exclude: [.propertyTypes])
     }
 
     func testRemoveBackticksAroundKeypathProperty() {
@@ -148,7 +148,7 @@ class RedundantBackticksTests: XCTestCase {
     func testNoRemoveBackticksAroundInitPropertyInSwift5() {
         let input = "let foo: Foo = .`init`"
         let options = FormatOptions(swiftVersion: "5")
-        testFormatting(for: input, rule: .redundantBackticks, options: options, exclude: [.propertyType])
+        testFormatting(for: input, rule: .redundantBackticks, options: options, exclude: [.propertyTypes])
     }
 
     func testNoRemoveBackticksAroundAnyProperty() {

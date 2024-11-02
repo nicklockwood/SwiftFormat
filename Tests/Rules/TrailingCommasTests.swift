@@ -125,7 +125,7 @@ class TrailingCommasTests: XCTestCase {
             Int
         ]).self
         """
-        testFormatting(for: input, rule: .trailingCommas, exclude: [.propertyType])
+        testFormatting(for: input, rule: .trailingCommas, exclude: [.propertyTypes])
     }
 
     func testTrailingCommaNotAddedToTypeDeclaration() {
@@ -172,7 +172,7 @@ class TrailingCommasTests: XCTestCase {
             String: Int
         ]]()
         """
-        testFormatting(for: input, rule: .trailingCommas, exclude: [.propertyType])
+        testFormatting(for: input, rule: .trailingCommas, exclude: [.propertyTypes])
     }
 
     func testTrailingCommaNotAddedToTypeDeclaration6() {
@@ -185,7 +185,7 @@ class TrailingCommasTests: XCTestCase {
             ])
         ]]()
         """
-        testFormatting(for: input, rule: .trailingCommas, exclude: [.propertyType])
+        testFormatting(for: input, rule: .trailingCommas, exclude: [.propertyTypes])
     }
 
     func testTrailingCommaNotAddedToTypeDeclaration7() {

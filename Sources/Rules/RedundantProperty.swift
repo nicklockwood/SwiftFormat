@@ -12,7 +12,7 @@ public extension FormatRule {
     static let redundantProperty = FormatRule(
         help: "Simplifies redundant property definitions that are immediately returned.",
         disabledByDefault: true,
-        orderAfter: [.propertyType]
+        orderAfter: [.propertyTypes]
     ) { formatter in
         formatter.forEach(.keyword) { introducerIndex, introducerToken in
             // Find properties like `let identifier = value` followed by `return identifier`

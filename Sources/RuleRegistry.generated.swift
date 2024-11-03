@@ -106,7 +106,7 @@ let ruleRegistry: [String: FormatRule] = [
     "trailingSpace": .trailingSpace,
     "typeSugar": .typeSugar,
     "unusedArguments": .unusedArguments,
-    "unusedPrivateDeclaration": .unusedPrivateDeclaration,
+    "unusedPrivateDeclarations": .unusedPrivateDeclarations,
     "void": .void,
     "wrap": .wrap,
     "wrapArguments": .wrapArguments,

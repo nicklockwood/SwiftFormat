@@ -81,7 +81,7 @@ extension XCTestCase {
             + (rules.first?.name == "extensionAccessControl" ? [] : ["extensionAccessControl"])
             + (rules.first?.name == "markTypes" ? [] : ["markTypes"])
             + (rules.first?.name == "blockComments" ? [] : ["blockComments"])
-            + (rules.first?.name == "unusedPrivateDeclaration" ? [] : ["unusedPrivateDeclaration"])
+            + (rules.first?.name == "unusedPrivateDeclarations" ? [] : ["unusedPrivateDeclarations"])
 
         guard let formatResult = try? format(input, rules: rules, options: options) else {
             XCTFail("Failed to format input, threw error")

@@ -1,5 +1,5 @@
 //
-//  UnusedPrivateDeclarationTests.swift
+//  UnusedPrivateDeclarationsTests.swift
 //  SwiftFormatTests
 //
 //  Created by Manny Lopez on 7/17/24.
@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class UnusedPrivateDeclarationTests: XCTestCase {
+class UnusedPrivateDeclarationsTests: XCTestCase {
     func testRemoveUnusedPrivate() {
         let input = """
         struct Foo {
@@ -22,7 +22,7 @@ class UnusedPrivateDeclarationTests: XCTestCase {
             var bar = "bar"
         }
         """
-        testFormatting(for: input, output, rule: .unusedPrivateDeclaration)
+        testFormatting(for: input, output, rule: .unusedPrivateDeclarations)
     }
 
     func testRemoveUnusedFilePrivate() {
@@ -37,7 +37,7 @@ class UnusedPrivateDeclarationTests: XCTestCase {
             var bar = "bar"
         }
         """
-        testFormatting(for: input, output, rule: .unusedPrivateDeclaration)
+        testFormatting(for: input, output, rule: .unusedPrivateDeclarations)
     }
 
     func testDoNotRemoveUsedFilePrivate() {
@@ -51,7 +51,7 @@ class UnusedPrivateDeclarationTests: XCTestCase {
             let localFoo = Foo().foo
         }
         """
-        testFormatting(for: input, rule: .unusedPrivateDeclaration)
+        testFormatting(for: input, rule: .unusedPrivateDeclarations)
     }
 
     func testRemoveMultipleUnusedFilePrivate() {
@@ -67,7 +67,7 @@ class UnusedPrivateDeclarationTests: XCTestCase {
             var bar = "bar"
         }
         """
-        testFormatting(for: input, output, rule: .unusedPrivateDeclaration)
+        testFormatting(for: input, output, rule: .unusedPrivateDeclarations)
     }
 
     func testRemoveMixedUsedAndUnusedFilePrivate() {
@@ -92,7 +92,7 @@ class UnusedPrivateDeclarationTests: XCTestCase {
             let localFoo = Foo().foo
         }
         """
-        testFormatting(for: input, output, rule: .unusedPrivateDeclaration)
+        testFormatting(for: input, output, rule: .unusedPrivateDeclarations)
     }
 
     func testDoNotRemoveFilePrivateUsedInSameStruct() {
@@ -106,7 +106,7 @@ class UnusedPrivateDeclarationTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .unusedPrivateDeclaration)
+        testFormatting(for: input, rule: .unusedPrivateDeclarations)
     }
 
     func testRemoveUnusedFilePrivateInNestedStruct() {
@@ -127,7 +127,7 @@ class UnusedPrivateDeclarationTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .unusedPrivateDeclaration, exclude: [.emptyBraces])
+        testFormatting(for: input, output, rule: .unusedPrivateDeclarations, exclude: [.emptyBraces])
     }
 
     func testDoNotRemoveFilePrivateUsedInNestedStruct() {
@@ -143,7 +143,7 @@ class UnusedPrivateDeclarationTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .unusedPrivateDeclaration)
+        testFormatting(for: input, rule: .unusedPrivateDeclarations)
     }
 
     func testRemoveUnusedFileprivateFunction() {
@@ -161,7 +161,7 @@ class UnusedPrivateDeclarationTests: XCTestCase {
             var bar = "bar"
         }
         """
-        testFormatting(for: input, [output], rules: [.unusedPrivateDeclaration, .blankLinesAtEndOfScope])
+        testFormatting(for: input, [output], rules: [.unusedPrivateDeclarations, .blankLinesAtEndOfScope])
     }
 
     func testDoNotRemoveUnusedFileprivateOperatorDefinition() {
@@ -172,7 +172,7 @@ class UnusedPrivateDeclarationTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .unusedPrivateDeclaration)
+        testFormatting(for: input, rule: .unusedPrivateDeclarations)
     }
 
     func testRemovePrivateDeclarationButDoNotRemoveUnusedPrivateType() {
@@ -188,7 +188,7 @@ class UnusedPrivateDeclarationTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .unusedPrivateDeclaration, exclude: [.emptyBraces])
+        testFormatting(for: input, output, rule: .unusedPrivateDeclarations, exclude: [.emptyBraces])
     }
 
     func testRemovePrivateDeclarationButDoNotRemovePrivateExtension() {
@@ -204,7 +204,7 @@ class UnusedPrivateDeclarationTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .unusedPrivateDeclaration)
+        testFormatting(for: input, output, rule: .unusedPrivateDeclarations)
     }
 
     func testRemovesPrivateTypealias() {
@@ -219,7 +219,7 @@ class UnusedPrivateDeclarationTests: XCTestCase {
             struct Bar {}
         }
         """
-        testFormatting(for: input, output, rule: .unusedPrivateDeclaration)
+        testFormatting(for: input, output, rule: .unusedPrivateDeclarations)
     }
 
     func testDoesntRemoveFileprivateInit() {
@@ -229,18 +229,18 @@ class UnusedPrivateDeclarationTests: XCTestCase {
             static let foo = Foo()
         }
         """
-        testFormatting(for: input, rule: .unusedPrivateDeclaration, exclude: [.propertyTypes])
+        testFormatting(for: input, rule: .unusedPrivateDeclarations, exclude: [.propertyTypes])
     }
 
-    func testCanDisableUnusedPrivateDeclarationRule() {
+    func testCanDisableUnusedPrivateDeclarationsRule() {
         let input = """
         private enum Foo {
-            // swiftformat:disable:next unusedPrivateDeclaration
+            // swiftformat:disable:next unusedPrivateDeclarations
             fileprivate static func bar() {}
         }
         """
 
-        testFormatting(for: input, rule: .unusedPrivateDeclaration)
+        testFormatting(for: input, rule: .unusedPrivateDeclarations)
     }
 
     func testDoesNotRemovePropertyWrapperPrefixesIfUsed() {
@@ -253,7 +253,7 @@ class UnusedPrivateDeclarationTests: XCTestCase {
             @State private var showButton: Bool
         }
         """
-        testFormatting(for: input, rule: .unusedPrivateDeclaration)
+        testFormatting(for: input, rule: .unusedPrivateDeclarations)
     }
 
     func testDoesNotRemoveUnderscoredDeclarationIfUsed() {
@@ -263,7 +263,7 @@ class UnusedPrivateDeclarationTests: XCTestCase {
             print(_showButton)
         }
         """
-        testFormatting(for: input, rule: .unusedPrivateDeclaration)
+        testFormatting(for: input, rule: .unusedPrivateDeclarations)
     }
 
     func testDoesNotRemoveBacktickDeclarationIfUsed() {
@@ -275,7 +275,7 @@ class UnusedPrivateDeclarationTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .unusedPrivateDeclaration)
+        testFormatting(for: input, rule: .unusedPrivateDeclarations)
     }
 
     func testDoesNotRemoveBacktickUsage() {
@@ -287,7 +287,7 @@ class UnusedPrivateDeclarationTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .unusedPrivateDeclaration, exclude: [.redundantBackticks])
+        testFormatting(for: input, rule: .unusedPrivateDeclarations, exclude: [.redundantBackticks])
     }
 
     func testDoNotRemovePreservedPrivateDeclarations() {
@@ -297,7 +297,7 @@ class UnusedPrivateDeclarationTests: XCTestCase {
         }
         """
         let options = FormatOptions(preservedPrivateDeclarations: ["registryAssociation", "hello"])
-        testFormatting(for: input, rule: .unusedPrivateDeclaration, options: options)
+        testFormatting(for: input, rule: .unusedPrivateDeclarations, options: options)
     }
 
     func testDoNotRemoveOverridePrivateMethodDeclarations() {
@@ -308,7 +308,7 @@ class UnusedPrivateDeclarationTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .unusedPrivateDeclaration)
+        testFormatting(for: input, rule: .unusedPrivateDeclarations)
     }
 
     func testDoNotRemoveOverridePrivatePropertyDeclarations() {
@@ -319,7 +319,7 @@ class UnusedPrivateDeclarationTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .unusedPrivateDeclaration)
+        testFormatting(for: input, rule: .unusedPrivateDeclarations)
     }
 
     func testDoNotRemoveObjcPrivatePropertyDeclaration() {
@@ -329,7 +329,7 @@ class UnusedPrivateDeclarationTests: XCTestCase {
             private var bar = "bar"
         }
         """
-        testFormatting(for: input, rule: .unusedPrivateDeclaration)
+        testFormatting(for: input, rule: .unusedPrivateDeclarations)
     }
 
     func testDoNotRemoveObjcPrivateFunctionDeclaration() {
@@ -339,7 +339,7 @@ class UnusedPrivateDeclarationTests: XCTestCase {
             private func doSomething() {}
         }
         """
-        testFormatting(for: input, rule: .unusedPrivateDeclaration)
+        testFormatting(for: input, rule: .unusedPrivateDeclarations)
     }
 
     func testDoNotRemoveIBActionPrivateFunctionDeclaration() {
@@ -350,7 +350,7 @@ class UnusedPrivateDeclarationTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .unusedPrivateDeclaration)
+        testFormatting(for: input, rule: .unusedPrivateDeclarations)
     }
 
     func testRemoveUnusedRecursivePrivateDeclaration() {
@@ -375,6 +375,6 @@ class UnusedPrivateDeclarationTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .unusedPrivateDeclaration)
+        testFormatting(for: input, output, rule: .unusedPrivateDeclarations)
     }
 }

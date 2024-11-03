@@ -1,5 +1,5 @@
 //
-//  DeclarationHelpers.swift
+//  DeclarationV1.swift
 //  SwiftFormat
 //
 //  Created by Cal Stephens on 7/20/24.
@@ -162,23 +162,9 @@ enum Declaration: Hashable {
     var isStoredProperty: Bool {
         guard keyword == "let" || keyword == "var" else { return false }
 
-        // If this property has a body, then it's a stored property
-        // if and only if the declaration body has a `didSet` or `willSet` keyword,
-        // based on the grammar for a variable declaration:
-        // https://docs.swift.org/swift-book/ReferenceManual/Declarations.html#grammar_variable-declaration
         let formatter = Formatter(tokens)
-        if let keywordIndex = formatter.index(of: .keyword(keyword), after: -1),
-           let startOfPropertyBody = formatter.startOfPropertyBody(
-               at: keywordIndex,
-               endOfPropertyIndex: formatter.tokens.count
-           ),
-           let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: startOfPropertyBody)
-        {
-            return [.identifier("willSet"), .identifier("didSet")].contains(nextToken)
-        }
-
-        // Otherwise, if the property doesn't have a body, then it must not be a computed property.
-        return true
+        guard let keywordIndex = formatter.index(of: .keyword(keyword), after: -1) else { return false }
+        return formatter.isStoredProperty(atIntroducerIndex: keywordIndex)
     }
 
     /// The original index of this declaration's primary keyword in the given formatter

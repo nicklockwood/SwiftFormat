@@ -70,7 +70,12 @@ extension DeclarationV2 {
     var name: String? {
         formatter.declarationName(keywordIndex: keywordIndex)
     }
-    
+
+    /// A `Hashable` reference to this declaration.
+    var identity: AnyHashable {
+        ObjectIdentifier(self)
+    }
+
     /// The child declarations of this declaration's body, if present.
     @_disfavoredOverload
     var body: [DeclarationV2]? {
@@ -82,6 +87,45 @@ extension DeclarationV2 {
         case let .conditionalCompilation(conditionalCompilation):
             return conditionalCompilation.body
         }
+    }
+
+    /// The modifiers before this declaration's keyword, including any attributes.
+    var modifiers: [String] {
+        var allModifiers = [String]()
+        _ = formatter.modifiersForDeclaration(at: keywordIndex, contains: { _, modifier in
+            allModifiers.append(modifier)
+            return false
+        })
+        return allModifiers
+    }
+
+    /// Whether or not this declaration represents a stored instance property
+    var isStoredInstanceProperty: Bool {
+        // A static property is not an instance property
+        !modifiers.contains("static") && isStoredProperty
+    }
+
+    /// Whether or not this declaration represents a static stored property
+    var isStaticStoredProperty: Bool {
+        modifiers.contains("static") && isStoredProperty
+    }
+
+    /// Whether or not this declaration represents a stored property
+    var isStoredProperty: Bool {
+        formatter.isStoredProperty(atIntroducerIndex: keywordIndex)
+    }
+
+    /// Full information about this `let` or `var` property declaration.
+    var asPropertyDeclaration: Formatter.PropertyDeclaration? {
+        guard keyword == "let" || keyword == "var" else { return nil }
+        return formatter.parsePropertyDeclaration(atIntroducerIndex: keywordIndex)
+    }
+
+    /// Removes this declaration from the source file.
+    /// After this point, this declaration reference is no longer valid.
+    func remove() {
+        formatter.unregisterDeclaration(self)
+        formatter.removeTokens(in: range)
     }
 }
 
@@ -188,12 +232,27 @@ extension DeclarationV2 {
 
     /// Adds the given visibility keyword to the given declaration,
     /// replacing any existing visibility keyword.
-    func add(_ visibilityKeyword: Visibility) {
+    func addVisibility(_ visibilityKeyword: Visibility) {
         formatter.addDeclarationVisibility(visibilityKeyword, declarationKeywordIndex: keywordIndex)
     }
 
     /// Removes the given visibility keyword from the given declaration
-    func remove(_ visibilityKeyword: Visibility) {
+    func removeVisibility(_ visibilityKeyword: Visibility) {
         formatter.removeDeclarationVisibility(visibilityKeyword, declarationKeywordIndex: keywordIndex)
+    }
+}
+
+/// We want to avoid including a Hashable requirement on DeclarationV2,
+/// so instead you can use this container type if you need a Hashable declaration.
+/// Uses reference identity of the `DeclarationV2` class value.
+struct HashableDeclaration: Hashable {
+    let declaration: DeclarationV2
+
+    static func == (lhs: HashableDeclaration, rhs: HashableDeclaration) -> Bool {
+        lhs.declaration === rhs.declaration
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(ObjectIdentifier(declaration))
     }
 }

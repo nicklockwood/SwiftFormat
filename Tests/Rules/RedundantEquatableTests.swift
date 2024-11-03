@@ -166,7 +166,7 @@ final class RedundantEquatableTests: XCTestCase {
             }
         }
 
-        class Quux: Equatable {
+        class Quux {
             let bar: Bar
             let baaz: Baaz
         }

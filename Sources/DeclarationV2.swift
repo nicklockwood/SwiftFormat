@@ -30,6 +30,9 @@ protocol DeclarationV2: AnyObject {
 
     /// The concrete kind of declaration represented by this value.
     var kind: DeclarationKind { get }
+
+    /// This declaration's parent declaration, if this isn't a top-level declaration.
+    var parent: DeclarationV2? { get set }
 }
 
 enum DeclarationKind {
@@ -71,6 +74,13 @@ extension DeclarationV2 {
         formatter.declarationName(keywordIndex: keywordIndex)
     }
 
+    /// The fully qualified name of this declaration, including the name of each parent declaration.
+    var fullyQualifiedName: String? {
+        guard let name = name else { return nil }
+        let typeNames = parentDeclarations.compactMap(\.name) + [name]
+        return typeNames.joined(separator: ".")
+    }
+
     /// A `Hashable` reference to this declaration.
     var identity: AnyHashable {
         ObjectIdentifier(self)
@@ -87,6 +97,19 @@ extension DeclarationV2 {
         case let .conditionalCompilation(conditionalCompilation):
             return conditionalCompilation.body
         }
+    }
+
+    /// Whether or not this declaration defines a type (a class, enum, etc, but not an extension)
+    var definesType: Bool {
+        var typeKeywords = Token.swiftTypeKeywords
+        typeKeywords.remove("extension")
+        return typeKeywords.contains(keyword)
+    }
+
+    /// The start index of this declaration's modifiers,
+    /// which represents the first non-space / non-comment token in the declaration.
+    var startOfModifiersIndex: Int {
+        formatter.startOfModifiers(at: keywordIndex, includingAttributes: true)
     }
 
     /// The modifiers before this declaration's keyword, including any attributes.
@@ -121,6 +144,12 @@ extension DeclarationV2 {
         return formatter.parsePropertyDeclaration(atIntroducerIndex: keywordIndex)
     }
 
+    /// A list of all declarations that are a parent of this declaration
+    var parentDeclarations: [DeclarationV2] {
+        guard let parent = parent else { return [] }
+        return parent.parentDeclarations + [parent]
+    }
+
     /// Removes this declaration from the source file.
     /// After this point, this declaration reference is no longer valid.
     func remove() {
@@ -141,6 +170,7 @@ final class SimpleDeclaration: DeclarationV2 {
 
     var keyword: String
     var range: ClosedRange<Int>
+    weak var parent: DeclarationV2?
     let formatter: Formatter
 
     var kind: DeclarationKind {
@@ -156,12 +186,17 @@ final class TypeDeclaration: DeclarationV2 {
         self.range = range
         self.body = body
         self.formatter = formatter
+
         formatter.registerDeclaration(self)
+        for child in body {
+            child.parent = self
+        }
     }
 
     var keyword: String
     var range: ClosedRange<Int>
     var body: [DeclarationV2]
+    weak var parent: DeclarationV2?
     let formatter: Formatter
 
     var kind: DeclarationKind {
@@ -191,12 +226,17 @@ final class ConditionalCompilationDeclaration: DeclarationV2 {
         self.range = range
         self.body = body
         self.formatter = formatter
+
         formatter.registerDeclaration(self)
+        for child in body {
+            child.parent = self
+        }
     }
 
     let keyword = "#if"
     var range: ClosedRange<Int>
     var body: [DeclarationV2]
+    weak var parent: DeclarationV2?
     let formatter: Formatter
 
     var kind: DeclarationKind {

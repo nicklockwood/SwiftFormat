@@ -14,31 +14,24 @@ public extension FormatRule {
         help: "Remove empty, non-conforming, extensions.",
         orderAfter: [.unusedPrivateDeclarations]
     ) { formatter in
-        var emptyExtensions = [Declaration]()
+        var emptyExtensions = [TypeDeclaration]()
 
-        formatter.forEachRecursiveDeclaration { declaration, _ in
-            let declarationModifiers = Set(declaration.modifiers)
+        for declaration in formatter.parseDeclarationsV2() {
             guard declaration.keyword == "extension",
-                  let declarationBody = declaration.body,
-                  declarationBody.isEmpty,
+                  let extensionDeclaration = declaration.asTypeDeclaration,
+                  extensionDeclaration.body.isEmpty,
                   // Ensure that it is not a macro
-                  !declarationModifiers.contains(where: { $0.first == "@" })
-            else { return }
+                  !extensionDeclaration.modifiers.contains(where: { $0.first == "@" })
+            else { continue }
 
             // Ensure that the extension does not conform to any protocols
-            let parser = Formatter(declaration.openTokens)
-            guard let extensionIndex = parser.index(of: .keyword("extension"), after: -1),
-                  let typeNameIndex = parser.index(of: .nonSpaceOrLinebreak, after: extensionIndex),
-                  let type = parser.parseType(at: typeNameIndex),
-                  let indexAfterType = parser.index(of: .nonSpaceOrCommentOrLinebreak, after: type.range.upperBound),
-                  parser.tokens[indexAfterType] != .delimiter(":")
-            else { return }
+            guard extensionDeclaration.conformances.isEmpty else { continue }
 
-            emptyExtensions.append(declaration)
+            emptyExtensions.append(extensionDeclaration)
         }
 
-        for declaration in emptyExtensions.reversed() {
-            formatter.removeTokens(in: declaration.originalRange)
+        for emptyExtension in emptyExtensions {
+            emptyExtension.remove()
         }
     } examples: {
         """

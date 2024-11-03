@@ -45,7 +45,7 @@ class OptionDescriptor {
     let argumentName: String // command-line argument; must not change
     fileprivate(set) var propertyName = "" // internal property; ok to change this
     let displayName: String
-    let help: String
+    fileprivate(set) var help: String
     fileprivate(set) var deprecationMessage: String?
     let toOptions: (String, inout FormatOptions) throws -> Void
     let fromOptions: (FormatOptions) -> String
@@ -73,6 +73,7 @@ class OptionDescriptor {
     fileprivate func renamed(to newPropertyName: String) -> OptionDescriptor {
         propertyName = newPropertyName
         deprecationMessage = "Use --\(newPropertyName) instead."
+        help = "deprecated"
         return self
     }
 
@@ -1161,9 +1162,9 @@ struct _Descriptors {
         falseValues: ["convert"]
     )
     let preserveSingleLineForEach = OptionDescriptor(
-        argumentName: "onelineforeach",
-        displayName: "Single-line forEach closures",
-        help: "Convert one-line forEach: \"convert\" or \"ignore\" (default)",
+        argumentName: "inlinedforeach",
+        displayName: "Inlined forEach closures",
+        help: "Convert inline forEach to for: \"convert\", \"ignore\" (default)",
         keyPath: \.preserveSingleLineForEach,
         trueValues: ["ignore", "preserve"],
         falseValues: ["convert"]
@@ -1351,4 +1352,13 @@ struct _Descriptors {
             }
         }
     ).renamed(to: "modifierOrder")
+
+    let oneLineLineForEach = OptionDescriptor(
+        argumentName: "onelineforeach",
+        displayName: "Single-line forEach closures",
+        help: "deprecated",
+        keyPath: \.preserveSingleLineForEach,
+        trueValues: ["ignore", "preserve"],
+        falseValues: ["convert"]
+    ).renamed(to: "preserveSingleLineForEach")
 }

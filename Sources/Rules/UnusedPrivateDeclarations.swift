@@ -1,5 +1,5 @@
 //
-//  UnusedPrivateDeclaration.swift
+//  UnusedPrivateDeclarations.swift
 //  SwiftFormat
 //
 //  Created by Manny Lopez on 7/17/24.
@@ -10,7 +10,7 @@ import Foundation
 
 public extension FormatRule {
     /// Remove unused private and fileprivate declarations
-    static let unusedPrivateDeclaration = FormatRule(
+    static let unusedPrivateDeclarations = FormatRule(
         help: "Remove unused private and fileprivate declarations.",
         disabledByDefault: true,
         options: ["preservedecls"]

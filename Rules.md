@@ -105,7 +105,7 @@
 * [propertyTypes](#propertyTypes)
 * [redundantProperty](#redundantProperty)
 * [sortSwitchCases](#sortSwitchCases)
-* [unusedPrivateDeclaration](#unusedPrivateDeclaration)
+* [unusedPrivateDeclarations](#unusedPrivateDeclarations)
 * [wrapConditionalBodies](#wrapConditionalBodies)
 * [wrapEnumCases](#wrapEnumCases)
 * [wrapMultilineConditionalAssignment](#wrapMultilineConditionalAssignment)
@@ -2885,7 +2885,7 @@ Option | Description
 </details>
 <br/>
 
-## unusedPrivateDeclaration
+## unusedPrivateDeclarations
 
 Remove unused private and fileprivate declarations.
 

@@ -830,6 +830,10 @@ extension Array where Element == WeakDeclarationReference {
                 // so doesn't invalidate the indices.
             }
 
+            // If you get a crash here where `endIndex` is less than `startIndex`,
+            // it means that the declaration is no longer valid, usually because it's
+            // been removed, but the declaration is unexpectedly still subscribed
+            // to updates from this formatter.
             declaration.range = startIndex ... endIndex
         }
     }

@@ -144,6 +144,11 @@ extension DeclarationV2 {
         return formatter.parsePropertyDeclaration(atIntroducerIndex: keywordIndex)
     }
 
+    /// The `TypeDeclaration` for this declaration, if it's a type with a body.
+    var asTypeDeclaration: TypeDeclaration? {
+        self as? TypeDeclaration
+    }
+
     /// A list of all declarations that are a parent of this declaration
     var parentDeclarations: [DeclarationV2] {
         guard let parent = parent else { return [] }

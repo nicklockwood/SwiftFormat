@@ -29,7 +29,7 @@ let ruleRegistry: [String: FormatRule] = [
     "consecutiveSpaces": .consecutiveSpaces,
     "consistentSwitchCaseSpacing": .consistentSwitchCaseSpacing,
     "docComments": .docComments,
-    "docCommentsBeforeAttributes": .docCommentsBeforeAttributes,
+    "docCommentsBeforeModifiers": .docCommentsBeforeModifiers,
     "duplicateImports": .duplicateImports,
     "elseOnSameLine": .elseOnSameLine,
     "emptyBraces": .emptyBraces,

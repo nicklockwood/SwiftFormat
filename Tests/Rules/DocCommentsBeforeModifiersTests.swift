@@ -1,5 +1,5 @@
 //
-//  DocCommentsBeforeAttributesTests.swift
+//  DocCommentsBeforeModifiersTests.swift
 //  SwiftFormatTests
 //
 //  Created by Cal Stephens on 7/22/24.
@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class DocCommentsBeforeAttributesTests: XCTestCase {
+class DocCommentsBeforeModifiersTests: XCTestCase {
     func testDocCommentsBeforeAttributes() {
         let input = """
         @MainActor
@@ -45,7 +45,7 @@ class DocCommentsBeforeAttributesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .docCommentsBeforeAttributes)
+        testFormatting(for: input, output, rule: .docCommentsBeforeModifiers)
     }
 
     func testDocCommentsBeforeMultipleAttributes() {
@@ -73,7 +73,29 @@ class DocCommentsBeforeAttributesTests: XCTestCase {
         public func bar() {}
         """
 
-        testFormatting(for: input, output, rule: .docCommentsBeforeAttributes)
+        testFormatting(for: input, output, rule: .docCommentsBeforeModifiers)
+    }
+
+    func testDocCommentsBeforeAllModifiers() {
+        let input = """
+        @MainActor
+        @Macro(argument: true)
+        @available(*, deprecated)
+        public
+        /// Doc comment on this function declaration after several attributes
+        func bar() {}
+        """
+
+        let output = """
+        /// Doc comment on this function declaration after several attributes
+        @MainActor
+        @Macro(argument: true)
+        @available(*, deprecated)
+        public
+        func bar() {}
+        """
+
+        testFormatting(for: input, output, rule: .docCommentsBeforeModifiers)
     }
 
     func testUpdatesCommentsAfterMark() {
@@ -99,6 +121,10 @@ class DocCommentsBeforeAttributesTests: XCTestCase {
             /// Doc comment on this function declaration.
             private func bar() {}
 
+            private
+            /// Doc comment on this function declaration.
+            // TODO: This function also has a trailing TODO comment.
+            func baz() {}
         }
         """
 
@@ -124,22 +150,54 @@ class DocCommentsBeforeAttributesTests: XCTestCase {
             @MainActor
             private func bar() {}
 
+            /// Doc comment on this function declaration.
+            private
+            // TODO: This function also has a trailing TODO comment.
+            func baz() {}
         }
         """
 
-        testFormatting(for: input, output, rule: .docCommentsBeforeAttributes, exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope])
+        testFormatting(for: input, output, rule: .docCommentsBeforeModifiers,
+                       exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope])
+    }
+
+    func testPreservesCommentOnSameLineAsAttribute() {
+        let input = """
+        @MainActor // Comment trailing attributes
+        func foo() {}
+        """
+
+        testFormatting(for: input, rule: .docCommentsBeforeModifiers)
+    }
+
+    func testHoistMultilineDocCommentOnSameLineAsAttribute() {
+        let input = """
+        @MainActor /**
+         Comment trailing attributes
+         */
+        func foo() {}
+        """
+
+        let output = """
+        /**
+         Comment trailing attributes
+         */
+        @MainActor func foo() {}
+        """
+
+        testFormatting(for: input, output, rule: .docCommentsBeforeModifiers, exclude: [.docComments])
     }
 
     func testPreservesCommentsBetweenAttributes() {
         let input = """
         @MainActor
-        /// Doc comment between attributes
+        // Comment between attributes
         @available(*, deprecated)
         /// Doc comment before declaration
         func bar() {}
 
-        @MainActor /// Doc comment after main actor attribute
-        @available(*, deprecated) /// Doc comment after deprecation attribute
+        @MainActor // Comment after main actor attribute
+        @available(*, deprecated) // Comment after deprecation attribute
         /// Doc comment before declaration
         func bar() {}
         """
@@ -147,26 +205,31 @@ class DocCommentsBeforeAttributesTests: XCTestCase {
         let output = """
         /// Doc comment before declaration
         @MainActor
-        /// Doc comment between attributes
+        // Comment between attributes
         @available(*, deprecated)
         func bar() {}
 
         /// Doc comment before declaration
-        @MainActor /// Doc comment after main actor attribute
-        @available(*, deprecated) /// Doc comment after deprecation attribute
+        @MainActor // Comment after main actor attribute
+        @available(*, deprecated) // Comment after deprecation attribute
         func bar() {}
         """
 
-        testFormatting(for: input, output, rule: .docCommentsBeforeAttributes, exclude: [.docComments])
+        testFormatting(for: input, output, rule: .docCommentsBeforeModifiers, exclude: [.docComments])
     }
 
-    func testPreservesCommentOnSameLineAsAttribute() {
+    func testHoisDocCommentOnSameLineAsAttribute() {
         let input = """
         @MainActor /// Doc comment trailing attributes
         func foo() {}
         """
 
-        testFormatting(for: input, rule: .docCommentsBeforeAttributes, exclude: [.docComments])
+        let output = """
+        /// Doc comment trailing attributes
+        @MainActor func foo() {}
+        """
+
+        testFormatting(for: input, output, rule: .docCommentsBeforeModifiers, exclude: [.docComments])
     }
 
     func testPreservesRegularComments() {
@@ -176,7 +239,7 @@ class DocCommentsBeforeAttributesTests: XCTestCase {
         func foo() {}
         """
 
-        testFormatting(for: input, rule: .docCommentsBeforeAttributes, exclude: [.docComments])
+        testFormatting(for: input, rule: .docCommentsBeforeModifiers, exclude: [.docComments])
     }
 
     func testCombinesWithDocCommentsRule() {
@@ -192,6 +255,26 @@ class DocCommentsBeforeAttributesTests: XCTestCase {
         func foo() {}
         """
 
-        testFormatting(for: input, [output], rules: [.docComments, .docCommentsBeforeAttributes])
+        testFormatting(for: input, [output], rules: [.docComments, .docCommentsBeforeModifiers])
+    }
+
+    func testCaseCommentsNotMangled() {
+        let input = """
+        enum Symbol: CustomStringConvertible, Hashable {
+            /// A named variable
+            case variable(String)
+
+            /// An infix operator
+            case infix(String)
+
+            /// A prefix operator
+            case prefix(String)
+
+            /// A postfix operator
+            case postfix(String)
+        }
+        """
+
+        testFormatting(for: input, rule: .docCommentsBeforeModifiers)
     }
 }

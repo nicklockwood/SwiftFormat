@@ -1641,7 +1641,7 @@ class OrganizeDeclarationsTests: XCTestCase {
         """
 
         testFormatting(for: input, rule: .organizeDeclarations,
-                       exclude: [.blankLinesAtStartOfScope, .docCommentsBeforeAttributes])
+                       exclude: [.blankLinesAtStartOfScope, .docCommentsBeforeModifiers])
     }
 
     func testHandlesTrailingCommentCorrectly() {

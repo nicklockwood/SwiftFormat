@@ -4,6 +4,12 @@ Are you interested in contributing to SwiftFormat? Fantastic!
 
 Here's what you need to know:
 
+## Code of Conduct
+
+There will be zero tolerance for rudeness or bullying. If you think somebody else's comment or pull request is stupid, keep it to yourself. If you are frustrated because your issue or pull request isn't getting the attention it deserves, feel free to post a comment like "any update on this?", but remember that we are all busy, and other peoples' priorities don't necessarily match yours.
+
+Abusive contributors will be blocked and/or reported, regardless of how valuable their code contributions may be.
+
 ## Branches and Versioning
 
 SwiftFormat follows the principles of [Semantic Versioning](http://semver.org/spec/v2.0.0.html) (semver), however since SwiftFormat is still pre-1.0, the rules are a little less strict. In general, 0.0.x releases are for bug fixes and non-breaking changes, and 0.x.0 releases are for breaking changes.
@@ -59,8 +65,28 @@ Tests are run automatically on all pull requests, branches and tags. These are t
 
 There is a separate Performance Tests scheme that you should run manually if your code changes are likely to affect performance.
 
-## Code of Conduct
+## Renaming a Rule Option
 
-There will be zero tolerance for rudeness or bullying. If you think somebody else's comment or pull request is stupid, keep it to yourself. If you are frustrated because your issue or pull request isn't getting the attention it deserves, feel free to post a comment like "any update on this?", but remember that we are all busy, and other peoples' priorities don't necessarily match yours.
+* Add a copy of the option in `OptionDescriptor.swift` under the `// MARK: - RENAMED` section
+* Add `.renamed(to: "newPropertyName")` to the renamed copy of the option
+* Rename the `propertyName` of the original option property to the new name
 
-Abusive contributors will be blocked and/or reported, regardless of how valuable their code contributions may be.
+## Release Process
+
+This is relevant only to maintainers:
+
+* Update version number in SwiftFormat.swift + 3 targets
+* Update CHANGELOG.md
+* Update SwiftFormat.podspec.json
+* Select SwiftFormat (Command Line Tool) and run Editor > Archive
+* Replace binary in CommandLineTool directory
+* Select SwiftFormat for Xcode and run Editor > Archive
+* Notarize and export built app
+* Tag commit and push to main
+* Run Build for Linux & Build for Windows and download binaries
+* Unzip Linux binary and mark as executable with chmod +x, then rezip
+* Unzip Windows msi zips and rename
+* Create a release
+* Attach all binaries
+* Create and Publish Docker image
+* pod trunk push --allow-warnings

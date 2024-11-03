@@ -56,9 +56,17 @@ class OptionDescriptor {
     }
 
     var isRenamed: Bool {
-        isDeprecated && Descriptors.all.contains(where: {
-            $0.propertyName == propertyName && $0.argumentName != argumentName
-        })
+        isDeprecated && help.hasPrefix("Renamed to")
+    }
+
+    fileprivate var newArgumentName: String? {
+        isRenamed ? String(help.dropFirst("Renamed to --".count)) : nil
+    }
+
+    fileprivate func renamed(to newArgumentName: String) -> OptionDescriptor {
+        deprecationMessage = "Use --\(newArgumentName) instead."
+        help = "Renamed to --\(newArgumentName)"
+        return self
     }
 
     var defaultArgument: String {
@@ -68,13 +76,6 @@ class OptionDescriptor {
     func validateArgument(_ arg: String) -> Bool {
         var options = FormatOptions.default
         return (try? toOptions(arg, &options)) != nil
-    }
-
-    fileprivate func renamed(to newPropertyName: String) -> OptionDescriptor {
-        propertyName = newPropertyName
-        deprecationMessage = "Use --\(newPropertyName) instead."
-        help = "deprecated"
-        return self
     }
 
     var isSetType: Bool {
@@ -387,7 +388,14 @@ private var _allDescriptors: [OptionDescriptor] = {
         guard let name = label, var descriptor = value as? OptionDescriptor else {
             continue
         }
-        if descriptor.propertyName.isEmpty {
+        if let newArgumentName = descriptor.newArgumentName {
+            guard let old = descriptors.first(where: {
+                $0.argumentName == newArgumentName
+            }) else {
+                preconditionFailure("No property matches argument name \(newArgumentName)")
+            }
+            descriptor.propertyName = old.propertyName
+        } else {
             descriptor.propertyName = name
         }
         descriptors.append(descriptor)
@@ -419,6 +427,12 @@ extension _Descriptors {
 
     /// An Array of all descriptors
     var all: [OptionDescriptor] { _allDescriptors }
+
+    /// All deprecated descriptors
+    var deprecated: [OptionDescriptor] { _allDescriptors.filter(\.isDeprecated) }
+
+    /// All renamed descriptors
+    var renamed: [OptionDescriptor] { _allDescriptors.filter(\.isRenamed) }
 
     /// A Dictionary of descriptors by name
     var byName: [String: OptionDescriptor] {
@@ -1323,7 +1337,7 @@ struct _Descriptors {
         keyPath: \.useVoid,
         trueValues: ["void"],
         falseValues: ["tuple", "tuples"]
-    ).renamed(to: "useVoid")
+    ).renamed(to: "voidtype")
 
     let hexLiterals = OptionDescriptor(
         argumentName: "hexliterals",
@@ -1332,14 +1346,14 @@ struct _Descriptors {
         keyPath: \.uppercaseHex,
         trueValues: ["uppercase", "upper"],
         falseValues: ["lowercase", "lower"]
-    ).renamed(to: "uppercaseHex")
+    ).renamed(to: "hexliteralcase")
 
     let wrapElements = OptionDescriptor(
         argumentName: "wrapelements",
         displayName: "Wrap Elements",
         help: "deprecated",
         keyPath: \.wrapCollections
-    ).renamed(to: "wrapCollections")
+    ).renamed(to: "wrapcollections")
 
     let specifierOrder = OptionDescriptor(
         argumentName: "specifierorder",
@@ -1351,7 +1365,7 @@ struct _Descriptors {
                 throw FormatError.options("'\($0)' is not a valid specifier")
             }
         }
-    ).renamed(to: "modifierOrder")
+    ).renamed(to: "modifierorder")
 
     let oneLineLineForEach = OptionDescriptor(
         argumentName: "onelineforeach",
@@ -1360,5 +1374,5 @@ struct _Descriptors {
         keyPath: \.preserveSingleLineForEach,
         trueValues: ["ignore", "preserve"],
         falseValues: ["convert"]
-    ).renamed(to: "preserveSingleLineForEach")
+    ).renamed(to: "inlinedforeach")
 }

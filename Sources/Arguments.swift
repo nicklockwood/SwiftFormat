@@ -682,6 +682,4 @@ let commandLineArguments = [
     "outputtokens",
 ] + optionsArguments
 
-let deprecatedArguments = Descriptors.all.compactMap {
-    $0.isDeprecated ? $0.argumentName : nil
-}
+let deprecatedArguments = Descriptors.deprecated.map(\.argumentName)

@@ -872,54 +872,20 @@ extension Formatter {
     /// Whether or not this property at the given introducer index (either `var` or `let`)
     /// is a stored property or a computed property.
     func isStoredProperty(atIntroducerIndex introducerIndex: Int) -> Bool {
-        assert(["let", "var"].contains(tokens[introducerIndex].string))
-
-        var parseIndex = introducerIndex
-
-        // All properties have the property name after the introducer
-        if let propertyNameIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: parseIndex),
-           tokens[propertyNameIndex].isIdentifierOrKeyword
-        {
-            parseIndex = propertyNameIndex
+        guard let property = parsePropertyDeclaration(atIntroducerIndex: introducerIndex) else {
+            return false
         }
 
-        // Properties have an optional `: TypeName` component
-        if let typeAnnotationStartIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: parseIndex),
-           tokens[typeAnnotationStartIndex] == .delimiter(":"),
-           let startOfTypeIndex = index(of: .nonSpaceOrComment, after: typeAnnotationStartIndex),
-           let typeRange = parseType(at: startOfTypeIndex)?.range
-        {
-            parseIndex = typeRange.upperBound
-        }
-
-        // Properties have an optional `= expression` component
-        if let assignmentIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: parseIndex),
-           tokens[assignmentIndex] == .operator("=", .infix)
-        {
-            // If the type has an assignment operator, it's guaranteed to be a stored property.
-            return true
-        }
-
-        // Finally, properties have an optional `{` body
-        if let startOfBody = index(of: .nonSpaceOrCommentOrLinebreak, after: parseIndex),
-           tokens[startOfBody] == .startOfScope("{")
-        {
-            // If this property has a body, then its a stored property if and only if the body
-            // has a `didSet` or `willSet` keyword, based on the grammar for a variable declaration.
-            if let nextToken = next(.nonSpaceOrCommentOrLinebreak, after: startOfBody),
-               [.identifier("willSet"), .identifier("didSet")].contains(nextToken)
-            {
-                return true
-            } else {
-                return false
-            }
-        }
-
-        // If the property declaration isn't followed by a `{ ... }` block,
-        // then it's definitely a stored property and not a computed property.
+        // If this property doesn't have a body, then it's definitely a stored property.
+        guard let bodyRange = property.body?.range,
+              let firstTokenInBody = token(at: bodyRange.lowerBound)
         else {
             return true
         }
+
+        // If this property has a body, then its a stored property if and only if the body
+        // has a `didSet` or `willSet` keyword, based on the grammar for a variable declaration.
+        return [.identifier("willSet"), .identifier("didSet")].contains(firstTokenInBody)
     }
 
     /// Determine if next line after this token should be indented
@@ -1642,6 +1608,17 @@ extension Formatter {
         return startIndex ... endOfExpression
     }
 
+    /// Whether or not the body within this scope is a single expression
+    func scopeBodyIsSingleExpression(at startOfScopeIndex: Int) -> Bool {
+        guard let endOfScopeIndex = endOfScope(at: startOfScopeIndex),
+              startOfScopeIndex + 1 != endOfScopeIndex,
+              let firstTokenInBody = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfScopeIndex + 1),
+              let expressionRange = parseExpressionRange(startingAt: firstTokenInBody, allowConditionalExpressions: true)
+        else { return false }
+
+        return index(of: .nonSpaceOrCommentOrLinebreak, after: expressionRange.upperBound) == endOfScopeIndex
+    }
+
     /// Whether or not the comment starting at the given index is a doc comment
     func isDocComment(startOfComment: Int) -> Bool {
         let commentToken = tokens[startOfComment]
@@ -1686,22 +1663,43 @@ extension Formatter {
         }
     }
 
-    /// A property of the format `(let|var) identifier: Type = expression`.
-    ///  - `: Type` and `= expression` elements are optional
+    /// A property of the format `(let|var) identifier: Type = expression { ... }`.
+    ///  - `: Type`, `= expression`, and the following `{ ... }` body are optional
     struct PropertyDeclaration {
+        /// The start index for this propery's list of modifiers.
+        /// If there are no modifiers, `startOfModifiersIndex` is just `introducerIndex`.
+        let startOfModifiersIndex: Int
+
+        /// The index of the `let` or `var` keyword
         let introducerIndex: Int
+
+        /// The identifier / name of this propery.
         let identifier: String
+
+        /// The index of this property's identifier / name.
         let identifierIndex: Int
+
+        /// Information about the property's type definition, if written explicitly.
         let type: (colonIndex: Int, name: String, range: ClosedRange<Int>)?
+
+        /// Information about the value following the propery's `=` token, if present.
         let value: (assignmentIndex: Int, expressionRange: ClosedRange<Int>)?
 
+        /// Information about the body following the property, which can include
+        /// `get`, `set`, `willSet`, `didSet` blocks, or just a single getter.
+        ///  - `scopeRange` is the range starting at the `{` token and ending at the `}` token.
+        ///  - `range` is the range of tokens inside the body scope.
+        let body: (scopeRange: ClosedRange<Int>, range: ClosedRange<Int>)?
+
         var range: ClosedRange<Int> {
-            if let value = value {
-                return introducerIndex ... value.expressionRange.upperBound
+            if let bodyScopeRange = body?.scopeRange {
+                return startOfModifiersIndex ... bodyScopeRange.upperBound
+            } else if let value = value {
+                return startOfModifiersIndex ... value.expressionRange.upperBound
             } else if let type = type {
-                return introducerIndex ... type.range.upperBound
+                return startOfModifiersIndex ... type.range.upperBound
             } else {
-                return introducerIndex ... identifierIndex
+                return startOfModifiersIndex ... identifierIndex
             }
         }
     }
@@ -1744,12 +1742,39 @@ extension Formatter {
             )
         }
 
+        let endOfTypeOrIdentifierOrValue = valueInformation?.expressionRange.upperBound ?? endOfTypeOrIdentifier
+        var body: (scopeRange: ClosedRange<Int>, range: ClosedRange<Int>)?
+
+        if let startOfBodyIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfTypeOrIdentifierOrValue),
+           tokens[startOfBodyIndex] == .startOfScope("{"),
+           let endOfScope = endOfScope(at: startOfBodyIndex)
+        {
+            let bodyRange = startOfBodyIndex ... endOfScope
+
+            let rangeInsideBody: ClosedRange<Int>
+            if startOfBodyIndex + 1 != endOfScope {
+                if let firstTokenInBody = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfBodyIndex + 1),
+                   let lastTokenInBody = index(of: .nonSpaceOrCommentOrLinebreak, before: endOfScope)
+                {
+                    rangeInsideBody = firstTokenInBody ... lastTokenInBody
+                } else {
+                    rangeInsideBody = startOfBodyIndex + 1 ... endOfScope - 1
+                }
+            } else {
+                rangeInsideBody = bodyRange
+            }
+
+            body = (bodyRange, rangeInsideBody)
+        }
+
         return PropertyDeclaration(
+            startOfModifiersIndex: startOfModifiers(at: introducerIndex, includingAttributes: true),
             introducerIndex: introducerIndex,
             identifier: propertyIdentifier.string,
             identifierIndex: propertyIdentifierIndex,
             type: typeInformation,
-            value: valueInformation
+            value: valueInformation,
+            body: body
         )
     }
 

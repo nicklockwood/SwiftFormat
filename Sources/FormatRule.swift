@@ -31,7 +31,7 @@
 
 import Foundation
 
-public final class FormatRule: Equatable, Comparable, CustomStringConvertible {
+public final class FormatRule: Hashable, Comparable, CustomStringConvertible {
     private let fn: (Formatter) -> Void
     fileprivate(set) var name = "[unnamed rule]"
     fileprivate(set) var index = 0
@@ -88,6 +88,10 @@ public final class FormatRule: Equatable, Comparable, CustomStringConvertible {
 
     public static func < (lhs: FormatRule, rhs: FormatRule) -> Bool {
         lhs.index < rhs.index
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(ObjectIdentifier(self))
     }
 }
 

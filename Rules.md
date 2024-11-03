@@ -1583,7 +1583,7 @@ Convert functional `forEach` calls to for loops.
 Option | Description
 --- | ---
 `--anonymousforeach` | Convert anonymous forEach: "convert" (default) or "ignore"
-`--onelineforeach` | Convert one-line forEach: "convert" or "ignore" (default)
+`--inlinedforeach` | Convert inline forEach to for: "convert", "ignore" (default)
 
 <details>
 <summary>Examples</summary>

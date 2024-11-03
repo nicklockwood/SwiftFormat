@@ -125,16 +125,13 @@ private let rulesByName: [String: FormatRule] = {
     return rules
 }()
 
-private func allRules(except rules: [String]) -> [FormatRule] {
-    precondition(!rules.contains(where: { rulesByName[$0] == nil }))
-    return Array(rulesByName.keys.sorted().compactMap {
-        rules.contains($0) ? nil : rulesByName[$0]
-    })
+private func allRules(except rules: [FormatRule]) -> [FormatRule] {
+    _allRules.filter { !rules.contains($0) }
 }
 
-private let _allRules = allRules(except: [])
-private let _deprecatedRules = _allRules.filter(\.isDeprecated).map(\.name)
-private let _disabledByDefault = _allRules.filter(\.disabledByDefault).map(\.name)
+private let _allRules = rulesByName.sorted(by: { $0.key < $1.key }).map(\.value)
+private let _deprecatedRules = _allRules.filter(\.isDeprecated)
+private let _disabledByDefault = _allRules.filter(\.disabledByDefault)
 private let _defaultRules = allRules(except: _disabledByDefault)
 
 public extension _FormatRules {
@@ -148,10 +145,10 @@ public extension _FormatRules {
     var `default`: [FormatRule] { _defaultRules }
 
     /// Rules that are disabled by default
-    var disabledByDefault: [String] { _disabledByDefault }
+    var disabledByDefault: [FormatRule] { _disabledByDefault }
 
     /// Rules that are deprecated
-    var deprecated: [String] { _deprecatedRules }
+    var deprecated: [FormatRule] { _deprecatedRules }
 
     /// Just the specified rules
     func named(_ names: [String]) -> [FormatRule] {
@@ -159,7 +156,7 @@ public extension _FormatRules {
     }
 
     /// All rules except those specified
-    func all(except rules: [String]) -> [FormatRule] {
+    func all(except rules: [FormatRule]) -> [FormatRule] {
         allRules(except: rules)
     }
 }

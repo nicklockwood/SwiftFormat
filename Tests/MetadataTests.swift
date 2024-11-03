@@ -42,7 +42,7 @@ class MetadataTests: XCTestCase {
         }
 
         result += "\n\n# Opt-in Rules (disabled by default)\n"
-        for rule in FormatRules.named(FormatRules.disabledByDefault) {
+        for rule in FormatRules.disabledByDefault {
             guard !rule.isDeprecated else {
                 continue
             }

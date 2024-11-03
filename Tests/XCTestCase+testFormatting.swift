@@ -75,14 +75,15 @@ extension XCTestCase {
         precondition((0 ... 2).contains(outputs.count), "Only 0, 1 or 2 output parameters permitted")
         precondition(Set(exclude).intersection(rules).isEmpty, "Cannot exclude rule under test")
         let output = outputs.first ?? input, output2 = outputs.last ?? input
-        let exclude = exclude.map(\.name) + FormatRules.deprecated
-            + (rules.first?.name == "linebreakAtEndOfFile" ? [] : ["linebreakAtEndOfFile"])
-            + (rules.first?.name == "organizeDeclarations" ? [] : ["organizeDeclarations"])
-            + (rules.first?.name == "extensionAccessControl" ? [] : ["extensionAccessControl"])
-            + (rules.first?.name == "markTypes" ? [] : ["markTypes"])
-            + (rules.first?.name == "blockComments" ? [] : ["blockComments"])
-            + (rules.first?.name == "unusedPrivateDeclarations" ? [] : ["unusedPrivateDeclarations"])
-
+        let defaultExclusions = FormatRules.deprecated + [
+            .linebreakAtEndOfFile,
+            .organizeDeclarations,
+            .extensionAccessControl,
+            .markTypes,
+            .blockComments,
+            .unusedPrivateDeclarations,
+        ]
+        let exclude = exclude + defaultExclusions.filter { !rules.contains($0) }
         guard let formatResult = try? format(input, rules: rules, options: options) else {
             XCTFail("Failed to format input, threw error")
             return
@@ -105,9 +106,9 @@ extension XCTestCase {
                            output, file: file, line: line)
             if !input.hasPrefix("#!") {
                 for rule in rules {
-                    let disabled = "// swiftformat:disable \(rule.name)\n\(input)"
+                    let disabled = "// swiftformat:disable \(rule)\n\(input)"
                     XCTAssertEqual(try format(disabled, rules: [rule], options: options).output,
-                                   disabled, "Failed to disable \(rule.name) rule", file: file, line: line)
+                                   disabled, "Failed to disable \(rule) rule", file: file, line: line)
                 }
             }
         }

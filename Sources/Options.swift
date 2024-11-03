@@ -1025,7 +1025,7 @@ public struct Options {
     public static let `default` = Options(
         fileOptions: .default,
         formatOptions: .default,
-        rules: Set(FormatRules.byName.keys).subtracting(FormatRules.disabledByDefault),
+        rules: defaultRules,
         configURL: nil,
         lint: false
     )

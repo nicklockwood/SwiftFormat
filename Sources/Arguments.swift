@@ -214,7 +214,8 @@ func parseCommaDelimitedList(_ string: String) -> [String] {
 }
 
 /// Parse a comma-delimited string into an array of rules
-let allRules = Set(FormatRules.byName.keys)
+let allRules = Set(FormatRules.all.map(\.name))
+let defaultRules = Set(FormatRules.default.map(\.name))
 func parseRules(_ rules: String) throws -> [String] {
     try parseCommaDelimitedList(rules).flatMap { proposedName -> [String] in
         let lowercaseName = proposedName.lowercased()
@@ -485,8 +486,6 @@ func argumentsFor(_ options: Options, excludingDefaults: Bool = false) -> [Strin
         args["lint"] = ""
     }
     if let rules = options.rules {
-        let defaultRules = allRules.subtracting(FormatRules.disabledByDefault)
-
         let enabled = rules.subtracting(defaultRules)
         if !enabled.isEmpty {
             args["enable"] = enabled.sorted().joined(separator: ",")
@@ -533,7 +532,7 @@ public func rulesFor(_ args: [String: String], lint: Bool) throws -> Set<String>
     var rules = allRules
     rules = try args["rules"].map {
         try Set(parseRules($0))
-    } ?? rules.subtracting(FormatRules.disabledByDefault)
+    } ?? rules.subtracting(FormatRules.disabledByDefault.map(\.name))
     try args["disable"].map {
         try rules.subtract(parseRules($0))
     }

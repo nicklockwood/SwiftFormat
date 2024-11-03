@@ -59,7 +59,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return false
         }
 
-        let rules = options.rules ?? allRules.subtracting(FormatRules.disabledByDefault)
+        let rules = options.rules ?? defaultRules
         RulesStore().restore(Set(FormatRules.byName.keys).map {
             Rule(name: $0, isEnabled: rules.contains($0))
         })

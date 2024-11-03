@@ -412,10 +412,15 @@ extension Formatter {
                 }
             case .endOfScope(")"):
                 guard let startIndex = self.index(of: .startOfScope("("), before: prevIndex),
-                      last(.nonSpaceOrCommentOrLinebreak, before: startIndex, if: {
+                      let identifierIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: startIndex, if: {
                           $0.isAttribute || _FormatRules.allModifiers.contains($0.string) || $0 == .endOfScope(">")
-                      }) != nil
+                      })
                 else {
+                    return false
+                }
+                if let prevToken = last(.nonSpaceOrCommentOrLinebreak, before: identifierIndex),
+                   prevToken == .delimiter(",") || prevToken.isDeclarationTypeKeyword
+                {
                     return false
                 }
                 prevIndex = startIndex
@@ -849,34 +854,6 @@ extension Formatter {
         default:
             return i
         }
-    }
-
-    /// Parses the list of attributes on a declaration, starting at the given index.
-    func attributes(startingAt index: Int) -> [(startIndex: Int, endIndex: Int, tokens: [Token])] {
-        assert(tokens[index].isAttribute)
-
-        var attributes: [(startIndex: Int, endIndex: Int, tokens: [Token])] = []
-
-        var nextAttributeStartIndex = index
-        while tokens[nextAttributeStartIndex].isAttribute {
-            guard let endOfAttribute = endOfAttribute(at: nextAttributeStartIndex) else {
-                return attributes
-            }
-
-            attributes.append((
-                startIndex: nextAttributeStartIndex,
-                endIndex: endOfAttribute,
-                tokens: Array(tokens[nextAttributeStartIndex ... endOfAttribute])
-            ))
-
-            guard let nextIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: endOfAttribute) else {
-                return attributes
-            }
-
-            nextAttributeStartIndex = nextIndex
-        }
-
-        return attributes
     }
 
     /// Whether or not this property at the given introducer index (either `var` or `let`)

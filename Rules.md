@@ -15,7 +15,7 @@
 * [consecutiveBlankLines](#consecutiveBlankLines)
 * [consecutiveSpaces](#consecutiveSpaces)
 * [consistentSwitchCaseSpacing](#consistentSwitchCaseSpacing)
-* [docCommentsBeforeAttributes](#docCommentsBeforeAttributes)
+* [docCommentsBeforeModifiers](#docCommentsBeforeModifiers)
 * [duplicateImports](#duplicateImports)
 * [elseOnSameLine](#elseOnSameLine)
 * [emptyBraces](#emptyBraces)
@@ -706,9 +706,9 @@ Option | Description
 </details>
 <br/>
 
-## docCommentsBeforeAttributes
+## docCommentsBeforeModifiers
 
-Place doc comments on declarations before any attributes.
+Place doc comments before any declaration modifiers or attributes.
 
 <details>
 <summary>Examples</summary>

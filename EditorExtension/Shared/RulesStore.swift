@@ -133,8 +133,8 @@ struct RulesStore {
     }
 
     func resetRulesToDefaults() {
-        let allRuleNames = Set(FormatRules.byName.keys)
-        let disabledRules = Set(FormatRules.disabledByDefault)
+        let allRuleNames = Set(FormatRules.all.map(\.name))
+        let disabledRules = Set(FormatRules.disabledByDefault.map(\.name))
         let activeRules = allRuleNames.subtracting(disabledRules)
 
         clear()
@@ -157,13 +157,13 @@ extension RulesStore {
     private func addNewRulesIfNeeded() {
         let currentRules = load()
         let currentRuleNames = Set(currentRules.keys)
-        let allRuleNames = Set(FormatRules.byName.keys)
+        let allRuleNames = Set(FormatRules.all.map(\.name))
         let newRuleNames = allRuleNames.subtracting(currentRuleNames)
         if newRuleNames.isEmpty {
             return
         }
 
-        let disabledRules = Set(FormatRules.disabledByDefault)
+        let disabledRules = Set(FormatRules.disabledByDefault.map(\.name))
         var rules = currentRules
         for newRuleName in newRuleNames {
             rules[newRuleName] = !disabledRules.contains(newRuleName)

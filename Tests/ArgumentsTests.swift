@@ -486,7 +486,7 @@ class ArgumentsTests: XCTestCase {
     // trailing separator
 
     func testSerializeOptionsDisabledDefaultRulesEnabledIsEmpty() throws {
-        let rules = allRules.subtracting(FormatRules.disabledByDefault)
+        let rules = defaultRules
         let config: String = serialize(options: Options(formatOptions: nil, rules: rules))
         XCTAssertEqual(config, "")
     }
@@ -499,7 +499,7 @@ class ArgumentsTests: XCTestCase {
     }
 
     func testSerializeOptionsDisabledSomeRulesDisabledNoTerminatingSeparator() throws {
-        let rules = Set(allRules.prefix(3)).subtracting(FormatRules.disabledByDefault)
+        let rules = Set(defaultRules.prefix(3))
         let config: String = serialize(options: Options(formatOptions: nil, rules: rules))
         XCTAssertTrue(config.contains("--disable"))
         XCTAssertFalse(config.contains("--enable"))
@@ -507,7 +507,7 @@ class ArgumentsTests: XCTestCase {
     }
 
     func testSerializeOptionsEnabledDefaultRulesEnabledNoTerminatingSeparator() throws {
-        let rules = allRules.subtracting(FormatRules.disabledByDefault)
+        let rules = defaultRules
         let config: String = serialize(options: Options(formatOptions: .default, rules: rules))
         XCTAssertNotEqual(config, "")
         XCTAssertFalse(config.contains("--disable"))
@@ -523,7 +523,7 @@ class ArgumentsTests: XCTestCase {
     }
 
     func testSerializeOptionsEnabledSomeRulesDisabledNoTerminatingSeparator() throws {
-        let rules = Set(allRules.prefix(3)).subtracting(FormatRules.disabledByDefault)
+        let rules = Set(defaultRules.prefix(3))
         let config: String = serialize(options: Options(formatOptions: .default, rules: rules))
         XCTAssertTrue(config.contains("--disable"))
         XCTAssertFalse(config.contains("--enable"))
@@ -704,7 +704,7 @@ class ArgumentsTests: XCTestCase {
         let options = try Options([:], in: "")
         XCTAssertNil(options.formatOptions)
         XCTAssertNil(options.fileOptions)
-        XCTAssertEqual(options.rules, allRules.subtracting(FormatRules.disabledByDefault))
+        XCTAssertEqual(options.rules, defaultRules)
     }
 
     func testParseExcludedURLsFileOption() throws {

@@ -442,7 +442,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
         // Show rules
         if showRules {
             print("")
-            let rules = options.rules ?? allRules.subtracting(FormatRules.disabledByDefault)
+            let rules = options.rules ?? defaultRules
             for name in Array(allRules).sorted() {
                 let annotation: String
                 if rules.contains(name) {
@@ -941,7 +941,7 @@ func applyRules(_ source: String, options: Options, lineRange: ClosedRange<Int>?
 
     // Get rules
     let rulesByName = FormatRules.byName
-    let ruleNames = Array(options.rules ?? allRules.subtracting(FormatRules.disabledByDefault)).sorted()
+    let ruleNames = Array(options.rules ?? defaultRules).sorted()
     let rules = ruleNames.compactMap { rulesByName[$0] }
 
     if verbose, let path = options.formatOptions?.fileInfo.filePath {
@@ -1051,7 +1051,7 @@ func processInput(_ inputURLs: [URL],
             let formatOptions = options.formatOptions ?? .default
             let range = lineRange.map { "\($0.lowerBound),\($0.upperBound);" } ?? ""
             // Check cache
-            let rules = options.rules ?? allRules.subtracting(FormatRules.disabledByDefault)
+            let rules = options.rules ?? defaultRules
             let configHash = computeHash("\(formatOptions)\(range)\(rules.sorted().joined(separator: ","))")
             let cachePrefix = "\(version);\(configHash);"
             let cacheKey: String = {

@@ -401,7 +401,7 @@ class CommandLineTests: XCTestCase {
     func testRulesNotMarkedAsDisabled() {
         CLI.print = { message, _ in
             XCTAssert(!message.contains("(disabled)") ||
-                FormatRules.disabledByDefault.contains(where: { message.contains($0) }))
+                FormatRules.disabledByDefault.contains(where: { message.contains($0.name) }))
         }
         XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "--rules"), .ok)
     }

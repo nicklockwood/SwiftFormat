@@ -73,7 +73,7 @@ extension XCTestCase {
 
         precondition(input != outputs.first || input != outputs.last, "Redundant output parameter")
         precondition((0 ... 2).contains(outputs.count), "Only 0, 1 or 2 output parameters permitted")
-        precondition(Set(exclude.map(\.name)).intersection(rules.map(\.name)).isEmpty, "Cannot exclude rule under test")
+        precondition(Set(exclude).intersection(rules).isEmpty, "Cannot exclude rule under test")
         let output = outputs.first ?? input, output2 = outputs.last ?? input
         let exclude = exclude.map(\.name) + FormatRules.deprecated
             + (rules.first?.name == "linebreakAtEndOfFile" ? [] : ["linebreakAtEndOfFile"])

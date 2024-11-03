@@ -74,7 +74,7 @@ public extension FormatRule {
                 if memberVisibility != extensionVisibility,
                    !(memberVisibility == .internal && visibilityKeyword == nil)
                 {
-                    extensionDeclaration.add(memberVisibility)
+                    extensionDeclaration.addVisibility(memberVisibility)
                 }
 
                 extensionDeclaration.body.forEachRecursiveDeclarationExcludingTypeBodies { bodyDeclaration in
@@ -82,11 +82,11 @@ public extension FormatRule {
                     let visibility = bodyDeclaration.visibility()
                     if memberVisibility > visibility ?? extensionVisibility ?? .internal {
                         if visibility == nil {
-                            bodyDeclaration.add(.internal)
+                            bodyDeclaration.addVisibility(.internal)
                         }
                         return
                     }
-                    bodyDeclaration.remove(memberVisibility)
+                    bodyDeclaration.removeVisibility(memberVisibility)
                 }
 
             // Move the extension's visibility keyword to each individual declaration
@@ -95,7 +95,7 @@ public extension FormatRule {
                 guard let extensionVisibility = extensionVisibility else { return }
 
                 // Remove the visibility keyword from the extension declaration itself
-                extensionDeclaration.remove(visibilityKeyword!)
+                extensionDeclaration.removeVisibility(visibilityKeyword!)
 
                 // And apply the extension's visibility to each of its child declarations
                 // that don't have an explicit visibility keyword
@@ -103,7 +103,7 @@ public extension FormatRule {
                     if bodyDeclaration.visibility() == nil {
                         // If there was no explicit visibility keyword, then this declaration
                         // was using the visibility of the extension itself.
-                        bodyDeclaration.add(extensionVisibility)
+                        bodyDeclaration.addVisibility(extensionVisibility)
                     }
                 }
             }

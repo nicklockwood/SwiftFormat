@@ -1026,9 +1026,10 @@ extension Declaration {
         // DeclarationV1 handles disabling rules by setting the keyword to an empty string.
         guard !keyword.isEmpty else { return nil }
 
+        let declaration: DeclarationV2
         switch self {
         case let .type(kind, _, body, _, originalRange):
-            return TypeDeclaration(
+            declaration = TypeDeclaration(
                 keyword: kind,
                 range: originalRange,
                 body: body.compactMap { $0.makeDeclarationV2(formatter: formatter) },
@@ -1036,18 +1037,24 @@ extension Declaration {
             )
 
         case let .declaration(kind, _, originalRange):
-            return SimpleDeclaration(
+            declaration = SimpleDeclaration(
                 keyword: kind,
                 range: originalRange,
                 formatter: formatter
             )
 
         case let .conditionalCompilation(_, body, _, originalRange):
-            return ConditionalCompilationDeclaration(
+            declaration = ConditionalCompilationDeclaration(
                 range: originalRange,
                 body: body.compactMap { $0.makeDeclarationV2(formatter: formatter) },
                 formatter: formatter
             )
         }
+
+        guard declaration.isValid else {
+            return nil
+        }
+
+        return declaration
     }
 }

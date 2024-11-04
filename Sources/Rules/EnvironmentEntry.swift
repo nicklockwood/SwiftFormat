@@ -68,7 +68,7 @@ extension Formatter {
         var environmentKeys = [String: EnvironmentKey]()
 
         for declaration in declarations {
-            guard let typeDeclaration = declaration as? TypeDeclaration,
+            guard let typeDeclaration = declaration.asTypeDeclaration,
                   typeDeclaration.keyword == "struct" || typeDeclaration.keyword == "enum",
                   typeDeclaration.conformances.contains(where: { $0.conformance == "EnvironmentKey" }),
                   let keyName = typeDeclaration.name,
@@ -89,7 +89,7 @@ extension Formatter {
     }
 
     func findEnvironmentKeyDefaultValue(_ defaultValueDeclaration: DeclarationV2) -> [Token]? {
-        guard let property = defaultValueDeclaration.asPropertyDeclaration else { return nil }
+        guard let property = defaultValueDeclaration.parsePropertyDeclaration() else { return nil }
 
         if let valueRange = property.value?.expressionRange {
             return Array(tokens[valueRange])
@@ -125,7 +125,7 @@ extension Formatter {
 
                     // Ensure the property has a setter and a getter, this can avoid edge cases where
                     // a property references a `EnvironmentKey` and consumes it to perform some computation.
-                    guard let bodyRange = propertyDeclaration.asPropertyDeclaration?.body?.range,
+                    guard let bodyRange = propertyDeclaration.parsePropertyDeclaration()?.body?.range,
                           let indexOfSetter = index(of: .identifier("set"), in: Range(bodyRange)),
                           isAccessorKeyword(at: indexOfSetter)
                     else { return nil }
@@ -141,7 +141,7 @@ extension Formatter {
 
     func modifyEnvironmentValuesProperties(_ environmentValuesPropertiesDeclarations: [EnvironmentValueProperty]) {
         for envProperty in environmentValuesPropertiesDeclarations {
-            guard let propertyDeclaration = envProperty.declaration.asPropertyDeclaration,
+            guard let propertyDeclaration = envProperty.declaration.parsePropertyDeclaration(),
                   let bodyScopeRange = propertyDeclaration.body?.scopeRange
             else { continue }
 

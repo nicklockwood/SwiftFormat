@@ -458,6 +458,6 @@ class ExtensionAccessControlTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .extensionAccessControl)
+        testFormatting(for: input, rule: .extensionAccessControl, exclude: [.emptyExtension])
     }
 }

@@ -256,7 +256,7 @@ class BracesTests: XCTestCase {
             // foo
         }
         """
-        testFormatting(for: input, output, rule: .braces)
+        testFormatting(for: input, output, rule: .braces, exclude: [.emptyExtension])
     }
 
     func testBracesForOptionalInit() {
@@ -505,7 +505,7 @@ class BracesTests: XCTestCase {
         }
         """
         let options = FormatOptions(allmanBraces: true)
-        testFormatting(for: input, output, rule: .braces, options: options)
+        testFormatting(for: input, output, rule: .braces, options: options, exclude: [.emptyExtension])
     }
 
     func testEmptyAllmanIfElseBraces() {

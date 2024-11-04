@@ -16,7 +16,7 @@
 /// automatically kept up-to-date as tokens are added, removed, or modified
 /// in the associated formatter.
 ///
-protocol DeclarationV2: AnyObject {
+protocol DeclarationV2: AnyObject, CustomDebugStringConvertible {
     /// The keyword of this declaration (`class`, `struct`, `func`, `let`, `var`, etc.)
     var keyword: String { get }
 
@@ -50,9 +50,24 @@ extension DeclarationV2 {
         formatter.tokens[range]
     }
 
+    /// Whether or not this declaration reference is still valid
+    var isValid: Bool {
+        _keywordIndex != nil
+    }
+
     /// The index of this declaration's keyword in the associated formatter.
     /// Assumes that the declaration has not been invalidated, and still contains its `keyword`.
     var keywordIndex: Int {
+        guard let keywordIndex = _keywordIndex else {
+            assertionFailure("Declaration \(self) is no longer valid.")
+            return range.lowerBound
+        }
+
+        return keywordIndex
+    }
+
+    /// The index of this declaration's keyword token, if the declaration is still valid.
+    var _keywordIndex: Int? {
         let expectedKeywordToken: Token
         switch kind {
         case .declaration, .type:
@@ -61,12 +76,7 @@ extension DeclarationV2 {
             expectedKeywordToken = .startOfScope("#if")
         }
 
-        guard let keywordIndex = formatter.index(of: expectedKeywordToken, after: range.lowerBound - 1) else {
-            assertionFailure("Declaration \(self) is no longer valid.")
-            return range.lowerBound
-        }
-
-        return keywordIndex
+        return formatter.index(of: expectedKeywordToken, after: range.lowerBound - 1)
     }
 
     /// The name of this declaration, which is always the identifier or type following the primary keyword.
@@ -139,7 +149,7 @@ extension DeclarationV2 {
     }
 
     /// Full information about this `let` or `var` property declaration.
-    var asPropertyDeclaration: Formatter.PropertyDeclaration? {
+    func parsePropertyDeclaration() -> Formatter.PropertyDeclaration? {
         guard keyword == "let" || keyword == "var" else { return nil }
         return formatter.parsePropertyDeclaration(atIntroducerIndex: keywordIndex)
     }
@@ -153,6 +163,19 @@ extension DeclarationV2 {
     var parentDeclarations: [DeclarationV2] {
         guard let parent = parent else { return [] }
         return parent.parentDeclarations + [parent]
+    }
+
+    /// The `CustomDebugStringConvertible` representation of this declaration
+    var debugDescription: String {
+        guard isValid else {
+            return "Invalid \(keyword) declaration reference at \(range)"
+        }
+
+        let indentation = formatter.currentIndentForLine(at: range.lowerBound)
+        return """
+        \(indentation)/* \(keyword) declaration at \(range) */
+        \(tokens.string)
+        """
     }
 
     /// Removes this declaration from the source file.
@@ -173,10 +196,14 @@ final class SimpleDeclaration: DeclarationV2 {
         formatter.registerDeclaration(self)
     }
 
+    deinit {
+        formatter.unregisterDeclaration(self)
+    }
+
     var keyword: String
     var range: ClosedRange<Int>
-    weak var parent: DeclarationV2?
     let formatter: Formatter
+    weak var parent: DeclarationV2?
 
     var kind: DeclarationKind {
         .declaration(self)
@@ -198,16 +225,22 @@ final class TypeDeclaration: DeclarationV2 {
         }
     }
 
+    deinit {
+        formatter.unregisterDeclaration(self)
+    }
+
     var keyword: String
     var range: ClosedRange<Int>
     var body: [DeclarationV2]
-    weak var parent: DeclarationV2?
     let formatter: Formatter
+    weak var parent: DeclarationV2?
 
     var kind: DeclarationKind {
         .type(self)
     }
+}
 
+extension TypeDeclaration {
     /// The index of the open brace (`{`) before the type's body.
     /// Assumes that the declaration has not been invalidated.
     var openBraceIndex: Int {
@@ -238,11 +271,15 @@ final class ConditionalCompilationDeclaration: DeclarationV2 {
         }
     }
 
+    deinit {
+        formatter.unregisterDeclaration(self)
+    }
+
     let keyword = "#if"
     var range: ClosedRange<Int>
     var body: [DeclarationV2]
-    weak var parent: DeclarationV2?
     let formatter: Formatter
+    weak var parent: DeclarationV2?
 
     var kind: DeclarationKind {
         .conditionalCompilation(self)
@@ -284,20 +321,5 @@ extension DeclarationV2 {
     /// Removes the given visibility keyword from the given declaration
     func removeVisibility(_ visibilityKeyword: Visibility) {
         formatter.removeDeclarationVisibility(visibilityKeyword, declarationKeywordIndex: keywordIndex)
-    }
-}
-
-/// We want to avoid including a Hashable requirement on DeclarationV2,
-/// so instead you can use this container type if you need a Hashable declaration.
-/// Uses reference identity of the `DeclarationV2` class value.
-struct HashableDeclaration: Hashable {
-    let declaration: DeclarationV2
-
-    static func == (lhs: HashableDeclaration, rhs: HashableDeclaration) -> Bool {
-        lhs.declaration === rhs.declaration
-    }
-
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(ObjectIdentifier(declaration))
     }
 }

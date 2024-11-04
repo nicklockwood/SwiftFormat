@@ -17,7 +17,7 @@ public extension FormatRule {
 
         let declarations = formatter.parseDeclarationsV2()
         declarations.forEachRecursiveDeclaration { declaration in
-            guard let extensionDeclaration = declaration as? TypeDeclaration,
+            guard let extensionDeclaration = declaration.asTypeDeclaration,
                   extensionDeclaration.keyword == "extension"
             else { return }
 
@@ -58,7 +58,7 @@ public extension FormatRule {
                 if memberVisibility > extensionVisibility ?? .internal {
                     // Check type being extended does not have lower visibility
                     for extendedType in declarations where extendedType.name == extensionDeclaration.name {
-                        guard let type = extendedType as? TypeDeclaration else { continue }
+                        guard let type = extendedType.asTypeDeclaration else { continue }
 
                         if extendedType.keyword != "extension",
                            extendedType.visibility() ?? .internal < memberVisibility

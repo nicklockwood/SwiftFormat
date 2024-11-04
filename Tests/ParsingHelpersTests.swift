@@ -2439,7 +2439,7 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertFalse(isStoredProperty("""
         var foo: String {
             get { "foo" }
-            set { print(newValue} }
+            set { print(newValue) }
         }
         """))
     }

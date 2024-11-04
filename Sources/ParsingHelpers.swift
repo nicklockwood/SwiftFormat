@@ -1705,7 +1705,8 @@ extension Formatter {
             let rangeInsideBody: ClosedRange<Int>
             if startOfBodyIndex + 1 != endOfScope {
                 if let firstTokenInBody = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfBodyIndex + 1),
-                   let lastTokenInBody = index(of: .nonSpaceOrCommentOrLinebreak, before: endOfScope)
+                   let lastTokenInBody = index(of: .nonSpaceOrCommentOrLinebreak, before: endOfScope),
+                   firstTokenInBody <= lastTokenInBody
                 {
                     rangeInsideBody = firstTokenInBody ... lastTokenInBody
                 } else {
@@ -2365,11 +2366,9 @@ extension Formatter {
 
     /// The explicit `Visibility` of the `Declaration` with its keyword at the given index
     func declarationVisibility(keywordIndex: Int) -> Visibility? {
-        let startOfModifiers = startOfModifiers(at: keywordIndex, includingAttributes: false)
-
         // Search for a visibility keyword in the tokens before the primary keyword,
         // making sure we exclude groups like private(set).
-        var searchIndex = startOfModifiers
+        var searchIndex = startOfModifiers(at: keywordIndex, includingAttributes: false)
         while searchIndex < keywordIndex {
             if let visibility = Visibility(rawValue: tokens[searchIndex].string),
                next(.nonSpaceOrComment, after: searchIndex) != .startOfScope("(")
@@ -2400,11 +2399,9 @@ extension Formatter {
             }
         }
 
-        let startOfModifiers = startOfModifiers(at: declarationKeywordIndex, includingAttributes: false)
-
         insert(
             [.keyword(visibilityKeyword.rawValue), .space(" ")],
-            at: startOfModifiers
+            at: startOfModifiers(at: declarationKeywordIndex, includingAttributes: false)
         )
     }
 

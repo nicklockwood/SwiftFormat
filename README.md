@@ -651,12 +651,10 @@ Most SwiftFormat rules are version-agnostic, but some are applicable only to new
 
 You can specify the Swift version in one of two ways:
 
-The preferred option is to add a `.swift-version` file to your project directory. This is a text file that should contain the minimum Swift version supported by your project, and is a standard already used by other tools.
+1. Use the `--swiftversion` command line argument. Note that this will be overridden by any `.swift-version` files encountered while processing. You can also add the `--swiftversion` option to your `.swiftformat` file.
 
+1. Add a `.swift-version` file to your project directory. This is a text file that should contain the minimum Swift version supported by your project, and is a standard already used by other tools.  
 The `.swift-version` file applies hierarchically; If you have submodules in your project that use a different Swift version, you can add separate `.swift-version` files to those directories.
-
-The other option to specify the Swift version using the `--swiftversion` command line argument. Note that this will be overridden by any `.swift-version` files encountered while processing. You can also add the `--swiftversion` option to your `.swiftformat` file.
-
 
 Config file
 -----------

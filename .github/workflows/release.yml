@@ -40,10 +40,33 @@ jobs:
           path: ~/swiftformat_linux
           retention-days: 5
 
+  linux_aarch64:
+    name: Build SwiftFormat for Linux AArch64
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install Static Linux SDKs
+        run: |
+          swift sdk install \
+            https://download.swift.org/swift-6.0.2-release/static-sdk/swift-6.0.2-RELEASE/swift-6.0.2-RELEASE_static-linux-0.0.1.artifactbundle.tar.gz \
+            --checksum aa5515476a403797223fc2aad4ca0c3bf83995d5427fb297cab1d93c68cee075
+      - name: Build aarch64
+        run: |
+          swift build --configuration release --enable-dead-strip --static-swift-stdlib --swift-sdk aarch64-swift-linux-musl
+          SWIFTFORMAT_BIN_PATH=`swift build --configuration release --show-bin-path --swift-sdk aarch64-swift-linux-musl`
+          mv $SWIFTFORMAT_BIN_PATH/swiftformat "${HOME}/swiftformat_linux_aarch64"
+      - name: Upload aarch64 Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: swiftformat_linux_aarch64
+          path: ~/swiftformat_linux_aarch64
+          retention-days: 5
+
   upload:
     name: Upload release artifacts
     runs-on: ubuntu-latest
-    needs: [macos, linux]
+    needs: [macos, linux, linux_aarch64]
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v4
@@ -53,7 +76,7 @@ jobs:
       - name: Display structure of downloaded files
         run: ls -R downloaded_artifacts
       - name: Build artifact bundle
-        run: ./Scripts/spm-artifact-bundle.sh ${{ github.event.release.name }} downloaded_artifacts/swiftformat_macos/swiftformat downloaded_artifacts/swiftformat_linux/swiftformat_linux
+        run: ./Scripts/spm-artifact-bundle.sh ${{ github.event.release.name }} downloaded_artifacts/swiftformat_macos/swiftformat downloaded_artifacts/swiftformat_linux/swiftformat_linux downloaded_artifacts/swiftformat_linux_aarch64/swiftformat_linux_aarch64
       - name: Upload artifact bundle
         uses: skx/github-action-publish-binaries@master
         env:

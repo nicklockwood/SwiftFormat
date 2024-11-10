@@ -12,6 +12,10 @@
                 {
                     "path": "swiftformat-__VERSION__-linux-gnu/bin/swiftformat_linux",
                     "supportedTriples": ["x86_64-unknown-linux-gnu"]
+                },
+                {
+                    "path": "swiftformat-__VERSION__-linux-gnu/bin/swiftformat_linux_aarch64",
+                    "supportedTriples": ["aarch64-unknown-linux-gnu"]
                 }
             ]
         }

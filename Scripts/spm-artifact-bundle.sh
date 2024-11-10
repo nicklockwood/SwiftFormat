@@ -8,11 +8,13 @@ set -e
 VERSION=${1:-$(./Scripts/get-version.sh)}
 MAC_EXECUTABLE=${2:-CommandLineTool/swiftformat}
 LINUX_EXECUTABLE=${3:-CommandLineTool/swiftformat_linux}
+LINUX_AARCH64_EXECUTABLE=${4:-CommandLineTool/swiftformat_linux_aarch64}
 
 ARTIFACT_BUNDLE=swiftformat.artifactbundle
 INFO_TEMPLATE=Scripts/spm-artifact-bundle-info.template
 MAC_BINARY_OUTPUT_DIR=$ARTIFACT_BUNDLE/swiftformat-$VERSION-macos/bin
 LINUX_BINARY_OUTPUT_DIR=$ARTIFACT_BUNDLE/swiftformat-$VERSION-linux-gnu/bin
+LINUX_AARCH64_BINARY_OUTPUT_DIR=$ARTIFACT_BUNDLE/swiftformat-$VERSION-linux-gnu/bin
 
 rm -rf swiftformat.artifactbundle
 rm -rf swiftformat.artifactbundle.zip
@@ -35,7 +37,12 @@ chmod +x $LINUX_EXECUTABLE
 mkdir -p $LINUX_BINARY_OUTPUT_DIR
 cp $LINUX_EXECUTABLE $LINUX_BINARY_OUTPUT_DIR
 
+# Copy Linux AArch64 SwiftFormat binary into bundle
+chmod +x $LINUX_AARCH64_EXECUTABLE
+mkdir -p $LINUX_AARCH64_BINARY_OUTPUT_DIR
+cp $LINUX_AARCH64_EXECUTABLE $LINUX_AARCH64_BINARY_OUTPUT_DIR
+
 # Create ZIP
-zip -yr - $ARTIFACT_BUNDLE > "${ARTIFACT_BUNDLE}.zip"
+zip -9yr - $ARTIFACT_BUNDLE > "${ARTIFACT_BUNDLE}.zip"
 
 rm -rf $ARTIFACT_BUNDLE

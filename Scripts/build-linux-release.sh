@@ -7,6 +7,7 @@ pushd "$(dirname "${BASH_SOURCE[0]}")/.." > /dev/null
 BUILD_ARGS=(
 	--product swiftformat
 	--configuration release
+	-Xlinker -S
 )
 
 if [[ -z "$TARGETPLATFORM" ]]; then

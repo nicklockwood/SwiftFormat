@@ -32,6 +32,7 @@ jobs:
         run: |
           swift build --configuration release --static-swift-stdlib --enable-dead-strip
           SWIFTFORMAT_BIN_PATH=`swift build --configuration release --show-bin-path`
+          strip "$SWIFTFORMAT_BIN_PATH/swiftformat"
           mv $SWIFTFORMAT_BIN_PATH/swiftformat "${HOME}/swiftformat_linux"
       - name: 'Upload Artifact'
         uses: actions/upload-artifact@v4
@@ -46,16 +47,21 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Install Static Linux SDKs
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build and export ARM64 binary
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/arm64
+          target: builder
+          outputs: type=local,dest=artifacts
+      - name: Install cross-binutils for aarch64
+        run: sudo apt install -y binutils-aarch64-linux-gnu
+      - name: Strip andMove binary
         run: |
-          swift sdk install \
-            https://download.swift.org/swift-6.0.2-release/static-sdk/swift-6.0.2-RELEASE/swift-6.0.2-RELEASE_static-linux-0.0.1.artifactbundle.tar.gz \
-            --checksum aa5515476a403797223fc2aad4ca0c3bf83995d5427fb297cab1d93c68cee075
-      - name: Build aarch64
-        run: |
-          swift build --configuration release --enable-dead-strip --static-swift-stdlib --swift-sdk aarch64-swift-linux-musl
-          SWIFTFORMAT_BIN_PATH=`swift build --configuration release --show-bin-path --swift-sdk aarch64-swift-linux-musl`
-          mv $SWIFTFORMAT_BIN_PATH/swiftformat "${HOME}/swiftformat_linux_aarch64"
+          aarch64-linux-gnu-strip artifacts/workspace/swiftformat
+          mv artifacts/workspace/swiftformat "${HOME}/swiftformat_linux_aarch64"
       - name: Upload aarch64 Artifact
         uses: actions/upload-artifact@v4
         with:

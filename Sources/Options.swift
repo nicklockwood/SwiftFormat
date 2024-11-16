@@ -126,8 +126,8 @@ public enum WrapEffects: String, CaseIterable {
     case never
 }
 
-/// Annotation which should be kept when removing a redundant type
-public enum RedundantType: String, CaseIterable {
+/// Argument type for whether explciti or inferred properties are preferred
+public enum PropertyTypes: String, CaseIterable {
     /// Preserves the type as a part of the property definition:
     /// `let foo: Foo = Foo()` becomes `let foo: Foo = .init()`
     case explicit
@@ -668,7 +668,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var alphabeticallySortedDeclarationPatterns: Set<String>
     public var yodaSwap: YodaMode
     public var extensionACLPlacement: ExtensionACLPlacement
-    public var redundantType: RedundantType
+    public var propertyTypes: PropertyTypes
     public var preserveSymbols: Set<String>
     public var inferredTypesInConditionalExpressions: Bool
     public var emptyBracesSpacing: EmptyBracesSpacing
@@ -793,7 +793,7 @@ public struct FormatOptions: CustomStringConvertible {
                 alphabeticallySortedDeclarationPatterns: Set<String> = [],
                 yodaSwap: YodaMode = .always,
                 extensionACLPlacement: ExtensionACLPlacement = .onExtension,
-                redundantType: RedundantType = .inferLocalsOnly,
+                propertyTypes: PropertyTypes = .inferLocalsOnly,
                 preserveSymbols: Set<String> = [],
                 inferredTypesInConditionalExpressions: Bool = false,
                 emptyBracesSpacing: EmptyBracesSpacing = .noSpace,
@@ -908,7 +908,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.alphabeticallySortedDeclarationPatterns = alphabeticallySortedDeclarationPatterns
         self.yodaSwap = yodaSwap
         self.extensionACLPlacement = extensionACLPlacement
-        self.redundantType = redundantType
+        self.propertyTypes = propertyTypes
         self.preserveSymbols = preserveSymbols
         self.inferredTypesInConditionalExpressions = inferredTypesInConditionalExpressions
         self.emptyBracesSpacing = emptyBracesSpacing

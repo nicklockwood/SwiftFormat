@@ -12,7 +12,7 @@ public extension FormatRule {
     /// Removes explicit type declarations from initialization declarations
     static let redundantType = FormatRule(
         help: "Remove redundant type from variable declarations.",
-        options: ["redundanttype"]
+        options: ["propertytypes"]
     ) { formatter in
         formatter.forEach(.operator("=", .infix)) { i, _ in
             guard let keyword = formatter.lastSignificantKeyword(at: i),
@@ -32,7 +32,7 @@ public extension FormatRule {
             // potentially depending on the context.
             let isInferred: Bool
             let declarationKeywordIndex: Int?
-            switch formatter.options.redundantType {
+            switch formatter.options.propertyTypes {
             case .inferred:
                 isInferred = true
                 declarationKeywordIndex = nil
@@ -97,8 +97,7 @@ public extension FormatRule {
             }
 
             // In Swift 5.9+ (SE-0380) we need to handle if / switch expressions by checking each branch
-            if formatter.options.swiftVersion >= "5.9",
-               let tokenAfterEquals = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
+            if let tokenAfterEquals = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
                let conditionalBranches = formatter.conditionalBranches(at: tokenAfterEquals),
                formatter.allRecursiveConditionalBranches(
                    in: conditionalBranches,
@@ -136,15 +135,15 @@ public extension FormatRule {
     } examples: {
         """
         ```diff
-        // inferred
+        // with --propertytypes inferred
         - let view: UIView = UIView()
         + let view = UIView()
 
-        // explicit
+        // with --propertytypes explicit
         - let view: UIView = UIView()
         + let view: UIView = .init()
 
-        // infer-locals-only
+        // with --propertytypes infer-locals-only
           class Foo {
         -     let view: UIView = UIView()
         +     let view: UIView = .init()
@@ -155,7 +154,7 @@ public extension FormatRule {
               }
           }
 
-        // Swift 5.9+, inferred (SE-0380)
+        // Swift 5.9+, with --propertytypes inferred (SE-0380)
         - let foo: Foo = if condition {
         + let foo = if condition {
               Foo("foo")
@@ -163,7 +162,7 @@ public extension FormatRule {
               Foo("bar")
           }
 
-        // Swift 5.9+, explicit (SE-0380)
+        // Swift 5.9+, with --propertytypes explicit (SE-0380)
           let foo: Foo = if condition {
         -     Foo("foo")
         +     .init("foo")
@@ -193,7 +192,7 @@ extension Formatter {
                 switch valueToken {
                 case _ where valueToken.isStringDelimiter, .number,
                      .identifier("true"), .identifier("false"):
-                    if options.redundantType == .explicit {
+                    if options.propertyTypes == .explicit {
                         // We never remove the value in this case, so exit early
                         return (false, i, j, wasValue)
                     }
@@ -206,7 +205,7 @@ extension Formatter {
                 return (false, i, j, wasValue)
             }
             // Avoid introducing "inferred to have type 'Void'" warning
-            if options.redundantType == .inferred, typeToken == .identifier("Void") ||
+            if options.propertyTypes == .inferred, typeToken == .identifier("Void") ||
                 typeToken == .endOfScope(")") && tokens[i] == .startOfScope("(")
             {
                 return (false, i, j, wasValue)

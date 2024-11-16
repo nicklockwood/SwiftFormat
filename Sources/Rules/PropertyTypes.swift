@@ -13,8 +13,7 @@ public extension FormatRule {
         help: "Convert property declarations to use inferred types (`let foo = Foo()`) or explicit types (`let foo: Foo = .init()`).",
         disabledByDefault: true,
         orderAfter: [.redundantType],
-        options: ["inferredtypes", "preservesymbols"],
-        sharedOptions: ["redundanttype"]
+        options: ["propertytypes", "inferredtypes", "preservesymbols"]
     ) { formatter in
         formatter.forEach(.operator("=", .infix)) { equalsIndex, _ in
             // Preserve all properties in conditional statements like `if let foo = Bar() { ... }`
@@ -23,7 +22,7 @@ public extension FormatRule {
             // Determine whether the type should use the inferred syntax (`let foo = Foo()`)
             // of the explicit syntax (`let foo: Foo = .init()`).
             let useInferredType: Bool
-            switch formatter.options.redundantType {
+            switch formatter.options.propertyTypes {
             case .inferred:
                 useInferredType = true
 
@@ -207,18 +206,24 @@ public extension FormatRule {
     } examples: {
         """
         ```diff
-        - let foo: Foo = .init()
-        + let foo = Foo.init()
+        // with --propertytypes inferred
+        - let view: UIView = UIView()
+        + let view = UIView()
 
-        - let bar: Bar = .defaultValue
-        + let bar = Bar.defaultValue
+        // with --propertytypes explicit
+        - let view: UIView = UIView()
+        + let view: UIView = .init()
 
-        - let baaz: Baaz = .buildBaaz(foo: foo, bar: bar)
-        + let baaz = Baaz.buildBaaz(foo: foo, bar: bar)
+        // with --propertytypes infer-locals-only
+          class Foo {
+        -     let view: UIView = UIView()
+        +     let view: UIView = .init()
 
-          let float: CGFloat = 10.0
-          let array: [String] = []
-          let anyFoo: AnyFoo = foo
+              func method() {
+        -         let view: UIView = UIView()
+        +         let view = UIView()
+              }
+          }
 
           // with --inferredtypes always:
         - let foo: Foo =

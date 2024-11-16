@@ -1642,6 +1642,7 @@ Convert property declarations to use inferred types (`let foo = Foo()`) or expli
 
 Option | Description
 --- | ---
+`--propertytypes` | "inferred", "explicit", or "infer-locals-only" (default)
 `--inferredtypes` | "exclude-cond-exprs" (default) or "always"
 `--preservesymbols` | Comma-delimited list of symbol names to preserve
 
@@ -1649,18 +1650,24 @@ Option | Description
 <summary>Examples</summary>
 
 ```diff
-- let foo: Foo = .init()
-+ let foo = Foo.init()
+// with --propertytypes inferred
+- let view: UIView = UIView()
++ let view = UIView()
 
-- let bar: Bar = .defaultValue
-+ let bar = Bar.defaultValue
+// with --propertytypes explicit
+- let view: UIView = UIView()
++ let view: UIView = .init()
 
-- let baaz: Baaz = .buildBaaz(foo: foo, bar: bar)
-+ let baaz = Baaz.buildBaaz(foo: foo, bar: bar)
+// with --propertytypes infer-locals-only
+  class Foo {
+-     let view: UIView = UIView()
++     let view: UIView = .init()
 
-  let float: CGFloat = 10.0
-  let array: [String] = []
-  let anyFoo: AnyFoo = foo
+      func method() {
+-         let view: UIView = UIView()
++         let view = UIView()
+      }
+  }
 
   // with --inferredtypes always:
 - let foo: Foo =
@@ -2176,21 +2183,21 @@ Remove redundant type from variable declarations.
 
 Option | Description
 --- | ---
-`--redundanttype` | "inferred", "explicit", or "infer-locals-only" (default)
+`--propertytypes` | "inferred", "explicit", or "infer-locals-only" (default)
 
 <details>
 <summary>Examples</summary>
 
 ```diff
-// inferred
+// with --propertytypes inferred
 - let view: UIView = UIView()
 + let view = UIView()
 
-// explicit
+// with --propertytypes explicit
 - let view: UIView = UIView()
 + let view: UIView = .init()
 
-// infer-locals-only
+// with --propertytypes infer-locals-only
   class Foo {
 -     let view: UIView = UIView()
 +     let view: UIView = .init()
@@ -2201,7 +2208,7 @@ Option | Description
       }
   }
 
-// Swift 5.9+, inferred (SE-0380)
+// Swift 5.9+, with --propertytypes inferred (SE-0380)
 - let foo: Foo = if condition {
 + let foo = if condition {
       Foo("foo")
@@ -2209,7 +2216,7 @@ Option | Description
       Foo("bar")
   }
 
-// Swift 5.9+, explicit (SE-0380)
+// Swift 5.9+, with --propertytypes explicit (SE-0380)
   let foo: Foo = if condition {
 -     Foo("foo")
 +     .init("foo")

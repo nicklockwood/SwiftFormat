@@ -33,7 +33,7 @@ class PropertyTypesTests: XCTestCase {
         let genericType = MyGenericType<Foo, Bar>()
         """
 
-        let options = FormatOptions(redundantType: .inferred)
+        let options = FormatOptions(propertyTypes: .inferred)
         testFormatting(for: input, [output], rules: [.propertyTypes, .redundantInit], options: options)
     }
 
@@ -58,7 +58,7 @@ class PropertyTypesTests: XCTestCase {
         let genericType: MyGenericType<Foo, Bar> = .init()
         """
 
-        let options = FormatOptions(redundantType: .explicit)
+        let options = FormatOptions(propertyTypes: .explicit)
         testFormatting(for: input, output, rule: .propertyTypes, options: options)
     }
 
@@ -87,7 +87,7 @@ class PropertyTypesTests: XCTestCase {
         }
         """
 
-        let options = FormatOptions(redundantType: .inferLocalsOnly)
+        let options = FormatOptions(propertyTypes: .inferLocalsOnly)
         testFormatting(for: input, output, rule: .propertyTypes, options: options)
     }
 
@@ -122,7 +122,7 @@ class PropertyTypesTests: XCTestCase {
         }
         """
 
-        let options = FormatOptions(redundantType: .inferLocalsOnly)
+        let options = FormatOptions(propertyTypes: .inferLocalsOnly)
         testFormatting(for: input, [output], rules: [.propertyTypes, .redundantInit], options: options)
     }
 
@@ -132,7 +132,7 @@ class PropertyTypesTests: XCTestCase {
         let color = Color.Theme.default
         """
 
-        let options = FormatOptions(redundantType: .explicit)
+        let options = FormatOptions(propertyTypes: .explicit)
         testFormatting(for: input, rule: .propertyTypes, options: options)
     }
 
@@ -142,7 +142,7 @@ class PropertyTypesTests: XCTestCase {
         let bar: Bar
         """
 
-        let options = FormatOptions(redundantType: .inferred)
+        let options = FormatOptions(propertyTypes: .inferred)
         testFormatting(for: input, rule: .propertyTypes, options: options)
     }
 
@@ -154,7 +154,7 @@ class PropertyTypesTests: XCTestCase {
         let array = ["string"]
         """
 
-        let options = FormatOptions(redundantType: .explicit)
+        let options = FormatOptions(propertyTypes: .explicit)
         testFormatting(for: input, rule: .propertyTypes, options: options)
     }
 
@@ -169,7 +169,7 @@ class PropertyTypesTests: XCTestCase {
         let foo = [foo: bar].first
         """
 
-        let options = FormatOptions(redundantType: .explicit)
+        let options = FormatOptions(propertyTypes: .explicit)
         testFormatting(for: input, rule: .propertyTypes, options: options, exclude: [.void])
     }
 
@@ -184,7 +184,7 @@ class PropertyTypesTests: XCTestCase {
         let tuple: (String, Int) = ("foo", 123)
         """
 
-        let options = FormatOptions(redundantType: .inferred)
+        let options = FormatOptions(propertyTypes: .inferred)
         testFormatting(for: input, rule: .propertyTypes, options: options, exclude: [.redundantType])
     }
 
@@ -197,7 +197,7 @@ class PropertyTypesTests: XCTestCase {
         let foo = Foo()
         """
 
-        let options = FormatOptions(redundantType: .inferred)
+        let options = FormatOptions(propertyTypes: .inferred)
         testFormatting(for: input, [output], rules: [.redundantType, .propertyTypes], options: options)
     }
 
@@ -210,7 +210,7 @@ class PropertyTypesTests: XCTestCase {
         let foo: Foo = .init()
         """
 
-        let options = FormatOptions(redundantType: .explicit)
+        let options = FormatOptions(propertyTypes: .explicit)
         testFormatting(for: input, [output], rules: [.redundantType, .propertyTypes], options: options)
     }
 
@@ -235,7 +235,7 @@ class PropertyTypesTests: XCTestCase {
         }
         """
 
-        let options = FormatOptions(redundantType: .inferLocalsOnly)
+        let options = FormatOptions(propertyTypes: .inferLocalsOnly)
         testFormatting(for: input, [output], rules: [.redundantType, .propertyTypes, .redundantInit], options: options)
     }
 
@@ -249,7 +249,7 @@ class PropertyTypesTests: XCTestCase {
             }
         """
 
-        let options = FormatOptions(redundantType: .inferred)
+        let options = FormatOptions(propertyTypes: .inferred)
         testFormatting(for: input, rule: .propertyTypes, options: options)
     }
 
@@ -272,7 +272,7 @@ class PropertyTypesTests: XCTestCase {
             }
         """
 
-        let options = FormatOptions(redundantType: .inferred, inferredTypesInConditionalExpressions: true)
+        let options = FormatOptions(propertyTypes: .inferred, inferredTypesInConditionalExpressions: true)
         testFormatting(for: input, [output], rules: [.propertyTypes, .redundantInit], options: options)
     }
 
@@ -297,7 +297,7 @@ class PropertyTypesTests: XCTestCase {
             }
         """
 
-        let options = FormatOptions(redundantType: .inferred, inferredTypesInConditionalExpressions: true)
+        let options = FormatOptions(propertyTypes: .inferred, inferredTypesInConditionalExpressions: true)
         testFormatting(for: input, [output], rules: [.propertyTypes, .redundantInit], options: options)
     }
 
@@ -311,7 +311,7 @@ class PropertyTypesTests: XCTestCase {
             }
         """
 
-        let options = FormatOptions(redundantType: .inferred, inferredTypesInConditionalExpressions: true)
+        let options = FormatOptions(propertyTypes: .inferred, inferredTypesInConditionalExpressions: true)
         testFormatting(for: input, rule: .propertyTypes, options: options)
     }
 
@@ -324,7 +324,7 @@ class PropertyTypesTests: XCTestCase {
         let optionalFoo4: Foo! = Foo.foo
         """
 
-        let options = FormatOptions(redundantType: .inferred)
+        let options = FormatOptions(propertyTypes: .inferred)
         testFormatting(for: input, rule: .propertyTypes, options: options)
     }
 
@@ -336,7 +336,7 @@ class PropertyTypesTests: XCTestCase {
         })
         """
 
-        let options = FormatOptions(redundantType: .inferred)
+        let options = FormatOptions(propertyTypes: .inferred)
         testFormatting(for: input, rule: .propertyTypes, options: options)
     }
 
@@ -356,7 +356,7 @@ class PropertyTypesTests: XCTestCase {
         // let myShape2 = (any ShapeStyle).myShape
         """
 
-        let options = FormatOptions(redundantType: .inferred)
+        let options = FormatOptions(propertyTypes: .inferred)
         testFormatting(for: input, rule: .propertyTypes, options: options)
     }
 
@@ -375,8 +375,20 @@ class PropertyTypesTests: XCTestCase {
         let dynamicTypeSizeRange = ClosedRange<DynamicTypeSize>.convertFromLiteral(.large ... .xxxLarge)
         """
 
-        let options = FormatOptions(redundantType: .inferred)
+        let options = FormatOptions(propertyTypes: .inferred)
         testFormatting(for: input, output, rule: .propertyTypes, options: options)
+    }
+
+    func testRedundantTypeInModelClassNotStripped() {
+        // See: https://github.com/nicklockwood/SwiftFormat/issues/1649
+        let input = """
+        @Model
+        class FooBar {
+            var created: Date = Date.now
+        }
+        """
+        let options = FormatOptions(propertyTypes: .explicit)
+        testFormatting(for: input, rule: .propertyTypes, options: options)
     }
 
     func testPreservesInferredRightHandSideWithOperators() {
@@ -386,7 +398,7 @@ class PropertyTypesTests: XCTestCase {
         let foo = Foo.bar ... baaz
         """
 
-        let options = FormatOptions(redundantType: .explicit)
+        let options = FormatOptions(propertyTypes: .explicit)
         testFormatting(for: input, rule: .propertyTypes, options: options)
     }
 
@@ -419,7 +431,7 @@ class PropertyTypesTests: XCTestCase {
         }
         """
 
-        let options = FormatOptions(redundantType: .inferLocalsOnly, preserveSymbols: ["Foo", "Baaz", "quux"])
+        let options = FormatOptions(propertyTypes: .inferLocalsOnly, preserveSymbols: ["Foo", "Baaz", "quux"])
         testFormatting(for: input, output, rule: .propertyTypes, options: options)
     }
 
@@ -452,7 +464,7 @@ class PropertyTypesTests: XCTestCase {
         }
         """
 
-        let options = FormatOptions(redundantType: .inferLocalsOnly, preserveSymbols: ["init"])
+        let options = FormatOptions(propertyTypes: .inferLocalsOnly, preserveSymbols: ["init"])
         testFormatting(for: input, output, rule: .propertyTypes, options: options, exclude: [.redundantInit])
     }
 
@@ -511,7 +523,7 @@ class PropertyTypesTests: XCTestCase {
         }
         """
 
-        let options = FormatOptions(redundantType: .inferLocalsOnly)
+        let options = FormatOptions(propertyTypes: .inferLocalsOnly)
         testFormatting(for: input, [output], rules: [.propertyTypes, .redundantInit], options: options)
     }
 
@@ -530,7 +542,7 @@ class PropertyTypesTests: XCTestCase {
         }
         """
 
-        let options = FormatOptions(redundantType: .inferLocalsOnly)
+        let options = FormatOptions(propertyTypes: .inferLocalsOnly)
         testFormatting(for: input, rule: .propertyTypes, options: options)
     }
 
@@ -554,7 +566,7 @@ class PropertyTypesTests: XCTestCase {
         }
         """
 
-        let options = FormatOptions(redundantType: .inferLocalsOnly)
+        let options = FormatOptions(propertyTypes: .inferLocalsOnly)
         testFormatting(for: input, rule: .propertyTypes, options: options)
     }
 }

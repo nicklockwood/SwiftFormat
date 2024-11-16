@@ -1097,11 +1097,11 @@ struct _Descriptors {
         help: "Place ACL \"on-extension\" (default) or \"on-declarations\"",
         keyPath: \.extensionACLPlacement
     )
-    let redundantType = OptionDescriptor(
-        argumentName: "redundanttype",
-        displayName: "Redundant Type",
+    let propertyTypes = OptionDescriptor(
+        argumentName: "propertytypes",
+        displayName: "Property Types",
         help: "\"inferred\", \"explicit\", or \"infer-locals-only\" (default)",
-        keyPath: \.redundantType
+        keyPath: \.propertyTypes
     )
     let inferredTypesInConditionalExpressions = OptionDescriptor(
         argumentName: "inferredtypes",
@@ -1366,4 +1366,11 @@ struct _Descriptors {
         trueValues: ["ignore", "preserve"],
         falseValues: ["convert"]
     ).renamed(to: "inlinedforeach")
+
+    let redundantType = OptionDescriptor(
+        argumentName: "redundanttype",
+        displayName: "Redundant Type",
+        help: "deprecated",
+        keyPath: \.propertyTypes
+    ).renamed(to: "propertytypes")
 }

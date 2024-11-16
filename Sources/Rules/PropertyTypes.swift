@@ -13,7 +13,7 @@ public extension FormatRule {
         help: "Convert property declarations to use inferred types (`let foo = Foo()`) or explicit types (`let foo: Foo = .init()`).",
         disabledByDefault: true,
         orderAfter: [.redundantType],
-        options: ["propertytypes", "inferredtypes", "preservesymbols"]
+        options: ["propertytypes", "inferredtypes", "preservedsymbols"]
     ) { formatter in
         formatter.forEach(.operator("=", .infix)) { equalsIndex, _ in
             // Preserve all properties in conditional statements like `if let foo = Bar() { ... }`
@@ -73,7 +73,7 @@ public extension FormatRule {
                 }
 
                 // Preserve the formatting as-is if the type is manually excluded
-                if formatter.options.preserveSymbols.contains(type.name) {
+                if formatter.options.preservedSymbols.contains(type.name) {
                     return
                 }
 
@@ -81,7 +81,7 @@ public extension FormatRule {
                 if formatter.tokens[rhsStartIndex].isOperator(".") {
                     // Preserve the formatting as-is if the identifier is manually excluded
                     if let identifierAfterDot = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: rhsStartIndex),
-                       formatter.options.preserveSymbols.contains(formatter.tokens[identifierAfterDot].string)
+                       formatter.options.preservedSymbols.contains(formatter.tokens[identifierAfterDot].string)
                     { return }
 
                     // Update the . token from a prefix operator to an infix operator.
@@ -109,7 +109,7 @@ public extension FormatRule {
 
                         // Preserve the formatting as-is if the identifier is manually excluded
                         if let identifierAfterDot = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: rhsStartIndex),
-                           formatter.options.preserveSymbols.contains(formatter.tokens[identifierAfterDot].string)
+                           formatter.options.preservedSymbols.contains(formatter.tokens[identifierAfterDot].string)
                         {
                             hasInvalidConditionalBranch = true
                         }
@@ -163,7 +163,7 @@ public extension FormatRule {
 
                 // Preserve any types that have been manually excluded.
                 // Preserve any `Void` types and tuples, since they're special and don't support things like `.init`
-                guard !(formatter.options.preserveSymbols + ["Void"]).contains(rhsType.name),
+                guard !(formatter.options.preservedSymbols + ["Void"]).contains(rhsType.name),
                       !rhsType.name.hasPrefix("(")
                 else { return }
 
@@ -171,7 +171,7 @@ public extension FormatRule {
                 // so that the init call stays valid after we move the type to the LHS.
                 if formatter.tokens[indexAfterType] == .startOfScope("(") {
                     // Preserve the existing format if `init` is manually excluded
-                    if formatter.options.preserveSymbols.contains("init") {
+                    if formatter.options.preservedSymbols.contains("init") {
                         return
                     }
 
@@ -189,7 +189,7 @@ public extension FormatRule {
 
                     // Preserve the formatting as-is if the identifier is manually excluded.
                     // Don't convert `let foo = Foo.self` to `let foo: Foo = .self`, since `.self` returns the metatype
-                    let symbolsToExclude = formatter.options.preserveSymbols + ["self"]
+                    let symbolsToExclude = formatter.options.preservedSymbols + ["self"]
                     if let indexAfterDot = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: indexAfterType),
                        symbolsToExclude.contains(formatter.tokens[indexAfterDot].string)
                     { return }

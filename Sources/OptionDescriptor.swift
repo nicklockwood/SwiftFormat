@@ -1235,6 +1235,12 @@ struct _Descriptors {
         help: "Comma separated list of declaration names to exclude",
         keyPath: \.preservedPrivateDeclarations
     )
+    let preservedSymbols = OptionDescriptor(
+        argumentName: "preservedsymbols",
+        displayName: "Preserved Symbols",
+        help: "Comma-delimited list of symbols to be ignored by the rule",
+        keyPath: \.preservedSymbols
+    )
 
     // MARK: - Internal
 
@@ -1265,12 +1271,6 @@ struct _Descriptors {
         displayName: "Swift Language Mode",
         help: "The Swift language mode used in the files being formatted",
         keyPath: \.languageMode
-    )
-    let preserveSymbols = OptionDescriptor(
-        argumentName: "preservesymbols",
-        displayName: "Preserve Symbols",
-        help: "Comma-delimited list of symbol names to preserve",
-        keyPath: \.preserveSymbols
     )
 
     // MARK: - DEPRECATED

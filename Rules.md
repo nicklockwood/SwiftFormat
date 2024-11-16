@@ -1644,7 +1644,7 @@ Option | Description
 --- | ---
 `--propertytypes` | "inferred", "explicit", or "infer-locals-only" (default)
 `--inferredtypes` | "exclude-cond-exprs" (default) or "always"
-`--preservesymbols` | Comma-delimited list of symbol names to preserve
+`--preservedsymbols` | Comma-delimited list of symbols to be ignored by the rule
 
 <details>
 <summary>Examples</summary>

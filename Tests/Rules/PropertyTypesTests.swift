@@ -431,7 +431,7 @@ class PropertyTypesTests: XCTestCase {
         }
         """
 
-        let options = FormatOptions(propertyTypes: .inferLocalsOnly, preserveSymbols: ["Foo", "Baaz", "quux"])
+        let options = FormatOptions(propertyTypes: .inferLocalsOnly, preservedSymbols: ["Foo", "Baaz", "quux"])
         testFormatting(for: input, output, rule: .propertyTypes, options: options)
     }
 
@@ -464,7 +464,7 @@ class PropertyTypesTests: XCTestCase {
         }
         """
 
-        let options = FormatOptions(propertyTypes: .inferLocalsOnly, preserveSymbols: ["init"])
+        let options = FormatOptions(propertyTypes: .inferLocalsOnly, preservedSymbols: ["init"])
         testFormatting(for: input, output, rule: .propertyTypes, options: options, exclude: [.redundantInit])
     }
 

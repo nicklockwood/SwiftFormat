@@ -20,6 +20,8 @@ class PropertyTypesTests: XCTestCase {
         let dictionary: [Foo: Bar] = .init()
         let array: [Foo] = .init()
         let genericType: MyGenericType<Foo, Bar> = .init()
+        let underscoredType: _Foo = .init()
+        let lowercaseType: c_type = .init()
         """
 
         let output = """
@@ -31,6 +33,8 @@ class PropertyTypesTests: XCTestCase {
         let dictionary = [Foo: Bar]()
         let array = [Foo]()
         let genericType = MyGenericType<Foo, Bar>()
+        let underscoredType = _Foo()
+        let lowercaseType = c_type.init()
         """
 
         let options = FormatOptions(propertyTypes: .inferred)
@@ -396,6 +400,16 @@ class PropertyTypesTests: XCTestCase {
         let foo = Foo().bar
         let foo = Foo.bar.baaz.quux
         let foo = Foo.bar ... baaz
+        """
+
+        let options = FormatOptions(propertyTypes: .explicit)
+        testFormatting(for: input, rule: .propertyTypes, options: options)
+    }
+
+    func testNonUppercaseSymbolsNotTreatedAsTypes() {
+        let input = """
+        let foo = bar()
+        let foo = _bar()
         """
 
         let options = FormatOptions(propertyTypes: .explicit)

@@ -1402,16 +1402,12 @@ extension Formatter {
         }
 
         // Otherwise this is just a single identifier
-        if startToken.isIdentifier || startToken.isKeywordOrAttribute, startToken != .identifier("init") {
-            let firstCharacter = startToken.string.first.flatMap(String.init) ?? ""
+        if case let .identifier(name) = startToken, name != "init" {
+            let firstCharacter = name.drop { $0 == "_" }.first.flatMap(String.init) ?? ""
             let isLowercaseIdentifier = firstCharacter.uppercased() != firstCharacter
+            guard !excludeLowercaseIdentifiers || !isLowercaseIdentifier else { return nil }
 
-            guard !(excludeLowercaseIdentifiers && isLowercaseIdentifier),
-                  // Don't parse macro invocations or `#selector` as a type.
-                  !["#"].contains(firstCharacter)
-            else { return nil }
-
-            return (name: startToken.string, range: startOfTypeIndex ... startOfTypeIndex)
+            return (name: name, range: startOfTypeIndex ... startOfTypeIndex)
         }
 
         return nil

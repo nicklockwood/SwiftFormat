@@ -271,10 +271,37 @@ class DocCommentsBeforeModifiersTests: XCTestCase {
             case prefix(String)
 
             /// A postfix operator
-            case postfix(String)
+            case postfix
+
+            /// Required
+            case required
+
+            /// Optional
+            case optional
+
+            /// Open
+            case open
+
+            /// Other
+            case other
         }
         """
 
         testFormatting(for: input, rule: .docCommentsBeforeModifiers)
+    }
+
+    func testDynamicFunctionName() {
+        let input = """
+        enum Colors {
+            /// Tint color
+            static let tintColor = UIColor.dynamic(light: .fullBlack, dark: .white)
+            /// Text color
+            static let textColor = UIColor.dynamic(light: .fullBlack, dark: .white)
+            /// Line color
+            static let lineColor: UIColor = .dynamic(light: .fullBlack, dark: .white)
+        }
+        """
+
+        testFormatting(for: input, rule: .docCommentsBeforeModifiers, exclude: [.propertyTypes])
     }
 }

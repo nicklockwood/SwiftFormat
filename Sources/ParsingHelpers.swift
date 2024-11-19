@@ -404,9 +404,15 @@ extension Formatter {
     func modifiersForDeclaration(at index: Int, contains: (Int, String) -> Bool) -> Bool {
         var index = index
         while var prevIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: index) {
-            let token = tokens[prevIndex]
-            switch token {
-            case _ where token.isModifierKeyword || token.isAttribute:
+            switch tokens[prevIndex] {
+            case let token where token.isModifierKeyword || token.isAttribute:
+                if case .identifier = token,
+                   let nextToken = last(.nonSpaceOrCommentOrLinebreak, before: prevIndex),
+                   nextToken == .keyword("case") || nextToken.isOperator(ofType: .infix) || nextToken.isOperator(ofType: .prefix)
+                {
+                    // Part of previous declaration
+                    return false
+                }
                 if contains(prevIndex, token.string) {
                     return true
                 }

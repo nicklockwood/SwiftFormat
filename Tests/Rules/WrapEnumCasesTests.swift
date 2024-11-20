@@ -226,4 +226,48 @@ class WrapEnumCasesTests: XCTestCase {
         let input = "enum Foo { case foo, bar }"
         testFormatting(for: input, rule: .wrapEnumCases)
     }
+
+    func testNoMangleSequentialEnums() {
+        let input = """
+        // enums
+
+        @objc public enum TestType: Int {
+            case value1 = 0, value2 = 1
+        }
+
+        public struct TestStruct: Equatable, Comparable {
+            public enum TestEnum {
+                case value1, value2, value3
+            }
+
+            public enum TestEnumAnother {
+                case value4, value5, value6
+            }
+        }
+        """
+        let output = """
+        // enums
+
+        @objc public enum TestType: Int {
+            case value1 = 0
+            case value2 = 1
+        }
+
+        public struct TestStruct: Equatable, Comparable {
+            public enum TestEnum {
+                case value1
+                case value2
+                case value3
+            }
+
+            public enum TestEnumAnother {
+                case value4
+                case value5
+                case value6
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: .wrapEnumCases)
+    }
 }

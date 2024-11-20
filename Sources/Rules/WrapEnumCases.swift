@@ -108,7 +108,7 @@ extension Formatter {
             }
         }
 
-        return Array(indexedRanges.values)
+        return indexedRanges.sorted(by: { $0.key < $1.key }).map(\.value)
     }
 
     func shouldWrapCaseRangeGroup(_ caseRangeGroup: [Formatter.EnumCaseRange]) -> Bool {

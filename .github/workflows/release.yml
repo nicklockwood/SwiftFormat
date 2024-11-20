@@ -30,46 +30,28 @@ jobs:
         run: echo "Using version number $GITHUB_REF_NAME" && sed -i "s/let swiftFormatVersion = \"[^\"]*\"/let swiftFormatVersion = \"$GITHUB_REF_NAME\"/" Sources/SwiftFormat.swift
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      - name: Build and export AMD64 binary
+      - name: Install cross-binutils for aarch64
+        run: sudo apt install -y binutils-aarch64-linux-gnu
+      - name: Build and export binaries
         uses: docker/build-push-action@v5
         with:
           context: .
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           target: builder
           outputs: type=local,dest=artifacts
-      - name: Strip and Move binary
+      - name: Strip and Move binaries
         run: |
-          strip artifacts/workspace/swiftformat
-          mv artifacts/workspace/swiftformat "${HOME}/swiftformat_linux"
-      - name: Upload Artifact
+          strip artifacts/linux_amd64/workspace/swiftformat
+          mv artifacts/linux_amd64/workspace/swiftformat "${HOME}/swiftformat_linux"
+          aarch64-linux-gnu-strip artifacts/linux_arm64/workspace/swiftformat
+          mv artifacts/linux_arm64/workspace/swiftformat "${HOME}/swiftformat_linux_aarch64"
+      - name: Upload AMD64 Artifact
         uses: actions/upload-artifact@v4
         with:
           name: swiftformat_linux
           path: ~/swiftformat_linux
           retention-days: 5
-
-  linux_aarch64:
-    name: Build SwiftFormat for Linux AArch64
-    runs-on: ubuntu-20.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: Build and export ARM64 binary
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          platforms: linux/arm64
-          target: builder
-          outputs: type=local,dest=artifacts
-      - name: Install cross-binutils for aarch64
-        run: sudo apt install -y binutils-aarch64-linux-gnu
-      - name: Strip and Move binary
-        run: |
-          aarch64-linux-gnu-strip artifacts/workspace/swiftformat
-          mv artifacts/workspace/swiftformat "${HOME}/swiftformat_linux_aarch64"
-      - name: Upload aarch64 Artifact
+      - name: Upload ARM64 Artifact
         uses: actions/upload-artifact@v4
         with:
           name: swiftformat_linux_aarch64
@@ -79,7 +61,7 @@ jobs:
   upload:
     name: Upload release artifacts
     runs-on: ubuntu-latest
-    needs: [macos, linux, linux_aarch64]
+    needs: [macos, linux]
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v4

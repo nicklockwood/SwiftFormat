@@ -78,9 +78,9 @@ This is relevant only to maintainers:
 * Update version number in SwiftFormat.swift + 3 targets
 * Update CHANGELOG.md
 * Update SwiftFormat.podspec.json
-* Select SwiftFormat (Command Line Tool) and run Editor > Archive
+* Select SwiftFormat (Command Line Tool) and run Product > Archive
 * Replace binary in CommandLineTool directory
-* Select SwiftFormat for Xcode and run Editor > Archive
+* Select SwiftFormat for Xcode and run Product > Archive
 * Notarize and export built app
 * Tag commit and push to main
 * Run Build for Linux & Build for Windows and download binaries

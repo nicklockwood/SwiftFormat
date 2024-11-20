@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.55.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.55.1) (2024-11-20)
+
+- Fixed bug where `docCommentsBeforeModifiers` got confused by `enum` cases that match modifier names
+- Fixed bug where `wrapEnumCases` would mangle nested or successive `enum` declarations
+- Artifact Bundle now includes pre-built binary for ARM-based Linux systems
+
 ## [0.55.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.55.0) (2024-11-16)
 
 - Added `docCommentsBeforeModifiers` rule to hoist doc comments above declaration modifiers

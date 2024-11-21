@@ -52,13 +52,15 @@ extension String {
     var inYellow: String { "\u{001B}[33m\(self)\u{001B}[0m" }
 }
 
-extension FileHandle: TextOutputStream {
-    public func write(_ string: String) {
-        write(Data(string.utf8))
+private struct FileHandleOutputStream: TextOutputStream {
+    private(set) var filehandle: FileHandle
+
+    func write(_ string: String) {
+        filehandle.write(Data(string.utf8))
     }
 }
 
-private var stderr = FileHandle.standardError
+private var stderr = FileHandleOutputStream(filehandle: .standardError)
 
 private let stderrIsTTY = isatty(STDERR_FILENO) != 0
 

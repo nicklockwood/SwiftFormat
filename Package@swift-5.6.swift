@@ -18,7 +18,7 @@ let package = Package(
             name: "SwiftFormatTests",
             dependencies: ["SwiftFormat"],
             path: "Tests",
-            exclude: ["Info.plist", "GlobTest[5].txt"]
+            exclude: ["GlobTest[5].txt"]
         ),
         .plugin(
             name: "SwiftFormatPlugin",

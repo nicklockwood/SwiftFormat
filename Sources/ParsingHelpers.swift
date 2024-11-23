@@ -1042,23 +1042,17 @@ extension Formatter {
             }
             fallthrough
         case .keyword("try"), .keyword("await"):
-            guard let prevToken = last(.nonSpaceOrComment, before: i) else {
+            guard let prevToken = last(.nonSpaceOrCommentOrLinebreak, before: i) else {
                 return true
             }
-            guard prevToken.isLinebreak else {
+            switch prevToken {
+            case .number, .operator(_, .postfix), .endOfScope, .identifier,
+                 .startOfScope("{"), .startOfScope(":"), .delimiter(";"),
+                 .keyword("in") where lastSignificantKeyword(at: i) != "for":
+                return true
+            default:
                 return false
             }
-            if let prevToken = last(.nonSpaceOrCommentOrLinebreak, before: i) {
-                switch prevToken {
-                case .number, .operator(_, .postfix), .endOfScope, .identifier,
-                     .startOfScope("{"), .delimiter(";"),
-                     .keyword("in") where lastSignificantKeyword(at: i) != "for":
-                    return true
-                default:
-                    return false
-                }
-            }
-            return true
         case .keyword:
             return true
         default:

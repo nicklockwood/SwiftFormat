@@ -364,7 +364,15 @@ class UnusedArgumentsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .unusedArguments)
+        let output = """
+        init(_ action: Action, hub _: Hub) {
+            switch action {
+            case let .get(hub, key):
+                self = .get(key, hub)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .unusedArguments)
     }
 
     func testParameterUsedInSwitchCaseAfterShadowing() {
@@ -1230,6 +1238,26 @@ class UnusedArgumentsTests: XCTestCase {
         let output = """
         func g(foo _: Int) {
             f[foo: 42]
+        }
+        """
+        testFormatting(for: input, output, rule: .unusedArguments)
+    }
+
+    func testCaseLetNotConfusedWithArgument() {
+        let input = """
+        func f(e: TheEnum, bar: String) {
+            switch e {
+            case let .foo(bar):
+                print(bar)
+            }
+        }
+        """
+        let output = """
+        func f(e: TheEnum, bar _: String) {
+            switch e {
+            case let .foo(bar):
+                print(bar)
+            }
         }
         """
         testFormatting(for: input, output, rule: .unusedArguments)

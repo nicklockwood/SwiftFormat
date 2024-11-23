@@ -509,7 +509,7 @@ private func applyRules(
     var tokens = originalTokens
 
     // Ensure rule names have been set
-    if rules.first?.name == "" {
+    if rules.first?.name == FormatRule.unnamedRule {
         _ = FormatRules.all
     }
 

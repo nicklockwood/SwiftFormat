@@ -32,8 +32,10 @@
 import Foundation
 
 public final class FormatRule: Hashable, Comparable, CustomStringConvertible {
+    static let unnamedRule = "[unnamed rule]"
+
     private let fn: (Formatter) -> Void
-    fileprivate(set) var name = "[unnamed rule]"
+    fileprivate(set) var name = FormatRule.unnamedRule
     fileprivate(set) var index = 0
     let help: String
     let examples: String?

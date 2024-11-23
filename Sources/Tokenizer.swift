@@ -1484,7 +1484,19 @@ public func tokenize(_ source: String) -> [Token] {
             assertionFailure()
             return
         }
-        while let nextToken: Token = index + 1 < tokens.count ? tokens[index + 1] : nil,
+        if index > 0, case .operator("\\", _) = tokens[index - 1] {
+            switch string {
+            case ".?.":
+                tokens[index ... index] = [.operator(".", .prefix), .operator("?", .postfix), .operator(".", .infix)]
+                return
+            case ".?":
+                tokens[index ... index] = [.operator(".", .prefix), .operator("?", .postfix)]
+                return
+            default:
+                break
+            }
+        }
+        while let nextToken = index + 1 < tokens.count ? tokens[index + 1] : nil,
               case let .operator(nextString, _) = nextToken, !nextString.hasPrefix("\\"),
               string.hasPrefix(".") || !nextString.contains(".")
         {
@@ -1497,7 +1509,7 @@ public func tokenize(_ source: String) -> [Token] {
             scopeIndexStack = scopeIndexStack.map { $0 > index ? $0 - 1 : $0 }
         }
         var index = index
-        while let prevToken: Token = index > 0 ? tokens[index - 1] : nil,
+        while let prevToken = index > 0 ? tokens[index - 1] : nil,
               case let .operator(prevString, _) = prevToken, !isUnwrapOperator(at: index - 1),
               !string.hasPrefix("\\"), prevString.hasPrefix(".") || !string.contains(".")
         {

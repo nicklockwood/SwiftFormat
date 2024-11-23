@@ -2485,6 +2485,20 @@ class RedundantSelfTests: XCTestCase {
         testFormatting(for: input, rule: .redundantSelf, options: options)
     }
 
+    func testNoInsertSelfInKeyPath() {
+        let input = """
+        class UserScreenPresenter: ScreenPresenter {
+            func onAppear() {
+                self.sessionInteractor.stage.compactMap(\\.?.session).latestValues(on: .main)
+            }
+
+            private var session: Session?
+        }
+        """
+        let options = FormatOptions(explicitSelf: .insert)
+        testFormatting(for: input, rule: .redundantSelf, options: options)
+    }
+
     // explicitSelf = .initOnly
 
     func testPreserveSelfInsideClassInit() {

@@ -4524,6 +4524,45 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testAnonymousOptionalKeyPath() {
+        let input = "let foo = \\.?.bar"
+        let output: [Token] = [
+            .keyword("let"),
+            .space(" "),
+            .identifier("foo"),
+            .space(" "),
+            .operator("=", .infix),
+            .space(" "),
+            .operator("\\", .prefix),
+            .operator(".", .prefix),
+            .operator("?", .postfix),
+            .operator(".", .infix),
+            .identifier("bar"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testAnonymousOptionalSubscriptKeyPath() {
+        let input = "let foo = \\.?[0].bar"
+        let output: [Token] = [
+            .keyword("let"),
+            .space(" "),
+            .identifier("foo"),
+            .space(" "),
+            .operator("=", .infix),
+            .space(" "),
+            .operator("\\", .prefix),
+            .operator(".", .prefix),
+            .operator("?", .postfix),
+            .startOfScope("["),
+            .number("0", .integer),
+            .endOfScope("]"),
+            .operator(".", .infix),
+            .identifier("bar"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     func testAttributeInsideGenericArguments() {
         let input = "Foo<(@MainActor () -> Void)?>(nil)"
         let output: [Token] = [

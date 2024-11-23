@@ -10,7 +10,8 @@ import Foundation
 
 public extension FormatRule {
     static let sortTypealiases = FormatRule(
-        help: "Sort protocol composition typealiases alphabetically."
+        help: "Sort protocol composition typealiases alphabetically.",
+        sharedOptions: ["linebreaks"]
     ) { formatter in
         formatter.forEach(.keyword("typealias")) { typealiasIndex, _ in
             guard let (equalsIndex, andTokenIndices, endIndex) = formatter.parseProtocolCompositionTypealias(at: typealiasIndex),
@@ -103,7 +104,8 @@ public extension FormatRule {
                    let nextToken = formatter.nextToken(after: parsedElements[elementIndex].endIndex),
                    !nextToken.isLinebreak
                 {
-                    sortedElements[elementIndex].allTokens.append(.linebreak("\n", 0))
+                    sortedElements[elementIndex].allTokens
+                        .append(formatter.linebreakToken(for: parsedElements[elementIndex].endIndex))
                 }
 
                 // If this element starts with a comment, that's because the comment
@@ -114,7 +116,8 @@ public extension FormatRule {
                    let previousToken = formatter.lastToken(before: parsedElements[elementIndex].startIndex, where: { !$0.isSpace }),
                    !previousToken.isLinebreak
                 {
-                    sortedElements[elementIndex].allTokens.insert(.linebreak("\n", 0), at: 0)
+                    sortedElements[elementIndex].allTokens
+                        .insert(formatter.linebreakToken(for: parsedElements[elementIndex].startIndex), at: 0)
                 }
             }
 

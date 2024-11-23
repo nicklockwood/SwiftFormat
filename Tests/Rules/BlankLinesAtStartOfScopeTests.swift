@@ -103,4 +103,19 @@ class BlankLinesAtStartOfScopeTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .blankLinesAtStartOfScope, options: .init(removeStartOrEndBlankLinesFromTypes: false))
     }
+
+    func testFalsePositive() {
+        let input = """
+        struct S {
+            // MARK: Internal
+
+            func g() {}
+
+            // MARK: Private
+
+            private func f() {}
+        }
+        """
+        XCTAssertEqual(try lint(input, rules: [.blankLinesAtStartOfScope, .organizeDeclarations]), [])
+    }
 }

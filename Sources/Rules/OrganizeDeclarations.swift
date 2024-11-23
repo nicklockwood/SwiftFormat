@@ -21,7 +21,7 @@ public extension FormatRule {
             "visibilityorder", "typeorder", "visibilitymarks", "typemarks",
             "groupblanklines",
         ],
-        sharedOptions: ["sortedpatterns", "lineaftermarks"]
+        sharedOptions: ["sortedpatterns", "lineaftermarks", "typeblanklines"]
     ) { formatter in
         guard !formatter.options.fragment else { return }
 
@@ -483,7 +483,13 @@ extension Formatter {
                 // make sure the type's opening sequence of tokens ends with
                 // at least one blank line so the category separator appears balanced
                 if markedDeclarations.isEmpty {
-                    typeDeclaration.open = typeDeclaration.open.endingWithBlankLine()
+                    if options.enabledRules.contains(FormatRule.blankLinesAtStartOfScope.name),
+                       options.removeStartOrEndBlankLinesFromTypes
+                    {
+                        typeDeclaration.open = typeDeclaration.open.endingWithoutBlankLine()
+                    } else {
+                        typeDeclaration.open = typeDeclaration.open.endingWithBlankLine()
+                    }
                 }
 
                 markedDeclarations.append(.declaration(

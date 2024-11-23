@@ -481,31 +481,16 @@ public func sourceCode(for tokens: [Token]?) -> String {
 }
 
 /// Apply specified rules to a token array and optionally capture list of changes
-public func applyRules(_ rules: [FormatRule],
-                       to originalTokens: [Token],
-                       with options: FormatOptions,
-                       trackChanges: Bool,
-                       range: Range<Int>?) throws -> (tokens: [Token], changes: [Formatter.Change])
-{
-    try applyRules(rules,
-                   to: originalTokens,
-                   with: options,
-                   trackChanges: trackChanges,
-                   range: range,
-                   callback: nil)
-}
-
-private func applyRules(
+public func applyRules(
     _ rules: [FormatRule],
     to originalTokens: [Token],
     with options: FormatOptions,
     trackChanges: Bool,
     range: Range<Int>?,
-    maxIterations: Int = 10,
-    callback: ((Int, [Token]) -> Void)? = nil
+    maxIterations: Int = 10
 ) throws -> (tokens: [Token], changes: [Formatter.Change]) {
     precondition(maxIterations > 1)
-    var rules = rules
+    var rules = rules.sorted()
     var tokens = originalTokens
 
     // Ensure rule names have been set
@@ -571,17 +556,23 @@ private func applyRules(
     let queue = DispatchQueue(label: "swiftformat.formatting", qos: .userInteractive)
     let timeout = options.timeout + TimeInterval(tokens.count) / 100
     var changes = [Formatter.Change]()
-    for _ in 0 ..< maxIterations {
+    // Apply trim/indent rule once at start
+    if rules.contains(.indent) {
+        rules.insert(.indent, at: 0)
+        if rules.contains(.trailingSpace) {
+            rules.insert(.trailingSpace, at: 0)
+        }
+    }
+    for iteration in 0 ..< maxIterations {
         let formatter = Formatter(tokens, options: options,
                                   trackChanges: trackChanges, range: range)
-        for (i, rule) in rules.sorted().enumerated() {
+        for rule in rules {
             queue.async(group: group) {
                 rule.apply(with: formatter)
             }
             guard group.wait(timeout: .now() + timeout) != .timedOut else {
                 throw FormatError.writing("\(rule.name) rule timed out")
             }
-            callback?(i, formatter.tokens)
         }
         if let error = formatter.errors.first, !options.fragment {
             throw error
@@ -618,7 +609,11 @@ private func applyRules(
             return (tokens, changes)
         }
         tokens = formatter.tokens
-        rules.removeAll(where: { $0.runOnceOnly }) // Prevents infinite recursion
+        if iteration == 0 {
+            if rules.first == .trailingSpace { rules.removeFirst() }
+            if rules.first == .indent { rules.removeFirst() }
+            rules.removeAll(where: { $0.runOnceOnly }) // Prevents infinite recursion
+        }
     }
     let formatter = Formatter(tokens, options: options, trackChanges: true, range: range)
     rules.sorted().forEach { $0.apply(with: formatter) }

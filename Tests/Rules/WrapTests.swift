@@ -722,4 +722,26 @@ class WrapTests: XCTestCase {
         let changes = try lint(input, rules: [.wrap, .indent], options: options)
         XCTAssertEqual(changes, [.init(line: 2, rule: .wrap, filePath: nil, isMove: false)])
     }
+
+    func testNoReportIndentAsWrap() throws {
+        let input = """
+        let package = Package(
+            name: "ExampleApp",
+            products: [
+                .executable(
+                    name: "ExampleApp",
+                    targets: ["ExampleApp"]
+                ),
+            ],
+            dependencies: [
+                .package(url: "https://example.com/package.swift", from: "1.0"),
+                // Plugins:
+                .package(url: "https://github.com/nicklockwood/SwiftFormat", from: "0.54.5"),
+             ]
+        )
+        """
+        let options = FormatOptions(truncateBlankLines: false, maxWidth: 120)
+        let changes = try lint(input, rules: [.wrap, .indent], options: options)
+        XCTAssertEqual(changes, [.init(line: 13, rule: .indent, filePath: nil, isMove: false)])
+    }
 }

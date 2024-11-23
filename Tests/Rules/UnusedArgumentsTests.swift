@@ -1206,4 +1206,32 @@ class UnusedArgumentsTests: XCTestCase {
         """
         testFormatting(for: input, rule: .unusedArguments)
     }
+
+    func testFunctionLabelNotConfusedWithArgument() {
+        let input = """
+        func g(foo: Int) {
+            f(foo: 42)
+        }
+        """
+        let output = """
+        func g(foo _: Int) {
+            f(foo: 42)
+        }
+        """
+        testFormatting(for: input, output, rule: .unusedArguments)
+    }
+
+    func testSubscriptLabelNotConfusedWithArgument() {
+        let input = """
+        func g(foo: Int) {
+            f[foo: 42]
+        }
+        """
+        let output = """
+        func g(foo _: Int) {
+            f[foo: 42]
+        }
+        """
+        testFormatting(for: input, output, rule: .unusedArguments)
+    }
 }

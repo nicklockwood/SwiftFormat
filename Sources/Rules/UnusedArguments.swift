@@ -258,13 +258,13 @@ extension Formatter {
                     break
                 }
                 if last(.nonSpaceOrCommentOrLinebreak, before: i)?.isOperator(".") == false,
-                   next(.nonSpaceOrCommentOrLinebreak, after: i) != .delimiter(":") ||
-                   [.startOfScope("("), .startOfScope("[")].contains(currentScope(at: i) ?? .space(""))
+                   next(.nonSpaceOrCommentOrLinebreak, after: i) != .delimiter(":") || startOfScope(at: i).map({
+                       scopeType(at: $0) == .dictionary
+                   }) ?? false
                 {
                     if isDeclaration {
                         switch next(.nonSpaceOrCommentOrLinebreak, after: i) {
-                        case .endOfScope(")")?, .operator("=", .infix)?,
-                             .delimiter(",")? where !isConditional:
+                        case .delimiter(",")? where !isConditional, .endOfScope(")")?, .operator("=", .infix)?:
                             tempLocals.insert(name)
                             break outer
                         default:

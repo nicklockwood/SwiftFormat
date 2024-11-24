@@ -50,8 +50,8 @@ public extension FormatRule {
                     return // It's a closure type, function declaration or for loop
                 }
             case .operator:
-                if case let .operator(inner, _)? = formatter.last(.nonSpace, before: closingIndex),
-                   !["?", "!"].contains(inner)
+                if let prevToken = formatter.last(.nonSpace, before: closingIndex),
+                   prevToken.isOperator, !prevToken.isUnwrapOperator
                 {
                     return
                 }

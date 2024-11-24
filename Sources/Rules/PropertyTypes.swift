@@ -53,7 +53,7 @@ public extension FormatRule {
                 // Preserve the existing formatting if the LHS type is optional.
                 //  - `let foo: Foo? = .foo` is valid, but `let foo = Foo?.foo`
                 //    is invalid if `.foo` is defined on `Foo` but not `Foo?`.
-                guard !["?", "!"].contains(typeTokens.last?.string ?? "") else { return }
+                guard typeTokens.last?.isUnwrapOperator != true else { return }
 
                 // Preserve the existing formatting if the LHS type is an existential (indicated with `any`).
                 //  - The `extension MyProtocol where Self == MyType { ... }` syntax

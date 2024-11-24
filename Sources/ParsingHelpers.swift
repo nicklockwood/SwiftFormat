@@ -207,9 +207,7 @@ public extension Formatter {
                 break
             case .keyword("as"):
                 wasOperator = true
-                if case let .operator(name, .postfix)? = self.token(at: i + 1),
-                   ["?", "!"].contains(name)
-                {
+                if self.token(at: i + 1)?.isUnwrapOperator == true {
                     i += 1
                 }
             case .number, .identifier:
@@ -1312,9 +1310,7 @@ extension Formatter {
         //   let foo: String/*bar*/? // not allowed
         //
         let nextTokenIndex = baseType.range.upperBound + 1
-        if let nextToken = token(at: nextTokenIndex),
-           ["?", "!"].contains(nextToken.string)
-        {
+        if token(at: nextTokenIndex)?.isUnwrapOperator == true {
             let typeRange = baseType.range.lowerBound ... nextTokenIndex
             return (name: tokens[typeRange].stringExcludingLinebreaks, range: typeRange)
         }

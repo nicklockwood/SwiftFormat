@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.55.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.55.2) (2024-11-24)
+
+- Fixed bug where `unusedArguments` failed to remove arguments that matched switch variable bindings
+- Fixed bug where `unusedArguments` failed to remove arguments that matched nested function call labels
+- Fixed spurious lint errors for `blankLinesAtStartOfScope` when using `organizeDeclarations` rule
+- Fixed bug where indentation errors were incorrectly reported as `wrap` rule lint errors
+- The `preferKeyPaths` rule now handles the `\\.self` case for Swift 5.10 and later
+- Fixed parsing of keyPaths beginning with `\.?`
+
 ## [0.55.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.55.1) (2024-11-20)
 
 - Fixed bug where `docCommentsBeforeModifiers` got confused by `enum` cases that match modifier names

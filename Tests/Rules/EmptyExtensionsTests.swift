@@ -1,5 +1,5 @@
 //
-//  EmptyExtensionTests.swift
+//  EmptyExtensionsTests.swift
 //  SwiftFormatTests
 //
 //  Created by Manny Lopez on 7/30/24.
@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class EmptyExtensionTests: XCTestCase {
+class EmptyExtensionsTests: XCTestCase {
     func testRemoveEmptyExtension() {
         let input = """
         extension String {}
@@ -19,7 +19,7 @@ class EmptyExtensionTests: XCTestCase {
         let output = """
         extension String: Equatable {}
         """
-        testFormatting(for: input, output, rule: .emptyExtension)
+        testFormatting(for: input, output, rule: .emptyExtensions)
     }
 
     func testRemoveNonConformingEmptyExtension() {
@@ -29,14 +29,14 @@ class EmptyExtensionTests: XCTestCase {
         extension Array where Element: Foo {}
         """
         let output = ""
-        testFormatting(for: input, output, rule: .emptyExtension)
+        testFormatting(for: input, output, rule: .emptyExtensions)
     }
 
     func testDoNotRemoveEmptyConformingExtension() {
         let input = """
         extension String: Equatable {}
         """
-        testFormatting(for: input, rule: .emptyExtension)
+        testFormatting(for: input, rule: .emptyExtensions)
     }
 
     func testDoNotRemoveAtModifierEmptyExtension() {
@@ -44,7 +44,7 @@ class EmptyExtensionTests: XCTestCase {
         @GenerateBoilerPlate
         extension Foo {}
         """
-        testFormatting(for: input, rule: .emptyExtension)
+        testFormatting(for: input, rule: .emptyExtensions)
     }
 
     func testRemoveEmptyExtensionWithEmptyBody() {
@@ -56,7 +56,7 @@ class EmptyExtensionTests: XCTestCase {
         }
         """
         let output = ""
-        testFormatting(for: input, output, rule: .emptyExtension)
+        testFormatting(for: input, output, rule: .emptyExtensions)
     }
 
     func testRemoveUnusedPrivateDeclarationThenEmptyExtension() {
@@ -75,6 +75,6 @@ class EmptyExtensionTests: XCTestCase {
         }
 
         """
-        testFormatting(for: input, [output], rules: [.unusedPrivateDeclarations, .emptyExtension])
+        testFormatting(for: input, [output], rules: [.unusedPrivateDeclarations, .emptyExtensions])
     }
 }

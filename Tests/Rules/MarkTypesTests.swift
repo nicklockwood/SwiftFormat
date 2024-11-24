@@ -36,7 +36,7 @@ class MarkTypesTests: XCTestCase {
         protocol Quux {}
         """
 
-        testFormatting(for: input, output, rule: .markTypes, exclude: [.emptyExtension])
+        testFormatting(for: input, output, rule: .markTypes, exclude: [.emptyExtensions])
     }
 
     func testDoesntAddMarkBeforeStructWithExistingMark() {
@@ -47,7 +47,7 @@ class MarkTypesTests: XCTestCase {
         extension Foo {}
         """
 
-        testFormatting(for: input, rule: .markTypes, exclude: [.emptyExtension])
+        testFormatting(for: input, rule: .markTypes, exclude: [.emptyExtensions])
     }
 
     func testCorrectsTypoInTypeMark() {
@@ -65,7 +65,7 @@ class MarkTypesTests: XCTestCase {
         extension Foo {}
         """
 
-        testFormatting(for: input, output, rule: .markTypes, exclude: [.emptyExtension])
+        testFormatting(for: input, output, rule: .markTypes, exclude: [.emptyExtensions])
     }
 
     func testUpdatesMarkAfterTypeIsRenamed() {
@@ -83,7 +83,7 @@ class MarkTypesTests: XCTestCase {
         extension FooBarControllerBuilder {}
         """
 
-        testFormatting(for: input, output, rule: .markTypes, exclude: [.emptyExtension])
+        testFormatting(for: input, output, rule: .markTypes, exclude: [.emptyExtensions])
     }
 
     func testAddsMarkBeforeTypeWithDocComment() {
@@ -107,7 +107,7 @@ class MarkTypesTests: XCTestCase {
         extension Foo {}
         """
 
-        testFormatting(for: input, output, rule: .markTypes, exclude: [.emptyExtension])
+        testFormatting(for: input, output, rule: .markTypes, exclude: [.emptyExtensions])
     }
 
     func testCustomTypeMark() {
@@ -126,7 +126,7 @@ class MarkTypesTests: XCTestCase {
         testFormatting(
             for: input, output, rule: .markTypes,
             options: FormatOptions(typeMarkComment: "TYPE DEFINITION: %t"),
-            exclude: [.emptyExtension]
+            exclude: [.emptyExtensions]
         )
     }
 
@@ -136,7 +136,7 @@ class MarkTypesTests: XCTestCase {
         extension Foo {}
         """
 
-        testFormatting(for: input, rule: .markTypes, exclude: [.emptyExtension])
+        testFormatting(for: input, rule: .markTypes, exclude: [.emptyExtensions])
     }
 
     func preservesExistingCommentForExtensionWithNoConformances() {
@@ -163,7 +163,7 @@ class MarkTypesTests: XCTestCase {
         extension Foo {}
         """
 
-        testFormatting(for: input, output, rule: .markTypes, exclude: [.emptyExtension])
+        testFormatting(for: input, output, rule: .markTypes, exclude: [.emptyExtensions])
     }
 
     func testUpdatesExtensionMarkToCorrectMark() {
@@ -181,7 +181,7 @@ class MarkTypesTests: XCTestCase {
         extension Foo {}
         """
 
-        testFormatting(for: input, output, rule: .markTypes, exclude: [.emptyExtension])
+        testFormatting(for: input, output, rule: .markTypes, exclude: [.emptyExtensions])
     }
 
     func testAddsMarkCommentForExtensionWithMultipleConformances() {
@@ -197,7 +197,7 @@ class MarkTypesTests: XCTestCase {
         extension Foo {}
         """
 
-        testFormatting(for: input, output, rule: .markTypes, exclude: [.emptyExtension])
+        testFormatting(for: input, output, rule: .markTypes, exclude: [.emptyExtensions])
     }
 
     func testUpdatesMarkCommentWithCorrectConformances() {
@@ -215,7 +215,7 @@ class MarkTypesTests: XCTestCase {
         extension Foo {}
         """
 
-        testFormatting(for: input, output, rule: .markTypes, exclude: [.emptyExtension])
+        testFormatting(for: input, output, rule: .markTypes, exclude: [.emptyExtensions])
     }
 
     func testCustomExtensionMarkComment() {
@@ -285,7 +285,7 @@ class MarkTypesTests: XCTestCase {
         extension MyModule.Foo {}
         """
 
-        testFormatting(for: input, output, rule: .markTypes, exclude: [.emptyExtension])
+        testFormatting(for: input, output, rule: .markTypes, exclude: [.emptyExtensions])
     }
 
     func testWhereClauseConformanceWithExactConstraint() {
@@ -301,7 +301,7 @@ class MarkTypesTests: XCTestCase {
         extension Array {}
         """
 
-        testFormatting(for: input, output, rule: .markTypes, exclude: [.emptyExtension])
+        testFormatting(for: input, output, rule: .markTypes, exclude: [.emptyExtensions])
     }
 
     func testWhereClauseConformanceWithConformanceConstraint() {
@@ -317,7 +317,7 @@ class MarkTypesTests: XCTestCase {
         extension Array {}
         """
 
-        testFormatting(for: input, output, rule: .markTypes, exclude: [.emptyExtension])
+        testFormatting(for: input, output, rule: .markTypes, exclude: [.emptyExtensions])
     }
 
     func testWhereClauseWithExactConstraint() {
@@ -326,7 +326,7 @@ class MarkTypesTests: XCTestCase {
         extension Array {}
         """
 
-        testFormatting(for: input, rule: .markTypes, exclude: [.emptyExtension])
+        testFormatting(for: input, rule: .markTypes, exclude: [.emptyExtensions])
     }
 
     func testWhereClauseWithConformanceConstraint() {
@@ -337,7 +337,7 @@ class MarkTypesTests: XCTestCase {
         extension Rules {}
         """
 
-        testFormatting(for: input, rule: .markTypes, exclude: [.emptyExtension])
+        testFormatting(for: input, rule: .markTypes, exclude: [.emptyExtensions])
     }
 
     func testPlacesMarkAfterImports() {
@@ -361,7 +361,7 @@ class MarkTypesTests: XCTestCase {
         extension Rules {}
         """
 
-        testFormatting(for: input, output, rule: .markTypes, exclude: [.emptyExtension])
+        testFormatting(for: input, output, rule: .markTypes, exclude: [.emptyExtensions])
     }
 
     func testPlacesMarkAfterFileHeader() {
@@ -385,7 +385,7 @@ class MarkTypesTests: XCTestCase {
         extension Rules {}
         """
 
-        testFormatting(for: input, output, rule: .markTypes, exclude: [.emptyExtension])
+        testFormatting(for: input, output, rule: .markTypes, exclude: [.emptyExtensions])
     }
 
     func testPlacesMarkAfterFileHeaderAndImports() {
@@ -415,7 +415,7 @@ class MarkTypesTests: XCTestCase {
         extension Rules {}
         """
 
-        testFormatting(for: input, output, rule: .markTypes, exclude: [.emptyExtension])
+        testFormatting(for: input, output, rule: .markTypes, exclude: [.emptyExtensions])
     }
 
     func testDoesNothingIfOnlyOneDeclaration() {

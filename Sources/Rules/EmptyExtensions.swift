@@ -1,5 +1,5 @@
 //
-//  EmptyExtension.swift
+//  EmptyExtensions.swift
 //  SwiftFormat
 //
 //  Created by Manny Lopez on 7/30/24.
@@ -10,7 +10,7 @@ import Foundation
 
 public extension FormatRule {
     /// Remove empty, non-conforming, extensions.
-    static let emptyExtension = FormatRule(
+    static let emptyExtensions = FormatRule(
         help: "Remove empty, non-conforming, extensions.",
         orderAfter: [.unusedPrivateDeclarations]
     ) { formatter in

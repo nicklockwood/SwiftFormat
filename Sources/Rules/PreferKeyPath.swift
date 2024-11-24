@@ -57,9 +57,9 @@ public extension FormatRule {
             }
             var replacementTokens: [Token]
             if nextIndex == lastIndex {
-                // TODO: add this when https://bugs.swift.org/browse/SR-12897 is fixed
-                // replacementTokens = tokenize("\\.self")
-                return
+                // https://bugs.swift.org/browse/SR-12897
+                guard formatter.options.swiftVersion >= "5.10" else { return }
+                replacementTokens = tokenize("\\.self")
             } else {
                 let tokens = formatter.tokens[nextIndex + 1 ... lastIndex]
                 guard tokens.allSatisfy({ $0.isSpace || $0.isIdentifier || $0.isOperator(".") }) else {

@@ -110,4 +110,18 @@ class PreferKeyPathTests: XCTestCase {
         let options = FormatOptions(swiftVersion: "5.2")
         testFormatting(for: input, rule: .preferKeyPath, options: options)
     }
+
+    func testSelfNotConvertedToKeyPathBefore5_10() {
+        // https://bugs.swift.org/browse/SR-12897
+        let input = "let foo = bar.compactMap { $0 }"
+        let options = FormatOptions(swiftVersion: "5.2")
+        testFormatting(for: input, rule: .preferKeyPath, options: options)
+    }
+
+    func testSelfConvertedToKeyPath() {
+        let input = "let foo = bar.compactMap { $0 }"
+        let output = "let foo = bar.compactMap(\\.self)"
+        let options = FormatOptions(swiftVersion: "5.10")
+        testFormatting(for: input, output, rule: .preferKeyPath, options: options)
+    }
 }

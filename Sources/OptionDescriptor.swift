@@ -1247,11 +1247,11 @@ struct _Descriptors {
         help: "Sort SwiftUI props: none, alphabetize, first-appearance-sort",
         keyPath: \.swiftUIPropertiesSortMode
     )
-    let equatableMacroInfo = OptionDescriptor(
+    let equatableMacro = OptionDescriptor(
         argumentName: "equatablemacro",
         displayName: "The name and module of an Equatable conformance macro",
         help: "For example: \"@Equatable,EquatableMacroLib\"",
-        keyPath: \.equatableMacroInfo
+        keyPath: \.equatableMacro
     )
     let preferFileMacro = OptionDescriptor(
         argumentName: "filemacro",

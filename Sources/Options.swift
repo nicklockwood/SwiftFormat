@@ -590,21 +590,34 @@ public enum SwiftUIPropertiesSortMode: String, CaseIterable {
     case firstAppearanceSort = "first-appearance-sort"
 }
 
-public struct EquatableMacroInfo: RawRepresentable {
-    /// The name of this macro, e.g. `@Equatable`
-    let macro: String
-    /// The name of the module defining this macro, e.g. `EquatableMacroLib`
-    let moduleName: String
+public enum EquatableMacro: Equatable, RawRepresentable, CustomStringConvertible {
+    /// No equatable macro
+    case none
+    /// The name and the module for the macro, e.g. `@Equatable,EquatableMacroLib`
+    case macro(String, module: String)
 
     public init?(rawValue: String) {
         let components = rawValue.components(separatedBy: ",")
-        guard components.count == 2 else { return nil }
-        macro = components[0]
-        moduleName = components[1]
+        if components.count == 2 {
+            self = .macro(components[0], module: components[1])
+        } else if rawValue == "none" {
+            self = .none
+        } else {
+            return nil
+        }
     }
 
     public var rawValue: String {
-        "\(macro),\(moduleName)"
+        switch self {
+        case .none:
+            return "none"
+        case let .macro(name, module: module):
+            return "\(name),\(module)"
+        }
+    }
+
+    public var description: String {
+        rawValue
     }
 }
 
@@ -718,7 +731,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var timeZone: FormatTimeZone
     public var nilInit: NilInitType
     public var preservedPrivateDeclarations: Set<String>
-    public var equatableMacroInfo: EquatableMacroInfo?
+    public var equatableMacro: EquatableMacro
     public var preferFileMacro: Bool
 
     /// Deprecated
@@ -846,7 +859,7 @@ public struct FormatOptions: CustomStringConvertible {
                 timeZone: FormatTimeZone = .system,
                 nilInit: NilInitType = .remove,
                 preservedPrivateDeclarations: Set<String> = [],
-                equatableMacroInfo: EquatableMacroInfo? = nil,
+                equatableMacro: EquatableMacro = .none,
                 preferFileMacro: Bool = true,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
@@ -964,7 +977,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.timeZone = timeZone
         self.nilInit = nilInit
         self.preservedPrivateDeclarations = preservedPrivateDeclarations
-        self.equatableMacroInfo = equatableMacroInfo
+        self.equatableMacro = equatableMacro
         self.preferFileMacro = preferFileMacro
         // Doesn't really belong here, but hard to put elsewhere
         self.fragment = fragment

@@ -199,7 +199,7 @@ final class RedundantEquatableTests: XCTestCase {
 
         let options = FormatOptions(
             typeAttributes: .prevLine,
-            equatableMacroInfo: EquatableMacroInfo(rawValue: "@Equatable,MyEquatableMacroLib")
+            equatableMacro: .macro("@Equatable", module: "MyEquatableMacroLib")
         )
 
         testFormatting(
@@ -248,7 +248,7 @@ final class RedundantEquatableTests: XCTestCase {
 
         let options = FormatOptions(
             typeAttributes: .prevLine,
-            equatableMacroInfo: EquatableMacroInfo(rawValue: "@Equatable,MyEquatableMacroLib")
+            equatableMacro: .macro("@Equatable", module: "MyEquatableMacroLib")
         )
 
         testFormatting(for: input, rule: .redundantEquatable, options: options)
@@ -286,7 +286,10 @@ final class RedundantEquatableTests: XCTestCase {
         }
         """
 
-        let options = FormatOptions(typeAttributes: .prevLine, equatableMacroInfo: EquatableMacroInfo(rawValue: "@Equatable,MyEquatableMacroLib"))
+        let options = FormatOptions(
+            typeAttributes: .prevLine,
+            equatableMacro: .macro("@Equatable", module: "MyEquatableMacroLib")
+        )
         testFormatting(for: input, [output], rules: [.redundantEquatable, .blankLinesAtEndOfScope, .wrapAttributes], options: options)
     }
 
@@ -321,7 +324,7 @@ final class RedundantEquatableTests: XCTestCase {
 
         let options = FormatOptions(
             typeAttributes: .prevLine,
-            equatableMacroInfo: EquatableMacroInfo(rawValue: "@Equatable,MyEquatableMacroLib")
+            equatableMacro: .macro("@Equatable", module: "MyEquatableMacroLib")
         )
 
         testFormatting(
@@ -367,7 +370,7 @@ final class RedundantEquatableTests: XCTestCase {
 
         let options = FormatOptions(
             typeAttributes: .prevLine,
-            equatableMacroInfo: EquatableMacroInfo(rawValue: "@Equatable,MyEquatableMacroLib")
+            equatableMacro: .macro("@Equatable", module: "MyEquatableMacroLib")
         )
 
         testFormatting(
@@ -510,7 +513,7 @@ final class RedundantEquatableTests: XCTestCase {
 
         let options = FormatOptions(
             typeAttributes: .prevLine,
-            equatableMacroInfo: EquatableMacroInfo(rawValue: "@Equatable,MyEquatableMacroLib")
+            equatableMacro: .macro("@Equatable", module: "MyEquatableMacroLib")
         )
 
         testFormatting(for: input, [output], rules: [.redundantEquatable, .emptyBraces, .wrapAttributes, .emptyExtensions, .consecutiveBlankLines], options: options)

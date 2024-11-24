@@ -324,22 +324,22 @@ extension Formatter {
                     return lhsName.localizedCompare(rhsName) == .orderedAscending
                 }
 
-                if let swiftUIPropertiesSortMode = options.swiftUIPropertiesSortMode,
-                   lhs.category.type == rhs.category.type,
-                   let lhsSwiftUIProperty = lhs.declaration.swiftUIPropertyWrapper,
-                   let rhsSwiftUIProperty = rhs.declaration.swiftUIPropertyWrapper
+                if lhs.category.type == rhs.category.type,
+                   let lhs = lhs.declaration.swiftUIPropertyWrapper,
+                   let rhs = rhs.declaration.swiftUIPropertyWrapper
                 {
-                    switch swiftUIPropertiesSortMode {
+                    switch options.swiftUIPropertiesSortMode {
+                    case .none:
+                        break
                     case .alphabetize:
-                        return lhsSwiftUIProperty.localizedCompare(rhsSwiftUIProperty) == .orderedAscending
+                        return lhs.localizedCompare(rhs) == .orderedAscending
                     case .firstAppearanceSort:
-                        return customDeclarationSortOrder.areInRelativeOrder(lhs: lhsSwiftUIProperty, rhs: rhsSwiftUIProperty)
+                        return customDeclarationSortOrder.areInRelativeOrder(lhs: lhs, rhs: rhs)
                     }
-                } else {
-                    // Respect the original declaration ordering when the categories and types are the same
-                    return lhsOriginalIndex < rhsOriginalIndex
                 }
 
+                // Respect the original declaration ordering when the categories and types are the same
+                return lhsOriginalIndex < rhsOriginalIndex
             })
             .map(\.element)
     }

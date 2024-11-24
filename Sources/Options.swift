@@ -582,10 +582,11 @@ public enum ClosingParenPosition: String, CaseIterable {
 }
 
 public enum SwiftUIPropertiesSortMode: String, CaseIterable {
-    /// Sorts all SwiftUI dynamic properties alphabetically
+    /// No sorting
+    case none
+    /// Sort alphabetically
     case alphabetize
-    /// Sorts SwiftUI dynamic properties by grouping all dynamic properties of the same type by using the first time each property appears
-    /// as the sort order.
+    /// Group all properties of the same type in order of the first time each property appears
     case firstAppearanceSort = "first-appearance-sort"
 }
 
@@ -692,7 +693,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var customTypeMarks: Set<String>
     public var blankLineAfterSubgroups: Bool
     public var alphabeticallySortedDeclarationPatterns: Set<String>
-    public var swiftUIPropertiesSortMode: SwiftUIPropertiesSortMode?
+    public var swiftUIPropertiesSortMode: SwiftUIPropertiesSortMode
     public var yodaSwap: YodaMode
     public var extensionACLPlacement: ExtensionACLPlacement
     public var propertyTypes: PropertyTypes
@@ -820,7 +821,7 @@ public struct FormatOptions: CustomStringConvertible {
                 customTypeMarks: Set<String> = [],
                 blankLineAfterSubgroups: Bool = true,
                 alphabeticallySortedDeclarationPatterns: Set<String> = [],
-                swiftUIPropertiesSortMode: SwiftUIPropertiesSortMode? = nil,
+                swiftUIPropertiesSortMode: SwiftUIPropertiesSortMode = .none,
                 yodaSwap: YodaMode = .always,
                 extensionACLPlacement: ExtensionACLPlacement = .onExtension,
                 propertyTypes: PropertyTypes = .inferLocalsOnly,
@@ -1080,16 +1081,5 @@ public struct Options {
 
     public func shouldSkipFile(_ inputURL: URL) -> Bool {
         fileOptions?.shouldSkipFile(inputURL) ?? false
-    }
-}
-
-extension Optional: RawRepresentable where Wrapped: RawRepresentable, Wrapped.RawValue == String {
-    public init?(rawValue: String) {
-        self = Wrapped(rawValue: rawValue)
-    }
-
-    public var rawValue: String {
-        guard let wrapped = self else { return "none" }
-        return wrapped.rawValue
     }
 }

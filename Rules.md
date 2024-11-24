@@ -19,7 +19,7 @@
 * [duplicateImports](#duplicateImports)
 * [elseOnSameLine](#elseOnSameLine)
 * [emptyBraces](#emptyBraces)
-* [emptyExtension](#emptyExtension)
+* [emptyExtensions](#emptyExtensions)
 * [enumNamespaces](#enumNamespaces)
 * [extensionAccessControl](#extensionAccessControl)
 * [fileHeader](#fileHeader)
@@ -831,7 +831,7 @@ Option | Description
 </details>
 <br/>
 
-## emptyExtension
+## emptyExtensions
 
 Remove empty, non-conforming, extensions.
 

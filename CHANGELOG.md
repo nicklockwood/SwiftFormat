@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.55.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.55.3) (2024-11-26)
+
+- Fixed bug where `sortTypealiases` rule could mangle generic types, or ones using the `any` keyword
+- The `preferKeyPaths` rule now only uses `\\.self` for Swift 6 and later (fix din't land yet in 5.10)
+- Added speculative fix for plugin `artifactbundle` not working on `ubuntu-latest`
+
 ## [0.55.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.55.2) (2024-11-24)
 
 - Fixed bug where `unusedArguments` failed to remove arguments that matched switch variable bindings

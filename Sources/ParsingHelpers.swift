@@ -2194,6 +2194,18 @@ extension Formatter {
 
         guard !andTokenIndices.isEmpty else { return nil }
 
+        // Quick fix for types we don't support yet
+        let firstRange = tokens[equalsIndex ..< andTokenIndices[0]]
+        guard !firstRange.contains(where: {
+            ["any", "[", "(", ":"].contains($0.string)
+        }), firstRange.filter({
+            $0 == .startOfScope("<")
+        }).count == firstRange.filter({
+            $0 == .endOfScope(">")
+        }).count else {
+            return nil
+        }
+
         return (equalsIndex, andTokenIndices, type.range.upperBound)
     }
 

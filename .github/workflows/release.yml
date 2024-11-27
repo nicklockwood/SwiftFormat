@@ -33,7 +33,7 @@ jobs:
       - name: Install cross-binutils for aarch64
         run: sudo apt install -y binutils-aarch64-linux-gnu
       - name: Build and export binaries
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v5
         with:
           context: .
           platforms: linux/amd64,linux/arm64

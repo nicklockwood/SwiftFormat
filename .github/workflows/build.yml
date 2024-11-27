@@ -36,7 +36,7 @@ jobs:
           cd ../../../../
           xcrun llvm-cov export -format="lcov" -instr-profile $pathCoverage Build/Build/Products/Debug/SwiftFormat.framework/SwiftFormat > info.lcov
       - name: Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v4
         with:
           # the token is optional for a public repo, but including it anyway
           token: a47579fa-9a2a-4c48-b557-aa725c6b5f92

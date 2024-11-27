@@ -83,10 +83,11 @@ This is relevant only to maintainers:
 * Select SwiftFormat for Xcode and run Product > Archive
 * Notarize and export built app
 * Tag commit and push to main
-* Run Build for Linux & Build for Windows and download binaries
-* Unzip Linux binary and mark as executable with chmod +x, then rezip
-* Unzip Windows msi zips and rename
-* Create a release
-* Attach all binaries
-* Create and Publish Docker image
 * pod trunk push --allow-warnings
+* Run Build for Windows and download binaries
+* Unzip Windows msi zips and rename
+* Publish a new release
+* Download swiftformat_linux.zip from the Build Release Artifacts action
+* Zip the macOS swiftformat build
+* Attach all binaries to release
+* Create and Publish Docker image

@@ -76,7 +76,21 @@ public extension FormatRule {
 
             // Sort each element by type name
             var sortedElements = parsedElements.sorted(by: { lhsElement, rhsElement in
-                lhsElement.type.lexicographicallyPrecedes(rhsElement.type)
+                // Exclude the any keyword if present when comparing types.
+                // Otherwise, all `any` types will be sorted to the end of the list.
+                // (lowercase letters come after uppercase letters in this sort order).
+                var lhsType = lhsElement.type
+                var rhsType = rhsElement.type
+
+                if lhsType.hasPrefix("any") {
+                    lhsType = String(lhsType.dropFirst(3))
+                }
+
+                if rhsType.hasPrefix("any") {
+                    rhsType = String(rhsType.dropFirst(3))
+                }
+
+                return lhsType.lexicographicallyPrecedes(rhsType)
             })
 
             // Don't modify the file if the typealias is already sorted

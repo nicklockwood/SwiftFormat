@@ -12,7 +12,9 @@ jobs:
       - name: Set Version Number
         run: echo "Using version number $GITHUB_REF_NAME" && sed -i '' "s/let swiftFormatVersion = \"[^\"]*\"/let swiftFormatVersion = \"$GITHUB_REF_NAME\"/" Sources/SwiftFormat.swift
       - name: Build macOS binary
-        run: swift build -c release --arch arm64 --arch x86_64
+        run: swift build -c release --arch arm64 --arch x86_64 -Xswiftc -Osize
+      - name: Strip macOS binary  
+        run: strip -rSTx .build/apple/Products/Release/swiftformat
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:

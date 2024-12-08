@@ -56,6 +56,7 @@ let ruleRegistry: [String: FormatRule] = [
     "numberFormatting": .numberFormatting,
     "opaqueGenericParameters": .opaqueGenericParameters,
     "organizeDeclarations": .organizeDeclarations,
+    "preferCountWhere": .preferCountWhere,
     "preferForLoop": .preferForLoop,
     "preferKeyPath": .preferKeyPath,
     "privateStateVariables": .privateStateVariables,

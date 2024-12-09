@@ -35,6 +35,9 @@ class EmptyExtensionsTests: XCTestCase {
     func testDoNotRemoveEmptyConformingExtension() {
         let input = """
         extension String: Equatable {}
+        extension Foo: @unchecked Sendable {}
+        extension Bar: @retroactive @unchecked Sendable {}
+        extension Module.Bar: @retroactive @unchecked Swift.Sendable {}
         """
         testFormatting(for: input, rule: .emptyExtensions)
     }

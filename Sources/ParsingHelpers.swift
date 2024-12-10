@@ -1271,8 +1271,10 @@ extension Formatter {
     ///  - `some ...`
     ///  - `borrowing ...`
     ///  - `consuming ...`
+    ///  - `sending ...`
     ///  - `@escaping ...`
     ///  - `@unchecked ...`
+    ///  - `@retroactive ...`
     ///  - `~...`
     ///  - `(type).(type)`
     ///  - `(type) & (type)`
@@ -1401,9 +1403,9 @@ extension Formatter {
             return (name: tokens[typeRange].stringExcludingLinebreaks, range: typeRange)
         }
 
-        // Parse types of the form `any ...`, `some ...`, `borrowing ...`, `consuming ...`,
-        // `@unchecked ...`, `@escaping ...`, `~...`,
-        let typePrefixes = Set(["any", "some", "borrowing", "consuming", "@unchecked", "@escaping", "~"])
+        // Parse types of the form `any ...`, `some ...`, `borrowing ...`, `consuming ...`, `sending ...`,
+        // `@unchecked ...`, `@escaping ...`, `~...`, `@retroactive ...`,
+        let typePrefixes = Set(["any", "some", "borrowing", "consuming", "sending", "@unchecked", "@escaping", "~", "@retroactive"])
         if typePrefixes.contains(startToken.string),
            let nextToken = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfTypeIndex),
            let followingType = parseType(at: nextToken)

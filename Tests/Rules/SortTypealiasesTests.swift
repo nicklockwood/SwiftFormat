@@ -92,6 +92,46 @@ class SortTypealiasesTests: XCTestCase {
         testFormatting(for: input, output, rule: .sortTypealiases)
     }
 
+    func testSortWrappedMultilineTypealiasWithAny() {
+        let input = """
+        typealias Dependencies
+            = any FooProviding
+            & any BarProviding
+            & any BaazProviding
+            & any QuuxProviding
+        """
+
+        let output = """
+        typealias Dependencies
+            = any BaazProviding
+            & any BarProviding
+            & any FooProviding
+            & any QuuxProviding
+        """
+
+        testFormatting(for: input, output, rule: .sortTypealiases)
+    }
+
+    func testSortWrappedMultilineTypealiasWithMixedAny() {
+        let input = """
+        typealias Dependencies
+            = any FooProviding
+            & BarProviding
+            & any BaazProviding
+            & QuuxProviding
+        """
+
+        let output = """
+        typealias Dependencies
+            = any BaazProviding
+            & BarProviding
+            & any FooProviding
+            & QuuxProviding
+        """
+
+        testFormatting(for: input, output, rule: .sortTypealiases)
+    }
+
     func testSortWrappedMultilineTypealiasWithComments() {
         let input = """
         typealias Dependencies

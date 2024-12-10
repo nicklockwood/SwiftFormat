@@ -68,6 +68,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           path: downloaded_artifacts
+          pattern: swiftformat_*
       - name: Display structure of downloaded files
         run: ls -R downloaded_artifacts
       - name: Build artifact bundle

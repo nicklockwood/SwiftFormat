@@ -1276,6 +1276,7 @@ extension Formatter {
     ///  - `each ...`
     ///  - `@escaping ...`
     ///  - `@unchecked ...`
+    ///  - `@retroactive ...`
     ///  - `~...`
     ///  - `(type).(type)`
     ///  - `(type) & (type)`

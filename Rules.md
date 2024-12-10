@@ -37,6 +37,7 @@
 * [modifierOrder](#modifierOrder)
 * [numberFormatting](#numberFormatting)
 * [opaqueGenericParameters](#opaqueGenericParameters)
+* [preferCountWhere](#preferCountWhere)
 * [preferForLoop](#preferForLoop)
 * [preferKeyPath](#preferKeyPath)
 * [redundantBackticks](#redundantBackticks)
@@ -1650,6 +1651,32 @@ Without this declaration, only functions will be reordered, while properties wil
 +     public func d() {}
 +
  }
+```
+
+</details>
+<br/>
+
+## preferCountWhere
+
+Prefer `count(where:)` over `filter(_:).count`.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- planets.filter { !$0.moons.isEmpty }.count
++ planets.count(where: { !$0.moons.isEmpty })
+
+- planets.filter { planet in
+-     planet.moons.filter { moon in
+-         moon.hasAtmosphere
+-     }.count > 1
+- }.count
++ planets.count(where: { planet in
++     planet.moons.count(where: { moon in
++         moon.hasAtmosphere
++     }) > 1
++ })
 ```
 
 </details>

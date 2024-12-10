@@ -1032,9 +1032,16 @@ extension Formatter {
         case .startOfScope where token.isStringDelimiter && !treatingCollectionKeysAsStart,
              .number where !treatingCollectionKeysAsStart, .identifier:
             if !treatingCollectionKeysAsStart,
-               let prevToken = last(.nonSpaceOrCommentOrLinebreak, before: i), [
+               let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: i),
+               case let prevToken = tokens[prevIndex], [
                    .delimiter(","), .startOfScope("["), .startOfScope("(")
-               ].contains(prevToken)
+               ].contains(prevToken) || (
+                   [
+                       .operator("?", .postfix), .operator("!", .postfix),
+                   ].contains(prevToken) && [
+                       .keyword("try"), .keyword("as"),
+                   ].contains(last(.nonSpaceOrComment, before: prevIndex) ?? .space(""))
+               )
             {
                 return false
             }

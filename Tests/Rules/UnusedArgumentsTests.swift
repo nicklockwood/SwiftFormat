@@ -1262,4 +1262,26 @@ class UnusedArgumentsTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .unusedArguments)
     }
+
+    func testShadowedArgumentNameInGuard() {
+        let input = """
+        func getTableInfo(forTable table: String) {
+            guard let table = try? db.schema.objectDefinitions(name: table, type: .table).first else { return nil }
+            print(table)
+        }
+        """
+
+        testFormatting(for: input, rule: .unusedArguments, exclude: [.wrapConditionalBodies])
+    }
+
+    func testShadowedArgumentNameInDoBlock() {
+        let input = """
+        func mapToResponse(_ jsonData: Data) -> Response {
+            let jsonData = try! JSONSerialization.jsonObject(with: jsonData, options: []) as! [String: AnyObject]
+            return Response(jsonData)
+        }
+        """
+
+        testFormatting(for: input, rule: .unusedArguments)
+    }
 }

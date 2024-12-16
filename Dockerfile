@@ -14,7 +14,7 @@ RUN --mount=type=cache,target=/workspace/.build,id=build-$TARGETPLATFORM \
 	cp /workspace/.build/release/swiftformat /workspace
 
 # https://github.com/nicklockwood/SwiftFormat/issues/1930
-FROM busybox:stable AS runner
+FROM scratch AS runner
 COPY --from=builder /workspace/swiftformat /usr/bin/swiftformat
 ENTRYPOINT [ "/usr/bin/swiftformat" ]
 CMD ["."]

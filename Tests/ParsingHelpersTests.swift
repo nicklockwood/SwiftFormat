@@ -100,6 +100,11 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertFalse(formatter.isStartOfClosure(at: 11))
     }
 
+    func testIfTryAndCallBracesNotTreatedAsClosure() {
+        let formatter = Formatter(tokenize("if try true && explode() {}"))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 12))
+    }
+
     func testGuardElseBracesNotTreatedAsClosure() {
         let formatter = Formatter(tokenize("guard foo else {}"))
         XCTAssertFalse(formatter.isStartOfClosure(at: 6))
@@ -222,6 +227,23 @@ class ParsingHelpersTests: XCTestCase {
     func testThrowingFunctionWithWhereClauseBracesNotTreatedAsClosure() {
         let formatter = Formatter(tokenize("func foo<U, V>() throws where T == Result<U, V> {}"))
         XCTAssertFalse(formatter.isStartOfClosure(at: 28))
+    }
+
+    func testClosureInForInWhereClauseNotTreatedAsClosure() {
+        let formatter = Formatter(tokenize("for foo in foos where foo.method() { print(foo) }"))
+        XCTAssertFalse(formatter.isStartOfClosure(at: 16))
+    }
+
+    func testClosureInCaseWhereClause() {
+        let formatter = Formatter(tokenize("""
+        switch foo {
+            case .bar
+            where testValues.map(String.init).compactMap { $0 }
+            .contains(baz):
+                continue
+        }
+        """))
+        XCTAssertTrue(formatter.isStartOfClosure(at: 26))
     }
 
     func testInitBracesNotTreatedAsClosure() {

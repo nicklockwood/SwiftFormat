@@ -716,8 +716,15 @@ extension Formatter {
     /// If the token at the specified index is part of a conditional statement, returns the index of the first
     /// token in the statement (e.g. `if`, `guard`, `while`, etc.), otherwise returns nil
     func startOfConditionalStatement(at i: Int, excluding: Set<String> = []) -> Int? {
-        guard var index = indexOfLastSignificantKeyword(at: i, excluding: excluding.union(["else", "where"])) else {
+        guard var index = indexOfLastSignificantKeyword(at: i, excluding: excluding.union(["else"])) else {
             return nil
+        }
+
+        if tokens[index] == .keyword("where") {
+            if self.index(of: .endOfScope("case"), before: index) != nil {
+                return nil
+            }
+            index = indexOfLastSignificantKeyword(at: index, excluding: ["where"]) ?? index
         }
 
         if tokens[index] == .keyword("case"), let i = self.index(
@@ -744,8 +751,10 @@ extension Formatter {
             default:
                 return nil
             }
-        case "if", "guard", "while", "for", "case", "switch":
+        case "if", "guard", "while", "for", "case":
             return index
+        case "switch":
+            return next(.startOfScope, after: i) == .startOfScope(":") ? nil : index
         default:
             return nil
         }

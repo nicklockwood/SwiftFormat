@@ -1556,7 +1556,7 @@ Default value for `--typeorder` when using `--organizationmode visibility`:
 `nestedType, staticProperty, staticPropertyWithBody, classPropertyWithBody, overriddenProperty, swiftUIPropertyWrapper, instanceProperty, instancePropertyWithBody, swiftUIProperty, swiftUIMethod, overriddenMethod, staticMethod, classMethod, instanceMethod`
 
 Default value for `--typeorder` when using `--organizationmode type`:
-`beforeMarks, nestedType, staticProperty, staticPropertyWithBody, classPropertyWithBody, overriddenProperty, swiftUIPropertyWrapper, instanceProperty, instancePropertyWithBody, instanceLifecycle, swiftUIProperty, swiftUIMethod, overriddenMethod, staticMethod, classMethod, instanceMethod`
+`beforeMarks, nestedType, staticProperty, staticPropertyWithBody, classPropertyWithBody, overriddenProperty, swiftUIPropertyWrapper, instanceProperty, computedProperty, instanceLifecycle, swiftUIProperty, swiftUIMethod, overriddenMethod, staticMethod, classMethod, instanceMethod`
 
 **NOTE:** The follow declaration types must be included in either `--typeorder` or `--visibilityorder`:
 `beforeMarks, nestedType, instanceLifecycle, instanceProperty, instanceMethod`

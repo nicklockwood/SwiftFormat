@@ -427,6 +427,7 @@ enum DeclarationType: String, CaseIterable {
     case swiftUIPropertyWrapper
     case instanceProperty
     case instancePropertyWithBody
+    case computedProperty
     case instanceLifecycle
     case swiftUIProperty
     case swiftUIMethod
@@ -462,6 +463,8 @@ enum DeclarationType: String, CaseIterable {
         case .instanceProperty:
             return "Properties"
         case .instancePropertyWithBody:
+            return "Properties with Bodies"
+        case .computedProperty:
             return "Computed Properties"
         case .staticMethod:
             return "Static Functions"
@@ -485,13 +488,42 @@ enum DeclarationType: String, CaseIterable {
     static func defaultOrdering(for mode: DeclarationOrganizationMode) -> [DeclarationType] {
         switch mode {
         case .type:
-            return allCases
+            return [
+                .beforeMarks,
+                .nestedType,
+                .staticProperty,
+                .staticPropertyWithBody,
+                .classPropertyWithBody,
+                .overriddenProperty,
+                .swiftUIPropertyWrapper,
+                .instanceProperty,
+                .computedProperty,
+                .instanceLifecycle,
+                .swiftUIProperty,
+                .swiftUIMethod,
+                .overriddenMethod,
+                .staticMethod,
+                .classMethod,
+                .instanceMethod,
+            ]
+
         case .visibility:
-            return allCases.filter { type in
-                // Exclude beforeMarks and instanceLifecycle, since by default
-                // these are instead treated as top-level categories
-                type != .beforeMarks && type != .instanceLifecycle
-            }
+            return [
+                nestedType,
+                staticProperty,
+                staticPropertyWithBody,
+                classPropertyWithBody,
+                overriddenProperty,
+                swiftUIPropertyWrapper,
+                instanceProperty,
+                instancePropertyWithBody,
+                swiftUIProperty,
+                swiftUIMethod,
+                overriddenMethod,
+                staticMethod,
+                classMethod,
+                instanceMethod,
+            ]
         }
     }
 }
@@ -549,10 +581,14 @@ extension Declaration {
                 before: declarationTypeTokenIndex
             ) != nil
 
-            let isDeclarationWithBody = declarationParser.startOfPropertyBody(
+            let isPropertyWithBody = declarationParser.startOfPropertyBody(
                 at: declarationTypeTokenIndex,
                 endOfPropertyIndex: declarationParser.tokens.count
             ) != nil
+
+            // A property with a body is either a computed property,
+            // or a stored property with a willSet or didSet.
+            let isComputedProperty = isPropertyWithBody && !isStoredProperty
 
             let isViewDeclaration: Bool = {
                 guard let someKeywordIndex = declarationParser.index(
@@ -575,7 +611,7 @@ extension Declaration {
                 if isOverriddenDeclaration, availableTypes.contains(.overriddenProperty) {
                     return .overriddenProperty
                 }
-                if isStaticDeclaration, isDeclarationWithBody, availableTypes.contains(.staticPropertyWithBody) {
+                if isStaticDeclaration, isPropertyWithBody, availableTypes.contains(.staticPropertyWithBody) {
                     return .staticPropertyWithBody
                 }
                 if isStaticDeclaration, availableTypes.contains(.staticProperty) {
@@ -590,10 +626,13 @@ extension Declaration {
                 if isViewDeclaration, availableTypes.contains(.swiftUIProperty) {
                     return .swiftUIProperty
                 }
-                if !isDeclarationWithBody, isSwiftUIPropertyWrapper, availableTypes.contains(.swiftUIPropertyWrapper) {
+                if !isPropertyWithBody, isSwiftUIPropertyWrapper, availableTypes.contains(.swiftUIPropertyWrapper) {
                     return .swiftUIPropertyWrapper
                 }
-                if isDeclarationWithBody, availableTypes.contains(.instancePropertyWithBody) {
+                if isComputedProperty, availableTypes.contains(.computedProperty) {
+                    return .computedProperty
+                }
+                if isPropertyWithBody, availableTypes.contains(.instancePropertyWithBody) {
                     return .instancePropertyWithBody
                 }
 

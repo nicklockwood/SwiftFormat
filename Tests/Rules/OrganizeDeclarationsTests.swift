@@ -1214,14 +1214,14 @@ class OrganizeDeclarationsTests: XCTestCase {
                 "closure body"
             }()
 
+            var d2: CGFloat = 3.141592653589 {
+                didSet {}
+            }
+
             // MARK: Computed Properties
 
             var d1: CGFloat {
                 3.141592653589
-            }
-
-            var d2: CGFloat = 3.141592653589 {
-                didSet {}
             }
 
             // MARK: Lifecycle

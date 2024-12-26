@@ -157,6 +157,29 @@ enum Declaration: Hashable {
         })
         return allModifiers
     }
+
+    /// Whether or not this declaration represents a stored property
+    var isStoredProperty: Bool {
+        guard keyword == "let" || keyword == "var" else { return false }
+
+        // If this property has a body, then it's a stored property
+        // if and only if the declaration body has a `didSet` or `willSet` keyword,
+        // based on the grammar for a variable declaration:
+        // https://docs.swift.org/swift-book/ReferenceManual/Declarations.html#grammar_variable-declaration
+        let formatter = Formatter(tokens)
+        if let keywordIndex = formatter.index(of: .keyword(keyword), after: -1),
+           let startOfPropertyBody = formatter.startOfPropertyBody(
+               at: keywordIndex,
+               endOfPropertyIndex: formatter.tokens.count
+           ),
+           let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: startOfPropertyBody)
+        {
+            return [.identifier("willSet"), .identifier("didSet")].contains(nextToken)
+        }
+
+        // Otherwise, if the property doesn't have a body, then it must not be a computed property.
+        return true
+    }
 }
 
 extension Formatter {
@@ -399,6 +422,7 @@ enum DeclarationType: String, CaseIterable {
     case swiftUIPropertyWrapper
     case instanceProperty
     case instancePropertyWithBody
+    case computedProperty
     case instanceLifecycle
     case swiftUIProperty
     case swiftUIMethod
@@ -434,6 +458,8 @@ enum DeclarationType: String, CaseIterable {
         case .instanceProperty:
             return "Properties"
         case .instancePropertyWithBody:
+            return "Properties with Bodies"
+        case .computedProperty:
             return "Computed Properties"
         case .staticMethod:
             return "Static Functions"
@@ -457,13 +483,42 @@ enum DeclarationType: String, CaseIterable {
     static func defaultOrdering(for mode: DeclarationOrganizationMode) -> [DeclarationType] {
         switch mode {
         case .type:
-            return allCases
+            return [
+                .beforeMarks,
+                .nestedType,
+                .staticProperty,
+                .staticPropertyWithBody,
+                .classPropertyWithBody,
+                .overriddenProperty,
+                .swiftUIPropertyWrapper,
+                .instanceProperty,
+                .computedProperty,
+                .instanceLifecycle,
+                .swiftUIProperty,
+                .swiftUIMethod,
+                .overriddenMethod,
+                .staticMethod,
+                .classMethod,
+                .instanceMethod,
+            ]
+
         case .visibility:
-            return allCases.filter { type in
-                // Exclude beforeMarks and instanceLifecycle, since by default
-                // these are instead treated as top-level categories
-                type != .beforeMarks && type != .instanceLifecycle
-            }
+            return [
+                nestedType,
+                staticProperty,
+                staticPropertyWithBody,
+                classPropertyWithBody,
+                overriddenProperty,
+                swiftUIPropertyWrapper,
+                instanceProperty,
+                instancePropertyWithBody,
+                swiftUIProperty,
+                swiftUIMethod,
+                overriddenMethod,
+                staticMethod,
+                classMethod,
+                instanceMethod,
+            ]
         }
     }
 }
@@ -521,17 +576,14 @@ extension Declaration {
                 before: declarationTypeTokenIndex
             ) != nil
 
-            let isDeclarationWithBody: Bool = {
-                // If there is a code block at the end of the declaration that is _not_ a closure,
-                // then this declaration has a body.
-                if let lastClosingBraceIndex = declarationParser.index(of: .endOfScope("}"), before: declarationParser.tokens.count),
-                   let lastOpeningBraceIndex = declarationParser.index(of: .startOfScope("{"), before: lastClosingBraceIndex),
-                   declarationTypeTokenIndex < lastOpeningBraceIndex,
-                   declarationTypeTokenIndex < lastClosingBraceIndex,
-                   !declarationParser.isStartOfClosure(at: lastOpeningBraceIndex) { return true }
+            let isPropertyWithBody = declarationParser.startOfPropertyBody(
+                at: declarationTypeTokenIndex,
+                endOfPropertyIndex: declarationParser.tokens.count
+            ) != nil
 
-                return false
-            }()
+            // A property with a body is either a computed property,
+            // or a stored property with a willSet or didSet.
+            let isComputedProperty = isPropertyWithBody && !isStoredProperty
 
             let isViewDeclaration: Bool = {
                 guard let someKeywordIndex = declarationParser.index(
@@ -554,7 +606,7 @@ extension Declaration {
                 if isOverriddenDeclaration, availableTypes.contains(.overriddenProperty) {
                     return .overriddenProperty
                 }
-                if isStaticDeclaration, isDeclarationWithBody, availableTypes.contains(.staticPropertyWithBody) {
+                if isStaticDeclaration, isPropertyWithBody, availableTypes.contains(.staticPropertyWithBody) {
                     return .staticPropertyWithBody
                 }
                 if isStaticDeclaration, availableTypes.contains(.staticProperty) {
@@ -569,10 +621,13 @@ extension Declaration {
                 if isViewDeclaration, availableTypes.contains(.swiftUIProperty) {
                     return .swiftUIProperty
                 }
-                if !isDeclarationWithBody, isSwiftUIPropertyWrapper, availableTypes.contains(.swiftUIPropertyWrapper) {
+                if !isPropertyWithBody, isSwiftUIPropertyWrapper, availableTypes.contains(.swiftUIPropertyWrapper) {
                     return .swiftUIPropertyWrapper
                 }
-                if isDeclarationWithBody, availableTypes.contains(.instancePropertyWithBody) {
+                if isComputedProperty, availableTypes.contains(.computedProperty) {
+                    return .computedProperty
+                }
+                if isPropertyWithBody, availableTypes.contains(.instancePropertyWithBody) {
                     return .instancePropertyWithBody
                 }
 
@@ -647,6 +702,26 @@ extension Declaration {
             "@UIApplicationDelegateAdaptor",
             "@WKExtensionDelegateAdaptor",
         ]
+    }
+}
+
+private extension Formatter {
+    /// The open `{` for given property declaration's body, if present
+    func startOfPropertyBody(at introducerIndex: Int, endOfPropertyIndex: Int) -> Int? {
+        guard tokens[introducerIndex] == .keyword("let") || tokens[introducerIndex] == .keyword("var") else {
+            return nil
+        }
+
+        // If there is a code block at the end of the declaration that is _not_ a closure,
+        // then this declaration has a body.
+        guard let lastClosingBraceIndex = index(of: .endOfScope("}"), before: endOfPropertyIndex),
+              let lastOpeningBraceIndex = index(of: .startOfScope("{"), before: lastClosingBraceIndex),
+              introducerIndex < lastOpeningBraceIndex,
+              introducerIndex < lastClosingBraceIndex,
+              !isStartOfClosure(at: lastOpeningBraceIndex)
+        else { return nil }
+
+        return lastOpeningBraceIndex
     }
 }
 

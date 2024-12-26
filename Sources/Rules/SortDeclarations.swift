@@ -16,7 +16,7 @@ public extension FormatRule {
         // swiftformat:sort:end comments.
         """,
         options: ["sortedpatterns"],
-        sharedOptions: ["organizetypes"]
+        sharedOptions: ["organizetypes", "linebreaks"]
     ) { formatter in
         formatter.forEachToken(
             where: {
@@ -79,7 +79,7 @@ public extension FormatRule {
             }
 
             var declarations = Formatter(Array(formatter.tokens[rangeToSort]))
-                .parseDeclarations()
+                .parseDeclarationsV2()
                 .enumerated()
                 .sorted(by: { lhs, rhs -> Bool in
                     let (lhsIndex, lhsDeclaration) = lhs
@@ -109,11 +109,8 @@ public extension FormatRule {
                 if declaration.tokens.last?.isLinebreak == false,
                    nextDeclaration.tokens.first?.isLinebreak == false
                 {
-                    declarations[i + 1] = nextDeclaration.mapOpeningTokens { openTokens in
-                        let openFormatter = Formatter(openTokens)
-                        openFormatter.insertLinebreak(at: 0)
-                        return openFormatter.tokens
-                    }
+                    let declarationNeedingLinebreak = declarations[i + 1]
+                    declarationNeedingLinebreak.formatter.insertLinebreak(at: declarationNeedingLinebreak.range.lowerBound)
                 }
             }
 

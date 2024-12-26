@@ -14,9 +14,9 @@ public extension FormatRule {
         runOnceOnly: true,
         disabledByDefault: true,
         options: ["marktypes", "typemark", "markextensions", "extensionmark", "groupedextension"],
-        sharedOptions: ["lineaftermarks"]
+        sharedOptions: ["lineaftermarks", "linebreaks"]
     ) { formatter in
-        var declarations = formatter.parseDeclarations()
+        var declarations = formatter.parseDeclarationsV2()
 
         // Do nothing if there is only one top-level declaration in the file (excluding imports)
         let declarationsWithoutImports = declarations.filter { $0.keyword != "import" }
@@ -25,11 +25,9 @@ public extension FormatRule {
         }
 
         for (index, declaration) in declarations.enumerated() {
-            guard case let .type(kind, open, body, close, _) = declaration else { continue }
-
-            guard var typeName = declaration.name else {
-                continue
-            }
+            guard let typeDeclaration = declaration.asTypeDeclaration,
+                  let typeName = typeDeclaration.name
+            else { continue }
 
             let markMode: MarkMode
             let commentTemplate: String
@@ -87,149 +85,144 @@ public extension FormatRule {
             case .never:
                 continue
             case .ifNotEmpty:
-                guard !body.isEmpty else {
+                guard !typeDeclaration.body.isEmpty else {
                     continue
                 }
             }
 
-            declarations[index] = declarations[index].mapOpeningTokens { openingTokens -> [Token] in
-                var openingFormatter = Formatter(openingTokens)
-
-                guard let keywordIndex = openingFormatter.index(after: -1, where: {
-                    $0.string == declaration.keyword
-                }) else { return openingTokens }
-
-                // If this declaration is extension, check if it has any conformances
-                var conformanceNames: String?
-                if declaration.keyword == "extension" {
-                    var conformances = openingFormatter.parseConformancesOfType(atKeywordIndex: keywordIndex).map(\.conformance)
-
-                    if !conformances.isEmpty {
-                        conformanceNames = conformances.joined(separator: ", ")
-                    }
+            // If this declaration is extension, check if it has any conformances
+            var conformanceNames: String?
+            if declaration.keyword == "extension" {
+                let conformances = typeDeclaration.conformances.map(\.conformance)
+                if !conformances.isEmpty {
+                    conformanceNames = conformances.joined(separator: ", ")
                 }
+            }
 
-                // Build the types expected mark comment by replacing `%t`s with the type name
-                // and `%c`s with the list of conformances added in the extension (if applicable)
-                var markForType: String?
+            // Build the types expected mark comment by replacing `%t`s with the type name
+            // and `%c`s with the list of conformances added in the extension (if applicable)
+            var markForType: String?
 
-                if !commentTemplate.contains("%c") {
-                    markForType = commentTemplate.replacingOccurrences(of: "%t", with: typeName)
-                } else if commentTemplate.contains("%c"), let conformanceNames = conformanceNames {
-                    markForType = commentTemplate
-                        .replacingOccurrences(of: "%t", with: typeName)
-                        .replacingOccurrences(of: "%c", with: conformanceNames)
-                }
+            if !commentTemplate.contains("%c") {
+                markForType = commentTemplate.replacingOccurrences(of: "%t", with: typeName)
+            } else if commentTemplate.contains("%c"), let conformanceNames = conformanceNames {
+                markForType = commentTemplate
+                    .replacingOccurrences(of: "%t", with: typeName)
+                    .replacingOccurrences(of: "%c", with: conformanceNames)
+            }
 
-                // If this is an extension without any conformances, but contains exactly
-                // one body declaration (a type), we can mark the extension with the nested type's name
-                // (e.g. `// MARK: Foo.Bar`).
-                if declaration.keyword == "extension",
-                   conformanceNames == nil
+            // If this is an extension without any conformances, but contains exactly
+            // one body declaration (a type), we can mark the extension with the nested type's name
+            // (e.g. `// MARK: Foo.Bar`).
+            if declaration.keyword == "extension",
+               conformanceNames == nil
+            {
+                // Find all of the nested extensions, so we can form the fully qualified
+                // name of the inner-most type (e.g. `Foo.Bar.Baaz.Quux`).
+                var extensions = [declaration]
+
+                while let innerExtension = extensions.last,
+                      let extensionBody = innerExtension.body,
+                      extensionBody.count == 1,
+                      extensionBody[0].keyword == "extension"
                 {
-                    // Find all of the nested extensions, so we can form the fully qualified
-                    // name of the inner-most type (e.g. `Foo.Bar.Baaz.Quux`).
-                    var extensions = [declaration]
+                    extensions.append(extensionBody[0])
+                }
 
-                    while let innerExtension = extensions.last,
-                          let extensionBody = innerExtension.body,
-                          extensionBody.count == 1,
-                          extensionBody[0].keyword == "extension"
-                    {
-                        extensions.append(extensionBody[0])
+                let innermostExtension = extensions.last!
+                let extensionNames = extensions.compactMap(\.name).joined(separator: ".")
+
+                if let extensionBody = innermostExtension.body,
+                   extensionBody.count == 1,
+                   let nestedType = extensionBody.first,
+                   nestedType.definesType,
+                   let nestedTypeName = nestedType.name
+                {
+                    let fullyQualifiedName = "\(extensionNames).\(nestedTypeName)"
+
+                    if isGroupedExtension {
+                        markForType = "// \(formatter.options.groupedExtensionMarkComment)"
+                            .replacingOccurrences(of: "%c", with: fullyQualifiedName)
+                    } else {
+                        markForType = "// \(formatter.options.typeMarkComment)"
+                            .replacingOccurrences(of: "%t", with: fullyQualifiedName)
                     }
+                }
+            }
 
-                    let innermostExtension = extensions.last!
-                    let extensionNames = extensions.compactMap(\.name).joined(separator: ".")
+            guard let expectedComment = markForType else {
+                return
+            }
 
-                    if let extensionBody = innermostExtension.body,
-                       extensionBody.count == 1,
-                       let nestedType = extensionBody.first,
-                       nestedType.definesType,
-                       let nestedTypeName = nestedType.name
-                    {
-                        let fullyQualifiedName = "\(extensionNames).\(nestedTypeName)"
+            // When inserting a mark before the first declaration,
+            // we should make sure we place it _after_ the file header.
+            var markInsertIndex = typeDeclaration.range.lowerBound
+            if index == 0, let headerCommentRange = formatter.headerCommentTokenRange() {
+                markInsertIndex = headerCommentRange.upperBound
+            }
 
-                        if isGroupedExtension {
-                            markForType = "// \(formatter.options.groupedExtensionMarkComment)"
-                                .replacingOccurrences(of: "%c", with: fullyQualifiedName)
-                        } else {
-                            markForType = "// \(formatter.options.typeMarkComment)"
-                                .replacingOccurrences(of: "%t", with: fullyQualifiedName)
+            // Remove any unexpected comments that have the same prefix as the comment template.
+            var commentPrefixes = Set(["// MARK: ", "// MARK: - "])
+
+            if let typeNameSymbolIndex = commentTemplate.firstIndex(of: "%") {
+                commentPrefixes.insert(String(commentTemplate.prefix(upTo: typeNameSymbolIndex)))
+            }
+
+            var alreadyHasExpectedComment = false
+
+            for index in markInsertIndex ..< typeDeclaration.keywordIndex {
+                guard formatter.tokens[index] == .startOfScope("//") else { continue }
+
+                let startOfLine = formatter.startOfLine(at: index)
+                let endOfLine = formatter.endOfLine(at: index)
+
+                let startOfComment = index
+                var endOfComment = endOfLine
+                if formatter.tokens[endOfLine].isLinebreak {
+                    endOfComment -= 1
+                }
+
+                let comment = formatter.tokens[startOfComment ... endOfComment].string
+
+                // If we find the expected comment in the expected place,
+                // we don't have to do anything.
+                if comment == expectedComment, startOfComment == markInsertIndex {
+                    alreadyHasExpectedComment = true
+                    continue
+                }
+
+                for commentPrefix in commentPrefixes {
+                    if comment.lowercased().hasPrefix(commentPrefix.lowercased()) {
+                        // If we found a line that matched the comment prefix,
+                        // remove it and any linebreak immediately after it.
+                        if formatter.token(at: endOfLine + 1)?.isLinebreak == true {
+                            formatter.removeToken(at: endOfLine + 1)
                         }
+
+                        formatter.removeTokens(in: startOfLine ... endOfLine)
+                        break
                     }
                 }
+            }
 
-                guard let expectedComment = markForType else {
-                    return openingFormatter.tokens
-                }
-
-                // Remove any lines that have the same prefix as the comment template
-                //  - We can't really do exact matches here like we do for `organizeDeclaration`
-                //    category separators, because there's a much wider variety of options
-                //    that a user could use for the type name (orphaned renames, etc.)
-                var commentPrefixes = Set(["// MARK: ", "// MARK: - "])
-
-                if let typeNameSymbolIndex = commentTemplate.firstIndex(of: "%") {
-                    commentPrefixes.insert(String(commentTemplate.prefix(upTo: typeNameSymbolIndex)))
-                }
-
-                openingFormatter.forEach(.startOfScope("//")) { index, _ in
-                    let startOfLine = openingFormatter.startOfLine(at: index)
-                    let endOfLine = openingFormatter.endOfLine(at: index)
-
-                    let commentLine = sourceCode(for: Array(openingFormatter.tokens[index ... endOfLine]))
-
-                    for commentPrefix in commentPrefixes {
-                        if commentLine.lowercased().hasPrefix(commentPrefix.lowercased()) {
-                            // If we found a line that matched the comment prefix,
-                            // remove it and any linebreak immediately after it.
-                            if openingFormatter.token(at: endOfLine + 1)?.isLinebreak == true {
-                                openingFormatter.removeToken(at: endOfLine + 1)
-                            }
-
-                            openingFormatter.removeTokens(in: startOfLine ... endOfLine)
-                            break
-                        }
-                    }
-                }
-
-                // When inserting a mark before the first declaration,
-                // we should make sure we place it _after_ the file header.
-                var markInsertIndex = 0
-                if index == 0 {
-                    // Search for the end of the file header, which ends when we hit a
-                    // blank line or any non-space/comment/lintbreak
-                    var endOfFileHeader = 0
-
-                    while openingFormatter.token(at: endOfFileHeader)?.isSpaceOrCommentOrLinebreak == true {
-                        endOfFileHeader += 1
-
-                        if openingFormatter.token(at: endOfFileHeader)?.isLinebreak == true,
-                           openingFormatter.next(.nonSpace, after: endOfFileHeader)?.isLinebreak == true
-                        {
-                            markInsertIndex = endOfFileHeader + 2
-                            break
-                        }
-                    }
-                }
-
+            if !alreadyHasExpectedComment {
                 // Insert the expected comment at the start of the declaration
-                let endMarkDeclaration = formatter.options.lineAfterMarks ? "\n\n" : "\n"
-                openingFormatter.insert(tokenize("\(expectedComment)\(endMarkDeclaration)"), at: markInsertIndex)
+                formatter.insertLinebreak(at: markInsertIndex)
 
-                // If the previous declaration doesn't end in a blank line,
-                // add an additional linebreak to balance the mark.
-                if index != 0 {
-                    declarations[index - 1] = declarations[index - 1].endingWithBlankLine()
+                if formatter.options.lineAfterMarks {
+                    formatter.insertLinebreak(at: markInsertIndex)
                 }
 
-                return openingFormatter.tokens
+                formatter.insert(tokenize(expectedComment), at: markInsertIndex)
+            }
+
+            // If the previous declaration doesn't end in a blank line,
+            // add an additional linebreak to balance the mark.
+            if index != 0 {
+                let previousDeclaration = declarations[index - 1]
+                previousDeclaration.addTrailingBlankLineIfNeeded()
             }
         }
-
-        let updatedTokens = declarations.flatMap(\.tokens)
-        formatter.replaceTokens(in: 0 ..< formatter.tokens.count, with: updatedTokens)
     } examples: {
         """
         ```diff

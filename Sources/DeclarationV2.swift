@@ -323,3 +323,45 @@ extension DeclarationV2 {
         formatter.removeDeclarationVisibility(visibilityKeyword, declarationKeywordIndex: keywordIndex)
     }
 }
+
+extension DeclarationV2 {
+    /// Ensures that this declaration ends with at least one trailing blank line,
+    /// by a blank like to the end of this declaration if not already present.
+    func addTrailingBlankLineIfNeeded() {
+        while tokens.numberOfTrailingLinebreaks() < 2 {
+            formatter.insertLinebreak(at: range.upperBound)
+        }
+    }
+
+    /// Ensures that this declaration doesn't end with a trailing blank line
+    /// by removing any trailing blank lines.
+    func removeTrailingBlankLinesIfPresent() {
+        while tokens.numberOfTrailingLinebreaks() > 1 {
+            guard let lastNewlineIndex = formatter.lastIndex(of: .linebreak, in: Range(range)) else { break }
+            formatter.removeTokens(in: lastNewlineIndex ..< range.upperBound)
+        }
+    }
+}
+
+extension RandomAccessCollection where Element == Token, Index == Int {
+    // The number of trailing newlines in this array of tokens,
+    // taking into account any spaces that may be between the linebreaks.
+    func numberOfTrailingLinebreaks() -> Int {
+        guard !isEmpty else { return 0 }
+
+        var numberOfTrailingLinebreaks = 0
+        var searchIndex = indices.last!
+
+        while searchIndex >= indices.first!,
+              self[searchIndex].isSpaceOrLinebreak
+        {
+            if self[searchIndex].isLinebreak {
+                numberOfTrailingLinebreaks += 1
+            }
+
+            searchIndex -= 1
+        }
+
+        return numberOfTrailingLinebreaks
+    }
+}

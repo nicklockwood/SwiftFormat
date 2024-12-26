@@ -995,28 +995,6 @@ extension Array where Element == Token {
 
         return parser.tokens
     }
-
-    // The number of trailing newlines in this array of tokens,
-    // taking into account any spaces that may be between the linebreaks.
-    func numberOfTrailingLinebreaks() -> Int {
-        let parser = Formatter(self)
-
-        var numberOfTrailingLinebreaks = 0
-        var searchIndex = parser.tokens.count - 1
-
-        while searchIndex > 0,
-              let token = parser.token(at: searchIndex),
-              token.isSpaceOrLinebreak
-        {
-            if token.isLinebreak {
-                numberOfTrailingLinebreaks += 1
-            }
-
-            searchIndex -= 1
-        }
-
-        return numberOfTrailingLinebreaks
-    }
 }
 
 extension Declaration {

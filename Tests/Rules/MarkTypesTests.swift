@@ -125,6 +125,30 @@ class MarkTypesTests: XCTestCase {
 
         testFormatting(
             for: input, output, rule: .markTypes,
+            options: FormatOptions(typeMarkComment: "TYPE DEFINITION: %t", fragment: true),
+            exclude: [.emptyExtensions]
+        )
+    }
+
+    func testCustomTypeMarkAfterFileHeader() {
+        let input = """
+        // MyFile.swift
+
+        struct Foo {}
+        extension Foo {}
+        """
+
+        let output = """
+        // MyFile.swift
+
+        // TYPE DEFINITION: Foo
+
+        struct Foo {}
+        extension Foo {}
+        """
+
+        testFormatting(
+            for: input, output, rule: .markTypes,
             options: FormatOptions(typeMarkComment: "TYPE DEFINITION: %t"),
             exclude: [.emptyExtensions]
         )
@@ -833,7 +857,6 @@ class MarkTypesTests: XCTestCase {
         let changes = try lint(input, rules: [.markTypes])
         XCTAssertEqual(changes, [
             .init(line: 1, rule: .markTypes, filePath: nil, isMove: false),
-            .init(line: 2, rule: .markTypes, filePath: nil, isMove: false),
         ])
     }
 

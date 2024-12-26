@@ -746,16 +746,9 @@ public extension Formatter {
         activeDeclarations.append(WeakDeclarationReference(declaration: declaration))
     }
 
-    /// Unregisters the given declaration and any children so it will no longer be notified of modifications.
+    /// Unregisters the given declaration so it will no longer be notified of modifications.
     internal func unregisterDeclaration(_ declaration: DeclarationV2) {
-        var declarationsToRemove = Set([declaration.identity])
-        declaration.body?.forEachRecursiveDeclaration { childDeclaration in
-            declarationsToRemove.insert(childDeclaration.identity)
-        }
-
-        activeDeclarations.removeAll(where: { declaration in
-            declarationsToRemove.contains(declaration.declaration?.identity)
-        })
+        activeDeclarations.removeAll(where: { $0.declaration === declaration })
     }
 }
 

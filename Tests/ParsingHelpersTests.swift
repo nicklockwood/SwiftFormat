@@ -1189,13 +1189,13 @@ class ParsingHelpersTests: XCTestCase {
         """
 
         let originalTokens = tokenize(input)
-        let declarations = Formatter(originalTokens).parseDeclarations()
+        let declarations = Formatter(originalTokens).parseDeclarationsV2()
 
         // Verify we didn't lose any tokens
         XCTAssertEqual(originalTokens, declarations.flatMap(\.tokens))
 
         XCTAssertEqual(
-            sourceCode(for: declarations[0].tokens),
+            declarations[0].tokens.string,
             """
             import CoreGraphics
 
@@ -1203,7 +1203,7 @@ class ParsingHelpersTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            sourceCode(for: declarations[1].tokens),
+            declarations[1].tokens.string,
             """
             import Foundation
 
@@ -1212,7 +1212,7 @@ class ParsingHelpersTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            sourceCode(for: declarations[2].tokens),
+            declarations[2].tokens.string,
             """
             let global = 10
 
@@ -1221,7 +1221,7 @@ class ParsingHelpersTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            sourceCode(for: declarations[3].tokens),
+            declarations[3].tokens.string,
             """
             @objc
             @available(iOS 13.0, *)
@@ -1233,7 +1233,7 @@ class ParsingHelpersTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            sourceCode(for: declarations[4].tokens),
+            declarations[4].tokens.string,
             """
             let anotherGlobal = "hello"
 
@@ -1242,7 +1242,7 @@ class ParsingHelpersTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            sourceCode(for: declarations[5].tokens),
+            declarations[5].tokens.string,
             """
             /// Doc comment
             /// (multiple lines)
@@ -1255,7 +1255,7 @@ class ParsingHelpersTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            sourceCode(for: declarations[6].tokens),
+            declarations[6].tokens.string,
             """
             protocol SomeProtocol {
                 var getter: String { get async throws }
@@ -1267,7 +1267,7 @@ class ParsingHelpersTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            sourceCode(for: declarations[6].body?[0].tokens),
+            declarations[6].body?[0].tokens.string,
             """
                 var getter: String { get async throws }
 
@@ -1275,7 +1275,7 @@ class ParsingHelpersTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            sourceCode(for: declarations[6].body?[1].tokens),
+            declarations[6].body?[1].tokens.string,
             """
                 func protocolMethod() -> Bool
 
@@ -1283,7 +1283,7 @@ class ParsingHelpersTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            sourceCode(for: declarations[7].tokens),
+            declarations[7].tokens.string,
             """
             class SomeClass {
 
@@ -1312,7 +1312,7 @@ class ParsingHelpersTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            sourceCode(for: declarations[7].body?[0].tokens),
+            declarations[7].body?[0].tokens.string,
             """
                 enum NestedEnum {
                     /// Doc comment
@@ -1325,7 +1325,7 @@ class ParsingHelpersTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            sourceCode(for: declarations[7].body?[0].body?[0].tokens),
+            declarations[7].body?[0].body?[0].tokens.string,
             """
                     /// Doc comment
                     case bar
@@ -1334,7 +1334,7 @@ class ParsingHelpersTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            sourceCode(for: declarations[7].body?[0].body?[1].tokens),
+            declarations[7].body?[0].body?[1].tokens.string,
             """
                     func test() {}
 
@@ -1342,7 +1342,7 @@ class ParsingHelpersTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            sourceCode(for: declarations[7].body?[1].tokens),
+            declarations[7].body?[1].tokens.string,
             """
                 /*
                  * Block comment
@@ -1356,7 +1356,7 @@ class ParsingHelpersTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            sourceCode(for: declarations[7].body?[2].tokens),
+            declarations[7].body?[2].tokens.string,
             """
                 @objc
                 private var computed: String {
@@ -1380,7 +1380,7 @@ class ParsingHelpersTests: XCTestCase {
         """
 
         let originalTokens = tokenize(input)
-        let declarations = Formatter(originalTokens).parseDeclarations()
+        let declarations = Formatter(originalTokens).parseDeclarationsV2()
 
         XCTAssert(declarations[0].keyword == "class")
         XCTAssert(declarations[1].keyword == "func")
@@ -1406,7 +1406,7 @@ class ParsingHelpersTests: XCTestCase {
         """
 
         let originalTokens = tokenize(input)
-        let declarations = Formatter(originalTokens).parseDeclarations()
+        let declarations = Formatter(originalTokens).parseDeclarationsV2()
 
         XCTAssert(declarations[0].keyword == "class")
         XCTAssert(declarations[0].body?[0].keyword == "init")
@@ -1425,10 +1425,10 @@ class ParsingHelpersTests: XCTestCase {
         """
 
         let originalTokens = tokenize(input)
-        let declarations = Formatter(originalTokens).parseDeclarations()
+        let declarations = Formatter(originalTokens).parseDeclarationsV2()
 
         XCTAssertEqual(
-            sourceCode(for: declarations[0].body?[0].tokens),
+            declarations[0].body?[0].tokens.string,
             """
                 var bar = "bar"
 
@@ -1436,7 +1436,7 @@ class ParsingHelpersTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            sourceCode(for: declarations[0].body?[0].tokens),
+            declarations[0].body?[0].tokens.string,
             """
                 var bar = "bar"
 
@@ -1444,7 +1444,7 @@ class ParsingHelpersTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            sourceCode(for: declarations[0].body?[1].tokens),
+            declarations[0].body?[1].tokens.string,
             """
                 /// Leading comment
                 public var baz = "baz" // Trailing comment
@@ -1453,7 +1453,7 @@ class ParsingHelpersTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            sourceCode(for: declarations[0].body?[2].tokens),
+            declarations[0].body?[2].tokens.string,
             """
                 var quux = "quux"
 
@@ -1470,10 +1470,10 @@ class ParsingHelpersTests: XCTestCase {
         """
 
         let originalTokens = tokenize(input)
-        let declarations = Formatter(originalTokens).parseDeclarations()
+        let declarations = Formatter(originalTokens).parseDeclarationsV2()
 
         XCTAssertEqual(
-            sourceCode(for: declarations[0].tokens),
+            declarations[0].tokens.string,
             """
             let `static` = NavigationBarType.static(nil, .none)
 
@@ -1481,7 +1481,7 @@ class ParsingHelpersTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            sourceCode(for: declarations[1].tokens),
+            declarations[1].tokens.string,
             """
             let foo = bar
 
@@ -1489,7 +1489,7 @@ class ParsingHelpersTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            sourceCode(for: declarations[2].tokens),
+            declarations[2].tokens.string,
             """
             let `static` = NavigationBarType.static
 
@@ -1497,7 +1497,7 @@ class ParsingHelpersTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            sourceCode(for: declarations[3].tokens),
+            declarations[3].tokens.string,
             """
             let bar = foo
             """
@@ -1514,7 +1514,7 @@ class ParsingHelpersTests: XCTestCase {
         """
 
         let originalTokens = tokenize(input)
-        let declarations = Formatter(originalTokens).parseDeclarations()
+        let declarations = Formatter(originalTokens).parseDeclarationsV2()
 
         XCTAssertNotNil(declarations[0].keyword, "#if")
         XCTAssertEqual(declarations[0].body?[0].keyword, "struct")
@@ -1533,7 +1533,7 @@ class ParsingHelpersTests: XCTestCase {
         """
 
         let originalTokens = tokenize(input)
-        let declarations = Formatter(originalTokens).parseDeclarations()
+        let declarations = Formatter(originalTokens).parseDeclarationsV2()
 
         XCTAssertNotNil(declarations[0].keyword, "#if")
         XCTAssertEqual(declarations[0].body?[0].keyword, "#if")
@@ -1563,7 +1563,7 @@ class ParsingHelpersTests: XCTestCase {
         """
 
         let originalTokens = tokenize(input)
-        let declarations = Formatter(originalTokens).parseDeclarations()
+        let declarations = Formatter(originalTokens).parseDeclarationsV2()
 
         XCTAssertEqual(declarations[0].keyword, "let")
         XCTAssertEqual(declarations[1].keyword, "#if")
@@ -1591,7 +1591,7 @@ class ParsingHelpersTests: XCTestCase {
         """
 
         let originalTokens = tokenize(input)
-        let declarations = Formatter(originalTokens).parseDeclarations()
+        let declarations = Formatter(originalTokens).parseDeclarationsV2()
 
         XCTAssertEqual(declarations[0].keyword, "import")
         XCTAssertEqual(declarations[1].keyword, "import")
@@ -1614,7 +1614,7 @@ class ParsingHelpersTests: XCTestCase {
         }
         """
         let tokens = tokenize(input)
-        _ = Formatter(tokens).parseDeclarations()
+        _ = Formatter(tokens).parseDeclarationsV2()
     }
 
     func testParseDeclarationRangesInType() {
@@ -1626,24 +1626,24 @@ class ParsingHelpersTests: XCTestCase {
         """
 
         let formatter = Formatter(tokenize(input))
-        let declarations = formatter.parseDeclarations()
+        let declarations = formatter.parseDeclarationsV2()
 
         XCTAssertEqual(declarations.count, 1)
-        XCTAssertEqual(declarations[0].originalRange, 0 ... 28)
+        XCTAssertEqual(declarations[0].range, 0 ... 28)
 
         XCTAssertEqual(declarations[0].body?.count, 2)
 
-        let barDeclarationRange = declarations[0].body![0].originalRange
+        let barDeclarationRange = declarations[0].body![0].range
         XCTAssertEqual(barDeclarationRange, 6 ... 16)
         XCTAssertEqual(
-            sourceCode(for: Array(formatter.tokens[barDeclarationRange])),
+            formatter.tokens[barDeclarationRange].string,
             "    let bar = \"bar\"\n"
         )
 
-        let baazDeclarationRange = declarations[0].body![1].originalRange
+        let baazDeclarationRange = declarations[0].body![1].range
         XCTAssertEqual(baazDeclarationRange, 17 ... 27)
         XCTAssertEqual(
-            sourceCode(for: Array(formatter.tokens[baazDeclarationRange])),
+            formatter.tokens[baazDeclarationRange].string,
             "    let baaz = \"baaz\"\n"
         )
     }
@@ -1657,25 +1657,25 @@ class ParsingHelpersTests: XCTestCase {
         """
 
         let formatter = Formatter(tokenize(input))
-        let declarations = formatter.parseDeclarations()
+        let declarations = formatter.parseDeclarationsV2()
 
         XCTAssertEqual(declarations.count, 1)
-        XCTAssertEqual(declarations[0].originalRange, 0 ... 24)
+        XCTAssertEqual(declarations[0].range, 0 ... 24)
         XCTAssertEqual(declarations[0].tokens.map(\.string).joined(), input)
 
         XCTAssertEqual(declarations[0].body?.count, 2)
 
-        let barDeclarationRange = declarations[0].body![0].originalRange
+        let barDeclarationRange = declarations[0].body![0].range
         XCTAssertEqual(barDeclarationRange, 4 ... 13)
         XCTAssertEqual(
-            sourceCode(for: Array(formatter.tokens[barDeclarationRange])),
+            formatter.tokens[barDeclarationRange].string,
             "let bar = \"bar\"\n"
         )
 
-        let baazDeclarationRange = declarations[0].body![1].originalRange
+        let baazDeclarationRange = declarations[0].body![1].range
         XCTAssertEqual(baazDeclarationRange, 14 ... 23)
         XCTAssertEqual(
-            sourceCode(for: Array(formatter.tokens[baazDeclarationRange])),
+            formatter.tokens[baazDeclarationRange].string,
             "let baaz = \"baaz\"\n"
         )
     }
@@ -1691,7 +1691,7 @@ class ParsingHelpersTests: XCTestCase {
         """
 
         let formatter = Formatter(tokenize(input))
-        let declarations = formatter.parseDeclarations()
+        let declarations = formatter.parseDeclarationsV2()
         XCTAssertEqual(declarations.count, 2)
 
         XCTAssertEqual(
@@ -1722,7 +1722,7 @@ class ParsingHelpersTests: XCTestCase {
         """
 
         let formatter = Formatter(tokenize(input))
-        let declarations = formatter.parseDeclarations()
+        let declarations = formatter.parseDeclarationsV2()
         XCTAssertEqual(declarations.count, 1)
         XCTAssertEqual(declarations[0].tokens.map(\.string).joined(), input)
     }

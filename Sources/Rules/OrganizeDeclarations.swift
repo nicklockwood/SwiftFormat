@@ -168,13 +168,7 @@ extension Formatter {
 
         // Categorize each of the declarations into their primary groups
         let categorizedDeclarations = typeDeclaration.body.map { declaration in
-            let declarationCategory = category(
-                of: declaration,
-                for: options.organizationMode,
-                using: categoryOrder
-            )
-
-            return (declaration: declaration, category: declarationCategory)
+            (declaration: declaration, category: category(of: declaration, using: categoryOrder))
         }
 
         // Sort the declarations based on their category and type
@@ -583,8 +577,8 @@ extension Formatter {
             {
                 let followingDeclaration = typeDeclaration.body[declarationIndex + 1]
 
-                let thisCategory = category(of: lastDeclarationInOriginalOrder, for: options.organizationMode, using: order)
-                let followingCategory = category(of: followingDeclaration, for: options.organizationMode, using: order)
+                let thisCategory = category(of: lastDeclarationInOriginalOrder, using: order)
+                let followingCategory = category(of: followingDeclaration, using: order)
 
                 // A trailing blank line is still necessary if the following
                 // declaration belongs to a different subgroup or category.
@@ -739,7 +733,6 @@ extension Formatter {
     /// The `Category` of the given `Declaration`
     func category(
         of declaration: Declaration,
-        for mode: DeclarationOrganizationMode,
         using order: ParsedOrder
     ) -> Category {
         let visibility = declaration.visibility() ?? .internal
@@ -751,7 +744,7 @@ extension Formatter {
         )
 
         let visibilityCategory: VisibilityCategory
-        switch mode {
+        switch options.organizationMode {
         case .visibility:
             guard VisibilityCategory.allCases.contains(.explicit(type)) else {
                 fallthrough

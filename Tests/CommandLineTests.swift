@@ -693,7 +693,6 @@ class CommandLineTests: XCTestCase {
             "(lint mode - no files will be changed.)",
             ":2:1: error: (organizeDeclarations) Organize declarations within class, struct, enum, actor, and extension bodies.",
             ":5:1: error: (organizeDeclarations) Organize declarations within class, struct, enum, actor, and extension bodies.",
-            ":6:1: error: (organizeDeclarations) Organize declarations within class, struct, enum, actor, and extension bodies.",
             "Source input did not pass lint check.",
         ])
     }

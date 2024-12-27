@@ -184,6 +184,11 @@ extension DeclarationV2 {
         formatter.unregisterDeclaration(self)
         formatter.removeTokens(in: range)
     }
+
+    /// Appends the given tokens to the end of this declaration.
+    func append(_ tokens: [Token]) {
+        formatter.insert(tokens, at: range.upperBound)
+    }
 }
 
 /// A simple declaration without any child declarations, representing a property, function, etc.
@@ -237,6 +242,42 @@ final class TypeDeclaration: DeclarationV2 {
 
     var kind: DeclarationKind {
         .type(self)
+    }
+
+    /// Replaces the body declarations of this type.
+    /// The updated array must contain the same set of declarations, just in a different order.
+    func updateBody(to newBody: [DeclarationV2]) {
+        assert(!body.isEmpty)
+
+        // Store the expceted tokens associated with each declaration.
+        // This is necessary since the declarations' range values will temporarily be invalid.
+        var declarationTokens: [AnyHashable: [Token]] = [:]
+        for declaration in newBody {
+            declarationTokens[declaration.identity] = Array(declaration.tokens)
+        }
+
+        // Unlink the declarations and the formatter while we reorder the tokens
+        for declaration in body + newBody {
+            formatter.unregisterDeclaration(declaration)
+        }
+
+        // Replace the contents of this declaration's body in the underlying formatter
+        let oldBodyRange = body.first!.range.lowerBound ... body.last!.range.upperBound
+        let newBodyTokens = newBody.flatMap(\.tokens)
+        formatter.diffAndReplaceTokens(in: oldBodyRange, with: newBodyTokens)
+
+        // Re-register each of the declarations in the body
+        var currentBodyIndex = oldBodyRange.lowerBound
+        for declaration in newBody {
+            let tokens = declarationTokens[declaration.identity]!
+            declaration.range = ClosedRange(currentBodyIndex ..< (currentBodyIndex + tokens.count))
+            currentBodyIndex += tokens.count
+
+            formatter.registerDeclaration(declaration)
+            assert(Array(declaration.tokens) == tokens)
+        }
+
+        body = newBody
     }
 }
 
@@ -325,6 +366,17 @@ extension DeclarationV2 {
 }
 
 extension DeclarationV2 {
+    /// The range of tokens before the first `nonSpaceOrCommentOrLinebreak` token
+    /// where leading comments like MARKs, directives, and documentation are located.
+    var leadingCommentRange: Range<Int> {
+        let firstTokenIndex = formatter.index(
+            of: .nonSpaceOrCommentOrLinebreak,
+            after: range.lowerBound - 1
+        ) ?? range.lowerBound
+
+        return range.lowerBound ..< firstTokenIndex
+    }
+
     /// Ensures that this declaration ends with at least one trailing blank line,
     /// by a blank like to the end of this declaration if not already present.
     func addTrailingBlankLineIfNeeded() {
@@ -338,7 +390,7 @@ extension DeclarationV2 {
     func removeTrailingBlankLinesIfPresent() {
         while tokens.numberOfTrailingLinebreaks() > 1 {
             guard let lastNewlineIndex = formatter.lastIndex(of: .linebreak, in: Range(range)) else { break }
-            formatter.removeTokens(in: lastNewlineIndex ..< range.upperBound)
+            formatter.removeTokens(in: lastNewlineIndex ... range.upperBound)
         }
     }
 }

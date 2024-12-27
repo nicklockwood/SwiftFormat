@@ -1451,9 +1451,7 @@ extension Formatter {
     func parseExpressionRange(
         startingAt startIndex: Int,
         allowConditionalExpressions: Bool = false
-    )
-        -> ClosedRange<Int>?
-    {
+    ) -> ClosedRange<Int>? {
         // Any expression can start with a prefix operator, or `await`
         if tokens[startIndex].isOperator(ofType: .prefix) || tokens[startIndex].string == "await",
            let nextTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: startIndex),
@@ -1564,7 +1562,7 @@ extension Formatter {
                 endOfExpression = followingExpression.upperBound
 
             /// Any value can be followed by a trailing closure
-            case .startOfScope("{"):
+            case .startOfScope("{") where isStartOfClosure(at: nextTokenIndex):
                 guard let endOfScope = endOfScope(at: nextTokenIndex) else { return nil }
 
                 // Within a conditional statement, an open brace is most likely
@@ -1694,9 +1692,8 @@ extension Formatter {
     /// Parses a property of the format `(let|var) identifier: Type = expression`
     /// starting at the given introducer index (the `let` / `var` keyword).
     func parsePropertyDeclaration(atIntroducerIndex introducerIndex: Int) -> PropertyDeclaration? {
-        assert(["let", "var"].contains(tokens[introducerIndex].string))
-
-        guard let propertyIdentifierIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: introducerIndex),
+        guard ["let", "var"].contains(tokens[introducerIndex].string),
+              let propertyIdentifierIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: introducerIndex),
               let propertyIdentifier = token(at: propertyIdentifierIndex),
               propertyIdentifier.isIdentifier
         else { return nil }

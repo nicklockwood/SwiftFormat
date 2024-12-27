@@ -1,5 +1,5 @@
 //
-//  DeclarationV2.swift
+//  Declaration.swift
 //  SwiftFormat
 //
 //  Created by Cal Stephens on 10/27/24.
@@ -16,7 +16,7 @@
 /// automatically kept up-to-date as tokens are added, removed, or modified
 /// in the associated formatter.
 ///
-protocol DeclarationV2: AnyObject, CustomDebugStringConvertible {
+protocol Declaration: AnyObject, CustomDebugStringConvertible {
     /// The keyword of this declaration (`class`, `struct`, `func`, `let`, `var`, etc.)
     var keyword: String { get }
 
@@ -32,7 +32,7 @@ protocol DeclarationV2: AnyObject, CustomDebugStringConvertible {
     var kind: DeclarationKind { get }
 
     /// This declaration's parent declaration, if this isn't a top-level declaration.
-    var parent: DeclarationV2? { get set }
+    var parent: Declaration? { get set }
 }
 
 enum DeclarationKind {
@@ -44,7 +44,7 @@ enum DeclarationKind {
     case conditionalCompilation(ConditionalCompilationDeclaration)
 }
 
-extension DeclarationV2 {
+extension Declaration {
     /// The tokens that make up this declaration
     var tokens: ArraySlice<Token> {
         formatter.tokens[range]
@@ -98,7 +98,7 @@ extension DeclarationV2 {
 
     /// The child declarations of this declaration's body, if present.
     @_disfavoredOverload
-    var body: [DeclarationV2]? {
+    var body: [Declaration]? {
         switch kind {
         case .declaration:
             return nil
@@ -160,7 +160,7 @@ extension DeclarationV2 {
     }
 
     /// A list of all declarations that are a parent of this declaration
-    var parentDeclarations: [DeclarationV2] {
+    var parentDeclarations: [Declaration] {
         guard let parent = parent else { return [] }
         return parent.parentDeclarations + [parent]
     }
@@ -192,7 +192,7 @@ extension DeclarationV2 {
 }
 
 /// A simple declaration without any child declarations, representing a property, function, etc.
-final class SimpleDeclaration: DeclarationV2 {
+final class SimpleDeclaration: Declaration {
     init(keyword: String, range: ClosedRange<Int>, formatter: Formatter) {
         self.keyword = keyword
         self.range = range
@@ -207,7 +207,7 @@ final class SimpleDeclaration: DeclarationV2 {
     var keyword: String
     var range: ClosedRange<Int>
     let formatter: Formatter
-    weak var parent: DeclarationV2?
+    weak var parent: Declaration?
 
     var kind: DeclarationKind {
         .declaration(self)
@@ -215,8 +215,8 @@ final class SimpleDeclaration: DeclarationV2 {
 }
 
 /// A type with a body, representing a class, struct, enum, extension, etc.
-final class TypeDeclaration: DeclarationV2 {
-    init(keyword: String, range: ClosedRange<Int>, body: [DeclarationV2], formatter: Formatter) {
+final class TypeDeclaration: Declaration {
+    init(keyword: String, range: ClosedRange<Int>, body: [Declaration], formatter: Formatter) {
         self.keyword = keyword
         self.range = range
         self.body = body
@@ -234,9 +234,9 @@ final class TypeDeclaration: DeclarationV2 {
 
     var keyword: String
     var range: ClosedRange<Int>
-    var body: [DeclarationV2]
+    var body: [Declaration]
     let formatter: Formatter
-    weak var parent: DeclarationV2?
+    weak var parent: Declaration?
 
     var kind: DeclarationKind {
         .type(self)
@@ -244,7 +244,7 @@ final class TypeDeclaration: DeclarationV2 {
 
     /// Replaces the body declarations of this type.
     /// The updated array must contain the same set of declarations, just in a different order.
-    func updateBody(to newBody: [DeclarationV2]) {
+    func updateBody(to newBody: [Declaration]) {
         assert(!body.isEmpty)
 
         // Store the expceted tokens associated with each declaration.
@@ -298,8 +298,8 @@ extension TypeDeclaration {
 }
 
 /// A conditional compilation condition with a body.
-final class ConditionalCompilationDeclaration: DeclarationV2 {
-    init(range: ClosedRange<Int>, body: [DeclarationV2], formatter: Formatter) {
+final class ConditionalCompilationDeclaration: Declaration {
+    init(range: ClosedRange<Int>, body: [Declaration], formatter: Formatter) {
         self.range = range
         self.body = body
         self.formatter = formatter
@@ -316,18 +316,20 @@ final class ConditionalCompilationDeclaration: DeclarationV2 {
 
     let keyword = "#if"
     var range: ClosedRange<Int>
-    var body: [DeclarationV2]
+    var body: [Declaration]
     let formatter: Formatter
-    weak var parent: DeclarationV2?
+    weak var parent: Declaration?
 
     var kind: DeclarationKind {
         .conditionalCompilation(self)
     }
 }
 
-extension Collection where Element == DeclarationV2 {
+// MARK: - Helpers
+
+extension Collection where Element == Declaration {
     /// Performs the given operation for each declaration in this tree of declarations.
-    func forEachRecursiveDeclaration(_ operation: (DeclarationV2) -> Void) {
+    func forEachRecursiveDeclaration(_ operation: (Declaration) -> Void) {
         for declaration in self {
             operation(declaration)
             (declaration.body ?? []).forEachRecursiveDeclaration(operation)
@@ -335,35 +337,7 @@ extension Collection where Element == DeclarationV2 {
     }
 }
 
-extension DeclarationV2 {
-    /// The explicit `Visibility` of this `Declaration`
-    func visibility() -> Visibility? {
-        switch kind {
-        case .declaration, .type:
-            return formatter.declarationVisibility(keywordIndex: keywordIndex)
-
-        case let .conditionalCompilation(conditionalCompilation):
-            // Conditional compilation blocks themselves don't have a category or visbility-level,
-            // but we still have to assign them a category for the sorting algorithm to function.
-            // A reasonable heuristic here is to simply use the category of the first declaration
-            // inside the conditional compilation block.
-            return conditionalCompilation.body.first?.visibility()
-        }
-    }
-
-    /// Adds the given visibility keyword to the given declaration,
-    /// replacing any existing visibility keyword.
-    func addVisibility(_ visibilityKeyword: Visibility) {
-        formatter.addDeclarationVisibility(visibilityKeyword, declarationKeywordIndex: keywordIndex)
-    }
-
-    /// Removes the given visibility keyword from the given declaration
-    func removeVisibility(_ visibilityKeyword: Visibility) {
-        formatter.removeDeclarationVisibility(visibilityKeyword, declarationKeywordIndex: keywordIndex)
-    }
-}
-
-extension DeclarationV2 {
+extension Declaration {
     /// The range of tokens before the first `nonSpaceOrCommentOrLinebreak` token
     /// where leading comments like MARKs, directives, and documentation are located.
     var leadingCommentRange: Range<Int> {
@@ -413,5 +387,49 @@ extension RandomAccessCollection where Element == Token, Index == Int {
         }
 
         return numberOfTrailingLinebreaks
+    }
+}
+
+// MARK: - Visibility
+
+/// The visibility of a declaration
+enum Visibility: String, CaseIterable, Comparable {
+    case open
+    case `public`
+    case package
+    case `internal`
+    case `fileprivate`
+    case `private`
+
+    static func < (lhs: Visibility, rhs: Visibility) -> Bool {
+        allCases.firstIndex(of: lhs)! > allCases.firstIndex(of: rhs)!
+    }
+}
+
+extension Declaration {
+    /// The explicit `Visibility` of this `Declaration`
+    func visibility() -> Visibility? {
+        switch kind {
+        case .declaration, .type:
+            return formatter.declarationVisibility(keywordIndex: keywordIndex)
+
+        case let .conditionalCompilation(conditionalCompilation):
+            // Conditional compilation blocks themselves don't have a category or visbility-level,
+            // but we still have to assign them a category for the sorting algorithm to function.
+            // A reasonable heuristic here is to simply use the category of the first declaration
+            // inside the conditional compilation block.
+            return conditionalCompilation.body.first?.visibility()
+        }
+    }
+
+    /// Adds the given visibility keyword to the given declaration,
+    /// replacing any existing visibility keyword.
+    func addVisibility(_ visibilityKeyword: Visibility) {
+        formatter.addDeclarationVisibility(visibilityKeyword, declarationKeywordIndex: keywordIndex)
+    }
+
+    /// Removes the given visibility keyword from the given declaration
+    func removeVisibility(_ visibilityKeyword: Visibility) {
+        formatter.removeDeclarationVisibility(visibilityKeyword, declarationKeywordIndex: keywordIndex)
     }
 }

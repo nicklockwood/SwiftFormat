@@ -521,26 +521,6 @@ extension Formatter {
         }
     }
 
-    /// Finds the set of single-line comments in the given range matching the given closure
-    func singleLineComments(
-        in range: Range<Int>,
-        matching isMatch: (_ commentBody: String) -> Bool
-    ) -> [ClosedRange<Int>] {
-        var matches = [ClosedRange<Int>]()
-
-        for commentStartIndex in range {
-            guard tokens[commentStartIndex] == .startOfScope("//"),
-                  let commentBodyIndex = index(after: commentStartIndex, where: \.isCommentBody)
-            else { continue }
-
-            if isMatch(tokens[commentBodyIndex].string) {
-                matches.append(commentStartIndex ... commentBodyIndex)
-            }
-        }
-
-        return matches
-    }
-
     /// The set of category separate comments like `// MARK: - Public` in the given range.
     /// Looks for approximate matches using edit distance, not exact matches.
     func matchingCategorySeparatorComments(in range: Range<Int>, order: ParsedOrder) -> [ClosedRange<Int>] {

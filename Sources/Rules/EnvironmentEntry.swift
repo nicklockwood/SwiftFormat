@@ -12,7 +12,7 @@ public extension FormatRule {
         // The @Entry macro is only available in Xcode 16 therefore this rule requires the same Xcode version to work.
         guard formatter.options.swiftVersion >= "6.0" else { return }
 
-        let declarations = formatter.parseDeclarationsV2()
+        let declarations = formatter.parseDeclarations()
 
         // Find all structs that conform to `EnvironmentKey`
         let environmentKeys = formatter.findAllEnvironmentKeys(declarations)
@@ -53,18 +53,18 @@ public extension FormatRule {
 
 struct EnvironmentKey {
     let key: String
-    let declaration: DeclarationV2
+    let declaration: Declaration
     let defaultValueTokens: [Token]?
 }
 
 struct EnvironmentValueProperty {
     let key: String
     let associatedEnvironmentKey: EnvironmentKey
-    let declaration: DeclarationV2
+    let declaration: Declaration
 }
 
 extension Formatter {
-    func findAllEnvironmentKeys(_ declarations: [DeclarationV2]) -> [String: EnvironmentKey] {
+    func findAllEnvironmentKeys(_ declarations: [Declaration]) -> [String: EnvironmentKey] {
         var environmentKeys = [String: EnvironmentKey]()
 
         for declaration in declarations {
@@ -88,7 +88,7 @@ extension Formatter {
         return environmentKeys
     }
 
-    func findEnvironmentKeyDefaultValue(_ defaultValueDeclaration: DeclarationV2) -> [Token]? {
+    func findEnvironmentKeyDefaultValue(_ defaultValueDeclaration: Declaration) -> [Token]? {
         guard let property = defaultValueDeclaration.parsePropertyDeclaration() else { return nil }
 
         if let valueRange = property.value?.expressionRange {
@@ -110,7 +110,7 @@ extension Formatter {
     }
 
     func findAllEnvironmentValuesProperties(
-        _ declarations: [DeclarationV2],
+        _ declarations: [Declaration],
         referencing environmentKeys: [String: EnvironmentKey]
     ) -> [EnvironmentValueProperty] {
         declarations

@@ -2237,6 +2237,26 @@ extension Formatter {
         return start ..< lastHeaderTokenIndex + 1
     }
 
+    /// Finds the set of single-line comments in the given range matching the given closure
+    func singleLineComments(
+        in range: Range<Int>,
+        matching isMatch: (_ commentBody: String) -> Bool
+    ) -> [ClosedRange<Int>] {
+        var matches = [ClosedRange<Int>]()
+
+        for commentStartIndex in range {
+            guard tokens[commentStartIndex] == .startOfScope("//"),
+                  let commentBodyIndex = index(after: commentStartIndex, where: \.isCommentBody)
+            else { continue }
+
+            if isMatch(tokens[commentBodyIndex].string) {
+                matches.append(commentStartIndex ... commentBodyIndex)
+            }
+        }
+
+        return matches
+    }
+
     /// Parses the prorocol composition typealias declaration starting at the given `typealias` keyword index.
     /// Returns `nil` if the given index isn't a protocol composition typealias.
     func parseProtocolCompositionTypealias(at typealiasIndex: Int)

@@ -67,15 +67,15 @@ public extension FormatRule {
                 }
 
                 if isGroupedWithExtendingType {
-                    commentTemplate = "// \(formatter.options.groupedExtensionMarkComment)"
+                    commentTemplate = formatter.options.groupedExtensionMarkComment
                     isGroupedExtension = true
                 } else {
-                    commentTemplate = "// \(formatter.options.extensionMarkComment)"
+                    commentTemplate = formatter.options.extensionMarkComment
                     isGroupedExtension = false
                 }
             default:
                 markMode = formatter.options.markTypes
-                commentTemplate = "// \(formatter.options.typeMarkComment)"
+                commentTemplate = formatter.options.typeMarkComment
                 isGroupedExtension = false
             }
 
@@ -141,16 +141,16 @@ public extension FormatRule {
                     let fullyQualifiedName = "\(extensionNames).\(nestedTypeName)"
 
                     if isGroupedExtension {
-                        markForType = "// \(formatter.options.groupedExtensionMarkComment)"
+                        markForType = formatter.options.groupedExtensionMarkComment
                             .replacingOccurrences(of: "%c", with: fullyQualifiedName)
                     } else {
-                        markForType = "// \(formatter.options.typeMarkComment)"
+                        markForType = formatter.options.typeMarkComment
                             .replacingOccurrences(of: "%t", with: fullyQualifiedName)
                     }
                 }
             }
 
-            guard let expectedComment = markForType else {
+            guard let expectedCommentBody = markForType else {
                 return
             }
 
@@ -162,49 +162,42 @@ public extension FormatRule {
             }
 
             // Remove any unexpected comments that have the same prefix as the comment template.
-            var commentPrefixes = Set(["// MARK: ", "// MARK: - "])
-
+            var commentPrefixes = Set(["MARK: ", "MARK: - "])
             if let typeNameSymbolIndex = commentTemplate.firstIndex(of: "%") {
                 commentPrefixes.insert(String(commentTemplate.prefix(upTo: typeNameSymbolIndex)))
             }
 
             var alreadyHasExpectedComment = false
+            let potentialCommentRange = markInsertIndex ..< typeDeclaration.leadingCommentRange.upperBound
 
-            for index in markInsertIndex ..< typeDeclaration.keywordIndex {
-                guard formatter.tokens[index] == .startOfScope("//") else { continue }
-
-                let startOfLine = formatter.startOfLine(at: index)
-                let endOfLine = formatter.endOfLine(at: index)
-
-                let startOfComment = index
-                var endOfComment = endOfLine
-                if formatter.tokens[endOfLine].isLinebreak {
-                    endOfComment -= 1
-                }
-
-                let comment = formatter.tokens[startOfComment ... endOfComment].string
-
-                // If we find the expected comment in the expected place,
-                // we don't have to do anything.
-                if comment == expectedComment, startOfComment == markInsertIndex {
+            let commentsToRemove = formatter.singleLineComments(in: potentialCommentRange, matching: { comment in
+                // If we find the exact expected comment, preserve it.
+                if comment == expectedCommentBody {
                     alreadyHasExpectedComment = true
-                    continue
+                    return false
                 }
 
                 for commentPrefix in commentPrefixes {
                     if comment.lowercased().hasPrefix(commentPrefix.lowercased()) {
-                        // If we found a line that matched the comment prefix,
-                        // remove it and any linebreak immediately after it.
-                        if formatter.token(at: endOfLine + 1)?.isLinebreak == true {
-                            formatter.removeToken(at: endOfLine + 1)
-                        }
-
-                        formatter.removeTokens(in: startOfLine ... endOfLine)
-                        break
+                        return true
                     }
                 }
+
+                return false
+            })
+
+            for commentToRemove in commentsToRemove.reversed() {
+                let startOfLine = formatter.startOfLine(at: commentToRemove.lowerBound)
+                let endOfLine = formatter.endOfLine(at: commentToRemove.lowerBound)
+
+                if formatter.token(at: endOfLine + 1)?.isLinebreak == true {
+                    formatter.removeToken(at: endOfLine + 1)
+                }
+
+                formatter.removeTokens(in: startOfLine ... endOfLine)
             }
 
+            // Insert the expected comment and the correct number of linebreaks
             if !alreadyHasExpectedComment {
                 // Insert the expected comment at the start of the declaration
                 formatter.insertLinebreak(at: markInsertIndex)
@@ -213,7 +206,7 @@ public extension FormatRule {
                     formatter.insertLinebreak(at: markInsertIndex)
                 }
 
-                formatter.insert(tokenize(expectedComment), at: markInsertIndex)
+                formatter.insert(tokenize("// \(expectedCommentBody)"), at: markInsertIndex)
             }
 
             // If the previous declaration doesn't end in a blank line,

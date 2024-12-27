@@ -15,7 +15,7 @@ public extension FormatRule {
     ) { formatter in
         guard !formatter.options.fragment else { return }
 
-        let declarations = formatter.parseDeclarationsV2()
+        let declarations = formatter.parseDeclarations()
         declarations.forEachRecursiveDeclaration { declaration in
             guard let extensionDeclaration = declaration.asTypeDeclaration,
                   extensionDeclaration.keyword == "extension"
@@ -143,12 +143,12 @@ public extension FormatRule {
     }
 }
 
-extension Collection where Element == DeclarationV2 {
+extension Collection where Element == Declaration {
     // Performs the given operation for each declaration in this tree of declarations,
     // including the body of any child conditional compilation blocks,
     // but not the body of any child types. All of the iterated declarations belong
     // directly to the parent scope holding this array of declarations.
-    func forEachRecursiveDeclarationExcludingTypeBodies(_ operation: (DeclarationV2) -> Void) {
+    func forEachRecursiveDeclarationExcludingTypeBodies(_ operation: (Declaration) -> Void) {
         for declaration in self {
             switch declaration.kind {
             case let .declaration(declaration):

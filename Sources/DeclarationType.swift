@@ -122,7 +122,7 @@ enum DeclarationType: String, CaseIterable {
     }
 }
 
-extension DeclarationV2 {
+extension Declaration {
     /// The `DeclarationType` of the given `Declaration`
     func declarationType(
         allowlist availableTypes: [DeclarationType],

@@ -79,7 +79,7 @@ public extension FormatRule {
             }
 
             var declarations = Formatter(Array(formatter.tokens[rangeToSort]))
-                .parseDeclarationsV2()
+                .parseDeclarations()
                 .enumerated()
                 .sorted(by: { lhs, rhs -> Bool in
                     let (lhsIndex, lhsDeclaration) = lhs

@@ -2302,6 +2302,7 @@ class OrganizeDeclarationsTests: XCTestCase {
         }
         """
 
+        // easy to start with?
         testFormatting(
             for: input, output,
             rule: .organizeDeclarations,
@@ -3527,5 +3528,69 @@ class OrganizeDeclarationsTests: XCTestCase {
         )
 
         testFormatting(for: input, rule: .organizeDeclarations, options: options)
+    }
+
+    func testFixesSpacingAfterMarks() {
+        let input = """
+        class Foo {
+            // MARK: Lifecycle
+            init() {}
+            // MARK: Internal
+            let bar = "bar"
+        }
+        """
+
+        let output = """
+        class Foo {
+
+            // MARK: Lifecycle
+
+            init() {}
+
+            // MARK: Internal
+
+            let bar = "bar"
+        }
+        """
+
+        testFormatting(for: input, output, rule: .organizeDeclarations, exclude: [.blankLinesAtStartOfScope])
+    }
+
+    func testRemovesUnnecessaryMark() {
+        let input = """
+        class Foo {
+
+            // MARK: Lifecycle
+
+            init() {}
+
+            // MARK: Internal
+
+            // MARK: Internal
+
+            let bar = "bar"
+
+            // MARK: Internal
+
+            let baaz = "baaz"
+        }
+        """
+
+        let output = """
+        class Foo {
+
+            // MARK: Lifecycle
+
+            init() {}
+
+            // MARK: Internal
+
+            let bar = "bar"
+
+            let baaz = "baaz"
+        }
+        """
+
+        testFormatting(for: input, output, rule: .organizeDeclarations, exclude: [.blankLinesAtStartOfScope])
     }
 }

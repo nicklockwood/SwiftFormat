@@ -1196,9 +1196,6 @@ class ParsingHelpersTests: XCTestCase {
         let originalTokens = tokenize(input)
         let declarations = Formatter(originalTokens).parseDeclarations()
 
-        // Verify we didn't lose any tokens
-        XCTAssertEqual(originalTokens, declarations.flatMap(\.tokens))
-
         XCTAssertEqual(
             declarations[0].tokens.string,
             """

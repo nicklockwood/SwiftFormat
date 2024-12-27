@@ -25,8 +25,8 @@ public extension FormatRule {
         let disallowedModifiers = ["override", "@objc", "@IBAction", "@IBSegueAction", "@IBOutlet", "@IBDesignable", "@IBInspectable", "@NSManaged", "@GKInspectable"]
 
         // Collect all of the `private` or `fileprivate` declarations in the file
-        var privateDeclarations: [DeclarationV2] = []
-        formatter.parseDeclarationsV2().forEachRecursiveDeclaration { declaration in
+        var privateDeclarations: [Declaration] = []
+        formatter.parseDeclarations().forEachRecursiveDeclaration { declaration in
             let declarationModifiers = Set(declaration.modifiers)
             let hasDisallowedModifiers = disallowedModifiers.contains(where: { declarationModifiers.contains($0) })
 

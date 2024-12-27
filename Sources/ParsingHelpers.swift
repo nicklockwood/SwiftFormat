@@ -1612,13 +1612,13 @@ extension Formatter {
     }
 
     /// Parses all of the declarations in the source file.
-    func parseDeclarations() -> [DeclarationV2] {
+    func parseDeclarations() -> [Declaration] {
         parseDeclarations(in: tokens.indices)
     }
 
     /// Parses the declarations in the given range.
-    func parseDeclarations(in range: Range<Int>) -> [DeclarationV2] {
-        var declarations = [DeclarationV2]()
+    func parseDeclarations(in range: Range<Int>) -> [Declaration] {
+        var declarations = [Declaration]()
         var startOfDeclaration = range.lowerBound
 
         for (index, token) in zip(range, tokens[range]) {
@@ -1641,7 +1641,7 @@ extension Formatter {
                let endOfScope = endOfScope(at: bodyOpenBrace)
             {
                 // The type body excludes any leading linebreaks or trailing spaces.
-                let body: [DeclarationV2]
+                let body: [Declaration]
                 if let startOfBody = self.index(of: .nonLinebreak, after: bodyOpenBrace),
                    let endOfBody = self.index(of: .nonSpace, before: endOfScope),
                    startOfBody <= endOfBody
@@ -1665,7 +1665,7 @@ extension Formatter {
                     let endOfScope = endOfScope(at: keywordIndex)
             {
                 // The conditional compilation body excludes any leading linebreaks or trailing spaces.
-                let body: [DeclarationV2]
+                let body: [Declaration]
                 if let startOfBody = self.index(of: .nonLinebreak, after: endOfLine(at: keywordIndex)),
                    let endOfBody = self.index(of: .nonSpace, before: endOfScope),
                    startOfBody <= endOfBody

@@ -18,7 +18,7 @@ class CodeOrganizationTests: XCTestCase {
 
             let content = try String(contentsOf: ruleFile)
             let formatter = Formatter(tokenize(content))
-            let declarations = formatter.parseDeclarationsV2()
+            let declarations = formatter.parseDeclarations()
             let extensions = declarations.filter { $0.keyword == "extension" }
 
             for extensionDecl in extensions {
@@ -69,7 +69,7 @@ class CodeOrganizationTests: XCTestCase {
             let content = try String(contentsOf: ruleFile)
             let formatter = Formatter(tokenize(content))
 
-            for declaration in formatter.parseDeclarationsV2() {
+            for declaration in formatter.parseDeclarations() {
                 guard declaration.keyword == "extension", let extendedType = declaration.name, extendedType != "FormatRule" else {
                     continue
                 }
@@ -161,7 +161,7 @@ class CodeOrganizationTests: XCTestCase {
             let testFileName = testFile.lastPathComponent
             let content = try String(contentsOf: testFile)
             let formatter = Formatter(tokenize(content))
-            let declarations = formatter.parseDeclarationsV2()
+            let declarations = formatter.parseDeclarations()
 
             guard let testClass = declarations.first(where: { declaration in
                 let rangeBeforeKeyword = declaration.range.lowerBound ..< declaration.keywordIndex

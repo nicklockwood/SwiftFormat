@@ -25,7 +25,7 @@ public extension FormatRule {
     ) { formatter in
         guard !formatter.options.fragment else { return }
 
-        formatter.parseDeclarationsV2().forEachRecursiveDeclaration { declaration in
+        formatter.parseDeclarations().forEachRecursiveDeclaration { declaration in
             // Organize the body of type declarations
             guard let typeDeclaration = declaration.asTypeDeclaration else { return }
             formatter.organizeDeclaration(typeDeclaration)
@@ -230,7 +230,7 @@ extension Formatter {
         return lineCount >= organizationThreshold
     }
 
-    typealias CategorizedDeclaration = (declaration: DeclarationV2, category: Category)
+    typealias CategorizedDeclaration = (declaration: Declaration, category: Category)
 
     /// Sorts the given categorized declarations based on the defined category ordering
     func sortCategorizedDeclarations(
@@ -342,7 +342,7 @@ extension Formatter {
 
     // Whether or not this declaration is an instance property that can affect
     // the parameters struct's synthesized memberwise initializer
-    func affectsSynthesizedMemberwiseInitializer(_ declaration: DeclarationV2) -> Bool {
+    func affectsSynthesizedMemberwiseInitializer(_ declaration: Declaration) -> Bool {
         declaration.isStoredInstanceProperty
     }
 
@@ -476,8 +476,8 @@ extension Formatter {
 
     /// Removes any existing category separators from the given declarations
     func removeExistingCategorySeparators(
-        from declaration: DeclarationV2,
-        previousDeclaration: DeclarationV2?,
+        from declaration: Declaration,
+        previousDeclaration: Declaration?,
         order: ParsedOrder
     ) {
         var matchingComments = matchingCategorySeparatorComments(in: declaration.leadingCommentRange, order: order)
@@ -565,7 +565,7 @@ extension Formatter {
     // After sorting, only the final declaration in the group should be followed by a blank line.
     func preserveConsecutivePropertyGroupSpacing(
         in typeDeclaration: TypeDeclaration,
-        groups consecutiveGroups: [[DeclarationV2]],
+        groups consecutiveGroups: [[Declaration]],
         order: ParsedOrder
     ) {
         for consecutiveGroup in consecutiveGroups {
@@ -613,13 +613,13 @@ extension Formatter {
     }
 
     // Finds all of the consecutive groups of property declarations in the type body
-    func consecutivePropertyDeclarationGroups(in typeDeclaration: TypeDeclaration) -> [[DeclarationV2]] {
-        var declarationGroups: [[DeclarationV2]] = []
-        var currentGroup: [DeclarationV2] = []
+    func consecutivePropertyDeclarationGroups(in typeDeclaration: TypeDeclaration) -> [[Declaration]] {
+        var declarationGroups: [[Declaration]] = []
+        var currentGroup: [Declaration] = []
 
         /// Ends the current group, ensuring that groups are only recorded
         /// when they contain two or more declarations.
-        func endCurrentGroup(addingToExistingGroup declarationToAdd: DeclarationV2? = nil) {
+        func endCurrentGroup(addingToExistingGroup declarationToAdd: Declaration? = nil) {
             if let declarationToAdd = declarationToAdd {
                 currentGroup.append(declarationToAdd)
             }
@@ -743,7 +743,7 @@ enum VisibilityCategory: CaseIterable, Hashable, RawRepresentable {
 extension Formatter {
     /// The `Category` of the given `Declaration`
     func category(
-        of declaration: DeclarationV2,
+        of declaration: Declaration,
         for mode: DeclarationOrganizationMode,
         using order: ParsedOrder
     ) -> Category {

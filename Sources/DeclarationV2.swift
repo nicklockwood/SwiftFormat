@@ -194,7 +194,6 @@ extension DeclarationV2 {
 /// A simple declaration without any child declarations, representing a property, function, etc.
 final class SimpleDeclaration: DeclarationV2 {
     init(keyword: String, range: ClosedRange<Int>, formatter: Formatter) {
-        assert(!keyword.isEmpty)
         self.keyword = keyword
         self.range = range
         self.formatter = formatter
@@ -218,7 +217,6 @@ final class SimpleDeclaration: DeclarationV2 {
 /// A type with a body, representing a class, struct, enum, extension, etc.
 final class TypeDeclaration: DeclarationV2 {
     init(keyword: String, range: ClosedRange<Int>, body: [DeclarationV2], formatter: Formatter) {
-        assert(!keyword.isEmpty)
         self.keyword = keyword
         self.range = range
         self.body = body

@@ -1611,6 +1611,159 @@ extension Formatter {
         return startIndex ... endOfExpression
     }
 
+    /// Parses all of the declarations in the source file.
+    func parseDeclarations() -> [DeclarationV2] {
+        parseDeclarations(in: tokens.indices)
+    }
+
+    /// Parses the declarations in the given range.
+    func parseDeclarations(in range: Range<Int>) -> [DeclarationV2] {
+        var declarations = [DeclarationV2]()
+        var startOfDeclaration = range.lowerBound
+
+        for (index, token) in zip(range, tokens[range]) {
+            guard index >= startOfDeclaration,
+                  token.isDeclarationTypeKeyword || token == .startOfScope("#if")
+            else {
+                continue
+            }
+
+            let keywordIndex = index
+            let declarationKeyword = declarationType(at: keywordIndex) ?? "#if"
+            let endOfDeclaration = self.endOfDeclaration(atDeclarationKeyword: keywordIndex)
+
+            let declarationRange = startOfDeclaration ... min(endOfDeclaration ?? .max, range.upperBound - 1)
+            startOfDeclaration = declarationRange.upperBound + 1
+
+            // If this declaration represents a type, we need to parse its inner declarations as well.
+            if Token.swiftTypeKeywords.contains(declarationKeyword),
+               let bodyOpenBrace = self.index(of: .startOfScope("{"), after: keywordIndex),
+               let endOfScope = endOfScope(at: bodyOpenBrace)
+            {
+                // The type body excludes any leading linebreaks or trailing spaces.
+                let body: [DeclarationV2]
+                if let startOfBody = self.index(of: .nonLinebreak, after: bodyOpenBrace),
+                   let endOfBody = self.index(of: .nonSpace, before: endOfScope),
+                   startOfBody <= endOfBody
+                {
+                    body = parseDeclarations(in: Range(startOfBody ... endOfBody))
+                } else {
+                    body = parseDeclarations(in: (bodyOpenBrace + 1) ..< endOfScope)
+                }
+
+                declarations.append(TypeDeclaration(
+                    keyword: declarationKeyword,
+                    range: declarationRange,
+                    body: body,
+                    formatter: self
+                ))
+            }
+
+            // If this declaration represents a conditional compilation block,
+            // we also have to parse its inner declarations.
+            else if declarationKeyword == "#if",
+                    let endOfScope = endOfScope(at: keywordIndex)
+            {
+                // The conditional compilation body excludes any leading linebreaks or trailing spaces.
+                let body: [DeclarationV2]
+                if let startOfBody = self.index(of: .nonLinebreak, after: endOfLine(at: keywordIndex)),
+                   let endOfBody = self.index(of: .nonSpace, before: endOfScope),
+                   startOfBody <= endOfBody
+                {
+                    body = parseDeclarations(in: Range(startOfBody ... endOfBody))
+                } else {
+                    body = parseDeclarations(in: (endOfLine(at: keywordIndex) + 1) ..< endOfScope)
+                }
+
+                declarations.append(ConditionalCompilationDeclaration(
+                    range: declarationRange,
+                    body: body,
+                    formatter: self
+                ))
+            }
+
+            else {
+                declarations.append(SimpleDeclaration(
+                    keyword: declarationKeyword,
+                    range: declarationRange,
+                    formatter: self
+                ))
+            }
+        }
+
+        return declarations.filter(\.isValid)
+    }
+
+    /// Returns the end index of the `Declaration` containing `declarationKeywordIndex`.
+    ///  - `declarationKeywordIndex.isDeclarationTypeKeyword` must be `true`
+    ///    (e.g. it must be a keyword like `let`, `var`, `func`, `class`, etc.
+    func endOfDeclaration(atDeclarationKeyword declarationKeywordIndex: Int) -> Int? {
+        assert(tokens[declarationKeywordIndex].isDeclarationTypeKeyword
+            || tokens[declarationKeywordIndex] == .startOfScope("#if"))
+
+        // Get declaration keyword
+        var searchIndex = declarationKeywordIndex
+        let declarationKeyword = declarationType(at: declarationKeywordIndex) ?? "#if"
+        switch tokens[declarationKeywordIndex] {
+        case .startOfScope("#if"):
+            // For conditional compilation blocks, the `declarationKeyword` _is_ the `startOfScope`
+            // so we can immediately skip to the corresponding #endif
+            if let endOfConditionalCompilationScope = endOfScope(at: declarationKeywordIndex) {
+                searchIndex = endOfConditionalCompilationScope
+            }
+        case .keyword("class") where declarationKeyword != "class":
+            // Most declarations will include exactly one token that `isDeclarationTypeKeyword` in
+            //  - `class func` methods will have two (and the first one will be incorrect!)
+            searchIndex = index(of: .keyword(declarationKeyword), after: declarationKeywordIndex) ?? searchIndex
+        case .keyword("import"):
+            // Symbol imports (like `import class Module.Type`) will have an extra `isDeclarationTypeKeyword`
+            // immediately following their `declarationKeyword`, so we need to skip them.
+            if let symbolTypeKeywordIndex = index(of: .nonSpaceOrComment, after: declarationKeywordIndex),
+               tokens[symbolTypeKeywordIndex].isDeclarationTypeKeyword
+            {
+                searchIndex = symbolTypeKeywordIndex
+            }
+        case .keyword("protocol"), .keyword("struct"), .keyword("actor"),
+             .keyword("enum"), .keyword("extension"):
+            if let scopeStart = index(of: .startOfScope("{"), after: declarationKeywordIndex) {
+                searchIndex = endOfScope(at: scopeStart) ?? searchIndex
+            }
+        default:
+            break
+        }
+
+        // Search for the next declaration so we know where this declaration ends.
+        let nextDeclarationKeywordIndex = index(after: searchIndex, where: {
+            $0.isDeclarationTypeKeyword || $0 == .startOfScope("#if")
+        })
+
+        // Search backward from the next declaration keyword to find where declaration begins.
+        var endOfDeclaration = nextDeclarationKeywordIndex.flatMap {
+            index(before: startOfModifiers(at: $0, includingAttributes: true), where: {
+                !$0.isSpaceOrCommentOrLinebreak
+            }).map { endOfLine(at: $0) }
+        }
+
+        // Prefer keeping linebreaks at the end of a declaration's tokens,
+        // instead of the start of the next delaration's tokens.
+        //  - This includes any spaces on blank lines, but doesn't include the
+        //    indentation associated with the next declaration.
+        while let linebreakSearchIndex = endOfDeclaration,
+              token(at: linebreakSearchIndex + 1)?.isSpaceOrLinebreak == true
+        {
+            // Only spaces between linebreaks (e.g. spaces on blank lines) are included
+            if token(at: linebreakSearchIndex + 1)?.isSpace == true {
+                guard token(at: linebreakSearchIndex)?.isLinebreak == true,
+                      token(at: linebreakSearchIndex + 2)?.isLinebreak == true
+                else { break }
+            }
+
+            endOfDeclaration = linebreakSearchIndex + 1
+        }
+
+        return endOfDeclaration
+    }
+
     /// Whether or not the body within this scope is a single expression
     func scopeBodyIsSingleExpression(at startOfScopeIndex: Int) -> Bool {
         guard let endOfScopeIndex = endOfScope(at: startOfScopeIndex),

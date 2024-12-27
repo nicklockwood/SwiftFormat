@@ -1186,6 +1186,11 @@ class ParsingHelpersTests: XCTestCase {
             }
 
         }
+
+        struct EmptyType {}
+
+        struct Test{let foo: String}
+
         """
 
         let originalTokens = tokenize(input)
@@ -1308,6 +1313,8 @@ class ParsingHelpersTests: XCTestCase {
                 }
 
             }
+
+
             """
         )
 
@@ -1366,6 +1373,30 @@ class ParsingHelpersTests: XCTestCase {
                 }
 
 
+            """
+        )
+
+        XCTAssertEqual(
+            declarations[8].tokens.string,
+            """
+            struct EmptyType {}
+
+
+            """
+        )
+
+        XCTAssertEqual(
+            declarations[9].tokens.string,
+            """
+            struct Test{let foo: String}
+
+            """
+        )
+
+        XCTAssertEqual(
+            declarations[9].body?[0].tokens.string,
+            """
+            let foo: String
             """
         )
     }
@@ -1559,6 +1590,9 @@ class ParsingHelpersTests: XCTestCase {
         }
         #endif
 
+        #if EMPTY_BLOCK
+        #endif
+
         let afterBlock = "quux"
         """
 
@@ -1570,7 +1604,8 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(declarations[1].body?[0].keyword, "struct")
         XCTAssertEqual(declarations[1].body?[1].keyword, "struct")
         XCTAssertEqual(declarations[1].body?[2].keyword, "struct")
-        XCTAssertEqual(declarations[2].keyword, "let")
+        XCTAssertEqual(declarations[2].keyword, "#if")
+        XCTAssertEqual(declarations[3].keyword, "let")
     }
 
     func testParseSymbolImportCorrectly() {
@@ -2148,29 +2183,6 @@ class ParsingHelpersTests: XCTestCase {
         """))
 
         XCTAssertEqual(formatter.parseType(at: 2)?.name, "Foo.Bar.Baaz.Quux.InnerType1.InnerType2")
-    }
-
-    func testEndOfDeclaration() {
-        let formatter = Formatter(tokenize("""
-        public enum MyFeatureCacheStrategy {
-          case networkOnly
-          case cacheFirst
-
-          public static let defaultCacheAge: TimeInterval = .minutes(5)
-
-          public func requestStrategy<Outcome>() -> SingleRequestStrategy<Outcome> {
-            switch self {
-            case .networkOnly:
-              return .networkOnly(writeResultToCache: true)
-            case .cacheFirst:
-              return .cacheFirst(maxCacheAge: Self.defaultCacheAge)
-            }
-          }
-        }
-        """))
-
-        XCTAssertEqual(formatter.endOfDeclaration(atDeclarationKeyword: 24), 39) // let defaultCacheAge
-        XCTAssertEqual(formatter.endOfDeclaration(atDeclarationKeyword: 43), 112) // func requestStrategy
     }
 
     // MARK: - parseExpressionRange

@@ -1615,14 +1615,23 @@ extension Formatter {
 
     /// Parses the declarations in the given range.
     func parseDeclarations(in range: Range<Int>) -> [Declaration] {
-        var declarations = [Declaration]()
+        /// A temporary declaration value. We can't create a `DeclarationV2` directly
+        /// within the `forEachToken` call, since `forEachToken` doesn't support reentrancy.
+        struct _Declaration {
+            let keyword: String
+            let keywordIndex: Int
+            let range: ClosedRange<Int>
+        }
+
+        var declarations = [_Declaration]()
         var startOfDeclaration = range.lowerBound
 
-        for (index, token) in zip(range, tokens[range]) {
-            guard index >= startOfDeclaration,
+        forEachToken(onlyWhereEnabled: false) { index, token in
+            guard range.contains(index),
+                  index >= startOfDeclaration,
                   token.isDeclarationTypeKeyword || token == .startOfScope("#if")
             else {
-                continue
+                return
             }
 
             let keywordIndex = index
@@ -1632,9 +1641,22 @@ extension Formatter {
             let declarationRange = startOfDeclaration ... min(endOfDeclaration ?? .max, range.upperBound - 1)
             startOfDeclaration = declarationRange.upperBound + 1
 
+            // If the current rule is disabled at this index, don't keep the declaration.
+            // This makes it easy for parseDeclarations-based rules to support directives
+            // like swiftformat:disable, swiftformat:disable:next.
+            if isEnabled {
+                declarations.append(_Declaration(
+                    keyword: declarationKeyword,
+                    keywordIndex: keywordIndex,
+                    range: declarationRange
+                ))
+            }
+        }
+
+        return declarations.map { declaration in
             // If this declaration represents a type, we need to parse its inner declarations as well.
-            if Token.swiftTypeKeywords.contains(declarationKeyword),
-               let bodyOpenBrace = self.index(of: .startOfScope("{"), after: keywordIndex),
+            if Token.swiftTypeKeywords.contains(declaration.keyword),
+               let bodyOpenBrace = self.index(of: .startOfScope("{"), after: declaration.keywordIndex),
                let endOfScope = endOfScope(at: bodyOpenBrace)
             {
                 // The type body excludes any leading linebreaks or trailing spaces.
@@ -1648,47 +1670,46 @@ extension Formatter {
                     body = parseDeclarations(in: (bodyOpenBrace + 1) ..< endOfScope)
                 }
 
-                declarations.append(TypeDeclaration(
-                    keyword: declarationKeyword,
-                    range: declarationRange,
+                return TypeDeclaration(
+                    keyword: declaration.keyword,
+                    range: declaration.range,
                     body: body,
                     formatter: self
-                ))
+                )
             }
 
             // If this declaration represents a conditional compilation block,
             // we also have to parse its inner declarations.
-            else if declarationKeyword == "#if",
-                    let endOfScope = endOfScope(at: keywordIndex)
+            else if declaration.keyword == "#if",
+                    let endOfScope = endOfScope(at: declaration.keywordIndex)
             {
                 // The conditional compilation body excludes any leading linebreaks or trailing spaces.
                 let body: [Declaration]
-                if let startOfBody = self.index(of: .nonLinebreak, after: endOfLine(at: keywordIndex)),
+                if let startOfBody = self.index(of: .nonLinebreak, after: endOfLine(at: declaration.keywordIndex)),
                    let endOfBody = self.index(of: .nonSpace, before: endOfScope),
                    startOfBody <= endOfBody
                 {
                     body = parseDeclarations(in: Range(startOfBody ... endOfBody))
                 } else {
-                    body = parseDeclarations(in: (endOfLine(at: keywordIndex) + 1) ..< endOfScope)
+                    body = parseDeclarations(in: (endOfLine(at: declaration.keywordIndex) + 1) ..< endOfScope)
                 }
 
-                declarations.append(ConditionalCompilationDeclaration(
-                    range: declarationRange,
+                return ConditionalCompilationDeclaration(
+                    range: declaration.range,
                     body: body,
                     formatter: self
-                ))
+                )
             }
 
             else {
-                declarations.append(SimpleDeclaration(
-                    keyword: declarationKeyword,
-                    range: declarationRange,
+                return SimpleDeclaration(
+                    keyword: declaration.keyword,
+                    range: declaration.range,
                     formatter: self
-                ))
+                )
             }
         }
-
-        return declarations.filter(\.isValid)
+        .filter(\.isValid)
     }
 
     /// Returns the end index of the `Declaration` containing `declarationKeywordIndex`.

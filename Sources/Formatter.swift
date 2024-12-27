@@ -331,16 +331,22 @@ public extension Formatter {
         replaceTokens(in: range.lowerBound ..< range.upperBound + 1, with: token)
     }
 
-    /// Replaces all of the tokens with the given new tokens,
+    /// Replaces all of the tokens in the given range with the given new tokens,
     /// diffing the lines and tracking lines that move without changes.
-    func replaceAllTokens(with updatedTokens: [Token]) {
+    func diffAndReplaceTokens(in rangeToUpdate: ClosedRange<Int>, with updatedTokens: [Token]) {
         guard #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) else {
             // Swift's diffing implementation is only available in macOS 10.15+
-            replaceTokens(in: tokens.indices, with: updatedTokens)
+            replaceTokens(in: rangeToUpdate, with: updatedTokens)
             return
         }
 
-        let originalLines = tokens.lines
+        // The diffing implementation below is zero-indexed related to the formatter,
+        // so the range we diff also needs to be zero-indexed.
+        let diffRange = 0 ... rangeToUpdate.upperBound
+        let originalTokens = Array(tokens[diffRange])
+        let updatedTokens = Array(tokens[0 ..< rangeToUpdate.lowerBound]) + updatedTokens
+
+        let originalLines = originalTokens.lines
         let updatedLines = updatedTokens.lines
         let difference = updatedLines.difference(from: originalLines).inferringMoves()
 
@@ -766,13 +772,13 @@ extension String {
     }
 }
 
-private extension Array where Element == Token {
+private extension Collection where Element == Token, Index == Int {
     /// Ranges of lines within this array of tokens
     var lineRanges: [ClosedRange<Int>] {
         var lineRanges: [ClosedRange<Int>] = []
         var currentLine: ClosedRange<Int>?
 
-        for (index, token) in enumerated() {
+        for (index, token) in zip(indices, self) {
             if currentLine == nil {
                 currentLine = index ... index
             } else {
@@ -793,7 +799,7 @@ private extension Array where Element == Token {
     }
 
     /// All of the lines within this array of tokens
-    var lines: [ArraySlice<Token>] {
+    var lines: [SubSequence] {
         lineRanges.map { lineRange in
             self[lineRange]
         }

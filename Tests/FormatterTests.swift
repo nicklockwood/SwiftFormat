@@ -555,7 +555,7 @@ class FormatterTests: XCTestCase {
         ].flatMap { $0 }
 
         let formatter = Formatter(input, trackChanges: true)
-        formatter.replaceAllTokens(with: output)
+        formatter.diffAndReplaceTokens(in: ClosedRange(formatter.tokens.indices), with: output)
         XCTAssertEqual(sourceCode(for: formatter.tokens), sourceCode(for: output))
 
         // The changes should include both moves and non-moves

@@ -644,6 +644,10 @@
 		2EF737522C5E881C00128F91 /* CodeOrganizationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EF737512C5E881C00128F91 /* CodeOrganizationTests.swift */; };
 		2EF737542C5E897800128F91 /* ProjectFilePaths.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EF737532C5E897800128F91 /* ProjectFilePaths.swift */; };
 		2EF737562C5ED19600128F91 /* DocCommentsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EF737552C5ED19600128F91 /* DocCommentsTests.swift */; };
+		2EF8BF1B2D1E0D4F00D6F12F /* DeclarationType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EF8BF1A2D1E0D4F00D6F12F /* DeclarationType.swift */; };
+		2EF8BF1C2D1E0D4F00D6F12F /* DeclarationType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EF8BF1A2D1E0D4F00D6F12F /* DeclarationType.swift */; };
+		2EF8BF1D2D1E0D4F00D6F12F /* DeclarationType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EF8BF1A2D1E0D4F00D6F12F /* DeclarationType.swift */; };
+		2EF8BF1E2D1E0D4F00D6F12F /* DeclarationType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EF8BF1A2D1E0D4F00D6F12F /* DeclarationType.swift */; };
 		37D828AB24BF77DA0012FC0A /* XcodeKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 37D828AA24BF77DA0012FC0A /* XcodeKit.framework */; };
 		37D828AC24BF77DA0012FC0A /* XcodeKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 37D828AA24BF77DA0012FC0A /* XcodeKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		580496D52C584E8F004B7DBF /* EmptyExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 580496D42C584E8F004B7DBF /* EmptyExtensions.swift */; };
@@ -1034,6 +1038,7 @@
 		2EF737512C5E881C00128F91 /* CodeOrganizationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeOrganizationTests.swift; sourceTree = "<group>"; };
 		2EF737532C5E897800128F91 /* ProjectFilePaths.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectFilePaths.swift; sourceTree = "<group>"; };
 		2EF737552C5ED19600128F91 /* DocCommentsTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DocCommentsTests.swift; sourceTree = "<group>"; };
+		2EF8BF1A2D1E0D4F00D6F12F /* DeclarationType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeclarationType.swift; sourceTree = "<group>"; };
 		37D828AA24BF77DA0012FC0A /* XcodeKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XcodeKit.framework; path = Library/Frameworks/XcodeKit.framework; sourceTree = DEVELOPER_DIR; };
 		580496D42C584E8F004B7DBF /* EmptyExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyExtensions.swift; sourceTree = "<group>"; };
 		90C4B6CA1DA4B04A009EB000 /* SwiftFormat for Xcode.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "SwiftFormat for Xcode.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1190,6 +1195,7 @@
 				01D3B28524E9C9C700888DE0 /* FormattingHelpers.swift */,
 				2EDC9DD92CCE9A7C0085DBE2 /* DeclarationV2.swift */,
 				2E230CA12C4C1C0700A16E2E /* DeclarationV1.swift */,
+				2EF8BF1A2D1E0D4F00D6F12F /* DeclarationType.swift */,
 				2E7D30A32A7940C500C32174 /* Singularize.swift */,
 				01A0EAA71D5DB4CF00A0A8E3 /* SwiftFormat.h */,
 				01A0EAC41D5DB54A00A0A8E3 /* SwiftFormat.swift */,
@@ -1949,6 +1955,7 @@
 				01B3987D1D763493009ADE61 /* Formatter.swift in Sources */,
 				2E230CA22C4C1C0700A16E2E /* DeclarationV1.swift in Sources */,
 				2E2BAD932C57F6DD00590239 /* NumberFormatting.swift in Sources */,
+				2EF8BF1B2D1E0D4F00D6F12F /* DeclarationType.swift in Sources */,
 				01F17E821E25870700DCD359 /* CommandLine.swift in Sources */,
 				2E2BAD7F2C57F6DD00590239 /* SortTypealiases.swift in Sources */,
 				2E2BAD772C57F6DD00590239 /* SortedSwitchCases.swift in Sources */,
@@ -2141,6 +2148,7 @@
 				2E2BACF42C57F6DD00590239 /* PreferForLoop.swift in Sources */,
 				2E2BACE42C57F6DD00590239 /* GenericExtensions.swift in Sources */,
 				2E2BAC942C57F6DD00590239 /* DocCommentsBeforeModifiers.swift in Sources */,
+				2EF8BF1C2D1E0D4F00D6F12F /* DeclarationType.swift in Sources */,
 				2E2BACDC2C57F6DD00590239 /* SpaceAroundBraces.swift in Sources */,
 				2E2BAD942C57F6DD00590239 /* NumberFormatting.swift in Sources */,
 				2E2BAD442C57F6DD00590239 /* AndOperator.swift in Sources */,
@@ -2366,6 +2374,7 @@
 				2E2BADA92C57F6DD00590239 /* UnusedArguments.swift in Sources */,
 				2E2BAD452C57F6DD00590239 /* AndOperator.swift in Sources */,
 				2E2BAC312C57F6DD00590239 /* SpaceInsideParens.swift in Sources */,
+				2EF8BF1D2D1E0D4F00D6F12F /* DeclarationType.swift in Sources */,
 				2E2BAD5D2C57F6DD00590239 /* AnyObjectProtocol.swift in Sources */,
 				2E2BAD492C57F6DD00590239 /* WrapLoopBodies.swift in Sources */,
 				2E2BACF52C57F6DD00590239 /* PreferForLoop.swift in Sources */,
@@ -2516,6 +2525,7 @@
 				2E2BAD922C57F6DD00590239 /* HoistTry.swift in Sources */,
 				2E2BADAA2C57F6DD00590239 /* UnusedArguments.swift in Sources */,
 				2E2BAD462C57F6DD00590239 /* AndOperator.swift in Sources */,
+				2EF8BF1E2D1E0D4F00D6F12F /* DeclarationType.swift in Sources */,
 				2E2BAC322C57F6DD00590239 /* SpaceInsideParens.swift in Sources */,
 				2E2BAD5E2C57F6DD00590239 /* AnyObjectProtocol.swift in Sources */,
 				2E2BAD4A2C57F6DD00590239 /* WrapLoopBodies.swift in Sources */,

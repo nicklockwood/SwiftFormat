@@ -16,7 +16,7 @@ public extension FormatRule {
     ) { formatter in
         var emptyExtensions = [TypeDeclaration]()
 
-        for declaration in formatter.parseDeclarationsV2() {
+        for declaration in formatter.parseDeclarations() {
             guard declaration.keyword == "extension",
                   let extensionDeclaration = declaration.asTypeDeclaration,
                   extensionDeclaration.body.isEmpty,

@@ -748,12 +748,12 @@ public extension Formatter {
     /// Registers the given declaration to receive range updates as tokens are modified
     /// in this formatter. The registration is automatically cleared after the declaration
     /// is deallocated.
-    internal func registerDeclaration(_ declaration: DeclarationV2) {
+    internal func registerDeclaration(_ declaration: Declaration) {
         activeDeclarations.append(WeakDeclarationReference(declaration: declaration))
     }
 
     /// Unregisters the given declaration so it will no longer be notified of modifications.
-    internal func unregisterDeclaration(_ declaration: DeclarationV2) {
+    internal func unregisterDeclaration(_ declaration: Declaration) {
         activeDeclarations.removeAll(where: { $0.declaration === declaration })
     }
 }
@@ -807,7 +807,7 @@ private extension Collection where Element == Token, Index == Int {
 }
 
 struct WeakDeclarationReference {
-    weak var declaration: DeclarationV2?
+    weak var declaration: Declaration?
 }
 
 extension Array where Element == WeakDeclarationReference {

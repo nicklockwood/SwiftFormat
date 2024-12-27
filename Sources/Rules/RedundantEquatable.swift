@@ -8,7 +8,7 @@ public extension FormatRule {
         options: ["equatablemacro"]
     ) { formatter in
         // Find all of the types with an `Equatable` conformance and a manually-implemented `static func ==` implementation.
-        let declarations = formatter.parseDeclarationsV2()
+        let declarations = formatter.parseDeclarations()
         let typesManuallyImplementingEquatableConformance = formatter.manuallyImplementedEquatableTypes(in: declarations)
 
         for equatableType in typesManuallyImplementingEquatableConformance {
@@ -131,19 +131,19 @@ public extension FormatRule {
 extension Formatter {
     struct EquatableType {
         /// The main type declaration of the type that has an Equatable conformance
-        let typeDeclaration: DeclarationV2
+        let typeDeclaration: Declaration
         /// The Equatable `static func ==` implementation, which could be defined in an extension.
-        let equatableFunction: DeclarationV2
+        let equatableFunction: Declaration
         /// The declaration that contains the `: Equatable` conformance, which may be an extension.
-        let declarationWithEquatableConformance: DeclarationV2
+        let declarationWithEquatableConformance: Declaration
     }
 
     /// Finds all of the types in the current file with an Equatable conformance,
     /// which also have a manually-implemented `static func ==` method.
-    func manuallyImplementedEquatableTypes(in declarations: [DeclarationV2]) -> [EquatableType] {
-        var typeDeclarationsByFullyQualifiedName: [String: DeclarationV2] = [:]
-        var typesWithEquatableConformances: [(fullyQualifiedTypeName: String, declarationWithEquatableConformance: DeclarationV2)] = []
-        var equatableImplementationsByFullyQualifiedName: [String: DeclarationV2] = [:]
+    func manuallyImplementedEquatableTypes(in declarations: [Declaration]) -> [EquatableType] {
+        var typeDeclarationsByFullyQualifiedName: [String: Declaration] = [:]
+        var typesWithEquatableConformances: [(fullyQualifiedTypeName: String, declarationWithEquatableConformance: Declaration)] = []
+        var equatableImplementationsByFullyQualifiedName: [String: Declaration] = [:]
 
         declarations.forEachRecursiveDeclaration { declaration in
             guard let declarationName = declaration.name else { return }
@@ -234,7 +234,7 @@ extension Formatter {
     /// Finds the set of properties that are compared in the given Equatable `func`,
     /// following the pattern `lhs.{property} == rhs.{property}`.
     ///  - Returns `nil` if there are any comparisons that don't match this pattern.
-    func parseComparedProperties(inEquatableImplementation equatableImplementation: DeclarationV2) -> Set<String>? {
+    func parseComparedProperties(inEquatableImplementation equatableImplementation: Declaration) -> Set<String>? {
         let funcIndex = equatableImplementation.keywordIndex
 
         guard let startOfBody = index(of: .startOfScope("{"), after: funcIndex),

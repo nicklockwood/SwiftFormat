@@ -16,7 +16,7 @@ public extension FormatRule {
         options: ["marktypes", "typemark", "markextensions", "extensionmark", "groupedextension"],
         sharedOptions: ["lineaftermarks", "linebreaks"]
     ) { formatter in
-        var declarations = formatter.parseDeclarationsV2()
+        var declarations = formatter.parseDeclarations()
 
         // Do nothing if there is only one top-level declaration in the file (excluding imports)
         let declarationsWithoutImports = declarations.filter { $0.keyword != "import" }

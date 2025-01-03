@@ -524,8 +524,7 @@ extension Formatter {
             Array(Set([
                 // The user's specific category separator template
                 $0.markCommentBody(from: options.categoryMarkComment, with: options.organizationMode),
-                // Other common variants that we would want to replace with the correct variant
-                $0.markCommentBody(from: "%c", with: options.organizationMode),
+                // Always look for MARKs even if the user is using a different template
                 $0.markCommentBody(from: "MARK: %c", with: options.organizationMode),
             ]))
         }.compactMap { $0 }

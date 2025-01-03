@@ -1568,9 +1568,9 @@ class OrganizeDeclarationsTests: XCTestCase {
 
             init() {}
 
-            // Public
+            // mark: Public
 
-            // - Public
+            // mark - Public
 
             public func bar() {}
 
@@ -3592,5 +3592,18 @@ class OrganizeDeclarationsTests: XCTestCase {
         """
 
         testFormatting(for: input, output, rule: .organizeDeclarations, exclude: [.blankLinesAtStartOfScope])
+    }
+
+    func testPreservesUnrelatedComments() {
+        let input = """
+        enum Test {
+            /// Test Properties
+            static let foo = "foo"
+            static let bar = "bar"
+            static let baaz = "baaz"
+        }
+        """
+
+        testFormatting(for: input, rule: .organizeDeclarations)
     }
 }

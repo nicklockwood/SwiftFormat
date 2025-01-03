@@ -1298,7 +1298,7 @@ extension Formatter {
     ///  - `[...]`
     ///  - `(...)`
     ///  - `Foo<...>`
-    ///  - `(...) -> ...`
+    ///  - `(...) (async|throws|throws(Error)) -> ...`
     ///  - `...?`
     ///  - `...!`
     ///  - `any ...`
@@ -1396,8 +1396,23 @@ extension Formatter {
 
         // Parse types of the form `(...)` or `(...) -> ...`
         if startToken == .startOfScope("("), let endOfScope = endOfScope(at: startOfTypeIndex) {
-            // Parse types of the form `(...) -> ...`
-            if let closureReturnIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfScope),
+            // Parse types of the form `(...) (async|throws|throws(Error)) -> ...`.
+            // Look for the `->` token, skipping over any `async`, `throws`, or `throws(Error)`s.
+            let allowedTokensBeforeReturnArrow: [Token] = [.keyword("throws"), .identifier("async"), .startOfScope("(")]
+            var searchIndex = endOfScope
+            while let nextToken = index(of: .nonSpaceOrCommentOrLinebreak, after: searchIndex),
+                  allowedTokensBeforeReturnArrow.contains(tokens[nextToken])
+            {
+                // Skip over any tokens inside parens
+                if tokens[nextToken].isStartOfScope, let endOfScope = self.endOfScope(at: nextToken) {
+                    searchIndex = endOfScope
+                } else {
+                    searchIndex = nextToken
+                }
+            }
+
+            // If we find a return arrow, this is a closure with a return type.
+            if let closureReturnIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: searchIndex),
                tokens[closureReturnIndex] == .operator("->", .infix),
                let returnTypeIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: closureReturnIndex),
                let returnTypeRange = parseType(at: returnTypeIndex)?.range

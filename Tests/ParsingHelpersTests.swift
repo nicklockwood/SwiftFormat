@@ -2058,6 +2058,41 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(formatter.parseType(at: 5)?.name, "(Foo, Bar) -> (Foo, Bar)")
     }
 
+    func testParseThrowingClosureType() {
+        let formatter = Formatter(tokenize("""
+        let foo: (Foo, Bar) throws -> Void
+        """))
+        XCTAssertEqual(formatter.parseType(at: 5)?.name, "(Foo, Bar) throws -> Void")
+    }
+
+    func testParseTypedThrowingClosureType() {
+        let formatter = Formatter(tokenize("""
+        let foo: (Foo, Bar) throws(MyFeatureError) -> Void
+        """))
+        XCTAssertEqual(formatter.parseType(at: 5)?.name, "(Foo, Bar) throws(MyFeatureError) -> Void")
+    }
+
+    func testParseAsyncClosureType() {
+        let formatter = Formatter(tokenize("""
+        let foo: (Foo, Bar) async -> Void
+        """))
+        XCTAssertEqual(formatter.parseType(at: 5)?.name, "(Foo, Bar) async -> Void")
+    }
+
+    func testParseAsyncThrowsClosureType() {
+        let formatter = Formatter(tokenize("""
+        let foo: (Foo, Bar) async throws -> Void
+        """))
+        XCTAssertEqual(formatter.parseType(at: 5)?.name, "(Foo, Bar) async throws -> Void")
+    }
+
+    func testParseTypedAsyncThrowsClosureType() {
+        let formatter = Formatter(tokenize("""
+        let foo: (Foo, Bar) async throws(MyCustomError) -> Void
+        """))
+        XCTAssertEqual(formatter.parseType(at: 5)?.name, "(Foo, Bar) async throws(MyCustomError) -> Void")
+    }
+
     func testParseClosureTypeWithOwnership() {
         let formatter = Formatter(tokenize("""
         let foo: (consuming Foo, borrowing Bar) -> (Foo, Bar) = { foo, bar in (foo, bar) }

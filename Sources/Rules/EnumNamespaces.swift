@@ -65,6 +65,7 @@ public extension FormatRule {
               static let foo = "foo"
               static let bar = "bar"
           }
+        ```
         """
     }
 }

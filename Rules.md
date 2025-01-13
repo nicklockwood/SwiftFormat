@@ -848,6 +848,7 @@ Option | Description
       static let foo = "foo"
       static let bar = "bar"
   }
+```
 
 </details>
 <br/>

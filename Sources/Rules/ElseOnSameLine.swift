@@ -42,7 +42,7 @@ public extension FormatRule {
                 if isOnNewLine {
                     prevIndex = formatter.index(of: .nonSpaceOrLinebreak, before: i) ?? prevIndex
                 }
-                if formatter.tokens[prevIndex] == .endOfScope("}") {
+                if formatter.tokens[prevIndex] == .endOfScope("}"), !formatter.isGuardElse(at: i) {
                     fallthrough
                 }
                 guard let guardIndex = formatter.indexOfLastSignificantKeyword(at: prevIndex + 1, excluding: [

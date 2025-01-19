@@ -4129,4 +4129,82 @@ class IndentTests: XCTestCase {
         let options = FormatOptions(indentCase: true)
         testFormatting(for: input, rule: .indent, options: options, exclude: [.wrap])
     }
+
+    func testGuardElseIndentAfterParenthesizedExpression() {
+        let input = """
+        func format() {
+            guard
+                let result = foo(
+                    bar: 5,
+                    baz: 6
+                )
+            else {
+                return
+            }
+
+            print(result)
+        }
+        """
+        testFormatting(for: input, rule: .indent)
+    }
+
+    func testGuardElseIndentAfterSwitchExpression() {
+        let input = """
+        func format(foo: String?) {
+            guard
+                let result =
+                    switch foo {
+                    case .none: "none"
+                    case .some: "some"
+                    }
+            else {
+                return
+            }
+
+            print(result)
+        }
+        """
+        testFormatting(for: input, rule: .indent)
+    }
+
+    func testGuardElseIndentAfterIfExpression() {
+        let input = """
+        func format(foo: Bool) {
+            guard
+                let result =
+                    if foo {
+                        bar
+                    } else {
+                        nil
+                    }
+            else {
+                return
+            }
+
+            print(result)
+        }
+        """
+        testFormatting(for: input, rule: .indent)
+    }
+
+    func testIfElseIndentAfterSwitchExpression() {
+        let input = """
+        func format(foo: String?) {
+            if
+                let result =
+                    switch foo {
+                    case .none: "none"
+                    case .some: "some"
+                    }
+            {
+                return true
+            } else {
+                return false
+            }
+
+            print(result)
+        }
+        """
+        testFormatting(for: input, rule: .indent)
+    }
 }

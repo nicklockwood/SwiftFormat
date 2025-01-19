@@ -257,9 +257,11 @@ public extension FormatRule {
                         // Find the `=` before this start of scope, which isn't itself part of the conditional statement
                         var previousAssignmentIndex = formatter.index(of: .operator("=", .infix), before: startOfScope)
                         while let currentPreviousAssignmentIndex = previousAssignmentIndex,
-                              formatter.isConditionalStatement(at: currentPreviousAssignmentIndex)
+                              formatter.isConditionalStatement(at: currentPreviousAssignmentIndex),
+                              let nextPreviousAssignmentIndex = formatter.index(of: .operator("=", .infix),
+                                                                                before: currentPreviousAssignmentIndex)
                         {
-                            previousAssignmentIndex = formatter.index(of: .operator("=", .infix), before: currentPreviousAssignmentIndex)
+                            previousAssignmentIndex = nextPreviousAssignmentIndex
                         }
 
                         // Make sure the `=` actually created a new scope
@@ -636,15 +638,32 @@ public extension FormatRule {
                         ) ?? index
                     }
                     let lastToken = formatter.tokens[lastIndex]
-                    if [.endOfScope("}"), .endOfScope(")")].contains(lastToken),
-                       lastIndex == formatter.startOfLine(at: lastIndex, excludingIndent: true),
-                       formatter.token(at: nextNonSpaceIndex) == .operator(".", .infix) ||
-                       (lastToken == .endOfScope("}") && formatter.isLabel(at: nextNonSpaceIndex))
-                    {
-                        indent = formatter.currentIndentForLine(at: lastIndex)
-                    }
                     if formatter.options.fragment, lastToken == .delimiter(",") {
                         break // Can't reliably indent
+                    }
+                    if lastIndex == formatter.startOfLine(at: lastIndex, excludingIndent: true) {
+                        switch lastToken {
+                        case .endOfScope("}"):
+                            if formatter.token(at: nextNonSpaceIndex) == .operator(".", .infix) ||
+                                formatter.isLabel(at: nextNonSpaceIndex)
+                            {
+                                indent = formatter.currentIndentForLine(at: lastIndex)
+                            } else if [.keyword("else"), .startOfScope("{")].contains(nextToken),
+                                      let scopeStart = formatter.startOfScope(at: lastIndex),
+                                      let startIndex = formatter.indexOfLastSignificantKeyword(at: scopeStart),
+                                      [.keyword("else"), .keyword("switch")].contains(formatter.tokens[startIndex]),
+                                      let equalsIndex = formatter.index(of: .operator("=", .infix), before: startIndex),
+                                      let outerIndex = formatter.startOfConditionalStatement(at: equalsIndex)
+                            {
+                                indent = formatter.currentIndentForLine(at: outerIndex)
+                            }
+                        case .endOfScope(")"):
+                            if formatter.token(at: nextNonSpaceIndex) == .operator(".", .infix) {
+                                indent = formatter.currentIndentForLine(at: lastIndex)
+                            }
+                        default:
+                            break
+                        }
                     }
                     formatter.insertSpaceIfEnabled(indent, at: i + 1)
                 }

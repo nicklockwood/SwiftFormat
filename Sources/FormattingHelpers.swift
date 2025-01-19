@@ -1375,6 +1375,12 @@ extension Formatter {
               let endOfBody = endOfScope(at: startOfBody)
         {
             branches.append((startOfBranch: startOfBody, endOfBranch: endOfBody))
+            if conditionalBranchIndex > ifIndex,
+               next(.nonSpaceOrCommentOrLinebreak, after: conditionalBranchIndex) != .keyword("if")
+            {
+                // An `if` statement can only have one `else` branch that's not an `else if`
+                break
+            }
             nextConditionalBranchIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfBody)
         }
 
@@ -1613,6 +1619,24 @@ extension Formatter {
                 }
                 return true
             }
+        }
+        return false
+    }
+
+    /// Whether a give else is part of a guard statement
+    func isGuardElse(at index: Int) -> Bool {
+        guard tokens[index] == .keyword("else"),
+              let previousIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: index)
+        else {
+            return false
+        }
+        guard tokens[previousIndex] == .endOfScope("}"),
+              let startOfScope = startOfScope(at: previousIndex),
+              lastSignificantKeyword(at: startOfScope - 1, excluding: [
+                  "as", "is", "try", "var", "let", "case",
+              ]) == "if"
+        else {
+            return true
         }
         return false
     }

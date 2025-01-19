@@ -1106,7 +1106,7 @@ extension Formatter {
         }
         switch prevToken {
         case .identifier, .operator(_, .postfix),
-             .endOfScope("]"), .endOfScope(")"), .endOfScope("}"),
+             .endOfScope("]"), .endOfScope(")"), .endOfScope(">"), .endOfScope("}"),
              .endOfScope where prevToken.isStringDelimiter:
             return true
         default:

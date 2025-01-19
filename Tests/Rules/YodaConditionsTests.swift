@@ -283,6 +283,18 @@ class YodaConditionsTests: XCTestCase {
         testFormatting(for: input, rule: .yodaConditions)
     }
 
+    func testGenericFunctionsInEqualityExpressions() {
+        let input = """
+        print(method<Int>() == 123)
+        print(method<Int>() == intVariable)
+        print(method<Int>() == IntEnum.foo.rawValue)
+        print(method<String>() == "string")
+        print(method<String>() == stringVariable)
+        print(method<String>() == StringEnum.foo.rawValue)
+        """
+        testFormatting(for: input, rule: .yodaConditions)
+    }
+
     // yodaSwap = literalsOnly
 
     func testNoSwapYodaDotMember() {

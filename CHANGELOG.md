@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.55.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.55.5) (2025-01-20)
+
+- Fixed bug with `yodaConditions` rule mangling generic function calls
+- Fixed indenting of guard `else` or opening brace following `if`/`switch` expression
+- The `organizeDeclarations` rule no longer treats properties with `didSet` as computed
+- Improved formatting support for async and throwing closures
+
 ## [0.55.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.55.4) (2024-12-22)
 
 - Fixed inconsistent indenting of wrapped `where` clause for `switch ... case` statements

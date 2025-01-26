@@ -2576,27 +2576,27 @@ class ParsingHelpersTests: XCTestCase {
 
         let formatter = Formatter(tokenize(input))
         XCTAssertEqual(
-            formatter.parseFunctionCallArgumentLabels(startOfScope: 1), // foo(...)
+            formatter.parseFunctionCallArguments(startOfScope: 1).map(\.label), // foo(...)
             [nil, "bar", nil, "quux", "last"]
         )
 
         XCTAssertEqual(
-            formatter.parseFunctionCallArgumentLabels(startOfScope: 3), // Foo(...)
+            formatter.parseFunctionCallArguments(startOfScope: 3).map(\.label), // Foo(...)
             ["foo"]
         )
 
         XCTAssertEqual(
-            formatter.parseFunctionCallArgumentLabels(startOfScope: 15), // Bar(...)
+            formatter.parseFunctionCallArguments(startOfScope: 15).map(\.label), // Bar(...)
             [nil]
         )
 
         XCTAssertEqual(
-            formatter.parseFunctionCallArgumentLabels(startOfScope: 27), // Quux()
+            formatter.parseFunctionCallArguments(startOfScope: 27).map(\.label), // Quux()
             []
         )
 
         XCTAssertEqual(
-            formatter.parseFunctionCallArgumentLabels(startOfScope: 49), // isOperator(...)
+            formatter.parseFunctionCallArguments(startOfScope: 49).map(\.label), // isOperator(...)
             ["at"]
         )
     }

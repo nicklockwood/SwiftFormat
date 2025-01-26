@@ -104,7 +104,7 @@ class CodeOrganizationTests: XCTestCase {
                 // between methods with the same base name
                 var functionCallArguments: [String?]?
                 if let functionCallStartOfScope = formatter.index(of: .startOfScope("("), after: index) {
-                    functionCallArguments = formatter.parseFunctionCallArgumentLabels(startOfScope: functionCallStartOfScope)
+                    functionCallArguments = formatter.parseFunctionCallArguments(startOfScope: functionCallStartOfScope).map(\.label)
                 }
 
                 guard let matchingHelper = allRuleFileHelpers.first(where: { helper in

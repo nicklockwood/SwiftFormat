@@ -112,6 +112,7 @@
 * [redundantProperty](#redundantProperty)
 * [sortSwitchCases](#sortSwitchCases)
 * [spacingGuards](#spacingGuards)
+* [swiftTesting](#swiftTesting)
 * [unusedPrivateDeclarations](#unusedPrivateDeclarations)
 * [wrapConditionalBodies](#wrapConditionalBodies)
 * [wrapEnumCases](#wrapEnumCases)
@@ -2912,6 +2913,78 @@ Remove backticks around `self` in Optional unwrap expressions.
 **NOTE:** assignment to un-escaped `self` is only supported in Swift 4.2 and
 above, so the `strongifiedSelf` rule is disabled unless the Swift version is
 set to 4.2 or above.
+
+</details>
+<br/>
+
+## swiftTesting
+
+Prefer the Swift Testing library over XCTest.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  @testable import MyFeatureLib
+- import XCTest
++ import Testing
+
+- final class MyFeatureTests: XCTestCase {
+-     func testMyFeatureHasNoBugs() {
+-         let myFeature = MyFeature()
+-         myFeature.runAction()
+-         XCTAssertFalse(myFeature.hasBugs, "My feature has no bugs")
+-         XCTAssertEqual(myFeature.crashes.count, 0, "My feature doesn't crash")
+-         XCTAssertNil(myFeature.crashReport)
+-     }
+- }
++ @MainActor
++ final class MyFeatureTests { 
++     @Test func myFeatureHasNoBugs() {
++         let myFeature = MyFeature()
++         myFeature.runAction()
++         #expect(!myFeature.hasBugs, "My feature has no bugs")
++         #expect(myFeature.crashes.isEmpty, "My feature doesn't crash")
++         #expect(myFeature.crashReport == nil)
++     }
++ }
+
+- final class MyFeatureTests: XCTestCase {
+-     var myFeature: MyFeature!
+- 
+-     override func setUp() async throws {
+-         myFeature = try await MyFeature()
+-     }
+- 
+-     override func tearDown() {
+-         myFeature = nil
+-     }
+- 
+-     func testMyFeatureWorks() {
+-         myFeature.runAction()
+-         XCTAssertTrue(myFeature.worksProperly)
+-         XCTAssertEqual(myFeature.screens.count, 8)
+-     }
+- }
++ @MainActor
++ final class MyFeatureTests {
++     var myFeature: MyFeature!
++ 
++     init() async throws {
++         myFeature = try await MyFeature()
++     }
++ 
++     deinit {
++         myFeature = nil
++     }
++ 
++     @Test func myFeatureWorks() {
++         myFeature.runAction()
++         #expect(myFeature.worksProperly)
++         #expect(myFeature.screens.count == 8)
++     }
++ }
+```
 
 </details>
 <br/>

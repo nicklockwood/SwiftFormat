@@ -2014,7 +2014,7 @@ extension Formatter {
                     switch tokens[nextPartIndex] {
                     case .operator(".", .infix):
                         name += "."
-                    case let .identifier(string):
+                    case let .identifier(string) where name.hasSuffix("."):
                         name += string
                     default:
                         break loop
@@ -2056,6 +2056,57 @@ extension Formatter {
         // End of imports
         importStack.append(importRanges)
         return importStack
+    }
+
+    /// Adds imports for the given list of modules to this file if not already present
+    func addImports(_ importsToAddIfNeeded: Set<String>) {
+        let importRanges = parseImports()
+        let currentImports = Set(importRanges.flatMap { $0.map(\.module) })
+
+        for importToAddIfNeeded in importsToAddIfNeeded {
+            guard !currentImports.contains(importToAddIfNeeded) else { continue }
+
+            let newImport: [Token] = [.keyword("import"), .space(" "), .identifier(importToAddIfNeeded)]
+
+            // If there are any existing imports, add the new import in the existing group
+            if let firstImportIndex = index(of: .keyword("import"), after: -1) {
+                let startOfFirstImport = startOfModifiers(at: firstImportIndex, includingAttributes: true)
+                insert(newImport + [linebreakToken(for: firstImportIndex)], at: startOfFirstImport)
+            }
+
+            // Otherwise if there are no imports:
+            //  - Make sure to insert the comment after any header comment if present
+            //  - Include a blank line after the import
+            else {
+                let insertionIndex: Int
+                if let headerCommentRange = headerCommentTokenRange(), !headerCommentRange.isEmpty {
+                    insertionIndex = headerCommentRange.upperBound
+                } else {
+                    insertionIndex = 0
+                }
+
+                let newImportWithBlankLine = newImport + [
+                    linebreakToken(for: insertionIndex),
+                    linebreakToken(for: insertionIndex),
+                ]
+
+                insert(newImportWithBlankLine, at: insertionIndex)
+            }
+        }
+    }
+
+    /// Removes the import for the given module names if present
+    func removeImports(_ moduleNames: Set<String>) {
+        let imports = parseImports().flatMap { $0 }
+        let importsToRemove = imports.filter { moduleNames.contains($0.module) }
+
+        let importsToRemoveByFileOrder = importsToRemove.sorted(by: { lhs, rhs in
+            lhs.range.lowerBound < rhs.range.lowerBound
+        })
+
+        for importToRemove in importsToRemoveByFileOrder.reversed() {
+            removeTokens(in: importToRemove.range)
+        }
     }
 
     /// Parses the arguments of the closure whose open brace is at the given index.
@@ -2532,15 +2583,22 @@ extension Formatter {
         return arguments
     }
 
+    struct FunctionCallArgument {
+        /// The label of the argument. `nil` if unlabeled.
+        let label: String?
+        /// The value of the argument, including any leading or trailing whitespace / comments.
+        let value: String
+    }
+
     /// Parses the parameter labels of the function call with its `(` start of scope
     /// token at the given index.
-    func parseFunctionCallArgumentLabels(startOfScope: Int) -> [String?] {
+    func parseFunctionCallArguments(startOfScope: Int) -> [FunctionCallArgument] {
         assert(tokens[startOfScope] == .startOfScope("("))
         guard let endOfScope = endOfScope(at: startOfScope),
               index(of: .nonSpaceOrCommentOrLinebreak, after: startOfScope) != endOfScope
         else { return [] }
 
-        var argumentLabels: [String?] = []
+        var argumentLabels: [FunctionCallArgument] = []
 
         var currentIndex = startOfScope
         repeat {
@@ -2551,9 +2609,15 @@ extension Formatter {
                let argumentLabelIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: colonIndex),
                tokens[argumentLabelIndex].isIdentifier
             {
-                argumentLabels.append(tokens[argumentLabelIndex].string)
+                argumentLabels.append(FunctionCallArgument(
+                    label: tokens[argumentLabelIndex].string,
+                    value: tokens[colonIndex + 1 ..< endOfCurrentArgument].string
+                ))
             } else {
-                argumentLabels.append(nil)
+                argumentLabels.append(FunctionCallArgument(
+                    label: nil,
+                    value: tokens[endOfPreviousArgument + 1 ..< endOfCurrentArgument].string
+                ))
             }
 
             if endOfCurrentArgument >= endOfScope {
@@ -2601,6 +2665,32 @@ extension Formatter {
         }
 
         return conformances
+    }
+
+    /// Removes the protocol conformance at the given index.
+    /// e.g. can remove `Foo` from `Type: Foo, Bar {` (becomes `Type: Bar {`).
+    func removeConformance(at conformanceIndex: Int) {
+        guard let previousToken = index(of: .nonSpaceOrCommentOrLinebreak, before: conformanceIndex),
+              let nextToken = index(of: .nonSpaceOrCommentOrLinebreak, after: conformanceIndex)
+        else { return }
+
+        // The first conformance will be preceded by a colon.
+        // Every conformance but the last one will be followed by a comma.
+        //  - for example: `Type: Foo, Bar, Baaz {`
+        let isFirstConformance = tokens[previousToken] == .delimiter(":")
+        let isLastConformance = tokens[nextToken] != .delimiter(",")
+        let isOnlyConformance = isFirstConformance && isLastConformance
+
+        if isLastConformance || isOnlyConformance {
+            removeTokens(in: previousToken ... conformanceIndex)
+        } else {
+            // When changing `Foo, Bar` to just `Bar`, also remove the space between them
+            if token(at: nextToken + 1)?.isSpace == true {
+                removeTokens(in: conformanceIndex ... (nextToken + 1))
+            } else {
+                removeTokens(in: conformanceIndex ... (nextToken + 1))
+            }
+        }
     }
 
     /// The explicit `Visibility` of the `Declaration` with its keyword at the given index

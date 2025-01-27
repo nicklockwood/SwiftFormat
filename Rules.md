@@ -2921,6 +2921,10 @@ set to 4.2 or above.
 
 Prefer the Swift Testing library over XCTest.
 
+Option | Description
+--- | ---
+`--xctestsymbols` | Comma-delimited list of symbols that depend on XCTest
+
 <details>
 <summary>Examples</summary>
 
@@ -2928,6 +2932,7 @@ Prefer the Swift Testing library over XCTest.
   @testable import MyFeatureLib
 - import XCTest
 + import Testing
++ import Foundation
 
 - final class MyFeatureTests: XCTestCase {
 -     func testMyFeatureHasNoBugs() {
@@ -2938,7 +2943,7 @@ Prefer the Swift Testing library over XCTest.
 -         XCTAssertNil(myFeature.crashReport)
 -     }
 - }
-+ @MainActor
++ @MainActor @Suite(.serialized)
 + final class MyFeatureTests { 
 +     @Test func myFeatureHasNoBugs() {
 +         let myFeature = MyFeature()

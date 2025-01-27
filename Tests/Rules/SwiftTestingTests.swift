@@ -34,10 +34,11 @@ final class SwiftTestingTests: XCTestCase {
         """
 
         let output = """
+        import Foundation
         @testable import MyFeatureLib
         import Testing
 
-        @MainActor
+        @MainActor @Suite(.serialized)
         final class MyFeatureTests {
             @Test func myFeatureWorks() {
                 let myFeature = MyFeature()
@@ -88,10 +89,11 @@ final class SwiftTestingTests: XCTestCase {
         """
 
         let output = """
+        import Foundation
         @testable import MyFeatureLib
         import Testing
 
-        @MainActor
+        @MainActor @Suite(.serialized)
         final class MyFeatureTests {
             var myFeature: MyFeature!
 
@@ -129,6 +131,11 @@ final class SwiftTestingTests: XCTestCase {
                 XCTAssertTrue(foo, "foo is true")
                 XCTAssertFalse(foo)
                 XCTAssertFalse(foo, "foo is false")
+                XCTAssertFalse(foo() == bar(), "foo is not equal to bar")
+                XCTAssertFalse(Foo(hasBar: foo == bar).isValid)
+                XCTAssertFalse(try foo)
+                XCTAssertFalse(try! foo.bar.baz())
+                XCTAssertFalse(foo is Bar)
                 XCTAssertNil(foo)
                 XCTAssertNil(foo, "foo is nil")
                 XCTAssertNotNil(foo)
@@ -136,6 +143,9 @@ final class SwiftTestingTests: XCTestCase {
                 XCTAssertEqual(foo, bar)
                 XCTAssertEqual(foo, bar, "foo and bar are equal")
                 XCTAssertEqual(foo, bar, "foo and bar" + " are equal")
+                XCTAssertEqual(foo == bar, foo == baaz)
+                XCTAssertEqual(foo is Bar, false)
+                XCTAssertNotEqual(foo == bar, foo == baaz)
                 XCTAssertNotEqual(foo, bar)
                 XCTAssertNotEqual(foo, bar, "foo and bar are different")
                 XCTAssertIdentical(foo, bar)
@@ -165,9 +175,10 @@ final class SwiftTestingTests: XCTestCase {
         """
 
         let output = """
+        import Foundation
         import Testing
 
-        @MainActor
+        @MainActor @Suite(.serialized)
         class HelperConversionTests {
             @Test func convertsSimpleXCTestHelpers() throws {
                 #expect(foo)
@@ -177,6 +188,11 @@ final class SwiftTestingTests: XCTestCase {
                 #expect(foo, "foo is true")
                 #expect(!foo)
                 #expect(!foo, "foo is false")
+                #expect(!(foo() == bar()), "foo is not equal to bar")
+                #expect(!Foo(hasBar: foo == bar).isValid)
+                #expect(try !foo)
+                #expect(!(try! foo.bar.baz()))
+                #expect(!(foo is Bar))
                 #expect(foo == nil)
                 #expect(foo == nil, "foo is nil")
                 #expect(foo != nil)
@@ -184,6 +200,9 @@ final class SwiftTestingTests: XCTestCase {
                 #expect(foo == bar)
                 #expect(foo == bar, "foo and bar are equal")
                 #expect(foo == bar, Comment(rawValue: "foo and bar" + " are equal"))
+                #expect((foo == bar) == (foo == baaz))
+                #expect((foo is Bar) == false)
+                #expect((foo == bar) != (foo == baaz))
                 #expect(foo != bar)
                 #expect(foo != bar, "foo and bar are different")
                 #expect(foo === bar)
@@ -213,7 +232,7 @@ final class SwiftTestingTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "6.0")
-        testFormatting(for: input, [output], rules: [.swiftTesting, .wrapArguments, .indent], options: options)
+        testFormatting(for: input, [output], rules: [.swiftTesting, .wrapArguments, .indent, .redundantParens, .hoistTry], options: options)
     }
 
     func testConvertsMultilineXCTestHelpers() {
@@ -263,9 +282,10 @@ final class SwiftTestingTests: XCTestCase {
         """
 
         let output = """
+        import Foundation
         import Testing
 
-        @MainActor
+        @MainActor @Suite(.serialized)
         class HelperConversionTests {
             @Test func converts_multiline_XCTest_helpers() {
                 #expect(foo.bar(
@@ -439,10 +459,11 @@ final class SwiftTestingTests: XCTestCase {
         """
 
         let output = """
+        import Foundation
         @testable import MyFeatureLib
         import Testing
 
-        @MainActor
+        @MainActor @Suite(.serialized)
         final class MyFeatureTests {
             @Test func myFeatureWorks() {
                 let myFeature = MyFeature()
@@ -488,22 +509,47 @@ final class SwiftTestingTests: XCTestCase {
             func test123() {
                 XCTAssertEqual(1 + 2, 3)
             }
+
+            func testInit() {
+                XCTAssertNotNil(Foo())
+            }
+
+            func testSubscript() {
+                XCTAssertNotNil(foo[bar])
+            }
+
+            func testNil() {
+                XCTAssertNil(foo.optionalFoo)
+            }
         }
         """
 
         let output = """
+        import Foundation
         import Testing
 
-        @MainActor
+        @MainActor @Suite(.serialized)
         final class MyFeatureTests {
             @Test func test123() {
-                #expect(1 + 2 == 3)
+                #expect((1 + 2) == 3)
+            }
+
+            @Test func testInit() {
+                #expect(Foo() != nil)
+            }
+
+            @Test func testSubscript() {
+                #expect(foo[bar] != nil)
+            }
+
+            @Test func testNil() {
+                #expect(foo.optionalFoo == nil)
             }
         }
         """
 
         let options = FormatOptions(swiftVersion: "6.0")
-        testFormatting(for: input, output, rule: .swiftTesting, options: options)
+        testFormatting(for: input, [output], rules: [.swiftTesting, .sortImports], options: options)
     }
 
     func testDoesntUpTestNameToExistingFunctionName() {
@@ -522,9 +568,10 @@ final class SwiftTestingTests: XCTestCase {
         """
 
         let output = """
+        import Foundation
         import Testing
 
-        @MainActor
+        @MainActor @Suite(.serialized)
         final class MyFeatureTests {
             @Test func testOnePlusTwo() {
                 #expect(onePlusTwo() == 3)
@@ -537,7 +584,7 @@ final class SwiftTestingTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "6.0")
-        testFormatting(for: input, output, rule: .swiftTesting, options: options)
+        testFormatting(for: input, [output], rules: [.swiftTesting, .sortImports], options: options)
     }
 
     func testPreservesTestMethodWithArguments() {
@@ -557,9 +604,10 @@ final class SwiftTestingTests: XCTestCase {
         """
 
         let output = """
+        import Foundation
         import Testing
 
-        @MainActor
+        @MainActor @Suite(.serialized)
         final class MyFeatureTests {
             @Test func myFeatureWorks() {
                 testMyFeatureWorks(MyFeature())
@@ -573,7 +621,7 @@ final class SwiftTestingTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "6.0")
-        testFormatting(for: input, output, rule: .swiftTesting, options: options)
+        testFormatting(for: input, [output], rules: [.swiftTesting, .sortImports], options: options)
     }
 
     func testAddsThrowingEffectIfNeeded() {
@@ -597,9 +645,10 @@ final class SwiftTestingTests: XCTestCase {
         """
 
         let output = """
+        import Foundation
         import Testing
 
-        @MainActor
+        @MainActor @Suite(.serialized)
         final class MyFeatureTests {
             @Test func myFeatureWorks() throws {
                 let myFeature = MyFeature()
@@ -614,6 +663,78 @@ final class SwiftTestingTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "6.0")
-        testFormatting(for: input, output, rule: .swiftTesting, options: options)
+        testFormatting(for: input, [output], rules: [.swiftTesting, .sortImports], options: options)
+    }
+
+    func testPreservesAdditionalXCTestSymbols() {
+        let input = """
+        @testable import MyFeatureLib
+        import XCTest
+
+        final class MyFeatureTests: XCTestCase {
+            func testMyFeatureWorks() {
+                let myFeature = MyFeature()
+                myCustomTestHelper(myFeature) // XCTest-based helper defined in another file
+            }
+        }
+        """
+
+        let options = FormatOptions(additionalXCTestSymbols: ["myCustomTestHelper"], swiftVersion: "6.0")
+        testFormatting(for: input, rule: .swiftTesting, options: options)
+    }
+
+    func testPreservesXCTestCaseExtension() {
+        let input = """
+        @testable import MyFeatureLib
+        import XCTest
+
+        final class MyFeatureTests: XCTestCase {
+            func testMyFeatureWorks() {
+                let myFeature = MyFeature()
+                myHelper()
+                XCTAssert(myFeature.works)
+            }
+        }
+
+        extension XCTestCase {
+            func myHelper() {
+                print("...")
+            }
+        }
+
+        """
+
+        let options = FormatOptions(swiftVersion: "6.0")
+        testFormatting(for: input, rule: .swiftTesting, options: options)
+    }
+
+    func testAddsUIKitImportIfNeeded() {
+        let input = """
+        import XCTest
+
+        final class MyFeatureTests: XCTestCase {
+            func testMyFeatureWorks() {
+                let viewController = UIViewController()
+                XCTAssertNotNil(viewController.view)
+            }
+        }
+        """
+
+        let output = """
+        import Foundation
+        import Testing
+        import UIKit
+
+        @MainActor @Suite(.serialized)
+        final class MyFeatureTests {
+            @Test func myFeatureWorks() {
+                let viewController = UIViewController()
+                #expect(viewController.view != nil)
+            }
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "6.0")
+        testFormatting(for: input, [output], rules: [.swiftTesting, .sortImports], options: options)
     }
 }

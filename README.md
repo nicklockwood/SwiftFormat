@@ -460,7 +460,7 @@ jobs:
   Lint:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: SwiftFormat
         run: swiftformat --lint . --reporter github-actions-log
 ```

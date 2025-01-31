@@ -1241,6 +1241,12 @@ struct _Descriptors {
         help: "Comma-delimited list of symbols to be ignored by the rule",
         keyPath: \.preservedSymbols
     )
+    let additionalXCTestSymbols = OptionDescriptor(
+        argumentName: "xctestsymbols",
+        displayName: "Additional XCTest symbols",
+        help: "Comma-delimited list of symbols that depend on XCTest",
+        keyPath: \.additionalXCTestSymbols
+    )
     let swiftUIPropertiesSortMode = OptionDescriptor(
         argumentName: "sortswiftuiprops",
         displayName: "Sort SwiftUI Dynamic Properties",

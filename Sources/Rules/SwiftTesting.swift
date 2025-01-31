@@ -11,7 +11,8 @@ import Foundation
 public extension FormatRule {
     static let swiftTesting = FormatRule(
         help: "Prefer the Swift Testing library over XCTest.",
-        disabledByDefault: true
+        disabledByDefault: true,
+        options: ["xctestsymbols"]
     ) { formatter in
         // Swift Testing was introduced in Xcode 16.0 with Swift 6.0
         guard formatter.options.swiftVersion >= "6.0" else { return }
@@ -30,8 +31,16 @@ public extension FormatRule {
               !xcTestSuites.contains(where: { $0.hasUnsupportedXCTestFunctionality() })
         else { return }
 
-        formatter.addImports(["Testing"])
+        // Replace `import XCTest` with `import Testing`.
+        // XCTest also exports Foundation, so add an explicit Foundation import for compatibility.
+        formatter.addImports(["Testing", "Foundation"])
         formatter.removeImports(["XCTest"])
+
+        // XCTest also exports UIKit. To maintain compatibility, add an explicit UIKit import
+        // if the test case file references any symbols that appear to come from UIKit.
+        if formatter.referencesUIKitSymbols() {
+            formatter.addImports(["UIKit"])
+        }
 
         for xcTestSuite in xcTestSuites {
             xcTestSuite.convertXCTestCaseToSwiftTestingSuite()
@@ -48,6 +57,7 @@ public extension FormatRule {
           @testable import MyFeatureLib
         - import XCTest
         + import Testing
+        + import Foundation
 
         - final class MyFeatureTests: XCTestCase {
         -     func testMyFeatureHasNoBugs() {
@@ -58,7 +68,7 @@ public extension FormatRule {
         -         XCTAssertNil(myFeature.crashReport)
         -     }
         - }
-        + @MainActor
+        + @MainActor @Suite(.serialized)
         + final class MyFeatureTests { 
         +     @Test func myFeatureHasNoBugs() {
         +         let myFeature = MyFeature()
@@ -148,25 +158,29 @@ extension TypeDeclaration {
             formatter.removeConformance(at: xcTestCaseConformance.index)
         }
 
-        // From the XCTest to Swift Testing migration guide:
-        // https://developer.apple.com/documentation/testing/migratingfromxctest
+        // XCTest runs test serially, but Swift Testing defaults to running tests concurrently.
+        // For compatibility, have the generate Swift Testing suite default to running tests serially.
         //
-        // XCTest runs synchronous test methods on the main actor by default,
-        // while the testing library runs all test functions on an arbitrary task.
-        // If a test function must run on the main thread, isolate it to the main actor
-        // with @MainActor, or run the thread-sensitive code inside a call to
-        // MainActor.run(resultType:body:).
+        // Also from the XCTest to Swift Testing migration guide:
+        // https://developer.apple.com/documentation/testing/migratingfromxctest
+        // > XCTest runs synchronous test methods on the main actor by default,
+        // > while the testing library runs all test functions on an arbitrary task.
+        // > If a test function must run on the main thread, isolate it to the main actor
+        // > with @MainActor, or run the thread-sensitive code inside a call to
+        // > MainActor.run(resultType:body:).
         //
         // Moving test case to a background thread may cause failures, e.g. if
         // the test case accesses any UIKit APIs, so we mark the test suite
         // as @MainActor for maximum compatibility.
+        let startOfModifiers = formatter.startOfModifiers(at: keywordIndex, includingAttributes: true)
         if !modifiers.contains("@MainActor") {
-            let startOfModifiers = formatter.startOfModifiers(at: keywordIndex, includingAttributes: true)
-            formatter.insert(tokenize("@MainActor\n"), at: startOfModifiers)
+            formatter.insert(tokenize("@MainActor @Suite(.serialized)\n"), at: startOfModifiers)
+        } else {
+            formatter.insert(tokenize("@Suite(.serialized)\n"), at: startOfModifiers)
         }
 
         let instanceMethods = body.filter { $0.keyword == "func" && !$0.modifiers.contains("static") }
-        let allIdentifiersInTestSuite = Set(formatter.tokens[range].filter(\.isIdentifier).map(\.string))
+        var allIdentifiersInTestSuite = Set(formatter.tokens[range].lazy.filter(\.isIdentifier).map(\.string))
 
         for instanceMethod in instanceMethods {
             guard let methodName = instanceMethod.name,
@@ -193,25 +207,27 @@ extension TypeDeclaration {
             }
 
             // Convert any test case method to a @Test method
-            if methodName.hasPrefix("test") {
+            if methodName.hasPrefix("test"), methodName != "test" {
                 let arguments = formatter.parseFunctionDeclarationArguments(startOfScope: startOfParameters)
                 guard arguments.isEmpty else { continue }
 
                 // In Swift Testing, idiomatic test case names don't start with "test".
-                var newTestCaseName = methodName.dropFirst("test".count)
+                var newTestCaseName = String(methodName.dropFirst("test".count))
                 newTestCaseName = newTestCaseName.first!.lowercased() + newTestCaseName.dropFirst()
 
                 while newTestCaseName.hasPrefix("_") {
-                    newTestCaseName = newTestCaseName.dropFirst()
+                    newTestCaseName = String(newTestCaseName.dropFirst())
                 }
 
                 // Ensure that the new identifier is valid (e.g. starts with a letter, not a number),
                 // and is unique / doesn't already exist somewhere in the test suite.
-                if newTestCaseName.first?.isLetter == true, // ensure the new identifier is valid
-                   !allIdentifiersInTestSuite.contains(String(newTestCaseName)),
+                if newTestCaseName.first?.isLetter == true,
+                   !allIdentifiersInTestSuite.contains(newTestCaseName),
+                   !swiftKeywords.union(["Any", "Self", "self", "super", "nil", "true", "false"]).contains(newTestCaseName),
                    let nameIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: instanceMethod.keywordIndex)
                 {
-                    formatter.replaceToken(at: nameIndex, with: .identifier(String(newTestCaseName)))
+                    formatter.replaceToken(at: nameIndex, with: .identifier(newTestCaseName))
+                    allIdentifiersInTestSuite.insert(newTestCaseName)
                 }
 
                 // XCTest assertions have throwing autoclosures, so can include a `try`
@@ -239,21 +255,44 @@ extension Formatter {
     func hasUnsupportedXCTestHelper() -> Bool {
         // https://developer.apple.com/documentation/xctest/xctestcase
         let xcTestCaseInstanceMethods = Set(["expectation", "wait", "measure", "measureMetrics", "addTeardownBlock", "runsForEachTargetApplicationUIConfiguration", "continueAfterFailure", "executionTimeAllowance", "startMeasuring", "stopMeasuring", "defaultPerformanceMetrics", "defaultMetrics", "defaultMeasureOptions", "fulfillment", "addUIInterruptionMonitor", "keyValueObservingExpectation", "removeUIInterruptionMonitor"])
+            .union(options.additionalXCTestSymbols)
 
         for index in tokens.indices where tokens[index].isIdentifier {
-            if xcTestCaseInstanceMethods.contains(tokens[index].string) {
+            let identifier = tokens[index].string
+
+            if xcTestCaseInstanceMethods.contains(identifier) {
                 return true
             }
 
-            if tokens[index].string.hasPrefix("XC"),
-               swiftTestingExpectationForXCTestHelper(at: index) == nil,
-               !["XCTest", "XCTestCase"].contains(tokens[index].string)
-            {
-                return true
+            // We know how to handle XCTestCase, XCTest, and any XCTAssert variant implemented in `swiftTestingExpectationForXCTestHelper`.
+            if tokens[index].string.hasPrefix("XC") {
+                let previousToken = lastToken(before: index, where: { !$0.isSpaceOrCommentOrLinebreak })
+                switch identifier {
+                case "XCTestCase":
+                    if previousToken != .delimiter(":") {
+                        return true
+                    }
+
+                case "XCTest":
+                    if previousToken != .keyword("import") {
+                        return true
+                    }
+
+                default:
+                    if swiftTestingExpectationForXCTestHelper(at: index) == nil {
+                        return true
+                    }
+                }
             }
         }
 
         return false
+    }
+
+    /// Whether or not this file includes a symbol starting with the UI prefix, which indicates that it probably comes from the UIKit library.
+    func referencesUIKitSymbols() -> Bool {
+        let allIdentifiersInFile = Set(tokens.lazy.filter(\.isIdentifier).map(\.string))
+        return allIdentifiersInFile.contains(where: { $0.hasPrefix("UI") })
     }
 
     /// Converts the XCTest helper function (e.g. `XCTAssert(...)`) at the given index
@@ -289,10 +328,11 @@ extension Formatter {
 
         case "XCTAssertFalse":
             return convertXCTAssertToTestingExpectation(at: identifierIndex) { value in
-                // Unlike other operators which are whitespace insensitive,
-                // the ! token has to come immediately before the first
-                // non-space/non-comment token in the rhs value.
-                var tokens = tokenize(value)
+                // Unlike other operators which are whitespace insensitive, the ! token has to come immediately before the first
+                // non-space/non-comment token in the rhs value, and after any effect like `try await`.
+                // ! also has stronger associativity than other operators, (for example, `!foo == bar` would be incorrect),
+                // so we have to wrap the value in parens if it includes any infix operators.
+                var tokens = tokenize(value.wrappedInParensIfContainsOperatorOrTry())
                 if let firstTokenIndex = tokens.firstIndex(where: { !$0.isSpaceOrCommentOrLinebreak }) {
                     tokens.insert(.operator("!", .prefix), at: firstTokenIndex)
                 }
@@ -302,12 +342,12 @@ extension Formatter {
 
         case "XCTAssertNil":
             return convertXCTAssertToTestingExpectation(at: identifierIndex) { value in
-                "\(value) == nil"
+                "\(value.wrappedInParensIfContainsOperatorOrTry()) == nil"
             }
 
         case "XCTAssertNotNil":
             return convertXCTAssertToTestingExpectation(at: identifierIndex) { value in
-                "\(value) != nil"
+                "\(value.wrappedInParensIfContainsOperatorOrTry()) != nil"
             }
 
         case "XCTAssertEqual":
@@ -463,12 +503,12 @@ extension Formatter {
         let message: String?
         switch functionParams.count {
         case 2:
-            lhs = functionParams[0].value
-            rhs = functionParams[1].value
+            lhs = functionParams[0].value.wrappedInParensIfContainsOperatorOrTry()
+            rhs = functionParams[1].value.wrappedInParensIfContainsOperatorOrTry()
             message = nil
         case 3:
-            lhs = functionParams[0].value
-            rhs = functionParams[1].value
+            lhs = functionParams[0].value.wrappedInParensIfContainsOperatorOrTry()
+            rhs = functionParams[1].value.wrappedInParensIfContainsOperatorOrTry()
             message = functionParams[2].value.asSwiftTestingComment()
         default:
             return nil
@@ -538,5 +578,50 @@ extension String {
             let leadingSpaces = formatter.currentIndentForLine(at: 0)
             return leadingSpaces + "Comment(rawValue: \(trimmingCharacters(in: .whitespaces)))"
         }
+    }
+
+    /// Wraps this value in parens if the value contains an infix operator or leading try keyword.
+    /// For example, `!foo == bar` and `!(foo == bar)` have different meanings,
+    /// and `try? foo() == bar` and (`(try? foo()) == bar` have different meanings.
+    func wrappedInParensIfContainsOperatorOrTry() -> String {
+        let formatter = Formatter(tokenize(self))
+
+        guard let firstTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: -1),
+              let lastTokenIndex = formatter.lastIndex(of: .nonSpaceOrCommentOrLinebreak, in: formatter.tokens.indices)
+        else { return formatter.tokens.string }
+
+        // If the operator if nested in parens or a closure, then we don't need extra parens.
+        // If we find a startOfScope, skip the the end of that scope.
+        var index = firstTokenIndex
+        var hasInfixOperatorOrTry = false
+
+        if formatter.tokens[firstTokenIndex] == .keyword("try") {
+            hasInfixOperatorOrTry = true
+        }
+
+        while index < formatter.tokens.indices.last! {
+            let token = formatter.tokens[index]
+
+            if token.isStartOfScope, let endOfScope = formatter.endOfScope(at: index) {
+                index = endOfScope
+                continue
+            }
+
+            if (token.isOperator(ofType: .infix) && !token.isOperator("."))
+                || token == .keyword("is") // the is keyword acts like an infix operator
+            {
+                hasInfixOperatorOrTry = true
+                break
+            }
+
+            index += 1
+        }
+
+        if hasInfixOperatorOrTry {
+            formatter.insert(.endOfScope(")"), at: lastTokenIndex + 1)
+            formatter.insert(.startOfScope("("), at: firstTokenIndex)
+        }
+
+        return formatter.tokens.string
     }
 }

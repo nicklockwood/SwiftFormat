@@ -731,6 +731,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var timeZone: FormatTimeZone
     public var nilInit: NilInitType
     public var preservedPrivateDeclarations: Set<String>
+    public var additionalXCTestSymbols: Set<String>
     public var equatableMacro: EquatableMacro
     public var preferFileMacro: Bool
 
@@ -859,6 +860,7 @@ public struct FormatOptions: CustomStringConvertible {
                 timeZone: FormatTimeZone = .system,
                 nilInit: NilInitType = .remove,
                 preservedPrivateDeclarations: Set<String> = [],
+                additionalXCTestSymbols: Set<String> = [],
                 equatableMacro: EquatableMacro = .none,
                 preferFileMacro: Bool = true,
                 // Doesn't really belong here, but hard to put elsewhere
@@ -977,6 +979,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.timeZone = timeZone
         self.nilInit = nilInit
         self.preservedPrivateDeclarations = preservedPrivateDeclarations
+        self.additionalXCTestSymbols = additionalXCTestSymbols
         self.equatableMacro = equatableMacro
         self.preferFileMacro = preferFileMacro
         // Doesn't really belong here, but hard to put elsewhere

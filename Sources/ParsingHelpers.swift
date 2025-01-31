@@ -2062,7 +2062,7 @@ extension Formatter {
     }
 
     /// Adds imports for the given list of modules to this file if not already present
-    func addImports(_ importsToAddIfNeeded: Set<String>) {
+    func addImports(_ importsToAddIfNeeded: [String]) {
         let importRanges = parseImports()
         let currentImports = Set(importRanges.flatMap { $0.map(\.module) })
 
@@ -2604,7 +2604,7 @@ extension Formatter {
         var argumentLabels: [FunctionCallArgument] = []
 
         var currentIndex = startOfScope
-        repeat {
+        while currentIndex < endOfScope {
             let endOfPreviousArgument = currentIndex
             let endOfCurrentArgument = index(of: .delimiter(","), in: endOfPreviousArgument + 1 ..< endOfScope) ?? endOfScope
 
@@ -2628,7 +2628,7 @@ extension Formatter {
             } else {
                 currentIndex = endOfCurrentArgument
             }
-        } while true
+        }
 
         return argumentLabels
     }

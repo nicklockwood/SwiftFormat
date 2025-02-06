@@ -3606,4 +3606,183 @@ class OrganizeDeclarationsTests: XCTestCase {
 
         testFormatting(for: input, rule: .organizeDeclarations)
     }
+
+    func testNoCrashWhenSortingNestedTypeDeclarations1() {
+        let input = """
+        public struct MyType {
+            var foo: Foo {
+                .foo
+            }
+
+            public let a: A
+            public let b: B
+            public let c: C
+            public let d: D
+            public let e: E
+
+            public enum Foo {
+                case foo
+                case bar
+                case baaz
+            }
+        }
+        """
+
+        let output = """
+        public struct MyType {
+
+            // MARK: Public
+
+            public enum Foo {
+                case foo
+                case bar
+                case baaz
+            }
+
+            public let a: A
+            public let b: B
+            public let c: C
+            public let d: D
+            public let e: E
+
+            // MARK: Internal
+
+            var foo: Foo {
+                .foo
+            }
+
+        }
+        """
+
+        let options = FormatOptions(organizeStructThreshold: 0)
+        testFormatting(for: input, output, rule: .organizeDeclarations, options: options, exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope])
+    }
+
+    func testNoCrashWhenSortingNestedTypeDeclarations2() {
+        let input = """
+        public struct MyType {
+            public let a: A
+            public let b: B
+            public let c: C
+            public let d: D
+            public let e: E
+
+            public enum Foo {
+                case foo
+                case bar
+                case baaz
+            }
+        }
+        """
+
+        let output = """
+        public struct MyType {
+            public enum Foo {
+                case foo
+                case bar
+                case baaz
+            }
+
+            public let a: A
+            public let b: B
+            public let c: C
+            public let d: D
+            public let e: E
+
+        }
+        """
+
+        let options = FormatOptions(organizeStructThreshold: 0)
+        testFormatting(for: input, output, rule: .organizeDeclarations, options: options, exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope])
+    }
+
+    func testSortsMultipleLayersOfNestedTypes() {
+        let input = """
+        public struct MyType {
+            public let a: A
+            public let b: B
+            public let c: C
+            public let d: D
+            public let e: E
+
+            public class Foo {
+                class Baaz {
+                    let b: B
+                    public let a: A
+
+                    public class Quux {
+                        let b: B
+                        public let a: A
+                    }
+                }
+
+                let bar: Bar
+                let baaz: Baaz
+
+                public class Bar {
+                    let b: B
+                    public let a: A
+                }
+            }
+        }
+        """
+
+        let output = """
+        public struct MyType {
+            public class Foo {
+
+                // MARK: Public
+
+                public class Bar {
+
+                    // MARK: Public
+
+                    public let a: A
+
+                    // MARK: Internal
+
+                    let b: B
+                }
+
+                // MARK: Internal
+
+                class Baaz {
+
+                    // MARK: Public
+
+                    public class Quux {
+
+                        // MARK: Public
+
+                        public let a: A
+
+                        // MARK: Internal
+
+                        let b: B
+                    }
+
+                    public let a: A
+
+                    // MARK: Internal
+
+                    let b: B
+
+                }
+
+                let bar: Bar
+                let baaz: Baaz
+
+            }
+
+            public let a: A
+            public let b: B
+            public let c: C
+            public let d: D
+            public let e: E
+
+        }
+        """
+
+        testFormatting(for: input, output, rule: .organizeDeclarations, exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope])
+    }
 }

@@ -247,11 +247,23 @@ final class TypeDeclaration: Declaration {
     func updateBody(to newBody: [Declaration]) {
         assert(!body.isEmpty)
 
-        // Store the expceted tokens associated with each declaration.
+        // Store the expected tokens associated with each declaration.
         // This is necessary since the declarations' range values will temporarily be invalid.
         var declarationTokens: [AnyHashable: [Token]] = [:]
+        var childDeclarationsNeedingUpdate = [AnyHashable: (originalIndexInParent: Int, originalTokens: [Token])]()
+
         for declaration in newBody {
             declarationTokens[declaration.identity] = Array(declaration.tokens)
+
+            // The body of this declaration won't be modified, but since we're update its range
+            // we have to also update the range of any children. Record the relative index of each child declaration
+            // so we can restore it later.
+            declaration.body?.forEachRecursiveDeclaration { childDeclaration in
+                let parent = declaration
+                let indexInParent = childDeclaration.range.lowerBound - parent.range.lowerBound
+                childDeclarationsNeedingUpdate[childDeclaration.identity] = (originalIndexInParent: indexInParent, originalTokens: Array(childDeclaration.tokens))
+                formatter.unregisterDeclaration(childDeclaration)
+            }
         }
 
         // Unlink the declarations and the formatter while we reorder the tokens
@@ -273,6 +285,20 @@ final class TypeDeclaration: Declaration {
 
             formatter.registerDeclaration(declaration)
             assert(Array(declaration.tokens) == tokens)
+            assert(declaration.isValid)
+
+            // Re-register each of the child declarations of this declaration
+            declaration.body?.forEachRecursiveDeclaration { childDeclaration in
+                guard let (originalIndexInParent, originalTokens) = childDeclarationsNeedingUpdate[childDeclaration.identity] else { return }
+                let parent = declaration
+                let newIndexInFile = parent.range.lowerBound + originalIndexInParent
+                let newRangeInFile = ClosedRange(newIndexInFile ..< (newIndexInFile + originalTokens.count))
+                childDeclaration.range = newRangeInFile
+
+                formatter.registerDeclaration(childDeclaration)
+                assert(Array(childDeclaration.tokens) == originalTokens)
+                assert(childDeclaration.isValid)
+            }
         }
 
         body = newBody

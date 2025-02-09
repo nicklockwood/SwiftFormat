@@ -1488,6 +1488,11 @@ Default value for `--typeorder` when using `--organizationmode type`:
 **NOTE:** The follow declaration types must be included in either `--typeorder` or `--visibilityorder`:
 `beforeMarks, nestedType, instanceLifecycle, instanceProperty, instanceMethod`
 
+**NOTE:** The Swift compiler automatically synthesizes a memberwise `init` for `struct` types.
+
+To allow SwiftFormat to reorganize your code effectively, you must explicitly declare an `init`.
+Without this declaration, only functions will be reordered, while properties will remain in their original order.
+
 `--organizationmode visibility` (default)
 
 ```diff

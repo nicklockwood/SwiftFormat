@@ -62,6 +62,11 @@ public extension FormatRule {
         **NOTE:** The follow declaration types must be included in either `--typeorder` or `--visibilityorder`:
         `\(DeclarationType.essentialCases.map(\.rawValue).joined(separator: ", "))`
 
+        **NOTE:** The Swift compiler automatically synthesizes a memberwise `init` for `struct` types.
+
+        To allow SwiftFormat to reorganize your code effectively, you must explicitly declare an `init`.
+        Without this declaration, only functions will be reordered, while properties will remain in their original order. 
+
         `--organizationmode visibility` (default)
 
         ```diff

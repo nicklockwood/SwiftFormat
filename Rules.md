@@ -1491,7 +1491,7 @@ Default value for `--typeorder` when using `--organizationmode type`:
 **NOTE:** The Swift compiler automatically synthesizes a memberwise `init` for `struct` types.
 
 To allow SwiftFormat to reorganize your code effectively, you must explicitly declare an `init`.
-Without this declaration, only functions will be reordered, while properties will remain in their original order.
+Without this declaration, only functions will be reordered, while properties will remain in their original order. 
 
 `--organizationmode visibility` (default)
 

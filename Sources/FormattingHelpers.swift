@@ -1682,6 +1682,37 @@ extension Formatter {
             return last(.keyword, before: startOfScopeIndex) == .keyword("func")
         }
     }
+
+    /// Whether or not the length of the type at the given index exceeds the minimum threshold to be organized
+    func typeLengthExceedsOrganizationThreshold(at typeKeywordIndex: Int) -> Bool {
+        let organizationThreshold: Int
+        switch tokens[typeKeywordIndex].string {
+        case "class", "actor":
+            organizationThreshold = options.organizeClassThreshold
+        case "struct":
+            organizationThreshold = options.organizeStructThreshold
+        case "enum":
+            organizationThreshold = options.organizeEnumThreshold
+        case "extension":
+            organizationThreshold = options.organizeExtensionThreshold
+        default:
+            organizationThreshold = 0
+        }
+
+        guard organizationThreshold != 0,
+              let startOfScope = index(of: .startOfScope("{"), after: typeKeywordIndex),
+              let endOfScope = endOfScope(at: startOfScope)
+        else {
+            return true
+        }
+
+        let lineCount = tokens[startOfScope ... endOfScope]
+            .filter(\.isLinebreak)
+            .count
+            - 1
+
+        return lineCount >= organizationThreshold
+    }
 }
 
 extension Formatter {

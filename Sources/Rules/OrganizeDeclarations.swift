@@ -21,7 +21,7 @@ public extension FormatRule {
             "visibilityorder", "typeorder", "visibilitymarks", "typemarks",
             "groupblanklines", "sortswiftuiprops",
         ],
-        sharedOptions: ["sortedpatterns", "lineaftermarks"]
+        sharedOptions: ["sortedpatterns", "lineaftermarks", "linebreaks"]
     ) { formatter in
         guard !formatter.options.fragment else { return }
 
@@ -151,7 +151,7 @@ extension Formatter {
     func organizeDeclaration(_ typeDeclaration: TypeDeclaration) {
         guard !typeDeclaration.body.isEmpty,
               options.organizeTypes.contains(typeDeclaration.keyword),
-              typeLengthExceedsOrganizationThreshold(typeDeclaration)
+              typeLengthExceedsOrganizationThreshold(at: typeDeclaration.keywordIndex)
         else { return }
 
         // Parse category order from options
@@ -194,34 +194,6 @@ extension Formatter {
             groups: consecutivePropertyGroups,
             order: categoryOrder
         )
-    }
-
-    /// Whether or not the length of this types exceeds the minimum threshold to be organized
-    func typeLengthExceedsOrganizationThreshold(_ typeDeclaration: TypeDeclaration) -> Bool {
-        let organizationThreshold: Int
-        switch typeDeclaration.keyword {
-        case "class", "actor":
-            organizationThreshold = options.organizeClassThreshold
-        case "struct":
-            organizationThreshold = options.organizeStructThreshold
-        case "enum":
-            organizationThreshold = options.organizeEnumThreshold
-        case "extension":
-            organizationThreshold = options.organizeExtensionThreshold
-        default:
-            organizationThreshold = 0
-        }
-
-        guard organizationThreshold != 0 else {
-            return true
-        }
-
-        let lineCount = typeDeclaration.body
-            .flatMap(\.tokens)
-            .filter(\.isLinebreak)
-            .count
-
-        return lineCount >= organizationThreshold
     }
 
     typealias CategorizedDeclaration = (declaration: Declaration, category: Category)

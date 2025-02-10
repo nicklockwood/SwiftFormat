@@ -155,12 +155,6 @@ class MetadataTests: XCTestCase {
                 allSharedOptions.subtract(ruleOptions)
                 var referencedOptions = [OptionDescriptor]()
                 for index in scopeStart + 1 ..< formatter.tokens.count {
-                    guard (formatter.token(at: index - 1) == .operator(".", .infix)
-                        && formatter.token(at: index - 2) == .identifier("formatter"))
-                        || (formatter.token(at: index) == .identifier("options") && formatter.token(at: index - 1)?.isOperator(".") == false)
-                    else {
-                        continue
-                    }
                     switch formatter.tokens[index] {
                     // Find all of the options called via `options.optionName`
                     case .identifier("options") where formatter.token(at: index + 1) == .operator(".", .infix):
@@ -204,6 +198,13 @@ class MetadataTests: XCTestCase {
                     case .identifier("removeSelf"):
                         referencedOptions += [
                             Descriptors.selfRequired,
+                        ]
+                    case .identifier("typeLengthExceedsOrganizationThreshold"):
+                        referencedOptions += [
+                            Descriptors.organizeClassThreshold,
+                            Descriptors.organizeStructThreshold,
+                            Descriptors.organizeEnumThreshold,
+                            Descriptors.organizeExtensionThreshold,
                         ]
                     default:
                         continue

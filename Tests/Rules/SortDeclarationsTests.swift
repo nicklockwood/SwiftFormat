@@ -286,4 +286,50 @@ class SortDeclarationsTests: XCTestCase {
 
         testFormatting(for: input, rule: .sortDeclarations)
     }
+
+    func testSortEnumNamespaceSmallerThanOrganizeDeclarationsEnumThreshold() {
+        let input = """
+        // swiftformat:sort
+        public enum Constants {
+            public static let foo = "foo"
+            public static let bar = "bar"
+            public static let baaz = "baaz"
+        }
+        """
+
+        let output = """
+        // swiftformat:sort
+        public enum Constants {
+            public static let baaz = "baaz"
+            public static let bar = "bar"
+            public static let foo = "foo"
+        }
+        """
+
+        let options = FormatOptions(organizeEnumThreshold: 20)
+        testFormatting(for: input, [output], rules: [.sortDeclarations, .organizeDeclarations], options: options)
+    }
+
+    func testSortStructSmallerThanOrganizeDeclarationsEnumThreshold() {
+        let input = """
+        // swiftformat:sort
+        public struct Foo {
+            public let foo = "foo"
+            public let bar = "bar"
+            public let baaz = "baaz"
+        }
+        """
+
+        let output = """
+        // swiftformat:sort
+        public struct Foo {
+            public let baaz = "baaz"
+            public let bar = "bar"
+            public let foo = "foo"
+        }
+        """
+
+        let options = FormatOptions(organizeStructThreshold: 20)
+        testFormatting(for: input, [output], rules: [.sortDeclarations, .organizeDeclarations])
+    }
 }

@@ -3785,4 +3785,26 @@ class OrganizeDeclarationsTests: XCTestCase {
 
         testFormatting(for: input, output, rule: .organizeDeclarations, exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope])
     }
+
+    func testOrganizeDeclarationsSortsEnumNamespace() {
+        let input = """
+        // swiftformat:sort
+        public enum Constants {
+            public static let foo = "foo"
+            public static let bar = "bar"
+            public static let baaz = "baaz"
+        }
+        """
+
+        let output = """
+        // swiftformat:sort
+        public enum Constants {
+            public static let baaz = "baaz"
+            public static let bar = "bar"
+            public static let foo = "foo"
+        }
+        """
+
+        testFormatting(for: input, [output], rules: [.organizeDeclarations, .sortDeclarations])
+    }
 }

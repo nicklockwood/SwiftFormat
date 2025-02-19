@@ -1713,6 +1713,45 @@ extension Formatter {
 
         return lineCount >= organizationThreshold
     }
+
+    /// Removes any "test" prefix from the given method name
+    func removeTestPrefix(fromFunctionAt funcKeywordIndex: Int) {
+        // The name of a function always immediately follows the `func` keyword
+        guard let methodNameIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: funcKeywordIndex),
+              tokens[methodNameIndex].isIdentifier
+        else { return }
+
+        let methodName = tokens[methodNameIndex].string
+        guard methodName.hasPrefix("test"), methodName != "test" else { return }
+
+        var newMethodName = String(methodName.dropFirst("test".count))
+        newMethodName = newMethodName.first!.lowercased() + newMethodName.dropFirst()
+
+        // Handle methods like `test_feature()`, which should be updated to `feature()` rather than `_feature()`.
+        while newMethodName.hasPrefix("_") {
+            newMethodName = String(newMethodName.dropFirst())
+        }
+
+        updateFunctionName(forFunctionAt: funcKeywordIndex, to: newMethodName)
+    }
+
+    /// Updates the name of the given method / function, unless that change could cause a build failure.
+    func updateFunctionName(forFunctionAt funcKeywordIndex: Int, to newMethodName: String) {
+        // The name of a function always immediately follows the `func` keyword
+        guard let methodNameIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: funcKeywordIndex),
+              tokens[methodNameIndex].isIdentifier
+        else { return }
+
+        // Ensure that the new identifier is valid (e.g. starts with a letter, not a number),
+        // and is unique / doesn't already exist somewhere in the file.
+        guard !newMethodName.isEmpty,
+              newMethodName.first?.isLetter == true,
+              !tokens.contains(.identifier(newMethodName)),
+              !swiftKeywords.union(["Any", "Self", "self", "super", "nil", "true", "false"]).contains(newMethodName)
+        else { return }
+
+        replaceToken(at: methodNameIndex, with: .identifier(newMethodName))
+    }
 }
 
 extension Formatter {

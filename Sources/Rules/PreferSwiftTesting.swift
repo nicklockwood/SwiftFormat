@@ -1,5 +1,5 @@
 //
-//  SwiftTesting.swift
+//  PreferSwiftTesting.swift
 //  SwiftFormatTests
 //
 //  Created by Cal Stephens on 1/25/25.
@@ -9,7 +9,7 @@
 import Foundation
 
 public extension FormatRule {
-    static let swiftTesting = FormatRule(
+    static let preferSwiftTesting = FormatRule(
         help: "Prefer the Swift Testing library over XCTest.",
         disabledByDefault: true,
         options: ["xctestsymbols"]
@@ -123,7 +123,7 @@ public extension FormatRule {
 
 extension TypeDeclaration {
     /// Whether or not this declaration uses XCTest functionality that is
-    /// not supported by the swiftTesting rule.
+    /// not supported by the preferSwiftTesting rule.
     func hasUnsupportedXCTestFunctionality() -> Bool {
         let overriddenMethods = body.filter {
             $0.modifiers.contains("override")
@@ -180,7 +180,6 @@ extension TypeDeclaration {
         }
 
         let instanceMethods = body.filter { $0.keyword == "func" && !$0.modifiers.contains("static") }
-        var allIdentifiersInTestSuite = Set(formatter.tokens[range].lazy.filter(\.isIdentifier).map(\.string))
 
         for instanceMethod in instanceMethods {
             guard let methodName = instanceMethod.name,
@@ -207,28 +206,12 @@ extension TypeDeclaration {
             }
 
             // Convert any test case method to a @Test method
-            if methodName.hasPrefix("test"), methodName != "test" {
+            if methodName.hasPrefix("test") {
                 let arguments = formatter.parseFunctionDeclarationArguments(startOfScope: startOfParameters)
                 guard arguments.isEmpty else { continue }
 
                 // In Swift Testing, idiomatic test case names don't start with "test".
-                var newTestCaseName = String(methodName.dropFirst("test".count))
-                newTestCaseName = newTestCaseName.first!.lowercased() + newTestCaseName.dropFirst()
-
-                while newTestCaseName.hasPrefix("_") {
-                    newTestCaseName = String(newTestCaseName.dropFirst())
-                }
-
-                // Ensure that the new identifier is valid (e.g. starts with a letter, not a number),
-                // and is unique / doesn't already exist somewhere in the test suite.
-                if newTestCaseName.first?.isLetter == true,
-                   !allIdentifiersInTestSuite.contains(newTestCaseName),
-                   !swiftKeywords.union(["Any", "Self", "self", "super", "nil", "true", "false"]).contains(newTestCaseName),
-                   let nameIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: instanceMethod.keywordIndex)
-                {
-                    formatter.replaceToken(at: nameIndex, with: .identifier(newTestCaseName))
-                    allIdentifiersInTestSuite.insert(newTestCaseName)
-                }
+                formatter.removeTestPrefix(fromFunctionAt: instanceMethod.keywordIndex)
 
                 // XCTest assertions have throwing autoclosures, so can include a `try`
                 // without the test case being `throws`. If the test case method isn't `throws`
@@ -251,7 +234,7 @@ extension TypeDeclaration {
 
 extension Formatter {
     /// Whether or not the file contains an XCTest helper function that
-    /// isn't supported by the swiftTesting rule.
+    /// isn't supported by the preferSwiftTesting rule.
     func hasUnsupportedXCTestHelper() -> Bool {
         // https://developer.apple.com/documentation/xctest/xctestcase
         let xcTestCaseInstanceMethods = Set(["expectation", "wait", "measure", "measureMetrics", "addTeardownBlock", "runsForEachTargetApplicationUIConfiguration", "continueAfterFailure", "executionTimeAllowance", "startMeasuring", "stopMeasuring", "defaultPerformanceMetrics", "defaultMetrics", "defaultMeasureOptions", "fulfillment", "addUIInterruptionMonitor", "keyValueObservingExpectation", "removeUIInterruptionMonitor"])

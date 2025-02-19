@@ -1,5 +1,5 @@
 //
-//  SwiftTestingTests.swift
+//  PreferSwiftTestingTests.swift
 //  SwiftFormatTests
 //
 //  Created by Cal Stephens on 1/25/25.
@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-final class SwiftTestingTests: XCTestCase {
+final class PreferSwiftTestingTests: XCTestCase {
     func testConvertsSimpleTestSuite() {
         let input = """
         @testable import MyFeatureLib
@@ -58,7 +58,7 @@ final class SwiftTestingTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "6.0")
-        testFormatting(for: input, [output], rules: [.swiftTesting, .sortImports, .isEmpty], options: options)
+        testFormatting(for: input, [output], rules: [.preferSwiftTesting, .sortImports, .isEmpty], options: options)
     }
 
     func testConvertsTestSuiteWithSetUpTearDown() {
@@ -115,7 +115,7 @@ final class SwiftTestingTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "6.0")
-        testFormatting(for: input, [output], rules: [.swiftTesting, .sortImports, .isEmpty], options: options)
+        testFormatting(for: input, [output], rules: [.preferSwiftTesting, .sortImports, .isEmpty], options: options)
     }
 
     func testConvertsSimpleXCTestHelpers() {
@@ -232,7 +232,7 @@ final class SwiftTestingTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "6.0")
-        testFormatting(for: input, [output], rules: [.swiftTesting, .wrapArguments, .indent, .redundantParens, .hoistTry], options: options)
+        testFormatting(for: input, [output], rules: [.preferSwiftTesting, .wrapArguments, .indent, .redundantParens, .hoistTry], options: options)
     }
 
     func testConvertsMultilineXCTestHelpers() {
@@ -329,7 +329,7 @@ final class SwiftTestingTests: XCTestCase {
         """
 
         let options = FormatOptions(closingParenPosition: .sameLine, swiftVersion: "6.0")
-        testFormatting(for: input, [output], rules: [.swiftTesting, .wrapArguments, .indent, .trailingSpace], options: options)
+        testFormatting(for: input, [output], rules: [.preferSwiftTesting, .wrapArguments, .indent, .trailingSpace], options: options)
     }
 
     func testPreservesUnsupportedExpectationHelpers() {
@@ -349,7 +349,7 @@ final class SwiftTestingTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "6.0")
-        testFormatting(for: input, rule: .swiftTesting, options: options)
+        testFormatting(for: input, rule: .preferSwiftTesting, options: options)
     }
 
     func testPreservesUnsupportedUITestHelpers() {
@@ -367,7 +367,7 @@ final class SwiftTestingTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "6.0")
-        testFormatting(for: input, rule: .swiftTesting, options: options)
+        testFormatting(for: input, rule: .preferSwiftTesting, options: options)
     }
 
     func testPreservesUnsupportedPerformanceTestHelpers() {
@@ -385,7 +385,7 @@ final class SwiftTestingTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "6.0")
-        testFormatting(for: input, rule: .swiftTesting, options: options)
+        testFormatting(for: input, rule: .preferSwiftTesting, options: options)
     }
 
     func testPreservesAsyncOrThrowsTearDown() {
@@ -415,7 +415,7 @@ final class SwiftTestingTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "6.0")
-        testFormatting(for: input, rule: .swiftTesting, options: options)
+        testFormatting(for: input, rule: .preferSwiftTesting, options: options)
     }
 
     func testPreservesUnsupportedMethodOverride() {
@@ -438,7 +438,7 @@ final class SwiftTestingTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "6.0")
-        testFormatting(for: input, rule: .swiftTesting, options: options)
+        testFormatting(for: input, rule: .preferSwiftTesting, options: options)
     }
 
     func testConvertsHelpersInHelperMethods() {
@@ -477,7 +477,7 @@ final class SwiftTestingTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "6.0")
-        testFormatting(for: input, [output], rules: [.swiftTesting, .sortImports], options: options)
+        testFormatting(for: input, [output], rules: [.preferSwiftTesting, .sortImports], options: options)
     }
 
     func testPreservesHelpersWithLineFileParams() {
@@ -498,7 +498,7 @@ final class SwiftTestingTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "6.0")
-        testFormatting(for: input, rule: .swiftTesting, options: options)
+        testFormatting(for: input, rule: .preferSwiftTesting, options: options)
     }
 
     func testDoesntUpdateNameToIdentifierRequiringBackTicks() {
@@ -549,7 +549,7 @@ final class SwiftTestingTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "6.0")
-        testFormatting(for: input, [output], rules: [.swiftTesting, .sortImports], options: options)
+        testFormatting(for: input, [output], rules: [.preferSwiftTesting, .sortImports], options: options)
     }
 
     func testDoesntUpTestNameToExistingFunctionName() {
@@ -584,7 +584,7 @@ final class SwiftTestingTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "6.0")
-        testFormatting(for: input, [output], rules: [.swiftTesting, .sortImports], options: options)
+        testFormatting(for: input, [output], rules: [.preferSwiftTesting, .sortImports], options: options)
     }
 
     func testPreservesTestMethodWithArguments() {
@@ -621,7 +621,7 @@ final class SwiftTestingTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "6.0")
-        testFormatting(for: input, [output], rules: [.swiftTesting, .sortImports], options: options)
+        testFormatting(for: input, [output], rules: [.preferSwiftTesting, .sortImports], options: options)
     }
 
     func testAddsThrowingEffectIfNeeded() {
@@ -663,7 +663,7 @@ final class SwiftTestingTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "6.0")
-        testFormatting(for: input, [output], rules: [.swiftTesting, .sortImports], options: options)
+        testFormatting(for: input, [output], rules: [.preferSwiftTesting, .sortImports], options: options)
     }
 
     func testPreservesAdditionalXCTestSymbols() {
@@ -680,7 +680,7 @@ final class SwiftTestingTests: XCTestCase {
         """
 
         let options = FormatOptions(additionalXCTestSymbols: ["myCustomTestHelper"], swiftVersion: "6.0")
-        testFormatting(for: input, rule: .swiftTesting, options: options)
+        testFormatting(for: input, rule: .preferSwiftTesting, options: options)
     }
 
     func testPreservesXCTestCaseExtension() {
@@ -705,7 +705,7 @@ final class SwiftTestingTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "6.0")
-        testFormatting(for: input, rule: .swiftTesting, options: options)
+        testFormatting(for: input, rule: .preferSwiftTesting, options: options)
     }
 
     func testAddsUIKitImportIfNeeded() {
@@ -735,6 +735,6 @@ final class SwiftTestingTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "6.0")
-        testFormatting(for: input, [output], rules: [.swiftTesting, .sortImports], options: options)
+        testFormatting(for: input, [output], rules: [.preferSwiftTesting, .sortImports], options: options)
     }
 }

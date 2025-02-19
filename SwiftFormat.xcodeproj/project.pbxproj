@@ -71,6 +71,11 @@
 		082D644D2CA4719E0072DA14 /* RedundantEquatable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 082D644A2CA4719B0072DA14 /* RedundantEquatable.swift */; };
 		082D644E2CA4719E0072DA14 /* RedundantEquatable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 082D644A2CA4719B0072DA14 /* RedundantEquatable.swift */; };
 		082D64502CA471F30072DA14 /* RedundantEquatableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 082D644F2CA471F00072DA14 /* RedundantEquatableTests.swift */; };
+		08CC3AD32D655C56005BFABE /* SwiftTestingTestCaseNames.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08CC3AD22D655C48005BFABE /* SwiftTestingTestCaseNames.swift */; };
+		08CC3AD42D655C56005BFABE /* SwiftTestingTestCaseNames.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08CC3AD22D655C48005BFABE /* SwiftTestingTestCaseNames.swift */; };
+		08CC3AD52D655C56005BFABE /* SwiftTestingTestCaseNames.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08CC3AD22D655C48005BFABE /* SwiftTestingTestCaseNames.swift */; };
+		08CC3AD62D655C56005BFABE /* SwiftTestingTestCaseNames.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08CC3AD22D655C48005BFABE /* SwiftTestingTestCaseNames.swift */; };
+		08CC3AD82D656259005BFABE /* SwiftTestingTestCaseNamesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08CC3AD72D656257005BFABE /* SwiftTestingTestCaseNamesTests.swift */; };
 		2E2BAB8C2C57F6B600590239 /* RuleRegistry.generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BAB8B2C57F6B600590239 /* RuleRegistry.generated.swift */; };
 		2E2BAB8D2C57F6B600590239 /* RuleRegistry.generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BAB8B2C57F6B600590239 /* RuleRegistry.generated.swift */; };
 		2E2BAB8E2C57F6B600590239 /* RuleRegistry.generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BAB8B2C57F6B600590239 /* RuleRegistry.generated.swift */; };
@@ -515,11 +520,11 @@
 		2E2BADB42C57F6DD00590239 /* SortDeclarations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BABFE2C57F6DD00590239 /* SortDeclarations.swift */; };
 		2E2BADB52C57F6DD00590239 /* SortDeclarations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BABFE2C57F6DD00590239 /* SortDeclarations.swift */; };
 		2E2BADB62C57F6DD00590239 /* SortDeclarations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BABFE2C57F6DD00590239 /* SortDeclarations.swift */; };
-		2E723EF32D45592B00D1B389 /* SwiftTestingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E723EF22D45592B00D1B389 /* SwiftTestingTests.swift */; };
-		2E723EF62D455B2A00D1B389 /* SwiftTesting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E723EF42D455B2600D1B389 /* SwiftTesting.swift */; };
-		2E723EF72D455B2B00D1B389 /* SwiftTesting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E723EF42D455B2600D1B389 /* SwiftTesting.swift */; };
-		2E723EF92D455B2C00D1B389 /* SwiftTesting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E723EF42D455B2600D1B389 /* SwiftTesting.swift */; };
-		2E723EFA2D455B2C00D1B389 /* SwiftTesting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E723EF42D455B2600D1B389 /* SwiftTesting.swift */; };
+		2E723EF32D45592B00D1B389 /* PreferSwiftTestingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E723EF22D45592B00D1B389 /* PreferSwiftTestingTests.swift */; };
+		2E723EF62D455B2A00D1B389 /* PreferSwiftTesting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E723EF42D455B2600D1B389 /* PreferSwiftTesting.swift */; };
+		2E723EF72D455B2B00D1B389 /* PreferSwiftTesting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E723EF42D455B2600D1B389 /* PreferSwiftTesting.swift */; };
+		2E723EF92D455B2C00D1B389 /* PreferSwiftTesting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E723EF42D455B2600D1B389 /* PreferSwiftTesting.swift */; };
+		2E723EFA2D455B2C00D1B389 /* PreferSwiftTesting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E723EF42D455B2600D1B389 /* PreferSwiftTesting.swift */; };
 		2E7D30A42A7940C500C32174 /* Singularize.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E7D30A32A7940C500C32174 /* Singularize.swift */; };
 		2E8DE6F82C57FEB30032BF25 /* RedundantClosureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E8DE68D2C57FEB30032BF25 /* RedundantClosureTests.swift */; };
 		2E8DE6F92C57FEB30032BF25 /* BlankLinesBetweenChainedFunctionsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E8DE68E2C57FEB30032BF25 /* BlankLinesBetweenChainedFunctionsTests.swift */; };
@@ -811,6 +816,8 @@
 		01F3DF8F1DBA003E00454944 /* InferenceTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InferenceTests.swift; sourceTree = "<group>"; };
 		082D644A2CA4719B0072DA14 /* RedundantEquatable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RedundantEquatable.swift; sourceTree = "<group>"; };
 		082D644F2CA471F00072DA14 /* RedundantEquatableTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RedundantEquatableTests.swift; sourceTree = "<group>"; };
+		08CC3AD22D655C48005BFABE /* SwiftTestingTestCaseNames.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftTestingTestCaseNames.swift; sourceTree = "<group>"; };
+		08CC3AD72D656257005BFABE /* SwiftTestingTestCaseNamesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftTestingTestCaseNamesTests.swift; sourceTree = "<group>"; };
 		2E2BAB8B2C57F6B600590239 /* RuleRegistry.generated.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuleRegistry.generated.swift; sourceTree = "<group>"; };
 		2E2BAB912C57F6DD00590239 /* InitCoderUnavailable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InitCoderUnavailable.swift; sourceTree = "<group>"; };
 		2E2BAB922C57F6DD00590239 /* RedundantBreak.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RedundantBreak.swift; sourceTree = "<group>"; };
@@ -922,8 +929,8 @@
 		2E2BABFC2C57F6DD00590239 /* SortSwitchCases.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SortSwitchCases.swift; sourceTree = "<group>"; };
 		2E2BABFD2C57F6DD00590239 /* RedundantType.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RedundantType.swift; sourceTree = "<group>"; };
 		2E2BABFE2C57F6DD00590239 /* SortDeclarations.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SortDeclarations.swift; sourceTree = "<group>"; };
-		2E723EF22D45592B00D1B389 /* SwiftTestingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftTestingTests.swift; sourceTree = "<group>"; };
-		2E723EF42D455B2600D1B389 /* SwiftTesting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftTesting.swift; sourceTree = "<group>"; };
+		2E723EF22D45592B00D1B389 /* PreferSwiftTestingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferSwiftTestingTests.swift; sourceTree = "<group>"; };
+		2E723EF42D455B2600D1B389 /* PreferSwiftTesting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferSwiftTesting.swift; sourceTree = "<group>"; };
 		2E7D30A32A7940C500C32174 /* Singularize.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Singularize.swift; sourceTree = "<group>"; };
 		2E8DE68D2C57FEB30032BF25 /* RedundantClosureTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RedundantClosureTests.swift; sourceTree = "<group>"; };
 		2E8DE68E2C57FEB30032BF25 /* BlankLinesBetweenChainedFunctionsTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BlankLinesBetweenChainedFunctionsTests.swift; sourceTree = "<group>"; };
@@ -1305,6 +1312,7 @@
 				2EA8C36F2D04F51A00843B42 /* PreferCountWhere.swift */,
 				2E2BABCE2C57F6DD00590239 /* PreferForLoop.swift */,
 				2E2BABDB2C57F6DD00590239 /* PreferKeyPath.swift */,
+				2E723EF42D455B2600D1B389 /* PreferSwiftTesting.swift */,
 				9BDB4F1C2C94773600C93995 /* PrivateStateVariables.swift */,
 				2E2BABF42C57F6DD00590239 /* PropertyTypes.swift */,
 				2E2BABE92C57F6DD00590239 /* RedundantBackticks.swift */,
@@ -1353,6 +1361,7 @@
 				2E2BABF82C57F6DD00590239 /* Specifiers.swift */,
 				2E2BABE72C57F6DD00590239 /* StrongifiedSelf.swift */,
 				2E2BABAA2C57F6DD00590239 /* StrongOutlets.swift */,
+				08CC3AD22D655C48005BFABE /* SwiftTestingTestCaseNames.swift */,
 				2E2BAB9C2C57F6DD00590239 /* Todos.swift */,
 				2E2BABEE2C57F6DD00590239 /* TrailingClosures.swift */,
 				2E2BABE62C57F6DD00590239 /* TrailingCommas.swift */,
@@ -1372,7 +1381,6 @@
 				2E2BABBB2C57F6DD00590239 /* WrapSingleLineComments.swift */,
 				2E2BABDF2C57F6DD00590239 /* WrapSwitchCases.swift */,
 				2E2BABF92C57F6DD00590239 /* YodaConditions.swift */,
-				2E723EF42D455B2600D1B389 /* SwiftTesting.swift */,
 			);
 			path = Rules;
 			sourceTree = "<group>";
@@ -1380,6 +1388,7 @@
 		2E8DE68C2C57FEB30032BF25 /* Rules */ = {
 			isa = PBXGroup;
 			children = (
+				08CC3AD72D656257005BFABE /* SwiftTestingTestCaseNamesTests.swift */,
 				2E8DE6D02C57FEB30032BF25 /* AcronymsTests.swift */,
 				2E8DE6F02C57FEB30032BF25 /* AndOperatorTests.swift */,
 				2E8DE6BB2C57FEB30032BF25 /* AnyObjectProtocolTests.swift */,
@@ -1475,7 +1484,7 @@
 				EBA6E7062C5B7DC400CBD360 /* SpacingGuardsTests.swift */,
 				2E8DE69C2C57FEB30032BF25 /* StrongifiedSelfTests.swift */,
 				2E8DE6B92C57FEB30032BF25 /* StrongOutletsTests.swift */,
-				2E723EF22D45592B00D1B389 /* SwiftTestingTests.swift */,
+				2E723EF22D45592B00D1B389 /* PreferSwiftTestingTests.swift */,
 				2E8DE6952C57FEB30032BF25 /* TodosTests.swift */,
 				2E8DE6D92C57FEB30032BF25 /* TrailingClosuresTests.swift */,
 				2E8DE69A2C57FEB30032BF25 /* TrailingCommasTests.swift */,
@@ -1860,6 +1869,7 @@
 				2E2BAC572C57F6DD00590239 /* BlankLinesBetweenChainedFunctions.swift in Sources */,
 				2E2BACAB2C57F6DD00590239 /* RedundantLetError.swift in Sources */,
 				2E2BADA72C57F6DD00590239 /* UnusedArguments.swift in Sources */,
+				08CC3AD32D655C56005BFABE /* SwiftTestingTestCaseNames.swift in Sources */,
 				2E2BACCB2C57F6DD00590239 /* IsEmpty.swift in Sources */,
 				2E2BAD0B2C57F6DD00590239 /* ApplicationMain.swift in Sources */,
 				2E2BAD572C57F6DD00590239 /* StrongifiedSelf.swift in Sources */,
@@ -1966,7 +1976,7 @@
 				2E2BAD3B2C57F6DD00590239 /* Braces.swift in Sources */,
 				2E2BABFF2C57F6DD00590239 /* InitCoderUnavailable.swift in Sources */,
 				2E2BACB72C57F6DD00590239 /* OrganizeDeclarations.swift in Sources */,
-				2E723EF62D455B2A00D1B389 /* SwiftTesting.swift in Sources */,
+				2E723EF62D455B2A00D1B389 /* PreferSwiftTesting.swift in Sources */,
 				2E2BAD132C57F6DD00590239 /* Wrap.swift in Sources */,
 				2E2BACDF2C57F6DD00590239 /* RedundantReturn.swift in Sources */,
 				2E2BAC0F2C57F6DD00590239 /* WrapMultilineConditionalAssignment.swift in Sources */,
@@ -2011,7 +2021,7 @@
 				2E8DE74C2C57FEB30032BF25 /* WrapConditionalBodiesTests.swift in Sources */,
 				EBA6E70B2C5B7E8400CBD360 /* SpacingGuardsTests.swift in Sources */,
 				2E8DE7332C57FEB30032BF25 /* SpaceAroundCommentsTests.swift in Sources */,
-				2E723EF32D45592B00D1B389 /* SwiftTestingTests.swift in Sources */,
+				2E723EF32D45592B00D1B389 /* PreferSwiftTestingTests.swift in Sources */,
 				2E8DE7342C57FEB30032BF25 /* PropertyTypesTests.swift in Sources */,
 				2E8DE7162C57FEB30032BF25 /* TrailingSpaceTests.swift in Sources */,
 				2E8DE7472C57FEB30032BF25 /* ConditionalAssignmentTests.swift in Sources */,
@@ -2123,6 +2133,7 @@
 				2E8DE7222C57FEB30032BF25 /* SortDeclarationsTests.swift in Sources */,
 				2E8DE7122C57FEB30032BF25 /* BlankLinesAtEndOfScopeTests.swift in Sources */,
 				2E8DE7252C57FEB30032BF25 /* BracesTests.swift in Sources */,
+				08CC3AD82D656259005BFABE /* SwiftTestingTestCaseNamesTests.swift in Sources */,
 				2E8DE74B2C57FEB30032BF25 /* LeadingDelimitersTests.swift in Sources */,
 				2E8DE7552C57FEB30032BF25 /* RedundantTypedThrowsTests.swift in Sources */,
 				2EA8C3752D05282600843B42 /* PreferCountWhereTests.swift in Sources */,
@@ -2203,6 +2214,7 @@
 				2E2BACF82C57F6DD00590239 /* RedundantStaticSelf.swift in Sources */,
 				2E2BAC442C57F6DD00590239 /* RedundantGet.swift in Sources */,
 				01F3DF8D1DB9FD3F00454944 /* Options.swift in Sources */,
+				08CC3AD62D655C56005BFABE /* SwiftTestingTestCaseNames.swift in Sources */,
 				E4FABAD6202FEF060065716E /* OptionDescriptor.swift in Sources */,
 				2E2BACCC2C57F6DD00590239 /* IsEmpty.swift in Sources */,
 				D52F6A652A82E04600FE1448 /* GitFileInfo.swift in Sources */,
@@ -2269,7 +2281,7 @@
 				2E2BAD502C57F6DD00590239 /* RedundantRawValues.swift in Sources */,
 				2E2BACAC2C57F6DD00590239 /* RedundantLetError.swift in Sources */,
 				01045A9A2119979400D2BE3D /* Arguments.swift in Sources */,
-				2E723EF72D455B2B00D1B389 /* SwiftTesting.swift in Sources */,
+				2E723EF72D455B2B00D1B389 /* PreferSwiftTesting.swift in Sources */,
 				580496D62C584E8F004B7DBF /* EmptyExtensions.swift in Sources */,
 				2E9DE5072C95F9A1000FEDF8 /* FileMacro.swift in Sources */,
 				2E2BAD482C57F6DD00590239 /* WrapLoopBodies.swift in Sources */,
@@ -2330,7 +2342,7 @@
 				2E2BACED2C57F6DD00590239 /* RedundantObjc.swift in Sources */,
 				2E2BAC692C57F6DD00590239 /* LinebreakAtEndOfFile.swift in Sources */,
 				E487211D201D885A0014845E /* RulesViewController.swift in Sources */,
-				2E723EF92D455B2C00D1B389 /* SwiftTesting.swift in Sources */,
+				2E723EF92D455B2C00D1B389 /* PreferSwiftTesting.swift in Sources */,
 				2E9DE5082C95F9A1000FEDF8 /* FileMacro.swift in Sources */,
 				2E2BAC212C57F6DD00590239 /* RedundantOptionalBinding.swift in Sources */,
 				01045A9B2119979400D2BE3D /* Arguments.swift in Sources */,
@@ -2377,6 +2389,7 @@
 				2E2BAD912C57F6DD00590239 /* HoistTry.swift in Sources */,
 				2E2BADA92C57F6DD00590239 /* UnusedArguments.swift in Sources */,
 				2E2BAD452C57F6DD00590239 /* AndOperator.swift in Sources */,
+				08CC3AD52D655C56005BFABE /* SwiftTestingTestCaseNames.swift in Sources */,
 				2E2BAC312C57F6DD00590239 /* SpaceInsideParens.swift in Sources */,
 				2EF8BF1D2D1E0D4F00D6F12F /* DeclarationType.swift in Sources */,
 				2E2BAD5D2C57F6DD00590239 /* AnyObjectProtocol.swift in Sources */,
@@ -2481,7 +2494,7 @@
 				2E2BACEE2C57F6DD00590239 /* RedundantObjc.swift in Sources */,
 				2E2BAC6A2C57F6DD00590239 /* LinebreakAtEndOfFile.swift in Sources */,
 				0142C77023C3FB6D005D5832 /* LintFileCommand.swift in Sources */,
-				2E723EFA2D455B2C00D1B389 /* SwiftTesting.swift in Sources */,
+				2E723EFA2D455B2C00D1B389 /* PreferSwiftTesting.swift in Sources */,
 				2E9DE5092C95F9A1000FEDF8 /* FileMacro.swift in Sources */,
 				2E2BAC222C57F6DD00590239 /* RedundantOptionalBinding.swift in Sources */,
 				E4E4D3CC2033F17C000D7CB1 /* EnumAssociable.swift in Sources */,
@@ -2528,6 +2541,7 @@
 				2E2BAD5A2C57F6DD00590239 /* StrongifiedSelf.swift in Sources */,
 				2E2BAD922C57F6DD00590239 /* HoistTry.swift in Sources */,
 				2E2BADAA2C57F6DD00590239 /* UnusedArguments.swift in Sources */,
+				08CC3AD42D655C56005BFABE /* SwiftTestingTestCaseNames.swift in Sources */,
 				2E2BAD462C57F6DD00590239 /* AndOperator.swift in Sources */,
 				2EF8BF1E2D1E0D4F00D6F12F /* DeclarationType.swift in Sources */,
 				2E2BAC322C57F6DD00590239 /* SpaceInsideParens.swift in Sources */,

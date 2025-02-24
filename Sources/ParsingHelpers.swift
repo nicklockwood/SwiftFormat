@@ -2058,6 +2058,15 @@ extension Formatter {
         return importStack
     }
 
+    /// Whether or not the given module is imported in this file
+    func hasImport(_ moduleName: String) -> Bool {
+        parseImports().contains(where: { importGroup in
+            importGroup.contains(where: { importedModule in
+                importedModule.module == moduleName
+            })
+        })
+    }
+
     /// Adds imports for the given list of modules to this file if not already present
     func addImports(_ importsToAddIfNeeded: [String]) {
         let importRanges = parseImports()

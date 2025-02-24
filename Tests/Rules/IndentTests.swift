@@ -1280,7 +1280,7 @@ class IndentTests: XCTestCase {
                 baz()
             }
         """
-        testFormatting(for: input, output, rule: .indent)
+        testFormatting(for: input, output, rule: .indent, exclude: [.wrapMultilineFunctionChains])
     }
 
     func testChainedClosureIndentsAfterVarDeclaration() {
@@ -4127,7 +4127,7 @@ class IndentTests: XCTestCase {
         """
 
         let options = FormatOptions(indentCase: true)
-        testFormatting(for: input, rule: .indent, options: options, exclude: [.wrap])
+        testFormatting(for: input, rule: .indent, options: options, exclude: [.wrap, .wrapMultilineFunctionChains])
     }
 
     func testGuardElseIndentAfterParenthesizedExpression() {

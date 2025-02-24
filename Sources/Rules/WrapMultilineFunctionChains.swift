@@ -39,6 +39,17 @@ public extension FormatRule {
                 return
             }
 
+            // If a type access (identifier with first character capitalized) immediately follows
+            // this operator on the same line, don't add a linebreak as it is likely a nested type.
+            if let nextNonSpaceIndex = formatter.index(of: .nonSpaceOrComment, after: operatorIndex),
+               nextNonSpaceIndex <= chainEndIndex,
+               formatter.onSameLine(operatorIndex, nextNonSpaceIndex),
+               case let .identifier(name) = formatter.token(at: nextNonSpaceIndex),
+               name.first?.isUppercase == true
+            {
+                return
+            }
+
             // If a closing scope immediately precedes this operator on the same line, insert a
             // line break
             if let previousNonSpaceIndex = formatter.index(of: .nonSpaceOrComment, before: operatorIndex),
@@ -85,6 +96,7 @@ extension Formatter {
             switch (prevToken, penultimateToken) {
             case (.endOfScope, .identifier),
                  (.endOfScope, .number),
+                 (.endOfScope, .endOfScope),
                  (.identifier, .number),
                  (.number, .identifier),
                  (.identifier, .identifier),
@@ -156,6 +168,7 @@ extension Formatter {
             switch (previousToken, nextToken) {
             case (.startOfScope, .identifier),
                  (.startOfScope, .number),
+                 (.startOfScope, .startOfScope),
                  (.identifier, .number),
                  (.number, .identifier),
                  (.identifier, .identifier),

@@ -184,6 +184,24 @@ class WrapMultilineFunctionChainsTests: XCTestCase {
         testFormatting(for: input, rules: [.wrapMultilineFunctionChains, .indent])
     }
 
+    func testNamespacedAccessNotWrapped() {
+        let input = """
+        Namespace.NestedNamespace.property
+            .map { $0 * 2 }
+        """
+
+        testFormatting(for: input, rules: [.wrapMultilineFunctionChains, .indent])
+    }
+
+    func testNestedNamespacedAccessNotWrapped() {
+        let input = """
+        Namespace.NestedNamespace.DeeplyNestedNamespace.property
+            .function()
+        """
+
+        testFormatting(for: input, rules: [.wrapMultilineFunctionChains, .indent])
+    }
+
     func testMultilineTypesNotWrapped() {
         let input = """
         func tableCellSelection(for selection: Selection?) -> Selection
@@ -306,5 +324,17 @@ class WrapMultilineFunctionChainsTests: XCTestCase {
         """
 
         testFormatting(for: input, [], rules: [.wrapMultilineFunctionChains, .indent])
+    }
+
+    func testParenthesisInSingleLineDoNoWrap() {
+        let input = """
+        MainActor.assumeIsolated {
+            let value = try await someFunction()
+        }
+
+        (invoke() as Value).method()
+        """
+
+        testFormatting(for: input, [], rules: [.wrapMultilineFunctionChains, .indent], exclude: [.hoistTry])
     }
 }

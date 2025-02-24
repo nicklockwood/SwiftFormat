@@ -79,6 +79,7 @@
 * [spaceInsideParens](#spaceInsideParens)
 * [strongOutlets](#strongOutlets)
 * [strongifiedSelf](#strongifiedSelf)
+* [swiftTestingTestCaseNames](#swiftTestingTestCaseNames)
 * [todos](#todos)
 * [trailingClosures](#trailingClosures)
 * [trailingCommas](#trailingCommas)
@@ -106,13 +107,13 @@
 * [markTypes](#markTypes)
 * [noExplicitOwnership](#noExplicitOwnership)
 * [organizeDeclarations](#organizeDeclarations)
+* [preferSwiftTesting](#preferSwiftTesting)
 * [privateStateVariables](#privateStateVariables)
 * [propertyTypes](#propertyTypes)
 * [redundantEquatable](#redundantEquatable)
 * [redundantProperty](#redundantProperty)
 * [sortSwitchCases](#sortSwitchCases)
 * [spacingGuards](#spacingGuards)
-* [swiftTesting](#swiftTesting)
 * [unusedPrivateDeclarations](#unusedPrivateDeclarations)
 * [wrapConditionalBodies](#wrapConditionalBodies)
 * [wrapEnumCases](#wrapEnumCases)
@@ -1739,6 +1740,83 @@ Convert trivial `map { $0.foo }` closures to keyPath-based syntax.
 </details>
 <br/>
 
+## preferSwiftTesting
+
+Prefer the Swift Testing library over XCTest.
+
+Option | Description
+--- | ---
+`--xctestsymbols` | Comma-delimited list of symbols that depend on XCTest
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  @testable import MyFeatureLib
+- import XCTest
++ import Testing
++ import Foundation
+
+- final class MyFeatureTests: XCTestCase {
+-     func testMyFeatureHasNoBugs() {
+-         let myFeature = MyFeature()
+-         myFeature.runAction()
+-         XCTAssertFalse(myFeature.hasBugs, "My feature has no bugs")
+-         XCTAssertEqual(myFeature.crashes.count, 0, "My feature doesn't crash")
+-         XCTAssertNil(myFeature.crashReport)
+-     }
+- }
++ @MainActor @Suite(.serialized)
++ final class MyFeatureTests { 
++     @Test func myFeatureHasNoBugs() {
++         let myFeature = MyFeature()
++         myFeature.runAction()
++         #expect(!myFeature.hasBugs, "My feature has no bugs")
++         #expect(myFeature.crashes.isEmpty, "My feature doesn't crash")
++         #expect(myFeature.crashReport == nil)
++     }
++ }
+
+- final class MyFeatureTests: XCTestCase {
+-     var myFeature: MyFeature!
+- 
+-     override func setUp() async throws {
+-         myFeature = try await MyFeature()
+-     }
+- 
+-     override func tearDown() {
+-         myFeature = nil
+-     }
+- 
+-     func testMyFeatureWorks() {
+-         myFeature.runAction()
+-         XCTAssertTrue(myFeature.worksProperly)
+-         XCTAssertEqual(myFeature.screens.count, 8)
+-     }
+- }
++ @MainActor
++ final class MyFeatureTests {
++     var myFeature: MyFeature!
++ 
++     init() async throws {
++         myFeature = try await MyFeature()
++     }
++ 
++     deinit {
++         myFeature = nil
++     }
++ 
++     @Test func myFeatureWorks() {
++         myFeature.runAction()
++         #expect(myFeature.worksProperly)
++         #expect(myFeature.screens.count == 8)
++     }
++ }
+```
+
+</details>
+<br/>
+
 ## privateStateVariables
 
 Adds `private` access control to @State properties without existing access control modifiers.
@@ -2918,78 +2996,26 @@ set to 4.2 or above.
 </details>
 <br/>
 
-## swiftTesting
+## swiftTestingTestCaseNames
 
-Prefer the Swift Testing library over XCTest.
-
-Option | Description
---- | ---
-`--xctestsymbols` | Comma-delimited list of symbols that depend on XCTest
+In Swift Testing, don't prefix @Test methods with 'test'.
 
 <details>
 <summary>Examples</summary>
 
 ```diff
-  @testable import MyFeatureLib
-- import XCTest
-+ import Testing
-+ import Foundation
+  import Testing
 
-- final class MyFeatureTests: XCTestCase {
--     func testMyFeatureHasNoBugs() {
--         let myFeature = MyFeature()
--         myFeature.runAction()
--         XCTAssertFalse(myFeature.hasBugs, "My feature has no bugs")
--         XCTAssertEqual(myFeature.crashes.count, 0, "My feature doesn't crash")
--         XCTAssertNil(myFeature.crashReport)
--     }
-- }
-+ @MainActor @Suite(.serialized)
-+ final class MyFeatureTests { 
+  struct MyFeatureTests {
+-     @Test func testMyFeatureHasNoBugs() {
 +     @Test func myFeatureHasNoBugs() {
-+         let myFeature = MyFeature()
-+         myFeature.runAction()
-+         #expect(!myFeature.hasBugs, "My feature has no bugs")
-+         #expect(myFeature.crashes.isEmpty, "My feature doesn't crash")
-+         #expect(myFeature.crashReport == nil)
-+     }
-+ }
-
-- final class MyFeatureTests: XCTestCase {
--     var myFeature: MyFeature!
-- 
--     override func setUp() async throws {
--         myFeature = try await MyFeature()
--     }
-- 
--     override func tearDown() {
--         myFeature = nil
--     }
-- 
--     func testMyFeatureWorks() {
--         myFeature.runAction()
--         XCTAssertTrue(myFeature.worksProperly)
--         XCTAssertEqual(myFeature.screens.count, 8)
--     }
-- }
-+ @MainActor
-+ final class MyFeatureTests {
-+     var myFeature: MyFeature!
-+ 
-+     init() async throws {
-+         myFeature = try await MyFeature()
-+     }
-+ 
-+     deinit {
-+         myFeature = nil
-+     }
-+ 
-+     @Test func myFeatureWorks() {
-+         myFeature.runAction()
-+         #expect(myFeature.worksProperly)
-+         #expect(myFeature.screens.count == 8)
-+     }
-+ }
+          let myFeature = MyFeature()
+          myFeature.runAction()
+          #expect(!myFeature.hasBugs, "My feature has no bugs")
+          #expect(myFeature.crashes.isEmpty, "My feature doesn't crash")
+          #expect(myFeature.crashReport == nil)
+      }
+  }
 ```
 
 </details>

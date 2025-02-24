@@ -1990,7 +1990,8 @@ class WrapArgumentsTests: XCTestCase {
                     } else {
                         return false
                     }
-                }).isEmpty,
+                })
+                .isEmpty,
             let bar = unwrappedFoo.bar,
             let baz = unwrappedFoo.bar?
                 .first(where: { $0.isBaz }),

@@ -118,6 +118,7 @@
 * [wrapConditionalBodies](#wrapConditionalBodies)
 * [wrapEnumCases](#wrapEnumCases)
 * [wrapMultilineConditionalAssignment](#wrapMultilineConditionalAssignment)
+* [wrapMultilineFunctionChains](#wrapMultilineFunctionChains)
 * [wrapSwitchCases](#wrapSwitchCases)
 
 # Deprecated Rules (do not use)
@@ -3488,6 +3489,27 @@ Wrap multiline conditional assignment expressions after the assignment operator.
 +     } else {
 +         "Rogue planet"
 +     }
+```
+
+</details>
+<br/>
+
+## wrapMultilineFunctionChains
+
+Wraps chained function calls to either all on the same line, or one per line.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  let evenSquaresSum = [20, 17, 35, 4]
+-   .filter { $0 % 2 == 0 }.map { $0 * $0 }
+    .reduce(0, +)
+
+  let evenSquaresSum = [20, 17, 35, 4]
++   .filter { $0 % 2 == 0 }
++   .map { $0 * $0 }
+    .reduce(0, +)
 ```
 
 </details>

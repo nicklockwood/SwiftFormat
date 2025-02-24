@@ -941,7 +941,7 @@ class MarkTypesTests: XCTestCase {
         ]: Hashable {}
         """
 
-        testFormatting(for: input, output, rule: .markTypes)
+        testFormatting(for: input, output, rule: .markTypes, exclude: [.wrapMultilineFunctionChains])
     }
 
     func testSupportsUncheckedSendable() {

@@ -124,6 +124,7 @@ let ruleRegistry: [String: FormatRule] = [
     "wrapEnumCases": .wrapEnumCases,
     "wrapLoopBodies": .wrapLoopBodies,
     "wrapMultilineConditionalAssignment": .wrapMultilineConditionalAssignment,
+    "wrapMultilineFunctionChains": .wrapMultilineFunctionChains,
     "wrapMultilineStatementBraces": .wrapMultilineStatementBraces,
     "wrapSingleLineComments": .wrapSingleLineComments,
     "wrapSwitchCases": .wrapSwitchCases,

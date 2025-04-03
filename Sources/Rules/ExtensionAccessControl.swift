@@ -78,7 +78,6 @@ public extension FormatRule {
                 }
 
                 extensionDeclaration.body.forEachRecursiveDeclarationExcludingTypeBodies { bodyDeclaration in
-
                     let visibility = bodyDeclaration.visibility()
                     if memberVisibility > visibility ?? extensionVisibility ?? .internal {
                         if visibility == nil {

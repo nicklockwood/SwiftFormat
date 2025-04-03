@@ -24,7 +24,6 @@ public extension FormatRule {
                     || $0.isDeclarationTypeKeyword(including: Array(Token.swiftTypeKeywords))
             }
         ) { index, token in
-
             let rangeToSort: ClosedRange<Int>
             let numberOfLeadingLinebreaks: Int
 

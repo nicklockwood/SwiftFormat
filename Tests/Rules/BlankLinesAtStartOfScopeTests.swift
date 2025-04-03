@@ -118,4 +118,94 @@ class BlankLinesAtStartOfScopeTests: XCTestCase {
         """
         XCTAssertEqual(try lint(input, rules: [.blankLinesAtStartOfScope, .organizeDeclarations]), [])
     }
+
+    func testRemovesBlankLineFromStartOfSwitchCase() {
+        let input = """
+        switch bool {
+
+        case true:
+
+            print("true")
+
+        case false:
+
+            print("false")
+        }
+        """
+
+        let output = """
+        switch bool {
+        case true:
+            print("true")
+
+        case false:
+            print("false")
+        }
+        """
+
+        testFormatting(for: input, output, rule: .blankLinesAtStartOfScope)
+    }
+
+    func testRemovesBlankLineInClosureWithParams() {
+        let input = """
+        presenter.present(viewController, animated: animated) { animated in
+
+            if animated {
+                self?.completion()
+            }
+        }
+        """
+
+        let output = """
+        presenter.present(viewController, animated: animated) { animated in
+            if animated {
+                self?.completion()
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: .blankLinesAtStartOfScope)
+    }
+
+    func testRemovesBlankLineInClosureWithCapture() {
+        let input = """
+        presenter.present(viewController, animated: animated) { [weak self] animated in
+
+            if animated {
+                self?.completion()
+            }
+        }
+        """
+
+        let output = """
+        presenter.present(viewController, animated: animated) { [weak self] animated in
+            if animated {
+                self?.completion()
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: .blankLinesAtStartOfScope)
+    }
+
+    func testRemovesBlankLineInClosureWithActorAnnotion() {
+        let input = """
+        presenter.present(viewController, animated: animated) { @MainActor in
+
+            if animated {
+                self?.completion()
+            }
+        }
+        """
+
+        let output = """
+        presenter.present(viewController, animated: animated) { @MainActor in
+            if animated {
+                self?.completion()
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: .blankLinesAtStartOfScope)
+    }
 }

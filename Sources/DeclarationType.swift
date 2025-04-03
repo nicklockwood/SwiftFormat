@@ -191,7 +191,6 @@ extension Declaration {
             switch keyword {
             // Properties and property-like declarations
             case "let", "var", "operator", "precedencegroup":
-
                 if isOverriddenDeclaration, availableTypes.contains(.overriddenProperty) {
                     return .overriddenProperty
                 }

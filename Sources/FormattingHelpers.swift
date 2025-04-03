@@ -2372,7 +2372,7 @@ extension Formatter {
                     continue
                 case .startOfScope("{") where lastKeyword == "var":
                     lastKeyword = ""
-                    if isStartOfClosure(at: index, in: scopeStack.last?.token) {
+                    if isStartOfClosure(at: index) {
                         fallthrough
                     }
                     var prevIndex = index - 1

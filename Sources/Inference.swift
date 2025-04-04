@@ -979,7 +979,7 @@ private struct Inference {
                     continue
                 case .startOfScope("{") where lastKeyword == "var":
                     lastKeyword = ""
-                    if formatter.isStartOfClosure(at: index, in: scopeStack.last) {
+                    if formatter.isStartOfClosure(at: index) {
                         fallthrough
                     }
                     var prevIndex = index - 1

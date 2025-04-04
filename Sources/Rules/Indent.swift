@@ -54,8 +54,7 @@ public extension FormatRule {
                 switch string {
                 case ":" where scopeStack.last == .endOfScope("case"):
                     popScope()
-                case "{" where !formatter.isStartOfClosure(at: i, in: scopeStack.last) &&
-                    linewrapStack.last == true:
+                case "{" where !formatter.isStartOfClosure(at: i) && linewrapStack.last == true:
                     indentStack.removeLast()
                     linewrapStack[linewrapStack.count - 1] = false
                 default:
@@ -286,6 +285,7 @@ public extension FormatRule {
                     guard !token.isLinebreak, lineIndex > scopeStartLineIndexes.last ?? -1 else {
                         break
                     }
+
                     // If indentCount > 0, drop back to previous indent level
                     if indentCount > 0 {
                         indentStack.removeLast(indentCount)
@@ -296,6 +296,30 @@ public extension FormatRule {
                         }
                     }
 
+                    // If this is a multi-line method call followed by a trailing closure,
+                    // indent the trailing closure by the same amount as the function call.
+                    if token == .endOfScope(")"),
+                       let nextTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i),
+                       formatter.isTrailingClosureOnLineAfterMultilineMethodCall(at: nextTokenIndex),
+                       let functionCallStartOfScope = formatter.startOfScope(at: i)
+                    {
+                        let indent = formatter.currentIndentForLine(at: functionCallStartOfScope)
+                        indentStack.append(indent)
+                        stringBodyIndentStack.append("")
+                        indentCounts.append(indentCount)
+                        scopeStartLineIndexes.append(lineIndex)
+                        linewrapStack.append(false)
+                        scopeStack.append(.startOfScope("{"))
+                    }
+
+                    // When we find the end of the trailing closure with extra indentation, pop the extra indentation scope.
+                    if token == .endOfScope("}"),
+                       let startOfScope = formatter.startOfScope(at: i),
+                       formatter.isTrailingClosureOnLineAfterMultilineMethodCall(at: startOfScope)
+                    {
+                        popScope()
+                    }
+
                     // Don't reduce indent if line doesn't start with end of scope
                     let start = formatter.startOfLine(at: i)
                     guard let firstIndex = formatter.index(of: .nonSpaceOrComment, after: start - 1) else {
@@ -304,6 +328,7 @@ public extension FormatRule {
                     if firstIndex != i {
                         break
                     }
+
                     if token == .endOfScope("#endif"), formatter.options.ifdefIndent == .outdent {
                         i += formatter.insertSpaceIfEnabled("", at: start)
                     } else {
@@ -851,6 +876,21 @@ extension Formatter {
         let end = endOfLine(at: i + 1)
         guard let lastToken = last(.nonSpaceOrCommentOrLinebreak, before: end + 1),
               [.startOfScope("{"), .endOfScope("}")].contains(lastToken) else { return false }
+
+        return true
+    }
+
+    /// Whether or not this index is the start of a trailing closure written on
+    /// the line after the closing paren of a multi-line method call. In this case,
+    /// the closure should have the same indentation as the open paren of the function call.
+    func isTrailingClosureOnLineAfterMultilineMethodCall(at startOfScope: Int) -> Bool {
+        guard isStartOfClosure(at: startOfScope),
+              let endOfFunctionCall = index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope),
+              tokens[endOfFunctionCall] == .endOfScope(")"),
+              startOfLine(at: endOfFunctionCall) != startOfLine(at: startOfScope),
+              let startOfFunctionCall = self.startOfScope(at: endOfFunctionCall),
+              startOfLine(at: startOfFunctionCall) != startOfLine(at: endOfFunctionCall)
+        else { return false }
 
         return true
     }

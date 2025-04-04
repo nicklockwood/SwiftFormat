@@ -1575,6 +1575,64 @@ class IndentTests: XCTestCase {
                        exclude: [.wrapMultilineStatementBraces])
     }
 
+    func testIndentTrailingClosureAfterChainedMethodCall() {
+        let input = """
+        Foo()
+            .bar(
+                baaz: baaz,
+                quux: quux)
+            {
+                print("Trailing closure")
+            }
+            .methodCallAfterTrailingClosure()
+
+        Foo().bar(baaz: baaz, quux, quux) {
+            print("Trailing closure")
+        }
+        """
+
+        let options = FormatOptions(closingParenPosition: .sameLine)
+        testFormatting(for: input, rule: .indent, options: options)
+    }
+
+    func testIndentNonTrailingClosureAfterChainedMethodCall() {
+        let input = """
+        Foo()
+            .bar(
+                baaz: baaz,
+                quux: quux,
+                closure: {
+                    print("Trailing closure")
+                })
+
+        Foo().bar(baaz: baaz, quux, quux, closure: {
+            print("Trailing closure")
+        })
+        """
+
+        let options = FormatOptions(closingParenPosition: .sameLine)
+        testFormatting(for: input, rule: .indent, options: options)
+    }
+
+    func testIndentTrailingClosureAfterNonChainedMethodCall() {
+        let input = """
+        Foo(
+            baaz: baaz,
+            quux: quux)
+        {
+            print("Trailing closure")
+        }
+        .methodCallAfterTrailingClosure()
+
+        Foo().bar(baaz: baaz, quux, quux, closure: {
+            print("Trailing closure")
+        })
+        """
+
+        let options = FormatOptions(closingParenPosition: .sameLine)
+        testFormatting(for: input, rule: .indent, options: options)
+    }
+
     func testNoDoubleIndentTrailingClosureBodyIfLineStartsWithClosingBrace() {
         let input = """
         let alert = Foo.alert(buttonCallback: {

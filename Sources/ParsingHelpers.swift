@@ -513,7 +513,7 @@ extension Formatter {
         return index(of: .operator("->", .infix), in: startIndex + 1 ..< endIndex)
     }
 
-    func isStartOfClosure(at i: Int, in _: Token? = nil) -> Bool {
+    func isStartOfClosure(at i: Int) -> Bool {
         guard token(at: i) == .startOfScope("{") else {
             return false
         }
@@ -1057,7 +1057,7 @@ extension Formatter {
            last(.nonSpaceOrCommentOrLinebreak, before: i) == .endOfScope("}"),
            let nextIndex = index(of: .nonSpaceOrComment, after: i, if: { $0 == .delimiter(":") }),
            let nextNextIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: nextIndex),
-           isStartOfClosure(at: nextNextIndex, in: nil)
+           isStartOfClosure(at: nextNextIndex)
         {
             return true
         }

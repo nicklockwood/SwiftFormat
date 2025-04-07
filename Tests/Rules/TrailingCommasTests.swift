@@ -272,4 +272,60 @@ class TrailingCommasTests: XCTestCase {
         let options = FormatOptions(trailingCommas: false)
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
+
+    func testTrailingCommasAddedToFunctionParameters() {
+        let input = "func foo(\n    bar _: Int\n) {}"
+        let output = "func foo(\n    bar _: Int,\n) {}"
+        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
+
+    func testTrailingCommasRemovedFromFunctionParameters() {
+        let input = "func foo(\n    bar _: Int,\n) {}"
+        let output = "func foo(\n    bar _: Int\n) {}"
+        let options = FormatOptions(trailingCommas: false, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
+
+    func testTrailingCommasAddedToFunctionArguments() {
+        let input = "foo(\n    bar _: Int\n) {}"
+        let output = "foo(\n    bar _: Int,\n) {}"
+        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
+
+    func testTrailingCommasRemovedFromFunctionArguments() {
+        let input = "foo(\n    bar _: Int,\n) {}"
+        let output = "foo(\n    bar _: Int\n) {}"
+        let options = FormatOptions(trailingCommas: false, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
+
+    func testTrailingCommasAddedToEnumCaseAssociatedValue() {
+        let input = "enum Foo {\n    case bar(\n        baz: String\n    )\n}"
+        let output = "enum Foo {\n    case bar(\n        baz: String,\n    )\n}"
+        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
+
+    func testTrailingCommasRemovedFromEnumCaseAssociatedValue() {
+        let input = "enum Foo {\n    case bar(\n        baz: String,\n    )\n}"
+        let output = "enum Foo {\n    case bar(\n        baz: String\n    )\n}"
+        let options = FormatOptions(trailingCommas: false, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
+
+    func testTrailingCommasAddedToInitializer() {
+        let input = "let foo: Foo = .init(\n    1\n)"
+        let output = "let foo: Foo = .init(\n    1,\n)"
+        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
+
+    func testTrailingCommasRemovedFromInitializer() {
+        let input = "let foo: Foo = .init(\n    1,\n)"
+        let output = "let foo: Foo = .init(\n    1\n)"
+        let options = FormatOptions(trailingCommas: false, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
 }

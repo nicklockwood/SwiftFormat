@@ -3073,7 +3073,7 @@ Option | Description
 
 ## trailingCommas
 
-Add or remove trailing comma from the last item in a collection literal.
+Add or remove trailing commas where applicable.
 
 Option | Description
 --- | ---
@@ -3094,6 +3094,16 @@ Option | Description
     bar,
 +   baz,
   ]
+```
+
+```diff
+func foo(
+-   bar _: Int
+) {}
+
+func foo(
++   bar _: Int,
+) {}
 ```
 
 </details>

@@ -9,10 +9,11 @@
 import Foundation
 
 public extension FormatRule {
-    /// Ensure that the last item in a multi-line array literal is followed by a comma.
+    /// Ensure that the last item in a multi-line collection literal, parameter or argument list,
+    /// or enum case with associated values is followed by a comma.
     /// This is useful for preventing noise in commits when items are added to end of array.
     static let trailingCommas = FormatRule(
-        help: "Add or remove trailing comma from the last item in a collection literal.",
+        help: "Add or remove trailing commas where applicable.",
         options: ["commas"]
     ) { formatter in
         formatter.forEach(.endOfScope("]")) { i, _ in

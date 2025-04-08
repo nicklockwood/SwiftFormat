@@ -9,10 +9,11 @@
 import Foundation
 
 public extension FormatRule {
-    /// Ensure that the last item in a multi-line array literal is followed by a comma.
+    /// Ensure that the last item in a multi-line collection literal, parameter or argument list,
+    /// or enum case with associated values is followed by a comma.
     /// This is useful for preventing noise in commits when items are added to end of array.
     static let trailingCommas = FormatRule(
-        help: "Add or remove trailing comma from the last item in a collection literal.",
+        help: "Add or remove trailing commas where applicable.",
         options: ["commas"]
     ) { formatter in
         formatter.forEach(.endOfScope("]")) { i, _ in
@@ -51,6 +52,51 @@ public extension FormatRule {
                 return
             }
         }
+
+        guard formatter.options.swiftVersion >= "6.1" else { return }
+
+        formatter.forEach(.endOfScope(")")) { i, _ in
+            guard let startIndex = formatter.startOfScope(at: i),
+                  formatter.tokens[startIndex] == .startOfScope("(")
+            else {
+                return
+            }
+
+            guard let functionStartIndex = formatter.index(of: .nonSpaceOrComment, before: startIndex),
+                  case .identifier = formatter.token(at: functionStartIndex)
+            else {
+                return
+            }
+
+            guard let prevTokenIndex = formatter.index(of: .nonSpaceOrComment, before: i) else {
+                return
+            }
+
+            switch formatter.tokens[prevTokenIndex] {
+            case .linebreak:
+                guard let lastArgIndex = formatter.index(
+                    of: .nonSpaceOrCommentOrLinebreak, before: prevTokenIndex + 1
+                ) else {
+                    break
+                }
+                switch formatter.tokens[lastArgIndex] {
+                case .delimiter(","):
+                    if !formatter.options.trailingCommas {
+                        formatter.removeToken(at: lastArgIndex)
+                    }
+                case .startOfScope("("):
+                    break
+                default:
+                    if formatter.options.trailingCommas {
+                        formatter.insert(.delimiter(","), at: lastArgIndex + 1)
+                    }
+                }
+            case .delimiter(","):
+                formatter.removeToken(at: prevTokenIndex)
+            default:
+                break
+            }
+        }
     } examples: {
         """
         ```diff
@@ -65,6 +111,16 @@ public extension FormatRule {
             bar,
         +   baz,
           ]
+        ```
+
+        ```diff
+        func foo(
+        -   bar _: Int
+        ) {}
+
+        func foo(
+        +   bar _: Int,
+        ) {}
         ```
         """
     }

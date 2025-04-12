@@ -1305,6 +1305,9 @@ extension Formatter {
     ///  - `some ...`
     ///  - `borrowing ...`
     ///  - `consuming ...`
+    ///  - `sending ...`
+    ///  - `repeat ...`
+    ///  - `each ...`
     ///  - `@escaping ...`
     ///  - `@unchecked ...`
     ///  - `~...`
@@ -1435,9 +1438,9 @@ extension Formatter {
             return (name: tokens[typeRange].stringExcludingLinebreaks, range: typeRange)
         }
 
-        // Parse types of the form `any ...`, `some ...`, `borrowing ...`, `consuming ...`,
-        // `@unchecked ...`, `@escaping ...`, `~...`,
-        let typePrefixes = Set(["any", "some", "borrowing", "consuming", "@unchecked", "@escaping", "~"])
+        // Parse types of the form `any ...`, `some ...`, `borrowing ...`, `consuming ...`, `sending ...`, `repeat ...`, `each ...`,
+        // `@unchecked ...`, `@escaping ...`, `~...`, `@retroactive ...`,
+        let typePrefixes = Set(["any", "some", "borrowing", "consuming", "sending", "repeat", "each", "@unchecked", "@escaping", "~", "@retroactive"])
         if typePrefixes.contains(startToken.string),
            let nextToken = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfTypeIndex),
            let followingType = parseType(at: nextToken)
@@ -1498,11 +1501,10 @@ extension Formatter {
     func parseExpressionRange(
         startingAt startIndex: Int,
         allowConditionalExpressions: Bool = false
-    )
-        -> ClosedRange<Int>?
-    {
-        // Any expression can start with a prefix operator, or `await`
-        if tokens[startIndex].isOperator(ofType: .prefix) || tokens[startIndex].string == "await",
+    ) -> ClosedRange<Int>? {
+        // Any expression can start with a prefix operator, or `await`, `repeat`, `each`
+        let prefixKeywords = ["await", "repeat", "each"]
+        if tokens[startIndex].isOperator(ofType: .prefix) || prefixKeywords.contains(tokens[startIndex].string),
            let nextTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: startIndex),
            let followingExpression = parseExpressionRange(startingAt: nextTokenIndex, allowConditionalExpressions: allowConditionalExpressions)
         {

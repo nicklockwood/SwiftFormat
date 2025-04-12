@@ -1310,11 +1310,25 @@ extension Formatter {
     ///  - `~...`
     ///  - `(type).(type)`
     ///  - `(type) & (type)`
+    ///  - `each ...` (parameter pack)
     func parseType(
         at startOfTypeIndex: Int,
         excludeLowercaseIdentifiers: Bool = false,
         excludeProtocolCompositions: Bool = false
     ) -> (name: String, range: ClosedRange<Int>)? {
+        // Check for parameter pack syntax (each T)
+        if let token = token(at: startOfTypeIndex),
+           token == .keyword("each"),
+           let nextTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfTypeIndex),
+           let baseType = parseNonOptionalType(
+               at: nextTokenIndex,
+               excludeLowercaseIdentifiers: excludeLowercaseIdentifiers,
+               excludeProtocolCompositions: excludeProtocolCompositions
+           ) {
+            let typeRange = startOfTypeIndex ... baseType.range.upperBound
+            return (name: tokens[typeRange].stringExcludingLinebreaks, range: typeRange)
+        }
+
         guard let baseType = parseNonOptionalType(
             at: startOfTypeIndex,
             excludeLowercaseIdentifiers: excludeLowercaseIdentifiers,
@@ -1501,6 +1515,27 @@ extension Formatter {
     )
         -> ClosedRange<Int>?
     {
+        // Check for parameter pack expansion (repeat ... each ...)
+        if let token = token(at: startIndex),
+           token == .keyword("repeat"),
+           let nextTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: startIndex),
+           let nextToken = token(at: nextTokenIndex),
+           nextToken == .keyword("each"),
+           let expressionIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: nextTokenIndex),
+           let expressionRange = parseExpressionRange(startingAt: expressionIndex)
+        {
+            return startIndex ... expressionRange.upperBound
+        }
+
+        // Check for parameter pack element access (each T)
+        if let token = token(at: startIndex),
+           token == .keyword("each"),
+           let nextTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: startIndex),
+           let expressionRange = parseExpressionRange(startingAt: nextTokenIndex)
+        {
+            return startIndex ... expressionRange.upperBound
+        }
+
         // Any expression can start with a prefix operator, or `await`
         if tokens[startIndex].isOperator(ofType: .prefix) || tokens[startIndex].string == "await",
            let nextTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: startIndex),

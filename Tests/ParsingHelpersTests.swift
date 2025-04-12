@@ -2567,4 +2567,34 @@ class ParsingHelpersTests: XCTestCase {
             ["at"]
         )
     }
+
+    func testParseParameterPackType() {
+        let formatter = Formatter(tokenize("""
+        func foo<each T>() -> (repeat each T) {
+            return (repeat each T.self)
+        }
+        """))
+        XCTAssertEqual(formatter.parseType(at: 5)?.name, "each T")
+        XCTAssertEqual(formatter.parseType(at: 9)?.name, "repeat each T")
+    }
+
+    func testParseParameterPackExpression() {
+        let formatter = Formatter(tokenize("""
+        func foo<each T>(_ values: repeat each T) {
+            let x = repeat each values
+            let y = each values
+        }
+        """))
+        XCTAssertNotNil(formatter.parseExpressionRange(startingAt: 12))
+        XCTAssertNotNil(formatter.parseExpressionRange(startingAt: 16))
+    }
+
+    func testParseParameterPackWithConstraints() {
+        let formatter = Formatter(tokenize("""
+        func foo<each T: Equatable>() where each T: Hashable {
+            return (repeat each T.self)
+        }
+        """))
+        XCTAssertEqual(formatter.parseType(at: 5)?.name, "each T")
+    }
 }

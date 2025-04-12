@@ -1695,6 +1695,8 @@ extension Formatter {
         var conformances: [GenericConformance]
         /// Whether or not this generic parameter can be removed and replaced with an opaque generic parameter
         var eligibleToRemove = true
+        /// Whether or not this generic parameter is a parameter pack
+        let isParameterPack: Bool
 
         /// A constraint or conformance that applies to a generic type
         struct GenericConformance: Hashable {
@@ -1718,10 +1720,11 @@ extension Formatter {
             let sourceRange: ClosedRange<Int>
         }
 
-        init(name: String, definitionSourceRange: ClosedRange<Int>, conformances: [GenericConformance] = []) {
+        init(name: String, definitionSourceRange: ClosedRange<Int>, conformances: [GenericConformance] = [], isParameterPack: Bool = false) {
             self.name = name
             self.definitionSourceRange = definitionSourceRange
             self.conformances = conformances
+            self.isParameterPack = isParameterPack
         }
 
         /// The opaque parameter syntax that represents this generic type,
@@ -1820,86 +1823,50 @@ extension Formatter {
     ) {
         var currentIndex = genericSignatureStartIndex
 
-        while currentIndex < genericSignatureEndIndex - 1 {
-            guard let genericTypeNameIndex = index(of: .identifier, after: currentIndex),
-                  genericTypeNameIndex < genericSignatureEndIndex
+        while currentIndex < genericSignatureEndIndex {
+            // Skip whitespace and comments
+            guard let nextTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex),
+                  nextTokenIndex < genericSignatureEndIndex
             else { break }
 
-            let typeEndIndex: Int
-            let nextCommaIndex = index(of: .delimiter(","), after: genericTypeNameIndex)
-            if let nextCommaIndex = nextCommaIndex, nextCommaIndex < genericSignatureEndIndex {
-                typeEndIndex = nextCommaIndex
-            } else {
-                typeEndIndex = genericSignatureEndIndex - 1
-            }
-
-            // Include all whitespace and comments in the conformance's source range,
-            // so if we remove it later all of the extra whitespace will get cleaned up
-            let sourceRangeEnd: Int
-            if let nextTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: typeEndIndex) {
-                sourceRangeEnd = nextTokenIndex - 1
-            } else {
-                sourceRangeEnd = typeEndIndex
-            }
-
-            // The generic constraint could have syntax like `Foo`, `Foo: Fooable`,
-            // `Foo.Element == Fooable`, etc. Create a reference to this specific
-            // generic parameter (`Foo` in all of these examples) that can store
-            // the constraints and conformances that we encounter later.
-            let fullGenericTypeName = qualifyGenericTypeName(tokens[genericTypeNameIndex].string)
-            let baseGenericTypeName = fullGenericTypeName.components(separatedBy: ".")[0]
-
-            let genericType: GenericType
-            if let existingType = genericTypes.first(where: { $0.name == baseGenericTypeName }) {
-                genericType = existingType
-            } else {
-                genericType = GenericType(
-                    name: baseGenericTypeName,
-                    definitionSourceRange: genericTypeNameIndex ... sourceRangeEnd
+            // Check for parameter pack syntax (each T)
+            if tokens[nextTokenIndex] == .keyword("each"),
+               let typeNameIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: nextTokenIndex),
+               tokens[typeNameIndex].isIdentifier
+            {
+                let typeName = tokens[typeNameIndex].string
+                let qualifiedTypeName = qualifyGenericTypeName(typeName)
+                
+                let genericType = GenericType(
+                    name: qualifiedTypeName,
+                    definitionSourceRange: nextTokenIndex ... typeNameIndex,
+                    conformances: [],
+                    isParameterPack: true
                 )
+                
                 genericTypes.append(genericType)
+                currentIndex = typeNameIndex
+                continue
             }
 
-            // Parse the constraint after the type name if present
-            var delineatorIndex: Int?
-            var conformanceType: GenericType.GenericConformance.ConformanceType?
-
-            // This can either be a protocol constraint of the form `T: Fooable`
-            if let colonIndex = index(of: .delimiter(":"), after: genericTypeNameIndex),
-               colonIndex < typeEndIndex
-            {
-                delineatorIndex = colonIndex
-                conformanceType = .protocolConstraint
+            // Handle regular generic parameters
+            if tokens[nextTokenIndex].isIdentifier {
+                let typeName = tokens[nextTokenIndex].string
+                let qualifiedTypeName = qualifyGenericTypeName(typeName)
+                
+                let genericType = GenericType(
+                    name: qualifiedTypeName,
+                    definitionSourceRange: nextTokenIndex ... nextTokenIndex,
+                    conformances: [],
+                    isParameterPack: false
+                )
+                
+                genericTypes.append(genericType)
+                currentIndex = nextTokenIndex
             }
 
-            // or a concrete type of the form `T == Foo`
-            else if let equalsIndex = index(after: genericTypeNameIndex, where: { $0.isOperator("==") }),
-                    equalsIndex < typeEndIndex
-            {
-                delineatorIndex = equalsIndex
-                conformanceType = .concreteType
-            }
-
-            if let delineatorIndex = delineatorIndex, let conformanceType = conformanceType {
-                let constrainedTypeName = tokens[genericTypeNameIndex ..< delineatorIndex]
-                    .map(\.string)
-                    .joined()
-                    .trimmingCharacters(in: .init(charactersIn: " \n\r,{}"))
-
-                let conformanceName = tokens[(delineatorIndex + 1) ... typeEndIndex]
-                    .map(\.string)
-                    .joined()
-                    .trimmingCharacters(in: .init(charactersIn: " \n\r,{}"))
-
-                genericType.conformances.append(.init(
-                    name: conformanceName,
-                    typeName: qualifyGenericTypeName(constrainedTypeName),
-                    type: conformanceType,
-                    sourceRange: genericTypeNameIndex ... sourceRangeEnd
-                ))
-            }
-
-            currentIndex = typeEndIndex
+            // Skip to next token
+            currentIndex = nextTokenIndex
         }
     }
 

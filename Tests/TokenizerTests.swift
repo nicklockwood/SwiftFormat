@@ -2553,6 +2553,29 @@ class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testParameterPackGeneric() {
+        let input = "Optional<(Wrapped, Other, repeat each Another)>"
+        let output: [Token] = [
+            .identifier("Optional"),
+            .startOfScope("<"),
+            .startOfScope("("),
+            .identifier("Wrapped"),
+            .delimiter(","),
+            .space(" "),
+            .identifier("Other"),
+            .delimiter(","),
+            .space(" "),
+            .keyword("repeat"),
+            .space(" "),
+            .identifier("each"),
+            .space(" "),
+            .identifier("Another"),
+            .endOfScope(")"),
+            .endOfScope(">"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     func testFunctionThatLooksLikeGenericType() {
         let input = "y<CGRectGetMaxY(r)"
         let output: [Token] = [

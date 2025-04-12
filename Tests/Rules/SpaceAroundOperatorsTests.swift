@@ -621,6 +621,17 @@ class SpaceAroundOperatorsTests: XCTestCase {
         testFormatting(for: input, output, rule: .spaceAroundOperators, options: options)
     }
 
+    func testSpaceNotInsertedInParameterPackGenericArgument() {
+        let input = """
+        func zip<Other, each Another>(
+            with _: Optional<Other>,
+            _: repeat Optional<each Another>
+        ) -> Optional<(Wrapped, Other, repeat each Another)> {}
+        """
+
+        testFormatting(for: input, rule: .spaceAroundOperators, exclude: [.typeSugar])
+    }
+
     // spaceAroundRangeOperators: .remove
 
     func testNoSpaceAroundRangeOperatorsWithCustomOptions() {

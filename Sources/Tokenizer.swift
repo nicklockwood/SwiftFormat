@@ -1847,9 +1847,9 @@ public func tokenize(_ source: String) -> [Token] {
                     return
                 case .keyword("throws"):
                     break
-                case .keyword where !token.isAttribute, .endOfScope:
-                    // If we encountered a keyword, or closing scope token that wasn't >
-                    // then the opening < must have been an operator after all
+                case .keyword where !token.isAttribute && token != .keyword("repeat"), .endOfScope:
+                    // If we encountered a keyword other than `repeat`, or closing scope
+                    // token that wasn't > then the opening < must have been an operator after all
                     convertOpeningChevronToOperator(at: scopeIndex)
                     processToken()
                     return

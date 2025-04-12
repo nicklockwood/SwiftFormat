@@ -265,7 +265,7 @@ class FormatterTests: XCTestCase {
     func testMalformedDirective2() {
         let input = "// swiftformat: --disable all"
         XCTAssertThrowsError(try format(input, rules: FormatRules.default).output) { error in
-            XCTAssertEqual("\(error)", "Expected directive after \'swiftformat:\' prefix on line 1")
+            XCTAssert(error.localizedDescription.hasSuffix("Expected directive after \'swiftformat:\' prefix on line 1."))
         }
     }
 

@@ -222,7 +222,13 @@ public class Formatter: NSObject {
 
     func fatalError(_ error: String, at tokenIndex: Int) {
         let line = originalLine(at: tokenIndex)
-        errors.append(.parsing(error + " on line \(line)"))
+        var message = error + " on line \(line)"
+
+        if let currentRuleName = currentRule?.name {
+            message = "[\(currentRuleName)] \(message)"
+        }
+
+        errors.append(.parsing(message))
         ruleDisabled = true
     }
 }

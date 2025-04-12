@@ -2791,7 +2791,8 @@ extension Formatter {
                 case .keyword("throws"),
                      .keyword("rethrows"),
                      .keyword("where"),
-                     .keyword("is"):
+                     .keyword("is"),
+                     .keyword("repeat"):
                     return false // Keep looking
                 case .keyword where !$0.isAttribute:
                     return true // Not valid between end of arguments and start of body

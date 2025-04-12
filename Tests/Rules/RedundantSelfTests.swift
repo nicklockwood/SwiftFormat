@@ -3405,4 +3405,66 @@ class RedundantSelfTests: XCTestCase {
         """
         XCTAssertNoThrow(try format(input, rules: [.redundantSelf]))
     }
+
+    func testUnderstandsParameterPacks_issue_1992() {
+        let input = """
+        @resultBuilder
+        public enum DirectoryContentBuilder {
+            public static func buildPartialBlock<each Accumulated>(
+                accumulated: repeat each Accumulated,
+                next: some DirectoryContent
+            ) -> some DirectoryContent where repeat each Accumulated: DirectoryContent {
+                Accumulate(
+                    accumulated: repeat each accumulated,
+                    next: next
+                )
+            }
+
+            public static func buildEither<First, Second>(
+                first component: First
+            ) -> _Either<First, Second> where First: DirectoryContent, Second: DirectoryContent {
+                .first(component)
+            }
+
+            struct List<Element>: DirectoryContent where Element: DirectoryContent {
+                init(_ list: [Element]) {
+                    self._list = list
+                }
+
+                private let _list: [Element]
+            }
+        }
+        """
+
+        let output = """
+        @resultBuilder
+        public enum DirectoryContentBuilder {
+            public static func buildPartialBlock<each Accumulated>(
+                accumulated: repeat each Accumulated,
+                next: some DirectoryContent
+            ) -> some DirectoryContent where repeat each Accumulated: DirectoryContent {
+                Accumulate(
+                    accumulated: repeat each accumulated,
+                    next: next
+                )
+            }
+
+            public static func buildEither<First, Second>(
+                first component: First
+            ) -> _Either<First, Second> where First: DirectoryContent, Second: DirectoryContent {
+                .first(component)
+            }
+
+            struct List<Element>: DirectoryContent where Element: DirectoryContent {
+                init(_ list: [Element]) {
+                    _list = list
+                }
+
+                private let _list: [Element]
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: .redundantSelf)
+    }
 }

@@ -2163,6 +2163,21 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(formatter.parseType(at: 5)?.name, "some View")
     }
 
+    func testParameterPackTypes() {
+        let formatter = Formatter(tokenize("""
+        func foo<each T>() -> repeat each T {
+          return repeat each T.self
+        }
+
+        func eachFirst<each T: Collection>(_ item: repeat each T) -> (repeat (each T).Element?) {
+            return (repeat (each item).first)
+        }
+        """))
+        XCTAssertEqual(formatter.parseType(at: 4)?.name, "each T")
+        XCTAssertEqual(formatter.parseType(at: 13)?.name, "repeat each T")
+        XCTAssertEqual(formatter.parseType(at: 62)?.name, "repeat (each T).Element?")
+    }
+
     func testParseInvalidType() {
         let formatter = Formatter(tokenize("""
         let foo = { foo, bar in (foo, bar) }
@@ -2267,6 +2282,9 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssert(isSingleExpression(#"await { await printAsync(foo) }()"#))
         XCTAssert(isSingleExpression(#"try await { try await printAsyncThrows(foo) }()"#))
         XCTAssert(isSingleExpression(#"Foo<Bar>()"#))
+        XCTAssert(isSingleExpression(#"each foo"#))
+        XCTAssert(isSingleExpression(#"repeat each foo.var.baaz"#))
+        XCTAssert(isSingleExpression(#"repeat (each item).first"#))
         XCTAssert(isSingleExpression(#"Foo<Bar, Baaz>(quux: quux)"#))
         XCTAssert(!isSingleExpression(#"if foo { "foo" } else { "bar" }"#))
         XCTAssert(!isSingleExpression(#"foo.bar, baaz.quux"#))

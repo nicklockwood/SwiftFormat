@@ -400,4 +400,504 @@ class TrailingCommasTests: XCTestCase {
         let options = FormatOptions(trailingCommas: false, swiftVersion: "6.1")
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
+
+    func testTrailingCommasAddedToTuple() {
+        let input = """
+        let foo = (
+            bar: 0,
+            baz: 1
+        )
+        """
+        let output = """
+        let foo = (
+            bar: 0,
+            baz: 1,
+        )
+        """
+        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
+
+    func testTrailingCommasRemovedFromTuple() {
+        let input = """
+        let foo = (
+            bar: 0,
+            baz: 1,
+        )
+        """
+        let output = """
+        let foo = (
+            bar: 0,
+            baz: 1
+        )
+        """
+        let options = FormatOptions(trailingCommas: false, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
+
+    func testTrailingCommasAddedToReturnTuple() {
+        let input = """
+        func foo() -> (Int, Int) {
+            let bar = 0
+            let baz = 1
+
+            return (
+                bar,
+                baz
+            )
+        }
+        """
+        let output = """
+        func foo() -> (Int, Int) {
+            let bar = 0
+            let baz = 1
+
+            return (
+                bar,
+                baz,
+            )
+        }
+        """
+        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
+
+    func testTrailingCommasRemovedFromReturnTuple() {
+        let input = """
+        func foo() -> (Int, Int) {
+            let bar = 0
+            let baz = 1
+
+            return (
+                bar,
+                baz,
+            )
+        }
+        """
+        let output = """
+        func foo() -> (Int, Int) {
+            let bar = 0
+            let baz = 1
+
+            return (
+                bar,
+                baz
+            )
+        }
+        """
+        let options = FormatOptions(trailingCommas: false, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
+
+    func testTrailingCommasAddedToThrow() {
+        let input = """
+        enum FooError: Error {
+            case bar
+        }
+
+        func baz() throws {
+            throw (
+                FooError.bar
+            )
+        }
+        """
+        let output = """
+        enum FooError: Error {
+            case bar
+        }
+
+        func baz() throws {
+            throw (
+                FooError.bar,
+            )
+        }
+        """
+        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
+
+    func testTrailingCommasRemovedFromThrow() {
+        let input = """
+        enum FooError: Error {
+            case bar
+        }
+
+        func baz() throws {
+            throw (
+                FooError.bar,
+            )
+        }
+        """
+        let output = """
+        enum FooError: Error {
+            case bar
+        }
+
+        func baz() throws {
+            throw (
+                FooError.bar
+            )
+        }
+        """
+        let options = FormatOptions(trailingCommas: false, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
+
+    func testTrailingCommasAddedToSwitch() {
+        let input = """
+        let foo = (
+            bar: 0,
+            baz: 1
+        )
+        switch (
+            foo.bar,
+            foo.baz
+        ) {
+        case (
+            0,
+            1
+        ): break
+        default: break
+        }
+        """
+        let output = """
+        let foo = (
+            bar: 0,
+            baz: 1,
+        )
+        switch (
+            foo.bar,
+            foo.baz,
+        ) {
+        case (
+            0,
+            1,
+        ): break
+        default: break
+        }
+        """
+        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
+
+    func testTrailingCommasAddedToIf() {
+        let input = """
+        if (
+            true
+        ) {}
+        """
+        let output = """
+        if (
+            true,
+        ) {}
+        """
+        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas,
+                       options: options, exclude: [.redundantParens])
+    }
+
+    func testTrailingCommasRemovedFromIf() {
+        let input = """
+        if (
+            true,
+        ) {}
+        """
+        let output = """
+        if (
+            true
+        ) {}
+        """
+        let options = FormatOptions(trailingCommas: false, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas,
+                       options: options, exclude: [.redundantParens])
+    }
+
+    func testTrailingCommasAddedToGuard() {
+        let input = """
+        guard (
+            true
+        ) else {
+            return
+        }
+        """
+        let output = """
+        guard (
+            true,
+        ) else {
+            return
+        }
+        """
+        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas,
+                       options: options, exclude: [.redundantParens])
+    }
+
+    func testTrailingCommasRemovedFromGuard() {
+        let input = """
+        guard (
+            true,
+        ) else {
+            return
+        }
+        """
+        let output = """
+        guard (
+            true
+        ) else {
+            return
+        }
+        """
+        let options = FormatOptions(trailingCommas: false, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas,
+                       options: options, exclude: [.redundantParens])
+    }
+
+    func testTrailingCommasAddedToWhile() {
+        let input = """
+        while (
+            true
+        ) {}
+        """
+        let output = """
+        while (
+            true,
+        ) {}
+        """
+        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas,
+                       options: options, exclude: [.redundantParens])
+    }
+
+    func testTrailingCommasRemovedFromWhile() {
+        let input = """
+        while (
+            true,
+        ) {}
+        """
+        let output = """
+        while (
+            true
+        ) {}
+        """
+        let options = FormatOptions(trailingCommas: false, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas,
+                       options: options, exclude: [.redundantParens])
+    }
+
+    func testTrailingCommasAddedToBool() {
+        let input = """
+        let foo: Bool = (
+            true && true
+        )
+        """
+        let output = """
+        let foo: Bool = (
+            true && true,
+        )
+        """
+        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas,
+                       options: options, exclude: [.redundantParens])
+    }
+
+    func testTrailingCommasRemovedFromBool() {
+        let input = """
+        let foo: Bool = (
+            true && true,
+        )
+        """
+        let output = """
+        let foo: Bool = (
+            true && true
+        )
+        """
+        let options = FormatOptions(trailingCommas: false, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas,
+                       options: options, exclude: [.redundantParens])
+    }
+
+    func testTrailingCommasNotAddedToTypeAnnotation() {
+        let input = """
+        let foo: (
+            bar: Int,
+            baz: Int
+        )
+        """
+        let options = FormatOptions(trailingCommas: false, swiftVersion: "6.1")
+        testFormatting(for: input, rule: .trailingCommas, options: options)
+    }
+
+    func testTrailingCommasAddedToCaseLet() {
+        let input = """
+        let foo = (0, 1)
+        switch foo {
+        case let (
+            bar,
+            baz
+        ): break
+        }
+        """
+        let output = """
+        let foo = (0, 1)
+        switch foo {
+        case let (
+            bar,
+            baz,
+        ): break
+        }
+        """
+        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
+
+    func testTrailingCommasRemovedFromCaseLet() {
+        let input = """
+        let foo = (0, 1)
+        switch foo {
+        case let (
+            bar,
+            baz,
+        ): break
+        }
+        """
+        let output = """
+        let foo = (0, 1)
+        switch foo {
+        case let (
+            bar,
+            baz
+        ): break
+        }
+        """
+        let options = FormatOptions(trailingCommas: false, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
+
+    func testTrailingCommasNotAddedToEmptyParentheses() {
+        let input = """
+        let foo = (
+
+        )
+        """
+        let options = FormatOptions(trailingCommas: false, swiftVersion: "6.1")
+        testFormatting(for: input, rule: .trailingCommas,
+                       options: options, exclude: [
+                           .blankLinesAtEndOfScope,
+                           .blankLinesAtStartOfScope,
+                       ])
+    }
+
+    func testTrailingCommasAddedToStringInterpolation() {
+        let input = """
+        let foo = \"""
+        Foo: \\(
+            1,
+            2
+        )
+        \"""
+        """
+        let output = """
+        let foo = \"""
+        Foo: \\(
+            1,
+            2,
+        )
+        \"""
+        """
+        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
+
+    func testTrailingCommasRemovedFromStringInterpolation() {
+        let input = """
+        let foo = \"""
+        Foo: \\(
+            1,
+            2,
+        )
+        \"""
+        """
+        let output = """
+        let foo = \"""
+        Foo: \\(
+            1,
+            2
+        )
+        \"""
+        """
+        let options = FormatOptions(trailingCommas: false, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
+
+    func testTrailingCommasAddedToAttribute() {
+        let input = """
+        @Foo(
+            "bar",
+            "baz"
+        )
+        struct Qux {}
+        """
+        let output = """
+        @Foo(
+            "bar",
+            "baz",
+        )
+        struct Qux {}
+        """
+        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
+
+    func testTrailingCommasRemovedFromAttribute() {
+        let input = """
+        @Foo(
+            "bar",
+            "baz",
+        )
+        struct Qux {}
+        """
+        let output = """
+        @Foo(
+            "bar",
+            "baz"
+        )
+        struct Qux {}
+        """
+        let options = FormatOptions(trailingCommas: false, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
+
+    func testTrailingCommasAddedToMacro() {
+        let input = """
+        #foo(
+            "bar",
+            "baz"
+        )
+        """
+        let output = """
+        #foo(
+            "bar",
+            "baz",
+        )
+        """
+        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
+
+    func testTrailingCommasRemovedFromMacro() {
+        let input = """
+        #foo(
+            "bar",
+            "baz",
+        )
+        """
+        let output = """
+        #foo(
+            "bar",
+            "baz"
+        )
+        """
+        let options = FormatOptions(trailingCommas: false, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
 }

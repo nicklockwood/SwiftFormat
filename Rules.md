@@ -3106,6 +3106,30 @@ func foo(
 ) {}
 ```
 
+```diff
+let foo = (
+    bar: 0,
+-   baz: 1
+)
+
+let foo = (
+    bar: 0,
++   baz: 1,
+)
+```
+
+```diff
+@Foo(
+    "bar",
+-   "baz"
+)
+
+@Foo(
+    "bar",
++   "baz",
+)
+```
+
 </details>
 <br/>
 

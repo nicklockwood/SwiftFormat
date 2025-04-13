@@ -62,20 +62,31 @@ public extension FormatRule {
                 return
             }
 
-            guard let functionStartIndex = formatter.index(of: .nonSpaceOrComment, before: startIndex),
-                  case .identifier = formatter.token(at: functionStartIndex)
-            else {
+            guard let prevToStartTokenIndex = formatter.index(of: .nonSpaceOrComment, before: startIndex) else {
                 return
             }
 
-            guard let prevTokenIndex = formatter.index(of: .nonSpaceOrComment, before: i) else {
+            switch formatter.tokens[prevToStartTokenIndex] {
+            case let .keyword(value):
+                if ["if", "guard", "while"].contains(value) {
+                    return
+                } else {
+                    break
+                }
+            case .delimiter(":"):
+                return
+            default:
+                break
+            }
+
+            guard let prevToEndTokenIndex = formatter.index(of: .nonSpaceOrComment, before: i) else {
                 return
             }
 
-            switch formatter.tokens[prevTokenIndex] {
+            switch formatter.tokens[prevToEndTokenIndex] {
             case .linebreak:
                 guard let lastArgIndex = formatter.index(
-                    of: .nonSpaceOrCommentOrLinebreak, before: prevTokenIndex + 1
+                    of: .nonSpaceOrCommentOrLinebreak, before: prevToEndTokenIndex + 1
                 ) else {
                     break
                 }
@@ -92,7 +103,7 @@ public extension FormatRule {
                     }
                 }
             case .delimiter(","):
-                formatter.removeToken(at: prevTokenIndex)
+                formatter.removeToken(at: prevToEndTokenIndex)
             default:
                 break
             }
@@ -121,6 +132,18 @@ public extension FormatRule {
         func foo(
         +   bar _: Int,
         ) {}
+        ```
+
+        ```diff
+        let foo = (
+            bar: 0,
+        -   baz: 1
+        )
+
+        let foo = (
+            bar: 0,
+        +   baz: 1,
+        )
         ```
         """
     }

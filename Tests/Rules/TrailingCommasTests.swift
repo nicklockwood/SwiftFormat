@@ -773,6 +773,40 @@ class TrailingCommasTests: XCTestCase {
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
+    func testTrailingCommaAddedToDestructuringLetTuple() {
+        let input = """
+        let (
+            foo,
+            bar
+        ) = (0, 1)
+        """
+        let output = """
+        let (
+            foo,
+            bar,
+        ) = (0, 1)
+        """
+        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
+
+    func testTrailingCommaRemovedFromDestructuringLetTuple() {
+        let input = """
+        let (
+            foo,
+            bar,
+        ) = (0, 1)
+        """
+        let output = """
+        let (
+            foo,
+            bar
+        ) = (0, 1)
+        """
+        let options = FormatOptions(trailingCommas: false, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
+
     func testTrailingCommasNotAddedToEmptyParentheses() {
         let input = """
         let foo = (

@@ -9,8 +9,7 @@
 import Foundation
 
 public extension FormatRule {
-    /// Ensure that the last item in a multi-line collection literal, parameter or argument list,
-    /// or enum case with associated values is followed by a comma.
+    /// Ensure that the last item in a multi-line list is followed by a comma, where applicable.
     /// This is useful for preventing noise in commits when items are added to end of array.
     static let trailingCommas = FormatRule(
         help: "Add or remove trailing commas where applicable.",
@@ -62,20 +61,22 @@ public extension FormatRule {
                 return
             }
 
-            guard let functionStartIndex = formatter.index(of: .nonSpaceOrComment, before: startIndex),
-                  case .identifier = formatter.token(at: functionStartIndex)
-            else {
+            guard let prevToStartTokenIndex = formatter.index(of: .nonSpaceOrComment, before: startIndex) else {
                 return
             }
 
-            guard let prevTokenIndex = formatter.index(of: .nonSpaceOrComment, before: i) else {
+            guard formatter.tokens[prevToStartTokenIndex] != .delimiter(":") else {
                 return
             }
 
-            switch formatter.tokens[prevTokenIndex] {
+            guard let prevToEndTokenIndex = formatter.index(of: .nonSpaceOrComment, before: i) else {
+                return
+            }
+
+            switch formatter.tokens[prevToEndTokenIndex] {
             case .linebreak:
                 guard let lastArgIndex = formatter.index(
-                    of: .nonSpaceOrCommentOrLinebreak, before: prevTokenIndex + 1
+                    of: .nonSpaceOrCommentOrLinebreak, before: prevToEndTokenIndex + 1
                 ) else {
                     break
                 }
@@ -92,7 +93,7 @@ public extension FormatRule {
                     }
                 }
             case .delimiter(","):
-                formatter.removeToken(at: prevTokenIndex)
+                formatter.removeToken(at: prevToEndTokenIndex)
             default:
                 break
             }
@@ -121,6 +122,30 @@ public extension FormatRule {
         func foo(
         +   bar _: Int,
         ) {}
+        ```
+
+        ```diff
+        let foo = (
+            bar: 0,
+        -   baz: 1
+        )
+
+        let foo = (
+            bar: 0,
+        +   baz: 1,
+        )
+        ```
+
+        ```diff
+        @Foo(
+            "bar",
+        -   "baz"
+        )
+
+        @Foo(
+            "bar",
+        +   "baz",
+        )
         ```
         """
     }

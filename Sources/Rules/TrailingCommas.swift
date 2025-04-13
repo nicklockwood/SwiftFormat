@@ -10,20 +10,7 @@ import Foundation
 
 public extension FormatRule {
     /// Ensure that the last item in a multi-line list is followed by a comma, where applicable.
-    /// This includes:
-    /// - array and dictionary literals
-    /// - function and initializer parameters and arguments
-    /// - enum case associated values
-    /// - tuple literals
-    /// - tuple expressions in `return`, `throw`, `switch`, `case let`, `if`, `guard`, `while`
-    /// - macro and attribute argument lists (e.g. `#macro(...)`, `@Attribute(...)`)
-    /// - string interpolation expressions
-    ///
-    /// Trailing commas help reduce version control noise when appending new elements to a list.
-    ///
-    /// Trailing commas will not be added in contexts where they are invalid:
-    /// - empty parentheses `()`
-    /// - type annotations (e.g. `let value: (Int, String)`)
+    /// This is useful for preventing noise in commits when items are added to end of array.
     static let trailingCommas = FormatRule(
         help: "Add or remove trailing commas where applicable.",
         options: ["commas"]

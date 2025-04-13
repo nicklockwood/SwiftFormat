@@ -66,17 +66,8 @@ public extension FormatRule {
                 return
             }
 
-            switch formatter.tokens[prevToStartTokenIndex] {
-            case let .keyword(value):
-                if ["if", "guard", "while"].contains(value) {
-                    return
-                } else {
-                    break
-                }
-            case .delimiter(":"):
+            guard formatter.tokens[prevToStartTokenIndex] != .delimiter(":") else {
                 return
-            default:
-                break
             }
 
             guard let prevToEndTokenIndex = formatter.index(of: .nonSpaceOrComment, before: i) else {

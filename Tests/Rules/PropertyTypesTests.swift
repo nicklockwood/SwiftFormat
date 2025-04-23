@@ -355,9 +355,24 @@ class PropertyTypesTests: XCTestCase {
 
         /// This compiles
         let myShape1: any ShapeStyle = .myShape
+        let myShape2: (any ShapeStyle) = .myShape
 
         // This would fail with "error: static member 'myShape' cannot be used on protocol metatype '(any ShapeStyle).Type'"
-        // let myShape2 = (any ShapeStyle).myShape
+        // let myShape3 = (any ShapeStyle).myShape
+        """
+
+        let options = FormatOptions(propertyTypes: .inferred)
+        testFormatting(for: input, rule: .propertyTypes, options: options)
+    }
+
+    func testPreservesTypeWithSomeKeyword() {
+        let input = """
+        /// This compiles
+        let myShape1: some ShapeStyle = .myShape
+        let myShape2: (some ShapeStyle) = .myShape
+
+        // This would fail to compile
+        // let myShape4 = (some ShapeStyle).myShape
         """
 
         let options = FormatOptions(propertyTypes: .inferred)

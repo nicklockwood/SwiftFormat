@@ -73,14 +73,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Oldest working version.
-          # 5.6 fails with "error: could not build C module 'CDispatch'"
-          # 5.7 fails with "error: expressions are not allowed at the top level" for "XCTMain(tests)"
-          - branch: swift-5.8-release
-            tag: 5.8-RELEASE
           # Version used by the release workflow
-          - branch: swift-5.10.1-release
-            tag: 5.10.1-RELEASE
+          - branch: swift-6.0.3-release
+            tag: 6.0.3-RELEASE
     runs-on: windows-latest
     name: windows (${{ matrix.tag }})
     steps:

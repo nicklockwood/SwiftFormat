@@ -3073,7 +3073,7 @@ Option | Description
 
 ## trailingCommas
 
-Add or remove trailing commas where applicable.
+Add or remove trailing commas in comma-separated lists.
 
 Option | Description
 --- | ---
@@ -3091,37 +3091,31 @@ Option | Description
   ]
 ```
 
+Swift 6.1 and later:
+
 ```diff
   func foo(
-      bar _: Int,
--     baaz _: Int
-+     baaz _: Int
+      bar: Int,
+-     baaz: Int
++     baaz: Int,
   ) {}
 ```
 
 ```diff
-  let foo = (
-      bar: 0,
--     baz: 1
-+     baz: 1,
+  foo(
+      bar: 1,
+-     baaz: 2
++     baaz: 2,
   )
 ```
 
 ```diff
-  if
-      let foo,
--     let baaz
-+     let baaz,
-  { ... }
-```
-
-```diff
-  guard
-      let foo,
--     let baaz
-+     let baaz,
-  else { return }
-```
+  struct Foo<
+      Bar,
+      Baaz,
+-     Quux
++     Quux,
+  > {}
 
 </details>
 <br/>

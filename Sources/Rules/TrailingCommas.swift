@@ -15,85 +15,54 @@ public extension FormatRule {
         help: "Add or remove trailing commas where applicable.",
         options: ["commas"]
     ) { formatter in
-        formatter.forEach(.endOfScope("]")) { i, _ in
-            guard let prevTokenIndex = formatter.index(of: .nonSpaceOrComment, before: i),
-                  let scopeType = formatter.scopeType(at: i)
-            else {
-                return
-            }
-            switch scopeType {
-            case .array, .dictionary:
-                switch formatter.tokens[prevTokenIndex] {
-                case .linebreak:
-                    guard let prevTokenIndex = formatter.index(
-                        of: .nonSpaceOrCommentOrLinebreak, before: prevTokenIndex + 1
-                    ) else {
-                        break
-                    }
-                    switch formatter.tokens[prevTokenIndex] {
-                    case .startOfScope("["), .delimiter(":"):
-                        break // do nothing
-                    case .delimiter(","):
-                        if !formatter.options.trailingCommas {
-                            formatter.removeToken(at: prevTokenIndex)
-                        }
-                    default:
-                        if formatter.options.trailingCommas {
-                            formatter.insert(.delimiter(","), at: prevTokenIndex + 1)
-                        }
-                    }
-                case .delimiter(","):
-                    formatter.removeToken(at: prevTokenIndex)
+        formatter.forEachToken { i, token in
+            switch token {
+            case .endOfScope("]"):
+                switch formatter.scopeType(at: i) {
+                case .array, .dictionary:
+                    formatter.addOrRemoveTrailingComma(before: i, trailingCommaSupported: true)
+                case .subscript, .captureList:
+                    formatter.addOrRemoveTrailingComma(before: i, trailingCommaSupported: formatter.options.swiftVersion >= "6.1")
                 default:
-                    break
+                    return
                 }
-            default:
-                return
-            }
-        }
 
-        guard formatter.options.swiftVersion >= "6.1" else { return }
+            case .endOfScope(")"), .endOfScope(">"):
+                formatter.addOrRemoveTrailingComma(before: i, trailingCommaSupported: formatter.options.swiftVersion >= "6.1")
 
-        formatter.forEach(.endOfScope(")")) { i, _ in
-            guard let startIndex = formatter.startOfScope(at: i),
-                  formatter.tokens[startIndex] == .startOfScope("(")
-            else {
-                return
-            }
+            case .keyword("if"):
+                guard let startOfConditions = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i),
+                      let startOfBody = formatter.startOfConditionalBranchBody(after: startOfConditions)
+                else { return }
 
-            guard let prevToStartTokenIndex = formatter.index(of: .nonSpaceOrComment, before: startIndex) else {
-                return
-            }
+                formatter.addOrRemoveTrailingComma(before: startOfBody, trailingCommaSupported: formatter.options.swiftVersion >= "6.1")
 
-            guard formatter.tokens[prevToStartTokenIndex] != .delimiter(":") else {
-                return
-            }
+            case .keyword("guard"):
+                guard let startOfConditions = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i),
+                      let startOfBody = formatter.startOfConditionalBranchBody(after: startOfConditions),
+                      let elseKeyword = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startOfBody),
+                      formatter.tokens[elseKeyword] == .keyword("else")
+                else { return }
 
-            guard let prevToEndTokenIndex = formatter.index(of: .nonSpaceOrComment, before: i) else {
-                return
-            }
+                formatter.addOrRemoveTrailingComma(before: elseKeyword, trailingCommaSupported: formatter.options.swiftVersion >= "6.1")
 
-            switch formatter.tokens[prevToEndTokenIndex] {
-            case .linebreak:
-                guard let lastArgIndex = formatter.index(
-                    of: .nonSpaceOrCommentOrLinebreak, before: prevToEndTokenIndex + 1
-                ) else {
-                    break
+            case .keyword("while"):
+                guard let startOfConditions = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i),
+                      let startOfBody = formatter.startOfConditionalBranchBody(after: startOfConditions)
+                else { return }
+
+                // Ensure this isn't a `repeat { ... } while ...` condition where any `{` token after the while keyword would be unrelated
+                if let previousToken = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i),
+                   formatter.tokens[previousToken] == .endOfScope("}"),
+                   let startOfScope = formatter.startOfScope(at: previousToken),
+                   let tokenBeforeStartOfScope = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope),
+                   formatter.tokens[tokenBeforeStartOfScope] == .keyword("repeat")
+                {
+                    return
                 }
-                switch formatter.tokens[lastArgIndex] {
-                case .delimiter(","):
-                    if !formatter.options.trailingCommas {
-                        formatter.removeToken(at: lastArgIndex)
-                    }
-                case .startOfScope("("):
-                    break
-                default:
-                    if formatter.options.trailingCommas {
-                        formatter.insert(.delimiter(","), at: lastArgIndex + 1)
-                    }
-                }
-            case .delimiter(","):
-                formatter.removeToken(at: prevToEndTokenIndex)
+
+                formatter.addOrRemoveTrailingComma(before: startOfBody, trailingCommaSupported: formatter.options.swiftVersion >= "6.1")
+
             default:
                 break
             }
@@ -105,48 +74,75 @@ public extension FormatRule {
             foo,
             bar,
         -   baz
-          ]
-
-          let array = [
-            foo,
-            bar,
         +   baz,
           ]
         ```
 
         ```diff
-        func foo(
-        -   bar _: Int
-        ) {}
-
-        func foo(
-        +   bar _: Int,
-        ) {}
+          func foo(
+              bar _: Int,
+        -     baaz _: Int
+        +     baaz _: Int
+          ) {}
         ```
 
         ```diff
-        let foo = (
-            bar: 0,
-        -   baz: 1
-        )
-
-        let foo = (
-            bar: 0,
-        +   baz: 1,
-        )
+          let foo = (
+              bar: 0,
+        -     baz: 1
+        +     baz: 1,
+          )
         ```
 
         ```diff
-        @Foo(
-            "bar",
-        -   "baz"
-        )
+          if
+              let foo,
+        -     let baaz
+        +     let baaz,
+          { ... }
+        ```
 
-        @Foo(
-            "bar",
-        +   "baz",
-        )
+        ```diff
+          guard
+              let foo,
+        -     let baaz
+        +     let baaz,
+          else { return }
         ```
         """
+    }
+}
+
+extension Formatter {
+    /// Adds or removes a trailing comma before the given index that marks the end of a comma-separated list.
+    /// Trailing commas can always be removed. `trailingCommaSupported` indicates whether or not a trailing
+    /// comma is allowed at this position.
+    func addOrRemoveTrailingComma(before endOfListIndex: Int, trailingCommaSupported: Bool) {
+        guard let prevTokenIndex = index(of: .nonSpaceOrComment, before: endOfListIndex) else { return }
+
+        switch tokens[prevTokenIndex] {
+        case .linebreak:
+            guard let prevTokenIndex = index(
+                of: .nonSpaceOrCommentOrLinebreak, before: prevTokenIndex + 1
+            ) else {
+                break
+            }
+            switch tokens[prevTokenIndex] {
+            case .startOfScope("["), .delimiter(":"), .startOfScope("("):
+                break // do nothing
+            case .delimiter(","):
+                if !options.trailingCommas {
+                    removeToken(at: prevTokenIndex)
+                }
+            default:
+                if options.trailingCommas, trailingCommaSupported {
+                    insert(.delimiter(","), at: prevTokenIndex + 1)
+                }
+            }
+        case .delimiter(","):
+            removeToken(at: prevTokenIndex)
+        default:
+            break
+        }
     }
 }

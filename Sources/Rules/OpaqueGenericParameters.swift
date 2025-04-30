@@ -225,6 +225,10 @@ public extension FormatRule {
                 [type.definitionSourceRange] + type.conformances.map(\.sourceRange)
             })
 
+            if genericsEligibleToRemove.isEmpty {
+                return
+            }
+
             // We perform modifications to the function signature in reverse order
             // so we don't invalidate any of the indices we've recorded. So first
             // we remove components of the where clause.

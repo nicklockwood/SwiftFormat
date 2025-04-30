@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.55.6](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.55.6) (2025-04-29)
+
+- Fixed parsing bugs related to parameter packs (`repeat`, `each` keywords)
+- Fixed bug where `propertyTypes` rule could cause build failure in properties with `some` type
+- Fixed but where `--callsiteparen balanced` would have no effect when using `--closingparen same-line`
+- Fatal error messages now include the name of the currently-running rule
+- Docker build now uses Swft 6.0.3
+
 ## [0.55.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.55.5) (2025-01-20)
 
 - Fixed bug with `yodaConditions` rule mangling generic function calls

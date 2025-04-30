@@ -920,30 +920,9 @@ extension Formatter {
                 return true
             }
         case .delimiter(","):
-            // If this is the trailing comma in an if/guard/while condition list, then don't indent the following code (the condition body)
-            if isConditionalStatement(at: i),
-               let startOfBranchBody = startOfConditionalBranchBody(after: i),
-               let nextToken = index(of: .nonSpaceOrCommentOrLinebreak, after: i)
-            {
-                if nextToken == startOfBranchBody {
-                    return true
-                }
-
-                // Handle guard statement lists ending with `else {` instead of just `{`
-                if tokens[nextToken] == .keyword("else"),
-                   let followingToken = index(of: .nonSpaceOrCommentOrLinebreak, after: nextToken),
-                   followingToken == startOfBranchBody
-                {
-                    return true
-                }
-            }
-
             // For arrays or argument lists, we already indent
-            if let scope = scope ?? currentScope(at: i) {
-                return ["<", "[", "(", "case", "default"].contains(scope.string)
-            }
-
-            return false
+            guard let scope = scope ?? currentScope(at: i) else { return false }
+            return ["<", "[", "(", "case", "default"].contains(scope.string)
         case .delimiter(":"):
             guard let scope = scope ?? currentScope(at: i) else {
                 return false

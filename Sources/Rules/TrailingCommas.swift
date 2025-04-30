@@ -9,10 +9,8 @@
 import Foundation
 
 public extension FormatRule {
-    /// Ensure that the last item in a multi-line list is followed by a comma, where applicable.
-    /// This is useful for preventing noise in commits when items are added to end of array.
     static let trailingCommas = FormatRule(
-        help: "Add or remove trailing commas where applicable.",
+        help: "Add or remove trailing commas in comma-separated lists.",
         options: ["commas"]
     ) { formatter in
         formatter.forEachToken { i, token in
@@ -30,39 +28,6 @@ public extension FormatRule {
             case .endOfScope(")"), .endOfScope(">"):
                 formatter.addOrRemoveTrailingComma(before: i, trailingCommaSupported: formatter.options.swiftVersion >= "6.1")
 
-            case .keyword("if"):
-                guard let startOfConditions = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i),
-                      let startOfBody = formatter.startOfConditionalBranchBody(after: startOfConditions)
-                else { return }
-
-                formatter.addOrRemoveTrailingComma(before: startOfBody, trailingCommaSupported: formatter.options.swiftVersion >= "6.1")
-
-            case .keyword("guard"):
-                guard let startOfConditions = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i),
-                      let startOfBody = formatter.startOfConditionalBranchBody(after: startOfConditions),
-                      let elseKeyword = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startOfBody),
-                      formatter.tokens[elseKeyword] == .keyword("else")
-                else { return }
-
-                formatter.addOrRemoveTrailingComma(before: elseKeyword, trailingCommaSupported: formatter.options.swiftVersion >= "6.1")
-
-            case .keyword("while"):
-                guard let startOfConditions = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i),
-                      let startOfBody = formatter.startOfConditionalBranchBody(after: startOfConditions)
-                else { return }
-
-                // Ensure this isn't a `repeat { ... } while ...` condition where any `{` token after the while keyword would be unrelated
-                if let previousToken = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i),
-                   formatter.tokens[previousToken] == .endOfScope("}"),
-                   let startOfScope = formatter.startOfScope(at: previousToken),
-                   let tokenBeforeStartOfScope = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope),
-                   formatter.tokens[tokenBeforeStartOfScope] == .keyword("repeat")
-                {
-                    return
-                }
-
-                formatter.addOrRemoveTrailingComma(before: startOfBody, trailingCommaSupported: formatter.options.swiftVersion >= "6.1")
-
             default:
                 break
             }
@@ -78,37 +43,31 @@ public extension FormatRule {
           ]
         ```
 
+        Swift 6.1 and later:
+
         ```diff
           func foo(
-              bar _: Int,
-        -     baaz _: Int
-        +     baaz _: Int
+              bar: Int,
+        -     baaz: Int
+        +     baaz: Int,
           ) {}
         ```
 
         ```diff
-          let foo = (
-              bar: 0,
-        -     baz: 1
-        +     baz: 1,
+          foo(
+              bar: 1,
+        -     baaz: 2
+        +     baaz: 2,
           )
         ```
 
         ```diff
-          if
-              let foo,
-        -     let baaz
-        +     let baaz,
-          { ... }
-        ```
-
-        ```diff
-          guard
-              let foo,
-        -     let baaz
-        +     let baaz,
-          else { return }
-        ```
+          struct Foo<
+              Bar,
+              Baaz,
+        -     Quux
+        +     Quux,
+          > {}
         """
     }
 }

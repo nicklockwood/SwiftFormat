@@ -545,6 +545,30 @@ class RedundantReturnTests: XCTestCase {
                        options: options)
     }
 
+    func testRedundantIfStatementWithClosureCondition() {
+        let input = """
+        func foo(condition: Bool) -> String {
+            if condition, { true }(), { false }() {
+                return "foo"
+            } else {
+                return "bar"
+            }
+        }
+        """
+
+        let output = """
+        func foo(condition: Bool) -> String {
+            if condition, { true }(), { false }() {
+                "foo"
+            } else {
+                "bar"
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, [output], rules: [.redundantReturn, .conditionalAssignment], options: options, exclude: [.redundantClosure])
+    }
+
     func testNonRedundantIfStatementReturnSwift5_9() {
         let input = """
         func foo(condition: Bool) -> String {

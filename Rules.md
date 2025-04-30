@@ -3087,47 +3087,40 @@ Option | Description
     foo,
     bar,
 -   baz
-  ]
-
-  let array = [
-    foo,
-    bar,
 +   baz,
   ]
 ```
 
 ```diff
-func foo(
--   bar _: Int
-) {}
-
-func foo(
-+   bar _: Int,
-) {}
+  func foo(
+      bar _: Int,
+-     baaz _: Int
++     baaz _: Int
+  ) {}
 ```
 
 ```diff
-let foo = (
-    bar: 0,
--   baz: 1
-)
-
-let foo = (
-    bar: 0,
-+   baz: 1,
-)
+  let foo = (
+      bar: 0,
+-     baz: 1
++     baz: 1,
+  )
 ```
 
 ```diff
-@Foo(
-    "bar",
--   "baz"
-)
+  if
+      let foo,
+-     let baaz
++     let baaz,
+  { ... }
+```
 
-@Foo(
-    "bar",
-+   "baz",
-)
+```diff
+  guard
+      let foo,
+-     let baaz
++     let baaz,
+  else { return }
 ```
 
 </details>

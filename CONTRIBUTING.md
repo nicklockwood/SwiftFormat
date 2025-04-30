@@ -78,6 +78,7 @@ This is relevant only to maintainers:
 * Update version number in SwiftFormat.swift + 3 targets
 * Update CHANGELOG.md
 * Update SwiftFormat.podspec.json
+* Run tests and ensure they pass
 * Select SwiftFormat (Command Line Tool) and run Product > Archive
 * Replace binary in CommandLineTool directory
 * Select SwiftFormat for Xcode and run Product > Archive

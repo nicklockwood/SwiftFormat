@@ -1371,7 +1371,7 @@ extension Formatter {
 
         while let conditionalBranchIndex = nextConditionalBranchIndex,
               conditionalBranchIndex == ifIndex || tokens[conditionalBranchIndex] == .keyword("else"),
-              let startOfBody = index(of: .startOfScope("{"), after: conditionalBranchIndex),
+              let startOfBody = startOfConditionalBranchBody(after: conditionalBranchIndex),
               let endOfBody = endOfScope(at: startOfBody)
         {
             branches.append((startOfBranch: startOfBody, endOfBranch: endOfBody))
@@ -1385,6 +1385,20 @@ extension Formatter {
         }
 
         return branches
+    }
+
+    /// Returns the `startOfScope("{")` token index for this conditional branch
+    func startOfConditionalBranchBody(after index: Int) -> Int? {
+        guard let startOfBody = self.index(of: .startOfScope("{"), after: index) else { return nil }
+
+        // If we find a closure, skip over it.
+        if isStartOfClosure(at: startOfBody),
+           let endOfClosure = endOfScope(at: startOfBody)
+        {
+            return startOfConditionalBranchBody(after: endOfClosure)
+        }
+
+        return startOfBody
     }
 
     /// Finds all of the branch bodies in a switch statement.

@@ -167,6 +167,22 @@ class WrapArgumentsTests: XCTestCase {
         testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
+    func testWrapParametersFunctionCallClosingParenBalancedAndForce() {
+        let input = """
+        foo(
+            bar: 42,
+            baz: "foo")
+        """
+        let output = """
+        foo(
+            bar: 42,
+            baz: "foo"
+        )
+        """
+        let options = FormatOptions(wrapArguments: .beforeFirst, closingParenPosition: .sameLine, callSiteClosingParenPosition: .balanced)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
+    }
+
     func testIndentMultilineStringWhenWrappingArguments() {
         let input = """
         foobar(foo: \"\""

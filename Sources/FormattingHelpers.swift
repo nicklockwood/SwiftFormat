@@ -391,8 +391,7 @@ extension Formatter {
 
         func wrapArgumentsBeforeFirst(startOfScope i: Int,
                                       endOfScope: Int,
-                                      allowGrouping: Bool,
-                                      endOfScopeOnSameLine: Bool)
+                                      allowGrouping: Bool)
         {
             // Get indent
             let indent = currentIndentForLine(at: i)
@@ -402,14 +401,23 @@ extension Formatter {
                                           endOfScope: &endOfScope)
 
             let closingParenOnSameLine: Bool
-            switch options.callSiteClosingParenPosition {
-            case .balanced: closingParenOnSameLine = false
-            case .sameLine: closingParenOnSameLine = true
-            case .default: closingParenOnSameLine = options.closingParenPosition == .sameLine
+            if isFunctionCall(at: i) {
+                switch options.callSiteClosingParenPosition {
+                case .balanced: closingParenOnSameLine = false
+                case .sameLine: closingParenOnSameLine = true
+                case .default: closingParenOnSameLine = options.closingParenPosition == .sameLine
+                }
+            } else if tokens[i] == .startOfScope("(") {
+                switch options.closingParenPosition {
+                case .balanced: closingParenOnSameLine = false
+                case .sameLine: closingParenOnSameLine = true
+                case .default: closingParenOnSameLine = false
+                }
+            } else {
+                closingParenOnSameLine = false
             }
-            if closingParenOnSameLine, isFunctionCall(at: i) {
-                removeLinebreakBeforeEndOfScope(at: &endOfScope)
-            } else if endOfScopeOnSameLine {
+
+            if closingParenOnSameLine {
                 removeLinebreakBeforeEndOfScope(at: &endOfScope)
             } else {
                 // Insert linebreak before closing paren
@@ -549,7 +557,6 @@ extension Formatter {
             }
 
             let mode: WrapMode
-            var endOfScopeOnSameLine = false
             let hasMultipleArguments = index(of: .delimiter(","), in: i + 1 ..< endOfScope) != nil
             var isParameters = false
             switch string {
@@ -569,7 +576,6 @@ extension Formatter {
                     return
                 }
 
-                endOfScopeOnSameLine = options.closingParenPosition == .sameLine
                 isParameters = isParameterList(at: i)
                 if isParameters, options.wrapParameters != .default {
                     mode = options.wrapParameters
@@ -603,13 +609,11 @@ extension Formatter {
                 case .beforeFirst:
                     wrapArgumentsBeforeFirst(startOfScope: i,
                                              endOfScope: endOfScope,
-                                             allowGrouping: firstIdentifierIndex > firstLinebreakIndex,
-                                             endOfScopeOnSameLine: endOfScopeOnSameLine)
+                                             allowGrouping: firstIdentifierIndex > firstLinebreakIndex)
                 case .preserve where firstIdentifierIndex > firstLinebreakIndex:
                     wrapArgumentsBeforeFirst(startOfScope: i,
                                              endOfScope: endOfScope,
-                                             allowGrouping: true,
-                                             endOfScopeOnSameLine: endOfScopeOnSameLine)
+                                             allowGrouping: true)
                 case .afterFirst, .preserve:
                     wrapArgumentsAfterFirst(startOfScope: i,
                                             endOfScope: endOfScope,
@@ -664,8 +668,7 @@ extension Formatter {
                     case .preserve, .beforeFirst:
                         wrapArgumentsBeforeFirst(startOfScope: i,
                                                  endOfScope: endOfScope,
-                                                 allowGrouping: false,
-                                                 endOfScopeOnSameLine: endOfScopeOnSameLine)
+                                                 allowGrouping: false)
                     case .afterFirst:
                         wrapArgumentsAfterFirst(startOfScope: i,
                                                 endOfScope: endOfScope,

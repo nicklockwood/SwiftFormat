@@ -2600,4 +2600,111 @@ class ParsingHelpersTests: XCTestCase {
             ["at"]
         )
     }
+
+    func testParseFunctionDeclarationWithEffects() {
+        let input = """
+        func foo(bar: Bar, baaz: Baaz) async throws(GenericError<Foo>) -> Foo<Bar, Baaz> {
+            Foo(bar: bar, baaz: baaz)
+        }
+        """
+
+        let formatter = Formatter(tokenize(input))
+        let function = formatter.parseFunctionDeclaration(funcKeywordIndex: 0)!
+
+        XCTAssertEqual(function.funcKeywordIndex, 0)
+        XCTAssertEqual(function.name, "foo")
+        XCTAssertEqual(function.genericParameterRange, nil)
+        XCTAssertEqual(formatter.tokens[function.argumentsRange].string, "(bar: Bar, baaz: Baaz)")
+        XCTAssertEqual(function.arguments.count, 2)
+        XCTAssertEqual(formatter.tokens[function.effectsRange!].string, "async throws(GenericError<Foo>)")
+        XCTAssertEqual(function.effects, ["async", "throws(GenericError<Foo>)"])
+        XCTAssertEqual(function.returnOperatorIndex, 26)
+        XCTAssertEqual(formatter.tokens[function.returnType!.range].string, "Foo<Bar, Baaz>")
+        XCTAssertEqual(function.whereClauseRange, nil)
+        XCTAssertEqual(formatter.tokens[function.bodyRange!].string, """
+        {
+            Foo(bar: bar, baaz: baaz)
+        }
+        """)
+    }
+
+    func testParseFunctionDeclarationWithGeneric() {
+        let input = """
+        public func genericFoo<Bar: Baaz>(bar: Bar) rethrows where Baaz.Quux == Foo {
+            print(bar)
+        }
+
+        func bar() { print("bar") }
+        """
+
+        let formatter = Formatter(tokenize(input))
+
+        let function = formatter.parseFunctionDeclaration(funcKeywordIndex: 2)!
+        XCTAssertEqual(function.funcKeywordIndex, 2)
+        XCTAssertEqual(function.name, "genericFoo")
+        XCTAssertEqual(formatter.tokens[function.genericParameterRange!].string, "<Bar: Baaz>")
+        XCTAssertEqual(formatter.tokens[function.argumentsRange].string, "(bar: Bar)")
+        XCTAssertEqual(function.arguments.count, 1)
+        XCTAssertEqual(formatter.tokens[function.effectsRange!].string, "rethrows")
+        XCTAssertEqual(function.effects, ["rethrows"])
+        XCTAssertEqual(function.returnOperatorIndex, nil)
+        XCTAssertEqual(function.returnType?.range, nil)
+        XCTAssertEqual(formatter.tokens[function.whereClauseRange!].string, "where Baaz.Quux == Foo")
+        XCTAssertEqual(formatter.tokens[function.bodyRange!].string, """
+        {
+            print(bar)
+        }
+        """)
+
+        let secondFunction = formatter.parseFunctionDeclaration(funcKeywordIndex: 41)!
+        XCTAssertEqual(secondFunction.funcKeywordIndex, 41)
+        XCTAssertEqual(secondFunction.name, "bar")
+        XCTAssertEqual(secondFunction.genericParameterRange, nil)
+        XCTAssertEqual(formatter.tokens[secondFunction.argumentsRange].string, "()")
+        XCTAssertEqual(secondFunction.arguments.count, 0)
+        XCTAssertEqual(secondFunction.effectsRange, nil)
+        XCTAssertEqual(secondFunction.effects, [])
+        XCTAssertEqual(secondFunction.returnOperatorIndex, nil)
+        XCTAssertEqual(secondFunction.returnType?.range, nil)
+        XCTAssertEqual(secondFunction.whereClauseRange, nil)
+        XCTAssertEqual(formatter.tokens[secondFunction.bodyRange!].string, #"{ print("bar") }"#)
+    }
+
+    func testParseProtocolFunctionRequirements() {
+        let input = """
+        protocol FooBarProtocol {
+            func foo(bar: Bar, baaz: Baaz) async throws -> Module.Foo<Bar, Baaz> where Bar == Baaz.Quux
+
+            func genericFoo<Bar: Baaz>(_ bar: Bar) throws
+        }
+        """
+
+        let formatter = Formatter(tokenize(input))
+
+        let function = formatter.parseFunctionDeclaration(funcKeywordIndex: 7)!
+        XCTAssertEqual(function.funcKeywordIndex, 7)
+        XCTAssertEqual(function.name, "foo")
+        XCTAssertEqual(function.genericParameterRange, nil)
+        XCTAssertEqual(formatter.tokens[function.argumentsRange].string, "(bar: Bar, baaz: Baaz)")
+        XCTAssertEqual(function.arguments.count, 2)
+        XCTAssertEqual(formatter.tokens[function.effectsRange!].string, "async throws")
+        XCTAssertEqual(function.effects, ["async", "throws"])
+        XCTAssertEqual(function.returnOperatorIndex, 27)
+        XCTAssertEqual(formatter.tokens[function.returnType!.range].string, "Module.Foo<Bar, Baaz>")
+        XCTAssertEqual(formatter.tokens[function.whereClauseRange!].string, "where Bar == Baaz.Quux")
+        XCTAssertEqual(function.bodyRange, nil)
+
+        let secondFunction = formatter.parseFunctionDeclaration(funcKeywordIndex: 51)!
+        XCTAssertEqual(secondFunction.funcKeywordIndex, 51)
+        XCTAssertEqual(secondFunction.name, "genericFoo")
+        XCTAssertEqual(formatter.tokens[secondFunction.genericParameterRange!].string, "<Bar: Baaz>")
+        XCTAssertEqual(formatter.tokens[secondFunction.argumentsRange].string, "(_ bar: Bar)")
+        XCTAssertEqual(secondFunction.arguments.count, 1)
+        XCTAssertEqual(formatter.tokens[secondFunction.effectsRange!].string, "throws")
+        XCTAssertEqual(secondFunction.effects, ["throws"])
+        XCTAssertEqual(secondFunction.returnOperatorIndex, nil)
+        XCTAssertEqual(secondFunction.returnType?.range, nil)
+        XCTAssertEqual(secondFunction.whereClauseRange, nil)
+        XCTAssertEqual(secondFunction.bodyRange, nil)
+    }
 }

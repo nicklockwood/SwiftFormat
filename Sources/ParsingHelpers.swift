@@ -2535,6 +2535,35 @@ extension Formatter {
         return (equalsIndex, andTokenIndices, fullProtocolCompositionType.range.upperBound)
     }
 
+    /// A fully parsed function declaration
+    struct FunctionDeclaration {
+        /// The index of the `func` keyword
+        let funcKeywordIndex: Int
+        /// The name of the function
+        let name: String
+        /// The index of the function name's `identifier` token
+        let nameIndex: Int
+        /// The range of of the generic parameters clause (`<...>`) if present
+        let genericParameterRange: ClosedRange<Int>?
+        /// The range of the function arguments (`(...)`)
+        let argumentsRange: ClosedRange<Int> // the range of (...)
+        /// The parsed function arguments within `argumentsRange`
+        let arguments: [FunctionArgument]
+        /// The range of effects keywords (`async`, `throws`, `rethrows`)
+        let effectsRange: ClosedRange<Int>?
+        /// The effects applied to the function in `effectsRange`
+        let effects: Set<String>
+        /// The index of the `->` operator if present
+        let returnOperatorIndex: Int?
+        /// The parsed return type if present
+        let returnType: (name: String, range: ClosedRange<Int>)?
+        /// The range of the `where` clause if present
+        let whereClauseRange: ClosedRange<Int>?
+        /// The range of the function body (`{ ... }`) if present.
+        /// A protocol method requirement doesn't have a body.
+        let bodyRange: ClosedRange<Int>?
+    }
+
     /// A function argument like `with foo: Foo`.
     struct FunctionArgument: Equatable {
         /// The external label of this argument. `nil` if omitted with an `_`.
@@ -2543,6 +2572,128 @@ extension Formatter {
         let internalLabel: String?
         /// The type of the argument
         var type: String
+    }
+
+    /// Parses the function declaration at the given `func` keyword index
+    func parseFunctionDeclaration(funcKeywordIndex: Int) -> FunctionDeclaration? {
+        // The `func` keyword is always followed by the method name
+        guard let nameIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: funcKeywordIndex) else {
+            return nil
+        }
+
+        var currentIndex = nameIndex
+
+        // Parse the optional generic parameters in `<...>`
+        var genericParameterRange: ClosedRange<Int>?
+        if let startOfGenericParameters = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex),
+           tokens[startOfGenericParameters] == .startOfScope("<"),
+           let endOfGenericParameters = endOfScope(at: startOfGenericParameters)
+        {
+            genericParameterRange = startOfGenericParameters ... endOfGenericParameters
+            currentIndex = endOfGenericParameters
+        }
+
+        // All functions have an arguments list, following the optional generic parameters
+        guard let startOfArguments = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex),
+              tokens[startOfArguments] == .startOfScope("("),
+              let endOfArguments = endOfScope(at: startOfArguments)
+        else { return nil }
+
+        let argumentsRange = startOfArguments ... endOfArguments
+        currentIndex = endOfArguments
+
+        // Parse optional `async`, `throws`, `rethrows`, and typed throws `throws(...)` effects.
+        var effects = Set<String>()
+        var effectsRange: ClosedRange<Int>?
+
+        let firstIndexAfterArguments = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex)
+        while let effectIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex),
+              let effect = token(at: effectIndex)?.string,
+              ["async", "throws", "rethrows"].contains(effect),
+              let firstIndexAfterArguments = firstIndexAfterArguments
+        {
+            // `throws` can optionally be typed throws with a `(Type)` component
+            if effect == "throws",
+               let startOfTypedThrows = index(of: .nonSpaceOrCommentOrLinebreak, after: effectIndex),
+               tokens[startOfTypedThrows] == .startOfScope("("),
+               let endOfTypedThrows = endOfScope(at: startOfTypedThrows)
+            {
+                effects.insert(tokens[effectIndex ... endOfTypedThrows].string)
+                effectsRange = firstIndexAfterArguments ... endOfTypedThrows
+                currentIndex = endOfTypedThrows
+            }
+
+            else {
+                effects.insert(effect)
+                effectsRange = firstIndexAfterArguments ... effectIndex
+                currentIndex = effectIndex
+            }
+        }
+
+        // Parse the optional return type
+        var returnOperatorIndex: Int?
+        var returnType: (name: String, range: ClosedRange<Int>)?
+
+        if let returnIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex),
+           tokens[returnIndex] == .operator("->", .infix),
+           let indexAfterReturnOperator = index(of: .nonSpaceOrCommentOrLinebreak, after: returnIndex),
+           let parsedReturnType = parseType(at: indexAfterReturnOperator)
+        {
+            returnOperatorIndex = returnIndex
+            returnType = parsedReturnType
+            currentIndex = parsedReturnType.range.upperBound
+        }
+
+        // Find the end of the declaration so we can parse the body backwards from there,
+        // rather than completely parsing the where clause.
+        var endOfDeclaration = min(
+            self.endOfDeclaration(atDeclarationKeyword: funcKeywordIndex) ?? .max,
+            tokens.count - 1
+        )
+
+        if tokens[endOfDeclaration].isSpaceOrCommentOrLinebreak,
+           let lastTokenInDeclaration = index(of: .nonSpaceOrCommentOrLinebreak, before: endOfDeclaration)
+        {
+            endOfDeclaration = lastTokenInDeclaration
+        }
+
+        // Parse the optional body.
+        // If this is a protocol declaration, there will be no body.
+        var bodyRange: ClosedRange<Int>?
+        if tokens[endOfDeclaration] == .endOfScope("}"),
+           let startOfScope = startOfScope(at: endOfDeclaration),
+           startOfScope > funcKeywordIndex
+        {
+            bodyRange = startOfScope ... endOfDeclaration
+        }
+
+        // Finally, the optional where clause. This is everything remaining up until the body.
+        // In a protocol declaration without a body, this is just the remainder of the declaration.
+        var whereClauseRange: ClosedRange<Int>?
+        if let whereKeyword = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex),
+           tokens[whereKeyword] == .keyword("where")
+        {
+            if let startOfBody = bodyRange?.lowerBound, let endOfWhereClause = index(of: .nonSpaceOrCommentOrLinebreak, before: startOfBody) {
+                whereClauseRange = whereKeyword ... endOfWhereClause
+            } else {
+                whereClauseRange = whereKeyword ... endOfDeclaration
+            }
+        }
+
+        return FunctionDeclaration(
+            funcKeywordIndex: funcKeywordIndex,
+            name: tokens[nameIndex].string,
+            nameIndex: nameIndex,
+            genericParameterRange: genericParameterRange,
+            argumentsRange: argumentsRange,
+            arguments: parseFunctionDeclarationArguments(startOfScope: argumentsRange.lowerBound),
+            effectsRange: effectsRange,
+            effects: effects,
+            returnOperatorIndex: returnOperatorIndex,
+            returnType: returnType,
+            whereClauseRange: whereClauseRange,
+            bodyRange: bodyRange
+        )
     }
 
     /// Parses the arguments of the function with its `(` start of scope token at the given index.

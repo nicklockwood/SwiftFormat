@@ -1689,6 +1689,33 @@ class WrapArgumentsTests: XCTestCase {
         testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
+    func testWrapReturnOnMultilineFunctionDeclarationInProtocol() {
+        let input = """
+        protocol MyProtocol {
+            func multilineFunction(
+                foo _: String,
+                bar _: String) -> String
+        }
+        """
+
+        let output = """
+        protocol MyProtocol {
+            func multilineFunction(
+                foo _: String,
+                bar _: String)
+                -> String
+        }
+        """
+
+        let options = FormatOptions(
+            wrapArguments: .beforeFirst,
+            closingParenPosition: .sameLine,
+            wrapReturnType: .ifMultiline
+        )
+
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
+    }
+
     func testWrapReturnAndEffectOnMultilineFunctionDeclaration() {
         let input = """
         func multilineFunction(
@@ -1756,6 +1783,35 @@ class WrapArgumentsTests: XCTestCase {
             foo _: String,
             bar _: String)
             async throws -> String {}
+        """
+
+        let options = FormatOptions(
+            wrapArguments: .beforeFirst,
+            closingParenPosition: .sameLine,
+            wrapReturnType: .ifMultiline,
+            wrapEffects: .ifMultiline
+        )
+
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
+    }
+
+    func testWrapEffectOnMultilineProtocolRequirement() {
+        let input = """
+        protocol MyProtocol {
+            func multilineFunction(
+                foo _: String,
+                bar _: String) async throws
+                -> String
+        }
+        """
+
+        let output = """
+        protocol MyProtocol {
+            func multilineFunction(
+                foo _: String,
+                bar _: String)
+                async throws -> String
+        }
         """
 
         let options = FormatOptions(

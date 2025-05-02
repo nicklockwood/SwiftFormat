@@ -330,7 +330,7 @@ extension Formatter {
             endOfFunctionScope: Int
         ) {
             guard token(at: startOfScope) == .startOfScope("("),
-                  let openBracket = index(of: .startOfScope("{"), after: endOfFunctionScope)
+                  let funcKeyword = index(of: .keyword("func"), before: startOfScope)
             else { return }
 
             func wrap(before index: Int) {
@@ -343,29 +343,28 @@ extension Formatter {
                 }
             }
 
-            if let effectIndex = index(after: endOfFunctionScope, where: {
-                [.keyword("throws"), .identifier("async")].contains($0)
-            }), effectIndex < openBracket {
+            if let funcDeclaration = parseFunctionDeclaration(funcKeywordIndex: funcKeyword),
+               let effectsRange = funcDeclaration.effectsRange
+            {
                 switch options.wrapEffects {
                 case .preserve:
                     break
                 case .ifMultiline:
                     // If the effect is on the same line as the closing paren, wrap it
-                    if startOfLine(at: endOfFunctionScope) == startOfLine(at: effectIndex) {
-                        wrap(before: effectIndex)
-
+                    if startOfLine(at: endOfFunctionScope) == startOfLine(at: effectsRange.lowerBound) {
                         // When wrapping the effect, we should also un-wrap any return type
-                        if let returnArrowIndex = index(of: .operator("->", .infix), after: endOfFunctionScope),
-                           returnArrowIndex < openBracket,
+                        if let returnArrowIndex = funcDeclaration.returnOperatorIndex,
                            let tokenBeforeArrowIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: returnArrowIndex),
                            startOfLine(at: tokenBeforeArrowIndex) != startOfLine(at: returnArrowIndex)
                         {
                             replaceTokens(in: endOfLine(at: tokenBeforeArrowIndex) ..< returnArrowIndex, with: [.space(" ")])
                         }
+
+                        wrap(before: effectsRange.lowerBound)
                     }
                 case .never:
-                    if startOfLine(at: endOfFunctionScope) != startOfLine(at: effectIndex) {
-                        let rangeToRemove = endOfLine(at: endOfFunctionScope) ..< effectIndex
+                    if startOfLine(at: endOfFunctionScope) != startOfLine(at: effectsRange.lowerBound) {
+                        let rangeToRemove = endOfLine(at: endOfFunctionScope) ..< effectsRange.lowerBound
 
                         if tokens[rangeToRemove].allSatisfy(\.isSpaceOrLinebreak) {
                             replaceTokens(in: rangeToRemove, with: [.space(" ")])
@@ -374,8 +373,8 @@ extension Formatter {
                 }
             }
 
-            if let returnArrowIndex = index(of: .operator("->", .infix), after: endOfFunctionScope),
-               returnArrowIndex < openBracket
+            if let funcDeclaration = parseFunctionDeclaration(funcKeywordIndex: funcKeyword),
+               let returnArrowIndex = funcDeclaration.returnOperatorIndex
             {
                 switch options.wrapReturnType {
                 case .preserve:

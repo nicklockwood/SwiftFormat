@@ -136,6 +136,7 @@ Capitalize acronyms when the first character is capitalized.
 Option | Description
 --- | ---
 `--acronyms` | Acronyms to auto-capitalize. Defaults to "ID,URL,UUID"
+`--preservedsymbols` | Comma-delimited list of symbols to be ignored by the rule
 
 <details>
 <summary>Examples</summary>

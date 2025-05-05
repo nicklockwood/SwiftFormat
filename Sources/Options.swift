@@ -112,21 +112,25 @@ public enum ExtensionACLPlacement: String, CaseIterable {
 
 /// Wrapping behavior for the return type of a function declaration
 public enum WrapReturnType: String, CaseIterable {
-    case ifMultiline = "if-multiline"
     case preserve
+    /// `-> ReturnType` is wrapped to the line after the closing paren
+    /// if the function signature spans multiple lines
+    case ifMultiline = "if-multiline"
+    /// `-> ReturnType` is never wrapped, and always include on the same line as the closing paren
+    case never
 }
 
 /// Wrapping behavior for effects (`async`, `throws`)
 public enum WrapEffects: String, CaseIterable {
     case preserve
     /// `async` and `throws` are wrapped to the line after the closing paren
-    /// if the function spans multiple lines
+    /// if the function signature spans multiple lines
     case ifMultiline = "if-multiline"
     /// `async` and `throws` are never wrapped, and are always included on the same line as the closing paren
     case never
 }
 
-/// Argument type for whether explciti or inferred properties are preferred
+/// Argument type for whether explicit or inferred properties are preferred
 public enum PropertyTypes: String, CaseIterable {
     /// Preserves the type as a part of the property definition:
     /// `let foo: Foo = Foo()` becomes `let foo: Foo = .init()`

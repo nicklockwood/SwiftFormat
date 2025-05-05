@@ -2757,7 +2757,7 @@ extension Formatter {
             }
         }
 
-        if let effectsRange {
+        if let effectsRange = effectsRange {
             return (effects: effects, range: effectsRange)
         } else {
             return nil

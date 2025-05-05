@@ -2537,12 +2537,12 @@ extension Formatter {
 
     /// A fully parsed function declaration
     struct FunctionDeclaration {
-        /// The index of the `func` keyword
-        let funcKeywordIndex: Int
+        /// The index of the `func`, `subscript`, or `init` keyword
+        let keywordIndex: Int
         /// The name of the function
-        let name: String
+        let name: String?
         /// The index of the function name's `identifier` token
-        let nameIndex: Int
+        let nameIndex: Int?
         /// The range of of the generic parameters clause (`<...>`) if present
         let genericParameterRange: ClosedRange<Int>?
         /// The range of the function arguments (`(...)`)
@@ -2562,6 +2562,17 @@ extension Formatter {
         /// The range of the function body (`{ ... }`) if present.
         /// A protocol method requirement doesn't have a body.
         let bodyRange: ClosedRange<Int>?
+
+        /// The full range of this declaration
+        var range: ClosedRange<Int> {
+            let endIndex = bodyRange?.upperBound
+                ?? whereClauseRange?.upperBound
+                ?? returnType?.range.upperBound
+                ?? effectsRange?.upperBound
+                ?? argumentsRange.upperBound
+
+            return keywordIndex ... endIndex
+        }
     }
 
     /// A function argument like `with foo: Foo`.
@@ -2574,14 +2585,33 @@ extension Formatter {
         var type: String
     }
 
-    /// Parses the function declaration at the given `func` keyword index
-    func parseFunctionDeclaration(funcKeywordIndex: Int) -> FunctionDeclaration? {
-        // The `func` keyword is always followed by the method name
-        guard let nameIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: funcKeywordIndex) else {
-            return nil
+    /// Parses the function or function-like declaration (`func`, `subscript`, `init`) at the given keyword index
+    func parseFunctionDeclaration(keywordIndex: Int) -> FunctionDeclaration? {
+        assert(["func", "subscript", "init"].contains(tokens[keywordIndex].string))
+        var currentIndex = keywordIndex
+
+        var nameIndex: Int?
+        var name: String?
+
+        // Only function declarations (not subscripts / inits) have names
+        if tokens[keywordIndex] == .keyword("func") {
+            // The `func` / `subscript` keyword is always followed by the method name
+            guard let funcNameIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: keywordIndex) else {
+                return nil
+            }
+
+            nameIndex = funcNameIndex
+            name = tokens[funcNameIndex].string
+            currentIndex = funcNameIndex
         }
 
-        var currentIndex = nameIndex
+        // If this is a failable initializer (`init?`), skip over the ? token
+        if tokens[keywordIndex] == .keyword("init"),
+           let nextToken = index(of: .nonSpaceOrCommentOrLinebreak, after: keywordIndex),
+           tokens[nextToken] == .operator("?", .postfix)
+        {
+            currentIndex = nextToken
+        }
 
         // Parse the optional generic parameters in `<...>`
         var genericParameterRange: ClosedRange<Int>?
@@ -2630,7 +2660,7 @@ extension Formatter {
         // Find the end of the declaration so we can parse the body backwards from there,
         // rather than completely parsing the where clause.
         var endOfDeclaration = min(
-            self.endOfDeclaration(atDeclarationKeyword: funcKeywordIndex) ?? .max,
+            self.endOfDeclaration(atDeclarationKeyword: keywordIndex) ?? .max,
             tokens.count - 1
         )
 
@@ -2645,7 +2675,7 @@ extension Formatter {
         var bodyRange: ClosedRange<Int>?
         if tokens[endOfDeclaration] == .endOfScope("}"),
            let startOfScope = startOfScope(at: endOfDeclaration),
-           startOfScope > funcKeywordIndex
+           startOfScope > keywordIndex
         {
             bodyRange = startOfScope ... endOfDeclaration
         }
@@ -2664,8 +2694,8 @@ extension Formatter {
         }
 
         return FunctionDeclaration(
-            funcKeywordIndex: funcKeywordIndex,
-            name: tokens[nameIndex].string,
+            keywordIndex: keywordIndex,
+            name: name,
             nameIndex: nameIndex,
             genericParameterRange: genericParameterRange,
             argumentsRange: argumentsRange,

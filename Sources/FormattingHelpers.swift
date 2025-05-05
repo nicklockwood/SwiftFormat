@@ -329,60 +329,53 @@ extension Formatter {
             startOfScope: Int,
             endOfFunctionScope: Int
         ) {
-            guard token(at: startOfScope) == .startOfScope("("),
-                  let funcKeyword = index(of: .keyword("func"), before: startOfScope)
-            else { return }
+            guard token(at: startOfScope) == .startOfScope("(") else { return }
 
-            func wrap(before index: Int) {
-                insertSpace(currentIndentForLine(at: index), at: index)
-                insertLinebreak(at: index)
+            let closingParenLine = startOfLine(at: endOfFunctionScope)
+            var cursorIndex = endOfFunctionScope + 1
+            var shouldUnwrapReturnArrow = false
 
-                // Remove any trailing whitespace that is now orphaned on the previous line
-                if tokens[index - 1].is(.space) {
-                    removeToken(at: index - 1)
-                }
-            }
+            if let parsedEffects = parseFunctionDeclarationEffectsClause(at: cursorIndex) {
+                let effectsIndex = parsedEffects.range.lowerBound
+                cursorIndex = parsedEffects.range.upperBound + 1
 
-            if let funcDeclaration = parseFunctionDeclaration(funcKeywordIndex: funcKeyword),
-               let effectsRange = funcDeclaration.effectsRange
-            {
                 switch options.wrapEffects {
-                case .preserve:
-                    break
+                case .preserve: break
+
                 case .ifMultiline:
                     // If the effect is on the same line as the closing paren, wrap it
-                    if startOfLine(at: endOfFunctionScope) == startOfLine(at: effectsRange.lowerBound) {
-                        // When wrapping the effect, we should also un-wrap any return type
-                        if let returnArrowIndex = funcDeclaration.returnOperatorIndex,
-                           let tokenBeforeArrowIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: returnArrowIndex),
-                           startOfLine(at: tokenBeforeArrowIndex) != startOfLine(at: returnArrowIndex)
-                        {
-                            replaceTokens(in: endOfLine(at: tokenBeforeArrowIndex) ..< returnArrowIndex, with: [.space(" ")])
-                        }
+                    guard closingParenLine == startOfLine(at: effectsIndex) else { break }
+                    cursorIndex += wrapLine(before: effectsIndex)
+                    shouldUnwrapReturnArrow = true
 
-                        wrap(before: effectsRange.lowerBound)
-                    }
                 case .never:
-                    if startOfLine(at: endOfFunctionScope) != startOfLine(at: effectsRange.lowerBound) {
-                        let rangeToRemove = endOfLine(at: endOfFunctionScope) ..< effectsRange.lowerBound
-
-                        if tokens[rangeToRemove].allSatisfy(\.isSpaceOrLinebreak) {
-                            replaceTokens(in: rangeToRemove, with: [.space(" ")])
-                        }
-                    }
+                    cursorIndex += unwrapLine(before: effectsIndex, preservingComments: false)
                 }
             }
 
-            if let funcDeclaration = parseFunctionDeclaration(funcKeywordIndex: funcKeyword),
-               let returnArrowIndex = funcDeclaration.returnOperatorIndex
-            {
+            if let parsedReturn = parseFunctionDeclarationReturnClause(at: cursorIndex) {
+                let arrowIndex = parsedReturn.returnOperatorIndex
+                cursorIndex = parsedReturn.returnType.range.upperBound + 1
+
+                if shouldUnwrapReturnArrow {
+                    // this is part of the effects wrapping rule
+                    cursorIndex += unwrapLine(before: arrowIndex, preservingComments: false)
+                }
+
                 switch options.wrapReturnType {
-                case .preserve:
-                    break
+                case .preserve: break
                 case .ifMultiline:
                     // If the return arrow is on the same line as the closing paren, wrap it
-                    if startOfLine(at: endOfFunctionScope) == startOfLine(at: returnArrowIndex) {
-                        wrap(before: returnArrowIndex)
+                    guard closingParenLine == startOfLine(at: arrowIndex) else { break }
+                    cursorIndex += wrapLine(before: arrowIndex)
+                case .never:
+                    cursorIndex += unwrapLine(before: arrowIndex, preservingComments: true)
+
+                    // TODO: handle where clause
+                    if let nextIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: cursorIndex - 1),
+                       tokens[nextIndex] == .startOfScope("{")
+                    {
+                        unwrapLine(before: nextIndex, preservingComments: true)
                     }
                 }
             }

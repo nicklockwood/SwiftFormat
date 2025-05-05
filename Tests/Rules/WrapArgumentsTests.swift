@@ -1849,6 +1849,141 @@ class WrapArgumentsTests: XCTestCase {
         testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
+    func testUnwrapEffectAndReturnTypeOnMultilineFunctionDeclaration() {
+        let input = """
+        func multilineFunction(
+            foo _: String,
+            bar _: String)
+            async throws -> String {}
+        """
+
+        let output = """
+        func multilineFunction(
+            foo _: String,
+            bar _: String
+        ) async throws -> String {}
+        """
+
+        let options = FormatOptions(
+            wrapArguments: .beforeFirst,
+            closingParenPosition: .balanced,
+            wrapReturnType: .never,
+            wrapEffects: .never
+        )
+
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
+    }
+
+    func testFormatReturnTypeOnMultilineFunctionDeclarationWithLineComment() {
+        let input = """
+        func multilineFunction(
+            foo _: String,
+            bar _: String)
+            async throws
+            -> String // this is a comment
+        {}
+        """
+
+        let output = """
+        func multilineFunction(
+            foo _: String,
+            bar _: String
+        ) async throws -> String // this is a comment
+        {}
+        """
+
+        let options = FormatOptions(
+            wrapArguments: .beforeFirst,
+            closingParenPosition: .balanced,
+            wrapReturnType: .never,
+            wrapEffects: .never
+        )
+
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
+    }
+
+    func testFormatReturnTypeOnMultilineFunctionDeclarationWithBlockComment() {
+        let input = """
+        func multilineFunction(
+            foo _: String,
+            bar _: String)
+            async throws
+            -> String /* block comment */
+        {}
+        """
+
+        let output = """
+        func multilineFunction(
+            foo _: String,
+            bar _: String
+        ) async throws -> String /* block comment */ {}
+        """
+
+        let options = FormatOptions(
+            wrapArguments: .beforeFirst,
+            closingParenPosition: .balanced,
+            wrapReturnType: .never,
+            wrapEffects: .never
+        )
+
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
+    }
+
+    func testUnwrapReturnTypeOnMultilineFunctionDeclaration() {
+        let input = """
+        func multilineFunction(
+            foo _: String,
+            bar _: String)
+            -> String {}
+        """
+
+        let output = """
+        func multilineFunction(
+            foo _: String,
+            bar _: String
+        ) -> String {}
+        """
+
+        let options = FormatOptions(
+            wrapArguments: .beforeFirst,
+            closingParenPosition: .balanced,
+            wrapReturnType: .never,
+            wrapEffects: .never
+        )
+
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
+    }
+
+    func testUnwrapBraceForReturnTypeOnMultilineFunctionDeclaration() {
+        let input = """
+        func multilineFunction(
+            foo _: String,
+            bar _: String)
+            -> String 
+        {
+            print("hello")
+        }
+        """
+
+        let output = """
+        func multilineFunction(
+            foo _: String,
+            bar _: String
+        ) -> String {
+            print("hello")
+        }
+        """
+
+        let options = FormatOptions(
+            wrapArguments: .beforeFirst,
+            closingParenPosition: .balanced,
+            wrapReturnType: .never,
+            wrapEffects: .never
+        )
+
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
+    }
+
     func testWrapArgumentsDoesntBreakFunctionDeclaration_issue_1776() {
         let input = """
         struct OpenAPIController: RouteCollection {
@@ -1878,8 +2013,17 @@ class WrapArgumentsTests: XCTestCase {
             async throws -> String {}
         """
 
+        let output = """
+        func multilineFunction(
+            foo _: String,
+            bar _: String) async throws -> String {}
+        """
+
         let options = FormatOptions(closingParenPosition: .sameLine, wrapEffects: .never)
-        testFormatting(for: input, rule: .wrapArguments, options: options)
+        testFormatting(
+            for: input, output, rule: .wrapArguments, options: options,
+            exclude: [.indent]
+        )
     }
 
     func testWrapReturnOnMultilineFunctionDeclarationWithAfterFirst() {

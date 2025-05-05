@@ -586,7 +586,7 @@ struct _Descriptors {
     let wrapReturnType = OptionDescriptor(
         argumentName: "wrapreturntype",
         displayName: "Wrap Return Type",
-        help: "Wrap return type: \"if-multiline\", \"preserve\" (default), \"never\"",
+        help: "Wrap return type: \"if-multiline\", \"preserve\", \"never\"",
         keyPath: \.wrapReturnType
     )
     let wrapEffects = OptionDescriptor(

@@ -3302,7 +3302,7 @@ Option | Description
 `--wrapcollections` | Wrap array/dict: "before-first", "after-first", "preserve"
 `--closingparen` | Closing paren position: "balanced" (default) or "same-line"
 `--callsiteparen` | Closing paren at call sites: "balanced" or "same-line"
-`--wrapreturntype` | Wrap return type: "if-multiline", "preserve" (default), "never"
+`--wrapreturntype` | Wrap return type: "if-multiline", "preserve", "never"
 `--wrapconditions` | Wrap conditions: "before-first", "after-first", "preserve"
 `--wraptypealiases` | Wrap typealiases: "before-first", "after-first", "preserve"
 `--wrapeffects` | Wrap effects: "if-multiline", "never", "preserve"

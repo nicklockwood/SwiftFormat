@@ -2602,46 +2602,29 @@ extension Formatter {
         let argumentsRange = startOfArguments ... endOfArguments
         currentIndex = endOfArguments
 
-        // Parse optional `async`, `throws`, `rethrows`, and typed throws `throws(...)` effects.
-        var effects = Set<String>()
-        var effectsRange: ClosedRange<Int>?
+        let effects: Set<String>
+        let effectsRange: ClosedRange<Int>?
 
-        let firstIndexAfterArguments = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex)
-        while let effectIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex),
-              let effect = token(at: effectIndex)?.string,
-              ["async", "throws", "rethrows"].contains(effect),
-              let firstIndexAfterArguments = firstIndexAfterArguments
-        {
-            // `throws` can optionally be typed throws with a `(Type)` component
-            if effect == "throws",
-               let startOfTypedThrows = index(of: .nonSpaceOrCommentOrLinebreak, after: effectIndex),
-               tokens[startOfTypedThrows] == .startOfScope("("),
-               let endOfTypedThrows = endOfScope(at: startOfTypedThrows)
-            {
-                effects.insert(tokens[effectIndex ... endOfTypedThrows].string)
-                effectsRange = firstIndexAfterArguments ... endOfTypedThrows
-                currentIndex = endOfTypedThrows
-            }
-
-            else {
-                effects.insert(effect)
-                effectsRange = firstIndexAfterArguments ... effectIndex
-                currentIndex = effectIndex
-            }
+        if let parsedEffects = parseFunctionDeclarationEffectsClause(at: currentIndex) {
+            effects = parsedEffects.effects
+            effectsRange = parsedEffects.range
+            currentIndex = parsedEffects.range.upperBound + 1
+        } else {
+            effects = []
+            effectsRange = nil
         }
 
         // Parse the optional return type
-        var returnOperatorIndex: Int?
-        var returnType: (name: String, range: ClosedRange<Int>)?
+        let returnOperatorIndex: Int?
+        let returnType: (name: String, range: ClosedRange<Int>)?
 
-        if let returnIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex),
-           tokens[returnIndex] == .operator("->", .infix),
-           let indexAfterReturnOperator = index(of: .nonSpaceOrCommentOrLinebreak, after: returnIndex),
-           let parsedReturnType = parseType(at: indexAfterReturnOperator)
-        {
-            returnOperatorIndex = returnIndex
-            returnType = parsedReturnType
-            currentIndex = parsedReturnType.range.upperBound
+        if let parsedReturnType = parseFunctionDeclarationReturnClause(at: currentIndex) {
+            returnOperatorIndex = parsedReturnType.returnOperatorIndex
+            returnType = parsedReturnType.returnType
+            currentIndex = parsedReturnType.returnType.range.upperBound
+        } else {
+            returnOperatorIndex = nil
+            returnType = nil
         }
 
         // Find the end of the declaration so we can parse the body backwards from there,
@@ -2742,6 +2725,52 @@ extension Formatter {
         }
 
         return arguments
+    }
+
+    func parseFunctionDeclarationEffectsClause(at startIndex: Int) -> (effects: Set<String>, range: ClosedRange<Int>)? {
+        // Parse optional `async`, `throws`, `rethrows`, and typed throws `throws(...)` effects.
+        var effects = Set<String>()
+        var effectsRange: ClosedRange<Int>?
+
+        var currentIndex = startIndex
+        let firstIndexAfterArguments = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex)
+        while let effectIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex),
+              let effect = token(at: effectIndex)?.string,
+              ["async", "throws", "rethrows"].contains(effect),
+              let firstIndexAfterArguments = firstIndexAfterArguments
+        {
+            // `throws` can optionally be typed throws with a `(Type)` component
+            if effect == "throws",
+               let startOfTypedThrows = index(of: .nonSpaceOrCommentOrLinebreak, after: effectIndex),
+               tokens[startOfTypedThrows] == .startOfScope("("),
+               let endOfTypedThrows = endOfScope(at: startOfTypedThrows)
+            {
+                effects.insert(tokens[effectIndex ... endOfTypedThrows].string)
+                effectsRange = firstIndexAfterArguments ... endOfTypedThrows
+                currentIndex = endOfTypedThrows
+            }
+
+            else {
+                effects.insert(effect)
+                effectsRange = firstIndexAfterArguments ... effectIndex
+                currentIndex = effectIndex
+            }
+        }
+
+        if let effectsRange {
+            return (effects: effects, range: effectsRange)
+        } else {
+            return nil
+        }
+    }
+
+    func parseFunctionDeclarationReturnClause(at startIndex: Int) -> (returnOperatorIndex: Int, returnType: (name: String, range: ClosedRange<Int>))? {
+        guard let returnIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: startIndex),
+              tokens[returnIndex] == .operator("->", .infix),
+              let indexAfterReturnOperator = index(of: .nonSpaceOrCommentOrLinebreak, after: returnIndex),
+              let parsedReturnType = parseType(at: indexAfterReturnOperator) else { return nil }
+
+        return (returnOperatorIndex: returnIndex, returnType: parsedReturnType)
     }
 
     struct FunctionCallArgument {

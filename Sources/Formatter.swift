@@ -711,6 +711,36 @@ public extension Formatter {
         return 1
     }
 
+    /// Indents before the token with the appropriate amount of indentation. Returns difference in tokens.
+    @discardableResult
+    func wrapLine(before tokenIndex: Int) -> Int {
+        var result = 0
+        result += insertSpace(currentIndentForLine(at: tokenIndex), at: tokenIndex)
+        insertLinebreak(at: tokenIndex)
+        result += 1
+
+        // Remove any trailing whitespace that is now orphaned on the previous line
+        if tokens[tokenIndex - 1].is(.space) {
+            removeToken(at: tokenIndex - 1)
+            result -= 1
+        }
+        return result
+    }
+
+    /// Removes linebreaks and space before the token, but not if a line comment is encountered. Returns difference in tokens..
+    @discardableResult
+    func unwrapLine(before tokenIndex: Int, preservingComments: Bool) -> Int {
+        // search backward and replace whitespace with a single " "
+        // if we find a line comment (// ...) do not make this change
+        let tokenType = preservingComments ? TokenType.nonSpaceOrLinebreak : TokenType.nonSpaceOrCommentOrLinebreak
+        guard let notWhitespace = index(of: tokenType, before: tokenIndex) else { return 0 }
+
+        if preservingComments, tokens[notWhitespace].isCommentBody { return 0 }
+
+        let rangeToReplace = (notWhitespace + 1) ..< tokenIndex
+        return replaceTokens(in: rangeToReplace, with: [.space(" ")])
+    }
+
     /// Returns a linebreak token suitable for insertion at the specified index
     func linebreakToken(for index: Int) -> Token {
         let lineNumber: Int

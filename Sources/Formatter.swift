@@ -846,13 +846,17 @@ private struct WeakAutoUpdatingReference {
 }
 
 /// An auto-updating index within an associated `Formatter`
-final class AutoUpdatingIndex: AutoUpdatingReference {
+final class AutoUpdatingIndex: AutoUpdatingReference, CustomStringConvertible {
     var index: Int
     let formatter: Formatter
 
     var range: ClosedRange<Int> {
         get { index ... index }
         set { index = newValue.lowerBound }
+    }
+
+    var description: String {
+        index.description
     }
 
     init(index: Int, formatter: Formatter) {
@@ -867,9 +871,21 @@ final class AutoUpdatingIndex: AutoUpdatingReference {
 }
 
 // An auto-updating subrange of indicies in a `Formatter`
-final class AutoUpdatingRange: AutoUpdatingReference {
+final class AutoUpdatingRange: AutoUpdatingReference, CustomStringConvertible {
     var range: ClosedRange<Int>
     let formatter: Formatter
+
+    var lowerBound: Int {
+        range.lowerBound
+    }
+
+    var upperBound: Int {
+        range.upperBound
+    }
+
+    var description: String {
+        range.description
+    }
 
     init(range: ClosedRange<Int>, formatter: Formatter) {
         self.range = range

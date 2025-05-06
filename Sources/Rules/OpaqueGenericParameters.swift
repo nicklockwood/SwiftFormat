@@ -26,8 +26,7 @@ public extension FormatRule {
                 // Validate that this is a generic method using angle bracket syntax,
                 // and find the indices for all of the key tokens
                 let declaration = formatter.parseFunctionDeclaration(keywordIndex: keywordIndex),
-                let genericParameterRange = declaration.genericParameterRange,
-                let bodyRange = declaration.bodyRange
+                let genericParameterRange = declaration.genericParameterRange
             else { return }
 
             let argumentsRange = declaration.argumentsRange
@@ -192,26 +191,27 @@ public extension FormatRule {
             // We perform modifications to the function signature in reverse order
             // so we don't invalidate any of the indices we've recorded. So first
             // we remove components of the where clause.
-            if let whereClauseRange = declaration.whereClauseRange {
+            if let whereClauseRange = declaration.whereClauseRange?.autoUpdating(in: formatter) {
                 let whereClauseSourceRanges = sourceRangesToRemove.filter { $0.lowerBound > whereClauseRange.lowerBound }
                 formatter.removeTokens(in: Array(whereClauseSourceRanges))
 
-                if let newOpenBraceIndex = formatter.index(of: .startOfScope("{"), after: whereClauseRange.lowerBound) {
-                    // if where clause is completely empty, we need to remove the where token as well
-                    if formatter.index(of: .nonSpaceOrLinebreak, after: whereClauseRange.lowerBound) == newOpenBraceIndex {
-                        formatter.removeTokens(in: whereClauseRange.lowerBound ..< newOpenBraceIndex)
-                    }
-                    // remove trailing comma
-                    else if let commaIndex = formatter.index(
-                        of: .nonSpaceOrCommentOrLinebreak,
-                        before: newOpenBraceIndex, if: { $0 == .delimiter(",") }
-                    ) {
-                        formatter.removeToken(at: commaIndex)
-                        if formatter.tokens[commaIndex - 1].isSpace,
-                           formatter.tokens[commaIndex].isSpaceOrLinebreak
-                        {
-                            formatter.removeToken(at: commaIndex - 1)
-                        }
+                // if where clause is completely empty, we need to remove the where token as well
+                if let tokenAfterWhereKeyword = formatter.index(of: .nonSpaceOrLinebreak, after: whereClauseRange.lowerBound),
+                   whereClauseRange.upperBound <= tokenAfterWhereKeyword
+                {
+                    formatter.removeTokens(in: whereClauseRange.range)
+                }
+
+                // remove trailing comma
+                else if let commaIndex = formatter.index(
+                    of: .nonSpaceOrCommentOrLinebreak,
+                    before: whereClauseRange.upperBound + 1, if: { $0 == .delimiter(",") }
+                ) {
+                    formatter.removeToken(at: commaIndex)
+                    if formatter.tokens[commaIndex - 1].isSpace,
+                       formatter.tokens[commaIndex].isSpaceOrLinebreak
+                    {
+                        formatter.removeToken(at: commaIndex - 1)
                     }
                 }
             }

@@ -1915,7 +1915,9 @@ extension Formatter {
             // Include all whitespace and comments in the conformance's source range,
             // so if we remove it later all of the extra whitespace will get cleaned up
             let sourceRangeEnd: Int
-            if let nextTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: typeEndIndex) {
+            if let nextTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: typeEndIndex),
+               nextTokenIndex - 1 <= genericSignatureEndIndex
+            {
                 sourceRangeEnd = nextTokenIndex - 1
             } else {
                 sourceRangeEnd = typeEndIndex

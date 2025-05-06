@@ -691,4 +691,24 @@ class OpaqueGenericParametersTests: XCTestCase {
         testFormatting(for: input, output, rule: .opaqueGenericParameters,
                        options: options, exclude: [.unusedArguments])
     }
+
+    func testUpdatesProtocolRequirements() {
+        let input = """
+        protocol FooProtocol {
+            func foo<T>(_ foos: T) where T: Collection, T.Element == Foo
+            func bar<T: Collection>(_ bars: T)
+        }
+        """
+
+        let output = """
+        protocol FooProtocol {
+            func foo(_ foos: some Collection<Foo>) 
+            func bar(_ bars: some Collection)
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, output, rule: .opaqueGenericParameters,
+                       options: options, exclude: [.unusedArguments, .trailingSpace])
+    }
 }

@@ -330,6 +330,6 @@ class SortDeclarationsTests: XCTestCase {
         """
 
         let options = FormatOptions(organizeStructThreshold: 20)
-        testFormatting(for: input, [output], rules: [.sortDeclarations, .organizeDeclarations])
+        testFormatting(for: input, [output], rules: [.sortDeclarations, .organizeDeclarations], options: options)
     }
 }

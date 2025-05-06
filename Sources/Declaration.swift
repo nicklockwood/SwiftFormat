@@ -16,7 +16,7 @@
 /// automatically kept up-to-date as tokens are added, removed, or modified
 /// in the associated formatter.
 ///
-protocol Declaration: AnyObject, CustomDebugStringConvertible {
+protocol Declaration: AutoUpdatingReference, CustomDebugStringConvertible {
     /// The keyword of this declaration (`class`, `struct`, `func`, `let`, `var`, etc.)
     var keyword: String { get }
 
@@ -181,7 +181,7 @@ extension Declaration {
     /// Removes this declaration from the source file.
     /// After this point, this declaration reference is no longer valid.
     func remove() {
-        formatter.unregisterDeclaration(self)
+        formatter.unregisterAutoUpdatingReference(self)
         formatter.removeTokens(in: range)
     }
 
@@ -197,11 +197,11 @@ final class SimpleDeclaration: Declaration {
         self.keyword = keyword
         self.range = range
         self.formatter = formatter
-        formatter.registerDeclaration(self)
+        formatter.registerAutoUpdatingReference(self)
     }
 
     deinit {
-        formatter.unregisterDeclaration(self)
+        formatter.unregisterAutoUpdatingReference(self)
     }
 
     var keyword: String
@@ -222,14 +222,14 @@ final class TypeDeclaration: Declaration {
         self.body = body
         self.formatter = formatter
 
-        formatter.registerDeclaration(self)
+        formatter.registerAutoUpdatingReference(self)
         for child in body {
             child.parent = self
         }
     }
 
     deinit {
-        formatter.unregisterDeclaration(self)
+        formatter.unregisterAutoUpdatingReference(self)
     }
 
     var keyword: String
@@ -262,13 +262,13 @@ final class TypeDeclaration: Declaration {
                 let parent = declaration
                 let indexInParent = childDeclaration.range.lowerBound - parent.range.lowerBound
                 childDeclarationsNeedingUpdate[childDeclaration.identity] = (originalIndexInParent: indexInParent, originalTokens: Array(childDeclaration.tokens))
-                formatter.unregisterDeclaration(childDeclaration)
+                formatter.unregisterAutoUpdatingReference(childDeclaration)
             }
         }
 
         // Unlink the declarations and the formatter while we reorder the tokens
         for declaration in body + newBody {
-            formatter.unregisterDeclaration(declaration)
+            formatter.unregisterAutoUpdatingReference(declaration)
         }
 
         // Replace the contents of this declaration's body in the underlying formatter
@@ -283,7 +283,7 @@ final class TypeDeclaration: Declaration {
             declaration.range = ClosedRange(currentBodyIndex ..< (currentBodyIndex + tokens.count))
             currentBodyIndex += tokens.count
 
-            formatter.registerDeclaration(declaration)
+            formatter.registerAutoUpdatingReference(declaration)
             assert(Array(declaration.tokens) == tokens)
             assert(declaration.isValid)
 
@@ -295,7 +295,7 @@ final class TypeDeclaration: Declaration {
                 let newRangeInFile = ClosedRange(newIndexInFile ..< (newIndexInFile + originalTokens.count))
                 childDeclaration.range = newRangeInFile
 
-                formatter.registerDeclaration(childDeclaration)
+                formatter.registerAutoUpdatingReference(childDeclaration)
                 assert(Array(childDeclaration.tokens) == originalTokens)
                 assert(childDeclaration.isValid)
             }
@@ -330,14 +330,14 @@ final class ConditionalCompilationDeclaration: Declaration {
         self.body = body
         self.formatter = formatter
 
-        formatter.registerDeclaration(self)
+        formatter.registerAutoUpdatingReference(self)
         for child in body {
             child.parent = self
         }
     }
 
     deinit {
-        formatter.unregisterDeclaration(self)
+        formatter.unregisterAutoUpdatingReference(self)
     }
 
     let keyword = "#if"

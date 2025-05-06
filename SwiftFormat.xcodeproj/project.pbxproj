@@ -675,6 +675,11 @@
 		E4FABAD6202FEF060065716E /* OptionDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4FABAD4202FEF060065716E /* OptionDescriptor.swift */; };
 		E4FABAD7202FEF060065716E /* OptionDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4FABAD4202FEF060065716E /* OptionDescriptor.swift */; };
 		E4FABAD8202FEF060065716E /* OptionDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4FABAD4202FEF060065716E /* OptionDescriptor.swift */; };
+		F052E10E2DC8F31C00429EF9 /* BreakLineAtEndOfTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F052E10D2DC8F31C00429EF9 /* BreakLineAtEndOfTypes.swift */; };
+		F052E10F2DC8F31C00429EF9 /* BreakLineAtEndOfTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F052E10D2DC8F31C00429EF9 /* BreakLineAtEndOfTypes.swift */; };
+		F052E1102DC8F31C00429EF9 /* BreakLineAtEndOfTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F052E10D2DC8F31C00429EF9 /* BreakLineAtEndOfTypes.swift */; };
+		F052E1112DC8F31C00429EF9 /* BreakLineAtEndOfTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F052E10D2DC8F31C00429EF9 /* BreakLineAtEndOfTypes.swift */; };
+		F052E1132DC8F3EC00429EF9 /* BreakLineAtEndOfTypesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F052E1122DC8F3EC00429EF9 /* BreakLineAtEndOfTypesTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -1017,6 +1022,8 @@
 		E4E4D3C82033F17C000D7CB1 /* EnumAssociable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnumAssociable.swift; sourceTree = "<group>"; };
 		E4E4D3CD2033F1EF000D7CB1 /* EnumAssociableTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnumAssociableTests.swift; sourceTree = "<group>"; };
 		E4FABAD4202FEF060065716E /* OptionDescriptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionDescriptor.swift; sourceTree = "<group>"; };
+		F052E10D2DC8F31C00429EF9 /* BreakLineAtEndOfTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreakLineAtEndOfTypes.swift; sourceTree = "<group>"; };
+		F052E1122DC8F3EC00429EF9 /* BreakLineAtEndOfTypesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreakLineAtEndOfTypesTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1190,6 +1197,7 @@
 		2E2BAB902C57F6DD00590239 /* Rules */ = {
 			isa = PBXGroup;
 			children = (
+				F052E10D2DC8F31C00429EF9 /* BreakLineAtEndOfTypes.swift */,
 				2E2BABF02C57F6DD00590239 /* Acronyms.swift */,
 				2E2BABE22C57F6DD00590239 /* AndOperator.swift */,
 				2E2BABE82C57F6DD00590239 /* AnyObjectProtocol.swift */,
@@ -1307,6 +1315,7 @@
 		2E8DE68C2C57FEB30032BF25 /* Rules */ = {
 			isa = PBXGroup;
 			children = (
+				F052E1122DC8F3EC00429EF9 /* BreakLineAtEndOfTypesTests.swift */,
 				2E8DE6D02C57FEB30032BF25 /* AcronymsTests.swift */,
 				2E8DE6F02C57FEB30032BF25 /* AndOperatorTests.swift */,
 				2E8DE6BB2C57FEB30032BF25 /* AnyObjectProtocolTests.swift */,
@@ -1818,6 +1827,7 @@
 				2E2BAD4B2C57F6DD00590239 /* RedundantVoidReturnType.swift in Sources */,
 				2E2BAC332C57F6DD00590239 /* Semicolons.swift in Sources */,
 				2E2BAC0B2C57F6DD00590239 /* Indent.swift in Sources */,
+				F052E1112DC8F31C00429EF9 /* BreakLineAtEndOfTypes.swift in Sources */,
 				2E2BACC32C57F6DD00590239 /* SpaceInsideBrackets.swift in Sources */,
 				2E2BACF32C57F6DD00590239 /* PreferForLoop.swift in Sources */,
 				2E2BAC172C57F6DD00590239 /* ConsistentSwitchCaseSpacing.swift in Sources */,
@@ -1995,6 +2005,7 @@
 				2E8DE7622C57FEB30032BF25 /* WrapSingleLineCommentsTests.swift in Sources */,
 				2E8DE72A2C57FEB30032BF25 /* PreferKeyPathTests.swift in Sources */,
 				2E8DE7592C57FEB30032BF25 /* BlankLinesBetweenImportsTests.swift in Sources */,
+				F052E1132DC8F3EC00429EF9 /* BreakLineAtEndOfTypesTests.swift in Sources */,
 				2E8DE7392C57FEB30032BF25 /* RedundantInternalTests.swift in Sources */,
 				2E8DE70B2C57FEB30032BF25 /* ModifierOrderTests.swift in Sources */,
 				2E8DE7422C57FEB30032BF25 /* ConsecutiveSpacesTests.swift in Sources */,
@@ -2138,6 +2149,7 @@
 				2E2BAC5C2C57F6DD00590239 /* RedundantFileprivate.swift in Sources */,
 				2E2BACD82C57F6DD00590239 /* ExtensionAccessControl.swift in Sources */,
 				2E2BAC382C57F6DD00590239 /* HoistPatternLet.swift in Sources */,
+				F052E10E2DC8F31C00429EF9 /* BreakLineAtEndOfTypes.swift in Sources */,
 				2E2BAD202C57F6DD00590239 /* EnumNamespaces.swift in Sources */,
 				2E2BAD282C57F6DD00590239 /* PreferKeyPath.swift in Sources */,
 				2E2BAD5C2C57F6DD00590239 /* AnyObjectProtocol.swift in Sources */,
@@ -2183,6 +2195,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2E2BAD6D2C57F6DD00590239 /* BlankLinesAtStartOfScope.swift in Sources */,
+				F052E1102DC8F31C00429EF9 /* BreakLineAtEndOfTypes.swift in Sources */,
 				2E2BAC252C57F6DD00590239 /* RedundantInternal.swift in Sources */,
 				2E2BADB52C57F6DD00590239 /* SortDeclarations.swift in Sources */,
 				2E2BACB92C57F6DD00590239 /* OrganizeDeclarations.swift in Sources */,
@@ -2325,6 +2338,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2E2BAD6E2C57F6DD00590239 /* BlankLinesAtStartOfScope.swift in Sources */,
+				F052E10F2DC8F31C00429EF9 /* BreakLineAtEndOfTypes.swift in Sources */,
 				2E2BAC262C57F6DD00590239 /* RedundantInternal.swift in Sources */,
 				2E2BADB62C57F6DD00590239 /* SortDeclarations.swift in Sources */,
 				2E2BACBA2C57F6DD00590239 /* OrganizeDeclarations.swift in Sources */,

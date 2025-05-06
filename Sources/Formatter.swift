@@ -44,7 +44,7 @@ public class Formatter: NSObject {
     private var ruleDisabled = false
     private var tempOptions: FormatOptions?
     private var wasNextDirective = false
-    private var activeDeclarations = [WeakDeclarationReference]()
+    private var autoUpdatingReferences = [WeakAutoUpdatingReference]()
 
     /// Formatting range
     public var range: Range<Int>?
@@ -208,7 +208,7 @@ public class Formatter: NSObject {
     }
 
     private func updateRange(at index: Int, delta: Int) {
-        activeDeclarations.updateRanges(at: index, delta: delta)
+        autoUpdatingReferences.updateRanges(at: index, delta: delta)
 
         guard let range = range, range.contains(index) else {
             return
@@ -775,16 +775,16 @@ public extension Formatter {
         }
     }
 
-    /// Registers the given declaration to receive range updates as tokens are modified
-    /// in this formatter. The registration is automatically cleared after the declaration
+    /// Registers the given reference to receive range updates as tokens are modified
+    /// in this formatter. The registration is automatically cleared after the reference
     /// is deallocated.
-    internal func registerDeclaration(_ declaration: Declaration) {
-        activeDeclarations.append(WeakDeclarationReference(declaration: declaration))
+    internal func registerAutoUpdatingReference(_ reference: AutoUpdatingReference) {
+        autoUpdatingReferences.append(WeakAutoUpdatingReference(reference: reference))
     }
 
-    /// Unregisters the given declaration so it will no longer be notified of modifications.
-    internal func unregisterDeclaration(_ declaration: Declaration) {
-        activeDeclarations.removeAll(where: { $0.declaration === declaration })
+    /// Unregisters the given reference so it will no longer be notified of modifications.
+    internal func unregisterAutoUpdatingReference(_ reference: AutoUpdatingReference) {
+        autoUpdatingReferences.removeAll(where: { $0.reference === reference })
     }
 }
 
@@ -836,24 +836,66 @@ private extension Collection where Element == Token, Index == Int {
     }
 }
 
-struct WeakDeclarationReference {
-    weak var declaration: Declaration?
+/// A type that references an auto-updating subrange of indicies in a `Formatter`
+protocol AutoUpdatingReference: AnyObject {
+    var range: ClosedRange<Int> { get set }
 }
 
-extension Array where Element == WeakDeclarationReference {
-    /// Updates the `range` value of the declarations in this array
+private struct WeakAutoUpdatingReference {
+    weak var reference: AutoUpdatingReference?
+}
+
+/// An auto-updating index within an associated `Formatter`
+final class AutoUpdatingIndex: AutoUpdatingReference {
+    var index: Int
+    let formatter: Formatter
+
+    var range: ClosedRange<Int> {
+        get { index ... index }
+        set { index = newValue.lowerBound }
+    }
+
+    init(index: Int, formatter: Formatter) {
+        self.index = index
+        self.formatter = formatter
+        formatter.registerAutoUpdatingReference(self)
+    }
+
+    deinit {
+        formatter.unregisterAutoUpdatingReference(self)
+    }
+}
+
+// An auto-updating subrange of indicies in a `Formatter`
+final class AutoUpdatingRange: AutoUpdatingReference {
+    var range: ClosedRange<Int>
+    let formatter: Formatter
+
+    init(range: ClosedRange<Int>, formatter: Formatter) {
+        self.range = range
+        self.formatter = formatter
+        formatter.registerAutoUpdatingReference(self)
+    }
+
+    deinit {
+        formatter.unregisterAutoUpdatingReference(self)
+    }
+}
+
+extension Array where Element == WeakAutoUpdatingReference {
+    /// Updates the `range` value of the index references in this array
     /// to account for the given addition or removal of tokens.
     mutating func updateRanges(at modifiedIndex: Int, delta: Int) {
         for (tokenIndex, reference) in zip(indices, self).reversed() {
-            guard let declaration = reference.declaration else {
-                // If we encounter a declaration that no longer exists
+            guard let reference = reference.reference else {
+                // If we encounter a reference that no longer exists
                 // (the weak reference is nil), clean up the entry.
                 remove(at: tokenIndex)
                 continue
             }
 
-            var startIndex = declaration.range.lowerBound
-            var endIndex = declaration.range.upperBound
+            var startIndex = reference.range.lowerBound
+            var endIndex = reference.range.upperBound
 
             if modifiedIndex < startIndex {
                 startIndex += delta
@@ -867,11 +909,27 @@ extension Array where Element == WeakDeclarationReference {
 
             // Defend against a potential crash here if `endIndex` is less than `startIndex`.
             guard startIndex <= endIndex else {
-                declaration.range = startIndex ... startIndex
+                reference.range = startIndex ... startIndex
                 continue
             }
 
-            declaration.range = startIndex ... endIndex
+            reference.range = startIndex ... endIndex
         }
+    }
+}
+
+extension Int {
+    /// Creates a dynamic auto-updating index value from this existing index value,
+    /// tracking token changes in the given formatter.
+    func autoUpdating(in formatter: Formatter) -> AutoUpdatingIndex {
+        AutoUpdatingIndex(index: self, formatter: formatter)
+    }
+}
+
+extension ClosedRange<Int> {
+    /// Creates a dynamic auto-updating range value from this existing range value,
+    /// tracking token changes in the given formatter.
+    func autoUpdating(in formatter: Formatter) -> AutoUpdatingRange {
+        AutoUpdatingRange(range: self, formatter: formatter)
     }
 }

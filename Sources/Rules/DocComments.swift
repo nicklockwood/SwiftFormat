@@ -59,8 +59,11 @@ public extension FormatRule {
             var preserveRegularComments = false
             if useDocComment,
                let declarationKeyword = formatter.index(after: endOfComment, where: \.isDeclarationTypeKeyword),
-               let endOfDeclaration = formatter.endOfDeclaration(atDeclarationKeyword: declarationKeyword),
-               let nextDeclarationKeyword = formatter.index(after: endOfDeclaration, where: \.isDeclarationTypeKeyword)
+               let endOfDeclaration = formatter._endOfDeclarationInTypeBody(atDeclarationKeyword: declarationKeyword),
+               let nextDeclarationKeyword = formatter.index(
+                   after: endOfDeclaration,
+                   where: \.isDeclarationTypeKeyword
+               )
             {
                 let linebreaksBetweenDeclarations = formatter.tokens[declarationKeyword ... nextDeclarationKeyword]
                     .filter(\.isLinebreak).count

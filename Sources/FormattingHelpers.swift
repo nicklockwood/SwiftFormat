@@ -1899,43 +1899,95 @@ extension Formatter {
 
     /// Parses generic types between the angle brackets of a function declaration, or in a where clause
     func parseGenericTypes(
+        from genericSignatureStartIndex: Int
+    ) -> (types: [GenericType], range: ClosedRange<Int>) {
+        var types = [GenericType]()
+        let range = parseGenericTypes(from: genericSignatureStartIndex, into: &types)
+        return (types, range)
+    }
+
+    /// Parses generic types between the angle brackets of a function declaration, or in a where clause
+    @discardableResult
+    func parseGenericTypes(
         from genericSignatureStartIndex: Int,
-        to genericSignatureEndIndex: Int,
         into genericTypes: inout [GenericType],
         qualifyGenericTypeName: (String) -> String = { $0 }
-    ) {
+    ) -> ClosedRange<Int> {
+        assert([.startOfScope("<"), .keyword("where")].contains(tokens[genericSignatureStartIndex]))
+
         var currentIndex = genericSignatureStartIndex
 
-        while currentIndex < genericSignatureEndIndex - 1 {
-            guard let genericTypeNameIndex = index(of: .identifier, after: currentIndex),
-                  genericTypeNameIndex < genericSignatureEndIndex
+        while currentIndex < tokens.count {
+            guard let lhsTypeIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex),
+                  let lhsType = parseType(at: lhsTypeIndex)
             else { break }
 
-            let typeEndIndex: Int
-            let nextCommaIndex = index(of: .delimiter(","), after: genericTypeNameIndex)
-            if let nextCommaIndex = nextCommaIndex, nextCommaIndex < genericSignatureEndIndex {
-                typeEndIndex = nextCommaIndex
-            } else {
-                typeEndIndex = genericSignatureEndIndex - 1
+            currentIndex = lhsType.range.upperBound
+
+            // Parse the constraint after the type name if present
+            var conformanceType: GenericType.GenericConformance.ConformanceType?
+
+            // This can either be a protocol constraint of the form `T: Fooable`
+            if let colonIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex),
+               tokens[colonIndex] == .delimiter(":")
+            {
+                conformanceType = .protocolConstraint
+                currentIndex = colonIndex
             }
 
-            // Include all whitespace and comments in the conformance's source range,
-            // so if we remove it later all of the extra whitespace will get cleaned up
-            let sourceRangeEnd: Int
-            if let nextTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: typeEndIndex),
-               nextTokenIndex - 1 <= genericSignatureEndIndex
+            // or a concrete type of the form `T == Foo`
+            else if let equalsIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex),
+                    tokens[equalsIndex].isOperator,
+                    tokens[equalsIndex].string == "=="
             {
-                sourceRangeEnd = nextTokenIndex - 1
+                conformanceType = .concreteType
+                currentIndex = equalsIndex
+            }
+
+            var rhsType: (name: String, range: ClosedRange<Int>)?
+            if let rhsTypeIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex),
+               let type = parseType(at: rhsTypeIndex)
+            {
+                rhsType = type
+                currentIndex = type.range.upperBound
+            }
+
+            // The generic clause can continue with a comma.
+            let hasMoreElements: Bool
+            if let commaIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex),
+               tokens[commaIndex] == .delimiter(",")
+            {
+                currentIndex = commaIndex
+                hasMoreElements = true
+
+                // Include any trailing spaces, comments, or newlines with this type.
+                if let nextToken = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex) {
+                    currentIndex = nextToken - 1
+                }
             } else {
-                sourceRangeEnd = typeEndIndex
+                // Otherwise this is the last element in the list.
+                hasMoreElements = false
+
+                // Include any trailing spaces or comments with this type.
+                // Don't include any newlines, since in the case of a protocol definition
+                // this could be the last time in the entire declaration.
+                if let nextToken = index(of: .nonSpaceOrComment, after: currentIndex) {
+                    currentIndex = nextToken - 1
+                }
             }
 
             // The generic constraint could have syntax like `Foo`, `Foo: Fooable`,
             // `Foo.Element == Fooable`, etc. Create a reference to this specific
             // generic parameter (`Foo` in all of these examples) that can store
             // the constraints and conformances that we encounter later.
-            let fullGenericTypeName = qualifyGenericTypeName(tokens[genericTypeNameIndex].string)
-            let baseGenericTypeName = fullGenericTypeName.components(separatedBy: ".")[0]
+            let fullGenericTypeName = qualifyGenericTypeName(lhsType.name)
+
+            let baseGenericTypeName: String
+            if fullGenericTypeName.contains(".") {
+                baseGenericTypeName = fullGenericTypeName.components(separatedBy: ".")[0]
+            } else {
+                baseGenericTypeName = fullGenericTypeName
+            }
 
             let genericType: GenericType
             if let existingType = genericTypes.first(where: { $0.name == baseGenericTypeName }) {
@@ -1943,51 +1995,32 @@ extension Formatter {
             } else {
                 genericType = GenericType(
                     name: baseGenericTypeName,
-                    definitionSourceRange: genericTypeNameIndex ... sourceRangeEnd
+                    definitionSourceRange: lhsType.range.lowerBound ... currentIndex
                 )
                 genericTypes.append(genericType)
             }
 
-            // Parse the constraint after the type name if present
-            var delineatorIndex: Int?
-            var conformanceType: GenericType.GenericConformance.ConformanceType?
-
-            // This can either be a protocol constraint of the form `T: Fooable`
-            if let colonIndex = index(of: .delimiter(":"), after: genericTypeNameIndex),
-               colonIndex < typeEndIndex
-            {
-                delineatorIndex = colonIndex
-                conformanceType = .protocolConstraint
-            }
-
-            // or a concrete type of the form `T == Foo`
-            else if let equalsIndex = index(after: genericTypeNameIndex, where: { $0.isOperator("==") }),
-                    equalsIndex < typeEndIndex
-            {
-                delineatorIndex = equalsIndex
-                conformanceType = .concreteType
-            }
-
-            if let delineatorIndex = delineatorIndex, let conformanceType = conformanceType {
-                let constrainedTypeName = tokens[genericTypeNameIndex ..< delineatorIndex]
-                    .map(\.string)
-                    .joined()
-                    .trimmingCharacters(in: .init(charactersIn: " \n\r,{}"))
-
-                let conformanceName = tokens[(delineatorIndex + 1) ... typeEndIndex]
-                    .map(\.string)
-                    .joined()
-                    .trimmingCharacters(in: .init(charactersIn: " \n\r,{}"))
-
+            if let rhsType, let conformanceType {
                 genericType.conformances.append(.init(
-                    name: conformanceName,
-                    typeName: qualifyGenericTypeName(constrainedTypeName),
+                    name: rhsType.name,
+                    typeName: qualifyGenericTypeName(lhsType.name),
                     type: conformanceType,
-                    sourceRange: genericTypeNameIndex ... sourceRangeEnd
+                    sourceRange: lhsType.range.lowerBound ... currentIndex
                 ))
             }
 
-            currentIndex = typeEndIndex
+            if !hasMoreElements {
+                break
+            }
+        }
+
+        if tokens[genericSignatureStartIndex] == .startOfScope("<"), let endOfScope = endOfScope(at: genericSignatureStartIndex) {
+            return genericSignatureStartIndex ... endOfScope
+        }
+
+        else {
+            // where clauses don't have an explicit end token, so end at the last index of the final element
+            return genericSignatureStartIndex ... currentIndex
         }
     }
 

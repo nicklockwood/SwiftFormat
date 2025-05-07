@@ -2603,28 +2603,32 @@ class ParsingHelpersTests: XCTestCase {
 
     func testParseFunctionDeclarationWithEffects() {
         let input = """
-        func foo(bar: Bar, baaz: Baaz) async throws(GenericError<Foo>) -> Foo<Bar, Baaz> {
-            Foo(bar: bar, baaz: baaz)
+        struct FooBar {
+
+            func foo(bar: Bar, baaz: Baaz) async throws(GenericError<Foo>) -> Foo<Bar, Baaz> {
+                Foo(bar: bar, baaz: baaz)
+            }
+
         }
         """
 
         let formatter = Formatter(tokenize(input))
-        let function = formatter.parseFunctionDeclaration(keywordIndex: 0)!
+        let function = formatter.parseFunctionDeclaration(keywordIndex: 8)!
 
-        XCTAssertEqual(function.keywordIndex, 0)
+        XCTAssertEqual(function.keywordIndex, 8)
         XCTAssertEqual(function.name, "foo")
         XCTAssertEqual(function.genericParameterRange, nil)
         XCTAssertEqual(formatter.tokens[function.argumentsRange].string, "(bar: Bar, baaz: Baaz)")
         XCTAssertEqual(function.arguments.count, 2)
         XCTAssertEqual(formatter.tokens[function.effectsRange!].string, "async throws(GenericError<Foo>)")
         XCTAssertEqual(function.effects, ["async", "throws(GenericError<Foo>)"])
-        XCTAssertEqual(function.returnOperatorIndex, 26)
+        XCTAssertEqual(function.returnOperatorIndex, 34)
         XCTAssertEqual(formatter.tokens[function.returnType!.range].string, "Foo<Bar, Baaz>")
         XCTAssertEqual(function.whereClauseRange, nil)
         XCTAssertEqual(formatter.tokens[function.bodyRange!].string, """
         {
-            Foo(bar: bar, baaz: baaz)
-        }
+                Foo(bar: bar, baaz: baaz)
+            }
         """)
     }
 
@@ -2649,7 +2653,7 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(function.effects, ["rethrows"])
         XCTAssertEqual(function.returnOperatorIndex, nil)
         XCTAssertEqual(function.returnType?.range, nil)
-        XCTAssertEqual(formatter.tokens[function.whereClauseRange!].string, "where Baaz.Quux == Foo")
+        XCTAssertEqual(formatter.tokens[function.whereClauseRange!].string, "where Baaz.Quux == Foo ")
         XCTAssertEqual(formatter.tokens[function.bodyRange!].string, """
         {
             print(bar)

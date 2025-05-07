@@ -49,7 +49,6 @@ public extension FormatRule {
             // Parse the generic constraints in the where clause
             formatter.parseGenericTypes(
                 from: whereIndex,
-                to: openBraceIndex,
                 into: &genericTypes,
                 qualifyGenericTypeName: { genericTypeName in
                     // In an extension all types implicitly refer to `Self`.

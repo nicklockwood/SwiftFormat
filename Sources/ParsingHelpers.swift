@@ -1275,6 +1275,7 @@ extension Formatter {
     ///  - `@escaping ...`
     ///  - `@unchecked ...`
     ///  - `@retroactive ...`
+    ///  - `@Sendable ...`
     ///  - `~...`
     ///  - `(type).(type)`
     ///  - `(type) & (type)`
@@ -1403,9 +1404,9 @@ extension Formatter {
             return (name: tokens[typeRange].stringExcludingLinebreaks, range: typeRange)
         }
 
-        // Parse types of the form `any ...`, `some ...`, `borrowing ...`, `consuming ...`, `sending ...`, `repeat ...`, `each ...`,
-        // `@unchecked ...`, `@escaping ...`, `~...`, `@retroactive ...`,
-        let typePrefixes = Set(["any", "some", "borrowing", "consuming", "sending", "repeat", "each", "@unchecked", "@escaping", "~", "@retroactive"])
+        // Parse types with any of the following prefixes:
+        // TODO: Should we include all @ annotations instead of having an explicit allowlist?
+        let typePrefixes = Set(["any", "some", "borrowing", "consuming", "sending", "repeat", "each", "@unchecked", "@escaping", "~", "@retroactive", "@Sendable"])
         if typePrefixes.contains(startToken.string),
            let nextToken = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfTypeIndex),
            let followingType = parseType(at: nextToken)
@@ -1637,7 +1638,7 @@ extension Formatter {
 
             let keywordIndex = index
             let declarationKeyword = declarationType(at: keywordIndex) ?? "#if"
-            let endOfDeclaration = self.endOfDeclaration(atDeclarationKeyword: keywordIndex)
+            let endOfDeclaration = self._endOfDeclarationInTypeBody(atDeclarationKeyword: keywordIndex)
 
             let declarationRange = startOfDeclaration ... min(endOfDeclaration ?? .max, range.upperBound - 1)
             startOfDeclaration = declarationRange.upperBound + 1
@@ -1714,9 +1715,11 @@ extension Formatter {
     }
 
     /// Returns the end index of the `Declaration` containing `declarationKeywordIndex`.
+    /// This is mostly an implementation detail of `parseDeclarations` and only correctly
+    /// handles declarations within type bodies (not within function bodies).
     ///  - `declarationKeywordIndex.isDeclarationTypeKeyword` must be `true`
     ///    (e.g. it must be a keyword like `let`, `var`, `func`, `class`, etc.
-    func endOfDeclaration(atDeclarationKeyword declarationKeywordIndex: Int) -> Int? {
+    func _endOfDeclarationInTypeBody(atDeclarationKeyword declarationKeywordIndex: Int) -> Int? {
         assert(tokens[declarationKeywordIndex].isDeclarationTypeKeyword
             || tokens[declarationKeywordIndex] == .startOfScope("#if"))
 
@@ -2657,40 +2660,24 @@ extension Formatter {
             returnType = nil
         }
 
-        // Find the end of the declaration so we can parse the body backwards from there,
-        // rather than completely parsing the where clause.
-        var endOfDeclaration = min(
-            self.endOfDeclaration(atDeclarationKeyword: keywordIndex) ?? .max,
-            tokens.count - 1
-        )
-
-        if tokens[endOfDeclaration].isSpaceOrCommentOrLinebreak,
-           let lastTokenInDeclaration = index(of: .nonSpaceOrCommentOrLinebreak, before: endOfDeclaration)
+        // Parse the optional where clause
+        var whereClauseRange: ClosedRange<Int>?
+        if let whereKeyword = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex),
+           tokens[whereKeyword] == .keyword("where")
         {
-            endOfDeclaration = lastTokenInDeclaration
+            let parsedWhereClauseRange = parseGenericTypes(from: whereKeyword).range
+            whereClauseRange = parsedWhereClauseRange
+            currentIndex = parsedWhereClauseRange.upperBound
         }
 
         // Parse the optional body.
         // If this is a protocol declaration, there will be no body.
         var bodyRange: ClosedRange<Int>?
-        if tokens[endOfDeclaration] == .endOfScope("}"),
-           let startOfScope = startOfScope(at: endOfDeclaration),
-           startOfScope > keywordIndex
+        if let bodyOpenBrace = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex),
+           tokens[bodyOpenBrace] == .startOfScope("{"),
+           let bodyClosingBrace = endOfScope(at: bodyOpenBrace)
         {
-            bodyRange = startOfScope ... endOfDeclaration
-        }
-
-        // Finally, the optional where clause. This is everything remaining up until the body.
-        // In a protocol declaration without a body, this is just the remainder of the declaration.
-        var whereClauseRange: ClosedRange<Int>?
-        if let whereKeyword = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex),
-           tokens[whereKeyword] == .keyword("where")
-        {
-            if let startOfBody = bodyRange?.lowerBound, let endOfWhereClause = index(of: .nonSpaceOrCommentOrLinebreak, before: startOfBody) {
-                whereClauseRange = whereKeyword ... endOfWhereClause
-            } else {
-                whereClauseRange = whereKeyword ... endOfDeclaration
-            }
+            bodyRange = bodyOpenBrace ... bodyClosingBrace
         }
 
         return FunctionDeclaration(

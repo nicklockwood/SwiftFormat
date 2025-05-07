@@ -29,12 +29,14 @@ class WrapArgumentsTests: XCTestCase {
     func testWrapArgumentsDoesntIndentTrailingComment() {
         let input = """
         foo( // foo
-        bar: Int
+        bar: Int,
+        baaz: Int
         )
         """
         let output = """
         foo( // foo
-            bar: Int
+            bar: Int,
+            baaz: Int
         )
         """
         testFormatting(for: input, output, rule: .wrapArguments)
@@ -1016,14 +1018,15 @@ class WrapArgumentsTests: XCTestCase {
 
     func testNoMangleCommentedLinesWhenWrappingArguments() {
         let input = """
-        foo(bar: bar
+        foo(bar: bar, quux: quux
         //    ,
         //    baz: baz
             ) {}
         """
         let output = """
         foo(
-            bar: bar
+            bar: bar,
+            quux: quux
         //    ,
         //    baz: baz
         ) {}
@@ -1034,13 +1037,14 @@ class WrapArgumentsTests: XCTestCase {
 
     func testNoMangleCommentedLinesWhenWrappingArgumentsWithNoCommas() {
         let input = """
-        foo(bar: bar
+        foo(bar: bar, quux: quux
         //    baz: baz
             ) {}
         """
         let output = """
         foo(
-            bar: bar
+            bar: bar,
+            quux: quux
         //    baz: baz
         ) {}
         """
@@ -1990,6 +1994,79 @@ class WrapArgumentsTests: XCTestCase {
         )
 
         testFormatting(for: input, [output], rules: [.wrapArguments, .braces], options: options)
+    }
+
+    func testWrapReturnIfMultilineOnClosureArgument() {
+        let input = """
+        func multilineFunctionWithClosureArgument(
+            closure: ((
+                _ view: ChartContainerView<Self>,
+                _ content: Content,
+                _ traitCollection: UITraitCollection,
+                _ state: ItemCellState) -> Void)? = nil) -> String
+        {
+            print(closure)
+        }
+        """
+
+        let output = """
+        func multilineFunctionWithClosureArgument(
+            closure: ((
+                _ view: ChartContainerView<Self>,
+                _ content: Content,
+                _ traitCollection: UITraitCollection,
+                _ state: ItemCellState)
+                -> Void)? = nil)
+            -> String
+        {
+            print(closure)
+        }
+        """
+
+        let options = FormatOptions(
+            wrapArguments: .beforeFirst,
+            closingParenPosition: .sameLine,
+            wrapReturnType: .ifMultiline,
+            maxWidth: 100
+        )
+
+        testFormatting(for: input, [output], rules: [.wrapArguments, .wrap, .indent], options: options)
+    }
+
+    func testPreservesReturnInClosure() {
+        let input = """
+        public private(set) var foo: ((
+            UIAccessibility.Notification,
+            Any?,
+            Bool,
+            TimeInterval,
+            String,
+            Int,
+            String) -> Void)?
+        """
+
+        let output = """
+        public private(set) var foo: ((
+            UIAccessibility.Notification,
+            Any?,
+            Bool,
+            TimeInterval,
+            String,
+            Int,
+            String)
+            -> Void)?
+        """
+
+        let options = FormatOptions(
+            wrapArguments: .beforeFirst,
+            wrapCollections: .beforeFirst,
+            closingParenPosition: .sameLine,
+            wrapReturnType: .ifMultiline,
+            maxWidth: 100,
+            wrapEffects: .ifMultiline
+        )
+
+        testFormatting(for: input, [output], rules: [.wrapArguments, .wrap], options: options)
     }
 
     func testFormatReturnTypeOnMultilineFunctionDeclarationWithBlockComment() {

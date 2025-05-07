@@ -1637,9 +1637,9 @@ extension Formatter {
 
             let keywordIndex = index
             let declarationKeyword = declarationType(at: keywordIndex) ?? "#if"
-            let endOfDeclaration = self.endOfDeclaration(atDeclarationKeyword: keywordIndex)
+            let endOfDeclaration = self.endOfDeclaration(atDeclarationKeyword: keywordIndex, includingTrailingSpacesAndLinebreaks: true)
 
-            let declarationRange = startOfDeclaration ... min(endOfDeclaration ?? .max, range.upperBound - 1)
+            let declarationRange = startOfDeclaration ... min(endOfDeclaration, range.upperBound - 1)
             startOfDeclaration = declarationRange.upperBound + 1
 
             // If the current rule is disabled at this index, don't keep the declaration.
@@ -1716,7 +1716,7 @@ extension Formatter {
     /// Returns the end index of the `Declaration` containing `declarationKeywordIndex`.
     ///  - `declarationKeywordIndex.isDeclarationTypeKeyword` must be `true`
     ///    (e.g. it must be a keyword like `let`, `var`, `func`, `class`, etc.
-    func endOfDeclaration(atDeclarationKeyword declarationKeywordIndex: Int) -> Int? {
+    func endOfDeclaration(atDeclarationKeyword declarationKeywordIndex: Int, includingTrailingSpacesAndLinebreaks: Bool = false) -> Int {
         assert(tokens[declarationKeywordIndex].isDeclarationTypeKeyword
             || tokens[declarationKeywordIndex] == .startOfScope("#if"))
 
@@ -1757,27 +1757,51 @@ extension Formatter {
         })
 
         // Search backward from the next declaration keyword to find where declaration begins.
-        var endOfDeclaration = nextDeclarationKeywordIndex.flatMap {
+        let tokenBeforeNextDeclaration = nextDeclarationKeywordIndex.flatMap {
             index(before: startOfModifiers(at: $0, includingAttributes: true), where: {
                 !$0.isSpaceOrCommentOrLinebreak
             }).map { endOfLine(at: $0) }
         }
 
-        // Prefer keeping linebreaks at the end of a declaration's tokens,
-        // instead of the start of the next delaration's tokens.
-        //  - This includes any spaces on blank lines, but doesn't include the
-        //    indentation associated with the next declaration.
-        while let linebreakSearchIndex = endOfDeclaration,
-              token(at: linebreakSearchIndex + 1)?.isSpaceOrLinebreak == true
-        {
-            // Only spaces between linebreaks (e.g. spaces on blank lines) are included
-            if token(at: linebreakSearchIndex + 1)?.isSpace == true {
-                guard token(at: linebreakSearchIndex)?.isLinebreak == true,
-                      token(at: linebreakSearchIndex + 2)?.isLinebreak == true
-                else { break }
-            }
+        // Ensure the index is within the possible range based on the current type body scope.
+        // If there is no scope then this is a top-level declaration.
+        let endOfCurrentScope: Int
+        if let startOfScope = index(of: .startOfScope("{"), before: declarationKeywordIndex), let endOfScope = endOfScope(at: startOfScope) {
+            assert((startOfScope ... endOfScope).contains(declarationKeywordIndex))
+            endOfCurrentScope = endOfScope
+        } else {
+            endOfCurrentScope = tokens.count
+        }
 
-            endOfDeclaration = linebreakSearchIndex + 1
+        let lastPossibleIndex: Int
+        if !includingTrailingSpacesAndLinebreaks, let lastTokenInScope = index(of: .nonSpaceOrCommentOrLinebreak, before: endOfCurrentScope) {
+            lastPossibleIndex = lastTokenInScope
+        } else {
+            lastPossibleIndex = endOfCurrentScope - 1
+        }
+
+        var endOfDeclaration: Int
+        if let tokenBeforeNextDeclaration {
+            endOfDeclaration = tokenBeforeNextDeclaration
+        } else {
+            endOfDeclaration = lastPossibleIndex
+        }
+
+        if includingTrailingSpacesAndLinebreaks, tokenBeforeNextDeclaration != nil {
+            // Prefer keeping linebreaks at the end of a declaration's tokens,
+            // instead of the start of the next delaration's tokens.
+            //  - This includes any spaces on blank lines, but doesn't include the
+            //    indentation associated with the next declaration.
+            while token(at: endOfDeclaration + 1)?.isSpaceOrLinebreak == true {
+                // Only spaces between linebreaks (e.g. spaces on blank lines) are included
+                if token(at: endOfDeclaration + 1)?.isSpace == true {
+                    guard token(at: endOfDeclaration)?.isLinebreak == true,
+                          token(at: endOfDeclaration + 2)?.isLinebreak == true
+                    else { break }
+                }
+
+                endOfDeclaration = endOfDeclaration + 1
+            }
         }
 
         return endOfDeclaration
@@ -2659,10 +2683,7 @@ extension Formatter {
 
         // Find the end of the declaration so we can parse the body backwards from there,
         // rather than completely parsing the where clause.
-        var endOfDeclaration = min(
-            self.endOfDeclaration(atDeclarationKeyword: keywordIndex) ?? .max,
-            tokens.count - 1
-        )
+        var endOfDeclaration = endOfDeclaration(atDeclarationKeyword: keywordIndex)
 
         if tokens[endOfDeclaration].isSpaceOrCommentOrLinebreak,
            let lastTokenInDeclaration = index(of: .nonSpaceOrCommentOrLinebreak, before: endOfDeclaration)

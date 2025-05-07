@@ -711,4 +711,18 @@ class OpaqueGenericParametersTests: XCTestCase {
         testFormatting(for: input, output, rule: .opaqueGenericParameters,
                        options: options, exclude: [.unusedArguments, .trailingSpace])
     }
+
+    func testPreservesGenericUsedInBodyAtEndOfScope() {
+        let input = """
+        extension ModelTransformer {
+          public static func decodableTransformer<T: Decodable>(for _: T.Type) -> ValueTransformer {
+            CodableTransformer<T>.default
+          }
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, rule: .opaqueGenericParameters,
+                       options: options, exclude: [.unusedArguments, .indent])
+    }
 }

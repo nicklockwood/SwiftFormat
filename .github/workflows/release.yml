@@ -75,9 +75,20 @@ jobs:
         run: ls -R downloaded_artifacts
       - name: Build artifact bundle
         run: ./Scripts/spm-artifact-bundle.sh ${{ github.event.release.name }} downloaded_artifacts/swiftformat_macos/swiftformat downloaded_artifacts/swiftformat_linux/swiftformat_linux downloaded_artifacts/swiftformat_linux_aarch64/swiftformat_linux_aarch64
-      - name: Upload artifact bundle
+      - name: Prepare files for upload
+        run: |
+          # Ensure binaries are executable
+          chmod +x downloaded_artifacts/swiftformat_macos/swiftformat
+          chmod +x downloaded_artifacts/swiftformat_linux/swiftformat_linux
+          chmod +x downloaded_artifacts/swiftformat_linux_aarch64/swiftformat_linux_aarch64
+
+          # Create individual zip files for each binary directly
+          zip -j swiftformat.zip downloaded_artifacts/swiftformat_macos/swiftformat
+          zip -j swiftformat_linux.zip downloaded_artifacts/swiftformat_linux/swiftformat_linux
+          zip -j swiftformat_linux_aarch64.zip downloaded_artifacts/swiftformat_linux_aarch64/swiftformat_linux_aarch64
+      - name: Upload release assets
         uses: skx/github-action-publish-binaries@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          args: 'swiftformat.artifactbundle.zip'
+          args: 'swiftformat.artifactbundle.zip swiftformat.zip swiftformat_linux.zip swiftformat_linux_aarch64.zip'

@@ -449,8 +449,15 @@ extension Formatter {
                 index = commaIndex
             }
 
+            // If the closing paren is on the same line, and there's only a single item in the list,
+            // don't insert an opening paren (unless we're over the line width limit). This prevents
+            // issues with an open paren being wrapped unnecessarily and sitting on its own line in
+            // cases like long closure types in parens.
+            let insertLinebreakAfterOpeningParen = self.index(of: .delimiter(","), after: i) != nil
+                || lineLength(at: endOfLine(at: i)) > maxWidth
+
             // Insert linebreak and indent after opening paren
-            if let nextIndex = self.index(of: .nonSpaceOrComment, after: i) {
+            if insertLinebreakAfterOpeningParen, let nextIndex = self.index(of: .nonSpaceOrComment, after: i) {
                 if !tokens[nextIndex].isLinebreak {
                     insertLinebreak(at: nextIndex)
                     endOfScope += 1

@@ -36,14 +36,13 @@ public extension FormatRule {
             // Parse the generics in the angle brackets (e.g. `<T, U: Fooable>`)
             formatter.parseGenericTypes(
                 from: genericParameterRange.lowerBound,
-                to: genericParameterRange.upperBound,
                 into: &genericTypes
             )
 
             // Parse additional conformances and constraints after the `where` keyword if present
             // (e.g. `where Foo: Fooable, Foo.Bar: Barable, Foo.Baaz == Baazable`)
             if let whereClauseRange = declaration.whereClauseRange {
-                formatter.parseGenericTypes(from: whereClauseRange.lowerBound, to: whereClauseRange.upperBound + 1, into: &genericTypes)
+                formatter.parseGenericTypes(from: whereClauseRange.lowerBound, into: &genericTypes)
             }
 
             for genericType in genericTypes {

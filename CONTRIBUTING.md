@@ -65,6 +65,10 @@ Tests are run automatically on all pull requests, branches and tags. These are t
 
 There is a separate Performance Tests scheme that you should run manually if your code changes are likely to affect performance.
 
+## Prerelease builds
+
+If you contribute a new rule or option, it would be published in the following major version release. To start using the new rule or option right away in your own project, you could use a prerelease build of the develop branch. More information is available [here](https://github.com/nicklockwood/SwiftFormat#nightly-builds).
+
 ## Renaming a Rule Option
 
 * Add a copy of the option in `OptionDescriptor.swift` under the `// MARK: - RENAMED` section
@@ -80,15 +84,16 @@ This is relevant only to maintainers:
 * Update SwiftFormat.podspec.json
 * Run tests and ensure they pass
 * Select SwiftFormat (Command Line Tool) and run Product > Archive
+  * This step requires a distribution signing certificate
 * Replace binary in CommandLineTool directory
 * Select SwiftFormat for Xcode and run Product > Archive
 * Notarize and export built app
+  * This step requires App Store Connect access, so only Nick can do this.
 * Tag commit and push to main
 * pod trunk push --allow-warnings
 * Run Build for Windows and download binaries
 * Unzip Windows msi zips and rename
 * Publish a new release
-* Download swiftformat_linux.zip from the Build Release Artifacts action
-* Zip the macOS swiftformat build
 * Attach all binaries to release
+  * The artifact bundle, macOS executable, and Linux executables are uploaded to the release automatically.
 * Create and Publish Docker image

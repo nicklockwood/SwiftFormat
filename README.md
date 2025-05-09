@@ -26,7 +26,7 @@ Table of Contents
     - [On CI using Danger](#on-ci-using-danger)
     - [Bazel build](#bazel-build)
     - [Docker](#docker)
-    - [Nightly Builds](#nightly-builds)
+    - [Prerelease Builds](#prerelease-builds)
 - [Configuration](#configuration)
     - [Options](#options)
     - [Rules](#rules)
@@ -521,12 +521,24 @@ Linting example:
 docker run --rm -v /local/source/path:/work ghcr.io/nicklockwood/swiftformat:latest /work --lint
 ```
 
-Nightly Builds
---------------
+Prerelease Builds
+-----------------
 
-***Nightly builds are subject to breaking changes.***
+***Prerelease builds are subject to breaking changes.***
 
 New rules, options, and fixes are merged to the [`develop`](https://github.com/nicklockwood/SwiftFormat/commits/develop/) branch before being incorporated into an official release. You may want to use a prerelease version of SwiftFormat that includes the latest unreleased changes.
+
+**Homebrew:**
+
+The [Homebrew](http://brew.sh/) `--HEAD` option downloads, builds, and installs the latest changes from the `develop` branch. 
+
+You can install a prerelease build via Homebrew by running:
+
+```bash
+$ brew install swiftformat --HEAD
+```
+
+**Nightly Builds:**
 
 Nightly builds of the `develop` branch are available in the [calda/SwiftFormat-nightly](https://github.com/calda/SwiftFormat-nightly) repo. A new release is published every day, unless there have been no changes to `develop` since the last release. You can download executables for the latest nightly release [here](https://github.com/calda/SwiftFormat-nightly/releases/latest).
 

@@ -1373,4 +1373,13 @@ struct _Descriptors {
         help: "deprecated",
         keyPath: \.propertyTypes
     ).renamed(to: "propertytypes")
+
+    let breakLineAtEndOfTypes = OptionDescriptor(
+        argumentName: "breaklineendoftypes",
+        displayName: "Break Line at End of Types",
+        help: "Add line break at the end of type declarations: \"true\" or \"false\" (default)",
+        keyPath: \.breakLineAtEndOfTypes,
+        trueValues: ["true", "enabled"],
+        falseValues: ["false", "disabled"]
+    )
 }

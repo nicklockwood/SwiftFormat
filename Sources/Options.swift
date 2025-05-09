@@ -690,6 +690,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var timeZone: FormatTimeZone
     public var nilInit: NilInitType
     public var preservedPrivateDeclarations: Set<String>
+    public var breakLineAtEndOfTypes: Bool
 
     /// Deprecated
     public var indentComments: Bool
@@ -815,6 +816,7 @@ public struct FormatOptions: CustomStringConvertible {
                 timeZone: FormatTimeZone = .system,
                 nilInit: NilInitType = .remove,
                 preservedPrivateDeclarations: Set<String> = [],
+                breakLineAtEndOfTypes: Bool = false,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -832,7 +834,6 @@ public struct FormatOptions: CustomStringConvertible {
         self.useVoid = useVoid
         self.indentCase = indentCase
         self.trailingCommas = trailingCommas
-        self.indentComments = indentComments
         self.truncateBlankLines = truncateBlankLines
         self.insertBlankLines = insertBlankLines
         self.removeBlankLines = removeBlankLines
@@ -930,7 +931,8 @@ public struct FormatOptions: CustomStringConvertible {
         self.timeZone = timeZone
         self.nilInit = nilInit
         self.preservedPrivateDeclarations = preservedPrivateDeclarations
-        // Doesn't really belong here, but hard to put elsewhere
+        self.breakLineAtEndOfTypes = breakLineAtEndOfTypes
+        self.indentComments = indentComments
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers
         self.swiftVersion = swiftVersion

@@ -84,15 +84,16 @@ This is relevant only to maintainers:
 * Update SwiftFormat.podspec.json
 * Run tests and ensure they pass
 * Select SwiftFormat (Command Line Tool) and run Product > Archive
+  * This step requires a distribution signing certificate
 * Replace binary in CommandLineTool directory
 * Select SwiftFormat for Xcode and run Product > Archive
 * Notarize and export built app
+  * This step requires App Store Connect access, so only Nick can do this.
 * Tag commit and push to main
 * pod trunk push --allow-warnings
 * Run Build for Windows and download binaries
 * Unzip Windows msi zips and rename
 * Publish a new release
-* Download swiftformat_linux.zip from the Build Release Artifacts action
-* Zip the macOS swiftformat build
 * Attach all binaries to release
+  * The artifact bundle, macOS executable, and Linux executables are uploaded to the release automatically.
 * Create and Publish Docker image

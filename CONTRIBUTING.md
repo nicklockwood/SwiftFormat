@@ -84,7 +84,6 @@ This is relevant only to maintainers:
 * Update SwiftFormat.podspec.json
 * Run tests and ensure they pass
 * Select SwiftFormat (Command Line Tool) and run Product > Archive
-  * This step requires a distribution signing certificate
 * Replace binary in CommandLineTool directory
 * Select SwiftFormat for Xcode and run Product > Archive
 * Notarize and export built app

@@ -65,6 +65,10 @@ Tests are run automatically on all pull requests, branches and tags. These are t
 
 There is a separate Performance Tests scheme that you should run manually if your code changes are likely to affect performance.
 
+## Prerelease builds
+
+If you contribute a new rule or option, it would be published in the following major version release. To start using the new rule or option right away in your own project, you could use a prerelease build of the develop branch. More information is available [here](https://github.com/nicklockwood/SwiftFormat#nightly-builds).
+
 ## Renaming a Rule Option
 
 * Add a copy of the option in `OptionDescriptor.swift` under the `// MARK: - RENAMED` section

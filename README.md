@@ -26,6 +26,7 @@ Table of Contents
     - [On CI using Danger](#on-ci-using-danger)
     - [Bazel build](#bazel-build)
     - [Docker](#docker)
+    - [Nightly Builds](#nightly-builds)
 - [Configuration](#configuration)
     - [Options](#options)
     - [Rules](#rules)
@@ -73,8 +74,6 @@ That depends - There are several ways you can use SwiftFormat:
 
 Command-line tool
 -------------------
-
-**NOTE:** if you are using any of the following methods to install SwiftFormat on macOS 10.14.3 or earlier and are experiencing a crash on launch, you may need to install the [Swift 5 Runtime Support for Command Line Tools](https://support.apple.com/kb/DL1998). See [known issues](#known-issues) for details.
 
 **Installation:**
 
@@ -521,6 +520,17 @@ Linting example:
 ```bash
 docker run --rm -v /local/source/path:/work ghcr.io/nicklockwood/swiftformat:latest /work --lint
 ```
+
+Nightly Builds
+--------------
+
+***Nightly builds are subject to breaking changes.***
+
+New rules, options, and fixes are merged to the [`develop`](https://github.com/nicklockwood/SwiftFormat/commits/develop/) branch before being incorporated into an official release. You may want to use a prerelease version of SwiftFormat that includes the latest unreleased changes.
+
+Nightly builds of the `develop` branch are available in the [calda/SwiftFormat-nightly](https://github.com/calda/SwiftFormat-nightly) repo. A new release is published every day, unless there have been no changes to `develop` since the last release. You can download executables for the latest nightly release [here](https://github.com/calda/SwiftFormat-nightly/releases/latest).
+
+Commit SHAs on `develop` are unstable since that branch is occasionally rebased, but artifact URLs and tags in [calda/SwiftFormat-nightly](https://github.com/calda/SwiftFormat-nightly) are stable references that can be used from other repos or tools.
 
 Configuration
 -------------

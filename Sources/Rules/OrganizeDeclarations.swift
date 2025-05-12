@@ -489,7 +489,7 @@ extension Formatter {
                 // at least one blank line so the category separator appears balanced
                 if markedDeclarations.isEmpty {
                     if options.enabledRules.contains(FormatRule.blankLinesAtStartOfScope.name),
-                       options.removeStartOrEndBlankLinesFromTypes
+                       options.typeBlankLines == .remove
                     {
                         typeDeclaration.open = typeDeclaration.open.endingWithoutBlankLine()
                     } else {

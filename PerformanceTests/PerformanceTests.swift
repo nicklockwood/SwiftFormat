@@ -93,8 +93,7 @@ class PerformanceTests: XCTestCase {
             hoistPatternLet: false,
             elseOnNextLine: true,
             explicitSelf: .insert,
-            experimentalRules: true,
-            breakLineAtEndOfTypes: true
+            experimentalRules: true
         )
         measure {
             _ = tokens.map { try! format($0, options: options) }

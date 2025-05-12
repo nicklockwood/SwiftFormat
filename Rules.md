@@ -325,7 +325,7 @@ Option | Description
 
 ## blankLinesAtEndOfScope
 
-Remove trailing blank line at the end of a scope.
+Remove or insert trailing blank line at the end of a scope.
 
 <details>
 <summary>Examples</summary>
@@ -356,6 +356,16 @@ Remove trailing blank line at the end of a scope.
   ]
 ```
 
+With --typeblanklines insert:
+
+```diff
+  class MyClass {
+      // Implementation
+-     }
++
++     }
+```
+
 </details>
 <br/>
 
@@ -365,7 +375,7 @@ Remove leading blank line at the start of a scope.
 
 Option | Description
 --- | ---
-`--typeblanklines` | "remove" (default) or "preserve" blank lines from types
+`--typeblanklines` | "remove" (default), "insert", or "preserve" blank lines in types
 
 <details>
 <summary>Examples</summary>

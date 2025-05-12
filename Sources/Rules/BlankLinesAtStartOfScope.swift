@@ -21,13 +21,9 @@ public extension FormatRule {
                   formatter.tokens[indexOfFirstLineBreak].isLinebreak
             else { return }
 
-            // Consumers can choose whether or not this rule should apply to type bodies
-            if !formatter.options.removeStartOrEndBlankLinesFromTypes,
-               ["class", "actor", "struct", "enum", "protocol", "extension"].contains(
-                   formatter.lastSignificantKeyword(at: i, excluding: ["where"]))
-            {
-                return
-            }
+            // Check if this is a type declaration
+            let isTypeDeclaration = ["class", "actor", "struct", "enum", "protocol", "extension"].contains(
+                formatter.lastSignificantKeyword(at: i, excluding: ["where"]))
 
             // Find next non-space token
             var index = indexOfFirstLineBreak + 1
@@ -43,9 +39,24 @@ public extension FormatRule {
                 }
                 index += 1
             }
-            if formatter.options.removeBlankLines, indexOfFirstLineBreak != indexOfLastLineBreak {
-                formatter.removeTokens(in: indexOfFirstLineBreak ..< indexOfLastLineBreak)
-                return
+
+            if isTypeDeclaration {
+                // Apply type-specific rules based on typeBlankLines option
+                switch formatter.options.typeBlankLines {
+                case .remove:
+                    // Remove blank lines after opening brace in types
+                    if indexOfFirstLineBreak != indexOfLastLineBreak {
+                        formatter.removeTokens(in: indexOfFirstLineBreak ..< indexOfLastLineBreak)
+                    }
+                case .insert, .preserve:
+                    // We don't insert blank lines at start of scope, and preserve means do nothing
+                    break
+                }
+            } else {
+                // For non-types, always remove blank lines
+                if formatter.options.removeBlankLines, indexOfFirstLineBreak != indexOfLastLineBreak {
+                    formatter.removeTokens(in: indexOfFirstLineBreak ..< indexOfLastLineBreak)
+                }
             }
         }
     } examples: {

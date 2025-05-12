@@ -81,7 +81,7 @@ class BlankLinesAtStartOfScopeTests: XCTestCase {
             func fooMethod() {}
         }
         """
-        testFormatting(for: input, rule: .blankLinesAtStartOfScope, options: .init(removeStartOrEndBlankLinesFromTypes: false))
+        testFormatting(for: input, rule: .blankLinesAtStartOfScope, options: .init(typeBlankLines: .preserve))
     }
 
     func testBlankLineAtStartOfScopeRemovedFromMethodInType() {
@@ -101,7 +101,22 @@ class BlankLinesAtStartOfScopeTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .blankLinesAtStartOfScope, options: .init(removeStartOrEndBlankLinesFromTypes: false))
+        testFormatting(for: input, output, rule: .blankLinesAtStartOfScope, options: .init(typeBlankLines: .preserve))
+    }
+
+    func testBlankLineInsertedAtStartOfType() {
+        let input = """
+        class Foo {
+            func bar() {}
+        }
+        """
+        let output = """
+        class Foo {
+
+            func bar() {}
+        }
+        """
+        testFormatting(for: input, output, rule: .blankLinesAtStartOfScope, options: .init(typeBlankLines: .insert))
     }
 
     func testFalsePositive() {

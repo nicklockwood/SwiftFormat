@@ -731,7 +731,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var indentStrings: Bool
     public var closureVoidReturn: ClosureVoidReturn
     public var enumNamespaces: EnumNamespacesMode
-    public var removeStartOrEndBlankLinesFromTypes: Bool
+    public var typeBlankLines: TypeBlankLines
     public var genericTypes: String
     public var useSomeAny: Bool
     public var wrapEffects: WrapEffects
@@ -863,7 +863,7 @@ public struct FormatOptions: CustomStringConvertible {
                 indentStrings: Bool = false,
                 closureVoidReturn: ClosureVoidReturn = .remove,
                 enumNamespaces: EnumNamespacesMode = .always,
-                removeStartOrEndBlankLinesFromTypes: Bool = true,
+                typeBlankLines: TypeBlankLines = .remove,
                 genericTypes: String = "",
                 useSomeAny: Bool = true,
                 wrapEffects: WrapEffects = .preserve,
@@ -898,7 +898,6 @@ public struct FormatOptions: CustomStringConvertible {
         self.useVoid = useVoid
         self.indentCase = indentCase
         self.trailingCommas = trailingCommas
-        self.indentComments = indentComments
         self.truncateBlankLines = truncateBlankLines
         self.insertBlankLines = insertBlankLines
         self.removeBlankLines = removeBlankLines
@@ -985,7 +984,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.indentStrings = indentStrings
         self.closureVoidReturn = closureVoidReturn
         self.enumNamespaces = enumNamespaces
-        self.removeStartOrEndBlankLinesFromTypes = removeStartOrEndBlankLinesFromTypes
+        self.typeBlankLines = typeBlankLines
         self.genericTypes = genericTypes
         self.useSomeAny = useSomeAny
         self.wrapEffects = wrapEffects
@@ -1004,6 +1003,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.preferFileMacro = preferFileMacro
         self.lineBetweenConsecutiveGuards = lineBetweenConsecutiveGuards
         // Doesn't really belong here, but hard to put elsewhere
+        self.indentComments = indentComments
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers
         self.swiftVersion = swiftVersion
@@ -1129,4 +1129,10 @@ public struct Options {
     public func shouldSkipFile(_ inputURL: URL) -> Bool {
         fileOptions?.shouldSkipFile(inputURL) ?? false
     }
+}
+
+public enum TypeBlankLines: String, CaseIterable {
+    case remove
+    case insert
+    case preserve
 }

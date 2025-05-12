@@ -82,7 +82,7 @@ class BlankLinesAtEndOfScopeTests: XCTestCase {
 
         }
         """
-        testFormatting(for: input, rule: .blankLinesAtEndOfScope, options: .init(removeStartOrEndBlankLinesFromTypes: false))
+        testFormatting(for: input, rule: .blankLinesAtEndOfScope, options: .init(typeBlankLines: .preserve))
     }
 
     func testBlankLineAtEndOfScopeRemovedFromMethodInType() {
@@ -102,6 +102,22 @@ class BlankLinesAtEndOfScopeTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .blankLinesAtEndOfScope, options: .init(removeStartOrEndBlankLinesFromTypes: false))
+        testFormatting(for: input, output, rule: .blankLinesAtEndOfScope, options: .init(typeBlankLines: .preserve))
+    }
+
+    func testBlankLinesInsertedAtEndOfType() {
+        let input = """
+        class FooClass {
+            func fooMethod() {}
+        }
+        """
+
+        let output = """
+        class FooClass {
+            func fooMethod() {}
+
+        }
+        """
+        testFormatting(for: input, output, rule: .blankLinesAtEndOfScope, options: .init(typeBlankLines: .insert))
     }
 }

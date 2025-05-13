@@ -1,5 +1,29 @@
 # Change Log
 
+## [0.56.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.56.0) (2025-05-12)
+
+- Added `wrapMultilineFunctionChains` rule to wrap chained method calls
+- Added `environmentEntry` rule to update SwiftUI `EnvironmentValues` definitions to use the `@Entry` macro
+- Added `redundantEquatable` rule to remove explicit `Equatable` conformances that would be compiler-synthesized
+- Added `preferSwiftTesting` rule to migrate XCTest-based tests to Swift Testing
+- Added `swiftTestingTestCaseNames` rule to remove redundant "test" prefix from Swift Testing test case methods.
+- Added `preferCountWhere` rule to prefer `count(where:)` over `filter(_:).count`
+- Added `fileMacro` rule to prefer either `#file` or `#fileID`, which have the same behavior in Swift 6 and later
+- Added `blankLinesAfterGuardStatements` rule to remove blank lines between consecuitve guard statements, and add blank line after last guard statement.
+- Added `privateStateVariables` rule to add `private` access control to `@State` properties
+- Added `emptyExtensions` rule to remove extensions that contain no declarations or conformances
+- Added `--preserveacronyms` option to `acronyms` rule
+- Added `--wrapreturntype never` option to `wrapArguments` rule
+- Updated `trailingCommas` to support Swift 6.1 trailing comma functionality
+- `opaqueGenericParameters` now supports protocol requirements without a body
+- `--wrapeffects` and `--wrapreturntype` now support protocol requirements and closure types
+- Fixed indentation of trailing closures after chained multiline method call when using same-line closing parens
+- `blankLinesAtStartOfScope` rule now supports switch cases and closure capture / parameter lists
+- Fixed issue where type under `organizeDeclarations` line count threshold would ignore `swiftformat:sort` directives
+- Fixed issue where `organizeDeclarations` rule would unexpectedly remove non-mark comments
+- Compiling SwiftFormat now requires Swift 5.7+
+- SwiftFormat prerelease builds can now be installed via Homebrew using `brew install swiftformat --head`. Prerelease builds are subject to breaking changes.
+
 ## [0.55.6](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.55.6) (2025-04-29)
 
 - Fixed parsing bugs related to parameter packs (`repeat`, `each` keywords)

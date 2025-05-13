@@ -507,6 +507,22 @@ class TrailingCommasTests: XCTestCase {
         testFormatting(for: input, rule: .trailingCommas, options: options)
     }
 
+    func testPreservesTrailingCommaInTupleFunctionArgumentInSwift6_1_issue_2050() {
+        let input = """
+        func updateBackgroundMusic(
+            _ inputs: (
+                isFullyVisible: Bool,
+                currentLevel: LevelsService.Level?,
+                isAudioEngineRunningInForeground: Bool,
+                cameraMode: EnvironmentCameraMode // <--- trailing comma does not compile
+            ),
+        ) {}
+        """
+
+        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        testFormatting(for: input, rule: .trailingCommas, options: options)
+    }
+
     func testTrailingCommasPreservedInClosureTypeInSwift6_1() {
         // Trailing commas are unexpectedly not supported in closure types in Swift 6.1
         // https://github.com/swiftlang/swift/issues/81485

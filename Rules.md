@@ -99,6 +99,7 @@
 
 * [acronyms](#acronyms)
 * [blankLineAfterSwitchCase](#blankLineAfterSwitchCase)
+* [blankLinesAfterGuardStatements](#blankLinesAfterGuardStatements)
 * [blankLinesBetweenImports](#blankLinesBetweenImports)
 * [blockComments](#blockComments)
 * [docComments](#docComments)
@@ -113,7 +114,6 @@
 * [redundantEquatable](#redundantEquatable)
 * [redundantProperty](#redundantProperty)
 * [sortSwitchCases](#sortSwitchCases)
-* [spacingGuards](#spacingGuards)
 * [unusedPrivateDeclarations](#unusedPrivateDeclarations)
 * [wrapConditionalBodies](#wrapConditionalBodies)
 * [wrapEnumCases](#wrapEnumCases)
@@ -295,6 +295,28 @@ which is followed by a closing brace).
           energyShields.engage()
       }
   }
+```
+
+</details>
+<br/>
+
+## blankLinesAfterGuardStatements
+
+Remove blank lines between consecutive guard statements, and insert a blank after the last guard statement.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+    guard let spicy = self.makeSpicy() else {
+        return
+    }
+-
+    guard let soap = self.clean() else {
+        return
+    }
++
+    let doTheJob = nikekov()
 ```
 
 </details>
@@ -2932,28 +2954,6 @@ Remove space inside parentheses.
 ```diff
 - ( a, b)
 + (a, b)
-```
-
-</details>
-<br/>
-
-## spacingGuards
-
-Remove space between guard statements, and add spaces after last guard.
-
-<details>
-<summary>Examples</summary>
-
-```diff
-    guard let spicy = self.makeSpicy() else {
-        return
-    }
--
-    guard let soap = self.clean() else {
-        return
-    }
-+
-    let doTheJob = nikekov()
 ```
 
 </details>

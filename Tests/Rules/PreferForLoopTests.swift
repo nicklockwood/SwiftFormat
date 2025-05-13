@@ -404,6 +404,6 @@ class PreferForLoopTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .preferForLoop, exclude: [.wrapConditionalBodies, .spacingGuards])
+        testFormatting(for: input, output, rule: .preferForLoop, exclude: [.wrapConditionalBodies, .blankLinesAfterGuardStatements])
     }
 }

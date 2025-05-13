@@ -1272,11 +1272,8 @@ extension Formatter {
     ///  - `sending ...`
     ///  - `repeat ...`
     ///  - `each ...`
-    ///  - `@escaping ...`
-    ///  - `@unchecked ...`
-    ///  - `@retroactive ...`
-    ///  - `@Sendable ...`
     ///  - `~...`
+    ///  - any `@attribute ...`
     ///  - `(type).(type)`
     ///  - `(type) & (type)`
     func parseType(
@@ -1404,10 +1401,9 @@ extension Formatter {
             return (name: tokens[typeRange].stringExcludingLinebreaks, range: typeRange)
         }
 
-        // Parse types with any of the following prefixes:
-        // TODO: Should we include all @ annotations instead of having an explicit allowlist?
-        let typePrefixes = Set(["any", "some", "borrowing", "consuming", "sending", "repeat", "each", "@unchecked", "@escaping", "~", "@retroactive", "@Sendable"])
-        if typePrefixes.contains(startToken.string),
+        // Parse types with any of the following prefixes, along with any `@attribute`.
+        let typePrefixes = Set(["any", "some", "borrowing", "consuming", "sending", "repeat", "each", "~"])
+        if typePrefixes.contains(startToken.string) || startToken.isAttribute,
            let nextToken = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfTypeIndex),
            let followingType = parseType(at: nextToken)
         {

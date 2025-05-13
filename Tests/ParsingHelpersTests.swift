@@ -2266,6 +2266,29 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(formatter.parseType(at: 2)?.name, "Foo.Bar.Baaz.Quux.InnerType1.InnerType2")
     }
 
+    func testParseTuples() {
+        let input = """
+        let tuple: (foo: Foo, bar: Bar)
+        let closure: (foo: Foo, bar: Bar) -> Void
+        let valueWithRedundantParens: (Foo)
+        let voidValue: ()
+        """
+
+        let formatter = Formatter(tokenize(input))
+
+        XCTAssertEqual(formatter.parseType(at: 5)?.name, "(foo: Foo, bar: Bar)")
+        XCTAssertTrue(formatter.isStartOfTuple(at: 5))
+
+        XCTAssertEqual(formatter.parseType(at: 23)?.name, "(foo: Foo, bar: Bar) -> Void")
+        XCTAssertFalse(formatter.isStartOfTuple(at: 23))
+
+        XCTAssertEqual(formatter.parseType(at: 45)?.name, "(Foo)")
+        XCTAssertFalse(formatter.isStartOfTuple(at: 45))
+
+        XCTAssertEqual(formatter.parseType(at: 54)?.name, "()")
+        XCTAssertFalse(formatter.isStartOfTuple(at: 54))
+    }
+
     // MARK: - parseExpressionRange
 
     func testParseIndividualExpressions() {

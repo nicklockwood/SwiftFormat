@@ -31,19 +31,24 @@ public extension FormatRule {
 
             // Find all of the stored instance properties in this type.
             // The synthesized Equatable implementation would compare each of these.
-            let storedInstanceProperties = Set(typeBody.filter(\.isStoredInstanceProperty).map(\.name))
+            let storedInstanceProperties = typeBody.filter(\.isStoredInstanceProperty)
+            let storedInstancePropertyNames = Set(storedInstanceProperties.map(\.name))
 
             // Find all of the properties compared using `lhs.{property} == rhs.{property}`
             let comparedProperties = formatter.parseComparedProperties(inEquatableImplementation: equatableType.equatableFunction)
 
             // If the set of compared properties match the set of stored instance properties,
             // then the manually implemented `==` function is redundant and can be removed.
-            guard comparedProperties == storedInstanceProperties else {
+            guard comparedProperties == storedInstancePropertyNames else {
                 continue
             }
 
             // The compiler automatically synthesizes Equatable implementations for structs
-            if equatableType.typeDeclaration.keyword == "struct" {
+            // as long as all of the properties are themselves Equatable. This is usually true
+            //
+            if equatableType.typeDeclaration.keyword == "struct",
+               !storedInstanceProperties.contains(where: { $0.parsePropertyDeclaration()?.type?.name.isKnownNonEquatableType == true })
+            {
                 equatableType.equatableFunction.remove()
             }
 
@@ -288,5 +293,13 @@ extension Formatter {
         }
 
         return validComparedProperties
+    }
+}
+
+extension String {
+    /// Whether or not this type name is known to be non-Equatable
+    var isKnownNonEquatableType: Bool {
+        let knownNonEquatableTypes = ["AnyClass"]
+        return knownNonEquatableTypes.contains(self) || isTupleType
     }
 }

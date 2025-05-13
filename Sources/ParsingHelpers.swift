@@ -2765,13 +2765,22 @@ extension Formatter {
                 effects.insert(tokens[effectIndex ... endOfTypedThrows].string)
                 effectsRange = firstIndexAfterArguments ... endOfTypedThrows
                 currentIndex = endOfTypedThrows
+                continue
             }
 
-            else {
-                effects.insert(effect)
-                effectsRange = firstIndexAfterArguments ... effectIndex
-                currentIndex = effectIndex
+            // If an `async` keyword is immediately followed by `let` on the same line, this is probably an `async let` property.
+            // It's possible an `async` keyword to be followed by a `let` keyword without being an `async let` property
+            // (e.g. if the attached function doesn't have a body), so this seems fundamentally ambiguous in the grammar.
+            if effect == "async",
+               let nextToken = index(of: .nonSpaceOrComment, after: effectIndex),
+               tokens[nextToken] == .keyword("let")
+            {
+                break
             }
+
+            effects.insert(effect)
+            effectsRange = firstIndexAfterArguments ... effectIndex
+            currentIndex = effectIndex
         }
 
         if let effectsRange = effectsRange {

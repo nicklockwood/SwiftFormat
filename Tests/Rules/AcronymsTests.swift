@@ -87,7 +87,7 @@ class AcronymsTests: XCTestCase {
         api.route(toUrl: destinationURL)
         """
 
-        let options = FormatOptions(preservedSymbols: ["externallyProvidedUrl", "toUrl"])
+        let options = FormatOptions(preserveAcronyms: ["externallyProvidedUrl", "toUrl"])
         testFormatting(for: input, output, rule: .acronyms, options: options)
     }
 }

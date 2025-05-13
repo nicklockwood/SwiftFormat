@@ -1759,6 +1759,40 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(declarations[0].tokens.map(\.string).joined(), input)
     }
 
+    func testParseIfExpressionDeclaration() {
+        let input = """
+        private lazy var x: [Any] =
+          if let b {
+            [b]
+          } else if false {
+            []
+          } else {
+            [1, 2]
+          }
+
+        private lazy var y = f()
+        """
+
+        let formatter = Formatter(tokenize(input))
+        let declarations = formatter.parseDeclarations()
+        XCTAssertEqual(declarations.count, 2)
+
+        XCTAssertEqual(declarations[0].tokens.string, """
+        private lazy var x: [Any] =
+          if let b {
+            [b]
+          } else if false {
+            []
+          } else {
+            [1, 2]
+          }
+
+
+        """)
+
+        XCTAssertEqual(declarations[1].tokens.string, "private lazy var y = f()")
+    }
+
     // MARK: declarationScope
 
     func testDeclarationScope_classAndGlobals() {

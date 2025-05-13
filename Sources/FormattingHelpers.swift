@@ -2285,7 +2285,6 @@ extension Formatter {
                         }
                         lastKeyword = ""
                     case "if", "while", "guard", "for":
-                        assert(!isTypeRoot)
                         // Guard is included because it's an error to reference guard vars in body
                         var scopedNames = localNames
                         let removeSelf = explicitSelf != .insert && !usingDynamicLookup && (

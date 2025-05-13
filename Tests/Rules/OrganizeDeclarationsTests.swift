@@ -3807,4 +3807,51 @@ class OrganizeDeclarationsTests: XCTestCase {
 
         testFormatting(for: input, [output], rules: [.organizeDeclarations, .sortDeclarations])
     }
+
+    func testIssue2045() {
+        let input = """
+        public final class A {
+
+          // MARK: Lifecycle
+
+          public init(a _: Int) {}
+
+          convenience init() {
+            self.init(a: 0)
+          }
+
+          // MARK: Public
+
+          public func a() {}
+
+          // MARK: Private
+
+          private enum Error: Swift.Error {
+            case e
+          }
+
+          private let a1: Float = 0
+          private lazy var b: String? = ""
+          private let a2 = 0
+
+          private lazy var x: [Any] =
+            if let b {
+              [b]
+            } else if false {
+              []
+            } else {
+              [1, 2]
+            }
+
+          private lazy var y = f()
+
+          private var z: Set<String> = []
+        }
+
+        func f() -> Int { 0 }
+        """
+
+        let options = FormatOptions(indent: "  ")
+        testFormatting(for: input, rule: .organizeDeclarations, options: options, exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope])
+    }
 }

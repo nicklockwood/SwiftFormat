@@ -1427,6 +1427,13 @@ extension Formatter {
         return nil
     }
 
+    /// Whether or not the `.startOfScope("(")` token at the given index represents the start of a tuple type of value.
+    /// This is only true when the type starts and end in parens, and isn't
+    func isStartOfTuple(at index: Int) -> Bool {
+        assert(tokens[index] == .startOfScope("("))
+        return parseType(at: index)?.name.isTupleType == true
+    }
+
     /// Whether or not the token at this index could potentially be the last token in a type.
     /// For a full list of all supported type patterns, check the documentation of `parseType(at:)`.
     func isValidEndOfType(at index: Int) -> Bool {
@@ -3099,5 +3106,24 @@ extension Token {
         default:
             return false
         }
+    }
+}
+
+extension String {
+    /// Whether or not this type name is a tuple
+    var isTupleType: Bool {
+        let formatter = Formatter(tokenize(self))
+
+        // Tuple types start and end with parens and have a comma-separated list of elements.
+        // (There are no single-element tuples).
+        guard let openParen = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: -1),
+              formatter.tokens[openParen] == .startOfScope("("),
+              let closingParen = formatter.endOfScope(at: openParen),
+              formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closingParen) == nil,
+              openParen + 1 != closingParen
+        else { return false }
+
+        let hasCommaInParens = formatter.index(of: .delimiter(","), in: (openParen + 1) ..< closingParen) != nil
+        return hasCommaInParens
     }
 }

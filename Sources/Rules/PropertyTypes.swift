@@ -54,11 +54,9 @@ public extension FormatRule {
                 // before we check for types like `any Type` or `Type?`.
                 var typeTokensWithoutParens = typeTokens
                 while typeTokensWithoutParens.first == .startOfScope("("),
-                      typeTokensWithoutParens.last == .endOfScope(")")
+                      typeTokensWithoutParens.last == .endOfScope(")"),
+                      !typeTokensWithoutParens.string.isTupleType
                 {
-                    // This doesn't handle tuples, where the parens wouldn't be redundant,
-                    // but that's fine because a tuple can never be used in this sort of pattern:
-                    // `let foo: (foo: Foo, bar: Bar) = .staticMemberOnTuple // not possible`
                     typeTokensWithoutParens = Array(typeTokensWithoutParens.dropFirst().dropLast())
                 }
 

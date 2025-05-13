@@ -1750,6 +1750,10 @@ extension Formatter {
             if let scopeStart = index(of: .startOfScope("{"), after: declarationKeywordIndex) {
                 searchIndex = endOfScope(at: scopeStart) ?? searchIndex
             }
+        case .keyword("let"), .keyword("var"):
+            if let propertyDeclaration = parsePropertyDeclaration(atIntroducerIndex: declarationKeywordIndex) {
+                searchIndex = propertyDeclaration.range.upperBound
+            }
         default:
             break
         }

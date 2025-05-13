@@ -2291,6 +2291,88 @@ class WrapArgumentsTests: XCTestCase {
         )
     }
 
+    func testWrapEffectsNeverDoesntUnwrapAsyncLet() {
+        let input = """
+        async let createdAd = createAd(
+            subcategoryID: subcategory.id,
+            shopID: shop?.id)
+        async let locationCity = createEditAdWorker.loadNearestCity(coordinates: coordinates)
+        """
+
+        let options = FormatOptions(
+            wrapArguments: .beforeFirst,
+            closingParenPosition: .sameLine,
+            wrapReturnType: .ifMultiline,
+            wrapEffects: .ifMultiline
+        )
+
+        testFormatting(for: input, rule: .wrapArguments, options: options)
+    }
+
+    func testWrapEffectsWrapsAsyncEffectBeforeLetProperty() {
+        let input = """
+        @attached(body) macro GenerateBody() = #externalMacro(module: "...", type: "...")
+
+        @GenerateBody // generates the body
+        func foo(
+            _ bar: Baaz,
+            _ baaz: Baaz) async
+
+        let quux: Quux
+        """
+
+        let output = """
+        @attached(body) macro GenerateBody() = #externalMacro(module: "...", type: "...")
+
+        @GenerateBody // generates the body
+        func foo(
+            _ bar: Baaz,
+            _ baaz: Baaz)
+        async
+
+        let quux: Quux
+        """
+
+        let options = FormatOptions(
+            wrapArguments: .beforeFirst,
+            closingParenPosition: .sameLine,
+            wrapReturnType: .ifMultiline,
+            wrapEffects: .ifMultiline
+        )
+
+        testFormatting(for: input, [output], rules: [.wrapArguments, .indent], options: options)
+    }
+
+    func testWrapsThrowsBeforeAsyncLet() {
+        let input = """
+        @GenerateBody // generates the body
+        func foo(
+            _ bar: Baaz,
+            _ baaz: Baaz) throws
+
+        async let quux: Quux
+        """
+
+        let output = """
+        @GenerateBody // generates the body
+        func foo(
+            _ bar: Baaz,
+            _ baaz: Baaz)
+            throws
+
+        async let quux: Quux
+        """
+
+        let options = FormatOptions(
+            wrapArguments: .beforeFirst,
+            closingParenPosition: .sameLine,
+            wrapReturnType: .ifMultiline,
+            wrapEffects: .ifMultiline
+        )
+
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
+    }
+
     func testDoesntWrapReturnOnMultilineThrowingFunction() {
         let input = """
         func multilineFunction(foo _: String,

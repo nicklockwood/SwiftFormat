@@ -25,8 +25,47 @@ public extension FormatRule {
                     return
                 }
 
-            case .endOfScope(")"), .endOfScope(">"):
-                formatter.addOrRemoveTrailingComma(before: i, trailingCommaSupported: formatter.options.swiftVersion >= "6.1")
+            case .endOfScope(")"):
+                var trailingCommaSupported = formatter.options.swiftVersion >= "6.1"
+
+                // In Swift 6.1, built-in attributes unexpectedly don't support trailing commas.
+                // Other attributes like property wrappers and macros do support trailing commas.
+                // https://github.com/swiftlang/swift/issues/81475
+                // https://docs.swift.org/swift-book/documentation/the-swift-programming-language/attributes/
+                let unsupportedBuiltInAttributes = ["@available", "@backDeployed", "@objc", "@freestanding", "@attached"]
+                if let startOfScope = formatter.startOfScope(at: i),
+                   let attributeIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope),
+                   let attribute = formatter.token(at: attributeIndex),
+                   attribute.isAttribute,
+                   unsupportedBuiltInAttributes.contains(attribute.string)
+                   // Assume any attribute that starts with a prefix is a built-in underscored attribute
+                   // https://github.com/swiftlang/swift/blob/main/docs/ReferenceGuides/UnderscoredAttributes.md
+                   || attribute.string.hasPrefix("@_")
+                {
+                    trailingCommaSupported = false
+                }
+
+                formatter.addOrRemoveTrailingComma(before: i, trailingCommaSupported: trailingCommaSupported)
+
+            case .endOfScope(">"):
+                var trailingCommaSupported = false
+
+                // In Swift 6.1, only generic lists in type / function / typealias declarations are allowed.
+                // https://github.com/swiftlang/swift/issues/81474
+                // All of these cases have the form `keyword identifier<...>`, like `class Foo<...>` or `func foo<...>`.
+                if formatter.options.swiftVersion >= "6.1",
+                   let startOfScope = formatter.startOfScope(at: i),
+                   let identifierIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope),
+                   formatter.tokens[identifierIndex].isIdentifier,
+                   let keywordIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: identifierIndex),
+                   let keyword = formatter.token(at: keywordIndex),
+                   keyword.isKeyword,
+                   ["class", "actor", "struct", "enum", "protocol", "extension", "typealias", "func"].contains(keyword.string)
+                {
+                    trailingCommaSupported = true
+                }
+
+                formatter.addOrRemoveTrailingComma(before: i, trailingCommaSupported: trailingCommaSupported)
 
             default:
                 break

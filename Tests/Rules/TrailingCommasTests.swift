@@ -790,6 +790,51 @@ class TrailingCommasTests: XCTestCase {
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
+    func testTrailingCommasNotAddedToBuiltInAttributesInSwift6_1() {
+        // Built-in attributes unexpectedly don't support trailing commas in Swift 6.1.
+        // Property wrappers and macros are supported properly.
+        // https://github.com/swiftlang/swift/issues/81475
+        let input = """
+        @available(
+            *,
+            deprecated,
+            renamed: "bar"
+        )
+        func foo() {}
+
+        @backDeployed(
+            before: iOS 17 // trailing comma not allowed
+        )
+        public func foo() {}
+
+        @objc(
+            custom_objc_name
+        )
+        class MyClass: NSObject()
+
+        @freestanding(
+            declaration,
+            names: named(CodingKeys)
+        )
+        macro FreestandingMacro() = #externalMacro(module: "Macros", type: "")
+
+        @attached(
+            extension,
+            names: arbitrary
+        )
+        macro AttachedMacro() = #externalMacro(module: "Macros", type: "")
+
+        @_originallyDefinedIn(
+            module: "Foo",
+            macOS 10.0
+        )
+        extension CoreFoundation.CGFloat: Swift.SignedNumeric {}
+        """
+
+        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        testFormatting(for: input, rule: .trailingCommas, options: options)
+    }
+
     func testTrailingCommasRemovedFromAttribute() {
         let input = """
         @Foo(
@@ -850,6 +895,16 @@ class TrailingCommasTests: XCTestCase {
             T2,
             T3
         > {}
+
+        typealias T<
+            T1,
+            T2
+        > = S<T1, T2, Bool>
+
+        func foo<
+            T1,
+            T2,
+        >() -> (T1, T2) {}
         """
         let output = """
         struct S<
@@ -857,9 +912,49 @@ class TrailingCommasTests: XCTestCase {
             T2,
             T3,
         > {}
+
+        typealias T<
+            T1,
+            T2,
+        > = S<T1, T2, Bool>
+
+        func foo<
+            T1,
+            T2,
+        >() -> (T1, T2) {}
         """
         let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
+
+    func testTrailingCommasNotAddedToGenericTypesInSwift6_1() {
+        // Trailing commas are not supported in types in Swift 6.1
+        // https://github.com/swiftlang/swift/issues/81474
+        let input = """
+        public final class TestThing: GenericThing<
+            Test1,
+            Test2,
+            Test3
+        > {}
+
+        func foo(_: GenericThing<
+            Test1,
+            Test2,
+            Test3
+        >) {}
+
+        typealias T<
+            T1,
+            T2,
+        > = S<
+            T1,
+            T2,
+            Bool
+        >
+        """
+
+        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        testFormatting(for: input, rule: .trailingCommas, options: options)
     }
 
     func testTrailingCommasRemovedFromGenericList() {

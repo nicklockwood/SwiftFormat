@@ -1298,7 +1298,7 @@ extension Formatter {
         let nextTokenIndex = baseType.range.upperBound + 1
         if token(at: nextTokenIndex)?.isUnwrapOperator == true {
             let typeRange = baseType.range.lowerBound ... nextTokenIndex
-            return (name: tokens[typeRange].stringExcludingLinebreaks, range: typeRange)
+            return (name: tokens[typeRange].stringExcludingLinebreaksAndComments, range: typeRange)
         }
 
         // Any type can be followed by a `.` or `&` which can then continue the type
@@ -1315,7 +1315,7 @@ extension Formatter {
            let followingType = parseType(at: followingToken, excludeLowercaseIdentifiers: excludeLowercaseIdentifiers)
         {
             let typeRange = startOfTypeIndex ... followingType.range.upperBound
-            return (name: tokens[typeRange].stringExcludingLinebreaks, range: typeRange)
+            return (name: tokens[typeRange].stringExcludingLinebreaksAndComments, range: typeRange)
         }
 
         return baseType
@@ -1357,24 +1357,17 @@ extension Formatter {
             }
 
             let typeRange = startOfTypeIndex ... endOfScope
-            return (name: tokens[typeRange].stringExcludingLinebreaks, range: typeRange)
+            return (name: tokens[typeRange].stringExcludingLinebreaksAndComments, range: typeRange)
         }
 
         // Parse types of the form `(...)` or `(...) -> ...`
         if startToken == .startOfScope("("), let endOfScope = endOfScope(at: startOfTypeIndex) {
             // Parse types of the form `(...) (async|throws|throws(Error)) -> ...`.
             // Look for the `->` token, skipping over any `async`, `throws`, or `throws(Error)`s.
-            let allowedTokensBeforeReturnArrow: [Token] = [.keyword("throws"), .identifier("async"), .startOfScope("(")]
             var searchIndex = endOfScope
-            while let nextToken = index(of: .nonSpaceOrCommentOrLinebreak, after: searchIndex),
-                  allowedTokensBeforeReturnArrow.contains(tokens[nextToken])
-            {
-                // Skip over any tokens inside parens
-                if tokens[nextToken].isStartOfScope, let endOfScope = self.endOfScope(at: nextToken) {
-                    searchIndex = endOfScope
-                } else {
-                    searchIndex = nextToken
-                }
+
+            if let effectsRange = parseFunctionDeclarationEffectsClause(at: endOfScope)?.range {
+                searchIndex = effectsRange.upperBound
             }
 
             // If we find a return arrow, this is a closure with a return type.
@@ -1384,12 +1377,12 @@ extension Formatter {
                let returnTypeRange = parseType(at: returnTypeIndex)?.range
             {
                 let typeRange = startOfTypeIndex ... returnTypeRange.upperBound
-                return (name: tokens[typeRange].stringExcludingLinebreaks, range: typeRange)
+                return (name: tokens[typeRange].stringExcludingLinebreaksAndComments, range: typeRange)
             }
 
             // Otherwise this is just `(...)`
             let typeRange = startOfTypeIndex ... endOfScope
-            return (name: tokens[typeRange].stringExcludingLinebreaks, range: typeRange)
+            return (name: tokens[typeRange].stringExcludingLinebreaksAndComments, range: typeRange)
         }
 
         // Parse types of the form `Foo<...>`
@@ -1398,7 +1391,7 @@ extension Formatter {
            let endOfScope = endOfScope(at: nextTokenIndex)
         {
             let typeRange = startOfTypeIndex ... endOfScope
-            return (name: tokens[typeRange].stringExcludingLinebreaks, range: typeRange)
+            return (name: tokens[typeRange].stringExcludingLinebreaksAndComments, range: typeRange)
         }
 
         // Parse types with any of the following prefixes, along with any `@attribute`.
@@ -1408,7 +1401,7 @@ extension Formatter {
            let followingType = parseType(at: nextToken)
         {
             let typeRange = startOfTypeIndex ... followingType.range.upperBound
-            return (name: tokens[typeRange].stringExcludingLinebreaks, range: typeRange)
+            return (name: tokens[typeRange].stringExcludingLinebreaksAndComments, range: typeRange)
         }
 
         // Otherwise this is just a single identifier
@@ -1423,11 +1416,14 @@ extension Formatter {
         return nil
     }
 
-    /// Whether or not the `.startOfScope("(")` token at the given index represents the start of a tuple type of value.
-    /// This is only true when the type starts and end in parens, and isn't
-    func isStartOfTuple(at index: Int) -> Bool {
-        assert(tokens[index] == .startOfScope("("))
-        return parseType(at: index)?.name.isTupleType == true
+    /// Whether or not the `.startOfScope("(")` token at the given index represents the start of a valid tuple type.
+    func isStartOfTupleType(at index: Int) -> Bool {
+        parseType(at: index)?.name.isTupleType == true
+    }
+
+    /// Whether or not the `.startOfScope("(")` token at the given index represents the start of a valid closure type.
+    func isStartOfClosureType(at index: Int) -> Bool {
+        parseType(at: index)?.name.isClosureType == true
     }
 
     /// Whether or not the token at this index could potentially be the last token in a type.
@@ -3119,7 +3115,8 @@ extension Token {
 }
 
 extension String {
-    /// Whether or not this type name is a tuple
+    /// Whether or not this type name is a tuple.
+    /// Assumes this string represents a valid type.
     var isTupleType: Bool {
         let formatter = Formatter(tokenize(self))
 
@@ -3134,5 +3131,12 @@ extension String {
 
         let hasCommaInParens = formatter.index(of: .delimiter(","), in: (openParen + 1) ..< closingParen) != nil
         return hasCommaInParens
+    }
+
+    /// Whether or not this type is a closure.
+    /// Assumes this string represents a valid type.
+    var isClosureType: Bool {
+        let formatter = Formatter(tokenize(self))
+        return formatter.index(of: .operator("->", .infix), after: -1) != nil
     }
 }

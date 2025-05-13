@@ -1123,6 +1123,12 @@ struct _Descriptors {
         help: "Acronyms to auto-capitalize. Defaults to \"ID,URL,UUID\"",
         keyPath: \.acronyms
     )
+    let preserveAcronyms = OptionDescriptor(
+        argumentName: "preserveacronyms",
+        displayName: "Preserve Acronymes",
+        help: "List of symbols to be ignored by the acyronyms rule",
+        keyPath: \.preserveAcronyms
+    )
     let indentStrings = OptionDescriptor(
         argumentName: "indentstrings",
         displayName: "Indent Strings",

@@ -1,13 +1,10 @@
-// SpacingGuardsTests.swift
-// SpacingGuardsTests
-//
 // Created by @NikeKov on 01.08.2024
 // Copyright © 2024 Nick Lockwood. All rights reserved.
 
 import XCTest
 @testable import SwiftFormat
 
-final class SpacingGuardsTests: XCTestCase {
+final class BlankLinesAfterGuardStatementsTests: XCTestCase {
     func testSpacesBetweenGuard() {
         let input = """
         guard let one = test.one else {
@@ -51,7 +48,7 @@ final class SpacingGuardsTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .spacingGuards)
+        testFormatting(for: input, output, rule: .blankLinesAfterGuardStatements, exclude: [.blankLinesBetweenScopes])
     }
 
     func testLinebreakAfterGuard() {
@@ -69,7 +66,7 @@ final class SpacingGuardsTests: XCTestCase {
         let x = test()
         """
 
-        testFormatting(for: input, output, rule: .spacingGuards)
+        testFormatting(for: input, output, rule: .blankLinesAfterGuardStatements)
     }
 
     func testIncludedGuard() {
@@ -98,7 +95,7 @@ final class SpacingGuardsTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .spacingGuards)
+        testFormatting(for: input, output, rule: .blankLinesAfterGuardStatements, exclude: [.blankLinesBetweenScopes])
     }
 
     func testEndBracketAndIf() {
@@ -124,7 +121,7 @@ final class SpacingGuardsTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .spacingGuards)
+        testFormatting(for: input, output, rule: .blankLinesAfterGuardStatements)
     }
 
     func testComments() {
@@ -154,7 +151,7 @@ final class SpacingGuardsTests: XCTestCase {
         let something = xxx
         """
 
-        testFormatting(for: input, output, rule: .spacingGuards, exclude: [.docComments])
+        testFormatting(for: input, output, rule: .blankLinesAfterGuardStatements, exclude: [.docComments])
     }
 
     func testNotInsertLineBreakWhenInlineFunction() {
@@ -164,7 +161,7 @@ final class SpacingGuardsTests: XCTestCase {
             return
         }
         """
-        testFormatting(for: input, rule: .spacingGuards, exclude: [.wrapConditionalBodies])
+        testFormatting(for: input, rule: .blankLinesAfterGuardStatements, exclude: [.wrapConditionalBodies])
     }
 
     func testNotInsertLineBreakInChain() {
@@ -179,6 +176,6 @@ final class SpacingGuardsTests: XCTestCase {
         else { return }
         """
 
-        testFormatting(for: input, rule: .spacingGuards, exclude: [.wrapConditionalBodies])
+        testFormatting(for: input, rule: .blankLinesAfterGuardStatements, exclude: [.wrapConditionalBodies])
     }
 }

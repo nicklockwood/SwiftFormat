@@ -1274,7 +1274,7 @@ class UnusedArgumentsTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .unusedArguments, exclude: [.wrapConditionalBodies, .spacingGuards])
+        testFormatting(for: input, rule: .unusedArguments, exclude: [.wrapConditionalBodies, .blankLinesAfterGuardStatements])
     }
 
     func testShadowedArgumentNameInDoBlock() {

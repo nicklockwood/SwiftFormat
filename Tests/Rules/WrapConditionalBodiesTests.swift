@@ -157,7 +157,7 @@ class WrapConditionalBodiesTests: XCTestCase {
             return true
         }
         """
-        testFormatting(for: input, output, rule: .wrapConditionalBodies, exclude: [.spacingGuards])
+        testFormatting(for: input, output, rule: .wrapConditionalBodies, exclude: [.blankLinesAfterGuardStatements])
     }
 
     func testIfElseReturnsWrap() {

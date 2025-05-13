@@ -218,11 +218,12 @@ class HoistPatternLetTests: XCTestCase {
     func testNoUnhoistGuardCaseLetFollowedByFunction() {
         let input = """
         guard case let foo as Foo = bar else { return }
+
         foo.bar(foo: bar)
         """
         let options = FormatOptions(hoistPatternLet: false)
         testFormatting(for: input, rule: .hoistPatternLet, options: options,
-                       exclude: [.wrapConditionalBodies, .spacingGuards])
+                       exclude: [.wrapConditionalBodies])
     }
 
     func testNoUnhoistSwitchCaseLetFollowedByWhere() {

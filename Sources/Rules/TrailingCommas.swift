@@ -45,6 +45,15 @@ public extension FormatRule {
                     trailingCommaSupported = false
                 }
 
+                // In Swift 6.1, tuple types and closure types unexpectedly don't support trailing commas.
+                // https://github.com/swiftlang/swift/issues/81485
+                if let startOfScope = formatter.startOfScope(at: i),
+                   formatter.isTypePosition(at: startOfScope),
+                   formatter.isStartOfTupleType(at: startOfScope) || formatter.isStartOfClosureType(at: startOfScope)
+                {
+                    trailingCommaSupported = false
+                }
+
                 formatter.addOrRemoveTrailingComma(before: i, trailingCommaSupported: trailingCommaSupported)
 
             case .endOfScope(">"):

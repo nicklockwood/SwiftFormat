@@ -377,6 +377,6 @@ class ElseOnSameLineTests: XCTestCase {
         """
 
         let options = FormatOptions(elseOnNextLine: false, guardElsePosition: .nextLine)
-        testFormatting(for: input, output, rule: .elseOnSameLine, options: options, exclude: [.spacingGuards])
+        testFormatting(for: input, output, rule: .elseOnSameLine, options: options, exclude: [.blankLinesAfterGuardStatements])
     }
 }

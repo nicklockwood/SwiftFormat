@@ -88,7 +88,7 @@ public extension FormatRule {
                    let keywordIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: identifierIndex),
                    let keyword = formatter.token(at: keywordIndex),
                    keyword.isKeyword,
-                   ["class", "actor", "struct", "enum", "protocol", "extension", "typealias", "func"].contains(keyword.string)
+                   ["class", "actor", "struct", "enum", "protocol", "typealias", "func"].contains(keyword.string)
                 {
                     trailingCommaSupported = true
                 }

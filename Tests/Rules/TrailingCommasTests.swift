@@ -1081,10 +1081,15 @@ class TrailingCommasTests: XCTestCase {
             T2,
             Bool
         >
+
+        extension Dictionary<
+            String,
+            Any
+        > {}
         """
 
         let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
-        testFormatting(for: input, rule: .trailingCommas, options: options)
+        testFormatting(for: input, rule: .trailingCommas, options: options, exclude: [.emptyExtensions, .typeSugar])
     }
 
     func testTrailingCommasRemovedFromGenericList() {

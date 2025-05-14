@@ -1,17 +1,13 @@
-name: Build for Windows
+name: Build Windows Release Artifacts
 
 on:
+  release:
+    types: [published]
   workflow_dispatch:
     inputs:
-      revision:
-        description: 'Revision to build (branch, tag, or SHA)'
-        required: false
-        default: 'main'
-
-      version:
-        description: 'Version being released'
-        required: false
-        default: '0.0.0'
+      tag:
+        description: 'Release tag (e.g. v1.2.3)'
+        required: true
 
 jobs:
   build:
@@ -33,9 +29,8 @@ jobs:
           tag: 6.1-RELEASE
           branch: swift-6.1-release
 
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.inputs.revision }}
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - run: swift build -c release --triple ${{ matrix.target-triple }} -Xswiftc -gnone
 
@@ -59,7 +54,7 @@ jobs:
           & msbuild -nologo -restore Platforms\Windows\SwiftFormat.wixproj `
             -p:Configuration=Release `
             -p:ProductArchitecture=${{ matrix.product-arch }} `
-            -p:ProductVersion=${{ github.event.inputs.version }} `
+            -p:ProductVersion=${{ github.event.release.tag_name || inputs.tag }} `
             -p:SwiftFormatBuildDir=${{ github.workspace }}\.build\${{ matrix.target-triple }}\release `
             -p:SwiftRedistDir=$SwiftRedistDir `
             -p:OutputPath=${{ github.workspace }}\artifacts `
@@ -78,3 +73,35 @@ jobs:
           name: SwiftFormat.${{ matrix.product-arch }}.msi
           path: artifacts\SwiftFormat.msi
           retention-days: 5
+
+  upload:
+    name: Upload release artifacts
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: always()
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: downloaded-artifacts
+          pattern: SwiftFormat.*.msi
+      - name: Display structure of downloaded files
+        run: ls -R downloaded-artifacts
+      - name: Move and rename MSI files to workspace root
+        run: |
+          for dir in downloaded-artifacts/SwiftFormat.*.msi; do
+            basename="$(basename "$dir")"                  # SwiftFormat.amd64.msi
+            arch="${basename#SwiftFormat.}"                # amd64.msi
+            arch="${arch%.msi}"                            # amd64
+            mv "$dir/SwiftFormat.msi" "./SwiftFormat.${arch}.msi"
+          done
+          rm -rf downloaded-artifacts
+      - name: Display structure of uploadable files
+        run: ls -R .
+      - name: Upload release assets
+        uses: skx/github-action-publish-binaries@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: 'SwiftFormat.*.msi'

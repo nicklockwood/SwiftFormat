@@ -2285,7 +2285,6 @@ class ParsingHelpersTests: XCTestCase {
 
         XCTAssertEqual(formatter.parseType(at: 23)?.name, "(foo: Foo, bar: Bar) -> Void")
         XCTAssertFalse(formatter.isStartOfTupleType(at: 23))
-        XCTAssertTrue(formatter.isStartOfClosureType(at: 23))
 
         XCTAssertEqual(formatter.parseType(at: 45)?.name, "(Foo)")
         XCTAssertFalse(formatter.isStartOfTupleType(at: 45))

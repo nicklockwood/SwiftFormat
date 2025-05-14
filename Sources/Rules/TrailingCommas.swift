@@ -26,32 +26,51 @@ public extension FormatRule {
                 }
 
             case .endOfScope(")"):
-                var trailingCommaSupported = formatter.options.swiftVersion >= "6.1"
+                var trailingCommaSupported = false
 
-                // In Swift 6.1, built-in attributes unexpectedly don't support trailing commas.
-                // Other attributes like property wrappers and macros do support trailing commas.
-                // https://github.com/swiftlang/swift/issues/81475
-                // https://docs.swift.org/swift-book/documentation/the-swift-programming-language/attributes/
-                let unsupportedBuiltInAttributes = ["@available", "@backDeployed", "@objc", "@freestanding", "@attached"]
-                if let startOfScope = formatter.startOfScope(at: i),
-                   let attributeIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope),
-                   let attribute = formatter.token(at: attributeIndex),
-                   attribute.isAttribute,
-                   unsupportedBuiltInAttributes.contains(attribute.string)
-                   // Assume any attribute that starts with a prefix is a built-in underscored attribute
-                   // https://github.com/swiftlang/swift/blob/main/docs/ReferenceGuides/UnderscoredAttributes.md
-                   || attribute.string.hasPrefix("@_")
+                // Trailing commas are supported in function calls, function definitions, and attributes.
+                if formatter.options.swiftVersion >= "6.1",
+                   let startOfScope = formatter.startOfScope(at: i),
+                   let identifierBeforeStartOfScope = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope),
+                   let identifierToken = formatter.token(at: identifierBeforeStartOfScope),
+                   identifierToken.isIdentifier || identifierToken.isAttribute || (identifierToken.isKeyword && identifierToken.string.hasPrefix("#"))
                 {
-                    trailingCommaSupported = false
+                    // In Swift 6.1, built-in attributes unexpectedly don't support trailing commas.
+                    // Other attributes like property wrappers and macros do support trailing commas.
+                    // https://github.com/swiftlang/swift/issues/81475
+                    // https://docs.swift.org/swift-book/documentation/the-swift-programming-language/attributes/
+                    let unsupportedBuiltInAttributes = ["@available", "@backDeployed", "@objc", "@freestanding", "@attached"]
+                    if identifierToken.isAttribute, unsupportedBuiltInAttributes.contains(identifierToken.string)
+                        || identifierToken.string.hasPrefix("@_")
+                    {
+                        trailingCommaSupported = false
+                    }
+
+                    else {
+                        trailingCommaSupported = true
+                    }
                 }
 
-                // In Swift 6.1, tuple types and closure types unexpectedly don't support trailing commas.
-                // https://github.com/swiftlang/swift/issues/81485
-                if let startOfScope = formatter.startOfScope(at: i),
-                   formatter.isTypePosition(at: startOfScope),
-                   formatter.isStartOfTupleType(at: startOfScope) || formatter.isStartOfClosureType(at: startOfScope)
+                // In Swift 6.1, trailing commas are also supported in tuple values,
+                // but not tuple types: https://github.com/swiftlang/swift/issues/81485
+                // If we know this is a tuple value, then trailing commas are supported.
+                if formatter.options.swiftVersion >= "6.1",
+                   let startOfScope = formatter.startOfScope(at: i),
+                   let tokenBeforeStartOfScope = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope)
                 {
-                    trailingCommaSupported = false
+                    // `= (...)`, `{ (...) }`, `return (...)` etc are always tuple values
+                    let tokensPreceedingValuesNotTypes: Set<Token> = [.operator("=", .infix), .startOfScope("{"), .keyword("return"), .keyword("throw"), .keyword("switch"), .endOfScope("case")]
+                    if tokensPreceedingValuesNotTypes.contains(formatter.tokens[tokenBeforeStartOfScope]) {
+                        trailingCommaSupported = true
+                    }
+
+                    // `function(...: (...))` is always a tuple value
+                    if formatter.tokens[tokenBeforeStartOfScope] == .delimiter(":"),
+                       let outerScope = formatter.startOfScope(at: tokenBeforeStartOfScope),
+                       formatter.isFunctionCall(at: outerScope)
+                    {
+                        trailingCommaSupported = true
+                    }
                 }
 
                 formatter.addOrRemoveTrailingComma(before: i, trailingCommaSupported: trailingCommaSupported)

@@ -548,4 +548,19 @@ final class RedundantEquatableTests: XCTestCase {
 
         testFormatting(for: input, rule: .redundantEquatable)
     }
+
+    func testPreserveCustomEquatableImplementationComparingOptionalTuple() {
+        // Tuples define an `==` operator but are not Equatable.
+        let input = """
+        struct Foo: Equatable {
+            let tupleValue: (string: String, int: Int)?
+
+            static func == (lhs: Foo, rhs: Foo) -> Bool {
+                lhs.tupleValue == rhs.tupleValue
+            }
+        }
+        """
+
+        testFormatting(for: input, rule: .redundantEquatable)
+    }
 }

@@ -1421,11 +1421,6 @@ extension Formatter {
         parseType(at: index)?.name.isTupleType == true
     }
 
-    /// Whether or not the `.startOfScope("(")` token at the given index represents the start of a valid closure type.
-    func isStartOfClosureType(at index: Int) -> Bool {
-        parseType(at: index)?.name.isClosureType == true
-    }
-
     /// Whether or not the token at this index could potentially be the last token in a type.
     /// For a full list of all supported type patterns, check the documentation of `parseType(at:)`.
     func isValidEndOfType(at index: Int) -> Bool {
@@ -3125,18 +3120,16 @@ extension String {
         guard let openParen = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: -1),
               formatter.tokens[openParen] == .startOfScope("("),
               let closingParen = formatter.endOfScope(at: openParen),
-              formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closingParen) == nil,
               openParen + 1 != closingParen
         else { return false }
 
+        // The tuple could be optional, but otherwise the closing paren should be the last token.
+        let tokenAfterClosingParen = formatter.next(.nonSpaceOrCommentOrLinebreak, after: closingParen)
+        guard tokenAfterClosingParen == nil || tokenAfterClosingParen == .operator("?", .postfix) else {
+            return false
+        }
+
         let hasCommaInParens = formatter.index(of: .delimiter(","), in: (openParen + 1) ..< closingParen) != nil
         return hasCommaInParens
-    }
-
-    /// Whether or not this type is a closure.
-    /// Assumes this string represents a valid type.
-    var isClosureType: Bool {
-        let formatter = Formatter(tokenize(self))
-        return formatter.index(of: .operator("->", .infix), after: -1) != nil
     }
 }

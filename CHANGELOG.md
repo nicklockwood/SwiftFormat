@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.56.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.56.1) (2025-05-13)
+
+- Fixed several issues where `trailingCommas` rule would insert commas in places not actually supported by Swift 6.1
+- Fixed issue where `--wrapeffects` option would incorrectly unwrap `async let` properties following function call
+- Fixed issue where `redundantEquatable` rule would incorrectly remove `==` implementation in factor of synthesized implementation even if type contained non-Equatable properies like tuples
+- Fixed issue where `extensionAccessControl` rule would incorrectly hoist `public` ACL in `@preconcurrency` conformances
+- Fixed issue where `organizeDeclarations` rule would sometimes break property declarations with if expression values
+
 ## [0.56.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.56.0) (2025-05-12)
 
 - Added `wrapMultilineFunctionChains` rule to wrap chained method calls

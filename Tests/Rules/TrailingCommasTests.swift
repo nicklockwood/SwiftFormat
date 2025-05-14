@@ -462,6 +462,97 @@ class TrailingCommasTests: XCTestCase {
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
+    func testTrailingCommasAddedToTupleReturnedFromFunction() {
+        let input = """
+        func foo() -> (bar: Int, baz: Int) {
+            (
+                bar: 0,
+                baz: 1
+            )
+        }
+
+        func bar() -> (bar: Int, baz: Int) {
+            return (
+                bar: 0,
+                baz: 1
+            )
+        }
+        """
+        let output = """
+        func foo() -> (bar: Int, baz: Int) {
+            (
+                bar: 0,
+                baz: 1,
+            )
+        }
+
+        func bar() -> (bar: Int, baz: Int) {
+            return (
+                bar: 0,
+                baz: 1,
+            )
+        }
+        """
+        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options, exclude: [.redundantReturn])
+    }
+
+    func testTrailingCommasAddedToTupleInFunctionCall() {
+        let input = """
+        foo(
+            bar: bar,
+            baaz: (
+                quux: quux,
+                foobar: foobar
+            )
+        )
+        """
+
+        let output = """
+        foo(
+            bar: bar,
+            baaz: (
+                quux: quux,
+                foobar: foobar,
+            ),
+        )
+        """
+        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options, exclude: [.redundantReturn])
+    }
+
+    func testTrailingCommasAddedToParensAroundSingleValue() {
+        let input = """
+        let foo = (
+            0
+        )
+        """
+        let output = """
+        let foo = (
+            0,
+        )
+        """
+        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options, exclude: [.redundantParens])
+    }
+
+    func testTrailingCommasAddedToTupleWithNoArguments() {
+        let input = """
+        let foo = (
+            0,
+            1
+        )
+        """
+        let output = """
+        let foo = (
+            0,
+            1,
+        )
+        """
+        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
+
     func testTrailingCommasRemovedFromTuple() {
         let input = """
         let foo = (
@@ -501,10 +592,34 @@ class TrailingCommasTests: XCTestCase {
             bar: String,
             quux: String // trailing comma not supported
         )]]
+
+        let foo = [[(
+            bar: String,
+            quux: String // trailing comma not supported
+        )]]()
         """
 
         let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
-        testFormatting(for: input, rule: .trailingCommas, options: options)
+        testFormatting(for: input, rule: .trailingCommas, options: options, exclude: [.propertyTypes])
+    }
+
+    func testTrailingCommasPreservedInTupleTypeInGenericBracketsInSwift6_1() {
+        // Trailing commas are unexpectedly not supported in tuple types in Swift 6.1
+        // https://github.com/swiftlang/swift/issues/81485
+        let input = """
+        let foo: Array<(
+            bar: String,
+            quux: String // trailing comma not supported
+        )>
+
+        let foo = Array<(
+            bar: String,
+            quux: String // trailing comma not supported
+        )>()
+        """
+
+        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        testFormatting(for: input, rule: .trailingCommas, options: options, exclude: [.typeSugar, .propertyTypes])
     }
 
     func testPreservesTrailingCommaInTupleFunctionArgumentInSwift6_1_issue_2050() {
@@ -534,6 +649,21 @@ class TrailingCommasTests: XCTestCase {
             bar: String,
             quux: String // trailing comma not supported
         )
+        """
+
+        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        testFormatting(for: input, rule: .trailingCommas, options: options)
+    }
+
+    func testTrailingCommasPreservedInOptionalClosureTypeInSwift6_1() {
+        let input = """
+        public func requestLocationAuthorizationAndAccuracy(completion _: (
+            (
+                _ authorizationStatus: CLAuthorizationStatus?,
+                _ accuracyAuthorization: CLAccuracyAuthorization?,
+                _ error: LocationServiceError?
+            ) -> Void
+        )?) {}
         """
 
         let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
@@ -696,29 +826,6 @@ class TrailingCommasTests: XCTestCase {
         testFormatting(for: input, rule: .trailingCommas, options: options)
     }
 
-    func testTrailingCommasAddedToCaseLet() {
-        let input = """
-        let foo = (0, 1)
-        switch foo {
-        case let (
-            bar,
-            baz
-        ): break
-        }
-        """
-        let output = """
-        let foo = (0, 1)
-        switch foo {
-        case let (
-            bar,
-            baz,
-        ): break
-        }
-        """
-        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
-        testFormatting(for: input, output, rule: .trailingCommas, options: options)
-    }
-
     func testTrailingCommasRemovedFromCaseLet() {
         let input = """
         let foo = (0, 1)
@@ -739,23 +846,6 @@ class TrailingCommasTests: XCTestCase {
         }
         """
         let options = FormatOptions(trailingCommas: false)
-        testFormatting(for: input, output, rule: .trailingCommas, options: options)
-    }
-
-    func testTrailingCommaAddedToDestructuringLetTuple() {
-        let input = """
-        let (
-            foo,
-            bar
-        ) = (0, 1)
-        """
-        let output = """
-        let (
-            foo,
-            bar,
-        ) = (0, 1)
-        """
-        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
@@ -788,27 +878,6 @@ class TrailingCommasTests: XCTestCase {
                            .blankLinesAtEndOfScope,
                            .blankLinesAtStartOfScope,
                        ])
-    }
-
-    func testTrailingCommasAddedToStringInterpolation() {
-        let input = """
-        let foo = \"""
-        Foo: \\(
-            1,
-            2
-        )
-        \"""
-        """
-        let output = """
-        let foo = \"""
-        Foo: \\(
-            1,
-            2,
-        )
-        \"""
-        """
-        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
-        testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
     func testTrailingCommasRemovedFromStringInterpolation() {

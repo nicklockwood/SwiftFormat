@@ -54,7 +54,7 @@ public extension FormatRule {
             // Explicit type can't be safely removed from @Model classes
             // https://github.com/nicklockwood/SwiftFormat/issues/1649
             if !isInferred,
-               let declarationKeywordIndex = declarationKeywordIndex,
+               let declarationKeywordIndex,
                formatter.modifiersForDeclaration(at: declarationKeywordIndex, contains: "@Model")
             {
                 return

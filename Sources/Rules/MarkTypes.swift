@@ -105,7 +105,7 @@ public extension FormatRule {
 
             if !commentTemplate.contains("%c") {
                 markForType = commentTemplate.replacingOccurrences(of: "%t", with: typeName)
-            } else if commentTemplate.contains("%c"), let conformanceNames = conformanceNames {
+            } else if commentTemplate.contains("%c"), let conformanceNames {
                 markForType = commentTemplate
                     .replacingOccurrences(of: "%t", with: typeName)
                     .replacingOccurrences(of: "%c", with: conformanceNames)

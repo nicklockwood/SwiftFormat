@@ -29,7 +29,7 @@
 --self remove
 --semicolons inline
 --stripunusedargs always
---swiftversion 5.3 # TODO: Update to 5.7 after releasing Swift Format 0.56.0
+--swiftversion 5.7
 --trimwhitespace always
 --wraparguments preserve
 --wrapcollections preserve

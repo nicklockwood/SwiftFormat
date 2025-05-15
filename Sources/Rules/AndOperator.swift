@@ -41,7 +41,7 @@ public extension FormatRule {
                         }
                         nextOpIndex = next
                     }
-                    if let chevronIndex = chevronIndex,
+                    if let chevronIndex,
                        formatter.index(of: .operator(">", .infix), in: index ..< endIndex) != nil
                     {
                         // Check if this would cause ambiguity for chevrons

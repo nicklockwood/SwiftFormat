@@ -91,7 +91,7 @@ public extension FormatRule {
             // Move the extension's visibility keyword to each individual declaration
             case .onDeclarations:
                 // If the extension visibility is unspecified then there isn't any work to do
-                guard let extensionVisibility = extensionVisibility else { return }
+                guard let extensionVisibility else { return }
 
                 // Remove the visibility keyword from the extension declaration itself
                 extensionDeclaration.removeVisibility(visibilityKeyword!)
@@ -142,7 +142,7 @@ public extension FormatRule {
     }
 }
 
-extension Collection where Element == Declaration {
+extension Collection<Declaration> {
     // Performs the given operation for each declaration in this tree of declarations,
     // including the body of any child conditional compilation blocks,
     // but not the body of any child types. All of the iterated declarations belong

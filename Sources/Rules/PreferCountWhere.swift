@@ -72,7 +72,7 @@ public extension FormatRule {
             // convert to the non-trailing-closure form.
 
             // Replace `filter({ ... })` with `count(where: { ... })`.
-            if let openParen = openParen, let closeParen = closeParen {
+            if let openParen, let closeParen {
                 formatter.replaceToken(at: filterIndex, with: .identifier("count"))
 
                 formatter.insert(

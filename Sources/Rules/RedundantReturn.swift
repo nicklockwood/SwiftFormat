@@ -205,7 +205,7 @@ extension Formatter {
 
         // If this scope is a single-statement if or switch statement then we have to recursively
         // remove the return from each branch of the if statement
-        let startOfBody = self.startOfBody(atStartOfScope: startOfScopeIndex)
+        let startOfBody = startOfBody(atStartOfScope: startOfScopeIndex)
 
         if let firstTokenInBody = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfBody),
            let conditionalBranches = conditionalBranches(at: firstTokenInBody)

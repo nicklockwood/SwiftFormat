@@ -67,7 +67,7 @@ public extension FormatRule {
                 }
                 replacementTokens = [.operator("\\", .prefix)] + tokens
             }
-            if let label = label {
+            if let label {
                 replacementTokens = [.identifier(label), .delimiter(":"), .space(" ")] + replacementTokens
             }
             if !parenthesized {

@@ -26,7 +26,7 @@ public extension FormatRule {
             let dotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: endIndex, if: {
                 $0.isOperator(".")
             })
-            if let dotIndex = dotIndex, formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: dotIndex, if: {
+            if let dotIndex, formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: dotIndex, if: {
                 ![.identifier("self"), .identifier("Type")].contains($0)
             }) != nil, identifier != "Optional" {
                 return

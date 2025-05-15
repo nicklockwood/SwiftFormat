@@ -163,7 +163,7 @@ extension Formatter {
                         guard let endIndex = endOfScope(at: nextIndex) else {
                             return fatalError("Expected end of scope", at: nextIndex)
                         }
-                        if let removeSelfKeyword = removeSelfKeyword {
+                        if let removeSelfKeyword {
                             var i = endIndex - 1
                             while i > nextIndex {
                                 switch tokens[i] {
@@ -423,7 +423,7 @@ extension Formatter {
             }
 
             // Insert linebreak after each comma
-            var index = self.index(of: .nonSpaceOrCommentOrLinebreak, before: endOfScope)!
+            var index = index(of: .nonSpaceOrCommentOrLinebreak, before: endOfScope)!
             if tokens[index] != .delimiter(",") {
                 index += 1
             }
@@ -915,7 +915,7 @@ extension Formatter {
     }
 
     func indexWhereLineShouldWrap(from index: Int) -> Int? {
-        var lineLength = self.lineLength(upTo: index)
+        var lineLength = lineLength(upTo: index)
         var stringLiteralDepth = 0
         var currentPriority = 0
         var lastBreakPoint: Int?
@@ -1259,7 +1259,7 @@ extension Formatter {
         includingReturnInConditionalStatements: Bool? = nil
     ) -> Bool {
         guard let endOfScopeIndex = endOfScope(at: startOfScopeIndex) else { return false }
-        let startOfBody = self.startOfBody(atStartOfScope: startOfScopeIndex)
+        let startOfBody = startOfBody(atStartOfScope: startOfScopeIndex)
 
         // The body should contain exactly one expression.
         // We can confirm this by parsing the body with `parseExpressionRange`,
@@ -1535,7 +1535,7 @@ extension Formatter {
 
         /// Inserts a blank line at the end of the switch case
         func insertTrailingBlankLine(using formatter: Formatter) {
-            guard let linebreakBeforeEndOfScope = linebreakBeforeEndOfScope else {
+            guard let linebreakBeforeEndOfScope else {
                 return
             }
 
@@ -1544,8 +1544,8 @@ extension Formatter {
 
         /// Removes the trailing blank line from the switch case if present
         func removeTrailingBlankLine(using formatter: Formatter) {
-            guard let linebreakBeforeEndOfScope = linebreakBeforeEndOfScope,
-                  let linebreakBeforeBlankLine = linebreakBeforeBlankLine
+            guard let linebreakBeforeEndOfScope,
+                  let linebreakBeforeBlankLine
             else { return }
 
             formatter.removeTokens(in: (linebreakBeforeBlankLine + 1) ... linebreakBeforeEndOfScope)
@@ -1602,7 +1602,7 @@ extension Formatter {
                 linebreakBeforeEndOfScope = tokenBeforeEndOfScope
             }
 
-            if let linebreakBeforeEndOfScope = linebreakBeforeEndOfScope,
+            if let linebreakBeforeEndOfScope,
                let tokenBeforeBlankLine = index(of: .nonSpace, before: linebreakBeforeEndOfScope),
                tokens[tokenBeforeBlankLine].isLinebreak
             {
@@ -1875,7 +1875,7 @@ extension Formatter {
                             return knownProtocol?.primaryAssociatedType == associatedTypeName
                         })
 
-                        if let matchingProtocolWithAssociatedType = matchingProtocolWithAssociatedType {
+                        if let matchingProtocolWithAssociatedType {
                             primaryAssociatedTypes[matchingProtocolWithAssociatedType] = conformance
                         } else {
                             // If this isn't the primary associated type of a protocol constraint, then we can't use it
@@ -2189,7 +2189,7 @@ extension Formatter {
                     i += 1
                 }
             }
-            if let type = type {
+            if let type {
                 membersByType[type.name] = members
                 classMembersByType[type.name] = classMembers
             }
@@ -2437,7 +2437,7 @@ extension Formatter {
                     let classOrStatic = modifiersForDeclaration(at: lastKeywordIndex, contains: { _, string in
                         ["static", "class"].contains(string)
                     })
-                    if let name = name, classOrStatic || !staticSelf {
+                    if let name, classOrStatic || !staticSelf {
                         processAccessors(["get", "set", "willSet", "didSet", "init", "_modify"], for: name,
                                          at: &index, localNames: localNames, members: members,
                                          typeStack: &typeStack, closureStack: &closureStack,
@@ -2461,7 +2461,7 @@ extension Formatter {
 
                     // Handle a capture list followed by an optional parameter list:
                     // `{ [self, foo] bar in` or `{ [self, foo] in` etc.
-                    if let inIndex = inIndex,
+                    if let inIndex,
                        let captureListStartIndex = self.index(in: (index + 1) ..< inIndex, where: {
                            !$0.isSpaceOrCommentOrLinebreak && !$0.isAttribute
                        }),
@@ -2474,7 +2474,7 @@ extension Formatter {
 
                     // Handle a parameter list if present without a capture list
                     // e.g. `{ foo, bar in`
-                    else if let inIndex = inIndex,
+                    else if let inIndex,
                             let firstTokenInClosure = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index),
                             isInClosureArguments(at: firstTokenInClosure)
                     {
@@ -2556,7 +2556,7 @@ extension Formatter {
                             return true
                         }
 
-                        guard let selfCapture = selfCapture else {
+                        guard let selfCapture else {
                             return false
                         }
 

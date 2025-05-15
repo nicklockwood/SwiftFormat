@@ -52,8 +52,8 @@ extension GitFileInfo {
     }
 
     var author: String? {
-        if let authorName = authorName {
-            if let authorEmail = authorEmail {
+        if let authorName {
+            if let authorEmail {
                 return "\(authorName) <\(authorEmail)>"
             }
             return authorName
@@ -169,7 +169,7 @@ private let getCommitInfo: ((String?, URL)) -> GitFileInfo? = memoize(
     { hash, root in
         let defaultInfo = getDefaultGitInfo(root)
 
-        guard let hash = hash else {
+        guard let hash else {
             return GitFileInfo(authorName: defaultInfo.authorName,
                                authorEmail: defaultInfo.authorEmail)
         }

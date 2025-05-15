@@ -107,7 +107,7 @@ public extension FormatRule {
                     startOfParentScope = formatter.startOfScope(at: caseToken)
                 }
 
-                if let startOfParentScope = startOfParentScope,
+                if let startOfParentScope,
                    let mostRecentIfOrSwitch = formatter.index(of: .keyword, before: startOfParentScope, if: { ["if", "switch"].contains($0.string) }),
                    let conditionalBranches = formatter.conditionalBranches(at: mostRecentIfOrSwitch),
                    let startOfFirstParentBranch = conditionalBranches.first?.startOfBranch,

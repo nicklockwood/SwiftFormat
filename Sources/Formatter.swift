@@ -121,7 +121,7 @@ public class Formatter: NSObject {
                 if let arg = args["1"] {
                     throw FormatError.options("Unknown option \(arg)")
                 }
-                var options = Options(formatOptions: self.options)
+                var options = Options(formatOptions: options)
                 try options.addArguments(args, in: "")
                 self.options = options.formatOptions ?? self.options
             } catch {
@@ -210,7 +210,7 @@ public class Formatter: NSObject {
     private func updateRange(at index: Int, delta: Int) {
         autoUpdatingReferences.updateRanges(at: index, delta: delta)
 
-        guard let range = range, range.contains(index) else {
+        guard let range, range.contains(index) else {
             return
         }
         self.range = range.lowerBound ..< range.upperBound + delta
@@ -790,9 +790,9 @@ public extension Formatter {
 
 extension String {
     /// https://stackoverflow.com/a/32306142
-    func ranges<S: StringProtocol>(of string: S, options: String.CompareOptions = []) -> [Range<Index>] {
+    func ranges(of string: some StringProtocol, options: String.CompareOptions = []) -> [Range<Index>] {
         var result: [Range<Index>] = []
-        var startIndex = self.startIndex
+        var startIndex = startIndex
         while startIndex < endIndex, let range = self[startIndex...].range(of: string, options: options) {
             result.append(range)
             startIndex = range.lowerBound < range.upperBound ? range.upperBound :
@@ -802,7 +802,7 @@ extension String {
     }
 }
 
-private extension Collection where Element == Token, Index == Int {
+private extension Collection<Token> where Index == Int {
     /// Ranges of lines within this array of tokens
     var lineRanges: [ClosedRange<Int>] {
         var lineRanges: [ClosedRange<Int>] = []
@@ -821,7 +821,7 @@ private extension Collection where Element == Token, Index == Int {
             }
         }
 
-        if let currentLine = currentLine {
+        if let currentLine {
             lineRanges.append(currentLine)
         }
 
@@ -898,7 +898,7 @@ final class AutoUpdatingRange: AutoUpdatingReference, CustomStringConvertible {
     }
 }
 
-extension Array where Element == WeakAutoUpdatingReference {
+extension [WeakAutoUpdatingReference] {
     /// Updates the `range` value of the index references in this array
     /// to account for the given addition or removal of tokens.
     mutating func updateRanges(at modifiedIndex: Int, delta: Int) {

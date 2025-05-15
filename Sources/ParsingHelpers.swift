@@ -1896,9 +1896,9 @@ extension Formatter {
         var range: ClosedRange<Int> {
             if let bodyScopeRange = body?.scopeRange {
                 return startOfModifiersIndex ... bodyScopeRange.upperBound
-            } else if let value = value {
+            } else if let value {
                 return startOfModifiersIndex ... value.expressionRange.upperBound
-            } else if let type = type {
+            } else if let type {
                 return startOfModifiersIndex ... type.range.upperBound
             } else {
                 return startOfModifiersIndex ... identifierIndex
@@ -2791,7 +2791,7 @@ extension Formatter {
         while let effectIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex),
               let effect = token(at: effectIndex)?.string,
               ["async", "throws", "rethrows"].contains(effect),
-              let firstIndexAfterArguments = firstIndexAfterArguments
+              let firstIndexAfterArguments
         {
             // `throws` can optionally be typed throws with a `(Type)` component
             if effect == "throws",
@@ -2820,7 +2820,7 @@ extension Formatter {
             currentIndex = effectIndex
         }
 
-        if let effectsRange = effectsRange {
+        if let effectsRange {
             return (effects: effects, range: effectsRange)
         } else {
             return nil

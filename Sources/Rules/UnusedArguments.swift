@@ -189,8 +189,8 @@ public extension FormatRule {
 }
 
 extension Formatter {
-    func removeUsed<T>(from argNames: inout [String], with associatedData: inout [T],
-                       locals: Set<String> = [], in range: CountableRange<Int>)
+    func removeUsed(from argNames: inout [String], with associatedData: inout [some Any],
+                    locals: Set<String> = [], in range: CountableRange<Int>)
     {
         var isDeclaration = false
         var wasDeclaration = false

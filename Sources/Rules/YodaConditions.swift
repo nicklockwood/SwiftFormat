@@ -53,7 +53,7 @@ public extension FormatRule {
 
 extension Formatter {
     func valuesInRangeAreConstant(_ range: CountableRange<Int>) -> Bool {
-        var index = self.index(of: .nonSpaceOrCommentOrLinebreak, in: range)
+        var index = index(of: .nonSpaceOrCommentOrLinebreak, in: range)
         while var i = index {
             switch tokens[i] {
             case .startOfScope where isConstant(at: i):
@@ -121,7 +121,7 @@ extension Formatter {
     }
 
     func isOperator(at index: Int?) -> Bool {
-        guard let index = index else {
+        guard let index else {
             return false
         }
         switch tokens[index] {

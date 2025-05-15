@@ -1,12 +1,8 @@
 name: Create and publish a Docker image
 
 on:
-  workflow_dispatch:
-    inputs:
-      ref:
-        description: 'Ref to build (branch, tag or SHA)'
-        required: false
-        default: 'main'
+  release:
+    types: [published]
 
 env:
   REGISTRY: ghcr.io
@@ -22,8 +18,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.inputs.ref }}
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta

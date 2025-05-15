@@ -47,13 +47,13 @@ public extension FormatRule {
         }
     } examples: {
         """
-        `--linebtwnguards false` (default)
+        `--linebtwnguards true` (default)
 
         ```diff
             guard let spicy = self.makeSpicy() else {
                 return
             }
-        -
+
             guard let soap = self.clean() else {
                 return
             }
@@ -61,13 +61,13 @@ public extension FormatRule {
             let doTheJob = nikekov()
         ```
 
-        `--linebtwnguards true`
+        `--linebtwnguards false`
 
         ```diff
             guard let spicy = self.makeSpicy() else {
                 return
             }
-
+        -
             guard let soap = self.clean() else {
                 return
             }

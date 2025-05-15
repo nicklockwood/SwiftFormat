@@ -870,7 +870,7 @@ public struct FormatOptions: CustomStringConvertible {
                 additionalXCTestSymbols: Set<String> = [],
                 equatableMacro: EquatableMacro = .none,
                 preferFileMacro: Bool = true,
-                lineBetweenConsecutiveGuards: Bool = false,
+                lineBetweenConsecutiveGuards: Bool = true,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,

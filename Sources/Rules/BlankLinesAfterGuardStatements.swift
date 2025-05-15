@@ -35,10 +35,11 @@ public extension FormatRule {
                 return
             }
 
-            let linebreaks = if formatter.options.lineBetweenConsecutiveGuards {
-                2
+            let linebreaks: Int
+            if formatter.options.lineBetweenConsecutiveGuards {
+                linebreaks = 2
             } else {
-                nextToken == .keyword("guard") ? 1 : 2
+                linebreaks = nextToken == .keyword("guard") ? 1 : 2
             }
 
             let indexesBetween = Set(endOfGuardScope + 1 ..< nextNonSpaceAndNonLinebreakIndex)

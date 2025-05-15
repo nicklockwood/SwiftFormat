@@ -6,7 +6,8 @@ import Foundation
 public extension FormatRule {
     static let blankLinesAfterGuardStatements = FormatRule(
         help: "Remove blank lines between consecutive guard statements, and insert a blank after the last guard statement.",
-        disabledByDefault: true
+        disabledByDefault: true,
+        options: ["linebtwnguards"]
     ) { formatter in
         formatter.forEach(.keyword("guard")) { guardIndex, _ in
             guard var elseIndex = formatter.index(of: .keyword("else"), after: guardIndex) else {
@@ -34,17 +35,38 @@ public extension FormatRule {
                 return
             }
 
-            let linebreaks = nextToken == .keyword("guard") ? 1 : 2
+            let linebreaks = if formatter.options.lineBetweenConsecutiveGuards {
+                2
+            } else {
+                nextToken == .keyword("guard") ? 1 : 2
+            }
+
             let indexesBetween = Set(endOfGuardScope + 1 ..< nextNonSpaceAndNonLinebreakIndex)
             formatter.leaveOrSetLinebreaksInIndexes(indexesBetween, linebreaksCount: linebreaks)
         }
     } examples: {
         """
+        `--linebtwnguards false` (default)
+
         ```diff
             guard let spicy = self.makeSpicy() else {
                 return
             }
         -
+            guard let soap = self.clean() else {
+                return
+            }
+        +
+            let doTheJob = nikekov()
+        ```
+
+        `--linebtwnguards true`
+
+        ```diff
+            guard let spicy = self.makeSpicy() else {
+                return
+            }
+
             guard let soap = self.clean() else {
                 return
             }

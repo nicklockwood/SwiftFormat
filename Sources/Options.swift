@@ -739,6 +739,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var additionalXCTestSymbols: Set<String>
     public var equatableMacro: EquatableMacro
     public var preferFileMacro: Bool
+    public var lineBetweenConsecutiveGuards: Bool
 
     /// Deprecated
     public var indentComments: Bool
@@ -869,6 +870,7 @@ public struct FormatOptions: CustomStringConvertible {
                 additionalXCTestSymbols: Set<String> = [],
                 equatableMacro: EquatableMacro = .none,
                 preferFileMacro: Bool = true,
+                lineBetweenConsecutiveGuards: Bool = false,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -989,6 +991,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.additionalXCTestSymbols = additionalXCTestSymbols
         self.equatableMacro = equatableMacro
         self.preferFileMacro = preferFileMacro
+        self.lineBetweenConsecutiveGuards = lineBetweenConsecutiveGuards
         // Doesn't really belong here, but hard to put elsewhere
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

@@ -304,14 +304,34 @@ which is followed by a closing brace).
 
 Remove blank lines between consecutive guard statements, and insert a blank after the last guard statement.
 
+Option | Description
+--- | ---
+`--linebtwnguards` | Insert line between guards: "true" or "false" (default)
+
 <details>
 <summary>Examples</summary>
+
+`--linebtwnguards false` (default)
 
 ```diff
     guard let spicy = self.makeSpicy() else {
         return
     }
 -
+    guard let soap = self.clean() else {
+        return
+    }
++
+    let doTheJob = nikekov()
+```
+
+`--linebtwnguards true`
+
+```diff
+    guard let spicy = self.makeSpicy() else {
+        return
+    }
+
     guard let soap = self.clean() else {
         return
     }

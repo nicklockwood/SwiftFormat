@@ -556,7 +556,7 @@ extension Token {
     }
 }
 
-extension Collection where Element == Token, Index == Int {
+extension Collection<Token> where Index == Int {
     var string: String {
         map(\.string).joined()
     }
@@ -742,7 +742,7 @@ private extension UnicodeScalarView {
 
     mutating func read(head: (UnicodeScalar) -> Bool, tail: (UnicodeScalar) -> Bool) -> String? {
         if let c = first, head(c) {
-            var index = self.index(after: startIndex)
+            var index = index(after: startIndex)
             while index < endIndex {
                 if !tail(self[index]) {
                     break

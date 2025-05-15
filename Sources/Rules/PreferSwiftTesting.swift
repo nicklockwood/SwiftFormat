@@ -462,7 +462,7 @@ extension Formatter {
             return nil
         }
 
-        if let message = message {
+        if let message {
             return tokenize("#expect(\(makeAssertion(value)),\(message))")
         } else {
             return tokenize("#expect(\(makeAssertion(value)))")
@@ -497,7 +497,7 @@ extension Formatter {
             return nil
         }
 
-        if let message = message {
+        if let message {
             return tokenize("#expect(\(lhs) \(operatorToken)\(rhs),\(message))")
         } else {
             return tokenize("#expect(\(lhs) \(operatorToken)\(rhs))")

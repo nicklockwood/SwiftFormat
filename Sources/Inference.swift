@@ -563,7 +563,7 @@ private struct Inference {
         var functionArgsRemoved = 0, functionArgsKept = 0
         var unnamedFunctionArgsRemoved = 0, unnamedFunctionArgsKept = 0
 
-        func removeUsed<T>(from argNames: inout [String], with associatedData: inout [T], in range: CountableRange<Int>) {
+        func removeUsed(from argNames: inout [String], with associatedData: inout [some Any], in range: CountableRange<Int>) {
             for i in range {
                 let token = formatter.tokens[i]
                 if case .identifier = token, let index = argNames.firstIndex(of: token.unescaped()),
@@ -758,7 +758,7 @@ private struct Inference {
                     i += 1
                 }
             }
-            if let type = type {
+            if let type {
                 membersByType[type] = members
                 classMembersByType[type] = classMembers
             }
@@ -997,7 +997,7 @@ private struct Inference {
                         }
                         prevIndex -= 1
                     }
-                    if let name = name {
+                    if let name {
                         processAccessors(["get", "set", "willSet", "didSet", "init", "_modify"], for: name,
                                          at: &index, localNames: localNames, members: members,
                                          typeStack: &typeStack, membersByType: &membersByType,

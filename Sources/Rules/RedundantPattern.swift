@@ -15,7 +15,7 @@ public extension FormatRule {
     ) { formatter in
         formatter.forEach(.startOfScope("(")) { i, _ in
             let prevIndex = formatter.index(of: .nonSpaceOrComment, before: i)
-            if let prevIndex = prevIndex, let prevToken = formatter.token(at: prevIndex),
+            if let prevIndex, let prevToken = formatter.token(at: prevIndex),
                [.keyword("case"), .endOfScope("case")].contains(prevToken)
             {
                 // Not safe to remove
@@ -29,7 +29,7 @@ public extension FormatRule {
                 return
             }
             formatter.removeTokens(in: i ... endIndex)
-            if let prevIndex = prevIndex, formatter.tokens[prevIndex].isIdentifier,
+            if let prevIndex, formatter.tokens[prevIndex].isIdentifier,
                formatter.last(.nonSpaceOrComment, before: prevIndex)?.string == "."
             {
                 if let endOfScopeIndex = formatter.index(

@@ -51,7 +51,7 @@ public extension FormatRule {
                 index -= 1
             }
             if formatter.options.removeBlankLines,
-               let indexOfFirstLineBreak = indexOfFirstLineBreak,
+               let indexOfFirstLineBreak,
                indexOfFirstLineBreak != indexOfLastLineBreak
             {
                 formatter.removeTokens(in: indexOfFirstLineBreak ..< indexOfLastLineBreak!)

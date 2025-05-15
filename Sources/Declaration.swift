@@ -86,7 +86,7 @@ extension Declaration {
 
     /// The fully qualified name of this declaration, including the name of each parent declaration.
     var fullyQualifiedName: String? {
-        guard let name = name else { return nil }
+        guard let name else { return nil }
         let typeNames = parentDeclarations.compactMap(\.name) + [name]
         return typeNames.joined(separator: ".")
     }
@@ -161,7 +161,7 @@ extension Declaration {
 
     /// A list of all declarations that are a parent of this declaration
     var parentDeclarations: [Declaration] {
-        guard let parent = parent else { return [] }
+        guard let parent else { return [] }
         return parent.parentDeclarations + [parent]
     }
 
@@ -353,7 +353,7 @@ final class ConditionalCompilationDeclaration: Declaration {
 
 // MARK: - Helpers
 
-extension Collection where Element == Declaration {
+extension Collection<Declaration> {
     /// Performs the given operation for each declaration in this tree of declarations.
     func forEachRecursiveDeclaration(_ operation: (Declaration) -> Void) {
         for declaration in self {

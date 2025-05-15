@@ -155,7 +155,7 @@ extension Formatter {
         else { return }
 
         // Parse category order from options
-        let categoryOrder = self.categoryOrder(for: options.organizationMode)
+        let categoryOrder = categoryOrder(for: options.organizationMode)
 
         // Adjust the ranges of the type's body declarations so that any
         // existing MARK comment is the first tokens in any declaration.
@@ -475,7 +475,7 @@ extension Formatter {
 
             // Move any tokens from before the category separator into the previous declaration.
             // This makes sure that things like comments stay grouped in the same category.
-            if let previousDeclaration = previousDeclaration, startOfCommentLine != 0 {
+            if let previousDeclaration, startOfCommentLine != 0 {
                 // Remove the tokens before the category separator from this declaration...
                 let rangeBeforeComment = min(startOfCommentLine, declaration.range.lowerBound) ..< startOfCommentLine
                 let tokensBeforeCommentLine = Array(tokens[rangeBeforeComment])
@@ -585,7 +585,7 @@ extension Formatter {
         /// Ends the current group, ensuring that groups are only recorded
         /// when they contain two or more declarations.
         func endCurrentGroup(addingToExistingGroup declarationToAdd: Declaration? = nil) {
-            if let declarationToAdd = declarationToAdd {
+            if let declarationToAdd {
                 currentGroup.append(declarationToAdd)
             }
 

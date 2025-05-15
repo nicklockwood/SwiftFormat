@@ -196,7 +196,7 @@ public extension FormatRule {
                 }
             }
 
-            if let forEachCallCloseParenIndex = forEachCallCloseParenIndex {
+            if let forEachCallCloseParenIndex {
                 formatter.removeToken(at: forEachCallCloseParenIndex)
             }
 

@@ -94,7 +94,7 @@ class OptionDescriptorTests: XCTestCase {
             XCTAssertEqual(descriptor.fromOptions(options), item.argumentValue, "\(testName): Option is transformed to argument")
         }
 
-        if let invalid = invalid {
+        if let invalid {
             options[keyPath: keyPath] = invalid
             XCTAssertEqual(descriptor.fromOptions(options), descriptor.defaultArgument, "\(testName): invalid input return the default value")
         }

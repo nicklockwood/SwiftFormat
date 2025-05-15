@@ -242,7 +242,7 @@ private func formatTime(_ time: TimeInterval) -> String {
 }
 
 private func serializeOptions(_ options: Options, to outputURL: URL?) throws {
-    if let outputURL = outputURL {
+    if let outputURL {
         let file = serialize(options: options) + "\n"
         do {
             try file.write(to: outputURL, atomically: true, encoding: .utf8)
@@ -643,7 +643,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
                 break
             case "clear":
                 setDefaultCacheURL()
-                if let cacheURL = cacheURL, manager.fileExists(atPath: cacheURL.path) {
+                if let cacheURL, manager.fileExists(atPath: cacheURL.path) {
                     do {
                         try manager.removeItem(at: cacheURL)
                     } catch {
@@ -684,7 +684,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
             while let line = CLI.readLine() {
                 input = (input ?? "") + line
             }
-            guard let input = input else {
+            guard let input else {
                 status = .finished(.ok)
                 return
             }
@@ -721,7 +721,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
                         verbose: verbose, lint: lint, reporter: reporter
                     )
                     let output = sourceCode(for: outputTokens)
-                    if let outputURL = outputURL, !useStdout {
+                    if let outputURL, !useStdout {
                         if !dryrun, (try? String(contentsOf: outputURL)) != output {
                             try write(output, to: outputURL)
                         }
@@ -734,7 +734,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
                             print(dryrun ? input : output, as: .raw)
                         }
                     } else if let reporterOutput = try reporter.write() {
-                        if let reportURL = reportURL {
+                        if let reportURL {
                             print("Writing report file to \(reportURL.path)", as: .info)
                             try reporterOutput.write(to: reportURL, options: .atomic)
                         } else {
@@ -823,7 +823,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
             print("warning: No eligible files found at \(inputPaths).", as: .warning)
         }
         if let reporterOutput = try reporter.write() {
-            if let reportURL = reportURL {
+            if let reportURL {
                 print("Writing report file to \(reportURL.path)", as: .info)
                 try reporterOutput.write(to: reportURL, options: .atomic)
             } else {
@@ -994,7 +994,7 @@ func processInput(_ inputURLs: [URL],
     // Load cache
     let cacheDirectory = cacheURL?.deletingLastPathComponent().absoluteURL
     var cache: [String: String]?
-    if let cacheURL = cacheURL {
+    if let cacheURL {
         if let data = try? Data(contentsOf: cacheURL) {
             cache = try? JSONDecoder().decode([String: String].self, from: data)
         }
@@ -1056,7 +1056,7 @@ func processInput(_ inputURLs: [URL],
             let cachePrefix = "\(version);\(configHash);"
             let cacheKey: String = {
                 var path = inputURL.absoluteURL.path
-                if let cacheDirectory = cacheDirectory {
+                if let cacheDirectory {
                     let commonPrefix = path.commonPrefix(with: cacheDirectory.path)
                     path = String(path[commonPrefix.endIndex ..< path.endIndex])
                 }
@@ -1070,7 +1070,7 @@ func processInput(_ inputURLs: [URL],
                     sourceHash = computeHash(input)
                 }
                 let output: String
-                if let cacheHash = cacheHash, cacheHash == sourceHash {
+                if let cacheHash, cacheHash == sourceHash {
                     output = input
                     if verbose {
                         print("\(lint ? "Linting" : "Formatting") \(inputURL.path)", as: .info)
@@ -1179,8 +1179,8 @@ func processInput(_ inputURLs: [URL],
         }
     }
     // Save cache
-    if outputFlags.filesChecked > 0, let cache = cache, let cacheURL = cacheURL,
-       let cacheDirectory = cacheDirectory
+    if outputFlags.filesChecked > 0, let cache, let cacheURL,
+       let cacheDirectory
     {
         do {
             let data = try JSONEncoder().encode(cache)

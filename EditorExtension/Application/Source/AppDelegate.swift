@@ -87,7 +87,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @IBAction func openConfiguration(_: NSMenuItem) {
-        guard let window = window else {
+        guard let window else {
             return
         }
 
@@ -108,7 +108,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @IBAction func saveConfiguration(_: NSMenuItem) {
-        guard let window = window else {
+        guard let window else {
             return
         }
 
@@ -137,7 +137,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func showError(_ error: Error) {
-        guard let window = window else {
+        guard let window else {
             return
         }
 

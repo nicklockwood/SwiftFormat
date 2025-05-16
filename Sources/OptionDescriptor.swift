@@ -604,8 +604,14 @@ struct _Descriptors {
     let wrapTernaryOperators = OptionDescriptor(
         argumentName: "wrapternary",
         displayName: "Wrap Ternary Operators",
-        help: "Wrap ternary operators: \"default\", \"before-operators\"",
+        help: "Wrap ternary operators: \"default\" (wrap if needed), \"before-operators\"",
         keyPath: \.wrapTernaryOperators
+    )
+    let wrapStringInterpolation = OptionDescriptor(
+        argumentName: "wrapstringinterpolation",
+        displayName: "Wrap String Interpolation",
+        help: "Wrap string interpolation: \"default\" (wrap if needed), \"preserve\"",
+        keyPath: \.wrapStringInterpolation
     )
     let closingParenPosition = OptionDescriptor(
         argumentName: "closingparen",

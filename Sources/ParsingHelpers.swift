@@ -1078,18 +1078,6 @@ extension Formatter {
         }
     }
 
-    /// Returns true if the token at the specified index is inside a single-line string literal (including inside an interpolation)
-    func isInSingleLineStringLiteral(at i: Int) -> Bool {
-        var i = i
-        while let token = token(at: i), !token.isLinebreak {
-            if token.isStringDelimiter {
-                return !token.isMultilineStringDelimiter
-            }
-            i -= 1
-        }
-        return false
-    }
-
     /// Crude check to detect if code is inside a Result Builder
     /// Note: this will produce false positives for any init that takes a closure
     func isInResultBuilder(at i: Int) -> Bool {

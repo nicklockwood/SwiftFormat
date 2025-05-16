@@ -590,7 +590,7 @@ extension Formatter {
             }
             guard mode != .disabled, let firstIdentifierIndex =
                 index(of: .nonSpaceOrCommentOrLinebreak, after: i),
-                !isInSingleLineStringLiteral(at: i)
+                !isInStringLiteralWithWrappingDisabled(at: i)
             else {
                 lastIndex = i
                 return
@@ -858,7 +858,7 @@ extension Formatter {
         forEach(.operator("?", .infix)) { conditionIndex, _ in
             guard options.wrapTernaryOperators != .default,
                   let expressionStartIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: conditionIndex),
-                  !isInSingleLineStringLiteral(at: conditionIndex)
+                  !isInStringLiteralWithWrappingDisabled(at: conditionIndex)
             else { return }
 
             // Find the : operator that separates the true and false branches
@@ -1014,7 +1014,7 @@ extension Formatter {
                 break
             }
             lineLength += tokenLength(token)
-            if lineLength > maxWidth, let breakPoint = lastBreakPoint, breakPoint < i {
+            if lineLength > maxWidth, let breakPoint = lastBreakPoint, breakPoint < i, !isInStringLiteralWithWrappingDisabled(at: i) {
                 return breakPoint
             }
             i += 1
@@ -1026,7 +1026,7 @@ extension Formatter {
     func wrapStatementBody(at i: Int) {
         assert(token(at: i) == .startOfScope("{"))
 
-        guard !isInSingleLineStringLiteral(at: i) else {
+        guard !isInStringLiteralWithWrappingDisabled(at: i) else {
             return
         }
 
@@ -1086,6 +1086,26 @@ extension Formatter {
 
         // We want the closing brace at the same indentation level as conditional
         insertSpace(currentIndentForLine(at: i), at: closingBraceIndex)
+    }
+
+    /// Returns true if the token at the specified index is inside a single-line string literal (including inside an interpolation),
+    /// which should never be wrapped, or in any string literal when string interpolation wrapping is disabled.
+    func isInStringLiteralWithWrappingDisabled(at i: Int) -> Bool {
+        var i = i
+        while let startOfScope = startOfScope(at: i) {
+            i = startOfScope
+
+            if tokens[startOfScope].isStringDelimiter {
+                if options.wrapStringInterpolation == .preserve {
+                    return true
+                } else if !tokens[startOfScope].isMultilineStringDelimiter {
+                    // Single line strings can never have line break
+                    return true
+                }
+            }
+        }
+
+        return false
     }
 
     func removeParen(at index: Int) {

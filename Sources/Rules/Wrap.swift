@@ -11,7 +11,7 @@ import Foundation
 public extension FormatRule {
     static let wrap = FormatRule(
         help: "Wrap lines that exceed the specified maximum width.",
-        options: ["maxwidth", "nowrapoperators", "assetliterals", "wrapternary"],
+        options: ["maxwidth", "nowrapoperators", "assetliterals", "wrapternary", "wrapstringinterpolation"],
         sharedOptions: ["wraparguments", "wrapparameters", "wrapcollections", "closingparen", "callsiteparen", "indent",
                         "trimwhitespace", "linebreaks", "tabwidth", "maxwidth", "smarttabs", "wrapreturntype",
                         "wrapconditions", "wraptypealiases", "wrapternary", "wrapeffects"]

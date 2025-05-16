@@ -524,6 +524,26 @@ class WrapTests: XCTestCase {
         testFormatting(for: input, output, rule: .wrap, options: options)
     }
 
+    func testPreserveMultiLineStringInterpolationWrapAfterFirst() {
+        let input = """
+        \"""
+        a very long string literal with \\(interpolation) inside
+        \"""
+        """
+        let options = FormatOptions(wrapArguments: .afterFirst, wrapStringInterpolation: .preserve, maxWidth: 40)
+        testFormatting(for: input, rule: .wrap, options: options)
+    }
+
+    func testPreserveMultiLineStringInterpolationWrapBeforeFirst() {
+        let input = """
+        \"""
+        a very long string literal with \\(interpolation) inside
+        \"""
+        """
+        let options = FormatOptions(wrapArguments: .beforeFirst, wrapStringInterpolation: .preserve, maxWidth: 40)
+        testFormatting(for: input, rule: .wrap, options: options)
+    }
+
     // ternary expressions
 
     func testWrapSimpleTernaryOperator() {

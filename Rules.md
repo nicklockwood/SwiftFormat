@@ -3290,7 +3290,8 @@ Option | Description
 `--maxwidth` | Maximum length of a line before wrapping. defaults to "none"
 `--nowrapoperators` | Comma-delimited list of operators that shouldn't be wrapped
 `--assetliterals` | Color/image literal width. "actual-width" or "visual-width"
-`--wrapternary` | Wrap ternary operators: "default", "before-operators"
+`--wrapternary` | Wrap ternary operators: "default" (wrap if needed), "before-operators"
+`--wrapstringinterpolation` | Wrap string interpolation: "default" (wrap if needed), "preserve"
 
 ## wrapArguments
 
@@ -3307,6 +3308,7 @@ Option | Description
 `--wrapconditions` | Wrap conditions: "before-first", "after-first", "preserve"
 `--wraptypealiases` | Wrap typealiases: "before-first", "after-first", "preserve"
 `--wrapeffects` | Wrap effects: "if-multiline", "never", "preserve"
+`--wrapstringinterpolation` | Wrap string interpolation: "default" (wrap if needed), "preserve"
 
 <details>
 <summary>Examples</summary>

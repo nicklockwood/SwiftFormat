@@ -14,7 +14,7 @@ public extension FormatRule {
         help: "Align wrapped function arguments or collection elements.",
         orderAfter: [.wrap],
         options: ["wraparguments", "wrapparameters", "wrapcollections", "closingparen", "callsiteparen",
-                  "wrapreturntype", "wrapconditions", "wraptypealiases", "wrapeffects"],
+                  "wrapreturntype", "wrapconditions", "wraptypealiases", "wrapeffects", "wrapstringinterpolation"],
         sharedOptions: ["indent", "trimwhitespace", "linebreaks",
                         "tabwidth", "maxwidth", "smarttabs", "assetliterals", "wrapternary"]
     ) { formatter in

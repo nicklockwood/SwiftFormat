@@ -11,7 +11,7 @@ import Foundation
 public extension FormatRule {
     static let wrapAttributes = FormatRule(
         help: "Wrap @attributes onto a separate line, or keep them on the same line.",
-        options: ["funcattributes", "typeattributes", "varattributes", "storedvarattrs", "computedvarattrs", "complexattrs", "noncomplexattrs"],
+        options: ["funcattributes", "typeattributes", "varattributes", "storedvarattributes", "computedvarattributes", "complexattributes", "noncomplexattributes"],
         sharedOptions: ["linebreaks", "maxwidth"]
     ) { formatter in
         formatter.forEach(.attribute) { i, _ in

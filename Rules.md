@@ -306,12 +306,12 @@ Remove blank lines between consecutive guard statements, and insert a blank afte
 
 Option | Description
 --- | ---
-`--linebtwnguards` | Insert line between guards: "true" or "false" (default)
+`--linebetweenguards` | Insert line between guards: "true" or "false" (default)
 
 <details>
 <summary>Examples</summary>
 
-`--linebtwnguards false` (default)
+`--linebetweenguards false` (default)
 
 ```diff
     // Multiline guard
@@ -338,7 +338,7 @@ Option | Description
     let doTheJob = nikekov()
 ```
 
-`--linebtwnguards true`
+`--linebetweenguards true`
 
 ```diff
     // Multiline guard
@@ -621,7 +621,7 @@ Assign properties using if / switch expressions.
 
 Option | Description
 --- | ---
-`--condassignment` | Use cond. assignment: "after-property" (default) or "always"
+`--conditionalassignment` | Use if/switch expressions for conditional assignment: "after-property" (default) or "always"
 
 <details>
 <summary>Examples</summary>
@@ -766,7 +766,7 @@ Use doc comments for API declarations, otherwise use regular comments.
 
 Option | Description
 --- | ---
-`--doccomments` | Doc comments: "before-declarations" (default) or "preserve"
+`--doccomments` | Convert standard comments to doc comments: "before-declarations" (default) or "preserve"
 
 <details>
 <summary>Examples</summary>
@@ -1152,7 +1152,7 @@ instead of type constraints (`extension Array where Element == Foo`).
 
 Option | Description
 --- | ---
-`--generictypes` | Semicolon-delimited list of generic types and type parameters
+`--generictypes` | Semicolon-delimited list of generic types and type parameters. For example: "LinkedList<Element>;StateStore<State, Action>"
 
 <details>
 <summary>Examples</summary>
@@ -1606,14 +1606,14 @@ Option | Description
 `--structthreshold` | Minimum line count to organize struct body. Defaults to 0
 `--classthreshold` | Minimum line count to organize class body. Defaults to 0
 `--enumthreshold` | Minimum line count to organize enum body. Defaults to 0
-`--extensionlength` | Minimum line count to organize extension body. Defaults to 0
+`--extensionthreshold` | Minimum line count to organize extension body. Defaults to 0
 `--organizationmode` | Organize declarations by "visibility" (default) or "type"
 `--visibilityorder` | Order for visibility groups inside declaration
 `--typeorder` | Order for declaration type groups inside declaration
 `--visibilitymarks` | Marks for visibility groups (public:Public Fields,..)
 `--typemarks` | Marks for declaration type groups (classMethod:Baaz,..)
 `--groupblanklines` | Require a blank line after each subgroup. Default: true
-`--sortswiftuiprops` | Sort SwiftUI props: none, alphabetize, first-appearance-sort
+`--sortswiftuiproperties` | Sort SwiftUI props: "none", "alphabetize", "first-appearance-sort"
 
 <details>
 <summary>Examples</summary>
@@ -1762,8 +1762,8 @@ Convert functional `forEach` calls to for loops.
 
 Option | Description
 --- | ---
-`--anonymousforeach` | Convert anonymous forEach: "convert" (default) or "ignore"
-`--inlinedforeach` | Convert inline forEach to for: "convert", "ignore" (default)
+`--anonymousforeach` | Convert anonymous forEach closures to for loops: "convert" (default) or "ignore"
+`--singlelineforeach` | Convert single-line forEach closures to for loop: "convert", "ignore" (default)
 
 <details>
 <summary>Examples</summary>
@@ -1919,7 +1919,7 @@ Option | Description
 --- | ---
 `--propertytypes` | "inferred", "explicit", or "infer-locals-only" (default)
 `--inferredtypes` | "exclude-cond-exprs" (default) or "always"
-`--preservedsymbols` | Comma-delimited list of symbols to be ignored by the rule
+`--preservedpropertytypes` | Comma-delimited list of symbols to be ignored and preserved as-is by the propertyTypes rule
 
 <details>
 <summary>Examples</summary>
@@ -3428,10 +3428,10 @@ Option | Description
 --- | ---
 `--funcattributes` | Function @attributes: "preserve", "prev-line", or "same-line"
 `--typeattributes` | Type @attributes: "preserve", "prev-line", or "same-line"
-`--storedvarattrs` | Stored var @attribs: "preserve", "prev-line", or "same-line"
-`--computedvarattrs` | Computed var @attribs: "preserve", "prev-line", "same-line"
-`--complexattrs` | Complex @attributes: "preserve", "prev-line", or "same-line"
-`--noncomplexattrs` | List of @attributes to exclude from complexattrs rule
+`--storedvarattributes` | Stored var @attributes: "preserve", "prev-line", or "same-line"
+`--computedvarattributes` | Computed var @attributes: "preserve", "prev-line", "same-line"
+`--complexattributes` | Complex @attributes: "preserve", "prev-line", or "same-line"
+`--noncomplexattributes` | List of @attributes to exclude from --complexattributes options
 
 <details>
 <summary>Examples</summary>

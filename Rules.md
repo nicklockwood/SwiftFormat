@@ -304,17 +304,65 @@ which is followed by a closing brace).
 
 Remove blank lines between consecutive guard statements, and insert a blank after the last guard statement.
 
+Option | Description
+--- | ---
+`--linebtwnguards` | Insert line between guards: "true" or "false" (default)
+
 <details>
 <summary>Examples</summary>
 
+`--linebtwnguards false` (default)
+
 ```diff
+    // Multiline guard
     guard let spicy = self.makeSpicy() else {
         return
-    }
+    } 
 -
+    guard let yummy = self.makeYummy() else {
+        return
+    }
     guard let soap = self.clean() else {
         return
     }
++
+    let doTheJob = nikekov()
+```
+```diff
+    // Single-line guard
+    guard let spicy = self.makeSpicy() else { return }
+-
+    guard let yummy = self.makeYummy() else { return }
+    guard let soap = self.clean() else { return }
++
+    let doTheJob = nikekov()
+```
+
+`--linebtwnguards true`
+
+```diff
+    // Multiline guard
+    guard let spicy = self.makeSpicy() else {
+        return
+    }
+
+    guard let yummy = self.makeYummy() else {
+        return
+    }
++
+    guard let soap = self.clean() else {
+        return
+    }
++
+    let doTheJob = nikekov()
+```
+```diff
+    // Single-line guard
+    guard let spicy = self.makeSpicy() else { return }
+
+    guard let yummy = self.makeYummy() else { return }
++
+    guard let soap = self.clean() else { return }
 +
     let doTheJob = nikekov()
 ```

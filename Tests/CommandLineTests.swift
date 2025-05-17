@@ -315,17 +315,6 @@ class CommandLineTests: XCTestCase {
         }
     }
 
-    func testHelpLineLength() {
-        CLI.print = { message, _ in
-            for line in message.components(separatedBy: "\n") {
-                // TODO: Consider removing this limit entirely
-                XCTAssertLessThanOrEqual(line.count, 160, line)
-            }
-        }
-        printHelp(as: .content)
-        printOptions(as: .content)
-    }
-
     func testHelpOptionsImplemented() {
         CLI.print = { message, _ in
             if message.hasPrefix("--") {
@@ -352,6 +341,54 @@ class CommandLineTests: XCTestCase {
         printHelp(as: .content)
         printOptions(as: .content)
         XCTAssert(arguments.isEmpty, "\(arguments.joined(separator: ",")) not listed in help")
+    }
+
+    func testHelpOptionFormatting() {
+        let shortOption = OptionDescriptor(
+            argumentName: "option",
+            displayName: "option",
+            help: "Short option description",
+            keyPath: \.fragment,
+            trueValues: [],
+            falseValues: []
+        )
+
+        let mediumOption = OptionDescriptor(
+            argumentName: "optionmedium",
+            displayName: "optionmedium",
+            help: "Option with a medium name and description length",
+            keyPath: \.fragment,
+            trueValues: [],
+            falseValues: []
+        )
+
+        let longOption = OptionDescriptor(
+            argumentName: "optionwithlongername",
+            displayName: "optionwithlongername",
+            help: """
+            This is a longer option with a name over the original 16 character limit, \
+            and a help text over the original 80 character limit.
+            """,
+            keyPath: \.fragment,
+            trueValues: [],
+            falseValues: []
+        )
+
+        CLI.print = { output, _ in
+            guard !output.isEmpty else { return }
+            XCTAssertEqual(output, """
+            --option           Short option description
+            --option           Short option description
+            --optionmedium     Option with a medium name and description length
+            --optionmedium     Option with a medium name and description length
+            --optionwithlongername
+                               This is a longer option with a name over the original 16 character limit, and a help text over the original 80 character limit.
+            --optionwithlongername
+                               This is a longer option with a name over the original 16 character limit, and a help text over the original 80 character limit.
+            """)
+        }
+
+        printOptions([shortOption, shortOption, mediumOption, mediumOption, longOption, longOption], as: .content)
     }
 
     // MARK: cache

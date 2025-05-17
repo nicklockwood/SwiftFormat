@@ -723,7 +723,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var yodaSwap: YodaMode
     public var extensionACLPlacement: ExtensionACLPlacement
     public var propertyTypes: PropertyTypes
-    public var preservedSymbols: Set<String>
+    public var preservedPropertyTypes: Set<String>
     public var inferredTypesInConditionalExpressions: Bool
     public var emptyBracesSpacing: EmptyBracesSpacing
     public var acronyms: Set<String>
@@ -855,7 +855,7 @@ public struct FormatOptions: CustomStringConvertible {
                 yodaSwap: YodaMode = .always,
                 extensionACLPlacement: ExtensionACLPlacement = .onExtension,
                 propertyTypes: PropertyTypes = .inferLocalsOnly,
-                preservedSymbols: Set<String> = ["Package"],
+                preservedPropertyTypes: Set<String> = ["Package"],
                 inferredTypesInConditionalExpressions: Bool = false,
                 emptyBracesSpacing: EmptyBracesSpacing = .noSpace,
                 acronyms: Set<String> = ["ID", "URL", "UUID"],
@@ -977,7 +977,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.yodaSwap = yodaSwap
         self.extensionACLPlacement = extensionACLPlacement
         self.propertyTypes = propertyTypes
-        self.preservedSymbols = preservedSymbols
+        self.preservedPropertyTypes = preservedPropertyTypes
         self.inferredTypesInConditionalExpressions = inferredTypesInConditionalExpressions
         self.emptyBracesSpacing = emptyBracesSpacing
         self.acronyms = acronyms

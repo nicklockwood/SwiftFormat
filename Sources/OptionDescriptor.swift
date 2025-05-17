@@ -93,7 +93,6 @@ class OptionDescriptor {
          trueValues: [String],
          falseValues: [String])
     {
-        assert(argumentName.count <= Options.maxArgumentNameLength)
         assert(argumentName == argumentName.lowercased())
         self.argumentName = argumentName
         self.displayName = displayName
@@ -968,7 +967,7 @@ struct _Descriptors {
         keyPath: \.organizeEnumThreshold
     )
     let organizeExtensionThreshold = OptionDescriptor(
-        argumentName: "extensionlength",
+        argumentName: "extensionthreshold",
         displayName: "Organize Extension Threshold",
         help: "Minimum line count to organize extension body. Defaults to 0",
         keyPath: \.organizeExtensionThreshold
@@ -1068,27 +1067,27 @@ struct _Descriptors {
         keyPath: \.typeAttributes
     )
     let storedVarAttributes = OptionDescriptor(
-        argumentName: "storedvarattrs",
+        argumentName: "storedvarattributes",
         displayName: "Stored Property Attributes",
-        help: "Stored var @attribs: \"preserve\", \"prev-line\", or \"same-line\"",
+        help: "Stored var @attributes: \"preserve\", \"prev-line\", or \"same-line\"",
         keyPath: \.storedVarAttributes
     )
     let computedVarAttributes = OptionDescriptor(
-        argumentName: "computedvarattrs",
+        argumentName: "computedvarattributes",
         displayName: "Computed Property Attributes",
-        help: "Computed var @attribs: \"preserve\", \"prev-line\", \"same-line\"",
+        help: "Computed var @attributes: \"preserve\", \"prev-line\", \"same-line\"",
         keyPath: \.computedVarAttributes
     )
     let complexAttributes = OptionDescriptor(
-        argumentName: "complexattrs",
+        argumentName: "complexattributes",
         displayName: "Complex Attributes",
         help: "Complex @attributes: \"preserve\", \"prev-line\", or \"same-line\"",
         keyPath: \.complexAttributes
     )
     let complexAttributesExceptions = OptionDescriptor(
-        argumentName: "noncomplexattrs",
+        argumentName: "noncomplexattributes",
         displayName: "Complex Attribute exceptions",
-        help: "List of @attributes to exclude from complexattrs rule",
+        help: "List of @attributes to exclude from --complexattributes options",
         keyPath: \.complexAttributesExceptions
     )
     let yodaSwap = OptionDescriptor(
@@ -1166,7 +1165,7 @@ struct _Descriptors {
     let genericTypes = OptionDescriptor(
         argumentName: "generictypes",
         displayName: "Additional generic types",
-        help: "Semicolon-delimited list of generic types and type parameters",
+        help: "Semicolon-delimited list of generic types and type parameters. For example: \"LinkedList<Element>;StateStore<State, Action>\"",
         keyPath: \.genericTypes,
         fromArgument: { $0 },
         toArgument: { $0 }
@@ -1182,15 +1181,15 @@ struct _Descriptors {
     let preserveAnonymousForEach = OptionDescriptor(
         argumentName: "anonymousforeach",
         displayName: "Anonymous forEach closures",
-        help: "Convert anonymous forEach: \"convert\" (default) or \"ignore\"",
+        help: "Convert anonymous forEach closures to for loops: \"convert\" (default) or \"ignore\"",
         keyPath: \.preserveAnonymousForEach,
         trueValues: ["ignore", "preserve"],
         falseValues: ["convert"]
     )
     let preserveSingleLineForEach = OptionDescriptor(
-        argumentName: "inlinedforeach",
-        displayName: "Inlined forEach closures",
-        help: "Convert inline forEach to for: \"convert\", \"ignore\" (default)",
+        argumentName: "singlelineforeach",
+        displayName: "Single-line forEach closures",
+        help: "Convert single-line forEach closures to for loop: \"convert\", \"ignore\" (default)",
         keyPath: \.preserveSingleLineForEach,
         trueValues: ["ignore", "preserve"],
         falseValues: ["convert"]
@@ -1198,15 +1197,15 @@ struct _Descriptors {
     let preserveDocComments = OptionDescriptor(
         argumentName: "doccomments",
         displayName: "Doc comments",
-        help: "Doc comments: \"before-declarations\" (default) or \"preserve\"",
+        help: "Convert standard comments to doc comments: \"before-declarations\" (default) or \"preserve\"",
         keyPath: \.preserveDocComments,
         trueValues: ["preserve"],
         falseValues: ["before-declarations", "declarations"]
     )
     let conditionalAssignmentOnlyAfterNewProperties = OptionDescriptor(
-        argumentName: "condassignment",
+        argumentName: "conditionalassignment",
         displayName: "Apply conditionalAssignment rule",
-        help: "Use cond. assignment: \"after-property\" (default) or \"always\"",
+        help: "Use if/switch expressions for conditional assignment: \"after-property\" (default) or \"always\"",
         keyPath: \.conditionalAssignmentOnlyAfterNewProperties,
         trueValues: ["after-property"],
         falseValues: ["always"]
@@ -1247,11 +1246,11 @@ struct _Descriptors {
         help: "Comma separated list of declaration names to exclude",
         keyPath: \.preservedPrivateDeclarations
     )
-    let preservedSymbols = OptionDescriptor(
-        argumentName: "preservedsymbols",
-        displayName: "Preserved Symbols",
-        help: "Comma-delimited list of symbols to be ignored by the rule",
-        keyPath: \.preservedSymbols
+    let preservedPropertyTypes = OptionDescriptor(
+        argumentName: "preservedpropertytypes",
+        displayName: "Preserved Property Types",
+        help: "Comma-delimited list of symbols to be ignored and preserved as-is by the propertyTypes rule",
+        keyPath: \.preservedPropertyTypes
     )
     let additionalXCTestSymbols = OptionDescriptor(
         argumentName: "xctestsymbols",
@@ -1260,9 +1259,9 @@ struct _Descriptors {
         keyPath: \.additionalXCTestSymbols
     )
     let swiftUIPropertiesSortMode = OptionDescriptor(
-        argumentName: "sortswiftuiprops",
+        argumentName: "sortswiftuiproperties",
         displayName: "Sort SwiftUI Dynamic Properties",
-        help: "Sort SwiftUI props: none, alphabetize, first-appearance-sort",
+        help: "Sort SwiftUI props: \"none\", \"alphabetize\", \"first-appearance-sort\"",
         keyPath: \.swiftUIPropertiesSortMode
     )
     let equatableMacro = OptionDescriptor(
@@ -1280,7 +1279,7 @@ struct _Descriptors {
         falseValues: ["#fileID", "fileID"]
     )
     let lineBetweenConsecutiveGuards = OptionDescriptor(
-        argumentName: "linebtwnguards",
+        argumentName: "linebetweenguards",
         displayName: "Blank Line Between Consecutive Guards",
         help: "Insert line between guards: \"true\" or \"false\" (default)",
         keyPath: \.lineBetweenConsecutiveGuards,
@@ -1361,7 +1360,7 @@ struct _Descriptors {
         argumentName: "varattributes",
         displayName: "Var Attributes",
         help: "Property @attributes: \"preserve\", \"prev-line\", or \"same-line\"",
-        deprecationMessage: "Use with `--storedvarattrs` or `--computedvarattrs` instead.",
+        deprecationMessage: "Use with `--storedvarattributes` or `--computedvarattributes` instead.",
         keyPath: \.varAttributes
     )
 
@@ -1411,7 +1410,7 @@ struct _Descriptors {
         keyPath: \.preserveSingleLineForEach,
         trueValues: ["ignore", "preserve"],
         falseValues: ["convert"]
-    ).renamed(to: "inlinedforeach")
+    ).renamed(to: "singlelineforeach")
 
     let redundantType = OptionDescriptor(
         argumentName: "redundanttype",
@@ -1419,4 +1418,71 @@ struct _Descriptors {
         help: "deprecated",
         keyPath: \.propertyTypes
     ).renamed(to: "propertytypes")
+
+    let inlinedForEach = OptionDescriptor(
+        argumentName: "inlinedforeach",
+        displayName: "Inlined forEach closures",
+        help: "deprecated",
+        keyPath: \.preserveSingleLineForEach,
+        trueValues: ["ignore", "preserve"],
+        falseValues: ["convert"]
+    ).renamed(to: "singlelineforeach")
+
+    let condAssignment = OptionDescriptor(
+        argumentName: "condassignment",
+        displayName: "Apply conditionalAssignment rule",
+        help: "deprecated",
+        keyPath: \.conditionalAssignmentOnlyAfterNewProperties,
+        trueValues: ["after-property"],
+        falseValues: ["always"]
+    ).renamed(to: "conditionalassignment")
+
+    let storedVarAttrs = OptionDescriptor(
+        argumentName: "storedvarattrs",
+        displayName: "Stored Property Attributes",
+        help: "deprecated",
+        keyPath: \.storedVarAttributes
+    ).renamed(to: "storedvarattributes")
+
+    let computedVarAttrs = OptionDescriptor(
+        argumentName: "computedvarattrs",
+        displayName: "Computed Property Attributes",
+        help: "deprecated",
+        keyPath: \.computedVarAttributes
+    ).renamed(to: "computedvarattributes")
+
+    let complexAttrs = OptionDescriptor(
+        argumentName: "complexattrs",
+        displayName: "Complex Attributes",
+        help: "deprecated",
+        keyPath: \.complexAttributes
+    ).renamed(to: "complexattributes")
+
+    let complexAttrsExceptions = OptionDescriptor(
+        argumentName: "noncomplexattrs",
+        displayName: "Complex Attribute exceptions",
+        help: "deprecated",
+        keyPath: \.complexAttributesExceptions
+    ).renamed(to: "noncomplexattributes")
+
+    let preservedSymbols = OptionDescriptor(
+        argumentName: "preservedsymbols",
+        displayName: "Preserved Symbols",
+        help: "deprecated",
+        keyPath: \.preservedPropertyTypes
+    ).renamed(to: "preservedpropertytypes")
+
+    let swiftUIPropsSortMode = OptionDescriptor(
+        argumentName: "sortswiftuiprops",
+        displayName: "Sort SwiftUI Dynamic Properties",
+        help: "deprecated",
+        keyPath: \.swiftUIPropertiesSortMode
+    ).renamed(to: "sortswiftuiproperties")
+
+    let organizeExtensionLength = OptionDescriptor(
+        argumentName: "extensionlength",
+        displayName: "Organize Extension Threshold",
+        help: "deprecated",
+        keyPath: \.organizeExtensionThreshold
+    ).renamed(to: "extensionthreshold")
 }

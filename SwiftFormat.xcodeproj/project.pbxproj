@@ -78,6 +78,14 @@
 		08CC3AD82D656259005BFABE /* SwiftTestingTestCaseNamesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08CC3AD72D656257005BFABE /* SwiftTestingTestCaseNamesTests.swift */; };
 		2E26108E2DD92CB400FFFE09 /* CommandLine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01F17E811E25870700DCD359 /* CommandLine.swift */; };
 		2E26108F2DD92CB400FFFE09 /* CommandLine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01F17E811E25870700DCD359 /* CommandLine.swift */; };
+		2E2611C82DD94FE900FFFE09 /* JSONReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3DF48242620E03600F45A5F /* JSONReporter.swift */; };
+		2E2611C92DD94FE900FFFE09 /* XMLReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FFD1812BD13C9E00774F55 /* XMLReporter.swift */; };
+		2E2611CA2DD94FE900FFFE09 /* GithubActionsLogReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD9AD39C2999FCC8001C2C0E /* GithubActionsLogReporter.swift */; };
+		2E2611CB2DD94FE900FFFE09 /* Reporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD9AD39D2999FCC8001C2C0E /* Reporter.swift */; };
+		2E2611CC2DD94FE900FFFE09 /* Reporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD9AD39D2999FCC8001C2C0E /* Reporter.swift */; };
+		2E2611CD2DD94FE900FFFE09 /* JSONReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3DF48242620E03600F45A5F /* JSONReporter.swift */; };
+		2E2611CE2DD94FE900FFFE09 /* GithubActionsLogReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD9AD39C2999FCC8001C2C0E /* GithubActionsLogReporter.swift */; };
+		2E2611CF2DD94FE900FFFE09 /* XMLReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FFD1812BD13C9E00774F55 /* XMLReporter.swift */; };
 		2E2BAB8C2C57F6B600590239 /* RuleRegistry.generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BAB8B2C57F6B600590239 /* RuleRegistry.generated.swift */; };
 		2E2BAB8D2C57F6B600590239 /* RuleRegistry.generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BAB8B2C57F6B600590239 /* RuleRegistry.generated.swift */; };
 		2E2BAB8E2C57F6B600590239 /* RuleRegistry.generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BAB8B2C57F6B600590239 /* RuleRegistry.generated.swift */; };
@@ -2326,6 +2334,10 @@
 				2E2BAD792C57F6DD00590239 /* SortedSwitchCases.swift in Sources */,
 				2E2BAD412C57F6DD00590239 /* MarkTypes.swift in Sources */,
 				2E2BAC092C57F6DD00590239 /* BlankLineAfterSwitchCase.swift in Sources */,
+				2E2611C82DD94FE900FFFE09 /* JSONReporter.swift in Sources */,
+				2E2611C92DD94FE900FFFE09 /* XMLReporter.swift in Sources */,
+				2E2611CA2DD94FE900FFFE09 /* GithubActionsLogReporter.swift in Sources */,
+				2E2611CB2DD94FE900FFFE09 /* Reporter.swift in Sources */,
 				2E26108E2DD92CB400FFFE09 /* CommandLine.swift in Sources */,
 				2E2BAC0D2C57F6DD00590239 /* Indent.swift in Sources */,
 				015D3A562995A0340065B2D9 /* AboutViewController.swift in Sources */,
@@ -2524,6 +2536,10 @@
 				2E2BAC122C57F6DD00590239 /* WrapMultilineConditionalAssignment.swift in Sources */,
 				015243E42B04B0A700F65221 /* Singularize.swift in Sources */,
 				2E2BAD562C57F6DD00590239 /* TrailingCommas.swift in Sources */,
+				2E2611CC2DD94FE900FFFE09 /* Reporter.swift in Sources */,
+				2E2611CD2DD94FE900FFFE09 /* JSONReporter.swift in Sources */,
+				2E2611CE2DD94FE900FFFE09 /* GithubActionsLogReporter.swift in Sources */,
+				2E2611CF2DD94FE900FFFE09 /* XMLReporter.swift in Sources */,
 				2E2BAD022C57F6DD00590239 /* WrapMultilineStatementBraces.swift in Sources */,
 				2E2BAD662C57F6DD00590239 /* SpaceAroundParens.swift in Sources */,
 				2E2BAC422C57F6DD00590239 /* DuplicateImports.swift in Sources */,

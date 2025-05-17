@@ -34,19 +34,15 @@ final class BlankLinesAfterGuardStatementsTests: XCTestCase {
         guard let one = test.one else {
             return
         }
-
         guard let two = test.two else {
             return
         }
-
         guard let three = test.three else {
             return
         }
-
         guard let four = test.four else {
             return
         }
-
         guard let five = test.five else {
             return
         }
@@ -55,7 +51,7 @@ final class BlankLinesAfterGuardStatementsTests: XCTestCase {
         testFormatting(for: input, output, rule: .blankLinesAfterGuardStatements, exclude: [.blankLinesBetweenScopes])
     }
 
-    func testSpacesBetweenGuardWhenBlankLineBetweenConsecutiveGuardsIsRemoved() {
+    func testSpacesBetweenGuardWhenBlankLineInsertedBetweenConsecutiveGuards() {
         let input = """
         guard let one = test.one else {
             return
@@ -84,15 +80,19 @@ final class BlankLinesAfterGuardStatementsTests: XCTestCase {
         guard let one = test.one else {
             return
         }
+
         guard let two = test.two else {
             return
         }
+
         guard let three = test.three else {
             return
         }
+
         guard let four = test.four else {
             return
         }
+
         guard let five = test.five else {
             return
         }
@@ -102,7 +102,7 @@ final class BlankLinesAfterGuardStatementsTests: XCTestCase {
             for: input,
             output,
             rule: .blankLinesAfterGuardStatements,
-            options: FormatOptions(lineBetweenConsecutiveGuards: false),
+            options: FormatOptions(lineBetweenConsecutiveGuards: true),
             exclude: [.blankLinesBetweenScopes]
         )
     }
@@ -125,7 +125,7 @@ final class BlankLinesAfterGuardStatementsTests: XCTestCase {
         testFormatting(for: input, output, rule: .blankLinesAfterGuardStatements)
     }
 
-    func testLinebreakAfterGuardWhenBlankLineBetweenConsecutiveGuardsIsRemoved() {
+    func testLinebreakAfterGuardWhenBlankLineInsertedBetweenConsecutiveGuards() {
         let input = """
         guard let one = test.one else {
             return
@@ -144,7 +144,7 @@ final class BlankLinesAfterGuardStatementsTests: XCTestCase {
             for: input,
             output,
             rule: .blankLinesAfterGuardStatements,
-            options: FormatOptions(lineBetweenConsecutiveGuards: false)
+            options: FormatOptions(lineBetweenConsecutiveGuards: true)
         )
     }
 
@@ -169,7 +169,6 @@ final class BlankLinesAfterGuardStatementsTests: XCTestCase {
 
             return
         }
-
         guard let three = test.three() else {
             return
         }
@@ -178,7 +177,7 @@ final class BlankLinesAfterGuardStatementsTests: XCTestCase {
         testFormatting(for: input, output, rule: .blankLinesAfterGuardStatements, exclude: [.blankLinesBetweenScopes])
     }
 
-    func testNotIncludedGuardWhenBlankLineBetweenConsecutiveGuardsIsRemoved() {
+    func testNotIncludedGuardWhenBlankLineInsertedBetweenConsecutiveGuards() {
         let input = """
         guard let one = test.one else {
             guard let two = test.two() else {
@@ -199,6 +198,7 @@ final class BlankLinesAfterGuardStatementsTests: XCTestCase {
 
             return
         }
+
         guard let three = test.three() else {
             return
         }
@@ -208,7 +208,7 @@ final class BlankLinesAfterGuardStatementsTests: XCTestCase {
             for: input,
             output,
             rule: .blankLinesAfterGuardStatements,
-            options: FormatOptions(lineBetweenConsecutiveGuards: false),
+            options: FormatOptions(lineBetweenConsecutiveGuards: true),
             exclude: [.blankLinesBetweenScopes]
         )
     }
@@ -239,7 +239,7 @@ final class BlankLinesAfterGuardStatementsTests: XCTestCase {
         testFormatting(for: input, output, rule: .blankLinesAfterGuardStatements)
     }
 
-    func testEndBracketAndIfWhenBlankLineBetweenConsecutiveGuardsIsRemoved() {
+    func testEndBracketAndIfWhenBlankLineInsertedBetweenConsecutiveGuards() {
         let input = """
         guard let something = test.something else {
             return
@@ -266,7 +266,7 @@ final class BlankLinesAfterGuardStatementsTests: XCTestCase {
             for: input,
             output,
             rule: .blankLinesAfterGuardStatements,
-            options: FormatOptions(lineBetweenConsecutiveGuards: false)
+            options: FormatOptions(lineBetweenConsecutiveGuards: true)
         )
     }
 
@@ -300,7 +300,7 @@ final class BlankLinesAfterGuardStatementsTests: XCTestCase {
         testFormatting(for: input, output, rule: .blankLinesAfterGuardStatements, exclude: [.docComments])
     }
 
-    func testCommentsWhenBlankLineBetweenConsecutiveGuardsIsRemoved() {
+    func testCommentsWhenBlankLineInsertedBetweenConsecutiveGuards() {
         let input = """
         guard let somethingTwo = test.somethingTwo else {
             return
@@ -331,7 +331,7 @@ final class BlankLinesAfterGuardStatementsTests: XCTestCase {
             for: input,
             output,
             rule: .blankLinesAfterGuardStatements,
-            options: FormatOptions(lineBetweenConsecutiveGuards: false),
+            options: FormatOptions(lineBetweenConsecutiveGuards: true),
             exclude: [.docComments]
         )
     }
@@ -346,7 +346,7 @@ final class BlankLinesAfterGuardStatementsTests: XCTestCase {
         testFormatting(for: input, rule: .blankLinesAfterGuardStatements, exclude: [.wrapConditionalBodies])
     }
 
-    func testNotInsertLineBreakWhenInlineFunctionAndBlankLineBetweenConsecutiveGuardsIsRemoved() {
+    func testNotInsertLineBreakWhenInlineFunctionAndBlankLineInsertedBetweenConsecutiveGuards() {
         let input = """
         let array = [1, 2, 3]
         guard array.map { String($0) }.isEmpty else {
@@ -356,7 +356,7 @@ final class BlankLinesAfterGuardStatementsTests: XCTestCase {
         testFormatting(
             for: input,
             rule: .blankLinesAfterGuardStatements,
-            options: FormatOptions(lineBetweenConsecutiveGuards: false),
+            options: FormatOptions(lineBetweenConsecutiveGuards: true),
             exclude: [.wrapConditionalBodies]
         )
     }
@@ -376,7 +376,7 @@ final class BlankLinesAfterGuardStatementsTests: XCTestCase {
         testFormatting(for: input, rule: .blankLinesAfterGuardStatements, exclude: [.wrapConditionalBodies])
     }
 
-    func testNotInsertLineBreakInChainWhenBlankLineBetweenConsecutiveGuardsIsRemoved() {
+    func testNotInsertLineBreakInChainWhenBlankLineInsertedBetweenConsecutiveGuards() {
         let input = """
         guard aBool,
               anotherBool,
@@ -391,7 +391,7 @@ final class BlankLinesAfterGuardStatementsTests: XCTestCase {
         testFormatting(
             for: input,
             rule: .blankLinesAfterGuardStatements,
-            options: FormatOptions(lineBetweenConsecutiveGuards: false),
+            options: FormatOptions(lineBetweenConsecutiveGuards: true),
             exclude: [.wrapConditionalBodies]
         )
     }

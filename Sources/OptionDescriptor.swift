@@ -1276,7 +1276,7 @@ struct _Descriptors {
     let lineBetweenConsecutiveGuards = OptionDescriptor(
         argumentName: "linebtwnguards",
         displayName: "Blank Line Between Consecutive Guards",
-        help: "Insert line between guards: \"true\" (default) or \"false\"",
+        help: "Insert line between guards: \"true\" or \"false\" (default)",
         keyPath: \.lineBetweenConsecutiveGuards,
         trueValues: ["true"],
         falseValues: ["false"]

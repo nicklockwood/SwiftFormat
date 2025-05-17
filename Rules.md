@@ -306,18 +306,18 @@ Remove blank lines between consecutive guard statements, and insert a blank afte
 
 Option | Description
 --- | ---
-`--linebtwnguards` | Insert line between guards: "true" (default) or "false"
+`--linebtwnguards` | Insert line between guards: "true" or "false" (default)
 
 <details>
 <summary>Examples</summary>
 
-`--linebtwnguards true` (default)
+`--linebtwnguards false` (default)
 
 ```diff
     guard let spicy = self.makeSpicy() else {
         return
     }
-
+-
     guard let soap = self.clean() else {
         return
     }
@@ -325,13 +325,13 @@ Option | Description
     let doTheJob = nikekov()
 ```
 
-`--linebtwnguards false`
+`--linebtwnguards true`
 
 ```diff
     guard let spicy = self.makeSpicy() else {
         return
     }
--
+
     guard let soap = self.clean() else {
         return
     }

@@ -76,6 +76,8 @@
 		08CC3AD52D655C56005BFABE /* SwiftTestingTestCaseNames.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08CC3AD22D655C48005BFABE /* SwiftTestingTestCaseNames.swift */; };
 		08CC3AD62D655C56005BFABE /* SwiftTestingTestCaseNames.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08CC3AD22D655C48005BFABE /* SwiftTestingTestCaseNames.swift */; };
 		08CC3AD82D656259005BFABE /* SwiftTestingTestCaseNamesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08CC3AD72D656257005BFABE /* SwiftTestingTestCaseNamesTests.swift */; };
+		2E26108E2DD92CB400FFFE09 /* CommandLine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01F17E811E25870700DCD359 /* CommandLine.swift */; };
+		2E26108F2DD92CB400FFFE09 /* CommandLine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01F17E811E25870700DCD359 /* CommandLine.swift */; };
 		2E2BAB8C2C57F6B600590239 /* RuleRegistry.generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BAB8B2C57F6B600590239 /* RuleRegistry.generated.swift */; };
 		2E2BAB8D2C57F6B600590239 /* RuleRegistry.generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BAB8B2C57F6B600590239 /* RuleRegistry.generated.swift */; };
 		2E2BAB8E2C57F6B600590239 /* RuleRegistry.generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E2BAB8B2C57F6B600590239 /* RuleRegistry.generated.swift */; };
@@ -2324,6 +2326,7 @@
 				2E2BAD792C57F6DD00590239 /* SortedSwitchCases.swift in Sources */,
 				2E2BAD412C57F6DD00590239 /* MarkTypes.swift in Sources */,
 				2E2BAC092C57F6DD00590239 /* BlankLineAfterSwitchCase.swift in Sources */,
+				2E26108E2DD92CB400FFFE09 /* CommandLine.swift in Sources */,
 				2E2BAC0D2C57F6DD00590239 /* Indent.swift in Sources */,
 				015D3A562995A0340065B2D9 /* AboutViewController.swift in Sources */,
 				2E2BACAD2C57F6DD00590239 /* RedundantLetError.swift in Sources */,
@@ -2477,6 +2480,7 @@
 				2E2BAD7A2C57F6DD00590239 /* SortedSwitchCases.swift in Sources */,
 				2E2BAD422C57F6DD00590239 /* MarkTypes.swift in Sources */,
 				2E2BAC0A2C57F6DD00590239 /* BlankLineAfterSwitchCase.swift in Sources */,
+				2E26108F2DD92CB400FFFE09 /* CommandLine.swift in Sources */,
 				2E2BAC0E2C57F6DD00590239 /* Indent.swift in Sources */,
 				01045A9F2119D30D00D2BE3D /* Inference.swift in Sources */,
 				2E2BACAE2C57F6DD00590239 /* RedundantLetError.swift in Sources */,

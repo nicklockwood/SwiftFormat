@@ -109,15 +109,27 @@ public enum ExitCode: Int32 {
     case error = 70 // EX_SOFTWARE
 }
 
-func printOptions(as type: CLI.OutputType) {
+func printOptions(_ options: [OptionDescriptor] = Descriptors.formatting, as type: CLI.OutputType) {
     print("")
-    print(Descriptors.formatting.compactMap {
+    print(options.compactMap {
         guard !$0.isDeprecated else { return nil }
         var result = "--\($0.argumentName)"
-        for _ in 0 ..< Options.maxArgumentNameLength + 3 - result.count {
-            result += " "
+
+        let maxNameLengthForSingleLineFormatting = 16
+        let optionNameColumnWidth = maxNameLengthForSingleLineFormatting + 3
+
+        if $0.argumentName.count <= maxNameLengthForSingleLineFormatting {
+            for _ in 0 ..< optionNameColumnWidth - result.count {
+                result += " "
+            }
+            return result + stripMarkdown($0.help)
+        } else {
+            result += "\n"
+            for _ in 0 ..< optionNameColumnWidth {
+                result += " "
+            }
+            return result + stripMarkdown($0.help)
         }
-        return result + stripMarkdown($0.help)
     }.sorted().joined(separator: "\n"), as: type)
     print("")
 }

@@ -16,7 +16,7 @@ public extension FormatRule {
         // swiftformat:sort:end comments.
         """,
         options: ["sortedpatterns"],
-        sharedOptions: ["linebreaks", "organizetypes", "structthreshold", "classthreshold", "enumthreshold", "extensionlength"]
+        sharedOptions: ["linebreaks", "organizetypes", "structthreshold", "classthreshold", "enumthreshold", "extensionthreshold"]
     ) { formatter in
         formatter.forEachToken(
             where: {

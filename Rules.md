@@ -314,13 +314,26 @@ Option | Description
 `--linebtwnguards false` (default)
 
 ```diff
+    // Multiline guard
     guard let spicy = self.makeSpicy() else {
         return
-    }
+    } 
 -
+    guard let yummy = self.makeYummy() else {
+        return
+    }
     guard let soap = self.clean() else {
         return
     }
++
+    let doTheJob = nikekov()
+```
+```diff
+    // Single-line guard
+    guard let spicy = self.makeSpicy() else { return }
+-
+    guard let yummy = self.makeYummy() else { return }
+    guard let soap = self.clean() else { return }
 +
     let doTheJob = nikekov()
 ```
@@ -328,13 +341,28 @@ Option | Description
 `--linebtwnguards true`
 
 ```diff
+    // Multiline guard
     guard let spicy = self.makeSpicy() else {
         return
     }
 
+    guard let yummy = self.makeYummy() else {
+        return
+    }
++
     guard let soap = self.clean() else {
         return
     }
++
+    let doTheJob = nikekov()
+```
+```diff
+    // Single-line guard
+    guard let spicy = self.makeSpicy() else { return }
+
+    guard let yummy = self.makeYummy() else { return }
++
+    guard let soap = self.clean() else { return }
 +
     let doTheJob = nikekov()
 ```

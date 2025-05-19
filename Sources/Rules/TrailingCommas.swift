@@ -33,13 +33,16 @@ public extension FormatRule {
                    let startOfScope = formatter.startOfScope(at: i),
                    let identifierBeforeStartOfScope = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope),
                    let identifierToken = formatter.token(at: identifierBeforeStartOfScope),
-                   identifierToken.isIdentifier || identifierToken.isAttribute || (identifierToken.isKeyword && identifierToken.string.hasPrefix("#"))
+                   identifierToken.isIdentifier || identifierToken.isAttribute || (identifierToken.isKeyword && identifierToken.string.hasPrefix("#")),
+                   // If the case of `@escaping` or `@Sendable`, this could be a closure type where trailing commas are not supported.
+                   !formatter.isStartOfClosureType(at: startOfScope)
                 {
                     // In Swift 6.1, built-in attributes unexpectedly don't support trailing commas.
                     // Other attributes like property wrappers and macros do support trailing commas.
                     // https://github.com/swiftlang/swift/issues/81475
                     // https://docs.swift.org/swift-book/documentation/the-swift-programming-language/attributes/
-                    let unsupportedBuiltInAttributes = ["@available", "@backDeployed", "@objc", "@freestanding", "@attached"]
+                    // Some attributes like `@objc`, `@inline` that have parens but not comma-separated lists don't support trailing commas.
+                    let unsupportedBuiltInAttributes = ["@available", "@backDeployed", "@freestanding", "@attached", "@objc", "@inline"]
                     if identifierToken.isAttribute, unsupportedBuiltInAttributes.contains(identifierToken.string)
                         || identifierToken.string.hasPrefix("@_")
                     {
@@ -78,7 +81,7 @@ public extension FormatRule {
             case .endOfScope(">"):
                 var trailingCommaSupported = false
 
-                // In Swift 6.1, only generic lists in type / function / typealias declarations are allowed.
+                // In Swift 6.1, only generic lists in concrete type / function / typealias declarations are allowed.
                 // https://github.com/swiftlang/swift/issues/81474
                 // All of these cases have the form `keyword identifier<...>`, like `class Foo<...>` or `func foo<...>`.
                 if formatter.options.swiftVersion >= "6.1",
@@ -88,7 +91,7 @@ public extension FormatRule {
                    let keywordIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: identifierIndex),
                    let keyword = formatter.token(at: keywordIndex),
                    keyword.isKeyword,
-                   ["class", "actor", "struct", "enum", "protocol", "typealias", "func"].contains(keyword.string)
+                   ["class", "actor", "struct", "enum", "typealias", "func"].contains(keyword.string)
                 {
                     trailingCommaSupported = true
                 }

@@ -637,6 +637,12 @@ extension Formatter {
         }
     }
 
+    /// Whether or not the index is the start of a valid closure type
+    func isStartOfClosureType(at i: Int) -> Bool {
+        guard let type = parseType(at: i) else { return false }
+        return index(of: .operator("->", .infix), in: Range(type.range)) != nil
+    }
+
     func isInClosureArguments(at i: Int) -> Bool {
         var i = i
         while let token = token(at: i) {

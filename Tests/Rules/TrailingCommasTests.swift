@@ -649,6 +649,35 @@ class TrailingCommasTests: XCTestCase {
             bar: String,
             quux: String // trailing comma not supported
         )
+
+        let closure: @Sendable (
+            String,
+            String // trailing comma not supported
+        ) -> (
+            bar: String,
+            quux: String // trailing comma not supported
+        )
+
+        let closure: (
+            String,
+            String // trailing comma not supported
+        ) async -> (
+            bar: String,
+            quux: String // trailing comma not supported
+        )
+
+        let closure: (
+            String,
+            String // trailing comma not supported
+        ) async throws -> (
+            bar: String,
+            quux: String // trailing comma not supported
+        )
+
+        func foo(_: @escaping (
+            String,
+            String // trailing comma not supported
+        ) -> Void) {}
         """
 
         let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
@@ -1085,6 +1114,11 @@ class TrailingCommasTests: XCTestCase {
         extension Dictionary<
             String,
             Any
+        > {}
+
+        protocol MyProtocolWithAssociatedTypes<
+            Foo,
+            Bar
         > {}
         """
 

@@ -65,6 +65,14 @@ Tests are run automatically on all pull requests, branches and tags. These are t
 
 There is a separate Performance Tests scheme that you should run manually if your code changes are likely to affect performance.
 
+Test cases for individual rules can be ran via the command line using the `./Scripts/test_rule.sh` script. For example:
+
+```sh
+$ ./Scripts/test_rule.sh blankLinesAtStartOfScope
+$ ./Scripts/test_rule.sh indent
+$ ./Scripts/test_rule.sh wrap
+```
+
 ## Prerelease builds
 
 If you contribute a new rule or option, it would be published in the following major version release. To start using the new rule or option right away in your own project, you could use a prerelease build of the `develop` branch. More information is available [here](https://github.com/nicklockwood/SwiftFormat#prerelease-builds).

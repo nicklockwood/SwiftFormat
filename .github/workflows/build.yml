@@ -9,10 +9,9 @@ jobs:
       fail-fast: false
       matrix:
         macos:
-          - 13
-          - latest
+          - 15
         xcode:
-          - latest-stable
+          - 16.3
     runs-on: macos-${{ matrix.macos }}
     steps:
       - name: Select Xcode version
@@ -91,9 +90,9 @@ jobs:
       fail-fast: false
       matrix:
         macos:
-          - 13
+          - 15
         xcode:
-          - latest-stable
+          - 16.3
     runs-on: macos-${{ matrix.macos }}
     steps:
       - name: Select Xcode version
@@ -110,9 +109,9 @@ jobs:
       fail-fast: false
       matrix:
         macos:
-          - 13
+          - 15
         xcode:
-          - latest-stable
+          - 16.3
     runs-on: macos-${{ matrix.macos }}
     steps:
       - name: Select Xcode version
@@ -129,9 +128,9 @@ jobs:
       fail-fast: false
       matrix:
         macos:
-          - 13
+          - 15
         xcode:
-          - latest-stable
+          - 16.3
     runs-on: macos-${{ matrix.macos }}
     steps:
       - name: Select Xcode version

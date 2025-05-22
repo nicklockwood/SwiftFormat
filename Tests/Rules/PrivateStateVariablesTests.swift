@@ -77,10 +77,19 @@ class PrivateStateVariablesTests: XCTestCase {
         testFormatting(for: input, output, rule: .privateStateVariables)
     }
 
-    func testWithPreviewable() {
+    func testWithPreviewableOnSameLine() {
         // Don't add `private` to @Previewable property wrappers:
         let input = """
         @Previewable @StateObject var counter: Int
+        """
+        testFormatting(for: input, rule: .privateStateVariables)
+    }
+
+    func testWithPreviewableOnPreviousLine() {
+        // Don't add `private` to @Previewable property wrappers:
+        let input = """
+        @Previewable
+        @State var counter: Int
         """
         testFormatting(for: input, rule: .privateStateVariables)
     }

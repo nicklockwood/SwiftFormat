@@ -14,24 +14,23 @@ public extension FormatRule {
         disabledByDefault: true
     ) { formatter in
         formatter.forEachToken(where: { $0 == .keyword("@State") || $0 == .keyword("@StateObject") }) { stateIndex, _ in
-            guard let endOfScope = formatter.index(after: stateIndex, where: {
+            guard let keywordIndex = formatter.index(after: stateIndex, where: {
                 $0 == .keyword("let") || $0 == .keyword("var")
             }) else { return }
 
             // Don't override any existing access control:
-            guard !formatter.tokens[stateIndex ..< endOfScope].contains(where: {
+            guard !formatter.tokens[stateIndex ..< keywordIndex].contains(where: {
                 _FormatRules.aclModifiers.contains($0.string) || _FormatRules.aclSetterModifiers.contains($0.string)
             }) else {
                 return
             }
 
             // Check for @Previewable - we won't modify @Previewable macros.
-            let lineStart = formatter.startOfLine(at: stateIndex)
-            guard !formatter.tokens[lineStart ..< stateIndex].contains(where: { $0 == .keyword("@Previewable") }) else {
+            guard !formatter.modifiersForDeclaration(at: keywordIndex, contains: "@Previewable") else {
                 return
             }
 
-            formatter.insert([.keyword("private"), .space(" ")], at: endOfScope)
+            formatter.insert([.keyword("private"), .space(" ")], at: keywordIndex)
         }
     } examples: {
         """

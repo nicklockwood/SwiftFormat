@@ -755,12 +755,12 @@ class CommandLineTests: XCTestCase {
             ) -> Foo { ... }
             ```
 
-            ```swift --indent 2
-            func foo(
-            bar: Bar,
-            baaz: Baaz
-            ) -> Foo { ... }
-            ```
+              ```swift --indent 2
+              func foo(
+              bar: Bar,
+              baaz: Baaz
+              ) -> Foo { ... }
+              ```
 
             ```swift --disable indent
             print( "foo" )
@@ -814,12 +814,12 @@ class CommandLineTests: XCTestCase {
             ) -> Foo { ... }
             ```
 
-            ```swift --indent 2
-            func foo(
-              bar: Bar,
-              baaz: Baaz
-            ) -> Foo { ... }
-            ```
+              ```swift --indent 2
+              func foo(
+                bar: Bar,
+                baaz: Baaz
+              ) -> Foo { ... }
+              ```
 
             ```swift --disable indent
             print("foo")
@@ -845,6 +845,13 @@ class CommandLineTests: XCTestCase {
                 func bar() {}
             }
             ```
+
+            ```swift
+            --markdownfiles format-lenient ignores blocks that can't be parsed:
+            print("Foo
+            ```
+
+            Thanks for reading!
             """)
         }
     }

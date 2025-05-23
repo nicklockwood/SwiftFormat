@@ -2820,12 +2820,12 @@ class ParsingHelpersTests: XCTestCase {
 
         and:
 
-        ```swift no-format
-        class Foo {
-            public init() {}
-            public func bar() {}
-        }
-        ```
+          ```swift no-format
+          class Foo {
+              public init() {}
+              public func bar() {}
+          }
+          ```
 
         This sample code even has a multi-line string in it:
 
@@ -2833,6 +2833,11 @@ class ParsingHelpersTests: XCTestCase {
         let codeBlock = """
           ```swift
           print("foo")
+          ```
+
+          ```diff
+          - print("foo")
+          + print("bar")
           ```
           """
         ```
@@ -2855,10 +2860,10 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(
             codeBlocks[1].text,
             #"""
-            class Foo {
-                public init() {}
-                public func bar() {}
-            }
+              class Foo {
+                  public init() {}
+                  public func bar() {}
+              }
             """#
         )
 
@@ -2870,6 +2875,11 @@ class ParsingHelpersTests: XCTestCase {
             let codeBlock = """
               ```swift
               print("foo")
+              ```
+
+              ```diff
+              - print("foo")
+              + print("bar")
               ```
               """
             """#

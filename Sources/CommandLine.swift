@@ -1090,7 +1090,8 @@ func processInput(_ inputURLs: [URL],
                         print("-- no changes (cached)", as: .success)
                     }
                 } else {
-                    if inputURL.pathExtension == "md" {
+                    // Format individual code blocks in markdown files is enabled
+                    if inputURL.pathExtension == "md", options.fileOptions?.supportedFileExtensions.contains("md") == true {
                         var markdown = input
                         let swiftCodeBlocks = parseSwiftCodeBlocks(fromMarkdown: input)
 
@@ -1298,7 +1299,7 @@ private struct OutputTokensData: Encodable {
 ///
 /// For example:
 ///
-/// ```swift options like no-format, --disable ruleName can be put here
+/// ```swift {{options like `no-format`, `--disable ruleName` can be put here}}
 /// // This content is returned as text,
 /// // and its range in the markdown string is returned as range.
 /// ```
@@ -1309,24 +1310,29 @@ func parseSwiftCodeBlocks(fromMarkdown markdown: String)
     var codeBlocks: [(range: Range<String.Index>, text: String, options: String?, lineStartIndex: Int)] = []
     var codeStartLineIndex: Int?
     var codeBlockOptions: String?
+    var codeBlockStack = 0
 
     for (lineIndex, lineRange) in lines.enumerated() {
-        let lineText = markdown[lineRange].trimmingCharacters(in: .newlines)
+        let lineText = markdown[lineRange].trimmingCharacters(in: .whitespacesAndNewlines)
 
-        if codeStartLineIndex == nil {
-            if lineText.hasPrefix("```swift") {
-                var options: String?
+        if lineText.hasPrefix("```"), lineText != "```" {
+            // If we're already inside a code block, don't start a new one
+            if codeStartLineIndex != nil {
+                codeBlockStack += 1
+            } else if lineText.hasPrefix("```swift"), lineIndex != lines.indices.last {
+                codeStartLineIndex = lineIndex + 1
+
+                // Any text following the code block start delimiter are treated as SwiftFormat options
                 if lineText.hasPrefix("```swift ") {
-                    options = String(lineText.dropFirst("```swift ".count))
-                }
-
-                if lineIndex != lines.indices.last {
-                    codeStartLineIndex = lineIndex + 1
-                    codeBlockOptions = options
+                    codeBlockOptions = String(lineText.dropFirst("```swift ".count))
                 }
             }
-        } else {
-            if lineText == "```", let startLine = codeStartLineIndex {
+        } else if lineText == "```", let startLine = codeStartLineIndex {
+            if codeBlockStack > 0 {
+                // If we're inside a nested code block, pop it off the stack.
+                codeBlockStack -= 1
+            } else {
+                // Otherwise this is the end of a code block
                 let codeEnd = lines[lineIndex - 1].upperBound
                 let range = lines[startLine].lowerBound ..< codeEnd
                 let codeText = String(markdown[range])

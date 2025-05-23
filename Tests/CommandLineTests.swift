@@ -61,7 +61,7 @@ private func withTmpFiles(_ files: [String: String], fn: (URL) throws -> Void) t
     for (path, contents) in files {
         try urls.append(createTmpFile("\(prefix)/\(path)", contents: contents))
     }
-    for url in urls where url.pathExtension == "swift" {
+    for url in urls where url.pathExtension == "swift" || url.pathExtension == "md" {
         try fn(url)
     }
     for url in urls {
@@ -733,5 +733,112 @@ class CommandLineTests: XCTestCase {
             ":5:1: error: (organizeDeclarations) Organize declarations within class, struct, enum, actor, and extension bodies.",
             "Source input did not pass lint check.",
         ])
+    }
+
+    func testFormatMarkdownFile() throws {
+        CLI.print = { message, type in
+            if type == .error {
+                XCTFail(message)
+            }
+        }
+
+        try withTmpFiles([
+            "README.md": """
+            # Sample README
+
+            This is a nice project with lots of cool APIs to know about, including:
+
+            ```swift
+            func foo(
+            bar: Bar,
+            baaz: Baaz
+            ) -> Foo { ... }
+            ```
+
+            ```swift
+            print("foo")
+              print("bar")
+                print("baaz")
+            ```
+
+            ```swift
+            --markdownfiles format-lenient ignores blocks that can't be parsed:
+            print("Foo
+            ```
+
+            Thanks for reading!
+            """,
+        ]) { url in
+            _ = processArguments([
+                "",
+                url.path,
+                "--markdownfiles", "format-lenient",
+                "--rules", "indent",
+            ], in: "")
+
+            let updatedReadme = try String(contentsOf: url, encoding: .utf8)
+
+            // The Swift code blocks should be indented correctly:
+            XCTAssertEqual(updatedReadme, """
+            # Sample README
+
+            This is a nice project with lots of cool APIs to know about, including:
+
+            ```swift
+            func foo(
+                bar: Bar,
+                baaz: Baaz
+            ) -> Foo { ... }
+            ```
+
+            ```swift
+            print("foo")
+            print("bar")
+            print("baaz")
+            ```
+
+            ```swift
+            --markdownfiles format-lenient ignores blocks that can't be parsed:
+            print("Foo
+            ```
+
+            Thanks for reading!
+            """)
+        }
+    }
+
+    func testStrictMarkdownFormatting() throws {
+        var errors = [String]()
+
+        CLI.print = { message, type in
+            if type == .error {
+                errors.append(message)
+            }
+        }
+
+        try withTmpFiles([
+            "README.md": """
+            # Sample README
+
+            This is a nice project with lots of cool APIs to know about, including:
+
+            ```swift
+            --markdownfiles format-strict fails if there are parsing errors:
+            print("Foo
+            ```
+
+            Thanks for reading!
+            """,
+        ]) { url in
+            _ = processArguments([
+                "",
+                url.path,
+                "--markdownfiles", "format-strict",
+                "--rules", "indent",
+            ], in: "")
+        }
+
+        XCTAssertEqual(errors.count, 1)
+        XCTAssert(errors[0].contains("Unexpected end of file at 7:11"))
     }
 }

@@ -2804,4 +2804,73 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(secondInit.whereClauseRange, nil)
         XCTAssertEqual(formatter.tokens[secondInit.bodyRange!].string, "{ return nil }")
     }
+
+    func testParseMarkdownFile() {
+        let input = #"""
+        # Sample README
+
+        This is a nice project with lots of cool APIs to know about, including:
+
+        ```swift
+        func foo(
+            bar: Bar
+            baaz: Baaz
+        ) -> Foo {}
+        ```
+
+        and:
+
+        ```swift
+        class Foo {
+            public init() {}
+            public func bar() {}
+        }
+        ```
+
+        This sample code even has a multi-line string in it:
+
+        ```swift
+        let codeBlock = """
+          ```swift
+          print("foo")
+          ```
+          """
+        ```
+
+        Try it out!
+        """#
+
+        let codeBlocks = parseSwiftCodeBlocks(fromMarkdown: input)
+
+        XCTAssertEqual(
+            codeBlocks[0].text,
+            #"""
+            func foo(
+                bar: Bar
+                baaz: Baaz
+            ) -> Foo {}
+            """#
+        )
+
+        XCTAssertEqual(
+            codeBlocks[1].text,
+            #"""
+            class Foo {
+                public init() {}
+                public func bar() {}
+            }
+            """#
+        )
+
+        XCTAssertEqual(
+            codeBlocks[2].text,
+            #"""
+            let codeBlock = """
+              ```swift
+              print("foo")
+              ```
+              """
+            """#
+        )
+    }
 }

@@ -455,6 +455,12 @@ func argumentsFor(_ options: Options, excludingDefaults: Bool = false) -> [Strin
             }
             arguments.remove("minversion")
         }
+        do {
+            if !excludingDefaults || fileOptions.markdownFormattingMode != nil {
+                args["markdownfiles"] = fileOptions.markdownFormattingMode?.rawValue ?? "ignore"
+            }
+            arguments.remove("markdownfiles")
+        }
         assert(arguments.isEmpty)
     }
     if let formatOptions = options.formatOptions {
@@ -582,6 +588,24 @@ func fileOptionsFor(_ args: [String: String], in directory: String) throws -> Fi
         }
         options.minVersion = minVersion
     }
+    try processOption("markdownfiles", in: args, from: &arguments) {
+        containsFileOption = true
+        switch $0.lowercased() {
+        case "ignore":
+            break
+        case MarkdownFormattingMode.lenient.rawValue:
+            options.supportedFileExtensions.append("md")
+            options.markdownFormattingMode = .lenient
+        case MarkdownFormattingMode.strict.rawValue:
+            options.supportedFileExtensions.append("md")
+            options.markdownFormattingMode = .strict
+        default:
+            throw FormatError.options("""
+            Valid options for --markdownfiles are 'ignore' (default), \
+            'format-lenient', or 'format-strict'.
+            """)
+        }
+    }
     assert(arguments.isEmpty, "\(arguments.joined(separator: ","))")
     return containsFileOption ? options : nil
 }
@@ -638,6 +662,7 @@ let fileArguments = [
     "exclude",
     "unexclude",
     "minversion",
+    "markdownfiles",
 ]
 
 let rulesArguments = [

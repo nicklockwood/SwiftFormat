@@ -110,21 +110,14 @@ class MarkTypesTests: XCTestCase {
         testFormatting(for: input, output, rule: .markTypes, exclude: [.emptyExtensions])
     }
 
-    func testCustomTypeMark() {
+    func testFragment() {
         let input = """
         struct Foo {}
         extension Foo {}
         """
 
-        let output = """
-        // TYPE DEFINITION: Foo
-
-        struct Foo {}
-        extension Foo {}
-        """
-
         testFormatting(
-            for: input, output, rule: .markTypes,
+            for: input, rule: .markTypes,
             options: FormatOptions(typeMarkComment: "TYPE DEFINITION: %t", fragment: true),
             exclude: [.emptyExtensions]
         )

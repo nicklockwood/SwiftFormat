@@ -1047,6 +1047,13 @@ public struct FormatOptions: CustomStringConvertible {
     }
 }
 
+public enum MarkdownFormattingMode: String {
+    /// Errors in markdown code blocks are ignored
+    case lenient = "format-lenient"
+    /// Errors in markdown code blocks are emitted
+    case strict = "format-strict"
+}
+
 /// File enumeration options
 public struct FileOptions {
     public var followSymlinks: Bool
@@ -1054,6 +1061,7 @@ public struct FileOptions {
     public var excludedGlobs: [Glob]
     public var unexcludedGlobs: [Glob]
     public var minVersion: Version
+    public var markdownFormattingMode: MarkdownFormattingMode?
 
     public static let `default` = FileOptions()
 
@@ -1061,13 +1069,15 @@ public struct FileOptions {
                 supportedFileExtensions: [String] = ["swift"],
                 excludedGlobs: [Glob] = [],
                 unexcludedGlobs: [Glob] = [],
-                minVersion: Version = .undefined)
+                minVersion: Version = .undefined,
+                markdownFormattingMode: MarkdownFormattingMode? = nil)
     {
         self.followSymlinks = followSymlinks
         self.supportedFileExtensions = supportedFileExtensions
         self.excludedGlobs = excludedGlobs
         self.unexcludedGlobs = unexcludedGlobs
         self.minVersion = minVersion
+        self.markdownFormattingMode = markdownFormattingMode
     }
 
     public func shouldSkipFile(_ inputURL: URL) -> Bool {

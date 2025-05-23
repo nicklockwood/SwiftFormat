@@ -18,9 +18,10 @@ public extension FormatRule {
     ) { formatter in
         var declarations = formatter.parseDeclarations()
 
-        // Do nothing if there is only one top-level declaration in the file (excluding imports)
+        // Do nothing if there is only one top-level declaration in the file (excluding imports),
+        // or if this is a fragment.
         let declarationsWithoutImports = declarations.filter { $0.keyword != "import" }
-        guard declarationsWithoutImports.count > 1 else {
+        guard declarationsWithoutImports.count > 1, !formatter.options.fragment else {
             return
         }
 

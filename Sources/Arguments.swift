@@ -532,8 +532,8 @@ private func processOption(_ key: String,
 }
 
 /// Parse rule names from arguments
-public func rulesFor(_ args: [String: String], lint: Bool) throws -> Set<String> {
-    var rules = allRules
+public func rulesFor(_ args: [String: String], lint: Bool, initial: Set<String>? = nil) throws -> Set<String> {
+    var rules = initial ?? allRules
     rules = try args["rules"].map {
         try Set(parseRules($0))
     } ?? rules.subtracting(FormatRules.disabledByDefault.map(\.name))
@@ -614,17 +614,32 @@ func fileOptionsFor(_ args: [String: String], in directory: String) throws -> Fi
 /// Returns nil if the arguments dictionary does not contain any formatting arguments
 public func formatOptionsFor(_ args: [String: String]) throws -> FormatOptions? {
     var options = FormatOptions.default
-    var arguments = Set(formattingArguments)
+    let containsFormatOption = try applyFormatOptions(from: args, to: &options)
+    return containsFormatOption ? options : nil
+}
 
+public func applyFormatOptions(from args: [String: String], to formatOptions: inout FormatOptions) throws -> Bool {
+    var arguments = Set(formattingArguments)
     var containsFormatOption = false
     for option in Descriptors.all {
         try processOption(option.argumentName, in: args, from: &arguments) {
             containsFormatOption = true
-            try option.toOptions($0, &options)
+            try option.toOptions($0, &formatOptions)
         }
     }
     assert(arguments.isEmpty, "\(arguments.joined(separator: ","))")
-    return containsFormatOption ? options : nil
+    return containsFormatOption
+}
+
+/// Applies additional arguments to the given `Options` struct
+func applyArguments(_ args: [String: String], lint: Bool, to options: inout Options) throws {
+    options.rules = try rulesFor(args, lint: lint, initial: options.rules)
+
+    var formatOptions = options.formatOptions ?? .default
+    let containsFormatOption = try applyFormatOptions(from: args, to: &formatOptions)
+    if containsFormatOption {
+        options.formatOptions = formatOptions
+    }
 }
 
 /// Get deprecation warnings from a set of arguments

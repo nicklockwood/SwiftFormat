@@ -755,10 +755,30 @@ class CommandLineTests: XCTestCase {
             ) -> Foo { ... }
             ```
 
-            ```swift
-            print("foo")
-              print("bar")
-                print("baaz")
+            ```swift --indent 2
+            func foo(
+            bar: Bar,
+            baaz: Baaz
+            ) -> Foo { ... }
+            ```
+
+            ```swift --disable indent
+            print( "foo" )
+              print( "bar" )
+                print( "baaz" )
+            ```
+
+            ```swift --disable spaceInsideParens
+            print( "foo" )
+              print( "bar" )
+                print( "baaz" )
+            ```
+
+            ```swift --enable organizeDeclarations
+            class Foo {
+                init() {}
+                func bar() {}
+            }
             ```
 
             ```swift
@@ -774,6 +794,9 @@ class CommandLineTests: XCTestCase {
                 url.path,
                 "--markdownfiles", "format-lenient",
                 "--rules", "indent",
+                "--rules", "braces",
+                "--rules", "spaceInsideParens",
+                "--rules", "linebreakAtEndOfFile",
             ], in: "")
 
             let updatedReadme = try String(contentsOf: url, encoding: .utf8)
@@ -791,18 +814,37 @@ class CommandLineTests: XCTestCase {
             ) -> Foo { ... }
             ```
 
-            ```swift
+            ```swift --indent 2
+            func foo(
+              bar: Bar,
+              baaz: Baaz
+            ) -> Foo { ... }
+            ```
+
+            ```swift --disable indent
             print("foo")
-            print("bar")
-            print("baaz")
+              print("bar")
+                print("baaz")
             ```
 
-            ```swift
-            --markdownfiles format-lenient ignores blocks that can't be parsed:
-            print("Foo
+            ```swift --disable spaceInsideParens
+            print( "foo" )
+            print( "bar" )
+            print( "baaz" )
             ```
 
-            Thanks for reading!
+            ```swift --enable organizeDeclarations
+            class Foo {
+
+                // MARK: Lifecycle
+
+                init() {}
+
+                // MARK: Internal
+
+                func bar() {}
+            }
+            ```
             """)
         }
     }
@@ -824,6 +866,11 @@ class CommandLineTests: XCTestCase {
 
             ```swift
             --markdownfiles format-strict fails if there are parsing errors:
+            print("Foo
+            ```
+
+            ```swift no-format
+            This block is ignored
             print("Foo
             ```
 

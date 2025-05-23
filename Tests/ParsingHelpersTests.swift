@@ -2820,7 +2820,7 @@ class ParsingHelpersTests: XCTestCase {
 
         and:
 
-        ```swift
+        ```swift no-format
         class Foo {
             public init() {}
             public func bar() {}
@@ -2829,7 +2829,7 @@ class ParsingHelpersTests: XCTestCase {
 
         This sample code even has a multi-line string in it:
 
-        ```swift
+        ```swift --indentstrings true
         let codeBlock = """
           ```swift
           print("foo")
@@ -2862,6 +2862,8 @@ class ParsingHelpersTests: XCTestCase {
             """#
         )
 
+        XCTAssertEqual(codeBlocks[1].options, "no-format")
+
         XCTAssertEqual(
             codeBlocks[2].text,
             #"""
@@ -2872,5 +2874,7 @@ class ParsingHelpersTests: XCTestCase {
               """
             """#
         )
+
+        XCTAssertEqual(codeBlocks[2].options, "--indentstrings true")
     }
 }

@@ -218,6 +218,7 @@ func printHelp(as type: CLI.OutputType) {
     --verbose          Display detailed formatting output and warnings/errors
     --quiet            Disables non-critical output messages and warnings
     --outputtokens     Outputs an array of tokens instead of text when using stdin
+    --markdownfiles    Format Swift code block in markdown files: 'format-strict', 'format-lenient' (ignore parsing errors), or  'ignore' (default)
 
     SwiftFormat has a number of rules that can be enabled or disabled. By default
     most rules are enabled. Use --rules to display all enabled/disabled rules.
@@ -945,11 +946,11 @@ func computeHash(_ source: String) -> String {
     return "\(count)\(hash)"
 }
 
-func applyRules(_ source: String, options: Options, lineRange: ClosedRange<Int>?,
+func applyRules(_ source: String, tokens: [Token]? = nil, options: Options, lineRange: ClosedRange<Int>?,
                 verbose: Bool, lint: Bool, reporter: Reporter?) throws -> [Token]
 {
     // Parse source
-    var tokens = tokenize(source)
+    var tokens = tokens ?? tokenize(source)
 
     // Get rules
     let rulesByName = FormatRules.byName
@@ -1089,11 +1090,71 @@ func processInput(_ inputURLs: [URL],
                         print("-- no changes (cached)", as: .success)
                     }
                 } else {
-                    let outputTokens = try applyRules(input, options: options, lineRange: lineRange,
-                                                      verbose: verbose, lint: lint, reporter: reporter)
-                    output = sourceCode(for: outputTokens)
-                    if output != input {
-                        sourceHash = nil
+                    // Format individual code blocks in markdown files is enabled
+                    if inputURL.pathExtension == "md", options.fileOptions?.supportedFileExtensions.contains("md") == true {
+                        var markdown = input
+                        let swiftCodeBlocks = parseSwiftCodeBlocks(fromMarkdown: input)
+
+                        // Iterate backwards through the code blocks to not invalidate existing indices
+                        for swiftCodeBlock in swiftCodeBlocks.reversed() {
+                            // Determine the options to use when formatting this block
+                            var markdownOptions = options
+                            markdownOptions.formatOptions?.fragment = true
+
+                            if swiftCodeBlock.options?.contains("no-format") == true {
+                                continue
+                            } else if let options = swiftCodeBlock.options?.components(separatedBy: " "), !options.isEmpty {
+                                let arguments = try preprocessArguments(options, commandLineArguments)
+                                try applyArguments(arguments, lint: lint, to: &markdownOptions)
+                            }
+
+                            // Update linebreak line numbers to reflect the actual line in the markdown file
+                            // rather than only the line within the code block. This makes it easier to
+                            // understand printed diagnostics that include line numbers.
+                            let inputTokens = tokenize(swiftCodeBlock.text).map { token in
+                                if case let .linebreak(string, lineInCodeBlock) = token {
+                                    return Token.linebreak(string, lineInCodeBlock + swiftCodeBlock.lineStartIndex)
+                                } else {
+                                    return token
+                                }
+                            }
+
+                            var outputTokens: [Token]?
+                            let parsingError = parsingError(for: inputTokens, options: markdownOptions.formatOptions ?? .default, allowErrorsInFragments: false)
+
+                            switch options.fileOptions?.markdownFormattingMode {
+                            case .lenient, nil:
+                                // Ignore code blocks that fail to parse
+                                if parsingError == nil {
+                                    outputTokens = try? applyRules(swiftCodeBlock.text, tokens: inputTokens, options: markdownOptions, lineRange: lineRange,
+                                                                   verbose: verbose, lint: lint, reporter: reporter)
+                                }
+                            case .strict:
+                                if let parsingError {
+                                    throw parsingError
+                                }
+
+                                outputTokens = try applyRules(swiftCodeBlock.text, tokens: inputTokens, options: markdownOptions, lineRange: lineRange,
+                                                              verbose: verbose, lint: lint, reporter: reporter)
+                            }
+
+                            if let outputTokens {
+                                assert(markdown[swiftCodeBlock.range] == swiftCodeBlock.text)
+                                markdown.replaceSubrange(swiftCodeBlock.range, with: sourceCode(for: outputTokens))
+                            }
+                        }
+
+                        output = markdown
+                        if markdown != input {
+                            sourceHash = nil
+                        }
+                    } else {
+                        let outputTokens = try applyRules(input, options: options, lineRange: lineRange,
+                                                          verbose: verbose, lint: lint, reporter: reporter)
+                        output = sourceCode(for: outputTokens)
+                        if output != input {
+                            sourceHash = nil
+                        }
                     }
                 }
                 let cacheValue = cache.map { _ in
@@ -1230,4 +1291,59 @@ private struct OutputTokensData: Encodable {
         let encodedData = try encoder.encode(outputData)
         return String(data: encodedData, encoding: .utf8)!
     }
+}
+
+/// Parses Swift code blocks in the given code file.
+///
+/// Any text on following the open delimiter on that initial line is returned in `options`.
+///
+/// For example:
+///
+/// ```swift {{options like `no-format`, `--disable ruleName` can be put here}}
+/// // This content is returned as text,
+/// // and its range in the markdown string is returned as range.
+/// ```
+func parseSwiftCodeBlocks(fromMarkdown markdown: String)
+    -> [(range: Range<String.Index>, text: String, options: String?, lineStartIndex: Int)]
+{
+    let lines = markdown.lineRanges
+    var codeBlocks: [(range: Range<String.Index>, text: String, options: String?, lineStartIndex: Int)] = []
+    var codeStartLineIndex: Int?
+    var codeBlockOptions: String?
+    var codeBlockStack = 0
+
+    for (lineIndex, lineRange) in lines.enumerated() {
+        let lineText = markdown[lineRange].trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if lineText.hasPrefix("```"), lineText != "```" {
+            // If we're already inside a code block, don't start a new one
+            if codeStartLineIndex != nil {
+                codeBlockStack += 1
+            } else if lineText.hasPrefix("```swift"), lineIndex != lines.indices.last {
+                codeStartLineIndex = lineIndex + 1
+
+                // Any text following the code block start delimiter are treated as SwiftFormat options
+                if lineText.hasPrefix("```swift ") {
+                    codeBlockOptions = String(lineText.dropFirst("```swift ".count))
+                }
+            }
+        } else if lineText == "```", let startLine = codeStartLineIndex {
+            if codeBlockStack > 0 {
+                // If we're inside a nested code block, pop it off the stack.
+                codeBlockStack -= 1
+            } else {
+                // Otherwise this is the end of a code block
+                let codeEnd = lines[lineIndex - 1].upperBound
+                let range = lines[startLine].lowerBound ..< codeEnd
+                let codeText = String(markdown[range])
+
+                assert(markdown[range] == codeText)
+                codeBlocks.append((range, codeText, codeBlockOptions, startLine))
+                codeStartLineIndex = nil
+                codeBlockOptions = nil
+            }
+        }
+    }
+
+    return codeBlocks
 }

@@ -802,11 +802,31 @@ extension String {
     }
 }
 
-private extension Collection<Token> where Index == Int {
+extension Collection<Token> {
     /// Ranges of lines within this array of tokens
-    var lineRanges: [ClosedRange<Int>] {
-        var lineRanges: [ClosedRange<Int>] = []
-        var currentLine: ClosedRange<Int>?
+    var lineRanges: [ClosedRange<Index>] {
+        lineRanges(isLinebreak: \.isLinebreak)
+    }
+
+    /// All of the lines within this array of tokens
+    var lines: [SubSequence] {
+        lineRanges.map { lineRange in
+            self[lineRange]
+        }
+    }
+}
+
+extension String {
+    /// Ranges of lines within this string
+    var lineRanges: [ClosedRange<Index>] {
+        lineRanges(isLinebreak: { $0 == "\n" })
+    }
+}
+
+private extension Collection {
+    func lineRanges(isLinebreak: (Element) -> Bool) -> [ClosedRange<Index>] {
+        var lineRanges: [ClosedRange<Index>] = []
+        var currentLine: ClosedRange<Index>?
 
         for (index, token) in zip(indices, self) {
             if currentLine == nil {
@@ -815,7 +835,7 @@ private extension Collection<Token> where Index == Int {
                 currentLine = currentLine!.lowerBound ... index
             }
 
-            if token.isLinebreak {
+            if isLinebreak(token) {
                 lineRanges.append(currentLine!)
                 currentLine = nil
             }
@@ -826,13 +846,6 @@ private extension Collection<Token> where Index == Int {
         }
 
         return lineRanges
-    }
-
-    /// All of the lines within this array of tokens
-    var lines: [SubSequence] {
-        lineRanges.map { lineRange in
-            self[lineRange]
-        }
     }
 }
 

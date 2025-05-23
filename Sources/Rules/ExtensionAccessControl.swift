@@ -13,8 +13,6 @@ public extension FormatRule {
         help: "Configure the placement of an extension's access control keyword.",
         options: ["extensionacl"]
     ) { formatter in
-        guard !formatter.options.fragment else { return }
-
         let declarations = formatter.parseDeclarations()
         declarations.forEachRecursiveDeclaration { declaration in
             guard let extensionDeclaration = declaration.asTypeDeclaration,

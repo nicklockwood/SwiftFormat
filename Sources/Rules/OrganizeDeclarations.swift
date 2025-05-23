@@ -23,8 +23,6 @@ public extension FormatRule {
         ],
         sharedOptions: ["sortedpatterns", "lineaftermarks", "linebreaks"]
     ) { formatter in
-        guard !formatter.options.fragment else { return }
-
         formatter.parseDeclarations().forEachRecursiveDeclaration { declaration in
             // Organize the body of type declarations
             guard let typeDeclaration = declaration.asTypeDeclaration else { return }

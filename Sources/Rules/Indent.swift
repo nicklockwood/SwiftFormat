@@ -663,7 +663,7 @@ public extension FormatRule {
                         ) ?? index
                     }
                     let lastToken = formatter.tokens[lastIndex]
-                    if formatter.options.fragment, lastToken == .delimiter(",") {
+                    if formatter.options.fragment, lastToken == .delimiter(","), formatter.startOfScope(at: i) == nil {
                         break // Can't reliably indent
                     }
                     if lastIndex == formatter.startOfLine(at: lastIndex, excludingIndent: true) {

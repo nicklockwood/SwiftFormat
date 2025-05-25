@@ -1,0 +1,16 @@
+name: "validate"
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  check-pr-base:
+    name: "Pull request base is 'develop'"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if PR base is not 'develop'
+        if: github.event.pull_request.base.ref != 'develop'
+        run: |
+          echo "❌ Pull request must target the 'develop' branch. Current base: '${{ github.event.pull_request.base.ref }}'"
+          exit 1

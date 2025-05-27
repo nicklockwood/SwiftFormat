@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.56.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.56.2) (2025-05-27)
+
+- Fixed issues where `trailingCommas` rule would insert commas in `@escpaing` or `@Sendable` closure types (not supported in Swift 6.1)
+- Fixed issue where `privateStateVariables` rule handled `@Previewable` attributes on previous line incorrectly
+
 ## [0.56.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.56.1) (2025-05-13)
 
 - Fixed several issues where `trailingCommas` rule would insert commas in places not actually supported by Swift 6.1

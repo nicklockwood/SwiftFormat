@@ -61,9 +61,17 @@ public extension FormatRule {
                    let startOfScope = formatter.startOfScope(at: i),
                    let tokenBeforeStartOfScope = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope)
                 {
-                    // `= (...)`, `{ (...) }`, `return (...)` etc are always tuple values
-                    let tokensPreceedingValuesNotTypes: Set<Token> = [.operator("=", .infix), .startOfScope("{"), .keyword("return"), .keyword("throw"), .keyword("switch"), .endOfScope("case")]
+                    // `{ (...) }`, `return (...)` etc are always tuple values
+                    // (except in the case of a typealias, where the rhs is a type)
+                    let tokensPreceedingValuesNotTypes: Set<Token> = [.startOfScope("{"), .keyword("return"), .keyword("throw"), .keyword("switch"), .endOfScope("case")]
                     if tokensPreceedingValuesNotTypes.contains(formatter.tokens[tokenBeforeStartOfScope]) {
+                        trailingCommaSupported = true
+                    }
+
+                    // `= (...)` is a tuple value, unless this is a typealias.
+                    if formatter.tokens[tokenBeforeStartOfScope] == .operator("=", .infix),
+                       formatter.lastSignificantKeyword(at: tokenBeforeStartOfScope) != "typealias"
+                    {
                         trailingCommaSupported = true
                     }
 

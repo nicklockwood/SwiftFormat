@@ -447,15 +447,25 @@ class TrailingCommasTests: XCTestCase {
 
     func testTrailingCommasAddedToTuple() {
         let input = """
-        let foo = (
+        var foo = (
             bar: 0,
             baz: 1
         )
+
+        foo = (
+            bar: 1,
+            baz: 2
+        )
         """
         let output = """
-        let foo = (
+        var foo = (
             bar: 0,
             baz: 1,
+        )
+
+        foo = (
+            bar: 1,
+            baz: 2,
         )
         """
         let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
@@ -693,6 +703,34 @@ class TrailingCommasTests: XCTestCase {
                 _ error: LocationServiceError?
             ) -> Void
         )?) {}
+        """
+
+        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        testFormatting(for: input, rule: .trailingCommas, options: options)
+    }
+
+    func testTrailingCommasPreservedInClosureTupleTypealiasesInSwift6_1() {
+        let input = """
+        public typealias StringToInt = (
+            String
+        ) -> Int
+
+        enum Toster {
+            public typealias StringToInt = ((
+                String
+            ) -> Int)?
+        }
+
+        public typealias Tuple = (
+            foo: String,
+            bar: Int
+        )
+
+        public typealias OptionalTuple = (
+            foo: String,
+            bar: Int,
+            baaz: Bool
+        )?
         """
 
         let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")

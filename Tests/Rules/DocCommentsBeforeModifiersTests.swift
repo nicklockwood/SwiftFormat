@@ -95,7 +95,7 @@ class DocCommentsBeforeModifiersTests: XCTestCase {
         func bar() {}
         """
 
-        testFormatting(for: input, output, rule: .docCommentsBeforeModifiers)
+        testFormatting(for: input, output, rule: .docCommentsBeforeModifiers, exclude: [.modifiersOnSameLine])
     }
 
     func testUpdatesCommentsAfterMark() {

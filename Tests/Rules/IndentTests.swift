@@ -190,7 +190,7 @@ class IndentTests: XCTestCase {
 
     func testNoIndentWrappedModifiersForProtocol() {
         let input = "@objc\nprivate\nprotocol Foo {}"
-        testFormatting(for: input, rule: .indent)
+        testFormatting(for: input, rule: .indent, exclude: [.modifiersOnSameLine])
     }
 
     // indent braces

@@ -5,7 +5,7 @@ import Foundation
 
 public extension FormatRule {
     static let throwingTests = FormatRule(
-        help: "Write tests that use `throws` instead of using `try!`"
+        help: "Write tests that use `throws` instead of using `try!`."
     ) { formatter in
         guard formatter.hasImport("Testing") else { return }
 

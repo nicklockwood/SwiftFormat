@@ -525,7 +525,7 @@ extension Formatter {
         }
     }
 
-    /// Whether or not this index the start of scope of a closure literal, eg `{` but not some other type of scope. 
+    /// Whether or not this index the start of scope of a closure literal, eg `{` but not some other type of scope.
     func isStartOfClosure(at i: Int) -> Bool {
         guard token(at: i) == .startOfScope("{") else {
             return false

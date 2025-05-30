@@ -79,6 +79,7 @@
 * [strongOutlets](#strongOutlets)
 * [strongifiedSelf](#strongifiedSelf)
 * [swiftTestingTestCaseNames](#swiftTestingTestCaseNames)
+* [throwingTests](#throwingTests)
 * [todos](#todos)
 * [trailingClosures](#trailingClosures)
 * [trailingCommas](#trailingCommas)
@@ -3071,6 +3072,27 @@ In Swift Testing, don't prefix @Test methods with 'test'.
       }
   }
 ```
+
+</details>
+<br/>
+
+## throwingTests
+
+Write tests that use `throws` instead of using `try!`.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+import Testing
+
+struct MyFeatureTests {
+- @Test func doSomething() {
++ @Test func doSomething() throws {
+     - try! MyFeature().doSomething()
+     + try MyFeature().doSomething()
+    }
+}
 
 </details>
 <br/>

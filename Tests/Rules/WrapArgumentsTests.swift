@@ -1134,12 +1134,12 @@ class WrapArgumentsTests: XCTestCase {
 
     func testWrapProtocolFuncParametersBeforeFirst() {
         let input = """
-        protocol Foo {
+        public protocol Foo {
             public func stringify<T>(_ value: T, label: String) -> (T, String)
         }
         """
         let output = """
-        protocol Foo {
+        public protocol Foo {
             public func stringify<T>(
                 _ value: T,
                 label: String

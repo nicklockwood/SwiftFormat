@@ -126,45 +126,32 @@ class RedundantPublicTests: XCTestCase {
         testFormatting(for: input, [output], rules: [.redundantPublic], exclude: [.enumNamespaces])
     }
 
-    func testRemovesPublicFromInternalExtension() {
-        let input = """
-        internal extension String {
-            public var isEmpty: Bool { count == 0 }
-            public func reversed() -> String { String(reversed()) }
-        }
-        """
-        let output = """
-        internal extension String {
-            var isEmpty: Bool { count == 0 }
-            func reversed() -> String { String(reversed()) }
-        }
-        """
-        testFormatting(for: input, [output], rules: [.redundantPublic], exclude: [.redundantInternal])
-    }
-
-    func testRemovesPublicFromDefaultExtension() {
+    func testPreservesPublicInExtension() {
         let input = """
         extension Array {
             public var isNotEmpty: Bool { !isEmpty }
         }
         """
-        let output = """
-        extension Array {
-            var isNotEmpty: Bool { !isEmpty }
-        }
-        """
-        testFormatting(for: input, [output], rules: [.redundantPublic])
+        testFormatting(for: input, rules: [.redundantPublic])
     }
 
-    func testDoesNotRemovePublicFromPublicExtension() {
+    func testRemovesPublicInTypeInExtension() {
         let input = """
-        public extension Collection {
-            public func customMap<T>(_ transform: (Element) -> T) -> [T] {
-                map(transform)
+        extension Foo {
+            struct Bar {
+                public var baaz: Int
             }
         }
         """
-        testFormatting(for: input, rules: [.redundantPublic], exclude: [.redundantExtensionACL])
+
+        let output = """
+        extension Foo {
+            struct Bar {
+                var baaz: Int
+            }
+        }
+        """
+        testFormatting(for: input, [output], rules: [.redundantPublic])
     }
 
     func testRemovesPublicFromEnumCasesInInternalEnum() {

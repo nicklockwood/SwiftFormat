@@ -10,7 +10,7 @@ import Foundation
 
 public extension FormatRule {
     static let redundantPublic = FormatRule(
-        help: "Remove redundant public access control from declarations in internal types or extensions."
+        help: "Remove redundant public access control from declarations in internal types."
     ) { formatter in
         let declarations = formatter.parseDeclarations()
 
@@ -19,11 +19,14 @@ public extension FormatRule {
             // Skip if the declaration doesn't have public visibility
             guard declaration.visibility() == .public else { return }
 
-            // Find the parent type or extension
+            // If the direct parent is an extension, preserve the existing access control.
+            if declaration.parent?.keyword == "extension" { return }
+
+            // Find the parent type
             var currentParent = declaration.parent
             while let parent = currentParent {
                 if let parentType = parent.asTypeDeclaration {
-                    // Check if the parent type/extension has an explicit visibility
+                    // Check if the parent type has an explicit visibility
                     let parentVisibility = parent.visibility() ?? .internal
 
                     // If the parent is internal (explicitly or by default),

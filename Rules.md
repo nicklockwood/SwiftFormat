@@ -2408,7 +2408,7 @@ Simplifies redundant property definitions that are immediately returned.
 
 ## redundantPublic
 
-Remove redundant public access control from declarations in internal types or extensions.
+Remove redundant public access control from declarations in internal types.
 
 <details>
 <summary>Examples</summary>

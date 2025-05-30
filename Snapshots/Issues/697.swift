@@ -73,10 +73,10 @@ class _FirestoreDecoder: Decoder {
 
   /// The path to the current point in the container tree. Given the root container, one could
   /// conceptually reconstruct `storage` by following `codingPath` from the root container.
-  public fileprivate(set) var codingPath: [CodingKey]
+  fileprivate(set) var codingPath: [CodingKey]
 
   /// Contextual user-provided information for use during encoding.
-  public var userInfo: [CodingUserInfoKey: Any] = [:]
+  var userInfo: [CodingUserInfoKey: Any] = [:]
 
   // MARK: - Initialization
 
@@ -89,7 +89,7 @@ class _FirestoreDecoder: Decoder {
 
   // MARK: - Decoder Methods
 
-  public func container<Key>(keyedBy _: Key.Type) throws -> KeyedDecodingContainer<Key> {
+  func container<Key>(keyedBy _: Key.Type) throws -> KeyedDecodingContainer<Key> {
     guard !(storage.topContainer is NSNull) else {
       throw DecodingError.valueNotFound(KeyedDecodingContainer<Key>.self,
                                         DecodingError.Context(codingPath: codingPath,
@@ -106,7 +106,7 @@ class _FirestoreDecoder: Decoder {
     return KeyedDecodingContainer(container)
   }
 
-  public func unkeyedContainer() throws -> UnkeyedDecodingContainer {
+  func unkeyedContainer() throws -> UnkeyedDecodingContainer {
     guard !(storage.topContainer is NSNull) else {
       throw DecodingError.valueNotFound(UnkeyedDecodingContainer.self,
                                         DecodingError.Context(codingPath: codingPath,
@@ -121,7 +121,7 @@ class _FirestoreDecoder: Decoder {
     return _FirestoreUnkeyedDecodingContainer(referencing: self, wrapping: topContainer)
   }
 
-  public func singleValueContainer() throws -> SingleValueDecodingContainer {
+  func singleValueContainer() throws -> SingleValueDecodingContainer {
     return self
   }
 }

@@ -10,7 +10,7 @@ enum FormatError: Error, CustomStringConvertible {
     case options(String)
     case generic(String)
 
-    public init(_ error: Error) {
+    init(_ error: Error) {
         switch error {
         case let error as FormatError:
             self = error
@@ -21,7 +21,7 @@ enum FormatError: Error, CustomStringConvertible {
         }
     }
 
-    public var description: String {
+    var description: String {
         switch self {
         case let .reading(string),
              let .writing(string),
@@ -33,7 +33,7 @@ enum FormatError: Error, CustomStringConvertible {
     }
 
     /// Converts error thrown by the wrapped closure to a LayoutError
-    public static func wrap<T>(_ closure: () throws -> T) throws -> T {
+    static func wrap<T>(_ closure: () throws -> T) throws -> T {
         do {
             return try closure()
         } catch {
@@ -44,11 +44,11 @@ enum FormatError: Error, CustomStringConvertible {
 
 /// File enumeration options
 struct FileOptions {
-    public var followSymlinks: Bool
-    public var supportedFileExtensions: [String]
+    var followSymlinks: Bool
+    var supportedFileExtensions: [String]
 
-    public init(followSymlinks: Bool = false,
-                supportedFileExtensions: [String] = ["xml"])
+    init(followSymlinks: Bool = false,
+         supportedFileExtensions: [String] = ["xml"])
     {
         self.followSymlinks = followSymlinks
         self.supportedFileExtensions = supportedFileExtensions

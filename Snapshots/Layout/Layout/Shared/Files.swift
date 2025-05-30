@@ -7,17 +7,17 @@ struct FileError: Error, CustomStringConvertible {
     let message: String
     let file: URL
 
-    public init(_ message: String, for file: URL) {
+    init(_ message: String, for file: URL) {
         self.message = message
         self.file = file
     }
 
-    public init(_ error: Error, for file: URL) {
+    init(_ error: Error, for file: URL) {
         let message = (error as NSError).localizedDescription
         self.init(message, for: file)
     }
 
-    public var description: String {
+    var description: String {
         var description = message
         if !description.contains(file.path) {
             description = "\(description) at \(file.path)"

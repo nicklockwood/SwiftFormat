@@ -48,7 +48,7 @@ class ModifiersOnSameLineTests: XCTestCase {
 
     func testMultipleModifiersOnMultipleLinesAreCombined() {
         let input = """
-        class Container {
+        public class Container {
             public
             static
             final
@@ -56,7 +56,7 @@ class ModifiersOnSameLineTests: XCTestCase {
         }
         """
         let output = """
-        class Container {
+        public class Container {
             public static final var foo: String = ""
         }
         """

@@ -55,6 +55,7 @@
 * [redundantOptionalBinding](#redundantOptionalBinding)
 * [redundantParens](#redundantParens)
 * [redundantPattern](#redundantPattern)
+* [redundantPublic](#redundantPublic)
 * [redundantRawValues](#redundantRawValues)
 * [redundantReturn](#redundantReturn)
 * [redundantSelf](#redundantSelf)
@@ -2400,6 +2401,35 @@ Simplifies redundant property definitions that are immediately returned.
 -   return foo
 +   return Foo()
   }
+```
+
+</details>
+<br/>
+
+## redundantPublic
+
+Remove redundant public access control from declarations in internal types or extensions.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+struct Foo {
+-   public let bar: Bar
++   let bar: Bar
+-   public func baz() {}
++   func baz() {}
+}
+
+internal class Example {
+-   public var value: Int
++   var value: Int
+}
+
+// Public modifier is not removed in public types
+public struct PublicType {
+    public let value: String // This remains public
+}
 ```
 
 </details>

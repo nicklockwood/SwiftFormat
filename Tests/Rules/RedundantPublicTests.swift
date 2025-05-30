@@ -207,4 +207,40 @@ class RedundantPublicTests: XCTestCase {
         """
         testFormatting(for: input, [output], rules: [.redundantPublic])
     }
+
+    func testPreservesPublicInConditionalCompilationInsideExtension() {
+        let input = """
+        extension Foo {
+            #if DEBUG
+                public var publicProperty: Int { 10 }
+
+            #if OTHER_CONDITION
+                public var otherPublicProperty: Int { 10 }
+            #endif
+            #endif
+        }
+        """
+        testFormatting(for: input, rules: [.redundantPublic], exclude: [.indent])
+    }
+
+    func testPreservesPublicInNestedTypeInsidePublicExtension() {
+        let input = """
+        public extension Foo {
+            struct Bar {
+                private var foo: Int
+                private let bar: Int
+
+                public var foobar: (Int, Int) {
+                    (foo, bar)
+                }
+
+                public init(foo: Int, bar: Int) {
+                    self.foo = foo
+                    self.bar = bar
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rules: [.redundantPublic])
+    }
 }

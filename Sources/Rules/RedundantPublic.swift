@@ -19,29 +19,37 @@ public extension FormatRule {
             // Skip if the declaration doesn't have public visibility
             guard declaration.visibility() == .public else { return }
 
-            // If the direct parent is an extension, preserve the existing access control.
-            if declaration.parent?.keyword == "extension" { return }
+            // Walk up the parent chain
+            var parent = declaration.parent
+            var enclosingType: TypeDeclaration?
+            var hasPublicExtension = false
+            var insideExtension = false
 
-            // Find the parent type
-            var currentParent = declaration.parent
-            while let parent = currentParent {
-                if let parentType = parent.asTypeDeclaration {
-                    // Check if the parent type has an explicit visibility
-                    let parentVisibility = parent.visibility() ?? .internal
-
-                    // If the parent is internal (explicitly or by default),
-                    // then public on child declarations is redundant
-                    if parentVisibility == .internal {
-                        declaration.removeVisibility(.public)
-                        return
+            while let currentParent = parent {
+                switch currentParent.keyword {
+                case "extension":
+                    insideExtension = true
+                    if currentParent.visibility() == .public {
+                        hasPublicExtension = true
                     }
 
-                    // If we found a parent type/extension with non-internal visibility,
-                    // the public modifier is not redundant
-                    return
+                default:
+                    if let typeDeclaration = currentParent.asTypeDeclaration {
+                        // Found a type declaration (class, struct, enum)
+                        enclosingType = typeDeclaration
+                        // Stop looking once we find a concrete type
+                        break
+                    }
                 }
+                parent = currentParent.parent
+            }
 
-                currentParent = parent.parent
+            // Remove public only if the enclosing type is internal and not in a public extension
+            if let enclosingType,
+               enclosingType.visibility() ?? .internal == .internal,
+               !hasPublicExtension
+            {
+                declaration.removeVisibility(.public)
             }
         }
     } examples: {

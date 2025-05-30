@@ -2414,22 +2414,17 @@ Remove redundant public access control from declarations in internal types or ex
 <summary>Examples</summary>
 
 ```diff
-struct Foo {
--   public let bar: Bar
-+   let bar: Bar
--   public func baz() {}
-+   func baz() {}
-}
+  struct Foo {
+-     public let bar: Bar
++     let bar: Bar
+-     public func baz() {}
++     func baz() {}
+  }
 
-internal class Example {
--   public var value: Int
-+   var value: Int
-}
-
-// Public modifier is not removed in public types
-public struct PublicType {
-    public let value: String // This remains public
-}
+  internal class Example {
+-     public var value: Int
++     var value: Int
+  }
 ```
 
 </details>

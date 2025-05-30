@@ -109,6 +109,7 @@ let ruleRegistry: [String: FormatRule] = [
     "strongOutlets": .strongOutlets,
     "strongifiedSelf": .strongifiedSelf,
     "swiftTestingTestCaseNames": .swiftTestingTestCaseNames,
+    "throwingTests": .throwingTests,
     "todos": .todos,
     "trailingClosures": .trailingClosures,
     "trailingCommas": .trailingCommas,

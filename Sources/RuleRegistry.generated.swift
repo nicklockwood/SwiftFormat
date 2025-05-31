@@ -81,6 +81,7 @@ let ruleRegistry: [String: FormatRule] = [
     "redundantParens": .redundantParens,
     "redundantPattern": .redundantPattern,
     "redundantProperty": .redundantProperty,
+    "redundantPublic": .redundantPublic,
     "redundantRawValues": .redundantRawValues,
     "redundantReturn": .redundantReturn,
     "redundantSelf": .redundantSelf,

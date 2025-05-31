@@ -12,7 +12,7 @@ import XCTest
 class OrganizeDeclarationsTests: XCTestCase {
     func testOrganizeClassDeclarationsIntoCategories() {
         let input = """
-        class Foo {
+        public class Foo {
             private func privateMethod() {}
 
             private let bar = 1
@@ -46,7 +46,7 @@ class OrganizeDeclarationsTests: XCTestCase {
         """
 
         let output = """
-        class Foo {
+        public class Foo {
 
             // MARK: Lifecycle
 
@@ -109,7 +109,7 @@ class OrganizeDeclarationsTests: XCTestCase {
 
     func testOrganizeClassDeclarationsIntoCategoriesWithCustomTypeOrder() {
         let input = """
-        class Foo {
+        public class Foo {
             private func privateMethod() {}
 
             private let bar = 1
@@ -143,7 +143,7 @@ class OrganizeDeclarationsTests: XCTestCase {
         """
 
         let output = """
-        class Foo {
+        public class Foo {
 
             // MARK: Lifecycle
 
@@ -215,7 +215,7 @@ class OrganizeDeclarationsTests: XCTestCase {
 
     func testOrganizeClassDeclarationsIntoCategoriesInTypeOrder() {
         let input = """
-        class Foo {
+        public class Foo {
             private func privateMethod() {}
 
             private let bar = 1
@@ -240,7 +240,7 @@ class OrganizeDeclarationsTests: XCTestCase {
         """
 
         let output = """
-        class Foo {
+        public class Foo {
 
             // MARK: Properties
 
@@ -543,7 +543,7 @@ class OrganizeDeclarationsTests: XCTestCase {
 
     func testCustomOrganizationInVisibilityOrder() {
         let input = """
-        class Foo {
+        public class Foo {
             public func bar() {}
             func baz() {}
             private func quux() {}
@@ -551,7 +551,7 @@ class OrganizeDeclarationsTests: XCTestCase {
         """
 
         let output = """
-        class Foo {
+        public class Foo {
 
             // MARK: Private
 
@@ -580,7 +580,7 @@ class OrganizeDeclarationsTests: XCTestCase {
 
     func testCustomOrganizationInVisibilityOrderWithParametrizedTypeOrder() {
         let input = """
-        class Foo {
+        public class Foo {
 
             // MARK: Private
 
@@ -599,7 +599,7 @@ class OrganizeDeclarationsTests: XCTestCase {
         """
 
         let output = """
-        class Foo {
+        public class Foo {
 
             // MARK: Private
 
@@ -630,7 +630,7 @@ class OrganizeDeclarationsTests: XCTestCase {
 
     func testCustomOrganizationInTypeOrder() {
         let input = """
-        class Foo {
+        public class Foo {
             private func quux() {}
             var baaz: Baaz
             func baz() {}
@@ -641,7 +641,7 @@ class OrganizeDeclarationsTests: XCTestCase {
         """
 
         let output = """
-        class Foo {
+        public class Foo {
 
             // MARK: Lifecycle
 
@@ -678,7 +678,7 @@ class OrganizeDeclarationsTests: XCTestCase {
 
     func testOrganizeDeclarationsIgnoresNotDefinedCategories() {
         let input = """
-        class Foo {
+        public class Foo {
             private func quux() {}
             var baaz: Baaz
             func baz() {}
@@ -689,7 +689,7 @@ class OrganizeDeclarationsTests: XCTestCase {
         """
 
         let output = """
-        class Foo {
+        public class Foo {
 
             // MARK: Lifecycle
 
@@ -723,7 +723,7 @@ class OrganizeDeclarationsTests: XCTestCase {
 
     func testCustomOrganizationInTypeOrderWithParametrizedVisibilityOrder() {
         let input = """
-        class Foo {
+        public class Foo {
             private func quux() {}
             var baaz: Baaz
             private var fooo: Fooo
@@ -735,7 +735,7 @@ class OrganizeDeclarationsTests: XCTestCase {
         """
 
         let output = """
-        class Foo {
+        public class Foo {
 
             // MARK: Lifecycle
 
@@ -841,7 +841,7 @@ class OrganizeDeclarationsTests: XCTestCase {
 
     func testCustomCategoryNamesInVisibilityOrder() {
         let input = """
-        class Foo {
+        public class Foo {
             public var bar: Bar
             init(bar: Bar) {
                 self.bar = bar
@@ -851,7 +851,7 @@ class OrganizeDeclarationsTests: XCTestCase {
         """
 
         let output = """
-        class Foo {
+        public class Foo {
 
             // MARK: Init
 
@@ -882,7 +882,7 @@ class OrganizeDeclarationsTests: XCTestCase {
 
     func testCustomCategoryNamesInTypeOrder() {
         let input = """
-        class Foo {
+        public class Foo {
             public var bar: Bar
             init(bar: Bar) {
                 self.bar = bar
@@ -892,7 +892,7 @@ class OrganizeDeclarationsTests: XCTestCase {
         """
 
         let output = """
-        class Foo {
+        public class Foo {
 
             // MARK: Bar_Bar
 
@@ -1014,7 +1014,7 @@ class OrganizeDeclarationsTests: XCTestCase {
 
     func testOrganizePrivateSet() {
         let input = """
-        class Foo {
+        public class Foo {
             public private(set) var bar: Int
             private(set) var baz: Int
             internal private(set) var baz: Int
@@ -1022,7 +1022,7 @@ class OrganizeDeclarationsTests: XCTestCase {
         """
 
         let output = """
-        class Foo {
+        public class Foo {
 
             // MARK: Public
 
@@ -1298,7 +1298,7 @@ class OrganizeDeclarationsTests: XCTestCase {
 
     func testPlacingCustomDeclarationsBeforeMarks() {
         let input = """
-        struct Foo {
+        public struct Foo {
 
             public init() {}
 
@@ -1310,7 +1310,7 @@ class OrganizeDeclarationsTests: XCTestCase {
         """
 
         let output = """
-        struct Foo {
+        public struct Foo {
 
             public typealias Bar = Int
 
@@ -1333,7 +1333,7 @@ class OrganizeDeclarationsTests: XCTestCase {
 
     func testCustomLifecycleMethods() {
         let input = """
-        class ViewController: UIViewController {
+        public class ViewController: UIViewController {
 
             public init() {
                 super.init(nibName: nil, bundle: nil)
@@ -1353,7 +1353,7 @@ class OrganizeDeclarationsTests: XCTestCase {
         """
 
         let output = """
-        class ViewController: UIViewController {
+        public class ViewController: UIViewController {
 
             // MARK: Lifecycle
 
@@ -1386,14 +1386,14 @@ class OrganizeDeclarationsTests: XCTestCase {
 
     func testCustomCategoryMarkTemplate() {
         let input = """
-        struct Foo {
+        public struct Foo {
             public init() {}
             public func publicInstanceMethod() {}
         }
         """
 
         let output = """
-        struct Foo {
+        public struct Foo {
 
             // - Lifecycle
 
@@ -1429,14 +1429,14 @@ class OrganizeDeclarationsTests: XCTestCase {
 
     func testAboveCustomStructOrganizationThreshold() {
         let input = """
-        struct StructAboveThreshold {
+        public struct StructAboveThreshold {
             init() {}
             public func instanceMethod() {}
         }
         """
 
         let output = """
-        struct StructAboveThreshold {
+        public struct StructAboveThreshold {
 
             // MARK: Lifecycle
 
@@ -1560,7 +1560,7 @@ class OrganizeDeclarationsTests: XCTestCase {
 
     func testUpdatesMalformedMarks() {
         let input = """
-        actor Foo {
+        public actor Foo {
 
             // MARK: lifecycle
 
@@ -1587,7 +1587,7 @@ class OrganizeDeclarationsTests: XCTestCase {
         """
 
         let output = """
-        actor Foo {
+        public actor Foo {
 
             // MARK: Lifecycle
 
@@ -1615,7 +1615,7 @@ class OrganizeDeclarationsTests: XCTestCase {
 
     func testDoesntAttemptToUpdateMarksNotAtTopLevel() {
         let input = """
-        class Foo {
+        public class Foo {
 
             // MARK: Lifecycle
 
@@ -1646,7 +1646,7 @@ class OrganizeDeclarationsTests: XCTestCase {
 
     func testHandlesTrailingCommentCorrectly() {
         let input = """
-        class Foo {
+        public class Foo {
             var bar = "bar"
             /// Leading comment
             public var baz = "baz" // Trailing comment
@@ -1655,7 +1655,7 @@ class OrganizeDeclarationsTests: XCTestCase {
         """
 
         let output = """
-        class Foo {
+        public class Foo {
 
             // MARK: Public
 
@@ -1697,12 +1697,12 @@ class OrganizeDeclarationsTests: XCTestCase {
     func testOrganizesTypesWithinConditionalCompilationBlock() {
         let input = """
         #if DEBUG
-        struct DebugFoo {
+        public struct DebugFoo {
             init() {}
             public func instanceMethod() {}
         }
         #else
-        struct ProductionFoo {
+        public struct ProductionFoo {
             init() {}
             public func instanceMethod() {}
         }
@@ -1711,7 +1711,7 @@ class OrganizeDeclarationsTests: XCTestCase {
 
         let output = """
         #if DEBUG
-        struct DebugFoo {
+        public struct DebugFoo {
 
             // MARK: Lifecycle
 
@@ -1722,7 +1722,7 @@ class OrganizeDeclarationsTests: XCTestCase {
             public func instanceMethod() {}
         }
         #else
-        struct ProductionFoo {
+        public struct ProductionFoo {
 
             // MARK: Lifecycle
 
@@ -1746,7 +1746,7 @@ class OrganizeDeclarationsTests: XCTestCase {
         import UIKit
         #endif
 
-        struct Foo {
+        public struct Foo {
             init() {}
             public func instanceMethod() {}
         }
@@ -1757,7 +1757,7 @@ class OrganizeDeclarationsTests: XCTestCase {
         import UIKit
         #endif
 
-        struct Foo {
+        public struct Foo {
 
             // MARK: Lifecycle
 
@@ -1863,7 +1863,7 @@ class OrganizeDeclarationsTests: XCTestCase {
         import var SomeModule.SomeGlobalVariable
         import func SomeModule.SomeFunc
 
-        struct Foo {
+        public struct Foo {
             init() {}
             public func instanceMethod() {}
         }
@@ -1879,7 +1879,7 @@ class OrganizeDeclarationsTests: XCTestCase {
         import var SomeModule.SomeGlobalVariable
         import func SomeModule.SomeFunc
 
-        struct Foo {
+        public struct Foo {
 
             // MARK: Lifecycle
 
@@ -1899,7 +1899,7 @@ class OrganizeDeclarationsTests: XCTestCase {
 
     func testDoesntBreakStructSynthesizedMemberwiseInitializer() {
         let input = """
-        struct Foo {
+        public struct Foo {
             var bar: Int {
                 didSet {}
             }
@@ -1916,7 +1916,7 @@ class OrganizeDeclarationsTests: XCTestCase {
 
     func testOrganizesStructPropertiesThatDontBreakMemberwiseInitializer() {
         let input = """
-        struct Foo {
+        public struct Foo {
             var computed: String {
                 let didSet = "didSet"
                 let willSet = "willSet"
@@ -1935,7 +1935,7 @@ class OrganizeDeclarationsTests: XCTestCase {
         """
 
         let output = """
-        struct Foo {
+        public struct Foo {
 
             // MARK: Public
 
@@ -1971,7 +1971,7 @@ class OrganizeDeclarationsTests: XCTestCase {
 
     func testPreservesCategoryMarksInStructWithIncorrectSubcategoryOrdering() {
         let input = """
-        struct Foo {
+        public struct Foo {
 
             // MARK: Public
 
@@ -1997,7 +1997,7 @@ class OrganizeDeclarationsTests: XCTestCase {
 
     func testPreservesCommentsAtBottomOfCategory() {
         let input = """
-        struct Foo {
+        public struct Foo {
 
             // MARK: Lifecycle
 
@@ -2019,7 +2019,7 @@ class OrganizeDeclarationsTests: XCTestCase {
 
     func testPreservesCommentsAtBottomOfCategoryWhenReorganizing() {
         let input = """
-        struct Foo {
+        public struct Foo {
 
             // MARK: Lifecycle
 
@@ -2038,7 +2038,7 @@ class OrganizeDeclarationsTests: XCTestCase {
         """
 
         let output = """
-        struct Foo {
+        public struct Foo {
 
             // MARK: Lifecycle
 
@@ -2067,7 +2067,7 @@ class OrganizeDeclarationsTests: XCTestCase {
 
     func testDoesntRemoveCategorySeparatorsFromBodyNotBeingOrganized() {
         let input = """
-        struct Foo {
+        public struct Foo {
 
             // MARK: Lifecycle
 
@@ -2145,7 +2145,7 @@ class OrganizeDeclarationsTests: XCTestCase {
 
     func testFuncWithNestedInitNotTreatedAsLifecycle() {
         let input = """
-        struct Foo {
+        public struct Foo {
 
             // MARK: Public
 
@@ -2202,7 +2202,7 @@ class OrganizeDeclarationsTests: XCTestCase {
 
     func testOrganizeClassDeclarationsIntoCategoriesWithNoBlankLineAfterMark() {
         let input = """
-        class Foo {
+        public class Foo {
             private func privateMethod() {}
 
             private let bar = 1
@@ -2218,7 +2218,7 @@ class OrganizeDeclarationsTests: XCTestCase {
         """
 
         let output = """
-        class Foo {
+        public class Foo {
 
             // MARK: Lifecycle
             init() {}
@@ -2253,7 +2253,7 @@ class OrganizeDeclarationsTests: XCTestCase {
 
     func testOrganizeWithNoCategoryMarks_noSpacesBetweenDeclarations() {
         let input = """
-        class Foo {
+        public class Foo {
             private func privateMethod() {}
             private let bar = 1
             public let baz = 1
@@ -2261,7 +2261,7 @@ class OrganizeDeclarationsTests: XCTestCase {
         """
 
         let output = """
-        class Foo {
+        public class Foo {
             public let baz = 1
 
             private let bar = 1
@@ -2279,7 +2279,7 @@ class OrganizeDeclarationsTests: XCTestCase {
 
     func testOrganizeWithNoCategoryMarks_withSpacesBetweenDeclarations() {
         let input = """
-        class Foo {
+        public class Foo {
             private func privateMethod() {}
 
             private let bar = 1
@@ -2291,7 +2291,7 @@ class OrganizeDeclarationsTests: XCTestCase {
         """
 
         let output = """
-        class Foo {
+        public class Foo {
             public let baz = 1
 
             private let bar = 1
@@ -2335,7 +2335,7 @@ class OrganizeDeclarationsTests: XCTestCase {
 
     func testOrganizeConditionalPublicFunction() {
         let input = """
-        class Foo {
+        public class Foo {
 
             // MARK: Lifecycle
 
@@ -2629,7 +2629,7 @@ class OrganizeDeclarationsTests: XCTestCase {
 
     func testOrganizeDeclarationsContainingNonisolated() {
         let input = """
-        class Test {
+        public class Test {
             public static func test1() {}
 
             private nonisolated(unsafe) static var test3: ((
@@ -2641,7 +2641,7 @@ class OrganizeDeclarationsTests: XCTestCase {
         }
         """
         let output = """
-        class Test {
+        public class Test {
 
             // MARK: Public
 
@@ -3783,7 +3783,7 @@ class OrganizeDeclarationsTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .organizeDeclarations, exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope])
+        testFormatting(for: input, output, rule: .organizeDeclarations, exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .redundantPublic])
     }
 
     func testOrganizeDeclarationsSortsEnumNamespace() {

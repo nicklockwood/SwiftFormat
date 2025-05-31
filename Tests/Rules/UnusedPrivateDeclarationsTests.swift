@@ -245,7 +245,7 @@ class UnusedPrivateDeclarationsTests: XCTestCase {
 
     func testDoesNotRemovePropertyWrapperPrefixesIfUsed() {
         let input = """
-        struct ContentView: View {
+        public struct ContentView: View {
             public init() {
                 _showButton = .init(initialValue: false)
             }

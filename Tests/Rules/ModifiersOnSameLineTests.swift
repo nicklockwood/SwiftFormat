@@ -169,6 +169,23 @@ class ModifiersOnSameLineTests: XCTestCase {
         let output = """
         public private(set) var complexProperty: String
         """
-        testFormatting(for: input, output, rule: .modifiersOnSameLine, exclude: [.redundantInternal, .redundantFileprivate, .modifierOrder])
+        testFormatting(for: input, output, rule: .modifiersOnSameLine)
+    }
+
+    func testDoesNotConfusePropertyIdentifierWithModifier() {
+        let input = """
+        @Environment(\\.rowPaddingOverride) private var override
+        private var resolvedRowPadding: AdaptiveEdgeInsets
+        """
+        testFormatting(for: input, rule: .modifiersOnSameLine)
+    }
+
+    func testDoesNotUnwrapWhenLineWouldExceedMaxWidth() {
+        let input = """
+        public private(set)
+        var propertyWithAReallyLongNameExceedingWidth: T
+        """
+        let options = FormatOptions(maxWidth: 50)
+        testFormatting(for: input, rule: .modifiersOnSameLine, options: options)
     }
 }

@@ -80,7 +80,7 @@ public extension FormatRule {
                 // Add the `@Equatable` macro
                 formatter.insert(
                     [.keyword(macro), .space(" ")],
-                    at: equatableType.typeDeclaration.startOfModifiersIndex
+                    at: equatableType.typeDeclaration.startOfModifiersIndex(includingAttributes: true)
                 )
 
                 // Import the module that defines the `@Equatable` macro if needed

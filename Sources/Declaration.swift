@@ -118,8 +118,9 @@ extension Declaration {
 
     /// The start index of this declaration's modifiers,
     /// which represents the first non-space / non-comment token in the declaration.
-    var startOfModifiersIndex: Int {
-        formatter.startOfModifiers(at: keywordIndex, includingAttributes: true)
+    func startOfModifiersIndex(includingAttributes: Bool) -> Int {
+        let startOfModifiers = formatter.startOfModifiers(at: keywordIndex, includingAttributes: includingAttributes)
+        return max(startOfModifiers, range.lowerBound)
     }
 
     /// The modifiers before this declaration's keyword, including any attributes.

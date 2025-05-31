@@ -727,15 +727,21 @@ public extension Formatter {
         return result
     }
 
-    /// Removes linebreaks and space before the token, but not if a line comment is encountered. Returns difference in tokens..
+    /// Removes linebreaks and space before the token, but not if a line comment is encountered. Returns difference in tokens.
     @discardableResult
     func unwrapLine(before tokenIndex: Int, preservingComments: Bool) -> Int {
         // search backward and replace whitespace with a single " "
         // if we find a line comment (// ...) do not make this change
         let tokenType = preservingComments ? TokenType.nonSpaceOrLinebreak : TokenType.nonSpaceOrCommentOrLinebreak
         guard let notWhitespace = index(of: tokenType, before: tokenIndex) else { return 0 }
-
         if preservingComments, tokens[notWhitespace].isCommentBody { return 0 }
+
+        // Don't unwrap if the resulting line would exceed `maxWidth`, since this could cause conflicts with the `wrap` rule.
+        let previousLineWidth = lineLength(at: notWhitespace)
+        let unwrappedLineWidth = lineLength(at: tokenIndex)
+        if options.maxWidth != 0, previousLineWidth + unwrappedLineWidth > options.maxWidth {
+            return 0
+        }
 
         let rangeToReplace = (notWhitespace + 1) ..< tokenIndex
         return replaceTokens(in: rangeToReplace, with: [.space(" ")])

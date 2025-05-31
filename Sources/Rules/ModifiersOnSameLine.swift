@@ -13,25 +13,22 @@ public extension FormatRule {
     static let modifiersOnSameLine = FormatRule(
         help: "Ensure that all modifiers are on the same line as the declaration keyword."
     ) { formatter in
-        formatter.forEachToken { i, token in
-            // Check if this is a declaration keyword
-            guard token.isDeclarationTypeKeyword else { return }
-
+        formatter.parseDeclarations().forEachRecursiveDeclaration { declaration in
             // Find the start of modifiers (excluding attributes)
-            let modifierStart = formatter.startOfModifiers(at: i, includingAttributes: false)
+            let modifierStart = declaration.startOfModifiersIndex(includingAttributes: false)
 
             // If there are no modifiers before the declaration, nothing to do
-            guard modifierStart < i else { return }
+            guard modifierStart < declaration.keywordIndex else { return }
 
             // Check if modifiers and declaration are already on the same line
-            if formatter.onSameLine(modifierStart, i) {
+            if formatter.onSameLine(modifierStart, declaration.keywordIndex) {
                 return
             }
 
             // Check if there are any comments between modifiers and declaration
             // If there are, we should preserve the existing formatting
             var hasComment = false
-            for index in modifierStart ..< i {
+            for index in modifierStart ..< declaration.keywordIndex {
                 if formatter.tokens[index].isComment {
                     hasComment = true
                     break
@@ -43,7 +40,7 @@ public extension FormatRule {
             }
 
             // Unwrap all lines between modifiers and the declaration
-            var currentIndex = i
+            var currentIndex = declaration.keywordIndex
             while currentIndex > modifierStart {
                 guard let prevIndex = formatter.index(of: .nonSpaceOrLinebreak, before: currentIndex) else {
                     break
@@ -51,7 +48,7 @@ public extension FormatRule {
 
                 // If there's a linebreak between previous and current token, unwrap it
                 if formatter.tokens[prevIndex + 1 ..< currentIndex].contains(where: \.isLinebreak) {
-                    _ = formatter.unwrapLine(before: currentIndex, preservingComments: true)
+                    formatter.unwrapLine(before: currentIndex, preservingComments: true)
                 }
 
                 currentIndex = prevIndex

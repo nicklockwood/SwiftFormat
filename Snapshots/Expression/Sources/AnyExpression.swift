@@ -774,15 +774,15 @@ private extension AnyExpression {
         }
 
         /// Literal values
-        public static let nilValue = Double(bitPattern: nilBits)
-        public static let trueValue = Double(bitPattern: trueBits)
-        public static let falseValue = Double(bitPattern: falseBits)
+        static let nilValue = Double(bitPattern: nilBits)
+        static let trueValue = Double(bitPattern: trueBits)
+        static let falseValue = Double(bitPattern: falseBits)
 
         /// The values stored in the box
-        public var values = [Any]()
+        var values = [Any]()
 
         /// Store a value in the box
-        public func store(_ value: Any) -> Double {
+        func store(_ value: Any) -> Double {
             switch value {
             case let doubleValue as Double:
                 return doubleValue

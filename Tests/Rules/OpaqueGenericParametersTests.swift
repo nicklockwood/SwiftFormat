@@ -529,7 +529,7 @@ class OpaqueGenericParametersTests: XCTestCase {
 
     func testOpaqueGenericParametersRuleSuccessfullyTerminatesInSampleCode() {
         let input = """
-        class Service {
+        public class Service {
             public func run() {}
             private let foo: Foo<Void, Void>
             private func a() -> Eventual<Void> {}

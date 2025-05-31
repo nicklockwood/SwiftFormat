@@ -87,7 +87,7 @@ class ModifierOrderTests: XCTestCase {
 
     func testNoConfuseCaseWithModifier() {
         let input = """
-        enum Foo {
+        public enum Foo {
             case strong
             case weak
             public init() {}

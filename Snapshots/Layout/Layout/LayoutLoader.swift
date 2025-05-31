@@ -141,7 +141,7 @@ class LayoutLoader {
     // MARK: LayoutNode loading
 
     /// Loads a named XML layout file from the app resources folder
-    public func loadLayoutNode(
+    func loadLayoutNode(
         named: String,
         bundle: Bundle = Bundle.main,
         relativeTo: String = #file,
@@ -164,7 +164,7 @@ class LayoutLoader {
     }
 
     /// Loads a local or remote XML layout file with the specified URL
-    public func loadLayoutNode(
+    func loadLayoutNode(
         withContentsOfURL xmlURL: URL,
         relativeTo: String? = #file,
         state: Any = (),
@@ -200,7 +200,7 @@ class LayoutLoader {
     }
 
     /// Reloads the most recently loaded XML layout file
-    public func reloadLayoutNode(withCompletion completion: @escaping LayoutLoaderCallback) {
+    func reloadLayoutNode(withCompletion completion: @escaping LayoutLoaderCallback) {
         guard let xmlURL = _originalURL, _dataTask == nil, queue.sync(execute: {
             guard reloadLock == 0 else { return false }
             cache.removeAll()
@@ -220,7 +220,7 @@ class LayoutLoader {
 
     // MARK: Layout loading
 
-    public func loadLayout(
+    func loadLayout(
         named: String,
         bundle: Bundle = Bundle.main,
         relativeTo: String = #file
@@ -249,7 +249,7 @@ class LayoutLoader {
         return layout
     }
 
-    public func loadLayout(
+    func loadLayout(
         withContentsOfURL xmlURL: URL,
         relativeTo: String? = #file,
         completion: @escaping (Layout?, LayoutError?) -> Void
@@ -346,7 +346,7 @@ class LayoutLoader {
 
     // MARK: String loading
 
-    public func loadLocalizedStrings() throws -> [String: String] {
+    func loadLocalizedStrings() throws -> [String: String] {
         if let strings = _strings {
             return strings
         }

@@ -11,7 +11,7 @@ enum XMLNode {
     case text(String)
     case comment(String)
 
-    public var isEmpty: Bool {
+    var isEmpty: Bool {
         switch self {
         case let .node(_, _, children):
             return !children.contains {
@@ -27,28 +27,28 @@ enum XMLNode {
         }
     }
 
-    public var isText: Bool {
+    var isText: Bool {
         guard case .text = self else {
             return false
         }
         return !isLinebreak
     }
 
-    public var isHTML: Bool {
+    var isHTML: Bool {
         guard case let .node(name, _, _) = self else {
             return false
         }
         return name.lowercased() == name
     }
 
-    public var isLinebreak: Bool {
+    var isLinebreak: Bool {
         guard case .text("\n") = self else {
             return false
         }
         return true
     }
 
-    public var isComment: Bool {
+    var isComment: Bool {
         guard case .comment = self else {
             return false
         }
@@ -62,14 +62,14 @@ enum XMLNode {
         return name
     }
 
-    public var children: [XMLNode] {
+    var children: [XMLNode] {
         if case let .node(_, _, children) = self {
             return children
         }
         return []
     }
 
-    public var attributes: [String: String] {
+    var attributes: [String: String] {
         if case let .node(_, attributes, _) = self {
             return attributes
         }
@@ -98,8 +98,8 @@ class XMLParser: NSObject, XMLParserDelegate {
     private var error: Error?
     private var text = ""
 
-    public struct Error: Swift.Error, CustomStringConvertible {
-        public let description: String
+    struct Error: Swift.Error, CustomStringConvertible {
+        let description: String
 
         fileprivate init(_ message: String) {
             description = message
@@ -119,16 +119,16 @@ class XMLParser: NSObject, XMLParserDelegate {
         }
     }
 
-    public struct Options: OptionSet {
-        public let rawValue: Int
-        public init(rawValue: Int) {
+    struct Options: OptionSet {
+        let rawValue: Int
+        init(rawValue: Int) {
             self.rawValue = rawValue
         }
 
-        public static let skipComments = Options(rawValue: 1 << 0)
+        static let skipComments = Options(rawValue: 1 << 0)
     }
 
-    public static func parse(data: Data, options: Options = []) throws -> [XMLNode] {
+    static func parse(data: Data, options: Options = []) throws -> [XMLNode] {
         let parser = XMLParser(options: options)
         let foundationParser = Foundation.XMLParser(data: data)
         foundationParser.delegate = parser

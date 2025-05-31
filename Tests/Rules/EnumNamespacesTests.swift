@@ -283,7 +283,7 @@ class EnumNamespacesTests: XCTestCase {
     func testEnumNamespacesDoesNothingIfSelfAssignedInternally() {
         let input = """
         class Foo {
-            public static func bar() {
+            static func bar() {
                 let bundle = Bundle(for: self)
             }
         }
@@ -294,7 +294,7 @@ class EnumNamespacesTests: XCTestCase {
     func testEnumNamespacesDoesNothingIfSelfAssignedInternally2() {
         let input = """
         class Foo {
-            public static func bar() {
+            static func bar() {
                 let `class` = self
             }
         }
@@ -305,7 +305,7 @@ class EnumNamespacesTests: XCTestCase {
     func testEnumNamespacesDoesNothingIfSelfAssignedInternally3() {
         let input = """
         class Foo {
-            public static func bar() {
+            static func bar() {
                 let `class` = Foo.self
             }
         }
@@ -337,7 +337,7 @@ class EnumNamespacesTests: XCTestCase {
     func testClassNotReplacedByEnum() {
         let input = """
         class Foo {
-            public static let bar = "bar"
+            static let bar = "bar"
         }
         """
         let options = FormatOptions(enumNamespaces: .structsOnly)

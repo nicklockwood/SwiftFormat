@@ -158,7 +158,7 @@ class DocCommentsBeforeModifiersTests: XCTestCase {
         """
 
         testFormatting(for: input, output, rule: .docCommentsBeforeModifiers,
-                       exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope])
+                       exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .redundantPublic])
     }
 
     func testPreservesCommentOnSameLineAsAttribute() {

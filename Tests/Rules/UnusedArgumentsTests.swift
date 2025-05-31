@@ -819,7 +819,7 @@ class UnusedArgumentsTests: XCTestCase {
 
     func testViewBuilderAnnotationDoesntBreakUnusedArgDetection() {
         let input = """
-        struct Foo {
+        public struct Foo {
             let content: View
 
             public init(
@@ -831,7 +831,7 @@ class UnusedArgumentsTests: XCTestCase {
         }
         """
         let output = """
-        struct Foo {
+        public struct Foo {
             let content: View
 
             public init(

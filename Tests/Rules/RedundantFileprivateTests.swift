@@ -375,7 +375,7 @@ class RedundantFileprivateTests: XCTestCase {
         }
 
         class Bar: Foo, Equatable {
-            override public init() {
+            override init() {
                 super.init()
             }
         }
@@ -391,7 +391,7 @@ class RedundantFileprivateTests: XCTestCase {
         }
 
         class Bar: Baz {
-            override public init() {
+            override init() {
                 super.init()
             }
         }
@@ -402,7 +402,7 @@ class RedundantFileprivateTests: XCTestCase {
         }
 
         class Bar: Baz {
-            override public init() {
+            override init() {
                 super.init()
             }
         }

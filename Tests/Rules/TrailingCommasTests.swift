@@ -715,7 +715,7 @@ class TrailingCommasTests: XCTestCase {
             String
         ) -> Int
 
-        enum Toster {
+        public enum Toster {
             public typealias StringToInt = ((
                 String
             ) -> Int)?

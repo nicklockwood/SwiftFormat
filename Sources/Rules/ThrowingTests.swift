@@ -13,14 +13,15 @@ public extension FormatRule {
         help: "Write tests that use `throws` instead of using `try!`.",
         disabledByDefault: true
     ) { formatter in
-        let testFramework: TestingFramework? = if formatter.hasImport("Testing") {
-            .Testing
+        let testFramework: TestingFramework
+
+        if formatter.hasImport("Testing") {
+            testFramework = .Testing
         } else if formatter.hasImport("XCTest") {
-            .XCTest
+            testFramework = .XCTest
         } else {
-            nil
+            return
         }
-        guard let testFramework else { return }
 
         formatter.forEach(.keyword("func")) { funcKeywordIndex, _ in
             guard let functionDecl = formatter.parseFunctionDeclaration(keywordIndex: funcKeywordIndex)

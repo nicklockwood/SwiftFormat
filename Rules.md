@@ -79,7 +79,6 @@
 * [strongOutlets](#strongOutlets)
 * [strongifiedSelf](#strongifiedSelf)
 * [swiftTestingTestCaseNames](#swiftTestingTestCaseNames)
-* [throwingTests](#throwingTests)
 * [todos](#todos)
 * [trailingClosures](#trailingClosures)
 * [trailingCommas](#trailingCommas)
@@ -115,6 +114,7 @@
 * [redundantEquatable](#redundantEquatable)
 * [redundantProperty](#redundantProperty)
 * [sortSwitchCases](#sortSwitchCases)
+* [throwingTests](#throwingTests)
 * [unusedPrivateDeclarations](#unusedPrivateDeclarations)
 * [wrapConditionalBodies](#wrapConditionalBodies)
 * [wrapEnumCases](#wrapEnumCases)
@@ -3084,15 +3084,25 @@ Write tests that use `throws` instead of using `try!`.
 <summary>Examples</summary>
 
 ```diff
-import Testing
+    import Testing
 
-struct MyFeatureTests {
-- @Test func doSomething() {
-+ @Test func doSomething() throws {
-     - try! MyFeature().doSomething()
-     + try MyFeature().doSomething()
-  }
-}
+    struct MyFeatureTests {
+-       @Test func doSomething() {
++       @Test func doSomething() throws {
+-           try! MyFeature().doSomething()
++           try MyFeature().doSomething()
+      }
+    }
+
+    import XCTeset
+
+    class MyFeatureTests: XCTestCase {
+-       func test_doSomething() {
++       func test_doSomething() throws {
+-           try! MyFeature().doSomething()
++           try MyFeature().doSomething()
+      }
+    }
 
 </details>
 <br/>

@@ -232,7 +232,7 @@ final class PreferSwiftTestingTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "6.0")
-        testFormatting(for: input, [output], rules: [.preferSwiftTesting, .wrapArguments, .indent, .redundantParens, .hoistTry], options: options)
+        testFormatting(for: input, [output], rules: [.preferSwiftTesting, .wrapArguments, .indent, .redundantParens, .hoistTry], options: options, exclude: [.throwingTests])
     }
 
     func testConvertsMultilineXCTestHelpers() {

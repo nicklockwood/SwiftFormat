@@ -513,6 +513,19 @@ extension Formatter {
         return index(of: .operator("->", .infix), in: startIndex + 1 ..< endIndex)
     }
 
+    /// Recursively searches to the start of scopes until we either no longer find a scope or we know we are in a closure.
+    func isInClosure(at index: Int) -> Bool {
+        guard let startOfScopeIndex = startOfScope(at: index) else {
+            return false
+        }
+        if isStartOfClosure(at: startOfScopeIndex) {
+            return true
+        } else {
+            return isInClosure(at: startOfScopeIndex)
+        }
+    }
+
+    /// Whether or not this index the start of scope of a closure literal, eg `{` but not some other type of scope.
     func isStartOfClosure(at i: Int) -> Bool {
         guard token(at: i) == .startOfScope("{") else {
             return false

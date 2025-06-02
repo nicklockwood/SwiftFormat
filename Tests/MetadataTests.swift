@@ -294,15 +294,15 @@ class MetadataTests: XCTestCase {
 
     // MARK: releases
 
-    func testLatestVersionInChangelog() {
-        let changelog = try! String(contentsOf: changeLogURL, encoding: .utf8)
+    func testLatestVersionInChangelog() throws {
+        let changelog = try String(contentsOf: changeLogURL, encoding: .utf8)
         XCTAssertTrue(changelog.contains("[\(SwiftFormat.version)]"), "CHANGELOG.md does not mention latest release")
         XCTAssertTrue(changelog.contains("(https://github.com/nicklockwood/SwiftFormat/releases/tag/\(SwiftFormat.version))"),
                       "CHANGELOG.md does not include correct link for latest release")
     }
 
-    func testLatestVersionInPodspec() {
-        let podspec = try! String(contentsOf: podspecURL, encoding: .utf8)
+    func testLatestVersionInPodspec() throws {
+        let podspec = try String(contentsOf: podspecURL, encoding: .utf8)
         XCTAssertTrue(podspec.contains("\"version\": \"\(SwiftFormat.version)\""), "Podspec version does not match latest release")
         XCTAssertTrue(podspec.contains("\"tag\": \"\(SwiftFormat.version)\""), "Podspec tag does not match latest release")
     }

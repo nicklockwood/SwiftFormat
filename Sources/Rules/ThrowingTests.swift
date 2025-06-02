@@ -7,12 +7,14 @@ public extension FormatRule {
     static let throwingTests = FormatRule(
         help: "Write tests that use `throws` instead of using `try!`."
     ) { formatter in
-        guard formatter.hasImport("Testing") else { return }
+        guard formatter.hasImport("Testing") || formatter.hasImport("XCTest") else { return }
 
         formatter.forEach(.keyword("func")) { funcKeywordIndex, _ in
-            guard formatter.modifiersForDeclaration(at: funcKeywordIndex, contains: "@Test") else { return }
             guard let functionDecl = formatter.parseFunctionDeclaration(keywordIndex: funcKeywordIndex)
             else { return }
+
+            guard formatter.modifiersForDeclaration(at: funcKeywordIndex, contains: "@Test")
+                || functionDecl.name?.starts(with: "test") == true else { return }
 
             guard let bodyRange = functionDecl.bodyRange else { return }
 
@@ -55,7 +57,7 @@ public extension FormatRule {
         + @Test func doSomething() throws {
              - try! MyFeature().doSomething()
              + try MyFeature().doSomething()
-            }
+          }
         }
         """
     }

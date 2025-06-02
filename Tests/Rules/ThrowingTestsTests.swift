@@ -4,7 +4,7 @@
 import XCTest
 
 final class ThrowingTestsTests: XCTestCase {
-    func testTestCaseIsUpdated() throws {
+    func testTestCaseIsUpdated_for_Testing() throws {
         let input = """
         import Testing
 
@@ -17,6 +17,28 @@ final class ThrowingTestsTests: XCTestCase {
 
         @Test func something() throws {
             try somethingThatThrows()
+        }
+        """
+        testFormatting(for: input, output, rule: .throwingTests)
+    }
+
+    func testTestCaseIsUpdated_for_XCTest() throws {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                try! somethingThatThrows()
+            }
+        }
+        """
+        let output = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() throws {
+                try somethingThatThrows()
+            }
         }
         """
         testFormatting(for: input, output, rule: .throwingTests)

@@ -3091,7 +3091,7 @@ struct MyFeatureTests {
 + @Test func doSomething() throws {
      - try! MyFeature().doSomething()
      + try MyFeature().doSomething()
-    }
+  }
 }
 
 </details>

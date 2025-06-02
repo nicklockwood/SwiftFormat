@@ -3,18 +3,34 @@
 
 import Foundation
 
+enum TestingFramework {
+    case XCTest
+    case Testing
+}
+
 public extension FormatRule {
     static let throwingTests = FormatRule(
         help: "Write tests that use `throws` instead of using `try!`."
     ) { formatter in
-        guard formatter.hasImport("Testing") || formatter.hasImport("XCTest") else { return }
+        let testFramework: TestingFramework? = if formatter.hasImport("Testing") {
+            .Testing
+        } else if formatter.hasImport("XCTest") {
+            .XCTest
+        } else {
+            nil
+        }
+        guard let testFramework else { return }
 
         formatter.forEach(.keyword("func")) { funcKeywordIndex, _ in
             guard let functionDecl = formatter.parseFunctionDeclaration(keywordIndex: funcKeywordIndex)
             else { return }
 
-            guard formatter.modifiersForDeclaration(at: funcKeywordIndex, contains: "@Test")
-                || functionDecl.name?.starts(with: "test") == true else { return }
+            switch testFramework {
+            case .XCTest:
+                guard functionDecl.name?.starts(with: "test") == true else { return }
+            case .Testing:
+                guard formatter.modifiersForDeclaration(at: funcKeywordIndex, contains: "@Test") else { return }
+            }
 
             guard let bodyRange = functionDecl.bodyRange else { return }
 
@@ -59,7 +75,7 @@ public extension FormatRule {
         +           try MyFeature().doSomething()
               }
             }
-            
+
             import XCTeset
 
             class MyFeatureTests: XCTestCase {

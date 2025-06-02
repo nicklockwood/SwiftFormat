@@ -22,6 +22,23 @@ final class ThrowingTestsTests: XCTestCase {
         testFormatting(for: input, output, rule: .throwingTests)
     }
 
+    func test_nonTestCaseFunction_IsNotUpdated_for_Testing() throws {
+        let input = """
+        import Testing
+
+        func something() {
+            try! somethingThatThrows()
+        }
+
+        /// Testing test cases must be annotated with @Test, otherwise they are not test cases.
+        /// This naming is not good style but we don't want to accidentally apply XCTest logic.
+        func test_something() {
+            try! somethingThatThrows()
+        }
+        """
+        testFormatting(for: input, rule: .throwingTests)
+    }
+
     func testTestCaseIsUpdated_for_XCTest() throws {
         let input = """
         import XCTest
@@ -42,6 +59,19 @@ final class ThrowingTestsTests: XCTestCase {
         }
         """
         testFormatting(for: input, output, rule: .throwingTests)
+    }
+
+    func test_nonTestCaseFunction_IsNotUpdated_for_XCTest() throws {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func something() {
+                try! somethingThatThrows()
+            }
+        }
+        """
+        testFormatting(for: input, rule: .throwingTests)
     }
 
     func testTestCaseIsUpdated_for_async_test() throws {

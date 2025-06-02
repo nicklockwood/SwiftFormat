@@ -116,6 +116,7 @@
 * [redundantEquatable](#redundantEquatable)
 * [redundantProperty](#redundantProperty)
 * [sortSwitchCases](#sortSwitchCases)
+* [throwingTests](#throwingTests)
 * [unusedPrivateDeclarations](#unusedPrivateDeclarations)
 * [wrapConditionalBodies](#wrapConditionalBodies)
 * [wrapEnumCases](#wrapEnumCases)
@@ -3124,6 +3125,37 @@ In Swift Testing, don't prefix @Test methods with 'test'.
       }
   }
 ```
+
+</details>
+<br/>
+
+## throwingTests
+
+Write tests that use `throws` instead of using `try!`.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+    import Testing
+
+    struct MyFeatureTests {
+-       @Test func doSomething() {
++       @Test func doSomething() throws {
+-           try! MyFeature().doSomething()
++           try MyFeature().doSomething()
+      }
+    }
+
+    import XCTeset
+
+    class MyFeatureTests: XCTestCase {
+-       func test_doSomething() {
++       func test_doSomething() throws {
+-           try! MyFeature().doSomething()
++           try MyFeature().doSomething()
+      }
+    }
 
 </details>
 <br/>

@@ -191,7 +191,7 @@ final class PreferSwiftTestingTests: XCTestCase {
                 #expect(!(foo() == bar()), "foo is not equal to bar")
                 #expect(!Foo(hasBar: foo == bar).isValid)
                 #expect(try !foo)
-                #expect(try !(foo.bar.baz()))
+                #expect(!(try! foo.bar.baz()))
                 #expect(!(foo is Bar))
                 #expect(foo == nil)
                 #expect(foo == nil, "foo is nil")
@@ -232,7 +232,7 @@ final class PreferSwiftTestingTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "6.0")
-        testFormatting(for: input, [output], rules: [.preferSwiftTesting, .wrapArguments, .indent, .redundantParens, .hoistTry], options: options)
+        testFormatting(for: input, [output], rules: [.preferSwiftTesting, .wrapArguments, .indent, .redundantParens, .hoistTry], options: options, exclude: [.throwingTests])
     }
 
     func testConvertsMultilineXCTestHelpers() {

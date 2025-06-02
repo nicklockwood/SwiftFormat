@@ -147,7 +147,7 @@ class CodeOrganizationTests: XCTestCase {
         for testFile in allRuleTestFiles {
             let testFileName = testFile.lastPathComponent
             let expectedTestClassName = testFileName.replacingOccurrences(of: ".swift", with: "")
-            let titleCaseRuleName = expectedTestClassName.replacingOccurrences(of: "Tests", with: "")
+            let titleCaseRuleName = expectedTestClassName.hasSuffix("Tests") ? String(expectedTestClassName.dropLast(5)) : expectedTestClassName
             let ruleName = titleCaseRuleName.first!.lowercased() + titleCaseRuleName.dropFirst()
 
             XCTAssert(allRuleNames.contains(ruleName), """

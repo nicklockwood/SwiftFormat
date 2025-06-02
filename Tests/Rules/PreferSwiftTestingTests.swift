@@ -191,7 +191,7 @@ final class PreferSwiftTestingTests: XCTestCase {
                 #expect(!(foo() == bar()), "foo is not equal to bar")
                 #expect(!Foo(hasBar: foo == bar).isValid)
                 #expect(try !foo)
-                #expect(!(try! foo.bar.baz()))
+                #expect(try !(foo.bar.baz()))
                 #expect(!(foo is Bar))
                 #expect(foo == nil)
                 #expect(foo == nil, "foo is nil")

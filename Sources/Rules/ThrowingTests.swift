@@ -10,7 +10,8 @@ enum TestingFramework {
 
 public extension FormatRule {
     static let throwingTests = FormatRule(
-        help: "Write tests that use `throws` instead of using `try!`."
+        help: "Write tests that use `throws` instead of using `try!`.",
+        disabledByDefault: true
     ) { formatter in
         let testFramework: TestingFramework? = if formatter.hasImport("Testing") {
             .Testing

@@ -40,12 +40,7 @@ public extension FormatRule {
                 }
             }
 
-            let useDocComment = formatter.shouldBeDocComment(at: index, endOfComment: endOfComment)
-            guard commentIndices.allSatisfy({
-                formatter.shouldBeDocComment(at: $0, endOfComment: endOfComment) == useDocComment
-            }) else {
-                return
-            }
+            let useDocComment = formatter.shouldBeDocComment(at: commentIndices, endOfComment: endOfComment)
 
             // Determine whether or not this is the start of a list of sequential declarations, like:
             //
@@ -138,21 +133,27 @@ public extension FormatRule {
 }
 
 extension Formatter {
+    /// Whether or not the comment at this index can be a doc comment,
+    /// considering the following type declaration and surrounding context.
     func shouldBeDocComment(
-        at index: Int,
+        at indices: [Int],
         endOfComment: Int
     ) -> Bool {
-        guard let nextDeclarationIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: endOfComment) else { return false }
+        guard let startIndex = indices.min(),
+              let nextDeclarationIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfComment)
+        else { return false }
 
         // Check if this is a special type of comment that isn't documentation
-        if case let .commentBody(body)? = next(.nonSpace, after: index), body.isCommentDirective {
-            return false
+        for index in indices {
+            if case let .commentBody(body)? = next(.nonSpace, after: index), body.isCommentDirective {
+                return false
+            }
         }
 
         // Check if this token defines a declaration that supports doc comments
         var declarationToken = tokens[nextDeclarationIndex]
         if declarationToken.isAttribute || declarationToken.isModifierKeyword,
-           let index = self.index(after: nextDeclarationIndex, where: { $0.isDeclarationTypeKeyword })
+           let index = index(after: nextDeclarationIndex, where: { $0.isDeclarationTypeKeyword })
         {
             declarationToken = tokens[index]
         }
@@ -161,7 +162,7 @@ extension Formatter {
         }
 
         // Only use doc comments on declarations in type bodies, or top-level declarations
-        if let startOfEnclosingScope = self.index(of: .startOfScope, before: index) {
+        if let startOfEnclosingScope = index(of: .startOfScope, before: startIndex) {
             switch tokens[startOfEnclosingScope] {
             case .startOfScope("#if"):
                 break
@@ -184,8 +185,8 @@ extension Formatter {
         }
 
         // Only comments at the start of a line can be doc comments
-        if let previousToken = self.index(of: .nonSpaceOrLinebreak, before: index) {
-            let commentLine = startOfLine(at: index)
+        if let previousToken = index(of: .nonSpaceOrLinebreak, before: startIndex) {
+            let commentLine = startOfLine(at: startIndex)
             let previousTokenLine = startOfLine(at: previousToken)
 
             if commentLine == previousTokenLine {
@@ -194,6 +195,6 @@ extension Formatter {
         }
 
         // Comments inside conditional statements are not doc comments
-        return !isConditionalStatement(at: index)
+        return !isConditionalStatement(at: startIndex)
     }
 }

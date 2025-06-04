@@ -135,6 +135,73 @@ class RedundantPublicTests: XCTestCase {
         testFormatting(for: input, rules: [.redundantPublic])
     }
 
+    func testPreservesPublicInTypeInPublicExtension() {
+        let input = """
+        public extension Foo {
+            struct Bar {
+                public var baaz: Baaz
+            }
+        }
+        """
+        testFormatting(for: input, rules: [.redundantPublic])
+    }
+
+    func testRemovesPublicInExtensionOfInternalTypeInSameFile() {
+        let input = """
+        struct InternalType {}
+
+        extension InternalType {
+            public func foo() {}
+            public func bar() {}
+
+            #if DEBUG
+                public func baaz() {}
+            #endif
+        }
+        """
+
+        let output = """
+        struct InternalType {}
+
+        extension InternalType {
+            func foo() {}
+            func bar() {}
+
+            #if DEBUG
+                func baaz() {}
+            #endif
+        }
+        """
+        testFormatting(for: input, [output], rules: [.redundantPublic])
+    }
+
+    func testRemovesPublicInExtensionOfNestedInternalType() {
+        let input = """
+        enum OuterType {
+            public struct InnerType {
+                let num: Int
+            }
+        }
+
+        extension OuterType.InnerType {
+            public func calculate() -> Int { num * 2 }
+        }
+        """
+
+        let output = """
+        enum OuterType {
+            struct InnerType {
+                let num: Int
+            }
+        }
+
+        extension OuterType.InnerType {
+            func calculate() -> Int { num * 2 }
+        }
+        """
+        testFormatting(for: input, [output], rules: [.redundantPublic])
+    }
+
     func testRemovesPublicInTypeInExtension() {
         let input = """
         extension Foo {
@@ -239,6 +306,19 @@ class RedundantPublicTests: XCTestCase {
                     self.bar = bar
                 }
             }
+        }
+        """
+        testFormatting(for: input, rules: [.redundantPublic])
+    }
+
+    func testPreservesPublicInProtocolExtension() {
+        // A method in an extenison of an internal protocol may actually be publically accessible
+        // via some public type that implements the protocol.
+        let input = """
+        protocol Foo {}
+
+        extension Foo {
+            public func bar() {}
         }
         """
         testFormatting(for: input, rules: [.redundantPublic])

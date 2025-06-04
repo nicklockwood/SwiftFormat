@@ -443,7 +443,7 @@ class ExtensionAccessControlTests: XCTestCase {
             public func bar() {}
         }
         """
-        testFormatting(for: input, rule: .extensionAccessControl)
+        testFormatting(for: input, rule: .extensionAccessControl, exclude: [.redundantPublic])
     }
 
     func testExtensionAccessControlRuleTerminatesInFileWithConditionalCompilation() {

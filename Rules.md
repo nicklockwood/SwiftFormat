@@ -2422,9 +2422,9 @@ Remove redundant public access control from declarations in internal types.
 +     func baz() {}
   }
 
-  internal class Example {
--     public var value: Int
-+     var value: Int
+  extension Foo {
+-     public func quux() {}
++     func quux() {}
   }
 ```
 

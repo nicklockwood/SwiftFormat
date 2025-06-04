@@ -2565,7 +2565,7 @@ class OrganizeDeclarationsTests: XCTestCase {
 
     func testSortDeclarationsSortsExtensionBody() {
         let input = """
-        enum Namespace {}
+        public enum Namespace {}
 
         // swiftformat:sort
         extension Namespace {
@@ -2576,7 +2576,7 @@ class OrganizeDeclarationsTests: XCTestCase {
         """
 
         let output = """
-        enum Namespace {}
+        public enum Namespace {}
 
         // swiftformat:sort
         extension Namespace {
@@ -2595,7 +2595,7 @@ class OrganizeDeclarationsTests: XCTestCase {
 
     func testOrganizeDeclarationsSortsExtensionBody() {
         let input = """
-        enum Namespace {}
+        public enum Namespace {}
 
         // swiftformat:sort
         extension Namespace {
@@ -2606,7 +2606,7 @@ class OrganizeDeclarationsTests: XCTestCase {
         """
 
         let output = """
-        enum Namespace {}
+        public enum Namespace {}
 
         // swiftformat:sort
         extension Namespace {

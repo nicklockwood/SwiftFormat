@@ -166,6 +166,16 @@ extension Declaration {
         return parent.parentDeclarations + [parent]
     }
 
+    /// The type that contains this declaration, or `nil` if this is a top-level declaration.
+    /// The closest `parent` that is not a conditional compilation declaration.
+    var parentType: TypeDeclaration? {
+        if let parentType = parent?.asTypeDeclaration {
+            return parentType
+        } else {
+            return parent?.parentType
+        }
+    }
+
     /// The `CustomDebugStringConvertible` representation of this declaration
     var debugDescription: String {
         guard isValid else {

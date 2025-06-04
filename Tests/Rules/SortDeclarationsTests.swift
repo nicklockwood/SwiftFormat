@@ -253,7 +253,7 @@ class SortDeclarationsTests: XCTestCase {
         """
 
         let options = FormatOptions(alphabeticallySortedDeclarationPatterns: ["Namespace"])
-        testFormatting(for: input, [output], rules: [.sortDeclarations, .blankLinesBetweenScopes], options: options)
+        testFormatting(for: input, [output], rules: [.sortDeclarations, .blankLinesBetweenScopes], options: options, exclude: [.redundantPublic])
     }
 
     func testSortDeclarationsWontSortByNamePatternInComment() {
@@ -270,7 +270,7 @@ class SortDeclarationsTests: XCTestCase {
         """
 
         let options = FormatOptions(alphabeticallySortedDeclarationPatterns: ["Constants"])
-        testFormatting(for: input, rules: [.sortDeclarations, .blankLinesBetweenScopes], options: options)
+        testFormatting(for: input, rules: [.sortDeclarations, .blankLinesBetweenScopes], options: options, exclude: [.redundantPublic])
     }
 
     func testSortDeclarationsUsesLocalizedCompare() {

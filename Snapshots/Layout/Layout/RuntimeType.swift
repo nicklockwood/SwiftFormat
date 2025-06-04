@@ -24,11 +24,11 @@ public class RuntimeType: NSObject {
         case options(Any.Type, [String: Any])
         case array(RuntimeType)
 
-        public static func == (lhs: Kind, rhs: Kind) -> Bool {
+        static func == (lhs: Kind, rhs: Kind) -> Bool {
             return lhs.description == rhs.description
         }
 
-        public var description: String {
+        var description: String {
             switch self {
             case let .any(type),
                  let .options(type, _):
@@ -50,7 +50,7 @@ public class RuntimeType: NSObject {
         case available
         case unavailable(reason: String?)
 
-        public static func == (lhs: Availability, rhs: Availability) -> Bool {
+        static func == (lhs: Availability, rhs: Availability) -> Bool {
             switch (lhs, rhs) {
             case (.available, .available):
                 return true

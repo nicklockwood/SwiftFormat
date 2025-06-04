@@ -14,42 +14,49 @@ public extension FormatRule {
     ) { formatter in
         let declarations = formatter.parseDeclarations()
 
+        // Find all internally declared types in the file
+        var internalTypes = Set<String>()
+        declarations.forEachRecursiveDeclaration { declaration in
+            if let typeDecl = declaration.asTypeDeclaration,
+               typeDecl.keyword != "extension" && typeDecl.keyword != "protocol",
+               let typeName = declaration.fullyQualifiedName,
+               declaration.visibility() == .internal || declaration.visibility() == nil
+            {
+                internalTypes.insert(typeName)
+            }
+        }
+
         // Process all declarations recursively
         declarations.forEachRecursiveDeclaration { declaration in
-            // Skip if the declaration doesn't have public visibility
-            guard declaration.visibility() == .public else { return }
+            guard declaration.visibility() == .public,
+                  let parentType = declaration.parentType
+            else { return }
 
-            // Walk up the parent chain
-            var parent = declaration.parent
-            var enclosingType: TypeDeclaration?
-            var hasPublicExtension = false
-            var insideExtension = false
+            // Inside public extensions, types with no access control modifier are public.
+            // This case is handled by the extensionAccessControl rule.
+            let insidePublicExtension = declaration.parentDeclarations.contains(where: {
+                $0.keyword == "extension" && $0.visibility() == .public
+            })
 
-            while let currentParent = parent {
-                switch currentParent.keyword {
-                case "extension":
-                    insideExtension = true
-                    if currentParent.visibility() == .public {
-                        hasPublicExtension = true
-                    }
-
-                default:
-                    if let typeDeclaration = currentParent.asTypeDeclaration {
-                        // Found a type declaration (class, struct, enum)
-                        enclosingType = typeDeclaration
-                        // Stop looking once we find a concrete type
-                        break
-                    }
-                }
-                parent = currentParent.parent
+            if insidePublicExtension {
+                return
             }
 
-            // Remove public only if the enclosing type is internal and not in a public extension
-            if let enclosingType,
-               enclosingType.visibility() ?? .internal == .internal,
-               !hasPublicExtension
-            {
-                declaration.removeVisibility(.public)
+            switch parentType.keyword {
+            case "extension":
+                // Inside an extension where the extended type is internal, any `public` modifier has no effect.
+                // We can only handle this case if the extension and type are defined in the same file.
+                if let extendedTypeName = parentType.name,
+                   internalTypes.contains(extendedTypeName)
+                {
+                    declaration.removeVisibility(.public)
+                }
+
+            // Inside an internal type, any `public` modifier has no effect
+            default:
+                if (parentType.visibility() ?? .internal) == .internal {
+                    declaration.removeVisibility(.public)
+                }
             }
         }
     } examples: {
@@ -62,9 +69,9 @@ public extension FormatRule {
         +     func baz() {}
           }
 
-          internal class Example {
-        -     public var value: Int
-        +     var value: Int
+          extension Foo {
+        -     public func quux() {}
+        +     func quux() {}
           }
         ```
         """

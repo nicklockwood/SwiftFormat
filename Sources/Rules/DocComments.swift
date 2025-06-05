@@ -21,7 +21,19 @@ public extension FormatRule {
             else { return }
 
             var commentIndices = [index]
-            if token == .startOfScope("//") {
+
+            // Check if this is a trailing comment (has non-space tokens before it on the same line)
+            let isTrailingComment: Bool
+            if let previousToken = formatter.index(of: .nonSpaceOrLinebreak, before: index) {
+                let commentLine = formatter.startOfLine(at: index)
+                let previousTokenLine = formatter.startOfLine(at: previousToken)
+                isTrailingComment = (commentLine == previousTokenLine)
+            } else {
+                isTrailingComment = false
+            }
+
+            // Only group comments if this is not a trailing comment
+            if token == .startOfScope("//"), !isTrailingComment {
                 var i = index
                 while let prevLineIndex = formatter.index(of: .linebreak, before: i),
                       case let lineStartIndex = formatter.startOfLine(at: prevLineIndex, excludingIndent: true),
@@ -86,14 +98,13 @@ public extension FormatRule {
 
             let isDocComment = formatter.isDocComment(startOfComment: index)
 
-            if isDocComment,
-               let commentBody = formatter.token(at: index + 1),
+            if let commentBody = formatter.token(at: index + 1),
                commentBody.isCommentBody
             {
                 if useDocComment, !isDocComment, !preserveRegularComments {
                     let updatedCommentBody = "\(startOfDocCommentBody)\(commentBody.string)"
                     formatter.replaceToken(at: index + 1, with: .commentBody(updatedCommentBody))
-                } else if !useDocComment, isDocComment, !formatter.options.preserveDocComments {
+                } else if !useDocComment || isTrailingComment, isDocComment, !formatter.options.preserveDocComments {
                     let prefix = commentBody.string.prefix(while: { String($0) == startOfDocCommentBody })
 
                     // Do nothing if this is a unusual comment like `//////////////////`

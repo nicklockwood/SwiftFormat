@@ -576,4 +576,32 @@ class DocCommentsTests: XCTestCase {
         """
         testFormatting(for: input, rule: .docComments)
     }
+
+    func testCommentsTrailingDeclarationPreservedAsRegularComment() {
+        let input = """
+        // Comment
+        let foo: Foo // Foo
+        let bar: Bar // Bar
+        """
+
+        testFormatting(for: input, rule: .docComments)
+    }
+
+    func testDocCommentsTrailingDeclarationConvertedToRegularComment() {
+        let input = """
+        // Comment
+        let foo: Foo /// Foo
+        let foo: bar /// Bar
+
+        """
+
+        let output = """
+        // Comment
+        let foo: Foo // Foo
+        let foo: bar // Bar
+
+        """
+
+        testFormatting(for: input, output, rule: .docComments)
+    }
 }

@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.56.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.56.3) (2025-06-04)
+
+- Fixed issue where `trailingCommas` rule would insert commas in closure types and tuple types used in typealaises (not supported in Swift 6.1)
+
 ## [0.56.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.56.2) (2025-05-27)
 
 - Fixed issues where `trailingCommas` rule would insert commas in `@escpaing` or `@Sendable` closure types (not supported in Swift 6.1)

@@ -258,4 +258,10 @@ class VoidTests: XCTestCase {
         let options = FormatOptions(useVoid: false)
         testFormatting(for: input, output, rule: .void, options: options)
     }
+
+    func testTypealiasEmptyTupleConvertedToVoid() {
+        let input = "public typealias Dependencies = ()"
+        let output = "public typealias Dependencies = Void"
+        testFormatting(for: input, output, rule: .void)
+    }
 }

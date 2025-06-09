@@ -86,6 +86,15 @@ public extension FormatRule {
                 !hasLocalVoid
             {
                 formatter.replaceTokens(in: i ... endIndex, with: .identifier("Void"))
+            } else if prevToken == .operator("=", .infix),
+                      let equalIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i),
+                      let prevPrevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: equalIndex),
+                      prevPrevToken.isIdentifier,
+                      formatter.lastSignificantKeyword(at: i) == "typealias",
+                      !hasLocalVoid
+            {
+                // Handle typealias cases like: typealias Dependencies = ()
+                formatter.replaceTokens(in: i ... endIndex, with: .identifier("Void"))
             }
             // TODO: other cases
         }

@@ -77,7 +77,7 @@ class PerformanceTests: XCTestCase {
             spaceAroundOperatorDeclarations: .remove,
             useVoid: false,
             indentCase: true,
-            trailingCommas: false,
+            trailingCommas: .never,
             indentComments: false,
             truncateBlankLines: false,
             allmanBraces: true,

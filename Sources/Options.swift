@@ -178,6 +178,12 @@ public enum ClosureVoidReturn: String, CaseIterable {
     case preserve
 }
 
+public enum TrailingCommas: String, CaseIterable {
+    case never
+    case always
+    case collectionsOnly = "collections-only"
+}
+
 /// Whether to insert, remove, or preserve spaces around operators
 public enum OperatorSpacingMode: String, CaseIterable {
     case insert = "spaced"
@@ -644,7 +650,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var spaceAroundOperatorDeclarations: OperatorSpacingMode
     public var useVoid: Bool
     public var indentCase: Bool
-    public var trailingCommas: Bool
+    public var trailingCommas: TrailingCommas
     public var truncateBlankLines: Bool
     public var insertBlankLines: Bool
     public var removeBlankLines: Bool
@@ -775,7 +781,7 @@ public struct FormatOptions: CustomStringConvertible {
                 spaceAroundOperatorDeclarations: OperatorSpacingMode = .insert,
                 useVoid: Bool = true,
                 indentCase: Bool = false,
-                trailingCommas: Bool = true,
+                trailingCommas: TrailingCommas = .always,
                 indentComments: Bool = true,
                 truncateBlankLines: Bool = true,
                 insertBlankLines: Bool = true,

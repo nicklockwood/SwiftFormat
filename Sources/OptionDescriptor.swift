@@ -518,10 +518,13 @@ struct _Descriptors {
     let trailingCommas = OptionDescriptor(
         argumentName: "commas",
         displayName: "Commas",
-        help: "Commas in collection literals: \"always\" (default) or \"inline\"",
+        help: "Trailing commas: \"always\" (default), \"never\", or \"collections-only\"",
         keyPath: \.trailingCommas,
-        trueValues: ["always", "true"],
-        falseValues: ["inline", "false"]
+        altOptions: [
+            "inline": .never,
+            "false": .never,
+            "true": .always,
+        ]
     )
     let truncateBlankLines = OptionDescriptor(
         argumentName: "trimwhitespace",

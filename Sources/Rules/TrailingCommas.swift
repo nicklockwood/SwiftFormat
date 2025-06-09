@@ -20,7 +20,18 @@ public extension FormatRule {
                 case .array, .dictionary:
                     formatter.addOrRemoveTrailingComma(before: i, trailingCommaSupported: true)
                 case .subscript, .captureList:
-                    formatter.addOrRemoveTrailingComma(before: i, trailingCommaSupported: formatter.options.swiftVersion >= "6.1")
+                    var trailingCommaSupported = false
+
+                    if formatter.options.swiftVersion >= "6.1" {
+                        switch formatter.options.trailingCommas {
+                        case .always:
+                            trailingCommaSupported = true
+                        case .never, .collectionsOnly:
+                            break
+                        }
+                    }
+
+                    formatter.addOrRemoveTrailingComma(before: i, trailingCommaSupported: trailingCommaSupported)
                 default:
                     return
                 }
@@ -84,6 +95,13 @@ public extension FormatRule {
                     }
                 }
 
+                switch formatter.options.trailingCommas {
+                case .always:
+                    break
+                case .never, .collectionsOnly:
+                    trailingCommaSupported = false
+                }
+
                 formatter.addOrRemoveTrailingComma(before: i, trailingCommaSupported: trailingCommaSupported)
 
             case .endOfScope(">"):
@@ -102,6 +120,13 @@ public extension FormatRule {
                    ["class", "actor", "struct", "enum", "typealias", "func"].contains(keyword.string)
                 {
                     trailingCommaSupported = true
+                }
+
+                switch formatter.options.trailingCommas {
+                case .always:
+                    break
+                case .never, .collectionsOnly:
+                    trailingCommaSupported = false
                 }
 
                 formatter.addOrRemoveTrailingComma(before: i, trailingCommaSupported: trailingCommaSupported)
@@ -153,7 +178,8 @@ public extension FormatRule {
 extension Formatter {
     /// Adds or removes a trailing comma before the given index that marks the end of a comma-separated list.
     /// Trailing commas can always be removed. `trailingCommaSupported` indicates whether or not a trailing
-    /// comma is allowed at this position.
+    /// comma is allowed at this position. A comma being supported is a combination of language support
+    /// and enabled options.
     func addOrRemoveTrailingComma(before endOfListIndex: Int, trailingCommaSupported: Bool) {
         guard let prevTokenIndex = index(of: .nonSpaceOrComment, before: endOfListIndex) else { return }
 
@@ -168,11 +194,11 @@ extension Formatter {
             case .startOfScope("["), .delimiter(":"), .startOfScope("("):
                 break // do nothing
             case .delimiter(","):
-                if !options.trailingCommas {
+                if !options.trailingCommas.enabled || !trailingCommaSupported {
                     removeToken(at: prevTokenIndex)
                 }
             default:
-                if options.trailingCommas, trailingCommaSupported {
+                if options.trailingCommas.enabled, trailingCommaSupported {
                     insert(.delimiter(","), at: prevTokenIndex + 1)
                 }
             }
@@ -180,6 +206,17 @@ extension Formatter {
             removeToken(at: prevTokenIndex)
         default:
             break
+        }
+    }
+}
+
+extension TrailingCommas {
+    var enabled: Bool {
+        switch self {
+        case .never:
+            return false
+        case .always, .collectionsOnly:
+            return true
         }
     }
 }

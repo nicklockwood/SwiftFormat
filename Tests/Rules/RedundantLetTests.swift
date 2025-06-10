@@ -89,10 +89,27 @@ class RedundantLetTests: XCTestCase {
         testFormatting(for: input, rule: .redundantLet)
     }
 
+    func testNoRemoveLetInCondIfStatementInViewBuilder() {
+        let input = """
+        VStack {
+            #if VIEW_PERF_LOGGING
+                let _ = Self._printChanges()
+            #else
+                let _ = Self._printChanges()
+            #endif
+            let _ = Self._printChanges()
+        }
+        """
+        testFormatting(for: input, rule: .redundantLet)
+    }
+
     func testNoRemoveLetInSwitchStatementInViewBuilder() {
         let input = """
         struct TestView: View {
             var body: some View {
+                #if DEBUG
+                    let _ = Self._printChanges()
+                #endif
                 var foo = ""
                 switch (self.min, self.max) {
                 case let (nil, max as Int):

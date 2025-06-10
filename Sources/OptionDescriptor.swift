@@ -516,8 +516,8 @@ struct _Descriptors {
         falseValues: ["false"]
     )
     let trailingCommas = OptionDescriptor(
-        argumentName: "commas",
-        displayName: "Commas",
+        argumentName: "trailingcommas",
+        displayName: "Trailing commas",
         help: "Trailing commas: \"always\" (default), \"never\", or \"collections-only\"",
         keyPath: \.trailingCommas,
         altOptions: [

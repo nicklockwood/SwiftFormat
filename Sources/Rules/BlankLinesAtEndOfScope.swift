@@ -11,51 +11,39 @@ import Foundation
 public extension FormatRule {
     /// Remove blank lines immediately before a closing brace, bracket, paren or chevron
     /// unless it's followed by more code on the same line (e.g. } else { )
+    /// Also insert blank lines before closing braces for type declarations if configured
     static let blankLinesAtEndOfScope = FormatRule(
-        help: "Remove trailing blank line at the end of a scope.",
+        help: "Remove or insert trailing blank line at the end of a scope.",
+        options: ["typeblanklines"],
         sharedOptions: ["typeblanklines"]
     ) { formatter in
-        formatter.forEach(.startOfScope) { startOfScopeIndex, _ in
-            guard let endOfScopeIndex = formatter.endOfScope(at: startOfScopeIndex) else { return }
-            let endOfScope = formatter.tokens[endOfScopeIndex]
+        formatter.forEach(.startOfScope) { startOfScope, token in
+            guard ["{", "(", "[", "<"].contains(token.string) else { return }
 
-            guard ["}", ")", "]", ">"].contains(endOfScope.string),
-                  // If there is extra code after the closing scope on the same line, ignore it
-                  (formatter.next(.nonSpaceOrComment, after: endOfScopeIndex).map(\.isLinebreak)) ?? true
+            guard let endOfScope = formatter.endOfScope(at: startOfScope),
+                  formatter.index(of: .nonSpaceOrComment, after: startOfScope) != endOfScope
             else { return }
 
-            // Consumers can choose whether or not this rule should apply to type bodies
-            if !formatter.options.removeStartOrEndBlankLinesFromTypes,
-               ["class", "actor", "struct", "enum", "protocol", "extension"].contains(
-                   formatter.lastSignificantKeyword(at: startOfScopeIndex, excluding: ["where"]))
+            // If there is extra code after the closing scope on the same line, ignore it
+            if let nextTokenAfterClosingScope = formatter.next(.nonSpaceOrComment, after: endOfScope),
+               !nextTokenAfterClosingScope.isLinebreak
             {
                 return
             }
 
-            // Find previous non-space token
-            var index = endOfScopeIndex - 1
-            var indexOfFirstLineBreak: Int?
-            var indexOfLastLineBreak: Int?
-            loop: while let token = formatter.token(at: index) {
-                switch token {
-                case .linebreak:
-                    indexOfFirstLineBreak = index
-                    if indexOfLastLineBreak == nil {
-                        indexOfLastLineBreak = index
-                    }
-                case .space:
+            let rangeInsideScope = ClosedRange(startOfScope + 1 ..< endOfScope)
+
+            if formatter.isStartOfTypeBody(at: startOfScope) {
+                switch formatter.options.typeBlankLines {
+                case .insert:
+                    formatter.addTrailingBlankLineIfNeeded(in: rangeInsideScope)
+                case .remove:
+                    formatter.removeTrailingBlankLinesIfPresent(in: rangeInsideScope)
+                case .preserve:
                     break
-                default:
-                    break loop
                 }
-                index -= 1
-            }
-            if formatter.options.removeBlankLines,
-               let indexOfFirstLineBreak,
-               indexOfFirstLineBreak != indexOfLastLineBreak
-            {
-                formatter.removeTokens(in: indexOfFirstLineBreak ..< indexOfLastLineBreak!)
-                return
+            } else {
+                formatter.removeTrailingBlankLinesIfPresent(in: rangeInsideScope)
             }
         }
     } examples: {
@@ -84,6 +72,15 @@ public extension FormatRule {
             bar,
             baz,
           ]
+        ```
+
+        With `--typeblanklines insert`:
+
+        ```diff
+          struct Foo {
+              let bar: Bar
+        +
+          }
         ```
         """
     }

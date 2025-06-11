@@ -1069,6 +1069,17 @@ extension Formatter {
         }
     }
 
+    /// Whether the given index is a `startOfScope("{")` that represents the start of a type body
+    func isStartOfTypeBody(at scopeIndex: Int) -> Bool {
+        guard tokens[scopeIndex] == .startOfScope("{") else { return false }
+
+        guard let lastKeyword = lastSignificantKeyword(at: scopeIndex, excluding: ["where"]) else {
+            return false
+        }
+
+        return Token.swiftTypeKeywords.contains(lastKeyword)
+    }
+
     func isTrailingClosureLabel(at i: Int) -> Bool {
         if case .identifier? = token(at: i),
            last(.nonSpaceOrCommentOrLinebreak, before: i) == .endOfScope("}"),

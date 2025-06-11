@@ -327,7 +327,7 @@ extension Formatter {
                 }
                 switch tokens[prevIndex] {
                 case .identifier, .endOfScope(")"), .endOfScope("]"),
-                     .operator("?", _), .operator("!", _),
+                     .operator("?", .postfix), .operator("!", .postfix),
                      .endOfScope where token.isStringDelimiter:
                     if tokens[prevIndex + 1 ..< index].contains(where: \.isLinebreak) {
                         break

@@ -2675,7 +2675,7 @@ extension Formatter {
                         switch prevToken {
                         case .identifier, .number, .endOfScope,
                              .operator where ![
-                                 .operator("=", .infix), .operator(".", .prefix)
+                                 .operator("=", .infix), .operator(".", .prefix),
                              ].contains(prevToken):
                             isAssignment = false
                             lastKeyword = ""

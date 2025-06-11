@@ -1373,4 +1373,16 @@ class TrailingCommasTests: XCTestCase {
         let options = FormatOptions(trailingCommas: .collectionsOnly, swiftVersion: "6.1")
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
+
+    func testSingleLineArrayWithMultipleElements() {
+        let input = """
+        for file in files where
+            file != "build" && !file.hasPrefix(".") && ![
+                ".build", ".app", ".framework", ".xcodeproj", ".xcassets",
+            ].contains(where: { file.hasSuffix($0) }) {}
+        """
+
+        let options = FormatOptions(trailingCommas: .always)
+        testFormatting(for: input, rule: .trailingCommas, options: options)
+    }
 }

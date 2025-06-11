@@ -22,6 +22,13 @@ class TrailingCommasTests: XCTestCase {
         testFormatting(for: input, output, rule: .trailingCommas)
     }
 
+    func testCommaAddedToLastItemCollectionsOnly() {
+        let input = "[\n    foo,\n    bar\n]"
+        let output = "[\n    foo,\n    bar,\n]"
+        let options = FormatOptions(trailingCommas: .collectionsOnly)
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
+
     func testCommaAddedToDictionary() {
         let input = "[\n    foo: bar\n]"
         let output = "[\n    foo: bar,\n]"
@@ -262,14 +269,14 @@ class TrailingCommasTests: XCTestCase {
 
     func testCommaNotAddedToLastItem() {
         let input = "[\n    foo,\n    bar\n]"
-        let options = FormatOptions(trailingCommas: false)
+        let options = FormatOptions(trailingCommas: .never)
         testFormatting(for: input, rule: .trailingCommas, options: options)
     }
 
     func testCommaRemovedFromLastItem() {
         let input = "[\n    foo,\n    bar,\n]"
         let output = "[\n    foo,\n    bar\n]"
-        let options = FormatOptions(trailingCommas: false)
+        let options = FormatOptions(trailingCommas: .never)
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
@@ -294,7 +301,7 @@ class TrailingCommasTests: XCTestCase {
             }
         }
         """
-        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
@@ -304,7 +311,7 @@ class TrailingCommasTests: XCTestCase {
             bar _: Int
         ) {}
         """
-        let options = FormatOptions(trailingCommas: true)
+        let options = FormatOptions(trailingCommas: .always)
         testFormatting(for: input, rule: .trailingCommas, options: options)
     }
 
@@ -319,7 +326,7 @@ class TrailingCommasTests: XCTestCase {
             bar _: Int
         ) {}
         """
-        let options = FormatOptions(trailingCommas: false)
+        let options = FormatOptions(trailingCommas: .never)
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
@@ -336,7 +343,7 @@ class TrailingCommasTests: XCTestCase {
             baaz _: Int)
         {}
         """
-        let options = FormatOptions(trailingCommas: false, closingParenPosition: .sameLine)
+        let options = FormatOptions(trailingCommas: .never, closingParenPosition: .sameLine)
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
@@ -353,7 +360,7 @@ class TrailingCommasTests: XCTestCase {
             baaz _: Int)
         {}
         """
-        let options = FormatOptions(trailingCommas: true, closingParenPosition: .sameLine)
+        let options = FormatOptions(trailingCommas: .always, closingParenPosition: .sameLine)
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
@@ -368,7 +375,7 @@ class TrailingCommasTests: XCTestCase {
             bar _: Int,
         ) {}
         """
-        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
@@ -383,7 +390,7 @@ class TrailingCommasTests: XCTestCase {
             bar _: Int
         ) {}
         """
-        let options = FormatOptions(trailingCommas: false)
+        let options = FormatOptions(trailingCommas: .never)
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
@@ -402,7 +409,7 @@ class TrailingCommasTests: XCTestCase {
             )
         }
         """
-        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
@@ -421,7 +428,7 @@ class TrailingCommasTests: XCTestCase {
             )
         }
         """
-        let options = FormatOptions(trailingCommas: false)
+        let options = FormatOptions(trailingCommas: .never)
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
@@ -436,7 +443,7 @@ class TrailingCommasTests: XCTestCase {
             1,
         )
         """
-        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
@@ -451,7 +458,7 @@ class TrailingCommasTests: XCTestCase {
             1
         )
         """
-        let options = FormatOptions(trailingCommas: false)
+        let options = FormatOptions(trailingCommas: .never)
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
@@ -478,7 +485,7 @@ class TrailingCommasTests: XCTestCase {
             baz: 2,
         )
         """
-        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
@@ -513,7 +520,7 @@ class TrailingCommasTests: XCTestCase {
             )
         }
         """
-        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
         testFormatting(for: input, output, rule: .trailingCommas, options: options, exclude: [.redundantReturn])
     }
 
@@ -537,7 +544,7 @@ class TrailingCommasTests: XCTestCase {
             ),
         )
         """
-        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
         testFormatting(for: input, output, rule: .trailingCommas, options: options, exclude: [.redundantReturn])
     }
 
@@ -552,7 +559,7 @@ class TrailingCommasTests: XCTestCase {
             0,
         )
         """
-        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
         testFormatting(for: input, output, rule: .trailingCommas, options: options, exclude: [.redundantParens])
     }
 
@@ -569,7 +576,7 @@ class TrailingCommasTests: XCTestCase {
             1,
         )
         """
-        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
@@ -586,7 +593,7 @@ class TrailingCommasTests: XCTestCase {
             baz: 1
         )
         """
-        let options = FormatOptions(trailingCommas: false)
+        let options = FormatOptions(trailingCommas: .never)
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
@@ -600,7 +607,7 @@ class TrailingCommasTests: XCTestCase {
         )
         """
 
-        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
         testFormatting(for: input, rule: .trailingCommas, options: options)
     }
 
@@ -619,7 +626,7 @@ class TrailingCommasTests: XCTestCase {
         )]]()
         """
 
-        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
         testFormatting(for: input, rule: .trailingCommas, options: options, exclude: [.propertyTypes])
     }
 
@@ -638,7 +645,7 @@ class TrailingCommasTests: XCTestCase {
         )>()
         """
 
-        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
         testFormatting(for: input, rule: .trailingCommas, options: options, exclude: [.typeSugar, .propertyTypes])
     }
 
@@ -654,7 +661,7 @@ class TrailingCommasTests: XCTestCase {
         ) {}
         """
 
-        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
         testFormatting(for: input, rule: .trailingCommas, options: options)
     }
 
@@ -700,7 +707,7 @@ class TrailingCommasTests: XCTestCase {
         ) -> Void) {}
         """
 
-        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
         testFormatting(for: input, rule: .trailingCommas, options: options)
     }
 
@@ -715,7 +722,7 @@ class TrailingCommasTests: XCTestCase {
         )?) {}
         """
 
-        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
         testFormatting(for: input, rule: .trailingCommas, options: options)
     }
 
@@ -743,7 +750,7 @@ class TrailingCommasTests: XCTestCase {
         )?
         """
 
-        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
         testFormatting(for: input, rule: .trailingCommas, options: options)
     }
 
@@ -770,7 +777,7 @@ class TrailingCommasTests: XCTestCase {
             )
         }
         """
-        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
@@ -797,7 +804,7 @@ class TrailingCommasTests: XCTestCase {
             )
         }
         """
-        let options = FormatOptions(trailingCommas: false)
+        let options = FormatOptions(trailingCommas: .never)
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
@@ -824,7 +831,7 @@ class TrailingCommasTests: XCTestCase {
             )
         }
         """
-        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
@@ -851,7 +858,7 @@ class TrailingCommasTests: XCTestCase {
             )
         }
         """
-        let options = FormatOptions(trailingCommas: false)
+        let options = FormatOptions(trailingCommas: .never)
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
@@ -888,7 +895,7 @@ class TrailingCommasTests: XCTestCase {
         default: break
         }
         """
-        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
@@ -899,7 +906,7 @@ class TrailingCommasTests: XCTestCase {
             baz: Int
         )
         """
-        let options = FormatOptions(trailingCommas: false)
+        let options = FormatOptions(trailingCommas: .never)
         testFormatting(for: input, rule: .trailingCommas, options: options)
     }
 
@@ -922,7 +929,7 @@ class TrailingCommasTests: XCTestCase {
         ): break
         }
         """
-        let options = FormatOptions(trailingCommas: false)
+        let options = FormatOptions(trailingCommas: .never)
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
@@ -939,7 +946,7 @@ class TrailingCommasTests: XCTestCase {
             bar
         ) = (0, 1)
         """
-        let options = FormatOptions(trailingCommas: false)
+        let options = FormatOptions(trailingCommas: .never)
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
@@ -949,7 +956,7 @@ class TrailingCommasTests: XCTestCase {
 
         )
         """
-        let options = FormatOptions(trailingCommas: false)
+        let options = FormatOptions(trailingCommas: .never)
         testFormatting(for: input, rule: .trailingCommas,
                        options: options, exclude: [
                            .blankLinesAtEndOfScope,
@@ -974,7 +981,7 @@ class TrailingCommasTests: XCTestCase {
         )
         \"""
         """
-        let options = FormatOptions(trailingCommas: false)
+        let options = FormatOptions(trailingCommas: .never)
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
@@ -993,7 +1000,7 @@ class TrailingCommasTests: XCTestCase {
         )
         struct Qux {}
         """
-        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
@@ -1038,7 +1045,7 @@ class TrailingCommasTests: XCTestCase {
         extension CoreFoundation.CGFloat: Swift.SignedNumeric {}
         """
 
-        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
         testFormatting(for: input, rule: .trailingCommas, options: options)
     }
 
@@ -1057,7 +1064,7 @@ class TrailingCommasTests: XCTestCase {
         )
         struct Qux {}
         """
-        let options = FormatOptions(trailingCommas: false)
+        let options = FormatOptions(trailingCommas: .never)
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
@@ -1074,7 +1081,7 @@ class TrailingCommasTests: XCTestCase {
             "baz",
         )
         """
-        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
@@ -1091,7 +1098,7 @@ class TrailingCommasTests: XCTestCase {
             "baz"
         )
         """
-        let options = FormatOptions(trailingCommas: false)
+        let options = FormatOptions(trailingCommas: .never)
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
@@ -1130,7 +1137,7 @@ class TrailingCommasTests: XCTestCase {
             T2,
         >() -> (T1, T2) {}
         """
-        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
@@ -1170,7 +1177,7 @@ class TrailingCommasTests: XCTestCase {
         > {}
         """
 
-        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
         testFormatting(for: input, rule: .trailingCommas, options: options, exclude: [.emptyExtensions, .typeSugar])
     }
 
@@ -1189,7 +1196,7 @@ class TrailingCommasTests: XCTestCase {
             T3
         > {}
         """
-        let options = FormatOptions(trailingCommas: false)
+        let options = FormatOptions(trailingCommas: .never)
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
@@ -1200,7 +1207,7 @@ class TrailingCommasTests: XCTestCase {
         let output = """
         struct S<T1, T2, T3> {}
         """
-        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
@@ -1219,7 +1226,7 @@ class TrailingCommasTests: XCTestCase {
         ] in
         }
         """
-        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
@@ -1238,7 +1245,7 @@ class TrailingCommasTests: XCTestCase {
         ] in
         }
         """
-        let options = FormatOptions(trailingCommas: false)
+        let options = FormatOptions(trailingCommas: .never)
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
@@ -1253,7 +1260,7 @@ class TrailingCommasTests: XCTestCase {
             print(capturedValue1, capturedValue2)
         }
         """
-        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
@@ -1270,7 +1277,24 @@ class TrailingCommasTests: XCTestCase {
             y,
         ]
         """
-        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
+
+    func testTrailingCommasRemoveFromSubscriptWhenCollectionsOnly() {
+        let input = """
+        let value = m[
+            x,
+            y,
+        ]
+        """
+        let output = """
+        let value = m[
+            x,
+            y
+        ]
+        """
+        let options = FormatOptions(trailingCommas: .collectionsOnly, swiftVersion: "6.1")
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
@@ -1287,7 +1311,7 @@ class TrailingCommasTests: XCTestCase {
             y
         ]
         """
-        let options = FormatOptions(trailingCommas: false)
+        let options = FormatOptions(trailingCommas: .never)
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
@@ -1298,7 +1322,7 @@ class TrailingCommasTests: XCTestCase {
         let output = """
         let value = m[x, y]
         """
-        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
@@ -1325,8 +1349,20 @@ class TrailingCommasTests: XCTestCase {
         }
         """
 
-        let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
+
+    func testSingleLineArrayWithMultipleElements() {
+        let input = """
+        for file in files where
+            file != "build" && !file.hasPrefix(".") && ![
+                ".build", ".app", ".framework", ".xcodeproj", ".xcassets",
+            ].contains(where: { file.hasSuffix($0) }) {}
+        """
+
+        let options = FormatOptions(trailingCommas: .always)
+        testFormatting(for: input, rule: .trailingCommas, options: options)
     }
 
     func testSingleLineArrayWithMultipleElementsFollowingNotOperator() {
@@ -1337,7 +1373,7 @@ class TrailingCommasTests: XCTestCase {
             ].contains(where: { file.hasSuffix($0) }) {}
         """
 
-        let options = FormatOptions(trailingCommas: true)
+        let options = FormatOptions(trailingCommas: .always)
         testFormatting(for: input, rule: .trailingCommas, options: options)
     }
 
@@ -1352,7 +1388,38 @@ class TrailingCommasTests: XCTestCase {
         ].throwingOperation()
         """
 
-        let options = FormatOptions(trailingCommas: true)
+        let options = FormatOptions(trailingCommas: .always)
         testFormatting(for: input, rule: .trailingCommas, options: options)
+    }
+
+    func testCollectionsOnlyAddsCollectionCommasAndRemovesNonCollectionCommas() {
+        let input = """
+        let array = [
+            1,
+            2
+        ]
+
+        func foo(
+            a: Int,
+            b: Int,
+        ) {
+            print(a, b)
+        }
+        """
+        let output = """
+        let array = [
+            1,
+            2,
+        ]
+
+        func foo(
+            a: Int,
+            b: Int
+        ) {
+            print(a, b)
+        }
+        """
+        let options = FormatOptions(trailingCommas: .collectionsOnly, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 }

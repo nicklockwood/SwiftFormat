@@ -235,7 +235,7 @@ private struct Inference {
                 noTrailing += 1
             }
         }
-        options.trailingCommas = (trailing >= noTrailing)
+        options.trailingCommas = (trailing >= noTrailing) ? .always : .never
     }
 
     let truncateBlankLines = OptionInferrer { formatter, options in

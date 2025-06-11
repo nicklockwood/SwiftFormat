@@ -3024,6 +3024,115 @@ extension Formatter {
             return tokens[nameIndex].string
         }
     }
+
+    /// Represents a condition in a guard or if statement
+    struct GuardCondition: Equatable {
+        let startIndex: Int
+        var endIndex: Int // Index of last token in condition (before comma or else)
+        var isLetBinding: Bool
+        var identifier: String?
+        var expression: ClosedRange<Int>?
+    }
+
+    /// Parse conditions in a guard or if statement
+    func parseGuardOrIfConditions(at guardOrIfIndex: Int) -> (conditions: [GuardCondition], elseIndex: Int)? {
+        guard tokens[guardOrIfIndex] == .keyword("guard") || tokens[guardOrIfIndex] == .keyword("if") else { return nil }
+
+        // Find the else keyword (or opening brace for if)
+        var searchIndex = guardOrIfIndex + 1
+        var elseIndex: Int?
+
+        while searchIndex < tokens.count {
+            if tokens[searchIndex] == .keyword("else") {
+                elseIndex = searchIndex
+                break
+            } else if tokens[searchIndex] == .startOfScope("{"), tokens[guardOrIfIndex] == .keyword("if") {
+                // For if statements without else
+                elseIndex = searchIndex
+                break
+            }
+            searchIndex += 1
+        }
+
+        guard let foundElseIndex = elseIndex else { return nil }
+
+        var conditions: [GuardCondition] = []
+        var currentPos = guardOrIfIndex + 1
+
+        while currentPos < foundElseIndex {
+            // Skip whitespace and comments
+            guard let conditionStart = index(of: .nonSpaceOrCommentOrLinebreak, after: currentPos - 1),
+                  conditionStart < foundElseIndex
+            else {
+                break
+            }
+
+            var condition = GuardCondition(
+                startIndex: conditionStart,
+                endIndex: conditionStart,
+                isLetBinding: false,
+                identifier: nil,
+                expression: nil
+            )
+
+            // Check if this is a let binding
+            if tokens[conditionStart] == .keyword("let"),
+               let identifierIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: conditionStart),
+               identifierIndex < foundElseIndex,
+               tokens[identifierIndex].isIdentifier,
+               let equalsIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: identifierIndex),
+               equalsIndex < foundElseIndex,
+               tokens[equalsIndex] == .operator("=", .infix),
+               let expressionStart = index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
+               expressionStart < foundElseIndex
+            {
+                condition.isLetBinding = true
+                condition.identifier = tokens[identifierIndex].string
+
+                // Parse expression
+                if let range = parseExpressionRange(startingAt: expressionStart, allowConditionalExpressions: false) {
+                    condition.expression = range
+                    condition.endIndex = range.upperBound
+                } else {
+                    condition.expression = expressionStart ... expressionStart
+                    condition.endIndex = expressionStart
+                }
+            } else {
+                // Non-let condition - parse until comma or else
+                var depth = 0
+                var pos = conditionStart
+                var lastNonSpace = conditionStart
+                while pos < foundElseIndex {
+                    let token = tokens[pos]
+                    if token.isStartOfScope {
+                        depth += 1
+                    } else if token.isEndOfScope {
+                        depth -= 1
+                    } else if depth == 0, token == .delimiter(",") || token == .keyword("else") {
+                        break
+                    }
+                    if !token.isSpaceOrLinebreak {
+                        lastNonSpace = pos
+                    }
+                    pos += 1
+                }
+                condition.endIndex = lastNonSpace
+            }
+
+            conditions.append(condition)
+
+            // Find next condition
+            if let commaIndex = index(of: .delimiter(","), after: condition.endIndex),
+               commaIndex < foundElseIndex
+            {
+                currentPos = commaIndex + 1
+            } else {
+                break
+            }
+        }
+
+        return (conditions, foundElseIndex)
+    }
 }
 
 extension _FormatRules {

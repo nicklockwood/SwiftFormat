@@ -409,7 +409,11 @@ Option | Description
 
 ## blankLinesAtEndOfScope
 
-Remove trailing blank line at the end of a scope.
+Remove or insert trailing blank line at the end of a scope.
+
+Option | Description
+--- | ---
+`--typeblanklines` | breakLine: "remove" (default), "insert", or "preserve"
 
 <details>
 <summary>Examples</summary>
@@ -438,6 +442,15 @@ Remove trailing blank line at the end of a scope.
     bar,
     baz,
   ]
+```
+
+With `--typeblanklines insert`:
+
+```diff
+  struct Foo {
+      let bar: Bar
++
+  }
 ```
 
 </details>
@@ -449,7 +462,7 @@ Remove leading blank line at the start of a scope.
 
 Option | Description
 --- | ---
-`--typeblanklines` | "remove" (default) or "preserve" blank lines from types
+`--typeblanklines` | breakLine: "remove" (default), "insert", or "preserve"
 
 <details>
 <summary>Examples</summary>
@@ -478,6 +491,15 @@ Option | Description
     bar,
     baz,
   ]
+```
+
+With `--typeblanklines insert`:
+
+```diff
+  struct Foo {
++
+      let bar: Bar
+  }
 ```
 
 </details>

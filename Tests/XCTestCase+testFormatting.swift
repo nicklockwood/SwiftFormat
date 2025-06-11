@@ -88,7 +88,7 @@ extension XCTestCase {
         do {
             formatResult = try format(input, rules: rules, options: options)
         } catch {
-            XCTFail("Failed to format input, threw error \(error)")
+            XCTFail("Failed to format input, threw error \(error)", file: file, line: line)
             return
         }
         XCTAssertEqual(formatResult.output, output, file: file, line: line)

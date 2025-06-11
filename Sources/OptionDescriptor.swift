@@ -1154,13 +1154,11 @@ struct _Descriptors {
         help: "Change type to enum: \"always\" (default) or \"structs-only\"",
         keyPath: \.enumNamespaces
     )
-    let removeStartOrEndBlankLinesFromTypes = OptionDescriptor(
+    let typeBlankLines = OptionDescriptor(
         argumentName: "typeblanklines",
-        displayName: "Remove blank lines from types",
-        help: "\"remove\" (default) or \"preserve\" blank lines from types",
-        keyPath: \.removeStartOrEndBlankLinesFromTypes,
-        trueValues: ["remove"],
-        falseValues: ["preserve"]
+        displayName: "Blank lines types",
+        help: "breakLine: \"remove\" (default), \"insert\", or \"preserve\"",
+        keyPath: \.typeBlankLines
     )
     let genericTypes = OptionDescriptor(
         argumentName: "generictypes",

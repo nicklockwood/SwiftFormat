@@ -2,7 +2,7 @@
 
 struct Foo<Value> {
     func bar<V, R>(
-        _ value: V,
+        _: V,
         _ work: () -> R
     ) -> R
         where Value == @Sendable () -> V,

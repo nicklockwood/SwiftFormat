@@ -1306,6 +1306,7 @@ extension Formatter {
     ///  - `sending ...`
     ///  - `repeat ...`
     ///  - `each ...`
+    ///  - `inout ...`
     ///  - `~...`
     ///  - any `@attribute ...`
     ///  - `(type).(type)`
@@ -1429,7 +1430,7 @@ extension Formatter {
         }
 
         // Parse types with any of the following prefixes, along with any `@attribute`.
-        let typePrefixes = Set(["any", "some", "borrowing", "consuming", "sending", "repeat", "each", "~"])
+        let typePrefixes = Set(["any", "some", "borrowing", "consuming", "sending", "repeat", "each", "~", "inout"])
         if typePrefixes.contains(startToken.string) || startToken.isAttribute,
            let nextToken = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfTypeIndex),
            let followingType = parseType(at: nextToken)
@@ -2614,8 +2615,17 @@ extension Formatter {
     struct FunctionArgument: Equatable {
         /// The external label of this argument. `nil` if omitted with an `_`.
         let externalLabel: String?
+
         /// The internal label of this argument. `nil` if omitted with an `_`.
         let internalLabel: String?
+
+        /// The index of the external argument label. If nil, the argument
+        /// uses the same label both internally and externally.
+        let externalLabelIndex: Int?
+
+        /// The index of the internal argument name. Always present in the grammar.
+        let internalLabelIndex: Int
+
         /// The type of the argument
         var type: String
     }
@@ -2747,11 +2757,13 @@ extension Formatter {
             else { continue }
 
             var externalLabelIndex = internalLabelIndex
+            var hasExplicitExternalLabel = false
 
             if let possibleExternalLabelIndex = index(of: .nonSpaceOrComment, before: internalLabelIndex),
                tokens[possibleExternalLabelIndex].isIdentifier || tokens[possibleExternalLabelIndex].string == "_"
             {
                 externalLabelIndex = possibleExternalLabelIndex
+                hasExplicitExternalLabel = true
             }
 
             guard let startOfType = index(of: .nonSpaceOrComment, after: colonIndex),
@@ -2762,13 +2774,15 @@ extension Formatter {
                 if token.string == "_" {
                     return nil
                 } else {
-                    return token.string
+                    return token.unescaped()
                 }
             }
 
             arguments.append(FunctionArgument(
                 externalLabel: identifierString(tokens[externalLabelIndex]),
                 internalLabel: identifierString(tokens[internalLabelIndex]),
+                externalLabelIndex: hasExplicitExternalLabel ? externalLabelIndex : nil,
+                internalLabelIndex: internalLabelIndex,
                 type: type
             ))
         }

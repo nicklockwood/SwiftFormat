@@ -22,7 +22,7 @@ class SpaceAroundGenericsTests: XCTestCase {
     }
 
     func testSpaceAroundGenericResultBuilder() {
-        let input = "func foo(@SomeResultBuilder<Self> builder: () -> Void) {}"
+        let input = "func foo(@SomeResultBuilder<Self> builder _: () -> Void) {}"
         testFormatting(for: input, rule: .spaceAroundGenerics)
     }
 }

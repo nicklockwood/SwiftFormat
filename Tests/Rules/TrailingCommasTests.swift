@@ -642,7 +642,7 @@ class TrailingCommasTests: XCTestCase {
     func testPreservesTrailingCommaInTupleFunctionArgumentInSwift6_1_issue_2050() {
         let input = """
         func updateBackgroundMusic(
-            _ inputs: (
+            inputs _: (
                 isFullyVisible: Bool,
                 currentLevel: LevelsService.Level?,
                 isAudioEngineRunningInForeground: Bool,

@@ -2618,10 +2618,10 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(
             formatter.parseFunctionDeclarationArguments(startOfScope: 3), // foo(...)
             [
-                Formatter.FunctionArgument(externalLabel: nil, internalLabel: "foo", type: "Foo"),
-                Formatter.FunctionArgument(externalLabel: "bar", internalLabel: "bar", type: "Bar"),
-                Formatter.FunctionArgument(externalLabel: "quux", internalLabel: nil, type: "Quux"),
-                Formatter.FunctionArgument(externalLabel: "last", internalLabel: "baaz", type: "Baaz"),
+                Formatter.FunctionArgument(externalLabel: nil, internalLabel: "foo", externalLabelIndex: 4, internalLabelIndex: 6, type: "Foo"),
+                Formatter.FunctionArgument(externalLabel: "bar", internalLabel: "bar", externalLabelIndex: nil, internalLabelIndex: 12, type: "Bar"),
+                Formatter.FunctionArgument(externalLabel: "quux", internalLabel: nil, externalLabelIndex: 18, internalLabelIndex: 20, type: "Quux"),
+                Formatter.FunctionArgument(externalLabel: "last", internalLabel: "baaz", externalLabelIndex: 26, internalLabelIndex: 28, type: "Baaz"),
             ]
         )
 

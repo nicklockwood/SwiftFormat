@@ -282,14 +282,24 @@ class TrailingCommasTests: XCTestCase {
 
     func testTrailingCommasAddedToFunctionParameters() {
         let input = """
-        func foo(
-            bar _: Int
-        ) {}
+        struct Foo {
+            func foo(
+                bar: Int,
+                baaz: Int
+            ) -> Int {
+                bar + baaz
+            }
+        }
         """
         let output = """
-        func foo(
-            bar _: Int,
-        ) {}
+        struct Foo {
+            func foo(
+                bar: Int,
+                baaz: Int,
+            ) -> Int {
+                bar + baaz
+            }
+        }
         """
         let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
         testFormatting(for: input, output, rule: .trailingCommas, options: options)

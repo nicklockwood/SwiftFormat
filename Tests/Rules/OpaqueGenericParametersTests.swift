@@ -317,7 +317,7 @@ class OpaqueGenericParametersTests: XCTestCase {
     func testGenericTypeWithClosureInWhereClauseDoesntCrash() {
         let input = """
         struct Foo<U> {
-            func bar<V>(_ value: V) where U == @Sendable (V) -> Int {}
+            func bar<V>(_: V) where U == @Sendable (V) -> Int {}
         }
         """
 
@@ -370,7 +370,7 @@ class OpaqueGenericParametersTests: XCTestCase {
     func testIssue1269() {
         let input = """
         func bar<V, R>(
-            _ value: V,
+            _: V,
             _ work: () -> R
         ) -> R
             where Value == @Sendable () -> V,

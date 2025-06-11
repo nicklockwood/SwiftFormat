@@ -16,6 +16,66 @@ public extension FormatRule {
     ) { formatter in
         guard !formatter.options.fragment else { return }
 
+        // Function arguments
+        formatter.forEach(.keyword) { i, token in
+            guard formatter.options.stripUnusedArguments != .closureOnly,
+                  ["func", "init", "subscript"].contains(token.string)
+            else { return }
+
+            // In subscripts and operators, external function labels are unnecessary
+            let isOperator = (token.string == "subscript") ||
+                (token.string == "func" && formatter.next(.nonSpaceOrCommentOrLinebreak, after: i)?.isOperator == true)
+
+            guard let declaration = formatter.parseFunctionDeclaration(keywordIndex: i),
+                  let bodyRange = declaration.bodyRange
+            else { return }
+
+            var arguments = declaration.arguments.filter { $0.internalLabel != nil }
+            var argNames = arguments.compactMap(\.internalLabel)
+
+            formatter.removeUsed(from: &argNames, with: &arguments, in: bodyRange.lowerBound + 1 ..< bodyRange.upperBound)
+            for argument in arguments.reversed() {
+                // In subscripts and operators, external function labels are unnecessary
+                if isOperator {
+                    // Convert `_ name:` to just `_:`
+                    if let externalLabelIndex = argument.externalLabelIndex, argument.externalLabel == nil {
+                        formatter.removeTokens(in: (externalLabelIndex + 1) ... argument.internalLabelIndex)
+                    }
+
+                    // Convert `name:` to just `_:`
+                    else {
+                        formatter.replaceToken(at: argument.internalLabelIndex, with: .identifier("_"))
+                    }
+                }
+
+                // When using --stripunusedargs unnamed-only, only remove the internal label
+                // when the external label is already explicitly removed.
+                else if formatter.options.stripUnusedArguments == .unnamedOnly {
+                    // Convert `_ name:` to just `_:`
+                    if let externalLabelIndex = argument.externalLabelIndex, argument.externalLabel == nil {
+                        formatter.removeTokens(in: (externalLabelIndex + 1) ... argument.internalLabelIndex)
+                    }
+                }
+
+                else {
+                    // Convert `_ name:` to just `_:`
+                    if let externalLabelIndex = argument.externalLabelIndex, argument.externalLabel == nil {
+                        formatter.removeTokens(in: (externalLabelIndex + 1) ... argument.internalLabelIndex)
+                    }
+
+                    // Convert `name:` to `name _:`,
+                    else if argument.externalLabelIndex == nil, !isOperator {
+                        formatter.insert([.space(" "), .identifier("_")], at: argument.internalLabelIndex + 1)
+                    }
+
+                    // Convert `in name:` to `in _:`
+                    else {
+                        formatter.replaceToken(at: argument.internalLabelIndex, with: .identifier("_"))
+                    }
+                }
+            }
+        }
+
         // Closure arguments
         formatter.forEach(.keyword("in")) { i, _ in
             var argNames = [String]()
@@ -84,83 +144,6 @@ public extension FormatRule {
             formatter.removeUsed(from: &argNames, with: &nameIndexPairs, in: i + 1 ..< bodyEndIndex)
             for pair in nameIndexPairs {
                 if case .identifier("_") = formatter.tokens[pair.0], pair.0 != pair.1 {
-                    formatter.removeToken(at: pair.1)
-                    if formatter.tokens[pair.1 - 1] == .space(" ") {
-                        formatter.removeToken(at: pair.1 - 1)
-                    }
-                } else {
-                    formatter.replaceToken(at: pair.1, with: .identifier("_"))
-                }
-            }
-        }
-        // Function arguments
-        formatter.forEachToken { i, token in
-            guard formatter.options.stripUnusedArguments != .closureOnly,
-                  case let .keyword(keyword) = token, ["func", "init", "subscript"].contains(keyword),
-                  let startIndex = formatter.index(of: .startOfScope("("), after: i),
-                  let endIndex = formatter.index(of: .endOfScope(")"), after: startIndex) else { return }
-            let isOperator = (keyword == "subscript") ||
-                (keyword == "func" && formatter.next(.nonSpaceOrCommentOrLinebreak, after: i)?.isOperator == true)
-            var index = startIndex
-            var argNames = [String]()
-            var nameIndexPairs = [(Int, Int)]()
-            while index < endIndex {
-                guard let externalNameIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index, if: {
-                    if case let .identifier(name) = $0 {
-                        return formatter.options.stripUnusedArguments != .unnamedOnly || name == "_"
-                    }
-                    // Probably an empty argument list
-                    return false
-                }) else { return }
-                guard let nextIndex =
-                    formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: externalNameIndex) else { return }
-                let nextToken = formatter.tokens[nextIndex]
-                switch nextToken {
-                case let .identifier(name):
-                    if name != "_" {
-                        argNames.append(nextToken.unescaped())
-                        nameIndexPairs.append((externalNameIndex, nextIndex))
-                    }
-                case .delimiter(":"):
-                    let externalNameToken = formatter.tokens[externalNameIndex]
-                    if case let .identifier(name) = externalNameToken, name != "_" {
-                        argNames.append(externalNameToken.unescaped())
-                        nameIndexPairs.append((externalNameIndex, externalNameIndex))
-                    }
-                default:
-                    return
-                }
-                index = formatter.index(of: .delimiter(","), after: index) ?? endIndex
-            }
-            guard !argNames.isEmpty, let bodyStartIndex = formatter.index(after: endIndex, where: {
-                switch $0 {
-                case .startOfScope("{"): // What we're looking for
-                    return true
-                case .keyword("throws"),
-                     .keyword("rethrows"),
-                     .identifier("async"),
-                     .keyword("where"),
-                     .keyword("is"):
-                    return false // Keep looking
-                case .keyword:
-                    return true // Not valid between end of arguments and start of body
-                default:
-                    return false // Keep looking
-                }
-            }), formatter.tokens[bodyStartIndex] == .startOfScope("{"),
-            let bodyEndIndex = formatter.index(of: .endOfScope("}"), after: bodyStartIndex) else {
-                return
-            }
-            formatter.removeUsed(from: &argNames, with: &nameIndexPairs, in: bodyStartIndex + 1 ..< bodyEndIndex)
-            for pair in nameIndexPairs.reversed() {
-                if pair.0 == pair.1 {
-                    if isOperator {
-                        formatter.replaceToken(at: pair.0, with: .identifier("_"))
-                    } else {
-                        formatter.insert(.identifier("_"), at: pair.0 + 1)
-                        formatter.insert(.space(" "), at: pair.0 + 1)
-                    }
-                } else if case .identifier("_") = formatter.tokens[pair.0] {
                     formatter.removeToken(at: pair.1)
                     if formatter.tokens[pair.1 - 1] == .space(" ") {
                         formatter.removeToken(at: pair.1 - 1)

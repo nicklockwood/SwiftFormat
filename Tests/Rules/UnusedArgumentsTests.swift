@@ -13,8 +13,16 @@ class UnusedArgumentsTests: XCTestCase {
     // closures
 
     func testUnusedTypedClosureArguments() {
-        let input = "let foo = { (bar: Int, baz: String) in\n    print(\"Hello \\(baz)\")\n}"
-        let output = "let foo = { (_: Int, baz: String) in\n    print(\"Hello \\(baz)\")\n}"
+        let input = """
+        let foo = { (bar: Int, baz: String) in
+            print(\"Hello \\(baz)\")
+        }
+        """
+        let output = """
+        let foo = { (_: Int, baz: String) in
+            print(\"Hello \\(baz)\")
+        }
+        """
         testFormatting(for: input, output, rule: .unusedArguments)
     }
 
@@ -948,7 +956,7 @@ class UnusedArgumentsTests: XCTestCase {
         func convert(
             filter: Filter,
             accounts: [Account],
-            outgoingTotal: MulticurrencyTotal?
+            outgoingTotal: MulticurrencyTotal?,
         ) -> History? {
             guard
                 let firstParameter = incomingTotal?.currency,
@@ -961,7 +969,7 @@ class UnusedArgumentsTests: XCTestCase {
             return History(firstParameter, secondParameter)
         }
         """
-        testFormatting(for: input, rule: .unusedArguments)
+        testFormatting(for: input, rule: .unusedArguments, exclude: [.trailingCommas])
     }
 
     func testFunctionArgumentUsedInGuardNotRemoved3() {
@@ -992,7 +1000,11 @@ class UnusedArgumentsTests: XCTestCase {
     // functions (unnamed-only)
 
     func testNoMarkNamedFunctionArgument() {
-        let input = "func foo(bar: Int, baz: String) {\n    print(\"Hello \\(baz)\")\n}"
+        let input = """
+        func foo(bar: Int, baz: String) {
+            print(\"Hello \\(baz)\")
+        }
+        """
         let options = FormatOptions(stripUnusedArguments: .unnamedOnly)
         testFormatting(for: input, rule: .unusedArguments, options: options)
     }
@@ -1013,9 +1025,23 @@ class UnusedArgumentsTests: XCTestCase {
     // init
 
     func testMarkUnusedInitArgument() {
-        let input = "init(bar: Int, baz: String) {\n    self.baz = baz\n}"
-        let output = "init(bar _: Int, baz: String) {\n    self.baz = baz\n}"
-        testFormatting(for: input, output, rule: .unusedArguments)
+        let input = """
+        init(
+            bar: Int,
+            baz: String,
+        ) {
+            self.baz = baz
+        }
+        """
+        let output = """
+        init(
+            bar _: Int,
+            baz: String,
+        ) {
+            self.baz = baz
+        }
+        """
+        testFormatting(for: input, output, rule: .unusedArguments, exclude: [.trailingCommas])
     }
 
     // subscript
@@ -1286,5 +1312,29 @@ class UnusedArgumentsTests: XCTestCase {
         """
 
         testFormatting(for: input, rule: .unusedArguments)
+    }
+
+    func testUnusedArgumentsWithAttributes() {
+        let input = """
+        func foo(
+            @Attribute<Foo> foo: Bar,
+            @Attribute bar baaz: Baaz,
+            quux: Quux,
+        ) {
+            print(quux)
+        }
+        """
+
+        let output = """
+        func foo(
+            @Attribute<Foo> foo _: Bar,
+            @Attribute bar _: Baaz,
+            quux: Quux,
+        ) {
+            print(quux)
+        }
+        """
+
+        testFormatting(for: input, output, rule: .unusedArguments, exclude: [.trailingCommas])
     }
 }

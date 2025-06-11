@@ -149,13 +149,13 @@ class InferenceTests: XCTestCase {
     func testInferTrailingCommas() {
         let input = "let foo = [\nbar,\n]\n let baz = [\nquux\n]"
         let options = inferFormatOptions(from: tokenize(input))
-        XCTAssertTrue(options.trailingCommas)
+        XCTAssertEqual(options.trailingCommas, .always)
     }
 
     func testInferNoTrailingCommas() {
         let input = "let foo = [\nbar\n]\n let baz = [\nquux\n]"
         let options = inferFormatOptions(from: tokenize(input))
-        XCTAssertFalse(options.trailingCommas)
+        XCTAssertEqual(options.trailingCommas, .never)
     }
 
     // MARK: truncateBlankLines

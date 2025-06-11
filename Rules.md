@@ -3233,7 +3233,7 @@ Add or remove trailing commas in comma-separated lists.
 
 Option | Description
 --- | ---
-`--commas` | Commas in collection literals: "always" (default) or "inline"
+`--trailingcommas` | Trailing commas: "always" (default), "never", or "collections-only"
 
 <details>
 <summary>Examples</summary>

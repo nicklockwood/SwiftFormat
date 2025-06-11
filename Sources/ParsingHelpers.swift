@@ -652,8 +652,20 @@ extension Formatter {
 
     /// Whether or not the index is the start of a valid closure type
     func isStartOfClosureType(at i: Int) -> Bool {
-        guard let type = parseType(at: i) else { return false }
-        return index(of: .operator("->", .infix), in: Range(type.range)) != nil
+        guard let type = parseType(at: i),
+              index(of: .operator("->", .infix), in: Range(type.range)) != nil
+        else { return false }
+
+        // Avoid confusing the arguments + return type of a function declaration with a closure type
+        if let previousKeyword = indexOfLastSignificantKeyword(at: i, excluding: ["where"]),
+           tokens[previousKeyword] == .keyword("func"),
+           let functionDeclaration = parseFunctionDeclaration(keywordIndex: previousKeyword),
+           functionDeclaration.argumentsRange.lowerBound == type.range.lowerBound
+        {
+            return false
+        }
+
+        return true
     }
 
     func isInClosureArguments(at i: Int) -> Bool {

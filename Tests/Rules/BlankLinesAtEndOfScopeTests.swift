@@ -11,26 +11,76 @@ import XCTest
 
 class BlankLinesAtEndOfScopeTests: XCTestCase {
     func testBlankLinesRemovedAtEndOfFunction() {
-        let input = "func foo() {\n    // code\n\n}"
-        let output = "func foo() {\n    // code\n}"
+        let input = """
+        func foo() {
+            // code
+
+        }
+        """
+
+        let output = """
+        func foo() {
+            // code
+        }
+        """
+
         testFormatting(for: input, output, rule: .blankLinesAtEndOfScope)
     }
 
     func testBlankLinesRemovedAtEndOfParens() {
-        let input = "(\n    foo: Int\n\n)"
-        let output = "(\n    foo: Int\n)"
+        let input = """
+        (
+            foo: Int
+
+        )
+        """
+        let output = """
+        (
+            foo: Int
+        )
+        """
         testFormatting(for: input, output, rule: .blankLinesAtEndOfScope)
     }
 
     func testBlankLinesRemovedAtEndOfBrackets() {
-        let input = "[\n    foo,\n    bar,\n\n]"
-        let output = "[\n    foo,\n    bar,\n]"
+        let input = """
+        [
+            foo,
+            bar,
+
+        ]
+        """
+
+        let output = """
+        [
+            foo,
+            bar,
+        ]
+        """
+
         testFormatting(for: input, output, rule: .blankLinesAtEndOfScope)
     }
 
     func testBlankLineNotRemovedBeforeElse() {
-        let input = "if x {\n\n    // do something\n\n} else if y {\n\n    // do something else\n\n}"
-        let output = "if x {\n\n    // do something\n\n} else if y {\n\n    // do something else\n}"
+        let input = """
+        if x {
+            // do something
+
+        } else if y {
+
+            // do something else
+
+        }
+        """
+        let output = """
+        if x {
+            // do something
+
+        } else if y {
+
+            // do something else
+        }
+        """
         testFormatting(for: input, output, rule: .blankLinesAtEndOfScope,
                        exclude: [.blankLinesAtStartOfScope])
     }
@@ -102,22 +152,60 @@ class BlankLinesAtEndOfScopeTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .blankLinesAtEndOfScope, options: .init(typeBlankLines: .preserve))
+        testFormatting(for: input, output, rule: .blankLinesAtEndOfScope, options: .init(typeBlankLines: .preserve), exclude: [.blankLinesAtStartOfScope])
     }
 
     func testBlankLinesInsertedAtEndOfType() {
         let input = """
         class FooClass {
+
+            struct FooStruct {
+
+                func nestedFunc() {}
+            }
+
             func fooMethod() {}
         }
         """
 
         let output = """
         class FooClass {
+
+            struct FooStruct {
+
+                func nestedFunc() {}
+
+            }
+
             func fooMethod() {}
 
         }
         """
         testFormatting(for: input, output, rule: .blankLinesAtEndOfScope, options: .init(typeBlankLines: .insert))
+    }
+
+    func testBlankLinesRemovedAtEndOfType() {
+        let input = """
+        class FooClass {
+            struct FooStruct {
+                func nestedFunc() {}
+            }
+
+            func fooMethod() {}
+        }
+        """
+
+        let output = """
+        class FooClass {
+            struct FooStruct {
+                func nestedFunc() {}
+
+            }
+
+            func fooMethod() {}
+
+        }
+        """
+        testFormatting(for: input, output, rule: .blankLinesAtEndOfScope, options: .init(typeBlankLines: .insert), exclude: [.blankLinesAtStartOfScope])
     }
 }

@@ -2920,6 +2920,89 @@ extension Formatter {
                     usingDynamicLookup: false, classOrStatic: false,
                     isTypeRoot: false, isInit: false)
     }
+
+    /// Ensures that the given range ends with at least one trailing blank line,
+    /// by adding a blank line to the end of this declaration if not already present.
+    func addTrailingBlankLineIfNeeded(in range: ClosedRange<Int>) {
+        let range = range.autoUpdating(in: self)
+        while tokens[range.range].numberOfTrailingLinebreaks() < 2 {
+            insertLinebreak(at: range.upperBound)
+        }
+    }
+
+    /// Ensures that given range doesn't end with a trailing blank line
+    /// by removing any trailing blank lines.
+    func removeTrailingBlankLinesIfPresent(in range: ClosedRange<Int>) {
+        let range = range.autoUpdating(in: self)
+        while tokens[range.range].numberOfTrailingLinebreaks() > 1 {
+            guard let lastNewlineIndex = lastIndex(of: .linebreak, in: Range(range.range)) else { break }
+
+            removeToken(at: lastNewlineIndex)
+        }
+    }
+
+    /// Ensures that given range starts with at least one leading blank line,
+    /// by adding blank like to the start of this declaration if not already present.
+    func addLeadingBlankLineIfNeeded(in range: ClosedRange<Int>) {
+        let range = range.autoUpdating(in: self)
+        while tokens[range.range].numberOfLeadingLinebreaks() < 2 {
+            insertLinebreak(at: range.lowerBound)
+        }
+    }
+
+    /// Ensures that the given range doesn't end with a trailing blank line
+    /// by removing any trailing blank lines.
+    func removeLeadingBlankLinesIfPresent(in range: ClosedRange<Int>) {
+        let range = range.autoUpdating(in: self)
+        while tokens[range.range].numberOfLeadingLinebreaks() > 1 {
+            guard let firstNewlineIndex = index(of: .linebreak, in: Range(range.range)) else { break }
+            removeTokens(in: range.lowerBound ... firstNewlineIndex)
+        }
+    }
+}
+
+extension RandomAccessCollection where Element == Token, Index == Int {
+    // The number of trailing newlines in this array of tokens,
+    // taking into account any spaces that may be between the linebreaks.
+    func numberOfLeadingLinebreaks() -> Int {
+        guard !isEmpty else { return 0 }
+
+        var numberOfLeadingLinebreaks = 0
+        var searchIndex = indices.first!
+
+        while searchIndex <= indices.last!,
+              self[searchIndex].isSpaceOrLinebreak
+        {
+            if self[searchIndex].isLinebreak {
+                numberOfLeadingLinebreaks += 1
+            }
+
+            searchIndex += 1
+        }
+
+        return numberOfLeadingLinebreaks
+    }
+
+    // The number of trailing newlines in this array of tokens,
+    // taking into account any spaces that may be between the linebreaks.
+    func numberOfTrailingLinebreaks() -> Int {
+        guard !isEmpty else { return 0 }
+
+        var numberOfTrailingLinebreaks = 0
+        var searchIndex = indices.last!
+
+        while searchIndex >= indices.first!,
+              self[searchIndex].isSpaceOrLinebreak
+        {
+            if self[searchIndex].isLinebreak {
+                numberOfTrailingLinebreaks += 1
+            }
+
+            searchIndex -= 1
+        }
+
+        return numberOfTrailingLinebreaks
+    }
 }
 
 extension Date {

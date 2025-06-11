@@ -11,25 +11,58 @@ import XCTest
 
 class BlankLinesAtStartOfScopeTests: XCTestCase {
     func testBlankLinesRemovedAtStartOfFunction() {
-        let input = "func foo() {\n\n    // code\n}"
-        let output = "func foo() {\n    // code\n}"
+        let input = """
+        func foo() {
+
+            // code
+        }
+        """
+        let output = """
+        func foo() {
+            // code
+        }
+        """
         testFormatting(for: input, output, rule: .blankLinesAtStartOfScope)
     }
 
     func testBlankLinesRemovedAtStartOfParens() {
-        let input = "(\n\n    foo: Int\n)"
-        let output = "(\n    foo: Int\n)"
+        let input = """
+        (
+
+            foo: Int
+        )
+        """
+        let output = """
+        (
+            foo: Int
+        )
+        """
         testFormatting(for: input, output, rule: .blankLinesAtStartOfScope)
     }
 
     func testBlankLinesRemovedAtStartOfBrackets() {
-        let input = "[\n\n    foo,\n    bar,\n]"
-        let output = "[\n    foo,\n    bar,\n]"
+        let input = """
+        [
+
+            foo,
+            bar,
+        ]
+        """
+        let output = """
+        [
+            foo,
+            bar,
+        ]
+        """
         testFormatting(for: input, output, rule: .blankLinesAtStartOfScope)
     }
 
     func testBlankLinesNotRemovedBetweenElementsInsideBrackets() {
-        let input = "[foo,\n\n bar]"
+        let input = """
+        [foo,
+
+         bar]
+        """
         testFormatting(for: input, rule: .blankLinesAtStartOfScope, exclude: [.wrapArguments])
     }
 
@@ -108,12 +141,14 @@ class BlankLinesAtStartOfScopeTests: XCTestCase {
         let input = """
         class Foo {
             func bar() {}
+
         }
         """
         let output = """
         class Foo {
 
             func bar() {}
+
         }
         """
         testFormatting(for: input, output, rule: .blankLinesAtStartOfScope, options: .init(typeBlankLines: .insert))
@@ -222,5 +257,34 @@ class BlankLinesAtStartOfScopeTests: XCTestCase {
         """
 
         testFormatting(for: input, output, rule: .blankLinesAtStartOfScope)
+    }
+
+    func testBlankLinesInsertedAtStartOfType() {
+        let input = """
+        class FooClass {
+            struct FooStruct {
+                func nestedFunc() {}
+
+            }
+
+            func fooMethod() {}
+
+        }
+        """
+
+        let output = """
+        class FooClass {
+
+            struct FooStruct {
+
+                func nestedFunc() {}
+
+            }
+
+            func fooMethod() {}
+
+        }
+        """
+        testFormatting(for: input, output, rule: .blankLinesAtStartOfScope, options: .init(typeBlankLines: .insert))
     }
 }

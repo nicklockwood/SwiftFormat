@@ -484,6 +484,13 @@ public enum DeclarationOrganizationMode: String, CaseIterable {
     case type
 }
 
+/// Whether to insert or remove blank lines from the start / end of type bodies
+public enum TypeBlankLines: String, CaseIterable {
+    case remove
+    case insert
+    case preserve
+}
+
 /// Format to use when printing dates
 public enum DateFormat: Equatable, RawRepresentable, CustomStringConvertible {
     case dayMonthYear
@@ -1129,10 +1136,4 @@ public struct Options {
     public func shouldSkipFile(_ inputURL: URL) -> Bool {
         fileOptions?.shouldSkipFile(inputURL) ?? false
     }
-}
-
-public enum TypeBlankLines: String, CaseIterable {
-    case remove
-    case insert
-    case preserve
 }

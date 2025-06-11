@@ -18,10 +18,6 @@ public extension FormatRule {
         formatter.forEach(.startOfScope) { i, token in
             guard ["{", "(", "[", "<", ":"].contains(token.string) else { return }
 
-            // Check if this is a type declaration
-            let isTypeDeclaration = ["class", "actor", "struct", "enum", "protocol", "extension"].contains(
-                formatter.lastSignificantKeyword(at: i, excluding: ["where"]))
-
             // If this is a closure with captures or params, skip to the `in` keyword
             // before we look for a blank line at the start of the scope.
             var startOfScope = i
@@ -34,43 +30,23 @@ public extension FormatRule {
                 startOfScope = inKeywordIndex
             }
 
-            guard let indexOfFirstLineBreak = formatter.index(of: .nonSpaceOrComment, after: startOfScope),
-                  // If there is extra code on the same line, ignore it
-                  formatter.tokens[indexOfFirstLineBreak].isLinebreak
+            guard let endOfScope = formatter.endOfScope(at: startOfScope),
+                  formatter.index(of: .nonSpaceOrComment, after: startOfScope) != endOfScope
             else { return }
 
-            // Find next non-space token
-            var index = indexOfFirstLineBreak + 1
-            var indexOfLastLineBreak = indexOfFirstLineBreak
-            loop: while let token = formatter.token(at: index) {
-                switch token {
-                case .linebreak:
-                    indexOfLastLineBreak = index
-                case .space:
-                    break
-                default:
-                    break loop
-                }
-                index += 1
-            }
+            let rangeInsideScope = ClosedRange(startOfScope + 1 ..< endOfScope)
 
-            if isTypeDeclaration {
-                // Apply type-specific rules based on typeBlankLines option
+            if formatter.isStartOfTypeBody(at: startOfScope) {
                 switch formatter.options.typeBlankLines {
+                case .insert:
+                    formatter.addLeadingBlankLineIfNeeded(in: rangeInsideScope)
                 case .remove:
-                    // Remove blank lines after opening brace in types
-                    if indexOfFirstLineBreak != indexOfLastLineBreak {
-                        formatter.removeTokens(in: indexOfFirstLineBreak ..< indexOfLastLineBreak)
-                    }
-                case .insert, .preserve:
-                    // We don't insert blank lines at start of scope, and preserve means do nothing
+                    formatter.removeLeadingBlankLinesIfPresent(in: rangeInsideScope)
+                case .preserve:
                     break
                 }
             } else {
-                // For non-types, always remove blank lines
-                if formatter.options.removeBlankLines, indexOfFirstLineBreak != indexOfLastLineBreak {
-                    formatter.removeTokens(in: indexOfFirstLineBreak ..< indexOfLastLineBreak)
-                }
+                formatter.removeLeadingBlankLinesIfPresent(in: rangeInsideScope)
             }
         }
     } examples: {
@@ -99,6 +75,15 @@ public extension FormatRule {
             bar,
             baz,
           ]
+        ```
+
+        With `--typeblanklines insert`:
+
+        ```diff
+          struct Foo {
+        +
+              let bar: Bar
+          }
         ```
         """
     }

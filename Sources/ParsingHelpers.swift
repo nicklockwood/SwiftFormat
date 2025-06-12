@@ -3032,6 +3032,7 @@ extension Formatter {
         var isLetBinding: Bool
         var identifier: String?
         var expression: ClosedRange<Int>?
+        var typeAnnotation: ClosedRange<Int>? // Range of type annotation (including colon)
     }
 
     /// Parse conditions in a guard or if statement
@@ -3072,7 +3073,8 @@ extension Formatter {
                 endIndex: conditionStart,
                 isLetBinding: false,
                 identifier: nil,
-                expression: nil
+                expression: nil,
+                typeAnnotation: nil
             )
 
             // Check if this is a let binding
@@ -3083,15 +3085,32 @@ extension Formatter {
             {
                 condition.isLetBinding = true
                 condition.identifier = tokens[identifierIndex].string
-                
+
+                // Skip over optional type annotation
+                var searchIndex = identifierIndex
+                if let colonIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: identifierIndex),
+                   colonIndex < foundElseIndex,
+                   tokens[colonIndex] == .delimiter(":")
+                {
+                    // Skip past the type annotation
+                    if let typeStart = index(of: .nonSpaceOrCommentOrLinebreak, after: colonIndex),
+                       typeStart < foundElseIndex,
+                       let typeRange = parseType(at: typeStart)
+                    {
+                        // Store the type annotation range (from colon to end of type)
+                        condition.typeAnnotation = colonIndex ... typeRange.range.upperBound
+                        searchIndex = typeRange.range.upperBound
+                    }
+                }
+
                 // Check if there's an equals sign (full syntax) or not (shorthand)
-                if let nextTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: identifierIndex),
-                   nextTokenIndex < foundElseIndex,
-                   tokens[nextTokenIndex] == .operator("=", .infix),
-                   let expressionStart = index(of: .nonSpaceOrCommentOrLinebreak, after: nextTokenIndex),
+                if let equalsIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: searchIndex),
+                   equalsIndex < foundElseIndex,
+                   tokens[equalsIndex] == .operator("=", .infix),
+                   let expressionStart = index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
                    expressionStart < foundElseIndex
                 {
-                    // Full syntax: let foo = expression
+                    // Full syntax: let foo = expression or let foo: Type = expression
                     if let range = parseExpressionRange(startingAt: expressionStart, allowConditionalExpressions: false) {
                         condition.expression = range
                         condition.endIndex = range.upperBound
@@ -3100,9 +3119,9 @@ extension Formatter {
                         condition.endIndex = expressionStart
                     }
                 } else {
-                    // Shorthand syntax: let foo (implicitly let foo = foo)
+                    // Shorthand syntax: let foo or let foo: Type (implicitly = foo)
                     condition.expression = identifierIndex ... identifierIndex
-                    condition.endIndex = identifierIndex
+                    condition.endIndex = searchIndex
                 }
             } else {
                 // Non-let condition - parse until comma or else

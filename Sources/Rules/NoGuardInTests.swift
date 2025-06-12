@@ -14,7 +14,8 @@ public extension FormatRule {
         Convert guard statements in unit tests to `try #require(...)` / `#expect(...)`
         or `try XCTUnwrap(...)` / `XCTAssert(...)`.
         """,
-        disabledByDefault: true
+        disabledByDefault: true,
+        sharedOptions: ["linebreaks"]
     ) { formatter in
         guard let testFramework = formatter.detectTestingFramework() else {
             return

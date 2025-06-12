@@ -147,9 +147,10 @@ public extension FormatRule {
 
                     switch condition {
                     case let .optionalBinding(range, property):
-                        // Transform let binding
+                        // Transform let/var binding - preserve the original keyword
+                        let introducerKeyword = formatter.tokens[property.introducerIndex]
                         replacementStatements.append(contentsOf: [
-                            .keyword("let"),
+                            introducerKeyword,
                             .space(" "),
                             .identifier(property.identifier),
                         ])

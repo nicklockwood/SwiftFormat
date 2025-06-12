@@ -918,10 +918,11 @@ final class NoGuardInTestsTests: XCTestCase {
 
         class TestCase: XCTestCase {
             func test_something() {
-                guard let foo: Foo = getFoo() else {
+                guard var foo: Foo = getFoo() else {
                     XCTFail()
                     return
                 }
+                foo = otherFoo
                 print(foo)
             }
         }
@@ -931,7 +932,8 @@ final class NoGuardInTestsTests: XCTestCase {
 
         class TestCase: XCTestCase {
             func test_something() throws {
-                let foo: Foo = try XCTUnwrap(getFoo())
+                var foo: Foo = try XCTUnwrap(getFoo())
+                foo = otherFoo
                 print(foo)
             }
         }

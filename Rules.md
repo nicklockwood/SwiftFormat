@@ -109,6 +109,7 @@
 * [isEmpty](#isEmpty)
 * [markTypes](#markTypes)
 * [noExplicitOwnership](#noExplicitOwnership)
+* [noGuardInTests](#noGuardInTests)
 * [organizeDeclarations](#organizeDeclarations)
 * [preferSwiftTesting](#preferSwiftTesting)
 * [privateStateVariables](#privateStateVariables)
@@ -1565,6 +1566,48 @@ Don't use explicit ownership modifiers (borrowing / consuming).
 ```diff
 - borrowing func foo(_ bar: consuming Bar) { ... }
 + func foo(_ bar: Bar) { ... }
+```
+
+</details>
+<br/>
+
+## noGuardInTests
+
+Convert guard statements in unit tests to `try #require(...)` / `#expect(...)`
+or `try XCTUnwrap(...)` / `XCTAssert(...)`.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+import XCTest
+
+final class SomeTestCase: XCTestCase {
+-   func test_something() {
++   func test_something() throws {
+-     guard let value = optionalValue, value.matchesCondition else {
+-       XCTFail()
+-       return
+-     }
++     let value = try XCTUnwrap(optionalValue)
++     XCTAssert(value.matchesCondition)
+  }
+}
+```
+
+```diff
+import Testing
+
+struct SomeTests {
+  @Test
+  func something() throws {
+-   guard let value = optionalValue, value.matchesCondition else {
+-     return
+-   }
++   let value = try #require(optionalValue)
++   #expect(value.matchesCondition)
+  }
+}
 ```
 
 </details>

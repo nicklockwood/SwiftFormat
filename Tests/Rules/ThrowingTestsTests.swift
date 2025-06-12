@@ -85,7 +85,7 @@ final class ThrowingTestsTests: XCTestCase {
         let output = """
         import Testing
 
-        @Test func something() throws async {
+        @Test func something() async throws {
             try somethingThatThrows()
         }
         """
@@ -171,6 +171,21 @@ final class ThrowingTestsTests: XCTestCase {
 
         @Test func something() {
             doSomething {
+                if condition {
+                    try! somethingThatThrows()
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: .throwingTests)
+    }
+
+    func testCaseIsNotUpdated_for_try_exclamationMark_in_closure_inside_nested_function() throws {
+        let input = """
+        import Testing
+
+        @Test func something() {
+            func nestedFunction() {
                 if condition {
                     try! somethingThatThrows()
                 }

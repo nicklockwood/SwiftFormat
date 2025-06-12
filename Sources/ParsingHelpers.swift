@@ -3042,18 +3042,25 @@ extension Formatter {
     }
 
     /// Represents a condition in a guard or if statement
-    struct GuardCondition: Equatable {
-        let startIndex: Int
-        var endIndex: Int // Index of last token in condition (before comma or else)
-        var isLetBinding: Bool
-        var identifier: String?
-        var expression: ClosedRange<Int>?
-        var typeAnnotation: ClosedRange<Int>? // Range of type annotation (including colon)
+    enum ConditionalStatementElement {
+        // A boolean expression like `foo == bar`
+        case booleanExpression(range: ClosedRange<Int>)
+        // An optional binding / unwrap condition like `let foo` or `let foo = foo`
+        case optionalBinding(range: ClosedRange<Int>, property: PropertyDeclaration)
+        /// A pattern matching condition like `case .foo(let bar) = baaz`
+        case patternMatching(range: ClosedRange<Int>)
+
+        var range: ClosedRange<Int> {
+            switch self {
+            case .booleanExpression(let range), .optionalBinding(let range, _), .patternMatching(let range):
+                return range
+            }
+        }
     }
 
     /// Parse conditions in a guard or if statement
-    func parseGuardOrIfConditions(at guardOrIfIndex: Int) -> (conditions: [GuardCondition], elseIndex: Int)? {
-        guard tokens[guardOrIfIndex] == .keyword("guard") || tokens[guardOrIfIndex] == .keyword("if") else { return nil }
+    func parseConditionalStatement(at guardOrIfIndex: Int) -> [ConditionalStatementElement] {
+        assert(tokens[guardOrIfIndex] == .keyword("guard") || tokens[guardOrIfIndex] == .keyword("if"))
 
         // Find the else keyword (or opening brace for if)
         var searchIndex = guardOrIfIndex + 1

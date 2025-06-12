@@ -63,27 +63,16 @@ public extension FormatRule {
                     // Matches: return or XCTFail(...); return
                     guard (elseBodyTokens.count == 1 && elseBodyTokens[0].string == "return") ||
                         (elseBodyTokens.count >= 3 && elseBodyTokens[0 ... 1].string == "XCTFail(") && elseBodyTokens.last == .keyword("return")
-                    else { return }
+                    else { continue }
 
                 case .swiftTesting:
                     // Matches: return or Issue.record(...); return
                     guard (elseBodyTokens.count == 1 && elseBodyTokens[0].string == "return") ||
                         (elseBodyTokens.count >= 5 && elseBodyTokens[0 ... 3].string == "Issue.record(" && elseBodyTokens.last == .keyword("return"))
-                    else { return }
+                    else { continue }
                 }
 
-                // Check if all conditions are let bindings that can be transformed
-                let transformableConditions = parsedGuard.conditions.enumerated().compactMap { index, condition -> (index: Int, identifier: String, expression: ClosedRange<Int>, typeAnnotation: ClosedRange<Int>?)? in
-                    guard condition.isLetBinding,
-                          let identifier = condition.identifier,
-                          let expression = condition.expression
-                    else { return nil }
-                    return (index, identifier, expression, condition.typeAnnotation)
-                }
-
-                guard !transformableConditions.isEmpty else { continue }
-
-                // Check for variable shadowing for any transformable identifier
+                // Check for variable shadowing
                 let scopeStart = bodyRange.lowerBound
                 let searchRange = scopeStart ..< guardIndex
                 var shadowedIdentifiers = Set<String>()
@@ -108,10 +97,18 @@ public extension FormatRule {
                 }
 
                 // Check if any let bindings have shadowing issues
-                let hasShadowingIssues = transformableConditions.contains { shadowedIdentifiers.contains($0.identifier) }
+                var hasShadowingIssues = false
+                for condition in parsedGuard.conditions where condition.isLetBinding {
+                    if let identifier = condition.identifier, shadowedIdentifiers.contains(identifier) {
+                        hasShadowingIssues = true
+                        break
+                    }
+                }
 
                 // If there's any shadowing, skip this guard entirely
-                guard !hasShadowingIssues else { continue }
+                guard !hasShadowingIssues else {
+                    continue
+                }
 
                 // Check if any condition contains a case pattern
                 var hasCasePattern = false
@@ -143,64 +140,63 @@ public extension FormatRule {
                 guard !hasAwait else { continue }
 
                 // Now we can safely transform all conditions
-                if true {
-                    // All conditions can be transformed
-                    let unwrapFunctionName = testFramework == .xcTest ? "XCTUnwrap" : "#require"
-                    let assertFunctionName = testFramework == .xcTest ? "XCTAssert" : "#expect"
-                    let linebreakToken = formatter.linebreakToken(for: guardIndex)
-                    let indent = formatter.currentIndentForLine(at: guardIndex)
+                let unwrapFunctionName = testFramework == .xcTest ? "XCTUnwrap" : "#require"
+                let assertFunctionName = testFramework == .xcTest ? "XCTAssert" : "#expect"
+                let linebreakToken = formatter.linebreakToken(for: guardIndex)
+                let indent = formatter.currentIndentForLine(at: guardIndex)
 
-                    var replacementStatements: [Token] = []
-                    var needsLinebreak = false
+                var replacementStatements: [Token] = []
+                var needsLinebreak = false
 
-                    for (index, condition) in parsedGuard.conditions.enumerated() {
-                        if needsLinebreak {
-                            replacementStatements.append(linebreakToken)
-                            replacementStatements.append(.space(indent))
-                        }
-                        needsLinebreak = true
-
-                        if condition.isLetBinding {
-                            // Transform let binding
-                            let transformation = transformableConditions.first { $0.index == index }!
-                            let expressionTokens = formatter.tokens[transformation.expression]
-
-                            replacementStatements.append(contentsOf: [
-                                .keyword("let"),
-                                .space(" "),
-                                .identifier(transformation.identifier),
-                            ])
-
-                            // Add type annotation if present
-                            if let typeAnnotation = transformation.typeAnnotation {
-                                let typeTokens = formatter.tokens[typeAnnotation]
-                                replacementStatements.append(contentsOf: typeTokens)
-                            }
-
-                            replacementStatements.append(contentsOf: [
-                                .space(" "),
-                                .operator("=", .infix),
-                                .space(" "),
-                                .keyword("try"),
-                                .space(" "),
-                                .identifier(unwrapFunctionName),
-                                .startOfScope("("),
-                            ])
-                            replacementStatements.append(contentsOf: expressionTokens)
-                            replacementStatements.append(.endOfScope(")"))
-                        } else {
-                            // Transform boolean condition to assertion
-                            let conditionTokens = formatter.tokens[condition.startIndex ... condition.endIndex]
-                            replacementStatements.append(.identifier(assertFunctionName))
-                            replacementStatements.append(.startOfScope("("))
-                            replacementStatements.append(contentsOf: conditionTokens)
-                            replacementStatements.append(.endOfScope(")"))
-                        }
+                for (index, condition) in parsedGuard.conditions.enumerated() {
+                    if needsLinebreak {
+                        replacementStatements.append(linebreakToken)
+                        replacementStatements.append(.space(indent))
                     }
+                    needsLinebreak = true
 
-                    formatter.replaceTokens(in: guardIndex ... endOfElseScope, with: replacementStatements)
-                    addedTryStatement = true
+                    if condition.isLetBinding,
+                       let identifier = condition.identifier,
+                       let expression = condition.expression
+                    {
+                        // Transform let binding
+                        let expressionTokens = formatter.tokens[expression]
+
+                        replacementStatements.append(contentsOf: [
+                            .keyword("let"),
+                            .space(" "),
+                            .identifier(identifier),
+                        ])
+
+                        // Add type annotation if present
+                        if let typeAnnotation = condition.typeAnnotation {
+                            let typeTokens = formatter.tokens[typeAnnotation]
+                            replacementStatements.append(contentsOf: typeTokens)
+                        }
+
+                        replacementStatements.append(contentsOf: [
+                            .space(" "),
+                            .operator("=", .infix),
+                            .space(" "),
+                            .keyword("try"),
+                            .space(" "),
+                            .identifier(unwrapFunctionName),
+                            .startOfScope("("),
+                        ])
+                        replacementStatements.append(contentsOf: expressionTokens)
+                        replacementStatements.append(.endOfScope(")"))
+                    } else {
+                        // Transform boolean condition to assertion
+                        let conditionTokens = formatter.tokens[condition.startIndex ... condition.endIndex]
+                        replacementStatements.append(.identifier(assertFunctionName))
+                        replacementStatements.append(.startOfScope("("))
+                        replacementStatements.append(contentsOf: conditionTokens)
+                        replacementStatements.append(.endOfScope(")"))
+                    }
                 }
+
+                formatter.replaceTokens(in: guardIndex ... endOfElseScope, with: replacementStatements)
+                addedTryStatement = true
 
                 // Only transform one guard per rule execution
                 // The formatter will run the rule again if needed

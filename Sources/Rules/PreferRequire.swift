@@ -46,9 +46,13 @@ public extension FormatRule {
                 if formatter.isInClosure(at: guardIndex) { continue }
 
                 // Parse the guard conditions
-                guard let parsedGuard = formatter.parseGuardOrIfConditions(at: guardIndex),
-                      let elseBraceIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: parsedGuard.elseIndex),
-                      formatter.tokens[elseBraceIndex] == .startOfScope("{"),
+                let conditions = formatter.parseConditionalStatement(at: guardIndex)
+                guard !conditions.isEmpty else { continue }
+                
+                // Find the else block
+                guard let elseBraceIndex = formatter.index(of: .startOfScope("{"), after: guardIndex),
+                      let prevTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: elseBraceIndex),
+                      formatter.tokens[prevTokenIndex] == .keyword("else"),
                       let endOfElseScope = formatter.endOfScope(at: elseBraceIndex)
                 else {
                     continue
@@ -58,86 +62,73 @@ public extension FormatRule {
                 let elseBodyTokens = formatter.tokens[(elseBraceIndex + 1) ..< endOfElseScope]
                     .filter { !$0.isSpaceOrCommentOrLinebreak }
 
-                switch testFramework {
-                case .xcTest:
-                    // Matches: return or XCTFail(...); return
-                    guard (elseBodyTokens.count == 1 && elseBodyTokens[0].string == "return") ||
-                        (elseBodyTokens.count >= 3 && elseBodyTokens[0 ... 1].string == "XCTFail(") && elseBodyTokens.last == .keyword("return")
-                    else { continue }
-
-                case .swiftTesting:
-                    // Matches: return or Issue.record(...); return
-                    guard (elseBodyTokens.count == 1 && elseBodyTokens[0].string == "return") ||
-                        (elseBodyTokens.count >= 5 && elseBodyTokens[0 ... 3].string == "Issue.record(" && elseBodyTokens.last == .keyword("return"))
-                    else { continue }
-                }
+                let isValidElseBlock: Bool = {
+                    // Common case: just return
+                    if elseBodyTokens.count == 1, elseBodyTokens[0] == .keyword("return") {
+                        return true
+                    }
+                    
+                    // Must end with return
+                    guard elseBodyTokens.last == .keyword("return") else { return false }
+                    
+                    switch testFramework {
+                    case .xcTest:
+                        // XCTFail(...); return
+                        return elseBodyTokens.count >= 3 && elseBodyTokens[0 ... 1].string == "XCTFail("
+                    case .swiftTesting:
+                        // Issue.record(...); return
+                        return elseBodyTokens.count >= 5 && elseBodyTokens[0 ... 3].string == "Issue.record("
+                    }
+                }()
+                
+                guard isValidElseBlock else { continue }
 
                 // Check for variable shadowing
                 let scopeStart = bodyRange.lowerBound
                 let searchRange = scopeStart ..< guardIndex
-                var shadowedIdentifiers = Set<String>()
-
-                for i in searchRange {
+                
+                let shadowedIdentifiers = Set<String>(searchRange.compactMap { i in
+                    let token = formatter.tokens[i]
+                    
                     // Check for let/var declarations
-                    if formatter.tokens[i] == .keyword("let") || formatter.tokens[i] == .keyword("var"),
+                    if token == .keyword("let") || token == .keyword("var"),
                        let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i),
-                       case let .identifier(name) = formatter.tokens[nextIndex]
-                    {
-                        shadowedIdentifiers.insert(name)
+                       case let .identifier(name) = formatter.tokens[nextIndex] {
+                        return name
                     }
-
+                    
                     // Check for function parameters
-                    if case let .identifier(name) = formatter.tokens[i],
+                    if case let .identifier(name) = token,
                        i > 0,
                        let prevNonSpace = formatter.index(of: .nonSpaceOrLinebreak, before: i),
-                       formatter.tokens[prevNonSpace] == .delimiter(",") || formatter.tokens[prevNonSpace] == .startOfScope("(")
-                    {
-                        shadowedIdentifiers.insert(name)
+                       formatter.tokens[prevNonSpace] == .delimiter(",") || formatter.tokens[prevNonSpace] == .startOfScope("(") {
+                        return name
+                    }
+                    
+                    return nil
+                })
+
+                // Check if we should skip this guard due to cases that can't be
+                // represented with #require or #expect
+                let shouldSkip = conditions.contains { condition in
+                    // Skip if any condition contains await
+                    if condition.range.contains(where: { formatter.tokens[$0] == .keyword("await") }) {
+                        return true
+                    }
+
+                    switch condition {
+                    case .optionalBinding(_, let property):
+                        // Skip if variable shadowing
+                        return shadowedIdentifiers.contains(property.identifier)
+                    case .patternMatching:
+                        // Skip if pattern matching
+                        return true
+                    case .booleanExpression:
+                        return false
                     }
                 }
 
-                // Check if any let bindings have shadowing issues
-                var hasShadowingIssues = false
-                for condition in parsedGuard.conditions where condition.isLetBinding {
-                    if let identifier = condition.identifier, shadowedIdentifiers.contains(identifier) {
-                        hasShadowingIssues = true
-                        break
-                    }
-                }
-
-                // If there's any shadowing, skip this guard entirely
-                guard !hasShadowingIssues else {
-                    continue
-                }
-
-                // Check if any condition contains a case pattern
-                var hasCasePattern = false
-                for condition in parsedGuard.conditions {
-                    // Check if the condition starts with 'case'
-                    if formatter.tokens[condition.startIndex] == .keyword("case") {
-                        hasCasePattern = true
-                        break
-                    }
-                }
-
-                // If there's a case pattern, skip this guard entirely
-                guard !hasCasePattern else { continue }
-
-                // Check if any condition contains await
-                var hasAwait = false
-                for condition in parsedGuard.conditions {
-                    // Check if the condition contains 'await' keyword
-                    for i in condition.startIndex ... condition.endIndex {
-                        if formatter.tokens[i] == .keyword("await") {
-                            hasAwait = true
-                            break
-                        }
-                    }
-                    if hasAwait { break }
-                }
-
-                // If there's await in any condition, skip this guard entirely
-                guard !hasAwait else { continue }
+                guard !shouldSkip else { continue }
 
                 // Now we can safely transform all conditions
                 let unwrapFunctionName = testFramework == .xcTest ? "XCTUnwrap" : "#require"
@@ -146,32 +137,36 @@ public extension FormatRule {
                 let indent = formatter.currentIndentForLine(at: guardIndex)
 
                 var replacementStatements: [Token] = []
-                var needsLinebreak = false
 
-                for (index, condition) in parsedGuard.conditions.enumerated() {
-                    if needsLinebreak {
+                for (index, condition) in conditions.enumerated() {
+                    if index > 0 {
                         replacementStatements.append(linebreakToken)
                         replacementStatements.append(.space(indent))
                     }
-                    needsLinebreak = true
 
-                    if condition.isLetBinding,
-                       let identifier = condition.identifier,
-                       let expression = condition.expression
-                    {
+                    switch condition {
+                    case .optionalBinding(let range, let property):
                         // Transform let binding
-                        let expressionTokens = formatter.tokens[expression]
-
                         replacementStatements.append(contentsOf: [
                             .keyword("let"),
                             .space(" "),
-                            .identifier(identifier),
+                            .identifier(property.identifier),
                         ])
 
                         // Add type annotation if present
-                        if let typeAnnotation = condition.typeAnnotation {
-                            let typeTokens = formatter.tokens[typeAnnotation]
+                        if let typeInfo = property.type {
+                            // Include from colon to end of type
+                            let typeTokens = formatter.tokens[typeInfo.colonIndex ... typeInfo.range.upperBound]
                             replacementStatements.append(contentsOf: typeTokens)
+                        }
+
+                        // Get the expression part (after the = if present, or just the identifier)
+                        var expressionTokens: [Token] = []
+                        if let valueInfo = property.value {
+                            expressionTokens = Array(formatter.tokens[valueInfo.expressionRange])
+                        } else {
+                            // For shorthand like `let foo`, use the identifier as the expression
+                            expressionTokens = [.identifier(property.identifier)]
                         }
 
                         replacementStatements.append(contentsOf: [
@@ -185,13 +180,18 @@ public extension FormatRule {
                         ])
                         replacementStatements.append(contentsOf: expressionTokens)
                         replacementStatements.append(.endOfScope(")"))
-                    } else {
+                        
+                    case .booleanExpression(let range):
                         // Transform boolean condition to assertion
-                        let conditionTokens = formatter.tokens[condition.startIndex ... condition.endIndex]
+                        let conditionTokens = formatter.tokens[range]
                         replacementStatements.append(.identifier(assertFunctionName))
                         replacementStatements.append(.startOfScope("("))
                         replacementStatements.append(contentsOf: conditionTokens)
                         replacementStatements.append(.endOfScope(")"))
+                        
+                    case .patternMatching:
+                        // This should have been filtered out earlier
+                        assertionFailure("Pattern matching conditions should have been filtered")
                     }
                 }
 

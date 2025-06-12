@@ -3063,124 +3063,65 @@ extension Formatter {
         assert(tokens[guardOrIfIndex] == .keyword("guard") || tokens[guardOrIfIndex] == .keyword("if"))
 
         // Find the else keyword (or opening brace for if)
-        var searchIndex = guardOrIfIndex + 1
-        var elseIndex: Int?
-
-        while searchIndex < tokens.count {
-            if tokens[searchIndex] == .keyword("else") {
-                elseIndex = searchIndex
-                break
-            } else if tokens[searchIndex] == .startOfScope("{"), tokens[guardOrIfIndex] == .keyword("if") {
+        var endIndex: Int?
+        
+        if let braceIndex = index(of: .startOfScope("{"), after: guardOrIfIndex) {
+            if tokens[guardOrIfIndex] == .keyword("if") {
                 // For if statements without else
-                elseIndex = searchIndex
-                break
+                endIndex = braceIndex
+            } else if let prevTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: braceIndex),
+                      tokens[prevTokenIndex] == .keyword("else") {
+                // For guard statements with else
+                endIndex = prevTokenIndex
             }
-            searchIndex += 1
         }
 
-        guard let foundElseIndex = elseIndex else { return nil }
+        guard let endIndex = endIndex else { return [] }
 
-        var conditions: [GuardCondition] = []
+        var conditions: [ConditionalStatementElement] = []
         var currentPos = guardOrIfIndex + 1
 
-        while currentPos < foundElseIndex {
+        while currentPos < endIndex {
             // Skip whitespace and comments
             guard let conditionStart = index(of: .nonSpaceOrCommentOrLinebreak, after: currentPos - 1),
-                  conditionStart < foundElseIndex
+                  conditionStart < endIndex
             else {
                 break
             }
 
-            var condition = GuardCondition(
-                startIndex: conditionStart,
-                endIndex: conditionStart,
-                isLetBinding: false,
-                identifier: nil,
-                expression: nil,
-                typeAnnotation: nil
-            )
-
-            // Check if this is a let binding
-            if tokens[conditionStart] == .keyword("let"),
-               let identifierIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: conditionStart),
-               identifierIndex < foundElseIndex,
-               tokens[identifierIndex].isIdentifier
-            {
-                condition.isLetBinding = true
-                condition.identifier = tokens[identifierIndex].string
-
-                // Skip over optional type annotation
-                var searchIndex = identifierIndex
-                if let colonIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: identifierIndex),
-                   colonIndex < foundElseIndex,
-                   tokens[colonIndex] == .delimiter(":")
-                {
-                    // Skip past the type annotation
-                    if let typeStart = index(of: .nonSpaceOrCommentOrLinebreak, after: colonIndex),
-                       typeStart < foundElseIndex,
-                       let typeRange = parseType(at: typeStart)
-                    {
-                        // Store the type annotation range (from colon to end of type)
-                        condition.typeAnnotation = colonIndex ... typeRange.range.upperBound
-                        searchIndex = typeRange.range.upperBound
-                    }
-                }
-
-                // Check if there's an equals sign (full syntax) or not (shorthand)
-                if let equalsIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: searchIndex),
-                   equalsIndex < foundElseIndex,
-                   tokens[equalsIndex] == .operator("=", .infix),
-                   let expressionStart = index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
-                   expressionStart < foundElseIndex
-                {
-                    // Full syntax: let foo = expression or let foo: Type = expression
-                    if let range = parseExpressionRange(startingAt: expressionStart, allowConditionalExpressions: false) {
-                        condition.expression = range
-                        condition.endIndex = range.upperBound
-                    } else {
-                        condition.expression = expressionStart ... expressionStart
-                        condition.endIndex = expressionStart
-                    }
-                } else {
-                    // Shorthand syntax: let foo or let foo: Type (implicitly = foo)
-                    condition.expression = identifierIndex ... identifierIndex
-                    condition.endIndex = searchIndex
-                }
+            let conditionEnd: Int
+            if let commaIndex = index(of: .delimiter(","), after: startIndex),
+               commaIndex < endIndex {
+                conditionEnd = index(of: .nonSpaceOrCommentOrLinebreak, before: commaIndex) ?? startIndex
             } else {
-                // Non-let condition - parse until comma or else
-                var depth = 0
-                var pos = conditionStart
-                var lastNonSpace = conditionStart
-                while pos < foundElseIndex {
-                    let token = tokens[pos]
-                    if token.isStartOfScope {
-                        depth += 1
-                    } else if token.isEndOfScope {
-                        depth -= 1
-                    } else if depth == 0, token == .delimiter(",") || token == .keyword("else") {
-                        break
-                    }
-                    if !token.isSpaceOrLinebreak {
-                        lastNonSpace = pos
-                    }
-                    pos += 1
-                }
-                condition.endIndex = lastNonSpace
+                conditionEnd = index(of: .nonSpaceOrCommentOrLinebreak, before: endIndex) ?? startIndex
             }
 
-            conditions.append(condition)
+            let element: ConditionalStatementElement
+            if tokens[conditionStart] == .keyword("case") {
+                element = .patternMatching(range: conditionStart ... conditionEnd)
+            } else if tokens[conditionStart] == .keyword("let") || tokens[conditionStart] == .keyword("var") {
+                guard let property = parsePropertyDeclaration(atIntroducerIndex: conditionStart) else {
+                    return []
+                }
 
-            // Find next condition
-            if let commaIndex = index(of: .delimiter(","), after: condition.endIndex),
-               commaIndex < foundElseIndex
-            {
+                element = .optionalBinding(range: conditionStart ... conditionEnd, property: property)
+            } else {
+                element = .booleanExpression(range: conditionStart ... conditionEnd)
+            }
+            
+            conditions.append(element)
+            
+            // Find next condition (after comma)
+            if let commaIndex = index(of: .delimiter(","), after: conditionEnd),
+               commaIndex < endIndex {
                 currentPos = commaIndex + 1
             } else {
                 break
             }
         }
 
-        return (conditions, foundElseIndex)
+        return conditions
     }
 }
 

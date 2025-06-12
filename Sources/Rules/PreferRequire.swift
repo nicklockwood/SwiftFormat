@@ -42,13 +42,13 @@ public extension FormatRule {
             for guardIndex in bodyRange.reversed() {
                 guard formatter.tokens[guardIndex] == .keyword("guard") else { continue }
 
-                // Only process if we are not within a closure, where it's not safe to add throws
-                if formatter.isInClosure(at: guardIndex) { continue }
+                // Only process if we are in the function body (not in a closure or nested function)
+                guard formatter.isInFunctionBody(of: functionDecl, at: guardIndex) else { continue }
 
                 // Parse the guard conditions
                 let conditions = formatter.parseConditionalStatement(at: guardIndex)
                 guard !conditions.isEmpty else { continue }
-                
+
                 // Find the else block
                 guard let elseBraceIndex = formatter.index(of: .startOfScope("{"), after: guardIndex),
                       let prevTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: elseBraceIndex),
@@ -67,10 +67,10 @@ public extension FormatRule {
                     if elseBodyTokens.count == 1, elseBodyTokens[0] == .keyword("return") {
                         return true
                     }
-                    
+
                     // Must end with return
                     guard elseBodyTokens.last == .keyword("return") else { return false }
-                    
+
                     switch testFramework {
                     case .xcTest:
                         // XCTFail(...); return
@@ -80,31 +80,33 @@ public extension FormatRule {
                         return elseBodyTokens.count >= 5 && elseBodyTokens[0 ... 3].string == "Issue.record("
                     }
                 }()
-                
+
                 guard isValidElseBlock else { continue }
 
                 // Check for variable shadowing
                 let scopeStart = bodyRange.lowerBound
                 let searchRange = scopeStart ..< guardIndex
-                
+
                 let shadowedIdentifiers = Set<String>(searchRange.compactMap { i in
                     let token = formatter.tokens[i]
-                    
+
                     // Check for let/var declarations
                     if token == .keyword("let") || token == .keyword("var"),
                        let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i),
-                       case let .identifier(name) = formatter.tokens[nextIndex] {
+                       case let .identifier(name) = formatter.tokens[nextIndex]
+                    {
                         return name
                     }
-                    
+
                     // Check for function parameters
                     if case let .identifier(name) = token,
                        i > 0,
                        let prevNonSpace = formatter.index(of: .nonSpaceOrLinebreak, before: i),
-                       formatter.tokens[prevNonSpace] == .delimiter(",") || formatter.tokens[prevNonSpace] == .startOfScope("(") {
+                       formatter.tokens[prevNonSpace] == .delimiter(",") || formatter.tokens[prevNonSpace] == .startOfScope("(")
+                    {
                         return name
                     }
-                    
+
                     return nil
                 })
 
@@ -117,7 +119,7 @@ public extension FormatRule {
                     }
 
                     switch condition {
-                    case .optionalBinding(_, let property):
+                    case let .optionalBinding(_, property):
                         // Skip if variable shadowing
                         return shadowedIdentifiers.contains(property.identifier)
                     case .patternMatching:
@@ -145,7 +147,7 @@ public extension FormatRule {
                     }
 
                     switch condition {
-                    case .optionalBinding(let range, let property):
+                    case let .optionalBinding(range, property):
                         // Transform let binding
                         replacementStatements.append(contentsOf: [
                             .keyword("let"),
@@ -180,15 +182,15 @@ public extension FormatRule {
                         ])
                         replacementStatements.append(contentsOf: expressionTokens)
                         replacementStatements.append(.endOfScope(")"))
-                        
-                    case .booleanExpression(let range):
+
+                    case let .booleanExpression(range):
                         // Transform boolean condition to assertion
                         let conditionTokens = formatter.tokens[range]
                         replacementStatements.append(.identifier(assertFunctionName))
                         replacementStatements.append(.startOfScope("("))
                         replacementStatements.append(contentsOf: conditionTokens)
                         replacementStatements.append(.endOfScope(")"))
-                        
+
                     case .patternMatching:
                         // This should have been filtered out earlier
                         assertionFailure("Pattern matching conditions should have been filtered")
@@ -216,24 +218,12 @@ public extension FormatRule {
         final class SomeTestCase: XCTestCase {
         -   func test_something() {
         +   func test_something() throws {
-        -     guard let value = optionalValue else {
+        -     guard let value = optionalValue, value.matchesCondition else {
         -       XCTFail()
-        -     }
-        +     let value = try XCTUnwrap(optionalValue)
-          }
-        }
-        ```
-
-        ```diff
-        import XCTest
-
-        final class SomeTestCase: XCTestCase {
-        -   func test_something() {
-        +   func test_something() throws {
-        -     guard let value = optionalValue else {
         -       return
         -     }
         +     let value = try XCTUnwrap(optionalValue)
+        +     XCTAssert(value.matchesCondition)
           }
         }
         ```
@@ -244,26 +234,11 @@ public extension FormatRule {
         struct SomeTests {
           @Test
           func something() throws {
-        -   guard let value = optionalValue else {
+        -   guard let value = optionalValue, value.matchesCondition else {
         -     return
         -   }
         +   let value = try #require(optionalValue)
-          }
-        }
-        ```
-
-        ```diff
-        import Testing
-
-        struct SomeTests {
-          @Test
-        -   func something() {
-        +   func something() throws {
-        -     guard let value = optionalValue else {
-        -       Issue.record("Expected value")
-        -       return
-        -     }
-        +     let value = try #require(optionalValue)
+        +   #expect(value.matchesCondition)
           }
         }
         ```

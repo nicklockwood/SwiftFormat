@@ -34,8 +34,9 @@ public extension FormatRule {
                 let nextToken = formatter.tokens[nextTokenIndex]
                 if nextToken != .operator("!", .postfix) { continue }
 
-                // Only remove the `!` if we are not within a closure, where it's not safe to just remove the `!` and make our function throw.
-                if formatter.isInClosure(at: index) { return }
+                // Only remove the `!` if we are not within a closure or nested function,
+                // where it's not safe to just remove the `!` and make our function throw.
+                guard formatter.isInFunctionBody(of: functionDecl, at: index) else { continue }
 
                 formatter.removeToken(at: nextTokenIndex)
                 foundAnyTryExclamationMarks = true

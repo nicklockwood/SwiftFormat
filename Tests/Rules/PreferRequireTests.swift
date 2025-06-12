@@ -138,6 +138,24 @@ final class PreferRequireTests: XCTestCase {
         testFormatting(for: input, rule: .preferRequire)
     }
 
+    func testDoesNotReplaceInNestedFunc() throws {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                func doSomething() {
+                    guard let value = optionalValue else {
+                        XCTFail()
+                        return
+                    }
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: .preferRequire)
+    }
+
     func testPreservesExistingThrows() throws {
         let input = """
         import XCTest

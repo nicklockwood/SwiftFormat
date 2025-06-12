@@ -525,6 +525,39 @@ extension Formatter {
         }
     }
 
+    /// Whether the given index is within the body of the given function declaration,
+    /// and not inside a nested closure or nested function.
+    func isInFunctionBody(of functionDecl: FunctionDeclaration, at index: Int) -> Bool {
+        guard let bodyRange = functionDecl.bodyRange,
+              bodyRange.contains(index)
+        else {
+            return false
+        }
+
+        guard let startOfScopeIndex = startOfScope(at: index) else {
+            return false
+        }
+
+        if startOfScopeIndex == bodyRange.lowerBound {
+            return true
+        }
+
+        if isStartOfClosure(at: startOfScopeIndex) {
+            return false
+        }
+
+        // If this is a function scope, but not the body of the function itself,
+        // then this is some nested function.
+        if lastSignificantKeyword(at: startOfScopeIndex, excluding: ["where"]) == "func",
+           startOfScopeIndex != bodyRange.lowerBound
+        {
+            return false
+        }
+
+        // Recursively check parent scope
+        return isInFunctionBody(of: functionDecl, at: startOfScopeIndex)
+    }
+
     /// Whether or not this index the start of scope of a closure literal, eg `{` but not some other type of scope.
     func isStartOfClosure(at i: Int) -> Bool {
         guard token(at: i) == .startOfScope("{") else {
@@ -3052,7 +3085,7 @@ extension Formatter {
 
         var range: ClosedRange<Int> {
             switch self {
-            case .booleanExpression(let range), .optionalBinding(let range, _), .patternMatching(let range):
+            case let .booleanExpression(range), let .optionalBinding(range, _), let .patternMatching(range):
                 return range
             }
         }
@@ -3064,19 +3097,20 @@ extension Formatter {
 
         // Find the else keyword (or opening brace for if)
         var endIndex: Int?
-        
+
         if let braceIndex = index(of: .startOfScope("{"), after: guardOrIfIndex) {
             if tokens[guardOrIfIndex] == .keyword("if") {
                 // For if statements without else
                 endIndex = braceIndex
             } else if let prevTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: braceIndex),
-                      tokens[prevTokenIndex] == .keyword("else") {
+                      tokens[prevTokenIndex] == .keyword("else")
+            {
                 // For guard statements with else
                 endIndex = prevTokenIndex
             }
         }
 
-        guard let endIndex = endIndex else { return [] }
+        guard let endIndex else { return [] }
 
         var conditions: [ConditionalStatementElement] = []
         var currentPos = guardOrIfIndex + 1
@@ -3090,11 +3124,12 @@ extension Formatter {
             }
 
             let conditionEnd: Int
-            if let commaIndex = index(of: .delimiter(","), after: startIndex),
-               commaIndex < endIndex {
-                conditionEnd = index(of: .nonSpaceOrCommentOrLinebreak, before: commaIndex) ?? startIndex
+            if let commaIndex = index(of: .delimiter(","), after: conditionStart),
+               commaIndex < endIndex
+            {
+                conditionEnd = index(of: .nonSpaceOrCommentOrLinebreak, before: commaIndex) ?? conditionStart
             } else {
-                conditionEnd = index(of: .nonSpaceOrCommentOrLinebreak, before: endIndex) ?? startIndex
+                conditionEnd = index(of: .nonSpaceOrCommentOrLinebreak, before: endIndex) ?? conditionStart
             }
 
             let element: ConditionalStatementElement
@@ -3109,12 +3144,13 @@ extension Formatter {
             } else {
                 element = .booleanExpression(range: conditionStart ... conditionEnd)
             }
-            
+
             conditions.append(element)
-            
+
             // Find next condition (after comma)
             if let commaIndex = index(of: .delimiter(","), after: conditionEnd),
-               commaIndex < endIndex {
+               commaIndex < endIndex
+            {
                 currentPos = commaIndex + 1
             } else {
                 break

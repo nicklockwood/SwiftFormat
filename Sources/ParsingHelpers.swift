@@ -8,7 +8,7 @@
 
 import Foundation
 
-// MARK: shared helper methods
+// MARK: - shared helper methods
 
 public extension Formatter {
     /// Returns the index of the first token of the line containing the specified index
@@ -523,6 +523,39 @@ extension Formatter {
         } else {
             return isInClosure(at: startOfScopeIndex)
         }
+    }
+
+    /// Whether the given index is within the body of the given function declaration,
+    /// and not inside a nested closure or nested function.
+    func isInFunctionBody(of functionDecl: FunctionDeclaration, at index: Int) -> Bool {
+        guard let bodyRange = functionDecl.bodyRange,
+              bodyRange.contains(index)
+        else {
+            return false
+        }
+
+        guard let startOfScopeIndex = startOfScope(at: index) else {
+            return false
+        }
+
+        if startOfScopeIndex == bodyRange.lowerBound {
+            return true
+        }
+
+        if isStartOfClosure(at: startOfScopeIndex) {
+            return false
+        }
+
+        // If this is a function scope, but not the body of the function itself,
+        // then this is some nested function.
+        if lastSignificantKeyword(at: startOfScopeIndex, excluding: ["where"]) == "func",
+           startOfScopeIndex != bodyRange.lowerBound
+        {
+            return false
+        }
+
+        // Recursively check parent scope
+        return isInFunctionBody(of: functionDecl, at: startOfScopeIndex)
     }
 
     /// Whether or not this index the start of scope of a closure literal, eg `{` but not some other type of scope.
@@ -2104,6 +2137,22 @@ extension Formatter {
         })
     }
 
+    enum TestingFramework {
+        case xcTest
+        case swiftTesting
+    }
+
+    /// Detects which testing framework is being used in the file
+    func detectTestingFramework() -> TestingFramework? {
+        if hasImport("Testing") {
+            return .swiftTesting
+        } else if hasImport("XCTest") {
+            return .xcTest
+        } else {
+            return nil
+        }
+    }
+
     /// Adds imports for the given list of modules to this file if not already present
     func addImports(_ importsToAddIfNeeded: [String]) {
         let importRanges = parseImports()
@@ -3023,6 +3072,92 @@ extension Formatter {
         } else {
             return tokens[nameIndex].string
         }
+    }
+
+    /// Represents a condition in a guard or if statement
+    enum ConditionalStatementElement {
+        // A boolean expression like `foo == bar`
+        case booleanExpression(range: ClosedRange<Int>)
+        // An optional binding / unwrap condition like `let foo` or `let foo = foo`
+        case optionalBinding(range: ClosedRange<Int>, property: PropertyDeclaration)
+        /// A pattern matching condition like `case .foo(let bar) = baaz`
+        case patternMatching(range: ClosedRange<Int>)
+
+        var range: ClosedRange<Int> {
+            switch self {
+            case let .booleanExpression(range), let .optionalBinding(range, _), let .patternMatching(range):
+                return range
+            }
+        }
+    }
+
+    /// Parse conditions in a guard or if statement
+    func parseConditionalStatement(at guardOrIfIndex: Int) -> [ConditionalStatementElement] {
+        assert(tokens[guardOrIfIndex] == .keyword("guard") || tokens[guardOrIfIndex] == .keyword("if"))
+
+        // Find the else keyword (or opening brace for if)
+        var endIndex: Int?
+
+        if let braceIndex = index(of: .startOfScope("{"), after: guardOrIfIndex) {
+            if tokens[guardOrIfIndex] == .keyword("if") {
+                // For if statements without else
+                endIndex = braceIndex
+            } else if let prevTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: braceIndex),
+                      tokens[prevTokenIndex] == .keyword("else")
+            {
+                // For guard statements with else
+                endIndex = prevTokenIndex
+            }
+        }
+
+        guard let endIndex else { return [] }
+
+        var conditions: [ConditionalStatementElement] = []
+        var currentPos = guardOrIfIndex + 1
+
+        while currentPos < endIndex {
+            // Skip whitespace and comments
+            guard let conditionStart = index(of: .nonSpaceOrCommentOrLinebreak, after: currentPos - 1),
+                  conditionStart < endIndex
+            else {
+                break
+            }
+
+            let conditionEnd: Int
+            if let commaIndex = index(of: .delimiter(","), after: conditionStart),
+               commaIndex < endIndex
+            {
+                conditionEnd = index(of: .nonSpaceOrCommentOrLinebreak, before: commaIndex) ?? conditionStart
+            } else {
+                conditionEnd = index(of: .nonSpaceOrCommentOrLinebreak, before: endIndex) ?? conditionStart
+            }
+
+            let element: ConditionalStatementElement
+            if tokens[conditionStart] == .keyword("case") {
+                element = .patternMatching(range: conditionStart ... conditionEnd)
+            } else if tokens[conditionStart] == .keyword("let") || tokens[conditionStart] == .keyword("var") {
+                guard let property = parsePropertyDeclaration(atIntroducerIndex: conditionStart) else {
+                    return []
+                }
+
+                element = .optionalBinding(range: conditionStart ... conditionEnd, property: property)
+            } else {
+                element = .booleanExpression(range: conditionStart ... conditionEnd)
+            }
+
+            conditions.append(element)
+
+            // Find next condition (after comma)
+            if let commaIndex = index(of: .delimiter(","), after: conditionEnd),
+               commaIndex < endIndex
+            {
+                currentPos = commaIndex + 1
+            } else {
+                break
+            }
+        }
+
+        return conditions
     }
 }
 

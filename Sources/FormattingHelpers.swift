@@ -1270,6 +1270,24 @@ extension Formatter {
         insertEffectKeyword(at: insertIndex)
     }
 
+    /// Adds `throws` effect to the given function declaration if not already present
+    func addThrowsEffect(to functionDecl: FunctionDeclaration) {
+        guard !functionDecl.effects.contains("throws") else { return }
+
+        if let effectsRange = functionDecl.effectsRange {
+            // If async is present, insert throws after it to maintain correct order: async throws
+            if let asyncIndex = index(of: .identifier("async"), in: effectsRange.lowerBound ..< effectsRange.upperBound + 1) {
+                insert([.space(" "), .keyword("throws")], at: asyncIndex + 1)
+            } else {
+                // Otherwise add it to the end of effects
+                insert([.keyword("throws"), .space(" ")], at: effectsRange.upperBound)
+            }
+        } else {
+            // If there are no effects, add after the arguments
+            insert([.space(" "), .keyword("throws")], at: functionDecl.argumentsRange.upperBound + 1)
+        }
+    }
+
     /// Whether or not the code block starting at the given `.startOfScope` token
     /// has a single statement. This makes it eligible to be used with implicit return.
     func blockBodyHasSingleStatement(

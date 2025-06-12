@@ -2,8 +2,8 @@
 //  PreferRequireTests.swift
 //  SwiftFormatTests
 //
-//  Created by Cal Stephens on 11/6/24.
-//  Copyright © 2024 Nick Lockwood. All rights reserved.
+//  Created by Cal Stephens on 6/12/25.
+//  Copyright © 2025 Nick Lockwood. All rights reserved.
 //
 
 import XCTest
@@ -19,6 +19,7 @@ final class PreferRequireTests: XCTestCase {
             func test_something() {
                 guard let value = optionalValue else {
                     XCTFail()
+                    return
                 }
                 print(value)
             }
@@ -45,6 +46,7 @@ final class PreferRequireTests: XCTestCase {
             func test_something() {
                 guard let value = optionalValue else {
                     XCTFail("Expected value to be non-nil")
+                    return
                 }
             }
         }
@@ -69,6 +71,7 @@ final class PreferRequireTests: XCTestCase {
             func helper() {
                 guard let value = optionalValue else {
                     XCTFail()
+                    return
                 }
             }
         }
@@ -100,6 +103,7 @@ final class PreferRequireTests: XCTestCase {
             func test_something() {
                 guard let value = getDifferentValue() else {
                     XCTFail()
+                    return
                 }
             }
         }
@@ -125,6 +129,7 @@ final class PreferRequireTests: XCTestCase {
                 doSomething {
                     guard let value = optionalValue else {
                         XCTFail()
+                        return
                     }
                 }
             }
@@ -141,6 +146,7 @@ final class PreferRequireTests: XCTestCase {
             func test_something() throws {
                 guard let value = optionalValue else {
                     XCTFail()
+                    return
                 }
             }
         }
@@ -165,6 +171,7 @@ final class PreferRequireTests: XCTestCase {
             func test_something() async {
                 guard let value = optionalValue else {
                     XCTFail()
+                    return
                 }
             }
         }
@@ -215,9 +222,11 @@ final class PreferRequireTests: XCTestCase {
             func test_something() {
                 guard let value1 = optionalValue1 else {
                     XCTFail()
+                    return
                 }
                 guard let value2 = optionalValue2 else {
                     XCTFail()
+                    return
                 }
             }
         }
@@ -432,6 +441,7 @@ final class PreferRequireTests: XCTestCase {
                 guard let value = optionalValue,
                       let other = otherValue else {
                     XCTFail()
+                    return
                 }
             }
         }
@@ -458,6 +468,7 @@ final class PreferRequireTests: XCTestCase {
                 guard someCondition,
                       let value = optionalValue else {
                     XCTFail()
+                    return
                 }
             }
         }
@@ -485,6 +496,7 @@ final class PreferRequireTests: XCTestCase {
                       someCondition,
                       let other = otherValue else {
                     XCTFail()
+                    return
                 }
             }
         }
@@ -567,6 +579,7 @@ final class PreferRequireTests: XCTestCase {
             func test_something() {
                 guard let value = optionalValue, condition else {
                     XCTFail()
+                    return
                 }
             }
         }
@@ -592,7 +605,8 @@ final class PreferRequireTests: XCTestCase {
             func test_something() {
                 guard condition, 
                     let value = optionalValue
-                else { XCTFail() }
+                else { XCTFail()
+                    return }
             }
         }
         """
@@ -677,6 +691,7 @@ final class PreferRequireTests: XCTestCase {
                       let value4 = optional4,
                       let value5 = optional5 else {
                     XCTFail()
+                    return
                 }
                 print(value1, value2, value3, value4, value5)
             }
@@ -716,6 +731,7 @@ final class PreferRequireTests: XCTestCase {
                       let value9 = optional9,
                       let value10 = optional10 else {
                     XCTFail()
+                    return
                 }
                 print(value1, value2, value3, value4, value5, value6, value7, value8, value9, value10)
             }
@@ -761,6 +777,7 @@ final class PreferRequireTests: XCTestCase {
                       let value6 = optional6,
                       condition5 else {
                     XCTFail()
+                    return
                 }
             }
         }
@@ -798,6 +815,7 @@ final class PreferRequireTests: XCTestCase {
                 let foo: String? = ""
                 guard let foo else {
                     XCTFail()
+                    return
                 }
             }
         }
@@ -829,6 +847,7 @@ final class PreferRequireTests: XCTestCase {
             func test_something(optionalValue: String?) {
                 guard let optionalValue else {
                     XCTFail()
+                    return
                 }
                 print(optionalValue)
             }
@@ -883,6 +902,7 @@ final class PreferRequireTests: XCTestCase {
             func test_something() {
                 guard let foo: Foo = getFoo() else {
                     XCTFail()
+                    return
                 }
                 print(foo)
             }
@@ -909,6 +929,7 @@ final class PreferRequireTests: XCTestCase {
             func test_something() {
                 guard let foo, let bar: Bar else {
                     XCTFail()
+                    return
                 }
                 print(foo, bar)
             }
@@ -1009,6 +1030,7 @@ final class PreferRequireTests: XCTestCase {
                 guard someCondition,
                       let value = optionalValue else {
                     XCTFail()
+                    return
                 }
                 print(value)
             }
@@ -1069,6 +1091,7 @@ final class PreferRequireTests: XCTestCase {
                       let value = optionalValue,
                       condition3 else {
                     XCTFail()
+                    return
                 }
             }
         }
@@ -1098,6 +1121,7 @@ final class PreferRequireTests: XCTestCase {
                 guard someCondition,
                       let foo = optionalFoo else {
                     XCTFail()
+                    return
                 }
                 print(foo)
             }
@@ -1117,6 +1141,7 @@ final class PreferRequireTests: XCTestCase {
                       let foo = optionalFoo,
                       let bar = optionalBar else {
                     XCTFail()
+                    return
                 }
                 print(foo, bar)
             }
@@ -1135,6 +1160,7 @@ final class PreferRequireTests: XCTestCase {
                 guard let foo = optionalFoo,
                       case .success(let value) = result else {
                     XCTFail()
+                    return
                 }
                 print(foo, value)
             }
@@ -1153,6 +1179,7 @@ final class PreferRequireTests: XCTestCase {
             func test_something() async {
                 guard let value = await getAsyncValue() else {
                     XCTFail()
+                    return
                 }
                 print(value)
             }
@@ -1187,6 +1214,7 @@ final class PreferRequireTests: XCTestCase {
                 guard let value1 = optionalValue,
                       let value2 = await getAsyncValue() else {
                     XCTFail()
+                    return
                 }
                 print(value1, value2)
             }

@@ -2,8 +2,8 @@
 //  PreferRequire.swift
 //  SwiftFormat
 //
-//  Created by Cal Stephens on 11/6/24.
-//  Copyright © 2024 Nick Lockwood. All rights reserved.
+//  Created by Cal Stephens on 6/12/25.
+//  Copyright © 2025 Nick Lockwood. All rights reserved.
 //
 
 import Foundation
@@ -18,38 +18,7 @@ public extension FormatRule {
         """,
         disabledByDefault: true
     ) { formatter in
-        // Helper function to check if else block matches our pattern
-        func isValidElseBlock(in range: Range<Int>, for framework: TestingFramework, formatter: Formatter) -> Bool {
-            let tokens = formatter.tokens[range].filter { !$0.isSpaceOrCommentOrLinebreak }
-
-            switch framework {
-            case .XCTest:
-                // Matches: XCTFail(...) or return
-                return (tokens.count >= 3 &&
-                    tokens[0] == .identifier("XCTFail") &&
-                    tokens[1] == .startOfScope("(")) ||
-                    (tokens.count == 1 &&
-                        tokens[0] == .keyword("return"))
-            case .Testing:
-                // Matches: return or Issue.record(...); return
-                return (tokens.count == 1 &&
-                    tokens[0] == .keyword("return")) ||
-                    (tokens.count >= 5 &&
-                        tokens[0] == .identifier("Issue") &&
-                        tokens[1] == .operator(".", .infix) &&
-                        tokens[2] == .identifier("record") &&
-                        tokens[3] == .startOfScope("(") &&
-                        tokens.last == .keyword("return"))
-            }
-        }
-
-        let testFramework: TestingFramework
-
-        if formatter.hasImport("Testing") {
-            testFramework = .Testing
-        } else if formatter.hasImport("XCTest") {
-            testFramework = .XCTest
-        } else {
+        guard let testFramework = formatter.detectTestingFramework() else {
             return
         }
 
@@ -58,9 +27,9 @@ public extension FormatRule {
             else { return }
 
             switch testFramework {
-            case .XCTest:
+            case .xcTest:
                 guard functionDecl.name?.starts(with: "test") == true else { return }
-            case .Testing:
+            case .swiftTesting:
                 guard formatter.modifiersForDeclaration(at: funcKeywordIndex, contains: "@Test") else { return }
             }
 
@@ -86,9 +55,21 @@ public extension FormatRule {
                 }
 
                 // Check if the else block matches our pattern
-                let elseBodyRange = (elseBraceIndex + 1) ..< endOfElseScope
-                guard isValidElseBlock(in: elseBodyRange, for: testFramework, formatter: formatter) else {
-                    continue
+                let elseBodyTokens = formatter.tokens[(elseBraceIndex + 1) ..< endOfElseScope]
+                    .filter { !$0.isSpaceOrCommentOrLinebreak }
+
+                switch testFramework {
+                case .xcTest:
+                    // Matches: return or XCTFail(...); return
+                    guard (elseBodyTokens.count == 1 && elseBodyTokens[0].string == "return") ||
+                        (elseBodyTokens.count >= 3 && elseBodyTokens[0 ... 1].string == "XCTFail(") && elseBodyTokens.last == .keyword("return")
+                    else { return }
+
+                case .swiftTesting:
+                    // Matches: return or Issue.record(...); return
+                    guard (elseBodyTokens.count == 1 && elseBodyTokens[0].string == "return") ||
+                        (elseBodyTokens.count >= 5 && elseBodyTokens[0 ... 3].string == "Issue.record(" && elseBodyTokens.last == .keyword("return"))
+                    else { return }
                 }
 
                 // Check if all conditions are let bindings that can be transformed
@@ -164,8 +145,8 @@ public extension FormatRule {
                 // Now we can safely transform all conditions
                 if true {
                     // All conditions can be transformed
-                    let unwrapFunctionName = testFramework == .XCTest ? "XCTUnwrap" : "#require"
-                    let assertFunctionName = testFramework == .XCTest ? "XCTAssert" : "#expect"
+                    let unwrapFunctionName = testFramework == .xcTest ? "XCTUnwrap" : "#require"
+                    let assertFunctionName = testFramework == .xcTest ? "XCTAssert" : "#expect"
                     let linebreakToken = formatter.linebreakToken(for: guardIndex)
                     let indent = formatter.currentIndentForLine(at: guardIndex)
 
@@ -227,19 +208,8 @@ public extension FormatRule {
             }
 
             // If we added try XCTUnwrap or try #require, ensure the function has throws
-            if addedTryStatement, !functionDecl.effects.contains("throws") {
-                if let effectsRange = functionDecl.effectsRange {
-                    // If async is present, insert throws after it to maintain correct order: async throws
-                    if let asyncIndex = formatter.index(of: .identifier("async"), in: effectsRange.lowerBound ..< effectsRange.upperBound + 1) {
-                        formatter.insert([.space(" "), .keyword("throws")], at: asyncIndex + 1)
-                    } else {
-                        // Otherwise add it to the end of effects
-                        formatter.insert([.keyword("throws"), .space(" ")], at: effectsRange.upperBound)
-                    }
-                } else {
-                    // If there are no effects, add after the arguments
-                    formatter.insert([.space(" "), .keyword("throws")], at: functionDecl.argumentsRange.upperBound + 1)
-                }
+            if addedTryStatement {
+                formatter.addThrowsEffect(to: functionDecl)
             }
         }
     } examples: {

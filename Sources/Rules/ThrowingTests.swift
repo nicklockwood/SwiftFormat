@@ -3,23 +3,12 @@
 
 import Foundation
 
-enum TestingFramework {
-    case XCTest
-    case Testing
-}
-
 public extension FormatRule {
     static let throwingTests = FormatRule(
         help: "Write tests that use `throws` instead of using `try!`.",
         disabledByDefault: true
     ) { formatter in
-        let testFramework: TestingFramework
-
-        if formatter.hasImport("Testing") {
-            testFramework = .Testing
-        } else if formatter.hasImport("XCTest") {
-            testFramework = .XCTest
-        } else {
+        guard let testFramework = formatter.detectTestingFramework() else {
             return
         }
 
@@ -28,9 +17,9 @@ public extension FormatRule {
             else { return }
 
             switch testFramework {
-            case .XCTest:
+            case .xcTest:
                 guard functionDecl.name?.starts(with: "test") == true else { return }
-            case .Testing:
+            case .swiftTesting:
                 guard formatter.modifiersForDeclaration(at: funcKeywordIndex, contains: "@Test") else { return }
             }
 
@@ -55,15 +44,7 @@ public extension FormatRule {
             // If we found any `!`s, add a `throws` if it doesn't already exist.
             guard foundAnyTryExclamationMarks else { return }
 
-            if functionDecl.effects.contains("throws") { return }
-
-            // If there are effects, just add it to the end of the effects range.
-            if let effectsRange = functionDecl.effectsRange {
-                formatter.insert([.keyword("throws"), .space(" ")], at: effectsRange.upperBound)
-            } else {
-                // If there are no effects, add after the arguments.
-                formatter.insert([.space(" "), .keyword("throws")], at: functionDecl.argumentsRange.upperBound + 1)
-            }
+            formatter.addThrowsEffect(to: functionDecl)
         }
     } examples: {
         """

@@ -8,7 +8,7 @@
 
 import Foundation
 
-// MARK: shared helper methods
+// MARK: - shared helper methods
 
 public extension Formatter {
     /// Returns the index of the first token of the line containing the specified index
@@ -2102,6 +2102,22 @@ extension Formatter {
                 importedModule.module == moduleName
             })
         })
+    }
+
+    enum TestingFramework {
+        case xcTest
+        case swiftTesting
+    }
+
+    /// Detects which testing framework is being used in the file
+    func detectTestingFramework() -> TestingFramework? {
+        if hasImport("Testing") {
+            return .swiftTesting
+        } else if hasImport("XCTest") {
+            return .xcTest
+        } else {
+            return nil
+        }
     }
 
     /// Adds imports for the given list of modules to this file if not already present

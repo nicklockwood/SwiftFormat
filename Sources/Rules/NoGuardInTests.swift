@@ -197,10 +197,6 @@ public extension FormatRule {
 
                 formatter.replaceTokens(in: guardIndex ... endOfElseScope, with: replacementStatements)
                 addedTryStatement = true
-
-                // Only transform one guard per rule execution
-                // The formatter will run the rule again if needed
-                break
             }
 
             // If we added try XCTUnwrap or try #require, ensure the function has throws

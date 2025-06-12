@@ -1,5 +1,5 @@
 //
-//  PreferRequire.swift
+//  NoGuardInTests.swift
 //  SwiftFormat
 //
 //  Created by Cal Stephens on 6/12/25.
@@ -9,12 +9,10 @@
 import Foundation
 
 public extension FormatRule {
-    // a better name could be noGuardInTests?
-    static let preferRequire = FormatRule(
+    static let noGuardInTests = FormatRule(
         help: """
-        Prefer Test APIs for unwrapping optionals over `if let` and `guard let`.
-        For XCTest, use `XCTUnwrap` instead of `guard let ... else { XCTFail() }` or `guard let ... else { return }`.
-        For Swift Testing, use `#require` instead of `guard let ... else { return }` or `guard let ... else { Issue.record(); return }`.
+        Convert guard statements in unit tests to `try #require(...)` / `#expect(...)`
+        or `try XCTUnwrap(...)` / `XCTAssert(...)`.
         """,
         disabledByDefault: true
     ) { formatter in

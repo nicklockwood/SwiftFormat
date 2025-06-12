@@ -1,5 +1,5 @@
 //
-//  PreferRequireTests.swift
+//  NoGuardInTestsTests.swift
 //  SwiftFormatTests
 //
 //  Created by Cal Stephens on 6/12/25.
@@ -8,7 +8,7 @@
 
 import XCTest
 
-final class PreferRequireTests: XCTestCase {
+final class NoGuardInTestsTests: XCTestCase {
     // MARK: - XCTest tests
 
     func testReplaceGuardXCTFailWithXCTUnwrap() throws {
@@ -35,7 +35,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferRequire, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
+        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
     }
 
     func testReplaceGuardXCTFailWithMessageWithXCTUnwrap() throws {
@@ -60,7 +60,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferRequire)
+        testFormatting(for: input, output, rule: .noGuardInTests)
     }
 
     func testDoesNotReplaceNonTestFunction() throws {
@@ -76,7 +76,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .preferRequire)
+        testFormatting(for: input, rule: .noGuardInTests)
     }
 
     func testDoesNotReplaceGuardWithDifferentElseBlock() throws {
@@ -92,7 +92,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .preferRequire)
+        testFormatting(for: input, rule: .noGuardInTests)
     }
 
     func testReplacesGuardWithDifferentExpression() throws {
@@ -117,7 +117,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferRequire)
+        testFormatting(for: input, output, rule: .noGuardInTests)
     }
 
     func testDoesNotReplaceInClosure() throws {
@@ -135,7 +135,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .preferRequire)
+        testFormatting(for: input, rule: .noGuardInTests)
     }
 
     func testDoesNotReplaceInNestedFunc() throws {
@@ -153,7 +153,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .preferRequire)
+        testFormatting(for: input, rule: .noGuardInTests)
     }
 
     func testPreservesExistingThrows() throws {
@@ -178,7 +178,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferRequire)
+        testFormatting(for: input, output, rule: .noGuardInTests)
     }
 
     func testHandlesAsyncFunction() throws {
@@ -203,7 +203,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferRequire)
+        testFormatting(for: input, output, rule: .noGuardInTests)
     }
 
     func testReplaceGuardReturnWithXCTUnwrap() throws {
@@ -229,7 +229,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferRequire, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
+        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
     }
 
     func testMultipleGuardStatements() throws {
@@ -259,7 +259,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferRequire, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
+        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
     }
 
     // MARK: - Swift Testing tests
@@ -289,7 +289,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferRequire, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
+        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
     }
 
     func testDoesNotReplaceNonTestFunctionSwiftTesting() throws {
@@ -304,7 +304,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .preferRequire)
+        testFormatting(for: input, rule: .noGuardInTests)
     }
 
     func testDoesNotReplaceGuardWithDifferentElseBlockSwiftTesting() throws {
@@ -321,7 +321,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .preferRequire)
+        testFormatting(for: input, rule: .noGuardInTests)
     }
 
     func testDoesNotReplaceInClosureSwiftTesting() throws {
@@ -339,7 +339,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .preferRequire)
+        testFormatting(for: input, rule: .noGuardInTests)
     }
 
     func testSwiftTestingAddsThrows() throws {
@@ -365,7 +365,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferRequire, exclude: [.elseOnSameLine])
+        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.elseOnSameLine])
     }
 
     func testSwiftTestingPreservesExistingThrows() throws {
@@ -391,7 +391,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferRequire, exclude: [.elseOnSameLine])
+        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.elseOnSameLine])
     }
 
     func testSwiftTestingAsyncFunction() throws {
@@ -417,7 +417,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferRequire)
+        testFormatting(for: input, output, rule: .noGuardInTests)
     }
 
     func testSwiftTestingMultipleGuardStatements() throws {
@@ -447,7 +447,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferRequire, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
+        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
     }
 
     func testReplaceGuardWithMultipleConditionsXCTest() throws {
@@ -474,7 +474,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferRequire)
+        testFormatting(for: input, output, rule: .noGuardInTests)
     }
 
     func testDoesNotReplaceAllConditionsInMultipleGuard() throws {
@@ -501,7 +501,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferRequire)
+        testFormatting(for: input, output, rule: .noGuardInTests)
     }
 
     func testReplaceMultipleGuardConditionsWithMixedPatterns() throws {
@@ -530,7 +530,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferRequire)
+        testFormatting(for: input, output, rule: .noGuardInTests)
     }
 
     func testReplaceGuardWithMultipleConditionsSwiftTesting() throws {
@@ -558,7 +558,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferRequire)
+        testFormatting(for: input, output, rule: .noGuardInTests)
     }
 
     func testReplaceMultipleOptionalBindingsSwiftTesting() throws {
@@ -586,7 +586,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferRequire)
+        testFormatting(for: input, output, rule: .noGuardInTests)
     }
 
     func testSimpleMultipleConditions() throws {
@@ -612,7 +612,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferRequire)
+        testFormatting(for: input, output, rule: .noGuardInTests)
     }
 
     func testSimpleMultipleConditions2() throws {
@@ -638,7 +638,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferRequire, exclude: [.wrapConditionalBodies])
+        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.wrapConditionalBodies])
     }
 
     func testReplaceGuardIssueRecordWithRequire() throws {
@@ -667,7 +667,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferRequire, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
+        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
     }
 
     func testReplaceGuardIssueRecordWithMessageWithRequire() throws {
@@ -694,7 +694,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferRequire)
+        testFormatting(for: input, output, rule: .noGuardInTests)
     }
 
     func testHandlesFiveConditions() throws {
@@ -729,7 +729,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferRequire, exclude: [.wrapMultilineStatementBraces, .elseOnSameLine, .blankLinesAfterGuardStatements, .wrapArguments])
+        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.wrapMultilineStatementBraces, .elseOnSameLine, .blankLinesAfterGuardStatements, .wrapArguments])
     }
 
     func testHandlesTenConditions() throws {
@@ -774,7 +774,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferRequire, exclude: [.blankLinesAfterGuardStatements, .acronyms])
+        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .acronyms])
     }
 
     func testHandlesMixedComplexConditions() throws {
@@ -819,7 +819,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferRequire, exclude: [.wrapMultilineStatementBraces, .elseOnSameLine, .blankLinesAfterGuardStatements, .wrapArguments])
+        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.wrapMultilineStatementBraces, .elseOnSameLine, .blankLinesAfterGuardStatements, .wrapArguments])
     }
 
     // MARK: - Variable shadowing tests
@@ -838,7 +838,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .preferRequire)
+        testFormatting(for: input, rule: .noGuardInTests)
     }
 
     func testDoesNotReplaceWhenVariableShadowingWithReturn() throws {
@@ -854,7 +854,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .preferRequire)
+        testFormatting(for: input, rule: .noGuardInTests)
     }
 
     func testHandlesGuardLetShorthand() throws {
@@ -881,7 +881,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferRequire, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
+        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
     }
 
     func testHandlesGuardLetShorthandSwiftTesting() throws {
@@ -909,7 +909,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferRequire, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
+        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
     }
 
     func testHandlesExplicitTypeAnnotation() throws {
@@ -936,7 +936,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferRequire, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
+        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
     }
 
     func testHandlesExplicitTypeAnnotationWithShorthand() throws {
@@ -964,7 +964,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferRequire, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
+        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
     }
 
     func testHandlesComplexTypeAnnotation() throws {
@@ -990,7 +990,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferRequire, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
+        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
     }
 
     func testHandlesTypeAnnotationSwiftTesting() throws {
@@ -1018,7 +1018,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferRequire, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
+        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
     }
 
     func testPreservesDependentConditions() throws {
@@ -1036,7 +1036,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .preferRequire, exclude: [.blankLinesAfterGuardStatements])
+        testFormatting(for: input, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements])
     }
 
     func testConvertsBooleanConditionsToXCTAssert() throws {
@@ -1065,7 +1065,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferRequire, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
+        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
     }
 
     func testConvertsBooleanConditionsToExpect() throws {
@@ -1095,7 +1095,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferRequire, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
+        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
     }
 
     func testConvertsMultipleBooleanConditions() throws {
@@ -1126,7 +1126,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferRequire)
+        testFormatting(for: input, output, rule: .noGuardInTests)
     }
 
     func testPreservesGuardWithShadowedVariable() throws {
@@ -1145,7 +1145,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .preferRequire, exclude: [.blankLinesAfterGuardStatements, .elseOnSameLine, .wrapMultilineStatementBraces])
+        testFormatting(for: input, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .elseOnSameLine, .wrapMultilineStatementBraces])
     }
 
     func testPreservesGuardWithAnyShadowing() throws {
@@ -1166,7 +1166,7 @@ final class PreferRequireTests: XCTestCase {
         }
         """
         // Since bar is shadowed, we preserve the entire guard
-        testFormatting(for: input, rule: .preferRequire, exclude: [.blankLinesAfterGuardStatements, .elseOnSameLine, .wrapMultilineStatementBraces])
+        testFormatting(for: input, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .elseOnSameLine, .wrapMultilineStatementBraces])
     }
 
     func testPreservesGuardWithMixedCasePattern() throws {
@@ -1184,7 +1184,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .preferRequire, exclude: [.blankLinesAfterGuardStatements, .hoistPatternLet, .elseOnSameLine, .wrapMultilineStatementBraces])
+        testFormatting(for: input, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .hoistPatternLet, .elseOnSameLine, .wrapMultilineStatementBraces])
     }
 
     // MARK: - Await tests
@@ -1203,7 +1203,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .preferRequire, exclude: [.blankLinesAfterGuardStatements])
+        testFormatting(for: input, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements])
     }
 
     func testPreservesGuardWithAwaitInConditionSwiftTesting() throws {
@@ -1220,7 +1220,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .preferRequire, exclude: [.blankLinesAfterGuardStatements])
+        testFormatting(for: input, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements])
     }
 
     func testPreservesGuardWithAwaitInMultipleConditions() throws {
@@ -1238,7 +1238,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .preferRequire, exclude: [.blankLinesAfterGuardStatements, .elseOnSameLine, .wrapMultilineStatementBraces])
+        testFormatting(for: input, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .elseOnSameLine, .wrapMultilineStatementBraces])
     }
 
     // MARK: - No import tests
@@ -1251,6 +1251,6 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .preferRequire)
+        testFormatting(for: input, rule: .noGuardInTests)
     }
 }

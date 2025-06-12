@@ -34,7 +34,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferRequire, exclude: [.blankLinesAfterGuardStatements])
+        testFormatting(for: input, output, rule: .preferRequire, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
     }
 
     func testReplaceGuardXCTFailWithMessageWithXCTUnwrap() throws {
@@ -204,7 +204,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferRequire, exclude: [.blankLinesAfterGuardStatements])
+        testFormatting(for: input, output, rule: .preferRequire, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
     }
 
     func testMultipleGuardStatements() throws {
@@ -232,7 +232,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferRequire, exclude: [.blankLinesAfterGuardStatements])
+        testFormatting(for: input, output, rule: .preferRequire, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
     }
 
     // MARK: - Swift Testing tests
@@ -262,7 +262,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferRequire, exclude: [.blankLinesAfterGuardStatements])
+        testFormatting(for: input, output, rule: .preferRequire, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
     }
 
     func testDoesNotReplaceNonTestFunctionSwiftTesting() throws {
@@ -420,7 +420,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferRequire, exclude: [.blankLinesAfterGuardStatements])
+        testFormatting(for: input, output, rule: .preferRequire, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
     }
 
     func testReplaceGuardWithMultipleConditionsXCTest() throws {
@@ -643,7 +643,7 @@ final class PreferRequireTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .preferRequire, exclude: [.blankLinesAfterGuardStatements])
+        testFormatting(for: input, output, rule: .preferRequire, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
     }
 
     func testReplaceGuardIssueRecordWithMessageWithRequire() throws {
@@ -671,6 +671,254 @@ final class PreferRequireTests: XCTestCase {
         }
         """
         testFormatting(for: input, output, rule: .preferRequire)
+    }
+
+    func testHandlesFiveConditions() throws {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                guard let value1 = optional1,
+                      let value2 = optional2,
+                      let value3 = optional3,
+                      let value4 = optional4,
+                      let value5 = optional5 else {
+                    XCTFail()
+                }
+                print(value1, value2, value3, value4, value5)
+            }
+        }
+        """
+        let output = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() throws {
+                let value1 = try XCTUnwrap(optional1)
+                let value2 = try XCTUnwrap(optional2)
+                let value3 = try XCTUnwrap(optional3)
+                let value4 = try XCTUnwrap(optional4)
+                let value5 = try XCTUnwrap(optional5)
+                print(value1, value2, value3, value4, value5)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .preferRequire, exclude: [.wrapMultilineStatementBraces, .elseOnSameLine, .blankLinesAfterGuardStatements, .wrapArguments])
+    }
+
+    func testHandlesTenConditions() throws {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                guard let value1 = optional1,
+                      let value2 = optional2,
+                      let value3 = optional3,
+                      let value4 = optional4,
+                      let value5 = optional5,
+                      let value6 = optional6,
+                      let value7 = optional7,
+                      let value8 = optional8,
+                      let value9 = optional9,
+                      let value10 = optional10 else {
+                    XCTFail()
+                }
+                print(value1, value2, value3, value4, value5, value6, value7, value8, value9, value10)
+            }
+        }
+        """
+        let output = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() throws {
+                let value1 = try XCTUnwrap(optional1)
+                let value2 = try XCTUnwrap(optional2)
+                let value3 = try XCTUnwrap(optional3)
+                let value4 = try XCTUnwrap(optional4)
+                let value5 = try XCTUnwrap(optional5)
+                let value6 = try XCTUnwrap(optional6)
+                let value7 = try XCTUnwrap(optional7)
+                let value8 = try XCTUnwrap(optional8)
+                let value9 = try XCTUnwrap(optional9)
+                let value10 = try XCTUnwrap(optional10)
+                print(value1, value2, value3, value4, value5, value6, value7, value8, value9, value10)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .preferRequire, exclude: [.blankLinesAfterGuardStatements, .acronyms])
+    }
+
+    func testComplexRealWorldGuardStatement() throws {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                guard
+                      let userIdsForTransactionsQuery = queries[1].variables?["userIdsForTransactionsQuery"] as? [Int64],
+                      let primaryHostUserId = queries[1].variables?["primaryHostUserId"] as? Int64,
+                      let coHostUserId = queries[1].variables?["coHostUserId"] as? Int64,
+                      let productTypeFilters = queries[1].variables?["productTypeFilters"] as? [[String: Any?]],
+                      let firstFilter = productTypeFilters.first,
+                      let productType = firstFilter["airbnbProductType"] as? String,
+                      let airbnbProductIds = firstFilter["airbnbProductIds"] as? [Int64]
+
+                    else {
+                      XCTFail("The parameters of the executed dashboard query do not match the expected value")
+                      return
+                    }
+            }
+        }
+        """
+        let output = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() throws {
+                let userIdsForTransactionsQuery = try XCTUnwrap(queries[1].variables?["userIdsForTransactionsQuery"] as? [Int64])
+                let primaryHostUserId = try XCTUnwrap(queries[1].variables?["primaryHostUserId"] as? Int64)
+                let coHostUserId = try XCTUnwrap(queries[1].variables?["coHostUserId"] as? Int64)
+                let productTypeFilters = try XCTUnwrap(queries[1].variables?["productTypeFilters"] as? [[String: Any?]])
+                let firstFilter = try XCTUnwrap(productTypeFilters.first)
+                let productType = try XCTUnwrap(firstFilter["airbnbProductType"] as? String)
+                let airbnbProductIds = try XCTUnwrap(firstFilter["airbnbProductIds"] as? [Int64])
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .preferRequire, exclude: [.blankLinesAfterGuardStatements, .acronyms])
+    }
+
+    func testHandlesMixedComplexConditions() throws {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                guard condition1,
+                      let value1 = optional1,
+                      condition2,
+                      let value2 = optional2,
+                      let value3 = optional3,
+                      condition3,
+                      let value4 = optional4,
+                      let value5 = optional5,
+                      condition4,
+                      let value6 = optional6,
+                      condition5 else {
+                    XCTFail()
+                }
+            }
+        }
+        """
+        let output = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() throws {
+                let value1 = try XCTUnwrap(optional1)
+                let value2 = try XCTUnwrap(optional2)
+                let value3 = try XCTUnwrap(optional3)
+                let value4 = try XCTUnwrap(optional4)
+                let value5 = try XCTUnwrap(optional5)
+                let value6 = try XCTUnwrap(optional6)
+                guard condition1, condition2, condition3, condition4, condition5 else {
+                    XCTFail()
+                }
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .preferRequire, exclude: [.wrapMultilineStatementBraces, .elseOnSameLine, .blankLinesAfterGuardStatements, .wrapArguments])
+    }
+
+    // MARK: - Variable shadowing tests
+
+    func testDoesNotReplaceWhenVariableShadowing() throws {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                let foo: String? = ""
+                guard let foo else {
+                    XCTFail()
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: .preferRequire)
+    }
+
+    func testDoesNotReplaceWhenVariableShadowingWithReturn() throws {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                let value: String? = ""
+                guard let value else {
+                    return
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: .preferRequire)
+    }
+
+    func testHandlesGuardLetShorthand() throws {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something(optionalValue: String?) {
+                guard let optionalValue else {
+                    XCTFail()
+                }
+                print(optionalValue)
+            }
+        }
+        """
+        let output = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something(optionalValue: String?) throws {
+                let optionalValue = try XCTUnwrap(optionalValue)
+                print(optionalValue)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .preferRequire, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
+    }
+
+    func testHandlesGuardLetShorthandSwiftTesting() throws {
+        let input = """
+        import Testing
+
+        struct SomeTests {
+            @Test
+            func something(value: String?) {
+                guard let value else {
+                    return
+                }
+                print(value)
+            }
+        }
+        """
+        let output = """
+        import Testing
+
+        struct SomeTests {
+            @Test
+            func something(value: String?) throws {
+                let value = try #require(value)
+                print(value)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .preferRequire, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
     }
 
     // MARK: - No import tests

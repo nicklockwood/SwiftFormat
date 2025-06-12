@@ -3079,23 +3079,30 @@ extension Formatter {
             if tokens[conditionStart] == .keyword("let"),
                let identifierIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: conditionStart),
                identifierIndex < foundElseIndex,
-               tokens[identifierIndex].isIdentifier,
-               let equalsIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: identifierIndex),
-               equalsIndex < foundElseIndex,
-               tokens[equalsIndex] == .operator("=", .infix),
-               let expressionStart = index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
-               expressionStart < foundElseIndex
+               tokens[identifierIndex].isIdentifier
             {
                 condition.isLetBinding = true
                 condition.identifier = tokens[identifierIndex].string
-
-                // Parse expression
-                if let range = parseExpressionRange(startingAt: expressionStart, allowConditionalExpressions: false) {
-                    condition.expression = range
-                    condition.endIndex = range.upperBound
+                
+                // Check if there's an equals sign (full syntax) or not (shorthand)
+                if let nextTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: identifierIndex),
+                   nextTokenIndex < foundElseIndex,
+                   tokens[nextTokenIndex] == .operator("=", .infix),
+                   let expressionStart = index(of: .nonSpaceOrCommentOrLinebreak, after: nextTokenIndex),
+                   expressionStart < foundElseIndex
+                {
+                    // Full syntax: let foo = expression
+                    if let range = parseExpressionRange(startingAt: expressionStart, allowConditionalExpressions: false) {
+                        condition.expression = range
+                        condition.endIndex = range.upperBound
+                    } else {
+                        condition.expression = expressionStart ... expressionStart
+                        condition.endIndex = expressionStart
+                    }
                 } else {
-                    condition.expression = expressionStart ... expressionStart
-                    condition.endIndex = expressionStart
+                    // Shorthand syntax: let foo (implicitly let foo = foo)
+                    condition.expression = identifierIndex ... identifierIndex
+                    condition.endIndex = identifierIndex
                 }
             } else {
                 // Non-let condition - parse until comma or else

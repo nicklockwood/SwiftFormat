@@ -396,6 +396,7 @@ public extension Token {
     var isSpaceOrLinebreak: Bool { isSpace || isLinebreak }
     var isSpaceOrComment: Bool { isSpace || isComment }
     var isSpaceOrCommentOrLinebreak: Bool { isSpaceOrComment || isLinebreak }
+    var isNonSpaceOrCommentOrLinebreak: Bool { !isSpaceOrCommentOrLinebreak }
     var isCommentOrLinebreak: Bool { isComment || isLinebreak }
 
     var isSwitchCaseOrDefault: Bool {

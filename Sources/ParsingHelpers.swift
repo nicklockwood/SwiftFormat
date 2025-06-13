@@ -325,9 +325,12 @@ extension Formatter {
                 if tokens[prevIndex].isAttribute {
                     prevIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex) ?? prevIndex
                 }
+                let tokenBeforePrevIndex = lastToken(before: prevIndex, where: \.isNonSpaceOrCommentOrLinebreak)
+
                 switch tokens[prevIndex] {
                 case .identifier, .endOfScope(")"), .endOfScope("]"),
-                     .operator("?", _), .operator("!", _),
+                     .operator("?", .postfix) where tokenBeforePrevIndex != .keyword("try"),
+                     .operator("!", .postfix) where tokenBeforePrevIndex != .keyword("try"),
                      .endOfScope where token.isStringDelimiter:
                     if tokens[prevIndex + 1 ..< index].contains(where: \.isLinebreak) {
                         break

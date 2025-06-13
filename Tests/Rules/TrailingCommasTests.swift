@@ -1328,4 +1328,31 @@ class TrailingCommasTests: XCTestCase {
         let options = FormatOptions(trailingCommas: true, swiftVersion: "6.1")
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
+
+    func testSingleLineArrayWithMultipleElementsFollowingNotOperator() {
+        let input = """
+        for file in files where
+            file != "build" && !file.hasPrefix(".") && ![
+                ".build", ".app", ".framework", ".xcodeproj", ".xcassets",
+            ].contains(where: { file.hasSuffix($0) }) {}
+        """
+
+        let options = FormatOptions(trailingCommas: true)
+        testFormatting(for: input, rule: .trailingCommas, options: options)
+    }
+
+    func testSingleLineArrayWithMultipleElementsFollowingForceTry() {
+        let input = """
+        let foo = try! [
+            ".build", ".app", ".framework", ".xcodeproj", ".xcassets",
+        ].throwingOperation()
+
+        let bar = try? [
+            ".build", ".app", ".framework", ".xcodeproj", ".xcassets",
+        ].throwingOperation()
+        """
+
+        let options = FormatOptions(trailingCommas: true)
+        testFormatting(for: input, rule: .trailingCommas, options: options)
+    }
 }

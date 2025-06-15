@@ -171,6 +171,7 @@ public extension FormatRule {
         -     Quux
         +     Quux,
           > {}
+        ```
         """
     }
 }

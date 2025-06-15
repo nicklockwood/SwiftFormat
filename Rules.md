@@ -3117,6 +3117,7 @@ Swift 6.1 and later:
 -     Quux
 +     Quux,
   > {}
+```
 
 </details>
 <br/>

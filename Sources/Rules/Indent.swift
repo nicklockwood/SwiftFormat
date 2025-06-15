@@ -582,7 +582,7 @@ public extension FormatRule {
                             }
                             if !lastToken.isEndOfScope || lastToken == .endOfScope("case") ||
                                 formatter.options.xcodeIndentation, ![
-                                    .endOfScope("}"), .endOfScope(")")
+                                    .endOfScope("}"), .endOfScope(")"),
                                 ].contains(lastToken)
                             {
                                 indent += formatter.options.indent

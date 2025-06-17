@@ -152,7 +152,7 @@ class RedundantMemberwiseInitTests: XCTestCase {
         testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
     }
 
-    func testDontRemovePublicInit() {
+    func testRemovePublicInitFromPublicStructDuplicate() {
         let input = """
         public struct Person {
             var name: String
@@ -164,7 +164,13 @@ class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        let output = """
+        public struct Person {
+            var name: String
+            var age: Int
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit)
     }
 
     func testRemoveInitWithComputedProperties() {
@@ -565,6 +571,230 @@ class RedundantMemberwiseInitTests: XCTestCase {
             init(_ name: String, _ age: Int) {
                 self.name = name
                 self.age = age
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+    }
+
+    func testDontRemoveInternalInitFromPublicStruct() {
+        let input = """
+        public struct Person {
+            var name: String
+            var age: Int
+
+            init(name: String, age: Int) {
+                self.name = name
+                self.age = age
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+    }
+
+    func testRemovePublicInitFromPublicStruct() {
+        let input = """
+        public struct Person {
+            var name: String
+            var age: Int
+
+            public init(name: String, age: Int) {
+                self.name = name
+                self.age = age
+            }
+        }
+        """
+        let output = """
+        public struct Person {
+            var name: String
+            var age: Int
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit)
+    }
+
+    func testDontRemoveInitWhenMultipleInitsExist() {
+        let input = """
+        struct Person {
+            var name: String
+            var age: Int
+
+            init(name: String, age: Int) {
+                self.name = name
+                self.age = age
+            }
+
+            init(name: String) {
+                self.name = name
+                self.age = 0
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+    }
+
+    func testDontRemoveInitWhenThreeInitsExist() {
+        let input = """
+        struct Person {
+            var name: String
+            var age: Int
+
+            init(name: String, age: Int) {
+                self.name = name
+                self.age = age
+            }
+
+            init(name: String) {
+                self.name = name
+                self.age = 0
+            }
+
+            init() {
+                self.name = "Unknown"
+                self.age = 0
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+    }
+
+    func testRemoveInitWithAttributes() {
+        let input = """
+        struct Person {
+            var name: String
+            var age: Int
+
+            @inlinable
+            init(name: String, age: Int) {
+                self.name = name
+                self.age = age
+            }
+        }
+        """
+        let output = """
+        struct Person {
+            var name: String
+            var age: Int
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit)
+    }
+
+    func testRemoveInitWithMultipleAttributes() {
+        let input = """
+        struct Person {
+            var name: String
+            var age: Int
+
+            @inlinable
+            @available(iOS 13.0, *)
+            init(name: String, age: Int) {
+                self.name = name
+                self.age = age
+            }
+        }
+        """
+        let output = """
+        struct Person {
+            var name: String
+            var age: Int
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit)
+    }
+
+    func testRemoveInitWithAttributesAndComments() {
+        let input = """
+        struct Person {
+            var name: String
+            var age: Int
+
+            /// Initializes a person with name and age
+            @inlinable
+            internal init(name: String, age: Int) {
+                self.name = name
+                self.age = age
+            }
+        }
+        """
+        let output = """
+        struct Person {
+            var name: String
+            var age: Int
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit)
+    }
+
+    func testDontRemoveInitWithPrivateStoredProperty() {
+        let input = """
+        struct Person {
+            var name: String
+            var age: Int
+            private var id: String
+
+            init(name: String, age: Int, id: String) {
+                self.name = name
+                self.age = age
+                self.id = id
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+    }
+
+    func testDontRemoveInitWithFileprivateStoredProperty() {
+        let input = """
+        struct Person {
+            var name: String
+            var age: Int
+            fileprivate var secret: String
+
+            init(name: String, age: Int, secret: String) {
+                self.name = name
+                self.age = age
+                self.secret = secret
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+    }
+
+    func testRemovePrivateInitWithPrivateStoredProperty() {
+        let input = """
+        struct Person {
+            var name: String
+            var age: Int
+            private var id: String
+
+            private init(name: String, age: Int, id: String) {
+                self.name = name
+                self.age = age
+                self.id = id
+            }
+        }
+        """
+        let output = """
+        struct Person {
+            var name: String
+            var age: Int
+            private var id: String
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit)
+    }
+
+    func testDontRemovePublicInitWithPrivateStoredProperty() {
+        let input = """
+        public struct Person {
+            var name: String
+            var age: Int
+            private var id: String
+
+            public init(name: String, age: Int, id: String) {
+                self.name = name
+                self.age = age
+                self.id = id
             }
         }
         """

@@ -8,6 +8,21 @@
 
 import Foundation
 
+/// Helper function to get the access level of a declaration
+private func getAccessLevel(for declaration: Declaration, in formatter: Formatter) -> String {
+    let modifiers = declaration.modifiers
+    
+    // Check for explicit access modifiers
+    for modifier in ["open", "public", "package", "internal", "fileprivate", "private"] {
+        if modifiers.contains(modifier) {
+            return modifier
+        }
+    }
+    
+    // Default to internal if no explicit access modifier
+    return "internal"
+}
+
 /// Helper function to check if a function argument has a default value
 private func checkForDefaultValue(arg: Formatter.FunctionArgument, in formatter: Formatter) -> Bool {
     // Start searching after the internal label index
@@ -50,40 +65,86 @@ public extension FormatRule {
         for declaration in allDeclarations where declaration.keyword == "struct" {
             guard case let .type(structDeclaration) = declaration.kind else { continue }
             
-            // Collect stored properties from the struct body
-            let storedProperties = structDeclaration.body.compactMap { childDeclaration -> (name: String, type: String)? in
+            // Get the struct's access level
+            let structAccessLevel = getAccessLevel(for: declaration, in: formatter)
+            
+            // Collect stored properties from the struct body and check access levels
+            var storedProperties = [(name: String, type: String)]()
+            var hasPrivateStoredProperties = false
+            
+            for childDeclaration in structDeclaration.body {
                 guard ["var", "let"].contains(childDeclaration.keyword),
                       let property = formatter.parsePropertyDeclaration(atIntroducerIndex: childDeclaration.keywordIndex),
                       let typeInfo = property.type,
                       property.body == nil, // Only stored properties (no computed properties or observers)
                       !formatter.modifiersForDeclaration(at: childDeclaration.keywordIndex, contains: { _, modifier in
-                          ["static", "private", "fileprivate", "public", "open"].contains(modifier)
+                          ["static"].contains(modifier) // Only exclude static properties
                       })
-                else { return nil }
+                else { continue }
                 
                 // Additional check: ensure no property observers (didSet, willSet)
                 let propertyEnd = childDeclaration.range.upperBound
                 var checkIndex = childDeclaration.keywordIndex + 1
+                var hasObservers = false
                 while checkIndex <= propertyEnd {
                     if let token = formatter.token(at: checkIndex) {
                         if token == .identifier("didSet") || token == .identifier("willSet") {
-                            return nil // Has property observers, not a simple stored property
+                            hasObservers = true
+                            break
                         }
                     }
                     checkIndex += 1
                 }
                 
-                return (name: property.identifier, type: typeInfo.name)
+                if hasObservers {
+                    continue // Skip properties with observers
+                }
+                
+                // Check if this property is private or fileprivate
+                let propertyAccessLevel = getAccessLevel(for: childDeclaration, in: formatter)
+                if propertyAccessLevel == "private" || propertyAccessLevel == "fileprivate" {
+                    hasPrivateStoredProperties = true
+                }
+                
+                storedProperties.append((name: property.identifier, type: typeInfo.name))
             }
             
             guard !storedProperties.isEmpty else { continue }
             
+            // Find all init declarations in the struct body
+            let allInitDeclarations = structDeclaration.body.filter { $0.keyword == "init" }
+            
+            // If there are multiple inits, don't remove any memberwise init
+            // as the compiler won't synthesize it
+            guard allInitDeclarations.count == 1 else { continue }
+            
             // Find init declarations in the struct body
             for initDeclaration in structDeclaration.body where initDeclaration.keyword == "init" {
-                // Skip if has explicit access modifier
-                guard !formatter.modifiersForDeclaration(at: initDeclaration.keywordIndex, contains: { _, modifier in
-                    ["private", "fileprivate", "public", "open"].contains(modifier)
-                }) else { continue }
+                // Get the init's access level
+                let initAccessLevel = getAccessLevel(for: initDeclaration, in: formatter)
+                
+                // Don't remove if struct is public but init is internal
+                // (compiler won't generate public memberwise init)
+                if structAccessLevel == "public" && initAccessLevel == "internal" {
+                    continue
+                }
+                
+                // Handle private property access level implications
+                if hasPrivateStoredProperties {
+                    // If the init is internal or public but private properties would make 
+                    // the synthesized init private, don't remove
+                    if initAccessLevel == "internal" || initAccessLevel == "public" {
+                        continue
+                    }
+                    // If both the current init and synthesized init would be private, 
+                    // it's safe to remove (no access level change)
+                } else {
+                    // No private properties, so synthesized init would match struct access level
+                    // Don't remove private inits if synthesized would be more accessible
+                    if initAccessLevel == "private" || initAccessLevel == "fileprivate" {
+                        continue
+                    }
+                }
                 
                 // Parse the init function using the parseFunctionDeclaration helper
                 guard let functionDecl = formatter.parseFunctionDeclaration(keywordIndex: initDeclaration.keywordIndex),
@@ -166,7 +227,8 @@ public extension FormatRule {
                 
                 // Remove redundant init if all assignments match
                 if isRedundant && assignmentCount == storedProperties.count {
-                    let startRemovalIndex = formatter.startOfModifiers(at: initDeclaration.keywordIndex, includingAttributes: false)
+                    // Use the declaration's range which includes leading comments
+                    let startRemovalIndex = initDeclaration.range.lowerBound
                     let endRemovalIndex = bodyRange.upperBound
                     
                     // Find the range including preceding and trailing whitespace

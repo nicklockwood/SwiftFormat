@@ -322,8 +322,9 @@ private func processDirectory(_ inputURL: URL, with options: inout Options, logg
     let manager = FileManager.default
     let configFile = inputURL.appendingPathComponent(swiftFormatConfigurationFile)
     if manager.fileExists(atPath: configFile.path) {
-        if let configURL = options.configURL {
-            if configURL.standardizedFileURL != configFile.standardizedFileURL {
+        if let configURLs = options.configURLs {
+            let standardizedConfigFile = configFile.standardizedFileURL
+            if !configURLs.contains(where: { $0.standardizedFileURL == standardizedConfigFile }) {
                 logger?("Ignoring config file at \(configFile.path)")
             }
         } else {

@@ -50,6 +50,7 @@
 * [redundantInternal](#redundantInternal)
 * [redundantLet](#redundantLet)
 * [redundantLetError](#redundantLetError)
+* [redundantMemberwiseInit](#redundantMemberwiseInit)
 * [redundantNilInit](#redundantNilInit)
 * [redundantObjc](#redundantObjc)
 * [redundantOptionalBinding](#redundantOptionalBinding)
@@ -2314,6 +2315,28 @@ Remove redundant `let error` from `catch` clause.
 ```diff
 - do { ... } catch let error { log(error) }
 + do { ... } catch { log(error) }
+```
+
+</details>
+<br/>
+
+## redundantMemberwiseInit
+
+Remove explicit internal memberwise initializers that are redundant.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+struct Person {
+    var name: String
+    var age: Int
+
+-   init(name: String, age: Int) {
+-       self.name = name
+-       self.age = age
+-   }
+}
 ```
 
 </details>

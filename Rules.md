@@ -118,8 +118,8 @@
 * [redundantProperty](#redundantProperty)
 * [sortSwitchCases](#sortSwitchCases)
 * [throwingTests](#throwingTests)
-* [uRLMacro](#uRLMacro)
 * [unusedPrivateDeclarations](#unusedPrivateDeclarations)
+* [urlMacro](#urlMacro)
 * [wrapConditionalBodies](#wrapConditionalBodies)
 * [wrapEnumCases](#wrapEnumCases)
 * [wrapMultilineConditionalAssignment](#wrapMultilineConditionalAssignment)
@@ -3375,34 +3375,6 @@ Option | Description
 </details>
 <br/>
 
-## uRLMacro
-
-Replace force-unwrapped URL initializers with the #URL(...) macro for compile-time validation.
-
-Option | Description
---- | ---
-`--urlmacro` | For example: "#URL,URLFoundation"
-
-<details>
-<summary>Examples</summary>
-
-With `--urlmacro #URL,URLFoundation`:
-
-```diff
-- let url = URL(string: "https://example.com")!
-+ import URLFoundation
-+ let url = #URL("https://example.com")
-```
-
-```diff
-- return URL(string: "https://api.example.com/users")!
-+ import URLFoundation
-+ return #URL("https://api.example.com/users")
-```
-
-</details>
-<br/>
-
 ## unusedArguments
 
 Mark unused function arguments with `_`.
@@ -3464,6 +3436,45 @@ Option | Description
 -     fileprivate var baz = "baz"
       var bar = "bar"
   }
+```
+
+</details>
+<br/>
+
+## urlMacro
+
+Replace force-unwrapped URL(string:) initializers with the configured URL macro (only for static string literals).
+
+Option | Description
+--- | ---
+`--urlmacro` | For example: "#URL,URLFoundation"
+
+<details>
+<summary>Examples</summary>
+
+With `--urlmacro #URL,URLFoundation`:
+
+```diff
+- let url = URL(string: "https://example.com")!
++ import URLFoundation
++ let url = #URL("https://example.com")
+```
+
+```diff
+- return URL(string: "https://api.example.com/users")!
++ import URLFoundation
++ return #URL("https://api.example.com/users")
+```
+
+**Note:** The `#URL` macro requires a static string literal and cannot be used with string interpolation or variables:
+
+```swift
+// ✅ This will be converted
+let url = URL(string: "https://example.com")!
+
+// ❌ This will NOT be converted (and shouldn't be)
+let url = URL(string: "https://\(domain)/path")!
+let url = URL(string: baseURL + "/endpoint")!
 ```
 
 </details>

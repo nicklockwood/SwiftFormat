@@ -273,47 +273,56 @@ private func readConfigArg(
     with args: inout [String: String],
     in directory: String
 ) throws -> URL? {
-    guard let url = try args[name].map({
-        try parsePath($0, for: "--\(name)", in: directory)
-    }) else {
+    guard let configPath = args[name] else {
         return nil
     }
-    if args[name] == "" {
+    if configPath.isEmpty {
         throw FormatError.options("--\(name) argument expects a value")
     }
+
+    let (url, config) = try processConfigFile(at: configPath, for: name, in: directory)
+    args = try mergeArguments(args, into: config)
+    return url
+}
+
+private func processConfigFile(at path: String, for argumentName: String, in directory: String) throws -> (URL, [String: String]) {
+    let url = try parsePath(path, for: "--\(argumentName)", in: directory)
+
     if !FileManager.default.fileExists(atPath: url.path) {
         throw FormatError.reading("Specified config file does not exist: \(url.path)")
     }
+
     let data: Data
     do {
         data = try Data(contentsOf: url)
     } catch {
         throw FormatError.reading("Failed to read config file at \(url.path), \(error)")
     }
+
     var config = try parseConfigFile(data)
+
     // Ensure exclude paths in config file are treated as relative to the file itself
-    // TODO: find a better way/place to do this
-    let directory = url.deletingLastPathComponent().path
+    let configDirectory = url.deletingLastPathComponent().path
     if let exclude = config["exclude"] {
-        let excluded = expandGlobs(exclude, in: directory)
+        let excluded = expandGlobs(exclude, in: configDirectory)
         if excluded.isEmpty {
-            print("warning: --exclude value '\(exclude)' did not match any files in \(directory).", as: .warning)
+            print("warning: --exclude value '\(exclude)' did not match any files in \(configDirectory).", as: .warning)
             config["exclude"] = nil
         } else {
             config["exclude"] = excluded.map(\.description).sorted().joined(separator: ",")
         }
     }
     if let unexclude = config["unexclude"] {
-        let unexcluded = expandGlobs(unexclude, in: directory)
+        let unexcluded = expandGlobs(unexclude, in: configDirectory)
         if unexcluded.isEmpty {
-            print("warning: --unexclude value '\(unexclude)' did not match any files in \(directory).", as: .warning)
+            print("warning: --unexclude value '\(unexclude)' did not match any files in \(configDirectory).", as: .warning)
             config["unexclude"] = nil
         } else {
             config["unexclude"] = unexcluded.map(\.description).sorted().joined(separator: ",")
         }
     }
-    args = try mergeArguments(args, into: config)
-    return url
+
+    return (url, config)
 }
 
 private func readMultipleConfigArgs(
@@ -336,41 +345,7 @@ private func readMultipleConfigArgs(
 
     // Process each config file in order (first as base, subsequent override)
     for (index, path) in paths.enumerated() {
-        let url = try parsePath(path, for: "--\(name)", in: directory)
-
-        if !FileManager.default.fileExists(atPath: url.path) {
-            throw FormatError.reading("Specified config file does not exist: \(url.path)")
-        }
-
-        let data: Data
-        do {
-            data = try Data(contentsOf: url)
-        } catch {
-            throw FormatError.reading("Failed to read config file at \(url.path), \(error)")
-        }
-
-        var config = try parseConfigFile(data)
-
-        // Ensure exclude paths in config file are treated as relative to the file itself
-        let configDirectory = url.deletingLastPathComponent().path
-        if let exclude = config["exclude"] {
-            let excluded = expandGlobs(exclude, in: configDirectory)
-            if excluded.isEmpty {
-                print("warning: --exclude value '\(exclude)' did not match any files in \(configDirectory).", as: .warning)
-                config["exclude"] = nil
-            } else {
-                config["exclude"] = excluded.map(\.description).sorted().joined(separator: ",")
-            }
-        }
-        if let unexclude = config["unexclude"] {
-            let unexcluded = expandGlobs(unexclude, in: configDirectory)
-            if unexcluded.isEmpty {
-                print("warning: --unexclude value '\(unexclude)' did not match any files in \(configDirectory).", as: .warning)
-                config["unexclude"] = nil
-            } else {
-                config["unexclude"] = unexcluded.map(\.description).sorted().joined(separator: ",")
-            }
-        }
+        let (url, config) = try processConfigFile(at: path, for: name, in: directory)
 
         // For first config file, use it as base; for subsequent files, merge them in
         if index == 0 {
@@ -518,7 +493,6 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
 
         // Base config
         _ = try readConfigArg("baseconfig", with: &args, in: directory)
-        _ = try readMultipleConfigArgs("config", with: &args, in: directory)
 
         // Options
         var options = try Options(args, in: directory)

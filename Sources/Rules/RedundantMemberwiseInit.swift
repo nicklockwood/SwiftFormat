@@ -8,6 +8,36 @@
 
 import Foundation
 
+/// Helper function to check if a function argument has a default value
+private func checkForDefaultValue(arg: Formatter.FunctionArgument, in formatter: Formatter) -> Bool {
+    // Start searching after the internal label index
+    let searchIndex = arg.internalLabelIndex + 1
+    
+    // Find the colon
+    guard let colonIndex = formatter.index(of: .delimiter(":"), after: searchIndex - 1) else {
+        return false
+    }
+    
+    // Find the end of the type after the colon
+    guard let typeStartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: colonIndex) else {
+        return false  
+    }
+    
+    // Parse the type to find its end
+    guard let typeInfo = formatter.parseType(at: typeStartIndex) else {
+        return false
+    }
+    let typeEndIndex = typeInfo.range.upperBound
+    
+    // Look for '=' token after the type
+    if let equalsIndex = formatter.index(of: .operator("=", .infix), after: typeEndIndex),
+       formatter.index(of: .nonSpaceOrCommentOrLinebreak, in: typeEndIndex + 1 ..< equalsIndex) == nil {
+        return true
+    }
+    
+    return false
+}
+
 public extension FormatRule {
     /// Remove redundant explicit memberwise initializers from structs
     static let redundantMemberwiseInit = FormatRule(
@@ -61,10 +91,26 @@ public extension FormatRule {
                 else { continue }
                 
                 // Check if parameters match stored properties exactly
-                let parameters = functionDecl.arguments.compactMap { arg -> (name: String, type: String)? in
+                let parameters = functionDecl.arguments.compactMap { arg -> (name: String, type: String, externalLabel: String?, hasDefaultValue: Bool)? in
                     guard let name = arg.internalLabel else { return nil }
-                    return (name: name, type: arg.type)
+                    
+                    // Check for default value by looking for '=' after the type
+                    let hasDefaultValue = checkForDefaultValue(arg: arg, in: formatter)
+                    
+                    return (name: name, type: arg.type, externalLabel: arg.externalLabel, hasDefaultValue: hasDefaultValue)
                 }
+                
+                // Don't remove if any parameter has a default value
+                guard !parameters.contains(where: { $0.hasDefaultValue }) else { continue }
+                
+                // Don't remove if any parameter has different external and internal labels
+                // This includes cases where external label is explicitly different or uses underscore
+                guard !parameters.contains(where: { param in
+                    // If externalLabel is nil, it means underscore was used (different from internal name)
+                    // If externalLabel exists and is different from internal name, it's also different
+                    param.externalLabel == nil || (param.externalLabel != nil && param.externalLabel != param.name)
+                }) else { continue }
+                
                 guard parameters.count == storedProperties.count,
                       zip(parameters, storedProperties).allSatisfy({ $0.name == $1.name && $0.type == $1.type })
                 else { continue }

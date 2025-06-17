@@ -493,4 +493,81 @@ class RedundantMemberwiseInitTests: XCTestCase {
         """
         testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent, .blankLinesBetweenScopes])
     }
+
+    func testDontRemoveInitWithDefaultArguments() {
+        let input = """
+        struct Person {
+            var name: String
+            var age: Int
+
+            init(name: String, age: Int = 0) {
+                self.name = name
+                self.age = age
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+    }
+
+    func testDontRemoveInitWithMultipleDefaultArguments() {
+        let input = """
+        struct Person {
+            var name: String
+            var age: Int
+            var city: String
+
+            init(name: String, age: Int = 0, city: String = "Unknown") {
+                self.name = name
+                self.age = age
+                self.city = city
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+    }
+
+    func testDontRemoveInitWithDifferentExternalLabels() {
+        let input = """
+        struct Person {
+            var name: String
+            var age: Int
+
+            init(withName name: String, andAge age: Int) {
+                self.name = name
+                self.age = age
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+    }
+
+    func testDontRemoveInitWithMixedExternalLabels() {
+        let input = """
+        struct Person {
+            var name: String
+            var age: Int
+
+            init(name: String, withAge age: Int) {
+                self.name = name
+                self.age = age
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+    }
+
+    func testDontRemoveInitWithUnderscoreExternalLabel() {
+        let input = """
+        struct Person {
+            var name: String
+            var age: Int
+
+            init(_ name: String, _ age: Int) {
+                self.name = name
+                self.age = age
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+    }
 }

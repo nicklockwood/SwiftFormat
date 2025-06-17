@@ -118,6 +118,7 @@ let ruleRegistry: [String: FormatRule] = [
     "trailingCommas": .trailingCommas,
     "trailingSpace": .trailingSpace,
     "typeSugar": .typeSugar,
+    "uRLMacro": .uRLMacro,
     "unusedArguments": .unusedArguments,
     "unusedPrivateDeclarations": .unusedPrivateDeclarations,
     "void": .void,

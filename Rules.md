@@ -86,6 +86,7 @@
 * [trailingCommas](#trailingCommas)
 * [trailingSpace](#trailingSpace)
 * [typeSugar](#typeSugar)
+* [uRLMacro](#uRLMacro)
 * [unusedArguments](#unusedArguments)
 * [void](#void)
 * [wrap](#wrap)
@@ -3369,6 +3370,28 @@ Option | Description
 ```diff
 - var foo: Optional<(Int) -> Void>
 + var foo: ((Int) -> Void)?
+```
+
+</details>
+<br/>
+
+## uRLMacro
+
+Replace force-unwrapped URL initializers with the #URL(...) macro for compile-time validation.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- let url = URL(string: "https://example.com")!
++ import URLFoundation
++ let url = #URL("https://example.com")
+```
+
+```diff
+- return URL(string: "https://api.example.com/users")!
++ import URLFoundation
++ return #URL("https://api.example.com/users")
 ```
 
 </details>

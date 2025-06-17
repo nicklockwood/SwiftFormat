@@ -35,7 +35,9 @@ extension Options {
     init(_ args: [String: String], in directory: String) throws {
         fileOptions = try fileOptionsFor(args, in: directory)
         formatOptions = try formatOptionsFor(args)
-        configURL = args["config"].map { expandPath($0, in: directory) }
+        configURLs = args["config"].map {
+            parseCommaDelimitedList($0).map { expandPath($0, in: directory) }
+        }
         let lint = args.keys.contains("lint")
         self.lint = lint
         rules = try rulesFor(args, lint: lint)
@@ -48,7 +50,7 @@ extension Options {
         if let fileInfo = formatOptions?.fileInfo {
             newOptions.formatOptions?.fileInfo = fileInfo
         }
-        newOptions.configURL = configURL
+        newOptions.configURLs = configURLs
         self = newOptions
     }
 }
@@ -187,7 +189,7 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
         }
         if let existing = namedArgs[name], !existing.isEmpty,
            // TODO: find a more general way to represent merge-able options
-           ["exclude", "unexclude", "disable", "enable", "lintonly", "rules"].contains(name) ||
+           ["exclude", "unexclude", "disable", "enable", "lintonly", "rules", "config"].contains(name) ||
            Descriptors.all.contains(where: {
                $0.argumentName == name && $0.isSetType
            })

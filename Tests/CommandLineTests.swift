@@ -555,6 +555,84 @@ class CommandLineTests: XCTestCase {
         XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "stdin --lint --rules indent --header foo"), .ok)
     }
 
+    func testMultipleConfigFiles() throws {
+        try withTmpFiles([
+            "config1.swiftformat": """
+            --indent 2
+            --rules trailingCommas
+            --rules redundantSelf
+            """,
+            "config2.swiftformat": """
+            --indent 4
+            --disable trailingCommas
+            """,
+            "test.swift": """
+            func foo() {
+                let array = [1, 2, 3,]
+                self.bar()
+            }
+            """,
+        ]) { url in
+            guard url.pathExtension == "swift" else { return }
+            let testDir = url.deletingLastPathComponent().path
+
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(
+                CLI.run(in: testDir, with: "test.swift --config config1.swiftformat --config config2.swiftformat"),
+                .ok
+            )
+
+            let output = try String(contentsOf: url, encoding: .utf8)
+
+            XCTAssertEqual(output, """
+            func foo() {
+                let array = [1, 2, 3,]
+                bar()
+            }
+            """)
+        }
+    }
+
+    func testMultipleConfigFilesWithCommaDelimitedPaths() throws {
+        try withTmpFiles([
+            "config1.swiftformat": """
+            --indent 2
+            --rules trailingCommas
+            --rules redundantSelf
+            """,
+            "config2.swiftformat": """
+            --indent 4
+            --disable trailingCommas
+            """,
+            "test.swift": """
+            func foo() {
+                let array = [1, 2, 3,]
+                self.bar()
+            }
+            """,
+        ]) { url in
+            guard url.pathExtension == "swift" else { return }
+            let testDir = url.deletingLastPathComponent().path
+
+            CLI.print = { _, _ in }
+
+            XCTAssertEqual(
+                CLI.run(in: testDir, with: "test.swift --config config1.swiftformat,config2.swiftformat"),
+                .ok
+            )
+
+            let output = try String(contentsOf: url, encoding: .utf8)
+
+            XCTAssertEqual(output, """
+            func foo() {
+                let array = [1, 2, 3,]
+                bar()
+            }
+            """)
+        }
+    }
+
     // MARK: reporter
 
     func testJSONReporterEndToEnd() throws {

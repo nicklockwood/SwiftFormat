@@ -10,8 +10,8 @@ import Foundation
 
 public extension FormatRule {
     /// Convert force-unwrapped URL initializers to use the #URL(...) macro
-    static let uRLMacro = FormatRule(
-        help: "Replace force-unwrapped URL initializers with the #URL(...) macro for compile-time validation.",
+    static let urlMacro = FormatRule(
+        help: "Replace force-unwrapped URL(string:) initializers with the configured URL macro (only for static string literals).",
         disabledByDefault: true,
         options: ["urlmacro"]
     ) { formatter in
@@ -38,6 +38,27 @@ public extension FormatRule {
                   let unwrapIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closeParenIndex),
                   formatter.tokens[unwrapIndex] == .operator("!", .postfix)
             else { return }
+
+            // Only convert simple string literals (no interpolation, concatenation, etc.)
+            // Check if there are any tokens between the string delimiters that indicate non-literal content
+            var hasNonLiteralContent = false
+            for tokenIndex in (stringStartIndex + 1) ..< stringEndIndex {
+                let token = formatter.tokens[tokenIndex]
+                switch token {
+                case .stringBody:
+                    // String body is fine - this is the literal content
+                    continue
+                case .startOfScope("\\("), .endOfScope(")"):
+                    // String interpolation detected
+                    hasNonLiteralContent = true
+                default:
+                    // Any other tokens between string delimiters suggest complex content
+                    hasNonLiteralContent = true
+                }
+            }
+
+            // Skip if this is not a simple string literal
+            guard !hasNonLiteralContent else { return }
 
             indicesToProcess.append((i, firstArgIndex, stringStartIndex, unwrapIndex))
         }
@@ -72,6 +93,17 @@ public extension FormatRule {
         - return URL(string: "https://api.example.com/users")!
         + import URLFoundation
         + return #URL("https://api.example.com/users")
+        ```
+
+        **Note:** The `#URL` macro requires a static string literal and cannot be used with string interpolation or variables:
+
+        ```swift
+        // ✅ This will be converted
+        let url = URL(string: "https://example.com")!
+
+        // ❌ This will NOT be converted (and shouldn't be)
+        let url = URL(string: "https://\\(domain)/path")!
+        let url = URL(string: baseURL + "/endpoint")!
         ```
         """
     }

@@ -1115,27 +1115,27 @@ public struct Options {
     public var fileOptions: FileOptions?
     public var formatOptions: FormatOptions?
     public var rules: Set<String>?
-    public var configURL: URL?
+    public var configURLs: [URL]?
     public var lint: Bool
 
     public static let `default` = Options(
         fileOptions: .default,
         formatOptions: .default,
         rules: defaultRules,
-        configURL: nil,
+        configURLs: nil,
         lint: false
     )
 
     public init(fileOptions: FileOptions? = nil,
                 formatOptions: FormatOptions? = nil,
                 rules: Set<String>? = nil,
-                configURL: URL? = nil,
+                configURLs: [URL]? = nil,
                 lint: Bool = false)
     {
         self.fileOptions = fileOptions
         self.formatOptions = formatOptions
         self.rules = rules
-        self.configURL = configURL
+        self.configURLs = configURLs
         self.lint = lint
     }
 

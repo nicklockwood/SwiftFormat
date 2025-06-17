@@ -195,7 +195,7 @@ func printHelp(as type: CLI.OutputType) {
     --filelist         Path to a file with names of files to process, one per line
     --stdinpath        Path to stdin source file (used for generating header)
     --scriptinput      Read Xcode SCRIPT_INPUT_FILE* environment variables as files
-    --config           Path to a configuration file containing rules and options
+    --config           Path(s) to configuration file(s) containing rules and options
     --baseconfig       Like --config, but local .swiftformat files aren't ignored
     --inferoptions     Instead of formatting input, use it to infer format options
     --output           Output path for formatted file(s) (defaults to input path)
@@ -314,6 +314,77 @@ private func readConfigArg(
     }
     args = try mergeArguments(args, into: config)
     return url
+}
+
+private func readMultipleConfigArgs(
+    _ name: String,
+    with args: inout [String: String],
+    in directory: String
+) throws -> [URL] {
+    guard let configPaths = args[name] else {
+        return []
+    }
+
+    if configPaths.isEmpty {
+        throw FormatError.options("--\(name) argument expects a value")
+    }
+
+    // Split comma-separated config paths
+    let paths = parseCommaDelimitedList(configPaths)
+    var configURLs: [URL] = []
+    var mergedConfig: [String: String] = [:]
+
+    // Process each config file in order (first as base, subsequent override)
+    for (index, path) in paths.enumerated() {
+        let url = try parsePath(path, for: "--\(name)", in: directory)
+
+        if !FileManager.default.fileExists(atPath: url.path) {
+            throw FormatError.reading("Specified config file does not exist: \(url.path)")
+        }
+
+        let data: Data
+        do {
+            data = try Data(contentsOf: url)
+        } catch {
+            throw FormatError.reading("Failed to read config file at \(url.path), \(error)")
+        }
+
+        var config = try parseConfigFile(data)
+
+        // Ensure exclude paths in config file are treated as relative to the file itself
+        let configDirectory = url.deletingLastPathComponent().path
+        if let exclude = config["exclude"] {
+            let excluded = expandGlobs(exclude, in: configDirectory)
+            if excluded.isEmpty {
+                print("warning: --exclude value '\(exclude)' did not match any files in \(configDirectory).", as: .warning)
+                config["exclude"] = nil
+            } else {
+                config["exclude"] = excluded.map(\.description).sorted().joined(separator: ",")
+            }
+        }
+        if let unexclude = config["unexclude"] {
+            let unexcluded = expandGlobs(unexclude, in: configDirectory)
+            if unexcluded.isEmpty {
+                print("warning: --unexclude value '\(unexclude)' did not match any files in \(configDirectory).", as: .warning)
+                config["unexclude"] = nil
+            } else {
+                config["unexclude"] = unexcluded.map(\.description).sorted().joined(separator: ",")
+            }
+        }
+
+        // For first config file, use it as base; for subsequent files, merge them in
+        if index == 0 {
+            mergedConfig = config
+        } else {
+            mergedConfig = try mergeArguments(config, into: mergedConfig)
+        }
+
+        configURLs.append(url)
+    }
+
+    // Merge final config into args
+    args = try mergeArguments(args, into: mergedConfig)
+    return configURLs
 }
 
 typealias OutputFlags = (
@@ -436,8 +507,8 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
             return false
         } ?? false
 
-        // Config file
-        let configURL = try readConfigArg("config", with: &args, in: directory)
+        // Config files (support multiple)
+        let configURLs = try readMultipleConfigArgs("config", with: &args, in: directory)
 
         // FormatOption overrides
         var overrides = [String: String]()
@@ -447,10 +518,11 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
 
         // Base config
         _ = try readConfigArg("baseconfig", with: &args, in: directory)
-        _ = try readConfigArg("config", with: &args, in: directory)
+        _ = try readMultipleConfigArgs("config", with: &args, in: directory)
 
         // Options
         var options = try Options(args, in: directory)
+        options.configURLs = configURLs.isEmpty ? nil : configURLs
 
         // Show rules
         if showRules {
@@ -586,7 +658,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
 
         // Infer options
         if args["inferoptions"] != nil {
-            guard configURL == nil else {
+            guard configURLs.isEmpty else {
                 throw FormatError.options("--inferoptions option can't be used along with a config file")
             }
             guard args["range"] == nil else {

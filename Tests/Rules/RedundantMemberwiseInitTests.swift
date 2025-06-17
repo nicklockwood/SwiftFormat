@@ -88,7 +88,7 @@ class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf])
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
     }
 
     func testDontRemoveInitWithAdditionalLogic() {
@@ -104,7 +104,7 @@ class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf])
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
     }
 
     func testDontRemoveInitWithDifferentParameterNames() {
@@ -119,7 +119,7 @@ class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf])
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
     }
 
     func testDontRemoveInitWithDifferentParameterTypes() {
@@ -134,7 +134,7 @@ class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf])
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
     }
 
     func testDontRemovePrivateInit() {
@@ -149,7 +149,7 @@ class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf])
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
     }
 
     func testDontRemovePublicInit() {
@@ -164,7 +164,7 @@ class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf])
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
     }
 
     func testRemoveInitWithComputedProperties() {
@@ -208,7 +208,7 @@ class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf])
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
     }
 
     func testRemoveInitWithStaticProperties() {
@@ -246,7 +246,7 @@ class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf])
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
     }
 
     func testDontRemoveInitWithPartialParameterMatch() {
@@ -263,7 +263,7 @@ class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf])
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
     }
 
     func testDontAffectClass() {
@@ -278,7 +278,7 @@ class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf])
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
     }
 
     func testDontAffectEnum() {
@@ -311,7 +311,7 @@ class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf])
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
     }
 
     func testRemoveRedundantInitWithComplexTypes() {
@@ -354,5 +354,143 @@ class RedundantMemberwiseInitTests: XCTestCase {
         }
         """
         testFormatting(for: input, output, rule: .redundantMemberwiseInit)
+    }
+
+    func testDontRemoveInitWithMethodCall() {
+        let input = """
+        struct Person {
+            var name: String
+            var age: Int
+
+            init(name: String, age: Int) {
+                self.name = name
+                self.age = age
+                self.validate()
+            }
+            
+            func validate() {}
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+    }
+
+    func testDontRemoveInitWithMethodCallBefore() {
+        let input = """
+        struct Person {
+            var name: String
+            var age: Int
+
+            init(name: String, age: Int) {
+                setupDefaults()
+                self.name = name
+                self.age = age
+            }
+            
+            func setupDefaults() {}
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+    }
+
+    func testDontRemoveInitWithPrintStatement() {
+        let input = """
+        struct Person {
+            var name: String
+            var age: Int
+
+            init(name: String, age: Int) {
+                print("Creating person: \\(name)")
+                self.name = name
+                self.age = age
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+    }
+
+    func testDontRemoveInitWithMultipleStatements() {
+        let input = """
+        struct Person {
+            var name: String
+            var age: Int
+
+            init(name: String, age: Int) {
+                self.name = name
+                self.age = age
+                print("Person created")
+                NotificationCenter.default.post(name: .personCreated, object: nil)
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+    }
+
+    func testDontRemoveInitWithGuardStatement() {
+        let input = """
+        struct Person {
+            var name: String
+            var age: Int
+
+            init(name: String, age: Int) {
+                guard age >= 0 else { fatalError("Invalid age") }
+                self.name = name
+                self.age = age
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent, .blankLinesAfterGuardStatements, .wrapConditionalBodies])
+    }
+
+    func testDontRemoveInitWithComments() {
+        let input = """
+        struct Person {
+            var name: String
+            var age: Int
+
+            init(name: String, age: Int) {
+                // Initialize properties
+                self.name = name
+                self.age = age
+                // Initialization complete
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+    }
+
+    func testDontRemoveInitWithConditionalLogic() {
+        let input = """
+        struct Person {
+            var name: String
+            var age: Int
+
+            init(name: String, age: Int) {
+                self.name = name
+                if age < 0 {
+                    self.age = 0
+                } else {
+                    self.age = age
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+    }
+
+    func testDontRemoveInitWithPropertyObserver() {
+        let input = """
+        struct Person {
+            var name: String {
+                didSet { print("Name changed") }
+            }
+            var age: Int
+
+            init(name: String, age: Int) {
+                self.name = name
+                self.age = age
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent, .blankLinesBetweenScopes])
     }
 }

@@ -86,7 +86,6 @@
 * [trailingCommas](#trailingCommas)
 * [trailingSpace](#trailingSpace)
 * [typeSugar](#typeSugar)
-* [uRLMacro](#uRLMacro)
 * [unusedArguments](#unusedArguments)
 * [void](#void)
 * [wrap](#wrap)
@@ -119,6 +118,7 @@
 * [redundantProperty](#redundantProperty)
 * [sortSwitchCases](#sortSwitchCases)
 * [throwingTests](#throwingTests)
+* [uRLMacro](#uRLMacro)
 * [unusedPrivateDeclarations](#unusedPrivateDeclarations)
 * [wrapConditionalBodies](#wrapConditionalBodies)
 * [wrapEnumCases](#wrapEnumCases)
@@ -3379,8 +3379,14 @@ Option | Description
 
 Replace force-unwrapped URL initializers with the #URL(...) macro for compile-time validation.
 
+Option | Description
+--- | ---
+`--urlmacro` | For example: "#URL,URLFoundation"
+
 <details>
 <summary>Examples</summary>
+
+With `--urlmacro #URL,URLFoundation`:
 
 ```diff
 - let url = URL(string: "https://example.com")!

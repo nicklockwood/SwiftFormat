@@ -11,8 +11,14 @@ import Foundation
 public extension FormatRule {
     /// Convert force-unwrapped URL initializers to use the #URL(...) macro
     static let uRLMacro = FormatRule(
-        help: "Replace force-unwrapped URL initializers with the #URL(...) macro for compile-time validation."
+        help: "Replace force-unwrapped URL initializers with the #URL(...) macro for compile-time validation.",
+        disabledByDefault: true,
+        options: ["urlmacro"]
     ) { formatter in
+        // Only apply this rule if a URL macro is configured
+        guard case let .macro(macroName, module: module) = formatter.options.urlMacro else {
+            return
+        }
         // First collect all indices to process
         var indicesToProcess: [(Int, Int, Int, Int)] = [] // (i, firstArgIndex, stringStartIndex, unwrapIndex)
 
@@ -44,16 +50,18 @@ public extension FormatRule {
             // Remove "string: " argument
             formatter.removeTokens(in: firstArgIndex ..< stringStartIndex)
 
-            // Insert "#" before "URL"
-            formatter.insert(.operator("#", .prefix), at: i)
+            // Replace "URL" with the configured macro name
+            formatter.replaceToken(at: i, with: .keyword(macroName))
         }
 
-        // Add URLFoundation import if any modifications were made
+        // Add the configured module import if any modifications were made
         if !indicesToProcess.isEmpty {
-            formatter.addImports(["URLFoundation"])
+            formatter.addImports([module])
         }
     } examples: {
         """
+        With `--urlmacro #URL,URLFoundation`:
+
         ```diff
         - let url = URL(string: "https://example.com")!
         + import URLFoundation

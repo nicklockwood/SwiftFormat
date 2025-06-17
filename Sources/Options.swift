@@ -646,6 +646,37 @@ public enum EquatableMacro: Equatable, RawRepresentable, CustomStringConvertible
     }
 }
 
+public enum URLMacro: Equatable, RawRepresentable, CustomStringConvertible {
+    /// No URL macro
+    case none
+    /// The name and the module for the macro, e.g. `#URL,URLFoundation`
+    case macro(String, module: String)
+
+    public init?(rawValue: String) {
+        let components = rawValue.components(separatedBy: ",")
+        if components.count == 2 {
+            self = .macro(components[0], module: components[1])
+        } else if rawValue == "none" {
+            self = .none
+        } else {
+            return nil
+        }
+    }
+
+    public var rawValue: String {
+        switch self {
+        case .none:
+            return "none"
+        case let .macro(name, module: module):
+            return "\(name),\(module)"
+        }
+    }
+
+    public var description: String {
+        rawValue
+    }
+}
+
 /// Configuration options for formatting. These aren't actually used by the
 /// Formatter class itself, but it makes them available to the format rules.
 public struct FormatOptions: CustomStringConvertible {
@@ -760,6 +791,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var preservedPrivateDeclarations: Set<String>
     public var additionalXCTestSymbols: Set<String>
     public var equatableMacro: EquatableMacro
+    public var urlMacro: URLMacro
     public var preferFileMacro: Bool
     public var lineBetweenConsecutiveGuards: Bool
 
@@ -892,6 +924,7 @@ public struct FormatOptions: CustomStringConvertible {
                 preservedPrivateDeclarations: Set<String> = [],
                 additionalXCTestSymbols: Set<String> = [],
                 equatableMacro: EquatableMacro = .none,
+                urlMacro: URLMacro = .none,
                 preferFileMacro: Bool = true,
                 lineBetweenConsecutiveGuards: Bool = false,
                 // Doesn't really belong here, but hard to put elsewhere
@@ -1013,6 +1046,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.preservedPrivateDeclarations = preservedPrivateDeclarations
         self.additionalXCTestSymbols = additionalXCTestSymbols
         self.equatableMacro = equatableMacro
+        self.urlMacro = urlMacro
         self.preferFileMacro = preferFileMacro
         self.lineBetweenConsecutiveGuards = lineBetweenConsecutiveGuards
         // Doesn't really belong here, but hard to put elsewhere

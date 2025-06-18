@@ -3443,7 +3443,7 @@ Option | Description
 
 ## urlMacro
 
-Replace force-unwrapped URL(string:) initializers with the configured URL macro (only for static string literals).
+Replace force-unwrapped `URL(string:)` initializers with the configured `#URL(_:)` macro.
 
 Option | Description
 --- | ---
@@ -3464,17 +3464,6 @@ With `--urlmacro #URL,URLFoundation`:
 - return URL(string: "https://api.example.com/users")!
 + import URLFoundation
 + return #URL("https://api.example.com/users")
-```
-
-**Note:** The `#URL` macro requires a static string literal and cannot be used with string interpolation or variables:
-
-```swift
-// ✅ This will be converted
-let url = URL(string: "https://example.com")!
-
-// ❌ This will NOT be converted (and shouldn't be)
-let url = URL(string: "https://\(domain)/path")!
-let url = URL(string: baseURL + "/endpoint")!
 ```
 
 </details>

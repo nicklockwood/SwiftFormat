@@ -11,7 +11,7 @@ import Foundation
 public extension FormatRule {
     /// Convert force-unwrapped URL initializers to use the #URL(...) macro
     static let urlMacro = FormatRule(
-        help: "Replace force-unwrapped `URL(string:)` initializers with the configured `#URL(_:)` macro",
+        help: "Replace force-unwrapped `URL(string:)` initializers with the configured `#URL(_:)` macro.",
         disabledByDefault: true,
         options: ["urlmacro"]
     ) { formatter in

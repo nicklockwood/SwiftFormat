@@ -9,7 +9,7 @@
 import Foundation
 
 /// Helper function to get the access level of a declaration
-private func getAccessLevel(for declaration: Declaration, in _: Formatter) -> String {
+private func getAccessLevel(for declaration: Declaration) -> String {
     let modifiers = declaration.modifiers
 
     // Check for explicit access modifiers
@@ -91,14 +91,14 @@ public extension FormatRule {
             guard case let .type(structDeclaration) = declaration.kind else { continue }
 
             // Get the struct's access level
-            let structAccessLevel = getAccessLevel(for: declaration, in: formatter)
+            let structAccessLevel = getAccessLevel(for: declaration)
 
             // Check if there are any private properties (which would make synthesized init private)
             var hasPrivateStoredProperties = false
             for childDeclaration in structDeclaration.body {
                 guard ["var", "let"].contains(childDeclaration.keyword) else { continue }
 
-                let propertyAccessLevel = getAccessLevel(for: childDeclaration, in: formatter)
+                let propertyAccessLevel = getAccessLevel(for: childDeclaration)
                 if propertyAccessLevel == "private" || propertyAccessLevel == "fileprivate" {
                     hasPrivateStoredProperties = true
                     break
@@ -151,7 +151,7 @@ public extension FormatRule {
             // Find init declarations in the struct body
             for initDeclaration in structDeclaration.body where initDeclaration.keyword == "init" {
                 // Get the init's access level
-                let initAccessLevel = getAccessLevel(for: initDeclaration, in: formatter)
+                let initAccessLevel = getAccessLevel(for: initDeclaration)
 
                 // Don't remove if struct is public but init is internal
                 // (compiler won't generate public memberwise init)

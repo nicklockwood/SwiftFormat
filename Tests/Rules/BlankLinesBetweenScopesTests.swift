@@ -163,7 +163,7 @@ class BlankLinesBetweenScopesTests: XCTestCase {
             // sourcery:end
         }
         """
-        testFormatting(for: input, rule: .blankLinesBetweenScopes, exclude: [.redundantPublic])
+        testFormatting(for: input, rule: .blankLinesBetweenScopes, exclude: [.redundantPublic, .redundantMemberwiseInit])
     }
 
     func testNoBlankLineBetweenChainedClosures() {

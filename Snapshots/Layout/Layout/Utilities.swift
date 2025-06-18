@@ -117,16 +117,10 @@ extension UIEdgeInsets {
 
 struct IntOptionSet: OptionSet {
     let rawValue: Int
-    init(rawValue: Int) {
-        self.rawValue = rawValue
-    }
 }
 
 struct UIntOptionSet: OptionSet {
     let rawValue: UInt
-    init(rawValue: UInt) {
-        self.rawValue = rawValue
-    }
 }
 
 #if !swift(>=3.4)

@@ -61,7 +61,7 @@ class RedundantPublicTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, [output], rules: [.redundantPublic])
+        testFormatting(for: input, [output], rules: [.redundantPublic], exclude: [.redundantMemberwiseInit])
     }
 
     func testDoesNotRemovePublicFromPublicType() {

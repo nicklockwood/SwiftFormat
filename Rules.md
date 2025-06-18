@@ -119,6 +119,7 @@
 * [sortSwitchCases](#sortSwitchCases)
 * [throwingTests](#throwingTests)
 * [unusedPrivateDeclarations](#unusedPrivateDeclarations)
+* [urlMacro](#urlMacro)
 * [wrapConditionalBodies](#wrapConditionalBodies)
 * [wrapEnumCases](#wrapEnumCases)
 * [wrapMultilineConditionalAssignment](#wrapMultilineConditionalAssignment)
@@ -3435,6 +3436,34 @@ Option | Description
 -     fileprivate var baz = "baz"
       var bar = "bar"
   }
+```
+
+</details>
+<br/>
+
+## urlMacro
+
+Replace force-unwrapped `URL(string:)` initializers with the configured `#URL(_:)` macro.
+
+Option | Description
+--- | ---
+`--urlmacro` | For example: "#URL,URLFoundation"
+
+<details>
+<summary>Examples</summary>
+
+With `--urlmacro #URL,URLFoundation`:
+
+```diff
+- let url = URL(string: "https://example.com")!
++ import URLFoundation
++ let url = #URL("https://example.com")
+```
+
+```diff
+- return URL(string: "https://api.example.com/users")!
++ import URLFoundation
++ return #URL("https://api.example.com/users")
 ```
 
 </details>

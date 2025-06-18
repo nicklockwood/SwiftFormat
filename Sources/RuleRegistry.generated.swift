@@ -76,6 +76,7 @@ let ruleRegistry: [String: FormatRule] = [
     "redundantInternal": .redundantInternal,
     "redundantLet": .redundantLet,
     "redundantLetError": .redundantLetError,
+    "redundantMemberwiseInit": .redundantMemberwiseInit,
     "redundantNilInit": .redundantNilInit,
     "redundantObjc": .redundantObjc,
     "redundantOptionalBinding": .redundantOptionalBinding,

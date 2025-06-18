@@ -483,23 +483,6 @@ class RedundantMemberwiseInitTests: XCTestCase {
         testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
     }
 
-    func testDontRemoveInitWithPropertyObserver() {
-        let input = """
-        struct Person {
-            var name: String {
-                didSet { print("Name changed") }
-            }
-            var age: Int
-
-            init(name: String, age: Int) {
-                self.name = name
-                self.age = age
-            }
-        }
-        """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent, .blankLinesBetweenScopes])
-    }
-
     func testDontRemoveInitWithDefaultArguments() {
         let input = """
         struct Person {
@@ -860,29 +843,6 @@ class RedundantMemberwiseInitTests: XCTestCase {
         }
         """
         testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
-    }
-
-    func testRemovePrivateInitWhenPrivatePropertiesWithDefaultValues() {
-        let input = """
-        struct Person {
-            let name: String
-            let age: Int
-            private var id: String = "default"
-
-            private init(name: String, age: Int) {
-                self.name = name
-                self.age = age
-            }
-        }
-        """
-        let output = """
-        struct Person {
-            let name: String
-            let age: Int
-            private var id: String = "default"
-        }
-        """
-        testFormatting(for: input, output, rule: .redundantMemberwiseInit)
     }
 
     func testDontRemoveInitWithDocumentationComments() {

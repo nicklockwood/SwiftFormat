@@ -8,76 +8,6 @@
 
 import Foundation
 
-/// Helper function to get the access level of a declaration
-private func getAccessLevel(for declaration: Declaration) -> String {
-    let modifiers = declaration.modifiers
-
-    // Check for explicit access modifiers
-    for modifier in ["open", "public", "package", "internal", "fileprivate", "private"] {
-        if modifiers.contains(modifier) {
-            return modifier
-        }
-    }
-
-    // Default to internal if no explicit access modifier
-    return "internal"
-}
-
-/// Helper function to check if a stored property has a default value
-private func hasDefaultValue(propertyName: String, in structDeclaration: TypeDeclaration, formatter: Formatter) -> Bool {
-    for childDeclaration in structDeclaration.body {
-        guard ["var", "let"].contains(childDeclaration.keyword),
-              let property = formatter.parsePropertyDeclaration(atIntroducerIndex: childDeclaration.keywordIndex),
-              property.identifier == propertyName
-        else { continue }
-
-        // Look for '=' token after the property declaration to indicate default value
-        let propertyEnd = childDeclaration.range.upperBound
-        var checkIndex = childDeclaration.keywordIndex + 1
-
-        while checkIndex <= propertyEnd {
-            if let token = formatter.token(at: checkIndex) {
-                if token == .operator("=", .infix) {
-                    return true // Found default value assignment
-                }
-            }
-            checkIndex += 1
-        }
-    }
-    return false
-}
-
-/// Helper function to check if a function argument has a default value
-private func checkForDefaultValue(arg: Formatter.FunctionArgument, in formatter: Formatter) -> Bool {
-    // Start searching after the internal label index
-    let searchIndex = arg.internalLabelIndex + 1
-
-    // Find the colon
-    guard let colonIndex = formatter.index(of: .delimiter(":"), after: searchIndex - 1) else {
-        return false
-    }
-
-    // Find the end of the type after the colon
-    guard let typeStartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: colonIndex) else {
-        return false
-    }
-
-    // Parse the type to find its end
-    guard let typeInfo = formatter.parseType(at: typeStartIndex) else {
-        return false
-    }
-    let typeEndIndex = typeInfo.range.upperBound
-
-    // Look for '=' token after the type
-    if let equalsIndex = formatter.index(of: .operator("=", .infix), after: typeEndIndex),
-       formatter.index(of: .nonSpaceOrCommentOrLinebreak, in: typeEndIndex + 1 ..< equalsIndex) == nil
-    {
-        return true
-    }
-
-    return false
-}
-
 public extension FormatRule {
     /// Remove redundant explicit memberwise initializers from structs
     static let redundantMemberwiseInit = FormatRule(
@@ -91,15 +21,15 @@ public extension FormatRule {
             guard case let .type(structDeclaration) = declaration.kind else { continue }
 
             // Get the struct's access level
-            let structAccessLevel = getAccessLevel(for: declaration)
+            let structAccessLevel = declaration.accessLevel()
 
             // Check if there are any private properties (which would make synthesized init private)
             var hasPrivateStoredProperties = false
             for childDeclaration in structDeclaration.body {
                 guard ["var", "let"].contains(childDeclaration.keyword) else { continue }
 
-                let propertyAccessLevel = getAccessLevel(for: childDeclaration)
-                if propertyAccessLevel == "private" || propertyAccessLevel == "fileprivate" {
+                let propertyAccessLevel = childDeclaration.accessLevel()
+                if propertyAccessLevel == .private || propertyAccessLevel == .fileprivate {
                     hasPrivateStoredProperties = true
                     break
                 }
@@ -112,30 +42,8 @@ public extension FormatRule {
                 guard ["var", "let"].contains(childDeclaration.keyword),
                       let property = formatter.parsePropertyDeclaration(atIntroducerIndex: childDeclaration.keywordIndex),
                       let typeInfo = property.type,
-                      property.body == nil, // Only stored properties (no computed properties or observers)
-                      !formatter.modifiersForDeclaration(at: childDeclaration.keywordIndex, contains: { _, modifier in
-                          ["static"].contains(modifier) // Only exclude static properties
-                      })
+                      childDeclaration.isStoredInstanceProperty
                 else { continue }
-
-                // Additional check: ensure no property observers (didSet, willSet)
-                let propertyEnd = childDeclaration.range.upperBound
-                var checkIndex = childDeclaration.keywordIndex + 1
-                var hasObservers = false
-                while checkIndex <= propertyEnd {
-                    if let token = formatter.token(at: checkIndex) {
-                        if token == .identifier("didSet") || token == .identifier("willSet") {
-                            hasObservers = true
-                            break
-                        }
-                    }
-                    checkIndex += 1
-                }
-
-                if hasObservers {
-                    continue // Skip properties with observers
-                }
-
                 storedProperties.append((name: property.identifier, type: typeInfo.name))
             }
 
@@ -151,11 +59,11 @@ public extension FormatRule {
             // Find init declarations in the struct body
             for initDeclaration in structDeclaration.body where initDeclaration.keyword == "init" {
                 // Get the init's access level
-                let initAccessLevel = getAccessLevel(for: initDeclaration)
+                let initAccessLevel = initDeclaration.accessLevel()
 
                 // Don't remove if struct is public but init is internal
                 // (compiler won't generate public memberwise init)
-                if structAccessLevel == "public", initAccessLevel == "internal" {
+                if structAccessLevel == .public, initAccessLevel == .internal {
                     continue
                 }
 
@@ -163,7 +71,7 @@ public extension FormatRule {
                 if hasPrivateStoredProperties {
                     // If there are ANY private properties, the synthesized init will be private
                     // Don't remove the explicit init if it's more accessible than private
-                    if initAccessLevel != "private" {
+                    if initAccessLevel != .private {
                         continue
                     }
                     // If both the current init and synthesized init would be private,
@@ -171,7 +79,7 @@ public extension FormatRule {
                 } else {
                     // No private properties, so synthesized init would match struct access level
                     // Don't remove private inits if synthesized would be more accessible
-                    if initAccessLevel == "private" || initAccessLevel == "fileprivate" {
+                    if initAccessLevel == .private || initAccessLevel == .fileprivate {
                         continue
                     }
                 }
@@ -246,7 +154,7 @@ public extension FormatRule {
                     guard let name = arg.internalLabel else { return nil }
 
                     // Check for default value by looking for '=' after the type
-                    let hasDefaultValue = checkForDefaultValue(arg: arg, in: formatter)
+                    let hasDefaultValue = formatter.checkForDefaultValue(arg: arg)
 
                     return (name: name, type: arg.type, externalLabel: arg.externalLabel, hasDefaultValue: hasDefaultValue)
                 }
@@ -266,7 +174,7 @@ public extension FormatRule {
                 // Properties with default values are optional in memberwise init
                 let propertiesWithoutDefaults = storedProperties.filter { prop in
                     // Check if this stored property has a default value
-                    !hasDefaultValue(propertyName: prop.name, in: structDeclaration, formatter: formatter)
+                    !formatter.hasDefaultValue(propertyName: prop.name, in: structDeclaration)
                 }
 
                 guard parameters.count == propertiesWithoutDefaults.count,
@@ -364,5 +272,57 @@ public extension FormatRule {
         }
         ```
         """
+    }
+}
+
+private extension Declaration {
+    /// Helper function to get the access level of a declaration
+    func accessLevel() -> Visibility {
+        visibility() ?? .internal
+    }
+}
+
+private extension Formatter {
+    /// Helper function to check if a stored property has a default value
+    func hasDefaultValue(propertyName: String, in structDeclaration: TypeDeclaration) -> Bool {
+        for childDeclaration in structDeclaration.body {
+            guard ["var", "let"].contains(childDeclaration.keyword),
+                  let property = parsePropertyDeclaration(atIntroducerIndex: childDeclaration.keywordIndex),
+                  property.identifier == propertyName,
+                  property.value != nil
+            else { continue }
+        }
+        return false
+    }
+
+    /// Helper function to check if a function argument has a default value
+    func checkForDefaultValue(arg: Formatter.FunctionArgument) -> Bool {
+        // Start searching after the internal label index
+        let searchIndex = arg.internalLabelIndex + 1
+
+        // Find the colon
+        guard let colonIndex = index(of: .delimiter(":"), after: searchIndex - 1) else {
+            return false
+        }
+
+        // Find the end of the type after the colon
+        guard let typeStartIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: colonIndex) else {
+            return false
+        }
+
+        // Parse the type to find its end
+        guard let typeInfo = parseType(at: typeStartIndex) else {
+            return false
+        }
+        let typeEndIndex = typeInfo.range.upperBound
+
+        // Look for '=' token after the type
+        if let equalsIndex = index(of: .operator("=", .infix), after: typeEndIndex),
+           index(of: .nonSpaceOrCommentOrLinebreak, in: typeEndIndex + 1 ..< equalsIndex) == nil
+        {
+            return true
+        }
+
+        return false
     }
 }

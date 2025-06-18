@@ -275,14 +275,14 @@ public extension FormatRule {
     }
 }
 
-private extension Declaration {
+extension Declaration {
     /// Helper function to get the access level of a declaration
     func accessLevel() -> Visibility {
         visibility() ?? .internal
     }
 }
 
-private extension Formatter {
+extension Formatter {
     /// Helper function to check if a stored property has a default value
     func hasDefaultValue(propertyName: String, in structDeclaration: TypeDeclaration) -> Bool {
         for childDeclaration in structDeclaration.body {

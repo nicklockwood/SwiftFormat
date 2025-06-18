@@ -370,7 +370,10 @@ extension _FormatRules {
     private func validatedRuleNames() throws -> [String] {
         try allRuleFiles.map { ruleFile in
             let titleCaseRuleName = ruleFile.lastPathComponent.replacingOccurrences(of: ".swift", with: "")
-            let camelCaseRuleName = titleCaseRuleName.first!.lowercased() + titleCaseRuleName.dropFirst()
+            var camelCaseRuleName = titleCaseRuleName.first!.lowercased() + titleCaseRuleName.dropFirst()
+            if titleCaseRuleName == "URLMacro" {
+                camelCaseRuleName = "urlMacro"
+            }
             try validateRuleImplementation(for: camelCaseRuleName, in: ruleFile)
             return camelCaseRuleName
         }

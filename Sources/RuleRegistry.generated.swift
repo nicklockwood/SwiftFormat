@@ -120,6 +120,7 @@ let ruleRegistry: [String: FormatRule] = [
     "typeSugar": .typeSugar,
     "unusedArguments": .unusedArguments,
     "unusedPrivateDeclarations": .unusedPrivateDeclarations,
+    "urlMacro": .urlMacro,
     "void": .void,
     "wrap": .wrap,
     "wrapArguments": .wrapArguments,

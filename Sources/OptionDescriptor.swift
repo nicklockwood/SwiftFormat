@@ -1266,6 +1266,12 @@ struct _Descriptors {
         help: "For example: \"@Equatable,EquatableMacroLib\"",
         keyPath: \.equatableMacro
     )
+    let urlMacro = OptionDescriptor(
+        argumentName: "urlmacro",
+        displayName: "The name and module of a URL macro",
+        help: "For example: \"#URL,URLFoundation\"",
+        keyPath: \.urlMacro
+    )
     let preferFileMacro = OptionDescriptor(
         argumentName: "filemacro",
         displayName: "Preferred File Macro",

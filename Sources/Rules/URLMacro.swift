@@ -11,7 +11,7 @@ import Foundation
 public extension FormatRule {
     /// Convert force-unwrapped URL initializers to use the #URL(...) macro
     static let urlMacro = FormatRule(
-        help: "Replace force-unwrapped URL(string:) initializers with the configured URL macro (only for static string literals).",
+        help: "Replace force-unwrapped `URL(string:)` initializers with the configured `#URL(_:)` macro",
         disabledByDefault: true,
         options: ["urlmacro"]
     ) { formatter in
@@ -93,17 +93,6 @@ public extension FormatRule {
         - return URL(string: "https://api.example.com/users")!
         + import URLFoundation
         + return #URL("https://api.example.com/users")
-        ```
-
-        **Note:** The `#URL` macro requires a static string literal and cannot be used with string interpolation or variables:
-
-        ```swift
-        // ✅ This will be converted
-        let url = URL(string: "https://example.com")!
-
-        // ❌ This will NOT be converted (and shouldn't be)
-        let url = URL(string: "https://\\(domain)/path")!
-        let url = URL(string: baseURL + "/endpoint")!
         ```
         """
     }

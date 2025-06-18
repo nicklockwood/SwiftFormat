@@ -9,47 +9,72 @@
 import Foundation
 
 /// Helper function to get the access level of a declaration
-private func getAccessLevel(for declaration: Declaration, in formatter: Formatter) -> String {
+private func getAccessLevel(for declaration: Declaration, in _: Formatter) -> String {
     let modifiers = declaration.modifiers
-    
+
     // Check for explicit access modifiers
     for modifier in ["open", "public", "package", "internal", "fileprivate", "private"] {
         if modifiers.contains(modifier) {
             return modifier
         }
     }
-    
+
     // Default to internal if no explicit access modifier
     return "internal"
+}
+
+/// Helper function to check if a stored property has a default value
+private func hasDefaultValue(propertyName: String, in structDeclaration: TypeDeclaration, formatter: Formatter) -> Bool {
+    for childDeclaration in structDeclaration.body {
+        guard ["var", "let"].contains(childDeclaration.keyword),
+              let property = formatter.parsePropertyDeclaration(atIntroducerIndex: childDeclaration.keywordIndex),
+              property.identifier == propertyName
+        else { continue }
+
+        // Look for '=' token after the property declaration to indicate default value
+        let propertyEnd = childDeclaration.range.upperBound
+        var checkIndex = childDeclaration.keywordIndex + 1
+
+        while checkIndex <= propertyEnd {
+            if let token = formatter.token(at: checkIndex) {
+                if token == .operator("=", .infix) {
+                    return true // Found default value assignment
+                }
+            }
+            checkIndex += 1
+        }
+    }
+    return false
 }
 
 /// Helper function to check if a function argument has a default value
 private func checkForDefaultValue(arg: Formatter.FunctionArgument, in formatter: Formatter) -> Bool {
     // Start searching after the internal label index
     let searchIndex = arg.internalLabelIndex + 1
-    
+
     // Find the colon
     guard let colonIndex = formatter.index(of: .delimiter(":"), after: searchIndex - 1) else {
         return false
     }
-    
+
     // Find the end of the type after the colon
     guard let typeStartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: colonIndex) else {
-        return false  
+        return false
     }
-    
+
     // Parse the type to find its end
     guard let typeInfo = formatter.parseType(at: typeStartIndex) else {
         return false
     }
     let typeEndIndex = typeInfo.range.upperBound
-    
+
     // Look for '=' token after the type
     if let equalsIndex = formatter.index(of: .operator("=", .infix), after: typeEndIndex),
-       formatter.index(of: .nonSpaceOrCommentOrLinebreak, in: typeEndIndex + 1 ..< equalsIndex) == nil {
+       formatter.index(of: .nonSpaceOrCommentOrLinebreak, in: typeEndIndex + 1 ..< equalsIndex) == nil
+    {
         return true
     }
-    
+
     return false
 }
 
@@ -61,17 +86,28 @@ public extension FormatRule {
     ) { formatter in
         // Parse all struct declarations
         let allDeclarations = formatter.parseDeclarations()
-        
+
         for declaration in allDeclarations where declaration.keyword == "struct" {
             guard case let .type(structDeclaration) = declaration.kind else { continue }
-            
+
             // Get the struct's access level
             let structAccessLevel = getAccessLevel(for: declaration, in: formatter)
-            
-            // Collect stored properties from the struct body and check access levels
-            var storedProperties = [(name: String, type: String)]()
+
+            // Check if there are any private properties (which would make synthesized init private)
             var hasPrivateStoredProperties = false
-            
+            for childDeclaration in structDeclaration.body {
+                guard ["var", "let"].contains(childDeclaration.keyword) else { continue }
+
+                let propertyAccessLevel = getAccessLevel(for: childDeclaration, in: formatter)
+                if propertyAccessLevel == "private" || propertyAccessLevel == "fileprivate" {
+                    hasPrivateStoredProperties = true
+                    break
+                }
+            }
+
+            // Collect stored properties from the struct body
+            var storedProperties = [(name: String, type: String)]()
+
             for childDeclaration in structDeclaration.body {
                 guard ["var", "let"].contains(childDeclaration.keyword),
                       let property = formatter.parsePropertyDeclaration(atIntroducerIndex: childDeclaration.keywordIndex),
@@ -81,7 +117,7 @@ public extension FormatRule {
                           ["static"].contains(modifier) // Only exclude static properties
                       })
                 else { continue }
-                
+
                 // Additional check: ensure no property observers (didSet, willSet)
                 let propertyEnd = childDeclaration.range.upperBound
                 var checkIndex = childDeclaration.keywordIndex + 1
@@ -95,48 +131,42 @@ public extension FormatRule {
                     }
                     checkIndex += 1
                 }
-                
+
                 if hasObservers {
                     continue // Skip properties with observers
                 }
-                
-                // Check if this property is private or fileprivate
-                let propertyAccessLevel = getAccessLevel(for: childDeclaration, in: formatter)
-                if propertyAccessLevel == "private" || propertyAccessLevel == "fileprivate" {
-                    hasPrivateStoredProperties = true
-                }
-                
+
                 storedProperties.append((name: property.identifier, type: typeInfo.name))
             }
-            
+
             guard !storedProperties.isEmpty else { continue }
-            
+
             // Find all init declarations in the struct body
             let allInitDeclarations = structDeclaration.body.filter { $0.keyword == "init" }
-            
+
             // If there are multiple inits, don't remove any memberwise init
             // as the compiler won't synthesize it
             guard allInitDeclarations.count == 1 else { continue }
-            
+
             // Find init declarations in the struct body
             for initDeclaration in structDeclaration.body where initDeclaration.keyword == "init" {
                 // Get the init's access level
                 let initAccessLevel = getAccessLevel(for: initDeclaration, in: formatter)
-                
+
                 // Don't remove if struct is public but init is internal
                 // (compiler won't generate public memberwise init)
-                if structAccessLevel == "public" && initAccessLevel == "internal" {
+                if structAccessLevel == "public", initAccessLevel == "internal" {
                     continue
                 }
-                
+
                 // Handle private property access level implications
                 if hasPrivateStoredProperties {
-                    // If the init is internal or public but private properties would make 
-                    // the synthesized init private, don't remove
-                    if initAccessLevel == "internal" || initAccessLevel == "public" {
+                    // If there are ANY private properties, the synthesized init will be private
+                    // Don't remove the explicit init if it's more accessible than private
+                    if initAccessLevel != "private" {
                         continue
                     }
-                    // If both the current init and synthesized init would be private, 
+                    // If both the current init and synthesized init would be private,
                     // it's safe to remove (no access level change)
                 } else {
                     // No private properties, so synthesized init would match struct access level
@@ -145,25 +175,85 @@ public extension FormatRule {
                         continue
                     }
                 }
-                
+
+                // Check if the init has documentation comments
+                var hasDocumentation = false
+
+                // Start from the init keyword and look backwards
+                let initKeywordIndex = initDeclaration.keywordIndex
+                var checkIndex = initKeywordIndex - 1
+
+                // Look backwards from the init keyword to find documentation comments
+                while checkIndex >= 0 {
+                    let token = formatter.tokens[checkIndex]
+
+                    if token.isComment {
+                        let commentText = token.string
+
+                        // Check if it's documentation comment (/// or /** */)
+                        if commentText.hasPrefix("///") || commentText.hasPrefix("/**") {
+                            hasDocumentation = true
+                            break
+                        }
+
+                        // Also check for the case where SwiftFormat splits /// into separate tokens
+                        // Look for // followed by / (indicating the third slash for ///)
+                        if commentText == "//", checkIndex + 1 < formatter.tokens.count {
+                            let nextToken = formatter.tokens[checkIndex + 1]
+                            // Must be exactly "/" (the third slash) followed by content, not just any / content
+                            // For ///, SwiftFormat splits it as "//" + "/ content"
+                            if nextToken.isComment, nextToken.string.hasPrefix("/ ") {
+                                // This is /// split as // + / content (note the space after /)
+                                hasDocumentation = true
+                                break
+                            }
+                        }
+
+                        // Also check for block comments that start with /**
+                        if commentText.contains("/**") {
+                            hasDocumentation = true
+                            break
+                        }
+
+                        // Check for split block comment pattern: /* followed by *
+                        if commentText == "/*", checkIndex + 1 < formatter.tokens.count {
+                            let nextToken = formatter.tokens[checkIndex + 1]
+                            if nextToken.isComment, nextToken.string == "*" {
+                                hasDocumentation = true
+                                break
+                            }
+                        }
+                    } else if !token.isSpaceOrLinebreak {
+                        // Hit non-whitespace, non-comment token, stop looking
+                        break
+                    }
+
+                    checkIndex -= 1
+                }
+
+                // Don't remove init if it has documentation
+                if hasDocumentation {
+                    continue
+                }
+
                 // Parse the init function using the parseFunctionDeclaration helper
                 guard let functionDecl = formatter.parseFunctionDeclaration(keywordIndex: initDeclaration.keywordIndex),
                       let bodyRange = functionDecl.bodyRange
                 else { continue }
-                
+
                 // Check if parameters match stored properties exactly
                 let parameters = functionDecl.arguments.compactMap { arg -> (name: String, type: String, externalLabel: String?, hasDefaultValue: Bool)? in
                     guard let name = arg.internalLabel else { return nil }
-                    
+
                     // Check for default value by looking for '=' after the type
                     let hasDefaultValue = checkForDefaultValue(arg: arg, in: formatter)
-                    
+
                     return (name: name, type: arg.type, externalLabel: arg.externalLabel, hasDefaultValue: hasDefaultValue)
                 }
-                
+
                 // Don't remove if any parameter has a default value
-                guard !parameters.contains(where: { $0.hasDefaultValue }) else { continue }
-                
+                guard !parameters.contains(where: \.hasDefaultValue) else { continue }
+
                 // Don't remove if any parameter has different external and internal labels
                 // This includes cases where external label is explicitly different or uses underscore
                 guard !parameters.contains(where: { param in
@@ -171,51 +261,58 @@ public extension FormatRule {
                     // If externalLabel exists and is different from internal name, it's also different
                     param.externalLabel == nil || (param.externalLabel != nil && param.externalLabel != param.name)
                 }) else { continue }
-                
-                guard parameters.count == storedProperties.count,
-                      zip(parameters, storedProperties).allSatisfy({ $0.name == $1.name && $0.type == $1.type })
+
+                // Only consider properties that don't have default values for memberwise init comparison
+                // Properties with default values are optional in memberwise init
+                let propertiesWithoutDefaults = storedProperties.filter { prop in
+                    // Check if this stored property has a default value
+                    !hasDefaultValue(propertyName: prop.name, in: structDeclaration, formatter: formatter)
+                }
+
+                guard parameters.count == propertiesWithoutDefaults.count,
+                      zip(parameters, propertiesWithoutDefaults).allSatisfy({ $0.name == $1.name && $0.type == $1.type })
                 else { continue }
-                
+
                 // Check if body only contains memberwise assignments
                 let bodyStart = bodyRange.lowerBound + 1
                 let bodyEnd = bodyRange.upperBound
                 var isRedundant = true
                 var bodyIndex = bodyStart
                 var assignmentCount = 0
-                
+
                 // Check for any comments in the body first - if present, don't remove
-                for tokenIndex in bodyStart..<bodyEnd {
+                for tokenIndex in bodyStart ..< bodyEnd {
                     let token = formatter.tokens[tokenIndex]
                     if token.isComment {
                         isRedundant = false
                         break
                     }
                 }
-                
+
                 if isRedundant {
                     while let nextToken = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: bodyIndex - 1),
-                          nextToken < bodyEnd {
-                        
+                          nextToken < bodyEnd
+                    {
                         let token = formatter.tokens[nextToken]
-                        
+
                         if token == .identifier("self") {
                             guard let dotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: nextToken, if: {
                                 $0.isOperator(".")
                             }),
-                            let propIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: dotIndex),
-                            let propToken = formatter.token(at: propIndex),
-                            propToken.isIdentifier,
-                            let equalsIndex = formatter.index(of: .operator("=", .infix), after: propIndex),
-                            let valueIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
-                            let valueToken = formatter.token(at: valueIndex),
-                            valueToken.isIdentifier,
-                            propToken.string == valueToken.string,
-                            storedProperties.contains(where: { $0.name == propToken.string })
+                                let propIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: dotIndex),
+                                let propToken = formatter.token(at: propIndex),
+                                propToken.isIdentifier,
+                                let equalsIndex = formatter.index(of: .operator("=", .infix), after: propIndex),
+                                let valueIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
+                                let valueToken = formatter.token(at: valueIndex),
+                                valueToken.isIdentifier,
+                                propToken.string == valueToken.string,
+                                propertiesWithoutDefaults.contains(where: { $0.name == propToken.string })
                             else {
                                 isRedundant = false
                                 break
                             }
-                            
+
                             assignmentCount += 1
                             bodyIndex = valueIndex + 1
                         } else {
@@ -224,17 +321,17 @@ public extension FormatRule {
                         }
                     }
                 }
-                
-                // Remove redundant init if all assignments match
-                if isRedundant && assignmentCount == storedProperties.count {
+
+                // Remove redundant init if all assignments match (only for properties without defaults)
+                if isRedundant, assignmentCount == propertiesWithoutDefaults.count {
                     // Use the declaration's range which includes leading comments
                     let startRemovalIndex = initDeclaration.range.lowerBound
                     let endRemovalIndex = bodyRange.upperBound
-                    
+
                     // Find the range including preceding and trailing whitespace
                     var actualStartIndex = startRemovalIndex
                     var actualEndIndex = endRemovalIndex
-                    
+
                     // Include preceding spaces and blank line
                     while let prevToken = formatter.token(at: actualStartIndex - 1), prevToken.isSpace {
                         actualStartIndex -= 1
@@ -242,13 +339,13 @@ public extension FormatRule {
                     if let prevToken = formatter.token(at: actualStartIndex - 1), prevToken.isLinebreak {
                         actualStartIndex -= 1
                     }
-                    
+
                     // Include trailing newlines and any orphaned indentation
                     while let next = formatter.token(at: actualEndIndex + 1), next.isSpaceOrLinebreak {
                         actualEndIndex += 1
                     }
-                    
-                    formatter.removeTokens(in: actualStartIndex...actualEndIndex)
+
+                    formatter.removeTokens(in: actualStartIndex ... actualEndIndex)
                     return
                 }
             }

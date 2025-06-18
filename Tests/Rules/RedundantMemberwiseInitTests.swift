@@ -373,7 +373,7 @@ class RedundantMemberwiseInitTests: XCTestCase {
                 self.age = age
                 self.validate()
             }
-            
+
             func validate() {}
         }
         """
@@ -391,7 +391,7 @@ class RedundantMemberwiseInitTests: XCTestCase {
                 self.name = name
                 self.age = age
             }
-            
+
             func setupDefaults() {}
         }
         """
@@ -799,5 +799,147 @@ class RedundantMemberwiseInitTests: XCTestCase {
         }
         """
         testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+    }
+
+    func testDontRemoveInitWhenPrivatePropertiesWithDefaultValues() {
+        let input = """
+        struct PayoutView {
+            let dataModel: String
+            private var style = DefaultStyle()
+
+            init(dataModel: String) {
+                self.dataModel = dataModel
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent, .propertyTypes])
+    }
+
+    func testDontRemoveInitWhenPrivatePropertiesHaveNoDefaultValues() {
+        let input = """
+        struct PayoutView {
+            let dataModel: String
+            private var shadowedStyle: ShadowedStyle
+
+            init(dataModel: String, shadowedStyle: ShadowedStyle) {
+                self.dataModel = dataModel
+                self.shadowedStyle = shadowedStyle
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+    }
+
+    func testDontRemoveInitWhenAllPropertiesInitialized() {
+        let input = """
+        struct Person {
+            let name: String
+            let age: Int
+            private var id: String = "default"
+
+            init(name: String, age: Int) {
+                self.name = name
+                self.age = age
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+    }
+
+    func testDontRemoveInitWhenPrivatePropertiesWithDefaultsMakesSynthesizedInitPrivate() {
+        let input = """
+        struct Person {
+            let name: String
+            let age: Int
+            private var id: String = "default"
+
+            init(name: String, age: Int) {
+                self.name = name
+                self.age = age
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+    }
+
+    func testRemovePrivateInitWhenPrivatePropertiesWithDefaultValues() {
+        let input = """
+        struct Person {
+            let name: String
+            let age: Int
+            private var id: String = "default"
+
+            private init(name: String, age: Int) {
+                self.name = name
+                self.age = age
+            }
+        }
+        """
+        let output = """
+        struct Person {
+            let name: String
+            let age: Int
+            private var id: String = "default"
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit)
+    }
+
+    func testDontRemoveInitWithDocumentationComments() {
+        let input = """
+        struct Person {
+            var name: String
+            var age: Int
+
+            /// Creates a Person with the specified name and age
+            init(name: String, age: Int) {
+                self.name = name  
+                self.age = age
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+    }
+
+    func testDontRemoveInitWithMultiLineDocumentationComments() {
+        let input = """
+        struct Person {
+            var name: String
+            var age: Int
+
+            /**
+             * Creates a Person with the specified name and age.
+             * - Parameter name: The person's full name
+             * - Parameter age: The person's age in years
+             */
+            init(name: String, age: Int) {
+                self.name = name
+                self.age = age
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+    }
+
+    func testRemoveInitWithRegularComments() {
+        let input = """
+        struct Person {
+            var name: String
+            var age: Int
+
+            // This is just a regular comment
+            init(name: String, age: Int) {
+                self.name = name
+                self.age = age
+            }
+        }
+        """
+        let output = """
+        struct Person {
+            var name: String
+            var age: Int
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit)
     }
 }

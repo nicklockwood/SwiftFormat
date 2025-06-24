@@ -929,339 +929,305 @@ class RedundantMemberwiseInitTests: XCTestCase {
 
     func testRemoveRedundantMemberwiseInitWithComplexStruct() {
         let input = """
-        // MARK: - WalleStepContent
-
-        public struct WalleStepContent {
+        public struct Foo {
 
           // MARK: Lifecycle
 
           public init(
-            componentContents: [WalleComponentViewModel],
-            nextButtonContent: WalleActionButtonContent,
-            secondaryButtonContent: WalleActionButtonContent?,
-            exitButtonContent: WalleExitButtonContent,
-            loggingInfo: WalleStepLoggingInfo,
-            saveMode: WalleFlowSaveModeDataType,
-            hideDiscardWarning: Bool,
-            clearAnswersOnBackPress: Bool,
-            progress: CGFloat?
+            name: String,
+            value: Int,
+            isEnabled: Bool
           ) {
-            self.componentContents = componentContents
-            self.nextButtonContent = nextButtonContent
-            self.secondaryButtonContent = secondaryButtonContent
-            self.exitButtonContent = exitButtonContent
-            self.loggingInfo = loggingInfo
-            self.saveMode = saveMode
-            self.hideDiscardWarning = hideDiscardWarning
-            self.clearAnswersOnBackPress = clearAnswersOnBackPress
-            self.progress = progress
+            self.name = name
+            self.value = value
+            self.isEnabled = isEnabled
           }
 
           // MARK: Public
 
-          public let componentContents: [WalleComponentViewModel]
-          public let nextButtonContent: WalleActionButtonContent
-          public let secondaryButtonContent: WalleActionButtonContent?
-          public let exitButtonContent: WalleExitButtonContent
-          public let loggingInfo: WalleStepLoggingInfo
-          public let saveMode: WalleFlowSaveModeDataType
-          public let hideDiscardWarning: Bool
-          public let clearAnswersOnBackPress: Bool
-          public let progress: CGFloat?
+          public let name: String
+          public let value: Int
+          public let isEnabled: Bool
         }
 
-        // MARK: - WalleRadioButtonGroupContent
-
-        public struct WalleRadioButtonGroupContent: Equatable {
+        public struct Bar: Equatable {
 
           // MARK: Lifecycle
 
           public init(
             id: String,
-            title: String?,
-            subtitle: String?,
-            contents: [WalleComponentViewModel],
-            impressionContext: MagicalImpressionContext?
+            count: Int
           ) {
             self.id = id
-            self.title = title
-            self.subtitle = subtitle
-            self.contents = contents
-            self.impressionContext = impressionContext
+            self.count = count
           }
 
           // MARK: Public
 
           public let id: String
-          public let title: String?
-          public let subtitle: String?
-          public let contents: [WalleComponentViewModel]
-          public let impressionContext: MagicalImpressionContext?
-
-
+          public let count: Int
         }
 
-        // MARK: - WalleRadioButtonRowContent
+        // MARK: - Baz
 
-        public struct WalleRadioButtonRowContent: Equatable {
+        public struct Baz: Equatable {
 
           // MARK: Lifecycle
 
           public init(
-            id: String,
             title: String,
             subtitle: String?,
-            imageURL: URL?,
-            questionValue: String,
-            contents: [WalleComponentViewModel],
-            isSelected: Bool,
-            answerContext: FlowAnswerContext
+            data: [String]
           ) {
-            self.id = id
             self.title = title
             self.subtitle = subtitle
-            self.imageURL = imageURL
-            self.questionValue = questionValue
-            self.contents = contents
-            self.isSelected = isSelected
-            self.answerContext = answerContext
+            self.data = data
           }
 
           // MARK: Public
 
-          public let id: String
           public let title: String
           public let subtitle: String?
-          public let imageURL: URL?
-          public let questionValue: String
-          public let contents: [WalleComponentViewModel]
-          public let isSelected: Bool
-          public let answerContext: FlowAnswerContext
-
-
+          public let data: [String]
         }
 
-        // MARK: - WalleRadioToggleButtonGroupContent
+        // MARK: - Qux
 
-        public struct WalleRadioToggleButtonGroupContent: Equatable {
+        public struct Qux: Equatable {
 
           // MARK: Lifecycle
 
           public init(
-            id: String,
-            title: String?,
-            subtitle: String?,
-            contents: [WalleRadioToggleButtonContent],
-            impressionContext: MagicalImpressionContext?
+            key: String,
+            value: String?
           ) {
-            self.id = id
-            self.title = title
-            self.subtitle = subtitle
-            self.contents = contents
-            self.impressionContext = impressionContext
+            self.key = key
+            self.value = value
           }
 
           // MARK: Public
 
-          public let id: String
-          public let title: String?
-          public let subtitle: String?
-          public let contents: [WalleRadioToggleButtonContent]
-          public let impressionContext: MagicalImpressionContext?
-
-
+          public let key: String
+          public let value: String?
         }
 
-        // MARK: - WalleButtonRowContent
+        // MARK: - Widget
 
-        public struct WalleButtonRowContent: Equatable {
+        public struct Widget: Equatable {
 
           // MARK: Lifecycle
 
           public init(
-            id: String,
-            title: String,
-            mobileAction: WalleFlowMobileAction,
-            styles: [String]?,
-            loggingContext: MagicalActionContext?
+            name: String,
+            color: String,
+            size: Int
           ) {
-            self.id = id
-            self.title = title
-            self.mobileAction = mobileAction
-            self.styles = styles
-            self.loggingContext = loggingContext
+            self.name = name
+            self.color = color
+            self.size = size
           }
 
           // MARK: Public
 
-          public let id: String
-          public let title: String
-          public let mobileAction: WalleFlowMobileAction
-          public let styles: [String]?
-          public let loggingContext: MagicalActionContext?
-
-
+          public let name: String
+          public let color: String
+          public let size: Int
         }
 
-        // MARK: - WalleLinkRowContent
+        // MARK: - Item
 
-        public struct WalleLinkRowContent: Equatable {
+        public struct Item: Equatable {
 
           // MARK: Lifecycle
 
           public init(
-            id: String,
-            title: String,
-            mobileAction: WalleFlowMobileAction,
-            styles: [String]?,
-            loggingContext: MagicalActionContext?
+            identifier: String,
+            label: String
           ) {
-            self.id = id
-            self.title = title
-            self.mobileAction = mobileAction
-            self.styles = styles
-            self.loggingContext = loggingContext
+            self.identifier = identifier
+            self.label = label
           }
 
           // MARK: Public
 
-          public let id: String
-          public let title: String
-          public let mobileAction: WalleFlowMobileAction
-          public let styles: [String]?
-          public let loggingContext: MagicalActionContext?
-
-
+          public let identifier: String
+          public let label: String
         }
 
-        // MARK: - WalleProfileHeaderRowContent
+        // MARK: - Component
 
-        public struct WalleProfileHeaderRowContent: Equatable {
-          public init(id: String, title: String, captions: [String]?, imageURL: URL?) {
-            self.id = id
-            self.title = title
-            self.captions = captions
-            self.imageURL = imageURL
+        public struct Component: Equatable {
+          public init(type: String, config: [String: Any]) {
+            self.type = type
+            self.config = config
           }
 
-
-          public let id: String
-          public let title: String
-          public let captions: [String]?
-          public let imageURL: URL?
+          public let type: String
+          public let config: [String: Any]
         }
 
-        // MARK: - WalleProfileActionRowContent
+        // MARK: - Element
 
-        public struct WalleProfileActionRowContent: Equatable {
+        public struct Element: Equatable {
 
           // MARK: Lifecycle
 
           public init(
-            id: String,
-            title: String,
-            subtitle: String,
-            action: String,
-            captions: [String]?,
-            iconName: String?,
-            iconColor: String?,
-            imageURL: URL?,
-            mobileAction: WalleFlowMobileAction?
+            tag: String,
+            attributes: [String]?,
+            content: String
           ) {
-            self.id = id
-            self.title = title
-            self.subtitle = subtitle
-            self.action = action
-            self.captions = captions
-            self.iconName = iconName
-            self.iconColor = iconColor
-            self.imageURL = imageURL
-            self.mobileAction = mobileAction
+            self.tag = tag
+            self.attributes = attributes
+            self.content = content
           }
 
           // MARK: Public
 
-          public let id: String
-          public let title: String
-          public let subtitle: String
-          public let action: String
-          public let captions: [String]?
-          public let iconName: String?
-          public let iconColor: String?
-          public let imageURL: URL?
-          public let mobileAction: WalleFlowMobileAction?
-
-
+          public let tag: String
+          public let attributes: [String]?
+          public let content: String
         }
 
-        // MARK: - WalleRadioToggleButtonContent
+        // MARK: - Node
 
-        public struct WalleRadioToggleButtonContent: Equatable {
+        public struct Node: Equatable {
 
           // MARK: Lifecycle
 
-          public init(id: String, title: String, questionValue: String, answerContext: FlowAnswerContext, isSelected: Bool) {
+          public init(id: String, parent: String?, children: [String]) {
             self.id = id
-            self.title = title
-            self.questionValue = questionValue
-            self.answerContext = answerContext
-            self.isSelected = isSelected
+            self.parent = parent
+            self.children = children
           }
 
           // MARK: Public
 
           public let id: String
-          public let title: String
-          public let questionValue: String
-          public let answerContext: FlowAnswerContext
-          public let isSelected: Bool
-
-
+          public let parent: String?
+          public let children: [String]
         }
 
-        // MARK: - WalleCheckBoxRowContent
+        // MARK: - Record
 
-        public struct WalleCheckBoxRowContent: Equatable {
+        public struct Record: Equatable {
 
           // MARK: Lifecycle
 
           public init(
-            id: String,
-            title: String,
-            subtitle: String?,
-            imageURL: URL?,
-            contents: [WalleComponentViewModel],
-            isSelected: Bool,
-            answerContext: FlowAnswerContext,
-            groupId: String?,
-            subGroupId: String?
+            timestamp: Double,
+            message: String
           ) {
-            self.id = id
-            self.title = title
-            self.subtitle = subtitle
-            self.imageURL = imageURL
-            self.contents = contents
-            self.isSelected = isSelected
-            self.answerContext = answerContext
-            self.groupId = groupId
-            self.subGroupId = subGroupId
+            self.timestamp = timestamp
+            self.message = message
           }
 
           // MARK: Public
 
-          public let id: String
-          public let title: String
-          public let subtitle: String?
-          public let imageURL: URL?
-          public let contents: [WalleComponentViewModel]
-          public let isSelected: Bool
-          public let answerContext: FlowAnswerContext
-          public let groupId: String?
-          public let subGroupId: String?
+          public let timestamp: Double
+          public let message: String
         }
-
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [])
+        let output = """
+        public struct Foo {
+
+          // MARK: Public
+
+          public let name: String
+          public let value: Int
+          public let isEnabled: Bool
+        }
+
+        public struct Bar: Equatable {
+
+          // MARK: Public
+
+          public let id: String
+          public let count: Int
+        }
+
+        // MARK: - Baz
+
+        public struct Baz: Equatable {
+
+          // MARK: Public
+
+          public let title: String
+          public let subtitle: String?
+          public let data: [String]
+        }
+
+        // MARK: - Qux
+
+        public struct Qux: Equatable {
+
+          // MARK: Public
+
+          public let key: String
+          public let value: String?
+        }
+
+        // MARK: - Widget
+
+        public struct Widget: Equatable {
+
+          // MARK: Public
+
+          public let name: String
+          public let color: String
+          public let size: Int
+        }
+
+        // MARK: - Item
+
+        public struct Item: Equatable {
+
+          // MARK: Public
+
+          public let identifier: String
+          public let label: String
+        }
+
+        // MARK: - Component
+
+        public struct Component: Equatable {
+          public let type: String
+          public let config: [String: Any]
+        }
+
+        // MARK: - Element
+
+        public struct Element: Equatable {
+
+          // MARK: Public
+
+          public let tag: String
+          public let attributes: [String]?
+          public let content: String
+        }
+
+        // MARK: - Node
+
+        public struct Node: Equatable {
+
+          // MARK: Public
+
+          public let id: String
+          public let parent: String?
+          public let children: [String]
+        }
+
+        // MARK: - Record
+
+        public struct Record: Equatable {
+
+          // MARK: Public
+
+          public let timestamp: Double
+          public let message: String
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit, exclude: [.indent, .acronyms, .blankLinesAtStartOfScope])
     }
 
     func testRemoveRedundantMemberwiseInitWithLargeStruct() {

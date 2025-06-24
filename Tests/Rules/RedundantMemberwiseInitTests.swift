@@ -569,20 +569,6 @@ class RedundantMemberwiseInitTests: XCTestCase {
         testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
     }
 
-    func testDontRemovePublicInitFromPublicStruct2() {
-        let input = """
-        public struct Person {
-            var name: String
-            var age: Int
-
-            public init(name: String, age: Int) {
-                self.name = name
-                self.age = age
-            }
-        }
-        """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
-    }
 
     func testDontRemoveInitWhenMultipleInitsExist() {
         let input = """
@@ -953,6 +939,30 @@ class RedundantMemberwiseInitTests: XCTestCase {
         testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.indent, .acronyms, .blankLinesAtStartOfScope, .redundantSelf, .trailingSpace])
     }
 
+    func testRemoveRedundantMemberwiseInitWithProperFormattingOfFirstProperty() {
+        let input = """
+        struct CardViewAnimationState {
+            init(
+            style: CardStyle,
+            backgroundColor: UIColor?
+            ) {
+            self.style = style
+            self.backgroundColor = backgroundColor
+            }
+
+            let style: CardStyle
+            let backgroundColor: UIColor?
+        }
+        """
+        let output = """
+        struct CardViewAnimationState {
+            let style: CardStyle
+            let backgroundColor: UIColor?
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit)
+    }
+
     func testRemoveRedundantMemberwiseInitFromInternalStructs() {
         let input = """
         struct Foo {
@@ -984,5 +994,120 @@ class RedundantMemberwiseInitTests: XCTestCase {
         }
         """
         testFormatting(for: input, output, rule: .redundantMemberwiseInit)
+    }
+
+    func testRemoveRedundantMemberwiseInitWithComplexStruct() {
+        let input = """
+        struct Foo {
+
+          // MARK: Lifecycle
+
+          init(
+            name: String,
+            value: Int,
+            isEnabled: Bool
+          ) {
+            self.name = name
+            self.value = value
+            self.isEnabled = isEnabled
+          }
+
+          // MARK: Public
+
+          let name: String
+          let value: Int
+          let isEnabled: Bool
+        }
+
+        struct Bar: Equatable {
+
+          // MARK: Lifecycle
+
+          init(
+            id: String,
+            count: Int
+          ) {
+            self.id = id
+            self.count = count
+          }
+
+          // MARK: Public
+
+          let id: String
+          let count: Int
+        }
+
+        // MARK: - Baz
+
+        struct Baz: Equatable {
+
+          // MARK: Lifecycle
+
+          init(
+            title: String,
+            subtitle: String?,
+            data: [String]
+          ) {
+            self.title = title
+            self.subtitle = subtitle
+            self.data = data
+          }
+
+          // MARK: Public
+
+          let title: String
+          let subtitle: String?
+          let data: [String]
+        }
+
+        // MARK: - Component
+
+        struct Component: Equatable {
+          init(type: String, config: [String: Any]) {
+            self.type = type
+            self.config = config
+          }
+
+          let type: String
+          let config: [String: Any]
+        }
+        """
+        let output = """
+        struct Foo {
+
+          // MARK: Public
+
+          let name: String
+          let value: Int
+          let isEnabled: Bool
+        }
+
+        struct Bar: Equatable {
+
+          // MARK: Public
+
+          let id: String
+          let count: Int
+        }
+
+        // MARK: - Baz
+
+        struct Baz: Equatable {
+
+          // MARK: Public
+
+          let title: String
+          let subtitle: String?
+          let data: [String]
+        }
+
+        // MARK: - Component
+
+        struct Component: Equatable {
+          let type: String
+          let config: [String: Any]
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit, exclude: [.indent, .acronyms, .blankLinesAtStartOfScope])
     }
 }

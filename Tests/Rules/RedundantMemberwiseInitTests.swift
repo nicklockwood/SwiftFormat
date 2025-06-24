@@ -902,4 +902,386 @@ class RedundantMemberwiseInitTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .redundantMemberwiseInit)
     }
+
+    func testRemoveRedundantMemberwiseInitWithComplexStruct() {
+        let input = """
+        // MARK: - WalleStepContent
+
+        public struct WalleStepContent {
+
+          // MARK: Lifecycle
+
+          public init(
+            componentContents: [WalleComponentViewModel],
+            nextButtonContent: WalleActionButtonContent,
+            secondaryButtonContent: WalleActionButtonContent?,
+            exitButtonContent: WalleExitButtonContent,
+            loggingInfo: WalleStepLoggingInfo,
+            saveMode: WalleFlowSaveModeDataType,
+            hideDiscardWarning: Bool,
+            clearAnswersOnBackPress: Bool,
+            progress: CGFloat?
+          ) {
+            self.componentContents = componentContents
+            self.nextButtonContent = nextButtonContent
+            self.secondaryButtonContent = secondaryButtonContent
+            self.exitButtonContent = exitButtonContent
+            self.loggingInfo = loggingInfo
+            self.saveMode = saveMode
+            self.hideDiscardWarning = hideDiscardWarning
+            self.clearAnswersOnBackPress = clearAnswersOnBackPress
+            self.progress = progress
+          }
+
+          // MARK: Public
+
+          public let componentContents: [WalleComponentViewModel]
+          public let nextButtonContent: WalleActionButtonContent
+          public let secondaryButtonContent: WalleActionButtonContent?
+          public let exitButtonContent: WalleExitButtonContent
+          public let loggingInfo: WalleStepLoggingInfo
+          public let saveMode: WalleFlowSaveModeDataType
+          public let hideDiscardWarning: Bool
+          public let clearAnswersOnBackPress: Bool
+          public let progress: CGFloat?
+        }
+
+        // MARK: - WalleRadioButtonGroupContent
+
+        public struct WalleRadioButtonGroupContent: Equatable {
+
+          // MARK: Lifecycle
+
+          public init(
+            id: String,
+            title: String?,
+            subtitle: String?,
+            contents: [WalleComponentViewModel],
+            impressionContext: MagicalImpressionContext?
+          ) {
+            self.id = id
+            self.title = title
+            self.subtitle = subtitle
+            self.contents = contents
+            self.impressionContext = impressionContext
+          }
+
+          // MARK: Public
+
+          public let id: String
+          public let title: String?
+          public let subtitle: String?
+          public let contents: [WalleComponentViewModel]
+          public let impressionContext: MagicalImpressionContext?
+
+          public static func ==(lhs: WalleRadioButtonGroupContent, rhs: WalleRadioButtonGroupContent) -> Bool {
+            lhs.title == rhs.title &&
+              lhs.subtitle == rhs.subtitle
+          }
+
+        }
+
+        // MARK: - WalleRadioButtonRowContent
+
+        public struct WalleRadioButtonRowContent: Equatable {
+
+          // MARK: Lifecycle
+
+          public init(
+            id: String,
+            title: String,
+            subtitle: String?,
+            imageURL: URL?,
+            questionValue: String,
+            contents: [WalleComponentViewModel],
+            isSelected: Bool,
+            answerContext: FlowAnswerContext
+          ) {
+            self.id = id
+            self.title = title
+            self.subtitle = subtitle
+            self.imageURL = imageURL
+            self.questionValue = questionValue
+            self.contents = contents
+            self.isSelected = isSelected
+            self.answerContext = answerContext
+          }
+
+          // MARK: Public
+
+          public let id: String
+          public let title: String
+          public let subtitle: String?
+          public let imageURL: URL?
+          public let questionValue: String
+          public let contents: [WalleComponentViewModel]
+          public let isSelected: Bool
+          public let answerContext: FlowAnswerContext
+
+          public static func ==(lhs: WalleRadioButtonRowContent, rhs: WalleRadioButtonRowContent) -> Bool {
+            lhs.title == rhs.title &&
+              lhs.subtitle == rhs.subtitle &&
+              lhs.imageURL == rhs.imageURL &&
+              lhs.questionValue == rhs.questionValue &&
+              lhs.isSelected == rhs.isSelected &&
+              lhs.answerContext == rhs.answerContext
+          }
+
+        }
+
+        // MARK: - WalleRadioToggleButtonGroupContent
+
+        public struct WalleRadioToggleButtonGroupContent: Equatable {
+
+          // MARK: Lifecycle
+
+          public init(
+            id: String,
+            title: String?,
+            subtitle: String?,
+            contents: [WalleRadioToggleButtonContent],
+            impressionContext: MagicalImpressionContext?
+          ) {
+            self.id = id
+            self.title = title
+            self.subtitle = subtitle
+            self.contents = contents
+            self.impressionContext = impressionContext
+          }
+
+          // MARK: Public
+
+          public let id: String
+          public let title: String?
+          public let subtitle: String?
+          public let contents: [WalleRadioToggleButtonContent]
+          public let impressionContext: MagicalImpressionContext?
+
+          public static func ==(lhs: WalleRadioToggleButtonGroupContent, rhs: WalleRadioToggleButtonGroupContent) -> Bool {
+            lhs.title == rhs.title &&
+              lhs.subtitle == rhs.subtitle
+          }
+
+        }
+
+        // MARK: - WalleButtonRowContent
+
+        public struct WalleButtonRowContent: Equatable {
+
+          // MARK: Lifecycle
+
+          public init(
+            id: String,
+            title: String,
+            mobileAction: WalleFlowMobileAction,
+            styles: [String]?,
+            loggingContext: MagicalActionContext?
+          ) {
+            self.id = id
+            self.title = title
+            self.mobileAction = mobileAction
+            self.styles = styles
+            self.loggingContext = loggingContext
+          }
+
+          // MARK: Public
+
+          public let id: String
+          public let title: String
+          public let mobileAction: WalleFlowMobileAction
+          public let styles: [String]?
+          public let loggingContext: MagicalActionContext?
+
+          public static func ==(lhs: WalleButtonRowContent, rhs: WalleButtonRowContent) -> Bool {
+            lhs.title == rhs.title &&
+              lhs.mobileAction == rhs.mobileAction
+          }
+
+        }
+
+        // MARK: - WalleLinkRowContent
+
+        public struct WalleLinkRowContent: Equatable {
+
+          // MARK: Lifecycle
+
+          public init(
+            id: String,
+            title: String,
+            mobileAction: WalleFlowMobileAction,
+            styles: [String]?,
+            loggingContext: MagicalActionContext?
+          ) {
+            self.id = id
+            self.title = title
+            self.mobileAction = mobileAction
+            self.styles = styles
+            self.loggingContext = loggingContext
+          }
+
+          // MARK: Public
+
+          public let id: String
+          public let title: String
+          public let mobileAction: WalleFlowMobileAction
+          public let styles: [String]?
+          public let loggingContext: MagicalActionContext?
+
+          public static func ==(lhs: WalleLinkRowContent, rhs: WalleLinkRowContent) -> Bool {
+            lhs.title == rhs.title &&
+              lhs.mobileAction == rhs.mobileAction
+          }
+
+        }
+
+        // MARK: - WalleProfileHeaderRowContent
+
+        public struct WalleProfileHeaderRowContent: Equatable {
+          public init(id: String, title: String, captions: [String]?, imageURL: URL?) {
+            self.id = id
+            self.title = title
+            self.captions = captions
+            self.imageURL = imageURL
+          }
+
+          public static func ==(lhs: WalleProfileHeaderRowContent, rhs: WalleProfileHeaderRowContent) -> Bool {
+            lhs.title == rhs.title &&
+              lhs.captions == rhs.captions &&
+              lhs.imageURL == rhs.imageURL
+          }
+
+          public let id: String
+          public let title: String
+          public let captions: [String]?
+          public let imageURL: URL?
+        }
+
+        // MARK: - WalleProfileActionRowContent
+
+        public struct WalleProfileActionRowContent: Equatable {
+
+          // MARK: Lifecycle
+
+          public init(
+            id: String,
+            title: String,
+            subtitle: String,
+            action: String,
+            captions: [String]?,
+            iconName: String?,
+            iconColor: String?,
+            imageURL: URL?,
+            mobileAction: WalleFlowMobileAction?
+          ) {
+            self.id = id
+            self.title = title
+            self.subtitle = subtitle
+            self.action = action
+            self.captions = captions
+            self.iconName = iconName
+            self.iconColor = iconColor
+            self.imageURL = imageURL
+            self.mobileAction = mobileAction
+          }
+
+          // MARK: Public
+
+          public let id: String
+          public let title: String
+          public let subtitle: String
+          public let action: String
+          public let captions: [String]?
+          public let iconName: String?
+          public let iconColor: String?
+          public let imageURL: URL?
+          public let mobileAction: WalleFlowMobileAction?
+
+          public static func ==(lhs: WalleProfileActionRowContent, rhs: WalleProfileActionRowContent) -> Bool {
+            lhs.title == rhs.title &&
+              lhs.subtitle == rhs.subtitle &&
+              lhs.action == rhs.action &&
+              lhs.iconName == rhs.iconName &&
+              lhs.iconColor == rhs.iconColor &&
+              lhs.captions == rhs.captions &&
+              lhs.imageURL == rhs.imageURL &&
+              lhs.mobileAction == rhs.mobileAction
+          }
+
+        }
+
+        // MARK: - WalleRadioToggleButtonContent
+
+        public struct WalleRadioToggleButtonContent: Equatable {
+
+          // MARK: Lifecycle
+
+          public init(id: String, title: String, questionValue: String, answerContext: FlowAnswerContext, isSelected: Bool) {
+            self.id = id
+            self.title = title
+            self.questionValue = questionValue
+            self.answerContext = answerContext
+            self.isSelected = isSelected
+          }
+
+          // MARK: Public
+
+          public let id: String
+          public let title: String
+          public let questionValue: String
+          public let answerContext: FlowAnswerContext
+          public let isSelected: Bool
+
+          public static func ==(lhs: WalleRadioToggleButtonContent, rhs: WalleRadioToggleButtonContent) -> Bool {
+            lhs.title == rhs.title &&
+              lhs.questionValue == rhs.questionValue &&
+              lhs.isSelected == rhs.isSelected &&
+              lhs.answerContext == rhs.answerContext
+          }
+
+        }
+
+        // MARK: - WalleCheckBoxRowContent
+
+        public struct WalleCheckBoxRowContent: Equatable {
+
+          // MARK: Lifecycle
+
+          public init(
+            id: String,
+            title: String,
+            subtitle: String?,
+            imageURL: URL?,
+            contents: [WalleComponentViewModel],
+            isSelected: Bool,
+            answerContext: FlowAnswerContext,
+            groupId: String?,
+            subGroupId: String?
+          ) {
+            self.id = id
+            self.title = title
+            self.subtitle = subtitle
+            self.imageURL = imageURL
+            self.contents = contents
+            self.isSelected = isSelected
+            self.answerContext = answerContext
+            self.groupId = groupId
+            self.subGroupId = subGroupId
+          }
+
+          // MARK: Public
+
+          public let id: String
+          public let title: String
+          public let subtitle: String?
+          public let imageURL: URL?
+          public let contents: [WalleComponentViewModel]
+          public let isSelected: Bool
+          public let answerContext: FlowAnswerContext
+          public let groupId: String?
+          public let subGroupId: String?
+        }
+
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [])
+    }
 }

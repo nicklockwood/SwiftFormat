@@ -152,7 +152,7 @@ class RedundantMemberwiseInitTests: XCTestCase {
         testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
     }
 
-    func testRemovePublicInitFromPublicStructDuplicate() {
+    func testDontRemovePublicInitFromPublicStruct() {
         let input = """
         public struct Person {
             var name: String
@@ -164,13 +164,7 @@ class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        let output = """
-        public struct Person {
-            var name: String
-            var age: Int
-        }
-        """
-        testFormatting(for: input, output, rule: .redundantMemberwiseInit)
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
     }
 
     func testRemoveInitWithComputedProperties() {
@@ -575,7 +569,7 @@ class RedundantMemberwiseInitTests: XCTestCase {
         testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
     }
 
-    func testRemovePublicInitFromPublicStruct() {
+    func testDontRemovePublicInitFromPublicStruct2() {
         let input = """
         public struct Person {
             var name: String
@@ -587,13 +581,7 @@ class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        let output = """
-        public struct Person {
-            var name: String
-            var age: Int
-        }
-        """
-        testFormatting(for: input, output, rule: .redundantMemberwiseInit)
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
     }
 
     func testDontRemoveInitWhenMultipleInitsExist() {
@@ -898,6 +886,101 @@ class RedundantMemberwiseInitTests: XCTestCase {
         struct Person {
             var name: String
             var age: Int
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit)
+    }
+
+    func testDontRemoveRedundantPublicMemberwiseInitFromPublicStruct() {
+        let input = """
+        public struct CardViewAnimationState {
+            public init(
+            style: CardStyle,
+            backgroundColor: UIColor?
+            ) {
+            self.style = style
+            self.backgroundColor = backgroundColor
+            }
+
+            public let style: CardStyle
+            public let backgroundColor: UIColor?
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+    }
+
+    func testDontRemoveRedundantMemberwiseInitFromPublicStructs() {
+        let input = """
+        public struct Foo {
+
+          // MARK: Lifecycle
+
+          public init(
+            name: String,
+            value: Int,
+            isEnabled: Bool
+          ) {
+            self.name = name
+            self.value = value
+            self.isEnabled = isEnabled
+          }
+
+          // MARK: Public
+
+          public let name: String
+          public let value: Int
+          public let isEnabled: Bool
+        }
+
+        public struct Bar: Equatable {
+
+          // MARK: Lifecycle
+
+          public init(
+            id: String,
+            count: Int
+          ) {
+            self.id = id
+            self.count = count
+          }
+
+          // MARK: Public
+
+          public let id: String
+          public let count: Int
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.indent, .acronyms, .blankLinesAtStartOfScope, .redundantSelf, .trailingSpace])
+    }
+
+    func testRemoveRedundantMemberwiseInitFromInternalStructs() {
+        let input = """
+        struct Foo {
+            let name: String
+            let value: Int
+
+            init(name: String, value: Int) {
+                self.name = name
+                self.value = value
+            }
+        }
+
+        struct Bar {
+            let id: String
+            
+            init(id: String) {
+                self.id = id
+            }
+        }
+        """
+        let output = """
+        struct Foo {
+            let name: String
+            let value: Int
+        }
+
+        struct Bar {
+            let id: String
         }
         """
         testFormatting(for: input, output, rule: .redundantMemberwiseInit)

@@ -903,6 +903,30 @@ class RedundantMemberwiseInitTests: XCTestCase {
         testFormatting(for: input, output, rule: .redundantMemberwiseInit)
     }
 
+    func testRemoveRedundantPublicMemberwiseInitWithProperFormattingOfFirstProperty() {
+        let input = """
+        public struct CardViewAnimationState {
+            public init(
+            style: CardStyle,
+            backgroundColor: UIColor?
+            ) {
+            self.style = style
+            self.backgroundColor = backgroundColor
+            }
+
+            public let style: CardStyle
+            public let backgroundColor: UIColor?
+        }
+        """
+        let output = """
+        public struct CardViewAnimationState {
+            public let style: CardStyle
+            public let backgroundColor: UIColor?
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit)
+    }
+
     func testRemoveRedundantMemberwiseInitWithComplexStruct() {
         let input = """
         // MARK: - WalleStepContent
@@ -974,10 +998,6 @@ class RedundantMemberwiseInitTests: XCTestCase {
           public let contents: [WalleComponentViewModel]
           public let impressionContext: MagicalImpressionContext?
 
-          public static func ==(lhs: WalleRadioButtonGroupContent, rhs: WalleRadioButtonGroupContent) -> Bool {
-            lhs.title == rhs.title &&
-              lhs.subtitle == rhs.subtitle
-          }
 
         }
 
@@ -1018,14 +1038,6 @@ class RedundantMemberwiseInitTests: XCTestCase {
           public let isSelected: Bool
           public let answerContext: FlowAnswerContext
 
-          public static func ==(lhs: WalleRadioButtonRowContent, rhs: WalleRadioButtonRowContent) -> Bool {
-            lhs.title == rhs.title &&
-              lhs.subtitle == rhs.subtitle &&
-              lhs.imageURL == rhs.imageURL &&
-              lhs.questionValue == rhs.questionValue &&
-              lhs.isSelected == rhs.isSelected &&
-              lhs.answerContext == rhs.answerContext
-          }
 
         }
 
@@ -1057,10 +1069,6 @@ class RedundantMemberwiseInitTests: XCTestCase {
           public let contents: [WalleRadioToggleButtonContent]
           public let impressionContext: MagicalImpressionContext?
 
-          public static func ==(lhs: WalleRadioToggleButtonGroupContent, rhs: WalleRadioToggleButtonGroupContent) -> Bool {
-            lhs.title == rhs.title &&
-              lhs.subtitle == rhs.subtitle
-          }
 
         }
 
@@ -1092,10 +1100,6 @@ class RedundantMemberwiseInitTests: XCTestCase {
           public let styles: [String]?
           public let loggingContext: MagicalActionContext?
 
-          public static func ==(lhs: WalleButtonRowContent, rhs: WalleButtonRowContent) -> Bool {
-            lhs.title == rhs.title &&
-              lhs.mobileAction == rhs.mobileAction
-          }
 
         }
 
@@ -1127,10 +1131,6 @@ class RedundantMemberwiseInitTests: XCTestCase {
           public let styles: [String]?
           public let loggingContext: MagicalActionContext?
 
-          public static func ==(lhs: WalleLinkRowContent, rhs: WalleLinkRowContent) -> Bool {
-            lhs.title == rhs.title &&
-              lhs.mobileAction == rhs.mobileAction
-          }
 
         }
 
@@ -1144,11 +1144,6 @@ class RedundantMemberwiseInitTests: XCTestCase {
             self.imageURL = imageURL
           }
 
-          public static func ==(lhs: WalleProfileHeaderRowContent, rhs: WalleProfileHeaderRowContent) -> Bool {
-            lhs.title == rhs.title &&
-              lhs.captions == rhs.captions &&
-              lhs.imageURL == rhs.imageURL
-          }
 
           public let id: String
           public let title: String
@@ -1196,16 +1191,6 @@ class RedundantMemberwiseInitTests: XCTestCase {
           public let imageURL: URL?
           public let mobileAction: WalleFlowMobileAction?
 
-          public static func ==(lhs: WalleProfileActionRowContent, rhs: WalleProfileActionRowContent) -> Bool {
-            lhs.title == rhs.title &&
-              lhs.subtitle == rhs.subtitle &&
-              lhs.action == rhs.action &&
-              lhs.iconName == rhs.iconName &&
-              lhs.iconColor == rhs.iconColor &&
-              lhs.captions == rhs.captions &&
-              lhs.imageURL == rhs.imageURL &&
-              lhs.mobileAction == rhs.mobileAction
-          }
 
         }
 
@@ -1231,12 +1216,6 @@ class RedundantMemberwiseInitTests: XCTestCase {
           public let answerContext: FlowAnswerContext
           public let isSelected: Bool
 
-          public static func ==(lhs: WalleRadioToggleButtonContent, rhs: WalleRadioToggleButtonContent) -> Bool {
-            lhs.title == rhs.title &&
-              lhs.questionValue == rhs.questionValue &&
-              lhs.isSelected == rhs.isSelected &&
-              lhs.answerContext == rhs.answerContext
-          }
 
         }
 

@@ -1229,5 +1229,4 @@ class RedundantMemberwiseInitTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .redundantMemberwiseInit, exclude: [.indent, .acronyms, .blankLinesAtStartOfScope])
     }
-
 }

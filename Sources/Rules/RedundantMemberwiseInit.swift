@@ -12,7 +12,6 @@ public extension FormatRule {
     /// Remove redundant explicit memberwise initializers from structs
     static let redundantMemberwiseInit = FormatRule(
         help: "Remove explicit internal memberwise initializers that are redundant.",
-        disabledByDefault: true,
         orderAfter: [.redundantInit]
     ) { formatter in
         // Parse all struct declarations
@@ -62,9 +61,9 @@ public extension FormatRule {
                 // Get the init's access level
                 let initAccessLevel = initDeclaration.accessLevel()
 
-                // Don't remove if struct is public but init is internal
+                // Don't remove public inits from public structs
                 // (compiler won't generate public memberwise init)
-                if structAccessLevel == .public, initAccessLevel == .internal {
+                if structAccessLevel == .public, initAccessLevel == .public {
                     continue
                 }
 
@@ -306,6 +305,7 @@ extension Formatter {
                   property.identifier == propertyName,
                   property.value != nil
             else { continue }
+            return true
         }
         return false
     }

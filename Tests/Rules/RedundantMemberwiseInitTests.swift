@@ -554,19 +554,46 @@ class RedundantMemberwiseInitTests: XCTestCase {
         testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
     }
 
-    func testDontRemoveInternalInitFromPublicStruct() {
+    func testRemoveInternalInitFromPublicStruct() {
         let input = """
         public struct Person {
-            var name: String
-            var age: Int
-
             init(name: String, age: Int) {
                 self.name = name
                 self.age = age
             }
+
+            public let name: String
+            public let age: Int
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        let output = """
+        public struct Person {
+            public let name: String
+            public let age: Int
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+    }
+
+    func testRemoveInternalInitFromPublicStructWithInternalProperties() {
+        let input = """
+        public struct Foo {
+            init(a: Int, b: Bool) {
+                self.a = a
+                self.b = b
+            }
+
+            let a: Int
+            let b: Bool
+        }
+        """
+        let output = """
+        public struct Foo {
+            let a: Int
+            let b: Bool
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
     }
 
     func testDontRemoveInitWhenMultipleInitsExist() {

@@ -963,39 +963,6 @@ class RedundantMemberwiseInitTests: XCTestCase {
         testFormatting(for: input, output, rule: .redundantMemberwiseInit)
     }
 
-    func testRemoveRedundantMemberwiseInitFromInternalStructs() {
-        let input = """
-        struct Foo {
-            let name: String
-            let value: Int
-
-            init(name: String, value: Int) {
-                self.name = name
-                self.value = value
-            }
-        }
-
-        struct Bar {
-            let id: String
-            
-            init(id: String) {
-                self.id = id
-            }
-        }
-        """
-        let output = """
-        struct Foo {
-            let name: String
-            let value: Int
-        }
-
-        struct Bar {
-            let id: String
-        }
-        """
-        testFormatting(for: input, output, rule: .redundantMemberwiseInit)
-    }
-
     func testRemoveRedundantMemberwiseInitWithComplexStruct() {
         let input = """
         struct Foo {

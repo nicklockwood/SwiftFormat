@@ -62,7 +62,8 @@ public extension FormatRule {
                 // Get the init's access level
                 let initAccessLevel = initDeclaration.accessLevel()
 
-                // Don't remove public inits from public structs - preserve explicit API
+                // Don't remove public inits from public structs
+                // (compiler won't generate public memberwise init)
                 if structAccessLevel == .public, initAccessLevel == .public {
                     continue
                 }

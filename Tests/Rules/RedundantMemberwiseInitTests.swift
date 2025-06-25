@@ -569,7 +569,6 @@ class RedundantMemberwiseInitTests: XCTestCase {
         testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
     }
 
-
     func testDontRemoveInitWhenMultipleInitsExist() {
         let input = """
         struct Person {
@@ -892,7 +891,7 @@ class RedundantMemberwiseInitTests: XCTestCase {
             public let backgroundColor: UIColor?
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent, .wrapArguments])
     }
 
     func testDontRemoveRedundantMemberwiseInitFromPublicStructs() {
@@ -936,31 +935,63 @@ class RedundantMemberwiseInitTests: XCTestCase {
           public let count: Int
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.indent, .acronyms, .blankLinesAtStartOfScope, .redundantSelf, .trailingSpace])
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.indent, .acronyms, .blankLinesAtStartOfScope, .redundantSelf, .trailingSpace, .wrapArguments])
     }
 
     func testRemoveRedundantMemberwiseInitWithProperFormattingOfFirstProperty() {
         let input = """
-        struct CardViewAnimationState {
+        struct TestStruct {
             init(
-            style: CardStyle,
-            backgroundColor: UIColor?
+            name: String,
+            value: Int?
             ) {
-            self.style = style
-            self.backgroundColor = backgroundColor
+            self.name = name
+            self.value = value
             }
 
-            let style: CardStyle
-            let backgroundColor: UIColor?
+            let name: String
+            let value: Int?
+        }
+
+        private struct PrivateStruct: TestProtocol {
+          init(
+            id: String,
+            items: [String]
+          ) {
+            self.id = id
+            self.items = items
+          }
+
+          let id: String
+          let items: [String]
+        }
+
+        struct ConditionalStruct: TestCondition {
+
+          init?(values: [String]) {
+            self.values = values
+          }
+
+          let values: [String]
         }
         """
         let output = """
-        struct CardViewAnimationState {
-            let style: CardStyle
-            let backgroundColor: UIColor?
+        struct TestStruct {
+            let name: String
+            let value: Int?
+        }
+
+        private struct PrivateStruct: TestProtocol {
+          let id: String
+          let items: [String]
+        }
+
+        struct ConditionalStruct: TestCondition {
+
+          let values: [String]
         }
         """
-        testFormatting(for: input, output, rule: .redundantMemberwiseInit)
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit, exclude: [.trailingSpace, .blankLinesAtStartOfScope, .indent])
     }
 
     func testRemoveRedundantMemberwiseInitWithComplexStruct() {

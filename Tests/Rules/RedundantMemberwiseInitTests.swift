@@ -152,7 +152,6 @@ class RedundantMemberwiseInitTests: XCTestCase {
         testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
     }
 
-
     func testRemoveInitWithComputedProperties() {
         let input = """
         struct Person {
@@ -776,6 +775,41 @@ class RedundantMemberwiseInitTests: XCTestCase {
         }
         """
         testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent, .propertyTypes])
+    }
+
+    func testDontRemoveInitWhenPropertyHasDefaultValueButInitTakesBothRequiredAndOptional() {
+        let input = """
+        struct Person {
+            let name: String
+            var age: Int = 25
+
+            init(name: String, age: Int) {
+                self.name = name
+                self.age = age
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+    }
+
+    func testRemoveInitWhenPropertyHasDefaultValueAndInitMatchesCompilerGenerated() {
+        let input = """
+        struct Person {
+            let name: String
+            var age: Int = 25
+
+            init(name: String) {
+                self.name = name
+            }
+        }
+        """
+        let output = """
+        struct Person {
+            let name: String
+            var age: Int = 25
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit)
     }
 
     func testDontRemoveInitWhenPrivatePropertiesHaveNoDefaultValues() {

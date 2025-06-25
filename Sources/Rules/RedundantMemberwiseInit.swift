@@ -64,7 +64,7 @@ public extension FormatRule {
 
                 // Don't remove public inits from public structs
                 // (compiler won't generate public memberwise init)
-                if structAccessLevel == .public, initAccessLevel == .public {
+                if initAccessLevel == .public {
                     continue
                 }
 

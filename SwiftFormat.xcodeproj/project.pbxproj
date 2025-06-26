@@ -93,6 +93,10 @@
 		2EF8BF1E2D1E0D4F00D6F12F /* DeclarationType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EF8BF1A2D1E0D4F00D6F12F /* DeclarationType.swift */; };
 		37D828AB24BF77DA0012FC0A /* XcodeKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 37D828AA24BF77DA0012FC0A /* XcodeKit.framework */; };
 		37D828AC24BF77DA0012FC0A /* XcodeKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 37D828AA24BF77DA0012FC0A /* XcodeKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		6E954FF32E0DEACC004EE019 /* SARIFReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E954FF22E0DEACC004EE019 /* SARIFReporter.swift */; };
+		6E954FF42E0DEACC004EE019 /* SARIFReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E954FF22E0DEACC004EE019 /* SARIFReporter.swift */; };
+		6E954FF52E0DEACC004EE019 /* SARIFReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E954FF22E0DEACC004EE019 /* SARIFReporter.swift */; };
+		6E954FF62E0DEACC004EE019 /* SARIFReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E954FF22E0DEACC004EE019 /* SARIFReporter.swift */; };
 		9028F7831DA4B435009FE5B4 /* SwiftFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A0EAC41D5DB54A00A0A8E3 /* SwiftFormat.swift */; };
 		9028F7841DA4B435009FE5B4 /* Tokenizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A0EABF1D5DB4F700A0A8E3 /* Tokenizer.swift */; };
 		9028F7851DA4B435009FE5B4 /* Formatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01B3987C1D763493009ADE61 /* Formatter.swift */; };
@@ -239,6 +243,7 @@
 		2EF737532C5E897800128F91 /* ProjectFilePaths.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectFilePaths.swift; sourceTree = "<group>"; };
 		2EF8BF1A2D1E0D4F00D6F12F /* DeclarationType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeclarationType.swift; sourceTree = "<group>"; };
 		37D828AA24BF77DA0012FC0A /* XcodeKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XcodeKit.framework; path = Library/Frameworks/XcodeKit.framework; sourceTree = DEVELOPER_DIR; };
+		6E954FF22E0DEACC004EE019 /* SARIFReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SARIFReporter.swift; sourceTree = "<group>"; };
 		90C4B6CA1DA4B04A009EB000 /* SwiftFormat for Xcode.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "SwiftFormat for Xcode.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		90C4B6CC1DA4B04A009EB000 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		90C4B6D01DA4B04A009EB000 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -333,6 +338,7 @@
 				DD9AD39D2999FCC8001C2C0E /* Reporter.swift */,
 				DD9AD39C2999FCC8001C2C0E /* GithubActionsLogReporter.swift */,
 				A3DF48242620E03600F45A5F /* JSONReporter.swift */,
+				6E954FF22E0DEACC004EE019 /* SARIFReporter.swift */,
 				C2FFD1812BD13C9E00774F55 /* XMLReporter.swift */,
 			);
 			name = Reporters;
@@ -830,6 +836,7 @@
 				01A0EAC11D5DB4F700A0A8E3 /* FormatRule.swift in Sources */,
 				01A0EAC51D5DB54A00A0A8E3 /* SwiftFormat.swift in Sources */,
 				C2FFD1822BD13C9E00774F55 /* XMLReporter.swift in Sources */,
+				6E954FF32E0DEACC004EE019 /* SARIFReporter.swift in Sources */,
 				2E7D30A42A7940C500C32174 /* Singularize.swift in Sources */,
 				2E2BAB8C2C57F6B600590239 /* RuleRegistry.generated.swift in Sources */,
 				01B3987D1D763493009ADE61 /* Formatter.swift in Sources */,
@@ -888,6 +895,7 @@
 				01A8320724EC7F7600A9D0EB /* FormattingHelpers.swift in Sources */,
 				01F17E831E25870700DCD359 /* CommandLine.swift in Sources */,
 				015243E22B04B0A600F65221 /* Singularize.swift in Sources */,
+				6E954FF42E0DEACC004EE019 /* SARIFReporter.swift in Sources */,
 				C2FFD1832BD13C9E00774F55 /* XMLReporter.swift in Sources */,
 				01A0EACD1D5DB5F500A0A8E3 /* main.swift in Sources */,
 				2E2BAB8D2C57F6B600590239 /* RuleRegistry.generated.swift in Sources */,
@@ -926,6 +934,7 @@
 				01045A93211988F100D2BE3D /* Inference.swift in Sources */,
 				E41CB5C32026CACD00C1BEDE /* ListSelectionTableCellView.swift in Sources */,
 				E4872129201E3DD50014845E /* RulesStore.swift in Sources */,
+				6E954FF62E0DEACC004EE019 /* SARIFReporter.swift in Sources */,
 				E41CB5BF2025761D00C1BEDE /* UserSelection.swift in Sources */,
 				E4872111201D3B830014845E /* Options.swift in Sources */,
 				01A95BD3225BEDE400744931 /* ParsingHelpers.swift in Sources */,
@@ -964,6 +973,7 @@
 				E487212A201E3DD50014845E /* RulesStore.swift in Sources */,
 				01F3DF8E1DB9FD3F00454944 /* Options.swift in Sources */,
 				9028F7831DA4B435009FE5B4 /* SwiftFormat.swift in Sources */,
+				6E954FF52E0DEACC004EE019 /* SARIFReporter.swift in Sources */,
 				B9C4F55C2387FA3E0088DBEE /* SupportedContentUTIs.swift in Sources */,
 				90C4B6E71DA4B059009EB000 /* FormatSelectionCommand.swift in Sources */,
 				90F16AF81DA5EB4600EB4EA1 /* FormatFileCommand.swift in Sources */,

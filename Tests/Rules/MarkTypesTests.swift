@@ -846,7 +846,7 @@ class MarkTypesTests: XCTestCase {
         """
 
         // Initialize rule names
-        let _ = FormatRules.byName
+        _ = FormatRules.byName
         let changes = try lint(input, rules: [.markTypes])
         XCTAssertEqual(changes, [
             .init(line: 1, rule: .markTypes, filePath: nil, isMove: false),

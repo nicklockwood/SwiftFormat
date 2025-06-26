@@ -62,9 +62,9 @@ public extension FormatRule {
                 // Get the init's access level
                 let initAccessLevel = initDeclaration.accessLevel()
 
-                // Don't remove if struct is public but init is internal
+                // Don't remove public or package inits
                 // (compiler won't generate public memberwise init)
-                if structAccessLevel == .public, initAccessLevel == .internal {
+                if initAccessLevel == .public || initAccessLevel == .package {
                     continue
                 }
 
@@ -306,6 +306,7 @@ extension Formatter {
                   property.identifier == propertyName,
                   property.value != nil
             else { continue }
+            return true
         }
         return false
     }

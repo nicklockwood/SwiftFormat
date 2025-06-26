@@ -358,11 +358,12 @@ dependencies: [
 ```
 
 The plugin will find an existing `.swiftformat` in your package root folder and honor it automatically.
+It will also pickup an existing `.swift-version` in your package root folder if defined.
 
 ### Trigger Plugin From Command-Line
 
 ```bash
-swift package plugin --allow-writing-to-package-directory swiftformat
+swift package plugin --allow-writing-to-package-directory --allow-writing-to-directory $dir swiftformat
 ```
 
 You can limit the formatting to a particular target with `--target` option.
@@ -374,6 +375,14 @@ Example
 ```bash
 swift package plugin --allow-writing-to-package-directory swiftformat --target MyLibrary --swiftversion 5.6 --verbose
 ```
+
+If the files you wish to lint are outside of the package directory (i.e your tools are in a tools package and you wish to use swiftformat to correct files outside of it) you need to grant permission to write to that directory by adding the `--allow-writing-to-directory` flag and specifying the directory like:
+
+```bash
+swift package plugin --allow-writing-to-package-directory --allow-writing-to-directory $dir swiftformat --target MyLibrary --swiftversion 5.6 --verbose
+```
+
+_Note: `--allow-writing-to-package-directory` is still needed because `swiftformat` declares that it can write to package directory, omitting this will trigger a manual prompt asking for permission to write to the directory._
 
 ### Trigger Plugin From Xcode
 

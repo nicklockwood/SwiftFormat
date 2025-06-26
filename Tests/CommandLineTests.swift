@@ -775,6 +775,50 @@ class CommandLineTests: XCTestCase {
         XCTAssert(output.contains("<error line=\"1\" column=\"0\" severity=\"warning\""))
     }
 
+    func testSARIFReporterEndToEnd() throws {
+        try withTmpFiles([
+            "foo.swift": "func foo() {\n}\n",
+        ]) { url in
+            CLI.print = { message, type in
+                switch type {
+                case .raw:
+                    XCTAssert(message.contains("\"ruleId\" : \"emptyBraces\""))
+                case .error, .warning:
+                    break
+                case .info, .success:
+                    break
+                case .content:
+                    XCTFail()
+                }
+            }
+            _ = processArguments([
+                "",
+                "--lint",
+                "--reporter",
+                "sarif",
+                url.path,
+            ], in: "")
+        }
+    }
+
+    func testSARIFReporterInferredFromURL() throws {
+        let outputURL = try createTmpFile("report.sarif", contents: "")
+        try withTmpFiles([
+            "foo.swift": "func foo() {\n}\n",
+        ]) { url in
+            CLI.print = { _, _ in }
+            _ = processArguments([
+                "",
+                "--lint",
+                "--report",
+                outputURL.path,
+                url.path,
+            ], in: "")
+        }
+        let output = try String(contentsOf: outputURL)
+        XCTAssert(output.contains("\"ruleId\" : \"emptyBraces\""))
+    }
+
     func testLintCommandOutputsOrganizeDeclarationOrderingViolations() {
         var output: [String] = []
         CLI.print = { message, _ in

@@ -1168,6 +1168,21 @@ extension Formatter {
             }) else {
                 return false
             }
+
+            // Check if this is a type definition rather than a result builder
+            if tokens[startIndex] == .startOfScope("{"),
+               let lastKeyword = lastSignificantKeyword(at: startIndex, excluding: ["where"]),
+               Token.swiftTypeKeywords.contains(lastKeyword)
+            {
+                // This is a type body, not a result builder
+                if tokens[prevIndex].isStartOfScope, i != startIndex {
+                    i = startIndex
+                } else {
+                    i = prevIndex
+                }
+                continue
+            }
+
             if case let .identifier(name) = tokens[prevIndex], name.first?.isUppercase == true {
                 switch last(.nonSpaceOrCommentOrLinebreak, before: prevIndex) {
                 case .identifier("some")?, .delimiter?, .startOfScope?, .endOfScope?,

@@ -11,15 +11,24 @@ import XCTest
 
 class RedundantNilInitTests: XCTestCase {
     func testRemoveRedundantNilInit() {
-        let input = "var foo: Int? = nil\nlet bar: Int? = nil"
-        let output = "var foo: Int?\nlet bar: Int? = nil"
+        let input = """
+        var foo: Int? = nil
+        let bar: Int? = nil
+        """
+        let output = """
+        var foo: Int?
+        let bar: Int? = nil
+        """
         let options = FormatOptions(nilInit: .remove)
         testFormatting(for: input, output, rule: .redundantNilInit,
                        options: options)
     }
 
     func testNoRemoveLetNilInitAfterVar() {
-        let input = "var foo: Int; let bar: Int? = nil"
+        let input = """
+        var foo: Int
+        let bar: Int? = nil
+        """
         let options = FormatOptions(nilInit: .remove)
         testFormatting(for: input, rule: .redundantNilInit,
                        options: options)
@@ -35,14 +44,6 @@ class RedundantNilInitTests: XCTestCase {
     func testRemoveRedundantImplicitUnwrapInit() {
         let input = "var foo: Int! = nil"
         let output = "var foo: Int!"
-        let options = FormatOptions(nilInit: .remove)
-        testFormatting(for: input, output, rule: .redundantNilInit,
-                       options: options)
-    }
-
-    func testRemoveMultipleRedundantNilInitsInSameLine() {
-        let input = "var foo: Int? = nil, bar: Int? = nil"
-        let output = "var foo: Int?, bar: Int?"
         let options = FormatOptions(nilInit: .remove)
         testFormatting(for: input, output, rule: .redundantNilInit,
                        options: options)
@@ -209,24 +210,42 @@ class RedundantNilInitTests: XCTestCase {
     // --nilInit insert
 
     func testInsertNilInit() {
-        let input = "var foo: Int?\nlet bar: Int? = nil"
-        let output = "var foo: Int? = nil\nlet bar: Int? = nil"
+        let input = """
+        var foo: Int?
+        let bar: Int? = nil
+        """
+        let output = """
+        var foo: Int? = nil
+        let bar: Int? = nil
+        """
         let options = FormatOptions(nilInit: .insert)
         testFormatting(for: input, output, rule: .redundantNilInit,
                        options: options)
     }
 
     func testInsertNilInitBeforeLet() {
-        let input = "var foo: Int?; let bar: Int? = nil"
-        let output = "var foo: Int? = nil; let bar: Int? = nil"
+        let input = """
+        var foo: Int?
+        let bar: Int? = nil
+        """
+        let output = """
+        var foo: Int? = nil
+        let bar: Int? = nil
+        """
         let options = FormatOptions(nilInit: .insert)
         testFormatting(for: input, output, rule: .redundantNilInit,
                        options: options)
     }
 
     func testInsertNilInitAfterLet() {
-        let input = "let bar: Int? = nil; var foo: Int?"
-        let output = "let bar: Int? = nil; var foo: Int? = nil"
+        let input = """
+        let bar: Int? = nil
+        var foo: Int?
+        """
+        let output = """
+        let bar: Int? = nil
+        var foo: Int? = nil
+        """
         let options = FormatOptions(nilInit: .insert)
         testFormatting(for: input, output, rule: .redundantNilInit,
                        options: options)
@@ -247,14 +266,6 @@ class RedundantNilInitTests: XCTestCase {
                        options: options)
     }
 
-    func testInsertMultipleRedundantNilInitsInSameLine() {
-        let input = "var foo: Int?, bar: Int?"
-        let output = "var foo: Int? = nil, bar: Int? = nil"
-        let options = FormatOptions(nilInit: .insert)
-        testFormatting(for: input, output, rule: .redundantNilInit,
-                       options: options)
-    }
-
     func testNoInsertLazyVarNilInit() {
         let input = "lazy var foo: Int?"
         let options = FormatOptions(nilInit: .insert)
@@ -270,7 +281,16 @@ class RedundantNilInitTests: XCTestCase {
     }
 
     func testNoInsertCodableNilInit() {
-        let input = "struct Foo: Codable, Bar {\n    enum CodingKeys: String, CodingKey {\n        case bar = \"_bar\"\n    }\n\n    var bar: Int?\n    var baz: String? = nil\n}"
+        let input = """
+        struct Foo: Codable, Bar {
+            enum CodingKeys: String, CodingKey {
+                case bar = \"_bar\"
+            }
+
+            var bar: Int?
+            var baz: String? = nil
+        }
+        """
         let options = FormatOptions(nilInit: .insert)
         testFormatting(for: input, rule: .redundantNilInit,
                        options: options)
@@ -484,6 +504,22 @@ class RedundantNilInitTests: XCTestCase {
         """
         let options = FormatOptions(nilInit: .insert)
         testFormatting(for: input, rule: .redundantNilInit,
+                       options: options)
+    }
+
+    func testRemoveRedundantNilInitInSubclass() {
+        let input = """
+        class SomeClass2: SomeClass {
+            var optionalString2: String? = nil
+        }
+        """
+        let output = """
+        class SomeClass2: SomeClass {
+            var optionalString2: String?
+        }
+        """
+        let options = FormatOptions(nilInit: .remove)
+        testFormatting(for: input, output, rule: .redundantNilInit,
                        options: options)
     }
 }

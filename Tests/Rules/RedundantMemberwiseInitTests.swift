@@ -575,6 +575,21 @@ class RedundantMemberwiseInitTests: XCTestCase {
         testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
     }
 
+    func testDontRemovePackageInitFromPublicStruct() {
+        let input = """
+        public struct Person {
+            var name: String
+            var age: Int
+
+            package init(name: String, age: Int) {
+                self.name = name
+                self.age = age
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+    }
+
     func testDontRemoveInitWhenMultipleInitsExist() {
         let input = """
         struct Person {
@@ -1269,6 +1284,38 @@ class RedundantMemberwiseInitTests: XCTestCase {
 
             let a: Int
             let b: Bool
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+    }
+
+    func testDontRemoveFileprivateInitFromInternalStructWithInternalProperties() {
+        // The synthesized init would be internal, which is broader than fileprivate
+        let input = """
+        struct Bar {
+            fileprivate init(a: Int, b: Bool) {
+                self.a = a
+                self.b = b
+            }
+
+            let a: Int
+            let b: Bool
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+    }
+
+    func testDontRemoveFileprivateInitFromInternalStructWithPrivateProperties() {
+        // The synthesized init would be private, which is lower than fileprivate
+        let input = """
+        struct Bar {
+            fileprivate init(a: Int, b: Bool) {
+                self.a = a
+                self.b = b
+            }
+
+            let a: Int
+            private let b: Bool
         }
         """
         testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])

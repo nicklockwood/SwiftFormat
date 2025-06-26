@@ -117,6 +117,7 @@
 * [propertyTypes](#propertyTypes)
 * [redundantEquatable](#redundantEquatable)
 * [redundantProperty](#redundantProperty)
+* [singlePropertyPerLine](#singlePropertyPerLine)
 * [sortSwitchCases](#sortSwitchCases)
 * [throwingTests](#throwingTests)
 * [unusedPrivateDeclarations](#unusedPrivateDeclarations)
@@ -2774,6 +2775,35 @@ Option | Description
 // semicolon is not removed if it would affect the behavior of the code
 return;
 goto(fail)
+```
+
+</details>
+<br/>
+
+## singlePropertyPerLine
+
+Place each property declaration on its own line.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- let a: Int, b: Int
++ let a: Int
++ let b: Int
+```
+
+```diff
+- public var c = 10, d = false, e = "string"
++ public var c = 10
++ public var d = false
++ public var e = "string"
+```
+
+```diff
+- @objc var f = true, g: Bool
++ @objc var f = true
++ @objc var g: Bool
 ```
 
 </details>

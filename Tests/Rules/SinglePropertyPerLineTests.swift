@@ -179,7 +179,7 @@ class SinglePropertyPerLineTests: XCTestCase {
         let input = "let a = 1, /* comment */ b = 2"
         let output = """
         let a = 1
-        let b = 2
+        let /* comment */ b = 2
         """
         testFormatting(for: input, output, rule: .singlePropertyPerLine)
     }
@@ -315,6 +315,169 @@ class SinglePropertyPerLineTests: XCTestCase {
                 }
             }
         }
+        """
+        testFormatting(for: input, output, rule: .singlePropertyPerLine)
+    }
+    
+    // MARK: - Complex Types Tests
+    
+    func testSeparatePropertiesWithArrayTypes() {
+        let input = "let numbers: [Int], strings: [String], optionals: [Int?]"
+        let output = """
+        let numbers: [Int]
+        let strings: [String]
+        let optionals: [Int?]
+        """
+        testFormatting(for: input, output, rule: .singlePropertyPerLine)
+    }
+    
+    func testSeparatePropertiesWithDictionaryTypes() {
+        let input = "var userMap: [String: User], settingsMap: [String: Any], counters: [String: Int]"
+        let output = """
+        var userMap: [String: User]
+        var settingsMap: [String: Any]
+        var counters: [String: Int]
+        """
+        testFormatting(for: input, output, rule: .singlePropertyPerLine)
+    }
+    
+    func testSeparatePropertiesWithArrayLiteralValues() {
+        let input = "let primes = [2, 3, 5, 7], evens = [2, 4, 6, 8], odds = [1, 3, 5, 7]"
+        let output = """
+        let primes = [2, 3, 5, 7]
+        let evens = [2, 4, 6, 8]
+        let odds = [1, 3, 5, 7]
+        """
+        testFormatting(for: input, output, rule: .singlePropertyPerLine)
+    }
+    
+    func testSeparatePropertiesWithDictionaryLiteralValues() {
+        let input = "let colors = [\"red\": 0xFF0000, \"green\": 0x00FF00], settings = [\"theme\": \"dark\", \"language\": \"en\"]"
+        let output = """
+        let colors = ["red": 0xFF0000, "green": 0x00FF00]
+        let settings = ["theme": "dark", "language": "en"]
+        """
+        testFormatting(for: input, output, rule: .singlePropertyPerLine)
+    }
+    
+    func testSeparatePropertiesWithMultilineArrayLiterals() {
+        let input = """
+        let config = [
+            "api": "v1",
+            "timeout": 30
+        ], credentials = ["username": user, "password": pass]
+        """
+        let output = """
+        let config = [
+            "api": "v1",
+            "timeout": 30
+        ]
+        let credentials = ["username": user, "password": pass]
+        """
+        testFormatting(for: input, output, rule: .singlePropertyPerLine, exclude: [.trailingCommas])
+    }
+    
+    func testSeparatePropertiesWithNestedArrayTypes() {
+        let input = "let matrix: [[Int]], jaggedArray: [[String?]], coordinates: [(Double, Double)]"
+        let output = """
+        let matrix: [[Int]]
+        let jaggedArray: [[String?]]
+        let coordinates: [(Double, Double)]
+        """
+        testFormatting(for: input, output, rule: .singlePropertyPerLine)
+    }
+    
+    func testSeparatePropertiesWithComplexGenericTypes() {
+        let input = "var publisher: AnyPublisher<String, Error>, subject: PassthroughSubject<Int, Never>"
+        let output = """
+        var publisher: AnyPublisher<String, Error>
+        var subject: PassthroughSubject<Int, Never>
+        """
+        testFormatting(for: input, output, rule: .singlePropertyPerLine)
+    }
+    
+    func testSeparatePropertiesWithOptionalArrayTypes() {
+        let input = "let optionalArray: [String]?, arrayOfOptionals: [String?], bothOptional: [String?]?"
+        let output = """
+        let optionalArray: [String]?
+        let arrayOfOptionals: [String?]
+        let bothOptional: [String?]?
+        """
+        testFormatting(for: input, output, rule: .singlePropertyPerLine)
+    }
+    
+    func testSeparatePropertiesWithFunctionTypes() {
+        let input = "let transformer: (String) -> Int, validator: (String) -> Bool, processor: ([Int]) -> [String]"
+        let output = """
+        let transformer: (String) -> Int
+        let validator: (String) -> Bool
+        let processor: ([Int]) -> [String]
+        """
+        testFormatting(for: input, output, rule: .singlePropertyPerLine)
+    }
+    
+    func testSeparatePropertiesWithEscapingClosureTypes() {
+        let input = "var onSuccess: (@escaping (Data) -> Void)?, onError: (@escaping (Error) -> Void)?"
+        let output = """
+        var onSuccess: (@escaping (Data) -> Void)?
+        var onError: (@escaping (Error) -> Void)?
+        """
+        testFormatting(for: input, output, rule: .singlePropertyPerLine)
+    }
+    
+    func testSeparatePropertiesWithSetValues() {
+        let input = "let vowels: Set = [\"a\", \"e\", \"i\", \"o\", \"u\"], consonants: Set<Character> = [\"b\", \"c\", \"d\"]"
+        let output = """
+        let vowels: Set = ["a", "e", "i", "o", "u"]
+        let consonants: Set<Character> = ["b", "c", "d"]
+        """
+        testFormatting(for: input, output, rule: .singlePropertyPerLine)
+    }
+    
+    func testSeparatePropertiesWithTupleValues() {
+        let input = "let point = (x: 10, y: 20), size = (width: 100, height: 200), origin = (0, 0)"
+        let output = """
+        let point = (x: 10, y: 20)
+        let size = (width: 100, height: 200)
+        let origin = (0, 0)
+        """
+        testFormatting(for: input, output, rule: .singlePropertyPerLine)
+    }
+    
+    func testSeparatePropertiesWithObjectInitializers() {
+        let input = "let url = URL(string: \"https://api.example.com\")!, client = HTTPClient(session: .shared), config = AppConfig.default"
+        let output = """
+        let url = URL(string: "https://api.example.com")!
+        let client = HTTPClient(session: .shared)
+        let config = AppConfig.default
+        """
+        testFormatting(for: input, output, rule: .singlePropertyPerLine, exclude: [.propertyTypes])
+    }
+    
+    func testSeparatePropertiesWithChainedMethodCalls() {
+        let input = "let trimmed = input.trimmingCharacters(in: .whitespaces), uppercased = text.uppercased().replacingOccurrences(of: \" \", with: \"_\")"
+        let output = """
+        let trimmed = input.trimmingCharacters(in: .whitespaces)
+        let uppercased = text.uppercased().replacingOccurrences(of: " ", with: "_")
+        """
+        testFormatting(for: input, output, rule: .singlePropertyPerLine)
+    }
+    
+    func testSeparatePropertiesWithConditionalValues() {
+        let input = "let result = condition ? value1 : value2, fallback = optional ?? defaultValue"
+        let output = """
+        let result = condition ? value1 : value2
+        let fallback = optional ?? defaultValue
+        """
+        testFormatting(for: input, output, rule: .singlePropertyPerLine)
+    }
+    
+    func testSeparatePropertiesWithTypeInference() {
+        let input = "let items = [\"apple\", \"banana\", \"cherry\"], counts = [1: \"one\", 2: \"two\"], flags = [true, false, true]"
+        let output = """
+        let items = ["apple", "banana", "cherry"]
+        let counts = [1: "one", 2: "two"]
+        let flags = [true, false, true]
         """
         testFormatting(for: input, output, rule: .singlePropertyPerLine)
     }

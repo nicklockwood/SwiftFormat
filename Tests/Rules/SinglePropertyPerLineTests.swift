@@ -44,7 +44,7 @@ class SinglePropertyPerLineTests: XCTestCase {
         @objc var f = true
         @objc var g: Bool
         """
-        testFormatting(for: input, output, rule: .singlePropertyPerLine)
+        testFormatting(for: input, output, rule: .singlePropertyPerLine, exclude: [.propertyTypes])
     }
 
     func testSeparatePrivateStaticDeclarations() {
@@ -318,9 +318,9 @@ class SinglePropertyPerLineTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .singlePropertyPerLine)
     }
-    
+
     // MARK: - Complex Types Tests
-    
+
     func testSeparatePropertiesWithArrayTypes() {
         let input = "let numbers: [Int], strings: [String], optionals: [Int?]"
         let output = """
@@ -330,7 +330,7 @@ class SinglePropertyPerLineTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .singlePropertyPerLine)
     }
-    
+
     func testSeparatePropertiesWithDictionaryTypes() {
         let input = "var userMap: [String: User], settingsMap: [String: Any], counters: [String: Int]"
         let output = """
@@ -340,7 +340,7 @@ class SinglePropertyPerLineTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .singlePropertyPerLine)
     }
-    
+
     func testSeparatePropertiesWithArrayLiteralValues() {
         let input = "let primes = [2, 3, 5, 7], evens = [2, 4, 6, 8], odds = [1, 3, 5, 7]"
         let output = """
@@ -350,7 +350,7 @@ class SinglePropertyPerLineTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .singlePropertyPerLine)
     }
-    
+
     func testSeparatePropertiesWithDictionaryLiteralValues() {
         let input = "let colors = [\"red\": 0xFF0000, \"green\": 0x00FF00], settings = [\"theme\": \"dark\", \"language\": \"en\"]"
         let output = """
@@ -359,7 +359,7 @@ class SinglePropertyPerLineTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .singlePropertyPerLine)
     }
-    
+
     func testSeparatePropertiesWithMultilineArrayLiterals() {
         let input = """
         let config = [
@@ -376,7 +376,7 @@ class SinglePropertyPerLineTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .singlePropertyPerLine, exclude: [.trailingCommas])
     }
-    
+
     func testSeparatePropertiesWithNestedArrayTypes() {
         let input = "let matrix: [[Int]], jaggedArray: [[String?]], coordinates: [(Double, Double)]"
         let output = """
@@ -386,7 +386,7 @@ class SinglePropertyPerLineTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .singlePropertyPerLine)
     }
-    
+
     func testSeparatePropertiesWithComplexGenericTypes() {
         let input = "var publisher: AnyPublisher<String, Error>, subject: PassthroughSubject<Int, Never>"
         let output = """
@@ -395,7 +395,7 @@ class SinglePropertyPerLineTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .singlePropertyPerLine)
     }
-    
+
     func testSeparatePropertiesWithOptionalArrayTypes() {
         let input = "let optionalArray: [String]?, arrayOfOptionals: [String?], bothOptional: [String?]?"
         let output = """
@@ -405,7 +405,7 @@ class SinglePropertyPerLineTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .singlePropertyPerLine)
     }
-    
+
     func testSeparatePropertiesWithFunctionTypes() {
         let input = "let transformer: (String) -> Int, validator: (String) -> Bool, processor: ([Int]) -> [String]"
         let output = """
@@ -415,7 +415,7 @@ class SinglePropertyPerLineTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .singlePropertyPerLine)
     }
-    
+
     func testSeparatePropertiesWithEscapingClosureTypes() {
         let input = "var onSuccess: (@escaping (Data) -> Void)?, onError: (@escaping (Error) -> Void)?"
         let output = """
@@ -424,7 +424,7 @@ class SinglePropertyPerLineTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .singlePropertyPerLine)
     }
-    
+
     func testSeparatePropertiesWithSetValues() {
         let input = "let vowels: Set = [\"a\", \"e\", \"i\", \"o\", \"u\"], consonants: Set<Character> = [\"b\", \"c\", \"d\"]"
         let output = """
@@ -433,7 +433,7 @@ class SinglePropertyPerLineTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .singlePropertyPerLine)
     }
-    
+
     func testSeparatePropertiesWithTupleValues() {
         let input = "let point = (x: 10, y: 20), size = (width: 100, height: 200), origin = (0, 0)"
         let output = """
@@ -443,7 +443,7 @@ class SinglePropertyPerLineTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .singlePropertyPerLine)
     }
-    
+
     func testSeparatePropertiesWithObjectInitializers() {
         let input = "let url = URL(string: \"https://api.example.com\")!, client = HTTPClient(session: .shared), config = AppConfig.default"
         let output = """
@@ -453,7 +453,7 @@ class SinglePropertyPerLineTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .singlePropertyPerLine, exclude: [.propertyTypes])
     }
-    
+
     func testSeparatePropertiesWithChainedMethodCalls() {
         let input = "let trimmed = input.trimmingCharacters(in: .whitespaces), uppercased = text.uppercased().replacingOccurrences(of: \" \", with: \"_\")"
         let output = """
@@ -462,7 +462,7 @@ class SinglePropertyPerLineTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .singlePropertyPerLine)
     }
-    
+
     func testSeparatePropertiesWithConditionalValues() {
         let input = "let result = condition ? value1 : value2, fallback = optional ?? defaultValue"
         let output = """
@@ -471,7 +471,7 @@ class SinglePropertyPerLineTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .singlePropertyPerLine)
     }
-    
+
     func testSeparatePropertiesWithTypeInference() {
         let input = "let items = [\"apple\", \"banana\", \"cherry\"], counts = [1: \"one\", 2: \"two\"], flags = [true, false, true]"
         let output = """
@@ -480,5 +480,143 @@ class SinglePropertyPerLineTests: XCTestCase {
         let flags = [true, false, true]
         """
         testFormatting(for: input, output, rule: .singlePropertyPerLine)
+    }
+
+    // MARK: - Bug Fix Tests
+
+    func testIgnoreGuardStatements() {
+        let input = """
+        guard let foo, foo, bar, let baaz: Baaz else { return }
+        """
+        let output = """
+        guard let foo, foo, bar, let baaz: Baaz else {
+            return
+        }
+        """
+        testFormatting(for: input, [output], rules: [.singlePropertyPerLine, .wrapConditionalBodies])
+    }
+
+    func testIgnoreIfStatements() {
+        let input = """
+        if let animator, animator.state != .inactive {
+            animator.stopAnimation(true)
+        }
+        """
+        testFormatting(for: input, rule: .singlePropertyPerLine)
+    }
+
+    func testSharedTypeAnnotation() {
+        let input = """
+        let itemPosition, itemSize, viewportSize, minContentOffset, maxContentOffset: CGFloat
+        """
+        let output = """
+        let itemPosition: CGFloat
+        let itemSize: CGFloat
+        let viewportSize: CGFloat
+        let minContentOffset: CGFloat
+        let maxContentOffset: CGFloat
+        """
+        testFormatting(for: input, output, rule: .singlePropertyPerLine)
+    }
+
+    func testSharedTypeAnnotationWithModifiers() {
+        let input = """
+        private let width, height, depth: Double
+        """
+        let output = """
+        private let width: Double
+        private let height: Double
+        private let depth: Double
+        """
+        testFormatting(for: input, output, rule: .singlePropertyPerLine)
+    }
+
+    func testSharedComplexTypeAnnotation() {
+        let input = """
+        let first, second, third: [String: Int]
+        """
+        let output = """
+        let first: [String: Int]
+        let second: [String: Int]
+        let third: [String: Int]
+        """
+        testFormatting(for: input, output, rule: .singlePropertyPerLine)
+    }
+
+    func testMixedDeclarationsWithAndWithoutTypes() {
+        let input = """
+        let a = 5, b: Int, c = 10
+        """
+        let output = """
+        let a = 5
+        let b: Int
+        let c = 10
+        """
+        testFormatting(for: input, output, rule: .singlePropertyPerLine)
+    }
+
+    func testGuardWithMultipleConditions() {
+        let input = """
+        guard let user = user,
+              user.isActive,
+              let token = user.token else {
+            return
+        }
+        """
+        let output = """
+        guard let user = user,
+              user.isActive,
+              let token = user.token
+        else {
+            return
+        }
+        """
+        testFormatting(for: input, [output], rules: [.singlePropertyPerLine, .elseOnSameLine, .wrapMultilineStatementBraces])
+    }
+
+    func testIfWithMultipleConditions() {
+        let input = """
+        if let data = data,
+           let result = process(data),
+           result.isValid {
+            handle(result)
+        }
+        """
+        let output = """
+        if let data = data,
+           let result = process(data),
+           result.isValid
+        {
+            handle(result)
+        }
+        """
+        testFormatting(for: input, [output], rules: [.singlePropertyPerLine, .wrapMultilineStatementBraces])
+    }
+
+    func testWhileWithMultipleConditions() {
+        let input = """
+        while let item = iterator.next(),
+              item.isValid {
+            process(item)
+        }
+        """
+        let output = """
+        while let item = iterator.next(),
+              item.isValid
+        {
+            process(item)
+        }
+        """
+        testFormatting(for: input, [output], rules: [.singlePropertyPerLine, .wrapMultilineStatementBraces])
+    }
+
+    func testSwitchCaseWithMultipleBindings() {
+        let input = """
+        switch value {
+        case let (a, b, c):
+            return
+        }
+        """
+        testFormatting(for: input, rule: .singlePropertyPerLine)
     }
 }

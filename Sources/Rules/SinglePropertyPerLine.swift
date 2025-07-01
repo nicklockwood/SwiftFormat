@@ -10,7 +10,7 @@ import Foundation
 
 public extension FormatRule {
     static let singlePropertyPerLine = FormatRule(
-        help: "Use a separate let/var declaration on its own line for every property.",
+        help: "Use a separate let/var declaration on its own line for every property definition.",
         disabledByDefault: true,
         sharedOptions: ["linebreaks"]
     ) { formatter in
@@ -177,6 +177,7 @@ public extension FormatRule {
         - let a, b, c: Int
         + let a: Int
         + let b: Int
+        + let c: Int
 
         - public var foo = 10, bar = false
         + public var foo = 10
@@ -189,6 +190,9 @@ public extension FormatRule {
         - private let (foo, bar): (Int, Bool) = (10, false)
         + private let foo: Int = 10
         + private let bar: Bool = false
+
+          // Preserved:
+          let (foo, bar) = methodCallWithPossibleSideEffects()
         ```
         """
     }

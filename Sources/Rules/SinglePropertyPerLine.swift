@@ -31,6 +31,63 @@ public extension FormatRule {
                 return
             }
 
+            // Check for tuple destructuring pattern: let (a, b, c) = ...
+            if let tupleDecl = formatter.parseTupleDeclaration(at: i) {
+                // Only process if RHS is a tuple literal
+                guard tupleDecl.identifiers.count > 1,
+                      tupleDecl.identifiers.count == tupleDecl.values.count else { return }
+
+                // Get modifiers and keyword once
+                let startOfModifiers = formatter.startOfModifiers(at: i, includingAttributes: true)
+                let modifierTokens = Array(formatter.tokens[startOfModifiers ..< i])
+                let keywordToken = formatter.tokens[i] // Store before removal
+
+                // Adjust the range to include modifiers
+                let adjustedRange = startOfModifiers ... tupleDecl.range.upperBound
+
+                // Build replacement tokens for all declarations
+                var allReplacementTokens: [Token] = []
+
+                for (index, (identifier, valueTokens)) in zip(tupleDecl.identifiers, tupleDecl.values).enumerated() {
+                    // Clean up value tokens by removing leading/trailing spaces
+                    var cleanValueTokens = valueTokens
+                    while cleanValueTokens.first?.isSpace == true {
+                        cleanValueTokens.removeFirst()
+                    }
+                    while cleanValueTokens.last?.isSpace == true {
+                        cleanValueTokens.removeLast()
+                    }
+                    // Add newline and indentation before each declaration except the first
+                    if index > 0 {
+                        allReplacementTokens.append(.linebreak(formatter.options.linebreak, 1))
+
+                        let indent = formatter.currentIndentForLine(at: i)
+                        if !indent.isEmpty {
+                            allReplacementTokens.append(.space(indent))
+                        }
+                    }
+
+                    // Add modifiers and keyword
+                    allReplacementTokens.append(contentsOf: modifierTokens)
+                    allReplacementTokens.append(keywordToken)
+                    allReplacementTokens.append(.space(" "))
+
+                    // Add identifier = value
+                    allReplacementTokens.append(.identifier(identifier))
+                    allReplacementTokens.append(.space(" "))
+                    allReplacementTokens.append(.operator("=", .infix))
+                    allReplacementTokens.append(.space(" "))
+
+                    // Add value tokens
+                    allReplacementTokens.append(contentsOf: cleanValueTokens)
+                }
+
+                // Replace the entire tuple declaration with the new tokens
+                formatter.replaceTokens(in: adjustedRange, with: allReplacementTokens)
+
+                return
+            }
+
             guard let multiplePropertyDecl = formatter.parseMultiplePropertyDeclaration(at: i) else { return }
 
             // Check if we need to redistribute type/default value from the final property to all properties
@@ -48,7 +105,8 @@ public extension FormatRule {
 
             // Get modifiers and keyword once
             let startOfModifiers = formatter.startOfModifiers(at: i, includingAttributes: true)
-            let modifierTokens = Array(formatter.tokens[startOfModifiers ... i])
+            let modifierTokens = Array(formatter.tokens[startOfModifiers ..< i])
+            let keywordToken = formatter.tokens[i]
 
             // Process commas from right to left
             for (index, property) in multiplePropertyDecl.properties.enumerated().reversed() {
@@ -76,9 +134,18 @@ public extension FormatRule {
                     formatter.insert(.space(indent), at: commaIndex + 1)
                 }
 
-                // Insert modifiers and keyword
+                // Insert modifiers and keyword, removing any existing space after the comma
                 let insertPoint = commaIndex + (indent.isEmpty ? 1 : 2)
-                formatter.insert(modifierTokens, at: insertPoint)
+
+                // Check if there's already a space token after the insertion point
+                if formatter.token(at: insertPoint)?.isSpace == true {
+                    formatter.removeToken(at: insertPoint)
+                }
+
+                var tokensToInsert = modifierTokens
+                tokensToInsert.append(keywordToken)
+                tokensToInsert.append(.space(" "))
+                formatter.insert(tokensToInsert, at: insertPoint)
             }
 
             // Handle the first property - add type if needed
@@ -128,6 +195,14 @@ extension Formatter {
 
         let introducerIndex: Int
         let properties: [Property]
+    }
+
+    /// A tuple destructuring declaration like `let (a, b, c) = (1, 2, 3)`
+    struct TupleDeclaration {
+        let introducerIndex: Int
+        let identifiers: [String]
+        let values: [[Token]]
+        let range: ClosedRange<Int>
     }
 
     /// Parses a property declaration that contains multiple properties, like:
@@ -203,6 +278,92 @@ extension Formatter {
         return MultiplePropertyDeclaration(
             introducerIndex: introducerIndex,
             properties: properties
+        )
+    }
+
+    /// Parses a tuple destructuring declaration like `let (a, b, c) = (1, 2, 3)`
+    func parseTupleDeclaration(at introducerIndex: Int) -> TupleDeclaration? {
+        guard ["let", "var"].contains(tokens[introducerIndex].string) else { return nil }
+
+        // Look for opening parenthesis after let/var
+        guard let parenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: introducerIndex),
+              tokens[parenIndex] == .startOfScope("("),
+              let endOfTuple = endOfScope(at: parenIndex),
+              let equalsIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfTuple),
+              tokens[equalsIndex] == .operator("=", .infix),
+              let valueStart = index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex)
+        else { return nil }
+
+        // Check if RHS is a tuple literal
+        guard tokens[valueStart] == .startOfScope("("),
+              let endOfValueTuple = endOfScope(at: valueStart)
+        else { return nil }
+
+        // Parse identifiers from the pattern tuple
+        var identifiers: [String] = []
+        var currentIndex = parenIndex + 1
+
+        while currentIndex < endOfTuple {
+            if let token = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex - 1),
+               token < endOfTuple
+            {
+                if tokens[token].isIdentifier {
+                    identifiers.append(tokens[token].string)
+                }
+                currentIndex = token + 1
+            } else {
+                break
+            }
+        }
+
+        // Parse value tokens from the value tuple
+        var values: [[Token]] = []
+        var currentValueTokens: [Token] = []
+        var parenDepth = 0
+        currentIndex = valueStart + 1
+
+        while currentIndex < endOfValueTuple {
+            let token = tokens[currentIndex]
+
+            switch token {
+            case .startOfScope("("), .startOfScope("["), .startOfScope("{"):
+                parenDepth += 1
+                currentValueTokens.append(token)
+            case .endOfScope(")"), .endOfScope("]"), .endOfScope("}"):
+                parenDepth -= 1
+                currentValueTokens.append(token)
+            case .delimiter(",") where parenDepth == 0:
+                // Found a value separator, save current value
+                if !currentValueTokens.isEmpty {
+                    values.append(currentValueTokens)
+                    currentValueTokens = []
+                }
+            case .space:
+                // Preserve spaces for proper formatting
+                currentValueTokens.append(token)
+            case .linebreak:
+                // Skip linebreaks in values for cleaner output
+                break
+            default:
+                currentValueTokens.append(token)
+            }
+
+            currentIndex += 1
+        }
+
+        // Add the last value
+        if !currentValueTokens.isEmpty {
+            values.append(currentValueTokens)
+        }
+
+        // Find the end of the statement
+        let endOfStatement = endOfValueTuple
+
+        return TupleDeclaration(
+            introducerIndex: introducerIndex,
+            identifiers: identifiers,
+            values: values,
+            range: introducerIndex ... endOfStatement
         )
     }
 }

@@ -753,4 +753,147 @@ class SinglePropertyPerLineTests: XCTestCase {
         """
         testFormatting(for: input, rule: .singlePropertyPerLine)
     }
+
+    // MARK: - Tuple Destructuring Tests
+
+    func testSimpleTupleDestructuring() {
+        let input = "let (foo, bar, baaz) = (1, 2, 3)"
+        let output = """
+        let foo = 1
+        let bar = 2
+        let baaz = 3
+        """
+        testFormatting(for: input, output, rule: .singlePropertyPerLine)
+    }
+
+    func testTupleDestructuringWithVarKeyword() {
+        let input = "var (x, y, z) = (10, 20, 30)"
+        let output = """
+        var x = 10
+        var y = 20
+        var z = 30
+        """
+        testFormatting(for: input, output, rule: .singlePropertyPerLine)
+    }
+
+    func testTupleDestructuringWithSpaces() {
+        let input = "let ( a , b , c ) = ( 1 , 2 , 3 )"
+        let output = """
+        let a = 1
+        let b = 2
+        let c = 3
+        """
+        testFormatting(for: input, output, rule: .singlePropertyPerLine)
+    }
+
+    func testTupleDestructuringWithComplexValues() {
+        let input = "let (name, age, active) = (\"John\", 25, true)"
+        let output = """
+        let name = "John"
+        let age = 25
+        let active = true
+        """
+        testFormatting(for: input, output, rule: .singlePropertyPerLine)
+    }
+
+    func testTupleDestructuringWithModifiers() {
+        let input = "private let (width, height) = (100.0, 200.0)"
+        let output = """
+        private let width = 100.0
+        private let height = 200.0
+        """
+        testFormatting(for: input, output, rule: .singlePropertyPerLine)
+    }
+
+    func testTupleDestructuringWithAttributes() {
+        let input = "@available(iOS 15, *) let (feature1, feature2) = (true, false)"
+        let output = """
+        @available(iOS 15, *) let feature1 = true
+        @available(iOS 15, *) let feature2 = false
+        """
+        testFormatting(for: input, output, rule: .singlePropertyPerLine)
+    }
+
+    func testTupleDestructuringWithNestedValues() {
+        let input = "let (array, dict) = ([1, 2, 3], [\"key\": \"value\"])"
+        let output = """
+        let array = [1, 2, 3]
+        let dict = ["key": "value"]
+        """
+        testFormatting(for: input, output, rule: .singlePropertyPerLine)
+    }
+
+    func testTupleDestructuringWithFunctionCalls() {
+        let input = "let (min, max) = (calculateMin(), calculateMax())"
+        let output = """
+        let min = calculateMin()
+        let max = calculateMax()
+        """
+        testFormatting(for: input, output, rule: .singlePropertyPerLine)
+    }
+
+    func testTupleDestructuringInsideFunction() {
+        let input = """
+        func process() {
+            let (result, error) = (try? getData(), nil)
+        }
+        """
+        let output = """
+        func process() {
+            let result = try? getData()
+            let error = nil
+        }
+        """
+        testFormatting(for: input, output, rule: .singlePropertyPerLine)
+    }
+
+    func testPreserveTupleDestructuringWithSingleValue() {
+        let input = "let (result) = (42)"
+        testFormatting(for: input, rule: .singlePropertyPerLine, exclude: [.redundantParens])
+    }
+
+    func testPreserveTupleDestructuringWithNonTupleRHS() {
+        let input = "let (foo, bar, baz) = someFunction()"
+        testFormatting(for: input, rule: .singlePropertyPerLine)
+    }
+
+    func testPreserveTupleDestructuringWithMethodCall() {
+        let input = "let (x, y) = point.coordinates()"
+        testFormatting(for: input, rule: .singlePropertyPerLine)
+    }
+
+    func testPreserveTupleDestructuringWithPropertyAccess() {
+        let input = "let (width, height) = view.size"
+        testFormatting(for: input, rule: .singlePropertyPerLine)
+    }
+
+    func testTupleDestructuringWithIndentation() {
+        let input = """
+        class Example {
+            func test() {
+                let (a, b, c) = (1, 2, 3)
+            }
+        }
+        """
+        let output = """
+        class Example {
+            func test() {
+                let a = 1
+                let b = 2
+                let c = 3
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .singlePropertyPerLine)
+    }
+
+    func testTupleDestructuringWithSwitchTuple() {
+        let input = """
+        switch value {
+        case let (x, y, z):
+            break
+        }
+        """
+        testFormatting(for: input, rule: .singlePropertyPerLine)
+    }
 }

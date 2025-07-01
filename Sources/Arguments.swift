@@ -108,18 +108,48 @@ extension String {
     }
 }
 
+/// Extract content from a string, stopping at unquoted comment markers
+/// Handles quoted strings and escaped characters properly
+private func contentBeforeUnquotedComment(in string: String) -> String {
+    var result = ""
+    var inQuotes = false
+    var escaped = false
+
+    for char in string {
+        if escaped {
+            result.append(char)
+            escaped = false
+        } else if char == "\\" {
+            result.append(char)
+            escaped = true
+        } else if char == "\"" {
+            result.append(char)
+            inQuotes.toggle()
+        } else if char == "#", !inQuotes {
+            // Found unquoted comment marker, stop here
+            break
+        } else {
+            result.append(char)
+        }
+    }
+
+    return result
+}
+
 /// Parse a space-delimited string into an array of command-line arguments
 /// Replicates the behavior implemented by the console when parsing input
 func parseArguments(_ argumentString: String, ignoreComments: Bool = true) -> [String] {
+    // First handle comments using the shared logic if comments are not ignored
+    let inputString = ignoreComments ? argumentString : contentBeforeUnquotedComment(in: argumentString)
+
     var arguments = [""] // Arguments always begin with script path
-    var characters = String.UnicodeScalarView.SubSequence(argumentString.unicodeScalars)
+    var characters = String.UnicodeScalarView.SubSequence(inputString.unicodeScalars)
     var string = ""
     var escaped = false
     var quoted = false
-    loop: while let char = characters.popFirst() {
+
+    while let char = characters.popFirst() {
         switch char {
-        case "#" where !ignoreComments && !escaped && !quoted:
-            break loop // comment
         case "\\" where !escaped:
             escaped = true
         case "\"" where !escaped && !quoted:
@@ -359,44 +389,18 @@ private func cumulate(successiveLines: [String]) throws -> [String] {
     var cumulatedLines = [String]()
     var iterator = successiveLines.makeIterator()
     while let currentLine = iterator.next() {
-        var cumulatedLine = effectiveContent(of: currentLine)
+        var cumulatedLine = contentBeforeUnquotedComment(in: currentLine).trimmingCharacters(in: .whitespaces)
         while cumulatedLine.hasSuffix("\\") {
             guard let nextLine = iterator.next() else {
                 throw FormatError.reading("Configuration file ends with an illegal line continuation character '\'")
             }
             if !nextLine.trimmingCharacters(in: .whitespaces).starts(with: "#") {
-                cumulatedLine = cumulatedLine.dropLast() + effectiveContent(of: nextLine)
+                cumulatedLine = cumulatedLine.dropLast() + contentBeforeUnquotedComment(in: nextLine).trimmingCharacters(in: .whitespaces)
             }
         }
         cumulatedLines.append(String(cumulatedLine))
     }
     return cumulatedLines
-}
-
-private func effectiveContent(of line: String) -> String {
-    var result = ""
-    var inQuotes = false
-    var escaped = false
-
-    for char in line {
-        if escaped {
-            result.append(char)
-            escaped = false
-        } else if char == "\\" {
-            result.append(char)
-            escaped = true
-        } else if char == "\"" {
-            result.append(char)
-            inQuotes.toggle()
-        } else if char == "#", !inQuotes {
-            // Found unquoted comment marker, stop here
-            break
-        } else {
-            result.append(char)
-        }
-    }
-
-    return result.trimmingCharacters(in: .whitespaces)
 }
 
 /// Serialize a set of options into either an arguments string or a file

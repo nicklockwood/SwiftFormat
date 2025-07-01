@@ -43,67 +43,51 @@ public extension FormatRule {
                 && (lastProperty.typeRange != nil || lastProperty.valueRange != nil)
 
             if onlyLastPropertyHasTypeOrDefault, let lastPropertyType = lastProperty.typeRange {
-                // Extract the type tokens to redistribute
                 sharedTypeTokens = Array(formatter.tokens[lastPropertyType])
-
-                // Remove the type annotation from the final property (it will be re-added to all properties)
-                let colonIndex = formatter.index(of: .delimiter(":"), before: lastPropertyType.lowerBound)!
-                formatter.removeTokens(in: colonIndex ... lastPropertyType.upperBound)
             }
 
+            // Get modifiers and keyword once
+            let startOfModifiers = formatter.startOfModifiers(at: i, includingAttributes: true)
+            let modifierTokens = Array(formatter.tokens[startOfModifiers ... i])
+
             // Process commas from right to left
-            for property in multiplePropertyDecl.properties.reversed() {
+            for (index, property) in multiplePropertyDecl.properties.enumerated().reversed() {
                 guard let commaIndex = property.trailingCommaIndex else { continue }
 
-                // Replace comma with newline + indentation + declaration
+                // The property after this comma is at index + 1
+                let nextPropertyIndex = index + 1
+                guard nextPropertyIndex < multiplePropertyDecl.properties.count else { continue }
+                let nextProperty = multiplePropertyDecl.properties[nextPropertyIndex]
+
+                // First, add type annotation if needed (before replacing comma)
+                if let sharedTypeTokens, nextProperty.typeRange == nil {
+                    // Insert type annotation after the next property's identifier
+                    var typeAnnotation = [Token.delimiter(":"), Token.space(" ")]
+                    typeAnnotation.append(contentsOf: sharedTypeTokens)
+                    formatter.insert(typeAnnotation, at: nextProperty.identifierIndex + 1)
+                }
+
+                // Replace comma with newline
                 formatter.replaceToken(at: commaIndex, with: .linebreak(formatter.options.linebreak, 1))
 
+                // Add indentation
                 let indent = formatter.currentIndentForLine(at: i)
                 if !indent.isEmpty {
                     formatter.insert(.space(indent), at: commaIndex + 1)
                 }
 
                 // Insert modifiers and keyword
-                let startOfModifiers = formatter.startOfModifiers(at: i, includingAttributes: true)
                 let insertPoint = commaIndex + (indent.isEmpty ? 1 : 2)
-
-                for j in startOfModifiers ... i {
-                    formatter.insert(formatter.tokens[j], at: insertPoint + (j - startOfModifiers))
-                }
+                formatter.insert(modifierTokens, at: insertPoint)
             }
 
-            // Add shared type to all properties
-            if let sharedTypeTokens {
-                // Find all property identifiers that need the shared type
-                // Search in reverse order to avoid index invalidation
-                let propertyNames = multiplePropertyDecl.properties.map(\.identifier).reversed()
-
-                for propertyName in propertyNames {
-                    // Find this property identifier after the current position
-                    var searchIndex = i
-                    while searchIndex < formatter.tokens.count {
-                        if formatter.tokens[searchIndex].isIdentifier,
-                           formatter.tokens[searchIndex].string == propertyName
-                        {
-                            // Check if this identifier already has a type
-                            if let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: searchIndex),
-                               formatter.tokens[nextIndex] == .delimiter(":")
-                            {
-                                // Already has type, skip to next occurrence
-                                searchIndex += 1
-                                continue
-                            }
-
-                            // Add type annotation
-                            formatter.insert(.delimiter(":"), at: searchIndex + 1)
-                            formatter.insert(.space(" "), at: searchIndex + 2)
-                            for (offset, token) in sharedTypeTokens.enumerated() {
-                                formatter.insert(token, at: searchIndex + 3 + offset)
-                            }
-                            break
-                        }
-                        searchIndex += 1
-                    }
+            // Handle the first property - add type if needed
+            if let sharedTypeTokens, let firstProperty = multiplePropertyDecl.properties.first {
+                if firstProperty.typeRange == nil {
+                    // Insert type annotation after the first property's identifier
+                    var typeAnnotation = [Token.delimiter(":"), Token.space(" ")]
+                    typeAnnotation.append(contentsOf: sharedTypeTokens)
+                    formatter.insert(typeAnnotation, at: firstProperty.identifierIndex + 1)
                 }
             }
         }

@@ -145,6 +145,15 @@ public extension FormatRule {
                     continue
                 }
 
+                // Don't remove failable inits (init? or init!)
+                // Check if there's a ? or ! after the init keyword
+                if let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: initDeclaration.keywordIndex),
+                   let nextToken = formatter.token(at: nextIndex),
+                   nextToken.isOperator("?") || nextToken.isOperator("!")
+                {
+                    continue
+                }
+
                 // Parse the init function using the parseFunctionDeclaration helper
                 guard let functionDecl = formatter.parseFunctionDeclaration(keywordIndex: initDeclaration.keywordIndex),
                       let bodyRange = functionDecl.bodyRange

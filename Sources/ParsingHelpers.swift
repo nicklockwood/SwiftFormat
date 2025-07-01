@@ -1953,6 +1953,9 @@ extension Formatter {
 
     /// Parses a property of the format `(let|var) identifier: Type = expression`
     /// starting at the given introducer index (the `let` / `var` keyword).
+    ///
+    /// Does not attempt to parse less-common property declarations that define multiple identifiers,
+    /// like `let (foo, bar) = (1, 2)` or `let foo: Foo, bar: Bar`.
     func parsePropertyDeclaration(atIntroducerIndex introducerIndex: Int) -> PropertyDeclaration? {
         guard ["let", "var"].contains(tokens[introducerIndex].string),
               let propertyIdentifierIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: introducerIndex),
@@ -2942,6 +2945,12 @@ extension Formatter {
         }
 
         return argumentLabels
+    }
+
+    /// Parses the parameter labels of the tuple type or value with its `(` start of scope
+    /// token at the given index.
+    func parseTupleArguments(startOfScope: Int) -> [FunctionCallArgument] {
+        parseFunctionCallArguments(startOfScope: startOfScope)
     }
 
     /// Parses the list of conformances on this type, starting at

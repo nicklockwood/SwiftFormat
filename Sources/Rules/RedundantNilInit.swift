@@ -14,36 +14,68 @@ public extension FormatRule {
         help: "Remove/insert redundant `nil` default value (Optional vars are nil by default).",
         options: ["nilinit"]
     ) { formatter in
-        // Check modifiers don't include `lazy`
-        formatter.forEach(.keyword("var")) { i, _ in
-            if formatter.modifiersForDeclaration(at: i, contains: {
-                $1 == "lazy" || ($1 != "@objc" && $1.hasPrefix("@"))
-            }) || formatter.isInResultBuilder(at: i) {
-                return // Can't remove the init
+        let declarations = formatter.parseDeclarations()
+        declarations.forEachRecursiveDeclaration { declaration in
+            // Only process var declarations
+            guard declaration.keyword == "var" else { return }
+
+            let varIndex = declaration.keywordIndex
+
+            // Check modifiers don't include `lazy` or property wrappers
+            if declaration.modifiers.contains(where: {
+                $0 == "lazy" || ($0 != "@objc" && $0.hasPrefix("@"))
+            }) {
+                return
             }
-            // Check this isn't a Codable
-            if let scopeIndex = formatter.index(of: .startOfScope("{"), before: i) {
-                var prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: scopeIndex)
-                loop: while let index = prevIndex {
-                    switch formatter.tokens[index] {
-                    case .identifier("Codable"), .identifier("Decodable"):
-                        return // Can't safely remove the default value
-                    case .keyword("struct") where formatter.options.swiftVersion < "5.2":
-                        if formatter.index(of: .keyword("init"), after: scopeIndex) == nil {
-                            return // Can't safely remove the default value
-                        }
-                        break loop
-                    case .keyword:
-                        break loop
-                    default:
-                        break
-                    }
-                    prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: index)
+
+            // Preserve as-is in result builders
+            if formatter.isInResultBuilder(at: varIndex) {
+                return
+            }
+
+            if let parentType = declaration.parentType {
+                // Check if this is in a Codable type
+                if parentType.conformances.contains(where: {
+                    ["Codable", "Decodable"].contains($0.conformance)
+                }) {
+                    return
+                }
+
+                // Preserve the value if the struct has a synthesized memberwise init
+                // before Swift 5.2
+                if parentType.keyword == "struct",
+                   formatter.index(of: .keyword("init"), after: parentType.openBraceIndex) == nil,
+                   formatter.options.swiftVersion < "5.2"
+                {
+                    return
                 }
             }
-            // Find the nil
-            formatter.search(from: i, isStoredProperty: formatter.isStoredProperty(atIntroducerIndex: i))
+
+            guard let propertyDeclaration = formatter.parsePropertyDeclaration(atIntroducerIndex: varIndex),
+                  let type = propertyDeclaration.type,
+                  type.name.hasSuffix("?") || type.name.hasSuffix("!")
+            else { return }
+
+            switch formatter.options.nilInit {
+            case .remove:
+                // Remove `= nil` if it exists
+                if let valueInfo = propertyDeclaration.value,
+                   formatter.tokens[valueInfo.expressionRange] == [.identifier("nil")]
+                {
+                    // Remove from the space before = to the end of the value
+                    let startIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: valueInfo.assignmentIndex, if: { !$0.isSpaceOrCommentOrLinebreak }) ?? valueInfo.assignmentIndex - 1
+                    formatter.removeTokens(in: startIndex + 1 ... valueInfo.expressionRange.upperBound)
+                }
+
+            case .insert:
+                // Insert `= nil` if it doesn't exist and this is a stored property
+                if propertyDeclaration.value == nil, declaration.isStoredProperty {
+                    let tokens: [Token] = [.space(" "), .operator("=", .infix), .space(" "), .identifier("nil")]
+                    formatter.insert(tokens, at: type.range.upperBound + 1)
+                }
+            }
         }
+
     } examples: {
         """
         `--nilinit remove`
@@ -70,35 +102,5 @@ public extension FormatRule {
         + var foo: Int? = nil
         ```
         """
-    }
-}
-
-extension Formatter {
-    func search(from index: Int, isStoredProperty: Bool) {
-        if let optionalIndex = self.index(of: .unwrapOperator, after: index) {
-            if self.index(of: .endOfStatement, in: index + 1 ..< optionalIndex) != nil {
-                return
-            }
-            let previousToken = tokens[optionalIndex - 1]
-            if !previousToken.isSpaceOrCommentOrLinebreak, previousToken != .keyword("as") {
-                let equalsIndex = self.index(of: .nonSpaceOrLinebreak, after: optionalIndex, if: {
-                    $0 == .operator("=", .infix)
-                })
-                switch options.nilInit {
-                case .remove:
-                    if let equalsIndex, let nilIndex = self.index(of: .nonSpaceOrLinebreak, after: equalsIndex, if: {
-                        $0 == .identifier("nil")
-                    }) {
-                        removeTokens(in: optionalIndex + 1 ... nilIndex)
-                    }
-                case .insert:
-                    if isStoredProperty, equalsIndex == nil {
-                        let tokens: [Token] = [.space(" "), .operator("=", .infix), .space(" "), .identifier("nil")]
-                        insert(tokens, at: optionalIndex + 1)
-                    }
-                }
-            }
-            search(from: optionalIndex, isStoredProperty: isStoredProperty)
-        }
     }
 }

@@ -3,6 +3,13 @@
 # Script for testing individual SwiftFormat rules.
 # $ ./Script/test_rule.sh blankLinesAtStartOfScope
 
+# Get the absolute path to the project root directory
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
+# Change to the project root directory
+cd "$PROJECT_ROOT"
+
 # Argument validation
 if [ "$#" -ne 1 ]; then
     echo "Usage: $0 <RuleName>" >&2
@@ -27,6 +34,9 @@ if [ ! -f "$TEST_FILE_PATH" ]; then
 fi
 
 echo "Testing ${rule_name} rule..."
+
+# Format code before running tests (same as Xcode pre-script phase)
+./format.sh > /dev/null 2>&1
 
 # Run tests for the specific rule using swift test
 SWIFT_TEST_TARGET="SwiftFormatTests"

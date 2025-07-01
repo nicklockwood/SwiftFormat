@@ -152,27 +152,6 @@ class RedundantMemberwiseInitTests: XCTestCase {
         testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
     }
 
-    func testRemovePublicInitFromPublicStructDuplicate() {
-        let input = """
-        public struct Person {
-            var name: String
-            var age: Int
-
-            public init(name: String, age: Int) {
-                self.name = name
-                self.age = age
-            }
-        }
-        """
-        let output = """
-        public struct Person {
-            var name: String
-            var age: Int
-        }
-        """
-        testFormatting(for: input, output, rule: .redundantMemberwiseInit)
-    }
-
     func testRemoveInitWithComputedProperties() {
         let input = """
         struct Person {
@@ -560,7 +539,7 @@ class RedundantMemberwiseInitTests: XCTestCase {
         testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
     }
 
-    func testDontRemoveInternalInitFromPublicStruct() {
+    func testRemoveInternalInitFromPublicStruct() {
         let input = """
         public struct Person {
             var name: String
@@ -572,10 +551,16 @@ class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+        let output = """
+        public struct Person {
+            var name: String
+            var age: Int
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
     }
 
-    func testRemovePublicInitFromPublicStruct() {
+    func testDontRemovePublicInitFromPublicStruct() {
         let input = """
         public struct Person {
             var name: String
@@ -587,13 +572,22 @@ class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        let output = """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+    }
+
+    func testDontRemovePackageInitFromPublicStruct() {
+        let input = """
         public struct Person {
             var name: String
             var age: Int
+
+            package init(name: String, age: Int) {
+                self.name = name
+                self.age = age
+            }
         }
         """
-        testFormatting(for: input, output, rule: .redundantMemberwiseInit)
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
     }
 
     func testDontRemoveInitWhenMultipleInitsExist() {
@@ -798,6 +792,41 @@ class RedundantMemberwiseInitTests: XCTestCase {
         testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent, .propertyTypes])
     }
 
+    func testDontRemoveInitWhenPropertyHasDefaultValueButInitTakesBothRequiredAndOptional() {
+        let input = """
+        struct Person {
+            let name: String
+            var age: Int = 25
+
+            init(name: String, age: Int) {
+                self.name = name
+                self.age = age
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+    }
+
+    func testRemoveInitWhenPropertyHasDefaultValueAndInitMatchesCompilerGenerated() {
+        let input = """
+        struct Person {
+            let name: String
+            var age: Int = 25
+
+            init(name: String) {
+                self.name = name
+            }
+        }
+        """
+        let output = """
+        struct Person {
+            let name: String
+            var age: Int = 25
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit)
+    }
+
     func testDontRemoveInitWhenPrivatePropertiesHaveNoDefaultValues() {
         let input = """
         struct PayoutView {
@@ -901,5 +930,455 @@ class RedundantMemberwiseInitTests: XCTestCase {
         }
         """
         testFormatting(for: input, output, rule: .redundantMemberwiseInit)
+    }
+
+    func testDontRemoveRedundantPublicMemberwiseInitWithProperFormattingOfFirstProperty() {
+        let input = """
+        public struct CardViewAnimationState {
+            public init(
+            style: CardStyle,
+            backgroundColor: UIColor?
+            ) {
+            self.style = style
+            self.backgroundColor = backgroundColor
+            }
+
+            public let style: CardStyle
+            public let backgroundColor: UIColor?
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent, .wrapArguments])
+    }
+
+    func testRemoveRedundantMemberwiseInitWithComplexStruct() {
+        let input = """
+        struct Foo {
+
+          // MARK: Lifecycle
+
+          init(
+            name: String,
+            value: Int,
+            isEnabled: Bool
+          ) {
+            self.name = name
+            self.value = value
+            self.isEnabled = isEnabled
+          }
+
+          // MARK: Public
+
+          let name: String
+          let value: Int
+          let isEnabled: Bool
+        }
+
+        struct Bar: Equatable {
+
+          // MARK: Lifecycle
+
+          init(
+            id: String,
+            count: Int
+          ) {
+            self.id = id
+            self.count = count
+          }
+
+          // MARK: Public
+
+          let id: String
+          let count: Int
+        }
+
+        // MARK: - Baz
+
+        struct Baz: Equatable {
+
+          // MARK: Lifecycle
+
+          init(
+            title: String,
+            subtitle: String?,
+            data: [String]
+          ) {
+            self.title = title
+            self.subtitle = subtitle
+            self.data = data
+          }
+
+          // MARK: Public
+
+          let title: String
+          let subtitle: String?
+          let data: [String]
+        }
+
+        // MARK: - Qux
+
+        struct Qux: Equatable {
+
+          // MARK: Lifecycle
+
+          init(
+            key: String,
+            value: String?
+          ) {
+            self.key = key
+            self.value = value
+          }
+
+          // MARK: Public
+
+          let key: String
+          let value: String?
+        }
+
+        // MARK: - Widget
+
+        struct Widget: Equatable {
+
+          // MARK: Lifecycle
+
+          init(
+            name: String,
+            color: String,
+            size: Int
+          ) {
+            self.name = name
+            self.color = color
+            self.size = size
+          }
+
+          // MARK: Public
+
+          let name: String
+          let color: String
+          let size: Int
+        }
+
+        // MARK: - Item
+
+        struct Item: Equatable {
+
+          // MARK: Lifecycle
+
+          init(
+            identifier: String,
+            label: String
+          ) {
+            self.identifier = identifier
+            self.label = label
+          }
+
+          // MARK: Public
+
+          let identifier: String
+          let label: String
+        }
+
+        // MARK: - Component
+
+        struct Component: Equatable {
+          init(type: String, config: [String: Any]) {
+            self.type = type
+            self.config = config
+          }
+
+          let type: String
+          let config: [String: Any]
+        }
+
+        // MARK: - Element
+
+        struct Element: Equatable {
+
+          // MARK: Lifecycle
+
+          init(
+            tag: String,
+            attributes: [String]?,
+            content: String
+          ) {
+            self.tag = tag
+            self.attributes = attributes
+            self.content = content
+          }
+
+          // MARK: Public
+
+          let tag: String
+          let attributes: [String]?
+          let content: String
+        }
+
+        // MARK: - Node
+
+        struct Node: Equatable {
+
+          // MARK: Lifecycle
+
+          init(id: String, parent: String?, children: [String]) {
+            self.id = id
+            self.parent = parent
+            self.children = children
+          }
+
+          // MARK: Public
+
+          let id: String
+          let parent: String?
+          let children: [String]
+        }
+
+        // MARK: - Record
+
+        struct Record: Equatable {
+
+          // MARK: Lifecycle
+
+          init(
+            timestamp: Double,
+            message: String
+          ) {
+            self.timestamp = timestamp
+            self.message = message
+          }
+
+          // MARK: Public
+
+          let timestamp: Double
+          let message: String
+        }
+        """
+        let output = """
+        struct Foo {
+
+          // MARK: Public
+
+          let name: String
+          let value: Int
+          let isEnabled: Bool
+        }
+
+        struct Bar: Equatable {
+
+          // MARK: Public
+
+          let id: String
+          let count: Int
+        }
+
+        // MARK: - Baz
+
+        struct Baz: Equatable {
+
+          // MARK: Public
+
+          let title: String
+          let subtitle: String?
+          let data: [String]
+        }
+
+        // MARK: - Qux
+
+        struct Qux: Equatable {
+
+          // MARK: Public
+
+          let key: String
+          let value: String?
+        }
+
+        // MARK: - Widget
+
+        struct Widget: Equatable {
+
+          // MARK: Public
+
+          let name: String
+          let color: String
+          let size: Int
+        }
+
+        // MARK: - Item
+
+        struct Item: Equatable {
+
+          // MARK: Public
+
+          let identifier: String
+          let label: String
+        }
+
+        // MARK: - Component
+
+        struct Component: Equatable {
+          let type: String
+          let config: [String: Any]
+        }
+
+        // MARK: - Element
+
+        struct Element: Equatable {
+
+          // MARK: Public
+
+          let tag: String
+          let attributes: [String]?
+          let content: String
+        }
+
+        // MARK: - Node
+
+        struct Node: Equatable {
+
+          // MARK: Public
+
+          let id: String
+          let parent: String?
+          let children: [String]
+        }
+
+        // MARK: - Record
+
+        struct Record: Equatable {
+
+          // MARK: Public
+
+          let timestamp: Double
+          let message: String
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit, exclude: [.indent, .acronyms, .blankLinesAtStartOfScope])
+    }
+
+    func testRemoveInternalInitFromPublicStructWithInternalProperties() {
+        let input = """
+        public struct Foo {
+            init(a: Int, b: Bool) {
+                self.a = a
+                self.b = b
+            }
+
+            let a: Int
+            let b: Bool
+        }
+        """
+        let output = """
+        public struct Foo {
+            let a: Int
+            let b: Bool
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+    }
+
+    func testDontRemovePrivateInitFromInternalStruct() {
+        let input = """
+        struct Bar {
+            private init(a: Int, b: Bool) {
+                self.a = a
+                self.b = b
+            }
+
+            let a: Int
+            let b: Bool
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+    }
+
+    func testDontRemoveFileprivateInitFromInternalStructWithInternalProperties() {
+        // The synthesized init would be internal, which is broader than fileprivate
+        let input = """
+        struct Bar {
+            fileprivate init(a: Int, b: Bool) {
+                self.a = a
+                self.b = b
+            }
+
+            let a: Int
+            let b: Bool
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+    }
+
+    func testDontRemoveFileprivateInitFromInternalStructWithPrivateProperties() {
+        // The synthesized init would be private, which is lower than fileprivate
+        let input = """
+        struct Bar {
+            fileprivate init(a: Int, b: Bool) {
+                self.a = a
+                self.b = b
+            }
+
+            let a: Int
+            private let b: Bool
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+    }
+
+    func testDontRemoveFailableInit() {
+        let input = """
+        struct Person {
+            var name: String
+            var age: Int
+
+            init?(name: String, age: Int) {
+                self.name = name
+                self.age = age
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+    }
+
+    func testDontRemoveImplicitlyUnwrappedFailableInit() {
+        let input = """
+        struct Person {
+            var name: String
+            var age: Int
+
+            init!(name: String, age: Int) {
+                self.name = name
+                self.age = age
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+    }
+
+    func testDontRemoveFailableInitWithValidation() {
+        let input = """
+        struct Person {
+            var name: String
+            var age: Int
+
+            init?(name: String, age: Int) {
+                guard age >= 0 else { return nil }
+                self.name = name
+                self.age = age
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent, .wrapConditionalBodies, .blankLinesAfterGuardStatements])
+    }
+
+    func testDontRemoveFailableInitWithSpacing() {
+        let input = """
+        struct Person {
+            var name: String
+            var age: Int
+
+            init? (name: String, age: Int) {
+                self.name = name
+                self.age = age
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
     }
 }

@@ -621,7 +621,7 @@ struct Category: Equatable, Hashable {
     var visibility: VisibilityCategory
     var type: DeclarationType
     var order: Int
-    var comment: String? = nil
+    var comment: String?
 
     /// The comment tokens that should precede all declarations in this category
     func markCommentBody(from template: String, with mode: DeclarationOrganizationMode) -> String? {

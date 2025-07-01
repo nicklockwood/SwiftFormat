@@ -12,6 +12,7 @@ public extension FormatRule {
     /// Remove redundant explicit memberwise initializers from structs
     static let redundantMemberwiseInit = FormatRule(
         help: "Remove explicit internal memberwise initializers that are redundant.",
+        disabledByDefault: true,
         orderAfter: [.redundantInit]
     ) { formatter in
         // Parse all struct declarations
@@ -61,9 +62,9 @@ public extension FormatRule {
                 // Get the init's access level
                 let initAccessLevel = initDeclaration.accessLevel()
 
-                // Don't remove if struct is public but init is internal
+                // Don't remove public or package inits
                 // (compiler won't generate public memberwise init)
-                if structAccessLevel == .public, initAccessLevel == .internal {
+                if initAccessLevel == .public || initAccessLevel == .package {
                     continue
                 }
 
@@ -141,6 +142,15 @@ public extension FormatRule {
 
                 // Don't remove init if it has documentation
                 if hasDocumentation {
+                    continue
+                }
+
+                // Don't remove failable inits (init? or init!)
+                // Check if there's a ? or ! after the init keyword
+                if let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: initDeclaration.keywordIndex),
+                   let nextToken = formatter.token(at: nextIndex),
+                   nextToken.isOperator("?") || nextToken.isOperator("!")
+                {
                     continue
                 }
 
@@ -236,25 +246,39 @@ public extension FormatRule {
                     let startRemovalIndex = initDeclaration.range.lowerBound
                     let endRemovalIndex = bodyRange.upperBound
 
-                    // Find the range including preceding and trailing whitespace
+                    // Find the range including preceding whitespace, but be conservative about trailing
                     var actualStartIndex = startRemovalIndex
                     var actualEndIndex = endRemovalIndex
 
                     // Include preceding spaces and blank line
-                    while let prevToken = formatter.token(at: actualStartIndex - 1), prevToken.isSpace {
-                        actualStartIndex -= 1
+                    while actualStartIndex > 0 {
+                        if let prevToken = formatter.token(at: actualStartIndex - 1), prevToken.isSpace {
+                            actualStartIndex -= 1
+                        } else {
+                            break
+                        }
                     }
-                    if let prevToken = formatter.token(at: actualStartIndex - 1), prevToken.isLinebreak {
-                        actualStartIndex -= 1
+                    if actualStartIndex > 0 {
+                        if let prevToken = formatter.token(at: actualStartIndex - 1), prevToken.isLinebreak {
+                            actualStartIndex -= 1
+                        }
                     }
 
-                    // Include trailing newlines and any orphaned indentation
-                    while let next = formatter.token(at: actualEndIndex + 1), next.isSpaceOrLinebreak {
-                        actualEndIndex += 1
+                    // Include trailing spaces and one newline to clean up properly
+                    while actualEndIndex + 1 < formatter.tokens.count {
+                        let next = formatter.token(at: actualEndIndex + 1)!
+                        if next.isSpace {
+                            actualEndIndex += 1
+                        } else if next.isLinebreak {
+                            // Include one newline to clean up, but stop there
+                            actualEndIndex += 1
+                            break
+                        } else {
+                            break
+                        }
                     }
 
                     formatter.removeTokens(in: actualStartIndex ... actualEndIndex)
-                    return
                 }
             }
         }
@@ -291,6 +315,7 @@ extension Formatter {
                   property.identifier == propertyName,
                   property.value != nil
             else { continue }
+            return true
         }
         return false
     }

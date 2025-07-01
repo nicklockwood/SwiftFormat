@@ -70,6 +70,7 @@ enum Reporters {
         JSONReporter.self,
         GithubActionsLogReporter.self,
         XMLReporter.self,
+        SARIFReporter.self,
     ]
 
     static var help: String {

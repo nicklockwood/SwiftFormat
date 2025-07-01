@@ -1269,7 +1269,7 @@ struct _Descriptors {
     let urlMacro = OptionDescriptor(
         argumentName: "urlmacro",
         displayName: "The name and module of a URL macro",
-        help: "For example: \"#URL,URLFoundation\"",
+        help: "For example: --urlmacro \"#URL,URLFoundation\"",
         keyPath: \.urlMacro
     )
     let preferFileMacro = OptionDescriptor(

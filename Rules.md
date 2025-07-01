@@ -3503,12 +3503,12 @@ Replace force-unwrapped `URL(string:)` initializers with the configured `#URL(_:
 
 Option | Description
 --- | ---
-`--urlmacro` | For example: "#URL,URLFoundation"
+`--urlmacro` | For example: --urlmacro "#URL,URLFoundation"
 
 <details>
 <summary>Examples</summary>
 
-With `--urlmacro #URL,URLFoundation`:
+With `--urlmacro "#URL,URLFoundation"`:
 
 ```diff
 - let url = URL(string: "https://example.com")!

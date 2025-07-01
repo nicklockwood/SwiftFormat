@@ -119,6 +119,12 @@ class ArgumentsTests: XCTestCase {
         XCTAssertEqual(parseArguments(input, ignoreComments: false), output)
     }
 
+    func testQuotedURLMacro() {
+        let input = "--urlmacro \"#URL,URLFoundation\""
+        let output = ["", "--urlmacro", "#URL,URLFoundation"]
+        XCTAssertEqual(parseArguments(input, ignoreComments: false), output)
+    }
+
     // MARK: arg preprocessor
 
     func testPreprocessArguments() {
@@ -338,6 +344,23 @@ class ArgumentsTests: XCTestCase {
         let args = try parseConfigFile(data)
         XCTAssertEqual(args.count, 1)
         XCTAssertEqual(args["rules"], "braces, fileHeader, consecutiveSpaces")
+    }
+
+    func testParseURLMacroArgumentInConfigFileFailsWithoutQuotes() throws {
+        let config = "--urlmacro #URL,URLFoundation"
+        let data = Data(config.utf8)
+        let args = try parseConfigFile(data)
+        // This should fail because #URL,URLFoundation is treated as a comment
+        XCTAssertEqual(args.count, 1)
+        XCTAssertEqual(args["urlmacro"], "")
+    }
+
+    func testParseURLMacroArgumentInConfigFileWithQuotes() throws {
+        let config = "--urlmacro \"#URL,URLFoundation\""
+        let data = Data(config.utf8)
+        let args = try parseConfigFile(data)
+        XCTAssertEqual(args.count, 1)
+        XCTAssertEqual(args["urlmacro"], "#URL,URLFoundation")
     }
 
     func testParseArgumentsOnMultipleLines() throws {

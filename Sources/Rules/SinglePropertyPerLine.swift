@@ -48,60 +48,54 @@ public extension FormatRule {
                     sharedTypeTokens = Array(formatter.tokens[lastPropertyType])
                 }
 
-                // The modifiers before the introducer apply to all of the properties
+                // Build replacement tokens for all declarations
+                var allReplacementTokens: [Token] = []
+
                 let startOfModifiers = formatter.startOfModifiers(at: i, includingAttributes: true)
                 let modifierTokens = Array(formatter.tokens[startOfModifiers ..< i])
                 let keywordToken = formatter.tokens[i]
 
-                // Process commas from right to left
-                for (index, property) in multiplePropertyDecl.properties.enumerated().reversed() {
-                    guard let commaIndex = property.trailingCommaIndex else { continue }
+                for (index, property) in multiplePropertyDecl.properties.enumerated() {
+                    // Add newline and indentation before each declaration except the first
+                    if index > 0 {
+                        allReplacementTokens.append(.linebreak(formatter.options.linebreak, 1))
 
-                    // The property after this comma is at index + 1
-                    let nextPropertyIndex = index + 1
-                    guard nextPropertyIndex < multiplePropertyDecl.properties.count else { continue }
-                    let nextProperty = multiplePropertyDecl.properties[nextPropertyIndex]
-
-                    // First, add type annotation if needed (before replacing comma)
-                    if let sharedTypeTokens, nextProperty.typeRange == nil {
-                        // Insert type annotation after the next property's identifier
-                        var typeAnnotation = [Token.delimiter(":"), Token.space(" ")]
-                        typeAnnotation.append(contentsOf: sharedTypeTokens)
-                        formatter.insert(typeAnnotation, at: nextProperty.identifierIndex + 1)
+                        let indent = formatter.currentIndentForLine(at: i)
+                        if !indent.isEmpty {
+                            allReplacementTokens.append(.space(indent))
+                        }
                     }
 
-                    // Replace comma with newline
-                    formatter.replaceToken(at: commaIndex, with: .linebreak(formatter.options.linebreak, 1))
+                    // Add modifiers and keyword
+                    allReplacementTokens.append(contentsOf: modifierTokens)
+                    allReplacementTokens.append(keywordToken)
+                    allReplacementTokens.append(.space(" "))
 
-                    // Add indentation
-                    let indent = formatter.currentIndentForLine(at: i)
-                    if !indent.isEmpty {
-                        formatter.insert(.space(indent), at: commaIndex + 1)
+                    // Add identifier
+                    allReplacementTokens.append(.identifier(property.identifier))
+
+                    // Add type annotation if available or shared
+                    if let typeRange = property.typeRange {
+                        allReplacementTokens.append(.delimiter(":"))
+                        allReplacementTokens.append(.space(" "))
+                        allReplacementTokens.append(contentsOf: formatter.tokens[typeRange])
+                    } else if let sharedTypeTokens {
+                        allReplacementTokens.append(.delimiter(":"))
+                        allReplacementTokens.append(.space(" "))
+                        allReplacementTokens.append(contentsOf: sharedTypeTokens)
                     }
 
-                    // Insert modifiers and keyword, removing any existing space after the comma
-                    let insertPoint = commaIndex + (indent.isEmpty ? 1 : 2)
-
-                    // Check if there's already a space token after the insertion point
-                    if formatter.token(at: insertPoint)?.isSpace == true {
-                        formatter.removeToken(at: insertPoint)
-                    }
-
-                    var tokensToInsert = modifierTokens
-                    tokensToInsert.append(keywordToken)
-                    tokensToInsert.append(.space(" "))
-                    formatter.insert(tokensToInsert, at: insertPoint)
-                }
-
-                // Handle the first property - add type if needed
-                if let sharedTypeTokens, let firstProperty = multiplePropertyDecl.properties.first {
-                    if firstProperty.typeRange == nil {
-                        // Insert type annotation after the first property's identifier
-                        var typeAnnotation = [Token.delimiter(":"), Token.space(" ")]
-                        typeAnnotation.append(contentsOf: sharedTypeTokens)
-                        formatter.insert(typeAnnotation, at: firstProperty.identifierIndex + 1)
+                    // Add value assignment if available
+                    if let valueRange = property.valueRange {
+                        allReplacementTokens.append(.space(" "))
+                        allReplacementTokens.append(.operator("=", .infix))
+                        allReplacementTokens.append(.space(" "))
+                        allReplacementTokens.append(contentsOf: formatter.tokens[valueRange])
                     }
                 }
+
+                // Replace the entire multiple property declaration with the new tokens
+                formatter.replaceTokens(in: startOfModifiers ... multiplePropertyDecl.range.upperBound, with: allReplacementTokens)
             }
 
             // Handle tuple destructing properties like `let (foo, bar) = (1, 2)
@@ -215,6 +209,15 @@ extension Formatter {
 
         let introducerIndex: Int
         let properties: [Property]
+
+        /// The range of this declaration
+        var range: ClosedRange<Int> {
+            guard let finalProperty = properties.last else {
+                return introducerIndex ... introducerIndex
+            }
+            let endIndex = finalProperty.valueRange?.upperBound ?? finalProperty.typeRange?.upperBound ?? finalProperty.identifierIndex
+            return introducerIndex ... endIndex
+        }
     }
 
     /// Parses a property declaration that contains multiple properties, like:

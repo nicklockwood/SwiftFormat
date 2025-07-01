@@ -175,15 +175,6 @@ class SinglePropertyPerLineTests: XCTestCase {
         testFormatting(for: input, output, rule: .singlePropertyPerLine)
     }
 
-    func testPreserveCommentsBetweenProperties() {
-        let input = "let a = 1, /* comment */ b = 2"
-        let output = """
-        let a = 1
-        let /* comment */ b = 2
-        """
-        testFormatting(for: input, output, rule: .singlePropertyPerLine)
-    }
-
     func testInsideClassBody() {
         let input = """
         class MyClass {

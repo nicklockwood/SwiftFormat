@@ -19,7 +19,7 @@ class LeadingDelimitersTests: XCTestCase {
         let foo = 5,
             bar = 6
         """
-        testFormatting(for: input, output, rule: .leadingDelimiters)
+        testFormatting(for: input, output, rule: .leadingDelimiters, exclude: [.singlePropertyPerLine])
     }
 
     func testLeadingColonFollowedByCommentMovedToPreviousLine() {
@@ -43,6 +43,6 @@ class LeadingDelimitersTests: XCTestCase {
         let foo = 5, // first
             bar = 6
         """
-        testFormatting(for: input, output, rule: .leadingDelimiters)
+        testFormatting(for: input, output, rule: .leadingDelimiters, exclude: [.singlePropertyPerLine])
     }
 }

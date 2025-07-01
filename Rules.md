@@ -117,6 +117,7 @@
 * [redundantEquatable](#redundantEquatable)
 * [redundantMemberwiseInit](#redundantMemberwiseInit)
 * [redundantProperty](#redundantProperty)
+* [singlePropertyPerLine](#singlePropertyPerLine)
 * [sortSwitchCases](#sortSwitchCases)
 * [throwingTests](#throwingTests)
 * [unusedPrivateDeclarations](#unusedPrivateDeclarations)
@@ -2774,6 +2775,38 @@ Option | Description
 // semicolon is not removed if it would affect the behavior of the code
 return;
 goto(fail)
+```
+
+</details>
+<br/>
+
+## singlePropertyPerLine
+
+Use a separate let/var declaration on its own line for every property definition.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- let a, b, c: Int
++ let a: Int
++ let b: Int
++ let c: Int
+
+- public var foo = 10, bar = false
++ public var foo = 10
++ public var bar = false
+
+- var (foo, bar) = ("foo", "bar")
++ var foo = "foo"
++ var bar = "bar"
+
+- private let (foo, bar): (Int, Bool) = (10, false)
++ private let foo: Int = 10
++ private let bar: Bool = false
+
+  // Preserved:
+  let (foo, bar) = methodCallWithPossibleSideEffects()
 ```
 
 </details>

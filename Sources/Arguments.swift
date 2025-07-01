@@ -374,9 +374,29 @@ private func cumulate(successiveLines: [String]) throws -> [String] {
 }
 
 private func effectiveContent(of line: String) -> String {
-    line
-        .prefix { $0 != "#" }
-        .trimmingCharacters(in: .whitespaces)
+    var result = ""
+    var inQuotes = false
+    var escaped = false
+
+    for char in line {
+        if escaped {
+            result.append(char)
+            escaped = false
+        } else if char == "\\" {
+            result.append(char)
+            escaped = true
+        } else if char == "\"" {
+            result.append(char)
+            inQuotes.toggle()
+        } else if char == "#", !inQuotes {
+            // Found unquoted comment marker, stop here
+            break
+        } else {
+            result.append(char)
+        }
+    }
+
+    return result.trimmingCharacters(in: .whitespaces)
 }
 
 /// Serialize a set of options into either an arguments string or a file

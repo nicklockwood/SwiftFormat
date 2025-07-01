@@ -1320,4 +1320,65 @@ class RedundantMemberwiseInitTests: XCTestCase {
         """
         testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
     }
+
+    func testDontRemoveFailableInit() {
+        let input = """
+        struct Person {
+            var name: String
+            var age: Int
+
+            init?(name: String, age: Int) {
+                self.name = name
+                self.age = age
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+    }
+
+    func testDontRemoveImplicitlyUnwrappedFailableInit() {
+        let input = """
+        struct Person {
+            var name: String
+            var age: Int
+
+            init!(name: String, age: Int) {
+                self.name = name
+                self.age = age
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+    }
+
+    func testDontRemoveFailableInitWithValidation() {
+        let input = """
+        struct Person {
+            var name: String
+            var age: Int
+
+            init?(name: String, age: Int) {
+                guard age >= 0 else { return nil }
+                self.name = name
+                self.age = age
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent, .wrapConditionalBodies, .blankLinesAfterGuardStatements])
+    }
+
+    func testDontRemoveFailableInitWithSpacing() {
+        let input = """
+        struct Person {
+            var name: String
+            var age: Int
+
+            init? (name: String, age: Int) {
+                self.name = name
+                self.age = age
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+    }
 }

@@ -298,7 +298,7 @@ extension Formatter {
     /// A tuple destructuring property declaration
     struct TuplePropertyDeclaration {
         let introducerIndex: Int
-        let identifiers: [(name: String, index: Int)]
+        let identifiers: [(name: String, range: ClosedRange<Int>)]
         let type: (range: ClosedRange<Int>, tupleTypes: [(name: String, range: ClosedRange<Int>)]?)?
         let value: (range: ClosedRange<Int>, tupleValueRanges: [ClosedRange<Int>]?)?
 
@@ -309,7 +309,7 @@ extension Formatter {
             } else if let type {
                 return introducerIndex ... type.range.upperBound
             } else {
-                return introducerIndex ... ((identifiers.last?.index) ?? introducerIndex)
+                return introducerIndex ... ((identifiers.last?.range.upperBound) ?? introducerIndex)
             }
         }
     }
@@ -319,6 +319,7 @@ extension Formatter {
     /// let (a, b, c) = (1, 2, 3)
     /// let (a, b): (Int, Bool)
     /// let (a, b) = foo.bar
+    /// let (a, (b, c)) = (1, (2, 3))
     /// ```
     func parseTuplePropertyDeclaration(at introducerIndex: Int) -> TuplePropertyDeclaration? {
         guard ["let", "var"].contains(tokens[introducerIndex].string) else { return nil }
@@ -330,19 +331,8 @@ extension Formatter {
         else { return nil }
 
         // Parse identifiers from the pattern tuple
-        var identifiers: [(name: String, index: Int)] = []
-        var currentIndex = parenIndex + 1
-        while currentIndex < endOfTuple {
-            if let token = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex - 1),
-               token < endOfTuple
-            {
-                if tokens[token].isIdentifier {
-                    identifiers.append((name: tokens[token].string, index: token))
-                }
-                currentIndex = token + 1
-            } else {
-                break
-            }
+        let identifiers: [(name: String, range: ClosedRange<Int>)] = parseTupleArguments(startOfScope: parenIndex).map { argument in
+            (name: argument.value, range: argument.valueRange)
         }
 
         guard identifiers.count > 1 else { return nil }

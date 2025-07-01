@@ -33,9 +33,13 @@ public extension FormatRule {
 
             // Check for tuple destructuring pattern: let (a, b, c) = ...
             if let tupleDecl = formatter.parseTupleDeclaration(at: i) {
-                // Only process if RHS is a tuple literal
-                guard tupleDecl.identifiers.count > 1,
-                      tupleDecl.identifiers.count == tupleDecl.values.count else { return }
+                // Only process if we have more than one identifier
+                guard tupleDecl.identifiers.count > 1 else { return }
+                
+                // If we have values, they must match the number of identifiers
+                if let values = tupleDecl.values {
+                    guard tupleDecl.identifiers.count == values.count else { return }
+                }
 
                 // Get modifiers and keyword once
                 let startOfModifiers = formatter.startOfModifiers(at: i, includingAttributes: true)
@@ -47,16 +51,14 @@ public extension FormatRule {
 
                 // Build replacement tokens for all declarations
                 var allReplacementTokens: [Token] = []
+                
+                // Parse individual types from type annotation if present
+                var individualTypes: [Token]? = nil
+                if let typeAnnotation = tupleDecl.typeAnnotation {
+                    individualTypes = formatter.parseIndividualTypesFromTuple(typeAnnotation)
+                }
 
-                for (index, (identifier, valueTokens)) in zip(tupleDecl.identifiers, tupleDecl.values).enumerated() {
-                    // Clean up value tokens by removing leading/trailing spaces
-                    var cleanValueTokens = valueTokens
-                    while cleanValueTokens.first?.isSpace == true {
-                        cleanValueTokens.removeFirst()
-                    }
-                    while cleanValueTokens.last?.isSpace == true {
-                        cleanValueTokens.removeLast()
-                    }
+                for (index, identifier) in tupleDecl.identifiers.enumerated() {
                     // Add newline and indentation before each declaration except the first
                     if index > 0 {
                         allReplacementTokens.append(.linebreak(formatter.options.linebreak, 1))
@@ -72,14 +74,34 @@ public extension FormatRule {
                     allReplacementTokens.append(keywordToken)
                     allReplacementTokens.append(.space(" "))
 
-                    // Add identifier = value
+                    // Add identifier
                     allReplacementTokens.append(.identifier(identifier))
-                    allReplacementTokens.append(.space(" "))
-                    allReplacementTokens.append(.operator("=", .infix))
-                    allReplacementTokens.append(.space(" "))
-
-                    // Add value tokens
-                    allReplacementTokens.append(contentsOf: cleanValueTokens)
+                    
+                    // Add type annotation if available
+                    if let individualTypes = individualTypes, index < individualTypes.count {
+                        allReplacementTokens.append(.delimiter(":"))
+                        allReplacementTokens.append(.space(" "))
+                        allReplacementTokens.append(individualTypes[index])
+                    }
+                    
+                    // Add value assignment if available
+                    if let values = tupleDecl.values, index < values.count {
+                        let valueTokens = values[index]
+                        
+                        // Clean up value tokens by removing leading/trailing spaces
+                        var cleanValueTokens = valueTokens
+                        while cleanValueTokens.first?.isSpace == true {
+                            cleanValueTokens.removeFirst()
+                        }
+                        while cleanValueTokens.last?.isSpace == true {
+                            cleanValueTokens.removeLast()
+                        }
+                        
+                        allReplacementTokens.append(.space(" "))
+                        allReplacementTokens.append(.operator("=", .infix))
+                        allReplacementTokens.append(.space(" "))
+                        allReplacementTokens.append(contentsOf: cleanValueTokens)
+                    }
                 }
 
                 // Replace the entire tuple declaration with the new tokens
@@ -197,11 +219,12 @@ extension Formatter {
         let properties: [Property]
     }
 
-    /// A tuple destructuring declaration like `let (a, b, c) = (1, 2, 3)`
+    /// A tuple destructuring declaration like `let (a, b, c) = (1, 2, 3)` or `let (a, b): (Int, Bool)`
     struct TupleDeclaration {
         let introducerIndex: Int
         let identifiers: [String]
-        let values: [[Token]]
+        let values: [[Token]]?
+        let typeAnnotation: [Token]?
         let range: ClosedRange<Int>
     }
 
@@ -281,31 +304,92 @@ extension Formatter {
         )
     }
 
-    /// Parses a tuple destructuring declaration like `let (a, b, c) = (1, 2, 3)`
+    /// Parses a tuple destructuring declaration like `let (a, b, c) = (1, 2, 3)` or `let (a, b): (Int, Bool)`
     func parseTupleDeclaration(at introducerIndex: Int) -> TupleDeclaration? {
         guard ["let", "var"].contains(tokens[introducerIndex].string) else { return nil }
 
         // Look for opening parenthesis after let/var
         guard let parenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: introducerIndex),
               tokens[parenIndex] == .startOfScope("("),
-              let endOfTuple = endOfScope(at: parenIndex),
-              let equalsIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfTuple),
-              tokens[equalsIndex] == .operator("=", .infix),
-              let valueStart = index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex)
+              let endOfTuple = endOfScope(at: parenIndex)
         else { return nil }
-
-        // Check if RHS is a tuple literal
-        guard tokens[valueStart] == .startOfScope("("),
-              let endOfValueTuple = endOfScope(at: valueStart)
+        
+        // Check what comes after the tuple pattern
+        guard let nextTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfTuple)
         else { return nil }
+        
+        var typeAnnotation: [Token]?
+        var values: [[Token]]?
+        var endOfStatement = endOfTuple
+        
+        if tokens[nextTokenIndex] == .delimiter(":") {
+            // Type annotation case: let (a, b): (Int, Bool)
+            guard let typeStart = index(of: .nonSpaceOrCommentOrLinebreak, after: nextTokenIndex),
+                  let type = parseType(at: typeStart)
+            else { return nil }
+            
+            typeAnnotation = Array(tokens[type.range])
+            endOfStatement = type.range.upperBound
+            
+            // Check if there's also an assignment
+            if let equalsIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: type.range.upperBound),
+               tokens[equalsIndex] == .operator("=", .infix),
+               let valueStart = index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex)
+            {
+                // Parse the value (could be a tuple literal or any expression)
+                if tokens[valueStart] == .startOfScope("("),
+                   let endOfValueTuple = endOfScope(at: valueStart)
+                {
+                    // Tuple literal case
+                    values = parseTupleValues(from: valueStart + 1, to: endOfValueTuple)
+                    endOfStatement = endOfValueTuple
+                } else {
+                    // Single expression case - parse as expression
+                    if parseExpressionRange(startingAt: valueStart, allowConditionalExpressions: true) != nil {
+                        // For non-tuple expressions, we can't split them, so return nil
+                        return nil
+                    }
+                }
+            }
+        } else if tokens[nextTokenIndex] == .operator("=", .infix) {
+            // Assignment without type annotation: let (a, b) = (1, 2)
+            guard let valueStart = index(of: .nonSpaceOrCommentOrLinebreak, after: nextTokenIndex)
+            else { return nil }
+            
+            // Check if RHS is a tuple literal
+            guard tokens[valueStart] == .startOfScope("("),
+                  let endOfValueTuple = endOfScope(at: valueStart)
+            else { return nil }
+            
+            values = parseTupleValues(from: valueStart + 1, to: endOfValueTuple)
+            endOfStatement = endOfValueTuple
+        } else {
+            // No type annotation or assignment - not a pattern we support
+            return nil
+        }
 
         // Parse identifiers from the pattern tuple
-        var identifiers: [String] = []
-        var currentIndex = parenIndex + 1
+        let identifiers = parseTupleIdentifiers(from: parenIndex + 1, to: endOfTuple)
+        
+        guard identifiers.count > 1 else { return nil }
 
-        while currentIndex < endOfTuple {
+        return TupleDeclaration(
+            introducerIndex: introducerIndex,
+            identifiers: identifiers,
+            values: values,
+            typeAnnotation: typeAnnotation,
+            range: introducerIndex ... endOfStatement
+        )
+    }
+    
+    /// Parses identifiers from a tuple pattern like (a, b, c)
+    func parseTupleIdentifiers(from startIndex: Int, to endIndex: Int) -> [String] {
+        var identifiers: [String] = []
+        var currentIndex = startIndex
+
+        while currentIndex < endIndex {
             if let token = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex - 1),
-               token < endOfTuple
+               token < endIndex
             {
                 if tokens[token].isIdentifier {
                     identifiers.append(tokens[token].string)
@@ -315,14 +399,18 @@ extension Formatter {
                 break
             }
         }
-
-        // Parse value tokens from the value tuple
+        
+        return identifiers
+    }
+    
+    /// Parses value tokens from a tuple literal like (1, 2, 3)
+    func parseTupleValues(from startIndex: Int, to endIndex: Int) -> [[Token]] {
         var values: [[Token]] = []
         var currentValueTokens: [Token] = []
         var parenDepth = 0
-        currentIndex = valueStart + 1
+        var currentIndex = startIndex
 
-        while currentIndex < endOfValueTuple {
+        while currentIndex < endIndex {
             let token = tokens[currentIndex]
 
             switch token {
@@ -355,15 +443,89 @@ extension Formatter {
         if !currentValueTokens.isEmpty {
             values.append(currentValueTokens)
         }
-
-        // Find the end of the statement
-        let endOfStatement = endOfValueTuple
-
-        return TupleDeclaration(
-            introducerIndex: introducerIndex,
-            identifiers: identifiers,
-            values: values,
-            range: introducerIndex ... endOfStatement
-        )
+        
+        return values
+    }
+    
+    /// Parses individual types from a tuple type annotation like (Int, Bool) -> [Int, Bool]
+    func parseIndividualTypesFromTuple(_ typeTokens: [Token]) -> [Token] {
+        var individualTypes: [Token] = []
+        var currentTypeTokens: [Token] = []
+        var parenDepth = 0
+        
+        // Skip the opening parenthesis and start parsing
+        var startIndex = 0
+        if typeTokens.first == .startOfScope("(") {
+            startIndex = 1
+        }
+        
+        var endIndex = typeTokens.count
+        if typeTokens.last == .endOfScope(")") {
+            endIndex = typeTokens.count - 1
+        }
+        
+        for i in startIndex ..< endIndex {
+            let token = typeTokens[i]
+            
+            switch token {
+            case .startOfScope("("), .startOfScope("["), .startOfScope("<"):
+                parenDepth += 1
+                currentTypeTokens.append(token)
+            case .endOfScope(")"), .endOfScope("]"), .endOfScope(">"):
+                parenDepth -= 1
+                currentTypeTokens.append(token)
+            case .delimiter(",") where parenDepth == 0:
+                // Found a type separator, save current type
+                if !currentTypeTokens.isEmpty {
+                    // Clean up the type tokens
+                    var cleanTypeTokens = currentTypeTokens
+                    while cleanTypeTokens.first?.isSpace == true {
+                        cleanTypeTokens.removeFirst()
+                    }
+                    while cleanTypeTokens.last?.isSpace == true {
+                        cleanTypeTokens.removeLast()
+                    }
+                    
+                    if cleanTypeTokens.count == 1 {
+                        individualTypes.append(cleanTypeTokens[0])
+                    } else {
+                        // For complex types, we need to join them back - this is a simplified approach
+                        // In a real implementation, we'd want to preserve the structure better
+                        let typeString = cleanTypeTokens.map { $0.string }.joined()
+                        individualTypes.append(.identifier(typeString))
+                    }
+                    currentTypeTokens = []
+                }
+            case .space, .linebreak:
+                // Handle whitespace - preserve if we're building a type
+                if !currentTypeTokens.isEmpty {
+                    currentTypeTokens.append(token)
+                }
+            default:
+                currentTypeTokens.append(token)
+            }
+        }
+        
+        // Add the last type
+        if !currentTypeTokens.isEmpty {
+            // Clean up the type tokens
+            var cleanTypeTokens = currentTypeTokens
+            while cleanTypeTokens.first?.isSpace == true {
+                cleanTypeTokens.removeFirst()
+            }
+            while cleanTypeTokens.last?.isSpace == true {
+                cleanTypeTokens.removeLast()
+            }
+            
+            if cleanTypeTokens.count == 1 {
+                individualTypes.append(cleanTypeTokens[0])
+            } else {
+                // For complex types, we need to join them back
+                let typeString = cleanTypeTokens.map { $0.string }.joined()
+                individualTypes.append(.identifier(typeString))
+            }
+        }
+        
+        return individualTypes
     }
 }

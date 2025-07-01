@@ -896,4 +896,87 @@ class SinglePropertyPerLineTests: XCTestCase {
         """
         testFormatting(for: input, rule: .singlePropertyPerLine)
     }
+    
+    // MARK: - Tuple Destructuring with Type Annotations Tests
+    
+    func testTupleDestructuringWithTypeAnnotation() {
+        let input = "let (a, b): (Int, Bool)"
+        let output = """
+        let a: Int
+        let b: Bool
+        """
+        testFormatting(for: input, output, rule: .singlePropertyPerLine)
+    }
+    
+    func testTupleDestructuringWithTypeAnnotationAndValues() {
+        let input = "let (c, d): (String, Bool) = (\"hello\", false)"
+        let output = """
+        let c: String = \"hello\"
+        let d: Bool = false
+        """
+        testFormatting(for: input, output, rule: .singlePropertyPerLine)
+    }
+    
+    func testTupleDestructuringWithComplexTypes() {
+        let input = "let (items, count): ([String], Int)"
+        let output = """
+        let items: [String]
+        let count: Int
+        """
+        testFormatting(for: input, output, rule: .singlePropertyPerLine)
+    }
+    
+    func testTupleDestructuringWithOptionalTypes() {
+        let input = "var (name, age): (String?, Int?)"
+        let output = """
+        var name: String?
+        var age: Int?
+        """
+        testFormatting(for: input, output, rule: .singlePropertyPerLine)
+    }
+    
+    func testTupleDestructuringWithModifiersAndTypeAnnotation() {
+        let input = "private let (width, height): (Double, Double)"
+        let output = """
+        private let width: Double
+        private let height: Double
+        """
+        testFormatting(for: input, output, rule: .singlePropertyPerLine)
+    }
+    
+    func testTupleDestructuringWithAttributesAndTypeAnnotation() {
+        let input = "@available(iOS 15, *) let (x, y): (CGFloat, CGFloat)"
+        let output = """
+        @available(iOS 15, *) let x: CGFloat
+        @available(iOS 15, *) let y: CGFloat
+        """
+        testFormatting(for: input, output, rule: .singlePropertyPerLine)
+    }
+    
+    func testTupleDestructuringWithFunctionTypes() {
+        let input = "let (handler, validator): ((String) -> Void, (Int) -> Bool)"
+        let output = """
+        let handler: (String) -> Void
+        let validator: (Int) -> Bool
+        """
+        testFormatting(for: input, output, rule: .singlePropertyPerLine)
+    }
+    
+    func testTupleDestructuringWithNestedTupleTypes() {
+        let input = "let (point, size): ((Int, Int), (Int, Int))"
+        let output = """
+        let point: (Int, Int)
+        let size: (Int, Int)
+        """
+        testFormatting(for: input, output, rule: .singlePropertyPerLine)
+    }
+    
+    func testTupleDestructuringWithTypeAnnotationAndPartialValues() {
+        let input = "let (result, error): (String?, Error?) = (getValue(), nil)"
+        let output = """
+        let result: String? = getValue()
+        let error: Error? = nil
+        """
+        testFormatting(for: input, output, rule: .singlePropertyPerLine)
+    }
 }

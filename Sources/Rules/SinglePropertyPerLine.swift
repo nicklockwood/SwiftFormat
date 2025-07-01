@@ -9,9 +9,8 @@
 import Foundation
 
 public extension FormatRule {
-    /// Separate multiple property declarations on the same line into separate lines
     static let singlePropertyPerLine = FormatRule(
-        help: "Place each property declaration on its own line.",
+        help: "Use a separate let/var declaration on its own line for every property.",
         disabledByDefault: true,
         sharedOptions: ["linebreaks"]
     ) { formatter in
@@ -175,22 +174,21 @@ public extension FormatRule {
     } examples: {
         """
         ```diff
-        - let a: Int, b: Int
+        - let a, b, c: Int
         + let a: Int
         + let b: Int
-        ```
 
-        ```diff
-        - public var c = 10, d = false, e = "string"
-        + public var c = 10
-        + public var d = false
-        + public var e = "string"
-        ```
+        - public var foo = 10, bar = false
+        + public var foo = 10
+        + public var bar = false
 
-        ```diff
-        - @objc var f = true, g: Bool
-        + @objc var f = true
-        + @objc var g: Bool
+        - var (foo, bar) = ("foo", "bar")
+        + var foo = "foo"
+        + var bar = "bar"
+
+        - private let (foo, bar): (Int, Bool) = (10, false)
+        + private let foo: Int = 10
+        + private let bar: Bool = false
         ```
         """
     }

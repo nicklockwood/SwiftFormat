@@ -246,7 +246,7 @@ class RedundantFileprivateTests: XCTestCase {
         }
         """
         let options = FormatOptions(swiftVersion: "4")
-        testFormatting(for: input, rule: .redundantFileprivate, options: options)
+        testFormatting(for: input, rule: .redundantFileprivate, options: options, exclude: [.singlePropertyPerLine])
     }
 
     func testFileprivateInitChangedToPrivateIfConstructorNotCalledOutsideType() {

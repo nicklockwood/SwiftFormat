@@ -947,7 +947,7 @@ class TrailingCommasTests: XCTestCase {
         ) = (0, 1)
         """
         let options = FormatOptions(trailingCommas: .never)
-        testFormatting(for: input, output, rule: .trailingCommas, options: options)
+        testFormatting(for: input, output, rule: .trailingCommas, options: options, exclude: [.singlePropertyPerLine])
     }
 
     func testTrailingCommasNotAddedToEmptyParentheses() {

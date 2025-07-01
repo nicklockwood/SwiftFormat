@@ -45,7 +45,7 @@ class RedundantNilInitTests: XCTestCase {
         let output = "var foo: Int?, bar: Int?"
         let options = FormatOptions(nilInit: .remove)
         testFormatting(for: input, output, rule: .redundantNilInit,
-                       options: options)
+                       options: options, exclude: [.singlePropertyPerLine])
     }
 
     func testNoRemoveLazyVarNilInit() {
@@ -252,7 +252,7 @@ class RedundantNilInitTests: XCTestCase {
         let output = "var foo: Int? = nil, bar: Int? = nil"
         let options = FormatOptions(nilInit: .insert)
         testFormatting(for: input, output, rule: .redundantNilInit,
-                       options: options)
+                       options: options, exclude: [.singlePropertyPerLine])
     }
 
     func testNoInsertLazyVarNilInit() {

@@ -2913,7 +2913,7 @@ extension Formatter {
 
     /// Parses the parameter labels of the function call with its `(` start of scope
     /// token at the given index.
-    func parseFunctionCallArguments(startOfScope: Int) -> [FunctionCallArgument] {
+    func parseFunctionCallArguments(startOfScope: Int, preserveWhitespace: Bool = false) -> [FunctionCallArgument] {
         assert(tokens[startOfScope] == .startOfScope("("))
         guard let endOfScope = endOfScope(at: startOfScope),
               index(of: .nonSpaceOrCommentOrLinebreak, after: startOfScope) != endOfScope
@@ -2930,42 +2930,46 @@ extension Formatter {
                let argumentLabelIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: colonIndex),
                tokens[argumentLabelIndex].isIdentifier
             {
-                // Trim whitespace and newlines from the value range
+                // Conditionally trim whitespace and newlines from the value range
                 var valueStart = colonIndex + 1
                 var valueEnd = endOfCurrentArgument - 1
 
-                while valueStart <= valueEnd, tokens[valueStart].isSpaceOrLinebreak {
-                    valueStart += 1
-                }
-                while valueEnd >= valueStart, tokens[valueEnd].isSpaceOrLinebreak {
-                    valueEnd -= 1
+                if !preserveWhitespace {
+                    while valueStart <= valueEnd, tokens[valueStart].isSpaceOrLinebreak {
+                        valueStart += 1
+                    }
+                    while valueEnd >= valueStart, tokens[valueEnd].isSpaceOrLinebreak {
+                        valueEnd -= 1
+                    }
                 }
 
-                let trimmedValueRange = valueStart ... valueEnd
+                let valueRange = valueStart ... valueEnd
                 argumentLabels.append(FunctionCallArgument(
                     label: tokens[argumentLabelIndex].string,
                     labelIndex: argumentLabelIndex,
-                    value: tokens[trimmedValueRange].string,
-                    valueRange: trimmedValueRange
+                    value: tokens[valueRange].string,
+                    valueRange: valueRange
                 ))
             } else {
-                // Trim whitespace and newlines from the value range
+                // Conditionally trim whitespace and newlines from the value range
                 var valueStart = endOfPreviousArgument + 1
                 var valueEnd = endOfCurrentArgument - 1
 
-                while valueStart <= valueEnd, tokens[valueStart].isSpaceOrLinebreak {
-                    valueStart += 1
-                }
-                while valueEnd >= valueStart, tokens[valueEnd].isSpaceOrLinebreak {
-                    valueEnd -= 1
+                if !preserveWhitespace {
+                    while valueStart <= valueEnd, tokens[valueStart].isSpaceOrLinebreak {
+                        valueStart += 1
+                    }
+                    while valueEnd >= valueStart, tokens[valueEnd].isSpaceOrLinebreak {
+                        valueEnd -= 1
+                    }
                 }
 
-                let trimmedValueRange = valueStart ... valueEnd
+                let valueRange = valueStart ... valueEnd
                 argumentLabels.append(FunctionCallArgument(
                     label: nil,
                     labelIndex: nil,
-                    value: tokens[trimmedValueRange].string,
-                    valueRange: trimmedValueRange
+                    value: tokens[valueRange].string,
+                    valueRange: valueRange
                 ))
             }
 

@@ -112,7 +112,7 @@ class RedundantTypeTests: XCTestCase {
         let output = "var foo = 0, bar = 0"
         let options = FormatOptions(propertyTypes: .inferred)
         testFormatting(for: input, output, rule: .redundantType,
-                       options: options)
+                       options: options, exclude: [.singlePropertyPerLine])
     }
 
     func testRedundantTypeRemovalWithComment() {

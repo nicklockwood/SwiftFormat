@@ -2903,8 +2903,12 @@ extension Formatter {
     struct FunctionCallArgument {
         /// The label of the argument. `nil` if unlabeled.
         let label: String?
+        /// The index of the optional label
+        let labelIndex: Int?
         /// The value of the argument, including any leading or trailing whitespace / comments.
         let value: String
+        /// The index of the value
+        let valueRange: ClosedRange<Int>
     }
 
     /// Parses the parameter labels of the function call with its `(` start of scope
@@ -2928,12 +2932,16 @@ extension Formatter {
             {
                 argumentLabels.append(FunctionCallArgument(
                     label: tokens[argumentLabelIndex].string,
-                    value: tokens[colonIndex + 1 ..< endOfCurrentArgument].string
+                    labelIndex: argumentLabelIndex,
+                    value: tokens[colonIndex + 1 ..< endOfCurrentArgument].string,
+                    valueRange: ClosedRange(colonIndex + 1 ..< endOfCurrentArgument)
                 ))
             } else {
                 argumentLabels.append(FunctionCallArgument(
                     label: nil,
-                    value: tokens[endOfPreviousArgument + 1 ..< endOfCurrentArgument].string
+                    labelIndex: nil,
+                    value: tokens[endOfPreviousArgument + 1 ..< endOfCurrentArgument].string,
+                    valueRange: ClosedRange(endOfPreviousArgument + 1 ..< endOfCurrentArgument)
                 ))
             }
 

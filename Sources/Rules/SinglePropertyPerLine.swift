@@ -31,7 +31,78 @@ public extension FormatRule {
                 return
             }
 
-            // Check for tuple destructuring pattern: let (a, b, c) = ...
+            /// Handle declarations that define multiple properties like `let foo, bar: Int = 10`
+            if let multiplePropertyDecl = formatter.parseMultiplePropertyDeclaration(at: i) {
+                // Check if we need to redistribute type/default value from the final property to all properties
+                var sharedTypeTokens: [Token]?
+                let lastProperty = multiplePropertyDecl.properties.last!
+                let propertiesBeforeLast = multiplePropertyDecl.properties.dropLast()
+
+                // If ONLY the final property has a type or default value, redistribute it to all properties
+                let onlyLastPropertyHasTypeOrDefault = propertiesBeforeLast.allSatisfy { $0.typeRange == nil && $0.valueRange == nil }
+                    && (lastProperty.typeRange != nil || lastProperty.valueRange != nil)
+
+                if onlyLastPropertyHasTypeOrDefault, let lastPropertyType = lastProperty.typeRange {
+                    sharedTypeTokens = Array(formatter.tokens[lastPropertyType])
+                }
+
+                // Get modifiers and keyword once
+                let startOfModifiers = formatter.startOfModifiers(at: i, includingAttributes: true)
+                let modifierTokens = Array(formatter.tokens[startOfModifiers ..< i])
+                let keywordToken = formatter.tokens[i]
+
+                // Process commas from right to left
+                for (index, property) in multiplePropertyDecl.properties.enumerated().reversed() {
+                    guard let commaIndex = property.trailingCommaIndex else { continue }
+
+                    // The property after this comma is at index + 1
+                    let nextPropertyIndex = index + 1
+                    guard nextPropertyIndex < multiplePropertyDecl.properties.count else { continue }
+                    let nextProperty = multiplePropertyDecl.properties[nextPropertyIndex]
+
+                    // First, add type annotation if needed (before replacing comma)
+                    if let sharedTypeTokens, nextProperty.typeRange == nil {
+                        // Insert type annotation after the next property's identifier
+                        var typeAnnotation = [Token.delimiter(":"), Token.space(" ")]
+                        typeAnnotation.append(contentsOf: sharedTypeTokens)
+                        formatter.insert(typeAnnotation, at: nextProperty.identifierIndex + 1)
+                    }
+
+                    // Replace comma with newline
+                    formatter.replaceToken(at: commaIndex, with: .linebreak(formatter.options.linebreak, 1))
+
+                    // Add indentation
+                    let indent = formatter.currentIndentForLine(at: i)
+                    if !indent.isEmpty {
+                        formatter.insert(.space(indent), at: commaIndex + 1)
+                    }
+
+                    // Insert modifiers and keyword, removing any existing space after the comma
+                    let insertPoint = commaIndex + (indent.isEmpty ? 1 : 2)
+
+                    // Check if there's already a space token after the insertion point
+                    if formatter.token(at: insertPoint)?.isSpace == true {
+                        formatter.removeToken(at: insertPoint)
+                    }
+
+                    var tokensToInsert = modifierTokens
+                    tokensToInsert.append(keywordToken)
+                    tokensToInsert.append(.space(" "))
+                    formatter.insert(tokensToInsert, at: insertPoint)
+                }
+
+                // Handle the first property - add type if needed
+                if let sharedTypeTokens, let firstProperty = multiplePropertyDecl.properties.first {
+                    if firstProperty.typeRange == nil {
+                        // Insert type annotation after the first property's identifier
+                        var typeAnnotation = [Token.delimiter(":"), Token.space(" ")]
+                        typeAnnotation.append(contentsOf: sharedTypeTokens)
+                        formatter.insert(typeAnnotation, at: firstProperty.identifierIndex + 1)
+                    }
+                }
+            }
+
+            // Handle tuple destructing properties like `let (foo, bar) = (1, 2)
             if let tupleDecl = formatter.parseTuplePropertyDeclaration(at: i) {
                 // Get modifiers and keyword once
                 let startOfModifiers = formatter.startOfModifiers(at: i, includingAttributes: true)
@@ -124,76 +195,6 @@ public extension FormatRule {
                 formatter.replaceTokens(in: adjustedRange, with: allReplacementTokens)
 
                 return
-            }
-
-            guard let multiplePropertyDecl = formatter.parseMultiplePropertyDeclaration(at: i) else { return }
-
-            // Check if we need to redistribute type/default value from the final property to all properties
-            var sharedTypeTokens: [Token]?
-            let lastProperty = multiplePropertyDecl.properties.last!
-            let propertiesBeforeLast = multiplePropertyDecl.properties.dropLast()
-
-            // If ONLY the final property has a type or default value, redistribute it to all properties
-            let onlyLastPropertyHasTypeOrDefault = propertiesBeforeLast.allSatisfy { $0.typeRange == nil && $0.valueRange == nil }
-                && (lastProperty.typeRange != nil || lastProperty.valueRange != nil)
-
-            if onlyLastPropertyHasTypeOrDefault, let lastPropertyType = lastProperty.typeRange {
-                sharedTypeTokens = Array(formatter.tokens[lastPropertyType])
-            }
-
-            // Get modifiers and keyword once
-            let startOfModifiers = formatter.startOfModifiers(at: i, includingAttributes: true)
-            let modifierTokens = Array(formatter.tokens[startOfModifiers ..< i])
-            let keywordToken = formatter.tokens[i]
-
-            // Process commas from right to left
-            for (index, property) in multiplePropertyDecl.properties.enumerated().reversed() {
-                guard let commaIndex = property.trailingCommaIndex else { continue }
-
-                // The property after this comma is at index + 1
-                let nextPropertyIndex = index + 1
-                guard nextPropertyIndex < multiplePropertyDecl.properties.count else { continue }
-                let nextProperty = multiplePropertyDecl.properties[nextPropertyIndex]
-
-                // First, add type annotation if needed (before replacing comma)
-                if let sharedTypeTokens, nextProperty.typeRange == nil {
-                    // Insert type annotation after the next property's identifier
-                    var typeAnnotation = [Token.delimiter(":"), Token.space(" ")]
-                    typeAnnotation.append(contentsOf: sharedTypeTokens)
-                    formatter.insert(typeAnnotation, at: nextProperty.identifierIndex + 1)
-                }
-
-                // Replace comma with newline
-                formatter.replaceToken(at: commaIndex, with: .linebreak(formatter.options.linebreak, 1))
-
-                // Add indentation
-                let indent = formatter.currentIndentForLine(at: i)
-                if !indent.isEmpty {
-                    formatter.insert(.space(indent), at: commaIndex + 1)
-                }
-
-                // Insert modifiers and keyword, removing any existing space after the comma
-                let insertPoint = commaIndex + (indent.isEmpty ? 1 : 2)
-
-                // Check if there's already a space token after the insertion point
-                if formatter.token(at: insertPoint)?.isSpace == true {
-                    formatter.removeToken(at: insertPoint)
-                }
-
-                var tokensToInsert = modifierTokens
-                tokensToInsert.append(keywordToken)
-                tokensToInsert.append(.space(" "))
-                formatter.insert(tokensToInsert, at: insertPoint)
-            }
-
-            // Handle the first property - add type if needed
-            if let sharedTypeTokens, let firstProperty = multiplePropertyDecl.properties.first {
-                if firstProperty.typeRange == nil {
-                    // Insert type annotation after the first property's identifier
-                    var typeAnnotation = [Token.delimiter(":"), Token.space(" ")]
-                    typeAnnotation.append(contentsOf: sharedTypeTokens)
-                    formatter.insert(typeAnnotation, at: firstProperty.identifierIndex + 1)
-                }
             }
         }
     } examples: {
@@ -382,21 +383,32 @@ extension Formatter {
             if let equalsIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: type.range.upperBound),
                tokens[equalsIndex] == .operator("=", .infix),
                let valueStart = index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
-               tokens[valueStart] == .startOfScope("("),
-               let endOfValueTuple = endOfScope(at: valueStart)
+               let expressionRange = parseExpressionRange(startingAt: valueStart, allowConditionalExpressions: true)
             {
+                // Only handle tuple literals on the RHS for destructuring
+                guard tokens[valueStart] == .startOfScope("("),
+                      let endOfValueTuple = endOfScope(at: valueStart),
+                      isTupleLiteral(from: valueStart, to: endOfValueTuple)
+                else {
+                    // If it's not a tuple literal, we can't destructure it
+                    return nil
+                }
+
                 let parsedValues = parseTupleValues(from: valueStart + 1, to: endOfValueTuple)
                 let tupleValueRanges = calculateValueRanges(parsedValues, startFrom: valueStart + 1, endAt: endOfValueTuple)
                 value = (range: valueStart ... endOfValueTuple, tupleValueRanges: tupleValueRanges)
             }
         } else if tokens[nextTokenIndex] == .operator("=", .infix) {
-            // Assignment without type annotation: let (a, b) = (1, 2)
-            guard let valueStart = index(of: .nonSpaceOrCommentOrLinebreak, after: nextTokenIndex)
+            // Assignment without type annotation: let (a, b) = expression
+            guard let valueStart = index(of: .nonSpaceOrCommentOrLinebreak, after: nextTokenIndex),
+                  let expressionRange = parseExpressionRange(startingAt: valueStart, allowConditionalExpressions: true)
             else { return nil }
 
-            // Check if RHS is a tuple literal
+            // Only handle tuple literals on the RHS for destructuring
+            // If it's not a tuple literal, we can't destructure it
             guard tokens[valueStart] == .startOfScope("("),
-                  let endOfValueTuple = endOfScope(at: valueStart)
+                  let endOfValueTuple = endOfScope(at: valueStart),
+                  isTupleLiteral(from: valueStart, to: endOfValueTuple)
             else { return nil }
 
             let parsedValues = parseTupleValues(from: valueStart + 1, to: endOfValueTuple)
@@ -456,6 +468,35 @@ extension Formatter {
         }
 
         return ranges
+    }
+
+    /// Check if the expression between the given indices is a tuple literal
+    /// A tuple literal is something like (1, 2, 3) or ("hello", true)
+    /// NOT a function call like foo() or a parenthesized expression like (someVar)
+    func isTupleLiteral(from startIndex: Int, to endIndex: Int) -> Bool {
+        guard tokens[startIndex] == .startOfScope("("),
+              tokens[endIndex] == .endOfScope(")")
+        else { return false }
+
+        // Check if there's at least one comma at depth 0
+        var depth = 0
+        var hasComma = false
+
+        for i in (startIndex + 1) ..< endIndex {
+            let token = tokens[i]
+            switch token {
+            case .startOfScope:
+                depth += 1
+            case .endOfScope:
+                depth -= 1
+            case .delimiter(",") where depth == 0:
+                hasComma = true
+            default:
+                break
+            }
+        }
+
+        return hasComma
     }
 
     /// Parses tuple values like (1, 2, 3)

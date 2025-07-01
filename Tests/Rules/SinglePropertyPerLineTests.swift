@@ -300,8 +300,6 @@ class SinglePropertyPerLineTests: XCTestCase {
         testFormatting(for: input, output, rule: .singlePropertyPerLine)
     }
 
-    // MARK: - Complex Types Tests
-
     func testSeparatePropertiesWithArrayTypes() {
         let input = "let numbers: [Int], strings: [String], optionals: [Int?]"
         let output = """
@@ -463,8 +461,6 @@ class SinglePropertyPerLineTests: XCTestCase {
         testFormatting(for: input, output, rule: .singlePropertyPerLine)
     }
 
-    // MARK: - Bug Fix Tests
-
     func testIgnoreGuardStatements() {
         let input = """
         guard let foo, foo, bar, let baaz: Baaz else { return }
@@ -600,8 +596,6 @@ class SinglePropertyPerLineTests: XCTestCase {
         """
         testFormatting(for: input, rule: .singlePropertyPerLine)
     }
-
-    // MARK: - Bug Fix Tests for Specific Cases
 
     func testSharedTypeAnnotationDuplication() {
         let input = """
@@ -754,8 +748,6 @@ class SinglePropertyPerLineTests: XCTestCase {
         testFormatting(for: input, rule: .singlePropertyPerLine)
     }
 
-    // MARK: - Tuple Destructuring Tests
-
     func testSimpleTupleDestructuring() {
         let input = "let (foo, bar, baaz) = (1, 2, 3)"
         let output = """
@@ -862,7 +854,7 @@ class SinglePropertyPerLineTests: XCTestCase {
         testFormatting(for: input, rule: .singlePropertyPerLine)
     }
 
-    func testPreserveTupleDestructuringWithPropertyAccess() {
+    func testPreserveTupleDestructuringWithPropertyAccess2() {
         let input = "let (width, height) = view.size"
         testFormatting(for: input, rule: .singlePropertyPerLine)
     }
@@ -896,8 +888,6 @@ class SinglePropertyPerLineTests: XCTestCase {
         """
         testFormatting(for: input, rule: .singlePropertyPerLine)
     }
-
-    // MARK: - Tuple Destructuring with Type Annotations Tests
 
     func testTupleDestructuringWithTypeAnnotation() {
         let input = "let (a, b): (Int, Bool)"
@@ -980,5 +970,37 @@ class SinglePropertyPerLineTests: XCTestCase {
         let error: Error? = nil
         """
         testFormatting(for: input, output, rule: .singlePropertyPerLine)
+    }
+
+    func testPreserveTupleDestructuringWithConditionalExpression() {
+        let input = """
+        let (foo, bar) =
+            if baaz {
+                (true, false)
+            } else {
+                (false, true)
+            }
+        """
+        testFormatting(for: input, rule: .singlePropertyPerLine)
+    }
+
+    func testPreserveTupleDestructuringWithFunctionCall() {
+        let input = "let (result, _): DecodedResponseWithContextCompletionArgument<Response> = castQueryResponse(from: query)"
+        testFormatting(for: input, rule: .singlePropertyPerLine)
+    }
+
+    func testPreserveTupleDestructuringWithClosureLiteral() {
+        let input = "let (_, observers): (Value?, Observers<Value>) = storage.mutate { storage in (nil, storage.observers) }"
+        testFormatting(for: input, rule: .singlePropertyPerLine)
+    }
+
+    func testPreserveTupleDestructuringWithPropertyAccess() {
+        let input = "let (width, height) = view.bounds.size"
+        testFormatting(for: input, rule: .singlePropertyPerLine)
+    }
+
+    func testPreserveTupleDestructuringWithComplexExpression() {
+        let input = "let (min, max) = array.isEmpty ? (0, 0) : (array.min()!, array.max()!)"
+        testFormatting(for: input, rule: .singlePropertyPerLine)
     }
 }

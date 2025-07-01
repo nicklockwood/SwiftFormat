@@ -1928,14 +1928,14 @@ extension Formatter {
     /// A property of the format `(let|var) identifier: Type = expression { ... }`.
     ///  - `: Type`, `= expression`, and the following `{ ... }` body are optional
     struct PropertyDeclaration {
-        /// The start index for this propery's list of modifiers.
+        /// The start index for this property's list of modifiers.
         /// If there are no modifiers, `startOfModifiersIndex` is just `introducerIndex`.
         let startOfModifiersIndex: Int
 
         /// The index of the `let` or `var` keyword
         let introducerIndex: Int
 
-        /// The identifier / name of this propery.
+        /// The identifier / name of this property.
         let identifier: String
 
         /// The index of this property's identifier / name.
@@ -1944,7 +1944,7 @@ extension Formatter {
         /// Information about the property's type definition, if written explicitly.
         let type: (colonIndex: Int, name: String, range: ClosedRange<Int>)?
 
-        /// Information about the value following the propery's `=` token, if present.
+        /// Information about the value following the property's `=` token, if present.
         let value: (assignmentIndex: Int, expressionRange: ClosedRange<Int>)?
 
         /// Information about the body following the property, which can include
@@ -1968,6 +1968,9 @@ extension Formatter {
 
     /// Parses a property of the format `(let|var) identifier: Type = expression`
     /// starting at the given introducer index (the `let` / `var` keyword).
+    ///
+    /// Does not attempt to parse less-common property declarations that define multiple identifiers,
+    /// like `let (foo, bar) = (1, 2)` or `let foo: Foo, bar: Bar`.
     func parsePropertyDeclaration(atIntroducerIndex introducerIndex: Int) -> PropertyDeclaration? {
         guard ["let", "var"].contains(tokens[introducerIndex].string),
               let propertyIdentifierIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: introducerIndex),
@@ -2915,13 +2918,17 @@ extension Formatter {
     struct FunctionCallArgument {
         /// The label of the argument. `nil` if unlabeled.
         let label: String?
-        /// The value of the argument, including any leading or trailing whitespace / comments.
+        /// The index of the optional label
+        let labelIndex: Int?
+        /// The value of the argument
         let value: String
+        /// The index of the value
+        let valueRange: ClosedRange<Int>
     }
 
     /// Parses the parameter labels of the function call with its `(` start of scope
     /// token at the given index.
-    func parseFunctionCallArguments(startOfScope: Int) -> [FunctionCallArgument] {
+    func parseFunctionCallArguments(startOfScope: Int, preserveWhitespace: Bool = false) -> [FunctionCallArgument] {
         assert(tokens[startOfScope] == .startOfScope("("))
         guard let endOfScope = endOfScope(at: startOfScope),
               index(of: .nonSpaceOrCommentOrLinebreak, after: startOfScope) != endOfScope
@@ -2934,18 +2941,55 @@ extension Formatter {
             let endOfPreviousArgument = currentIndex
             let endOfCurrentArgument = index(of: .delimiter(","), in: endOfPreviousArgument + 1 ..< endOfScope) ?? endOfScope
 
+            // If we find a trailing comma, then there's nothing else to parse
+            if index(of: .nonSpaceOrCommentOrLinebreak, after: endOfPreviousArgument) == endOfScope {
+                return argumentLabels
+            }
+
             if let colonIndex = index(of: .delimiter(":"), in: (endOfPreviousArgument + 1) ..< endOfCurrentArgument),
                let argumentLabelIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: colonIndex),
                tokens[argumentLabelIndex].isIdentifier
             {
+                // Conditionally trim whitespace and newlines from the value range
+                var valueStart = colonIndex + 1
+                var valueEnd = endOfCurrentArgument - 1
+
+                if !preserveWhitespace {
+                    while valueStart <= valueEnd, tokens[valueStart].isSpaceOrLinebreak {
+                        valueStart += 1
+                    }
+                    while valueEnd >= valueStart, tokens[valueEnd].isSpaceOrLinebreak {
+                        valueEnd -= 1
+                    }
+                }
+
+                let valueRange = valueStart ... valueEnd
                 argumentLabels.append(FunctionCallArgument(
                     label: tokens[argumentLabelIndex].string,
-                    value: tokens[colonIndex + 1 ..< endOfCurrentArgument].string
+                    labelIndex: argumentLabelIndex,
+                    value: tokens[valueRange].string,
+                    valueRange: valueRange
                 ))
             } else {
+                // Conditionally trim whitespace and newlines from the value range
+                var valueStart = endOfPreviousArgument + 1
+                var valueEnd = endOfCurrentArgument - 1
+
+                if !preserveWhitespace {
+                    while valueStart <= valueEnd, tokens[valueStart].isSpaceOrLinebreak {
+                        valueStart += 1
+                    }
+                    while valueEnd >= valueStart, tokens[valueEnd].isSpaceOrLinebreak {
+                        valueEnd -= 1
+                    }
+                }
+
+                let valueRange = valueStart ... valueEnd
                 argumentLabels.append(FunctionCallArgument(
                     label: nil,
-                    value: tokens[endOfPreviousArgument + 1 ..< endOfCurrentArgument].string
+                    labelIndex: nil,
+                    value: tokens[valueRange].string,
+                    valueRange: valueRange
                 ))
             }
 
@@ -2957,6 +3001,12 @@ extension Formatter {
         }
 
         return argumentLabels
+    }
+
+    /// Parses the parameter labels of the tuple type or value with its `(` start of scope
+    /// token at the given index.
+    func parseTupleArguments(startOfScope: Int) -> [FunctionCallArgument] {
+        parseFunctionCallArguments(startOfScope: startOfScope)
     }
 
     /// Parses the list of conformances on this type, starting at

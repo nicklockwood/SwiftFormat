@@ -522,7 +522,7 @@ class UnusedArgumentsTests: XCTestCase {
             print(bar, baz)
         }
         """
-        testFormatting(for: input, output, rule: .unusedArguments)
+        testFormatting(for: input, output, rule: .unusedArguments, exclude: [.singlePropertyPerLine])
     }
 
     func testShadowedUsedArguments2() {
@@ -741,7 +741,7 @@ class UnusedArgumentsTests: XCTestCase {
             print(foo, bar, baz)
         }
         """
-        testFormatting(for: input, output, rule: .unusedArguments)
+        testFormatting(for: input, output, rule: .unusedArguments, exclude: [.singlePropertyPerLine])
     }
 
     func testUnusedParamsInTupleAssignment() {
@@ -757,7 +757,7 @@ class UnusedArgumentsTests: XCTestCase {
             print(foo, bar, baz, quux)
         }
         """
-        testFormatting(for: input, output, rule: .unusedArguments)
+        testFormatting(for: input, output, rule: .unusedArguments, exclude: [.singlePropertyPerLine])
     }
 
     func testShadowedIfLetNotMarkedAsUnused() {
@@ -789,7 +789,7 @@ class UnusedArgumentsTests: XCTestCase {
             var foo, bar: Int?
         }
         """
-        testFormatting(for: input, output, rule: .unusedArguments)
+        testFormatting(for: input, output, rule: .unusedArguments, exclude: [.singlePropertyPerLine])
     }
 
     func testShadowedClosureNotMarkedUnused() {

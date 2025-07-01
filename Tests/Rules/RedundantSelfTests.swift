@@ -44,7 +44,7 @@ class RedundantSelfTests: XCTestCase {
 
     func testNoRemoveSelfForCommaDelimitedLocalVariables() {
         let input = "func foo() { let foo = self.foo, bar = self.bar }"
-        testFormatting(for: input, rule: .redundantSelf)
+        testFormatting(for: input, rule: .redundantSelf, exclude: [.singlePropertyPerLine])
     }
 
     func testRemoveSelfForCommaDelimitedLocalVariablesOn5_4() {
@@ -52,17 +52,17 @@ class RedundantSelfTests: XCTestCase {
         let output = "func foo() { let foo = self.foo, bar = bar }"
         let options = FormatOptions(swiftVersion: "5.4")
         testFormatting(for: input, output, rule: .redundantSelf,
-                       options: options)
+                       options: options, exclude: [.singlePropertyPerLine])
     }
 
     func testNoRemoveSelfForCommaDelimitedLocalVariables2() {
         let input = "func foo() {\n    let foo: Foo, bar: Bar\n    foo = self.foo\n    bar = self.bar\n}"
-        testFormatting(for: input, rule: .redundantSelf)
+        testFormatting(for: input, rule: .redundantSelf, exclude: [.singlePropertyPerLine])
     }
 
     func testNoRemoveSelfForTupleAssignedVariables() {
         let input = "func foo() { let (bar, baz) = (self.bar, self.baz) }"
-        testFormatting(for: input, rule: .redundantSelf)
+        testFormatting(for: input, rule: .redundantSelf, exclude: [.singlePropertyPerLine])
     }
 
     // TODO: make this work
@@ -76,12 +76,12 @@ class RedundantSelfTests: XCTestCase {
 
     func testNoRemoveSelfForTupleAssignedVariablesFollowedByRegularVariable() {
         let input = "func foo() {\n    let (foo, bar) = (self.foo, self.bar), baz = self.baz\n}"
-        testFormatting(for: input, rule: .redundantSelf)
+        testFormatting(for: input, rule: .redundantSelf, exclude: [.singlePropertyPerLine])
     }
 
     func testNoRemoveSelfForTupleAssignedVariablesFollowedByRegularLet() {
         let input = "func foo() {\n    let (foo, bar) = (self.foo, self.bar)\n    let baz = self.baz\n}"
-        testFormatting(for: input, rule: .redundantSelf)
+        testFormatting(for: input, rule: .redundantSelf, exclude: [.singlePropertyPerLine])
     }
 
     func testNoRemoveNonRedundantNestedFunctionSelf() {
@@ -2284,7 +2284,7 @@ class RedundantSelfTests: XCTestCase {
         }
         """
         let options = FormatOptions(explicitSelf: .insert)
-        testFormatting(for: input, rule: .redundantSelf, options: options)
+        testFormatting(for: input, rule: .redundantSelf, options: options, exclude: [.singlePropertyPerLine])
     }
 
     func testInsertSelfForMemberNamedLazy() {

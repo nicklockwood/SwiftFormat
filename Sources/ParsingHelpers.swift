@@ -1913,14 +1913,14 @@ extension Formatter {
     /// A property of the format `(let|var) identifier: Type = expression { ... }`.
     ///  - `: Type`, `= expression`, and the following `{ ... }` body are optional
     struct PropertyDeclaration {
-        /// The start index for this propery's list of modifiers.
+        /// The start index for this property's list of modifiers.
         /// If there are no modifiers, `startOfModifiersIndex` is just `introducerIndex`.
         let startOfModifiersIndex: Int
 
         /// The index of the `let` or `var` keyword
         let introducerIndex: Int
 
-        /// The identifier / name of this propery.
+        /// The identifier / name of this property.
         let identifier: String
 
         /// The index of this property's identifier / name.
@@ -1929,7 +1929,7 @@ extension Formatter {
         /// Information about the property's type definition, if written explicitly.
         let type: (colonIndex: Int, name: String, range: ClosedRange<Int>)?
 
-        /// Information about the value following the propery's `=` token, if present.
+        /// Information about the value following the property's `=` token, if present.
         let value: (assignmentIndex: Int, expressionRange: ClosedRange<Int>)?
 
         /// Information about the body following the property, which can include

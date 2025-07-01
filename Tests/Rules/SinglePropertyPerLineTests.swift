@@ -619,4 +619,177 @@ class SinglePropertyPerLineTests: XCTestCase {
         """
         testFormatting(for: input, rule: .singlePropertyPerLine)
     }
+
+    // MARK: - Bug Fix Tests for Specific Cases
+
+    func testSharedTypeAnnotationDuplication() {
+        let input = """
+        let itemPosition, itemSize, viewportSize, minContentOffset, maxContentOffset: CGFloat
+        """
+        let output = """
+        let itemPosition: CGFloat
+        let itemSize: CGFloat
+        let viewportSize: CGFloat
+        let minContentOffset: CGFloat
+        let maxContentOffset: CGFloat
+        """
+        testFormatting(for: input, output, rule: .singlePropertyPerLine)
+    }
+
+    func testSwitchCaseWithOptionalBindings() {
+        let input = """
+        switch value {
+        case (let leading?, nil, nil):
+            return
+        }
+        """
+        testFormatting(for: input, rule: .singlePropertyPerLine)
+    }
+
+    func testSwitchCaseWithMultipleConditions() {
+        let input = """
+        let fromFrame, toFrame: CGRect
+        switch (containerType, destinationContentMode) {
+        case (.source, _), (_, .fill):
+            break
+        }
+        """
+        let output = """
+        let fromFrame: CGRect
+        let toFrame: CGRect
+        switch (containerType, destinationContentMode) {
+        case (.source, _), (_, .fill):
+            break
+        }
+        """
+        testFormatting(for: input, output, rule: .singlePropertyPerLine, exclude: [.sortSwitchCases, .wrapSwitchCases])
+    }
+
+    // TODO: Fix tuple parsing - parseExpressionRange doesn't handle tuples correctly
+    // func testSimpleTupleValues() {
+    //     let input = "let a = (1, 2), b = (3, 4)"
+    //     let output = """
+    //     let a = (1, 2)
+    //     let b = (3, 4)
+    //     """
+    //     testFormatting(for: input, output, rule: .singlePropertyPerLine)
+    // }
+
+    func testBasicCommaDetection() {
+        // Test if parseExpressionRange is working correctly for simple cases
+        let input = "let x = 5, y = 10"
+        let output = """
+        let x = 5
+        let y = 10
+        """
+        testFormatting(for: input, output, rule: .singlePropertyPerLine)
+    }
+
+    func testSimpleSharedType() {
+        let input = "let a, b: Int"
+        let output = """
+        let a: Int
+        let b: Int
+        """
+        testFormatting(for: input, output, rule: .singlePropertyPerLine)
+    }
+
+    func testEnumDeclarationWithConformances() {
+        let input = "enum DiagnosticFailure: Error, CustomStringConvertible { }"
+        testFormatting(for: input, rule: .singlePropertyPerLine, exclude: [.emptyBraces])
+    }
+
+    func testIfLetWithTupleDestructuring() {
+        let input = """
+        if let (cacheKey, cachedHeight) = cachedHeight, cacheKey == newCacheKey {
+            return cachedHeight
+        }
+        """
+        testFormatting(for: input, rule: .singlePropertyPerLine)
+    }
+
+    func testGuardCaseWithBinding() {
+        let input = """
+        guard case .link(let url, _) = tappableContent else {
+            return
+        }
+        """
+        testFormatting(for: input, rule: .singlePropertyPerLine, exclude: [.hoistPatternLet])
+    }
+
+    func testIfLetWithMultipleConditions() {
+        let input = """
+        if let (cacheKey, cachedHeight) = cachedHeight, cacheKey == newCacheKey {
+            return cachedHeight
+        }
+        """
+        testFormatting(for: input, rule: .singlePropertyPerLine)
+    }
+
+    func testClassDeclarationWithMultipleInheritance() {
+        let input = "public final class PrimaryButton: BaseMarginView, ConstellationView, PrimaryActionLoggable { }"
+        testFormatting(for: input, rule: .singlePropertyPerLine, exclude: [.emptyBraces])
+    }
+
+    func testSwitchCaseWithMultipleLetBindings() {
+        let input = """
+        switch value {
+        case .remote(url: let url, placeholder: let placeholder, aspectRatio: let aspectRatio):
+            break
+        }
+        """
+        testFormatting(for: input, rule: .singlePropertyPerLine, exclude: [.hoistPatternLet, .wrapSwitchCases])
+    }
+
+    func testSwitchCaseWithMixedPatterns() {
+        let input = """
+        switch content {
+        case .link(let title, _, _), .text(let title, _):
+            return title
+        }
+        """
+        testFormatting(for: input, rule: .singlePropertyPerLine, exclude: [.hoistPatternLet, .wrapSwitchCases])
+    }
+
+    func testSimpleCasePattern() {
+        let input = """
+        switch value {
+        case let a, let b:
+            break
+        }
+        """
+        testFormatting(for: input, rule: .singlePropertyPerLine, exclude: [.hoistPatternLet, .wrapSwitchCases])
+    }
+
+    func testVerySimpleCasePattern() {
+        let input = """
+        switch value {
+        case let a:
+            break
+        }
+        """
+        testFormatting(for: input, rule: .singlePropertyPerLine)
+    }
+
+    func testCasePatternWithParentheses() {
+        let input = """
+        switch value {
+        case .remote(let url, let placeholder):
+            break
+        }
+        """
+        testFormatting(for: input, rule: .singlePropertyPerLine, exclude: [.hoistPatternLet])
+    }
+
+    func testEnumWithProtocolConformanceListFollowingProperty() {
+        let input = """
+        public let foo = "bar"
+
+        enum MyEnum: Error, CustomStringConvertible {
+            case foo
+            case bar
+        }
+        """
+        testFormatting(for: input, rule: .singlePropertyPerLine)
+    }
 }

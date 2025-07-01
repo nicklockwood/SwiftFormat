@@ -2,8 +2,8 @@
 //  SinglePropertyPerLine.swift
 //  SwiftFormat
 //
-//  Created by Cal Stephens on 12/26/24.
-//  Copyright © 2024 Nick Lockwood. All rights reserved.
+//  Created by Cal Stephens on 6/27/25.
+//  Copyright © 2025 Nick Lockwood. All rights reserved.
 //
 
 import Foundation
@@ -20,6 +20,14 @@ public extension FormatRule {
 
             // Skip if this is part of a guard, if, or while statement
             if formatter.isConditionalStatement(at: i) {
+                return
+            }
+
+            // If this property is within a parenthesis scope, this is probably
+            // within a switch case like `case (let foo, bar):`
+            if let startOfScope = formatter.startOfScope(at: i),
+               formatter.tokens[startOfScope] == .startOfScope("(")
+            {
                 return
             }
 
@@ -64,7 +72,7 @@ public extension FormatRule {
                 }
             }
 
-            // Add shared type to all properties (simple search approach)
+            // Add shared type to all properties
             if let sharedTypeTokens {
                 // Find all property identifiers that need the shared type
                 // Search in reverse order to avoid index invalidation

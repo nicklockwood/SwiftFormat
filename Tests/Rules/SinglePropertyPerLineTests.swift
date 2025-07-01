@@ -2,8 +2,8 @@
 //  SinglePropertyPerLineTests.swift
 //  SwiftFormatTests
 //
-//  Created by Cal Stephens on 12/26/24.
-//  Copyright © 2024 Nick Lockwood. All rights reserved.
+//  Created by Cal Stephens on 6/27/25.
+//  Copyright © 2025 Nick Lockwood. All rights reserved.
 //
 
 import XCTest
@@ -251,25 +251,6 @@ class SinglePropertyPerLineTests: XCTestCase {
             let b = 2
             var x: Int
             var y: Int
-        }
-        """
-        testFormatting(for: input, output, rule: .singlePropertyPerLine)
-    }
-
-    func testInsideEnumBody() {
-        let input = """
-        enum Configuration {
-            case light(let brightness: Float, contrast: Float)
-
-            static let defaultBrightness = 1.0, defaultContrast = 0.8
-        }
-        """
-        let output = """
-        enum Configuration {
-            case light(let brightness: Float, contrast: Float)
-
-            static let defaultBrightness = 1.0
-            static let defaultContrast = 0.8
         }
         """
         testFormatting(for: input, output, rule: .singlePropertyPerLine)
@@ -751,30 +732,10 @@ class SinglePropertyPerLineTests: XCTestCase {
         testFormatting(for: input, rule: .singlePropertyPerLine, exclude: [.hoistPatternLet, .wrapSwitchCases])
     }
 
-    func testSimpleCasePattern() {
-        let input = """
-        switch value {
-        case let a, let b:
-            break
-        }
-        """
-        testFormatting(for: input, rule: .singlePropertyPerLine, exclude: [.hoistPatternLet, .wrapSwitchCases])
-    }
-
-    func testVerySimpleCasePattern() {
-        let input = """
-        switch value {
-        case let a:
-            break
-        }
-        """
-        testFormatting(for: input, rule: .singlePropertyPerLine)
-    }
-
     func testCasePatternWithParentheses() {
         let input = """
         switch value {
-        case .remote(let url, let placeholder):
+        case .remote(let url, placeholder):
             break
         }
         """

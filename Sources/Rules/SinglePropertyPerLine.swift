@@ -106,13 +106,18 @@ public extension FormatRule {
 
             // Handle tuple destructing properties like `let (foo, bar) = (1, 2)
             if let tupleDecl = formatter.parseTuplePropertyDeclaration(at: i) {
-                // If the tuple property has a non-tuple type value, preserve if
+                // If the tuple property has a non-tuple type value, preserve it
                 if tupleDecl.type != nil, tupleDecl.type?.tupleTypes == nil {
                     return
                 }
 
                 // If the tuple property has a non-tuple RHS value, preserve it
                 if tupleDecl.value != nil, tupleDecl.value?.tupleValueRanges == nil {
+                    return
+                }
+
+                // The property should have at least either a value or a type
+                if tupleDecl.value == nil, tupleDecl.type == nil {
                     return
                 }
 

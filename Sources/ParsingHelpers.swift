@@ -2905,7 +2905,7 @@ extension Formatter {
         let label: String?
         /// The index of the optional label
         let labelIndex: Int?
-        /// The value of the argument, including any leading or trailing whitespace / comments.
+        /// The value of the argument
         let value: String
         /// The index of the value
         let valueRange: ClosedRange<Int>
@@ -2930,18 +2930,42 @@ extension Formatter {
                let argumentLabelIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: colonIndex),
                tokens[argumentLabelIndex].isIdentifier
             {
+                // Trim whitespace and newlines from the value range
+                var valueStart = colonIndex + 1
+                var valueEnd = endOfCurrentArgument - 1
+
+                while valueStart <= valueEnd, tokens[valueStart].isSpaceOrLinebreak {
+                    valueStart += 1
+                }
+                while valueEnd >= valueStart, tokens[valueEnd].isSpaceOrLinebreak {
+                    valueEnd -= 1
+                }
+
+                let trimmedValueRange = valueStart ... valueEnd
                 argumentLabels.append(FunctionCallArgument(
                     label: tokens[argumentLabelIndex].string,
                     labelIndex: argumentLabelIndex,
-                    value: tokens[colonIndex + 1 ..< endOfCurrentArgument].string,
-                    valueRange: ClosedRange(colonIndex + 1 ..< endOfCurrentArgument)
+                    value: tokens[trimmedValueRange].string,
+                    valueRange: trimmedValueRange
                 ))
             } else {
+                // Trim whitespace and newlines from the value range
+                var valueStart = endOfPreviousArgument + 1
+                var valueEnd = endOfCurrentArgument - 1
+
+                while valueStart <= valueEnd, tokens[valueStart].isSpaceOrLinebreak {
+                    valueStart += 1
+                }
+                while valueEnd >= valueStart, tokens[valueEnd].isSpaceOrLinebreak {
+                    valueEnd -= 1
+                }
+
+                let trimmedValueRange = valueStart ... valueEnd
                 argumentLabels.append(FunctionCallArgument(
                     label: nil,
                     labelIndex: nil,
-                    value: tokens[endOfPreviousArgument + 1 ..< endOfCurrentArgument].string,
-                    valueRange: ClosedRange(endOfPreviousArgument + 1 ..< endOfCurrentArgument)
+                    value: tokens[trimmedValueRange].string,
+                    valueRange: trimmedValueRange
                 ))
             }
 

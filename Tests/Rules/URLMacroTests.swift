@@ -19,7 +19,19 @@ class URLMacroTests: XCTestCase {
 
         let url = #URL("https://example.com")
         """
-        testFormatting(for: input, output, rule: .urlMacro, options: FormatOptions(urlMacro: .macro("#URL", module: "URLFoundation")), exclude: [.blankLineAfterImports, .redundantInit, .propertyTypes, .trailingSpace, .indent, .spaceInsideParens])
+        let options = FormatOptions(urlMacro: .macro("#URL", module: "URLFoundation"))
+        testFormatting(for: input, output, rule: .urlMacro, options: options, exclude: [.propertyTypes])
+    }
+
+    func testImportNotAddedInFragment() {
+        let input = """
+        let url = URL(string: "https://example.com")!
+        """
+        let output = """
+        let url = #URL("https://example.com")
+        """
+        let options = FormatOptions(urlMacro: .macro("#URL", module: "URLFoundation"), fragment: true)
+        testFormatting(for: input, output, rule: .urlMacro, options: options, exclude: [.propertyTypes])
     }
 
     func testURLStringForceUnwrapInReturnStatement() {
@@ -35,7 +47,8 @@ class URLMacroTests: XCTestCase {
             return #URL("https://api.example.com/users")
         }
         """
-        testFormatting(for: input, output, rule: .urlMacro, options: FormatOptions(urlMacro: .macro("#URL", module: "URLFoundation")), exclude: [.blankLineAfterImports, .redundantInit, .propertyTypes, .trailingSpace, .indent, .spaceInsideParens])
+        let options = FormatOptions(urlMacro: .macro("#URL", module: "URLFoundation"))
+        testFormatting(for: input, output, rule: .urlMacro, options: options, exclude: [.propertyTypes])
     }
 
     func testURLStringForceUnwrapInAssignment() {
@@ -49,7 +62,8 @@ class URLMacroTests: XCTestCase {
         var baseURL: URL
         baseURL = #URL("https://api.service.com")
         """
-        testFormatting(for: input, output, rule: .urlMacro, options: FormatOptions(urlMacro: .macro("#URL", module: "URLFoundation")), exclude: [.blankLineAfterImports, .redundantInit, .propertyTypes, .trailingSpace, .indent, .spaceInsideParens])
+        let options = FormatOptions(urlMacro: .macro("#URL", module: "URLFoundation"))
+        testFormatting(for: input, output, rule: .urlMacro, options: options, exclude: [.propertyTypes])
     }
 
     func testURLStringForceUnwrapWithComplexString() {
@@ -61,7 +75,8 @@ class URLMacroTests: XCTestCase {
 
         let complexURL = #URL("https://example.com/path?param=value&other=123")
         """
-        testFormatting(for: input, output, rule: .urlMacro, options: FormatOptions(urlMacro: .macro("#URL", module: "URLFoundation")), exclude: [.blankLineAfterImports, .redundantInit, .propertyTypes, .trailingSpace, .indent, .spaceInsideParens])
+        let options = FormatOptions(urlMacro: .macro("#URL", module: "URLFoundation"))
+        testFormatting(for: input, output, rule: .urlMacro, options: options, exclude: [.propertyTypes])
     }
 
     func testURLStringForceUnwrapWithSpacing() {
@@ -73,7 +88,8 @@ class URLMacroTests: XCTestCase {
 
         let url = #URL("https://example.com" )
         """
-        testFormatting(for: input, output, rule: .urlMacro, options: FormatOptions(urlMacro: .macro("#URL", module: "URLFoundation")), exclude: [.blankLineAfterImports, .redundantInit, .propertyTypes, .trailingSpace, .indent, .spaceInsideParens])
+        let options = FormatOptions(urlMacro: .macro("#URL", module: "URLFoundation"))
+        testFormatting(for: input, output, rule: .urlMacro, options: options, exclude: [.propertyTypes, .spaceInsideParens])
     }
 
     func testMultipleURLStringForceUnwraps() {
@@ -87,47 +103,55 @@ class URLMacroTests: XCTestCase {
         let url1 = #URL("https://example.com")
         let url2 = #URL("https://other.com")
         """
-        testFormatting(for: input, output, rule: .urlMacro, options: FormatOptions(urlMacro: .macro("#URL", module: "URLFoundation")), exclude: [.blankLineAfterImports, .redundantInit, .propertyTypes, .trailingSpace, .indent, .spaceInsideParens])
+        let options = FormatOptions(urlMacro: .macro("#URL", module: "URLFoundation"))
+        testFormatting(for: input, output, rule: .urlMacro, options: options, exclude: [.propertyTypes])
     }
 
     func testURLStringOptionalNotConverted() {
         let input = """
         let url = URL(string: "https://example.com")
         """
-        testFormatting(for: input, rule: .urlMacro, options: FormatOptions(urlMacro: .macro("#URL", module: "URLFoundation")), exclude: [.blankLineAfterImports, .redundantInit, .propertyTypes, .trailingSpace, .indent, .spaceInsideParens])
+        let options = FormatOptions(urlMacro: .macro("#URL", module: "URLFoundation"))
+        testFormatting(for: input, rule: .urlMacro, options: options, exclude: [.propertyTypes])
     }
 
     func testURLStringOptionalWithNilCoalescingNotConverted() {
         let input = """
         let url = URL(string: "https://example.com") ?? URL(fileURLWithPath: "/")
         """
-        testFormatting(for: input, rule: .urlMacro, options: FormatOptions(urlMacro: .macro("#URL", module: "URLFoundation")), exclude: [.blankLineAfterImports, .redundantInit, .propertyTypes, .trailingSpace, .indent, .spaceInsideParens])
+        let options = FormatOptions(urlMacro: .macro("#URL", module: "URLFoundation"))
+        testFormatting(for: input, rule: .urlMacro, options: options, exclude: [.propertyTypes])
     }
 
     func testURLFileURLWithPathNotConverted() {
         let input = """
         let url = URL(fileURLWithPath: "/path/to/file")!
         """
-        testFormatting(for: input, rule: .urlMacro, options: FormatOptions(urlMacro: .macro("#URL", module: "URLFoundation")), exclude: [.blankLineAfterImports, .redundantInit, .propertyTypes, .trailingSpace, .indent, .spaceInsideParens])
+        let options = FormatOptions(urlMacro: .macro("#URL", module: "URLFoundation"))
+        testFormatting(for: input, rule: .urlMacro, options: options, exclude: [.propertyTypes])
     }
 
     func testURLWithOtherInitializerNotConverted() {
         let input = """
         let url = URL(string: "https://example.com", relativeTo: baseURL)!
         """
-        testFormatting(for: input, rule: .urlMacro, options: FormatOptions(urlMacro: .macro("#URL", module: "URLFoundation")), exclude: [.blankLineAfterImports, .redundantInit, .propertyTypes, .trailingSpace, .indent, .spaceInsideParens])
+        let options = FormatOptions(urlMacro: .macro("#URL", module: "URLFoundation"))
+        testFormatting(for: input, rule: .urlMacro, options: options, exclude: [.propertyTypes])
     }
 
     func testExistingURLFoundationImportNotDuplicated() {
         let input = """
         import URLFoundation
+
         let url = URL(string: "https://example.com")!
         """
         let output = """
         import URLFoundation
+
         let url = #URL("https://example.com")
         """
-        testFormatting(for: input, output, rule: .urlMacro, options: FormatOptions(urlMacro: .macro("#URL", module: "URLFoundation")), exclude: [.blankLineAfterImports, .redundantInit, .propertyTypes, .trailingSpace, .indent, .spaceInsideParens])
+        let options = FormatOptions(urlMacro: .macro("#URL", module: "URLFoundation"))
+        testFormatting(for: input, output, rule: .urlMacro, options: options, exclude: [.propertyTypes])
     }
 
     func testURLInDifferentContexts() {
@@ -153,7 +177,8 @@ class URLMacroTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .urlMacro, options: FormatOptions(urlMacro: .macro("#URL", module: "URLFoundation")), exclude: [.blankLineAfterImports, .redundantInit, .propertyTypes, .trailingSpace, .indent, .spaceInsideParens])
+        let options = FormatOptions(urlMacro: .macro("#URL", module: "URLFoundation"))
+        testFormatting(for: input, output, rule: .urlMacro, options: options, exclude: [.propertyTypes])
     }
 
     func testURLWithEscapedCharacters() {
@@ -165,14 +190,15 @@ class URLMacroTests: XCTestCase {
 
         let url = #URL("https://example.com/path with spaces")
         """
-        testFormatting(for: input, output, rule: .urlMacro, options: FormatOptions(urlMacro: .macro("#URL", module: "URLFoundation")), exclude: [.blankLineAfterImports, .redundantInit, .propertyTypes, .trailingSpace, .indent, .spaceInsideParens])
+        let options = FormatOptions(urlMacro: .macro("#URL", module: "URLFoundation"))
+        testFormatting(for: input, output, rule: .urlMacro, options: options, exclude: [.propertyTypes])
     }
 
     func testNoTransformationWhenMacroNotConfigured() {
         let input = """
         let url = URL(string: "https://example.com")!
         """
-        testFormatting(for: input, rule: .urlMacro, options: FormatOptions(urlMacro: .none), exclude: [.blankLineAfterImports, .redundantInit, .propertyTypes, .trailingSpace, .indent, .spaceInsideParens])
+        testFormatting(for: input, rule: .urlMacro, exclude: [.propertyTypes])
     }
 
     func testCustomMacroConfiguration() {
@@ -182,9 +208,10 @@ class URLMacroTests: XCTestCase {
         let output = """
         import CustomURLLib
 
-        let url = @CustomURL("https://example.com")
+        let url = #CustomURL("https://example.com")
         """
-        testFormatting(for: input, output, rule: .urlMacro, options: FormatOptions(urlMacro: .macro("@CustomURL", module: "CustomURLLib")), exclude: [.blankLineAfterImports, .redundantInit, .propertyTypes, .trailingSpace, .indent, .spaceInsideParens])
+        let options = FormatOptions(urlMacro: .macro("#CustomURL", module: "CustomURLLib"))
+        testFormatting(for: input, output, rule: .urlMacro, options: options, exclude: [.propertyTypes])
     }
 
     func testStringInterpolationNotConverted() {
@@ -192,7 +219,8 @@ class URLMacroTests: XCTestCase {
         let domain = "example.com"
         let url = URL(string: "https://\\(domain)/path")!
         """
-        testFormatting(for: input, rule: .urlMacro, options: FormatOptions(urlMacro: .macro("#URL", module: "URLFoundation")), exclude: [.blankLineAfterImports, .redundantInit, .propertyTypes, .trailingSpace, .indent, .spaceInsideParens])
+        let options = FormatOptions(urlMacro: .macro("#URL", module: "URLFoundation"))
+        testFormatting(for: input, rule: .urlMacro, options: options, exclude: [.propertyTypes])
     }
 
     func testStringConcatenationNotConverted() {
@@ -200,7 +228,8 @@ class URLMacroTests: XCTestCase {
         let baseURL = "https://api.example.com"
         let url = URL(string: baseURL + "/endpoint")!
         """
-        testFormatting(for: input, rule: .urlMacro, options: FormatOptions(urlMacro: .macro("#URL", module: "URLFoundation")), exclude: [.blankLineAfterImports, .redundantInit, .propertyTypes, .trailingSpace, .indent, .spaceInsideParens])
+        let options = FormatOptions(urlMacro: .macro("#URL", module: "URLFoundation"))
+        testFormatting(for: input, rule: .urlMacro, options: options, exclude: [.propertyTypes])
     }
 
     func testComplexStringExpressionNotConverted() {
@@ -208,6 +237,7 @@ class URLMacroTests: XCTestCase {
         let clientID = "12345"
         let url = URL(string: "com.googleusercontent.apps.\\(clientID):/oauth2redirect/google")!
         """
-        testFormatting(for: input, rule: .urlMacro, options: FormatOptions(urlMacro: .macro("#URL", module: "URLFoundation")), exclude: [.blankLineAfterImports, .redundantInit, .propertyTypes, .trailingSpace, .indent, .spaceInsideParens])
+        let options = FormatOptions(urlMacro: .macro("#URL", module: "URLFoundation"))
+        testFormatting(for: input, rule: .urlMacro, options: options, exclude: [.propertyTypes])
     }
 }

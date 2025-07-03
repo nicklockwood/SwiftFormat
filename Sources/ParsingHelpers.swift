@@ -2176,6 +2176,9 @@ extension Formatter {
 
     /// Adds imports for the given list of modules to this file if not already present
     func addImports(_ importsToAddIfNeeded: [String]) {
+        // Don't add imports in fragments
+        if options.fragment { return }
+
         let importRanges = parseImports()
         let currentImports = Set(importRanges.flatMap { $0.map(\.module) })
 

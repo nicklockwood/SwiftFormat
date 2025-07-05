@@ -506,6 +506,18 @@ class ArgumentsTests: XCTestCase {
         XCTAssertEqual(config, "--header \"// hello\\n// world\"")
     }
 
+    func testSerializeOptionsWithPoundCharacter() throws {
+        let options = Options(formatOptions: FormatOptions(
+            urlMacro: .macro("#URL", module: "URLFoundation"),
+            preferFileMacro: false
+        ))
+        let config = serialize(options: options, excludingDefaults: true)
+        XCTAssertEqual(config, """
+        --filemacro "#fileID"
+        --urlmacro "#URL,URLFoundation"
+        """)
+    }
+
     // trailing separator
 
     func testSerializeOptionsDisabledDefaultRulesEnabledIsEmpty() throws {

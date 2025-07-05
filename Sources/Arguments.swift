@@ -446,6 +446,9 @@ func serialize(arguments: [String: String],
         if value.contains(" ") {
             value = "\"\(value.replacingOccurrences(of: "\"", with: "\\\""))\""
         }
+        if value.contains("#") {
+            value = "\"\(value)\""
+        }
         return "--\($0) \(value)"
     }.sorted().joined(separator: separator)
 }

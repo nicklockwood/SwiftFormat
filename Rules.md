@@ -677,7 +677,7 @@ Option | Description
 +     "bar"
   }
 
-// With --condassignment always (disabled by default)
+  // With --condassignment always (disabled by default)
 - switch condition {
 + foo.bar = switch condition {
   case true:
@@ -1162,11 +1162,11 @@ Option | Description
 <summary>Examples</summary>
 
 ```diff
-// --filemacro #file
+  // --filemacro #file
 - func foo(file: StaticString = #fileID) { ... }
 + func foo(file: StaticString = #file) { ... }
 
-// --filemacro #fileID
+  // --filemacro #fileID
 - func foo(file: StaticString = #file) { ... }
 + func foo(file: StaticString = #fileID) { ... }
 ```
@@ -1196,7 +1196,7 @@ Option | Description
 + extension Dictionary<Key, Value> {}
 + extension Collection<Foo> {}
 
-// With `typeSugar` also enabled:
+  // With `typeSugar` also enabled:
 - extension Array where Element == Foo {}
 - extension Optional where Wrapped == Foo {}
 - extension Dictionary where Key == Foo, Value == Bar {}
@@ -1204,7 +1204,7 @@ Option | Description
 + extension Foo? {}
 + extension [Key: Value] {}
 
-// Also supports user-defined types!
+  // Also supports user-defined types!
 - extension LinkedList where Element == Foo {}
 - extension Reducer where
 -     State == FooState,
@@ -1486,15 +1486,15 @@ Option | Description
 ```diff
 + // MARK: - FooViewController
 +
- final class FooViewController: UIViewController { }
+  final class FooViewController: UIViewController { }
 
 + // MARK: UICollectionViewDelegate
 +
- extension FooViewController: UICollectionViewDelegate { }
+  extension FooViewController: UICollectionViewDelegate { }
 
 + // MARK: - String + FooProtocol
 +
- extension String: FooProtocol { }
+  extension String: FooProtocol { }
 ```
 
 </details>
@@ -1583,34 +1583,34 @@ or `try XCTUnwrap(...)` / `XCTAssert(...)`.
 <summary>Examples</summary>
 
 ```diff
-import XCTest
+  import XCTest
 
-final class SomeTestCase: XCTestCase {
--   func test_something() {
-+   func test_something() throws {
--     guard let value = optionalValue, value.matchesCondition else {
--       XCTFail()
--       return
--     }
-+     let value = try XCTUnwrap(optionalValue)
-+     XCTAssert(value.matchesCondition)
+  final class SomeTestCase: XCTestCase {
+-     func test_something() {
++     func test_something() throws {
+-         guard let value = optionalValue, value.matchesCondition else {
+-             XCTFail()
+-             return
+-         }
++         let value = try XCTUnwrap(optionalValue)
++         XCTAssert(value.matchesCondition)
+      }
   }
-}
 ```
 
 ```diff
-import Testing
+  import Testing
 
-struct SomeTests {
-  @Test
-  func something() throws {
--   guard let value = optionalValue, value.matchesCondition else {
--     return
--   }
-+   let value = try #require(optionalValue)
-+   #expect(value.matchesCondition)
+  struct SomeTests {
+      @Test
+      func something() throws {
+-         guard let value = optionalValue, value.matchesCondition else {
+-             return
+-         }
++         let value = try #require(optionalValue)
++         #expect(value.matchesCondition)
+      }
   }
-}
 ```
 
 </details>
@@ -1680,7 +1680,7 @@ Option | Description
       print(value)
   }
 
-// With `--someany enabled` (the default)
+  // With `--someany enabled` (the default)
 - func handle<T>(_ value: T) {
 + func handle(_ value: some Any) {
       print(value)
@@ -1754,7 +1754,7 @@ Without this declaration, only functions will be reordered, while properties wil
 -     func f() {}
 -     init() {}
 -     deinit() {}
- }
+  }
 
   public class Foo {
 +
@@ -1781,7 +1781,7 @@ Without this declaration, only functions will be reordered, while properties wil
 +
 +     private let g: Int = 2
 +
- }
+  }
 ```
 
 `--organizationmode type`
@@ -1799,7 +1799,7 @@ Without this declaration, only functions will be reordered, while properties wil
 -     func f() {}
 -     init() {}
 -     deinit() {}
- }
+  }
 
   public class Foo {
 +
@@ -1822,7 +1822,7 @@ Without this declaration, only functions will be reordered, while properties wil
 +     public func c() -> String {}
 +     public func d() {}
 +
- }
+  }
 ```
 
 </details>
@@ -2023,15 +2023,15 @@ Option | Description
 <summary>Examples</summary>
 
 ```diff
-// with --propertytypes inferred
+  // with --propertytypes inferred
 - let view: UIView = UIView()
 + let view = UIView()
 
-// with --propertytypes explicit
+  // with --propertytypes explicit
 - let view: UIView = UIView()
 + let view: UIView = .init()
 
-// with --propertytypes infer-locals-only
+  // with --propertytypes infer-locals-only
   class Foo {
 -     let view: UIView = UIView()
 +     let view: UIView = .init()
@@ -2330,15 +2330,15 @@ Remove explicit internal memberwise initializers that are redundant.
 <summary>Examples</summary>
 
 ```diff
-struct Person {
-    var name: String
-    var age: Int
+  struct Person {
+      var name: String
+      var age: Int
 
--   init(name: String, age: Int) {
--       self.name = name
--       self.age = age
--   }
-}
+-     init(name: String, age: Int) {
+-         self.name = name
+-         self.age = age
+-     }
+  }
 ```
 
 </details>
@@ -2363,13 +2363,13 @@ Option | Description
 ```
 
 ```diff
-// doesn't apply to `let` properties
-let foo: Int? = nil
+  // doesn't apply to `let` properties
+  let foo: Int? = nil
 ```
 
 ```diff
-// doesn't affect non-nil initialization
-var foo: Int? = 0
+  // doesn't affect non-nil initialization
+  var foo: Int? = 0
 ```
 
 `--nilinit insert`
@@ -2663,15 +2663,15 @@ Option | Description
 <summary>Examples</summary>
 
 ```diff
-// with --propertytypes inferred
+  // with --propertytypes inferred
 - let view: UIView = UIView()
 + let view = UIView()
 
-// with --propertytypes explicit
+  // with --propertytypes explicit
 - let view: UIView = UIView()
 + let view: UIView = .init()
 
-// with --propertytypes infer-locals-only
+  // with --propertytypes infer-locals-only
   class Foo {
 -     let view: UIView = UIView()
 +     let view: UIView = .init()
@@ -2682,7 +2682,7 @@ Option | Description
       }
   }
 
-// Swift 5.9+, with --propertytypes inferred (SE-0380)
+  // Swift 5.9+, with --propertytypes inferred (SE-0380)
 - let foo: Foo = if condition {
 + let foo = if condition {
       Foo("foo")
@@ -2690,7 +2690,7 @@ Option | Description
       Foo("bar")
   }
 
-// Swift 5.9+, with --propertytypes explicit (SE-0380)
+  // Swift 5.9+, with --propertytypes explicit (SE-0380)
   let foo: Foo = if condition {
 -     Foo("foo")
 +     .init("foo")
@@ -2772,9 +2772,9 @@ Option | Description
 ```
 
 ```diff
-// semicolon is not removed if it would affect the behavior of the code
-return;
-goto(fail)
+  // semicolon is not removed if it would affect the behavior of the code
+  return;
+  goto(fail)
 ```
 
 </details>
@@ -2842,11 +2842,7 @@ Option | Description
 +     case upsellB
   }
 
-config:
-```
-    sortedpatterns: 'Feature'
-```
-
+  /// With --sortedpatterns Feature
   enum FeatureFlags {
 -     case upsellB
 -     case fooFeature
@@ -3278,6 +3274,7 @@ Write tests that use `throws` instead of using `try!`.
 +           try MyFeature().doSomething()
       }
     }
+```
 
 </details>
 <br/>

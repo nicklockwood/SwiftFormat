@@ -156,7 +156,7 @@ public extension FormatRule {
         +     "bar"
           }
 
-        // With --condassignment always (disabled by default)
+          // With --condassignment always (disabled by default)
         - switch condition {
         + foo.bar = switch condition {
           case true:

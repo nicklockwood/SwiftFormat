@@ -68,7 +68,7 @@ public extension FormatRule {
         -     func f() {}
         -     init() {}
         -     deinit() {}
-         }
+          }
 
           public class Foo {
         +
@@ -95,7 +95,7 @@ public extension FormatRule {
         +
         +     private let g: Int = 2
         +
-         }
+          }
         ```
 
         `--organizationmode type`
@@ -113,7 +113,7 @@ public extension FormatRule {
         -     func f() {}
         -     init() {}
         -     deinit() {}
-         }
+          }
 
           public class Foo {
         +
@@ -136,7 +136,7 @@ public extension FormatRule {
         +     public func c() -> String {}
         +     public func d() {}
         +
-         }
+          }
         ```
         """
     }

@@ -1139,7 +1139,17 @@ func processInput(_ inputURLs: [URL],
                     // Format individual code blocks in markdown files is enabled
                     if inputURL.pathExtension == "md", options.fileOptions?.supportedFileExtensions.contains("md") == true {
                         var markdown = input
-                        let swiftCodeBlocks = parseSwiftCodeBlocks(fromMarkdown: input)
+                        let swiftCodeBlocks: [MarkdownCodeBlock]
+                        do {
+                            swiftCodeBlocks = try parseCodeBlocks(fromMarkdown: input, language: "swift")
+                        } catch {
+                            switch options.fileOptions?.markdownFormattingMode {
+                            case .strict:
+                                throw error
+                            case .lenient, nil:
+                                swiftCodeBlocks = []
+                            }
+                        }
 
                         // Iterate backwards through the code blocks to not invalidate existing indices
                         for swiftCodeBlock in swiftCodeBlocks.reversed() {
@@ -1339,21 +1349,35 @@ private struct OutputTokensData: Encodable {
     }
 }
 
-/// Parses Swift code blocks in the given code file.
-///
-/// Any text on following the open delimiter on that initial line is returned in `options`.
+/// A code block from a markdown file
 ///
 /// For example:
 ///
-/// ```swift {{options like `no-format`, `--disable ruleName` can be put here}}
+/// ```{language} {{options like `no-format`, `--disable ruleName` can be put here}}
 /// // This content is returned as text,
 /// // and its range in the markdown string is returned as range.
 /// ```
-func parseSwiftCodeBlocks(fromMarkdown markdown: String)
-    -> [(range: Range<String.Index>, text: String, options: String?, lineStartIndex: Int)]
-{
+struct MarkdownCodeBlock {
+    let language: String
+    let range: Range<String.Index>
+    let text: String
+    let options: String?
+    let lineStartIndex: Int
+}
+
+/// Parses code blocks of a specific language in the given markdown file.
+///
+/// Any text following the open delimiter on that initial line is returned in `options`.
+///
+/// For example:
+///
+/// ```{language} {{options like `no-format`, `--disable ruleName` can be put here}}
+/// // This content is returned as text,
+/// // and its range in the markdown string is returned as range.
+/// ```
+func parseCodeBlocks(fromMarkdown markdown: String, language: String) throws -> [MarkdownCodeBlock] {
     let lines = markdown.lineRanges
-    var codeBlocks: [(range: Range<String.Index>, text: String, options: String?, lineStartIndex: Int)] = []
+    var codeBlocks: [MarkdownCodeBlock] = []
     var codeStartLineIndex: Int?
     var codeBlockOptions: String?
     var codeBlockStack = 0
@@ -1365,12 +1389,12 @@ func parseSwiftCodeBlocks(fromMarkdown markdown: String)
             // If we're already inside a code block, don't start a new one
             if codeStartLineIndex != nil {
                 codeBlockStack += 1
-            } else if lineText.hasPrefix("```swift"), lineIndex != lines.indices.last {
+            } else if lineText.hasPrefix("```\(language)"), lineIndex != lines.indices.last {
                 codeStartLineIndex = lineIndex + 1
 
-                // Any text following the code block start delimiter are treated as SwiftFormat options
-                if lineText.hasPrefix("```swift ") {
-                    codeBlockOptions = String(lineText.dropFirst("```swift ".count))
+                // Any text following the code block start delimiter are treated as options
+                if lineText.hasPrefix("```\(language) ") {
+                    codeBlockOptions = String(lineText.dropFirst("```\(language) ".count))
                 }
             }
         } else if lineText == "```", let startLine = codeStartLineIndex {
@@ -1384,11 +1408,19 @@ func parseSwiftCodeBlocks(fromMarkdown markdown: String)
                 let codeText = String(markdown[range])
 
                 assert(markdown[range] == codeText)
-                codeBlocks.append((range, codeText, codeBlockOptions, startLine))
+
+                let codeBlock = MarkdownCodeBlock(language: language, range: range, text: codeText, options: codeBlockOptions, lineStartIndex: startLine)
+
+                codeBlocks.append(codeBlock)
                 codeStartLineIndex = nil
                 codeBlockOptions = nil
             }
         }
+    }
+
+    // Check for unbalanced code blocks
+    if codeStartLineIndex != nil || codeBlockStack > 0 {
+        throw FormatError.parsing("Unbalanced code block delimiters in markdown")
     }
 
     return codeBlocks

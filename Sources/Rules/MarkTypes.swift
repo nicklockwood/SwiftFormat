@@ -222,15 +222,15 @@ public extension FormatRule {
         ```diff
         + // MARK: - FooViewController
         +
-         final class FooViewController: UIViewController { }
+          final class FooViewController: UIViewController { }
 
         + // MARK: UICollectionViewDelegate
         +
-         extension FooViewController: UICollectionViewDelegate { }
+          extension FooViewController: UICollectionViewDelegate { }
 
         + // MARK: - String + FooProtocol
         +
-         extension String: FooProtocol { }
+          extension String: FooProtocol { }
         ```
         """
     }

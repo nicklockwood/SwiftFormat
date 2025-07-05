@@ -62,9 +62,9 @@ public extension FormatRule {
         ```
 
         ```diff
-        // semicolon is not removed if it would affect the behavior of the code
-        return;
-        goto(fail)
+          // semicolon is not removed if it would affect the behavior of the code
+          return;
+          goto(fail)
         ```
         """
     }

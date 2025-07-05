@@ -30,11 +30,11 @@ public extension FormatRule {
     } examples: {
         """
         ```diff
-        // --filemacro #file
+          // --filemacro #file
         - func foo(file: StaticString = #fileID) { ... }
         + func foo(file: StaticString = #file) { ... }
 
-        // --filemacro #fileID
+          // --filemacro #fileID
         - func foo(file: StaticString = #file) { ... }
         + func foo(file: StaticString = #fileID) { ... }
         ```

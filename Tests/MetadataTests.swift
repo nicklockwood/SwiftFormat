@@ -121,6 +121,51 @@ class MetadataTests: XCTestCase {
         }
     }
 
+    func testRuleExampleDiffsAreValid() throws {
+        for rule in FormatRules.all {
+            guard let examples = rule.examples else { continue }
+
+            // Parse all diff code blocks in the examples and validate they don't have unbalanced tokens
+            let codeBlocks: [MarkdownCodeBlock]
+            do {
+                codeBlocks = try parseCodeBlocks(fromMarkdown: examples, language: "diff")
+            } catch {
+                XCTFail("Error parsing ```diff code blocks in \(rule.name) rule examples: \(error)")
+                continue
+            }
+
+            // Collect all invalid lines for this rule
+            var invalidLines: [Int] = []
+
+            // Validate diff formatting for each code block
+            for codeBlock in codeBlocks {
+                let lines = codeBlock.text.components(separatedBy: .newlines)
+                for (lineIndex, line) in lines.enumerated() {
+                    guard !line.isEmpty else { continue }
+
+                    // Check diff formatting: first column must be space/+/-, second column must be space
+                    let firstChar = line.first!
+                    let secondChar = line.count >= 2 ? line[line.index(line.startIndex, offsetBy: 1)] : " "
+
+                    let isValidDiffLine = (firstChar == " " || firstChar == "+" || firstChar == "-") &&
+                        (line.count < 2 || secondChar == " ")
+
+                    if !isValidDiffLine {
+                        invalidLines.append(lineIndex + 1)
+                    }
+                }
+            }
+
+            XCTAssert(
+                invalidLines.isEmpty,
+                """
+                \(rule.name) rule has invalid example diff formatting. \ 
+                Each line must start with space/+/- followed by a space.
+                """
+            )
+        }
+    }
+
     // MARK: options
 
     func testRulesOptions() throws {

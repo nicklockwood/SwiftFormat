@@ -134,7 +134,7 @@ public extension FormatRule {
         + extension Dictionary<Key, Value> {}
         + extension Collection<Foo> {}
 
-        // With `typeSugar` also enabled:
+          // With `typeSugar` also enabled:
         - extension Array where Element == Foo {}
         - extension Optional where Wrapped == Foo {}
         - extension Dictionary where Key == Foo, Value == Bar {}
@@ -142,7 +142,7 @@ public extension FormatRule {
         + extension Foo? {}
         + extension [Key: Value] {}
 
-        // Also supports user-defined types!
+          // Also supports user-defined types!
         - extension LinkedList where Element == Foo {}
         - extension Reducer where
         -     State == FooState,

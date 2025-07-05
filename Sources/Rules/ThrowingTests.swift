@@ -69,6 +69,7 @@ public extension FormatRule {
         +           try MyFeature().doSomething()
               }
             }
+        ```
         """
     }
 }

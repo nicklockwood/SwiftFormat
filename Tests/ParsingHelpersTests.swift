@@ -2805,7 +2805,7 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(formatter.tokens[secondInit.bodyRange!].string, "{ return nil }")
     }
 
-    func testParseMarkdownFile() {
+    func testParseMarkdownFile() throws {
         let input = #"""
         # Sample README
 
@@ -2845,7 +2845,7 @@ class ParsingHelpersTests: XCTestCase {
         Try it out!
         """#
 
-        let codeBlocks = parseSwiftCodeBlocks(fromMarkdown: input)
+        let codeBlocks = try parseSwiftCodeBlocks(fromMarkdown: input)
 
         XCTAssertEqual(
             codeBlocks[0].text,
@@ -2886,5 +2886,25 @@ class ParsingHelpersTests: XCTestCase {
         )
 
         XCTAssertEqual(codeBlocks[2].options, "--indentstrings true")
+    }
+
+    func testParseMarkdownWithUnbalancedDelimiters() {
+        let input = """
+        # Sample README
+
+        This is a nice project with lots of cool APIs to know about, including:
+
+        ```swift
+        func foo(
+            bar: Bar
+            baaz: Baaz
+        ) -> Foo {}
+
+        ```swift
+        foo(bar: bar, baaz: baaz)
+        ```
+        """
+
+        XCTAssertThrowsError(try parseSwiftCodeBlocks(fromMarkdown: input))
     }
 }

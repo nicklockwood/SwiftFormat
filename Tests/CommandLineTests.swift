@@ -1017,4 +1017,38 @@ class CommandLineTests: XCTestCase {
         XCTAssertEqual(errors.count, 1)
         XCTAssert(errors[0].contains("Unexpected end of file at 7:11"))
     }
+
+    func testUnbalancedCodeBlockTokens() throws {
+        var errors = [String]()
+
+        CLI.print = { message, type in
+            if type == .error {
+                errors.append(message)
+            }
+        }
+
+        try withTmpFiles([
+            "README.md": """
+            # Sample README
+
+            This markdown file has unbalanced code block tokens:
+
+            ```swift
+            print("Hello, world!")
+            // Missing closing ```
+
+            This should cause an error in strict mode.
+            """,
+        ]) { url in
+            _ = processArguments([
+                "",
+                url.path,
+                "--markdownfiles", "format-strict",
+                "--rules", "indent",
+            ], in: "")
+        }
+
+        XCTAssertEqual(errors.count, 1)
+        XCTAssert(errors[0].contains("Unbalanced code block delimiters in markdown"))
+    }
 }

@@ -1139,7 +1139,17 @@ func processInput(_ inputURLs: [URL],
                     // Format individual code blocks in markdown files is enabled
                     if inputURL.pathExtension == "md", options.fileOptions?.supportedFileExtensions.contains("md") == true {
                         var markdown = input
-                        let swiftCodeBlocks = parseSwiftCodeBlocks(fromMarkdown: input)
+                        let swiftCodeBlocks: [(range: Range<String.Index>, text: String, options: String?, lineStartIndex: Int)]
+                        do {
+                            swiftCodeBlocks = try parseSwiftCodeBlocks(fromMarkdown: input)
+                        } catch {
+                            switch options.fileOptions?.markdownFormattingMode {
+                            case .strict:
+                                throw error
+                            case .lenient, nil:
+                                swiftCodeBlocks = []
+                            }
+                        }
 
                         // Iterate backwards through the code blocks to not invalidate existing indices
                         for swiftCodeBlock in swiftCodeBlocks.reversed() {
@@ -1350,7 +1360,7 @@ private struct OutputTokensData: Encodable {
 /// // and its range in the markdown string is returned as range.
 /// ```
 func parseSwiftCodeBlocks(fromMarkdown markdown: String)
-    -> [(range: Range<String.Index>, text: String, options: String?, lineStartIndex: Int)]
+    throws -> [(range: Range<String.Index>, text: String, options: String?, lineStartIndex: Int)]
 {
     let lines = markdown.lineRanges
     var codeBlocks: [(range: Range<String.Index>, text: String, options: String?, lineStartIndex: Int)] = []
@@ -1389,6 +1399,11 @@ func parseSwiftCodeBlocks(fromMarkdown markdown: String)
                 codeBlockOptions = nil
             }
         }
+    }
+
+    // Check for unbalanced code blocks
+    if codeStartLineIndex != nil || codeBlockStack > 0 {
+        throw FormatError.parsing("Unbalanced code block delimiters in markdown")
     }
 
     return codeBlocks

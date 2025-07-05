@@ -285,15 +285,15 @@ public extension FormatRule {
     } examples: {
         """
         ```diff
-        struct Person {
-            var name: String
-            var age: Int
+          struct Person {
+              var name: String
+              var age: Int
 
-        -   init(name: String, age: Int) {
-        -       self.name = name
-        -       self.age = age
-        -   }
-        }
+        -     init(name: String, age: Int) {
+        -         self.name = name
+        -         self.age = age
+        -     }
+          }
         ```
         """
     }

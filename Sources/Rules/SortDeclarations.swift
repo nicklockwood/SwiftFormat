@@ -167,11 +167,7 @@ public extension FormatRule {
         +     case upsellB
           }
 
-        config:
-        ```
-            sortedpatterns: 'Feature'
-        ```
-
+          /// With --sortedpatterns Feature
           enum FeatureFlags {
         -     case upsellB
         -     case fooFeature

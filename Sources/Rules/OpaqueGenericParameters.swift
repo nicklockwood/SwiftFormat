@@ -271,7 +271,7 @@ public extension FormatRule {
               print(value)
           }
 
-        // With `--someany enabled` (the default)
+          // With `--someany enabled` (the default)
         - func handle<T>(_ value: T) {
         + func handle(_ value: some Any) {
               print(value)

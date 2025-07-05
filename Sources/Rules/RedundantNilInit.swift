@@ -86,13 +86,13 @@ public extension FormatRule {
         ```
 
         ```diff
-        // doesn't apply to `let` properties
-        let foo: Int? = nil
+          // doesn't apply to `let` properties
+          let foo: Int? = nil
         ```
 
         ```diff
-        // doesn't affect non-nil initialization
-        var foo: Int? = 0
+          // doesn't affect non-nil initialization
+          var foo: Int? = 0
         ```
 
         `--nilinit insert`

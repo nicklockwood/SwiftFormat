@@ -2845,7 +2845,7 @@ class ParsingHelpersTests: XCTestCase {
         Try it out!
         """#
 
-        let codeBlocks = try parseSwiftCodeBlocks(fromMarkdown: input)
+        let codeBlocks = try parseCodeBlocks(fromMarkdown: input, language: "swift")
 
         XCTAssertEqual(
             codeBlocks[0].text,
@@ -2905,6 +2905,6 @@ class ParsingHelpersTests: XCTestCase {
         ```
         """
 
-        XCTAssertThrowsError(try parseSwiftCodeBlocks(fromMarkdown: input))
+        XCTAssertThrowsError(try parseCodeBlocks(fromMarkdown: input, language: "swift"))
     }
 }

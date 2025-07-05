@@ -209,34 +209,34 @@ public extension FormatRule {
     } examples: {
         """
         ```diff
-        import XCTest
+          import XCTest
 
-        final class SomeTestCase: XCTestCase {
-        -   func test_something() {
-        +   func test_something() throws {
-        -     guard let value = optionalValue, value.matchesCondition else {
-        -       XCTFail()
-        -       return
-        -     }
-        +     let value = try XCTUnwrap(optionalValue)
-        +     XCTAssert(value.matchesCondition)
+          final class SomeTestCase: XCTestCase {
+        -     func test_something() {
+        +     func test_something() throws {
+        -         guard let value = optionalValue, value.matchesCondition else {
+        -             XCTFail()
+        -             return
+        -         }
+        +         let value = try XCTUnwrap(optionalValue)
+        +         XCTAssert(value.matchesCondition)
+              }
           }
-        }
         ```
 
         ```diff
-        import Testing
+          import Testing
 
-        struct SomeTests {
-          @Test
-          func something() throws {
-        -   guard let value = optionalValue, value.matchesCondition else {
-        -     return
-        -   }
-        +   let value = try #require(optionalValue)
-        +   #expect(value.matchesCondition)
+          struct SomeTests {
+              @Test
+              func something() throws {
+        -         guard let value = optionalValue, value.matchesCondition else {
+        -             return
+        -         }
+        +         let value = try #require(optionalValue)
+        +         #expect(value.matchesCondition)
+              }
           }
-        }
         ```
         """
     }

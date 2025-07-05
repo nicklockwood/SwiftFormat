@@ -37,6 +37,7 @@ Table of Contents
     - [Error codes](#error-codes)
     - [Cache](#cache)
     - [File headers](#file-headers)
+    - [Markdown formatting](#markdown-formatting)
 - [FAQ](#faq)
 - [Known issues](#known-issues)
 - [Tip Jar](#tip-jar)
@@ -877,6 +878,78 @@ Will be formatted as:
 
 **NOTE:** the `{year}` value and `{created}` date format are determined from the current locale and timezone of the machine running the script. `{author.name}` and `{author.email}` requires the project to be version controlled by git.
 
+
+Markdown formatting
+-------------------
+
+SwiftFormat can format Swift code blocks inside Markdown files (`.md`). This is useful for keeping code examples in documentation, README files, and other markdown content properly formatted.
+
+````diff
+  ### Sample README
+  
+  This is a nice project with lots of cool APIs to know about, including:
+  
+  ```swift
+  func foo(
+- bar: Bar,
+- baaz: Baaz
++     bar: Bar,
++     baaz: Baaz
+  ) -> Foo { ... }
+  ```
+````
+
+To format Swift code blocks in markdown files, use the `--markdownfiles` option with either `format-strict` or `format-lenient`:
+
+```bash
+$ swiftformat . --markdownfiles format-strict
+$ swiftformat . --markdownfiles format-lenient
+```
+
+Or add it to your `.swiftformat` config file:
+
+```
+--markdownfiles format-strict
+--markdownfiles format-lenient
+```
+
+**Formatting modes:**
+
+SwiftFormat supports two modes for handling markdown files:
+
+- `format-lenient` (default): Ignores parsing errors in code blocks and continues formatting
+- `format-strict`: Fails if any code blocks contain parsing errors
+
+SwiftFormat's tokenizer is more permissive than the Swift compiler and typically only emits errors when encountering unbalanced scope tokens like `(` or `{`.
+
+**Code block options:**
+
+You can specify options for options for individual code blocks by adding them after the opening delimiter. For example, you can use `no-format` to prevent a code block from being parsed or formatted:
+
+````md
+```swift no-format
+func example()
+{
+    doSomething()
+}
+```
+````
+
+You can also specify SwiftFormat command line options to configure the behavior of individual rules:
+
+````md
+```swift --indent 2
+func example() {
+  doSomething()
+}
+```
+
+```swift --disable redundantSelf
+func example() {
+    self.doSomething()
+}
+```
+````
 
 FAQ
 -----

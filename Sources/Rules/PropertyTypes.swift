@@ -13,7 +13,7 @@ public extension FormatRule {
         help: "Convert property declarations to use inferred types (`let foo = Foo()`) or explicit types (`let foo: Foo = .init()`).",
         disabledByDefault: true,
         orderAfter: [.redundantType],
-        options: ["propertytypes", "inferredtypes", "preservedpropertytypes"]
+        options: ["property-types", "inferred-types", "preserved-property-types"]
     ) { formatter in
         formatter.forEach(.operator("=", .infix)) { equalsIndex, _ in
             // Preserve all properties in conditional statements like `if let foo = Bar() { ... }`

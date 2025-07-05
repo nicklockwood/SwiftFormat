@@ -14,8 +14,8 @@ public extension FormatRule {
     /// Also insert blank lines before closing braces for type declarations if configured
     static let blankLinesAtEndOfScope = FormatRule(
         help: "Remove or insert trailing blank line at the end of a scope.",
-        options: ["typeblanklines"],
-        sharedOptions: ["typeblanklines"]
+        options: ["type-blank-lines"],
+        sharedOptions: ["type-blank-lines"]
     ) { formatter in
         formatter.forEach(.startOfScope) { startOfScope, token in
             guard ["{", "(", "[", "<"].contains(token.string) else { return }

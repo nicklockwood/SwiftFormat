@@ -13,7 +13,7 @@ public extension FormatRule {
     static let braces = FormatRule(
         help: "Wrap braces in accordance with selected style (K&R or Allman).",
         options: ["allman"],
-        sharedOptions: ["linebreaks", "maxwidth", "indent", "tabwidth", "assetliterals"]
+        sharedOptions: ["line-breaks", "max-width", "indent", "tab-width", "asset-literals"]
     ) { formatter in
         formatter.forEach(.startOfScope("{")) { i, _ in
             guard let closingBraceIndex = formatter.endOfScope(at: i),

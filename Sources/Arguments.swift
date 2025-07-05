@@ -744,7 +744,7 @@ let commandLineArguments = [
     "version",
     "options",
     "ruleinfo",
-    "dateformat",
+    "date-format",
     "timezone",
     "outputtokens",
 ] + optionsArguments

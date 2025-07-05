@@ -12,7 +12,7 @@ public extension FormatRule {
     /// Insert blank line after import statements
     static let blankLineAfterImports = FormatRule(
         help: "Insert blank line after import statements.",
-        sharedOptions: ["linebreaks"]
+        sharedOptions: ["line-breaks"]
     ) { formatter in
         formatter.forEach(.keyword("import")) { currentImportIndex, _ in
             guard let endOfLine = formatter.index(of: .linebreak, after: currentImportIndex),

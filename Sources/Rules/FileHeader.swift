@@ -13,8 +13,8 @@ public extension FormatRule {
     static let fileHeader = FormatRule(
         help: "Use specified source file header template for all files.",
         runOnceOnly: true,
-        options: ["header", "dateformat", "timezone"],
-        sharedOptions: ["linebreaks"]
+        options: ["header", "date-format", "timezone"],
+        sharedOptions: ["line-breaks"]
     ) { formatter in
         var headerTokens = [Token]()
         var directives = [String]()

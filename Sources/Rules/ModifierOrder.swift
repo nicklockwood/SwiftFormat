@@ -12,7 +12,7 @@ public extension FormatRule {
     /// Standardise the order of property modifiers
     static let modifierOrder = FormatRule(
         help: "Use consistent ordering for member modifiers.",
-        options: ["modifierorder"]
+        options: ["modifier-order"]
     ) { formatter in
         formatter.forEach(.keyword) { i, token in
             switch token.string {

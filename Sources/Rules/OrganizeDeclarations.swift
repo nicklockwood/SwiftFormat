@@ -15,13 +15,13 @@ public extension FormatRule {
         disabledByDefault: true,
         orderAfter: [.extensionAccessControl, .redundantFileprivate, .redundantPublic],
         options: [
-            "categorymark", "markcategories", "beforemarks",
-            "lifecycle", "organizetypes", "structthreshold", "classthreshold",
-            "enumthreshold", "extensionthreshold", "organizationmode",
-            "visibilityorder", "typeorder", "visibilitymarks", "typemarks",
-            "groupblanklines", "sortswiftuiproperties",
+            "category-mark", "mark-categories", "before-marks",
+            "lifecycle", "organize-types", "struct-threshold", "class-threshold",
+            "enum-threshold", "extension-threshold", "organization-mode",
+            "visibility-order", "type-order", "visibility-marks", "type-marks",
+            "group-blank-lines", "sort-swiftui-properties",
         ],
-        sharedOptions: ["sortedpatterns", "lineaftermarks", "linebreaks"]
+        sharedOptions: ["sorted-patterns", "line-after-marks", "line-breaks"]
     ) { formatter in
         formatter.parseDeclarations().forEachRecursiveDeclaration { declaration in
             // Organize the body of type declarations

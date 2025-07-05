@@ -13,10 +13,10 @@ public extension FormatRule {
     static let wrapArguments = FormatRule(
         help: "Align wrapped function arguments or collection elements.",
         orderAfter: [.wrap],
-        options: ["wraparguments", "wrapparameters", "wrapcollections", "closingparen", "callsiteparen",
-                  "wrapreturntype", "wrapconditions", "wraptypealiases", "wrapeffects", "wrapstringinterpolation"],
-        sharedOptions: ["indent", "trimwhitespace", "linebreaks",
-                        "tabwidth", "maxwidth", "smarttabs", "assetliterals", "wrapternary"]
+        options: ["wrap-arguments", "wrap-parameters", "wrap-collections", "closing-paren", "call-site-paren",
+                  "wrap-return-type", "wrap-conditions", "wrap-type-aliases", "wrap-effects", "wrap-string-interpolation"],
+        sharedOptions: ["indent", "trim-whitespace", "line-breaks",
+                        "tab-width", "max-width", "smart-tabs", "asset-literals", "wrap-ternary"]
     ) { formatter in
         formatter.wrapCollectionsAndArguments(completePartialWrapping: true,
                                               wrapSingleArguments: false)

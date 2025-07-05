@@ -17,8 +17,8 @@ public extension FormatRule {
         size (the number of digits in each group) and a threshold (the minimum number of
         digits in a number before grouping is applied).
         """,
-        options: ["decimalgrouping", "binarygrouping", "octalgrouping", "hexgrouping",
-                  "fractiongrouping", "exponentgrouping", "hexliteralcase", "exponentcase"]
+        options: ["decimal-grouping", "binary-grouping", "octal-grouping", "hex-grouping",
+                  "fraction-grouping", "exponent-grouping", "hex-literal-case", "exponent-case"]
     ) { formatter in
         formatter.forEachToken { i, token in
             guard case let .number(number, type) = token else {

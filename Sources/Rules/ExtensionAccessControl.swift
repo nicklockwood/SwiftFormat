@@ -11,7 +11,7 @@ import Foundation
 public extension FormatRule {
     static let extensionAccessControl = FormatRule(
         help: "Configure the placement of an extension's access control keyword.",
-        options: ["extensionacl"]
+        options: ["extension-acl"]
     ) { formatter in
         let declarations = formatter.parseDeclarations()
         declarations.forEachRecursiveDeclaration { declaration in

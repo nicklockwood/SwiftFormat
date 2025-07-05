@@ -13,8 +13,8 @@ public extension FormatRule {
     static let wrapEnumCases = FormatRule(
         help: "Rewrite comma-delimited enum cases to one case per line.",
         disabledByDefault: true,
-        options: ["wrapenumcases"],
-        sharedOptions: ["linebreaks"]
+        options: ["wrap-enum-cases"],
+        sharedOptions: ["line-breaks"]
     ) { formatter in
         formatter.parseEnumCaseRanges()
             .filter(formatter.shouldWrapCaseRangeGroup)

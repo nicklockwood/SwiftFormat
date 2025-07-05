@@ -12,8 +12,8 @@ public extension FormatRule {
     /// Sort import statements
     static let sortImports = FormatRule(
         help: "Sort import statements alphabetically.",
-        options: ["importgrouping"],
-        sharedOptions: ["linebreaks"]
+        options: ["import-grouping"],
+        sharedOptions: ["line-breaks"]
     ) { formatter in
         for var importRanges in formatter.parseImports().reversed() {
             guard importRanges.count > 1 else { continue }

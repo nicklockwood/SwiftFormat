@@ -7,7 +7,7 @@ public extension FormatRule {
     static let blankLinesAfterGuardStatements = FormatRule(
         help: "Remove blank lines between consecutive guard statements, and insert a blank after the last guard statement.",
         disabledByDefault: true,
-        options: ["linebetweenguards"]
+        options: ["line-between-guards"]
     ) { formatter in
         formatter.forEach(.keyword("guard")) { guardIndex, _ in
             guard var elseIndex = formatter.index(of: .keyword("else"), after: guardIndex) else {

@@ -12,7 +12,7 @@ public extension FormatRule {
     static let singlePropertyPerLine = FormatRule(
         help: "Use a separate let/var declaration on its own line for every property definition.",
         disabledByDefault: true,
-        sharedOptions: ["linebreaks"]
+        sharedOptions: ["line-breaks"]
     ) { formatter in
         formatter.forEachToken { i, token in
             guard ["let", "var"].contains(token.string) else { return }

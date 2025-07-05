@@ -13,7 +13,7 @@ public extension FormatRule {
     /// http://stackoverflow.com/questions/2287967/why-is-it-recommended-to-have-empty-line-in-the-end-of-file
     static let linebreakAtEndOfFile = FormatRule(
         help: "Add empty blank line at end of file.",
-        sharedOptions: ["linebreaks"]
+        sharedOptions: ["line-breaks"]
     ) { formatter in
         guard !formatter.options.fragment else { return }
         var wasLinebreak = true

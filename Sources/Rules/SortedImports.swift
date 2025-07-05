@@ -13,8 +13,8 @@ public extension FormatRule {
     static let sortedImports = FormatRule(
         help: "Sort import statements alphabetically.",
         deprecationMessage: "Use sortImports instead.",
-        options: ["importgrouping"],
-        sharedOptions: ["linebreaks"]
+        options: ["import-grouping"],
+        sharedOptions: ["line-breaks"]
     ) { formatter in
         _ = formatter.options.importGrouping
         _ = formatter.options.linebreak

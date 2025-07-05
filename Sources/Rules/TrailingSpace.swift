@@ -14,7 +14,7 @@ public extension FormatRule {
     static let trailingSpace = FormatRule(
         help: "Remove trailing space at end of a line.",
         orderAfter: [.wrap, .wrapArguments],
-        options: ["trimwhitespace"]
+        options: ["trim-whitespace"]
     ) { formatter in
         formatter.forEach(.space) { i, _ in
             if formatter.token(at: i + 1)?.isLinebreak ?? true,

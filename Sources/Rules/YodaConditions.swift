@@ -12,7 +12,7 @@ public extension FormatRule {
     /// Reorders "yoda conditions" where constant is placed on lhs of a comparison
     static let yodaConditions = FormatRule(
         help: "Prefer constant values to be on the right-hand-side of expressions.",
-        options: ["yodaswap"]
+        options: ["yoda-swap"]
     ) { formatter in
         formatter.forEachToken { i, token in
             guard case let .operator(op, .infix) = token,

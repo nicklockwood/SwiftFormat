@@ -13,7 +13,7 @@ public extension FormatRule {
     /// that starts a new scope.
     static let blankLinesAtStartOfScope = FormatRule(
         help: "Remove leading blank line at the start of a scope.",
-        options: ["typeblanklines"]
+        options: ["type-blank-lines"]
     ) { formatter in
         formatter.forEach(.startOfScope) { i, token in
             guard ["{", "(", "[", "<", ":"].contains(token.string) else { return }

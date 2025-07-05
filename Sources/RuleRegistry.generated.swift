@@ -50,7 +50,7 @@ let ruleRegistry: [String: FormatRule] = [
     "isEmpty": .isEmpty,
     "leadingDelimiters": .leadingDelimiters,
     "linebreakAtEndOfFile": .linebreakAtEndOfFile,
-    "linebreaks": .linebreaks,
+    "line-breaks": .linebreaks,
     "markTypes": .markTypes,
     "modifierOrder": .modifierOrder,
     "modifiersOnSameLine": .modifiersOnSameLine,

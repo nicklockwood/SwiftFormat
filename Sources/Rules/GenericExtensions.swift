@@ -14,7 +14,7 @@ public extension FormatRule {
         Use angle brackets (`extension Array<Foo>`) for generic type extensions
         instead of type constraints (`extension Array where Element == Foo`).
         """,
-        options: ["generictypes"]
+        options: ["generic-types"]
     ) { formatter in
         formatter.forEach(.keyword("extension")) { extensionIndex, _ in
             guard // Angle brackets syntax in extensions is only supported in Swift 5.7+

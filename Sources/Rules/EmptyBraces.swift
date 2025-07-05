@@ -12,8 +12,8 @@ public extension FormatRule {
     /// Remove white-space between empty braces
     static let emptyBraces = FormatRule(
         help: "Remove whitespace inside empty braces.",
-        options: ["emptybraces"],
-        sharedOptions: ["linebreaks"]
+        options: ["empty-braces"],
+        sharedOptions: ["line-breaks"]
     ) { formatter in
         formatter.forEach(.startOfScope("{")) { i, _ in
             guard let closingIndex = formatter.index(of: .nonSpaceOrLinebreak, after: i, if: {

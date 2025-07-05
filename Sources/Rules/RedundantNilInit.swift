@@ -12,7 +12,7 @@ public extension FormatRule {
     /// Remove or insert  redundant `= nil` initialization for Optional properties
     static let redundantNilInit = FormatRule(
         help: "Remove/insert redundant `nil` default value (Optional vars are nil by default).",
-        options: ["nilinit"]
+        options: ["nil-init"]
     ) { formatter in
         let declarations = formatter.parseDeclarations()
         declarations.forEachRecursiveDeclaration { declaration in

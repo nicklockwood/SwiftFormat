@@ -5,7 +5,7 @@ public extension FormatRule {
     static let redundantEquatable = FormatRule(
         help: "Omit a hand-written Equatable implementation when the compiler-synthesized conformance would be equivalent.",
         disabledByDefault: true,
-        options: ["equatablemacro"]
+        options: ["equatable-macro"]
     ) { formatter in
         // Find all of the types with an `Equatable` conformance and a manually-implemented `static func ==` implementation.
         let declarations = formatter.parseDeclarations()

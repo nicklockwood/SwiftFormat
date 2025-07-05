@@ -13,7 +13,7 @@ public extension FormatRule {
         help: "Wraps chained function calls to either all on the same line, or one per line.",
         disabledByDefault: true,
         orderAfter: [.braces, .indent],
-        sharedOptions: ["linebreaks"]
+        sharedOptions: ["line-breaks"]
     ) { formatter in
         formatter.forEach(.operator(".", .infix)) { operatorIndex, _ in
             if formatter.isInReturnType(at: operatorIndex) {

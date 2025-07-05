@@ -11,7 +11,7 @@ import Foundation
 public extension FormatRule {
     static let leadingDelimiters = FormatRule(
         help: "Move leading delimiters to the end of the previous line.",
-        sharedOptions: ["linebreaks"]
+        sharedOptions: ["line-breaks"]
     ) { formatter in
         formatter.forEach(.delimiter) { i, _ in
             guard let endOfLine = formatter.index(of: .nonSpace, before: i, if: {

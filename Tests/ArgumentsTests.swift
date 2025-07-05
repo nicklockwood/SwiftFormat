@@ -513,8 +513,8 @@ class ArgumentsTests: XCTestCase {
         ))
         let config = serialize(options: options, excludingDefaults: true)
         XCTAssertEqual(config, """
-        --filemacro "#fileID"
-        --urlmacro "#URL,URLFoundation"
+        --file-macro "#fileID"
+        --url-macro "#URL,URLFoundation"
         """)
     }
 
@@ -571,7 +571,7 @@ class ArgumentsTests: XCTestCase {
         let version = Version(rawValue: "5.2") ?? "0"
         let options = Options(formatOptions: FormatOptions(swiftVersion: version))
         let config = serialize(options: options, excludingDefaults: true)
-        XCTAssertEqual(config, "--swiftversion 5.2")
+        XCTAssertEqual(config, "--swift-version 5.2")
     }
 
     // MARK: config file merging
@@ -781,7 +781,7 @@ class ArgumentsTests: XCTestCase {
 
     func testParseInvalidModifierOrderOption() throws {
         XCTAssertThrowsError(try Options(["modifier-order": "unknowned"], in: "")) { error in
-            XCTAssertEqual("\(error)", "'unknowned' is not a valid modifier (did you mean 'unowned'?) in --modifierorder")
+            XCTAssertEqual("\(error)", "'unknowned' is not a valid modifier (did you mean 'unowned'?) in --modifier-order")
         }
     }
 
@@ -824,14 +824,14 @@ class ArgumentsTests: XCTestCase {
     // MARK: lintonly
 
     func testLintonlyRulesContain() throws {
-        let options = try Options(["lint": "", "lintonly": "wrapEnumCases"], in: "")
+        let options = try Options(["lint": "", "lint-only": "wrapEnumCases"], in: "")
         XCTAssert(options.rules?.contains("wrapEnumCases") == true)
         let arguments = argumentsFor(options)
         XCTAssertEqual(arguments, ["lint": "", "enable": "wrapEnumCases"])
     }
 
     func testLintonlyRulesDontContain() throws {
-        let options = try Options(["lintonly": "unusedArguments"], in: "")
+        let options = try Options(["lint-only": "unusedArguments"], in: "")
         XCTAssert(options.rules?.contains("unusedArguments") == false)
         let arguments = argumentsFor(options)
         XCTAssertEqual(arguments, ["disable": "unusedArguments"])
@@ -839,13 +839,13 @@ class ArgumentsTests: XCTestCase {
 
     func testLintonlyMergeOptionsAdd() throws {
         var options = try Options(["lint": "", "disable": "unusedArguments"], in: "")
-        try options.addArguments(["lintonly": "unusedArguments"], in: "")
+        try options.addArguments(["lint-only": "unusedArguments"], in: "")
         XCTAssert(options.rules?.contains("unusedArguments") == true)
     }
 
     func testLintonlyMergeOptionsRemove() throws {
         var options = try Options(["enable": "wrapEnumCases"], in: "")
-        try options.addArguments(["lintonly": "wrapEnumCases"], in: "")
+        try options.addArguments(["lint-only": "wrapEnumCases"], in: "")
         XCTAssert(options.rules?.contains("wrapEnumCases") == false)
     }
 
@@ -901,7 +901,7 @@ class ArgumentsTests: XCTestCase {
 
     func testLintOnlyRuleDoesntTriggerUnusedOptionWarning2() throws {
         let options = try Options([
-            "lintonly": "sortImports",
+            "lint-only": "sortImports",
             "import-grouping": "testable-bottom",
         ], in: "")
         let arguments = argumentsFor(options, excludingDefaults: true)

@@ -151,12 +151,12 @@ Option | Description
 ```diff
 - let destinationUrl: URL
 - let urlRouter: UrlRouter
-- let screenId: String
+- let screenIds: [String]
 - let entityUuid: UUID
 
 + let destinationURL: URL
 + let urlRouter: URLRouter
-+ let screenID: String
++ let screenIDs: [String]
 + let entityUUID: UUID
 ```
 

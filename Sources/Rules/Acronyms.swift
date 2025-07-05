@@ -14,14 +14,11 @@ public extension FormatRule {
         disabledByDefault: true,
         options: ["acronyms", "preserveacronyms"]
     ) { formatter in
-        formatter.forEachToken { index, token in
-            guard token.is(.identifier) || token.isComment else { return }
-
-            guard !formatter.options.preserveAcronyms.contains(token.string) else {
+        formatter.forEachToken(where: { $0.isIdentifier || $0.isComment }) { index, token in
+            var updatedText = token.string
+            guard !formatter.options.preserveAcronyms.contains(updatedText) else {
                 return
             }
-
-            var updatedText = token.string
 
             for acronym in formatter.options.acronyms {
                 let find = acronym.capitalized
@@ -42,7 +39,7 @@ public extension FormatRule {
 
                         // But if the next character is 's', and then the character after the 's' is uppercase,
                         // allow the acronym to be capitalized (to handle the plural case, `Ids` to `IDs`)
-                        else if characterAfterMatch == Character("s") {
+                        else if characterAfterMatch == "s" {
                             if indexAfterMatch < token.string.indices.last! {
                                 let characterAfterNext = token.string[token.string.index(after: indexAfterMatch)]
                                 acronymShouldBeCapitalized = (characterAfterNext.isUppercase || characterAfterNext.isWhitespace)
@@ -81,12 +78,12 @@ public extension FormatRule {
         ```diff
         - let destinationUrl: URL
         - let urlRouter: UrlRouter
-        - let screenId: String
+        - let screenIds: [String]
         - let entityUuid: UUID
 
         + let destinationURL: URL
         + let urlRouter: URLRouter
-        + let screenID: String
+        + let screenIDs: [String]
         + let entityUUID: UUID
         ```
         """

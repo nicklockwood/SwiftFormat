@@ -880,14 +880,9 @@ private struct Inference {
                 case let .keyword(name):
                     lastKeyword = name
                     lastKeywordIndex = index
-                case .startOfScope("//"), .startOfScope("/*"):
-                    if case let .commentBody(comment)? = formatter.next(.nonSpace, after: index) {
-                        formatter.processCommentBody(comment, at: index)
-                        if token == .startOfScope("//") {
-                            formatter.processLinebreak()
-                        }
-                    }
+                case .startOfScope("/*"), .startOfScope("//"):
                     index = formatter.endOfScope(at: index) ?? (formatter.tokens.count - 1)
+                    formatter.updateEnablement(at: index)
                 case .startOfScope("("):
                     if case let .identifier(fn)? = formatter.last(.nonSpaceOrCommentOrLinebreak, before: index),
                        selfRequired.contains(fn) || fn == "expect"
@@ -1107,7 +1102,7 @@ private struct Inference {
                         return
                     }
                 case .linebreak:
-                    formatter.processLinebreak()
+                    formatter.updateEnablement(at: index)
                 default:
                     break
                 }

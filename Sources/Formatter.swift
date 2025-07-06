@@ -39,11 +39,6 @@ import Foundation
 /// transparently handles changes that affect the current token index.
 public class Formatter: NSObject {
     private var enumerationIndex = -1
-    private var disabledCount = 0
-    private var disabledNext = 0
-    private var ruleDisabled = false
-    private var tempOptions: FormatOptions?
-    private var wasNextDirective = false
     private var autoUpdatingReferences = [WeakAutoUpdatingReference]()
 
     /// Formatting range
@@ -52,104 +47,8 @@ public class Formatter: NSObject {
     /// Current rule, used for handling comment directives
     var currentRule: FormatRule? {
         didSet {
-            disabledCount = 0
-            disabledNext = 0
+            disabled = false
             ruleDisabled = false
-            wasNextDirective = false
-            if let options = tempOptions {
-                self.options = options
-                tempOptions = nil
-            }
-        }
-    }
-
-    /// Is current rule enabled
-    var isEnabled: Bool {
-        if ruleDisabled || disabledCount + disabledNext > 0 ||
-            range?.contains(enumerationIndex) == false
-        {
-            return false
-        }
-        return true
-    }
-
-    /// Directives that can be used in comments, e.g. `// swiftformat:disable rule`
-    let directives = ["disable", "enable", "options", "sort"]
-
-    /// Process a comment token (which may contain directives)
-    func processCommentBody(_ comment: String, at index: Int) {
-        var prefix = "swiftformat:"
-        guard let range = comment.range(of: prefix) else {
-            return
-        }
-        let comment = String(comment[range.upperBound...])
-        guard let directive = directives.first(where: {
-            comment.hasPrefix($0)
-        }) else {
-            let parts = comment.components(separatedBy: ":")
-            var directive = parts[0]
-            if let range = directive.rangeOfCharacter(from: .whitespacesAndNewlines) {
-                directive = String(directive[..<range.lowerBound])
-            }
-            if directive.isEmpty {
-                return fatalError("Expected directive after 'swiftformat:' prefix", at: index)
-            }
-            return fatalError("Unknown directive swiftformat:\(directive)", at: index)
-        }
-        prefix = directive
-        wasNextDirective = comment.hasPrefix("\(prefix):next")
-        let offset = (wasNextDirective ? "\(prefix):next" : prefix).endIndex
-        let argumentsString = String(comment[offset...])
-        func containsRule() -> Bool {
-            guard let rule = currentRule else {
-                return false
-            }
-            // TODO: handle typos, error for invalid rule names
-            // TODO: warn when trying to enable a rule that isn't enabled at file level
-            return argumentsString.range(of: "\\b(\(rule.name)|all)\\b", options: [
-                .regularExpression, .caseInsensitive,
-            ]) != nil
-        }
-        switch directive {
-        case "options":
-            if wasNextDirective {
-                tempOptions = options
-            }
-            let args = parseArguments(argumentsString)
-            do {
-                let args = try preprocessArguments(args, formattingArguments + internalArguments)
-                if let arg = args["1"] {
-                    throw FormatError.options("Unknown option \(arg)")
-                }
-                var options = Options(formatOptions: options)
-                try options.addArguments(args, in: "")
-                self.options = options.formatOptions ?? self.options
-            } catch {
-                return fatalError("\(error)", at: index)
-            }
-        case "disable" where containsRule():
-            if wasNextDirective {
-                disabledNext = 1
-            } else {
-                disabledCount += 1
-            }
-        case "enable" where containsRule():
-            if wasNextDirective {
-                disabledNext = -1
-            } else {
-                disabledCount -= 1
-            }
-        default:
-            return
-        }
-    }
-
-    /// Process a linebreak (used to cancel disable/enable:next directive)
-    func processLinebreak() {
-        if wasNextDirective {
-            wasNextDirective = false
-        } else {
-            disabledNext = 0
             if let options = tempOptions {
                 self.options = options
                 tempOptions = nil
@@ -163,6 +62,9 @@ public class Formatter: NSObject {
     /// The token array managed by the formatter (read-only)
     public private(set) var tokens: [Token]
 
+    /// Swiftformat directives found in the file
+    private var directives: [Directive] = []
+
     /// Create a new formatter instance from a token array
     public init(_ tokens: [Token], options: FormatOptions = FormatOptions(),
                 trackChanges: Bool = false, range: Range<Int>? = nil)
@@ -171,9 +73,206 @@ public class Formatter: NSObject {
         self.options = options
         self.trackChanges = trackChanges
         self.range = range
+
+        // TODO: why is this an NSObject?
+        super.init()
+
+        if !options.enabledRules.isEmpty {
+            processDirectives()
+        }
     }
 
-    // MARK: changes made
+    // MARK: enablement
+
+    private var disabled = false
+    private var ruleDisabled = false
+    private var tempOptions: FormatOptions?
+
+    /// Is current rule enabled
+    var isEnabled: Bool {
+        if ruleDisabled || disabled || range?.contains(enumerationIndex) == false {
+            return false
+        }
+        return true
+    }
+
+    private struct Directive {
+        var type: DirectiveType
+        var toggle: Bool
+        var line: Int
+        var index: Int // Index of token in the line
+    }
+
+    private enum DirectiveType {
+        case enable(rules: String)
+        case disable(rules: String)
+        case options([String: String])
+    }
+
+    private func processDirectives() {
+        // Should only be run once
+        assert(directives.isEmpty)
+
+        var line = 1, lineIndex = 0, tokenIndex = 0
+        for (i, token) in tokens.enumerated() {
+            switch token {
+            case let .linebreak(_, ln):
+                line = ln + 1
+                lineIndex = i
+                tokenIndex = 0
+            case .startOfScope("//"):
+                tokenIndex = 0
+            case .startOfScope("/*"):
+                tokenIndex = i - lineIndex
+            case let .commentBody(comment):
+                guard let range = comment.range(of: "swiftformat:") else {
+                    continue
+                }
+                let comment = String(comment[range.upperBound...])
+                var parts = ArraySlice(comment.components(separatedBy: " "))
+                parts = parts[0].components(separatedBy: ":") + [parts[1...].joined(separator: " ")]
+                guard let directive = parts.popFirst(), !directive.isEmpty else {
+                    return fatalError("Expected directive after 'swiftformat:' prefix", at: i)
+                }
+                let toggle: Bool
+                switch parts.first {
+                case "next":
+                    line += 1
+                    tokenIndex = 0
+                    toggle = false
+                    parts.removeFirst()
+                case "previous":
+                    line -= 1
+                    tokenIndex = 0
+                    toggle = false
+                    parts.removeFirst()
+                case "this":
+                    tokenIndex = 0
+                    toggle = false
+                    parts.removeFirst()
+                default:
+                    toggle = true
+                }
+                let args = parts.joined(separator: ":")
+                let type: DirectiveType
+                switch directive {
+                case "options":
+                    do {
+                        let args = try preprocessArguments(
+                            parseArguments(args),
+                            formattingArguments + internalArguments
+                        )
+                        if let arg = args["1"] {
+                            throw FormatError.options("Unknown option \(arg)")
+                        }
+                        type = .options(args)
+                    } catch {
+                        return fatalError("\(error)", at: i)
+                    }
+                case "disable":
+                    type = .disable(rules: args)
+                case "enable":
+                    type = .enable(rules: args)
+                case "sort":
+                    // TODO: treat sort:next/previous/this as an error
+                    // TODO: handle sort the same way as other directives
+                    continue
+                default:
+                    return fatalError("Unknown directive 'swiftformat:\(directive)'", at: i)
+                }
+                directives.append(.init(type: type, toggle: toggle, line: line, index: tokenIndex))
+            default:
+                continue
+            }
+        }
+    }
+
+    // Update `isEnabled` based on directives around the specified index
+    func updateEnablement(at index: Int) {
+        if directives.isEmpty { return }
+
+        let line, tokenIndex: Int
+        switch tokens[index] {
+        case let .linebreak(_, ln):
+            line = ln + 1
+            tokenIndex = 0
+        default:
+            if let i = tokens[..<index].lastIndex(where: { $0.isLinebreak }),
+               case let .linebreak(_, ln) = tokens[i]
+            {
+                line = ln + 1
+                tokenIndex = index - i - 1
+            } else {
+                line = 1
+                tokenIndex = index
+            }
+        }
+
+        // TODO: replace with stricter format for rules (space and/or comma-delimited)
+        func containsRule(_ directive: DirectiveType) -> Bool {
+            guard let rule = currentRule else {
+                return false
+            }
+            switch directive {
+            case let .enable(rules: rules), let .disable(rules: rules):
+                return rules.range(of: "\\b(\(rule.name)|all)\\b", options: [
+                    .regularExpression, .caseInsensitive,
+                ]) != nil
+            case .options:
+                return false
+            }
+        }
+
+        var disabledCount = 0
+        var disabledNext = 0
+        for directive in directives {
+            if directive.line > line || (directive.line == line && directive.index > tokenIndex) {
+                break
+            }
+            if let tempOptions {
+                options = tempOptions
+                self.tempOptions = nil
+            }
+            switch directive.type {
+            case .enable where containsRule(directive.type):
+                if directive.toggle {
+                    disabledCount -= 1
+                } else if directive.line == line {
+                    disabledNext -= 1
+                } else {
+                    disabledNext = 0
+                }
+            case .disable where containsRule(directive.type):
+                if directive.toggle {
+                    disabledCount += 1
+                } else if directive.line == line {
+                    disabledNext += 1
+                } else {
+                    disabledNext = 0
+                }
+            case let .options(args):
+                if !directive.toggle {
+                    if directive.line != line {
+                        continue
+                    }
+                    tempOptions = options
+                }
+                do {
+                    // TODO: move this step to processDirectives function
+                    var options = Options(formatOptions: options)
+                    try options.addArguments(args, in: "")
+                    self.options = options.formatOptions ?? self.options
+                } catch {
+                    return fatalError("\(error)", at: index)
+                }
+            case .disable, .enable:
+                continue
+            }
+        }
+        disabled = disabledCount + disabledNext > 0
+    }
+
+    // MARK: change tracking
 
     /// Change record
     public struct Change: Equatable {
@@ -216,7 +315,7 @@ public class Formatter: NSObject {
         self.range = range.lowerBound ..< range.upperBound + delta
     }
 
-    // MARK: errors and warning
+    // MARK: errors and warnings
 
     private(set) var errors = [FormatError]()
 
@@ -484,17 +583,16 @@ public extension Formatter {
     internal func forEachToken(onlyWhereEnabled: Bool, _ body: (Int, Token) -> Void) {
         assert(enumerationIndex == -1, "forEachToken does not support re-entrancy")
         enumerationIndex = 0
+        updateEnablement(at: 0)
         while enumerationIndex < tokens.count {
             let token = tokens[enumerationIndex]
             switch token {
-            case let .commentBody(comment):
-                processCommentBody(comment, at: enumerationIndex)
-            case .linebreak:
-                processLinebreak()
+            case .startOfScope("//"), .startOfScope("/*"), .endOfScope("*/"), .linebreak:
+                updateEnablement(at: enumerationIndex)
             default:
                 break
             }
-            if isEnabled || !onlyWhereEnabled {
+            if !onlyWhereEnabled || isEnabled {
                 body(enumerationIndex, token) // May mutate enumerationIndex
             }
             enumerationIndex += 1

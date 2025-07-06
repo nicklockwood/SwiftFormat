@@ -164,8 +164,7 @@ class FormatterTests: XCTestCase {
 
     func testDisableAllRules() {
         let input = "//swiftformat:disable all\nlet foo : Int=5;"
-        let output = "// swiftformat:disable all\nlet foo : Int=5;"
-        XCTAssertEqual(try format(input, rules: FormatRules.default).output, output)
+        XCTAssertEqual(try format(input, rules: FormatRules.default).output, input)
     }
 
     func testDisableAndReEnableAllRules() {
@@ -206,7 +205,7 @@ class FormatterTests: XCTestCase {
 
     func testDisableAllRulesAndReEnableOneRule() {
         let input = "//swiftformat:disable all\nlet foo : Int=5;\n//swiftformat:enable linebreakAtEndOfFile"
-        let output = "// swiftformat:disable all\nlet foo : Int=5;\n//swiftformat:enable linebreakAtEndOfFile\n"
+        let output = "//swiftformat:disable all\nlet foo : Int=5;\n//swiftformat:enable linebreakAtEndOfFile\n"
         XCTAssertEqual(try format(input, rules: FormatRules.default).output, output)
     }
 
@@ -218,7 +217,19 @@ class FormatterTests: XCTestCase {
 
     func testEnableNext() {
         let input = "//swiftformat:disable all\n//swiftformat:enable:next all\nlet foo : Int=5;\nlet foo : Int=5;"
-        let output = "// swiftformat:disable all\n//swiftformat:enable:next all\nlet foo: Int = 5\nlet foo : Int=5;"
+        let output = "//swiftformat:disable all\n//swiftformat:enable:next all\nlet foo: Int = 5\nlet foo : Int=5;"
+        XCTAssertEqual(try format(input, rules: FormatRules.default).output, output)
+    }
+
+    func testDisableThis() {
+        let input = "let foo : Int=5; // swiftformat:disable:this all\nlet foo : Int=5;"
+        let output = "let foo : Int=5; // swiftformat:disable:this all\nlet foo: Int = 5\n"
+        XCTAssertEqual(try format(input, rules: FormatRules.default).output, output)
+    }
+
+    func testEnableThis() {
+        let input = "//swiftformat:disable all\nlet foo : Int=5; //swiftformat:enable:this all\nlet foo : Int=5;"
+        let output = "//swiftformat:disable all\nlet foo: Int = 5 // swiftformat:enable:this all\nlet foo : Int=5;"
         XCTAssertEqual(try format(input, rules: FormatRules.default).output, output)
     }
 
@@ -234,6 +245,17 @@ class FormatterTests: XCTestCase {
         XCTAssertEqual(try format(input, rules: FormatRules.default).output, output)
     }
 
+    func testDisableAndReenableAllRulesWithMultilineComment() {
+        let input = """
+        /*swiftformat:disable all*/let foo : Int=5;/*swiftformat:enable all*/let foo : Int=5;
+        """
+        let output = """
+        /*swiftformat:disable all*/let foo : Int=5; /* swiftformat:enable all */ let foo: Int = 5
+
+        """
+        XCTAssertEqual(try format(input, rules: FormatRules.default).output, output)
+    }
+
     func testDisableNextWithMultilineComment() {
         let input = "/*swiftformat:disable:next all*/\nlet foo : Int=5;\nlet foo : Int=5;"
         let output = "/* swiftformat:disable:next all */\nlet foo : Int=5;\nlet foo: Int = 5\n"
@@ -242,7 +264,7 @@ class FormatterTests: XCTestCase {
 
     func testEnableNextWithMultilineComment() {
         let input = "//swiftformat:disable all\n/*swiftformat:enable:next all*/\nlet foo : Int=5;\nlet foo : Int=5;"
-        let output = "// swiftformat:disable all\n/*swiftformat:enable:next all*/\nlet foo: Int = 5\nlet foo : Int=5;"
+        let output = "//swiftformat:disable all\n/*swiftformat:enable:next all*/\nlet foo: Int = 5\nlet foo : Int=5;"
         XCTAssertEqual(try format(input, rules: FormatRules.default).output, output)
     }
 
@@ -258,14 +280,14 @@ class FormatterTests: XCTestCase {
     func testMalformedDirective() {
         let input = "// swiftformat:disbible all"
         XCTAssertThrowsError(try format(input, rules: FormatRules.default).output) { error in
-            XCTAssert("\(error)".contains("Unknown directive swiftformat:disbible"))
+            XCTAssertEqual("\(error)", "Unknown directive 'swiftformat:disbible' on line 1")
         }
     }
 
     func testMalformedDirective2() {
         let input = "// swiftformat: --disable all"
         XCTAssertThrowsError(try format(input, rules: FormatRules.default).output) { error in
-            XCTAssert(error.localizedDescription.hasSuffix("Expected directive after \'swiftformat:\' prefix on line 1."))
+            XCTAssertEqual("\(error)", "Expected directive after 'swiftformat:' prefix on line 1")
         }
     }
 
@@ -288,6 +310,45 @@ class FormatterTests: XCTestCase {
 
         """
         XCTAssertEqual(try format(input, rules: FormatRules.default).output, output)
+    }
+
+    func testAllmanThis() {
+        let input = """
+        func foo() // swiftformat:options:this --allman true
+        {
+            print("bar")
+        }
+
+        func foo()
+        { // swiftformat:options:this --allman true
+            print("bar")
+        }
+
+        """
+        XCTAssertEqual(try format(input, rules: FormatRules.default).output, input)
+    }
+
+    func testAllmanNext() {
+        let input = """
+        func foo() // swiftformat:options:next --allman true
+        {
+            print("bar")
+        }
+
+        """
+        XCTAssertEqual(try format(input, rules: FormatRules.default).output, input)
+    }
+
+    func testAllmanPrevious() {
+        let input = """
+        func foo()
+        {
+            // swiftformat:options:previous --allman true
+            print("bar")
+        }
+
+        """
+        XCTAssertEqual(try format(input, rules: FormatRules.default).output, input)
     }
 
     func testIndentNext() {

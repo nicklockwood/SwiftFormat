@@ -179,18 +179,6 @@ func parseArguments(_ argumentString: String, ignoreComments: Bool = true) -> [S
     return arguments
 }
 
-/// Find a matching `--kebab-case` option for a legacy `--alloneword` option name
-private func findLegacyOptionMatch(_ legacy: String, in names: [String]) -> String? {
-    for name in names {
-        let nonKebab = name.replacingOccurrences(of: "-", with: "")
-        if nonKebab == legacy {
-            return name
-        }
-    }
-
-    return nil
-}
-
 /// Parse a flat array of command-line arguments into a dictionary of flags and values
 func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String: String] {
     var anonymousArgs = 0
@@ -206,11 +194,17 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
 
             // Support legacy `--alloneword` option names by finding
             // any matching `--kebab-case` option name.
-            else if let kebabCaseOption = findLegacyOptionMatch(key, in: names) {
-                name = kebabCaseOption
+            else if !key.contains("-") {
+                for kebabCaseName in names {
+                    let nonKebabCaseName = kebabCaseName.replacingOccurrences(of: "-", with: "")
+                    if nonKebabCaseName == key {
+                        name = kebabCaseName
+                        break
+                    }
+                }
             }
 
-            else {
+            if name.isEmpty {
                 guard let match = key.bestMatches(in: names).first else {
                     throw FormatError.options("Unknown option --\(key)")
                 }

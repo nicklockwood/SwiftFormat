@@ -16,6 +16,8 @@ let projectURL = projectDirectory
     .appendingPathComponent("SwiftFormat.xcodeproj")
     .appendingPathComponent("project.pbxproj")
 
+let rulesDirectory = projectDirectory.appendingPathComponent("Sources/Rules")
+
 let allSourceFiles = allSwiftFiles(inDirectory: "Sources")
 let allRuleFiles = allSwiftFiles(inDirectory: "Sources/Rules")
 

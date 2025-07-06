@@ -16,7 +16,7 @@ public extension FormatRule {
         primary associated types for common standard library types, so definitions like
         `T where T: Collection, T.Element == Foo` are updated to `some Collection<Foo>`.
         """,
-        options: ["someany"]
+        options: ["some-any"]
     ) { formatter in
         formatter.forEach(.keyword) { keywordIndex, keyword in
             guard // Opaque generic parameter syntax is only supported in Swift 5.7+
@@ -271,7 +271,7 @@ public extension FormatRule {
               print(value)
           }
 
-          // With `--someany enabled` (the default)
+          // With `--some-any enabled` (the default)
         - func handle<T>(_ value: T) {
         + func handle(_ value: some Any) {
               print(value)

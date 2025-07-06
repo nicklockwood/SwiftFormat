@@ -186,15 +186,31 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
     var name = ""
     for arg in args {
         if arg.hasPrefix("--") {
-            // Long argument names
             let key = String(arg.unicodeScalars.dropFirst(2)).lowercased()
-            guard names.contains(key) else {
+
+            if names.contains(key) {
+                name = key
+            }
+
+            // Support legacy `--alloneword` option names by finding
+            // any matching `--kebab-case` option name.
+            else if !key.contains("-") {
+                for kebabCaseName in names {
+                    let nonKebabCaseName = kebabCaseName.replacingOccurrences(of: "-", with: "")
+                    if nonKebabCaseName == key {
+                        name = kebabCaseName
+                        break
+                    }
+                }
+            }
+
+            if name.isEmpty {
                 guard let match = key.bestMatches(in: names).first else {
                     throw FormatError.options("Unknown option --\(key)")
                 }
                 throw FormatError.options("Unknown option --\(key). Did you mean --\(match)?")
             }
-            name = key
+
             namedArgs[name] = namedArgs[name] ?? ""
             continue
         } else if arg.hasPrefix("-") {
@@ -219,7 +235,7 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
         }
         if let existing = namedArgs[name], !existing.isEmpty,
            // TODO: find a more general way to represent merge-able options
-           ["exclude", "unexclude", "disable", "enable", "lintonly", "rules", "config"].contains(name) ||
+           ["exclude", "unexclude", "disable", "enable", "lint-only", "rules", "config"].contains(name) ||
            Descriptors.all.contains(where: {
                $0.argumentName == name && $0.isSetType
            })
@@ -314,7 +330,7 @@ func mergeArguments(_ args: [String: String], into config: [String: String]) thr
             input["rules"] = nil
             input["enable"] = nil
             input["disable"] = nil
-            input["lintonly"] = nil
+            input["lint-only"] = nil
         }
     } else {
         if let _disable = try output["disable"].map(parseRules) {
@@ -324,8 +340,8 @@ func mergeArguments(_ args: [String: String], into config: [String: String]) thr
             if let enable = try input["enable"].map(parseRules) {
                 input["enable"] = Set(enable).subtracting(_disable).sorted().joined(separator: ",")
             }
-            if let lintonly = try input["lintonly"].map(parseRules) {
-                input["lintonly"] = Set(lintonly).subtracting(_disable).sorted().joined(separator: ",")
+            if let lintonly = try input["lint-only"].map(parseRules) {
+                input["lint-only"] = Set(lintonly).subtracting(_disable).sorted().joined(separator: ",")
             }
             if let disable = try input["disable"].map(parseRules) {
                 input["disable"] = Set(disable).union(_disable).sorted().joined(separator: ",")
@@ -337,17 +353,17 @@ func mergeArguments(_ args: [String: String], into config: [String: String]) thr
                 input["enable"] = Set(enable).union(_enable).sorted().joined(separator: ",")
                 output["enable"] = nil
             }
-            if let lintonly = try input["lintonly"].map(parseRules) {
-                input["lintonly"] = Set(lintonly).subtracting(_enable).sorted().joined(separator: ",")
+            if let lintonly = try input["lint-only"].map(parseRules) {
+                input["lint-only"] = Set(lintonly).subtracting(_enable).sorted().joined(separator: ",")
             }
             if let disable = try input["disable"].map(parseRules) {
                 input["disable"] = Set(disable).subtracting(_enable).sorted().joined(separator: ",")
             }
         }
-        if let _lintonly = try output["lintonly"].map(parseRules) {
-            if let lintonly = try input["lintonly"].map(parseRules) {
-                input["lintonly"] = Set(lintonly).union(_lintonly).sorted().joined(separator: ",")
-                output["lintonly"] = nil
+        if let _lintonly = try output["lint-only"].map(parseRules) {
+            if let lintonly = try input["lint-only"].map(parseRules) {
+                input["lint-only"] = Set(lintonly).union(_lintonly).sorted().joined(separator: ",")
+                output["lint-only"] = nil
             }
         }
     }
@@ -480,15 +496,15 @@ func argumentsFor(_ options: Options, excludingDefaults: Bool = false) -> [Strin
         }
         do {
             if !excludingDefaults || fileOptions.minVersion != FileOptions.default.minVersion {
-                args["minversion"] = fileOptions.minVersion.description
+                args["min-version"] = fileOptions.minVersion.description
             }
-            arguments.remove("minversion")
+            arguments.remove("min-version")
         }
         do {
             if !excludingDefaults || fileOptions.markdownFormattingMode != nil {
-                args["markdownfiles"] = fileOptions.markdownFormattingMode?.rawValue ?? "ignore"
+                args["markdown-files"] = fileOptions.markdownFormattingMode?.rawValue ?? "ignore"
             }
-            arguments.remove("markdownfiles")
+            arguments.remove("markdown-files")
         }
         assert(arguments.isEmpty)
     }
@@ -572,7 +588,7 @@ public func rulesFor(_ args: [String: String], lint: Bool, initial: Set<String>?
     try args["enable"].map {
         try rules.formUnion(parseRules($0))
     }
-    try args["lintonly"].map { rulesString in
+    try args["lint-only"].map { rulesString in
         if lint {
             try rules.formUnion(parseRules(rulesString))
         } else {
@@ -607,17 +623,17 @@ func fileOptionsFor(_ args: [String: String], in directory: String) throws -> Fi
         containsFileOption = true
         options.unexcludedGlobs += expandGlobs($0, in: directory)
     }
-    try processOption("minversion", in: args, from: &arguments) {
+    try processOption("min-version", in: args, from: &arguments) {
         containsFileOption = true
         guard let minVersion = Version(rawValue: $0) else {
-            throw FormatError.options("Unsupported --minversion value '\($0)'")
+            throw FormatError.options("Unsupported --min-version value '\($0)'")
         }
         guard minVersion <= Version(stringLiteral: swiftFormatVersion) else {
-            throw FormatError.options("Project specifies SwiftFormat --minversion of \(minVersion)")
+            throw FormatError.options("Project specifies SwiftFormat --min-version of \(minVersion)")
         }
         options.minVersion = minVersion
     }
-    try processOption("markdownfiles", in: args, from: &arguments) {
+    try processOption("markdown-files", in: args, from: &arguments) {
         containsFileOption = true
         switch $0.lowercased() {
         case "ignore":
@@ -630,7 +646,7 @@ func fileOptionsFor(_ args: [String: String], in directory: String) throws -> Fi
             options.markdownFormattingMode = .strict
         default:
             throw FormatError.options("""
-            Valid options for --markdownfiles are 'ignore' (default), \
+            Valid options for --markdown-files are 'ignore' (default), \
             'format-lenient', or 'format-strict'.
             """)
         }
@@ -705,14 +721,14 @@ let fileArguments = [
     "symlinks",
     "exclude",
     "unexclude",
-    "minversion",
-    "markdownfiles",
+    "min-version",
+    "markdown-files",
 ]
 
 let rulesArguments = [
     "disable",
     "enable",
-    "lintonly",
+    "lint-only",
     "rules",
 ]
 
@@ -723,15 +739,15 @@ let optionsArguments = fileArguments + rulesArguments + formattingArguments + in
 let commandLineArguments = [
     // Input options
     "filelist",
-    "stdinpath",
-    "scriptinput",
+    "stdin-path",
+    "script-input",
     "config",
-    "baseconfig",
-    "inferoptions",
-    "linerange",
+    "base-config",
+    "infer-options",
+    "line-range",
     "output",
     "cache",
-    "dryrun",
+    "dry-run",
     "lint",
     "lenient",
     "strict",
@@ -743,10 +759,10 @@ let commandLineArguments = [
     "help",
     "version",
     "options",
-    "ruleinfo",
-    "dateformat",
+    "rule-info",
+    "date-format",
     "timezone",
-    "outputtokens",
+    "output-tokens",
 ] + optionsArguments
 
 let deprecatedArguments = Descriptors.deprecated.map(\.argumentName)

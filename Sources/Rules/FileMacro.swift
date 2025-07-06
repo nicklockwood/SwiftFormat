@@ -11,7 +11,7 @@ import Foundation
 public extension FormatRule {
     static let fileMacro = FormatRule(
         help: "Prefer either #file or #fileID, which have the same behavior in Swift 6 and later.",
-        options: ["filemacro"]
+        options: ["file-macro"]
     ) { formatter in
         // In the Swift 6 lanaguage mode and later, `#file` and `#fileID` have the same behavior.
         guard formatter.options.languageMode >= "6" else {

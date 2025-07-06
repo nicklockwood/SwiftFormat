@@ -12,7 +12,7 @@ public extension FormatRule {
     /// Replace unused arguments with an underscore
     static let unusedArguments = FormatRule(
         help: "Mark unused function arguments with `_`.",
-        options: ["stripunusedargs"]
+        options: ["strip-unused-args"]
     ) { formatter in
         guard !formatter.options.fragment else { return }
 

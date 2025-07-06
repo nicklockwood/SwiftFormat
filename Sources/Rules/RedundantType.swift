@@ -12,7 +12,7 @@ public extension FormatRule {
     /// Removes explicit type declarations from initialization declarations
     static let redundantType = FormatRule(
         help: "Remove redundant type from variable declarations.",
-        options: ["propertytypes"]
+        options: ["property-types"]
     ) { formatter in
         formatter.forEach(.operator("=", .infix)) { i, _ in
             guard let keyword = formatter.lastSignificantKeyword(at: i),

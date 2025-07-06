@@ -12,7 +12,7 @@ public extension FormatRule {
     static let conditionalAssignment = FormatRule(
         help: "Assign properties using if / switch expressions.",
         orderAfter: [.redundantReturn],
-        options: ["conditionalassignment"]
+        options: ["conditional-assignment"]
     ) { formatter in
         // If / switch expressions were added in Swift 5.9 (SE-0380)
         guard formatter.options.swiftVersion >= "5.9" else {

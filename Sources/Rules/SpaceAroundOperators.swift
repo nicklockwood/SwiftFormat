@@ -17,7 +17,7 @@ public extension FormatRule {
     ///   preceded by a space, unless it appears at the beginning of a line.
     static let spaceAroundOperators = FormatRule(
         help: "Add or remove space around operators or delimiters.",
-        options: ["operatorfunc", "nospaceoperators", "ranges", "typedelimiter"]
+        options: ["operator-func", "no-space-operators", "ranges", "type-delimiter"]
     ) { formatter in
         formatter.forEachToken { i, token in
             switch token {

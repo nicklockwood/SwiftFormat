@@ -337,11 +337,11 @@ private func processDirectory(_ inputURL: URL, with options: inout Options, logg
     if manager.fileExists(atPath: versionFile.path) {
         let versionString = try String(contentsOf: versionFile, encoding: .utf8)
             .trimmingCharacters(in: .whitespacesAndNewlines)
-        if args["swiftversion"] != nil {
+        if args["swift-version"] != nil {
             logger?("Ignoring swift-version file at \(versionFile.path)")
         } else if Version(rawValue: versionString) != nil {
             logger?("Reading swift-version file at \(versionFile.path) (version \(versionString))")
-            args["swiftversion"] = versionString
+            args["swift-version"] = versionString
         } else {
             // Don't treat as error, per: https://github.com/nicklockwood/SwiftFormat/issues/639
             // TODO: find a better solution for logging warnings here

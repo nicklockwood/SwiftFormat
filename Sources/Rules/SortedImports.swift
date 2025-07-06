@@ -13,7 +13,7 @@ public extension FormatRule {
     static let sortedImports = FormatRule(
         help: "Sort import statements alphabetically.",
         deprecationMessage: "Use sortImports instead.",
-        options: ["importgrouping"],
+        options: ["import-grouping"],
         sharedOptions: ["linebreaks"]
     ) { formatter in
         _ = formatter.options.importGrouping

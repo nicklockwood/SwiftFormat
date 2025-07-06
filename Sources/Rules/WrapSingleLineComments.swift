@@ -11,8 +11,8 @@ import Foundation
 public extension FormatRule {
     /// Wrap single-line comments that exceed given `FormatOptions.maxWidth` setting.
     static let wrapSingleLineComments = FormatRule(
-        help: "Wrap single line `//` comments that exceed the specified `--maxwidth`.",
-        sharedOptions: ["maxwidth", "indent", "tabwidth", "assetliterals", "linebreaks"]
+        help: "Wrap single line `//` comments that exceed the specified `--max-width`.",
+        sharedOptions: ["max-width", "indent", "tab-width", "asset-literals", "linebreaks"]
     ) { formatter in
         let delimiterLength = "//".count
         var maxWidth = formatter.options.maxWidth

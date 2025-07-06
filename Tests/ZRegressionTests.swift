@@ -29,7 +29,7 @@ class ZRegressionTests: XCTestCase {
         let tokens = projectFiles.flatMap { tokenize($0) }
         let options = Options(formatOptions: inferFormatOptions(from: tokens))
         let arguments = serialize(options: options, excludingDefaults: true, separator: " ")
-        XCTAssertEqual(arguments, "--binarygrouping none --decimalgrouping none --hexgrouping none --octalgrouping none --semicolons never")
+        XCTAssertEqual(arguments, "--binary-grouping none --decimal-grouping none --hex-grouping none --octal-grouping none --semicolons never")
     }
 
     // MARK: snapshot/regression tests

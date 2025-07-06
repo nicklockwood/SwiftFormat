@@ -354,8 +354,8 @@ class CommandLineTests: XCTestCase {
         )
 
         let mediumOption = OptionDescriptor(
-            argumentName: "optionmedium",
-            displayName: "optionmedium",
+            argumentName: "option-medium",
+            displayName: "option-medium",
             help: "Option with a medium name and description length",
             keyPath: \.fragment,
             trueValues: [],
@@ -363,8 +363,8 @@ class CommandLineTests: XCTestCase {
         )
 
         let longOption = OptionDescriptor(
-            argumentName: "optionwithlongername",
-            displayName: "optionwithlongername",
+            argumentName: "option-with-longer-name",
+            displayName: "option-with-longer-name",
             help: """
             This is a longer option with a name over the original 16 character limit, \
             and a help text over the original 80 character limit.
@@ -379,11 +379,11 @@ class CommandLineTests: XCTestCase {
             XCTAssertEqual(output, """
             --option           Short option description
             --option           Short option description
-            --optionmedium     Option with a medium name and description length
-            --optionmedium     Option with a medium name and description length
-            --optionwithlongername
+            --option-medium    Option with a medium name and description length
+            --option-medium    Option with a medium name and description length
+            --option-with-longer-name
                                This is a longer option with a name over the original 16 character limit, and a help text over the original 80 character limit.
-            --optionwithlongername
+            --option-with-longer-name
                                This is a longer option with a name over the original 16 character limit, and a help text over the original 80 character limit.
             """)
         }
@@ -458,7 +458,7 @@ class CommandLineTests: XCTestCase {
         CLI.print = { message, _ in
             XCTFail(message)
         }
-        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "--quiet --dryrun"), .ok)
+        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "--quiet --dry-run"), .ok)
     }
 
     func testQuietModeAllowsContent() {
@@ -481,7 +481,7 @@ class CommandLineTests: XCTestCase {
         CLI.print = { message, type in
             XCTAssertEqual(type, .error, message)
         }
-        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "Sources --dryrun Tests --rules indent"), .error)
+        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "Sources --dry-run Tests --rules indent"), .error)
     }
 
     // MARK: file list

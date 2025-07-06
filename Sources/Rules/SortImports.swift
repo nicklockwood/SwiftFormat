@@ -12,7 +12,7 @@ public extension FormatRule {
     /// Sort import statements
     static let sortImports = FormatRule(
         help: "Sort import statements alphabetically.",
-        options: ["importgrouping"],
+        options: ["import-grouping"],
         sharedOptions: ["linebreaks"]
     ) { formatter in
         for var importRanges in formatter.parseImports().reversed() {

@@ -282,7 +282,7 @@ class MetadataTests: XCTestCase {
     func testNoInvalidOptionsInRulesFile() {
         let arguments = Set(commandLineArguments)
         var range = rulesFile.startIndex ..< rulesFile.endIndex
-        while let match = rulesFile.range(of: "`--[a-zA-Z]+[` ]", options: .regularExpression, range: range, locale: nil) {
+        while let match = rulesFile.range(of: "`--[a-zA-Z-]+[` ]", options: .regularExpression, range: range, locale: nil) {
             let lower = rulesFile.index(match.lowerBound, offsetBy: 3)
             let upper = rulesFile.index(before: match.upperBound)
             let argument = String(rulesFile[lower ..< upper])

@@ -12,7 +12,7 @@ public extension FormatRule {
     static let preferSwiftTesting = FormatRule(
         help: "Prefer the Swift Testing library over XCTest.",
         disabledByDefault: true,
-        options: ["xctestsymbols"]
+        options: ["xctest-symbols"]
     ) { formatter in
         // Swift Testing was introduced in Xcode 16.0 with Swift 6.0
         guard formatter.options.swiftVersion >= "6.0" else { return }

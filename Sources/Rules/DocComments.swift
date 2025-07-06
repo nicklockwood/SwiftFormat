@@ -13,7 +13,7 @@ public extension FormatRule {
         help: "Use doc comments for API declarations, otherwise use regular comments.",
         disabledByDefault: true,
         orderAfter: [.fileHeader],
-        options: ["doccomments"]
+        options: ["doc-comments"]
     ) { formatter in
         formatter.forEach(.startOfScope) { index, token in
             guard [.startOfScope("//"), .startOfScope("/*")].contains(token),

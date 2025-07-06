@@ -13,7 +13,7 @@ public extension FormatRule {
     static let urlMacro = FormatRule(
         help: "Replace force-unwrapped `URL(string:)` initializers with the configured `#URL(_:)` macro.",
         disabledByDefault: true,
-        options: ["urlmacro"]
+        options: ["url-macro"]
     ) { formatter in
         // Only apply this rule if a URL macro is configured
         guard case let .macro(macroName, module: module) = formatter.options.urlMacro else {
@@ -81,7 +81,7 @@ public extension FormatRule {
         }
     } examples: {
         """
-        With `--urlmacro "#URL,URLFoundation"`:
+        With `--url-macro "#URL,URLFoundation"`:
 
         ```diff
         - let url = URL(string: "https://example.com")!

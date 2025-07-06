@@ -15,7 +15,7 @@ public extension FormatRule {
         Add `@available(*, unavailable)` attribute to required `init(coder:)` when
         it hasn't been implemented.
         """,
-        options: ["initcodernil"],
+        options: ["init-coder-nil"],
         sharedOptions: ["linebreaks"]
     ) { formatter in
         let unavailableTokens = tokenize("@available(*, unavailable)")

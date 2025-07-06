@@ -192,7 +192,7 @@ extension Formatter {
                             names.formUnion(locals)
                             return
                         }
-                        continue
+                        continue inner
                     case .keyword("let"), .keyword("var"):
                         names.formUnion(locals)
                         declarationIndex = nextIndex
@@ -213,17 +213,8 @@ extension Formatter {
                         index = nextIndex
                         names.formUnion(locals)
                         break inner
-                    case .startOfScope("//"), .startOfScope("/*"):
-                        if case let .commentBody(comment)? = next(.nonSpace, after: nextIndex) {
-                            processCommentBody(comment, at: nextIndex)
-                            if token == .startOfScope("//") {
-                                processLinebreak()
-                            }
-                        }
-                        index = endOfScope(at: nextIndex) ?? (tokens.count - 1)
-                        continue inner
-                    case .linebreak:
-                        processLinebreak()
+                    case .endOfScope("*/"), .linebreak:
+                        updateEnablement(at: nextIndex)
                     default:
                         break
                     }
@@ -253,16 +244,8 @@ extension Formatter {
                     return
                 }
                 index = nextIndex
-            case .startOfScope("//"), .startOfScope("/*"):
-                if case let .commentBody(comment)? = next(.nonSpace, after: index) {
-                    processCommentBody(comment, at: index)
-                    if token == .startOfScope("//") {
-                        processLinebreak()
-                    }
-                }
-                index = endOfScope(at: index) ?? (tokens.count - 1)
-            case .linebreak:
-                processLinebreak()
+            case .endOfScope("*/"), .linebreak:
+                updateEnablement(at: index)
             default:
                 break
             }
@@ -2204,23 +2187,16 @@ extension Formatter {
                         } else {
                             localNames.insert(nameToken.unescaped())
                         }
-                    case .startOfScope("("), .startOfScope("#if"), .startOfScope(":"):
+                    case .startOfScope("("), .startOfScope("#if"), .startOfScope(":"),
+                         .startOfScope("/*"), .startOfScope("//"):
                         break
-                    case .startOfScope("//"), .startOfScope("/*"):
-                        if case let .commentBody(comment)? = next(.nonSpace, after: i) {
-                            processCommentBody(comment, at: i)
-                            if token == .startOfScope("//") {
-                                processLinebreak()
-                            }
-                        }
-                        i = endOfScope(at: i) ?? (tokens.count - 1)
                     case .startOfScope:
                         classOrStatic = false
                         i = endOfScope(at: i) ?? (tokens.count - 1)
                     case .endOfScope("}"), .endOfScope("case"), .endOfScope("default"):
                         break outer
-                    case .linebreak:
-                        processLinebreak()
+                    case .endOfScope("*/"), .linebreak:
+                        updateEnablement(at: i)
                     default:
                         break
                     }
@@ -2237,7 +2213,7 @@ extension Formatter {
             var classOrStatic = classOrStatic
             var scopeStack = [(token: Token.space(""), dynamicMemberTypes: Set<String>())]
 
-            // TODO: restructure this to use forEachToken to avoid exposing processCommentBody mechanism
+            // TODO: restructure this to use forEachToken to avoid exposing comment directives mechanism
             while let token = token(at: index) {
                 switch token {
                 case .keyword("is"), .keyword("as"), .keyword("try"), .keyword("await"):
@@ -2397,14 +2373,9 @@ extension Formatter {
                 case let .keyword(name):
                     lastKeyword = name
                     lastKeywordIndex = index
-                case .startOfScope("//"), .startOfScope("/*"):
-                    if case let .commentBody(comment)? = next(.nonSpace, after: index) {
-                        processCommentBody(comment, at: index)
-                        if token == .startOfScope("//") {
-                            processLinebreak()
-                        }
-                    }
+                case .startOfScope("/*"), .startOfScope("//"):
                     index = endOfScope(at: index) ?? (tokens.count - 1)
+                    updateEnablement(at: index)
                 case .startOfScope where token.isStringDelimiter, .startOfScope("#if"),
                      .startOfScope("["), .startOfScope("("):
                     scopeStack.append((token, []))
@@ -2747,7 +2718,7 @@ extension Formatter {
                         return
                     }
                 case .linebreak:
-                    processLinebreak()
+                    updateEnablement(at: index)
                 default:
                     break
                 }

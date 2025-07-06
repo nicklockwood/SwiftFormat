@@ -1725,7 +1725,7 @@ extension Formatter {
 
             // If the current rule is disabled at this index, don't keep the declaration.
             // This makes it easy for parseDeclarations-based rules to support directives
-            // like swiftformat:disable, swiftformat:disable:next.
+            // like disable and disable:next.
             if isEnabled {
                 declarations.append(_Declaration(
                     keyword: declarationKeyword,
@@ -2522,11 +2522,7 @@ extension Formatter {
             switch tokens[startIndex] {
             case .startOfScope("//"):
                 if case let .commentBody(body)? = next(.nonSpace, after: startIndex) {
-                    processCommentBody(body, at: startIndex)
-                    defer {
-                        processLinebreak()
-                        processLinebreak()
-                    }
+                    updateEnablement(at: startIndex)
                     if !isEnabled || (body.hasPrefix("/") && !body.hasPrefix("//")) ||
                         body.hasPrefix("swift-tools-version")
                     {
@@ -2562,11 +2558,7 @@ extension Formatter {
                 }
             case .startOfScope("/*"):
                 if case let .commentBody(body)? = next(.nonSpace, after: startIndex) {
-                    processCommentBody(body, at: startIndex)
-                    defer {
-                        processLinebreak()
-                        processLinebreak()
-                    }
+                    updateEnablement(at: startIndex)
                     if !isEnabled || (body.hasPrefix("*") && !body.hasPrefix("**")) {
                         return nil
                     } else if body.isCommentDirective {
@@ -2589,6 +2581,8 @@ extension Formatter {
                     }
                     startIndex = nextIndex
                 }
+            case .endOfScope("*/"), .linebreak:
+                updateEnablement(at: startIndex)
             default:
                 break
             }

@@ -566,9 +566,11 @@ You can configure options for specific files or code ranges by using `swiftforma
 // swiftformat:options --indent 2 --allman true
 ```
 
-To apply an options override only to a particular line, use the `:next` modifier:
+To apply an options override only to a particular line, use the `:this`, `:next` or `:previous` modifiers:
 
 ```swift
+let indexUrl: URL // swiftformat:options:this --preserve-acronyms url 
+
 // swiftformat:options:next --semicolons inline
 doTheThing(); print("Did the thing")
 ```
@@ -662,7 +664,7 @@ let foo = bar // rule(s) will be disabled for this line
 let bar = baz // rule(s) will be re-enabled for this line
 ```
 
-There is no need to manually re-enable a rule after using the `next` directive.
+You can also use `this` or `previous` to enable or disable rules for the current or previous line. There is no need to manually re-enable a rule after using the `next`, `this` or `previous` directives.
 
 **NOTE:** The `swiftformat:enable` directive only serves to counter a previous `swiftformat:disable` directive in the same file. It is not possible to use `swiftformat:enable` to enable a rule that was not already enabled when formatting started.
 

@@ -14,7 +14,7 @@ public extension FormatRule {
         help: "Use specified source file header template for all files.",
         runOnceOnly: true,
         options: ["header", "date-format", "timezone"],
-        sharedOptions: ["line-breaks"]
+        sharedOptions: ["linebreaks"]
     ) { formatter in
         var headerTokens = [Token]()
         var directives = [String]()

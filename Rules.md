@@ -1466,7 +1466,7 @@ Use specified linebreak character for all linebreaks (CR, LF or CRLF).
 
 Option | Description
 --- | ---
-`--line-breaks` | Linebreak character to use: "cr", "crlf" or "lf" (default)
+`--linebreaks` | Linebreak character to use: "cr", "crlf" or "lf" (default)
 
 ## markTypes
 

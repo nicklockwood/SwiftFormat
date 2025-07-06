@@ -12,7 +12,7 @@ public extension FormatRule {
     static let wrapMultilineStatementBraces = FormatRule(
         help: "Wrap the opening brace of multiline statements.",
         orderAfter: [.braces, .indent, .wrapArguments],
-        sharedOptions: ["line-breaks"]
+        sharedOptions: ["linebreaks"]
     ) { formatter in
         formatter.forEach(.startOfScope("{")) { i, _ in
             guard formatter.last(.nonSpaceOrComment, before: i)?.isLinebreak == false,

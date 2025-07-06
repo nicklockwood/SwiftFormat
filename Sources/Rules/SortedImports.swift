@@ -14,7 +14,7 @@ public extension FormatRule {
         help: "Sort import statements alphabetically.",
         deprecationMessage: "Use sortImports instead.",
         options: ["import-grouping"],
-        sharedOptions: ["line-breaks"]
+        sharedOptions: ["linebreaks"]
     ) { formatter in
         _ = formatter.options.importGrouping
         _ = formatter.options.linebreak

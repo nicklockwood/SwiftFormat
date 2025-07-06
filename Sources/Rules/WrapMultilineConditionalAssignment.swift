@@ -13,7 +13,7 @@ public extension FormatRule {
         help: "Wrap multiline conditional assignment expressions after the assignment operator.",
         disabledByDefault: true,
         orderAfter: [.conditionalAssignment],
-        sharedOptions: ["line-breaks"]
+        sharedOptions: ["linebreaks"]
     ) { formatter in
         formatter.forEach(.keyword) { startOfCondition, keywordToken in
             guard [.keyword("if"), .keyword("switch")].contains(keywordToken),

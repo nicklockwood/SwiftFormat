@@ -15,7 +15,7 @@ public extension FormatRule {
         orderAfter: [.wrap],
         options: ["wrap-arguments", "wrap-parameters", "wrap-collections", "closing-paren", "call-site-paren",
                   "wrap-return-type", "wrap-conditions", "wrap-type-aliases", "wrap-effects", "wrap-string-interpolation"],
-        sharedOptions: ["indent", "trim-whitespace", "line-breaks",
+        sharedOptions: ["indent", "trim-whitespace", "linebreaks",
                         "tab-width", "max-width", "smart-tabs", "asset-literals", "wrap-ternary"]
     ) { formatter in
         formatter.wrapCollectionsAndArguments(completePartialWrapping: true,

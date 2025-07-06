@@ -16,7 +16,7 @@ public extension FormatRule {
         it hasn't been implemented.
         """,
         options: ["init-coder-nil"],
-        sharedOptions: ["line-breaks"]
+        sharedOptions: ["linebreaks"]
     ) { formatter in
         let unavailableTokens = tokenize("@available(*, unavailable)")
         formatter.forEach(.identifier("required")) { i, _ in

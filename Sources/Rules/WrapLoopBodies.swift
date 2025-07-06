@@ -12,7 +12,7 @@ public extension FormatRule {
     static let wrapLoopBodies = FormatRule(
         help: "Wrap the bodies of inline loop statements onto a new line.",
         orderAfter: [.preferForLoop],
-        sharedOptions: ["line-breaks", "indent"]
+        sharedOptions: ["linebreaks", "indent"]
     ) { formatter in
         formatter.forEachToken(where: { [
             .keyword("for"),

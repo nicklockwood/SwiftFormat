@@ -15,7 +15,7 @@ public extension FormatRule {
         Insert blank line before class, struct, enum, extension, protocol or function
         declarations.
         """,
-        sharedOptions: ["line-breaks"]
+        sharedOptions: ["linebreaks"]
     ) { formatter in
         var spaceableScopeStack = [true]
         var isSpaceableScopeType = false

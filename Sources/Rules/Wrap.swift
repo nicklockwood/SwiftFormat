@@ -13,7 +13,7 @@ public extension FormatRule {
         help: "Wrap lines that exceed the specified maximum width.",
         options: ["max-width", "no-wrap-operators", "asset-literals", "wrap-ternary", "wrap-string-interpolation"],
         sharedOptions: ["wrap-arguments", "wrap-parameters", "wrap-collections", "closing-paren", "call-site-paren", "indent",
-                        "trim-whitespace", "line-breaks", "tab-width", "max-width", "smart-tabs", "wrap-return-type",
+                        "trim-whitespace", "linebreaks", "tab-width", "max-width", "smart-tabs", "wrap-return-type",
                         "wrap-conditions", "wrap-type-aliases", "wrap-ternary", "wrap-effects"]
     ) { formatter in
         let maxWidth = formatter.options.maxWidth

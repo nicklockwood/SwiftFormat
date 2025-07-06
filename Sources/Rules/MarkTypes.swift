@@ -14,7 +14,7 @@ public extension FormatRule {
         runOnceOnly: true,
         disabledByDefault: true,
         options: ["mark-types", "type-mark", "mark-extensions", "extension-mark", "grouped-extension"],
-        sharedOptions: ["line-after-marks", "line-breaks"]
+        sharedOptions: ["line-after-marks", "linebreaks"]
     ) { formatter in
         var declarations = formatter.parseDeclarations()
 

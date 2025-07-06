@@ -15,7 +15,7 @@ public extension FormatRule {
         or `try XCTUnwrap(...)` / `XCTAssert(...)`.
         """,
         disabledByDefault: true,
-        sharedOptions: ["line-breaks"]
+        sharedOptions: ["linebreaks"]
     ) { formatter in
         guard let testFramework = formatter.detectTestingFramework() else {
             return

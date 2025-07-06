@@ -464,7 +464,7 @@ struct _Descriptors {
         toArgument: { $0 == "\t" ? "tab" : String($0.count) }
     )
     let linebreak = OptionDescriptor(
-        argumentName: "line-breaks",
+        argumentName: "linebreaks",
         displayName: "Linebreak Character",
         help: "Linebreak character to use: \"cr\", \"crlf\" or \"lf\" (default)",
         keyPath: \.linebreak,

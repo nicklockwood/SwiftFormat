@@ -11,7 +11,7 @@ import Foundation
 public extension FormatRule {
     static let sortTypealiases = FormatRule(
         help: "Sort protocol composition typealiases alphabetically.",
-        sharedOptions: ["line-breaks"]
+        sharedOptions: ["linebreaks"]
     ) { formatter in
         formatter.forEach(.keyword("typealias")) { typealiasIndex, _ in
             guard let (equalsIndex, andTokenIndices, endIndex) = formatter.parseProtocolCompositionTypealias(at: typealiasIndex),

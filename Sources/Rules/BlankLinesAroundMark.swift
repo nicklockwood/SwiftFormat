@@ -13,7 +13,7 @@ public extension FormatRule {
     static let blankLinesAroundMark = FormatRule(
         help: "Insert blank line before and after `MARK:` comments.",
         options: ["line-after-marks"],
-        sharedOptions: ["line-breaks"]
+        sharedOptions: ["linebreaks"]
     ) { formatter in
         formatter.forEachToken { i, token in
             guard case let .commentBody(comment) = token, comment.hasPrefix("MARK:"),

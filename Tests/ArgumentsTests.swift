@@ -129,11 +129,11 @@ class ArgumentsTests: XCTestCase {
 
     func testPreprocessArguments() {
         let input = ["", "foo", "bar", "-o", "baz", "-i", "4", "-l", "cr", "-s", "inline"]
-        let output = ["0": "", "1": "foo", "2": "bar", "output": "baz", "indent": "4", "line-breaks": "cr", "semicolons": "inline"]
+        let output = ["0": "", "1": "foo", "2": "bar", "output": "baz", "indent": "4", "linebreaks": "cr", "semicolons": "inline"]
         XCTAssertEqual(try preprocessArguments(input, [
             "output",
             "indent",
-            "line-breaks",
+            "linebreaks",
             "semicolons",
         ]), output)
     }
@@ -692,7 +692,7 @@ class ArgumentsTests: XCTestCase {
         var options = Options(
             formatOptions: FormatOptions(indent: " ", allowInlineSemicolons: true)
         )
-        try options.addArguments(["indent": "2", "line-breaks": "crlf"], in: "")
+        try options.addArguments(["indent": "2", "linebreaks": "crlf"], in: "")
         guard let formatOptions = options.formatOptions else {
             XCTFail()
             return

@@ -19,7 +19,7 @@ public extension FormatRule {
         """,
         orderAfter: [.wrapMultilineStatementBraces],
         options: ["else-position", "guard-else"],
-        sharedOptions: ["allman", "line-breaks"]
+        sharedOptions: ["allman", "linebreaks"]
     ) { formatter in
         formatter.forEachToken { i, token in
             switch token {

@@ -14,7 +14,7 @@ public extension FormatRule {
         help: "Rewrite comma-delimited enum cases to one case per line.",
         disabledByDefault: true,
         options: ["wrap-enum-cases"],
-        sharedOptions: ["line-breaks"]
+        sharedOptions: ["linebreaks"]
     ) { formatter in
         formatter.parseEnumCaseRanges()
             .filter(formatter.shouldWrapCaseRangeGroup)

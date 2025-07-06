@@ -15,7 +15,7 @@ public extension FormatRule {
         Remove blank lines between import statements.
         """,
         disabledByDefault: true,
-        sharedOptions: ["line-breaks"]
+        sharedOptions: ["linebreaks"]
     ) { formatter in
         formatter.forEach(.keyword("import")) { currentImportIndex, _ in
             guard let endOfLine = formatter.index(of: .linebreak, after: currentImportIndex),

@@ -21,7 +21,7 @@ public extension FormatRule {
             "visibility-order", "type-order", "visibility-marks", "type-marks",
             "group-blank-lines", "sort-swiftui-properties",
         ],
-        sharedOptions: ["sorted-patterns", "line-after-marks", "line-breaks"]
+        sharedOptions: ["sorted-patterns", "line-after-marks", "linebreaks"]
     ) { formatter in
         formatter.parseDeclarations().forEachRecursiveDeclaration { declaration in
             // Organize the body of type declarations

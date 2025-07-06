@@ -13,7 +13,7 @@ public extension FormatRule {
     static let semicolons = FormatRule(
         help: "Remove semicolons.",
         options: ["semicolons"],
-        sharedOptions: ["line-breaks"]
+        sharedOptions: ["linebreaks"]
     ) { formatter in
         formatter.forEach(.delimiter(";")) { i, _ in
             if let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: i) {

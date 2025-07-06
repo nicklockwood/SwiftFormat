@@ -30,22 +30,22 @@ public extension FormatRule {
         }
     } examples: {
         """
-        Default value for `--visibilityorder` when using `--organizationmode visibility`:
+        Default value for `--visibility-order` when using `--organization-mode visibility`:
         `\(VisibilityCategory.defaultOrdering(for: .visibility).map(\.rawValue).joined(separator: ", "))`
 
-        Default value for `--visibilityorder` when using `--organizationmode type`:
+        Default value for `--visibility-order` when using `--organization-mode type`:
         `\(VisibilityCategory.defaultOrdering(for: .type).map(\.rawValue).joined(separator: ", "))`
 
-        **NOTE:** When providing custom arguments for `--visibilityorder` the following entries must be included:
+        **NOTE:** When providing custom arguments for `--visibility-order` the following entries must be included:
         `\(VisibilityCategory.essentialCases.map(\.rawValue).joined(separator: ", "))`
 
-        Default value for `--typeorder` when using `--organizationmode visibility`:
+        Default value for `--type-order` when using `--organization-mode visibility`:
         `\(DeclarationType.defaultOrdering(for: .visibility).map(\.rawValue).joined(separator: ", "))`
 
-        Default value for `--typeorder` when using `--organizationmode type`:
+        Default value for `--type-order` when using `--organization-mode type`:
         `\(DeclarationType.defaultOrdering(for: .type).map(\.rawValue).joined(separator: ", "))`
 
-        **NOTE:** The follow declaration types must be included in either `--typeorder` or `--visibilityorder`:
+        **NOTE:** The follow declaration types must be included in either `--type-order` or `--visibility-order`:
         `\(DeclarationType.essentialCases.map(\.rawValue).joined(separator: ", "))`
 
         **NOTE:** The Swift compiler automatically synthesizes a memberwise `init` for `struct` types.
@@ -53,7 +53,7 @@ public extension FormatRule {
         To allow SwiftFormat to reorganize your code effectively, you must explicitly declare an `init`.
         Without this declaration, only functions will be reordered, while properties will remain in their original order. 
 
-        `--organizationmode visibility` (default)
+        `--organization-mode visibility` (default)
 
         ```diff
           public class Foo {
@@ -98,7 +98,7 @@ public extension FormatRule {
           }
         ```
 
-        `--organizationmode type`
+        `--organization-mode type`
 
         ```diff
           public class Foo {
@@ -751,7 +751,7 @@ extension Formatter {
             guard declarationTypes.contains(essentialDeclarationType)
                 || VisibilityCategorys.contains(.explicit(essentialDeclarationType))
             else {
-                Swift.fatalError("\(essentialDeclarationType.rawValue) must be included in either --typeorder or --visibilityorder")
+                Swift.fatalError("\(essentialDeclarationType.rawValue) must be included in either --type-order or --visibility-order")
             }
         }
 

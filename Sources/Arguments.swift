@@ -188,7 +188,7 @@ private func kebabToCamelCase(_ kebabCase: String) -> String {
 }
 
 /// Find a matching kebab-case option for a legacy non-kebab option name
-private func findLegacyOption(_ legacy: String, in names: [String]) -> String? {
+private func findLegacyOptionMatch(_ legacy: String, in names: [String]) -> String? {
     // Convert legacy lowercase compound word to camelCase, then find kebab option that matches
     let legacyCamelCase = kebabToCamelCase(legacy)
 
@@ -224,7 +224,7 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
                 name = key
             } else {
                 // Fall back to legacy option name by finding matching kebab-case option
-                if let kebabKey = findLegacyOption(key, in: names) {
+                if let kebabKey = findLegacyOptionMatch(key, in: names) {
                     name = kebabKey
                 } else {
                     guard let match = key.bestMatches(in: names).first else {
@@ -769,7 +769,7 @@ let commandLineArguments = [
     "line-range",
     "output",
     "cache",
-    "dryrun",
+    "dry-run",
     "lint",
     "lenient",
     "strict",

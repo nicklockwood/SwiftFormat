@@ -209,7 +209,7 @@ func printHelp(as type: CLI.OutputType) {
     --language-mode    \(stripMarkdown(Descriptors.languageMode.help))
     --min-version      The minimum SwiftFormat version to be used for these files
     --cache            Path to cache file, or "clear" or "ignore" the default cache
-    --dryrun           Run in "dry" mode (without actually changing any files)
+    --dry-run          Run in "dry" mode (without actually changing any files)
     --lint             Return an error for unformatted input, and list violations
     --report           Path to a file where --lint output should be written
     --reporter         Report format: \(Reporters.help)
@@ -401,7 +401,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
         let lint = (args["lint"] != nil)
 
         // Dry run
-        let dryrun = lint || (args["dryrun"] != nil)
+        let dryrun = lint || (args["dry-run"] != nil)
 
         // Whether or not to output tokens instead of source code
         let printTokens = args["output-tokens"] != nil
@@ -586,7 +586,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
         try addInputPaths(for: "verbose")
         try addInputPaths(for: "lenient")
         try addInputPaths(for: "strict")
-        try addInputPaths(for: "dryrun")
+        try addInputPaths(for: "dry-run")
         try addInputPaths(for: "lint")
         try addInputPaths(for: "infer-options")
 

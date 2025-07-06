@@ -87,7 +87,7 @@ public extension FormatRule {
         + private convenience init()
         ```
 
-        **NOTE:** If the `--modifierorder` option isn't set, the default order will be:
+        **NOTE:** If the `--modifier-order` option isn't set, the default order will be:
         `\(_FormatRules.defaultModifierOrder.flatMap { $0 }.joined(separator: "`, `"))`
         """
     }

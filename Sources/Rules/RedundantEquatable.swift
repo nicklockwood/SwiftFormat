@@ -110,12 +110,12 @@ public extension FormatRule {
         ```
 
         If your project includes a macro that generates the `static func ==` implementation
-        for the attached class, you can specify `--equatablemacro @Equatable,MyMacroLib`
+        for the attached class, you can specify `--equatable-macro @Equatable,MyMacroLib`
         and this rule will also migrate eligible classes to use your macro instead of
         a hand-written Equatable conformance:
 
         ```diff
-          // --equatablemacro @Equatable,MyMacroLib
+          // --equatable-macro @Equatable,MyMacroLib
           import FooLib
         + import MyMacroLib
 

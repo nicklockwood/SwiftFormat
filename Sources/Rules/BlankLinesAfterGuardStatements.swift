@@ -47,7 +47,7 @@ public extension FormatRule {
         }
     } examples: {
         """
-        `--linebetweenguards false` (default)
+        `--line-between-guards false` (default)
 
         ```diff
             // Multiline guard
@@ -74,7 +74,7 @@ public extension FormatRule {
             let doTheJob = nikekov()
         ```
 
-        `--linebetweenguards true`
+        `--line-between-guards true`
 
         ```diff
             // Multiline guard

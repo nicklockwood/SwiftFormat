@@ -120,8 +120,8 @@ class ArgumentsTests: XCTestCase {
     }
 
     func testQuotedURLMacro() {
-        let input = "--urlmacro \"#URL,URLFoundation\""
-        let output = ["", "--urlmacro", "#URL,URLFoundation"]
+        let input = "--url-macro \"#URL,URLFoundation\""
+        let output = ["", "--url-macro", "#URL,URLFoundation"]
         XCTAssertEqual(parseArguments(input, ignoreComments: false), output)
     }
 
@@ -193,7 +193,7 @@ class ArgumentsTests: XCTestCase {
     }
 
     func testDuplicateSelfrequiredArgumentsAreMerged() {
-        let input = ["", "--selfrequired", "foo", "--selfrequired", "bar"]
+        let input = ["", "--self-required", "foo", "--self-required", "bar"]
         let output = ["0": "", "self-required": "foo,bar"]
         XCTAssertEqual(try preprocessArguments(input, [
             "self-required",
@@ -347,7 +347,7 @@ class ArgumentsTests: XCTestCase {
     }
 
     func testParseURLMacroArgumentInConfigFileFailsWithoutQuotes() throws {
-        let config = "--urlmacro #URL,URLFoundation"
+        let config = "--url-macro #URL,URLFoundation"
         let data = Data(config.utf8)
         let args = try parseConfigFile(data)
         // This should fail because #URL,URLFoundation is treated as a comment
@@ -356,7 +356,7 @@ class ArgumentsTests: XCTestCase {
     }
 
     func testParseURLMacroArgumentInConfigFileWithQuotes() throws {
-        let config = "--urlmacro \"#URL,URLFoundation\""
+        let config = "--url-macro \"#URL,URLFoundation\""
         let data = Data(config.utf8)
         let args = try parseConfigFile(data)
         XCTAssertEqual(args.count, 1)

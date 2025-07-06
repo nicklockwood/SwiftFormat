@@ -111,7 +111,7 @@ public extension FormatRule {
         }
     } examples: {
         """
-        `--funcattributes prev-line`
+        `--func-attributes prev-line`
 
         ```diff
         - @objc func foo() {}
@@ -120,7 +120,7 @@ public extension FormatRule {
         + func foo() { }
         ```
 
-        `--funcattributes same-line`
+        `--func-attributes same-line`
 
         ```diff
         - @objc
@@ -129,7 +129,7 @@ public extension FormatRule {
         + @objc func foo() {}
         ```
 
-        `--typeattributes prev-line`
+        `--type-attributes prev-line`
 
         ```diff
         - @objc class Foo {}
@@ -138,7 +138,7 @@ public extension FormatRule {
         + class Foo { }
         ```
 
-        `--typeattributes same-line`
+        `--type-attributes same-line`
 
         ```diff
         - @objc

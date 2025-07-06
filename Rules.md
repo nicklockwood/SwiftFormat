@@ -318,7 +318,7 @@ Option | Description
 <details>
 <summary>Examples</summary>
 
-`--linebetweenguards false` (default)
+`--line-between-guards false` (default)
 
 ```diff
     // Multiline guard
@@ -345,7 +345,7 @@ Option | Description
     let doTheJob = nikekov()
 ```
 
-`--linebetweenguards true`
+`--line-between-guards true`
 
 ```diff
     // Multiline guard
@@ -448,7 +448,7 @@ Option | Description
   ]
 ```
 
-With `--typeblanklines insert`:
+With `--type-blank-lines insert`:
 
 ```diff
   struct Foo {
@@ -497,7 +497,7 @@ Option | Description
   ]
 ```
 
-With `--typeblanklines insert`:
+With `--type-blank-lines insert`:
 
 ```diff
   struct Foo {
@@ -1016,7 +1016,7 @@ Option | Description
 <details>
 <summary>Examples</summary>
 
-`--extensionacl on-extension` (default)
+`--extension-acl on-extension` (default)
 
 ```diff
 - extension Foo {
@@ -1030,7 +1030,7 @@ Option | Description
   }
 ```
 
-`--extensionacl on-declarations`
+`--extension-acl on-declarations`
 
 ```diff
 - public extension Foo {
@@ -1087,7 +1087,7 @@ Token | Description
 + //
 ```
 
-You can use the following built-in formats for `--dateformat`:
+You can use the following built-in formats for `--date-format`:
 
 Token | Description
 --- | ---
@@ -1099,28 +1099,28 @@ mdy | Month/Day/Year (MM/dd/yyyy)
 Custom formats are defined using
 [Unicode symbols](https://www.unicode.org/reports/tr35/tr35-31/tr35-dates.html#Date_Field_Symbol_Table).
 
-`--dateformat iso`
+`--date-format iso`
 
 ```diff
 - // Created {created}
 + // Created 2023-08-10
 ```
 
-`--dateformat dmy`
+`--date-format dmy`
 
 ```diff
 - // Created {created}
 + // Created 10/08/2023
 ```
 
-`--dateformat mdy`
+`--date-format mdy`
 
 ```diff
 - // Created {created}
 + // Created 08/10/2023
 ```
 
-`--dateformat 'yyyy.MM.dd.HH.mm'`
+`--date-format 'yyyy.MM.dd.HH.mm'`
 
 ```diff
 - // Created {created}
@@ -1133,14 +1133,14 @@ around the world. By default the local system locale is used and for convenience
 setting it to a abbreviation/time zone identifier supported by the Swift
 standard library.
 
-`--dateformat 'yyyy-MM-dd HH:mm ZZZZ' --timezone utc`
+`--date-format 'yyyy-MM-dd HH:mm ZZZZ' --timezone utc`
 
 ```diff
 - // Created {created}
 + // Created 2023-08-10 11:00 GMT
 ```
 
-`--dateformat 'yyyy-MM-dd HH:mm ZZZZ' --timezone Pacific/Fiji`
+`--date-format 'yyyy-MM-dd HH:mm ZZZZ' --timezone Pacific/Fiji`
 
 ```diff
 - // Created 2023-08-10 11:00 GMT
@@ -1526,7 +1526,7 @@ Option | Description
 + private convenience init()
 ```
 
-**NOTE:** If the `--modifierorder` option isn't set, the default order will be:
+**NOTE:** If the `--modifier-order` option isn't set, the default order will be:
 `override`, `private`, `fileprivate`, `internal`, `package`, `public`, `open`, `private(set)`, `fileprivate(set)`, `internal(set)`, `package(set)`, `public(set)`, `open(set)`, `final`, `dynamic`, `optional`, `required`, `convenience`, `indirect`, `isolated`, `nonisolated`, `nonisolated(unsafe)`, `lazy`, `weak`, `unowned`, `static`, `class`, `borrowing`, `consuming`, `mutating`, `nonmutating`, `prefix`, `infix`, `postfix`
 
 </details>
@@ -1680,7 +1680,7 @@ Option | Description
       print(value)
   }
 
-  // With `--someany enabled` (the default)
+  // With `--some-any enabled` (the default)
 - func handle<T>(_ value: T) {
 + func handle(_ value: some Any) {
       print(value)
@@ -1716,22 +1716,22 @@ Option | Description
 <details>
 <summary>Examples</summary>
 
-Default value for `--visibilityorder` when using `--organizationmode visibility`:
+Default value for `--visibility-order` when using `--organization-mode visibility`:
 `beforeMarks, instanceLifecycle, open, public, package, internal, fileprivate, private`
 
-Default value for `--visibilityorder` when using `--organizationmode type`:
+Default value for `--visibility-order` when using `--organization-mode type`:
 `open, public, package, internal, fileprivate, private`
 
-**NOTE:** When providing custom arguments for `--visibilityorder` the following entries must be included:
+**NOTE:** When providing custom arguments for `--visibility-order` the following entries must be included:
 `open, public, package, internal, fileprivate, private`
 
-Default value for `--typeorder` when using `--organizationmode visibility`:
+Default value for `--type-order` when using `--organization-mode visibility`:
 `nestedType, staticProperty, staticPropertyWithBody, classPropertyWithBody, overriddenProperty, swiftUIPropertyWrapper, instanceProperty, instancePropertyWithBody, swiftUIProperty, swiftUIMethod, overriddenMethod, staticMethod, classMethod, instanceMethod`
 
-Default value for `--typeorder` when using `--organizationmode type`:
+Default value for `--type-order` when using `--organization-mode type`:
 `beforeMarks, nestedType, staticProperty, staticPropertyWithBody, classPropertyWithBody, overriddenProperty, swiftUIPropertyWrapper, instanceProperty, computedProperty, instanceLifecycle, swiftUIProperty, swiftUIMethod, overriddenMethod, staticMethod, classMethod, instanceMethod`
 
-**NOTE:** The follow declaration types must be included in either `--typeorder` or `--visibilityorder`:
+**NOTE:** The follow declaration types must be included in either `--type-order` or `--visibility-order`:
 `beforeMarks, nestedType, instanceLifecycle, instanceProperty, instanceMethod`
 
 **NOTE:** The Swift compiler automatically synthesizes a memberwise `init` for `struct` types.
@@ -1739,7 +1739,7 @@ Default value for `--typeorder` when using `--organizationmode type`:
 To allow SwiftFormat to reorganize your code effectively, you must explicitly declare an `init`.
 Without this declaration, only functions will be reordered, while properties will remain in their original order. 
 
-`--organizationmode visibility` (default)
+`--organization-mode visibility` (default)
 
 ```diff
   public class Foo {
@@ -1784,7 +1784,7 @@ Without this declaration, only functions will be reordered, while properties wil
   }
 ```
 
-`--organizationmode type`
+`--organization-mode type`
 
 ```diff
   public class Foo {
@@ -2155,12 +2155,12 @@ Option | Description
 ```
 
 If your project includes a macro that generates the `static func ==` implementation
-for the attached class, you can specify `--equatablemacro @Equatable,MyMacroLib`
+for the attached class, you can specify `--equatable-macro @Equatable,MyMacroLib`
 and this rule will also migrate eligible classes to use your macro instead of
 a hand-written Equatable conformance:
 
 ```diff
-  // --equatablemacro @Equatable,MyMacroLib
+  // --equatable-macro @Equatable,MyMacroLib
   import FooLib
 + import MyMacroLib
 
@@ -2355,7 +2355,7 @@ Option | Description
 <details>
 <summary>Examples</summary>
 
-`--nilinit remove`
+`--nil-init remove`
 
 ```diff
 - var foo: Int? = nil
@@ -2372,7 +2372,7 @@ Option | Description
   var foo: Int? = 0
 ```
 
-`--nilinit insert`
+`--nil-init insert`
 
 ```diff
 - var foo: Int?
@@ -2603,7 +2603,7 @@ Option | Description
 
 In the rare case of functions with `@autoclosure` arguments, `self` may be
 required at the call site, but SwiftFormat is unable to detect this
-automatically. You can use the `--selfrequired` command-line option to specify
+automatically. You can use the `--self-required` command-line option to specify
 a list of such methods, and the `redundantSelf` rule will then ignore them.
 
 An example of such a method is the `expect()` function in the Nimble unit
@@ -3500,12 +3500,12 @@ Replace force-unwrapped `URL(string:)` initializers with the configured `#URL(_:
 
 Option | Description
 --- | ---
-`--url-macro` | For example: --urlmacro "#URL,URLFoundation"
+`--url-macro` | For example: --url-macro "#URL,URLFoundation"
 
 <details>
 <summary>Examples</summary>
 
-With `--urlmacro "#URL,URLFoundation"`:
+With `--url-macro "#URL,URLFoundation"`:
 
 ```diff
 - let url = URL(string: "https://example.com")!
@@ -3594,9 +3594,9 @@ Option | Description
 <summary>Examples</summary>
 
 **NOTE:** For backwards compatibility with previous versions, if no value is
-provided for `--wrapparameters`, the value for `--wraparguments` will be used.
+provided for `--wrap-parameters`, the value for `--wrap-arguments` will be used.
 
-`--wraparguments before-first`
+`--wrap-arguments before-first`
 
 ```diff
 - foo(bar: Int,
@@ -3618,7 +3618,7 @@ provided for `--wrapparameters`, the value for `--wraparguments` will be used.
 + >
 ```
 
-`--wrapparameters after-first`
+`--wrap-parameters after-first`
 
 ```diff
 - func foo(
@@ -3635,7 +3635,7 @@ provided for `--wrapparameters`, the value for `--wraparguments` will be used.
   }
 ```
 
-`--wrapcollections before-first`:
+`--wrap-collections before-first`:
 
 ```diff
 - let foo = [bar,
@@ -3668,7 +3668,7 @@ Option | Description
 <details>
 <summary>Examples</summary>
 
-`--funcattributes prev-line`
+`--func-attributes prev-line`
 
 ```diff
 - @objc func foo() {}
@@ -3677,7 +3677,7 @@ Option | Description
 + func foo() { }
 ```
 
-`--funcattributes same-line`
+`--func-attributes same-line`
 
 ```diff
 - @objc
@@ -3686,7 +3686,7 @@ Option | Description
 + @objc func foo() {}
 ```
 
-`--typeattributes prev-line`
+`--type-attributes prev-line`
 
 ```diff
 - @objc class Foo {}
@@ -3695,7 +3695,7 @@ Option | Description
 + class Foo { }
 ```
 
-`--typeattributes same-line`
+`--type-attributes same-line`
 
 ```diff
 - @objc
@@ -3891,7 +3891,7 @@ Wrap the opening brace of multiline statements.
 
 ## wrapSingleLineComments
 
-Wrap single line `//` comments that exceed the specified `--maxwidth`.
+Wrap single line `//` comments that exceed the specified `--max-width`.
 
 ## wrapSwitchCases
 

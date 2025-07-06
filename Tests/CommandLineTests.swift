@@ -458,7 +458,7 @@ class CommandLineTests: XCTestCase {
         CLI.print = { message, _ in
             XCTFail(message)
         }
-        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "--quiet --dryrun"), .ok)
+        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "--quiet --dry-run"), .ok)
     }
 
     func testQuietModeAllowsContent() {
@@ -481,7 +481,7 @@ class CommandLineTests: XCTestCase {
         CLI.print = { message, type in
             XCTAssertEqual(type, .error, message)
         }
-        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "Sources --dryrun Tests --rules indent"), .error)
+        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "Sources --dry-run Tests --rules indent"), .error)
     }
 
     // MARK: file list
@@ -1058,7 +1058,7 @@ class CommandLineTests: XCTestCase {
             ("lineaftermarks", "line-after-marks"),
             ("indentcase", "indent-case"),
             ("trailingcommas", "trailing-commas"),
-            ("wraparguments", "wrap-arguments"),
+            ("wrap-arguments", "wrap-arguments"),
             ("hexliteralcase", "hex-literal-case"),
             ("nospaceoperators", "no-space-operators"),
             ("modifierorder", "modifier-order"),

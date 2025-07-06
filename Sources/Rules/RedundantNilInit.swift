@@ -78,7 +78,7 @@ public extension FormatRule {
 
     } examples: {
         """
-        `--nilinit remove`
+        `--nil-init remove`
 
         ```diff
         - var foo: Int? = nil
@@ -95,7 +95,7 @@ public extension FormatRule {
           var foo: Int? = 0
         ```
 
-        `--nilinit insert`
+        `--nil-init insert`
 
         ```diff
         - var foo: Int?

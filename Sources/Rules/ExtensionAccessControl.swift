@@ -107,7 +107,7 @@ public extension FormatRule {
         }
     } examples: {
         """
-        `--extensionacl on-extension` (default)
+        `--extension-acl on-extension` (default)
 
         ```diff
         - extension Foo {
@@ -121,7 +121,7 @@ public extension FormatRule {
           }
         ```
 
-        `--extensionacl on-declarations`
+        `--extension-acl on-declarations`
 
         ```diff
         - public extension Foo {

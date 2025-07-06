@@ -23,9 +23,9 @@ public extension FormatRule {
     } examples: {
         """
         **NOTE:** For backwards compatibility with previous versions, if no value is
-        provided for `--wrapparameters`, the value for `--wraparguments` will be used.
+        provided for `--wrap-parameters`, the value for `--wrap-arguments` will be used.
 
-        `--wraparguments before-first`
+        `--wrap-arguments before-first`
 
         ```diff
         - foo(bar: Int,
@@ -47,7 +47,7 @@ public extension FormatRule {
         + >
         ```
 
-        `--wrapparameters after-first`
+        `--wrap-parameters after-first`
 
         ```diff
         - func foo(
@@ -64,7 +64,7 @@ public extension FormatRule {
           }
         ```
 
-        `--wrapcollections before-first`:
+        `--wrap-collections before-first`:
 
         ```diff
         - let foo = [bar,

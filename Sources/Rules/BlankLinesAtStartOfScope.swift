@@ -77,7 +77,7 @@ public extension FormatRule {
           ]
         ```
 
-        With `--typeblanklines insert`:
+        With `--type-blank-lines insert`:
 
         ```diff
           struct Foo {

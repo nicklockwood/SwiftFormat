@@ -81,7 +81,7 @@ public extension FormatRule {
         }
     } examples: {
         """
-        With `--urlmacro "#URL,URLFoundation"`:
+        With `--url-macro "#URL,URLFoundation"`:
 
         ```diff
         - let url = URL(string: "https://example.com")!

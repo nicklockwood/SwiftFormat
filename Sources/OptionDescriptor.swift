@@ -985,12 +985,12 @@ struct _Descriptors {
             let essentials = VisibilityCategory.essentialCases.map(\.rawValue)
             for type in essentials {
                 guard order.contains(type) else {
-                    throw FormatError.options("--visibilityorder expects \(type) to be included")
+                    throw FormatError.options("--visibility-order expects \(type) to be included")
                 }
             }
             for type in order {
                 guard let concrete = VisibilityCategory(rawValue: type) else {
-                    let errorMessage = "'\(type)' is not a valid parameter for --visibilityorder"
+                    let errorMessage = "'\(type)' is not a valid parameter for --visibility-order"
                     guard let match = type.bestMatches(in: VisibilityCategory.allCases.map(\.rawValue)).first else {
                         throw FormatError.options(errorMessage)
                     }
@@ -1007,7 +1007,7 @@ struct _Descriptors {
         validateArray: { order in
             for type in order {
                 guard let concrete = DeclarationType(rawValue: type) else {
-                    let errorMessage = "'\(type)' is not a valid parameter for --typeorder"
+                    let errorMessage = "'\(type)' is not a valid parameter for --type-order"
                     guard let match = type.bestMatches(in: DeclarationType.allCases.map(\.rawValue)).first else {
                         throw FormatError.options(errorMessage)
                     }
@@ -1269,7 +1269,7 @@ struct _Descriptors {
     let urlMacro = OptionDescriptor(
         argumentName: "url-macro",
         displayName: "The name and module of a URL macro",
-        help: "For example: --urlmacro \"#URL,URLFoundation\"",
+        help: "For example: --url-macro \"#URL,URLFoundation\"",
         keyPath: \.urlMacro
     )
     let preferFileMacro = OptionDescriptor(

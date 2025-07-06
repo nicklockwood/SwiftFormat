@@ -104,7 +104,7 @@ public extension FormatRule {
         + //
         ```
 
-        You can use the following built-in formats for `--dateformat`:
+        You can use the following built-in formats for `--date-format`:
 
         Token | Description
         --- | ---
@@ -116,28 +116,28 @@ public extension FormatRule {
         Custom formats are defined using
         [Unicode symbols](https://www.unicode.org/reports/tr35/tr35-31/tr35-dates.html#Date_Field_Symbol_Table).
 
-        `--dateformat iso`
+        `--date-format iso`
 
         ```diff
         - // Created {created}
         + // Created 2023-08-10
         ```
 
-        `--dateformat dmy`
+        `--date-format dmy`
 
         ```diff
         - // Created {created}
         + // Created 10/08/2023
         ```
 
-        `--dateformat mdy`
+        `--date-format mdy`
 
         ```diff
         - // Created {created}
         + // Created 08/10/2023
         ```
 
-        `--dateformat 'yyyy.MM.dd.HH.mm'`
+        `--date-format 'yyyy.MM.dd.HH.mm'`
 
         ```diff
         - // Created {created}
@@ -150,14 +150,14 @@ public extension FormatRule {
         setting it to a abbreviation/time zone identifier supported by the Swift
         standard library.
 
-        `--dateformat 'yyyy-MM-dd HH:mm ZZZZ' --timezone utc`
+        `--date-format 'yyyy-MM-dd HH:mm ZZZZ' --timezone utc`
 
         ```diff
         - // Created {created}
         + // Created 2023-08-10 11:00 GMT
         ```
 
-        `--dateformat 'yyyy-MM-dd HH:mm ZZZZ' --timezone Pacific/Fiji`
+        `--date-format 'yyyy-MM-dd HH:mm ZZZZ' --timezone Pacific/Fiji`
 
         ```diff
         - // Created 2023-08-10 11:00 GMT

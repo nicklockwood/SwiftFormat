@@ -179,27 +179,9 @@ func parseArguments(_ argumentString: String, ignoreComments: Bool = true) -> [S
     return arguments
 }
 
-/// Convert kebab-case to camelCase for legacy option support
-private func kebabToCamelCase(_ kebabCase: String) -> String {
-    let components = kebabCase.components(separatedBy: "-")
-    guard components.count > 1 else { return kebabCase }
-
-    return components.first! + components.dropFirst().map(\.capitalized).joined()
-}
-
-/// Find a matching kebab-case option for a legacy non-kebab option name
+/// Find a matching `--kebab-case` option for a legacy `--alloneword` option name
 private func findLegacyOptionMatch(_ legacy: String, in names: [String]) -> String? {
-    // Convert legacy lowercase compound word to camelCase, then find kebab option that matches
-    let legacyCamelCase = kebabToCamelCase(legacy)
-
-    // Look for a kebab-case option that would convert to the same camelCase
     for name in names {
-        let nameCamelCase = kebabToCamelCase(name)
-        if nameCamelCase == legacyCamelCase {
-            return name
-        }
-
-        // Also check if the legacy name matches the non-kebab version directly
         let nonKebab = name.replacingOccurrences(of: "-", with: "")
         if nonKebab == legacy {
             return name
@@ -216,23 +198,25 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
     var name = ""
     for arg in args {
         if arg.hasPrefix("--") {
-            // Long argument names
             let key = String(arg.unicodeScalars.dropFirst(2)).lowercased()
 
-            // First try to find the option as-is (current kebab-case)
             if names.contains(key) {
                 name = key
-            } else {
-                // Fall back to legacy option name by finding matching kebab-case option
-                if let kebabKey = findLegacyOptionMatch(key, in: names) {
-                    name = kebabKey
-                } else {
-                    guard let match = key.bestMatches(in: names).first else {
-                        throw FormatError.options("Unknown option --\(key)")
-                    }
-                    throw FormatError.options("Unknown option --\(key). Did you mean --\(match)?")
-                }
             }
+
+            // Support legacy `--alloneword` option names by finding
+            // any matching `--kebab-case` option name.
+            else if let kebabCaseOption = findLegacyOptionMatch(key, in: names) {
+                name = kebabCaseOption
+            }
+
+            else {
+                guard let match = key.bestMatches(in: names).first else {
+                    throw FormatError.options("Unknown option --\(key)")
+                }
+                throw FormatError.options("Unknown option --\(key). Did you mean --\(match)?")
+            }
+
             namedArgs[name] = namedArgs[name] ?? ""
             continue
         } else if arg.hasPrefix("-") {

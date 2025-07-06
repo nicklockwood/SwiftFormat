@@ -1051,33 +1051,4 @@ class CommandLineTests: XCTestCase {
         XCTAssertEqual(errors.count, 1)
         XCTAssert(errors[0].contains("Unbalanced code block delimiters in markdown"))
     }
-
-    func testLegacyOptionsWithCamelCaseNames() throws {
-        // Test that legacy camelCase option names are still supported
-        let testCases: [(legacy: String, current: String)] = [
-            ("lineaftermarks", "line-after-marks"),
-            ("indentcase", "indent-case"),
-            ("trailingcommas", "trailing-commas"),
-            ("wrap-arguments", "wrap-arguments"),
-            ("hexliteralcase", "hex-literal-case"),
-            ("nospaceoperators", "no-space-operators"),
-            ("modifierorder", "modifier-order"),
-            ("extensionacl", "extension-acl"),
-            ("propertytypes", "property-types"),
-            ("swiftversion", "swift-version"),
-        ]
-
-        for (legacy, current) in testCases {
-            // Test that the legacy option name works
-            do {
-                let legacyArgs = try preprocessArguments(["", "--\(legacy)", "true"], commandLineArguments)
-                let currentArgs = try preprocessArguments(["", "--\(current)", "true"], commandLineArguments)
-
-                // Both should map to the same internal option name
-                XCTAssertEqual(legacyArgs[current] ?? legacyArgs[legacy], currentArgs[current])
-            } catch {
-                XCTFail("Legacy option --\(legacy) should work but failed with: \(error)")
-            }
-        }
-    }
 }

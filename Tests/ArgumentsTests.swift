@@ -125,6 +125,33 @@ class ArgumentsTests: XCTestCase {
         XCTAssertEqual(parseArguments(input, ignoreComments: false), output)
     }
 
+    func testLegacyOptionsWithLegacyOptionNames() throws {
+        let testCases: [(legacy: String, current: String)] = [
+            ("lineaftermarks", "line-after-marks"),
+            ("indentcase", "indent-case"),
+            ("trailingcommas", "trailing-commas"),
+            ("wrapArguments", "wrap-arguments"),
+            ("hexliteralcase", "hex-literal-case"),
+            ("nospaceoperators", "no-space-operators"),
+            ("modifierorder", "modifier-order"),
+            ("extensionACL", "extension-acl"),
+            ("propertyTypes", "property-types"),
+            ("swiftVersion", "swift-version"),
+        ]
+
+        for (legacy, current) in testCases {
+            do {
+                let legacyArgs = try preprocessArguments(["", "--\(legacy)", "true"], commandLineArguments)
+                let currentArgs = try preprocessArguments(["", "--\(current)", "true"], commandLineArguments)
+
+                // Both should map to the same internal option name
+                XCTAssertEqual(legacyArgs[current] ?? legacyArgs[legacy], currentArgs[current])
+            } catch {
+                XCTFail("Legacy option --\(legacy) should work but failed with: \(error)")
+            }
+        }
+    }
+
     // MARK: arg preprocessor
 
     func testPreprocessArguments() {

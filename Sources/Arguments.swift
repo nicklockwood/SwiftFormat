@@ -420,10 +420,10 @@ private func cumulate(successiveLines: [String]) throws -> [String] {
 }
 
 /// Serialize a set of options into either an arguments string or a file
-func serialize(options: Options,
-               swiftVersion: Version = .undefined,
-               excludingDefaults: Bool = false,
-               separator: String = "\n") -> String
+public func serialize(options: Options,
+                      swiftVersion: Version = .undefined,
+                      excludingDefaults: Bool = false,
+                      separator: String = "\n") -> String
 {
     var arguments = [[String: String]]()
     if let fileOptions = options.fileOptions {

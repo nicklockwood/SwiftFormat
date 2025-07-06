@@ -12,7 +12,7 @@ public extension FormatRule {
     /// Normalize the use of void in closure arguments and return values
     static let void = FormatRule(
         help: "Use `Void` for type declarations and `()` for values.",
-        options: ["voidtype"]
+        options: ["void-type"]
     ) { formatter in
         let hasLocalVoid = formatter.hasLocalVoid()
 

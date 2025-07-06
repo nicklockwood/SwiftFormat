@@ -13,7 +13,7 @@ public extension FormatRule {
     static let wrapSwitchCases = FormatRule(
         help: "Wrap comma-delimited switch cases onto multiple lines.",
         disabledByDefault: true,
-        sharedOptions: ["linebreaks", "tabwidth", "indent", "smarttabs"]
+        sharedOptions: ["linebreaks", "tab-width", "indent", "smart-tabs"]
     ) { formatter in
         formatter.forEach(.endOfScope("case")) { i, _ in
             guard var endIndex = formatter.index(of: .startOfScope(":"), after: i) else { return }

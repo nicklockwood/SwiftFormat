@@ -137,7 +137,7 @@ func printOptions(_ options: [OptionDescriptor] = Descriptors.formatting, as typ
 func printRuleInfo(for name: String, as type: CLI.OutputType) throws {
     guard let rule = FormatRules.byName[name] else {
         if name.isEmpty {
-            throw FormatError.options("--ruleinfo command expects a rule name")
+            throw FormatError.options("--rule-info command expects a rule name")
         }
         throw FormatError.options("'\(name)' rule does not exist")
     }
@@ -188,28 +188,28 @@ func printHelp(as type: CLI.OutputType) {
 
     SwiftFormat can operate on files & directories, or directly on input from stdin.
 
-    Usage: swiftformat [<file> <file> ...] [--inferoptions] [--output path] [...]
+    Usage: swiftformat [<file> <file> ...] [--infer-options] [--output path] [...]
 
     <file> <file> ...  Swift files or directories to be processed, or "stdin"
 
     --filelist         Path to a file with names of files to process, one per line
-    --stdinpath        Path to stdin source file (used for generating header)
-    --scriptinput      Read Xcode SCRIPT_INPUT_FILE* environment variables as files
+    --stdin-path       Path to stdin source file (used for generating header)
+    --script-input     Read Xcode SCRIPT_INPUT_FILE* environment variables as files
     --config           Path(s) to configuration file(s) containing rules and options
-    --baseconfig       Like --config, but local .swiftformat files aren't ignored
-    --inferoptions     Instead of formatting input, use it to infer format options
+    --base-config      Like --config, but local .swiftformat files aren't ignored
+    --infer-options    Instead of formatting input, use it to infer format options
     --output           Output path for formatted file(s) (defaults to input path)
     --exclude          Comma-delimited list of ignored paths (supports glob syntax)
     --unexclude        Paths to not exclude, even if excluded elsewhere in config
     --symlinks         How symlinks are handled: "follow" or "ignore" (default)
-    --linerange        Range of lines to process within the input file (first, last)
+    --line-range       Range of lines to process within the input file (first, last)
     --fragment         \(stripMarkdown(Descriptors.fragment.help))
-    --conflictmarkers  \(stripMarkdown(Descriptors.ignoreConflictMarkers.help))
-    --swiftversion     \(stripMarkdown(Descriptors.swiftVersion.help))
-    --languagemode     \(stripMarkdown(Descriptors.languageMode.help))
-    --minversion       The minimum SwiftFormat version to be used for these files
+    --conflict-markers \(stripMarkdown(Descriptors.ignoreConflictMarkers.help))
+    --swift-version    \(stripMarkdown(Descriptors.swiftVersion.help))
+    --language-mode    \(stripMarkdown(Descriptors.languageMode.help))
+    --min-version      The minimum SwiftFormat version to be used for these files
     --cache            Path to cache file, or "clear" or "ignore" the default cache
-    --dryrun           Run in "dry" mode (without actually changing any files)
+    --dry-run          Run in "dry" mode (without actually changing any files)
     --lint             Return an error for unformatted input, and list violations
     --report           Path to a file where --lint output should be written
     --reporter         Report format: \(Reporters.help)
@@ -217,8 +217,8 @@ func printHelp(as type: CLI.OutputType) {
     --strict           Emit errors for unformatted code when formatting
     --verbose          Display detailed formatting output and warnings/errors
     --quiet            Disables non-critical output messages and warnings
-    --outputtokens     Outputs an array of tokens instead of text when using stdin
-    --markdownfiles    Format Swift code block in markdown files: 'format-strict', 'format-lenient' (ignore parsing errors), or  'ignore' (default)
+    --output-tokens    Outputs an array of tokens instead of text when using stdin
+    --markdown-files   Format Swift code block in markdown files: 'format-strict', 'format-lenient' (ignore parsing errors), or  'ignore' (default)
 
     SwiftFormat has a number of rules that can be enabled or disabled. By default
     most rules are enabled. Use --rules to display all enabled/disabled rules.
@@ -226,12 +226,12 @@ func printHelp(as type: CLI.OutputType) {
     --rules            The list of rules to apply. Pass nothing to print rules list
     --disable          Comma-delimited list of format rules to be disabled, or "all"
     --enable           Comma-delimited list of rules to be enabled, or "all"
-    --lintonly         A list of rules to be enabled only when using --lint mode
+    --lint-only        A list of rules to be enabled only when using --lint mode
 
     SwiftFormat's rules can be configured using options. A given option may affect
     multiple rules. Options have no effect if the related rules have been disabled.
 
-    --ruleinfo         Display options for a given rule or rules (comma-delimited)
+    --rule-info        Display options for a given rule or rules (comma-delimited)
     --options          Prints a list of all formatting options and their usage
     """, as: type)
     print("")
@@ -401,10 +401,10 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
         let lint = (args["lint"] != nil)
 
         // Dry run
-        let dryrun = lint || (args["dryrun"] != nil)
+        let dryrun = lint || (args["dry-run"] != nil)
 
         // Whether or not to output tokens instead of source code
-        let printTokens = args["outputtokens"] != nil
+        let printTokens = args["output-tokens"] != nil
 
         // Warnings
         for warning in warningsForArguments(args) {
@@ -465,7 +465,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
         }
 
         // Show rule info
-        if let names = try args["ruleinfo"].map(parseRules) {
+        if let names = try args["rule-info"].map(parseRules) {
             let names = names.isEmpty ? allRules.sorted() : names.sorted()
             for name in names {
                 try printRuleInfo(for: name, as: .content)
@@ -492,7 +492,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
         }
 
         // Base config
-        _ = try readConfigArg("baseconfig", with: &args, in: directory)
+        _ = try readConfigArg("base-config", with: &args, in: directory)
 
         // Options
         var options = try Options(args, in: directory)
@@ -547,11 +547,11 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
             }
             inputURLs = []
         }
-        if let stdinPath = args["stdinpath"] {
+        if let stdinPath = args["stdin-path"] {
             if !useStdin {
-                print("warning: --stdinpath option only applies when using stdin", as: .warning)
+                print("warning: --stdin-path option only applies when using stdin", as: .warning)
             }
-            let stdinURL = try parsePath(stdinPath, for: "stdinpath", in: directory)
+            let stdinURL = try parsePath(stdinPath, for: "stdin-path", in: directory)
             let resourceValues = try getResourceValues(
                 for: stdinURL.standardizedFileURL,
                 keys: [.creationDateKey, .pathKey]
@@ -564,7 +564,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
             )
             options.formatOptions = formatOptions
         }
-        if args["scriptinput"] != nil {
+        if args["script-input"] != nil {
             inputURLs += try parseScriptInput(from: environment)
         }
 
@@ -586,9 +586,9 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
         try addInputPaths(for: "verbose")
         try addInputPaths(for: "lenient")
         try addInputPaths(for: "strict")
-        try addInputPaths(for: "dryrun")
+        try addInputPaths(for: "dry-run")
         try addInputPaths(for: "lint")
-        try addInputPaths(for: "inferoptions")
+        try addInputPaths(for: "infer-options")
 
         // Output path
         var useStdout = false
@@ -612,11 +612,11 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
         }
 
         // Source range
-        let lineRange = try args["linerange"].flatMap { arg -> ClosedRange<Int>? in
+        let lineRange = try args["line-range"].flatMap { arg -> ClosedRange<Int>? in
             if arg == "" {
-                throw FormatError.options("--linerange argument expects a value")
+                throw FormatError.options("--line-range argument expects a value")
             } else if inputURLs.count > 1 {
-                throw FormatError.options("--linerange argument is only valid for a single input file")
+                throw FormatError.options("--line-range argument is only valid for a single input file")
             }
             let parts = arg.components(separatedBy: ",").map {
                 $0.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -625,18 +625,18 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
                   let start = parts.first.flatMap(Int.init),
                   let end = parts.last.flatMap(Int.init)
             else {
-                throw FormatError.options("Unsupported --linerange value '\(arg)'")
+                throw FormatError.options("Unsupported --line-range value '\(arg)'")
             }
             return start ... end
         }
 
         // Infer options
-        if args["inferoptions"] != nil {
+        if args["infer-options"] != nil {
             guard configURLs.isEmpty else {
-                throw FormatError.options("--inferoptions option can't be used along with a config file")
+                throw FormatError.options("--infer-options option can't be used along with a config file")
             }
             guard args["range"] == nil else {
-                throw FormatError.options("--inferoptions option can't be applied to a line range")
+                throw FormatError.options("--infer-options option can't be applied to a line range")
             }
             if !inputURLs.isEmpty {
                 print("Inferring swiftformat options from source file(s)...", as: .info)
@@ -749,7 +749,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
             }
             do {
                 var options = options
-                if args["inferoptions"] != nil {
+                if args["infer-options"] != nil {
                     let tokens = tokenize(input)
                     options.formatOptions = inferFormatOptions(from: tokens)
                     try serializeOptions(options, to: outputURL)
@@ -846,8 +846,8 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
                         return exitCode
                     }
                 }
-            } else if args["inferoptions"] != nil {
-                throw FormatError.options("--inferoptions requires one or more input files")
+            } else if args["infer-options"] != nil {
+                throw FormatError.options("--infer-options requires one or more input files")
             } else {
                 printHelp(as: .info)
             }
@@ -928,7 +928,7 @@ func parseScriptInput(from environment: [String: String]) throws -> [URL] {
           let count = Int(countString)
     else {
         throw FormatError
-            .options("--scriptinput requires a configured SCRIPT_INPUT_FILE_COUNT integer variable")
+            .options("--script-input requires a configured SCRIPT_INPUT_FILE_COUNT integer variable")
     }
 
     return try (0 ..< count).map { index in
@@ -1083,7 +1083,7 @@ func processInput(_ inputURLs: [URL],
         }
         let formatOptions = options.formatOptions ?? .default
         if formatOptions.swiftVersion == .undefined {
-            print("warning: No Swift version was specified, so some formatting features were disabled. Specify the version of Swift you are using with the --swiftversion option, or by adding a \(swiftVersionFile) file to your project.", as: .warning)
+            print("warning: No Swift version was specified, so some formatting features were disabled. Specify the version of Swift you are using with the --swift-version option, or by adding a \(swiftVersionFile) file to your project.", as: .warning)
         }
         if formatOptions.useTabs, formatOptions.tabWidth <= 0, !formatOptions.smartTabs {
             print("warning: The --smarttabs option is disabled, but no --tabwidth was specified.", as: .warning)
@@ -1325,7 +1325,7 @@ func processInput(_ inputURLs: [URL],
     return (outputFlags, errors)
 }
 
-/// The data format used with `--outputtokens`
+/// The data format used with `--output-tokens`
 private struct OutputTokensData: Encodable {
     init(tokens: [Token]) {
         self.tokens = tokens

@@ -11,7 +11,7 @@ import Foundation
 public extension FormatRule {
     static let extensionAccessControl = FormatRule(
         help: "Configure the placement of an extension's access control keyword.",
-        options: ["extensionacl"]
+        options: ["extension-acl"]
     ) { formatter in
         let declarations = formatter.parseDeclarations()
         declarations.forEachRecursiveDeclaration { declaration in
@@ -107,7 +107,7 @@ public extension FormatRule {
         }
     } examples: {
         """
-        `--extensionacl on-extension` (default)
+        `--extension-acl on-extension` (default)
 
         ```diff
         - extension Foo {
@@ -121,7 +121,7 @@ public extension FormatRule {
           }
         ```
 
-        `--extensionacl on-declarations`
+        `--extension-acl on-declarations`
 
         ```diff
         - public extension Foo {

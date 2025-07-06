@@ -11,8 +11,8 @@ import Foundation
 public extension FormatRule {
     static let wrapAttributes = FormatRule(
         help: "Wrap @attributes onto a separate line, or keep them on the same line.",
-        options: ["funcattributes", "typeattributes", "varattributes", "storedvarattributes", "computedvarattributes", "complexattributes", "noncomplexattributes"],
-        sharedOptions: ["linebreaks", "maxwidth"]
+        options: ["func-attributes", "type-attributes", "var-attributes", "stored-var-attributes", "computed-var-attributes", "complex-attributes", "non-complex-attributes"],
+        sharedOptions: ["linebreaks", "max-width"]
     ) { formatter in
         formatter.forEach(.attribute) { i, _ in
             // Ignore sequential attributes
@@ -111,7 +111,7 @@ public extension FormatRule {
         }
     } examples: {
         """
-        `--funcattributes prev-line`
+        `--func-attributes prev-line`
 
         ```diff
         - @objc func foo() {}
@@ -120,7 +120,7 @@ public extension FormatRule {
         + func foo() { }
         ```
 
-        `--funcattributes same-line`
+        `--func-attributes same-line`
 
         ```diff
         - @objc
@@ -129,7 +129,7 @@ public extension FormatRule {
         + @objc func foo() {}
         ```
 
-        `--typeattributes prev-line`
+        `--type-attributes prev-line`
 
         ```diff
         - @objc class Foo {}
@@ -138,7 +138,7 @@ public extension FormatRule {
         + class Foo { }
         ```
 
-        `--typeattributes same-line`
+        `--type-attributes same-line`
 
         ```diff
         - @objc

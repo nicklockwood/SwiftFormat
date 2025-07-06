@@ -13,19 +13,19 @@ public extension FormatRule {
     static let wrapArguments = FormatRule(
         help: "Align wrapped function arguments or collection elements.",
         orderAfter: [.wrap],
-        options: ["wraparguments", "wrapparameters", "wrapcollections", "closingparen", "callsiteparen",
-                  "wrapreturntype", "wrapconditions", "wraptypealiases", "wrapeffects", "wrapstringinterpolation"],
-        sharedOptions: ["indent", "trimwhitespace", "linebreaks",
-                        "tabwidth", "maxwidth", "smarttabs", "assetliterals", "wrapternary"]
+        options: ["wrap-arguments", "wrap-parameters", "wrap-collections", "closing-paren", "call-site-paren",
+                  "wrap-return-type", "wrap-conditions", "wrap-type-aliases", "wrap-effects", "wrap-string-interpolation"],
+        sharedOptions: ["indent", "trim-whitespace", "linebreaks",
+                        "tab-width", "max-width", "smart-tabs", "asset-literals", "wrap-ternary"]
     ) { formatter in
         formatter.wrapCollectionsAndArguments(completePartialWrapping: true,
                                               wrapSingleArguments: false)
     } examples: {
         """
         **NOTE:** For backwards compatibility with previous versions, if no value is
-        provided for `--wrapparameters`, the value for `--wraparguments` will be used.
+        provided for `--wrap-parameters`, the value for `--wrap-arguments` will be used.
 
-        `--wraparguments before-first`
+        `--wrap-arguments before-first`
 
         ```diff
         - foo(bar: Int,
@@ -47,7 +47,7 @@ public extension FormatRule {
         + >
         ```
 
-        `--wrapparameters after-first`
+        `--wrap-parameters after-first`
 
         ```diff
         - func foo(
@@ -64,7 +64,7 @@ public extension FormatRule {
           }
         ```
 
-        `--wrapcollections before-first`:
+        `--wrap-collections before-first`:
 
         ```diff
         - let foo = [bar,

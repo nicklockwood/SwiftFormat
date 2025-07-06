@@ -12,7 +12,7 @@ public extension FormatRule {
     /// Convert closure arguments to trailing closure syntax where possible
     static let trailingClosures = FormatRule(
         help: "Use trailing closure syntax where applicable.",
-        options: ["trailingclosures", "nevertrailing"]
+        options: ["trailing-closures", "never-trailing"]
     ) { formatter in
         let useTrailing = Set([
             "async", "asyncAfter", "sync", "autoreleasepool",

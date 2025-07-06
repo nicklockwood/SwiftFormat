@@ -13,7 +13,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-// swiftformat:options --indent 2 --maxwidth 100 --wrapparameters afterfirst
+// swiftformat:options --indent 2 --max-width 100 --wrap-parameters afterfirst
 // swiftformat:disable sortedImports unusedArguments wrapMultilineStatementBraces redundantParens
 
 import FirebaseFirestore

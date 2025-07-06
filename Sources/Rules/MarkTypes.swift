@@ -13,8 +13,8 @@ public extension FormatRule {
         help: "Add a MARK comment before top-level types and extensions.",
         runOnceOnly: true,
         disabledByDefault: true,
-        options: ["marktypes", "typemark", "markextensions", "extensionmark", "groupedextension"],
-        sharedOptions: ["lineaftermarks", "linebreaks"]
+        options: ["mark-types", "type-mark", "mark-extensions", "extension-mark", "grouped-extension"],
+        sharedOptions: ["line-after-marks", "linebreaks"]
     ) { formatter in
         var declarations = formatter.parseDeclarations()
 

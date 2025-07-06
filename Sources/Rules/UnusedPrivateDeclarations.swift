@@ -13,7 +13,7 @@ public extension FormatRule {
     static let unusedPrivateDeclarations = FormatRule(
         help: "Remove unused private and fileprivate declarations.",
         disabledByDefault: true,
-        options: ["preservedecls"]
+        options: ["preserve-decls"]
     ) { formatter in
         guard !formatter.options.fragment else { return }
 

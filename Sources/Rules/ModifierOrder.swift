@@ -12,7 +12,7 @@ public extension FormatRule {
     /// Standardise the order of property modifiers
     static let modifierOrder = FormatRule(
         help: "Use consistent ordering for member modifiers.",
-        options: ["modifierorder"]
+        options: ["modifier-order"]
     ) { formatter in
         formatter.forEach(.keyword) { i, token in
             switch token.string {
@@ -87,7 +87,7 @@ public extension FormatRule {
         + private convenience init()
         ```
 
-        **NOTE:** If the `--modifierorder` option isn't set, the default order will be:
+        **NOTE:** If the `--modifier-order` option isn't set, the default order will be:
         `\(_FormatRules.defaultModifierOrder.flatMap { $0 }.joined(separator: "`, `"))`
         """
     }

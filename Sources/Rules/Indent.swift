@@ -15,8 +15,8 @@ public extension FormatRule {
     static let indent = FormatRule(
         help: "Indent code in accordance with the scope level.",
         orderAfter: [.trailingSpace, .wrap, .wrapArguments],
-        options: ["indent", "tabwidth", "smarttabs", "indentcase", "ifdef", "xcodeindentation", "indentstrings"],
-        sharedOptions: ["trimwhitespace", "allman", "wrapconditions", "wrapternary"]
+        options: ["indent", "tab-width", "smart-tabs", "indent-case", "ifdef", "xcode-indentation", "indent-strings"],
+        sharedOptions: ["trim-whitespace", "allman", "wrap-conditions", "wrap-ternary"]
     ) { formatter in
         var scopeStack: [Token] = []
         var scopeStartLineIndexes: [Int] = []

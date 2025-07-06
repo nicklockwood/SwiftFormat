@@ -11,10 +11,10 @@ import Foundation
 public extension FormatRule {
     static let wrap = FormatRule(
         help: "Wrap lines that exceed the specified maximum width.",
-        options: ["maxwidth", "nowrapoperators", "assetliterals", "wrapternary", "wrapstringinterpolation"],
-        sharedOptions: ["wraparguments", "wrapparameters", "wrapcollections", "closingparen", "callsiteparen", "indent",
-                        "trimwhitespace", "linebreaks", "tabwidth", "maxwidth", "smarttabs", "wrapreturntype",
-                        "wrapconditions", "wraptypealiases", "wrapternary", "wrapeffects"]
+        options: ["max-width", "no-wrap-operators", "asset-literals", "wrap-ternary", "wrap-string-interpolation"],
+        sharedOptions: ["wrap-arguments", "wrap-parameters", "wrap-collections", "closing-paren", "call-site-paren", "indent",
+                        "trim-whitespace", "linebreaks", "tab-width", "max-width", "smart-tabs", "wrap-return-type",
+                        "wrap-conditions", "wrap-type-aliases", "wrap-ternary", "wrap-effects"]
     ) { formatter in
         let maxWidth = formatter.options.maxWidth
         guard maxWidth > 0 else { return }

@@ -12,7 +12,7 @@ public extension FormatRule {
     /// Remove redundant void return values for function and closure declarations
     static let redundantVoidReturnType = FormatRule(
         help: "Remove explicit `Void` return type.",
-        options: ["closurevoid"]
+        options: ["closure-void"]
     ) { formatter in
         formatter.forEach(.operator("->", .infix)) { i, _ in
             guard let startIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i),

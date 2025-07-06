@@ -7,7 +7,7 @@ public extension FormatRule {
     static let blankLinesAfterGuardStatements = FormatRule(
         help: "Remove blank lines between consecutive guard statements, and insert a blank after the last guard statement.",
         disabledByDefault: true,
-        options: ["linebetweenguards"]
+        options: ["line-between-guards"]
     ) { formatter in
         formatter.forEach(.keyword("guard")) { guardIndex, _ in
             guard var elseIndex = formatter.index(of: .keyword("else"), after: guardIndex) else {
@@ -47,7 +47,7 @@ public extension FormatRule {
         }
     } examples: {
         """
-        `--linebetweenguards false` (default)
+        `--line-between-guards false` (default)
 
         ```diff
             // Multiline guard
@@ -74,7 +74,7 @@ public extension FormatRule {
             let doTheJob = nikekov()
         ```
 
-        `--linebetweenguards true`
+        `--line-between-guards true`
 
         ```diff
             // Multiline guard

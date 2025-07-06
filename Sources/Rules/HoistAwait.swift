@@ -12,7 +12,7 @@ public extension FormatRule {
     /// Reposition `await` keyword outside of the current scope.
     static let hoistAwait = FormatRule(
         help: "Move inline `await` keyword(s) to start of expression.",
-        options: ["asynccapturing"]
+        options: ["async-capturing"]
     ) { formatter in
         guard formatter.options.swiftVersion >= "5.5" else { return }
 

@@ -397,6 +397,26 @@ class FormatterTests: XCTestCase {
         XCTAssertEqual(try format(input, rules: FormatRules.default).output, output)
     }
 
+    func testCumulativeOptions() {
+        let input = """
+        // swiftformat:options --self insert
+        // swiftformat:options:next --swiftversion 5.2
+        let foo1 = self.map { $0.foo }
+        // swiftformat:options --self remove
+        let foo2 = self.map { $0.foo }
+
+        """
+        let output = """
+        // swiftformat:options --self insert
+        // swiftformat:options:next --swiftversion 5.2
+        let foo1 = self.map(\\.foo)
+        // swiftformat:options --self remove
+        let foo2 = map { $0.foo }
+
+        """
+        XCTAssertEqual(try format(input, rules: FormatRules.default).output, output)
+    }
+
     func testMalformedOption() {
         let input = """
         // swiftformat:options blooblahbleh

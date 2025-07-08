@@ -106,13 +106,14 @@ public class Formatter: NSObject {
     private enum DirectiveType {
         case enable(rules: String)
         case disable(rules: String)
-        case options([String: String])
+        case options(FormatOptions)
     }
 
     private func processDirectives() {
         // Should only be run once
         assert(directives.isEmpty)
 
+        var cumulativeOptions = options
         var line = 1, lineIndex = 0, tokenIndex = 0
         for (i, token) in tokens.enumerated() {
             switch token {
@@ -165,7 +166,14 @@ public class Formatter: NSObject {
                         if let arg = args["1"] {
                             throw FormatError.options("Unknown option \(arg)")
                         }
-                        type = .options(args)
+                        var options = Options(formatOptions: cumulativeOptions)
+                        try options.addArguments(args, in: "")
+                        if toggle {
+                            cumulativeOptions = options.formatOptions ?? cumulativeOptions
+                            type = .options(cumulativeOptions)
+                        } else {
+                            type = .options(options.formatOptions ?? cumulativeOptions)
+                        }
                     } catch {
                         return fatalError("\(error)", at: i)
                     }
@@ -250,21 +258,14 @@ public class Formatter: NSObject {
                 } else {
                     disabledNext = 0
                 }
-            case let .options(args):
+            case let .options(options):
                 if !directive.toggle {
                     if directive.line != line {
                         continue
                     }
-                    tempOptions = options
+                    tempOptions = self.options
                 }
-                do {
-                    // TODO: move this step to processDirectives function
-                    var options = Options(formatOptions: options)
-                    try options.addArguments(args, in: "")
-                    self.options = options.formatOptions ?? self.options
-                } catch {
-                    return fatalError("\(error)", at: index)
-                }
+                self.options = options
             case .disable, .enable:
                 continue
             }

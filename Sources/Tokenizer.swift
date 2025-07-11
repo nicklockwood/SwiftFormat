@@ -46,6 +46,7 @@ let swiftKeywords = Set([
     "throw", "typealias", "where", "break", "deinit", "subscript", "is", "while",
     "associatedtype", "inout", "continue", "fallthrough", "operator", "precedencegroup",
     "repeat", "rethrows", "default", "protocol", "defer", "await", "consume", "discard",
+    "package",
     /* Any, Self, self, super, nil, true, false */
 ])
 

@@ -2176,6 +2176,32 @@ class WrapArgumentsTests: XCTestCase {
         testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
+    func testAllmanBraceWithWrapReturnTypeNever() {
+        let input = """
+        func makeStuff(
+            param1: String = "",
+            param2: Int? = nil,
+            param3: String = ""
+        ) -> String {
+            print(param1, param2, param3)
+            return "return"
+        }
+        """
+        let output = """
+        func makeStuff(
+            param1: String = "",
+            param2: Int? = nil,
+            param3: String = ""
+        ) -> String
+        {
+            print(param1, param2, param3)
+            return "return"
+        }
+        """
+        let options = FormatOptions(allmanBraces: true, wrapReturnType: .never)
+        testFormatting(for: input, [output], rules: [.wrapArguments, .braces], options: options)
+    }
+
     func testWrapArgumentsDoesntBreakFunctionDeclaration_issue_1776() {
         let input = """
         struct OpenAPIController: RouteCollection {

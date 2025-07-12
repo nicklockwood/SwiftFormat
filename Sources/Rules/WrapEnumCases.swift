@@ -80,7 +80,7 @@ extension Formatter {
         var result: [[EnumCaseRange]] = []
 
         parseDeclarations().forEachRecursiveDeclaration { declaration in
-            guard declaration.keyword == "case" else { return }
+            guard declaration.keyword == "case", isEnumCase(at: declaration.keywordIndex) else { return }
 
             let caseIndex = declaration.keywordIndex
             var caseRanges: [EnumCaseRange] = []

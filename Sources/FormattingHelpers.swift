@@ -358,7 +358,10 @@ extension Formatter {
                     if let nextIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: cursorIndex - 1),
                        tokens[nextIndex] == .startOfScope("{")
                     {
-                        unwrapLine(before: nextIndex, preservingComments: true)
+                        // Don't unwrap the brace line if using Allman braces
+                        if !options.allmanBraces {
+                            unwrapLine(before: nextIndex, preservingComments: true)
+                        }
                     }
                 }
             }

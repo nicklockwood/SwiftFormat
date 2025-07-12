@@ -270,4 +270,27 @@ class WrapEnumCasesTests: XCTestCase {
 
         testFormatting(for: input, output, rule: .wrapEnumCases)
     }
+
+    func testPackageEnumWithProtocolConformances() {
+        let input = """
+        enum Outer {
+            case outerCase, otherOuterCase
+
+            package enum Inner: String, CaseIterable, Codable {
+                case innerCase
+            }
+        }
+        """
+        let output = """
+        enum Outer {
+            case outerCase
+            case otherOuterCase
+
+            package enum Inner: String, CaseIterable, Codable {
+                case innerCase
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .wrapEnumCases)
+    }
 }

@@ -77,38 +77,48 @@ extension Formatter {
     }
 
     func parseEnumCaseRanges() -> [[EnumCaseRange]] {
-        var indexedRanges: [Int: [EnumCaseRange]] = [:]
+        var result: [[EnumCaseRange]] = []
 
-        forEach(.keyword("case")) { i, _ in
-            guard isEnumCase(at: i) else { return }
+        parseDeclarations().forEachRecursiveDeclaration { declaration in
+            guard declaration.keyword == "case", isEnumCase(at: declaration.keywordIndex) else { return }
 
-            var idx = i
-            while let starOfCaseRangeIdx = index(of: .identifier, after: idx),
-                  lastSignificantKeyword(at: starOfCaseRangeIdx) == "case",
-                  let lastCaseIndex = lastIndex(of: .keyword("case"), in: i ..< starOfCaseRangeIdx),
-                  lastCaseIndex == i,
-                  let endOfCaseRangeIdx = index(
-                      after: starOfCaseRangeIdx,
-                      where: { $0 == .delimiter(",") || $0.isLinebreak }
-                  ),
-                  let endOfCaseRangeToken = token(at: endOfCaseRangeIdx)
+            let caseIndex = declaration.keywordIndex
+            var caseRanges: [EnumCaseRange] = []
+
+            // Split the case declaration on commas to get individual case ranges
+            var currentStart = index(of: .nonSpaceOrCommentOrLinebreak, after: caseIndex) ?? caseIndex
+            var searchIndex = caseIndex
+
+            while let commaIndex = index(of: .delimiter(","), after: searchIndex),
+                  commaIndex <= declaration.range.upperBound
             {
-                let startOfScopeIdx = index(of: .startOfScope, before: starOfCaseRangeIdx) ?? 0
+                // Add the case before this comma
+                caseRanges.append(EnumCaseRange(
+                    value: currentStart ..< commaIndex,
+                    endOfCaseRangeToken: .delimiter(",")
+                ))
 
-                var indexedCase = indexedRanges[startOfScopeIdx, default: []]
-                indexedCase.append(
-                    EnumCaseRange(
-                        value: starOfCaseRangeIdx ..< endOfCaseRangeIdx,
-                        endOfCaseRangeToken: endOfCaseRangeToken
-                    )
-                )
-                indexedRanges[startOfScopeIdx] = indexedCase
+                // Move to start of next case
+                currentStart = index(of: .nonSpaceOrCommentOrLinebreak, after: commaIndex) ?? commaIndex
+                searchIndex = commaIndex
+            }
 
-                idx = endOfCaseRangeIdx
+            // Add the final case
+            let finalCaseEnd = lastIndex(of: .nonSpaceOrCommentOrLinebreak, in: currentStart ..< (declaration.range.upperBound + 1)) ?? declaration.range.upperBound
+
+            let endToken = token(at: finalCaseEnd) ?? .linebreak("\n", 1)
+            caseRanges.append(EnumCaseRange(
+                value: currentStart ..< finalCaseEnd,
+                endOfCaseRangeToken: endToken
+            ))
+
+            // Only add if there are multiple cases in this declaration
+            if caseRanges.count > 1 {
+                result.append(caseRanges)
             }
         }
 
-        return indexedRanges.sorted(by: { $0.key < $1.key }).map(\.value)
+        return result
     }
 
     func shouldWrapCaseRangeGroup(_ caseRangeGroup: [Formatter.EnumCaseRange]) -> Bool {

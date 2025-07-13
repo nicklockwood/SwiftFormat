@@ -22,7 +22,15 @@ public extension FormatRule {
                let typeName = declaration.fullyQualifiedName,
                declaration.visibility() == .internal || declaration.visibility() == nil
             {
-                internalTypes.insert(typeName)
+                // Inside public extensions, types with no access control modifier are public.
+                // This case is handled by the extensionAccessControl rule.
+                let insidePublicExtension = declaration.parentDeclarations.contains(where: {
+                    $0.keyword == "extension" && $0.visibility() == .public
+                })
+
+                if !insidePublicExtension {
+                    internalTypes.insert(typeName)
+                }
             }
         }
 

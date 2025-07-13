@@ -97,22 +97,27 @@ If you contribute a new rule or option, it would be published in the following m
 
 ## Release Process
 
+
 This is relevant only to maintainers:
 
-* Update version number in SwiftFormat.swift + 3 targets
-* Update CHANGELOG.md
-* Update SwiftFormat.podspec.json
+Run `./Scripts/prepare_release.sh VERSION_NUMBER`. This script:
+
+* Updates version number in SwiftFormat.swift + 3 targets
+* Updates SwiftFormat.podspec.json
+* Creates a placeholder entry in CHANGELOG.md
 * Run tests and ensure they pass
-* Select SwiftFormat (Command Line Tool) and run Product > Archive
-* Replace binary in CommandLineTool directory
+* Archives SwiftFormat (Command Line Tool)
+* Replaced binary in CommandLineTool directory
+
+Then complete the following steps manually:
+
+* Fill out the CHANGELOG.md entry
+* Tag commit and push to main
+* Publish a new release
+  * All binaries are built and uploaded to the release automatically
+* pod trunk push --allow-warnings
+
+Finally, these steps require App Store Connect access, so only Nick can do them:
+
 * Select SwiftFormat for Xcode and run Product > Archive
 * Notarize and export built app
-  * This step requires App Store Connect access, so only Nick can do this.
-* Tag commit and push to main
-* pod trunk push --allow-warnings
-* Run Build for Windows and download binaries
-* Unzip Windows msi zips and rename
-* Publish a new release
-* Attach all binaries to release
-  * The artifact bundle, macOS executable, and Linux executables are uploaded to the release automatically.
-* Create and Publish Docker image

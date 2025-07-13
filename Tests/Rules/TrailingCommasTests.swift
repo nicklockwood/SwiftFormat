@@ -611,6 +611,20 @@ class TrailingCommasTests: XCTestCase {
         testFormatting(for: input, rule: .trailingCommas, options: options)
     }
 
+    func testTrailingCommasPreservedInTupleTypeInSwift6_1_multiElementLists() {
+        // Trailing commas are unexpectedly not supported in tuple types in Swift 6.1
+        // https://github.com/swiftlang/swift/issues/81485
+        let input = """
+        let foo: (
+            bar: String,
+            quux: String // trailing comma not supported
+        )
+        """
+
+        let options = FormatOptions(trailingCommas: .multiElementLists, swiftVersion: "6.1")
+        testFormatting(for: input, rule: .trailingCommas, options: options)
+    }
+
     func testTrailingCommasPreservedInTupleTypeInArrayInSwift6_1() {
         // Trailing commas are unexpectedly not supported in tuple types in Swift 6.1
         // https://github.com/swiftlang/swift/issues/81485
@@ -708,6 +722,30 @@ class TrailingCommasTests: XCTestCase {
         """
 
         let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
+        testFormatting(for: input, rule: .trailingCommas, options: options)
+    }
+
+    func testTrailingCommasPreservedInClosureTypeInSwift6_1_multiElementList() {
+        // Trailing commas are unexpectedly not supported in closure types in Swift 6.1
+        // https://github.com/swiftlang/swift/issues/81485
+        let input = """
+        let closure: (
+            String,
+            String // trailing comma not supported
+        ) -> (
+            bar: String,
+            quux: String // trailing comma not supported
+        )
+
+        let closure: @Sendable (
+            String // trailing comma not supported
+        ) -> (
+            bar: String,
+            quux: String // trailing comma not supported
+        )
+        """
+
+        let options = FormatOptions(trailingCommas: .multiElementLists, swiftVersion: "6.1")
         testFormatting(for: input, rule: .trailingCommas, options: options)
     }
 
@@ -1049,6 +1087,28 @@ class TrailingCommasTests: XCTestCase {
         testFormatting(for: input, rule: .trailingCommas, options: options)
     }
 
+    func testTrailingCommasNotAddedToBuiltInAttributesInSwift6_1_multiElementList() {
+        // Built-in attributes unexpectedly don't support trailing commas in Swift 6.1.
+        // Property wrappers and macros are supported properly.
+        // https://github.com/swiftlang/swift/issues/81475
+        let input = """
+        @available(
+            *,
+            deprecated,
+            renamed: "bar"
+        )
+        func foo() {}
+
+        @objc(
+            custom_objc_name
+        )
+        class MyClass: NSObject()
+        """
+
+        let options = FormatOptions(trailingCommas: .multiElementLists, swiftVersion: "6.1")
+        testFormatting(for: input, rule: .trailingCommas, options: options)
+    }
+
     func testTrailingCommasRemovedFromAttribute() {
         let input = """
         @Foo(
@@ -1227,6 +1287,23 @@ class TrailingCommasTests: XCTestCase {
         }
         """
         let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
+
+    func testTrailingCommasRemovedFromSingleElementCaptureList() {
+        let input = """
+        { [
+            capturedValue1,
+        ] in
+        }
+        """
+        let output = """
+        { [
+            capturedValue1
+        ] in
+        }
+        """
+        let options = FormatOptions(trailingCommas: .multiElementLists, swiftVersion: "6.1")
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 

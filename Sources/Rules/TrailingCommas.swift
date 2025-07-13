@@ -14,21 +14,25 @@ public extension FormatRule {
         options: ["trailing-commas"]
     ) { formatter in
         formatter.forEachToken { i, token in
+            guard let startOfScope = formatter.startOfScope(at: i) else { return }
+            let elementsInScope = formatter.commaSepeartedElementsInScope(startOfScope: startOfScope)
+
             switch token {
             case .endOfScope("]"):
                 switch formatter.scopeType(at: i) {
                 case .array, .dictionary:
-                    var trailingCommaSupported = true
-
-                    // For multi-element-lists, only add trailing comma if there are multiple elements
-                    if formatter.options.trailingCommas == .multiElementLists {
-                        if let startIndex = formatter.startOfScope(at: i) {
-                            let elementCount = formatter.countElementsInList(from: startIndex, to: i)
-                            trailingCommaSupported = elementCount > 1
-                        }
+                    let trailingCommaSupported: Bool
+                    switch formatter.options.trailingCommas {
+                    case .always, .collectionsOnly:
+                        trailingCommaSupported = true
+                    case .multiElementLists:
+                        trailingCommaSupported = elementsInScope.count > 1
+                    case .never:
+                        trailingCommaSupported = false
                     }
 
                     formatter.addOrRemoveTrailingComma(before: i, trailingCommaSupported: trailingCommaSupported)
+
                 case .subscript, .captureList:
                     var trailingCommaSupported = false
 
@@ -39,14 +43,12 @@ public extension FormatRule {
                         case .never, .collectionsOnly:
                             break
                         case .multiElementLists:
-                            if let startIndex = formatter.startOfScope(at: i) {
-                                let elementCount = formatter.countElementsInList(from: startIndex, to: i)
-                                trailingCommaSupported = elementCount > 1
-                            }
+                            trailingCommaSupported = elementsInScope.count > 1
                         }
                     }
 
                     formatter.addOrRemoveTrailingComma(before: i, trailingCommaSupported: trailingCommaSupported)
+
                 default:
                     return
                 }
@@ -56,7 +58,6 @@ public extension FormatRule {
 
                 // Trailing commas are supported in function calls, function definitions, and attributes.
                 if formatter.options.swiftVersion >= "6.1",
-                   let startOfScope = formatter.startOfScope(at: i),
                    let identifierBeforeStartOfScope = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope),
                    let identifierToken = formatter.token(at: identifierBeforeStartOfScope),
                    identifierToken.isIdentifier || identifierToken.isAttribute || (identifierToken.isKeyword && identifierToken.string.hasPrefix("#")),
@@ -84,7 +85,6 @@ public extension FormatRule {
                 // but not tuple types: https://github.com/swiftlang/swift/issues/81485
                 // If we know this is a tuple value, then trailing commas are supported.
                 if formatter.options.swiftVersion >= "6.1",
-                   let startOfScope = formatter.startOfScope(at: i),
                    let tokenBeforeStartOfScope = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope)
                 {
                     // `{ (...) }`, `return (...)` etc are always tuple values
@@ -117,10 +117,7 @@ public extension FormatRule {
                     trailingCommaSupported = false
                 case .multiElementLists:
                     if trailingCommaSupported {
-                        if let startIndex = formatter.startOfScope(at: i) {
-                            let elementCount = formatter.countElementsInList(from: startIndex, to: i)
-                            trailingCommaSupported = elementCount > 1
-                        }
+                        trailingCommaSupported = elementsInScope.count > 1
                     }
                 }
 
@@ -133,7 +130,6 @@ public extension FormatRule {
                 // https://github.com/swiftlang/swift/issues/81474
                 // All of these cases have the form `keyword identifier<...>`, like `class Foo<...>` or `func foo<...>`.
                 if formatter.options.swiftVersion >= "6.1",
-                   let startOfScope = formatter.startOfScope(at: i),
                    let identifierIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope),
                    formatter.tokens[identifierIndex].isIdentifier,
                    let keywordIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: identifierIndex),
@@ -151,10 +147,7 @@ public extension FormatRule {
                     trailingCommaSupported = false
                 case .multiElementLists:
                     if trailingCommaSupported {
-                        if let startIndex = formatter.startOfScope(at: i) {
-                            let elementCount = formatter.countElementsInList(from: startIndex, to: i)
-                            trailingCommaSupported = elementCount > 1
-                        }
+                        trailingCommaSupported = elementsInScope.count > 1
                     }
                 }
 
@@ -206,44 +199,6 @@ public extension FormatRule {
 }
 
 extension Formatter {
-    /// Counts the number of elements in a comma-separated list
-    /// Returns 0 if the list is empty, 1 if it contains only one element, 2+ for multiple elements
-    func countElementsInList(from startIndex: Int, to endIndex: Int) -> Int {
-        var count = 0
-        var hasElement = false
-        var depth = 0
-
-        for i in (startIndex + 1) ..< endIndex {
-            let token = tokens[i]
-
-            switch token {
-            case .startOfScope:
-                depth += 1
-            case .endOfScope:
-                depth -= 1
-            case .delimiter(","):
-                if depth == 0 {
-                    if hasElement {
-                        count += 1
-                    }
-                    hasElement = false
-                }
-            case .space, .linebreak, .startOfScope("//"), .startOfScope("/*"):
-                continue
-            default:
-                if depth == 0, !token.isComment {
-                    hasElement = true
-                }
-            }
-        }
-
-        if hasElement {
-            count += 1
-        }
-
-        return count
-    }
-
     /// Adds or removes a trailing comma before the given index that marks the end of a comma-separated list.
     /// Trailing commas can always be removed. `trailingCommaSupported` indicates whether or not a trailing
     /// comma is allowed at this position. A comma being supported is a combination of language support
@@ -275,6 +230,32 @@ extension Formatter {
         default:
             break
         }
+    }
+
+    /// Returns the range of each comma-separated element in the given range
+    func commaSepeartedElementsInScope(startOfScope: Int) -> [ClosedRange<Int>] {
+        guard let endOfScope = endOfScope(at: startOfScope),
+              let firstTokenInScope = index(of: .nonSpaceOrLinebreak, after: startOfScope),
+              firstTokenInScope != endOfScope
+        else { return [] }
+
+        var currentIndex = firstTokenInScope
+        var commasSeparatedElements = [ClosedRange<Int>]()
+
+        while let nextCommaIndex = index(of: .delimiter(","), in: currentIndex ..< endOfScope),
+              let tokenBeforeComma = index(of: .nonSpaceOrLinebreak, before: nextCommaIndex),
+              let tokenAfterComma = index(of: .nonSpaceOrCommentOrLinebreak, after: nextCommaIndex)
+        {
+            // If this was a trailing comma, exclude it from the returned array
+            if tokenAfterComma == endOfScope {
+                break
+            }
+
+            commasSeparatedElements.append(currentIndex ... tokenBeforeComma)
+            currentIndex = tokenAfterComma
+        }
+
+        return commasSeparatedElements
     }
 }
 

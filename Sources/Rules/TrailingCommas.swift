@@ -56,11 +56,11 @@ public extension FormatRule {
             case .endOfScope(")"):
                 var trailingCommaSupported = false
 
-                // Trailing commas are supported in function calls, function definitions, and attributes.
+                // Trailing commas are supported in function calls, function definitions, initializers, and attributes.
                 if formatter.options.swiftVersion >= "6.1",
                    let identifierBeforeStartOfScope = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope),
                    let identifierToken = formatter.token(at: identifierBeforeStartOfScope),
-                   identifierToken.isIdentifier || identifierToken.isAttribute || (identifierToken.isKeyword && identifierToken.string.hasPrefix("#")),
+                   identifierToken.isIdentifier || identifierToken.isAttribute || identifierToken.isKeyword,
                    // If the case of `@escaping` or `@Sendable`, this could be a closure type where trailing commas are not supported.
                    !formatter.isStartOfClosureType(at: startOfScope)
                 {

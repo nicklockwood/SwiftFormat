@@ -3036,6 +3036,7 @@ class OrganizeDeclarationsTests: XCTestCase {
             @State var foo: Foo
             @Binding var isOn: Bool
             @Environment(\\.quux) var quux: Quux
+            @Bindable var model: MyModel
 
             @ViewBuilder
             var body: some View {
@@ -3053,6 +3054,7 @@ class OrganizeDeclarationsTests: XCTestCase {
 
             // MARK: Internal
 
+            @Bindable var model: MyModel
             @Binding var isOn: Bool
             @Environment(\\.colorScheme) var colorScheme
             @Environment(\\.quux) var quux: Quux

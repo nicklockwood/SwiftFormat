@@ -312,7 +312,7 @@ class RedundantPublicTests: XCTestCase {
     }
 
     func testPreservesPublicInProtocolExtension() {
-        // A method in an extenison of an internal protocol may actually be publically accessible
+        // A method in an extension of an internal protocol may actually be publicly accessible
         // via some public type that implements the protocol.
         let input = """
         protocol Foo {}
@@ -322,5 +322,56 @@ class RedundantPublicTests: XCTestCase {
         }
         """
         testFormatting(for: input, rules: [.redundantPublic])
+    }
+
+    func testTreatsTypeInPublicExtensionAsPublic() {
+        let input = """
+        public enum Foo {}
+
+        public extension Foo {
+            enum Bar {}
+        }
+
+        extension Foo {
+            enum Baaz {}
+        }
+
+        extension Foo.Bar: CustomStringConvertible {
+            public var description: String {
+                ""
+            }
+        }
+
+        extension Foo.Baaz: CustomStringConvertible {
+            public var description: String {
+                ""
+            }
+        }
+        """
+
+        let output = """
+        public enum Foo {}
+
+        public extension Foo {
+            enum Bar {}
+        }
+
+        extension Foo {
+            enum Baaz {}
+        }
+
+        extension Foo.Bar: CustomStringConvertible {
+            public var description: String {
+                ""
+            }
+        }
+
+        extension Foo.Baaz: CustomStringConvertible {
+            var description: String {
+                ""
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantPublic)
     }
 }

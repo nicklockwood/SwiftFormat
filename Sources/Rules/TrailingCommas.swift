@@ -18,7 +18,17 @@ public extension FormatRule {
             case .endOfScope("]"):
                 switch formatter.scopeType(at: i) {
                 case .array, .dictionary:
-                    formatter.addOrRemoveTrailingComma(before: i, trailingCommaSupported: true)
+                    var trailingCommaSupported = true
+
+                    // For multi-element-lists, only add trailing comma if there are multiple elements
+                    if formatter.options.trailingCommas == .multiElementLists {
+                        if let startIndex = formatter.startOfScope(at: i) {
+                            let elementCount = formatter.countElementsInList(from: startIndex, to: i)
+                            trailingCommaSupported = elementCount > 1
+                        }
+                    }
+
+                    formatter.addOrRemoveTrailingComma(before: i, trailingCommaSupported: trailingCommaSupported)
                 case .subscript, .captureList:
                     var trailingCommaSupported = false
 
@@ -28,6 +38,11 @@ public extension FormatRule {
                             trailingCommaSupported = true
                         case .never, .collectionsOnly:
                             break
+                        case .multiElementLists:
+                            if let startIndex = formatter.startOfScope(at: i) {
+                                let elementCount = formatter.countElementsInList(from: startIndex, to: i)
+                                trailingCommaSupported = elementCount > 1
+                            }
                         }
                     }
 
@@ -100,6 +115,13 @@ public extension FormatRule {
                     break
                 case .never, .collectionsOnly:
                     trailingCommaSupported = false
+                case .multiElementLists:
+                    if trailingCommaSupported {
+                        if let startIndex = formatter.startOfScope(at: i) {
+                            let elementCount = formatter.countElementsInList(from: startIndex, to: i)
+                            trailingCommaSupported = elementCount > 1
+                        }
+                    }
                 }
 
                 formatter.addOrRemoveTrailingComma(before: i, trailingCommaSupported: trailingCommaSupported)
@@ -127,6 +149,13 @@ public extension FormatRule {
                     break
                 case .never, .collectionsOnly:
                     trailingCommaSupported = false
+                case .multiElementLists:
+                    if trailingCommaSupported {
+                        if let startIndex = formatter.startOfScope(at: i) {
+                            let elementCount = formatter.countElementsInList(from: startIndex, to: i)
+                            trailingCommaSupported = elementCount > 1
+                        }
+                    }
                 }
 
                 formatter.addOrRemoveTrailingComma(before: i, trailingCommaSupported: trailingCommaSupported)
@@ -177,6 +206,44 @@ public extension FormatRule {
 }
 
 extension Formatter {
+    /// Counts the number of elements in a comma-separated list
+    /// Returns 0 if the list is empty, 1 if it contains only one element, 2+ for multiple elements
+    func countElementsInList(from startIndex: Int, to endIndex: Int) -> Int {
+        var count = 0
+        var hasElement = false
+        var depth = 0
+
+        for i in (startIndex + 1) ..< endIndex {
+            let token = tokens[i]
+
+            switch token {
+            case .startOfScope:
+                depth += 1
+            case .endOfScope:
+                depth -= 1
+            case .delimiter(","):
+                if depth == 0 {
+                    if hasElement {
+                        count += 1
+                    }
+                    hasElement = false
+                }
+            case .space, .linebreak, .startOfScope("//"), .startOfScope("/*"):
+                continue
+            default:
+                if depth == 0, !token.isComment {
+                    hasElement = true
+                }
+            }
+        }
+
+        if hasElement {
+            count += 1
+        }
+
+        return count
+    }
+
     /// Adds or removes a trailing comma before the given index that marks the end of a comma-separated list.
     /// Trailing commas can always be removed. `trailingCommaSupported` indicates whether or not a trailing
     /// comma is allowed at this position. A comma being supported is a combination of language support
@@ -216,7 +283,7 @@ extension TrailingCommas {
         switch self {
         case .never:
             return false
-        case .always, .collectionsOnly:
+        case .always, .collectionsOnly, .multiElementLists:
             return true
         }
     }

@@ -1422,4 +1422,154 @@ class TrailingCommasTests: XCTestCase {
         let options = FormatOptions(trailingCommas: .collectionsOnly, swiftVersion: "6.1")
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
+
+    // MARK: - Multi-element lists tests
+
+    func testMultiElementListsAddsCommaToMultiElementArray() {
+        let input = """
+        let array = [
+            1,
+            2
+        ]
+        """
+        let output = """
+        let array = [
+            1,
+            2,
+        ]
+        """
+        let options = FormatOptions(trailingCommas: .multiElementLists, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
+
+    func testMultiElementListsDoesNotAddCommaToSingleElementArray() {
+        let input = """
+        let array = [
+            1
+        ]
+        """
+        let options = FormatOptions(trailingCommas: .multiElementLists, swiftVersion: "6.1")
+        testFormatting(for: input, rule: .trailingCommas, options: options)
+    }
+
+    func testMultiElementListsAddsCommaToMultiElementFunction() {
+        let input = """
+        func foo(
+            a: Int,
+            b: Int
+        ) {
+            print(a, b)
+        }
+        """
+        let output = """
+        func foo(
+            a: Int,
+            b: Int,
+        ) {
+            print(a, b)
+        }
+        """
+        let options = FormatOptions(trailingCommas: .multiElementLists, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
+
+    func testMultiElementListsDoesNotAddCommaToSingleElementFunction() {
+        let input = """
+        func foo(
+            a: Int
+        ) {
+            print(a)
+        }
+        """
+        let options = FormatOptions(trailingCommas: .multiElementLists, swiftVersion: "6.1")
+        testFormatting(for: input, rule: .trailingCommas, options: options)
+    }
+
+    func testMultiElementListsAddsCommaToMultiElementFunctionCall() {
+        let input = """
+        foo(
+            a: 1,
+            b: 2
+        )
+        """
+        let output = """
+        foo(
+            a: 1,
+            b: 2,
+        )
+        """
+        let options = FormatOptions(trailingCommas: .multiElementLists, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
+
+    func testMultiElementListsDoesNotAddCommaToSingleElementFunctionCall() {
+        let input = """
+        foo(
+            a: 1
+        )
+        """
+        let options = FormatOptions(trailingCommas: .multiElementLists, swiftVersion: "6.1")
+        testFormatting(for: input, rule: .trailingCommas, options: options)
+    }
+
+    func testMultiElementListsAddsCommaToMultiElementGenericList() {
+        let input = """
+        struct Foo<
+            T,
+            U
+        > {}
+        """
+        let output = """
+        struct Foo<
+            T,
+            U,
+        > {}
+        """
+        let options = FormatOptions(trailingCommas: .multiElementLists, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
+
+    func testMultiElementListsDoesNotAddCommaToSingleElementGenericList() {
+        let input = """
+        struct Foo<
+            T
+        > {}
+        """
+        let options = FormatOptions(trailingCommas: .multiElementLists, swiftVersion: "6.1")
+        testFormatting(for: input, rule: .trailingCommas, options: options)
+    }
+
+    func testMultiElementListsRemovesCommaFromSingleElementArray() {
+        let input = """
+        let array = [
+            1,
+        ]
+        """
+        let output = """
+        let array = [
+            1
+        ]
+        """
+        let options = FormatOptions(trailingCommas: .multiElementLists, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
+
+    func testMultiElementListsRemovesCommaFromSingleElementFunction() {
+        let input = """
+        func foo(
+            a: Int,
+        ) {
+            print(a)
+        }
+        """
+        let output = """
+        func foo(
+            a: Int
+        ) {
+            print(a)
+        }
+        """
+        let options = FormatOptions(trailingCommas: .multiElementLists, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
 }

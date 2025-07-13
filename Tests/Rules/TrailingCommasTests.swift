@@ -1557,6 +1557,12 @@ class TrailingCommasTests: XCTestCase {
         ) {
             print(a)
         }
+
+        init(
+            a: Int
+        ) {
+            print(a)
+        }
         """
         let options = FormatOptions(trailingCommas: .multiElementLists, swiftVersion: "6.1")
         testFormatting(for: input, rule: .trailingCommas, options: options)
@@ -1648,5 +1654,17 @@ class TrailingCommasTests: XCTestCase {
         """
         let options = FormatOptions(trailingCommas: .multiElementLists, swiftVersion: "6.1")
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
+
+    func testTrailingCommasNotRemovedFromInitParametersWithAlwaysOption() {
+        let input = """
+        public init(
+            parameter: Parameter,
+        ) {
+            // test
+        }
+        """
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
+        testFormatting(for: input, rule: .trailingCommas, options: options, exclude: [.unusedArguments])
     }
 }

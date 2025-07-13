@@ -2907,4 +2907,40 @@ class ParsingHelpersTests: XCTestCase {
 
         XCTAssertThrowsError(try parseCodeBlocks(fromMarkdown: input, language: "swift"))
     }
+
+    func testCommaSeparatedElementsInScope() {
+        let input = """
+        [
+            1,
+            2,
+            3
+        ]
+        """
+
+        let formatter = Formatter(tokenize(input))
+        let elements = formatter.commaSeparatedElementsInScope(startOfScope: 0).map { formatter.tokens[$0].string }
+        XCTAssertEqual(elements, [
+            "1",
+            "2",
+            "3",
+        ])
+    }
+
+    func testCommaSeparatedElementsInScopeWithTrailingComma() {
+        let input = """
+        foo(
+            foo: foo(),
+            bar: bar(foo, bar),
+            baaz: baaz.quux,
+        )
+        """
+
+        let formatter = Formatter(tokenize(input))
+        let elements = formatter.commaSeparatedElementsInScope(startOfScope: 1).map { formatter.tokens[$0].string }
+        XCTAssertEqual(elements, [
+            "foo: foo()",
+            "bar: bar(foo, bar)",
+            "baaz: baaz.quux",
+        ])
+    }
 }

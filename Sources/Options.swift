@@ -182,6 +182,7 @@ public enum TrailingCommas: String, CaseIterable {
     case never
     case always
     case collectionsOnly = "collections-only"
+    case multiElementLists = "multi-element-lists"
 }
 
 /// Whether to insert, remove, or preserve spaces around operators

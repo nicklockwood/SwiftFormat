@@ -3330,7 +3330,7 @@ Add or remove trailing commas in comma-separated lists.
 
 Option | Description
 --- | ---
-`--trailing-commas` | Trailing commas: "always" (default), "never", or "collections-only"
+`--trailing-commas` | Trailing commas: "always" (default), "never", "collections-only", or "multi-element-lists"
 
 <details>
 <summary>Examples</summary>
@@ -3344,7 +3344,7 @@ Option | Description
   ]
 ```
 
-Swift 6.1 and later:
+Swift 6.1 and later with `--trailing-commas always`:
 
 ```diff
   func foo(
@@ -3369,6 +3369,20 @@ Swift 6.1 and later:
 -     Quux
 +     Quux,
   > {}
+```
+
+`--trailing-commas multi-element-lists`
+
+```diff
+  let foo = [
+-     bar,
++     bar
+  ]
+
+  foo(
+-     bar,
++     bar
+  )
 ```
 
 </details>

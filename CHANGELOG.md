@@ -1,5 +1,31 @@
 # Change Log
 
+## [0.57.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.57.0) (2025-07-13)
+
+- Options now use `--kebab-case`. Existing option names without dashes remain supported for backwards compatibility. Some options have been renamed to improve clarity.
+- Added support for `:this` and `:previous` in comment directives.
+- Added support for formatting code blocks in Markdown files.
+- Added support for multiple `--config` file arguments.
+- Added `singlePropertyPerLine` rule to convert property declarations defining multiple properties into separate declarations.
+- Added `redundantMemberwiseInit` rule to remove explicit memberwise initializers that are identical to the `struct`'s compiler-synthesized initializer.  
+- Added `redundantPublic` rule to remove public access control from properties of internal types.
+- Added `modifiersOnSameLine` rule to keep declaration modifiers on the same line.
+- Added `throwingTests` rule to prefer using `try` and `throws` in unit tests rather than `try!`.
+- Added `noGuardInTests` rule to prefer convert guard statements in unit tests to `try #require(...)` / `#expect(...)` or `try XCTUnwrap(...)` / `XCTAssert(...)`.
+- Added `urlMacro` rule to convert `URL(string: "...")!` initializers to a provided `#URL("...")` macro.
+- Added `--trailing-commas collections-only` and `--trailing-commas multi-element-lists` options to `trailingCommas` rule.
+- Added `--type-blank-lines insert` option to `blankLinesAtStartOfScope` and `blankLinesAtEndOfScope` rules.
+- Added `--wrap-string-interpolation` option to support disabling line wrapping within string interpolation.
+- Added `--line-between-guards` option to `blankLinesAfterGuardStatements` rule.
+- Added support for SARIF output format.
+- Improved performance of the `docComments` rule.
+- Fixed bug in `docComments` rule where trailing comments would be converted to doc comments.
+- Fixed bug where `redundantNilInit` rule would ignore type bodies with conformances.
+- Fixed bug where `wrapEnumCases` didn't handle some nested types correctly.
+- Fixed issue where `#` characters in config files couldn't be escaped.
+- Fixed issue where SwiftFormat for Xcode app would generate invalid config files with unescaped `#` characters.
+- Fixed issue where `--wrap-return-type never` didn't respect `--allman true`.
+
 ## [0.56.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.56.4) (2025-06-15)
 
 - Fixed issue where `trailingCommas` rule would not insert trailing commas in function declarations with return type

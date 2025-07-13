@@ -117,7 +117,6 @@ public extension FormatRule {
                     trailingCommaSupported = false
                 case .multiElementLists:
                     if trailingCommaSupported {
-                        let elementsInScope = formatter.commaSeparatedElementsInScope(startOfScope: startOfScope)
                         trailingCommaSupported = elementsInScope.count > 1
                     }
                 }
@@ -148,7 +147,6 @@ public extension FormatRule {
                     trailingCommaSupported = false
                 case .multiElementLists:
                     if trailingCommaSupported {
-                        let elementsInScope = formatter.commaSeparatedElementsInScope(startOfScope: startOfScope)
                         trailingCommaSupported = elementsInScope.count > 1
                     }
                 }
@@ -170,7 +168,7 @@ public extension FormatRule {
           ]
         ```
 
-        Swift 6.1 and later:
+        Swift 6.1 and later with `--trailing-commas always`:
 
         ```diff
           func foo(
@@ -195,6 +193,20 @@ public extension FormatRule {
         -     Quux
         +     Quux,
           > {}
+        ```
+
+        `--trailing-commas multi-element-lists`
+
+        ```diff
+          let foo = [
+        -     bar,
+        +     bar
+          ]
+
+          foo(
+        -     bar,
+        +     bar
+          )
         ```
         """
     }
@@ -239,7 +251,8 @@ extension Formatter {
         guard let endOfScope = endOfScope(at: startOfScope),
               let firstTokenInScope = index(of: .nonSpaceOrLinebreak, after: startOfScope),
               let lastTokenInScope = index(of: .nonSpaceOrLinebreak, before: endOfScope),
-              firstTokenInScope != endOfScope
+              firstTokenInScope != endOfScope,
+              firstTokenInScope < lastTokenInScope
         else { return [] }
 
         var currentIndex = firstTokenInScope
@@ -254,7 +267,7 @@ extension Formatter {
         }
 
         // Add the final element, unless the final comma was a trailing comma
-        if currentIndex < endOfScope {
+        if currentIndex < endOfScope, currentIndex <= lastTokenInScope {
             commasSeparatedElements.append(currentIndex ... lastTokenInScope)
         }
 

@@ -2911,18 +2911,18 @@ class ParsingHelpersTests: XCTestCase {
     func testCommaSeparatedElementsInScope() {
         let input = """
         [
-            foo(),
-            bar(foo, bar),
-            baaz.quux
+            1,
+            2,
+            3
         ]
         """
 
         let formatter = Formatter(tokenize(input))
         let elements = formatter.commaSeparatedElementsInScope(startOfScope: 0).map { formatter.tokens[$0].string }
         XCTAssertEqual(elements, [
-            "foo()",
-            "bar(foo, bar)",
-            "baaz.quux",
+            "1",
+            "2",
+            "3",
         ])
     }
 

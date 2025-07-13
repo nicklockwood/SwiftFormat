@@ -13,7 +13,10 @@ public extension FormatRule {
         help: "Add or remove trailing commas in comma-separated lists.",
         options: ["trailing-commas"]
     ) { formatter in
-        formatter.forEachToken { i, token in
+        formatter.forEach(.endOfScope) { i, token in
+            guard let startOfScope = formatter.startOfScope(at: i) else { return }
+            let elementsInScope = formatter.commaSeparatedElementsInScope(startOfScope: startOfScope)
+
             switch token {
             case .endOfScope("]"):
                 switch formatter.scopeType(at: i) {
@@ -23,12 +26,7 @@ public extension FormatRule {
                     case .always, .collectionsOnly:
                         trailingCommaSupported = true
                     case .multiElementLists:
-                        if let startOfScope = formatter.startOfScope(at: i) {
-                            let elementsInScope = formatter.commaSeparatedElementsInScope(startOfScope: startOfScope)
-                            trailingCommaSupported = elementsInScope.count > 1
-                        } else {
-                            trailingCommaSupported = false
-                        }
+                        trailingCommaSupported = elementsInScope.count > 1
                     case .never:
                         trailingCommaSupported = false
                     }
@@ -45,10 +43,7 @@ public extension FormatRule {
                         case .never, .collectionsOnly:
                             break
                         case .multiElementLists:
-                            if let startOfScope = formatter.startOfScope(at: i) {
-                                let elementsInScope = formatter.commaSeparatedElementsInScope(startOfScope: startOfScope)
-                                trailingCommaSupported = elementsInScope.count > 1
-                            }
+                            trailingCommaSupported = elementsInScope.count > 1
                         }
                     }
 
@@ -60,8 +55,6 @@ public extension FormatRule {
 
             case .endOfScope(")"):
                 var trailingCommaSupported = false
-
-                guard let startOfScope = formatter.startOfScope(at: i) else { return }
 
                 // Trailing commas are supported in function calls, function definitions, and attributes.
                 if formatter.options.swiftVersion >= "6.1",
@@ -133,8 +126,6 @@ public extension FormatRule {
 
             case .endOfScope(">"):
                 var trailingCommaSupported = false
-
-                guard let startOfScope = formatter.startOfScope(at: i) else { return }
 
                 // In Swift 6.1, only generic lists in concrete type / function / typealias declarations are allowed.
                 // https://github.com/swiftlang/swift/issues/81474
@@ -263,7 +254,7 @@ extension Formatter {
         }
 
         // Add the final element, unless the final comma was a trailing comma
-        if currentIndex < endOfScope, index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex) != endOfScope {
+        if currentIndex < endOfScope {
             commasSeparatedElements.append(currentIndex ... lastTokenInScope)
         }
 

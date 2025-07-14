@@ -218,7 +218,7 @@ func printHelp(as type: CLI.OutputType) {
     --verbose          Display detailed formatting output and warnings/errors
     --quiet            Disables non-critical output messages and warnings
     --output-tokens    Outputs an array of tokens instead of text when using stdin
-    --markdown-files   Format Swift code block in markdown files: 'format-strict', 'format-lenient' (ignore parsing errors), or  'ignore' (default)
+    --markdown-files   Swift in markdown files: \(MarkdownFormattingMode.help)
 
     SwiftFormat has a number of rules that can be enabled or disabled. By default
     most rules are enabled. Use --rules to display all enabled/disabled rules.
@@ -1136,17 +1136,17 @@ func processInput(_ inputURLs: [URL],
                         print("-- no changes (cached)", as: .success)
                     }
                 } else {
-                    // Format individual code blocks in markdown files is enabled
+                    // Formatting and linting of code blocks in markdown files is enabled
                     if inputURL.pathExtension == "md", options.fileOptions?.supportedFileExtensions.contains("md") == true {
                         var markdown = input
                         let swiftCodeBlocks: [MarkdownCodeBlock]
                         do {
                             swiftCodeBlocks = try parseCodeBlocks(fromMarkdown: input, language: "swift")
                         } catch {
-                            switch options.fileOptions?.markdownFormattingMode {
+                            switch options.fileOptions?.markdownFormattingMode ?? .ignore {
                             case .strict:
                                 throw error
-                            case .lenient, nil:
+                            case .lenient, .ignore:
                                 swiftCodeBlocks = []
                             }
                         }
@@ -1178,8 +1178,8 @@ func processInput(_ inputURLs: [URL],
                             var outputTokens: [Token]?
                             let parsingError = parsingError(for: inputTokens, options: markdownOptions.formatOptions ?? .default, allowErrorsInFragments: false)
 
-                            switch options.fileOptions?.markdownFormattingMode {
-                            case .lenient, nil:
+                            switch options.fileOptions?.markdownFormattingMode ?? .ignore {
+                            case .lenient, .ignore:
                                 // Ignore code blocks that fail to parse
                                 if parsingError == nil {
                                     outputTokens = try? applyRules(swiftCodeBlock.text, tokens: inputTokens, options: markdownOptions, lineRange: lineRange,

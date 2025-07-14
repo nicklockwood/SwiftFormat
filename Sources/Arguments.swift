@@ -56,6 +56,10 @@ extension Options {
 }
 
 extension Array {
+    func formattedList(default: Element? = nil) -> String where Element: RawRepresentable {
+        map(\.rawValue).formattedList(default: `default`?.rawValue)
+    }
+
     func formattedList(default: Element? = nil) -> String {
         let options = map {
             "\"\($0)\"\("\($0)" == "\(String(describing: `default`))" ? " (default)" : "")"
@@ -519,8 +523,8 @@ func argumentsFor(_ options: Options, excludingDefaults: Bool = false) -> [Strin
             arguments.remove("min-version")
         }
         do {
-            if !excludingDefaults || fileOptions.markdownFormattingMode != nil {
-                args["markdown-files"] = fileOptions.markdownFormattingMode?.rawValue ?? "ignore"
+            if !excludingDefaults || fileOptions.markdownFormattingMode != .default {
+                args["markdown-files"] = fileOptions.markdownFormattingMode.rawValue
             }
             arguments.remove("markdown-files")
         }
@@ -653,20 +657,17 @@ func fileOptionsFor(_ args: [String: String], in directory: String) throws -> Fi
     }
     try processOption("markdown-files", in: args, from: &arguments) {
         containsFileOption = true
-        switch $0.lowercased() {
-        case "ignore":
-            break
-        case MarkdownFormattingMode.lenient.rawValue:
-            options.supportedFileExtensions.append("md")
-            options.markdownFormattingMode = .lenient
-        case MarkdownFormattingMode.strict.rawValue:
-            options.supportedFileExtensions.append("md")
-            options.markdownFormattingMode = .strict
-        default:
+        guard let mode = MarkdownFormattingMode(rawValue: $0.lowercased()) else {
             throw FormatError.options("""
-            Valid options for --markdown-files are 'ignore' (default), \
-            'format-lenient', or 'format-strict'.
+            Unsupported --markdown-files value '\($0)'. Valid options are \(MarkdownFormattingMode.help).
             """)
+        }
+        switch mode {
+        case .lenient, .strict:
+            options.markdownFormattingMode = mode
+            options.supportedFileExtensions.append("md")
+        case .ignore:
+            break
         }
     }
     assert(arguments.isEmpty, "\(arguments.joined(separator: ","))")

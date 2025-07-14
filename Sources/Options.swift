@@ -1095,11 +1095,19 @@ public struct FormatOptions: CustomStringConvertible {
     }
 }
 
-public enum MarkdownFormattingMode: String {
+public enum MarkdownFormattingMode: String, CaseIterable {
+    /// Swift code in markdown files is ignored (default)
+    case ignore
     /// Errors in markdown code blocks are ignored
     case lenient = "format-lenient"
-    /// Errors in markdown code blocks are emitted
+    /// Errors in markdown code blocks are reported
     case strict = "format-strict"
+
+    public static let `default`: Self = .ignore
+
+    public static var help: String {
+        allCases.formattedList(default: .default)
+    }
 }
 
 /// File enumeration options
@@ -1109,7 +1117,7 @@ public struct FileOptions {
     public var excludedGlobs: [Glob]
     public var unexcludedGlobs: [Glob]
     public var minVersion: Version
-    public var markdownFormattingMode: MarkdownFormattingMode?
+    public var markdownFormattingMode: MarkdownFormattingMode
 
     public static let `default` = FileOptions()
 
@@ -1118,7 +1126,7 @@ public struct FileOptions {
                 excludedGlobs: [Glob] = [],
                 unexcludedGlobs: [Glob] = [],
                 minVersion: Version = .undefined,
-                markdownFormattingMode: MarkdownFormattingMode? = nil)
+                markdownFormattingMode: MarkdownFormattingMode = .ignore)
     {
         self.followSymlinks = followSymlinks
         self.supportedFileExtensions = supportedFileExtensions

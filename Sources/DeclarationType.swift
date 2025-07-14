@@ -274,6 +274,7 @@ extension Declaration {
         [
             "@AccessibilityFocusState",
             "@AppStorage",
+            "@Bindable",
             "@Binding",
             "@Environment",
             "@EnvironmentObject",

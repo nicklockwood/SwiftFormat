@@ -15,39 +15,15 @@ public extension FormatRule {
     ) { formatter in
         formatter.forEach(.endOfScope) { i, token in
             guard let startOfScope = formatter.startOfScope(at: i) else { return }
-            let elementsInScope = formatter.commaSeparatedElementsInScope(startOfScope: startOfScope)
 
             switch token {
             case .endOfScope("]"):
                 switch formatter.scopeType(at: i) {
                 case .array, .dictionary:
-                    let trailingCommaSupported: Bool
-                    switch formatter.options.trailingCommas {
-                    case .always, .collectionsOnly:
-                        trailingCommaSupported = true
-                    case .multiElementLists:
-                        trailingCommaSupported = elementsInScope.count > 1
-                    case .never:
-                        trailingCommaSupported = false
-                    }
-
-                    formatter.addOrRemoveTrailingComma(before: i, trailingCommaSupported: trailingCommaSupported)
+                    formatter.addOrRemoveTrailingComma(beforeEndOfScope: i, trailingCommaSupported: true, isCollection: true)
 
                 case .subscript, .captureList:
-                    var trailingCommaSupported = false
-
-                    if formatter.options.swiftVersion >= "6.1" {
-                        switch formatter.options.trailingCommas {
-                        case .always:
-                            trailingCommaSupported = true
-                        case .never, .collectionsOnly:
-                            break
-                        case .multiElementLists:
-                            trailingCommaSupported = elementsInScope.count > 1
-                        }
-                    }
-
-                    formatter.addOrRemoveTrailingComma(before: i, trailingCommaSupported: trailingCommaSupported)
+                    formatter.addOrRemoveTrailingComma(beforeEndOfScope: i, trailingCommaSupported: formatter.options.swiftVersion >= "6.1")
 
                 default:
                     return
@@ -110,18 +86,7 @@ public extension FormatRule {
                     }
                 }
 
-                switch formatter.options.trailingCommas {
-                case .always:
-                    break
-                case .never, .collectionsOnly:
-                    trailingCommaSupported = false
-                case .multiElementLists:
-                    if trailingCommaSupported {
-                        trailingCommaSupported = elementsInScope.count > 1
-                    }
-                }
-
-                formatter.addOrRemoveTrailingComma(before: i, trailingCommaSupported: trailingCommaSupported)
+                formatter.addOrRemoveTrailingComma(beforeEndOfScope: i, trailingCommaSupported: trailingCommaSupported)
 
             case .endOfScope(">"):
                 var trailingCommaSupported = false
@@ -140,18 +105,7 @@ public extension FormatRule {
                     trailingCommaSupported = true
                 }
 
-                switch formatter.options.trailingCommas {
-                case .always:
-                    break
-                case .never, .collectionsOnly:
-                    trailingCommaSupported = false
-                case .multiElementLists:
-                    if trailingCommaSupported {
-                        trailingCommaSupported = elementsInScope.count > 1
-                    }
-                }
-
-                formatter.addOrRemoveTrailingComma(before: i, trailingCommaSupported: trailingCommaSupported)
+                formatter.addOrRemoveTrailingComma(beforeEndOfScope: i, trailingCommaSupported: trailingCommaSupported)
 
             default:
                 break
@@ -214,12 +168,51 @@ public extension FormatRule {
 
 extension Formatter {
     /// Adds or removes a trailing comma before the given index that marks the end of a comma-separated list.
-    /// Trailing commas can always be removed. `trailingCommaSupported` indicates whether or not a trailing
-    /// comma is allowed at this position. A comma being supported is a combination of language support
-    /// and enabled options.
-    func addOrRemoveTrailingComma(before endOfListIndex: Int, trailingCommaSupported: Bool) {
-        guard let prevTokenIndex = index(of: .nonSpaceOrComment, before: endOfListIndex) else { return }
+    /// Trailing commas can always be removed.
+    ///  - `trailingCommaSupported` indicates whether or not a trailing comma is allowed by the language at this position.
+    ///  - `isCollection` indicates whether this is an array or dictionary literal.
+    func addOrRemoveTrailingComma(beforeEndOfScope endOfListIndex: Int, trailingCommaSupported: Bool, isCollection: Bool = false) {
+        guard let prevTokenIndex = index(of: .nonSpaceOrComment, before: endOfListIndex),
+              let startOfScope = startOfScope(at: endOfListIndex)
+        else { return }
 
+        // Decide whether to insert, remove, or preserve the comma in this context based on the enabled option
+        enum TrailingCommaMode {
+            case insert
+            case remove
+            case preserve
+        }
+
+        let trailingCommaMode: TrailingCommaMode
+        switch options.trailingCommas {
+        case .never:
+            trailingCommaMode = .remove
+
+        case .always:
+            if trailingCommaSupported {
+                trailingCommaMode = .insert
+            } else {
+                trailingCommaMode = .preserve
+            }
+
+        case .collectionsOnly:
+            if isCollection {
+                trailingCommaMode = .insert
+            } else {
+                trailingCommaMode = .remove
+            }
+
+        case .multiElementLists:
+            if commaSeparatedElementsInScope(startOfScope: startOfScope).count <= 1 {
+                trailingCommaMode = .remove
+            } else if trailingCommaSupported {
+                trailingCommaMode = .insert
+            } else {
+                trailingCommaMode = .preserve
+            }
+        }
+
+        // Remove or insert the comma
         switch tokens[prevTokenIndex] {
         case .linebreak:
             guard let prevTokenIndex = index(
@@ -231,16 +224,19 @@ extension Formatter {
             case .startOfScope("["), .delimiter(":"), .startOfScope("("):
                 break // do nothing
             case .delimiter(","):
-                if !options.trailingCommas.enabled || !trailingCommaSupported {
+                if trailingCommaMode == .remove {
                     removeToken(at: prevTokenIndex)
                 }
             default:
-                if options.trailingCommas.enabled, trailingCommaSupported {
+                if trailingCommaMode == .insert {
                     insert(.delimiter(","), at: prevTokenIndex + 1)
                 }
             }
+
         case .delimiter(","):
+            // Always remove a trailing comma that isn't followed by a linebreak
             removeToken(at: prevTokenIndex)
+
         default:
             break
         }
@@ -272,16 +268,5 @@ extension Formatter {
         }
 
         return commasSeparatedElements
-    }
-}
-
-extension TrailingCommas {
-    var enabled: Bool {
-        switch self {
-        case .never:
-            return false
-        case .always, .collectionsOnly, .multiElementLists:
-            return true
-        }
     }
 }

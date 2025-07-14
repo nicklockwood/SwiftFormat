@@ -57,6 +57,15 @@ public extension FormatRule {
                     }
                 }
 
+                // If the previous token is the closing `>` of a generic list, then this is a function declaration or initializer,
+                // like `func foo<T>(args...)` or `Foo<Bar>(args...)`.
+                if formatter.options.swiftVersion >= "6.1",
+                   let tokenBeforeStartOfScope = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope),
+                   formatter.tokens[tokenBeforeStartOfScope] == .endOfScope(">")
+                {
+                    trailingCommaSupported = true
+                }
+
                 // In Swift 6.1, trailing commas are also supported in tuple values,
                 // but not tuple types: https://github.com/swiftlang/swift/issues/81485
                 // If we know this is a tuple value, then trailing commas are supported.

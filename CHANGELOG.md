@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.57.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.57.1) (2025-07-14)
+
+- Fixed issue where trailing commas were unexpectedly removed from initializer argument lists when using `--trailing-commas always`.
+- Fixed issue where `redundantPublic` rule didn't handle extensions on types defined in public extensions.
+- Added `@Bindable` to list of SwiftUI property wrappers used by `organizeDeclarations` rule.
+- Fixed case-sensitivity issue with `preferFileMacro` rule.
+
 ## [0.57.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.57.0) (2025-07-13)
 
 - Options now use `--kebab-case`. Existing option names without dashes remain supported for backwards compatibility. Some options have been renamed to improve clarity.

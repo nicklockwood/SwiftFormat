@@ -1667,4 +1667,54 @@ class TrailingCommasTests: XCTestCase {
         let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
         testFormatting(for: input, rule: .trailingCommas, options: options, exclude: [.unusedArguments])
     }
+
+    func testTrailingCommaNotRemovedFromTupleTypeSwift6_1() {
+        let input = """
+        let foo: (
+            bar: String,
+            quux: String,
+        )
+
+        let bar: (
+            bar: String,
+            baaz: String,
+        ) -> Void
+
+        public func testClosureArgumentInTuple() {
+            _ = object.methodWithTupleArgument((
+                closureArgument: { capturedObject in
+                    _ = capturedObject
+                },
+            ))
+        }
+        """
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
+        testFormatting(for: input, rule: .trailingCommas, options: options)
+    }
+
+    func testTrailingCommaNotRemovedFromClosureTypeSwift6_1_mutliElementLists() {
+        let input = """
+        let foo: (
+            bar: String,
+        ) -> Void
+
+        let foo: (
+            bar: String,
+            baaz: String,
+        ) -> Void
+        """
+
+        let output = """
+        let foo: (
+            bar: String
+        ) -> Void
+
+        let foo: (
+            bar: String,
+            baaz: String,
+        ) -> Void
+        """
+        let options = FormatOptions(trailingCommas: .multiElementLists, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
 }

@@ -3,7 +3,7 @@
 [![PayPal](https://img.shields.io/badge/paypal-donate-blue.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=9ZGWNK5FEZFF6&source=url)
 [![Build](https://github.com/nicklockwood/SwiftFormat/actions/workflows/build.yml/badge.svg)](https://github.com/nicklockwood/SwiftFormat/actions/workflows/build.yml)
 [![Codecov](https://codecov.io/gh/nicklockwood/SwiftFormat/graphs/badge.svg)](https://codecov.io/gh/nicklockwood/SwiftFormat)
-[![Swift 5.3](https://img.shields.io/badge/swift-5.1-red.svg?style=flat)](https://developer.apple.com/swift)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fnicklockwood%2FSwiftFormat%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/nicklockwood/swiftformat)
 [![License](https://img.shields.io/badge/license-MIT-lightgrey.svg)](https://opensource.org/licenses/MIT)
 [![Mastodon](https://img.shields.io/badge/mastodon-@nicklockwood@mastodon.social-636dff.svg)](https://mastodon.social/@nicklockwood)
 

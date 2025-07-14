@@ -531,7 +531,7 @@ func argumentsFor(_ options: Options, excludingDefaults: Bool = false) -> [Strin
         assert(arguments.isEmpty)
     }
     if let formatOptions = options.formatOptions {
-        for descriptor in Descriptors.all where !descriptor.isRenamed {
+        for descriptor in Descriptors.all where !descriptor.isRenamed && !descriptor.isDeprecated {
             let value = descriptor.fromOptions(formatOptions)
             guard value != descriptor.fromOptions(.default) ||
                 (!excludingDefaults && !descriptor.isDeprecated)

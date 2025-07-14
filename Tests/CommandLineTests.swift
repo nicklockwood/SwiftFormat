@@ -1051,4 +1051,22 @@ class CommandLineTests: XCTestCase {
         XCTAssertEqual(errors.count, 1)
         XCTAssert(errors[0].contains("Unbalanced code block delimiters in markdown"))
     }
+
+    func testTrailingCommasCollectionsOnlyDoesNotTriggerDeprecationWarning_issue_2141() throws {
+        var warnings = [String]()
+        CLI.print = { message, type in
+            if type == .warning {
+                warnings.append(message)
+            }
+        }
+
+        try withTmpFiles([
+            "foo/bar/baz.swift": "",
+        ]) { url in
+            _ = processArguments(["", url.path, "--trailing-commas", "collections-only", "--swift-version", "6.0"], in: "")
+        }
+
+        // Should not contain the deprecation warning about --commas
+        XCTAssertEqual(warnings, [])
+    }
 }

@@ -55,6 +55,24 @@ extension Options {
     }
 }
 
+extension Array {
+    func formattedList(default: Element? = nil) -> String {
+        let options = map {
+            "\"\($0)\"\("\($0)" == "\(String(describing: `default`))" ? " (default)" : "")"
+        }
+        switch options.count {
+        case 0:
+            return ""
+        case 1:
+            return String(describing: options[0])
+        case 2:
+            return "\(options[0]) or \(options[1])"
+        default:
+            return "\(options.dropLast().joined(separator: ", ")), or \(options.last!)"
+        }
+    }
+}
+
 extension String {
     /// Find best match for the string in a list of options
     func bestMatches(in options: [String]) -> [String] {

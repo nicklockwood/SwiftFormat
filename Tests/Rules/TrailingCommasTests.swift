@@ -305,6 +305,37 @@ class TrailingCommasTests: XCTestCase {
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
+    func testTrailingCommasAddedToGenericFunctionParameters() {
+        let input = """
+        struct Foo {
+            func foo<
+                Bar,
+                Baaz
+            >(
+                bar: Bar,
+                baaz: Baaz
+            ) -> Int {
+                bar + baaz
+            }
+        }
+        """
+        let output = """
+        struct Foo {
+            func foo<
+                Bar,
+                Baaz,
+            >(
+                bar: Bar,
+                baaz: Baaz,
+            ) -> Int {
+                bar + baaz
+            }
+        }
+        """
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options, exclude: [.opaqueGenericParameters])
+    }
+
     func testTrailingCommasNotAddedToFunctionParametersBeforeSwift6_1() {
         let input = """
         func foo(
@@ -546,6 +577,26 @@ class TrailingCommasTests: XCTestCase {
         """
         let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
         testFormatting(for: input, output, rule: .trailingCommas, options: options, exclude: [.redundantReturn])
+    }
+
+    func testTrailingCommasAddedToTupleInGenericInitCall() {
+        let input = """
+        let setModeSwizzle = Swizzle<AVAudioSession>(
+            instance: instance,
+            original: #selector(AVAudioSession.setMode(_:)),
+            swizzled: #selector(AVAudioSession.swizzled_setMode(_:))
+        )
+        """
+
+        let output = """
+        let setModeSwizzle = Swizzle<AVAudioSession>(
+            instance: instance,
+            original: #selector(AVAudioSession.setMode(_:)),
+            swizzled: #selector(AVAudioSession.swizzled_setMode(_:)),
+        )
+        """
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options, exclude: [.redundantReturn, .propertyTypes])
     }
 
     func testTrailingCommasAddedToParensAroundSingleValue() {

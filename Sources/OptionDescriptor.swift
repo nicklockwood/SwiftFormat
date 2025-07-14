@@ -101,9 +101,9 @@ class OptionDescriptor {
         type = .binary(true: trueValues, false: falseValues)
         toOptions = { value, options in
             switch value.lowercased() {
-            case let value where trueValues.contains(value):
+            case let value where trueValues.contains(where: { value == $0.lowercased() }):
                 options[keyPath: keyPath] = true
-            case let value where falseValues.contains(value):
+            case let value where falseValues.contains(where: { value == $0.lowercased() }):
                 options[keyPath: keyPath] = false
             default:
                 throw FormatError.options("")

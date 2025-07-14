@@ -349,4 +349,10 @@ class OptionDescriptorTests: XCTestCase {
         let options2 = FormatOptions(selfRequired: ["baz", "bar", "foo"])
         XCTAssertEqual(options1.description, options2.description)
     }
+
+    func testFileMacroCase() {
+        let argument = "#fileID"
+        var options: FormatOptions = .default
+        XCTAssertNoThrow(try Descriptors.preferFileMacro.toOptions(argument, &options))
+    }
 }

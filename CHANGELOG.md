@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.57.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.57.2) (2025-07-14)
+
+- Updated `trailingCommas` rule to handle function declarations with generic arguments.
+- Updated `--trailing-commas always` to preserve trailing commas rather than unnecessarily removing trailing commas in some edge cases.
+- Fixed spurious deprecation message when using some non-deprecated options.
+
 ## [0.57.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.57.1) (2025-07-14)
 
 - Fixed issue where trailing commas were unexpectedly removed from initializer argument lists when using `--trailing-commas always`.

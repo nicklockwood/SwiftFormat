@@ -11,19 +11,22 @@ import Foundation
 public extension FormatRule {
     static let blankLineAfterSwitchCase = FormatRule(
         help: """
-        Insert a blank line after multiline switch cases (excluding the last case,
+        Insert a blank line after switch cases (excluding the last case,
         which is followed by a closing brace).
         """,
         disabledByDefault: true,
-        orderAfter: [.redundantBreak]
+        orderAfter: [.redundantBreak],
+        options: ["blank-line-after-switch-case"]
     ) { formatter in
         formatter.forEach(.keyword("switch")) { switchIndex, _ in
             guard let switchCases = formatter.switchStatementBranchesWithSpacingInfo(at: switchIndex) else { return }
 
+            let shouldAlwaysInsertBlankLineAfterSwitchCase = formatter.options.blankLineAfterSwitchCase == .always
             for switchCase in switchCases.reversed() {
-                // Any switch statement that spans multiple lines should be followed by a blank line
+                // Any switch statement should be followed by a blank line, depending on the
+                // `blankLineAfterSwitchCase` option.
                 // (excluding the last case, which is followed by a closing brace).
-                if switchCase.spansMultipleLines,
+                if shouldAlwaysInsertBlankLineAfterSwitchCase || switchCase.spansMultipleLines,
                    !switchCase.isLastCase,
                    !switchCase.isFollowedByBlankLine
                 {
@@ -41,6 +44,8 @@ public extension FormatRule {
         }
     } examples: {
         #"""
+        `--blank-line-after-switch-case multiline-only` (default)
+
         ```diff
           func handle(_ action: SpaceshipAction) {
               switch action {
@@ -57,6 +62,58 @@ public extension FormatRule {
         +
               case .handleIncomingEnergyBlast:
                   await energyShields.prepare()
+                  energyShields.engage()
+              }
+          }
+        ```
+
+        ```diff
+          func handle(_ action: SpaceshipAction) {
+              switch action {
+              case .engageWarpDrive:
+                  warpDrive.activate()
+        -
+              case let .scanPlanet(planet):
+                  scanner.scanForArticialLife()
+        -
+              case .handleIncomingEnergyBlast:
+                  energyShields.engage()
+              }
+          }
+        ```
+        `--blank-line-after-switch-case always` 
+
+        ```diff
+          func handle(_ action: SpaceshipAction) {
+              switch action {
+              case .engageWarpDrive:
+                  navigationComputer.destination = targetedDestination
+                  await warpDrive.spinUp()
+                  warpDrive.activate()
+        +
+              case let .scanPlanet(planet):
+                  scanner.target = planet
+                  scanner.scanAtmosphere()
+                  scanner.scanBiosphere()
+                  scanner.scanForArticialLife()
+        +
+              case .handleIncomingEnergyBlast:
+                  await energyShields.prepare()
+                  energyShields.engage()
+              }
+          }
+        ```
+
+        ```diff
+          func handle(_ action: SpaceshipAction) {
+              switch action {
+              case .engageWarpDrive:
+                  warpDrive.activate()
+        +
+              case let .scanPlanet(planet):
+                  scanner.scanForArticialLife()
+        +
+              case .handleIncomingEnergyBlast:
                   energyShields.engage()
               }
           }

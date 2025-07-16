@@ -46,6 +46,39 @@ class BlankLineAfterSwitchCaseTests: XCTestCase {
         testFormatting(for: input, output, rule: .blankLineAfterSwitchCase)
     }
 
+    func testAddsBlankLineAfterSingleSwitchCasesWhenBlankLineAroundSingleLineCases() {
+        let input = """
+        func handle(_ action: SpaceshipAction) {
+            switch action {
+            // The warp drive can be engaged by pressing a button on the control panel
+            case .engageWarpDrive:
+                warpDrive.activate()
+            // Triggered automatically whenever we detect an energy blast was fired in our direction
+            case .handleIncomingEnergyBlast:
+                energyShields.engage()
+            }
+        }
+        """
+
+        let output = """
+        func handle(_ action: SpaceshipAction) {
+            switch action {
+            // The warp drive can be engaged by pressing a button on the control panel
+            case .engageWarpDrive:
+                warpDrive.activate()
+
+            // Triggered automatically whenever we detect an energy blast was fired in our direction
+            case .handleIncomingEnergyBlast:
+                energyShields.engage()
+            }
+        }
+        """
+        testFormatting(for: input,
+                       output,
+                       rule: .blankLineAfterSwitchCase,
+                       options: FormatOptions(blankLineAfterSwitchCase: .always))
+    }
+
     func testRemovesBlankLineAfterLastSwitchCase() {
         let input = """
         func handle(_ action: SpaceshipAction) {

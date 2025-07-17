@@ -32,6 +32,11 @@ public extension FormatRule {
 
             guard let nextToken = formatter.next(.nonSpaceOrCommentOrLinebreak, after: endIndex) else { return }
 
+            // Ensure that `-> ()` isn't actually a closure, like `-> () -> Void`.
+            guard !formatter.isStartOfClosureType(at: startIndex) else {
+                return
+            }
+
             let isInProtocol = nextToken == .endOfScope("}") || (nextToken.isKeywordOrAttribute && nextToken != .keyword("in"))
 
             // After a `Void` we could see the start of a function's body, or if the function is inside a protocol declaration

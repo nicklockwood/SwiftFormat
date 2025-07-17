@@ -37,7 +37,8 @@ public extension FormatRule {
                     case .identifier("as"), .identifier("is"), // not treated as keywords inside macro
                          .identifier("borrowing") where formatter.isTypePosition(at: index),
                          .identifier("consuming") where formatter.isTypePosition(at: index),
-                         .identifier("sending") where formatter.isTypePosition(at: index):
+                         .identifier("sending") where formatter.isTypePosition(at: index),
+                         .identifier("try"), .keyword("try"):
                         break
                     case .identifier, .number, .endOfScope("]"), .endOfScope("}"), .endOfScope(")"):
                         formatter.removeToken(at: i - 1)

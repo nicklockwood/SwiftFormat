@@ -437,4 +437,17 @@ class HoistTryTests: XCTestCase {
         """#
         testFormatting(for: input, output, rule: .hoistTry)
     }
+
+    func testNoHoistTryInTestAttribute() {
+        let input = """
+        @Test(arguments: [try Identifier(101), nil])
+        func testFunction() {}
+        """
+
+        let output = """
+        @Test(arguments: try [Identifier(101), nil])
+        func testFunction() {}
+        """
+        testFormatting(for: input, output, rule: .hoistTry)
+    }
 }

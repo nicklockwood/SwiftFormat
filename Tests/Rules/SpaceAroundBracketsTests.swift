@@ -103,4 +103,9 @@ class SpaceAroundBracketsTests: XCTestCase {
         let input = "@Test(arguments: [kSecReturnRef, kSecReturnAttributes] as [String])"
         testFormatting(for: input, rule: .spaceAroundBrackets)
     }
+
+    func testSpaceNotRemovedBetweenTryAndBracket() {
+        let input = "@Test(arguments: try [Identifier(101), nil])"
+        testFormatting(for: input, rule: .spaceAroundBrackets)
+    }
 }

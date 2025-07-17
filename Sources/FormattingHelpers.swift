@@ -1206,6 +1206,8 @@ extension Formatter {
                 }
             case let .keyword(name) where name.hasPrefix("#") && prevToken == .startOfScope("("):
                 return
+            case .keyword where tokens[i].isAttribute && prevToken == .startOfScope("("):
+                return
             case .keyword("try") where keyword == "await":
                 break loop
             case let .keyword(name) where ["is", "as", "try", "await"].contains(name):

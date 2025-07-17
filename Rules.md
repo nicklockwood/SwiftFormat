@@ -1324,7 +1324,7 @@ Option | Description
 --- | ---
 `--indent` | Number of spaces to indent, or "tab" to use tabs
 `--tab-width` | The width of a tab character. Defaults to "unspecified"
-`--smart-tabs` | Align code independently of tab width. defaults to "enabled"
+`--smart-tabs` | Align code independently of tab width. Defaults to "enabled"
 `--indent-case` | Indent cases inside a switch: "true" or "false" (default)
 `--ifdef` | #if indenting: "indent" (default), "no-indent" or "outdent"
 `--xcode-indentation` | Match Xcode indenting: "enabled" or "disabled" (default)
@@ -3581,7 +3581,7 @@ Wrap lines that exceed the specified maximum width.
 
 Option | Description
 --- | ---
-`--max-width` | Maximum length of a line before wrapping. defaults to "none"
+`--max-width` | Maximum length of a line before wrapping. Defaults to "none"
 `--no-wrap-operators` | Comma-delimited list of operators that shouldn't be wrapped
 `--asset-literals` | Color/image literal width. "actual-width" or "visual-width"
 `--wrap-ternary` | Wrap ternary operators: "default" (wrap if needed), "before-operators"

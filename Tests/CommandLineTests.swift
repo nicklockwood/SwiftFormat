@@ -349,8 +349,8 @@ class CommandLineTests: XCTestCase {
             displayName: "option",
             help: "Short option description",
             keyPath: \.fragment,
-            trueValues: [],
-            falseValues: []
+            trueValues: ["true"],
+            falseValues: ["false"]
         )
 
         let mediumOption = OptionDescriptor(
@@ -358,8 +358,8 @@ class CommandLineTests: XCTestCase {
             displayName: "option-medium",
             help: "Option with a medium name and description length",
             keyPath: \.fragment,
-            trueValues: [],
-            falseValues: []
+            trueValues: ["true"],
+            falseValues: ["false"]
         )
 
         let longOption = OptionDescriptor(
@@ -370,8 +370,8 @@ class CommandLineTests: XCTestCase {
             and a help text over the original 80 character limit.
             """,
             keyPath: \.fragment,
-            trueValues: [],
-            falseValues: []
+            trueValues: ["true"],
+            falseValues: ["false"]
         )
 
         CLI.print = { output, _ in

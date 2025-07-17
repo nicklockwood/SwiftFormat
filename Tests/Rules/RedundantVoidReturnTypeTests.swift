@@ -112,4 +112,20 @@ class RedundantVoidReturnTypeTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .redundantVoidReturnType)
     }
+
+    func testNoRemoveThrowingClosureVoidReturnType() {
+        // https://github.com/nicklockwood/SwiftFormat/issues/1978
+        let input = "func foo(bar: Bar) -> () throws -> Void"
+        testFormatting(for: input, rule: .redundantVoidReturnType)
+    }
+
+    func testNoRemoveClosureVoidReturnType() {
+        let input = "func foo(bar: Bar) -> () -> Void"
+        testFormatting(for: input, rule: .redundantVoidReturnType)
+    }
+
+    func testNoRemoveAsyncClosureVoidReturnType() {
+        let input = "func foo(bar: Bar) -> () async -> Void"
+        testFormatting(for: input, rule: .redundantVoidReturnType)
+    }
 }

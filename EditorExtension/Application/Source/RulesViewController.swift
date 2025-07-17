@@ -133,14 +133,14 @@ final class RulesViewController: NSViewController {
                         let enabled = !optionStore.inferOptions
 
                         switch descriptor.type {
-                        case let .binary(t, f):
+                        case let .binary(true: trueValue, false: falseValue):
                             let list = UserSelectionList(
                                 identifier: descriptor.argumentName,
                                 title: descriptor.displayName,
                                 description: descriptor.toolTip,
                                 isEnabled: enabled,
                                 selection: selection,
-                                options: [t[0], f[0]],
+                                options: [trueValue, falseValue],
                                 observer: saveOption
                             )
                             return UserSelectionType.list(list)

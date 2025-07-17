@@ -33,8 +33,7 @@ import Foundation
 
 class OptionDescriptor {
     enum ArgumentType: EnumAssociable {
-        /// index 0 is official value, others are acceptable
-        case binary(true: [String], false: [String])
+        case binary(true: String, false: String)
         case `enum`([String])
         case text
         case int
@@ -45,11 +44,11 @@ class OptionDescriptor {
     let argumentName: String // command-line argument; must not change
     fileprivate(set) var propertyName = "" // internal property; ok to change this
     let displayName: String
-    fileprivate(set) var help: String
+    private(set) var help: String
     fileprivate(set) var deprecationMessage: String?
     let toOptions: (String, inout FormatOptions) throws -> Void
     let fromOptions: (FormatOptions) -> String
-    private(set) var type: ArgumentType
+    let type: ArgumentType
 
     var isDeprecated: Bool {
         deprecationMessage != nil
@@ -85,134 +84,204 @@ class OptionDescriptor {
         return true
     }
 
-    init(argumentName: String,
-         displayName: String,
-         help: String,
-         deprecationMessage: String? = nil,
-         keyPath: WritableKeyPath<FormatOptions, Bool>,
-         trueValues: [String],
-         falseValues: [String])
-    {
+    /// Formatted list of valid arguments (for boolean or enum-type options)
+    var argumentList: String? {
+        switch type {
+        case let .binary(true: trueValue, false: falseValue):
+            return [trueValue, falseValue].formattedList(default: defaultArgument)
+        case let .enum(values):
+            return values.formattedList(default: defaultArgument)
+        case .array, .set, .int, .text:
+            return nil
+        }
+    }
+
+    /// Designated initializer
+    private init(
+        argumentName: String,
+        displayName: String,
+        help: String,
+        deprecationMessage: String?,
+        toOptions: @escaping (String, inout FormatOptions) throws -> Void,
+        fromOptions: @escaping (FormatOptions) -> String,
+        type: ArgumentType
+    ) {
         assert(argumentName == argumentName.lowercased())
+
         self.argumentName = argumentName
         self.displayName = displayName
         self.help = help
         self.deprecationMessage = deprecationMessage
-        type = .binary(true: trueValues, false: falseValues)
-        toOptions = { value, options in
-            switch value.lowercased() {
-            case let value where trueValues.contains(where: { value == $0.lowercased() }):
-                options[keyPath: keyPath] = true
-            case let value where falseValues.contains(where: { value == $0.lowercased() }):
-                options[keyPath: keyPath] = false
-            default:
-                throw FormatError.options("")
-            }
-        }
-        fromOptions = { options in
-            options[keyPath: keyPath] ? trueValues[0] : falseValues[0]
-        }
+        self.toOptions = toOptions
+        self.fromOptions = fromOptions
+        self.type = type
+    }
+}
+
+extension OptionDescriptor {
+    /// Define a boolean option with an array of true/false values
+    /// Note: only the first true/false value are included in help/docs
+    convenience init(
+        argumentName: String,
+        displayName: String,
+        help: String,
+        deprecationMessage: String? = nil,
+        keyPath: WritableKeyPath<FormatOptions, Bool>,
+        trueValues: [String],
+        falseValues: [String]
+    ) {
+        self.init(
+            argumentName: argumentName,
+            displayName: displayName,
+            help: help,
+            deprecationMessage: deprecationMessage,
+            toOptions: { value, options in
+                switch value.lowercased() {
+                case let value where trueValues.contains(where: { value == $0.lowercased() }):
+                    options[keyPath: keyPath] = true
+                case let value where falseValues.contains(where: { value == $0.lowercased() }):
+                    options[keyPath: keyPath] = false
+                default:
+                    throw FormatError.options("")
+                }
+            },
+            fromOptions: { options in
+                options[keyPath: keyPath] ? trueValues[0] : falseValues[0]
+            },
+            type: .binary(true: trueValues[0], false: falseValues[0])
+        )
     }
 
-    init<T>(argumentName: String,
-            displayName: String,
-            help: String,
-            deprecationMessage: String? = nil,
-            keyPath: WritableKeyPath<FormatOptions, T>,
-            fromArgument: @escaping (String) -> T?,
-            toArgument: @escaping (T) -> String)
-    {
-        self.argumentName = argumentName
-        self.displayName = displayName
-        self.help = help
-        self.deprecationMessage = deprecationMessage
-        type = .text
-        toOptions = { key, options in
-            guard let value = fromArgument(key) else {
-                throw FormatError.options("")
-            }
-            options[keyPath: keyPath] = value
-        }
-        fromOptions = { options in
-            toArgument(options[keyPath: keyPath])
-        }
+    /// Define a freeform option with closures to convert to/from an argument string
+    convenience init<T>(
+        argumentName: String,
+        displayName: String,
+        help: String,
+        deprecationMessage: String? = nil,
+        keyPath: WritableKeyPath<FormatOptions, T>,
+        type: ArgumentType,
+        fromArgument: @escaping (String) throws -> T?,
+        toArgument: @escaping (T) -> String
+    ) {
+        self.init(
+            argumentName: argumentName,
+            displayName: displayName,
+            help: help,
+            deprecationMessage: deprecationMessage,
+            toOptions: { key, options in
+                guard let value = try fromArgument(key) else {
+                    throw FormatError.options("")
+                }
+                options[keyPath: keyPath] = value
+            },
+            fromOptions: { options in
+                toArgument(options[keyPath: keyPath])
+            },
+            type: type
+        )
     }
 
-    convenience init(argumentName: String,
-                     displayName: String,
-                     help: String,
-                     deprecationMessage: String? = nil,
-                     keyPath: WritableKeyPath<FormatOptions, String>,
-                     options: KeyValuePairs<String, String>)
-    {
-        let map: [String: String] = Dictionary(options.map { ($0, $1) }, uniquingKeysWith: { $1 })
-        let keys = Array(map.keys).sorted()
-        self.init(argumentName: argumentName,
-                  displayName: displayName,
-                  help: help,
-                  deprecationMessage: deprecationMessage,
-                  keyPath: keyPath,
-                  fromArgument: { map[$0.lowercased()] },
-                  toArgument: { value in
-                      if let key = map.first(where: { $0.value == value })?.key {
-                          return key
-                      }
-                      let fallback = FormatOptions.default[keyPath: keyPath]
-                      if let key = map.first(where: { $0.value == fallback })?.key {
-                          return key
-                      }
-                      return keys[0]
-                  })
-        type = .enum(keys)
-    }
-
-    convenience init(argumentName: String,
-                     displayName: String,
-                     help: String,
-                     deprecationMessage: String? = nil,
-                     keyPath: WritableKeyPath<FormatOptions, Int>)
-    {
+    /// Define a list-type option with automatic mapping between keys and values
+    convenience init<T: Equatable>(
+        argumentName: String,
+        displayName: String,
+        help: String,
+        deprecationMessage: String? = nil,
+        keyPath: WritableKeyPath<FormatOptions, T>,
+        options: KeyValuePairs<String, T>
+    ) {
+        let map = Dictionary(uniqueKeysWithValues: options.map { ($0.lowercased(), $1) })
+        let defaultValue = FormatOptions.default[keyPath: keyPath]
         self.init(
             argumentName: argumentName,
             displayName: displayName,
             help: help,
             deprecationMessage: deprecationMessage,
             keyPath: keyPath,
+            type: .enum(options.map(\.key)),
+            fromArgument: { map[$0.lowercased()] },
+            toArgument: { value in
+                if let key = options.first(where: { $0.value == value })?.key {
+                    return key
+                }
+                // TODO: is this fallback path needed? how would a non-existent value arise?
+                return map.first(where: { $0.value == defaultValue })!.key
+            }
+        )
+    }
+
+    // TODO: we should add some sort of range validation to this
+    /// Define an integer option
+    convenience init(
+        argumentName: String,
+        displayName: String,
+        help: String,
+        deprecationMessage: String? = nil,
+        keyPath: WritableKeyPath<FormatOptions, Int>
+    ) {
+        self.init(
+            argumentName: argumentName,
+            displayName: displayName,
+            help: help,
+            deprecationMessage: deprecationMessage,
+            keyPath: keyPath,
+            type: .int,
             fromArgument: { Int($0).map { max(0, $0) } },
             toArgument: { String($0) }
         )
-        type = .int
     }
 
-    init<T: RawRepresentable>(argumentName: String,
-                              displayName: String,
-                              help: String,
-                              deprecationMessage: String? = nil,
-                              keyPath: WritableKeyPath<FormatOptions, T>,
-                              type: ArgumentType,
-                              altOptions: [String: T] = [:]) where T.RawValue == String
-    {
-        self.argumentName = argumentName
-        self.displayName = displayName
-        self.help = help
-        for option in help.quotedValues {
-            assert(T(rawValue: option) ?? altOptions[option] != nil, "Option \(option) doesn't exist")
-        }
-        self.deprecationMessage = deprecationMessage
-        self.type = type
-        toOptions = { rawValue, options in
-            guard let value = T(rawValue: rawValue) ?? T(rawValue: rawValue.lowercased()) ??
-                altOptions[rawValue] ?? altOptions[rawValue.lowercased()]
-            else {
-                throw FormatError.options("")
-            }
-            options[keyPath: keyPath] = value
-        }
-        fromOptions = { options in
-            options[keyPath: keyPath].rawValue
+    /// Define a raw-representable option
+    convenience init<T: RawRepresentable>(
+        argumentName: String,
+        displayName: String,
+        help: String,
+        deprecationMessage: String? = nil,
+        keyPath: WritableKeyPath<FormatOptions, T>,
+        type: ArgumentType,
+        altOptions: [String: T] = [:]
+    ) where T.RawValue == String {
+        self.init(
+            argumentName: argumentName,
+            displayName: displayName,
+            help: help,
+            deprecationMessage: deprecationMessage,
+            keyPath: keyPath,
+            type: type,
+            fromArgument: {
+                T(rawValue: $0) ?? T(rawValue: $0.lowercased()) ??
+                    altOptions[$0] ?? altOptions[$0.lowercased()]
+            },
+            toArgument: { $0.rawValue }
+        )
+
+        // Validate help
+        for value in help.quotedValues {
+            assert(T(rawValue: value) ?? altOptions[value] != nil, "Option \"\(value)\" doesn't exist")
         }
     }
 
+    /// Define a plain text option
+    convenience init(
+        argumentName: String,
+        displayName: String,
+        help: String,
+        deprecationMessage: String? = nil,
+        keyPath: WritableKeyPath<FormatOptions, String>
+    ) {
+        self.init(
+            argumentName: argumentName,
+            displayName: displayName,
+            help: help,
+            deprecationMessage: deprecationMessage,
+            keyPath: keyPath,
+            type: .text,
+            fromArgument: { $0 },
+            toArgument: { $0 }
+        )
+    }
+
+    /// Define a String-representable option
     @_disfavoredOverload
     convenience init<T: RawRepresentable>(
         argumentName: String,
@@ -231,6 +300,7 @@ class OptionDescriptor {
         )
     }
 
+    /// Define a String-representable option with a fixed set of CaseIterable argument values
     convenience init<T: RawRepresentable & CaseIterable>(
         argumentName: String,
         displayName: String,
@@ -250,85 +320,40 @@ class OptionDescriptor {
         )
     }
 
-    init(argumentName: String,
-         displayName: String,
-         help: String,
-         deprecationMessage: String? = nil,
-         keyPath: WritableKeyPath<FormatOptions, [String]>,
-         validateArray: @escaping ([String]) throws -> Void = { _ in })
-    {
-        self.argumentName = argumentName
-        self.displayName = displayName
-        self.help = help
-        self.deprecationMessage = deprecationMessage
-        type = .array
-        toOptions = { value, options in
-            let values = parseCommaDelimitedList(value)
-            try validateArray(values)
-            options[keyPath: keyPath] = values
-        }
-        fromOptions = { options in
-            options[keyPath: keyPath].joined(separator: ",")
-        }
-    }
-
-    convenience init(argumentName: String,
-                     displayName: String,
-                     help: String,
-                     deprecationMessage _: String? = nil,
-                     keyPath: WritableKeyPath<FormatOptions, [String]>,
-                     validate: @escaping (String) throws -> Void = { _ in })
-    {
+    /// Define a StringArray-type option with a validation callback applied to the whole argument array
+    convenience init(
+        argumentName: String,
+        displayName: String,
+        help: String,
+        deprecationMessage: String? = nil,
+        keyPath: WritableKeyPath<FormatOptions, [String]>,
+        validateArray: @escaping ([String]) throws -> Void = { _ in }
+    ) {
         self.init(
             argumentName: argumentName,
             displayName: displayName,
             help: help,
+            deprecationMessage: deprecationMessage,
             keyPath: keyPath,
-            validateArray: { values in
-                for (index, value) in values.enumerated() {
-                    if values[0 ..< index].contains(value) {
-                        throw FormatError.options("Duplicate value '\(value)'")
-                    }
-                    try validate(value)
-                }
-            }
-        )
-    }
-
-    init(argumentName: String,
-         displayName: String,
-         help: String,
-         deprecationMessage: String? = nil,
-         keyPath: WritableKeyPath<FormatOptions, [String]?>,
-         validateArray: @escaping ([String]) throws -> Void = { _ in })
-    {
-        self.argumentName = argumentName
-        self.displayName = displayName
-        self.help = help
-        self.deprecationMessage = deprecationMessage
-        type = .array
-        toOptions = { value, options in
-            let values = parseCommaDelimitedList(value)
-
-            if values.isEmpty {
-                options[keyPath: keyPath] = nil
-            } else {
+            type: .array,
+            fromArgument: {
+                let values = parseCommaDelimitedList($0)
                 try validateArray(values)
-                options[keyPath: keyPath] = values
-            }
-        }
-        fromOptions = { options in
-            options[keyPath: keyPath]?.joined(separator: ",") ?? ""
-        }
+                return values
+            },
+            toArgument: { $0.joined(separator: ",") }
+        )
     }
 
-    convenience init(argumentName: String,
-                     displayName: String,
-                     help: String,
-                     deprecationMessage _: String? = nil,
-                     keyPath: WritableKeyPath<FormatOptions, [String]?>,
-                     validate: @escaping (String) throws -> Void = { _ in })
-    {
+    /// Define a StringArray-type option with a validation callback applied individually to each argument
+    convenience init(
+        argumentName: String,
+        displayName: String,
+        help: String,
+        deprecationMessage _: String? = nil,
+        keyPath: WritableKeyPath<FormatOptions, [String]>,
+        validate: @escaping (String) throws -> Void = { _ in }
+    ) {
         self.init(
             argumentName: argumentName,
             displayName: displayName,
@@ -345,26 +370,85 @@ class OptionDescriptor {
         )
     }
 
-    init(argumentName: String,
-         displayName: String,
-         help: String,
-         deprecationMessage: String? = nil,
-         keyPath: WritableKeyPath<FormatOptions, Set<String>>,
-         validate: @escaping (String) throws -> Void = { _ in })
-    {
-        self.argumentName = argumentName
-        self.displayName = displayName
-        self.help = help
-        self.deprecationMessage = deprecationMessage
-        type = .set
-        toOptions = { value, options in
-            let values = parseCommaDelimitedList(value)
-            try values.forEach(validate)
-            options[keyPath: keyPath] = Set(values)
-        }
-        fromOptions = { options in
-            options[keyPath: keyPath].sorted().joined(separator: ",")
-        }
+    /// Define an optional StringArray-type option with a validation callback applied to the whole argument array
+    convenience init(
+        argumentName: String,
+        displayName: String,
+        help: String,
+        deprecationMessage: String? = nil,
+        keyPath: WritableKeyPath<FormatOptions, [String]?>,
+        validateArray: @escaping ([String]) throws -> Void = { _ in }
+    ) {
+        self.init(
+            argumentName: argumentName,
+            displayName: displayName,
+            help: help,
+            deprecationMessage: deprecationMessage,
+            toOptions: { value, options in
+                let values = parseCommaDelimitedList(value)
+
+                if values.isEmpty {
+                    options[keyPath: keyPath] = nil
+                } else {
+                    try validateArray(values)
+                    options[keyPath: keyPath] = values
+                }
+            },
+            fromOptions: { options in
+                options[keyPath: keyPath]?.joined(separator: ",") ?? ""
+            },
+            type: .array
+        )
+    }
+
+    /// Define an optional StringArray-type option with a validation callback applied individually to each argument
+    convenience init(
+        argumentName: String,
+        displayName: String,
+        help: String,
+        deprecationMessage _: String? = nil,
+        keyPath: WritableKeyPath<FormatOptions, [String]?>,
+        validate: @escaping (String) throws -> Void = { _ in }
+    ) {
+        self.init(
+            argumentName: argumentName,
+            displayName: displayName,
+            help: help,
+            keyPath: keyPath,
+            validateArray: { values in
+                for (index, value) in values.enumerated() {
+                    if values[0 ..< index].contains(value) {
+                        throw FormatError.options("Duplicate value '\(value)'")
+                    }
+                    try validate(value)
+                }
+            }
+        )
+    }
+
+    /// Define a StringSet-type option with a validation callback applied individually to each argument
+    convenience init(
+        argumentName: String,
+        displayName: String,
+        help: String,
+        deprecationMessage: String? = nil,
+        keyPath: WritableKeyPath<FormatOptions, Set<String>>,
+        validate: @escaping (String) throws -> Void = { _ in }
+    ) {
+        self.init(
+            argumentName: argumentName,
+            displayName: displayName,
+            help: help,
+            deprecationMessage: deprecationMessage,
+            keyPath: keyPath,
+            type: .set,
+            fromArgument: {
+                let values = parseCommaDelimitedList($0)
+                try values.forEach(validate)
+                return Set(values)
+            },
+            toArgument: { $0.sorted().joined(separator: ",") }
+        )
     }
 }
 
@@ -453,6 +537,7 @@ struct _Descriptors {
         displayName: "Indent",
         help: "Number of spaces to indent, or \"tab\" to use tabs",
         keyPath: \.indent,
+        type: .text,
         fromArgument: { arg in
             switch arg.lowercased() {
             case "tab", "tabs", "tabbed":
@@ -483,21 +568,14 @@ struct _Descriptors {
         displayName: "Operator Functions",
         help: "Operator funcs: \"spaced\" (default), \"no-space\", or \"preserve\"",
         keyPath: \.spaceAroundOperatorDeclarations,
-        fromArgument: { argument in
-            switch argument {
-            case "spaced", "space", "spaces":
-                return .insert
-            case "no-space", "nospace":
-                return .remove
-            case "preserve", "preserve-spaces", "preservespaces":
-                return .preserve
-            default:
-                return nil
-            }
-        },
-        toArgument: { value in
-            value.rawValue
-        }
+        altOptions: [
+            "space": .insert,
+            "spaces": .insert,
+            "nospace": .remove,
+            "preserve": .preserve,
+            "preserve-spaces": .preserve,
+            "preservespaces": .preserve,
+        ]
     )
     let useVoid = OptionDescriptor(
         argumentName: "void-type",
@@ -767,21 +845,23 @@ struct _Descriptors {
         displayName: "Tab Width",
         help: "The width of a tab character. Defaults to \"unspecified\"",
         keyPath: \.tabWidth,
+        type: .int,
         fromArgument: { $0.lowercased() == "unspecified" ? 0 : Int($0).map { max(0, $0) } },
         toArgument: { $0 > 0 ? String($0) : "unspecified" }
     )
     let maxWidth = OptionDescriptor(
         argumentName: "max-width",
         displayName: "Max Width",
-        help: "Maximum length of a line before wrapping. defaults to \"none\"",
+        help: "Maximum length of a line before wrapping. Defaults to \"none\"",
         keyPath: \.maxWidth,
+        type: .int,
         fromArgument: { $0.lowercased() == "none" ? 0 : Int($0).map { max(0, $0) } },
         toArgument: { $0 > 0 ? String($0) : "none" }
     )
     let smartTabs = OptionDescriptor(
         argumentName: "smart-tabs",
         displayName: "Smart Tabs",
-        help: "Align code independently of tab width. defaults to \"enabled\"",
+        help: "Align code independently of tab width. Defaults to \"enabled\"",
         keyPath: \.smartTabs,
         trueValues: ["enabled", "true"],
         falseValues: ["disabled", "false"]
@@ -821,21 +901,14 @@ struct _Descriptors {
         displayName: "Ranges",
         help: "Range spaces: \"spaced\" (default) or \"no-space\", or \"preserve\"",
         keyPath: \.spaceAroundRangeOperators,
-        fromArgument: { argument in
-            switch argument {
-            case "spaced", "space", "spaces":
-                return .insert
-            case "no-space", "nospace":
-                return .remove
-            case "preserve", "preserve-spaces", "preservespaces":
-                return .preserve
-            default:
-                return nil
-            }
-        },
-        toArgument: { value in
-            value.rawValue
-        }
+        altOptions: [
+            "space": .insert,
+            "spaces": .insert,
+            "nospace": .remove,
+            "preserve": .preserve,
+            "preserve-spaces": .preserve,
+            "preservespaces": .preserve,
+        ]
     )
     let noWrapOperators = OptionDescriptor(
         argumentName: "no-wrap-operators",
@@ -886,9 +959,7 @@ struct _Descriptors {
         argumentName: "type-mark",
         displayName: "Type Mark Comment",
         help: "Template for type mark comments. Defaults to \"MARK: - %t\"",
-        keyPath: \.typeMarkComment,
-        fromArgument: { $0 },
-        toArgument: { $0 }
+        keyPath: \.typeMarkComment
     )
     let markExtensions = OptionDescriptor(
         argumentName: "mark-extensions",
@@ -900,17 +971,13 @@ struct _Descriptors {
         argumentName: "extension-mark",
         displayName: "Extension Mark Comment",
         help: "Mark for standalone extensions. Defaults to \"MARK: - %t + %c\"",
-        keyPath: \.extensionMarkComment,
-        fromArgument: { $0 },
-        toArgument: { $0 }
+        keyPath: \.extensionMarkComment
     )
     let groupedExtensionMarkComment = OptionDescriptor(
         argumentName: "grouped-extension",
         displayName: "Grouped Extension Mark Comment",
         help: "Mark for extension grouped with extended type. (\"MARK: %c\")",
-        keyPath: \.groupedExtensionMarkComment,
-        fromArgument: { $0 },
-        toArgument: { $0 }
+        keyPath: \.groupedExtensionMarkComment
     )
     let markCategories = OptionDescriptor(
         argumentName: "mark-categories",
@@ -924,9 +991,7 @@ struct _Descriptors {
         argumentName: "category-mark",
         displayName: "Category Mark Comment",
         help: "Template for category mark comments. Defaults to \"MARK: %c\"",
-        keyPath: \.categoryMarkComment,
-        fromArgument: { $0 },
-        toArgument: { $0 }
+        keyPath: \.categoryMarkComment
     )
     let beforeMarks = OptionDescriptor(
         argumentName: "before-marks",
@@ -1162,9 +1227,7 @@ struct _Descriptors {
         argumentName: "generic-types",
         displayName: "Additional generic types",
         help: "Semicolon-delimited list of generic types and type parameters. For example: \"LinkedList<Element>;StateStore<State, Action>\"",
-        keyPath: \.genericTypes,
-        fromArgument: { $0 },
-        toArgument: { $0 }
+        keyPath: \.genericTypes
     )
     let useSomeAny = OptionDescriptor(
         argumentName: "some-any",
@@ -1218,17 +1281,13 @@ struct _Descriptors {
         argumentName: "date-format",
         displayName: "Date format",
         help: "\"system\" (default), \"iso\", \"dmy\", \"mdy\" or custom",
-        keyPath: \.dateFormat,
-        fromArgument: { DateFormat(rawValue: $0) },
-        toArgument: { $0.rawValue }
+        keyPath: \.dateFormat
     )
     let timeZone = OptionDescriptor(
         argumentName: "timezone",
         displayName: "Date formatting timezone",
         help: "\"system\" (default) or a valid identifier/abbreviation",
-        keyPath: \.timeZone,
-        fromArgument: { FormatTimeZone(rawValue: $0) },
-        toArgument: { $0.rawValue }
+        keyPath: \.timeZone
     )
     let nilInit = OptionDescriptor(
         argumentName: "nil-init",

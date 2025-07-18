@@ -277,11 +277,17 @@ Insert blank line after import statements.
 
 ## blankLineAfterSwitchCase
 
-Insert a blank line after multiline switch cases (excluding the last case,
+Insert a blank line after switch cases (excluding the last case,
 which is followed by a closing brace).
+
+Option | Description
+--- | ---
+`--blank-line-after-switch-case` | Insert line After switch cases: "always" or "multiline-only" (default)
 
 <details>
 <summary>Examples</summary>
+
+`--blank-line-after-switch-case multiline-only` (default)
 
 ```diff
   func handle(_ action: SpaceshipAction) {
@@ -299,6 +305,58 @@ which is followed by a closing brace).
 +
       case .handleIncomingEnergyBlast:
           await energyShields.prepare()
+          energyShields.engage()
+      }
+  }
+```
+
+```diff
+  func handle(_ action: SpaceshipAction) {
+      switch action {
+      case .engageWarpDrive:
+          warpDrive.activate()
+
+      case let .scanPlanet(planet):
+          scanner.scanForArticialLife()
+
+      case .handleIncomingEnergyBlast:
+          energyShields.engage()
+      }
+  }
+```
+`--blank-line-after-switch-case always` 
+
+```diff
+  func handle(_ action: SpaceshipAction) {
+      switch action {
+      case .engageWarpDrive:
+          navigationComputer.destination = targetedDestination
+          await warpDrive.spinUp()
+          warpDrive.activate()
++
+      case let .scanPlanet(planet):
+          scanner.target = planet
+          scanner.scanAtmosphere()
+          scanner.scanBiosphere()
+          scanner.scanForArticialLife()
++
+      case .handleIncomingEnergyBlast:
+          await energyShields.prepare()
+          energyShields.engage()
+      }
+  }
+```
+
+```diff
+  func handle(_ action: SpaceshipAction) {
+      switch action {
+      case .engageWarpDrive:
+          warpDrive.activate()
++
+      case let .scanPlanet(planet):
+          scanner.scanForArticialLife()
++
+      case .handleIncomingEnergyBlast:
           energyShields.engage()
       }
   }

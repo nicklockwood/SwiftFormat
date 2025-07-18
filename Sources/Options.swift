@@ -647,6 +647,13 @@ public enum EquatableMacro: Equatable, RawRepresentable, CustomStringConvertible
     }
 }
 
+public enum BlankLineAfterSwitchCase: String, CaseIterable {
+    /// Add blank lines after multiline switch cases only
+    case multilineOnly = "multiline-only"
+    /// Always add blank lines after switch cases
+    case always
+}
+
 public enum URLMacro: Equatable, RawRepresentable, CustomStringConvertible {
     /// No URL macro
     case none
@@ -795,6 +802,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var urlMacro: URLMacro
     public var preferFileMacro: Bool
     public var lineBetweenConsecutiveGuards: Bool
+    public var blankLineAfterSwitchCase: BlankLineAfterSwitchCase
 
     /// Deprecated
     public var indentComments: Bool
@@ -928,6 +936,7 @@ public struct FormatOptions: CustomStringConvertible {
                 urlMacro: URLMacro = .none,
                 preferFileMacro: Bool = true,
                 lineBetweenConsecutiveGuards: Bool = false,
+                blankLineAfterSwitchCase: BlankLineAfterSwitchCase = .multilineOnly,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -1050,7 +1059,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.urlMacro = urlMacro
         self.preferFileMacro = preferFileMacro
         self.lineBetweenConsecutiveGuards = lineBetweenConsecutiveGuards
-        // Doesn't really belong here, but hard to put elsewhere
+        self.blankLineAfterSwitchCase = blankLineAfterSwitchCase
         self.indentComments = indentComments
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

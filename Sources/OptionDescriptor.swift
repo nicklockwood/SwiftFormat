@@ -1347,6 +1347,12 @@ struct _Descriptors {
         trueValues: ["true"],
         falseValues: ["false"]
     )
+    let blankLineAfterSwitchCase = OptionDescriptor(
+        argumentName: "blank-line-after-switch-case",
+        displayName: "Blank Line After Switch Cases",
+        help: "Insert line After switch cases: \"always\" or \"multiline-only\" (default)",
+        keyPath: \.blankLineAfterSwitchCase
+    )
 
     // MARK: - Internal
 

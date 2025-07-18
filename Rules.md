@@ -277,8 +277,12 @@ Insert blank line after import statements.
 
 ## blankLineAfterSwitchCase
 
-Insert a blank line after multiline switch cases (excluding the last case,
+Insert a blank line after switch cases (excluding the last case,
 which is followed by a closing brace).
+
+Option | Description
+--- | ---
+`--blank-line-after-switch-case` | Insert line After switch cases: "always" or "multiline-only" (default)
 
 <details>
 <summary>Examples</summary>
@@ -320,7 +324,7 @@ which is followed by a closing brace).
       }
   }
 ```
-`--blank-line-after-switch-case always`
+`--blank-line-after-switch-case always` 
 
 ```diff
   func handle(_ action: SpaceshipAction) {

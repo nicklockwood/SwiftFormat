@@ -315,10 +315,10 @@ Option | Description
       switch action {
       case .engageWarpDrive:
           warpDrive.activate()
--
+
       case let .scanPlanet(planet):
           scanner.scanForArticialLife()
--
+
       case .handleIncomingEnergyBlast:
           energyShields.engage()
       }

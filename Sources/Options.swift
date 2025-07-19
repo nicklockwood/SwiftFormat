@@ -648,10 +648,10 @@ public enum EquatableMacro: Equatable, RawRepresentable, CustomStringConvertible
 }
 
 public enum BlankLineAfterSwitchCase: String, CaseIterable {
-    /// Add blank lines after multiline switch cases only
-    case multilineOnly = "multiline-only"
     /// Always add blank lines after switch cases
     case always
+    /// Add blank lines after multiline switch cases only
+    case multilineOnly = "multiline-only"
 }
 
 public enum URLMacro: Equatable, RawRepresentable, CustomStringConvertible {

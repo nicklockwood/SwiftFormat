@@ -348,18 +348,21 @@ class CommandLineTests: XCTestCase {
             argumentName: "option",
             displayName: "option",
             help: "Short option description",
-            keyPath: \.fragment,
-            trueValues: ["true"],
-            falseValues: ["false"]
+            keyPath: \.fragment
         )
 
         let mediumOption = OptionDescriptor(
             argumentName: "option-medium",
             displayName: "option-medium",
             help: "Option with a medium name and description length",
-            keyPath: \.fragment,
-            trueValues: ["true"],
-            falseValues: ["false"]
+            keyPath: \.fragment
+        )
+
+        let optionWithArgs = OptionDescriptor(
+            argumentName: "option-with-args",
+            displayName: "option-with-args",
+            help: "Option description with arguments:",
+            keyPath: \.fragment
         )
 
         let longOption = OptionDescriptor(
@@ -369,26 +372,21 @@ class CommandLineTests: XCTestCase {
             This is a longer option with a name over the original 16 character limit, \
             and a help text over the original 80 character limit.
             """,
-            keyPath: \.fragment,
-            trueValues: ["true"],
-            falseValues: ["false"]
+            keyPath: \.fragment
         )
 
         CLI.print = { output, _ in
             guard !output.isEmpty else { return }
             XCTAssertEqual(output, """
             --option           Short option description
-            --option           Short option description
             --option-medium    Option with a medium name and description length
-            --option-medium    Option with a medium name and description length
-            --option-with-longer-name
-                               This is a longer option with a name over the original 16 character limit, and a help text over the original 80 character limit.
+            --option-with-args Option description with arguments: "true" or "false" (default)
             --option-with-longer-name
                                This is a longer option with a name over the original 16 character limit, and a help text over the original 80 character limit.
             """)
         }
 
-        printOptions([shortOption, shortOption, mediumOption, mediumOption, longOption, longOption], as: .content)
+        printOptions([shortOption, mediumOption, optionWithArgs, longOption], as: .content)
     }
 
     // MARK: cache

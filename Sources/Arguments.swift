@@ -55,14 +55,19 @@ extension Options {
     }
 }
 
-extension Array {
-    func formattedList(default: Element? = nil) -> String where Element: RawRepresentable {
-        map(\.rawValue).formattedList(default: `default`?.rawValue)
+extension Array where Element: Equatable {
+    func formattedList(default defaultValue: Element? = nil) -> String
+        where Element: RawRepresentable, Element.RawValue: Equatable
+    {
+        map(\.rawValue).formattedList(default: defaultValue?.rawValue)
     }
 
     func formattedList(default: Element? = nil) -> String {
+        if let `default` {
+            assert(contains(where: { $0 == `default` }))
+        }
         let options = map {
-            "\"\($0)\"\("\($0)" == "\(String(describing: `default`))" ? " (default)" : "")"
+            "\"\($0)\"\($0 == `default` ? " (default)" : "")"
         }
         switch options.count {
         case 0:

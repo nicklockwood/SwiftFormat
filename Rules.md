@@ -475,7 +475,7 @@ Remove or insert trailing blank line at the end of a scope.
 
 Option | Description
 --- | ---
-`--type-blank-lines` | breakLine: "remove" (default), "insert", or "preserve"
+`--type-blank-lines` | Blank lines in type declarations: "remove" (default), "insert", or "preserve"
 
 <details>
 <summary>Examples</summary>
@@ -524,7 +524,7 @@ Remove leading blank line at the start of a scope.
 
 Option | Description
 --- | ---
-`--type-blank-lines` | breakLine: "remove" (default), "insert", or "preserve"
+`--type-blank-lines` | Blank lines in type declarations: "remove" (default), "insert", or "preserve"
 
 <details>
 <summary>Examples</summary>
@@ -676,7 +676,7 @@ Wrap braces in accordance with selected style (K&R or Allman).
 
 Option | Description
 --- | ---
-`--allman` | Use allman indentation style: "true" or "false" (default)
+`--allman` | Use Allman indentation style: "true" or "false" (default)
 
 <details>
 <summary>Examples</summary>
@@ -853,7 +853,7 @@ Use doc comments for API declarations, otherwise use regular comments.
 
 Option | Description
 --- | ---
-`--doc-comments` | Convert standard comments to doc comments: "before-declarations" (default) or "preserve"
+`--doc-comments` | Preserve doc comments: "preserve" or "before-declarations" (default)
 
 <details>
 <summary>Examples</summary>
@@ -923,7 +923,7 @@ next line).
 Option | Description
 --- | ---
 `--else-position` | Placement of else/catch: "same-line" (default) or "next-line"
-`--guard-else` | Guard else: "same-line", "next-line" or "auto" (default)
+`--guard-else` | Placement of else in guard statements: "same-line", "next-line", or "auto" (default)
 
 <details>
 <summary>Examples</summary>
@@ -982,7 +982,7 @@ Remove whitespace inside empty braces.
 
 Option | Description
 --- | ---
-`--empty-braces` | Empty braces: "no-space" (default), "spaced" or "linebreak"
+`--empty-braces` | Empty brace spacing: "spaced", "no-space" (default), or "linebreak"
 
 <details>
 <summary>Examples</summary>
@@ -1021,7 +1021,7 @@ the canonical way to create a namespace in Swift as it can't be instantiated).
 
 Option | Description
 --- | ---
-`--enum-namespaces` | Change type to enum: "always" (default) or "structs-only"
+`--enum-namespaces` | Change types used as namespaces to enums: "always" (default) or "structs-only"
 
 <details>
 <summary>Examples</summary>
@@ -1069,7 +1069,7 @@ Configure the placement of an extension's access control keyword.
 
 Option | Description
 --- | ---
-`--extension-acl` | Place ACL "on-extension" (default) or "on-declarations"
+`--extension-acl` | Access control keyword placement: "on-extension" (default) or "on-declarations"
 
 <details>
 <summary>Examples</summary>
@@ -1114,8 +1114,8 @@ Use specified source file header template for all files.
 Option | Description
 --- | ---
 `--header` | Header comments: "strip", "ignore", or the text you wish use
-`--date-format` | "system" (default), "iso", "dmy", "mdy" or custom
-`--timezone` | "system" (default) or a valid identifier/abbreviation
+`--date-format` | File header date format: "system" (default), "iso", "dmy", "mdy" or custom
+`--timezone` | File header date timezone: "system" (default) or a valid identifier/abbreviation
 
 <details>
 <summary>Examples</summary>
@@ -1214,7 +1214,7 @@ Prefer either #file or #fileID, which have the same behavior in Swift 6 and late
 
 Option | Description
 --- | ---
-`--file-macro` | File macro to prefer: "#file" (default) or "#fileID".
+`--file-macro` | File macro to prefer: "#file" (default) or "#fileID"
 
 <details>
 <summary>Examples</summary>
@@ -1327,7 +1327,7 @@ Reposition `let` or `var` bindings within pattern.
 
 Option | Description
 --- | ---
-`--pattern-let` | let/var placement in patterns: "hoist" (default) or "inline"
+`--pattern-let` | Placement of let/var in patterns: "hoist" (default) or "inline"
 
 <details>
 <summary>Examples</summary>
@@ -1382,11 +1382,11 @@ Option | Description
 --- | ---
 `--indent` | Number of spaces to indent, or "tab" to use tabs
 `--tab-width` | The width of a tab character. Defaults to "unspecified"
-`--smart-tabs` | Align code independently of tab width. Defaults to "enabled"
-`--indent-case` | Indent cases inside a switch: "true" or "false" (default)
-`--ifdef` | #if indenting: "indent" (default), "no-indent" or "outdent"
+`--smart-tabs` | Align code independently of tab-width: "enabled" (default) or "disabled"
+`--indent-case` | Indent cases inside a switch statement: "true" or "false" (default)
+`--ifdef` | #if statement indenting: "indent" (default), "no-indent", or "outdent"
 `--xcode-indentation` | Match Xcode indenting: "enabled" or "disabled" (default)
-`--indent-strings` | Indent multiline strings: "false" (default) or "true"
+`--indent-strings` | Indent multiline strings: "true" or "false" (default)
 
 <details>
 <summary>Examples</summary>
@@ -1441,7 +1441,7 @@ it hasn't been implemented.
 
 Option | Description
 --- | ---
-`--init-coder-nil` | Replace fatalError with nil in unavailable init?(coder:)
+`--init-coder-nil` | Replace fatalError with nil in unavailable init?(coder:): "true" or "false" (default)
 
 <details>
 <summary>Examples</summary>
@@ -1524,7 +1524,7 @@ Use specified linebreak character for all linebreaks (CR, LF or CRLF).
 
 Option | Description
 --- | ---
-`--linebreaks` | Linebreak character to use: "cr", "crlf" or "lf" (default)
+`--linebreaks` | Linebreak character to use: "cr", "crlf", or "lf" (default)
 
 ## markTypes
 
@@ -1532,9 +1532,9 @@ Add a MARK comment before top-level types and extensions.
 
 Option | Description
 --- | ---
-`--mark-types` | Mark types "always" (default), "never", "if-not-empty"
+`--mark-types` | Mark types: "always" (default), "never", or "if-not-empty"
 `--type-mark` | Template for type mark comments. Defaults to "MARK: - %t"
-`--mark-extensions` | Mark extensions "always" (default), "never", "if-not-empty"
+`--mark-extensions` | Mark extensions: "always" (default), "never", or "if-not-empty"
 `--extension-mark` | Mark for standalone extensions. Defaults to "MARK: - %t + %c"
 `--grouped-extension` | Mark for extension grouped with extended type. ("MARK: %c")
 
@@ -1683,14 +1683,14 @@ digits in a number before grouping is applied).
 
 Option | Description
 --- | ---
-`--decimal-grouping` | Decimal grouping,threshold (default: 3,6) or "none", "ignore"
-`--binary-grouping` | Binary grouping,threshold (default: 4,8) or "none", "ignore"
-`--octal-grouping` | Octal grouping,threshold (default: 4,8) or "none", "ignore"
-`--hex-grouping` | Hex grouping,threshold (default: 4,8) or "none", "ignore"
-`--fraction-grouping` | Group digits after '.': "enabled" or "disabled" (default)
-`--exponent-grouping` | Group exponent digits: "enabled" or "disabled" (default)
-`--hex-literal-case` | Casing for hex literals: "uppercase" (default) or "lowercase"
-`--exponent-case` | Case of 'e' in numbers: "lowercase" or "uppercase" (default)
+`--decimal-grouping` | Decimal grouping and threshold (default: 3,6) or "none", "ignore"
+`--binary-grouping` | Binary grouping and threshold (default: 4,8) or "none", "ignore"
+`--octal-grouping` | Octal grouping and threshold (default: 4,8) or "none", "ignore"
+`--hex-grouping` | Hex grouping and threshold (default: 4,8) or "none", "ignore"
+`--fraction-grouping` | Grouping of decimal digits after the '.': "enabled" or "disabled" (default)
+`--exponent-grouping` | Grouping of exponent digits: "enabled" or "disabled" (default)
+`--hex-literal-case` | Case for letters in hex literals: "uppercase" (default) or "lowercase"
+`--exponent-case` | Case for 'e' in exponent literals: "uppercase" or "lowercase" (default)
 
 <details>
 <summary>Examples</summary>
@@ -1755,7 +1755,7 @@ Organize declarations within class, struct, enum, actor, and extension bodies.
 Option | Description
 --- | ---
 `--category-mark` | Template for category mark comments. Defaults to "MARK: %c"
-`--mark-categories` | Insert MARK comments between categories (true by default)
+`--mark-categories` | Insert MARK comments between categories: "true" (default) or "false"
 `--before-marks` | Declarations placed before first mark (e.g. `typealias,struct`)
 `--lifecycle` | Names of additional Lifecycle methods (e.g. `viewDidLoad`)
 `--organize-types` | Declarations to organize (default: `class,actor,struct,enum`)
@@ -1763,13 +1763,13 @@ Option | Description
 `--class-threshold` | Minimum line count to organize class body. Defaults to 0
 `--enum-threshold` | Minimum line count to organize enum body. Defaults to 0
 `--extension-threshold` | Minimum line count to organize extension body. Defaults to 0
-`--organization-mode` | Organize declarations by "visibility" (default) or "type"
+`--organization-mode` | Organize declarations by: "visibility" (default) or "type"
 `--visibility-order` | Order for visibility groups inside declaration
 `--type-order` | Order for declaration type groups inside declaration
 `--visibility-marks` | Marks for visibility groups (public:Public Fields,..)
 `--type-marks` | Marks for declaration type groups (classMethod:Baaz,..)
 `--group-blank-lines` | Require a blank line after each subgroup. Default: true
-`--sort-swiftui-properties` | Sort SwiftUI props: "none", "alphabetize", "first-appearance-sort"
+`--sort-swiftui-properties` | SwiftUI property sorting: "none" (default), "alphabetize", or "first-appearance-sort"
 
 <details>
 <summary>Examples</summary>
@@ -1918,8 +1918,8 @@ Convert functional `forEach` calls to for loops.
 
 Option | Description
 --- | ---
-`--anonymous-for-each` | Convert anonymous forEach closures to for loops: "convert" (default) or "ignore"
-`--single-line-for-each` | Convert single-line forEach closures to for loop: "convert", "ignore" (default)
+`--anonymous-for-each` | Convert anonymous forEach closures to for loops: "ignore" or "convert" (default)
+`--single-line-for-each` | Convert single-line forEach closures to for loops: "ignore" (default) or "convert"
 
 <details>
 <summary>Examples</summary>
@@ -2073,8 +2073,8 @@ Convert property declarations to use inferred types (`let foo = Foo()`) or expli
 
 Option | Description
 --- | ---
-`--property-types` | "inferred", "explicit", or "infer-locals-only" (default)
-`--inferred-types` | "exclude-cond-exprs" (default) or "always"
+`--property-types` | Types in property declarations: "explicit", "inferred", or "infer-locals-only" (default)
+`--inferred-types` | Prefer inferred types: "exclude-cond-exprs" or "always" (default)
 `--preserved-property-types` | Comma-delimited list of symbols to be ignored and preserved as-is by the propertyTypes rule
 
 <details>
@@ -2408,7 +2408,7 @@ Remove/insert redundant `nil` default value (Optional vars are nil by default).
 
 Option | Description
 --- | ---
-`--nil-init` | "remove" (default) redundant nil or "insert" missing nil
+`--nil-init` | Explicit nil init value for Optional properties: "remove" (default) or "insert"
 
 <details>
 <summary>Examples</summary>
@@ -2639,7 +2639,7 @@ Insert/remove explicit `self` where applicable.
 
 Option | Description
 --- | ---
-`--self` | Explicit self: "insert", "remove" (default) or "init-only"
+`--self` | Explicit self: "insert", "remove" (default), or "init-only"
 `--self-required` | Comma-delimited list of functions with @autoclosure arguments
 
 <details>
@@ -2715,7 +2715,7 @@ Remove redundant type from variable declarations.
 
 Option | Description
 --- | ---
-`--property-types` | "inferred", "explicit", or "infer-locals-only" (default)
+`--property-types` | Types in property declarations: "explicit", "inferred", or "infer-locals-only" (default)
 
 <details>
 <summary>Examples</summary>
@@ -2789,7 +2789,7 @@ Remove explicit `Void` return type.
 
 Option | Description
 --- | ---
-`--closure-void` | Closure void returns: "remove" (default) or "preserve"
+`--closure-void` | Explicit Void return types in closures: "remove" (default) or "preserve"
 
 <details>
 <summary>Examples</summary>
@@ -2813,7 +2813,7 @@ Remove semicolons.
 
 Option | Description
 --- | ---
-`--semicolons` | Allow semicolons: "never" or "inline" (default)
+`--semicolons` | Allow semicolons: "inline" (default) or "never"
 
 <details>
 <summary>Examples</summary>
@@ -2878,7 +2878,7 @@ and declarations between // swiftformat:sort:begin and
 
 Option | Description
 --- | ---
-`--sorted-patterns` | List of patterns to sort alphabetically without `:sort` mark.
+`--sorted-patterns` | List of patterns to sort alphabetically without `:sort` mark
 
 <details>
 <summary>Examples</summary>
@@ -2947,7 +2947,7 @@ Sort import statements alphabetically.
 
 Option | Description
 --- | ---
-`--import-grouping` | "testable-first/last", "alpha" (default) or "length"
+`--import-grouping` | Import statement grouping: "alpha" (default), "length", "testable-first", or "testable-last"
 
 <details>
 <summary>Examples</summary>
@@ -3111,10 +3111,10 @@ Add or remove space around operators or delimiters.
 
 Option | Description
 --- | ---
-`--operator-func` | Operator funcs: "spaced" (default), "no-space", or "preserve"
+`--operator-func` | Operator function spacing: "spaced" (default), "no-space", or "preserve"
 `--no-space-operators` | Comma-delimited list of operators without surrounding space
-`--ranges` | Range spaces: "spaced" (default) or "no-space", or "preserve"
-`--type-delimiter` | "space-after" (default), "spaced" or "no-space"
+`--ranges` | Range operator spacing: "spaced" (default), "no-space", or "preserve"
+`--type-delimiter` | Type delimiter spacing: "spaced", "space-after" (default), or "no-space"
 
 <details>
 <summary>Examples</summary>
@@ -3388,7 +3388,7 @@ Add or remove trailing commas in comma-separated lists.
 
 Option | Description
 --- | ---
-`--trailing-commas` | Trailing commas: "always" (default), "never", "collections-only", or "multi-element-lists"
+`--trailing-commas` | Include trailing commas: "never", "always" (default), "collections-only", or "multi-element-lists"
 
 <details>
 <summary>Examples</summary>
@@ -3452,7 +3452,7 @@ Remove trailing space at end of a line.
 
 Option | Description
 --- | ---
-`--trim-whitespace` | Trim trailing space: "always" (default) or "nonblank-lines"
+`--trim-whitespace` | Trim trailing whitespace: "always" (default) or "nonblank-lines"
 
 <details>
 <summary>Examples</summary>
@@ -3477,7 +3477,7 @@ Prefer shorthand syntax for Arrays, Dictionaries and Optionals.
 
 Option | Description
 --- | ---
-`--short-optionals` | Use ? for optionals "always" or "except-properties" (default)
+`--short-optionals` | Prefer ? shorthand for optionals: "except-properties" (default) or "always"
 
 <details>
 <summary>Examples</summary>
@@ -3506,7 +3506,7 @@ Mark unused function arguments with `_`.
 
 Option | Description
 --- | ---
-`--strip-unused-args` | "closure-only", "unnamed-only" or "always" (default)
+`--strip-unused-args` | Strip unused arguments: "unnamed-only", "closure-only", or "always" (default)
 
 <details>
 <summary>Examples</summary>
@@ -3600,7 +3600,7 @@ Use `Void` for type declarations and `()` for values.
 
 Option | Description
 --- | ---
-`--void-type` | How void types are represented: "void" (default) or "tuple"
+`--void-type` | How Void types are represented: "Void" (default) or "tuple"
 
 <details>
 <summary>Examples</summary>
@@ -3641,9 +3641,9 @@ Option | Description
 --- | ---
 `--max-width` | Maximum length of a line before wrapping. Defaults to "none"
 `--no-wrap-operators` | Comma-delimited list of operators that shouldn't be wrapped
-`--asset-literals` | Color/image literal width. "actual-width" or "visual-width"
-`--wrap-ternary` | Wrap ternary operators: "default" (wrap if needed), "before-operators"
-`--wrap-string-interpolation` | Wrap string interpolation: "default" (wrap if needed), "preserve"
+`--asset-literals` | Formatting of color/image literals: "actual-width" or "visual-width" (default)
+`--wrap-ternary` | Ternary expression wrapping: "default" (wrap if needed) or "before-operators"
+`--wrap-string-interpolation` | String interpolation wrapping: "default" (wrap if needed) or "preserve"
 
 ## wrapArguments
 
@@ -3651,16 +3651,16 @@ Align wrapped function arguments or collection elements.
 
 Option | Description
 --- | ---
-`--wrap-arguments` | Wrap all arguments: "before-first", "after-first", "preserve"
-`--wrap-parameters` | Wrap func params: "before-first", "after-first", "preserve"
-`--wrap-collections` | Wrap array/dict: "before-first", "after-first", "preserve"
-`--closing-paren` | Closing paren position: "balanced" (default) or "same-line"
-`--call-site-paren` | Closing paren at call sites: "balanced" or "same-line"
-`--wrap-return-type` | Wrap return type: "if-multiline", "preserve", "never"
-`--wrap-conditions` | Wrap conditions: "before-first", "after-first", "preserve"
-`--wrap-type-aliases` | Wrap typealiases: "before-first", "after-first", "preserve"
-`--wrap-effects` | Wrap effects: "if-multiline", "never", "preserve"
-`--wrap-string-interpolation` | Wrap string interpolation: "default" (wrap if needed), "preserve"
+`--wrap-arguments` | Function argument wrapping: "before-first", "after-first", "preserve" (default), "disabled", or "default"
+`--wrap-parameters` | Function call parameter wrapping: "before-first", "after-first", "preserve", "disabled", or "default" (default)
+`--wrap-collections` | Collection literal element wrapping: "before-first", "after-first", "preserve" (default), "disabled", or "default"
+`--closing-paren` | Closing paren placement: "balanced" (default), "same-line", or "default"
+`--call-site-paren` | Closing paren placement at function call sites: "balanced", "same-line", or "default" (default)
+`--wrap-return-type` | Function return type wrapping: "preserve" (default), "if-multiline", or "never"
+`--wrap-conditions` | Conditional expression wrapping: "before-first", "after-first", "preserve" (default), "disabled", or "default"
+`--wrap-type-aliases` | Typealias wrapping: "before-first", "after-first", "preserve" (default), "disabled", or "default"
+`--wrap-effects` | Function effects (throws, async) wrapping: "preserve" (default), "if-multiline", or "never"
+`--wrap-string-interpolation` | String interpolation wrapping: "default" (wrap if needed) or "preserve"
 
 <details>
 <summary>Examples</summary>
@@ -3730,11 +3730,11 @@ Wrap @attributes onto a separate line, or keep them on the same line.
 
 Option | Description
 --- | ---
-`--func-attributes` | Function @attributes: "preserve", "prev-line", or "same-line"
-`--type-attributes` | Type @attributes: "preserve", "prev-line", or "same-line"
-`--stored-var-attributes` | Stored var @attributes: "preserve", "prev-line", or "same-line"
-`--computed-var-attributes` | Computed var @attributes: "preserve", "prev-line", "same-line"
-`--complex-attributes` | Complex @attributes: "preserve", "prev-line", or "same-line"
+`--func-attributes` | Placement for function @attributes: "prev-line", "same-line", or "preserve" (default)
+`--type-attributes` | Placement for type @attributes: "prev-line", "same-line", or "preserve" (default)
+`--stored-var-attributes` | Placement for stored var @attributes: "prev-line", "same-line", or "preserve" (default)
+`--computed-var-attributes` | Placement for computed var @attributes: "prev-line", "same-line", or "preserve" (default)
+`--complex-attributes` | Placement for complex @attributes: "prev-line", "same-line", or "preserve" (default)
 `--non-complex-attributes` | List of @attributes to exclude from --complexattributes options
 
 <details>
@@ -3809,7 +3809,7 @@ Rewrite comma-delimited enum cases to one case per line.
 
 Option | Description
 --- | ---
-`--wrap-enum-cases` | Wrap enum cases: "always" (default) or "with-values"
+`--wrap-enum-cases` | Enum case wrapping: "always" (default) or "with-values"
 
 <details>
 <summary>Examples</summary>
@@ -3994,7 +3994,7 @@ Prefer constant values to be on the right-hand-side of expressions.
 
 Option | Description
 --- | ---
-`--yoda-swap` | Swap yoda values: "always" (default) or "literals-only"
+`--yoda-swap` | Swap yoda expression operands: "literals-only" or "always" (default)
 
 <details>
 <summary>Examples</summary>

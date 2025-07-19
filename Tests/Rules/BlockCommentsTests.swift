@@ -74,12 +74,12 @@ class BlockCommentsTests: XCTestCase {
         let input = """
         /**
          * This is a documentation comment,
-         * not a standard comment.
+         * not a regular comment.
          */
         """
         let output = """
         /// This is a documentation comment,
-        /// not a standard comment.
+        /// not a regular comment.
         """
         testFormatting(for: input, output, rule: .blockComments, exclude: [.docComments])
     }
@@ -88,12 +88,12 @@ class BlockCommentsTests: XCTestCase {
         let input = """
         /**
          This is a documentation comment,
-         not a standard comment.
+         not a regular comment.
          */
         """
         let output = """
         /// This is a documentation comment,
-        /// not a standard comment.
+        /// not a regular comment.
         """
         testFormatting(for: input, output, rule: .blockComments, exclude: [.docComments])
     }

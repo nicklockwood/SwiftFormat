@@ -36,21 +36,21 @@ class SemicolonsTests: XCTestCase {
 
     func testIgnoreInlineSemicolon() {
         let input = "print(\"hello\"); print(\"goodbye\")"
-        let options = FormatOptions(allowInlineSemicolons: true)
+        let options = FormatOptions(semicolons: .inlineOnly)
         testFormatting(for: input, rule: .semicolons, options: options)
     }
 
     func testReplaceInlineSemicolon() {
         let input = "print(\"hello\"); print(\"goodbye\")"
         let output = "print(\"hello\")\nprint(\"goodbye\")"
-        let options = FormatOptions(allowInlineSemicolons: false)
+        let options = FormatOptions(semicolons: .never)
         testFormatting(for: input, output, rule: .semicolons, options: options)
     }
 
     func testReplaceSemicolonFollowedByComment() {
         let input = "print(\"hello\"); // comment\nprint(\"goodbye\")"
         let output = "print(\"hello\") // comment\nprint(\"goodbye\")"
-        let options = FormatOptions(allowInlineSemicolons: true)
+        let options = FormatOptions(semicolons: .inlineOnly)
         testFormatting(for: input, output, rule: .semicolons, options: options)
     }
 

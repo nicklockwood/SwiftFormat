@@ -32,8 +32,7 @@
 import XCTest
 @testable import SwiftFormat
 
-private func createTmpFile(_ path: String? = nil, contents: String) throws -> URL {
-    let path = path ?? (UUID().uuidString + ".swift")
+private func createTmpFile(_ path: String, contents: String) throws -> URL {
     let url = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(path)
     let directory = url.deletingLastPathComponent()
     if !FileManager.default.fileExists(atPath: directory.path) {
@@ -57,15 +56,17 @@ private func withTmpFile(_ path: String? = nil, contents: String, fn: (URL) -> V
 
 private func withTmpFiles(_ files: [String: String], fn: (URL) throws -> Void) throws {
     var urls = [URL]()
+    defer {
+        for url in urls {
+            try? FileManager.default.removeItem(at: url)
+        }
+    }
     let prefix = UUID().uuidString
     for (path, contents) in files {
         try urls.append(createTmpFile("\(prefix)/\(path)", contents: contents))
     }
-    for url in urls where url.pathExtension == "swift" || url.pathExtension == "md" {
+    for url in urls where ["swift", "md"].contains(url.pathExtension) {
         try fn(url)
-    }
-    for url in urls {
-        try FileManager.default.removeItem(at: url)
     }
 }
 

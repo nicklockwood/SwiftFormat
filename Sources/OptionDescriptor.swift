@@ -1416,7 +1416,8 @@ struct _Descriptors {
         argumentName: "markdown-files",
         displayName: "Markdown Files",
         help: "Swift in markdown files:",
-        keyPath: \.markdownFiles
+        keyPath: \.markdownFiles,
+        altOptions: ["format-lenient": .lenient, "format-strict": .strict]
     )
 
     // MARK: - DEPRECATED

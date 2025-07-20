@@ -693,7 +693,16 @@ public func applyFormatOptions(from args: [String: String], to formatOptions: in
     for option in Descriptors.all {
         try processOption(option.argumentName, in: args, from: &arguments) {
             containsFormatOption = true
-            try option.toOptions($0, &formatOptions)
+            do {
+                try option.toOptions($0, &formatOptions)
+            } catch {
+                if let argumentList = option.argumentList {
+                    throw FormatError.options("""
+                    Unsupported --\(option.argumentName) value '\($0)'. Valid options are \(argumentList)
+                    """)
+                }
+                throw error
+            }
         }
     }
     assert(arguments.isEmpty, "\(arguments.joined(separator: ","))")

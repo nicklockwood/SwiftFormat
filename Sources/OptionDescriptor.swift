@@ -204,8 +204,8 @@ extension OptionDescriptor {
             displayName: displayName,
             help: help,
             deprecationMessage: deprecationMessage,
-            toOptions: { key, options in
-                guard let value = try fromArgument(key) else {
+            toOptions: { argument, options in
+                guard let value = try fromArgument(argument) else {
                     throw FormatError.options("")
                 }
                 options[keyPath: keyPath] = value

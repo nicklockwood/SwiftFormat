@@ -440,7 +440,29 @@ class FormatterTests: XCTestCase {
         // swiftformat:options --indent baz
         """
         XCTAssertThrowsError(try format(input, rules: FormatRules.default).output) { error in
-            XCTAssert("\(error)".contains("Unsupported --indent value"))
+            XCTAssertEqual("\(error)", "Unsupported --indent value 'baz' on line 1")
+        }
+    }
+
+    func testInvalidEnumOptionValue() {
+        let input = """
+        // swiftformat:options --else-position prev-line
+        """
+        XCTAssertThrowsError(try format(input, rules: FormatRules.default).output) { error in
+            XCTAssert("\(error)".hasPrefix("""
+            Unsupported --else-position value 'prev-line' on line 1. Valid options are 
+            """))
+        }
+    }
+
+    func testInvalidBoolOptionValue() {
+        let input = """
+        // swiftformat:options --allman always
+        """
+        XCTAssertThrowsError(try format(input, rules: FormatRules.default).output) { error in
+            XCTAssert("\(error)".hasPrefix("""
+            Unsupported --allman value 'always' on line 1. Valid options are 
+            """))
         }
     }
 

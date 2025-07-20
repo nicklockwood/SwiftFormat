@@ -808,7 +808,7 @@ class ArgumentsTests: XCTestCase {
 
     func testParseInvalidModifierOrderOption() throws {
         XCTAssertThrowsError(try Options(["modifier-order": "unknowned"], in: "")) { error in
-            XCTAssertEqual("\(error)", "'unknowned' is not a valid modifier (did you mean 'unowned'?) in --modifier-order")
+            XCTAssertEqual("\(error)", "Unsupported --modifier-order value 'unknowned'. Did you mean 'unowned'?")
         }
     }
 

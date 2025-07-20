@@ -715,7 +715,7 @@ class CommandLineTests: XCTestCase {
                 case .raw, .warning, .info:
                     break
                 case .error:
-                    XCTAssert(message.contains("did you mean 'github-actions-log'?"))
+                    XCTAssert(message.contains("Did you mean 'github-actions-log'?"))
                 case .content, .success:
                     XCTFail()
                 }

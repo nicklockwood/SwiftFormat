@@ -83,7 +83,20 @@ extension Array where Element: Equatable {
 }
 
 extension String {
-    /// Find best match for the string in a list of options
+    /// Find single best match for the string in a list of options
+    /// If more than one match is equally good, return nil
+    func bestMatch(in options: [String]) -> String? {
+        let matches = bestMatches(in: options)
+        guard let best = matches.first else {
+            return nil
+        }
+        if matches.count > 1, editDistance(from: matches[1]) == editDistance(from: best) {
+            return nil
+        }
+        return best
+    }
+
+    /// Find best matches for the string in a list of options
     func bestMatches(in options: [String]) -> [String] {
         let lowercaseQuery = lowercased()
         // Sort matches by Levenshtein edit distance
@@ -305,10 +318,11 @@ func parseRules(_ rules: String) throws -> [String] {
             }
             throw FormatError.options("'\(proposedName)' is not a formatting rule")
         }
+        let message = "Unknown rule '\(proposedName)'"
         guard let match = proposedName.bestMatches(in: Array(allRules)).first else {
-            throw FormatError.options("Unknown rule '\(proposedName)'")
+            throw FormatError.options(message)
         }
-        throw FormatError.options("Unknown rule '\(proposedName)'. Did you mean '\(match)'?")
+        throw FormatError.options("\(message). Did you mean '\(match)'?")
     }
 }
 
@@ -675,12 +689,10 @@ public func applyFormatOptions(from args: [String: String], to formatOptions: in
             do {
                 try option.toOptions($0, &formatOptions)
             } catch {
-                if let argumentList = option.argumentList {
-                    throw FormatError.options("""
-                    Unsupported --\(option.argumentName) value '\($0)'. Valid options are \(argumentList)
-                    """)
+                guard let names = option.validArguments else {
+                    throw error
                 }
-                throw error
+                throw FormatError.invalidOption($0, for: option.argumentName, with: names)
             }
         }
     }

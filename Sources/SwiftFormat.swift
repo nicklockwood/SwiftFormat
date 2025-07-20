@@ -78,6 +78,18 @@ public enum FormatError: Error, CustomStringConvertible, LocalizedError, CustomN
     case parsing(String)
     case options(String)
 
+    static func invalidOption(
+        _ option: String,
+        for argumentName: String,
+        with validOptions: [String]
+    ) -> Self {
+        let message = "Unsupported --\(argumentName) value '\(option)'"
+        guard let match = option.bestMatch(in: validOptions) else {
+            return .options("\(message). Valid options are \(validOptions.formattedList())")
+        }
+        return .options("\(message). Did you mean '\(match)'?")
+    }
+
     public var description: String {
         switch self {
         case let .reading(string),

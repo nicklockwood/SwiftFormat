@@ -322,7 +322,12 @@ public class Formatter: NSObject {
 
     func fatalError(_ error: String, at tokenIndex: Int) {
         let line = originalLine(at: tokenIndex)
-        var message = error + " on line \(line)"
+        var message: String
+        if let range = error.range(of: ". Valid options") {
+            message = "\(error[..<range.lowerBound]) on line \(line)\(error[range.lowerBound...])"
+        } else {
+            message = "\(error) on line \(line)"
+        }
 
         if let currentRuleName = currentRule?.name {
             message = "[\(currentRuleName)] \(message)"

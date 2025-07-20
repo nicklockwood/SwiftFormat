@@ -581,19 +581,19 @@ class InferenceTests: XCTestCase {
     func testInferElseOnNextLine() {
         let input = "if foo {\n}\nelse {}"
         let options = inferFormatOptions(from: tokenize(input))
-        XCTAssertTrue(options.elseOnNextLine)
+        XCTAssertEqual(options.elsePosition, .nextLine)
     }
 
     func testInferElseOnSameLine() {
         let input = "if foo {\n} else {}"
         let options = inferFormatOptions(from: tokenize(input))
-        XCTAssertFalse(options.elseOnNextLine)
+        XCTAssertEqual(options.elsePosition, .sameLine)
     }
 
     func testIgnoreInlineIfElse() {
         let input = "if foo {} else {}\nif foo {\n}\nelse {}"
         let options = inferFormatOptions(from: tokenize(input))
-        XCTAssertTrue(options.elseOnNextLine)
+        XCTAssertEqual(options.elsePosition, .nextLine)
     }
 
     // MARK: indentCase

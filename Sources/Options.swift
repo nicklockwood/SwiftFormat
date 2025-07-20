@@ -498,6 +498,12 @@ public enum TypeBlankLines: String, CaseIterable {
     case preserve
 }
 
+/// Treatment of semicolons
+public enum SemicolonsMode: String, CaseIterable {
+    case inlineOnly = "inline-only"
+    case never
+}
+
 /// Format to use when printing dates
 public enum DateFormat: Equatable, RawRepresentable, CustomStringConvertible {
     case dayMonthYear
@@ -691,7 +697,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var lineAfterMarks: Bool
     public var indent: String
     public var linebreak: String
-    public var allowInlineSemicolons: Bool
+    public var semicolons: SemicolonsMode
     public var spaceAroundRangeOperators: OperatorSpacingMode
     public var spaceAroundOperatorDeclarations: OperatorSpacingMode
     public var useVoid: Bool
@@ -824,7 +830,7 @@ public struct FormatOptions: CustomStringConvertible {
     public init(lineAfterMarks: Bool = true,
                 indent: String = "    ",
                 linebreak: String = "\n",
-                allowInlineSemicolons: Bool = true,
+                semicolons: SemicolonsMode = .inlineOnly,
                 spaceAroundRangeOperators: OperatorSpacingMode = .insert,
                 spaceAroundOperatorDeclarations: OperatorSpacingMode = .insert,
                 useVoid: Bool = true,
@@ -948,7 +954,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.lineAfterMarks = lineAfterMarks
         self.indent = indent
         self.linebreak = linebreak
-        self.allowInlineSemicolons = allowInlineSemicolons
+        self.semicolons = semicolons
         self.spaceAroundRangeOperators = spaceAroundRangeOperators
         self.spaceAroundOperatorDeclarations = spaceAroundOperatorDeclarations
         self.useVoid = useVoid

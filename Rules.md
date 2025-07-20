@@ -2813,7 +2813,7 @@ Remove semicolons.
 
 Option | Description
 --- | ---
-`--semicolons` | Allow semicolons: "inline" (default) or "never"
+`--semicolons` | Allow semicolons: "inline-only" (default) or "never"
 
 <details>
 <summary>Examples</summary>

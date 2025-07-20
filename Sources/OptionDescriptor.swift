@@ -589,13 +589,15 @@ struct _Descriptors {
         keyPath: \.linebreak,
         options: ["cr": "\r", "crlf": "\r\n", "lf": "\n"]
     )
-    let allowInlineSemicolons = OptionDescriptor(
+    let semicolons = OptionDescriptor(
         argumentName: "semicolons",
         displayName: "Semicolons",
         help: "Allow semicolons:",
-        keyPath: \.allowInlineSemicolons,
-        trueValues: ["inline"],
-        falseValues: ["never", "false"]
+        keyPath: \.semicolons,
+        altOptions: [
+            "inline": .inlineOnly,
+            "false": .never,
+        ]
     )
     let spaceAroundOperatorDeclarations = OptionDescriptor(
         argumentName: "operator-func",

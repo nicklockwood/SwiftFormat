@@ -717,7 +717,7 @@ class ArgumentsTests: XCTestCase {
 
     func testAddFormatArguments() throws {
         var options = Options(
-            formatOptions: FormatOptions(indent: " ", allowInlineSemicolons: true)
+            formatOptions: FormatOptions(indent: " ", semicolons: .inlineOnly)
         )
         try options.addArguments(["indent": "2", "linebreaks": "crlf"], in: "")
         guard let formatOptions = options.formatOptions else {
@@ -726,7 +726,7 @@ class ArgumentsTests: XCTestCase {
         }
         XCTAssertEqual(formatOptions.indent, "  ")
         XCTAssertEqual(formatOptions.linebreak, "\r\n")
-        XCTAssertTrue(formatOptions.allowInlineSemicolons)
+        XCTAssertEqual(formatOptions.semicolons, .inlineOnly)
     }
 
     func testAddArgumentsDoesntBreakSwiftVersion() throws {

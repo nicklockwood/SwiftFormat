@@ -115,19 +115,19 @@ class InferenceTests: XCTestCase {
     func testInferAllowInlineSemicolons() {
         let input = "let foo = 5; let bar = 6"
         let options = inferFormatOptions(from: tokenize(input))
-        XCTAssertTrue(options.allowInlineSemicolons)
+        XCTAssertEqual(options.semicolons, .inlineOnly)
     }
 
     func testInferNoAllowInlineSemicolons() {
         let input = "let foo = 5\nlet bar = 6"
         let options = inferFormatOptions(from: tokenize(input))
-        XCTAssertFalse(options.allowInlineSemicolons)
+        XCTAssertEqual(options.semicolons, .never)
     }
 
     func testNoInferAllowInlineSemicolonsFromTerminatingSemicolon() {
         let input = "let foo = 5;\nlet bar = 6"
         let options = inferFormatOptions(from: tokenize(input))
-        XCTAssertFalse(options.allowInlineSemicolons)
+        XCTAssertEqual(options.semicolons, .never)
     }
 
     // MARK: useVoid

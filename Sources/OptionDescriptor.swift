@@ -541,6 +541,7 @@ extension _Descriptors {
             ignoreConflictMarkers,
             swiftVersion,
             languageMode,
+            markdownFiles,
         ]
     }
 
@@ -1410,6 +1411,12 @@ struct _Descriptors {
         displayName: "Swift Language Mode",
         help: "The Swift language mode used in the files being formatted",
         keyPath: \.languageMode
+    )
+    let markdownFiles = OptionDescriptor(
+        argumentName: "markdown-files",
+        displayName: "Markdown Files",
+        help: "Swift in markdown files:",
+        keyPath: \.markdownFiles
     )
 
     // MARK: - DEPRECATED

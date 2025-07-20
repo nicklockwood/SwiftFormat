@@ -16,7 +16,9 @@ private let projectFiles: [String] = {
     var files = [String]()
     _ = enumerateFiles(withInputURL: projectDirectory) { url, _, _ in
         {
-            if let source = try? String(contentsOf: url, encoding: .utf8) {
+            if url.pathExtension == "swift",
+               let source = try? String(contentsOf: url, encoding: .utf8)
+            {
                 files.append(source)
             }
         }

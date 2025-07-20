@@ -1271,7 +1271,7 @@ private struct Inference {
         options.spaceAroundOperatorDeclarations = nospace > space ? .remove : .insert
     }
 
-    let elseOnNextLine = OptionInferrer { formatter, options in
+    let elsePosition = OptionInferrer { formatter, options in
         var sameLine = 0, nextLine = 0
         formatter.forEach(.keyword) { i, token in
             guard [.keyword("else"), .keyword("catch"), .keyword("while")].contains(token) else { return }
@@ -1292,7 +1292,7 @@ private struct Inference {
                 sameLine += 1
             }
         }
-        options.elseOnNextLine = (sameLine < nextLine)
+        options.elsePosition = sameLine < nextLine ? .nextLine : .sameLine
     }
 
     let indentCase = OptionInferrer { formatter, options in

@@ -97,8 +97,14 @@ public enum AttributeMode: String, CaseIterable {
     case preserve
 }
 
-/// Argument type for else position
+/// Where to place the else or catch in an if/else or do/catch statement
 public enum ElsePosition: String, CaseIterable {
+    case sameLine = "same-line"
+    case nextLine = "next-line"
+}
+
+/// Where to place the else in a guard statement
+public enum GuardElsePosition: String, CaseIterable {
     case sameLine = "same-line"
     case nextLine = "next-line"
     case auto
@@ -730,8 +736,8 @@ public struct FormatOptions: CustomStringConvertible {
     public var exponentGrouping: Bool
     public var hoistPatternLet: Bool
     public var stripUnusedArguments: ArgumentStrippingMode
-    public var elseOnNextLine: Bool
-    public var guardElsePosition: ElsePosition
+    public var elsePosition: ElsePosition
+    public var guardElsePosition: GuardElsePosition
     public var explicitSelf: SelfMode
     public var selfRequired: Set<String>
     public var throwCapturing: Set<String>
@@ -864,8 +870,8 @@ public struct FormatOptions: CustomStringConvertible {
                 exponentGrouping: Bool = false,
                 hoistPatternLet: Bool = true,
                 stripUnusedArguments: ArgumentStrippingMode = .all,
-                elseOnNextLine: Bool = false,
-                guardElsePosition: ElsePosition = .auto,
+                elsePosition: ElsePosition = .sameLine,
+                guardElsePosition: GuardElsePosition = .auto,
                 explicitSelf: SelfMode = .remove,
                 selfRequired: Set<String> = [],
                 throwCapturing: Set<String> = [],
@@ -987,7 +993,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.hexGrouping = hexGrouping
         self.hoistPatternLet = hoistPatternLet
         self.stripUnusedArguments = stripUnusedArguments
-        self.elseOnNextLine = elseOnNextLine
+        self.elsePosition = elsePosition
         self.guardElsePosition = guardElsePosition
         self.explicitSelf = explicitSelf
         self.selfRequired = selfRequired

@@ -46,7 +46,7 @@ class ElseOnSameLineTests: XCTestCase {
     func testElseOnNextLineOption() {
         let input = "if true {\n    1\n} else { 2 }"
         let output = "if true {\n    1\n}\nelse { 2 }"
-        let options = FormatOptions(elseOnNextLine: true)
+        let options = FormatOptions(elsePosition: .nextLine)
         testFormatting(for: input, output, rule: .elseOnSameLine,
                        options: options, exclude: [.wrapConditionalBodies])
     }
@@ -109,7 +109,7 @@ class ElseOnSameLineTests: XCTestCase {
             }
         }
         """
-        let options = FormatOptions(elseOnNextLine: false)
+        let options = FormatOptions(elsePosition: .sameLine)
         testFormatting(for: input, rule: .elseOnSameLine, options: options,
                        exclude: [.braces])
     }
@@ -186,6 +186,24 @@ class ElseOnSameLineTests: XCTestCase {
         testFormatting(for: input, output, rule: .elseOnSameLine)
     }
 
+    func testMultilineGuardElseEndingInParen() {
+        let input = """
+        guard let foo = bar,
+              let baz = quux() else
+        {
+            return
+        }
+        """
+        let output = """
+        guard let foo = bar,
+              let baz = quux()
+        else {
+            return
+        }
+        """
+        testFormatting(for: input, output, rule: .elseOnSameLine)
+    }
+
     // guardelse = nextLine
 
     func testSingleLineGuardElseNotWrapped() {
@@ -227,26 +245,6 @@ class ElseOnSameLineTests: XCTestCase {
         let options = FormatOptions(guardElsePosition: .nextLine)
         testFormatting(for: input, output, rule: .elseOnSameLine,
                        options: options, exclude: [.wrapMultilineStatementBraces])
-    }
-
-    func testMultilineGuardElseEndingInParen() {
-        let input = """
-        guard let foo = bar,
-              let baz = quux() else
-        {
-            return
-        }
-        """
-        let output = """
-        guard let foo = bar,
-              let baz = quux()
-        else {
-            return
-        }
-        """
-        let options = FormatOptions(guardElsePosition: .auto)
-        testFormatting(for: input, output, rule: .elseOnSameLine,
-                       options: options)
     }
 
     // guardelse = sameLine
@@ -311,7 +309,7 @@ class ElseOnSameLineTests: XCTestCase {
         }
         """
 
-        let options = FormatOptions(elseOnNextLine: false)
+        let options = FormatOptions(elsePosition: .sameLine)
         testFormatting(for: input, rule: .elseOnSameLine, options: options)
     }
 
@@ -376,7 +374,7 @@ class ElseOnSameLineTests: XCTestCase {
         }
         """
 
-        let options = FormatOptions(elseOnNextLine: false, guardElsePosition: .nextLine)
+        let options = FormatOptions(elsePosition: .sameLine, guardElsePosition: .nextLine)
         testFormatting(for: input, output, rule: .elseOnSameLine, options: options, exclude: [.blankLinesAfterGuardStatements])
     }
 }

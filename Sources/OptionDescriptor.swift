@@ -804,13 +804,12 @@ struct _Descriptors {
         help: "Strip unused arguments:",
         keyPath: \.stripUnusedArguments
     )
-    let elseOnNextLine = OptionDescriptor(
+    let elsePosition = OptionDescriptor(
         argumentName: "else-position",
         displayName: "Else Position",
-        help: "Placement of else/catch: \"same-line\" (default) or \"next-line\"",
-        keyPath: \.elseOnNextLine,
-        trueValues: ["next-line", "nextline"],
-        falseValues: ["same-line", "sameline"]
+        help: "Placement of else/catch:",
+        keyPath: \.elsePosition,
+        altOptions: ["nextline": .nextLine, "sameline": .sameLine]
     )
     let guardElsePosition = OptionDescriptor(
         argumentName: "guard-else",

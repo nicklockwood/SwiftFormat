@@ -87,7 +87,7 @@ public extension FormatRule {
                     return
                 }
 
-                let shouldWrap = formatter.options.allmanBraces || formatter.options.elseOnNextLine
+                let shouldWrap = formatter.options.allmanBraces || formatter.options.elsePosition == .nextLine
                 if !shouldWrap, formatter.tokens[prevIndex].isLinebreak {
                     if let prevBraceIndex = formatter.index(of: .nonSpaceOrLinebreak, before: prevIndex, if: {
                         $0 == .endOfScope("}")

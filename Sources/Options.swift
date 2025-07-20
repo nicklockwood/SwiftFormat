@@ -825,6 +825,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var swiftVersion: Version
     public var languageMode: Version
     public var fileInfo: FileInfo
+    public var markdownFiles: MarkdownFormattingMode
     public var timeout: TimeInterval
 
     /// Enabled rules - this is a hack used to allow rules to vary their behavior
@@ -955,6 +956,7 @@ public struct FormatOptions: CustomStringConvertible {
                 swiftVersion: Version = .undefined,
                 languageMode: Version? = nil,
                 fileInfo: FileInfo = FileInfo(),
+                markdownFiles: MarkdownFormattingMode = .ignore,
                 timeout: TimeInterval = 1)
     {
         self.lineAfterMarks = lineAfterMarks
@@ -1078,6 +1080,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.swiftVersion = swiftVersion
         self.languageMode = languageMode ?? defaultLanguageMode(for: swiftVersion)
         self.fileInfo = fileInfo
+        self.markdownFiles = markdownFiles
         self.timeout = timeout
     }
 
@@ -1123,12 +1126,6 @@ public enum MarkdownFormattingMode: String, CaseIterable {
     case lenient = "format-lenient"
     /// Errors in markdown code blocks are reported
     case strict = "format-strict"
-
-    public static let `default`: Self = .ignore
-
-    public static var help: String {
-        allCases.formattedList(default: .default)
-    }
 }
 
 /// File enumeration options
@@ -1138,23 +1135,20 @@ public struct FileOptions {
     public var excludedGlobs: [Glob]
     public var unexcludedGlobs: [Glob]
     public var minVersion: Version
-    public var markdownFormattingMode: MarkdownFormattingMode
 
     public static let `default` = FileOptions()
 
     public init(followSymlinks: Bool = false,
-                supportedFileExtensions: [String] = ["swift"],
+                supportedFileExtensions: [String] = ["swift", "md"],
                 excludedGlobs: [Glob] = [],
                 unexcludedGlobs: [Glob] = [],
-                minVersion: Version = .undefined,
-                markdownFormattingMode: MarkdownFormattingMode = .ignore)
+                minVersion: Version = .undefined)
     {
         self.followSymlinks = followSymlinks
         self.supportedFileExtensions = supportedFileExtensions
         self.excludedGlobs = excludedGlobs
         self.unexcludedGlobs = unexcludedGlobs
         self.minVersion = minVersion
-        self.markdownFormattingMode = markdownFormattingMode
     }
 
     public func shouldSkipFile(_ inputURL: URL) -> Bool {
@@ -1204,6 +1198,11 @@ public struct Options {
     }
 
     public func shouldSkipFile(_ inputURL: URL) -> Bool {
-        fileOptions?.shouldSkipFile(inputURL) ?? false
+        if inputURL.pathExtension == "md",
+           (formatOptions ?? .default).markdownFiles == .ignore
+        {
+            return true
+        }
+        return fileOptions?.shouldSkipFile(inputURL) ?? false
     }
 }

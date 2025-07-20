@@ -1387,50 +1387,66 @@ struct MarkdownCodeBlock {
 /// // and its range in the markdown string is returned as range.
 /// ```
 func parseCodeBlocks(fromMarkdown markdown: String, language: String) throws -> [MarkdownCodeBlock] {
+    struct PartialCodeBlock {
+        let lineStartIndex: Int
+        let topLevel: Bool
+        let tickCount: Int
+        let textAfterTicks: String
+    }
+
     let lines = markdown.lineRanges
     var codeBlocks: [MarkdownCodeBlock] = []
-    var codeStartLineIndex: Int?
-    var codeBlockOptions: String?
-    var codeBlockStack = 0
+    var codeBlockStack = [PartialCodeBlock]()
 
     for (lineIndex, lineRange) in lines.enumerated() {
         let lineText = markdown[lineRange].trimmingCharacters(in: .whitespacesAndNewlines)
+        let ticks = String(lineText.prefix(while: { $0 == "`" }))
+        let tickCount = ticks.count
+        guard tickCount >= 3 else { continue }
 
-        if lineText.hasPrefix("```"), lineText != "```" {
-            // If we're already inside a code block, don't start a new one
-            if codeStartLineIndex != nil {
-                codeBlockStack += 1
-            } else if lineText.hasPrefix("```\(language)"), lineIndex != lines.indices.last {
-                codeStartLineIndex = lineIndex + 1
+        let textAfterTicks = String(lineText.dropFirst(tickCount))
 
-                // Any text following the code block start delimiter are treated as options
-                if lineText.hasPrefix("```\(language) ") {
-                    codeBlockOptions = String(lineText.dropFirst("```\(language) ".count))
-                }
-            }
-        } else if lineText == "```", let startLine = codeStartLineIndex {
-            if codeBlockStack > 0 {
-                // If we're inside a nested code block, pop it off the stack.
-                codeBlockStack -= 1
-            } else {
-                // Otherwise this is the end of a code block
-                let codeEnd = lines[lineIndex - 1].upperBound
-                let range = lines[startLine].lowerBound ..< codeEnd
-                let codeText = String(markdown[range])
+        // If this fence has a different number of ticks from the previous fence,
+        // or has text like ```language, then it's an open fence.
+        let isOpenFence = !textAfterTicks.isEmpty
+            || codeBlockStack.last?.tickCount != tickCount
 
-                assert(markdown[range] == codeText)
+        if isOpenFence {
+            codeBlockStack.append(PartialCodeBlock(
+                lineStartIndex: lineIndex + 1,
+                topLevel: codeBlockStack.isEmpty,
+                tickCount: tickCount,
+                textAfterTicks: textAfterTicks
+            ))
+        }
 
-                let codeBlock = MarkdownCodeBlock(language: language, range: range, text: codeText, options: codeBlockOptions, lineStartIndex: startLine)
+        else if let partialBlock = codeBlockStack.popLast() {
+            // Only store and return blocks that are top-level and match the given language
+            guard partialBlock.topLevel,
+                  partialBlock.textAfterTicks.hasPrefix(language),
+                  lineIndex != partialBlock.lineStartIndex
+            else { continue }
 
-                codeBlocks.append(codeBlock)
-                codeStartLineIndex = nil
-                codeBlockOptions = nil
-            }
+            let options = String(partialBlock.textAfterTicks.dropFirst(language.count))
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+
+            let codeEnd = lines[lineIndex - 1].upperBound
+            let range = lines[partialBlock.lineStartIndex].lowerBound ..< codeEnd
+            let codeText = String(markdown[range])
+            assert(markdown[range] == codeText)
+
+            codeBlocks.append(MarkdownCodeBlock(
+                language: language,
+                range: range,
+                text: codeText,
+                options: options.isEmpty ? nil : options,
+                lineStartIndex: partialBlock.lineStartIndex
+            ))
         }
     }
 
     // Check for unbalanced code blocks
-    if codeStartLineIndex != nil || codeBlockStack > 0 {
+    if !codeBlockStack.isEmpty {
         throw FormatError.parsing("Unbalanced code block delimiters in markdown")
     }
 

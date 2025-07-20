@@ -1017,6 +1017,62 @@ class CommandLineTests: XCTestCase {
         XCTAssert(errors[0].contains("Unexpected end of file at 7:11"))
     }
 
+    func testDoesntFormatSwiftBlockInDiffBlock() throws {
+        var errors = [String]()
+
+        CLI.print = { message, type in
+            if type == .error {
+                errors.append(message)
+            }
+        }
+
+        try withTmpFiles([
+            "README.md": """
+            ````diff
+              ```swift
+            - func    foo(   ) {    }
+            + func foo() {    }
+              ```
+            ````
+
+            ```swift
+            func    foo(   ) {    }
+            ```
+
+            ```swift
+            ```
+            """,
+        ]) { url in
+            _ = processArguments([
+                "",
+                url.path,
+                "--markdownfiles", "format-strict",
+                "--rules", "consecutiveSpaces",
+                "--rules", "spaceInsideBrackets",
+                "--rules", "spaceInsideParens",
+            ], in: "")
+
+            let updatedReadme = try String(contentsOf: url, encoding: .utf8)
+            XCTAssertEqual(updatedReadme, """
+            ````diff
+              ```swift
+            - func    foo(   ) {    }
+            + func foo() {    }
+              ```
+            ````
+
+            ```swift
+            func foo() { }
+            ```
+
+            ```swift
+            ```
+            """)
+        }
+
+        XCTAssertEqual(errors, [])
+    }
+
     func testUnbalancedCodeBlockTokens() throws {
         var errors = [String]()
 

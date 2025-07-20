@@ -78,9 +78,9 @@ private func print(_ message: String, as type: CLI.OutputType = .info) {
 private func printWarnings(_ errors: [Error]) -> Bool {
     var containsError = false
     for error in errors {
-        var errorMessage = "\(error)"
-        if !".?!".contains(errorMessage.last ?? " ") {
-            errorMessage += "."
+        var message = "\(error)"
+        if !".?!".contains(message.last ?? " ") {
+            message += "."
         }
         let isError: Bool
         switch error as? FormatError {
@@ -90,13 +90,13 @@ private func printWarnings(_ errors: [Error]) -> Bool {
             isError = true
         case nil:
             isError = true
-            errorMessage = error.localizedDescription
+            message = error.localizedDescription
         }
         if isError {
             containsError = true
-            print("error: \(errorMessage)", as: .error)
+            print("error: \(message)", as: .error)
         } else {
-            print("warning: \(errorMessage)", as: .warning)
+            print("warning: \(message)", as: .warning)
         }
     }
     return containsError
@@ -428,13 +428,12 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
                 named: identifier,
                 environment: environment
             ) else {
-                var message = "'\(identifier)' is not a valid reporter"
-                // swiftformat:disable:next --preferKeyPath
-                let names = Reporters.all.map { $0.name }
-                if let match = identifier.bestMatches(in: names).first {
-                    message += " (did you mean '\(match)'?)"
-                }
-                throw FormatError.options(message)
+                throw FormatError.invalidOption(
+                    identifier,
+                    for: "reporter",
+                    // swiftformat:disable:next --preferKeyPath
+                    with: Reporters.all.map { $0.name }
+                )
             }
             return reporter
         } ?? reportURL.flatMap {
@@ -894,11 +893,11 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
     } catch {
         _ = printWarnings(errors)
         // Fatal error
-        var errorMessage = "\(error)"
-        if ![".", "?", "!"].contains(errorMessage.last ?? " ") {
-            errorMessage += "."
+        var message = "\(error)"
+        if ![".", "?", "!"].contains(message.last ?? " ") {
+            message += "."
         }
-        print("error: \(errorMessage)", as: .error)
+        print("error: \(message)", as: .error)
         return .error
     }
 }
@@ -1278,20 +1277,25 @@ func processInput(_ inputURLs: [URL],
                 }
             } catch {
                 if verbose {
-                    var errorMessage = "\(error)"
-                    if !".?!".contains(errorMessage.last ?? " ") {
-                        errorMessage += "."
+                    var message = "\(error)"
+                    if !".?!".contains(message.last ?? " ") {
+                        message += "."
                     }
-                    print("-- error: \(errorMessage)", as: .error)
+                    print("-- error: \(message)", as: .error)
                 }
                 return {
                     outputFlags.filesChecked += 1
                     showConfigurationWarnings(options)
                     switch error {
-                    case let FormatError.parsing(string):
-                        throw FormatError.parsing("\(string) in \(inputURL.path)")
-                    case let FormatError.writing(string):
-                        throw FormatError.writing("\(string) in \(inputURL.path)")
+                    case let FormatError.parsing(message):
+                        if let range = message.range(of: ". Valid options") ?? message.range(of: ". Did you mean") {
+                            throw FormatError.parsing("""
+                            \(message[..<range.lowerBound]) in \(inputURL.path)\(message[range.lowerBound...])
+                            """)
+                        }
+                        throw FormatError.parsing("\(message) in \(inputURL.path)")
+                    case let FormatError.writing(message):
+                        throw FormatError.writing("\(message) in \(inputURL.path)")
                     default:
                         throw error
                     }

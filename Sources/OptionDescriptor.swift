@@ -66,16 +66,21 @@ class OptionDescriptor {
         return true
     }
 
-    /// Formatted list of valid arguments (for boolean or enum-type options)
-    var argumentList: String? {
+    /// List of valid arguments (for boolean or enum-type options)
+    var validArguments: [String]? {
         switch type {
         case let .binary(true: trueValue, false: falseValue):
-            return [trueValue, falseValue].formattedList(default: defaultArgument)
+            return [trueValue, falseValue]
         case let .enum(values):
-            return values.formattedList(default: defaultArgument)
+            return values
         case .array, .set, .int, .text:
             return nil
         }
+    }
+
+    /// Formatted list of valid arguments (for boolean or enum-type options)
+    var argumentList: String? {
+        validArguments?.formattedList(default: defaultArgument)
     }
 
     /// Designated initializer
@@ -794,7 +799,7 @@ struct _Descriptors {
     let hoistPatternLet = OptionDescriptor(
         argumentName: "pattern-let",
         displayName: "Pattern Let",
-        help: "Placement of let/var in patterns: \"hoist\" (default) or \"inline\"",
+        help: "Placement of let/var in patterns:",
         keyPath: \.hoistPatternLet,
         trueValues: ["hoist"],
         falseValues: ["inline"]
@@ -965,15 +970,13 @@ struct _Descriptors {
         displayName: "Modifier Order",
         help: "Comma-delimited list of modifiers in preferred order",
         keyPath: \FormatOptions.modifierOrder,
-        validate: {
-            guard _FormatRules.mapModifiers($0) != nil else {
-                let names = _FormatRules.allModifiers
-                    + _FormatRules.semanticModifierGroups
-                let error = "'\($0)' is not a valid modifier"
-                guard let match = $0.bestMatches(in: names).first else {
-                    throw FormatError.options(error)
-                }
-                throw FormatError.options("\(error) (did you mean '\(match)'?)")
+        validate: { modifier in
+            guard _FormatRules.mapModifiers(modifier) != nil else {
+                throw FormatError.invalidOption(
+                    modifier,
+                    for: "modifier-order",
+                    with: _FormatRules.allModifiers + _FormatRules.semanticModifierGroups
+                )
             }
         }
     )
@@ -1087,11 +1090,11 @@ struct _Descriptors {
             }
             for type in order {
                 guard let concrete = VisibilityCategory(rawValue: type) else {
-                    let errorMessage = "'\(type)' is not a valid parameter for --visibility-order"
-                    guard let match = type.bestMatches(in: VisibilityCategory.allCases.map(\.rawValue)).first else {
-                        throw FormatError.options(errorMessage)
-                    }
-                    throw FormatError.options(errorMessage + ". Did you mean '\(match)?'")
+                    throw FormatError.invalidOption(
+                        type,
+                        for: "visibility-order",
+                        with: VisibilityCategory.allCases.map(\.rawValue)
+                    )
                 }
             }
         }
@@ -1101,15 +1104,13 @@ struct _Descriptors {
         displayName: "Organization Order For Declaration Types",
         help: "Order for declaration type groups inside declaration",
         keyPath: \.typeOrder,
-        validateArray: { order in
-            for type in order {
-                guard let concrete = DeclarationType(rawValue: type) else {
-                    let errorMessage = "'\(type)' is not a valid parameter for --type-order"
-                    guard let match = type.bestMatches(in: DeclarationType.allCases.map(\.rawValue)).first else {
-                        throw FormatError.options(errorMessage)
-                    }
-                    throw FormatError.options(errorMessage + ". Did you mean '\(match)?'")
-                }
+        validate: { type in
+            guard let concrete = DeclarationType(rawValue: type) else {
+                throw FormatError.invalidOption(
+                    type,
+                    for: "type-order",
+                    with: DeclarationType.allCases.map(\.rawValue)
+                )
             }
         }
     )
@@ -1238,7 +1239,7 @@ struct _Descriptors {
     let closureVoidReturn = OptionDescriptor(
         argumentName: "closure-void",
         displayName: "Closure Void",
-        help: "Explicit Void return types in closures: \"remove\" (default) or \"preserve\"",
+        help: "Explicit Void return types in closures:",
         keyPath: \.closureVoidReturn
     )
     let enumNamespaces = OptionDescriptor(
@@ -1452,7 +1453,7 @@ struct _Descriptors {
     let experimentalRules = OptionDescriptor(
         argumentName: "experimental",
         displayName: "Experimental Rules",
-        help: "Experimental rules: \"enabled\" or \"disabled\" (default)",
+        help: "Experimental rules:",
         deprecationMessage: "Use --enable to opt-in to rules individually.",
         keyPath: \.experimentalRules,
         trueValues: ["enabled", "true"],
@@ -1461,7 +1462,7 @@ struct _Descriptors {
     let varAttributes = OptionDescriptor(
         argumentName: "var-attributes",
         displayName: "Var Attributes",
-        help: "Property @attributes: \"preserve\", \"prev-line\", or \"same-line\"",
+        help: "Property @attributes:",
         deprecationMessage: "Use with `--storedvarattributes` or `--computedvarattributes` instead.",
         keyPath: \.varAttributes
     )

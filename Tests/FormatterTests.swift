@@ -449,9 +449,20 @@ class FormatterTests: XCTestCase {
         // swiftformat:options --else-position prev-line
         """
         XCTAssertThrowsError(try format(input, rules: FormatRules.default).output) { error in
-            XCTAssert("\(error)".hasPrefix("""
-            Unsupported --else-position value 'prev-line' on line 1. Valid options are 
-            """))
+            XCTAssertEqual("\(error)", """
+            Unsupported --else-position value 'prev-line' on line 1. Valid options are "same-line" or "next-line"
+            """)
+        }
+    }
+
+    func testInvalidEnumOptionValue2() {
+        let input = """
+        // swiftformat:options --else-position next
+        """
+        XCTAssertThrowsError(try format(input, rules: FormatRules.default).output) { error in
+            XCTAssertEqual("\(error)", """
+            Unsupported --else-position value 'next' on line 1. Did you mean 'next-line'?
+            """)
         }
     }
 
@@ -460,9 +471,9 @@ class FormatterTests: XCTestCase {
         // swiftformat:options --allman always
         """
         XCTAssertThrowsError(try format(input, rules: FormatRules.default).output) { error in
-            XCTAssert("\(error)".hasPrefix("""
-            Unsupported --allman value 'always' on line 1. Valid options are 
-            """))
+            XCTAssertEqual("\(error)", """
+            Unsupported --allman value 'always' on line 1. Valid options are "true" or "false"
+            """)
         }
     }
 

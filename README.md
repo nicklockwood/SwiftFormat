@@ -901,26 +901,25 @@ SwiftFormat can format Swift code blocks inside Markdown files (`.md`). This is 
   ```
 ````
 
-To format Swift code blocks in markdown files, use the `--markdown-files` option with either `format-strict` or `format-lenient`:
+To format Swift code blocks in markdown files, use the `--markdown-files` option with either `strict` or `lenient`:
 
 ```bash
-$ swiftformat . --markdown-files format-strict
-$ swiftformat . --markdown-files format-lenient
+$ swiftformat . --markdown-files strict
+$ swiftformat . --markdown-files lenient
 ```
 
 Or add it to your `.swiftformat` config file:
 
 ```
---markdown-files format-strict
---markdown-files format-lenient
+--markdown-files strict
 ```
 
 **Formatting modes:**
 
 SwiftFormat supports two modes for handling markdown files:
 
-- `format-lenient` (default): Ignores parsing errors in code blocks and continues formatting
-- `format-strict`: Fails if any code blocks contain parsing errors
+- `lenient` (default): Ignores parsing errors in code blocks and continues formatting
+- `strict`: Fails if any code blocks contain parsing errors
 
 SwiftFormat's tokenizer is more permissive than the Swift compiler and typically only emits errors when encountering unbalanced scope tokens like `(` or `{`.
 

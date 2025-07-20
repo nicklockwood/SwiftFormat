@@ -1123,9 +1123,9 @@ public enum MarkdownFormattingMode: String, CaseIterable {
     /// Swift code in markdown files is ignored (default)
     case ignore
     /// Errors in markdown code blocks are ignored
-    case lenient = "format-lenient"
+    case lenient
     /// Errors in markdown code blocks are reported
-    case strict = "format-strict"
+    case strict
 }
 
 /// File enumeration options

@@ -3856,4 +3856,33 @@ class OrganizeDeclarationsTests: XCTestCase {
         let options = FormatOptions(indent: "  ")
         testFormatting(for: input, rule: .organizeDeclarations, options: options, exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope])
     }
+
+    func testOrganizesProtocol() {
+        let input = """
+        protocol Foo {
+            func foo()
+            var bar: Bar { get }
+            func baaz()
+            associatedtype Baaz
+            var quux: Quux { get set }
+            associatedtype Quux
+        }
+        """
+
+        let output = """
+        protocol Foo {
+            associatedtype Baaz
+            associatedtype Quux
+
+            var bar: Bar { get }
+            var quux: Quux { get set }
+
+            func foo()
+            func baaz()
+        }
+        """
+
+        let options = FormatOptions(organizeTypes: ["protocol"])
+        testFormatting(for: input, output, rule: .organizeDeclarations, options: options)
+    }
 }

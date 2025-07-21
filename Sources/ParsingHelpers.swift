@@ -3243,7 +3243,7 @@ extension _FormatRules {
     static let mutatingModifiers = ["borrowing", "consuming", "mutating", "nonmutating"]
 
     /// Ownership modifiers
-    static let ownershipModifiers = ["weak", "unowned"]
+    static let ownershipModifiers = ["weak", "unowned", "unowned(safe)", "unowned(unsafe)"]
 
     /// Modifier mapping (designed to match SwiftLint)
     static func mapModifiers(_ input: String) -> [String]? {

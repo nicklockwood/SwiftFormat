@@ -820,7 +820,7 @@ class ParsingHelpersTests: XCTestCase {
             "indirect",
             "isolated", "nonisolated", "nonisolated(unsafe)",
             "lazy",
-            "weak", "unowned",
+            "weak", "unowned", "unowned(safe)", "unowned(unsafe)",
             "static", "class",
             "borrowing", "consuming", "mutating", "nonmutating",
             "prefix", "infix", "postfix",
@@ -846,7 +846,7 @@ class ParsingHelpersTests: XCTestCase {
             "final",
             "optional", "required",
             "convenience",
-            "weak", "unowned",
+            "weak", "unowned", "unowned(safe)", "unowned(unsafe)",
             "prefix", "infix", "postfix",
         ])
     }

@@ -1,0 +1,87 @@
+name: Build and Notarize SwiftFormat for Xcode
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    branches: [develop, main]
+  workflow_dispatch:
+
+jobs:
+  build-and-notarize:
+    runs-on: macos-15
+    
+    steps:
+      - name: Select Xcode version
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '16.3'
+      
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Archive SwiftFormat for Xcode App
+        run: |
+          ARCHIVE_PATH="build/SwiftFormatForXcode.xcarchive"
+          xcodebuild \
+            -project SwiftFormat.xcodeproj \
+            -scheme "SwiftFormat for Xcode" \
+            -configuration Release \
+            -archivePath "$ARCHIVE_PATH" \
+            archive
+      
+      - name: Export App from Archive
+        id: export-app
+        run: |
+          ARCHIVE_PATH="build/SwiftFormatForXcode.xcarchive"
+          EXPORT_PATH="build/Export"
+          
+          # Create export options plist
+          cat > export_options.plist << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>method</key>
+              <string>developer-id</string>
+              <key>destination</key>
+              <string>export</string>
+          </dict>
+          </plist>
+          EOF
+          
+          xcodebuild \
+            -exportArchive \
+            -archivePath "$ARCHIVE_PATH" \
+            -exportPath "$EXPORT_PATH" \
+            -exportOptionsPlist export_options.plist
+          
+          APP_PATH=$(find "$EXPORT_PATH" -name "SwiftFormat for Xcode.app" -type d | head -1)
+          echo "app-path=$APP_PATH" >> $GITHUB_OUTPUT
+          echo "Found exported app at: $APP_PATH"
+          ls -la "$APP_PATH"
+      
+      - name: Notarize App
+        uses: lando/notarize-action@v2
+        with:
+          product-path: ${{ steps.export-app.outputs.app-path }}
+          appstore-connect-username: ${{ secrets.NOTARIZATION_USERNAME }}
+          appstore-connect-password: ${{ secrets.NOTARIZATION_PASSWORD }}
+          appstore-connect-team-id: 8VQKF583ED
+          primary-bundle-id: com.nicklockwood.SwiftFormat-for-Xcode
+          verbose: true
+      
+      - name: Staple Notarization
+        run: |
+          xcrun stapler staple "${{ steps.export-app.outputs.app-path }}"
+      
+      - name: Zip App
+        run: |
+          cd "$(dirname "${{ steps.export-app.outputs.app-path }}")"
+          zip -r SwiftFormat-for-Xcode.zip "SwiftFormat for Xcode.app"
+          echo "ZIP_PATH=$(pwd)/SwiftFormat-for-Xcode.zip" >> $GITHUB_ENV
+      
+      - name: Upload App Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          path: ${{ env.ZIP_PATH }}

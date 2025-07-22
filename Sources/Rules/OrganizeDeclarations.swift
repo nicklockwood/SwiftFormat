@@ -357,7 +357,13 @@ extension Formatter {
         let numberOfCategories: Int = {
             switch options.organizationMode {
             case .visibility:
-                return Set(sortedDeclarations.map(\.category).map(\.visibility)).count
+                if typeDeclaration.keyword == "protocol" {
+                    // There is no access control in protocols, so all declarations are part of the same category.
+                    return 1
+                } else {
+                    return Set(sortedDeclarations.map(\.category).map(\.visibility)).count
+                }
+
             case .type:
                 return Set(sortedDeclarations.map(\.category).map(\.type)).count
             }

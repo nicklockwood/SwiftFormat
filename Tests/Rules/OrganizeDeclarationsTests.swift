@@ -3885,4 +3885,26 @@ class OrganizeDeclarationsTests: XCTestCase {
         let options = FormatOptions(organizeTypes: ["protocol"])
         testFormatting(for: input, output, rule: .organizeDeclarations, options: options)
     }
+
+    func testOrganizesProtocolWithInit() {
+        let input = """
+        public protocol Foo {
+            func foo()
+            func bar()
+            init()
+        }
+        """
+
+        let output = """
+        public protocol Foo {
+            init()
+
+            func foo()
+            func bar()
+        }
+        """
+
+        let options = FormatOptions(organizeTypes: ["protocol"])
+        testFormatting(for: input, output, rule: .organizeDeclarations, options: options)
+    }
 }

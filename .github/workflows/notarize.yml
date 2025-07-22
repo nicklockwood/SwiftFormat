@@ -20,6 +20,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       
+      - name: Import Code Signing Certificate
+        run: |
+          # Create keychain
+          security create-keychain -p "" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "" build.keychain
+          security set-keychain-settings -t 3600 -l build.keychain
+          
+          # Import certificate
+          echo "${{ secrets.SIGNING_CERTIFICATE_BASE64 }}" | base64 --decode > certificate.p12
+          security import certificate.p12 -k build.keychain -P "${{ secrets.SIGNING_CERTIFICATE_PASSWORD }}" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
+          
+          # Clean up
+          rm certificate.p12
+      
       - name: Archive SwiftFormat for Xcode App
         run: |
           ARCHIVE_PATH="build/SwiftFormatForXcode.xcarchive"

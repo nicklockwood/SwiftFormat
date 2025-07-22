@@ -22,6 +22,18 @@ jobs:
       
       - name: Import Code Signing Certificate
         run: |
+          # Debug: Check if secrets exist (without revealing them)
+          if [ -z "${{ secrets.SIGNING_CERTIFICATE_BASE64 }}" ]; then
+            echo "ERROR: SIGNING_CERTIFICATE_BASE64 secret is empty or not set"
+            exit 1
+          fi
+          if [ -z "${{ secrets.SIGNING_CERTIFICATE_PASSWORD }}" ]; then
+            echo "ERROR: SIGNING_CERTIFICATE_PASSWORD secret is empty or not set"  
+            exit 1
+          fi
+          
+          echo "Secrets are present, proceeding with certificate import..."
+          
           # Create keychain
           security create-keychain -p "" build.keychain
           security default-keychain -s build.keychain

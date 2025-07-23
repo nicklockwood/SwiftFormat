@@ -17,9 +17,10 @@ public extension FormatRule {
         options: [
             "category-mark", "mark-categories", "before-marks",
             "lifecycle", "organize-types", "struct-threshold", "class-threshold",
-            "enum-threshold", "extension-threshold", "organization-mode",
-            "visibility-order", "type-order", "visibility-marks", "type-marks",
-            "group-blank-lines", "sort-swiftui-properties",
+            "enum-threshold", "extension-threshold", "mark-struct-threshold",
+            "mark-class-threshold", "mark-enum-threshold", "mark-extension-threshold",
+            "organization-mode", "visibility-order", "type-order", "visibility-marks",
+            "type-marks", "group-blank-lines", "sort-swiftui-properties",
         ],
         sharedOptions: ["sorted-patterns", "line-after-marks", "linebreaks"]
     ) { formatter in
@@ -354,6 +355,8 @@ extension Formatter {
         in typeDeclaration: TypeDeclaration,
         order: ParsedOrder
     ) {
+        let typeExceedsThresholdToAddMarks = typeLengthExceedsMarkThreshold(at: typeDeclaration.keywordIndex)
+
         let numberOfCategories: Int = {
             switch options.organizationMode {
             case .visibility:
@@ -373,6 +376,7 @@ extension Formatter {
 
         for (index, (declaration, category)) in sortedDeclarations.enumerated() {
             if options.markCategories,
+               typeExceedsThresholdToAddMarks,
                numberOfCategories > 1,
                let markCommentBody = category.markCommentBody(from: options.categoryMarkComment, with: options.organizationMode),
                category.shouldBeMarked(in: Set(formattedCategories), for: options.organizationMode)
@@ -388,7 +392,7 @@ extension Formatter {
                 })
 
                 if matchingComments.count == 1, let matchingComment = matchingComments.first {
-                    // The declaration already has the expetced mark comment.
+                    // The declaration already has the expected mark comment.
                     // However, we need to make sure it also has a trailing blank line.
                     if options.lineAfterMarks,
                        let tokenAfterComment = self.index(of: .nonSpaceOrComment, after: matchingComment.upperBound),
@@ -425,8 +429,9 @@ extension Formatter {
                         insertLinebreak(at: typeDeclaration.openBraceIndex + 1)
                     }
                 }
-            } else {
-                // Otherwise, this declaration shouldn't have separators
+            } else if typeExceedsThresholdToAddMarks {
+                // Otherwise, this declaration shouldn't have separators.
+                // If the type is under the mark threshold, preserve any marks that were added manually.
                 removeExistingCategorySeparators(
                     from: declaration,
                     previousDeclaration: index == 0 ? nil : sortedDeclarations[index - 1].declaration,
@@ -441,6 +446,14 @@ extension Formatter {
             {
                 declaration.addTrailingBlankLineIfNeeded()
             }
+        }
+
+        // If the type was originally below the MARK threshold, but now meets the MARK threshold after being organized,
+        // ensure we do add the marks. Otherwise the marks would just be added next the this rule is ran.
+        if !typeExceedsThresholdToAddMarks,
+           typeLengthExceedsMarkThreshold(at: typeDeclaration.keywordIndex)
+        {
+            addCategorySeparators(to: sortedDeclarations, in: typeDeclaration, order: order)
         }
     }
 
@@ -847,6 +860,33 @@ extension Formatter {
         .reduce(into: [:]) { dictionary, option in
             dictionary[option.0] = option.1
         }
+    }
+
+    func typeLengthExceedsMarkThreshold(at typeKeywordIndex: Int) -> Bool {
+        let markThreshold: Int
+        switch tokens[typeKeywordIndex].string {
+        case "class", "actor":
+            markThreshold = options.markClassThreshold
+        case "struct":
+            markThreshold = options.markStructThreshold
+        case "enum":
+            markThreshold = options.markEnumThreshold
+        case "extension":
+            markThreshold = options.markExtensionThreshold
+        default:
+            markThreshold = 0
+        }
+        guard markThreshold != 0,
+              let startOfScope = index(of: .startOfScope("{"), after: typeKeywordIndex),
+              let endOfScope = endOfScope(at: startOfScope)
+        else {
+            return true
+        }
+        let lineCount = tokens[startOfScope ... endOfScope]
+            .filter(\.isLinebreak)
+            .count
+            - 1
+        return lineCount >= markThreshold
     }
 }
 

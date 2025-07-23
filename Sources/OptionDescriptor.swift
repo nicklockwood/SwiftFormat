@@ -1070,6 +1070,30 @@ struct _Descriptors {
         help: "Minimum line count to organize extension body. Defaults to 0",
         keyPath: \.organizeExtensionThreshold
     )
+    let markStructThreshold = OptionDescriptor(
+        argumentName: "mark-struct-threshold",
+        displayName: "Mark Struct Threshold",
+        help: "Minimum line count to add MARK comments in struct body. Defaults to 0",
+        keyPath: \.markStructThreshold
+    )
+    let markClassThreshold = OptionDescriptor(
+        argumentName: "mark-class-threshold",
+        displayName: "Mark Class Threshold",
+        help: "Minimum line count to add MARK comments in class body. Defaults to 0",
+        keyPath: \.markClassThreshold
+    )
+    let markEnumThreshold = OptionDescriptor(
+        argumentName: "mark-enum-threshold",
+        displayName: "Mark Enum Threshold",
+        help: "Minimum line count to add MARK comments in enum body. Defaults to 0",
+        keyPath: \.markEnumThreshold
+    )
+    let markExtensionThreshold = OptionDescriptor(
+        argumentName: "mark-extension-threshold",
+        displayName: "Mark Extension Threshold",
+        help: "Minimum line count to add MARK comments in extension body. Defaults to 0",
+        keyPath: \.markExtensionThreshold
+    )
     let organizationMode = OptionDescriptor(
         argumentName: "organization-mode",
         displayName: "Declaration Organization Mode",

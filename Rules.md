@@ -1763,6 +1763,10 @@ Option | Description
 `--class-threshold` | Minimum line count to organize class body. Defaults to 0
 `--enum-threshold` | Minimum line count to organize enum body. Defaults to 0
 `--extension-threshold` | Minimum line count to organize extension body. Defaults to 0
+`--mark-struct-threshold` | Minimum line count to add MARK comments in struct body. Defaults to 0
+`--mark-class-threshold` | Minimum line count to add MARK comments in class body. Defaults to 0
+`--mark-enum-threshold` | Minimum line count to add MARK comments in enum body. Defaults to 0
+`--mark-extension-threshold` | Minimum line count to add MARK comments in extension body. Defaults to 0
 `--organization-mode` | Organize declarations by: "visibility" (default) or "type"
 `--visibility-order` | Order for visibility groups inside declaration
 `--type-order` | Order for declaration type groups inside declaration

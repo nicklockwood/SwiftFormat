@@ -3907,4 +3907,124 @@ class OrganizeDeclarationsTests: XCTestCase {
         let options = FormatOptions(organizeTypes: ["protocol"])
         testFormatting(for: input, output, rule: .organizeDeclarations, options: options)
     }
+
+    func testBelowCustomStructMarkThreshold() {
+        let input = """
+        struct SmallStruct {
+            func foo() {}
+            let a = 1
+            private let b = 2
+        }
+        """
+
+        let output = """
+        struct SmallStruct {
+            let a = 1
+
+            func foo() {}
+
+            private let b = 2
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: .organizeDeclarations,
+            options: FormatOptions(markStructThreshold: 20),
+            exclude: [.blankLinesAtStartOfScope]
+        )
+    }
+
+    func testOrganizedStructNowOverMarkThreshold() {
+        let input = """
+        struct SmallStruct {
+            func foo() {}
+            let a = 1
+            private let b = 2
+        }
+        """
+
+        let output = """
+        struct SmallStruct {
+
+            // MARK: Internal
+
+            let a = 1
+
+            func foo() {}
+
+            // MARK: Private
+
+            private let b = 2
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: .organizeDeclarations,
+            options: FormatOptions(markStructThreshold: 4),
+            exclude: [.blankLinesAtStartOfScope]
+        )
+    }
+
+    func testBelowCustomStructMarkThresholdDoesntRemoveMarks() {
+        let input = """
+        struct SmallStruct {
+
+            // MARK: Internal
+
+            let a = 1
+
+            func foo() {}
+
+            // MARK: Private
+
+            private let b = 2
+        }
+        """
+
+        testFormatting(
+            for: input,
+            rule: .organizeDeclarations,
+            options: FormatOptions(markStructThreshold: 20),
+            exclude: [.blankLinesAtStartOfScope]
+        )
+    }
+
+    func testAboveCustomStructMarkThreshold() {
+        let input = """
+        public struct LargeStruct {
+            let a = 1
+            let b = 2
+            let c = 3
+            public func foo() {}
+            public func bar() {}
+            public func baz() {}
+        }
+        """
+
+        let output = """
+        public struct LargeStruct {
+
+            // MARK: Public
+
+            public func foo() {}
+            public func bar() {}
+            public func baz() {}
+
+            // MARK: Internal
+
+            let a = 1
+            let b = 2
+            let c = 3
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: .organizeDeclarations,
+            options: FormatOptions(markStructThreshold: 5),
+            exclude: [.blankLinesAtStartOfScope]
+        )
+    }
 }

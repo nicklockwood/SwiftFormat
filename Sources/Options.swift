@@ -776,6 +776,10 @@ public struct FormatOptions: CustomStringConvertible {
     public var organizeStructThreshold: Int
     public var organizeEnumThreshold: Int
     public var organizeExtensionThreshold: Int
+    public var markStructThreshold: Int
+    public var markClassThreshold: Int
+    public var markEnumThreshold: Int
+    public var markExtensionThreshold: Int
     public var organizationMode: DeclarationOrganizationMode
     public var visibilityOrder: [String]?
     public var typeOrder: [String]?
@@ -911,6 +915,10 @@ public struct FormatOptions: CustomStringConvertible {
                 organizeStructThreshold: Int = 0,
                 organizeEnumThreshold: Int = 0,
                 organizeExtensionThreshold: Int = 0,
+                markStructThreshold: Int = 0,
+                markClassThreshold: Int = 0,
+                markEnumThreshold: Int = 0,
+                markExtensionThreshold: Int = 0,
                 organizationMode: DeclarationOrganizationMode = .visibility,
                 visibilityOrder: [String]? = nil,
                 typeOrder: [String]? = nil,
@@ -1035,6 +1043,10 @@ public struct FormatOptions: CustomStringConvertible {
         self.organizeStructThreshold = organizeStructThreshold
         self.organizeEnumThreshold = organizeEnumThreshold
         self.organizeExtensionThreshold = organizeExtensionThreshold
+        self.markStructThreshold = markStructThreshold
+        self.markClassThreshold = markClassThreshold
+        self.markEnumThreshold = markEnumThreshold
+        self.markExtensionThreshold = markExtensionThreshold
         self.organizationMode = organizationMode
         self.visibilityOrder = visibilityOrder
         self.typeOrder = typeOrder

@@ -23,12 +23,12 @@ jobs:
       - name: Import Code Signing Certificate
         run: |
           # Debug: Check if secrets exist (without revealing them)
-          if [ -z "${{ secrets.SIGNING_CERTIFICATE_BASE64 }}" ]; then
-            echo "ERROR: SIGNING_CERTIFICATE_BASE64 secret is empty or not set"
+          if [ -z "${{ secrets.DEVELOPER_ID_CERTIFICATE_BASE64 }}" ]; then
+            echo "ERROR: DEVELOPER_ID_CERTIFICATE_BASE64 secret is empty or not set"
             exit 1
           fi
-          if [ -z "${{ secrets.SIGNING_CERTIFICATE_PASSWORD }}" ]; then
-            echo "ERROR: SIGNING_CERTIFICATE_PASSWORD secret is empty or not set"  
+          if [ -z "${{ secrets.DEVELOPER_ID_CERTIFICATE_PASSWORD }}" ]; then
+            echo "ERROR: DEVELOPER_ID_CERTIFICATE_PASSWORD secret is empty or not set"  
             exit 1
           fi
           
@@ -41,8 +41,8 @@ jobs:
           security set-keychain-settings -t 3600 -l build.keychain
           
           # Import certificate
-          echo "${{ secrets.SIGNING_CERTIFICATE_BASE64 }}" | base64 --decode > certificate.p12
-          security import certificate.p12 -k build.keychain -P "${{ secrets.SIGNING_CERTIFICATE_PASSWORD }}" -T /usr/bin/codesign
+          echo "${{ secrets.DEVELOPER_ID_CERTIFICATE_BASE64 }}" | base64 --decode > certificate.p12
+          security import certificate.p12 -k build.keychain -P "${{ secrets.DEVELOPER_ID_CERTIFICATE_PASSWORD }}" -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
           
           # Clean up
@@ -60,6 +60,10 @@ jobs:
             -scheme "SwiftFormat for Xcode" \
             -configuration Release \
             -archivePath "$ARCHIVE_PATH" \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Developer ID Application" \
+            DEVELOPMENT_TEAM="8VQKF583ED" \
+            PROVISIONING_PROFILE_SPECIFIER="" \
             archive
       
       - name: Export App from Archive

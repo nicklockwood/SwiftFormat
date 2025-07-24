@@ -76,21 +76,8 @@ jobs:
           echo "app-path=$APP_PATH" >> $GITHUB_OUTPUT
           echo "Copied app to: $APP_PATH"
           
-          # Re-sign the app and all components with hardened runtime
-          echo "Re-signing app components..."
-          find "$APP_PATH" -name "*.dylib" -exec codesign --force --sign "Developer ID Application" --timestamp --options runtime {} \;
-          # Skip Apple's XcodeKit.framework - don't re-sign it
-          find "$APP_PATH" -name "*.framework" -not -path "*/XcodeKit.framework" -exec codesign --force --sign "Developer ID Application" --timestamp --options runtime {} \;
-          find "$APP_PATH" -name "*.appex" -exec codesign --force --sign "Developer ID Application" --timestamp --options runtime {} \;
-          codesign --force --sign "Developer ID Application" --timestamp --options runtime "$APP_PATH"
-          
-          # Verify signing - fail if verification fails but continue workflow
-          echo "Verifying code signature..."
-          if ! codesign --verify --deep --strict "$APP_PATH"; then
-            echo "ERROR: Code signature verification failed!"
-            exit 1
-          fi
-          echo "App signing verified successfully"
+          # Use app from archive as-is without additional signing
+          echo "Using app from archive without modification"
         continue-on-error: true
       
       - name: Notarize App

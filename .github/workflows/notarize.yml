@@ -1,0 +1,161 @@
+name: Build and Notarize SwiftFormat for Xcode
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g. v1.2.3)'
+        required: true
+
+jobs:
+  build-and-notarize:
+    runs-on: macos-15
+    
+    steps:
+      - name: Select Xcode version
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '16.3'
+      
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name || inputs.tag }}
+      
+      - name: Import Code Signing Certificate
+        run: |
+          # Debug: Check if secrets exist (without revealing them)
+          if [ -z "${{ secrets.DEVELOPER_ID_CERTIFICATE_BASE64 }}" ]; then
+            echo "ERROR: DEVELOPER_ID_CERTIFICATE_BASE64 secret is empty or not set"
+            exit 1
+          fi
+          if [ -z "${{ secrets.DEVELOPER_ID_CERTIFICATE_PASSWORD }}" ]; then
+            echo "ERROR: DEVELOPER_ID_CERTIFICATE_PASSWORD secret is empty or not set"  
+            exit 1
+          fi
+          
+          echo "Secrets are present, proceeding with certificate import..."
+          
+          # Create keychain
+          security create-keychain -p "" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "" build.keychain
+          security set-keychain-settings -t 3600 -l build.keychain
+          
+          # Import certificate
+          echo "${{ secrets.DEVELOPER_ID_CERTIFICATE_BASE64 }}" | base64 --decode > certificate.p12
+          security import certificate.p12 -k build.keychain -P "${{ secrets.DEVELOPER_ID_CERTIFICATE_PASSWORD }}" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain
+          
+          # Clean up
+          rm certificate.p12
+      
+      - name: Archive SwiftFormat for Xcode App
+        run: |
+          ARCHIVE_PATH="build/SwiftFormatForXcode.xcarchive"
+          xcodebuild \
+            -project SwiftFormat.xcodeproj \
+            -scheme "SwiftFormat for Xcode" \
+            -configuration Release \
+            -archivePath "$ARCHIVE_PATH" \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Developer ID Application" \
+            DEVELOPMENT_TEAM="8VQKF583ED" \
+            PROVISIONING_PROFILE_SPECIFIER="" \
+            archive
+      
+      - name: Copy and Sign App from Archive
+        id: export-app
+        run: |
+          ARCHIVE_PATH="build/SwiftFormatForXcode.xcarchive"
+          EXPORT_PATH="build/Export"
+          mkdir -p "$EXPORT_PATH"
+          
+          # Copy app from archive
+          cp -R "$ARCHIVE_PATH/Products/Applications/SwiftFormat for Xcode.app" "$EXPORT_PATH/"
+          
+          APP_PATH="$EXPORT_PATH/SwiftFormat for Xcode.app"
+          echo "app-path=$APP_PATH" >> $GITHUB_OUTPUT
+          echo "Copied app to: $APP_PATH"
+          
+          # Use app from archive as-is without additional signing
+          echo "Using app from archive without modification"
+          
+          # Check and fix XcodeKit.framework structure
+          XCODE_KIT_PATH="$APP_PATH/Contents/PlugIns/SwiftFormat.appex/Contents/Frameworks/XcodeKit.framework"
+          echo "Checking XcodeKit.framework structure..."
+          ls -la "$XCODE_KIT_PATH/Versions/"
+          file "$XCODE_KIT_PATH/Versions/Current"
+          
+          # Validate the signature from archive
+          echo "Validating archive signature..."
+          if ! codesign --verify --deep --strict "$APP_PATH"; then
+            echo "ERROR: Archive produced invalid signature!"
+            exit 1
+          fi
+          echo "Archive signature is valid"
+          
+          # Check Gatekeeper assessment
+          echo "Checking Gatekeeper assessment..."
+          if ! spctl -a -v "$APP_PATH"; then
+            echo "ERROR: Gatekeeper would reject this app!"
+            exit 1
+          fi
+          echo "Gatekeeper assessment passed"
+      
+      - name: Notarize App
+        uses: lando/notarize-action@v2
+        with:
+          product-path: ${{ steps.export-app.outputs.app-path }}
+          appstore-connect-username: ${{ secrets.NOTARIZATION_USERNAME }}
+          appstore-connect-password: ${{ secrets.NOTARIZATION_PASSWORD }}
+          appstore-connect-team-id: 8VQKF583ED
+          primary-bundle-id: com.nicklockwood.SwiftFormat-for-Xcode
+          verbose: true
+      
+      - name: Staple Notarization
+        id: staple
+        run: |
+          xcrun stapler staple "${{ steps.export-app.outputs.app-path }}"
+      
+      - name: Get Notarization Logs
+        if: failure()
+        run: |
+          echo "Getting notarization history and logs..."
+          
+          # Show recent history
+          echo "=== Recent Notarization History ==="
+          xcrun notarytool history --team-id 8VQKF583ED --apple-id "${{ secrets.NOTARIZATION_USERNAME }}" --password "${{ secrets.NOTARIZATION_PASSWORD }}"
+          
+          # Get the most recent request UUID and its detailed logs
+          echo ""
+          echo "=== Getting detailed logs for most recent submission ==="
+          REQUEST_UUID=$(xcrun notarytool history --team-id 8VQKF583ED --apple-id "${{ secrets.NOTARIZATION_USERNAME }}" --password "${{ secrets.NOTARIZATION_PASSWORD }}" | grep -E "id:\s*[a-f0-9-]{36}" | head -1 | sed 's/.*id: //')
+          
+          if [ -n "$REQUEST_UUID" ]; then
+            echo "Getting logs for request: $REQUEST_UUID"
+            xcrun notarytool log "$REQUEST_UUID" --team-id 8VQKF583ED --apple-id "${{ secrets.NOTARIZATION_USERNAME }}" --password "${{ secrets.NOTARIZATION_PASSWORD }}"
+          else
+            echo "Could not extract request UUID from history"
+          fi
+      
+      - name: Zip App
+        run: |
+          cd "$(dirname "${{ steps.export-app.outputs.app-path }}")"
+          zip -r --symlinks SwiftFormat.for.Xcode.app.zip "SwiftFormat for Xcode.app"
+          echo "ZIP_DIR=$(pwd)" >> $GITHUB_ENV
+      
+      - name: Upload App Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SwiftFormat-for-Xcode
+          path: ${{ env.ZIP_DIR }}/SwiftFormat.for.Xcode.app.zip
+      
+      - name: Upload to Release
+        uses: skx/github-action-publish-binaries@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: ${{ env.ZIP_DIR }}/SwiftFormat.for.Xcode.app.zip

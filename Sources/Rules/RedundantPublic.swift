@@ -50,6 +50,10 @@ public extension FormatRule {
                 return
             }
 
+            if declaration.modifiers.contains("@_spi") {
+                return
+            }
+
             switch parentType.keyword {
             case "extension":
                 // Inside an extension where the extended type is internal, any `public` modifier has no effect.

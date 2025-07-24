@@ -47,10 +47,6 @@ jobs:
           
           # Clean up
           rm certificate.p12
-          
-          # Debug: List available certificates
-          echo "Available signing identities:"
-          security find-identity -v -p codesigning build.keychain
       
       - name: Archive SwiftFormat for Xcode App
         run: |
@@ -105,8 +101,10 @@ jobs:
         id: staple
         run: |
           xcrun stapler staple "${{ steps.export-app.outputs.app-path }}"
+        continue-on-error: true
       
       - name: Get Notarization Logs
+        if: steps.staple.outcome == 'failure'
         run: |
           echo "Getting notarization history and logs..."
           

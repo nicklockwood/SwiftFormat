@@ -86,6 +86,14 @@ jobs:
             exit 1
           fi
           echo "Archive signature is valid"
+          
+          # Check Gatekeeper assessment
+          echo "Checking Gatekeeper assessment..."
+          if ! spctl -a -v "$APP_PATH"; then
+            echo "ERROR: Gatekeeper would reject this app!"
+            exit 1
+          fi
+          echo "Gatekeeper assessment passed"
         continue-on-error: true
       
       - name: Notarize App

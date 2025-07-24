@@ -66,44 +66,30 @@ jobs:
             PROVISIONING_PROFILE_SPECIFIER="" \
             archive
       
-      - name: Export App from Archive
+      - name: Copy and Sign App from Archive
         id: export-app
         run: |
           ARCHIVE_PATH="build/SwiftFormatForXcode.xcarchive"
           EXPORT_PATH="build/Export"
+          mkdir -p "$EXPORT_PATH"
           
-          # Create export options plist
-          cat > export_options.plist << EOF
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-              <key>method</key>
-              <string>developer-id</string>
-              <key>destination</key>
-              <string>export</string>
-              <key>signingStyle</key>
-              <string>manual</string>
-              <key>stripSwiftSymbols</key>
-              <true/>
-              <key>teamID</key>
-              <string>8VQKF583ED</string>
-              <key>signingCertificate</key>
-              <string>Developer ID Application</string>
-          </dict>
-          </plist>
-          EOF
+          # Copy app from archive
+          cp -R "$ARCHIVE_PATH/Products/Applications/SwiftFormat for Xcode.app" "$EXPORT_PATH/"
           
-          xcodebuild \
-            -exportArchive \
-            -archivePath "$ARCHIVE_PATH" \
-            -exportPath "$EXPORT_PATH" \
-            -exportOptionsPlist export_options.plist
-          
-          APP_PATH=$(find "$EXPORT_PATH" -name "SwiftFormat for Xcode.app" -type d | head -1)
+          APP_PATH="$EXPORT_PATH/SwiftFormat for Xcode.app"
           echo "app-path=$APP_PATH" >> $GITHUB_OUTPUT
-          echo "Found exported app at: $APP_PATH"
-          ls -la "$APP_PATH"
+          echo "Copied app to: $APP_PATH"
+          
+          # Re-sign the app and all components
+          echo "Re-signing app components..."
+          find "$APP_PATH" -name "*.dylib" -exec codesign --force --sign "Developer ID Application" --timestamp {} \;
+          find "$APP_PATH" -name "*.framework" -exec codesign --force --sign "Developer ID Application" --timestamp {} \;
+          find "$APP_PATH" -name "*.appex" -exec codesign --force --sign "Developer ID Application" --timestamp {} \;
+          codesign --force --sign "Developer ID Application" --timestamp --options runtime "$APP_PATH"
+          
+          # Verify signing
+          codesign --verify --deep --strict "$APP_PATH"
+          echo "App signing verified successfully"
       
       - name: Notarize App
         uses: lando/notarize-action@v2

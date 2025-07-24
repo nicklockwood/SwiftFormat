@@ -82,6 +82,14 @@ jobs:
               <string>developer-id</string>
               <key>destination</key>
               <string>export</string>
+              <key>signingStyle</key>
+              <string>manual</string>
+              <key>stripSwiftSymbols</key>
+              <true/>
+              <key>teamID</key>
+              <string>8VQKF583ED</string>
+              <key>signingCertificate</key>
+              <string>Developer ID Application</string>
           </dict>
           </plist>
           EOF

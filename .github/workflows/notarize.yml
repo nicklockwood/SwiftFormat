@@ -102,9 +102,9 @@ jobs:
           verbose: true
       
       - name: Staple Notarization
+        id: staple
         run: |
           xcrun stapler staple "${{ steps.export-app.outputs.app-path }}"
-        continue-on-error: true
       
       - name: Get Notarization Logs
         run: |
@@ -127,12 +127,15 @@ jobs:
           fi
       
       - name: Zip App
+        if: steps.staple.outcome == 'success'
         run: |
           cd "$(dirname "${{ steps.export-app.outputs.app-path }}")"
           zip -r SwiftFormat.for.Xcode.app.zip "SwiftFormat for Xcode.app"
-          echo "ZIP_PATH=$(pwd)/SwiftFormat.for.Xcode.app.zip" >> $GITHUB_ENV
+          echo "ZIP_DIR=$(pwd)" >> $GITHUB_ENV
       
       - name: Upload App Artifact
+        if: steps.staple.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
-          path: ${{ env.ZIP_PATH }}
+          name: SwiftFormat-for-Xcode
+          path: ${{ env.ZIP_DIR }}/SwiftFormat.for.Xcode.app.zip

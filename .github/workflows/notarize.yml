@@ -78,6 +78,14 @@ jobs:
           
           # Use app from archive as-is without additional signing
           echo "Using app from archive without modification"
+          
+          # Validate the signature from archive
+          echo "Validating archive signature..."
+          if ! codesign --verify --deep --strict "$APP_PATH"; then
+            echo "ERROR: Archive produced invalid signature!"
+            exit 1
+          fi
+          echo "Archive signature is valid"
         continue-on-error: true
       
       - name: Notarize App

@@ -93,7 +93,7 @@
 		2EF8BF1D2D1E0D4F00D6F12F /* DeclarationType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EF8BF1A2D1E0D4F00D6F12F /* DeclarationType.swift */; };
 		2EF8BF1E2D1E0D4F00D6F12F /* DeclarationType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EF8BF1A2D1E0D4F00D6F12F /* DeclarationType.swift */; };
 		37D828AB24BF77DA0012FC0A /* XcodeKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 37D828AA24BF77DA0012FC0A /* XcodeKit.framework */; };
-		37D828AC24BF77DA0012FC0A /* XcodeKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 37D828AA24BF77DA0012FC0A /* XcodeKit.framework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		37D828AC24BF77DA0012FC0A /* XcodeKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 37D828AA24BF77DA0012FC0A /* XcodeKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		6E954FF32E0DEACC004EE019 /* SARIFReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E954FF22E0DEACC004EE019 /* SARIFReporter.swift */; };
 		6E954FF42E0DEACC004EE019 /* SARIFReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E954FF22E0DEACC004EE019 /* SARIFReporter.swift */; };
 		6E954FF52E0DEACC004EE019 /* SARIFReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E954FF22E0DEACC004EE019 /* SARIFReporter.swift */; };

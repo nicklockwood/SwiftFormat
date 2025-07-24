@@ -79,6 +79,12 @@ jobs:
           # Use app from archive as-is without additional signing
           echo "Using app from archive without modification"
           
+          # Check and fix XcodeKit.framework structure
+          XCODE_KIT_PATH="$APP_PATH/Contents/PlugIns/SwiftFormat.appex/Contents/Frameworks/XcodeKit.framework"
+          echo "Checking XcodeKit.framework structure..."
+          ls -la "$XCODE_KIT_PATH/Versions/"
+          file "$XCODE_KIT_PATH/Versions/Current"
+          
           # Validate the signature from archive
           echo "Validating archive signature..."
           if ! codesign --verify --deep --strict "$APP_PATH"; then
@@ -137,7 +143,7 @@ jobs:
       - name: Zip App
         run: |
           cd "$(dirname "${{ steps.export-app.outputs.app-path }}")"
-          zip -r SwiftFormat.for.Xcode.app.zip "SwiftFormat for Xcode.app"
+          zip -r --symlinks SwiftFormat.for.Xcode.app.zip "SwiftFormat for Xcode.app"
           echo "ZIP_DIR=$(pwd)" >> $GITHUB_ENV
       
       - name: Upload App Artifact

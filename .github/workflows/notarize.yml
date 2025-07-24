@@ -122,8 +122,8 @@ jobs:
       - name: Zip App
         run: |
           cd "$(dirname "${{ steps.export-app.outputs.app-path }}")"
-          zip -r SwiftFormat-for-Xcode.zip "SwiftFormat for Xcode.app"
-          echo "ZIP_PATH=$(pwd)/SwiftFormat-for-Xcode.zip" >> $GITHUB_ENV
+          zip -r SwiftFormat.for.Xcode.app.zip "SwiftFormat for Xcode.app"
+          echo "ZIP_PATH=$(pwd)/SwiftFormat.for.Xcode.app.zip" >> $GITHUB_ENV
       
       - name: Upload App Artifact
         uses: actions/upload-artifact@v4

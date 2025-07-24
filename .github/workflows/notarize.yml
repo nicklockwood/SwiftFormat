@@ -92,6 +92,7 @@ jobs:
           echo "App signing verified successfully"
       
       - name: Notarize App
+        id: notarize
         uses: lando/notarize-action@v2
         with:
           product-path: ${{ steps.export-app.outputs.app-path }}
@@ -100,6 +101,20 @@ jobs:
           appstore-connect-team-id: 8VQKF583ED
           primary-bundle-id: com.nicklockwood.SwiftFormat-for-Xcode
           verbose: true
+        continue-on-error: true
+      
+      - name: Get Notarization Logs on Failure
+        if: steps.notarize.outcome == 'failure'
+        run: |
+          echo "Notarization failed, getting detailed logs..."
+          # Get the request UUID from notarytool history
+          REQUEST_UUID=$(xcrun notarytool history --team-id 8VQKF583ED --apple-id "${{ secrets.NOTARIZATION_USERNAME }}" --password "${{ secrets.NOTARIZATION_PASSWORD }}" --output-format json | jq -r '.[0].id')
+          echo "Request UUID: $REQUEST_UUID"
+          
+          # Get detailed logs
+          xcrun notarytool log "$REQUEST_UUID" --team-id 8VQKF583ED --apple-id "${{ secrets.NOTARIZATION_USERNAME }}" --password "${{ secrets.NOTARIZATION_PASSWORD }}"
+          
+          exit 1
       
       - name: Staple Notarization
         run: |

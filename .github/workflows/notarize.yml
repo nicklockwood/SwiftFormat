@@ -102,24 +102,8 @@ jobs:
           verbose: true
       
       - name: Staple Notarization
-        id: staple
         run: |
-          # Retry stapling up to 3 times with delays
-          for i in {1..3}; do
-            echo "Stapling attempt $i..."
-            if xcrun stapler staple "${{ steps.export-app.outputs.app-path }}"; then
-              echo "Stapling successful on attempt $i"
-              exit 0
-            else
-              if [ $i -eq 3 ]; then
-                echo "Stapling failed after 3 attempts"
-                exit 1
-              else
-                echo "Stapling attempt $i failed, waiting 30 seconds before retry..."
-                sleep 30
-              fi
-            fi
-          done
+          xcrun stapler staple "${{ steps.export-app.outputs.app-path }}"
         continue-on-error: true
       
       - name: Get Notarization Logs

@@ -100,7 +100,6 @@ jobs:
             exit 1
           fi
           echo "Gatekeeper assessment passed"
-        continue-on-error: true
       
       - name: Notarize App
         uses: lando/notarize-action@v2
@@ -111,16 +110,14 @@ jobs:
           appstore-connect-team-id: 8VQKF583ED
           primary-bundle-id: com.nicklockwood.SwiftFormat-for-Xcode
           verbose: true
-        continue-on-error: true
       
       - name: Staple Notarization
         id: staple
         run: |
           xcrun stapler staple "${{ steps.export-app.outputs.app-path }}"
-        continue-on-error: true
       
       - name: Get Notarization Logs
-        if: steps.staple.outcome == 'failure'
+        if: failure()
         run: |
           echo "Getting notarization history and logs..."
           

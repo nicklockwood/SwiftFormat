@@ -1,11 +1,8 @@
 name: Build and Notarize SwiftFormat for Xcode
 
 on:
-  push:
-    branches: [develop, main]
-  pull_request:
-    branches: [develop, main]
-  workflow_dispatch:
+  release:
+    types: [published]
 
 jobs:
   build-and-notarize:
@@ -148,3 +145,10 @@ jobs:
         with:
           name: SwiftFormat-for-Xcode
           path: ${{ env.ZIP_DIR }}/SwiftFormat.for.Xcode.app.zip
+      
+      - name: Upload to Release
+        uses: skx/github-action-publish-binaries@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: ${{ env.ZIP_DIR }}/SwiftFormat.for.Xcode.app.zip

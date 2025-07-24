@@ -116,8 +116,3 @@ Then complete the following steps manually:
 * Publish a new release
   * All binaries are built and uploaded to the release automatically
 * pod trunk push --allow-warnings
-
-Finally, these steps require App Store Connect access, so only Nick can do them:
-
-* Select SwiftFormat for Xcode and run Product > Archive
-* Notarize and export built app

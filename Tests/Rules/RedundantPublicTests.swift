@@ -38,6 +38,16 @@ class RedundantPublicTests: XCTestCase {
         testFormatting(for: input, [output], rules: [.redundantPublic])
     }
 
+    func testDoesNotRemovePublicFromMethodInInternalClassWithSPI() {
+        let input = """
+        class Example {
+            @_spi(Example)
+            public func doSomething() {}
+        }
+        """
+        testFormatting(for: input, rules: [.redundantPublic])
+    }
+
     func testRemovesPublicFromMultipleDeclarationsInInternalType() {
         let input = """
         struct Container {

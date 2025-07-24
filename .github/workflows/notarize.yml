@@ -84,8 +84,12 @@ jobs:
           find "$APP_PATH" -name "*.appex" -exec codesign --force --sign "Developer ID Application" --timestamp --options runtime {} \;
           codesign --force --sign "Developer ID Application" --timestamp --options runtime "$APP_PATH"
           
-          # Verify signing
-          codesign --verify --deep --strict "$APP_PATH"
+          # Verify signing - fail if verification fails
+          echo "Verifying code signature..."
+          if ! codesign --verify --deep --strict "$APP_PATH"; then
+            echo "ERROR: Code signature verification failed!"
+            exit 1
+          fi
           echo "App signing verified successfully"
       
       - name: Notarize App

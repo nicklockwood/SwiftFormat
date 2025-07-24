@@ -80,11 +80,11 @@ jobs:
           echo "app-path=$APP_PATH" >> $GITHUB_OUTPUT
           echo "Copied app to: $APP_PATH"
           
-          # Re-sign the app and all components
+          # Re-sign the app and all components with hardened runtime
           echo "Re-signing app components..."
-          find "$APP_PATH" -name "*.dylib" -exec codesign --force --sign "Developer ID Application" --timestamp {} \;
-          find "$APP_PATH" -name "*.framework" -exec codesign --force --sign "Developer ID Application" --timestamp {} \;
-          find "$APP_PATH" -name "*.appex" -exec codesign --force --sign "Developer ID Application" --timestamp {} \;
+          find "$APP_PATH" -name "*.dylib" -exec codesign --force --sign "Developer ID Application" --timestamp --options runtime {} \;
+          find "$APP_PATH" -name "*.framework" -exec codesign --force --sign "Developer ID Application" --timestamp --options runtime {} \;
+          find "$APP_PATH" -name "*.appex" -exec codesign --force --sign "Developer ID Application" --timestamp --options runtime {} \;
           codesign --force --sign "Developer ID Application" --timestamp --options runtime "$APP_PATH"
           
           # Verify signing

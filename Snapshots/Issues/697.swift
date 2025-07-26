@@ -171,7 +171,7 @@ private struct _FirestoreKeyedDecodingContainer<K: CodingKey>: KeyedDecodingCont
   private let container: [String: Any]
 
   /// The path of coding keys taken to get to this point in decoding.
-  public private(set) var codingPath: [CodingKey]
+  private(set) var codingPath: [CodingKey]
 
   // MARK: - Initialization
 
@@ -184,20 +184,20 @@ private struct _FirestoreKeyedDecodingContainer<K: CodingKey>: KeyedDecodingCont
 
   // MARK: - KeyedDecodingContainerProtocol Methods
 
-  public var allKeys: [Key] {
+  var allKeys: [Key] {
     return container.keys.compactMap { Key(stringValue: $0) }
   }
 
-  public func contains(_ key: Key) -> Bool {
+  func contains(_ key: Key) -> Bool {
     return container[key.stringValue] != nil
   }
 
-  public func decodeNil(forKey key: Key) throws -> Bool {
+  func decodeNil(forKey key: Key) throws -> Bool {
     let entry = try require(key: key)
     return entry is NSNull
   }
 
-  public func decode(_: Bool.Type, forKey key: Key) throws -> Bool {
+  func decode(_: Bool.Type, forKey key: Key) throws -> Bool {
     let entry = try require(key: key)
 
     decoder.codingPath.append(key)
@@ -207,7 +207,7 @@ private struct _FirestoreKeyedDecodingContainer<K: CodingKey>: KeyedDecodingCont
     return try require(value: value)
   }
 
-  public func decode(_: Int.Type, forKey key: Key) throws -> Int {
+  func decode(_: Int.Type, forKey key: Key) throws -> Int {
     let entry = try require(key: key)
 
     decoder.codingPath.append(key)
@@ -217,7 +217,7 @@ private struct _FirestoreKeyedDecodingContainer<K: CodingKey>: KeyedDecodingCont
     return try require(value: value)
   }
 
-  public func decode(_: Int8.Type, forKey key: Key) throws -> Int8 {
+  func decode(_: Int8.Type, forKey key: Key) throws -> Int8 {
     let entry = try require(key: key)
 
     decoder.codingPath.append(key)
@@ -227,7 +227,7 @@ private struct _FirestoreKeyedDecodingContainer<K: CodingKey>: KeyedDecodingCont
     return try require(value: value)
   }
 
-  public func decode(_: Int16.Type, forKey key: Key) throws -> Int16 {
+  func decode(_: Int16.Type, forKey key: Key) throws -> Int16 {
     let entry = try require(key: key)
 
     decoder.codingPath.append(key)
@@ -237,7 +237,7 @@ private struct _FirestoreKeyedDecodingContainer<K: CodingKey>: KeyedDecodingCont
     return try require(value: value)
   }
 
-  public func decode(_: Int32.Type, forKey key: Key) throws -> Int32 {
+  func decode(_: Int32.Type, forKey key: Key) throws -> Int32 {
     let entry = try require(key: key)
 
     decoder.codingPath.append(key)
@@ -247,7 +247,7 @@ private struct _FirestoreKeyedDecodingContainer<K: CodingKey>: KeyedDecodingCont
     return try require(value: value)
   }
 
-  public func decode(_: Int64.Type, forKey key: Key) throws -> Int64 {
+  func decode(_: Int64.Type, forKey key: Key) throws -> Int64 {
     let entry = try require(key: key)
 
     decoder.codingPath.append(key)
@@ -257,7 +257,7 @@ private struct _FirestoreKeyedDecodingContainer<K: CodingKey>: KeyedDecodingCont
     return try require(value: value)
   }
 
-  public func decode(_: UInt.Type, forKey key: Key) throws -> UInt {
+  func decode(_: UInt.Type, forKey key: Key) throws -> UInt {
     let entry = try require(key: key)
 
     decoder.codingPath.append(key)
@@ -267,7 +267,7 @@ private struct _FirestoreKeyedDecodingContainer<K: CodingKey>: KeyedDecodingCont
     return try require(value: value)
   }
 
-  public func decode(_: UInt8.Type, forKey key: Key) throws -> UInt8 {
+  func decode(_: UInt8.Type, forKey key: Key) throws -> UInt8 {
     let entry = try require(key: key)
 
     decoder.codingPath.append(key)
@@ -277,7 +277,7 @@ private struct _FirestoreKeyedDecodingContainer<K: CodingKey>: KeyedDecodingCont
     return try require(value: value)
   }
 
-  public func decode(_: UInt16.Type, forKey key: Key) throws -> UInt16 {
+  func decode(_: UInt16.Type, forKey key: Key) throws -> UInt16 {
     let entry = try require(key: key)
 
     decoder.codingPath.append(key)
@@ -287,7 +287,7 @@ private struct _FirestoreKeyedDecodingContainer<K: CodingKey>: KeyedDecodingCont
     return try require(value: value)
   }
 
-  public func decode(_: UInt32.Type, forKey key: Key) throws -> UInt32 {
+  func decode(_: UInt32.Type, forKey key: Key) throws -> UInt32 {
     let entry = try require(key: key)
 
     decoder.codingPath.append(key)
@@ -297,7 +297,7 @@ private struct _FirestoreKeyedDecodingContainer<K: CodingKey>: KeyedDecodingCont
     return try require(value: value)
   }
 
-  public func decode(_: UInt64.Type, forKey key: Key) throws -> UInt64 {
+  func decode(_: UInt64.Type, forKey key: Key) throws -> UInt64 {
     let entry = try require(key: key)
 
     decoder.codingPath.append(key)
@@ -307,7 +307,7 @@ private struct _FirestoreKeyedDecodingContainer<K: CodingKey>: KeyedDecodingCont
     return try require(value: value)
   }
 
-  public func decode(_: Float.Type, forKey key: Key) throws -> Float {
+  func decode(_: Float.Type, forKey key: Key) throws -> Float {
     let entry = try require(key: key)
 
     decoder.codingPath.append(key)
@@ -317,7 +317,7 @@ private struct _FirestoreKeyedDecodingContainer<K: CodingKey>: KeyedDecodingCont
     return try require(value: value)
   }
 
-  public func decode(_: Double.Type, forKey key: Key) throws -> Double {
+  func decode(_: Double.Type, forKey key: Key) throws -> Double {
     let entry = try require(key: key)
 
     decoder.codingPath.append(key)
@@ -327,7 +327,7 @@ private struct _FirestoreKeyedDecodingContainer<K: CodingKey>: KeyedDecodingCont
     return try require(value: value)
   }
 
-  public func decode(_: String.Type, forKey key: Key) throws -> String {
+  func decode(_: String.Type, forKey key: Key) throws -> String {
     let entry = try require(key: key)
 
     decoder.codingPath.append(key)
@@ -337,7 +337,7 @@ private struct _FirestoreKeyedDecodingContainer<K: CodingKey>: KeyedDecodingCont
     return try require(value: value)
   }
 
-  public func decode<T: Decodable>(_ type: T.Type, forKey key: Key) throws -> T {
+  func decode<T: Decodable>(_ type: T.Type, forKey key: Key) throws -> T {
     #if compiler(>=5.1)
       if let type = type as? DocumentIDProtocol.Type {
         let docRef = decoder.userInfo[
@@ -388,8 +388,8 @@ private struct _FirestoreKeyedDecodingContainer<K: CodingKey>: KeyedDecodingCont
     throw DecodingError.valueNotFound(T.self, context)
   }
 
-  public func nestedContainer<NestedKey>(keyedBy _: NestedKey.Type,
-                                         forKey key: Key) throws
+  func nestedContainer<NestedKey>(keyedBy _: NestedKey.Type,
+                                  forKey key: Key) throws
     -> KeyedDecodingContainer<NestedKey> {
     decoder.codingPath.append(key)
     defer { self.decoder.codingPath.removeLast() }
@@ -410,7 +410,7 @@ private struct _FirestoreKeyedDecodingContainer<K: CodingKey>: KeyedDecodingCont
     return KeyedDecodingContainer(container)
   }
 
-  public func nestedUnkeyedContainer(forKey key: Key) throws -> UnkeyedDecodingContainer {
+  func nestedUnkeyedContainer(forKey key: Key) throws -> UnkeyedDecodingContainer {
     decoder.codingPath.append(key)
     defer { self.decoder.codingPath.removeLast() }
 
@@ -436,11 +436,11 @@ private struct _FirestoreKeyedDecodingContainer<K: CodingKey>: KeyedDecodingCont
     return _FirestoreDecoder(referencing: value, at: decoder.codingPath)
   }
 
-  public func superDecoder() throws -> Decoder {
+  func superDecoder() throws -> Decoder {
     return try _superDecoder(forKey: _FirestoreKey.super)
   }
 
-  public func superDecoder(forKey key: Key) throws -> Decoder {
+  func superDecoder(forKey key: Key) throws -> Decoder {
     return try _superDecoder(forKey: key)
   }
 }
@@ -455,10 +455,10 @@ private struct _FirestoreUnkeyedDecodingContainer: UnkeyedDecodingContainer {
   private let container: [Any]
 
   /// The path of coding keys taken to get to this point in decoding.
-  public private(set) var codingPath: [CodingKey]
+  private(set) var codingPath: [CodingKey]
 
   /// The index of the element we're about to decode.
-  public private(set) var currentIndex: Int
+  private(set) var currentIndex: Int
 
   // MARK: - Initialization
 
@@ -472,15 +472,15 @@ private struct _FirestoreUnkeyedDecodingContainer: UnkeyedDecodingContainer {
 
   // MARK: - UnkeyedDecodingContainer Methods
 
-  public var count: Int? {
+  var count: Int? {
     return container.count
   }
 
-  public var isAtEnd: Bool {
+  var isAtEnd: Bool {
     return currentIndex >= count!
   }
 
-  public mutating func decodeNil() throws -> Bool {
+  mutating func decodeNil() throws -> Bool {
     try expectNotAtEnd()
 
     if container[currentIndex] is NSNull {
@@ -491,7 +491,7 @@ private struct _FirestoreUnkeyedDecodingContainer: UnkeyedDecodingContainer {
     }
   }
 
-  public mutating func decode(_: Bool.Type) throws -> Bool {
+  mutating func decode(_: Bool.Type) throws -> Bool {
     try expectNotAtEnd()
 
     decoder.codingPath.append(_FirestoreKey(index: currentIndex))
@@ -501,7 +501,7 @@ private struct _FirestoreUnkeyedDecodingContainer: UnkeyedDecodingContainer {
     return try require(value: decoded)
   }
 
-  public mutating func decode(_: Int.Type) throws -> Int {
+  mutating func decode(_: Int.Type) throws -> Int {
     try expectNotAtEnd()
 
     decoder.codingPath.append(_FirestoreKey(index: currentIndex))
@@ -511,7 +511,7 @@ private struct _FirestoreUnkeyedDecodingContainer: UnkeyedDecodingContainer {
     return try require(value: decoded)
   }
 
-  public mutating func decode(_: Int8.Type) throws -> Int8 {
+  mutating func decode(_: Int8.Type) throws -> Int8 {
     try expectNotAtEnd()
 
     decoder.codingPath.append(_FirestoreKey(index: currentIndex))
@@ -521,7 +521,7 @@ private struct _FirestoreUnkeyedDecodingContainer: UnkeyedDecodingContainer {
     return try require(value: decoded)
   }
 
-  public mutating func decode(_: Int16.Type) throws -> Int16 {
+  mutating func decode(_: Int16.Type) throws -> Int16 {
     try expectNotAtEnd()
 
     decoder.codingPath.append(_FirestoreKey(index: currentIndex))
@@ -531,7 +531,7 @@ private struct _FirestoreUnkeyedDecodingContainer: UnkeyedDecodingContainer {
     return try require(value: decoded)
   }
 
-  public mutating func decode(_: Int32.Type) throws -> Int32 {
+  mutating func decode(_: Int32.Type) throws -> Int32 {
     try expectNotAtEnd()
 
     decoder.codingPath.append(_FirestoreKey(index: currentIndex))
@@ -541,7 +541,7 @@ private struct _FirestoreUnkeyedDecodingContainer: UnkeyedDecodingContainer {
     return try require(value: decoded)
   }
 
-  public mutating func decode(_: Int64.Type) throws -> Int64 {
+  mutating func decode(_: Int64.Type) throws -> Int64 {
     try expectNotAtEnd()
 
     decoder.codingPath.append(_FirestoreKey(index: currentIndex))
@@ -551,7 +551,7 @@ private struct _FirestoreUnkeyedDecodingContainer: UnkeyedDecodingContainer {
     return try require(value: decoded)
   }
 
-  public mutating func decode(_: UInt.Type) throws -> UInt {
+  mutating func decode(_: UInt.Type) throws -> UInt {
     try expectNotAtEnd()
 
     decoder.codingPath.append(_FirestoreKey(index: currentIndex))
@@ -561,7 +561,7 @@ private struct _FirestoreUnkeyedDecodingContainer: UnkeyedDecodingContainer {
     return try require(value: decoded)
   }
 
-  public mutating func decode(_: UInt8.Type) throws -> UInt8 {
+  mutating func decode(_: UInt8.Type) throws -> UInt8 {
     try expectNotAtEnd()
 
     decoder.codingPath.append(_FirestoreKey(index: currentIndex))
@@ -571,7 +571,7 @@ private struct _FirestoreUnkeyedDecodingContainer: UnkeyedDecodingContainer {
     return try require(value: decoded)
   }
 
-  public mutating func decode(_: UInt16.Type) throws -> UInt16 {
+  mutating func decode(_: UInt16.Type) throws -> UInt16 {
     try expectNotAtEnd()
 
     decoder.codingPath.append(_FirestoreKey(index: currentIndex))
@@ -581,7 +581,7 @@ private struct _FirestoreUnkeyedDecodingContainer: UnkeyedDecodingContainer {
     return try require(value: decoded)
   }
 
-  public mutating func decode(_: UInt32.Type) throws -> UInt32 {
+  mutating func decode(_: UInt32.Type) throws -> UInt32 {
     try expectNotAtEnd()
 
     decoder.codingPath.append(_FirestoreKey(index: currentIndex))
@@ -591,7 +591,7 @@ private struct _FirestoreUnkeyedDecodingContainer: UnkeyedDecodingContainer {
     return try require(value: decoded)
   }
 
-  public mutating func decode(_: UInt64.Type) throws -> UInt64 {
+  mutating func decode(_: UInt64.Type) throws -> UInt64 {
     try expectNotAtEnd()
 
     decoder.codingPath.append(_FirestoreKey(index: currentIndex))
@@ -601,7 +601,7 @@ private struct _FirestoreUnkeyedDecodingContainer: UnkeyedDecodingContainer {
     return try require(value: decoded)
   }
 
-  public mutating func decode(_: Float.Type) throws -> Float {
+  mutating func decode(_: Float.Type) throws -> Float {
     try expectNotAtEnd()
 
     decoder.codingPath.append(_FirestoreKey(index: currentIndex))
@@ -611,7 +611,7 @@ private struct _FirestoreUnkeyedDecodingContainer: UnkeyedDecodingContainer {
     return try require(value: decoded)
   }
 
-  public mutating func decode(_: Double.Type) throws -> Double {
+  mutating func decode(_: Double.Type) throws -> Double {
     try expectNotAtEnd()
 
     decoder.codingPath.append(_FirestoreKey(index: currentIndex))
@@ -621,7 +621,7 @@ private struct _FirestoreUnkeyedDecodingContainer: UnkeyedDecodingContainer {
     return try require(value: decoded)
   }
 
-  public mutating func decode(_: String.Type) throws -> String {
+  mutating func decode(_: String.Type) throws -> String {
     try expectNotAtEnd()
 
     decoder.codingPath.append(_FirestoreKey(index: currentIndex))
@@ -631,7 +631,7 @@ private struct _FirestoreUnkeyedDecodingContainer: UnkeyedDecodingContainer {
     return try require(value: decoded)
   }
 
-  public mutating func decode<T: Decodable>(_: T.Type) throws -> T {
+  mutating func decode<T: Decodable>(_: T.Type) throws -> T {
     try expectNotAtEnd()
 
     decoder.codingPath.append(_FirestoreKey(index: currentIndex))
@@ -641,7 +641,7 @@ private struct _FirestoreUnkeyedDecodingContainer: UnkeyedDecodingContainer {
     return try require(value: decoded)
   }
 
-  public mutating func nestedContainer<NestedKey>(keyedBy _: NestedKey
+  mutating func nestedContainer<NestedKey>(keyedBy _: NestedKey
     .Type) throws -> KeyedDecodingContainer<NestedKey> {
     decoder.codingPath.append(_FirestoreKey(index: currentIndex))
     defer { self.decoder.codingPath.removeLast() }
@@ -662,7 +662,7 @@ private struct _FirestoreUnkeyedDecodingContainer: UnkeyedDecodingContainer {
     return KeyedDecodingContainer(container)
   }
 
-  public mutating func nestedUnkeyedContainer() throws -> UnkeyedDecodingContainer {
+  mutating func nestedUnkeyedContainer() throws -> UnkeyedDecodingContainer {
     decoder.codingPath.append(_FirestoreKey(index: currentIndex))
     defer { self.decoder.codingPath.removeLast() }
 
@@ -679,7 +679,7 @@ private struct _FirestoreUnkeyedDecodingContainer: UnkeyedDecodingContainer {
     return _FirestoreUnkeyedDecodingContainer(referencing: decoder, wrapping: array)
   }
 
-  public mutating func superDecoder() throws -> Decoder {
+  mutating func superDecoder() throws -> Decoder {
     decoder.codingPath.append(_FirestoreKey(index: currentIndex))
     defer { self.decoder.codingPath.removeLast() }
 

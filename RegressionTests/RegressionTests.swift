@@ -26,7 +26,6 @@ private let projectFiles: [String] = {
     return files
 }()
 
-// Split into separate classes for parallelization
 class RegressionTests: XCTestCase {
     func testRegressionSuite() {
         CLI.print = { message, _ in

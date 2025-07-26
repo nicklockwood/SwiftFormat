@@ -598,4 +598,19 @@ class PropertyTypesTests: XCTestCase {
         let options = FormatOptions(propertyTypes: .inferLocalsOnly)
         testFormatting(for: input, rule: .propertyTypes, options: options)
     }
+
+    func testHandlesEscapedIdentifiers() {
+        let input = """
+        let `property with raw identifier 1` = `function with raw identifier`()
+        let `property with raw identifier 2` = `Escaped Type Name`.staticMember
+        """
+
+        let output = """
+        let `property with raw identifier 1` = `function with raw identifier`()
+        let `property with raw identifier 2`: `Escaped Type Name` = .staticMember
+        """
+
+        let options = FormatOptions(propertyTypes: .explicit)
+        testFormatting(for: input, output, rule: .propertyTypes, options: options)
+    }
 }

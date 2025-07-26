@@ -1764,17 +1764,28 @@ extension Formatter {
         else { return }
 
         let methodName = tokens[methodNameIndex].string
-        guard methodName.hasPrefix("test"), methodName != "test" else { return }
 
-        var newMethodName = String(methodName.dropFirst("test".count))
-        newMethodName = newMethodName.first!.lowercased() + newMethodName.dropFirst()
+        // Handle names like `func testFeature()` or `func test_feature()`
+        if methodName.hasPrefix("test"), methodName != "test" {
+            var newMethodName = String(methodName.dropFirst("test".count))
+            newMethodName = newMethodName.first!.lowercased() + newMethodName.dropFirst()
 
-        // Handle methods like `test_feature()`, which should be updated to `feature()` rather than `_feature()`.
-        while newMethodName.hasPrefix("_") {
-            newMethodName = String(newMethodName.dropFirst())
+            // Handle methods like `test_feature()`, which should be updated to `feature()` rather than `_feature()`.
+            while newMethodName.hasPrefix("_") {
+                newMethodName = String(newMethodName.dropFirst())
+            }
+
+            updateFunctionName(forFunctionAt: funcKeywordIndex, to: newMethodName)
         }
 
-        updateFunctionName(forFunctionAt: funcKeywordIndex, to: newMethodName)
+        // Handle names like ``func `test feature`()``, ``func `Test Feature`()``
+        if methodName.lowercased().hasPrefix("`test "), methodName.lowercased() != "`test `" {
+            var newMethodName = String(methodName.dropFirst("`test ".count))
+            newMethodName = String(newMethodName.first!) + newMethodName.dropFirst()
+            newMethodName = "`" + newMethodName
+
+            updateFunctionName(forFunctionAt: funcKeywordIndex, to: newMethodName)
+        }
     }
 
     /// Updates the name of the given method / function, unless that change could cause a build failure.
@@ -1787,7 +1798,7 @@ extension Formatter {
         // Ensure that the new identifier is valid (e.g. starts with a letter, not a number),
         // and is unique / doesn't already exist somewhere in the file.
         guard !newMethodName.isEmpty,
-              newMethodName.first?.isLetter == true,
+              newMethodName.first?.isLetter == true || newMethodName.first == "`",
               !tokens.contains(.identifier(newMethodName)),
               !swiftKeywords.union(["Any", "Self", "self", "super", "nil", "true", "false"]).contains(newMethodName)
         else { return }

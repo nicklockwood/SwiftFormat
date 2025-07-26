@@ -26,6 +26,13 @@ public extension FormatRule {
                   #expect(myFeature.crashes.isEmpty, "My feature doesn't crash")
                   #expect(myFeature.crashReport == nil)
               }
+
+        -     @Test func `test feature works as expected`(_ feature: Feature) {
+        +     @Test func `feature works as expected`(_ feature: Feature) {
+                let myFeature = MyFeature()
+                myFeature.run(feature)
+                #expect(myFeature.worksAsExpected)
+            }
           }
         ```
         """

@@ -974,57 +974,57 @@ private enum Subexpression: CustomStringConvertible {
 
 /// Workaround for horribly slow Substring.UnicodeScalarView perf
 private struct UnicodeScalarView {
-    public typealias Index = String.UnicodeScalarView.Index
+    typealias Index = String.UnicodeScalarView.Index
 
     private let characters: String.UnicodeScalarView
-    public private(set) var startIndex: Index
-    public private(set) var endIndex: Index
+    private(set) var startIndex: Index
+    private(set) var endIndex: Index
 
-    public init(_ unicodeScalars: String.UnicodeScalarView) {
+    init(_ unicodeScalars: String.UnicodeScalarView) {
         characters = unicodeScalars
         startIndex = characters.startIndex
         endIndex = characters.endIndex
     }
 
-    public init(_ unicodeScalars: Substring.UnicodeScalarView) {
+    init(_ unicodeScalars: Substring.UnicodeScalarView) {
         self.init(String.UnicodeScalarView(unicodeScalars))
     }
 
-    public init(_ string: String) {
+    init(_ string: String) {
         self.init(string.unicodeScalars)
     }
 
-    public var first: UnicodeScalar? {
+    var first: UnicodeScalar? {
         return isEmpty ? nil : characters[startIndex]
     }
 
-    public var isEmpty: Bool {
+    var isEmpty: Bool {
         return startIndex >= endIndex
     }
 
-    public subscript(_ index: Index) -> UnicodeScalar {
+    subscript(_ index: Index) -> UnicodeScalar {
         return characters[index]
     }
 
-    public func index(after index: Index) -> Index {
+    func index(after index: Index) -> Index {
         return characters.index(after: index)
     }
 
-    public func prefix(upTo index: Index) -> UnicodeScalarView {
+    func prefix(upTo index: Index) -> UnicodeScalarView {
         var view = UnicodeScalarView(characters)
         view.startIndex = startIndex
         view.endIndex = index
         return view
     }
 
-    public func suffix(from index: Index) -> UnicodeScalarView {
+    func suffix(from index: Index) -> UnicodeScalarView {
         var view = UnicodeScalarView(characters)
         view.startIndex = index
         view.endIndex = endIndex
         return view
     }
 
-    public mutating func popFirst() -> UnicodeScalar? {
+    mutating func popFirst() -> UnicodeScalar? {
         if isEmpty {
             return nil
         }

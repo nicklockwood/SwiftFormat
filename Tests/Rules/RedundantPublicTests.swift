@@ -100,22 +100,32 @@ class RedundantPublicTests: XCTestCase {
         testFormatting(for: input, [output], rules: [.redundantPublic], exclude: [.redundantInternal])
     }
 
-    func testDoesNotRemovePublicFromPrivateType() {
+    func testRemovesPublicFromPrivateType() {
         let input = """
         private struct PrivateStruct {
             public let value: String
         }
         """
-        testFormatting(for: input, rules: [.redundantPublic])
+        let output = """
+        private struct PrivateStruct {
+            let value: String
+        }
+        """
+        testFormatting(for: input, [output], rules: [.redundantPublic])
     }
 
-    func testDoesNotRemovePublicFromFileprivateType() {
+    func testRemovesPublicFromFileprivateType() {
         let input = """
         fileprivate class Helper {
             public func help() {}
         }
         """
-        testFormatting(for: input, rules: [.redundantPublic], exclude: [.redundantFileprivate])
+        let output = """
+        fileprivate class Helper {
+            func help() {}
+        }
+        """
+        testFormatting(for: input, [output], rules: [.redundantPublic], exclude: [.redundantFileprivate])
     }
 
     func testRemovesPublicFromNestedTypeInInternalParent() {
@@ -383,5 +393,21 @@ class RedundantPublicTests: XCTestCase {
         }
         """
         testFormatting(for: input, output, rule: .redundantPublic)
+    }
+
+    func testRemovesPublicFromComplexPrivateStruct() {
+        let input = """
+        private struct Example {
+            public var value: Int
+            public func test() {}
+        }
+        """
+        let output = """
+        private struct Example {
+            var value: Int
+            func test() {}
+        }
+        """
+        testFormatting(for: input, [output], rules: [.redundantPublic])
     }
 }

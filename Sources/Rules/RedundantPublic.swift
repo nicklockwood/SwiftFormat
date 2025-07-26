@@ -10,7 +10,7 @@ import Foundation
 
 public extension FormatRule {
     static let redundantPublic = FormatRule(
-        help: "Remove redundant public access control from declarations in internal types."
+        help: "Remove redundant public access control from declarations in internal or private types."
     ) { formatter in
         let declarations = formatter.parseDeclarations()
 
@@ -64,9 +64,9 @@ public extension FormatRule {
                     declaration.removeVisibility(.public)
                 }
 
-            // Inside an internal type, any `public` modifier has no effect
+            // Inside an internal or private type, any `public` modifier has no effect
             default:
-                if (parentType.visibility() ?? .internal) == .internal {
+                if (parentType.visibility() ?? .internal) <= .internal {
                     declaration.removeVisibility(.public)
                 }
             }

@@ -55,6 +55,56 @@ final class SwiftTestingTestCaseNamesTests: XCTestCase {
         testFormatting(for: input, output, rule: .swiftTestingTestCaseNames)
     }
 
+    func testRemovesTestPrefixFromMethodWithRawIdentifier() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test func `test my feature has no bugs`() {
+                let myFeature = MyFeature()
+                myFeature.runAction()
+                #expect(!myFeature.hasBugs)
+            }
+
+            @Test("Features work as expected", arguments: [
+                .foo,
+                .bar,
+                .baaz,
+            ])
+            func `Test Feature Works As Expected`(_ feature: Feature) {
+                let myFeature = MyFeature()
+                myFeature.run(feature)
+                #expect(myFeature.worksAsExpected)
+            }
+        }
+        """
+
+        let output = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test func `my feature has no bugs`() {
+                let myFeature = MyFeature()
+                myFeature.runAction()
+                #expect(!myFeature.hasBugs)
+            }
+
+            @Test("Features work as expected", arguments: [
+                .foo,
+                .bar,
+                .baaz,
+            ])
+            func `Feature Works As Expected`(_ feature: Feature) {
+                let myFeature = MyFeature()
+                myFeature.run(feature)
+                #expect(myFeature.worksAsExpected)
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: .swiftTestingTestCaseNames)
+    }
+
     func testDoesntUpdateNameToIdentifierRequiringBackTicks() {
         let input = """
         import Testing

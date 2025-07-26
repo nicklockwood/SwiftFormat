@@ -1206,7 +1206,17 @@ extension Formatter {
         guard let token = token(at: i), token.isIdentifier else {
             return false
         }
+
         let unescaped = token.unescaped()
+
+        // This identifier may be a raw identifier like ``func `function name with spaces`()``.
+        // Validate that the escaped identifier is a valid standard identifier.
+        var scalarView = UnicodeScalarView(unescaped.unicodeScalars)
+        let parsedIdentifier = scalarView.parseIdentifier()
+        guard parsedIdentifier == .identifier(unescaped) || parsedIdentifier == .keyword(unescaped) else {
+            return true
+        }
+
         if !unescaped.isSwiftKeyword {
             switch unescaped {
             case "_", "$":
@@ -1492,7 +1502,7 @@ extension Formatter {
 
         // Otherwise this is just a single identifier
         if case let .identifier(name) = startToken, name != "init" {
-            let firstCharacter = name.drop { $0 == "_" }.first.flatMap(String.init) ?? ""
+            let firstCharacter = name.drop { $0 == "_" || $0 == "`" }.first.flatMap(String.init) ?? ""
             let isLowercaseIdentifier = firstCharacter.uppercased() != firstCharacter
             guard !excludeLowercaseIdentifiers || !isLowercaseIdentifier else { return nil }
 

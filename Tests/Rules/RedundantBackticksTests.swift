@@ -105,7 +105,7 @@ class RedundantBackticksTests: XCTestCase {
 
     func testNoRemoveBackticksAroundTrueProperty() {
         let input = "var type = Foo.`true`"
-        testFormatting(for: input, rule: .redundantBackticks)
+        testFormatting(for: input, rule: .redundantBackticks, exclude: [.propertyTypes])
     }
 
     func testRemoveBackticksAroundTrueProperty() {
@@ -209,6 +209,17 @@ class RedundantBackticksTests: XCTestCase {
 
     func testNoRemoveBackticksAroundDollar() {
         let input = "@attached(peer, names: prefixed(`$`))"
+        testFormatting(for: input, rule: .redundantBackticks)
+    }
+
+    func testNoRemoveBackticksAroundRawIdentifier() {
+        let input = """
+        func `function with raw identifier`() -> String {
+            "foo"
+        }
+
+        let `property with raw identifier` = `function with raw identifier`()
+        """
         testFormatting(for: input, rule: .redundantBackticks)
     }
 }

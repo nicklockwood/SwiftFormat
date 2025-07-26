@@ -5121,4 +5121,75 @@ class TokenizerTests: XCTestCase {
         ]
         XCTAssertEqual(tokenize(input), output)
     }
+
+    func testRawIdentifiers() {
+        let input = """
+        func `square returns x * x`() -> Int { 42 }
+        enum ColorVariant { case `50`, `100`, `200` }
+        let `1.circle` = "SF Symbol"
+        struct `class` { let `for` = true }
+        """
+        let output: [Token] = [
+            .keyword("func"),
+            .space(" "),
+            .identifier("`square returns x * x`"),
+            .startOfScope("("),
+            .endOfScope(")"),
+            .space(" "),
+            .operator("->", .infix),
+            .space(" "),
+            .identifier("Int"),
+            .space(" "),
+            .startOfScope("{"),
+            .space(" "),
+            .number("42", .integer),
+            .space(" "),
+            .endOfScope("}"),
+            .linebreak("\n", 1),
+            .keyword("enum"),
+            .space(" "),
+            .identifier("ColorVariant"),
+            .space(" "),
+            .startOfScope("{"),
+            .space(" "),
+            .keyword("case"),
+            .space(" "),
+            .identifier("`50`"),
+            .delimiter(","),
+            .space(" "),
+            .identifier("`100`"),
+            .delimiter(","),
+            .space(" "),
+            .identifier("`200`"),
+            .space(" "),
+            .endOfScope("}"),
+            .linebreak("\n", 2),
+            .keyword("let"),
+            .space(" "),
+            .identifier("`1.circle`"),
+            .space(" "),
+            .operator("=", .infix),
+            .space(" "),
+            .startOfScope("\""),
+            .stringBody("SF Symbol"),
+            .endOfScope("\""),
+            .linebreak("\n", 3),
+            .keyword("struct"),
+            .space(" "),
+            .identifier("`class`"),
+            .space(" "),
+            .startOfScope("{"),
+            .space(" "),
+            .keyword("let"),
+            .space(" "),
+            .identifier("`for`"),
+            .space(" "),
+            .operator("=", .infix),
+            .space(" "),
+            .identifier("true"),
+            .space(" "),
+            .endOfScope("}"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
 }

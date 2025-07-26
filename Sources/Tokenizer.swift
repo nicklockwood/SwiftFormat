@@ -613,70 +613,70 @@ extension UnicodeScalar {
 
 // Workaround for horribly slow String.UnicodeScalarView.Subsequence perf
 
-private struct UnicodeScalarView {
-    public typealias Index = String.UnicodeScalarView.Index
+struct UnicodeScalarView {
+    typealias Index = String.UnicodeScalarView.Index
 
     private let characters: String.UnicodeScalarView
-    public private(set) var startIndex: Index
-    public private(set) var endIndex: Index
+    private(set) var startIndex: Index
+    private(set) var endIndex: Index
 
-    public init(_ unicodeScalars: String.UnicodeScalarView) {
+    init(_ unicodeScalars: String.UnicodeScalarView) {
         characters = unicodeScalars
         startIndex = characters.startIndex
         endIndex = characters.endIndex
     }
 
-    public init(_ unicodeScalars: String.UnicodeScalarView.SubSequence) {
+    init(_ unicodeScalars: String.UnicodeScalarView.SubSequence) {
         self.init(String.UnicodeScalarView(unicodeScalars))
     }
 
-    public init(_ string: String) {
+    init(_ string: String) {
         self.init(string.unicodeScalars)
     }
 
-    public var first: UnicodeScalar? {
+    var first: UnicodeScalar? {
         isEmpty ? nil : characters[startIndex]
     }
 
     @available(*, deprecated, message: "Really hurts performance - use a different approach")
-    public var count: Int {
+    var count: Int {
         characters.distance(from: startIndex, to: endIndex)
     }
 
-    public var isEmpty: Bool {
+    var isEmpty: Bool {
         startIndex >= endIndex
     }
 
-    public subscript(_ index: Index) -> UnicodeScalar {
+    subscript(_ index: Index) -> UnicodeScalar {
         characters[index]
     }
 
-    public func index(after index: Index) -> Index {
+    func index(after index: Index) -> Index {
         characters.index(after: index)
     }
 
-    public func prefix(upTo index: Index) -> UnicodeScalarView {
+    func prefix(upTo index: Index) -> UnicodeScalarView {
         var view = UnicodeScalarView(characters)
         view.startIndex = startIndex
         view.endIndex = index
         return view
     }
 
-    public func suffix(from index: Index) -> UnicodeScalarView {
+    func suffix(from index: Index) -> UnicodeScalarView {
         var view = UnicodeScalarView(characters)
         view.startIndex = index
         view.endIndex = endIndex
         return view
     }
 
-    public func dropFirst() -> UnicodeScalarView {
+    func dropFirst() -> UnicodeScalarView {
         var view = UnicodeScalarView(characters)
         view.startIndex = characters.index(after: startIndex)
         view.endIndex = endIndex
         return view
     }
 
-    public mutating func popFirst() -> UnicodeScalar? {
+    mutating func popFirst() -> UnicodeScalar? {
         if isEmpty {
             return nil
         }
@@ -686,13 +686,13 @@ private struct UnicodeScalarView {
     }
 
     /// Will crash if n > remaining char count
-    public mutating func removeFirst(_ n: Int) {
+    mutating func removeFirst(_ n: Int) {
         startIndex = characters.index(startIndex, offsetBy: n)
     }
 
     /// Will crash if collection is empty
     @discardableResult
-    public mutating func removeFirst() -> UnicodeScalar {
+    mutating func removeFirst() -> UnicodeScalar {
         let oldIndex = startIndex
         startIndex = characters.index(after: startIndex)
         return characters[oldIndex]
@@ -790,7 +790,7 @@ private extension UnicodeScalarView {
     }
 }
 
-private extension UnicodeScalarView {
+extension UnicodeScalarView {
     mutating func parseSpace() -> Token? {
         readCharacters(where: { $0.isSpace }).map { .space($0) }
     }
@@ -1005,9 +1005,27 @@ private extension UnicodeScalarView {
             read(head: isHead, tail: isTail)
         }
 
+        func readRawIdentifier() -> String? {
+            readCharacters(where: { scalar in
+                // Characters disallowed in raw identifiers:
+                // https://github.com/swiftlang/swift-evolution/blob/main/proposals/0451-escaped-identifiers.md#permitted-characters
+                switch scalar.value {
+                case 0x60, // backtick (`)
+                     0x5C, // backslash (\)
+                     0x000D, // carriage return
+                     0x000A, // newline
+                     0x0000, // NUL character
+                     0x0001 ... 0x001F, 0x007F: // non-printable ASCII
+                    return false
+                default:
+                    return true
+                }
+            })
+        }
+
         let start = self
         if read("`") {
-            if let identifier = readIdentifier(), read("`") {
+            if let identifier = readRawIdentifier(), read("`") {
                 return .identifier("`" + identifier + "`")
             }
             self = start

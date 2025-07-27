@@ -11,57 +11,97 @@ import XCTest
 
 class SemicolonsTests: XCTestCase {
     func testSemicolonRemovedAtEndOfLine() {
-        let input = "print(\"hello\");\n"
-        let output = "print(\"hello\")\n"
+        let input = """
+        print(\"hello\");
+
+        """
+        let output = """
+        print(\"hello\")
+
+        """
         testFormatting(for: input, output, rule: .semicolons)
     }
 
     func testSemicolonRemovedAtStartOfLine() {
-        let input = "\n;print(\"hello\")"
-        let output = "\nprint(\"hello\")"
+        let input = """
+
+        ;print(\"hello\")
+        """
+        let output = """
+
+        print(\"hello\")
+        """
         testFormatting(for: input, output, rule: .semicolons)
     }
 
     func testSemicolonRemovedAtEndOfProgram() {
-        let input = "print(\"hello\");"
-        let output = "print(\"hello\")"
+        let input = """
+        print(\"hello\");
+        """
+        let output = """
+        print(\"hello\")
+        """
         testFormatting(for: input, output, rule: .semicolons)
     }
 
     func testSemicolonRemovedAtStartOfProgram() {
-        let input = ";print(\"hello\")"
-        let output = "print(\"hello\")"
+        let input = """
+        ;print(\"hello\")
+        """
+        let output = """
+        print(\"hello\")
+        """
         testFormatting(for: input, output, rule: .semicolons)
     }
 
     func testIgnoreInlineSemicolon() {
-        let input = "print(\"hello\"); print(\"goodbye\")"
+        let input = """
+        print(\"hello\"); print(\"goodbye\")
+        """
         let options = FormatOptions(semicolons: .inlineOnly)
         testFormatting(for: input, rule: .semicolons, options: options)
     }
 
     func testReplaceInlineSemicolon() {
-        let input = "print(\"hello\"); print(\"goodbye\")"
-        let output = "print(\"hello\")\nprint(\"goodbye\")"
+        let input = """
+        print(\"hello\"); print(\"goodbye\")
+        """
+        let output = """
+        print(\"hello\")
+        print(\"goodbye\")
+        """
         let options = FormatOptions(semicolons: .never)
         testFormatting(for: input, output, rule: .semicolons, options: options)
     }
 
     func testReplaceSemicolonFollowedByComment() {
-        let input = "print(\"hello\"); // comment\nprint(\"goodbye\")"
-        let output = "print(\"hello\") // comment\nprint(\"goodbye\")"
+        let input = """
+        print(\"hello\"); // comment
+        print(\"goodbye\")
+        """
+        let output = """
+        print(\"hello\") // comment
+        print(\"goodbye\")
+        """
         let options = FormatOptions(semicolons: .inlineOnly)
         testFormatting(for: input, output, rule: .semicolons, options: options)
     }
 
     func testSemicolonNotReplacedAfterReturn() {
-        let input = "return;\nfoo()"
+        let input = """
+        return;
+        foo()
+        """
         testFormatting(for: input, rule: .semicolons)
     }
 
     func testSemicolonReplacedAfterReturnIfEndOfScope() {
-        let input = "do { return; }"
-        let output = "do { return }"
+        let input = """
+        do { return; }
+        """
+        let output = """
+        do { return }
+        """
         testFormatting(for: input, output, rule: .semicolons)
     }
 

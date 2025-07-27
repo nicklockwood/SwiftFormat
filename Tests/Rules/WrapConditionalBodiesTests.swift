@@ -11,7 +11,9 @@ import XCTest
 
 class WrapConditionalBodiesTests: XCTestCase {
     func testGuardReturnWraps() {
-        let input = "guard let foo = bar else { return }"
+        let input = """
+        guard let foo = bar else { return }
+        """
         let output = """
         guard let foo = bar else {
             return
@@ -21,19 +23,25 @@ class WrapConditionalBodiesTests: XCTestCase {
     }
 
     func testEmptyGuardReturnWithSpaceDoesNothing() {
-        let input = "guard let foo = bar else { }"
+        let input = """
+        guard let foo = bar else { }
+        """
         testFormatting(for: input, rule: .wrapConditionalBodies,
                        exclude: [.emptyBraces])
     }
 
     func testEmptyGuardReturnWithoutSpaceDoesNothing() {
-        let input = "guard let foo = bar else {}"
+        let input = """
+        guard let foo = bar else {}
+        """
         testFormatting(for: input, rule: .wrapConditionalBodies,
                        exclude: [.emptyBraces])
     }
 
     func testGuardReturnWithValueWraps() {
-        let input = "guard let foo = bar else { return baz }"
+        let input = """
+        guard let foo = bar else { return baz }
+        """
         let output = """
         guard let foo = bar else {
             return baz
@@ -56,7 +64,9 @@ class WrapConditionalBodiesTests: XCTestCase {
     }
 
     func testGuardContinueWithNoSpacesToCleanupWraps() {
-        let input = "guard let foo = bar else {continue}"
+        let input = """
+        guard let foo = bar else {continue}
+        """
         let output = """
         guard let foo = bar else {
             continue
@@ -66,7 +76,9 @@ class WrapConditionalBodiesTests: XCTestCase {
     }
 
     func testGuardReturnWrapsSemicolonDelimitedStatements() {
-        let input = "guard let foo = bar else { var baz = 0; let boo = 1; fatalError() }"
+        let input = """
+        guard let foo = bar else { var baz = 0; let boo = 1; fatalError() }
+        """
         let output = """
         guard let foo = bar else {
             var baz = 0; let boo = 1; fatalError()
@@ -76,7 +88,9 @@ class WrapConditionalBodiesTests: XCTestCase {
     }
 
     func testGuardReturnWrapsSemicolonDelimitedStatementsWithNoSpaces() {
-        let input = "guard let foo = bar else {var baz=0;let boo=1;fatalError()}"
+        let input = """
+        guard let foo = bar else {var baz=0;let boo=1;fatalError()}
+        """
         let output = """
         guard let foo = bar else {
             var baz=0;let boo=1;fatalError()
@@ -105,7 +119,9 @@ class WrapConditionalBodiesTests: XCTestCase {
     }
 
     func testGuardMultilineCommentSameLineUnchanged() {
-        let input = "guard let foo = bar else { /* Test comment */ return }"
+        let input = """
+        guard let foo = bar else { /* Test comment */ return }
+        """
         let output = """
         guard let foo = bar else { /* Test comment */
             return
@@ -115,7 +131,9 @@ class WrapConditionalBodiesTests: XCTestCase {
     }
 
     func testGuardTwoMultilineCommentsSameLine() {
-        let input = "guard let foo = bar else { /* Test comment 1 */ return /* Test comment 2 */ }"
+        let input = """
+        guard let foo = bar else { /* Test comment 1 */ return /* Test comment 2 */ }
+        """
         let output = """
         guard let foo = bar else { /* Test comment 1 */
             return /* Test comment 2 */
@@ -125,7 +143,9 @@ class WrapConditionalBodiesTests: XCTestCase {
     }
 
     func testNestedGuardElseIfStatementsPutOnNewline() {
-        let input = "guard let foo = bar else { if qux { return quux } else { return quuz } }"
+        let input = """
+        guard let foo = bar else { if qux { return quux } else { return quuz } }
+        """
         let output = """
         guard let foo = bar else {
             if qux {
@@ -139,7 +159,9 @@ class WrapConditionalBodiesTests: XCTestCase {
     }
 
     func testNestedGuardElseGuardStatementPutOnNewline() {
-        let input = "guard let foo = bar else { guard qux else { return quux } }"
+        let input = """
+        guard let foo = bar else { guard qux else { return quux } }
+        """
         let output = """
         guard let foo = bar else {
             guard qux else {
@@ -151,7 +173,9 @@ class WrapConditionalBodiesTests: XCTestCase {
     }
 
     func testGuardWithClosureOnlyWrapsElseBody() {
-        let input = "guard foo { $0.bar } else { return true }"
+        let input = """
+        guard foo { $0.bar } else { return true }
+        """
         let output = """
         guard foo { $0.bar } else {
             return true
@@ -161,7 +185,9 @@ class WrapConditionalBodiesTests: XCTestCase {
     }
 
     func testIfElseReturnsWrap() {
-        let input = "if foo { return bar } else if baz { return qux } else { return quux }"
+        let input = """
+        if foo { return bar } else if baz { return qux } else { return quux }
+        """
         let output = """
         if foo {
             return bar
@@ -175,7 +201,9 @@ class WrapConditionalBodiesTests: XCTestCase {
     }
 
     func testIfElseBodiesWrap() {
-        let input = "if foo { bar } else if baz { qux } else { quux }"
+        let input = """
+        if foo { bar } else if baz { qux } else { quux }
+        """
         let output = """
         if foo {
             bar
@@ -189,7 +217,9 @@ class WrapConditionalBodiesTests: XCTestCase {
     }
 
     func testIfElsesWithClosuresDontWrapClosures() {
-        let input = "if foo { $0.bar } { baz } else if qux { $0.quux } { quuz } else { corge }"
+        let input = """
+        if foo { $0.bar } { baz } else if qux { $0.quux } { quuz } else { corge }
+        """
         let output = """
         if foo { $0.bar } {
             baz
@@ -203,13 +233,17 @@ class WrapConditionalBodiesTests: XCTestCase {
     }
 
     func testEmptyIfElseBodiesWithSpaceDoNothing() {
-        let input = "if foo { } else if baz { } else { }"
+        let input = """
+        if foo { } else if baz { } else { }
+        """
         testFormatting(for: input, rule: .wrapConditionalBodies,
                        exclude: [.emptyBraces])
     }
 
     func testEmptyIfElseBodiesWithoutSpaceDoNothing() {
-        let input = "if foo {} else if baz {} else {}"
+        let input = """
+        if foo {} else if baz {} else {}
+        """
         testFormatting(for: input, rule: .wrapConditionalBodies,
                        exclude: [.emptyBraces])
     }

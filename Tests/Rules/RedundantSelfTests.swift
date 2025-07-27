@@ -13,55 +13,95 @@ class RedundantSelfTests: XCTestCase {
     // explicitSelf = .remove
 
     func testSimpleRemoveRedundantSelf() {
-        let input = "func foo() { self.bar() }"
-        let output = "func foo() { bar() }"
+        let input = """
+        func foo() { self.bar() }
+        """
+        let output = """
+        func foo() { bar() }
+        """
         testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testRemoveSelfInsideStringInterpolation() {
-        let input = "class Foo {\n    var bar: String?\n    func baz() {\n        print(\"\\(self.bar)\")\n    }\n}"
-        let output = "class Foo {\n    var bar: String?\n    func baz() {\n        print(\"\\(bar)\")\n    }\n}"
+        let input = """
+        class Foo {
+            var bar: String?
+            func baz() {
+                print(\"\\(self.bar)\")
+            }
+        }
+        """
+        let output = """
+        class Foo {
+            var bar: String?
+            func baz() {
+                print(\"\\(bar)\")
+            }
+        }
+        """
         testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testNoRemoveSelfForArgument() {
-        let input = "func foo(bar: Int) { self.bar = bar }"
+        let input = """
+        func foo(bar: Int) { self.bar = bar }
+        """
         testFormatting(for: input, rule: .redundantSelf)
     }
 
     func testNoRemoveSelfForLocalVariable() {
-        let input = "func foo() { var bar = self.bar }"
+        let input = """
+        func foo() { var bar = self.bar }
+        """
         testFormatting(for: input, rule: .redundantSelf)
     }
 
     func testRemoveSelfForLocalVariableOn5_4() {
-        let input = "func foo() { var bar = self.bar }"
-        let output = "func foo() { var bar = bar }"
+        let input = """
+        func foo() { var bar = self.bar }
+        """
+        let output = """
+        func foo() { var bar = bar }
+        """
         let options = FormatOptions(swiftVersion: "5.4")
         testFormatting(for: input, output, rule: .redundantSelf,
                        options: options)
     }
 
     func testNoRemoveSelfForCommaDelimitedLocalVariables() {
-        let input = "func foo() { let foo = self.foo, bar = self.bar }"
+        let input = """
+        func foo() { let foo = self.foo, bar = self.bar }
+        """
         testFormatting(for: input, rule: .redundantSelf, exclude: [.singlePropertyPerLine])
     }
 
     func testRemoveSelfForCommaDelimitedLocalVariablesOn5_4() {
-        let input = "func foo() { let foo = self.foo, bar = self.bar }"
-        let output = "func foo() { let foo = self.foo, bar = bar }"
+        let input = """
+        func foo() { let foo = self.foo, bar = self.bar }
+        """
+        let output = """
+        func foo() { let foo = self.foo, bar = bar }
+        """
         let options = FormatOptions(swiftVersion: "5.4")
         testFormatting(for: input, output, rule: .redundantSelf,
                        options: options, exclude: [.singlePropertyPerLine])
     }
 
     func testNoRemoveSelfForCommaDelimitedLocalVariables2() {
-        let input = "func foo() {\n    let foo: Foo, bar: Bar\n    foo = self.foo\n    bar = self.bar\n}"
+        let input = """
+        func foo() {
+            let foo: Foo, bar: Bar
+            foo = self.foo
+            bar = self.bar
+        }
+        """
         testFormatting(for: input, rule: .redundantSelf, exclude: [.singlePropertyPerLine])
     }
 
     func testNoRemoveSelfForTupleAssignedVariables() {
-        let input = "func foo() { let (bar, baz) = (self.bar, self.baz) }"
+        let input = """
+        func foo() { let (bar, baz) = (self.bar, self.baz) }
+        """
         testFormatting(for: input, rule: .redundantSelf, exclude: [.singlePropertyPerLine])
     }
 
@@ -75,179 +115,325 @@ class RedundantSelfTests: XCTestCase {
 //    }
 
     func testNoRemoveSelfForTupleAssignedVariablesFollowedByRegularVariable() {
-        let input = "func foo() {\n    let (foo, bar) = (self.foo, self.bar), baz = self.baz\n}"
+        let input = """
+        func foo() {
+            let (foo, bar) = (self.foo, self.bar), baz = self.baz
+        }
+        """
         testFormatting(for: input, rule: .redundantSelf, exclude: [.singlePropertyPerLine])
     }
 
     func testNoRemoveSelfForTupleAssignedVariablesFollowedByRegularLet() {
-        let input = "func foo() {\n    let (foo, bar) = (self.foo, self.bar)\n    let baz = self.baz\n}"
+        let input = """
+        func foo() {
+            let (foo, bar) = (self.foo, self.bar)
+            let baz = self.baz
+        }
+        """
         testFormatting(for: input, rule: .redundantSelf, exclude: [.singlePropertyPerLine])
     }
 
     func testNoRemoveNonRedundantNestedFunctionSelf() {
-        let input = "func foo() { func bar() { self.bar() } }"
+        let input = """
+        func foo() { func bar() { self.bar() } }
+        """
         testFormatting(for: input, rule: .redundantSelf)
     }
 
     func testNoRemoveNonRedundantNestedFunctionSelf2() {
-        let input = "func foo() {\n    func bar() {}\n    self.bar()\n}"
+        let input = """
+        func foo() {
+            func bar() {}
+            self.bar()
+        }
+        """
         testFormatting(for: input, rule: .redundantSelf)
     }
 
     func testNoRemoveNonRedundantNestedFunctionSelf3() {
-        let input = "func foo() { let bar = 5; func bar() { self.bar = bar } }"
+        let input = """
+        func foo() { let bar = 5; func bar() { self.bar = bar } }
+        """
         testFormatting(for: input, rule: .redundantSelf)
     }
 
     func testNoRemoveClosureSelf() {
-        let input = "func foo() { bar { self.bar = 5 } }"
+        let input = """
+        func foo() { bar { self.bar = 5 } }
+        """
         testFormatting(for: input, rule: .redundantSelf)
     }
 
     func testNoRemoveSelfAfterOptionalReturn() {
-        let input = "func foo() -> String? {\n    var index = startIndex\n    if !matching(self[index]) {\n        break\n    }\n    index = self.index(after: index)\n}"
+        let input = """
+        func foo() -> String? {
+            var index = startIndex
+            if !matching(self[index]) {
+                break
+            }
+            index = self.index(after: index)
+        }
+        """
         testFormatting(for: input, rule: .redundantSelf)
     }
 
     func testNoRemoveRequiredSelfInExtensions() {
-        let input = "extension Foo {\n    func foo() {\n        var index = 5\n        if true {\n            break\n        }\n        index = self.index(after: index)\n    }\n}"
+        let input = """
+        extension Foo {
+            func foo() {
+                var index = 5
+                if true {
+                    break
+                }
+                index = self.index(after: index)
+            }
+        }
+        """
         testFormatting(for: input, rule: .redundantSelf)
     }
 
     func testNoRemoveSelfBeforeInit() {
-        let input = "convenience init() { self.init(5) }"
+        let input = """
+        convenience init() { self.init(5) }
+        """
         testFormatting(for: input, rule: .redundantSelf)
     }
 
     func testRemoveSelfInsideSwitch() {
-        let input = "func foo() {\n    switch self.bar {\n    case .foo:\n        self.baz()\n    }\n}"
-        let output = "func foo() {\n    switch bar {\n    case .foo:\n        baz()\n    }\n}"
+        let input = """
+        func foo() {
+            switch self.bar {
+            case .foo:
+                self.baz()
+            }
+        }
+        """
+        let output = """
+        func foo() {
+            switch bar {
+            case .foo:
+                baz()
+            }
+        }
+        """
         testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testRemoveSelfInsideSwitchWhere() {
-        let input = "func foo() {\n    switch self.bar {\n    case .foo where a == b:\n        self.baz()\n    }\n}"
-        let output = "func foo() {\n    switch bar {\n    case .foo where a == b:\n        baz()\n    }\n}"
+        let input = """
+        func foo() {
+            switch self.bar {
+            case .foo where a == b:
+                self.baz()
+            }
+        }
+        """
+        let output = """
+        func foo() {
+            switch bar {
+            case .foo where a == b:
+                baz()
+            }
+        }
+        """
         testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testRemoveSelfInsideSwitchWhereAs() {
-        let input = "func foo() {\n    switch self.bar {\n    case .foo where a == b as C:\n        self.baz()\n    }\n}"
-        let output = "func foo() {\n    switch bar {\n    case .foo where a == b as C:\n        baz()\n    }\n}"
+        let input = """
+        func foo() {
+            switch self.bar {
+            case .foo where a == b as C:
+                self.baz()
+            }
+        }
+        """
+        let output = """
+        func foo() {
+            switch bar {
+            case .foo where a == b as C:
+                baz()
+            }
+        }
+        """
         testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testRemoveSelfInsideClassInit() {
-        let input = "class Foo {\n    var bar = 5\n    init() { self.bar = 6 }\n}"
-        let output = "class Foo {\n    var bar = 5\n    init() { bar = 6 }\n}"
+        let input = """
+        class Foo {
+            var bar = 5
+            init() { self.bar = 6 }
+        }
+        """
+        let output = """
+        class Foo {
+            var bar = 5
+            init() { bar = 6 }
+        }
+        """
         testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testNoRemoveSelfInClosureInsideIf() {
-        let input = "if foo { bar { self.baz() } }"
+        let input = """
+        if foo { bar { self.baz() } }
+        """
         testFormatting(for: input, rule: .redundantSelf,
                        exclude: [.wrapConditionalBodies])
     }
 
     func testNoRemoveSelfForErrorInCatch() {
-        let input = "do {} catch { self.error = error }"
+        let input = """
+        do {} catch { self.error = error }
+        """
         testFormatting(for: input, rule: .redundantSelf)
     }
 
     func testNoRemoveSelfForErrorInDoThrowsCatch() {
-        let input = "do throws(Foo) {} catch { self.error = error }"
+        let input = """
+        do throws(Foo) {} catch { self.error = error }
+        """
         testFormatting(for: input, rule: .redundantSelf)
     }
 
     func testNoRemoveSelfForNewValueInSet() {
-        let input = "var foo: Int { set { self.newValue = newValue } get { return 0 } }"
+        let input = """
+        var foo: Int { set { self.newValue = newValue } get { return 0 } }
+        """
         testFormatting(for: input, rule: .redundantSelf)
     }
 
     func testNoRemoveSelfForCustomNewValueInSet() {
-        let input = "var foo: Int { set(n00b) { self.n00b = n00b } get { return 0 } }"
+        let input = """
+        var foo: Int { set(n00b) { self.n00b = n00b } get { return 0 } }
+        """
         testFormatting(for: input, rule: .redundantSelf)
     }
 
     func testNoRemoveSelfForNewValueInWillSet() {
-        let input = "var foo: Int { willSet { self.newValue = newValue } }"
+        let input = """
+        var foo: Int { willSet { self.newValue = newValue } }
+        """
         testFormatting(for: input, rule: .redundantSelf)
     }
 
     func testNoRemoveSelfForCustomNewValueInWillSet() {
-        let input = "var foo: Int { willSet(n00b) { self.n00b = n00b } }"
+        let input = """
+        var foo: Int { willSet(n00b) { self.n00b = n00b } }
+        """
         testFormatting(for: input, rule: .redundantSelf)
     }
 
     func testNoRemoveSelfForOldValueInDidSet() {
-        let input = "var foo: Int { didSet { self.oldValue = oldValue } }"
+        let input = """
+        var foo: Int { didSet { self.oldValue = oldValue } }
+        """
         testFormatting(for: input, rule: .redundantSelf)
     }
 
     func testNoRemoveSelfForCustomOldValueInDidSet() {
-        let input = "var foo: Int { didSet(oldz) { self.oldz = oldz } }"
+        let input = """
+        var foo: Int { didSet(oldz) { self.oldz = oldz } }
+        """
         testFormatting(for: input, rule: .redundantSelf)
     }
 
     func testNoRemoveSelfForIndexVarInFor() {
-        let input = "for foo in bar { self.foo = foo }"
+        let input = """
+        for foo in bar { self.foo = foo }
+        """
         testFormatting(for: input, rule: .redundantSelf, exclude: [.wrapLoopBodies])
     }
 
     func testNoRemoveSelfForKeyValueTupleInFor() {
-        let input = "for (foo, bar) in baz { self.foo = foo; self.bar = bar }"
+        let input = """
+        for (foo, bar) in baz { self.foo = foo; self.bar = bar }
+        """
         testFormatting(for: input, rule: .redundantSelf, exclude: [.wrapLoopBodies])
     }
 
     func testRemoveSelfFromComputedVar() {
-        let input = "var foo: Int { return self.bar }"
-        let output = "var foo: Int { return bar }"
+        let input = """
+        var foo: Int { return self.bar }
+        """
+        let output = """
+        var foo: Int { return bar }
+        """
         testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testRemoveSelfFromOptionalComputedVar() {
-        let input = "var foo: Int? { return self.bar }"
-        let output = "var foo: Int? { return bar }"
+        let input = """
+        var foo: Int? { return self.bar }
+        """
+        let output = """
+        var foo: Int? { return bar }
+        """
         testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testRemoveSelfFromNamespacedComputedVar() {
-        let input = "var foo: Swift.String { return self.bar }"
-        let output = "var foo: Swift.String { return bar }"
+        let input = """
+        var foo: Swift.String { return self.bar }
+        """
+        let output = """
+        var foo: Swift.String { return bar }
+        """
         testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testRemoveSelfFromGenericComputedVar() {
-        let input = "var foo: Foo<Int> { return self.bar }"
-        let output = "var foo: Foo<Int> { return bar }"
+        let input = """
+        var foo: Foo<Int> { return self.bar }
+        """
+        let output = """
+        var foo: Foo<Int> { return bar }
+        """
         testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testRemoveSelfFromComputedArrayVar() {
-        let input = "var foo: [Int] { return self.bar }"
-        let output = "var foo: [Int] { return bar }"
+        let input = """
+        var foo: [Int] { return self.bar }
+        """
+        let output = """
+        var foo: [Int] { return bar }
+        """
         testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testRemoveSelfFromVarSetter() {
-        let input = "var foo: Int { didSet { self.bar() } }"
-        let output = "var foo: Int { didSet { bar() } }"
+        let input = """
+        var foo: Int { didSet { self.bar() } }
+        """
+        let output = """
+        var foo: Int { didSet { bar() } }
+        """
         testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testNoRemoveSelfFromVarClosure() {
-        let input = "var foo = { self.bar }"
+        let input = """
+        var foo = { self.bar }
+        """
         testFormatting(for: input, rule: .redundantSelf)
     }
 
     func testNoRemoveSelfFromLazyVar() {
-        let input = "lazy var foo = self.bar"
+        let input = """
+        lazy var foo = self.bar
+        """
         testFormatting(for: input, rule: .redundantSelf)
     }
 
     func testRemoveSelfFromLazyVar() {
-        let input = "lazy var foo = self.bar"
-        let output = "lazy var foo = bar"
+        let input = """
+        lazy var foo = self.bar
+        """
+        let output = """
+        lazy var foo = bar
+        """
         let options = FormatOptions(swiftVersion: "4")
         testFormatting(for: input, output, rule: .redundantSelf, options: options)
     }
@@ -274,158 +460,322 @@ class RedundantSelfTests: XCTestCase {
     }
 
     func testNoRemoveSelfFromLazyVarClosure() {
-        let input = "lazy var foo = { self.bar }()"
+        let input = """
+        lazy var foo = { self.bar }()
+        """
         testFormatting(for: input, rule: .redundantSelf, exclude: [.redundantClosure])
     }
 
     func testNoRemoveSelfFromLazyVarClosure2() {
-        let input = "lazy var foo = { let bar = self.baz }()"
+        let input = """
+        lazy var foo = { let bar = self.baz }()
+        """
         testFormatting(for: input, rule: .redundantSelf)
     }
 
     func testNoRemoveSelfFromLazyVarClosure3() {
-        let input = "lazy var foo = { [unowned self] in let bar = self.baz }()"
+        let input = """
+        lazy var foo = { [unowned self] in let bar = self.baz }()
+        """
         testFormatting(for: input, rule: .redundantSelf)
     }
 
     func testRemoveSelfFromVarInFuncWithUnusedArgument() {
-        let input = "func foo(bar _: Int) { self.baz = 5 }"
-        let output = "func foo(bar _: Int) { baz = 5 }"
+        let input = """
+        func foo(bar _: Int) { self.baz = 5 }
+        """
+        let output = """
+        func foo(bar _: Int) { baz = 5 }
+        """
         testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testRemoveSelfFromVarMatchingUnusedArgument() {
-        let input = "func foo(bar _: Int) { self.bar = 5 }"
-        let output = "func foo(bar _: Int) { bar = 5 }"
+        let input = """
+        func foo(bar _: Int) { self.bar = 5 }
+        """
+        let output = """
+        func foo(bar _: Int) { bar = 5 }
+        """
         testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testNoRemoveSelfFromVarMatchingRenamedArgument() {
-        let input = "func foo(bar baz: Int) { self.baz = baz }"
+        let input = """
+        func foo(bar baz: Int) { self.baz = baz }
+        """
         testFormatting(for: input, rule: .redundantSelf)
     }
 
     func testNoRemoveSelfFromVarRedeclaredInSubscope() {
-        let input = "func foo() {\n    if quux {\n        let bar = 5\n    }\n    let baz = self.bar\n}"
-        let output = "func foo() {\n    if quux {\n        let bar = 5\n    }\n    let baz = bar\n}"
+        let input = """
+        func foo() {
+            if quux {
+                let bar = 5
+            }
+            let baz = self.bar
+        }
+        """
+        let output = """
+        func foo() {
+            if quux {
+                let bar = 5
+            }
+            let baz = bar
+        }
+        """
         testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testNoRemoveSelfFromVarDeclaredLaterInScope() {
-        let input = "func foo() {\n    let bar = self.baz\n    let baz = quux\n}"
+        let input = """
+        func foo() {
+            let bar = self.baz
+            let baz = quux
+        }
+        """
         testFormatting(for: input, rule: .redundantSelf)
     }
 
     func testNoRemoveSelfFromVarDeclaredLaterInOuterScope() {
-        let input = "func foo() {\n    if quux {\n        let bar = self.baz\n    }\n    let baz = 6\n}"
+        let input = """
+        func foo() {
+            if quux {
+                let bar = self.baz
+            }
+            let baz = 6
+        }
+        """
         testFormatting(for: input, rule: .redundantSelf)
     }
 
     func testNoRemoveSelfInWhilePreceededByVarDeclaration() {
-        let input = "var index = start\nwhile index < end {\n    index = self.index(after: index)\n}"
+        let input = """
+        var index = start
+        while index < end {
+            index = self.index(after: index)
+        }
+        """
         testFormatting(for: input, rule: .redundantSelf)
     }
 
     func testNoRemoveSelfInLocalVarPrecededByLocalVarFollowedByIfComma() {
-        let input = "func foo() {\n    let bar = Bar()\n    let baz = Baz()\n    self.baz = baz\n    if let bar = bar, bar > 0 {}\n}"
+        let input = """
+        func foo() {
+            let bar = Bar()
+            let baz = Baz()
+            self.baz = baz
+            if let bar = bar, bar > 0 {}
+        }
+        """
         testFormatting(for: input, rule: .redundantSelf)
     }
 
     func testNoRemoveSelfInLocalVarPrecededByIfLetContainingClosure() {
-        let input = "func foo() {\n    if let bar = 5 { baz { _ in } }\n    let quux = self.quux\n}"
+        let input = """
+        func foo() {
+            if let bar = 5 { baz { _ in } }
+            let quux = self.quux
+        }
+        """
         testFormatting(for: input, rule: .redundantSelf,
                        exclude: [.wrapConditionalBodies])
     }
 
     func testNoRemoveSelfForVarCreatedInGuardScope() {
-        let input = "func foo() {\n    guard let bar = 5 else {}\n    let baz = self.bar\n}"
+        let input = """
+        func foo() {
+            guard let bar = 5 else {}
+            let baz = self.bar
+        }
+        """
         testFormatting(for: input, rule: .redundantSelf,
                        exclude: [.wrapConditionalBodies, .blankLinesAfterGuardStatements])
     }
 
     func testRemoveSelfForVarCreatedInIfScope() {
-        let input = "func foo() {\n    if let bar = bar {}\n    let baz = self.bar\n}"
-        let output = "func foo() {\n    if let bar = bar {}\n    let baz = bar\n}"
+        let input = """
+        func foo() {
+            if let bar = bar {}
+            let baz = self.bar
+        }
+        """
+        let output = """
+        func foo() {
+            if let bar = bar {}
+            let baz = bar
+        }
+        """
         testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testNoRemoveSelfForVarDeclaredInWhileCondition() {
-        let input = "while let foo = bar { self.foo = foo }"
+        let input = """
+        while let foo = bar { self.foo = foo }
+        """
         testFormatting(for: input, rule: .redundantSelf, exclude: [.wrapLoopBodies])
     }
 
     func testRemoveSelfForVarNotDeclaredInWhileCondition() {
-        let input = "while let foo == bar { self.baz = 5 }"
-        let output = "while let foo == bar { baz = 5 }"
+        let input = """
+        while let foo == bar { self.baz = 5 }
+        """
+        let output = """
+        while let foo == bar { baz = 5 }
+        """
         testFormatting(for: input, output, rule: .redundantSelf, exclude: [.wrapLoopBodies])
     }
 
     func testNoRemoveSelfForVarDeclaredInSwitchCase() {
-        let input = "switch foo {\ncase bar: let baz = self.baz\n}"
+        let input = """
+        switch foo {
+        case bar: let baz = self.baz
+        }
+        """
         testFormatting(for: input, rule: .redundantSelf)
     }
 
     func testNoRemoveSelfAfterGenericInit() {
-        let input = "init(bar: Int) {\n    self = Foo<Bar>()\n    self.bar(bar)\n}"
+        let input = """
+        init(bar: Int) {
+            self = Foo<Bar>()
+            self.bar(bar)
+        }
+        """
         testFormatting(for: input, rule: .redundantSelf)
     }
 
     func testRemoveSelfInClassFunction() {
-        let input = "class Foo {\n    class func foo() {\n        func bar() { self.foo() }\n    }\n}"
-        let output = "class Foo {\n    class func foo() {\n        func bar() { foo() }\n    }\n}"
+        let input = """
+        class Foo {
+            class func foo() {
+                func bar() { self.foo() }
+            }
+        }
+        """
+        let output = """
+        class Foo {
+            class func foo() {
+                func bar() { foo() }
+            }
+        }
+        """
         testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testRemoveSelfInStaticFunction() {
-        let input = "struct Foo {\n    static func foo() {\n        func bar() { self.foo() }\n    }\n}"
-        let output = "struct Foo {\n    static func foo() {\n        func bar() { foo() }\n    }\n}"
+        let input = """
+        struct Foo {
+            static func foo() {
+                func bar() { self.foo() }
+            }
+        }
+        """
+        let output = """
+        struct Foo {
+            static func foo() {
+                func bar() { foo() }
+            }
+        }
+        """
         testFormatting(for: input, output, rule: .redundantSelf, exclude: [.enumNamespaces])
     }
 
     func testRemoveSelfInClassFunctionWithModifiers() {
-        let input = "class Foo {\n    class private func foo() {\n        func bar() { self.foo() }\n    }\n}"
-        let output = "class Foo {\n    class private func foo() {\n        func bar() { foo() }\n    }\n}"
+        let input = """
+        class Foo {
+            class private func foo() {
+                func bar() { self.foo() }
+            }
+        }
+        """
+        let output = """
+        class Foo {
+            class private func foo() {
+                func bar() { foo() }
+            }
+        }
+        """
         testFormatting(for: input, output, rule: .redundantSelf,
                        exclude: [.modifierOrder])
     }
 
     func testNoRemoveSelfInClassFunction() {
-        let input = "class Foo {\n    class func foo() {\n        var foo: Int\n        func bar() { self.foo() }\n    }\n}"
+        let input = """
+        class Foo {
+            class func foo() {
+                var foo: Int
+                func bar() { self.foo() }
+            }
+        }
+        """
         testFormatting(for: input, rule: .redundantSelf)
     }
 
     func testNoRemoveSelfForVarDeclaredAfterRepeatWhile() {
-        let input = "class Foo {\n    let foo = 5\n    func bar() {\n        repeat {} while foo\n        let foo = 6\n        self.foo()\n    }\n}"
+        let input = """
+        class Foo {
+            let foo = 5
+            func bar() {
+                repeat {} while foo
+                let foo = 6
+                self.foo()
+            }
+        }
+        """
         testFormatting(for: input, rule: .redundantSelf)
     }
 
     func testNoRemoveSelfForVarInClosureAfterRepeatWhile() {
-        let input = "class Foo {\n    let foo = 5\n    func bar() {\n        repeat {} while foo\n        ({ self.foo() })()\n    }\n}"
+        let input = """
+        class Foo {
+            let foo = 5
+            func bar() {
+                repeat {} while foo
+                ({ self.foo() })()
+            }
+        }
+        """
         testFormatting(for: input, rule: .redundantSelf)
     }
 
     func testNoRemoveSelfInClosureAfterVar() {
-        let input = "var foo: String\nbar { self.baz() }"
+        let input = """
+        var foo: String
+        bar { self.baz() }
+        """
         testFormatting(for: input, rule: .redundantSelf)
     }
 
     func testNoRemoveSelfInClosureAfterNamespacedVar() {
-        let input = "var foo: Swift.String\nbar { self.baz() }"
+        let input = """
+        var foo: Swift.String
+        bar { self.baz() }
+        """
         testFormatting(for: input, rule: .redundantSelf)
     }
 
     func testNoRemoveSelfInClosureAfterOptionalVar() {
-        let input = "var foo: String?\nbar { self.baz() }"
+        let input = """
+        var foo: String?
+        bar { self.baz() }
+        """
         testFormatting(for: input, rule: .redundantSelf)
     }
 
     func testNoRemoveSelfInClosureAfterGenericVar() {
-        let input = "var foo: Foo<Int>\nbar { self.baz() }"
+        let input = """
+        var foo: Foo<Int>
+        bar { self.baz() }
+        """
         testFormatting(for: input, rule: .redundantSelf)
     }
 
     func testNoRemoveSelfInClosureAfterArray() {
-        let input = "var foo: [Int]\nbar { self.baz() }"
+        let input = """
+        var foo: [Int]
+        bar { self.baz() }
+        """
         testFormatting(for: input, rule: .redundantSelf)
     }
 
@@ -1145,7 +1495,9 @@ class RedundantSelfTests: XCTestCase {
     }
 
     func testRedundantSelfDoesntGetStuckIfNoParensFound() {
-        let input = "init<T>_ foo: T {}"
+        let input = """
+        init<T>_ foo: T {}
+        """
         testFormatting(for: input, rule: .redundantSelf,
                        exclude: [.spaceAroundOperators])
     }
@@ -1270,8 +1622,12 @@ class RedundantSelfTests: XCTestCase {
     }
 
     func testRemoveSelfForMemberNamedLazy() {
-        let input = "func foo() { self.lazy() }"
-        let output = "func foo() { lazy() }"
+        let input = """
+        func foo() { self.lazy() }
+        """
+        let output = """
+        func foo() { lazy() }
+        """
         testFormatting(for: input, output, rule: .redundantSelf)
     }
 
@@ -1615,7 +1971,9 @@ class RedundantSelfTests: XCTestCase {
     }
 
     func testRedundantSelfRuleDoesntErrorInForInTryLoop() {
-        let input = "for foo in try bar() {}"
+        let input = """
+        for foo in try bar() {}
+        """
         testFormatting(for: input, rule: .redundantSelf)
     }
 
@@ -1839,135 +2197,313 @@ class RedundantSelfTests: XCTestCase {
     // explicitSelf = .insert
 
     func testInsertSelf() {
-        let input = "class Foo {\n    let foo: Int\n    init() { foo = 5 }\n}"
-        let output = "class Foo {\n    let foo: Int\n    init() { self.foo = 5 }\n}"
+        let input = """
+        class Foo {
+            let foo: Int
+            init() { foo = 5 }
+        }
+        """
+        let output = """
+        class Foo {
+            let foo: Int
+            init() { self.foo = 5 }
+        }
+        """
         let options = FormatOptions(explicitSelf: .insert)
         testFormatting(for: input, output, rule: .redundantSelf, options: options)
     }
 
     func testInsertSelfInActor() {
-        let input = "actor Foo {\n    let foo: Int\n    init() { foo = 5 }\n}"
-        let output = "actor Foo {\n    let foo: Int\n    init() { self.foo = 5 }\n}"
+        let input = """
+        actor Foo {
+            let foo: Int
+            init() { foo = 5 }
+        }
+        """
+        let output = """
+        actor Foo {
+            let foo: Int
+            init() { self.foo = 5 }
+        }
+        """
         let options = FormatOptions(explicitSelf: .insert)
         testFormatting(for: input, output, rule: .redundantSelf, options: options)
     }
 
     func testInsertSelfAfterReturn() {
-        let input = "class Foo {\n    let foo: Int\n    func bar() -> Int { return foo }\n}"
-        let output = "class Foo {\n    let foo: Int\n    func bar() -> Int { return self.foo }\n}"
+        let input = """
+        class Foo {
+            let foo: Int
+            func bar() -> Int { return foo }
+        }
+        """
+        let output = """
+        class Foo {
+            let foo: Int
+            func bar() -> Int { return self.foo }
+        }
+        """
         let options = FormatOptions(explicitSelf: .insert)
         testFormatting(for: input, output, rule: .redundantSelf, options: options)
     }
 
     func testInsertSelfInsideStringInterpolation() {
-        let input = "class Foo {\n    var bar: String?\n    func baz() {\n        print(\"\\(bar)\")\n    }\n}"
-        let output = "class Foo {\n    var bar: String?\n    func baz() {\n        print(\"\\(self.bar)\")\n    }\n}"
+        let input = """
+        class Foo {
+            var bar: String?
+            func baz() {
+                print(\"\\(bar)\")
+            }
+        }
+        """
+        let output = """
+        class Foo {
+            var bar: String?
+            func baz() {
+                print(\"\\(self.bar)\")
+            }
+        }
+        """
         let options = FormatOptions(explicitSelf: .insert)
         testFormatting(for: input, output, rule: .redundantSelf, options: options)
     }
 
     func testNoInterpretGenericTypesAsMembers() {
-        let input = "class Foo {\n    let foo: Bar<Int, Int>\n    init() { self.foo = Int(5) }\n}"
+        let input = """
+        class Foo {
+            let foo: Bar<Int, Int>
+            init() { self.foo = Int(5) }
+        }
+        """
         let options = FormatOptions(explicitSelf: .insert)
         testFormatting(for: input, rule: .redundantSelf, options: options)
     }
 
     func testInsertSelfForStaticMemberInClassFunction() {
-        let input = "class Foo {\n    static var foo: Int\n    class func bar() { foo = 5 }\n}"
-        let output = "class Foo {\n    static var foo: Int\n    class func bar() { self.foo = 5 }\n}"
+        let input = """
+        class Foo {
+            static var foo: Int
+            class func bar() { foo = 5 }
+        }
+        """
+        let output = """
+        class Foo {
+            static var foo: Int
+            class func bar() { self.foo = 5 }
+        }
+        """
         let options = FormatOptions(explicitSelf: .insert)
         testFormatting(for: input, output, rule: .redundantSelf, options: options)
     }
 
     func testNoInsertSelfForInstanceMemberInClassFunction() {
-        let input = "class Foo {\n    var foo: Int\n    class func bar() { foo = 5 }\n}"
+        let input = """
+        class Foo {
+            var foo: Int
+            class func bar() { foo = 5 }
+        }
+        """
         let options = FormatOptions(explicitSelf: .insert)
         testFormatting(for: input, rule: .redundantSelf, options: options)
     }
 
     func testNoInsertSelfForStaticMemberInInstanceFunction() {
-        let input = "class Foo {\n    static var foo: Int\n    func bar() { foo = 5 }\n}"
+        let input = """
+        class Foo {
+            static var foo: Int
+            func bar() { foo = 5 }
+        }
+        """
         let options = FormatOptions(explicitSelf: .insert)
         testFormatting(for: input, rule: .redundantSelf, options: options)
     }
 
     func testNoInsertSelfForShadowedClassMemberInClassFunction() {
-        let input = "class Foo {\n    class func foo() {\n        var foo: Int\n        func bar() { foo = 5 }\n    }\n}"
+        let input = """
+        class Foo {
+            class func foo() {
+                var foo: Int
+                func bar() { foo = 5 }
+            }
+        }
+        """
         let options = FormatOptions(explicitSelf: .insert)
         testFormatting(for: input, rule: .redundantSelf, options: options)
     }
 
     func testNoInsertSelfInForLoopTuple() {
-        let input = "class Foo {\n    var bar: Int\n    func foo() { for (bar, baz) in quux {} }\n}"
+        let input = """
+        class Foo {
+            var bar: Int
+            func foo() { for (bar, baz) in quux {} }
+        }
+        """
         let options = FormatOptions(explicitSelf: .insert)
         testFormatting(for: input, rule: .redundantSelf, options: options)
     }
 
     func testNoInsertSelfForTupleTypeMembers() {
-        let input = "class Foo {\n    var foo: (Int, UIColor) {\n        let bar = UIColor.red\n    }\n}"
+        let input = """
+        class Foo {
+            var foo: (Int, UIColor) {
+                let bar = UIColor.red
+            }
+        }
+        """
         let options = FormatOptions(explicitSelf: .insert)
         testFormatting(for: input, rule: .redundantSelf, options: options)
     }
 
     func testNoInsertSelfForArrayElements() {
-        let input = "class Foo {\n    var foo = [1, 2, nil]\n    func bar() { baz(nil) }\n}"
+        let input = """
+        class Foo {
+            var foo = [1, 2, nil]
+            func bar() { baz(nil) }
+        }
+        """
         let options = FormatOptions(explicitSelf: .insert)
         testFormatting(for: input, rule: .redundantSelf, options: options)
     }
 
     func testNoInsertSelfForNestedVarReference() {
-        let input = "class Foo {\n    func bar() {\n        var bar = 5\n        repeat { bar = 6 } while true\n    }\n}"
+        let input = """
+        class Foo {
+            func bar() {
+                var bar = 5
+                repeat { bar = 6 } while true
+            }
+        }
+        """
         let options = FormatOptions(explicitSelf: .insert)
         testFormatting(for: input, rule: .redundantSelf, options: options, exclude: [.wrapLoopBodies])
     }
 
     func testNoInsertSelfInSwitchCaseLet() {
-        let input = "class Foo {\n    var foo: Bar? {\n        switch bar {\n        case let .baz(foo, _):\n            return nil\n        }\n    }\n}"
+        let input = """
+        class Foo {
+            var foo: Bar? {
+                switch bar {
+                case let .baz(foo, _):
+                    return nil
+                }
+            }
+        }
+        """
         let options = FormatOptions(explicitSelf: .insert)
         testFormatting(for: input, rule: .redundantSelf, options: options)
     }
 
     func testNoInsertSelfInFuncAfterImportedClass() {
-        let input = "import class Foo.Bar\nfunc foo() {\n    var bar = 5\n    if true {\n        bar = 6\n    }\n}"
+        let input = """
+        import class Foo.Bar
+        func foo() {
+            var bar = 5
+            if true {
+                bar = 6
+            }
+        }
+        """
         let options = FormatOptions(explicitSelf: .insert)
         testFormatting(for: input, rule: .redundantSelf, options: options,
                        exclude: [.blankLineAfterImports])
     }
 
     func testNoInsertSelfForSubscriptGetSet() {
-        let input = "class Foo {\n    func get() {}\n    func set() {}\n    subscript(key: String) -> String {\n        get { return get(key) }\n        set { set(key, newValue) }\n    }\n}"
-        let output = "class Foo {\n    func get() {}\n    func set() {}\n    subscript(key: String) -> String {\n        get { return self.get(key) }\n        set { self.set(key, newValue) }\n    }\n}"
+        let input = """
+        class Foo {
+            func get() {}
+            func set() {}
+            subscript(key: String) -> String {
+                get { return get(key) }
+                set { set(key, newValue) }
+            }
+        }
+        """
+        let output = """
+        class Foo {
+            func get() {}
+            func set() {}
+            subscript(key: String) -> String {
+                get { return self.get(key) }
+                set { self.set(key, newValue) }
+            }
+        }
+        """
         let options = FormatOptions(explicitSelf: .insert)
         testFormatting(for: input, output, rule: .redundantSelf, options: options)
     }
 
     func testNoInsertSelfInIfCaseLet() {
-        let input = "enum Foo {\n    case bar(Int)\n    var value: Int? {\n        if case let .bar(value) = self { return value }\n    }\n}"
+        let input = """
+        enum Foo {
+            case bar(Int)
+            var value: Int? {
+                if case let .bar(value) = self { return value }
+            }
+        }
+        """
         let options = FormatOptions(explicitSelf: .insert)
         testFormatting(for: input, rule: .redundantSelf, options: options,
                        exclude: [.wrapConditionalBodies])
     }
 
     func testNoInsertSelfForPatternLet() {
-        let input = "class Foo {\n    func foo() {}\n    func bar() {\n        switch x {\n        case .bar(let foo, var bar): print(foo + bar)\n        }\n    }\n}"
+        let input = """
+        class Foo {
+            func foo() {}
+            func bar() {
+                switch x {
+                case .bar(let foo, var bar): print(foo + bar)
+                }
+            }
+        }
+        """
         let options = FormatOptions(explicitSelf: .insert)
         testFormatting(for: input, rule: .redundantSelf, options: options)
     }
 
     func testNoInsertSelfForPatternLet2() {
-        let input = "class Foo {\n    func foo() {}\n    func bar() {\n        switch x {\n        case let .foo(baz): print(baz)\n        case .bar(let foo, var bar): print(foo + bar)\n        }\n    }\n}"
+        let input = """
+        class Foo {
+            func foo() {}
+            func bar() {
+                switch x {
+                case let .foo(baz): print(baz)
+                case .bar(let foo, var bar): print(foo + bar)
+                }
+            }
+        }
+        """
         let options = FormatOptions(explicitSelf: .insert)
         testFormatting(for: input, rule: .redundantSelf, options: options)
     }
 
     func testNoInsertSelfForTypeOf() {
-        let input = "class Foo {\n    var type: String?\n    func bar() {\n        print(\"\\(type(of: self))\")\n    }\n}"
+        let input = """
+        class Foo {
+            var type: String?
+            func bar() {
+                print(\"\\(type(of: self))\")
+            }
+        }
+        """
         let options = FormatOptions(explicitSelf: .insert)
         testFormatting(for: input, rule: .redundantSelf, options: options)
     }
 
     func testNoInsertSelfForConditionalLocal() {
-        let input = "class Foo {\n    func foo() {\n        #if os(watchOS)\n            var foo: Int\n        #else\n            var foo: Float\n        #endif\n        print(foo)\n    }\n}"
+        let input = """
+        class Foo {
+            func foo() {
+                #if os(watchOS)
+                    var foo: Int
+                #else
+                    var foo: Float
+                #endif
+                print(foo)
+            }
+        }
+        """
         let options = FormatOptions(explicitSelf: .insert)
         testFormatting(for: input, rule: .redundantSelf, options: options)
     }
@@ -3342,7 +3878,10 @@ class RedundantSelfTests: XCTestCase {
     }
 
     func testNoMistakeProtocolClassModifierForClassFunction() {
-        let input = "protocol Foo: class {}\nfunc bar() {}"
+        let input = """
+        protocol Foo: class {}
+        func bar() {}
+        """
         XCTAssertNoThrow(try format(input, rules: [.redundantSelf]))
         XCTAssertNoThrow(try format(input, rules: FormatRules.all))
     }

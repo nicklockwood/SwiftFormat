@@ -11,35 +11,72 @@ import XCTest
 
 class RedundantGetTests: XCTestCase {
     func testRemoveSingleLineIsolatedGet() {
-        let input = "var foo: Int { get { return 5 } }"
-        let output = "var foo: Int { return 5 }"
+        let input = """
+        var foo: Int { get { return 5 } }
+        """
+        let output = """
+        var foo: Int { return 5 }
+        """
         testFormatting(for: input, output, rule: .redundantGet)
     }
 
     func testRemoveMultilineIsolatedGet() {
-        let input = "var foo: Int {\n    get {\n        return 5\n    }\n}"
-        let output = "var foo: Int {\n    return 5\n}"
+        let input = """
+        var foo: Int {
+            get {
+                return 5
+            }
+        }
+        """
+        let output = """
+        var foo: Int {
+            return 5
+        }
+        """
         testFormatting(for: input, [output], rules: [.redundantGet, .indent])
     }
 
     func testNoRemoveMultilineGetSet() {
-        let input = "var foo: Int {\n    get { return 5 }\n    set { foo = newValue }\n}"
+        let input = """
+        var foo: Int {
+            get { return 5 }
+            set { foo = newValue }
+        }
+        """
         testFormatting(for: input, rule: .redundantGet)
     }
 
     func testNoRemoveAttributedGet() {
-        let input = "var enabled: Bool { @objc(isEnabled) get { true } }"
+        let input = """
+        var enabled: Bool { @objc(isEnabled) get { true } }
+        """
         testFormatting(for: input, rule: .redundantGet)
     }
 
     func testRemoveSubscriptGet() {
-        let input = "subscript(_ index: Int) {\n    get {\n        return lookup(index)\n    }\n}"
-        let output = "subscript(_ index: Int) {\n    return lookup(index)\n}"
+        let input = """
+        subscript(_ index: Int) {
+            get {
+                return lookup(index)
+            }
+        }
+        """
+        let output = """
+        subscript(_ index: Int) {
+            return lookup(index)
+        }
+        """
         testFormatting(for: input, [output], rules: [.redundantGet, .indent])
     }
 
     func testGetNotRemovedInFunction() {
-        let input = "func foo() {\n    get {\n        self.lookup(index)\n    }\n}"
+        let input = """
+        func foo() {
+            get {
+                self.lookup(index)
+            }
+        }
+        """
         testFormatting(for: input, rule: .redundantGet)
     }
 

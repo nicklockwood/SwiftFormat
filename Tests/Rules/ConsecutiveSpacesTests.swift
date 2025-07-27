@@ -11,46 +11,76 @@ import XCTest
 
 class ConsecutiveSpacesTests: XCTestCase {
     func testConsecutiveSpaces() {
-        let input = "let foo  = bar"
-        let output = "let foo = bar"
+        let input = """
+        let foo  = bar
+        """
+        let output = """
+        let foo = bar
+        """
         testFormatting(for: input, output, rule: .consecutiveSpaces)
     }
 
     func testConsecutiveSpacesAfterComment() {
-        let input = "// comment\nfoo  bar"
-        let output = "// comment\nfoo bar"
+        let input = """
+        // comment
+        foo  bar
+        """
+        let output = """
+        // comment
+        foo bar
+        """
         testFormatting(for: input, output, rule: .consecutiveSpaces)
     }
 
     func testConsecutiveSpacesDoesntStripIndent() {
-        let input = "{\n    let foo  = bar\n}"
-        let output = "{\n    let foo = bar\n}"
+        let input = """
+        {
+            let foo  = bar
+        }
+        """
+        let output = """
+        {
+            let foo = bar
+        }
+        """
         testFormatting(for: input, output, rule: .consecutiveSpaces)
     }
 
     func testConsecutiveSpacesDoesntAffectMultilineComments() {
-        let input = "/*    comment  */"
+        let input = """
+        /*    comment  */
+        """
         testFormatting(for: input, rule: .consecutiveSpaces)
     }
 
     func testConsecutiveSpacesRemovedBetweenComments() {
-        let input = "/* foo */  /* bar */"
-        let output = "/* foo */ /* bar */"
+        let input = """
+        /* foo */  /* bar */
+        """
+        let output = """
+        /* foo */ /* bar */
+        """
         testFormatting(for: input, output, rule: .consecutiveSpaces)
     }
 
     func testConsecutiveSpacesDoesntAffectNestedMultilineComments() {
-        let input = "/*  foo  /*  bar  */  baz  */"
+        let input = """
+        /*  foo  /*  bar  */  baz  */
+        """
         testFormatting(for: input, rule: .consecutiveSpaces)
     }
 
     func testConsecutiveSpacesDoesntAffectNestedMultilineComments2() {
-        let input = "/*  /*  foo  */  /*  bar  */  */"
+        let input = """
+        /*  /*  foo  */  /*  bar  */  */
+        """
         testFormatting(for: input, rule: .consecutiveSpaces)
     }
 
     func testConsecutiveSpacesDoesntAffectSingleLineComments() {
-        let input = "//    foo  bar"
+        let input = """
+        //    foo  bar
+        """
         testFormatting(for: input, rule: .consecutiveSpaces)
     }
 }

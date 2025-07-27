@@ -11,55 +11,81 @@ import XCTest
 
 class RedundantInitTests: XCTestCase {
     func testRemoveRedundantInit() {
-        let input = "[1].flatMap { String.init($0) }"
-        let output = "[1].flatMap { String($0) }"
+        let input = """
+        [1].flatMap { String.init($0) }
+        """
+        let output = """
+        [1].flatMap { String($0) }
+        """
         testFormatting(for: input, output, rule: .redundantInit)
     }
 
     func testRemoveRedundantInit2() {
-        let input = "[String.self].map { Type in Type.init(foo: 1) }"
-        let output = "[String.self].map { Type in Type(foo: 1) }"
+        let input = """
+        [String.self].map { Type in Type.init(foo: 1) }
+        """
+        let output = """
+        [String.self].map { Type in Type(foo: 1) }
+        """
         testFormatting(for: input, output, rule: .redundantInit)
     }
 
     func testRemoveRedundantInit3() {
-        let input = "String.init(\"text\")"
-        let output = "String(\"text\")"
+        let input = """
+        String.init(\"text\")
+        """
+        let output = """
+        String(\"text\")
+        """
         testFormatting(for: input, output, rule: .redundantInit)
     }
 
     func testDontRemoveInitInSuperCall() {
-        let input = "class C: NSObject { override init() { super.init() } }"
+        let input = """
+        class C: NSObject { override init() { super.init() } }
+        """
         testFormatting(for: input, rule: .redundantInit)
     }
 
     func testDontRemoveInitInSelfCall() {
-        let input = "struct S { let n: Int }; extension S { init() { self.init(n: 1) } }"
+        let input = """
+        struct S { let n: Int }; extension S { init() { self.init(n: 1) } }
+        """
         testFormatting(for: input, rule: .redundantInit)
     }
 
     func testDontRemoveInitWhenPassedAsFunction() {
-        let input = "[1].flatMap(String.init)"
+        let input = """
+        [1].flatMap(String.init)
+        """
         testFormatting(for: input, rule: .redundantInit)
     }
 
     func testDontRemoveInitWhenUsedOnMetatype() {
-        let input = "[String.self].map { type in type.init(1) }"
+        let input = """
+        [String.self].map { type in type.init(1) }
+        """
         testFormatting(for: input, rule: .redundantInit)
     }
 
     func testDontRemoveInitWhenUsedOnImplicitClosureMetatype() {
-        let input = "[String.self].map { $0.init(1) }"
+        let input = """
+        [String.self].map { $0.init(1) }
+        """
         testFormatting(for: input, rule: .redundantInit)
     }
 
     func testDontRemoveInitWhenUsedOnPossibleMetatype() {
-        let input = "let something = Foo.bar.init()"
+        let input = """
+        let something = Foo.bar.init()
+        """
         testFormatting(for: input, rule: .redundantInit)
     }
 
     func testDontRemoveInitWithExplicitSignature() {
-        let input = "[String.self].map(Foo.init(bar:))"
+        let input = """
+        [String.self].map(Foo.init(bar:))
+        """
         testFormatting(for: input, rule: .redundantInit)
     }
 

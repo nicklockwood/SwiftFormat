@@ -11,96 +11,163 @@ import XCTest
 
 class SpaceInsideCommentsTests: XCTestCase {
     func testSpaceInsideMultilineComment() {
-        let input = "/*foo\n bar*/"
-        let output = "/* foo\n bar */"
+        let input = """
+        /*foo
+         bar*/
+        """
+        let output = """
+        /* foo
+         bar */
+        """
         testFormatting(for: input, output, rule: .spaceInsideComments)
     }
 
     func testSpaceInsideSingleLineMultilineComment() {
-        let input = "/*foo*/"
-        let output = "/* foo */"
+        let input = """
+        /*foo*/
+        """
+        let output = """
+        /* foo */
+        """
         testFormatting(for: input, output, rule: .spaceInsideComments)
     }
 
     func testNoSpaceInsideEmptyMultilineComment() {
-        let input = "/**/"
+        let input = """
+        /**/
+        """
         testFormatting(for: input, rule: .spaceInsideComments)
     }
 
     func testSpaceInsideSingleLineComment() {
-        let input = "//foo"
-        let output = "// foo"
+        let input = """
+        //foo
+        """
+        let output = """
+        // foo
+        """
         testFormatting(for: input, output, rule: .spaceInsideComments)
     }
 
     func testSpaceInsideMultilineHeaderdocComment() {
-        let input = "/**foo\n bar*/"
-        let output = "/** foo\n bar */"
+        let input = """
+        /**foo
+         bar*/
+        """
+        let output = """
+        /** foo
+         bar */
+        """
         testFormatting(for: input, output, rule: .spaceInsideComments, exclude: [.docComments])
     }
 
     func testSpaceInsideMultilineHeaderdocCommentType2() {
-        let input = "/*!foo\n bar*/"
-        let output = "/*! foo\n bar */"
+        let input = """
+        /*!foo
+         bar*/
+        """
+        let output = """
+        /*! foo
+         bar */
+        """
         testFormatting(for: input, output, rule: .spaceInsideComments)
     }
 
     func testSpaceInsideMultilineSwiftPlaygroundDocComment() {
-        let input = "/*:foo\n bar*/"
-        let output = "/*: foo\n bar */"
+        let input = """
+        /*:foo
+         bar*/
+        """
+        let output = """
+        /*: foo
+         bar */
+        """
         testFormatting(for: input, output, rule: .spaceInsideComments)
     }
 
     func testNoExtraSpaceInsideMultilineHeaderdocComment() {
-        let input = "/** foo\n bar */"
+        let input = """
+        /** foo
+         bar */
+        """
         testFormatting(for: input, rule: .spaceInsideComments, exclude: [.docComments])
     }
 
     func testNoExtraSpaceInsideMultilineHeaderdocCommentType2() {
-        let input = "/*! foo\n bar */"
+        let input = """
+        /*! foo
+         bar */
+        """
         testFormatting(for: input, rule: .spaceInsideComments)
     }
 
     func testNoExtraSpaceInsideMultilineSwiftPlaygroundDocComment() {
-        let input = "/*: foo\n bar */"
+        let input = """
+        /*: foo
+         bar */
+        """
         testFormatting(for: input, rule: .spaceInsideComments)
     }
 
     func testSpaceInsideSingleLineHeaderdocComment() {
-        let input = "///foo"
-        let output = "/// foo"
+        let input = """
+        ///foo
+        """
+        let output = """
+        /// foo
+        """
         testFormatting(for: input, output, rule: .spaceInsideComments)
     }
 
     func testSpaceInsideSingleLineHeaderdocCommentType2() {
-        let input = "//!foo"
-        let output = "//! foo"
+        let input = """
+        //!foo
+        """
+        let output = """
+        //! foo
+        """
         testFormatting(for: input, output, rule: .spaceInsideComments)
     }
 
     func testSpaceInsideSingleLineSwiftPlaygroundDocComment() {
-        let input = "//:foo"
-        let output = "//: foo"
+        let input = """
+        //:foo
+        """
+        let output = """
+        //: foo
+        """
         testFormatting(for: input, output, rule: .spaceInsideComments)
     }
 
     func testPreformattedMultilineComment() {
-        let input = "/*********************\n *****Hello World*****\n *********************/"
+        let input = """
+        /*********************
+         *****Hello World*****
+         *********************/
+        """
         testFormatting(for: input, rule: .spaceInsideComments)
     }
 
     func testPreformattedSingleLineComment() {
-        let input = "/////////ATTENTION////////"
+        let input = """
+        /////////ATTENTION////////
+        """
         testFormatting(for: input, rule: .spaceInsideComments)
     }
 
     func testNoSpaceAddedToFirstLineOfDocComment() {
-        let input = "/**\n Comment\n */"
+        let input = """
+        /**
+         Comment
+         */
+        """
         testFormatting(for: input, rule: .spaceInsideComments, exclude: [.docComments])
     }
 
     func testNoSpaceAddedToEmptyDocComment() {
-        let input = "///"
+        let input = """
+        ///
+        """
         testFormatting(for: input, rule: .spaceInsideComments)
     }
 

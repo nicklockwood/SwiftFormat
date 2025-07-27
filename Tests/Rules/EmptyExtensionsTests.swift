@@ -28,7 +28,9 @@ class EmptyExtensionsTests: XCTestCase {
 
         extension Array where Element: Foo {}
         """
-        let output = ""
+        let output = """
+
+        """
         testFormatting(for: input, output, rule: .emptyExtensions)
     }
 
@@ -58,7 +60,9 @@ class EmptyExtensionsTests: XCTestCase {
 
         }
         """
-        let output = ""
+        let output = """
+
+        """
         testFormatting(for: input, output, rule: .emptyExtensions)
     }
 

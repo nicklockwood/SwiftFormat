@@ -123,7 +123,9 @@ class WrapTests: XCTestCase {
     }
 
     func testWrapClosure3() {
-        let input = "let foo = bar { $0.baz }"
+        let input = """
+        let foo = bar { $0.baz }
+        """
         let output = """
         let foo = bar {
             $0.baz }
@@ -381,22 +383,31 @@ class WrapTests: XCTestCase {
     }
 
     func testNoWrapAtUnspacedOperator() {
-        let input = "let foo = bar+baz+quux"
-        let output = "let foo =\n    bar+baz+quux"
+        let input = """
+        let foo = bar+baz+quux
+        """
+        let output = """
+        let foo =
+            bar+baz+quux
+        """
         let options = FormatOptions(maxWidth: 15)
         testFormatting(for: input, output, rule: .wrap, options: options,
                        exclude: [.spaceAroundOperators])
     }
 
     func testNoWrapAtUnspacedEquals() {
-        let input = "let foo=bar+baz+quux"
+        let input = """
+        let foo=bar+baz+quux
+        """
         let options = FormatOptions(maxWidth: 15)
         testFormatting(for: input, rule: .wrap, options: options,
                        exclude: [.spaceAroundOperators])
     }
 
     func testNoWrapSingleParameter() {
-        let input = "let fooBar = try unkeyedContainer.decode(FooBar.self)"
+        let input = """
+        let fooBar = try unkeyedContainer.decode(FooBar.self)
+        """
         let output = """
         let fooBar = try unkeyedContainer
             .decode(FooBar.self)
@@ -406,7 +417,9 @@ class WrapTests: XCTestCase {
     }
 
     func testWrapSingleParameter() {
-        let input = "let fooBar = try unkeyedContainer.decode(FooBar.self)"
+        let input = """
+        let fooBar = try unkeyedContainer.decode(FooBar.self)
+        """
         let output = """
         let fooBar = try unkeyedContainer.decode(
             FooBar.self
@@ -417,7 +430,9 @@ class WrapTests: XCTestCase {
     }
 
     func testWrapFunctionArrow() {
-        let input = "func foo() -> Int {}"
+        let input = """
+        func foo() -> Int {}
+        """
         let output = """
         func foo()
             -> Int {}
@@ -427,7 +442,9 @@ class WrapTests: XCTestCase {
     }
 
     func testNoWrapFunctionArrow() {
-        let input = "func foo() -> Int {}"
+        let input = """
+        func foo() -> Int {}
+        """
         let output = """
         func foo(
         ) -> Int {}
@@ -494,7 +511,9 @@ class WrapTests: XCTestCase {
     }
 
     func testWrapImageLiteral() {
-        let input = "if let image = #imageLiteral(resourceName: \"abc.png\") {}"
+        let input = """
+        if let image = #imageLiteral(resourceName: \"abc.png\") {}
+        """
         let options = FormatOptions(maxWidth: 40, assetLiteralWidth: .visualWidth)
         testFormatting(for: input, rule: .wrap, options: options)
     }

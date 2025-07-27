@@ -11,13 +11,22 @@ import XCTest
 
 class EmptyBracesTests: XCTestCase {
     func testLinebreaksRemovedInsideBraces() {
-        let input = "func foo() {\n  \n }"
-        let output = "func foo() {}"
+        let input = """
+        func foo() {
+
+         }
+        """
+        let output = """
+        func foo() {}
+        """
         testFormatting(for: input, output, rule: .emptyBraces)
     }
 
     func testCommentNotRemovedInsideBraces() {
-        let input = "func foo() { // foo\n}"
+        let input = """
+        func foo() { // foo
+        }
+        """
         testFormatting(for: input, rule: .emptyBraces)
     }
 
@@ -40,27 +49,44 @@ class EmptyBracesTests: XCTestCase {
     }
 
     func testSpaceRemovedInsideEmptybraces() {
-        let input = "foo { }"
-        let output = "foo {}"
+        let input = """
+        foo { }
+        """
+        let output = """
+        foo {}
+        """
         testFormatting(for: input, output, rule: .emptyBraces)
     }
 
     func testSpaceAddedInsideEmptyBracesWithSpacedConfiguration() {
-        let input = "foo {}"
-        let output = "foo { }"
+        let input = """
+        foo {}
+        """
+        let output = """
+        foo { }
+        """
         let options = FormatOptions(emptyBracesSpacing: .spaced)
         testFormatting(for: input, output, rule: .emptyBraces, options: options)
     }
 
     func testLinebreaksRemovedInsideBracesWithSpacedConfiguration() {
-        let input = "func foo() {\n  \n }"
-        let output = "func foo() { }"
+        let input = """
+        func foo() {
+
+         }
+        """
+        let output = """
+        func foo() { }
+        """
         let options = FormatOptions(emptyBracesSpacing: .spaced)
         testFormatting(for: input, output, rule: .emptyBraces, options: options)
     }
 
     func testCommentNotRemovedInsideBracesWithSpacedConfiguration() {
-        let input = "func foo() { // foo\n}"
+        let input = """
+        func foo() { // foo
+        }
+        """
         let options = FormatOptions(emptyBracesSpacing: .spaced)
         testFormatting(for: input, rule: .emptyBraces, options: options)
     }

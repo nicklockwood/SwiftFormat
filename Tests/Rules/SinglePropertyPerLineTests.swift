@@ -11,7 +11,9 @@ import XCTest
 
 class SinglePropertyPerLineTests: XCTestCase {
     func testSeparateLetDeclarations() {
-        let input = "let a: Int, b: Int"
+        let input = """
+        let a: Int, b: Int
+        """
         let output = """
         let a: Int
         let b: Int
@@ -20,7 +22,9 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testSeparateVarDeclarations() {
-        let input = "var x = 10, y = 20"
+        let input = """
+        var x = 10, y = 20
+        """
         let output = """
         var x = 10
         var y = 20
@@ -29,7 +33,9 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testSeparatePublicVarDeclarations() {
-        let input = "public var c = 10, d = false, e = \"string\""
+        let input = """
+        public var c = 10, d = false, e = \"string\"
+        """
         let output = """
         public var c = 10
         public var d = false
@@ -39,7 +45,9 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testSeparateObjcVarDeclarations() {
-        let input = "@objc var f = true, g: Bool"
+        let input = """
+        @objc var f = true, g: Bool
+        """
         let output = """
         @objc var f = true
         @objc var g: Bool
@@ -64,7 +72,9 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testSeparateDeclarationsWithComplexTypes() {
-        let input = "let dict: [String: Int], array: [String]"
+        let input = """
+        let dict: [String: Int], array: [String]
+        """
         let output = """
         let dict: [String: Int]
         let array: [String]
@@ -73,7 +83,9 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testSeparateDeclarationsWithGenericTypes() {
-        let input = "var optional: Optional<String>, result: Result<Int, Error>"
+        let input = """
+        var optional: Optional<String>, result: Result<Int, Error>
+        """
         let output = """
         var optional: Optional<String>
         var result: Result<Int, Error>
@@ -82,7 +94,9 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testSeparateDeclarationsWithClosureTypes() {
-        let input = "let callback: () -> Void, handler: (String) -> Int"
+        let input = """
+        let callback: () -> Void, handler: (String) -> Int
+        """
         let output = """
         let callback: () -> Void
         let handler: (String) -> Int
@@ -91,7 +105,9 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testSeparateDeclarationsWithTupleTypes() {
-        let input = "let point: (Int, Int), size: (width: Int, height: Int)"
+        let input = """
+        let point: (Int, Int), size: (width: Int, height: Int)
+        """
         let output = """
         let point: (Int, Int)
         let size: (width: Int, height: Int)
@@ -115,7 +131,9 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testPreserveMultipleAttributes() {
-        let input = "@available(iOS 13.0, *) @objc private var a = 1, b = 2"
+        let input = """
+        @available(iOS 13.0, *) @objc private var a = 1, b = 2
+        """
         let output = """
         @available(iOS 13.0, *) @objc private var a = 1
         @available(iOS 13.0, *) @objc private var b = 2
@@ -124,7 +142,9 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testNoChangeForSingleProperty() {
-        let input = "let single: String = \"value\""
+        let input = """
+        let single: String = \"value\"
+        """
         testFormatting(for: input, rule: .singlePropertyPerLine)
     }
 
@@ -138,27 +158,37 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testIgnoreCommasInFunctionCalls() {
-        let input = "let result = someFunction(param1, param2, param3)"
+        let input = """
+        let result = someFunction(param1, param2, param3)
+        """
         testFormatting(for: input, rule: .singlePropertyPerLine)
     }
 
     func testIgnoreCommasInArrayLiterals() {
-        let input = "let array = [1, 2, 3, 4, 5]"
+        let input = """
+        let array = [1, 2, 3, 4, 5]
+        """
         testFormatting(for: input, rule: .singlePropertyPerLine)
     }
 
     func testIgnoreCommasInDictionaryLiterals() {
-        let input = "let dict = [\"a\": 1, \"b\": 2, \"c\": 3]"
+        let input = """
+        let dict = [\"a\": 1, \"b\": 2, \"c\": 3]
+        """
         testFormatting(for: input, rule: .singlePropertyPerLine)
     }
 
     func testIgnoreCommasInTuples() {
-        let input = "let tuple = (1, 2, 3)"
+        let input = """
+        let tuple = (1, 2, 3)
+        """
         testFormatting(for: input, rule: .singlePropertyPerLine)
     }
 
     func testSeparatePropertiesWithComplexInitializers() {
-        let input = "let a = [1, 2, 3], b = (x: 1, y: 2)"
+        let input = """
+        let a = [1, 2, 3], b = (x: 1, y: 2)
+        """
         let output = """
         let a = [1, 2, 3]
         let b = (x: 1, y: 2)
@@ -167,7 +197,9 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testSeparatePropertiesWithFunctionCallInitializers() {
-        let input = "let result1 = process(data, options), result2 = transform(input)"
+        let input = """
+        let result1 = process(data, options), result2 = transform(input)
+        """
         let output = """
         let result1 = process(data, options)
         let result2 = transform(input)
@@ -292,7 +324,9 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testSeparatePropertiesWithArrayTypes() {
-        let input = "let numbers: [Int], strings: [String], optionals: [Int?]"
+        let input = """
+        let numbers: [Int], strings: [String], optionals: [Int?]
+        """
         let output = """
         let numbers: [Int]
         let strings: [String]
@@ -302,7 +336,9 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testSeparatePropertiesWithDictionaryTypes() {
-        let input = "var userMap: [String: User], settingsMap: [String: Any], counters: [String: Int]"
+        let input = """
+        var userMap: [String: User], settingsMap: [String: Any], counters: [String: Int]
+        """
         let output = """
         var userMap: [String: User]
         var settingsMap: [String: Any]
@@ -312,7 +348,9 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testSeparatePropertiesWithArrayLiteralValues() {
-        let input = "let primes = [2, 3, 5, 7], evens = [2, 4, 6, 8], odds = [1, 3, 5, 7]"
+        let input = """
+        let primes = [2, 3, 5, 7], evens = [2, 4, 6, 8], odds = [1, 3, 5, 7]
+        """
         let output = """
         let primes = [2, 3, 5, 7]
         let evens = [2, 4, 6, 8]
@@ -322,7 +360,9 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testSeparatePropertiesWithDictionaryLiteralValues() {
-        let input = "let colors = [\"red\": 0xFF0000, \"green\": 0x00FF00], settings = [\"theme\": \"dark\", \"language\": \"en\"]"
+        let input = """
+        let colors = [\"red\": 0xFF0000, \"green\": 0x00FF00], settings = [\"theme\": \"dark\", \"language\": \"en\"]
+        """
         let output = """
         let colors = ["red": 0xFF0000, "green": 0x00FF00]
         let settings = ["theme": "dark", "language": "en"]
@@ -348,7 +388,9 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testSeparatePropertiesWithNestedArrayTypes() {
-        let input = "let matrix: [[Int]], jaggedArray: [[String?]], coordinates: [(Double, Double)]"
+        let input = """
+        let matrix: [[Int]], jaggedArray: [[String?]], coordinates: [(Double, Double)]
+        """
         let output = """
         let matrix: [[Int]]
         let jaggedArray: [[String?]]
@@ -358,7 +400,9 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testSeparatePropertiesWithComplexGenericTypes() {
-        let input = "var publisher: AnyPublisher<String, Error>, subject: PassthroughSubject<Int, Never>"
+        let input = """
+        var publisher: AnyPublisher<String, Error>, subject: PassthroughSubject<Int, Never>
+        """
         let output = """
         var publisher: AnyPublisher<String, Error>
         var subject: PassthroughSubject<Int, Never>
@@ -367,7 +411,9 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testSeparatePropertiesWithOptionalArrayTypes() {
-        let input = "let optionalArray: [String]?, arrayOfOptionals: [String?], bothOptional: [String?]?"
+        let input = """
+        let optionalArray: [String]?, arrayOfOptionals: [String?], bothOptional: [String?]?
+        """
         let output = """
         let optionalArray: [String]?
         let arrayOfOptionals: [String?]
@@ -377,7 +423,9 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testSeparatePropertiesWithFunctionTypes() {
-        let input = "let transformer: (String) -> Int, validator: (String) -> Bool, processor: ([Int]) -> [String]"
+        let input = """
+        let transformer: (String) -> Int, validator: (String) -> Bool, processor: ([Int]) -> [String]
+        """
         let output = """
         let transformer: (String) -> Int
         let validator: (String) -> Bool
@@ -387,7 +435,9 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testSeparatePropertiesWithEscapingClosureTypes() {
-        let input = "var onSuccess: (@escaping (Data) -> Void)?, onError: (@escaping (Error) -> Void)?"
+        let input = """
+        var onSuccess: (@escaping (Data) -> Void)?, onError: (@escaping (Error) -> Void)?
+        """
         let output = """
         var onSuccess: (@escaping (Data) -> Void)?
         var onError: (@escaping (Error) -> Void)?
@@ -396,7 +446,9 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testSeparatePropertiesWithSetValues() {
-        let input = "let vowels: Set = [\"a\", \"e\", \"i\", \"o\", \"u\"], consonants: Set<Character> = [\"b\", \"c\", \"d\"]"
+        let input = """
+        let vowels: Set = [\"a\", \"e\", \"i\", \"o\", \"u\"], consonants: Set<Character> = [\"b\", \"c\", \"d\"]
+        """
         let output = """
         let vowels: Set = ["a", "e", "i", "o", "u"]
         let consonants: Set<Character> = ["b", "c", "d"]
@@ -405,7 +457,9 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testSeparatePropertiesWithTupleValues() {
-        let input = "let point = (x: 10, y: 20), size = (width: 100, height: 200), origin = (0, 0)"
+        let input = """
+        let point = (x: 10, y: 20), size = (width: 100, height: 200), origin = (0, 0)
+        """
         let output = """
         let point = (x: 10, y: 20)
         let size = (width: 100, height: 200)
@@ -415,7 +469,9 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testSeparatePropertiesWithObjectInitializers() {
-        let input = "let url = URL(string: \"https://api.example.com\")!, client = HTTPClient(session: .shared), config = AppConfig.default"
+        let input = """
+        let url = URL(string: \"https://api.example.com\")!, client = HTTPClient(session: .shared), config = AppConfig.default
+        """
         let output = """
         let url = URL(string: "https://api.example.com")!
         let client = HTTPClient(session: .shared)
@@ -425,7 +481,9 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testSeparatePropertiesWithChainedMethodCalls() {
-        let input = "let trimmed = input.trimmingCharacters(in: .whitespaces), uppercased = text.uppercased().replacingOccurrences(of: \" \", with: \"_\")"
+        let input = """
+        let trimmed = input.trimmingCharacters(in: .whitespaces), uppercased = text.uppercased().replacingOccurrences(of: \" \", with: \"_\")
+        """
         let output = """
         let trimmed = input.trimmingCharacters(in: .whitespaces)
         let uppercased = text.uppercased().replacingOccurrences(of: " ", with: "_")
@@ -434,7 +492,9 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testSeparatePropertiesWithConditionalValues() {
-        let input = "let result = condition ? value1 : value2, fallback = optional ?? defaultValue"
+        let input = """
+        let result = condition ? value1 : value2, fallback = optional ?? defaultValue
+        """
         let output = """
         let result = condition ? value1 : value2
         let fallback = optional ?? defaultValue
@@ -443,7 +503,9 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testSeparatePropertiesWithTypeInference() {
-        let input = "let items = [\"apple\", \"banana\", \"cherry\"], counts = [1: \"one\", 2: \"two\"], flags = [true, false, true]"
+        let input = """
+        let items = [\"apple\", \"banana\", \"cherry\"], counts = [1: \"one\", 2: \"two\"], flags = [true, false, true]
+        """
         let output = """
         let items = ["apple", "banana", "cherry"]
         let counts = [1: "one", 2: "two"]
@@ -643,7 +705,9 @@ class SinglePropertyPerLineTests: XCTestCase {
 
     func testBasicCommaDetection() {
         // Test if parseExpressionRange is working correctly for simple cases
-        let input = "let x = 5, y = 10"
+        let input = """
+        let x = 5, y = 10
+        """
         let output = """
         let x = 5
         let y = 10
@@ -652,7 +716,9 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testSimpleSharedType() {
-        let input = "let a, b: Int"
+        let input = """
+        let a, b: Int
+        """
         let output = """
         let a: Int
         let b: Int
@@ -661,7 +727,9 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testEnumDeclarationWithConformances() {
-        let input = "enum DiagnosticFailure: Error, CustomStringConvertible { }"
+        let input = """
+        enum DiagnosticFailure: Error, CustomStringConvertible { }
+        """
         testFormatting(for: input, rule: .singlePropertyPerLine, exclude: [.emptyBraces])
     }
 
@@ -693,7 +761,9 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testClassDeclarationWithMultipleInheritance() {
-        let input = "public final class PrimaryButton: BaseMarginView, ConstellationView, PrimaryActionLoggable { }"
+        let input = """
+        public final class PrimaryButton: BaseMarginView, ConstellationView, PrimaryActionLoggable { }
+        """
         testFormatting(for: input, rule: .singlePropertyPerLine, exclude: [.emptyBraces])
     }
 
@@ -740,7 +810,9 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testSimpleTupleDestructuring() {
-        let input = "let (foo, bar, baaz) = (1, 2, 3)"
+        let input = """
+        let (foo, bar, baaz) = (1, 2, 3)
+        """
         let output = """
         let foo = 1
         let bar = 2
@@ -750,7 +822,9 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testTupleDestructuringWithVarKeyword() {
-        let input = "var (x, y, z) = (10, 20, 30)"
+        let input = """
+        var (x, y, z) = (10, 20, 30)
+        """
         let output = """
         var x = 10
         var y = 20
@@ -760,7 +834,9 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testTupleDestructuringWithSpaces() {
-        let input = "let ( a , b , c ) = ( 1 , 2 , 3 )"
+        let input = """
+        let ( a , b , c ) = ( 1 , 2 , 3 )
+        """
         let output = """
         let a = 1
         let b = 2
@@ -770,7 +846,9 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testTupleDestructuringWithComplexValues() {
-        let input = "let (name, age, active) = (\"John\", 25, true)"
+        let input = """
+        let (name, age, active) = (\"John\", 25, true)
+        """
         let output = """
         let name = "John"
         let age = 25
@@ -780,7 +858,9 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testTupleDestructuringWithModifiers() {
-        let input = "private let (width, height) = (100.0, 200.0)"
+        let input = """
+        private let (width, height) = (100.0, 200.0)
+        """
         let output = """
         private let width = 100.0
         private let height = 200.0
@@ -789,7 +869,9 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testTupleDestructuringWithAttributes() {
-        let input = "@available(iOS 15, *) let (feature1, feature2) = (true, false)"
+        let input = """
+        @available(iOS 15, *) let (feature1, feature2) = (true, false)
+        """
         let output = """
         @available(iOS 15, *) let feature1 = true
         @available(iOS 15, *) let feature2 = false
@@ -798,7 +880,9 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testTupleDestructuringWithNestedValues() {
-        let input = "let (array, dict) = ([1, 2, 3], [\"key\": \"value\"])"
+        let input = """
+        let (array, dict) = ([1, 2, 3], [\"key\": \"value\"])
+        """
         let output = """
         let array = [1, 2, 3]
         let dict = ["key": "value"]
@@ -807,7 +891,9 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testTupleDestructuringWithFunctionCalls() {
-        let input = "let (min, max) = (calculateMin(), calculateMax())"
+        let input = """
+        let (min, max) = (calculateMin(), calculateMax())
+        """
         let output = """
         let min = calculateMin()
         let max = calculateMax()
@@ -831,22 +917,30 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testPreserveTupleDestructuringWithSingleValue() {
-        let input = "let (result) = (42)"
+        let input = """
+        let (result) = (42)
+        """
         testFormatting(for: input, rule: .singlePropertyPerLine, exclude: [.redundantParens])
     }
 
     func testPreserveTupleDestructuringWithNonTupleRHS() {
-        let input = "let (foo, bar, baz) = someFunction()"
+        let input = """
+        let (foo, bar, baz) = someFunction()
+        """
         testFormatting(for: input, rule: .singlePropertyPerLine)
     }
 
     func testPreserveTupleDestructuringWithMethodCall() {
-        let input = "let (x, y) = point.coordinates()"
+        let input = """
+        let (x, y) = point.coordinates()
+        """
         testFormatting(for: input, rule: .singlePropertyPerLine)
     }
 
     func testPreserveTupleDestructuringWithPropertyAccess2() {
-        let input = "let (width, height) = view.size"
+        let input = """
+        let (width, height) = view.size
+        """
         testFormatting(for: input, rule: .singlePropertyPerLine)
     }
 
@@ -881,7 +975,9 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testTupleDestructuringWithTypeAnnotation() {
-        let input = "let (a, b): (Int, Bool)"
+        let input = """
+        let (a, b): (Int, Bool)
+        """
         let output = """
         let a: Int
         let b: Bool
@@ -901,7 +997,9 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testTupleDestructuringWithComplexTypes() {
-        let input = "let (items, count): ([String], Int)"
+        let input = """
+        let (items, count): ([String], Int)
+        """
         let output = """
         let items: [String]
         let count: Int
@@ -910,7 +1008,9 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testTupleDestructuringWithOptionalTypes() {
-        let input = "var (name, age): (String?, Int?)"
+        let input = """
+        var (name, age): (String?, Int?)
+        """
         let output = """
         var name: String?
         var age: Int?
@@ -919,7 +1019,9 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testTupleDestructuringWithModifiersAndTypeAnnotation() {
-        let input = "private let (width, height): (Double, Double)"
+        let input = """
+        private let (width, height): (Double, Double)
+        """
         let output = """
         private let width: Double
         private let height: Double
@@ -928,7 +1030,9 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testTupleDestructuringWithAttributesAndTypeAnnotation() {
-        let input = "@available(iOS 15, *) let (x, y): (CGFloat, CGFloat)"
+        let input = """
+        @available(iOS 15, *) let (x, y): (CGFloat, CGFloat)
+        """
         let output = """
         @available(iOS 15, *) let x: CGFloat
         @available(iOS 15, *) let y: CGFloat
@@ -937,7 +1041,9 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testTupleDestructuringWithFunctionTypes() {
-        let input = "let (handler, validator): ((String) -> Void, (Int) -> Bool)"
+        let input = """
+        let (handler, validator): ((String) -> Void, (Int) -> Bool)
+        """
         let output = """
         let handler: (String) -> Void
         let validator: (Int) -> Bool
@@ -946,7 +1052,9 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testTupleDestructuringWithNestedTupleTypes() {
-        let input = "let (point, size): ((Int, Int), (Int, Int))"
+        let input = """
+        let (point, size): ((Int, Int), (Int, Int))
+        """
         let output = """
         let point: (Int, Int)
         let size: (Int, Int)
@@ -955,7 +1063,9 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testTupleDestructuringWithTypeAnnotationAndPartialValues() {
-        let input = "let (result, error): (String?, Error?) = (getValue(), nil)"
+        let input = """
+        let (result, error): (String?, Error?) = (getValue(), nil)
+        """
         let output = """
         let result: String? = getValue()
         let error: Error? = nil
@@ -976,22 +1086,30 @@ class SinglePropertyPerLineTests: XCTestCase {
     }
 
     func testPreserveTupleDestructuringWithFunctionCall() {
-        let input = "let (result, _): DecodedResponseWithContextCompletionArgument<Response> = castQueryResponse(from: query)"
+        let input = """
+        let (result, _): DecodedResponseWithContextCompletionArgument<Response> = castQueryResponse(from: query)
+        """
         testFormatting(for: input, rule: .singlePropertyPerLine)
     }
 
     func testPreserveTupleDestructuringWithClosureLiteral() {
-        let input = "let (_, observers): (Value?, Observers<Value>) = storage.mutate { storage in (nil, storage.observers) }"
+        let input = """
+        let (_, observers): (Value?, Observers<Value>) = storage.mutate { storage in (nil, storage.observers) }
+        """
         testFormatting(for: input, rule: .singlePropertyPerLine)
     }
 
     func testPreserveTupleDestructuringWithPropertyAccess() {
-        let input = "let (width, height) = view.bounds.size"
+        let input = """
+        let (width, height) = view.bounds.size
+        """
         testFormatting(for: input, rule: .singlePropertyPerLine)
     }
 
     func testPreserveTupleDestructuringWithComplexExpression() {
-        let input = "let (min, max) = array.isEmpty ? (0, 0) : (array.min()!, array.max()!)"
+        let input = """
+        let (min, max) = array.isEmpty ? (0, 0) : (array.min()!, array.max()!)
+        """
         testFormatting(for: input, rule: .singlePropertyPerLine)
     }
 }

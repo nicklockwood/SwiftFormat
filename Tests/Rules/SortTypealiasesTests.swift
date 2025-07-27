@@ -217,27 +217,37 @@ class SortTypealiasesTests: XCTestCase {
     }
 
     func testSortSingleLineTypealiasBeginningWithAny() {
-        let input = "typealias Placeholders = any Bar & Foo"
+        let input = """
+        typealias Placeholders = any Bar & Foo
+        """
         testFormatting(for: input, rule: .sortTypealiases)
     }
 
     func testCollectionTypealiasWithArrayOfExistentialTypes() {
-        let input = "public typealias Parameters = [any Any & Sendable]"
+        let input = """
+        public typealias Parameters = [any Any & Sendable]
+        """
         testFormatting(for: input, rule: .sortTypealiases)
     }
 
     func testCollectionTypealiasWithDictionaryOfExistentialTypes() {
-        let input = "public typealias Parameters = [any Hashable & Sendable: any Any & Sendable]"
+        let input = """
+        public typealias Parameters = [any Hashable & Sendable: any Any & Sendable]
+        """
         testFormatting(for: input, rule: .sortTypealiases)
     }
 
     func testCollectionTypealiasWithOptionalExistentialType() {
-        let input = "public typealias Parameters = (Hashable & Sendable)?"
+        let input = """
+        public typealias Parameters = (Hashable & Sendable)?
+        """
         testFormatting(for: input, rule: .sortTypealiases)
     }
 
     func testCollectionTypealiasWithGenericExistentialType() {
-        let input = "public typealias Parameters = Result<any Hashable & Sendable, any Error & Sendable>"
+        let input = """
+        public typealias Parameters = Result<any Hashable & Sendable, any Error & Sendable>
+        """
         testFormatting(for: input, rule: .sortTypealiases)
     }
 

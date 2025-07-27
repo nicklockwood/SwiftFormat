@@ -167,7 +167,9 @@ class WrapEnumCasesTests: XCTestCase {
     }
 
     func testNoWrapEnumStatementAllOnOneLine() {
-        let input = "enum Foo { bar, baz }"
+        let input = """
+        enum Foo { bar, baz }
+        """
         testFormatting(for: input, rule: .wrapEnumCases)
     }
 
@@ -223,7 +225,9 @@ class WrapEnumCasesTests: XCTestCase {
     }
 
     func testNoWrapSingleLineEnumCases() {
-        let input = "enum Foo { case foo, bar }"
+        let input = """
+        enum Foo { case foo, bar }
+        """
         testFormatting(for: input, rule: .wrapEnumCases)
     }
 

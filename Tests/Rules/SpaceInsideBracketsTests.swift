@@ -11,20 +11,34 @@ import XCTest
 
 class SpaceInsideBracketsTests: XCTestCase {
     func testSpaceInsideBrackets() {
-        let input = "foo[ 5 ]"
-        let output = "foo[5]"
+        let input = """
+        foo[ 5 ]
+        """
+        let output = """
+        foo[5]
+        """
         testFormatting(for: input, output, rule: .spaceInsideBrackets)
     }
 
     func testSpaceInsideWrappedArray() {
-        let input = "[ foo,\n bar ]"
-        let output = "[foo,\n bar]"
+        let input = """
+        [ foo,
+         bar ]
+        """
+        let output = """
+        [foo,
+         bar]
+        """
         let options = FormatOptions(wrapCollections: .disabled)
         testFormatting(for: input, output, rule: .spaceInsideBrackets, options: options)
     }
 
     func testSpaceBeforeCommentInsideWrappedArray() {
-        let input = "[ // foo\n    bar,\n]"
+        let input = """
+        [ // foo
+            bar,
+        ]
+        """
         let options = FormatOptions(wrapCollections: .disabled)
         testFormatting(for: input, rule: .spaceInsideBrackets, options: options)
     }

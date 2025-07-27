@@ -11,8 +11,12 @@ import XCTest
 
 class SpaceInsideGenericsTests: XCTestCase {
     func testSpaceInsideGenerics() {
-        let input = "Foo< Bar< Baz > >"
-        let output = "Foo<Bar<Baz>>"
+        let input = """
+        Foo< Bar< Baz > >
+        """
+        let output = """
+        Foo<Bar<Baz>>
+        """
         testFormatting(for: input, output, rule: .spaceInsideGenerics)
     }
 }

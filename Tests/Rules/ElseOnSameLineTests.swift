@@ -11,67 +11,129 @@ import XCTest
 
 class ElseOnSameLineTests: XCTestCase {
     func testElseOnSameLine() {
-        let input = "if true {\n    1\n}\nelse { 2 }"
-        let output = "if true {\n    1\n} else { 2 }"
+        let input = """
+        if true {
+            1
+        }
+        else { 2 }
+        """
+        let output = """
+        if true {
+            1
+        } else { 2 }
+        """
         testFormatting(for: input, output, rule: .elseOnSameLine,
                        exclude: [.wrapConditionalBodies])
     }
 
     func testElseOnSameLineOnlyAppliedToDanglingBrace() {
-        let input = "if true { 1 }\nelse { 2 }"
+        let input = """
+        if true { 1 }
+        else { 2 }
+        """
         testFormatting(for: input, rule: .elseOnSameLine,
                        exclude: [.wrapConditionalBodies])
     }
 
     func testGuardNotAffectedByElseOnSameLine() {
-        let input = "guard true\nelse { return }"
+        let input = """
+        guard true
+        else { return }
+        """
         testFormatting(for: input, rule: .elseOnSameLine,
                        exclude: [.wrapConditionalBodies])
     }
 
     func testElseOnSameLineDoesntEatPreviousStatement() {
-        let input = "if true {}\nguard true else { return }"
+        let input = """
+        if true {}
+        guard true else { return }
+        """
         testFormatting(for: input, rule: .elseOnSameLine,
                        exclude: [.wrapConditionalBodies])
     }
 
     func testElseNotOnSameLineForAllman() {
-        let input = "if true\n{\n    1\n} else { 2 }"
-        let output = "if true\n{\n    1\n}\nelse { 2 }"
+        let input = """
+        if true
+        {
+            1
+        } else { 2 }
+        """
+        let output = """
+        if true
+        {
+            1
+        }
+        else { 2 }
+        """
         let options = FormatOptions(allmanBraces: true)
         testFormatting(for: input, output, rule: .elseOnSameLine,
                        options: options, exclude: [.wrapConditionalBodies])
     }
 
     func testElseOnNextLineOption() {
-        let input = "if true {\n    1\n} else { 2 }"
-        let output = "if true {\n    1\n}\nelse { 2 }"
+        let input = """
+        if true {
+            1
+        } else { 2 }
+        """
+        let output = """
+        if true {
+            1
+        }
+        else { 2 }
+        """
         let options = FormatOptions(elsePosition: .nextLine)
         testFormatting(for: input, output, rule: .elseOnSameLine,
                        options: options, exclude: [.wrapConditionalBodies])
     }
 
     func testGuardNotAffectedByElseOnSameLineForAllman() {
-        let input = "guard true else { return }"
+        let input = """
+        guard true else { return }
+        """
         let options = FormatOptions(allmanBraces: true)
         testFormatting(for: input, rule: .elseOnSameLine,
                        options: options, exclude: [.wrapConditionalBodies])
     }
 
     func testRepeatWhileNotOnSameLineForAllman() {
-        let input = "repeat\n{\n    foo\n} while x"
-        let output = "repeat\n{\n    foo\n}\nwhile x"
+        let input = """
+        repeat
+        {
+            foo
+        } while x
+        """
+        let output = """
+        repeat
+        {
+            foo
+        }
+        while x
+        """
         let options = FormatOptions(allmanBraces: true)
         testFormatting(for: input, output, rule: .elseOnSameLine, options: options)
     }
 
     func testWhileNotAffectedByElseOnSameLineIfNotRepeatWhile() {
-        let input = "func foo(x) {}\n\nwhile true {}"
+        let input = """
+        func foo(x) {}
+
+        while true {}
+        """
         testFormatting(for: input, rule: .elseOnSameLine)
     }
 
     func testCommentsNotDiscardedByElseOnSameLineRule() {
-        let input = "if true {\n    1\n}\n\n// comment\nelse {}"
+        let input = """
+        if true {
+            1
+        }
+
+        // comment
+        else {}
+        """
         testFormatting(for: input, rule: .elseOnSameLine)
     }
 
@@ -117,20 +179,31 @@ class ElseOnSameLineTests: XCTestCase {
     // guardelse = auto
 
     func testSingleLineGuardElseNotWrappedByDefault() {
-        let input = "guard foo = bar else {}"
+        let input = """
+        guard foo = bar else {}
+        """
         testFormatting(for: input, rule: .elseOnSameLine,
                        exclude: [.wrapConditionalBodies])
     }
 
     func testSingleLineGuardElseNotUnwrappedByDefault() {
-        let input = "guard foo = bar\nelse {}"
+        let input = """
+        guard foo = bar
+        else {}
+        """
         testFormatting(for: input, rule: .elseOnSameLine,
                        exclude: [.wrapConditionalBodies])
     }
 
     func testSingleLineGuardElseWrappedByDefaultIfBracesOnNextLine() {
-        let input = "guard foo = bar else\n{}"
-        let output = "guard foo = bar\nelse {}"
+        let input = """
+        guard foo = bar else
+        {}
+        """
+        let output = """
+        guard foo = bar
+        else {}
+        """
         testFormatting(for: input, output, rule: .elseOnSameLine,
                        exclude: [.wrapConditionalBodies])
     }
@@ -207,22 +280,33 @@ class ElseOnSameLineTests: XCTestCase {
     // guardelse = nextLine
 
     func testSingleLineGuardElseNotWrapped() {
-        let input = "guard foo = bar else {}"
+        let input = """
+        guard foo = bar else {}
+        """
         let options = FormatOptions(guardElsePosition: .nextLine)
         testFormatting(for: input, rule: .elseOnSameLine,
                        options: options, exclude: [.wrapConditionalBodies])
     }
 
     func testSingleLineGuardElseNotUnwrapped() {
-        let input = "guard foo = bar\nelse {}"
+        let input = """
+        guard foo = bar
+        else {}
+        """
         let options = FormatOptions(guardElsePosition: .nextLine)
         testFormatting(for: input, rule: .elseOnSameLine,
                        options: options, exclude: [.wrapConditionalBodies])
     }
 
     func testSingleLineGuardElseWrappedIfBracesOnNextLine() {
-        let input = "guard foo = bar else\n{}"
-        let output = "guard foo = bar\nelse {}"
+        let input = """
+        guard foo = bar else
+        {}
+        """
+        let output = """
+        guard foo = bar
+        else {}
+        """
         let options = FormatOptions(guardElsePosition: .nextLine)
         testFormatting(for: input, output, rule: .elseOnSameLine,
                        options: options, exclude: [.wrapConditionalBodies])
@@ -269,8 +353,13 @@ class ElseOnSameLineTests: XCTestCase {
     }
 
     func testGuardElseUnwrappedIfBracesOnNextLine() {
-        let input = "guard foo = bar\nelse {}"
-        let output = "guard foo = bar else {}"
+        let input = """
+        guard foo = bar
+        else {}
+        """
+        let output = """
+        guard foo = bar else {}
+        """
         let options = FormatOptions(guardElsePosition: .sameLine)
         testFormatting(for: input, output, rule: .elseOnSameLine,
                        options: options)

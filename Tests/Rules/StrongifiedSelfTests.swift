@@ -64,7 +64,9 @@ class StrongifiedSelfTests: XCTestCase {
     }
 
     func testBacktickedSelfNotConvertedIfNotConditional() {
-        let input = "nonisolated(unsafe) let `self` = self"
+        let input = """
+        nonisolated(unsafe) let `self` = self
+        """
         let options = FormatOptions(swiftVersion: "4.2")
         testFormatting(for: input, rule: .strongifiedSelf, options: options)
     }

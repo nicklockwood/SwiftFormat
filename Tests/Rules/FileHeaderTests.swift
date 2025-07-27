@@ -11,8 +11,22 @@ import XCTest
 
 class FileHeaderTests: XCTestCase {
     func testStripHeader() {
-        let input = "//\n//  test.swift\n//  SwiftFormat\n//\n//  Created by Nick Lockwood on 08/11/2016.\n//  Copyright © 2016 Nick Lockwood. All rights reserved.\n//\n\n/// func\nfunc foo() {}"
-        let output = "/// func\nfunc foo() {}"
+        let input = """
+        //
+        //  test.swift
+        //  SwiftFormat
+        //
+        //  Created by Nick Lockwood on 08/11/2016.
+        //  Copyright © 2016 Nick Lockwood. All rights reserved.
+        //
+
+        /// func
+        func foo() {}
+        """
+        let output = """
+        /// func
+        func foo() {}
+        """
         let options = FormatOptions(fileHeader: "")
         testFormatting(for: input, output, rule: .fileHeader, options: options)
     }
@@ -31,110 +45,239 @@ class FileHeaderTests: XCTestCase {
         /// func
         func foo() {}
         """
-        let output = "/// func\nfunc foo() {}"
+        let output = """
+        /// func
+        func foo() {}
+        """
         let options = FormatOptions(fileHeader: "")
         testFormatting(for: input, output, rule: .fileHeader, options: options)
     }
 
     func testReplaceHeaderWhenFileContainsNoCode() {
-        let input = "// foobar"
+        let input = """
+        // foobar
+        """
         let options = FormatOptions(fileHeader: "// foobar")
         testFormatting(for: input, rule: .fileHeader, options: options,
                        exclude: [.linebreakAtEndOfFile])
     }
 
     func testReplaceHeaderWhenFileContainsNoCode2() {
-        let input = "// foobar\n"
+        let input = """
+        // foobar
+
+        """
         let options = FormatOptions(fileHeader: "// foobar")
         testFormatting(for: input, rule: .fileHeader, options: options)
     }
 
     func testMultilineCommentHeader() {
-        let input = "/****************************/\n/* Created by Nick Lockwood */\n/****************************/\n\n\n/// func\nfunc foo() {}"
-        let output = "/// func\nfunc foo() {}"
+        let input = """
+        /****************************/
+        /* Created by Nick Lockwood */
+        /****************************/
+
+
+        /// func
+        func foo() {}
+        """
+        let output = """
+        /// func
+        func foo() {}
+        """
         let options = FormatOptions(fileHeader: "")
         testFormatting(for: input, output, rule: .fileHeader, options: options)
     }
 
     func testNoStripHeaderWhenDisabled() {
-        let input = "//\n//  test.swift\n//  SwiftFormat\n//\n//  Created by Nick Lockwood on 08/11/2016.\n//  Copyright © 2016 Nick Lockwood. All rights reserved.\n//\n\n/// func\nfunc foo() {}"
+        let input = """
+        //
+        //  test.swift
+        //  SwiftFormat
+        //
+        //  Created by Nick Lockwood on 08/11/2016.
+        //  Copyright © 2016 Nick Lockwood. All rights reserved.
+        //
+
+        /// func
+        func foo() {}
+        """
         let options = FormatOptions(fileHeader: .ignore)
         testFormatting(for: input, rule: .fileHeader, options: options)
     }
 
     func testNoStripComment() {
-        let input = "\n/// func\nfunc foo() {}"
+        let input = """
+
+        /// func
+        func foo() {}
+        """
         let options = FormatOptions(fileHeader: "")
         testFormatting(for: input, rule: .fileHeader, options: options)
     }
 
     func testNoStripPackageHeader() {
-        let input = "// swift-tools-version:4.2\n\nimport PackageDescription"
+        let input = """
+        // swift-tools-version:4.2
+
+        import PackageDescription
+        """
         let options = FormatOptions(fileHeader: "")
         testFormatting(for: input, rule: .fileHeader, options: options)
     }
 
     func testNoStripFormatDirective() {
-        let input = "// swiftformat:options --swiftversion 5.2\n\nimport PackageDescription"
+        let input = """
+        // swiftformat:options --swiftversion 5.2
+
+        import PackageDescription
+        """
         let options = FormatOptions(fileHeader: "")
         testFormatting(for: input, rule: .fileHeader, options: options)
     }
 
     func testNoStripFormatDirectiveAfterHeader() {
-        let input = "// header\n// swiftformat:options --swiftversion 5.2\n\nimport PackageDescription"
+        let input = """
+        // header
+        // swiftformat:options --swiftversion 5.2
+
+        import PackageDescription
+        """
         let options = FormatOptions(fileHeader: "")
         testFormatting(for: input, rule: .fileHeader, options: options)
     }
 
     func testNoReplaceFormatDirective() {
-        let input = "// swiftformat:options --swiftversion 5.2\n\nimport PackageDescription"
-        let output = "// Hello World\n\n// swiftformat:options --swiftversion 5.2\n\nimport PackageDescription"
+        let input = """
+        // swiftformat:options --swiftversion 5.2
+
+        import PackageDescription
+        """
+        let output = """
+        // Hello World
+
+        // swiftformat:options --swiftversion 5.2
+
+        import PackageDescription
+        """
         let options = FormatOptions(fileHeader: "// Hello World")
         testFormatting(for: input, output, rule: .fileHeader, options: options)
     }
 
     func testSetSingleLineHeader() {
-        let input = "//\n//  test.swift\n//  SwiftFormat\n//\n//  Created by Nick Lockwood on 08/11/2016.\n//  Copyright © 2016 Nick Lockwood. All rights reserved.\n//\n\n/// func\nfunc foo() {}"
-        let output = "// Hello World\n\n/// func\nfunc foo() {}"
+        let input = """
+        //
+        //  test.swift
+        //  SwiftFormat
+        //
+        //  Created by Nick Lockwood on 08/11/2016.
+        //  Copyright © 2016 Nick Lockwood. All rights reserved.
+        //
+
+        /// func
+        func foo() {}
+        """
+        let output = """
+        // Hello World
+
+        /// func
+        func foo() {}
+        """
         let options = FormatOptions(fileHeader: "// Hello World")
         testFormatting(for: input, output, rule: .fileHeader, options: options)
     }
 
     func testSetMultilineHeader() {
-        let input = "//\n//  test.swift\n//  SwiftFormat\n//\n//  Created by Nick Lockwood on 08/11/2016.\n//  Copyright © 2016 Nick Lockwood. All rights reserved.\n//\n\n/// func\nfunc foo() {}"
-        let output = "// Hello\n// World\n\n/// func\nfunc foo() {}"
+        let input = """
+        //
+        //  test.swift
+        //  SwiftFormat
+        //
+        //  Created by Nick Lockwood on 08/11/2016.
+        //  Copyright © 2016 Nick Lockwood. All rights reserved.
+        //
+
+        /// func
+        func foo() {}
+        """
+        let output = """
+        // Hello
+        // World
+
+        /// func
+        func foo() {}
+        """
         let options = FormatOptions(fileHeader: "// Hello\n// World")
         testFormatting(for: input, output, rule: .fileHeader, options: options)
     }
 
     func testSetMultilineHeaderWithMarkup() {
-        let input = "//\n//  test.swift\n//  SwiftFormat\n//\n//  Created by Nick Lockwood on 08/11/2016.\n//  Copyright © 2016 Nick Lockwood. All rights reserved.\n//\n\n/// func\nfunc foo() {}"
-        let output = "/*--- Hello ---*/\n/*--- World ---*/\n\n/// func\nfunc foo() {}"
+        let input = """
+        //
+        //  test.swift
+        //  SwiftFormat
+        //
+        //  Created by Nick Lockwood on 08/11/2016.
+        //  Copyright © 2016 Nick Lockwood. All rights reserved.
+        //
+
+        /// func
+        func foo() {}
+        """
+        let output = """
+        /*--- Hello ---*/
+        /*--- World ---*/
+
+        /// func
+        func foo() {}
+        """
         let options = FormatOptions(fileHeader: "/*--- Hello ---*/\n/*--- World ---*/")
         testFormatting(for: input, output, rule: .fileHeader, options: options)
     }
 
     func testNoStripHeaderIfRuleDisabled() {
-        let input = "// swiftformat:disable fileHeader\n// test\n// swiftformat:enable fileHeader\n\nfunc foo() {}"
+        let input = """
+        // swiftformat:disable fileHeader
+        // test
+        // swiftformat:enable fileHeader
+
+        func foo() {}
+        """
         let options = FormatOptions(fileHeader: "")
         testFormatting(for: input, rule: .fileHeader, options: options)
     }
 
     func testNoStripHeaderIfNextRuleDisabled() {
-        let input = "// swiftformat:disable:next fileHeader\n// test\n\nfunc foo() {}"
+        let input = """
+        // swiftformat:disable:next fileHeader
+        // test
+
+        func foo() {}
+        """
         let options = FormatOptions(fileHeader: "")
         testFormatting(for: input, rule: .fileHeader, options: options)
     }
 
     func testNoStripHeaderDocWithNewlineBeforeCode() {
-        let input = "/// Header doc\n\nclass Foo {}"
+        let input = """
+        /// Header doc
+
+        class Foo {}
+        """
         let options = FormatOptions(fileHeader: "")
         testFormatting(for: input, rule: .fileHeader, options: options, exclude: [.docComments])
     }
 
     func testNoDuplicateHeaderIfMissingTrailingBlankLine() {
-        let input = "// Header comment\nclass Foo {}"
-        let output = "// Header comment\n\nclass Foo {}"
+        let input = """
+        // Header comment
+        class Foo {}
+        """
+        let output = """
+        // Header comment
+
+        class Foo {}
+        """
         let options = FormatOptions(fileHeader: "Header comment")
         testFormatting(for: input, output, rule: .fileHeader, options: options)
     }
@@ -178,7 +321,9 @@ class FileHeaderTests: XCTestCase {
     }
 
     func testFileHeaderYearReplacement() {
-        let input = "let foo = bar"
+        let input = """
+        let foo = bar
+        """
         let output: String = {
             let formatter = DateFormatter()
             formatter.dateFormat = "yyyy"
@@ -189,7 +334,9 @@ class FileHeaderTests: XCTestCase {
     }
 
     func testFileHeaderCreationYearReplacement() {
-        let input = "let foo = bar"
+        let input = """
+        let foo = bar
+        """
         let date = Date(timeIntervalSince1970: 0)
         let output: String = {
             let formatter = DateFormatter()
@@ -202,35 +349,64 @@ class FileHeaderTests: XCTestCase {
     }
 
     func testFileHeaderAuthorReplacement() {
-        let name = "Test User"
-        let email = "test@email.com"
-        let input = "let foo = bar"
-        let output = "// Created by \(name) \(email)\n\nlet foo = bar"
+        let name = """
+        Test User
+        """
+        let email = """
+        test@email.com
+        """
+        let input = """
+        let foo = bar
+        """
+        let output = """
+        // Created by \(name) \(email)
+
+        let foo = bar
+        """
         let fileInfo = FileInfo(replacements: [.authorName: .constant(name), .authorEmail: .constant(email)])
         let options = FormatOptions(fileHeader: "// Created by {author.name} {author.email}", fileInfo: fileInfo)
         testFormatting(for: input, output, rule: .fileHeader, options: options)
     }
 
     func testFileHeaderAuthorReplacement2() {
-        let author = "Test User <test@email.com>"
-        let input = "let foo = bar"
-        let output = "// Created by \(author)\n\nlet foo = bar"
+        let author = """
+        Test User <test@email.com>
+        """
+        let input = """
+        let foo = bar
+        """
+        let output = """
+        // Created by \(author)
+
+        let foo = bar
+        """
         let fileInfo = FileInfo(replacements: [.author: .constant(author)])
         let options = FormatOptions(fileHeader: "// Created by {author}", fileInfo: fileInfo)
         testFormatting(for: input, output, rule: .fileHeader, options: options)
     }
 
     func testFileHeaderMultipleReplacement() {
-        let name = "Test User"
-        let input = "let foo = bar"
-        let output = "// Copyright © \(name)\n// Created by \(name)\n\nlet foo = bar"
+        let name = """
+        Test User
+        """
+        let input = """
+        let foo = bar
+        """
+        let output = """
+        // Copyright © \(name)
+        // Created by \(name)
+
+        let foo = bar
+        """
         let fileInfo = FileInfo(replacements: [.authorName: .constant(name)])
         let options = FormatOptions(fileHeader: "// Copyright © {author.name}\n// Created by {author.name}", fileInfo: fileInfo)
         testFormatting(for: input, output, rule: .fileHeader, options: options)
     }
 
     func testFileHeaderCreationDateReplacement() {
-        let input = "let foo = bar"
+        let input = """
+        let foo = bar
+        """
         let date = Date(timeIntervalSince1970: 0)
         let output: String = {
             let formatter = DateFormatter()
@@ -246,8 +422,14 @@ class FileHeaderTests: XCTestCase {
     func testFileHeaderDateFormattingIso() {
         let date = createTestDate("2023-08-09")
 
-        let input = "let foo = bar"
-        let output = "// 2023-08-09\n\nlet foo = bar"
+        let input = """
+        let foo = bar
+        """
+        let output = """
+        // 2023-08-09
+
+        let foo = bar
+        """
         let fileInfo = FileInfo(creationDate: date)
         let options = FormatOptions(fileHeader: "// {created}", dateFormat: .iso, fileInfo: fileInfo)
         testFormatting(for: input, output, rule: .fileHeader, options: options)
@@ -256,8 +438,14 @@ class FileHeaderTests: XCTestCase {
     func testFileHeaderDateFormattingDayMonthYear() {
         let date = createTestDate("2023-08-09")
 
-        let input = "let foo = bar"
-        let output = "// 09/08/2023\n\nlet foo = bar"
+        let input = """
+        let foo = bar
+        """
+        let output = """
+        // 09/08/2023
+
+        let foo = bar
+        """
         let fileInfo = FileInfo(creationDate: date)
         let options = FormatOptions(fileHeader: "// {created}", dateFormat: .dayMonthYear, fileInfo: fileInfo)
         testFormatting(for: input, output, rule: .fileHeader, options: options)
@@ -266,8 +454,14 @@ class FileHeaderTests: XCTestCase {
     func testFileHeaderDateFormattingMonthDayYear() {
         let date = createTestDate("2023-08-09")
 
-        let input = "let foo = bar"
-        let output = "// 08/09/2023\n\nlet foo = bar"
+        let input = """
+        let foo = bar
+        """
+        let output = """
+        // 08/09/2023
+
+        let foo = bar
+        """
         let fileInfo = FileInfo(creationDate: date)
         let options = FormatOptions(fileHeader: "// {created}",
                                     dateFormat: .monthDayYear,
@@ -278,8 +472,14 @@ class FileHeaderTests: XCTestCase {
     func testFileHeaderDateFormattingCustom() {
         let date = createTestDate("2023-08-09T12:59:30.345Z", .timestamp)
 
-        let input = "let foo = bar"
-        let output = "// 23.08.09-12.59.30.345\n\nlet foo = bar"
+        let input = """
+        let foo = bar
+        """
+        let output = """
+        // 23.08.09-12.59.30.345
+
+        let foo = bar
+        """
         let fileInfo = FileInfo(creationDate: date)
         let options = FormatOptions(fileHeader: "// {created}",
                                     dateFormat: .custom("yy.MM.dd-HH.mm.ss.SSS"),
@@ -289,16 +489,31 @@ class FileHeaderTests: XCTestCase {
     }
 
     func testFileHeaderFileReplacement() {
-        let input = "let foo = bar"
-        let output = "// MyFile.swift\n\nlet foo = bar"
+        let input = """
+        let foo = bar
+        """
+        let output = """
+        // MyFile.swift
+
+        let foo = bar
+        """
         let fileInfo = FileInfo(filePath: "~/MyFile.swift")
         let options = FormatOptions(fileHeader: "// {file}", fileInfo: fileInfo)
         testFormatting(for: input, output, rule: .fileHeader, options: options)
     }
 
     func testEdgeCaseHeaderEndIndexPlusNewHeaderTokensCountEqualsFileTokensEndIndex() {
-        let input = "// Header comment\n\nclass Foo {}"
-        let output = "// Header line1\n// Header line2\n\nclass Foo {}"
+        let input = """
+        // Header comment
+
+        class Foo {}
+        """
+        let output = """
+        // Header line1
+        // Header line2
+
+        class Foo {}
+        """
         let options = FormatOptions(fileHeader: "// Header line1\n// Header line2")
         testFormatting(for: input, output, rule: .fileHeader, options: options)
     }
@@ -418,8 +633,14 @@ class FileHeaderTests: XCTestCase {
     ) {
         for (input, expected) in tests {
             let date = createTestDate(input, .time)
-            let input = "let foo = bar"
-            let output = "// \(expected)\n\nlet foo = bar"
+            let input = """
+            let foo = bar
+            """
+            let output = """
+            // \(expected)
+
+            let foo = bar
+            """
 
             let fileInfo = FileInfo(creationDate: date)
 
@@ -493,13 +714,17 @@ class FileHeaderTests: XCTestCase {
     }
 
     func testFileHeaderRuleThrowsIfCreationDateUnavailable() {
-        let input = "let foo = bar"
+        let input = """
+        let foo = bar
+        """
         let options = FormatOptions(fileHeader: "// Created by Nick Lockwood on {created}.", fileInfo: FileInfo())
         XCTAssertThrowsError(try format(input, rules: [.fileHeader], options: options))
     }
 
     func testFileHeaderRuleThrowsIfFileNameUnavailable() {
-        let input = "let foo = bar"
+        let input = """
+        let foo = bar
+        """
         let options = FormatOptions(fileHeader: "// {file}.", fileInfo: FileInfo())
         XCTAssertThrowsError(try format(input, rules: [.fileHeader], options: options))
     }

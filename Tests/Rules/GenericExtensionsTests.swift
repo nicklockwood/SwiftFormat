@@ -11,40 +11,60 @@ import XCTest
 
 class GenericExtensionsTests: XCTestCase {
     func testUpdatesArrayGenericExtensionToAngleBracketSyntax() {
-        let input = "extension Array where Element == Foo {}"
-        let output = "extension Array<Foo> {}"
+        let input = """
+        extension Array where Element == Foo {}
+        """
+        let output = """
+        extension Array<Foo> {}
+        """
 
         let options = FormatOptions(swiftVersion: "5.7")
         testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: [.typeSugar, .emptyExtensions])
     }
 
     func testUpdatesOptionalGenericExtensionToAngleBracketSyntax() {
-        let input = "extension Optional where Wrapped == Foo {}"
-        let output = "extension Optional<Foo> {}"
+        let input = """
+        extension Optional where Wrapped == Foo {}
+        """
+        let output = """
+        extension Optional<Foo> {}
+        """
 
         let options = FormatOptions(swiftVersion: "5.7")
         testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: [.typeSugar, .emptyExtensions])
     }
 
     func testUpdatesArrayGenericExtensionToAngleBracketSyntaxWithSelf() {
-        let input = "extension Array where Self.Element == Foo {}"
-        let output = "extension Array<Foo> {}"
+        let input = """
+        extension Array where Self.Element == Foo {}
+        """
+        let output = """
+        extension Array<Foo> {}
+        """
 
         let options = FormatOptions(swiftVersion: "5.7")
         testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: [.typeSugar, .emptyExtensions])
     }
 
     func testUpdatesArrayWithGenericElement() {
-        let input = "extension Array where Element == Foo<Bar> {}"
-        let output = "extension Array<Foo<Bar>> {}"
+        let input = """
+        extension Array where Element == Foo<Bar> {}
+        """
+        let output = """
+        extension Array<Foo<Bar>> {}
+        """
 
         let options = FormatOptions(swiftVersion: "5.7")
         testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: [.typeSugar, .emptyExtensions])
     }
 
     func testUpdatesDictionaryGenericExtensionToAngleBracketSyntax() {
-        let input = "extension Dictionary where Key == Foo, Value == Bar {}"
-        let output = "extension Dictionary<Foo, Bar> {}"
+        let input = """
+        extension Dictionary where Key == Foo, Value == Bar {}
+        """
+        let output = """
+        extension Dictionary<Foo, Bar> {}
+        """
 
         let options = FormatOptions(swiftVersion: "5.7")
         testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: [.typeSugar, .emptyExtensions])
@@ -52,15 +72,21 @@ class GenericExtensionsTests: XCTestCase {
 
     func testRequiresAllGenericTypesToBeProvided() {
         // No type provided for `Value`, so we can't use the angle bracket syntax
-        let input = "extension Dictionary where Key == Foo {}"
+        let input = """
+        extension Dictionary where Key == Foo {}
+        """
 
         let options = FormatOptions(swiftVersion: "5.7")
         testFormatting(for: input, rule: .genericExtensions, options: options, exclude: [.emptyExtensions])
     }
 
     func testHandlesNestedCollectionTypes() {
-        let input = "extension Array where Element == [[Foo: Bar]] {}"
-        let output = "extension Array<[[Foo: Bar]]> {}"
+        let input = """
+        extension Array where Element == [[Foo: Bar]] {}
+        """
+        let output = """
+        extension Array<[[Foo: Bar]]> {}
+        """
 
         let options = FormatOptions(swiftVersion: "5.7")
         testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: [.typeSugar, .emptyExtensions])
@@ -69,15 +95,21 @@ class GenericExtensionsTests: XCTestCase {
     func testDoesntUpdateIneligibleConstraints() {
         // This could potentially by `extension Optional<some Fooable>` in a future language version
         // but that syntax isn't implemented as of Swift 5.7
-        let input = "extension Optional where Wrapped: Fooable {}"
+        let input = """
+        extension Optional where Wrapped: Fooable {}
+        """
 
         let options = FormatOptions(swiftVersion: "5.7")
         testFormatting(for: input, rule: .genericExtensions, options: options, exclude: [.emptyExtensions])
     }
 
     func testPreservesOtherConstraintsInWhereClause() {
-        let input = "extension Collection where Element == String, Index == Int {}"
-        let output = "extension Collection<String> where Index == Int {}"
+        let input = """
+        extension Collection where Element == String, Index == Int {}
+        """
+        let output = """
+        extension Collection<String> where Index == Int {}
+        """
 
         let options = FormatOptions(swiftVersion: "5.7")
         testFormatting(for: input, output, rule: .genericExtensions, options: options, exclude: [.emptyExtensions])

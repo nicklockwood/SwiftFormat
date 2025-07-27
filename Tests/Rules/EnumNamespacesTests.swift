@@ -20,7 +20,9 @@ class EnumNamespacesTests: XCTestCase {
     }
 
     func testEnumNamespacesConformingOtherType() {
-        let input = "private final class CustomUITableViewCell: UITableViewCell {}"
+        let input = """
+        private final class CustomUITableViewCell: UITableViewCell {}
+        """
         testFormatting(for: input, rule: .enumNamespaces)
     }
 

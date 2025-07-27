@@ -11,70 +11,152 @@ import XCTest
 
 class IndentTests: XCTestCase {
     func testReduceIndentAtStartOfFile() {
-        let input = "    foo()"
-        let output = "foo()"
+        let input = """
+            foo()
+        """
+        let output = """
+        foo()
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testReduceIndentAtEndOfFile() {
-        let input = "foo()\n   bar()"
-        let output = "foo()\nbar()"
+        let input = """
+        foo()
+           bar()
+        """
+        let output = """
+        foo()
+        bar()
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     // indent parens
 
     func testSimpleScope() {
-        let input = "foo(\nbar\n)"
-        let output = "foo(\n    bar\n)"
+        let input = """
+        foo(
+        bar
+        )
+        """
+        let output = """
+        foo(
+            bar
+        )
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testNestedScope() {
-        let input = "foo(\nbar {\n}\n)"
-        let output = "foo(\n    bar {\n    }\n)"
+        let input = """
+        foo(
+        bar {
+        }
+        )
+        """
+        let output = """
+        foo(
+            bar {
+            }
+        )
+        """
         testFormatting(for: input, output, rule: .indent, exclude: [.emptyBraces])
     }
 
     func testNestedScopeOnSameLine() {
-        let input = "foo(bar(\nbaz\n))"
-        let output = "foo(bar(\n    baz\n))"
+        let input = """
+        foo(bar(
+        baz
+        ))
+        """
+        let output = """
+        foo(bar(
+            baz
+        ))
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testNestedScopeOnSameLine2() {
-        let input = "foo(bar(in:\nbaz))"
-        let output = "foo(bar(in:\n    baz))"
+        let input = """
+        foo(bar(in:
+        baz))
+        """
+        let output = """
+        foo(bar(in:
+            baz))
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testIndentNestedArrayLiteral() {
-        let input = "foo(bar: [\n.baz,\n])"
-        let output = "foo(bar: [\n    .baz,\n])"
+        let input = """
+        foo(bar: [
+        .baz,
+        ])
+        """
+        let output = """
+        foo(bar: [
+            .baz,
+        ])
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testClosingScopeAfterContent() {
-        let input = "foo(\nbar\n)"
-        let output = "foo(\n    bar\n)"
+        let input = """
+        foo(
+        bar
+        )
+        """
+        let output = """
+        foo(
+            bar
+        )
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testClosingNestedScopeAfterContent() {
-        let input = "foo(bar(\nbaz\n))"
-        let output = "foo(bar(\n    baz\n))"
+        let input = """
+        foo(bar(
+        baz
+        ))
+        """
+        let output = """
+        foo(bar(
+            baz
+        ))
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testWrappedFunctionArguments() {
-        let input = "foo(\nbar,\nbaz\n)"
-        let output = "foo(\n    bar,\n    baz\n)"
+        let input = """
+        foo(
+        bar,
+        baz
+        )
+        """
+        let output = """
+        foo(
+            bar,
+            baz
+        )
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testFunctionArgumentsWrappedAfterFirst() {
-        let input = "func foo(bar: Int,\nbaz: Int)"
-        let output = "func foo(bar: Int,\n         baz: Int)"
+        let input = """
+        func foo(bar: Int,
+        baz: Int)
+        """
+        let output = """
+        func foo(bar: Int,
+                 baz: Int)
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
@@ -189,45 +271,111 @@ class IndentTests: XCTestCase {
     // indent modifiers
 
     func testNoIndentWrappedModifiersForProtocol() {
-        let input = "@objc\nprivate\nprotocol Foo {}"
+        let input = """
+        @objc
+        private
+        protocol Foo {}
+        """
         testFormatting(for: input, rule: .indent, exclude: [.modifiersOnSameLine])
     }
 
     // indent braces
 
     func testElseClauseIndenting() {
-        let input = "if x {\nbar\n} else {\nbaz\n}"
-        let output = "if x {\n    bar\n} else {\n    baz\n}"
+        let input = """
+        if x {
+        bar
+        } else {
+        baz
+        }
+        """
+        let output = """
+        if x {
+            bar
+        } else {
+            baz
+        }
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testNoIndentBlankLines() {
-        let input = "{\n\n// foo\n}"
-        let output = "{\n\n    // foo\n}"
+        let input = """
+        {
+
+        // foo
+        }
+        """
+        let output = """
+        {
+
+            // foo
+        }
+        """
         testFormatting(for: input, output, rule: .indent, exclude: [.blankLinesAtStartOfScope])
     }
 
     func testNestedBraces() {
-        let input = "({\n// foo\n}, {\n// bar\n})"
-        let output = "({\n    // foo\n}, {\n    // bar\n})"
+        let input = """
+        ({
+        // foo
+        }, {
+        // bar
+        })
+        """
+        let output = """
+        ({
+            // foo
+        }, {
+            // bar
+        })
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testBraceIndentAfterComment() {
-        let input = "if foo { // comment\nbar\n}"
-        let output = "if foo { // comment\n    bar\n}"
+        let input = """
+        if foo { // comment
+        bar
+        }
+        """
+        let output = """
+        if foo { // comment
+            bar
+        }
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testBraceIndentAfterClosingScope() {
-        let input = "foo(bar(baz), {\nquux\nbleem\n})"
-        let output = "foo(bar(baz), {\n    quux\n    bleem\n})"
+        let input = """
+        foo(bar(baz), {
+        quux
+        bleem
+        })
+        """
+        let output = """
+        foo(bar(baz), {
+            quux
+            bleem
+        })
+        """
         testFormatting(for: input, output, rule: .indent, exclude: [.trailingClosures])
     }
 
     func testBraceIndentAfterLineWithParens() {
-        let input = "({\nfoo()\nbar\n})"
-        let output = "({\n    foo()\n    bar\n})"
+        let input = """
+        ({
+        foo()
+        bar
+        })
+        """
+        let output = """
+        ({
+            foo()
+            bar
+        })
+        """
         testFormatting(for: input, output, rule: .indent, exclude: [.redundantParens])
     }
 
@@ -488,49 +636,168 @@ class IndentTests: XCTestCase {
     // indent switch/case
 
     func testSwitchCaseIndenting() {
-        let input = "switch x {\ncase foo:\nbreak\ncase bar:\nbreak\ndefault:\nbreak\n}"
-        let output = "switch x {\ncase foo:\n    break\ncase bar:\n    break\ndefault:\n    break\n}"
+        let input = """
+        switch x {
+        case foo:
+        break
+        case bar:
+        break
+        default:
+        break
+        }
+        """
+        let output = """
+        switch x {
+        case foo:
+            break
+        case bar:
+            break
+        default:
+            break
+        }
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testSwitchWrappedCaseIndenting() {
-        let input = "switch x {\ncase foo,\nbar,\n    baz:\n    break\ndefault:\n    break\n}"
-        let output = "switch x {\ncase foo,\n     bar,\n     baz:\n    break\ndefault:\n    break\n}"
+        let input = """
+        switch x {
+        case foo,
+        bar,
+            baz:
+            break
+        default:
+            break
+        }
+        """
+        let output = """
+        switch x {
+        case foo,
+             bar,
+             baz:
+            break
+        default:
+            break
+        }
+        """
         testFormatting(for: input, output, rule: .indent, exclude: [.sortSwitchCases])
     }
 
     func testSwitchWrappedEnumCaseIndenting() {
-        let input = "switch x {\ncase .foo,\n.bar,\n    .baz:\n    break\ndefault:\n    break\n}"
-        let output = "switch x {\ncase .foo,\n     .bar,\n     .baz:\n    break\ndefault:\n    break\n}"
+        let input = """
+        switch x {
+        case .foo,
+        .bar,
+            .baz:
+            break
+        default:
+            break
+        }
+        """
+        let output = """
+        switch x {
+        case .foo,
+             .bar,
+             .baz:
+            break
+        default:
+            break
+        }
+        """
         testFormatting(for: input, output, rule: .indent, exclude: [.sortSwitchCases])
     }
 
     func testSwitchWrappedEnumCaseIndentingVariant2() {
-        let input = "switch x {\ncase\n.foo,\n.bar,\n    .baz:\n    break\ndefault:\n    break\n}"
-        let output = "switch x {\ncase\n    .foo,\n    .bar,\n    .baz:\n    break\ndefault:\n    break\n}"
+        let input = """
+        switch x {
+        case
+        .foo,
+        .bar,
+            .baz:
+            break
+        default:
+            break
+        }
+        """
+        let output = """
+        switch x {
+        case
+            .foo,
+            .bar,
+            .baz:
+            break
+        default:
+            break
+        }
+        """
         testFormatting(for: input, output, rule: .indent, exclude: [.sortSwitchCases])
     }
 
     func testSwitchWrappedEnumCaseIsIndenting() {
-        let input = "switch x {\ncase is Foo.Type,\n    is Bar.Type:\n    break\ndefault:\n    break\n}"
-        let output = "switch x {\ncase is Foo.Type,\n     is Bar.Type:\n    break\ndefault:\n    break\n}"
+        let input = """
+        switch x {
+        case is Foo.Type,
+            is Bar.Type:
+            break
+        default:
+            break
+        }
+        """
+        let output = """
+        switch x {
+        case is Foo.Type,
+             is Bar.Type:
+            break
+        default:
+            break
+        }
+        """
         testFormatting(for: input, output, rule: .indent, exclude: [.sortSwitchCases])
     }
 
     func testSwitchCaseIsDictionaryIndenting() {
-        let input = "switch x {\ncase foo is [Key: Value]:\nfallthrough\ndefault:\nbreak\n}"
-        let output = "switch x {\ncase foo is [Key: Value]:\n    fallthrough\ndefault:\n    break\n}"
+        let input = """
+        switch x {
+        case foo is [Key: Value]:
+        fallthrough
+        default:
+        break
+        }
+        """
+        let output = """
+        switch x {
+        case foo is [Key: Value]:
+            fallthrough
+        default:
+            break
+        }
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testEnumCaseIndenting() {
-        let input = "enum Foo {\ncase Bar\ncase Baz\n}"
-        let output = "enum Foo {\n    case Bar\n    case Baz\n}"
+        let input = """
+        enum Foo {
+        case Bar
+        case Baz
+        }
+        """
+        let output = """
+        enum Foo {
+            case Bar
+            case Baz
+        }
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testEnumCaseIndentingCommas() {
-        let input = "enum Foo {\ncase Bar,\nBaz\n}"
+        let input = """
+        enum Foo {
+        case Bar,
+        Baz
+        }
+        """
         let output = """
         enum Foo {
             case Bar,
@@ -541,24 +808,70 @@ class IndentTests: XCTestCase {
     }
 
     func testGenericEnumCaseIndenting() {
-        let input = "enum Foo<T> {\ncase Bar\ncase Baz\n}"
-        let output = "enum Foo<T> {\n    case Bar\n    case Baz\n}"
+        let input = """
+        enum Foo<T> {
+        case Bar
+        case Baz
+        }
+        """
+        let output = """
+        enum Foo<T> {
+            case Bar
+            case Baz
+        }
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testIndentSwitchAfterRangeCase() {
-        let input = "switch x {\ncase 0 ..< 2:\n    switch y {\n    default:\n        break\n    }\ndefault:\n    break\n}"
+        let input = """
+        switch x {
+        case 0 ..< 2:
+            switch y {
+            default:
+                break
+            }
+        default:
+            break
+        }
+        """
         testFormatting(for: input, rule: .indent, exclude: [.blankLineAfterSwitchCase])
     }
 
     func testIndentEnumDeclarationInsideSwitchCase() {
-        let input = "switch x {\ncase y:\nenum Foo {\ncase z\n}\nbar()\ndefault: break\n}"
-        let output = "switch x {\ncase y:\n    enum Foo {\n        case z\n    }\n    bar()\ndefault: break\n}"
+        let input = """
+        switch x {
+        case y:
+        enum Foo {
+        case z
+        }
+        bar()
+        default: break
+        }
+        """
+        let output = """
+        switch x {
+        case y:
+            enum Foo {
+                case z
+            }
+            bar()
+        default: break
+        }
+        """
         testFormatting(for: input, output, rule: .indent, exclude: [.blankLineAfterSwitchCase])
     }
 
     func testIndentEnumCaseBodyAfterWhereClause() {
-        let input = "switch foo {\ncase _ where baz < quux:\n    print(1)\n    print(2)\ndefault:\n    break\n}"
+        let input = """
+        switch foo {
+        case _ where baz < quux:
+            print(1)
+            print(2)
+        default:
+            break
+        }
+        """
         testFormatting(for: input, rule: .indent, exclude: [.blankLineAfterSwitchCase])
     }
 
@@ -637,20 +950,52 @@ class IndentTests: XCTestCase {
     }
 
     func testIndentMultipleSingleLineSwitchCaseCommentsCorrectly() {
-        let input = "switch x {\n// comment 1\n// comment 2\ncase y:\n// comment\nbreak\n}"
-        let output = "switch x {\n// comment 1\n// comment 2\ncase y:\n    // comment\n    break\n}"
+        let input = """
+        switch x {
+        // comment 1
+        // comment 2
+        case y:
+        // comment
+        break
+        }
+        """
+        let output = """
+        switch x {
+        // comment 1
+        // comment 2
+        case y:
+            // comment
+            break
+        }
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testIndentIfCase() {
-        let input = "{\nif case let .foo(msg) = error {}\n}"
-        let output = "{\n    if case let .foo(msg) = error {}\n}"
+        let input = """
+        {
+        if case let .foo(msg) = error {}
+        }
+        """
+        let output = """
+        {
+            if case let .foo(msg) = error {}
+        }
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testIndentGuardCase() {
-        let input = "{\nguard case .Foo = error else {}\n}"
-        let output = "{\n    guard case .Foo = error else {}\n}"
+        let input = """
+        {
+        guard case .Foo = error else {}
+        }
+        """
+        let output = """
+        {
+            guard case .Foo = error else {}
+        }
+        """
         testFormatting(for: input, output, rule: .indent,
                        exclude: [.wrapConditionalBodies])
     }
@@ -885,28 +1230,94 @@ class IndentTests: XCTestCase {
     // indentCase = true
 
     func testSwitchCaseWithIndentCaseTrue() {
-        let input = "switch x {\ncase foo:\nbreak\ncase bar:\nbreak\ndefault:\nbreak\n}"
-        let output = "switch x {\n    case foo:\n        break\n    case bar:\n        break\n    default:\n        break\n}"
+        let input = """
+        switch x {
+        case foo:
+        break
+        case bar:
+        break
+        default:
+        break
+        }
+        """
+        let output = """
+        switch x {
+            case foo:
+                break
+            case bar:
+                break
+            default:
+                break
+        }
+        """
         let options = FormatOptions(indentCase: true)
         testFormatting(for: input, output, rule: .indent, options: options)
     }
 
     func testSwitchWrappedEnumCaseWithIndentCaseTrue() {
-        let input = "switch x {\ncase .foo,\n.bar,\n    .baz:\n    break\ndefault:\n    break\n}"
-        let output = "switch x {\n    case .foo,\n         .bar,\n         .baz:\n        break\n    default:\n        break\n}"
+        let input = """
+        switch x {
+        case .foo,
+        .bar,
+            .baz:
+            break
+        default:
+            break
+        }
+        """
+        let output = """
+        switch x {
+            case .foo,
+                 .bar,
+                 .baz:
+                break
+            default:
+                break
+        }
+        """
         let options = FormatOptions(indentCase: true)
         testFormatting(for: input, output, rule: .indent, options: options, exclude: [.sortSwitchCases])
     }
 
     func testIndentMultilineSwitchCaseCommentsWithIndentCaseTrue() {
-        let input = "switch x {\n/*\n * comment\n */\ncase y:\nbreak\n/*\n * comment\n */\ndefault:\nbreak\n}"
-        let output = "switch x {\n    /*\n     * comment\n     */\n    case y:\n        break\n    /*\n     * comment\n     */\n    default:\n        break\n}"
+        let input = """
+        switch x {
+        /*
+         * comment
+         */
+        case y:
+        break
+        /*
+         * comment
+         */
+        default:
+        break
+        }
+        """
+        let output = """
+        switch x {
+            /*
+             * comment
+             */
+            case y:
+                break
+            /*
+             * comment
+             */
+            default:
+                break
+        }
+        """
         let options = FormatOptions(indentCase: true)
         testFormatting(for: input, output, rule: .indent, options: options)
     }
 
     func testNoMangleLabelWhenIndentCaseTrue() {
-        let input = "foo: while true {\n    break foo\n}"
+        let input = """
+        foo: while true {
+            break foo
+        }
+        """
         let options = FormatOptions(indentCase: true)
         testFormatting(for: input, rule: .indent, options: options)
     }
@@ -981,67 +1392,139 @@ class IndentTests: XCTestCase {
     // indent wrapped lines
 
     func testWrappedLineAfterOperator() {
-        let input = "if x {\nlet y = foo +\nbar\n}"
-        let output = "if x {\n    let y = foo +\n        bar\n}"
+        let input = """
+        if x {
+        let y = foo +
+        bar
+        }
+        """
+        let output = """
+        if x {
+            let y = foo +
+                bar
+        }
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testWrappedLineAfterComma() {
-        let input = "let a = b,\nb = c"
-        let output = "let a = b,\n    b = c"
+        let input = """
+        let a = b,
+        b = c
+        """
+        let output = """
+        let a = b,
+            b = c
+        """
         testFormatting(for: input, output, rule: .indent, exclude: [.singlePropertyPerLine])
     }
 
     func testWrappedBeforeComma() {
-        let input = "let a = b\n, b = c"
-        let output = "let a = b\n    , b = c"
+        let input = """
+        let a = b
+        , b = c
+        """
+        let output = """
+        let a = b
+            , b = c
+        """
         testFormatting(for: input, output, rule: .indent, exclude: [.leadingDelimiters, .singlePropertyPerLine])
     }
 
     func testWrappedLineAfterCommaInsideArray() {
-        let input = "[\nfoo,\nbar,\n]"
-        let output = "[\n    foo,\n    bar,\n]"
+        let input = """
+        [
+        foo,
+        bar,
+        ]
+        """
+        let output = """
+        [
+            foo,
+            bar,
+        ]
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testWrappedLineBeforeCommaInsideArray() {
-        let input = "[\nfoo\n, bar,\n]"
-        let output = "[\n    foo\n    , bar,\n]"
+        let input = """
+        [
+        foo
+        , bar,
+        ]
+        """
+        let output = """
+        [
+            foo
+            , bar,
+        ]
+        """
         let options = FormatOptions(wrapCollections: .disabled)
         testFormatting(for: input, output, rule: .indent, options: options,
                        exclude: [.leadingDelimiters])
     }
 
     func testWrappedLineAfterCommaInsideInlineArray() {
-        let input = "[foo,\nbar]"
-        let output = "[foo,\n bar]"
+        let input = """
+        [foo,
+        bar]
+        """
+        let output = """
+        [foo,
+         bar]
+        """
         let options = FormatOptions(wrapCollections: .disabled)
         testFormatting(for: input, output, rule: .indent, options: options)
     }
 
     func testWrappedLineBeforeCommaInsideInlineArray() {
-        let input = "[foo\n, bar]"
-        let output = "[foo\n , bar]"
+        let input = """
+        [foo
+        , bar]
+        """
+        let output = """
+        [foo
+         , bar]
+        """
         let options = FormatOptions(wrapCollections: .disabled)
         testFormatting(for: input, output, rule: .indent, options: options,
                        exclude: [.leadingDelimiters])
     }
 
     func testWrappedLineAfterColonInFunction() {
-        let input = "func foo(bar:\nbaz)"
-        let output = "func foo(bar:\n    baz)"
+        let input = """
+        func foo(bar:
+        baz)
+        """
+        let output = """
+        func foo(bar:
+            baz)
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testNoDoubleIndentOfWrapAfterAsAfterOpenScope() {
-        let input = "(foo as\nBar)"
-        let output = "(foo as\n    Bar)"
+        let input = """
+        (foo as
+        Bar)
+        """
+        let output = """
+        (foo as
+            Bar)
+        """
         testFormatting(for: input, output, rule: .indent, exclude: [.redundantParens])
     }
 
     func testNoDoubleIndentOfWrapBeforeAsAfterOpenScope() {
-        let input = "(foo\nas Bar)"
-        let output = "(foo\n    as Bar)"
+        let input = """
+        (foo
+        as Bar)
+        """
+        let output = """
+        (foo
+            as Bar)
+        """
         testFormatting(for: input, output, rule: .indent, exclude: [.redundantParens])
     }
 
@@ -1062,88 +1545,186 @@ class IndentTests: XCTestCase {
     }
 
     func testNoDoubleIndentWhenScopesSeparatedByWrap() {
-        let input = "(foo\nas Bar {\nbaz\n}\n)"
-        let output = "(foo\n    as Bar {\n        baz\n    }\n)"
+        let input = """
+        (foo
+        as Bar {
+        baz
+        }
+        )
+        """
+        let output = """
+        (foo
+            as Bar {
+                baz
+            }
+        )
+        """
         testFormatting(for: input, output, rule: .indent,
                        exclude: [.wrapArguments, .redundantParens])
     }
 
     func testNoPermanentReductionInScopeAfterWrap() {
-        let input = "{ foo\nas Bar\nlet baz = 5\n}"
-        let output = "{ foo\n    as Bar\n    let baz = 5\n}"
+        let input = """
+        { foo
+        as Bar
+        let baz = 5
+        }
+        """
+        let output = """
+        { foo
+            as Bar
+            let baz = 5
+        }
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testWrappedLineBeforeOperator() {
-        let input = "if x {\nlet y = foo\n+ bar\n}"
-        let output = "if x {\n    let y = foo\n        + bar\n}"
+        let input = """
+        if x {
+        let y = foo
+        + bar
+        }
+        """
+        let output = """
+        if x {
+            let y = foo
+                + bar
+        }
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testWrappedLineBeforeIsOperator() {
-        let input = "if x {\nlet y = foo\nis Bar\n}"
-        let output = "if x {\n    let y = foo\n        is Bar\n}"
+        let input = """
+        if x {
+        let y = foo
+        is Bar
+        }
+        """
+        let output = """
+        if x {
+            let y = foo
+                is Bar
+        }
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testWrappedLineAfterForKeyword() {
-        let input = "for\ni in range {}"
-        let output = "for\n    i in range {}"
+        let input = """
+        for
+        i in range {}
+        """
+        let output = """
+        for
+            i in range {}
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testWrappedLineAfterInKeyword() {
-        let input = "for i in\nrange {}"
-        let output = "for i in\n    range {}"
+        let input = """
+        for i in
+        range {}
+        """
+        let output = """
+        for i in
+            range {}
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testWrappedLineAfterDot() {
-        let input = "let foo = bar.\nbaz"
-        let output = "let foo = bar.\n    baz"
+        let input = """
+        let foo = bar.
+        baz
+        """
+        let output = """
+        let foo = bar.
+            baz
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testWrappedLineBeforeDot() {
-        let input = "let foo = bar\n.baz"
-        let output = "let foo = bar\n    .baz"
+        let input = """
+        let foo = bar
+        .baz
+        """
+        let output = """
+        let foo = bar
+            .baz
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testWrappedLineBeforeWhere() {
-        let input = "let foo = bar\nwhere foo == baz"
-        let output = "let foo = bar\n    where foo == baz"
+        let input = """
+        let foo = bar
+        where foo == baz
+        """
+        let output = """
+        let foo = bar
+            where foo == baz
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testWrappedLineAfterWhere() {
-        let input = "let foo = bar where\nfoo == baz"
-        let output = "let foo = bar where\n    foo == baz"
+        let input = """
+        let foo = bar where
+        foo == baz
+        """
+        let output = """
+        let foo = bar where
+            foo == baz
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testWrappedLineBeforeGuardElse() {
-        let input = "guard let foo = bar\nelse { return }"
+        let input = """
+        guard let foo = bar
+        else { return }
+        """
         testFormatting(for: input, rule: .indent,
                        exclude: [.wrapConditionalBodies])
     }
 
     func testWrappedLineAfterGuardElse() {
         // Don't indent because this case is handled by braces rule
-        let input = "guard let foo = bar else\n{ return }"
+        let input = """
+        guard let foo = bar else
+        { return }
+        """
         testFormatting(for: input, rule: .indent,
                        exclude: [.elseOnSameLine, .wrapConditionalBodies])
     }
 
     func testWrappedLineAfterComment() {
-        let input = "foo = bar && // comment\nbaz"
-        let output = "foo = bar && // comment\n    baz"
+        let input = """
+        foo = bar && // comment
+        baz
+        """
+        let output = """
+        foo = bar && // comment
+            baz
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testWrappedLineInClosure() {
-        let input = "forEach { item in\nprint(item)\n}"
-        let output = "forEach { item in\n    print(item)\n}"
+        let input = """
+        forEach { item in
+        print(item)
+        }
+        """
+        let output = """
+        forEach { item in
+            print(item)
+        }
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
@@ -1159,70 +1740,169 @@ class IndentTests: XCTestCase {
     }
 
     func testConsecutiveWraps() {
-        let input = "let a = b +\nc +\nd"
-        let output = "let a = b +\n    c +\n    d"
+        let input = """
+        let a = b +
+        c +
+        d
+        """
+        let output = """
+        let a = b +
+            c +
+            d
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testWrapReset() {
-        let input = "let a = b +\nc +\nd\nlet a = b +\nc +\nd"
-        let output = "let a = b +\n    c +\n    d\nlet a = b +\n    c +\n    d"
+        let input = """
+        let a = b +
+        c +
+        d
+        let a = b +
+        c +
+        d
+        """
+        let output = """
+        let a = b +
+            c +
+            d
+        let a = b +
+            c +
+            d
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testIndentElseAfterComment() {
-        let input = "if x {}\n// comment\nelse {}"
+        let input = """
+        if x {}
+        // comment
+        else {}
+        """
         testFormatting(for: input, rule: .indent)
     }
 
     func testWrappedLinesWithComments() {
-        let input = "let foo = bar ||\n // baz||\nquux"
-        let output = "let foo = bar ||\n    // baz||\n    quux"
+        let input = """
+        let foo = bar ||
+         // baz||
+        quux
+        """
+        let output = """
+        let foo = bar ||
+            // baz||
+            quux
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testNoIndentAfterAssignOperatorToVariable() {
-        let input = "let greaterThan = >\nlet lessThan = <"
+        let input = """
+        let greaterThan = >
+        let lessThan = <
+        """
         testFormatting(for: input, rule: .indent)
     }
 
     func testNoIndentAfterDefaultAsIdentifier() {
-        let input = "let foo = FileManager.default\n/// Comment\nlet bar = 0"
+        let input = """
+        let foo = FileManager.default
+        /// Comment
+        let bar = 0
+        """
         testFormatting(for: input, rule: .indent, exclude: [.propertyTypes])
     }
 
     func testIndentClosureStartingOnIndentedLine() {
-        let input = "foo\n.bar {\nbaz()\n}"
-        let output = "foo\n    .bar {\n        baz()\n    }"
+        let input = """
+        foo
+        .bar {
+        baz()
+        }
+        """
+        let output = """
+        foo
+            .bar {
+                baz()
+            }
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testIndentClosureStartingOnIndentedLineInVar() {
-        let input = "var foo = foo\n.bar {\nbaz()\n}"
-        let output = "var foo = foo\n    .bar {\n        baz()\n    }"
+        let input = """
+        var foo = foo
+        .bar {
+        baz()
+        }
+        """
+        let output = """
+        var foo = foo
+            .bar {
+                baz()
+            }
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testIndentClosureStartingOnIndentedLineInLet() {
-        let input = "let foo = foo\n.bar {\nbaz()\n}"
-        let output = "let foo = foo\n    .bar {\n        baz()\n    }"
+        let input = """
+        let foo = foo
+        .bar {
+        baz()
+        }
+        """
+        let output = """
+        let foo = foo
+            .bar {
+                baz()
+            }
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testIndentClosureStartingOnIndentedLineInTypedVar() {
-        let input = "var: Int foo = foo\n.bar {\nbaz()\n}"
-        let output = "var: Int foo = foo\n    .bar {\n        baz()\n    }"
+        let input = """
+        var: Int foo = foo
+        .bar {
+        baz()
+        }
+        """
+        let output = """
+        var: Int foo = foo
+            .bar {
+                baz()
+            }
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testIndentClosureStartingOnIndentedLineInTypedLet() {
-        let input = "let: Int foo = foo\n.bar {\nbaz()\n}"
-        let output = "let: Int foo = foo\n    .bar {\n        baz()\n    }"
+        let input = """
+        let: Int foo = foo
+        .bar {
+        baz()
+        }
+        """
+        let output = """
+        let: Int foo = foo
+            .bar {
+                baz()
+            }
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testNestedWrappedIfIndents() {
-        let input = "if foo {\nif bar &&\n(baz ||\nquux) {\nfoo()\n}\n}"
+        let input = """
+        if foo {
+        if bar &&
+        (baz ||
+        quux) {
+        foo()
+        }
+        }
+        """
         let output = """
         if foo {
             if bar &&
@@ -1236,20 +1916,72 @@ class IndentTests: XCTestCase {
     }
 
     func testWrappedEnumThatLooksLikeIf() {
-        let input = "foo &&\n bar.if {\nfoo()\n}"
-        let output = "foo &&\n    bar.if {\n        foo()\n    }"
+        let input = """
+        foo &&
+         bar.if {
+        foo()
+        }
+        """
+        let output = """
+        foo &&
+            bar.if {
+                foo()
+            }
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testChainedClosureIndents() {
-        let input = "foo\n.bar {\nbaz()\n}\n.bar {\nbaz()\n}"
-        let output = "foo\n    .bar {\n        baz()\n    }\n    .bar {\n        baz()\n    }"
+        let input = """
+        foo
+        .bar {
+        baz()
+        }
+        .bar {
+        baz()
+        }
+        """
+        let output = """
+        foo
+            .bar {
+                baz()
+            }
+            .bar {
+                baz()
+            }
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testChainedClosureIndentsAfterIfCondition() {
-        let input = "if foo {\nbar()\n.baz()\n}\n\nfoo\n.bar {\nbaz()\n}\n.bar {\nbaz()\n}"
-        let output = "if foo {\n    bar()\n        .baz()\n}\n\nfoo\n    .bar {\n        baz()\n    }\n    .bar {\n        baz()\n    }"
+        let input = """
+        if foo {
+        bar()
+        .baz()
+        }
+
+        foo
+        .bar {
+        baz()
+        }
+        .bar {
+        baz()
+        }
+        """
+        let output = """
+        if foo {
+            bar()
+                .baz()
+        }
+
+        foo
+            .bar {
+                baz()
+            }
+            .bar {
+                baz()
+            }
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
@@ -1284,14 +2016,50 @@ class IndentTests: XCTestCase {
     }
 
     func testChainedClosureIndentsAfterVarDeclaration() {
-        let input = "var foo: Int\nfoo\n.bar {\nbaz()\n}\n.bar {\nbaz()\n}"
-        let output = "var foo: Int\nfoo\n    .bar {\n        baz()\n    }\n    .bar {\n        baz()\n    }"
+        let input = """
+        var foo: Int
+        foo
+        .bar {
+        baz()
+        }
+        .bar {
+        baz()
+        }
+        """
+        let output = """
+        var foo: Int
+        foo
+            .bar {
+                baz()
+            }
+            .bar {
+                baz()
+            }
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testChainedClosureIndentsAfterLetDeclaration() {
-        let input = "let foo: Int\nfoo\n.bar {\nbaz()\n}\n.bar {\nbaz()\n}"
-        let output = "let foo: Int\nfoo\n    .bar {\n        baz()\n    }\n    .bar {\n        baz()\n    }"
+        let input = """
+        let foo: Int
+        foo
+        .bar {
+        baz()
+        }
+        .bar {
+        baz()
+        }
+        """
+        let output = """
+        let foo: Int
+        foo
+            .bar {
+                baz()
+            }
+            .bar {
+                baz()
+            }
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
@@ -1376,83 +2144,207 @@ class IndentTests: XCTestCase {
     }
 
     func testChainedFunctionsInsideIf() {
-        let input = "if foo {\nreturn bar()\n.baz()\n}"
-        let output = "if foo {\n    return bar()\n        .baz()\n}"
+        let input = """
+        if foo {
+        return bar()
+        .baz()
+        }
+        """
+        let output = """
+        if foo {
+            return bar()
+                .baz()
+        }
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testChainedFunctionsInsideForLoop() {
-        let input = "for x in y {\nfoo\n.bar {\nbaz()\n}\n.quux()\n}"
-        let output = "for x in y {\n    foo\n        .bar {\n            baz()\n        }\n        .quux()\n}"
+        let input = """
+        for x in y {
+        foo
+        .bar {
+        baz()
+        }
+        .quux()
+        }
+        """
+        let output = """
+        for x in y {
+            foo
+                .bar {
+                    baz()
+                }
+                .quux()
+        }
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testChainedFunctionsAfterAnIfStatement() {
-        let input = "if foo {}\nbar\n.baz {\n}\n.quux()"
-        let output = "if foo {}\nbar\n    .baz {\n    }\n    .quux()"
+        let input = """
+        if foo {}
+        bar
+        .baz {
+        }
+        .quux()
+        """
+        let output = """
+        if foo {}
+        bar
+            .baz {
+            }
+            .quux()
+        """
         testFormatting(for: input, output, rule: .indent, exclude: [.emptyBraces])
     }
 
     func testIndentInsideWrappedIfStatementWithClosureCondition() {
-        let input = "if foo({ 1 }) ||\nbar {\nbaz()\n}"
-        let output = "if foo({ 1 }) ||\n    bar {\n    baz()\n}"
+        let input = """
+        if foo({ 1 }) ||
+        bar {
+        baz()
+        }
+        """
+        let output = """
+        if foo({ 1 }) ||
+            bar {
+            baz()
+        }
+        """
         testFormatting(for: input, output, rule: .indent, exclude: [.wrapMultilineStatementBraces])
     }
 
     func testIndentInsideWrappedClassDefinition() {
-        let input = "class Foo\n: Bar {\nbaz()\n}"
-        let output = "class Foo\n    : Bar {\n    baz()\n}"
+        let input = """
+        class Foo
+        : Bar {
+        baz()
+        }
+        """
+        let output = """
+        class Foo
+            : Bar {
+            baz()
+        }
+        """
         testFormatting(for: input, output, rule: .indent,
                        exclude: [.leadingDelimiters, .wrapMultilineStatementBraces])
     }
 
     func testIndentInsideWrappedProtocolDefinition() {
-        let input = "protocol Foo\n: Bar, Baz {\nbaz()\n}"
-        let output = "protocol Foo\n    : Bar, Baz {\n    baz()\n}"
+        let input = """
+        protocol Foo
+        : Bar, Baz {
+        baz()
+        }
+        """
+        let output = """
+        protocol Foo
+            : Bar, Baz {
+            baz()
+        }
+        """
         testFormatting(for: input, output, rule: .indent,
                        exclude: [.leadingDelimiters, .wrapMultilineStatementBraces])
     }
 
     func testIndentInsideWrappedVarStatement() {
-        let input = "var Foo:\nBar {\nreturn 5\n}"
-        let output = "var Foo:\n    Bar {\n    return 5\n}"
+        let input = """
+        var Foo:
+        Bar {
+        return 5
+        }
+        """
+        let output = """
+        var Foo:
+            Bar {
+            return 5
+        }
+        """
         testFormatting(for: input, output, rule: .indent,
                        exclude: [.wrapMultilineStatementBraces])
     }
 
     func testNoIndentAfterOperatorDeclaration() {
-        let input = "infix operator ?=\nfunc ?= (lhs _: Int, rhs _: Int) -> Bool {}"
+        let input = """
+        infix operator ?=
+        func ?= (lhs _: Int, rhs _: Int) -> Bool {}
+        """
         testFormatting(for: input, rule: .indent)
     }
 
     func testNoIndentAfterChevronOperatorDeclaration() {
-        let input = "infix operator =<<\nfunc =<< <T>(lhs _: T, rhs _: T) -> T {}"
+        let input = """
+        infix operator =<<
+        func =<< <T>(lhs _: T, rhs _: T) -> T {}
+        """
         testFormatting(for: input, rule: .indent)
     }
 
     func testIndentWrappedStringDictionaryKeysAndValues() {
-        let input = "[\n\"foo\":\n\"bar\",\n\"baz\":\n\"quux\",\n]"
-        let output = "[\n    \"foo\":\n        \"bar\",\n    \"baz\":\n        \"quux\",\n]"
+        let input = """
+        [
+        \"foo\":
+        \"bar\",
+        \"baz\":
+        \"quux\",
+        ]
+        """
+        let output = """
+        [
+            \"foo\":
+                \"bar\",
+            \"baz\":
+                \"quux\",
+        ]
+        """
         let options = FormatOptions(wrapCollections: .disabled)
         testFormatting(for: input, output, rule: .indent, options: options)
     }
 
     func testIndentWrappedEnumDictionaryKeysAndValues() {
-        let input = "[\n.foo:\n.bar,\n.baz:\n.quux,\n]"
-        let output = "[\n    .foo:\n        .bar,\n    .baz:\n        .quux,\n]"
+        let input = """
+        [
+        .foo:
+        .bar,
+        .baz:
+        .quux,
+        ]
+        """
+        let output = """
+        [
+            .foo:
+                .bar,
+            .baz:
+                .quux,
+        ]
+        """
         let options = FormatOptions(wrapCollections: .disabled)
         testFormatting(for: input, output, rule: .indent, options: options)
     }
 
     func testIndentWrappedFunctionArgument() {
-        let input = "foobar(baz: a &&\nb)"
-        let output = "foobar(baz: a &&\n    b)"
+        let input = """
+        foobar(baz: a &&
+        b)
+        """
+        let output = """
+        foobar(baz: a &&
+            b)
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testIndentWrappedFunctionClosureArgument() {
-        let input = "foobar(baz: { a &&\nb })"
-        let output = "foobar(baz: { a &&\n        b })"
+        let input = """
+        foobar(baz: { a &&
+        b })
+        """
+        let output = """
+        foobar(baz: { a &&
+                b })
+        """
         testFormatting(for: input, output, rule: .indent,
                        exclude: [.trailingClosures, .braces])
     }
@@ -1469,7 +2361,11 @@ class IndentTests: XCTestCase {
     }
 
     func testIndentClassDeclarationContainingComment() {
-        let input = "class Foo: Bar,\n    // Comment\n    Baz {}"
+        let input = """
+        class Foo: Bar,
+            // Comment
+            Baz {}
+        """
         testFormatting(for: input, rule: .indent)
     }
 
@@ -2384,20 +3280,40 @@ class IndentTests: XCTestCase {
     // indent comments
 
     func testCommentIndenting() {
-        let input = "/* foo\nbar */"
-        let output = "/* foo\n bar */"
+        let input = """
+        /* foo
+        bar */
+        """
+        let output = """
+        /* foo
+         bar */
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testCommentIndentingWithTrailingClose() {
-        let input = "/*\nfoo\n*/"
-        let output = "/*\n foo\n */"
+        let input = """
+        /*
+        foo
+        */
+        """
+        let output = """
+        /*
+         foo
+         */
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testCommentIndentingWithTrailingClose2() {
-        let input = "/* foo\n*/"
-        let output = "/* foo\n */"
+        let input = """
+        /* foo
+        */
+        """
+        let output = """
+        /* foo
+         */
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
@@ -2440,12 +3356,20 @@ class IndentTests: XCTestCase {
     }
 
     func testCommentedCodeBlocksNotIndented() {
-        let input = "func foo() {\n//    var foo: Int\n}"
+        let input = """
+        func foo() {
+        //    var foo: Int
+        }
+        """
         testFormatting(for: input, rule: .indent)
     }
 
     func testBlankCodeCommentBlockLinesNotIndented() {
-        let input = "func foo() {\n//\n}"
+        let input = """
+        func foo() {
+        //
+        }
+        """
         testFormatting(for: input, rule: .indent)
     }
 
@@ -2486,18 +3410,42 @@ class IndentTests: XCTestCase {
     // indent multiline strings
 
     func testSimpleMultilineString() {
-        let input = "\"\"\"\n    hello\n    world\n\"\"\""
+        let input = """
+        \"\"\"
+            hello
+            world
+        \"\"\"
+        """
         testFormatting(for: input, rule: .indent)
     }
 
     func testIndentIndentedSimpleMultilineString() {
-        let input = "{\n\"\"\"\n    hello\n    world\n    \"\"\"\n}"
-        let output = "{\n    \"\"\"\n    hello\n    world\n    \"\"\"\n}"
+        let input = """
+        {
+        \"\"\"
+            hello
+            world
+            \"\"\"
+        }
+        """
+        let output = """
+        {
+            \"\"\"
+            hello
+            world
+            \"\"\"
+        }
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testMultilineStringWithEscapedLinebreak() {
-        let input = "\"\"\"\n    hello \\n    world\n\"\"\""
+        let input = """
+        \"\"\"
+            hello \
+            world
+        \"\"\"
+        """
         testFormatting(for: input, rule: .indent)
     }
 
@@ -2820,8 +3768,22 @@ class IndentTests: XCTestCase {
     // indent multiline raw strings
 
     func testIndentIndentedSimpleRawMultilineString() {
-        let input = "{\n##\"\"\"\n    hello\n    world\n    \"\"\"##\n}"
-        let output = "{\n    ##\"\"\"\n    hello\n    world\n    \"\"\"##\n}"
+        let input = """
+        {
+        ##\"\"\"
+            hello
+            world
+            \"\"\"##
+        }
+        """
+        let output = """
+        {
+            ##\"\"\"
+            hello
+            world
+            \"\"\"##
+        }
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
@@ -2951,82 +3913,260 @@ class IndentTests: XCTestCase {
     // indent #if/#else/#elseif/#endif (mode: indent)
 
     func testIfEndifIndenting() {
-        let input = "#if x\n// foo\n#endif"
-        let output = "#if x\n    // foo\n#endif"
+        let input = """
+        #if x
+        // foo
+        #endif
+        """
+        let output = """
+        #if x
+            // foo
+        #endif
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testIndentedIfEndifIndenting() {
-        let input = "{\n#if x\n// foo\nfoo()\n#endif\n}"
-        let output = "{\n    #if x\n        // foo\n        foo()\n    #endif\n}"
+        let input = """
+        {
+        #if x
+        // foo
+        foo()
+        #endif
+        }
+        """
+        let output = """
+        {
+            #if x
+                // foo
+                foo()
+            #endif
+        }
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testIfElseEndifIndenting() {
-        let input = "#if x\n    // foo\nfoo()\n#else\n    // bar\n#endif"
-        let output = "#if x\n    // foo\n    foo()\n#else\n    // bar\n#endif"
+        let input = """
+        #if x
+            // foo
+        foo()
+        #else
+            // bar
+        #endif
+        """
+        let output = """
+        #if x
+            // foo
+            foo()
+        #else
+            // bar
+        #endif
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testEnumIfCaseEndifIndenting() {
-        let input = "enum Foo {\ncase bar\n#if x\ncase baz\n#endif\n}"
-        let output = "enum Foo {\n    case bar\n    #if x\n        case baz\n    #endif\n}"
+        let input = """
+        enum Foo {
+        case bar
+        #if x
+        case baz
+        #endif
+        }
+        """
+        let output = """
+        enum Foo {
+            case bar
+            #if x
+                case baz
+            #endif
+        }
+        """
         let options = FormatOptions(indentCase: false)
         testFormatting(for: input, output, rule: .indent, options: options)
     }
 
     func testSwitchIfCaseEndifIndenting() {
-        let input = "switch foo {\ncase .bar: break\n#if x\ncase .baz: break\n#endif\n}"
-        let output = "switch foo {\ncase .bar: break\n#if x\n    case .baz: break\n#endif\n}"
+        let input = """
+        switch foo {
+        case .bar: break
+        #if x
+        case .baz: break
+        #endif
+        }
+        """
+        let output = """
+        switch foo {
+        case .bar: break
+        #if x
+            case .baz: break
+        #endif
+        }
+        """
         let options = FormatOptions(indentCase: false)
         testFormatting(for: input, output, rule: .indent, options: options)
     }
 
     func testSwitchIfCaseEndifIndenting2() {
-        let input = "switch foo {\ncase .bar: break\n#if x\ncase .baz: break\n#endif\n}"
-        let output = "switch foo {\n    case .bar: break\n    #if x\n        case .baz: break\n    #endif\n}"
+        let input = """
+        switch foo {
+        case .bar: break
+        #if x
+        case .baz: break
+        #endif
+        }
+        """
+        let output = """
+        switch foo {
+            case .bar: break
+            #if x
+                case .baz: break
+            #endif
+        }
+        """
         let options = FormatOptions(indentCase: true)
         testFormatting(for: input, output, rule: .indent, options: options)
     }
 
     func testSwitchIfCaseEndifIndenting3() {
-        let input = "switch foo {\n#if x\ncase .bar: break\ncase .baz: break\n#endif\n}"
-        let output = "switch foo {\n#if x\n    case .bar: break\n    case .baz: break\n#endif\n}"
+        let input = """
+        switch foo {
+        #if x
+        case .bar: break
+        case .baz: break
+        #endif
+        }
+        """
+        let output = """
+        switch foo {
+        #if x
+            case .bar: break
+            case .baz: break
+        #endif
+        }
+        """
         let options = FormatOptions(indentCase: false)
         testFormatting(for: input, output, rule: .indent, options: options)
     }
 
     func testSwitchIfCaseEndifIndenting4() {
-        let input = "switch foo {\n#if x\ncase .bar:\nbreak\ncase .baz:\nbreak\n#endif\n}"
-        let output = "switch foo {\n    #if x\n        case .bar:\n            break\n        case .baz:\n            break\n    #endif\n}"
+        let input = """
+        switch foo {
+        #if x
+        case .bar:
+        break
+        case .baz:
+        break
+        #endif
+        }
+        """
+        let output = """
+        switch foo {
+            #if x
+                case .bar:
+                    break
+                case .baz:
+                    break
+            #endif
+        }
+        """
         let options = FormatOptions(indentCase: true)
         testFormatting(for: input, output, rule: .indent, options: options)
     }
 
     func testSwitchIfCaseElseCaseEndifIndenting() {
-        let input = "switch foo {\n#if x\ncase .bar: break\n#else\ncase .baz: break\n#endif\n}"
-        let output = "switch foo {\n#if x\n    case .bar: break\n#else\n    case .baz: break\n#endif\n}"
+        let input = """
+        switch foo {
+        #if x
+        case .bar: break
+        #else
+        case .baz: break
+        #endif
+        }
+        """
+        let output = """
+        switch foo {
+        #if x
+            case .bar: break
+        #else
+            case .baz: break
+        #endif
+        }
+        """
         let options = FormatOptions(indentCase: false)
         testFormatting(for: input, output, rule: .indent, options: options)
     }
 
     func testSwitchIfCaseElseCaseEndifIndenting2() {
-        let input = "switch foo {\n#if x\ncase .bar: break\n#else\ncase .baz: break\n#endif\n}"
-        let output = "switch foo {\n    #if x\n        case .bar: break\n    #else\n        case .baz: break\n    #endif\n}"
+        let input = """
+        switch foo {
+        #if x
+        case .bar: break
+        #else
+        case .baz: break
+        #endif
+        }
+        """
+        let output = """
+        switch foo {
+            #if x
+                case .bar: break
+            #else
+                case .baz: break
+            #endif
+        }
+        """
         let options = FormatOptions(indentCase: true)
         testFormatting(for: input, output, rule: .indent, options: options)
     }
 
     func testSwitchIfEndifInsideCaseIndenting() {
-        let input = "switch foo {\ncase .bar:\n#if x\nbar()\n#endif\nbaz()\ncase .baz: break\n}"
-        let output = "switch foo {\ncase .bar:\n    #if x\n        bar()\n    #endif\n    baz()\ncase .baz: break\n}"
+        let input = """
+        switch foo {
+        case .bar:
+        #if x
+        bar()
+        #endif
+        baz()
+        case .baz: break
+        }
+        """
+        let output = """
+        switch foo {
+        case .bar:
+            #if x
+                bar()
+            #endif
+            baz()
+        case .baz: break
+        }
+        """
         let options = FormatOptions(indentCase: false)
         testFormatting(for: input, output, rule: .indent, options: options, exclude: [.blankLineAfterSwitchCase])
     }
 
     func testSwitchIfEndifInsideCaseIndenting2() {
-        let input = "switch foo {\ncase .bar:\n#if x\nbar()\n#endif\nbaz()\ncase .baz: break\n}"
-        let output = "switch foo {\n    case .bar:\n        #if x\n            bar()\n        #endif\n        baz()\n    case .baz: break\n}"
+        let input = """
+        switch foo {
+        case .bar:
+        #if x
+        bar()
+        #endif
+        baz()
+        case .baz: break
+        }
+        """
+        let output = """
+        switch foo {
+            case .bar:
+                #if x
+                    bar()
+                #endif
+                baz()
+            case .baz: break
+        }
+        """
         let options = FormatOptions(indentCase: true)
         testFormatting(for: input, output, rule: .indent, options: options, exclude: [.blankLineAfterSwitchCase])
     }
@@ -3202,33 +4342,76 @@ class IndentTests: XCTestCase {
     // indent #if/#else/#elseif/#endif (mode: noindent)
 
     func testIfEndifNoIndenting() {
-        let input = "#if x\n// foo\n#endif"
+        let input = """
+        #if x
+        // foo
+        #endif
+        """
         let options = FormatOptions(ifdefIndent: .noIndent)
         testFormatting(for: input, rule: .indent, options: options)
     }
 
     func testIndentedIfEndifNoIndenting() {
-        let input = "{\n#if x\n// foo\n#endif\n}"
-        let output = "{\n    #if x\n    // foo\n    #endif\n}"
+        let input = """
+        {
+        #if x
+        // foo
+        #endif
+        }
+        """
+        let output = """
+        {
+            #if x
+            // foo
+            #endif
+        }
+        """
         let options = FormatOptions(ifdefIndent: .noIndent)
         testFormatting(for: input, output, rule: .indent, options: options)
     }
 
     func testIfElseEndifNoIndenting() {
-        let input = "#if x\n// foo\n#else\n// bar\n#endif"
+        let input = """
+        #if x
+        // foo
+        #else
+        // bar
+        #endif
+        """
         let options = FormatOptions(ifdefIndent: .noIndent)
         testFormatting(for: input, rule: .indent, options: options)
     }
 
     func testIfCaseEndifNoIndenting() {
-        let input = "switch foo {\ncase .bar: break\n#if x\ncase .baz: break\n#endif\n}"
+        let input = """
+        switch foo {
+        case .bar: break
+        #if x
+        case .baz: break
+        #endif
+        }
+        """
         let options = FormatOptions(indentCase: false, ifdefIndent: .noIndent)
         testFormatting(for: input, rule: .indent, options: options)
     }
 
     func testIfCaseEndifNoIndenting2() {
-        let input = "switch foo {\ncase .bar: break\n#if x\ncase .baz: break\n#endif\n}"
-        let output = "switch foo {\n    case .bar: break\n    #if x\n    case .baz: break\n    #endif\n}"
+        let input = """
+        switch foo {
+        case .bar: break
+        #if x
+        case .baz: break
+        #endif
+        }
+        """
+        let output = """
+        switch foo {
+            case .bar: break
+            #if x
+            case .baz: break
+            #endif
+        }
+        """
         let options = FormatOptions(indentCase: true, ifdefIndent: .noIndent)
         testFormatting(for: input, output, rule: .indent, options: options)
     }
@@ -3260,15 +4443,51 @@ class IndentTests: XCTestCase {
     }
 
     func testIfEndifInsideCaseNoIndenting() {
-        let input = "switch foo {\ncase .bar:\n#if x\nbar()\n#endif\nbaz()\ncase .baz: break\n}"
-        let output = "switch foo {\ncase .bar:\n    #if x\n    bar()\n    #endif\n    baz()\ncase .baz: break\n}"
+        let input = """
+        switch foo {
+        case .bar:
+        #if x
+        bar()
+        #endif
+        baz()
+        case .baz: break
+        }
+        """
+        let output = """
+        switch foo {
+        case .bar:
+            #if x
+            bar()
+            #endif
+            baz()
+        case .baz: break
+        }
+        """
         let options = FormatOptions(indentCase: false, ifdefIndent: .noIndent)
         testFormatting(for: input, output, rule: .indent, options: options, exclude: [.blankLineAfterSwitchCase])
     }
 
     func testIfEndifInsideCaseNoIndenting2() {
-        let input = "switch foo {\ncase .bar:\n#if x\nbar()\n#endif\nbaz()\ncase .baz: break\n}"
-        let output = "switch foo {\n    case .bar:\n        #if x\n        bar()\n        #endif\n        baz()\n    case .baz: break\n}"
+        let input = """
+        switch foo {
+        case .bar:
+        #if x
+        bar()
+        #endif
+        baz()
+        case .baz: break
+        }
+        """
+        let output = """
+        switch foo {
+            case .bar:
+                #if x
+                bar()
+                #endif
+                baz()
+            case .baz: break
+        }
+        """
         let options = FormatOptions(indentCase: true, ifdefIndent: .noIndent)
         testFormatting(for: input, output, rule: .indent, options: options, exclude: [.blankLineAfterSwitchCase])
     }
@@ -3431,60 +4650,179 @@ class IndentTests: XCTestCase {
     // indent #if/#else/#elseif/#endif (mode: outdent)
 
     func testIfEndifOutdenting() {
-        let input = "#if x\n// foo\n#endif"
+        let input = """
+        #if x
+        // foo
+        #endif
+        """
         let options = FormatOptions(ifdefIndent: .outdent)
         testFormatting(for: input, rule: .indent, options: options)
     }
 
     func testIndentedIfEndifOutdenting() {
-        let input = "{\n#if x\n// foo\n#endif\n}"
-        let output = "{\n#if x\n    // foo\n#endif\n}"
+        let input = """
+        {
+        #if x
+        // foo
+        #endif
+        }
+        """
+        let output = """
+        {
+        #if x
+            // foo
+        #endif
+        }
+        """
         let options = FormatOptions(ifdefIndent: .outdent)
         testFormatting(for: input, output, rule: .indent, options: options)
     }
 
     func testIfElseEndifOutdenting() {
-        let input = "#if x\n// foo\n#else\n// bar\n#endif"
+        let input = """
+        #if x
+        // foo
+        #else
+        // bar
+        #endif
+        """
         let options = FormatOptions(ifdefIndent: .outdent)
         testFormatting(for: input, rule: .indent, options: options)
     }
 
     func testIndentedIfElseEndifOutdenting() {
-        let input = "{\n#if x\n// foo\nfoo()\n#else\n// bar\n#endif\n}"
-        let output = "{\n#if x\n    // foo\n    foo()\n#else\n    // bar\n#endif\n}"
+        let input = """
+        {
+        #if x
+        // foo
+        foo()
+        #else
+        // bar
+        #endif
+        }
+        """
+        let output = """
+        {
+        #if x
+            // foo
+            foo()
+        #else
+            // bar
+        #endif
+        }
+        """
         let options = FormatOptions(ifdefIndent: .outdent)
         testFormatting(for: input, output, rule: .indent, options: options)
     }
 
     func testIfElseifEndifOutdenting() {
-        let input = "#if x\n// foo\n#elseif y\n// bar\n#endif"
+        let input = """
+        #if x
+        // foo
+        #elseif y
+        // bar
+        #endif
+        """
         let options = FormatOptions(ifdefIndent: .outdent)
         testFormatting(for: input, rule: .indent, options: options)
     }
 
     func testIndentedIfElseifEndifOutdenting() {
-        let input = "{\n#if x\n// foo\nfoo()\n#elseif y\n// bar\n#endif\n}"
-        let output = "{\n#if x\n    // foo\n    foo()\n#elseif y\n    // bar\n#endif\n}"
+        let input = """
+        {
+        #if x
+        // foo
+        foo()
+        #elseif y
+        // bar
+        #endif
+        }
+        """
+        let output = """
+        {
+        #if x
+            // foo
+            foo()
+        #elseif y
+            // bar
+        #endif
+        }
+        """
         let options = FormatOptions(ifdefIndent: .outdent)
         testFormatting(for: input, output, rule: .indent, options: options)
     }
 
     func testNestedIndentedIfElseifEndifOutdenting() {
-        let input = "{\n#if x\n#if y\n// foo\nfoo()\n#elseif y\n// bar\n#endif\n#endif\n}"
-        let output = "{\n#if x\n#if y\n    // foo\n    foo()\n#elseif y\n    // bar\n#endif\n#endif\n}"
+        let input = """
+        {
+        #if x
+        #if y
+        // foo
+        foo()
+        #elseif y
+        // bar
+        #endif
+        #endif
+        }
+        """
+        let output = """
+        {
+        #if x
+        #if y
+            // foo
+            foo()
+        #elseif y
+            // bar
+        #endif
+        #endif
+        }
+        """
         let options = FormatOptions(ifdefIndent: .outdent)
         testFormatting(for: input, output, rule: .indent, options: options)
     }
 
     func testDoubleNestedIndentedIfElseifEndifOutdenting() {
-        let input = "{\n#if x\n#if y\n#if z\n// foo\nfoo()\n#elseif y\n// bar\n#endif\n#endif\n#endif\n}"
-        let output = "{\n#if x\n#if y\n#if z\n    // foo\n    foo()\n#elseif y\n    // bar\n#endif\n#endif\n#endif\n}"
+        let input = """
+        {
+        #if x
+        #if y
+        #if z
+        // foo
+        foo()
+        #elseif y
+        // bar
+        #endif
+        #endif
+        #endif
+        }
+        """
+        let output = """
+        {
+        #if x
+        #if y
+        #if z
+            // foo
+            foo()
+        #elseif y
+            // bar
+        #endif
+        #endif
+        #endif
+        }
+        """
         let options = FormatOptions(ifdefIndent: .outdent)
         testFormatting(for: input, output, rule: .indent, options: options)
     }
 
     func testIfCaseEndifOutdenting() {
-        let input = "switch foo {\ncase .bar: break\n#if x\ncase .baz: break\n#endif\n}"
+        let input = """
+        switch foo {
+        case .bar: break
+        #if x
+        case .baz: break
+        #endif
+        }
+        """
         let options = FormatOptions(ifdefIndent: .outdent)
         testFormatting(for: input, rule: .indent, options: options)
     }
@@ -3573,85 +4911,191 @@ class IndentTests: XCTestCase {
     // indent expression after return
 
     func testIndentIdentifierAfterReturn() {
-        let input = "if foo {\n    return\n        bar\n}"
+        let input = """
+        if foo {
+            return
+                bar
+        }
+        """
         testFormatting(for: input, rule: .indent)
     }
 
     func testIndentEnumValueAfterReturn() {
-        let input = "if foo {\n    return\n        .bar\n}"
+        let input = """
+        if foo {
+            return
+                .bar
+        }
+        """
         testFormatting(for: input, rule: .indent)
     }
 
     func testIndentMultilineExpressionAfterReturn() {
-        let input = "if foo {\n    return\n        bar +\n        baz\n}"
+        let input = """
+        if foo {
+            return
+                bar +
+                baz
+        }
+        """
         testFormatting(for: input, rule: .indent)
     }
 
     func testDontIndentClosingBraceAfterReturn() {
-        let input = "if foo {\n    return\n}"
+        let input = """
+        if foo {
+            return
+        }
+        """
         testFormatting(for: input, rule: .indent)
     }
 
     func testDontIndentCaseAfterReturn() {
-        let input = "switch foo {\ncase bar:\n    return\ncase baz:\n    return\n}"
+        let input = """
+        switch foo {
+        case bar:
+            return
+        case baz:
+            return
+        }
+        """
         testFormatting(for: input, rule: .indent)
     }
 
     func testDontIndentCaseAfterWhere() {
-        let input = "switch foo {\ncase bar\nwhere baz:\nreturn\ndefault:\nreturn\n}"
-        let output = "switch foo {\ncase bar\n    where baz:\n    return\ndefault:\n    return\n}"
+        let input = """
+        switch foo {
+        case bar
+        where baz:
+        return
+        default:
+        return
+        }
+        """
+        let output = """
+        switch foo {
+        case bar
+            where baz:
+            return
+        default:
+            return
+        }
+        """
         testFormatting(for: input, output, rule: .indent)
     }
 
     func testDontIndentIfAfterReturn() {
-        let input = "if foo {\n    return\n    if bar {}\n}"
+        let input = """
+        if foo {
+            return
+            if bar {}
+        }
+        """
         testFormatting(for: input, rule: .indent)
     }
 
     func testDontIndentFuncAfterReturn() {
-        let input = "if foo {\n    return\n    func bar() {}\n}"
+        let input = """
+        if foo {
+            return
+            func bar() {}
+        }
+        """
         testFormatting(for: input, rule: .indent)
     }
 
     // indent fragments
 
     func testIndentFragment() {
-        let input = "   func foo() {\nbar()\n}"
-        let output = "   func foo() {\n       bar()\n   }"
+        let input = """
+           func foo() {
+        bar()
+        }
+        """
+        let output = """
+           func foo() {
+               bar()
+           }
+        """
         let options = FormatOptions(fragment: true)
         testFormatting(for: input, output, rule: .indent, options: options)
     }
 
     func testIndentFragmentAfterBlankLines() {
-        let input = "\n\n   func foo() {\nbar()\n}"
-        let output = "\n\n   func foo() {\n       bar()\n   }"
+        let input = """
+
+
+           func foo() {
+        bar()
+        }
+        """
+        let output = """
+
+
+           func foo() {
+               bar()
+           }
+        """
         let options = FormatOptions(fragment: true)
         testFormatting(for: input, output, rule: .indent, options: options)
     }
 
     func testUnterminatedFragment() {
-        let input = "class Foo {\n\n  func foo() {\nbar()\n}"
-        let output = "class Foo {\n\n    func foo() {\n        bar()\n    }"
+        let input = """
+        class Foo {
+
+          func foo() {
+        bar()
+        }
+        """
+        let output = """
+        class Foo {
+
+            func foo() {
+                bar()
+            }
+        """
         let options = FormatOptions(fragment: true)
         testFormatting(for: input, output, rule: .indent, options: options,
                        exclude: [.blankLinesAtStartOfScope])
     }
 
     func testOverTerminatedFragment() {
-        let input = "   func foo() {\nbar()\n}\n\n}"
-        let output = "   func foo() {\n       bar()\n   }\n\n}"
+        let input = """
+           func foo() {
+        bar()
+        }
+
+        }
+        """
+        let output = """
+           func foo() {
+               bar()
+           }
+
+        }
+        """
         let options = FormatOptions(fragment: true)
         testFormatting(for: input, output, rule: .indent, options: options)
     }
 
     func testDontCorruptPartialFragment() {
-        let input = "    } foo {\n        bar\n    }\n}"
+        let input = """
+            } foo {
+                bar
+            }
+        }
+        """
         let options = FormatOptions(fragment: true)
         testFormatting(for: input, rule: .indent, options: options)
     }
 
     func testDontCorruptPartialFragment2() {
-        let input = "        return completionHandler(nil)\n    }\n}"
+        let input = """
+                return completionHandler(nil)
+            }
+        }
+        """
         let options = FormatOptions(fragment: true)
         testFormatting(for: input, rule: .indent, options: options)
     }

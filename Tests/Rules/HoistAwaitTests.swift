@@ -11,15 +11,23 @@ import XCTest
 
 class HoistAwaitTests: XCTestCase {
     func testHoistAwait() {
-        let input = "greet(await name, await surname)"
-        let output = "await greet(name, surname)"
+        let input = """
+        greet(await name, await surname)
+        """
+        let output = """
+        await greet(name, surname)
+        """
         testFormatting(for: input, output, rule: .hoistAwait,
                        options: FormatOptions(swiftVersion: "5.5"))
     }
 
     func testHoistAwaitInsideIf() {
-        let input = "if !(await isSomething()) {}"
-        let output = "if await !(isSomething()) {}"
+        let input = """
+        if !(await isSomething()) {}
+        """
+        let output = """
+        if await !(isSomething()) {}
+        """
         testFormatting(for: input, output, rule: .hoistAwait,
                        options: FormatOptions(swiftVersion: "5.5"),
                        exclude: [.redundantParens])
@@ -37,8 +45,12 @@ class HoistAwaitTests: XCTestCase {
     }
 
     func testHoistAwaitInsideStringInterpolation() {
-        let input = "\"\\(replace(regex: await something()))\""
-        let output = "await \"\\(replace(regex: something()))\""
+        let input = """
+        \"\\(replace(regex: await something()))\"
+        """
+        let output = """
+        await \"\\(replace(regex: something()))\"
+        """
         testFormatting(for: input, output, rule: .hoistAwait,
                        options: FormatOptions(swiftVersion: "5.5"))
     }
@@ -85,71 +97,109 @@ class HoistAwaitTests: XCTestCase {
     }
 
     func testHoistAwaitInExpressionWithNoSpaces() {
-        let input = "let foo=bar(contentsOf:await baz())"
-        let output = "let foo=await bar(contentsOf:baz())"
+        let input = """
+        let foo=bar(contentsOf:await baz())
+        """
+        let output = """
+        let foo=await bar(contentsOf:baz())
+        """
         testFormatting(for: input, output, rule: .hoistAwait,
                        options: FormatOptions(swiftVersion: "5.5"), exclude: [.spaceAroundOperators])
     }
 
     func testHoistAwaitInExpressionWithExcessSpaces() {
-        let input = "let foo = bar ( contentsOf: await baz() )"
-        let output = "let foo = await bar ( contentsOf: baz() )"
+        let input = """
+        let foo = bar ( contentsOf: await baz() )
+        """
+        let output = """
+        let foo = await bar ( contentsOf: baz() )
+        """
         testFormatting(for: input, output, rule: .hoistAwait,
                        options: FormatOptions(swiftVersion: "5.5"),
                        exclude: [.spaceAroundParens, .spaceInsideParens])
     }
 
     func testHoistAwaitWithReturn() {
-        let input = "return .enumCase(try await service.greet())"
-        let output = "return await .enumCase(try service.greet())"
+        let input = """
+        return .enumCase(try await service.greet())
+        """
+        let output = """
+        return await .enumCase(try service.greet())
+        """
         testFormatting(for: input, output, rule: .hoistAwait,
                        options: FormatOptions(swiftVersion: "5.5"), exclude: [.hoistTry])
     }
 
     func testHoistDeeplyNestedAwaits() {
-        let input = "let foo = (bar: (5, (await quux(), 6)), baz: (7, quux: await quux()))"
-        let output = "let foo = await (bar: (5, (quux(), 6)), baz: (7, quux: quux()))"
+        let input = """
+        let foo = (bar: (5, (await quux(), 6)), baz: (7, quux: await quux()))
+        """
+        let output = """
+        let foo = await (bar: (5, (quux(), 6)), baz: (7, quux: quux()))
+        """
         testFormatting(for: input, output, rule: .hoistAwait,
                        options: FormatOptions(swiftVersion: "5.5"))
     }
 
     func testAwaitNotHoistedOutOfClosure() {
-        let input = "let foo = { (await bar(), 5) }"
-        let output = "let foo = { await (bar(), 5) }"
+        let input = """
+        let foo = { (await bar(), 5) }
+        """
+        let output = """
+        let foo = { await (bar(), 5) }
+        """
         testFormatting(for: input, output, rule: .hoistAwait,
                        options: FormatOptions(swiftVersion: "5.5"))
     }
 
     func testAwaitNotHoistedOutOfClosureWithArguments() {
-        let input = "let foo = { bar in (await baz(bar), 5) }"
-        let output = "let foo = { bar in await (baz(bar), 5) }"
+        let input = """
+        let foo = { bar in (await baz(bar), 5) }
+        """
+        let output = """
+        let foo = { bar in await (baz(bar), 5) }
+        """
         testFormatting(for: input, output, rule: .hoistAwait,
                        options: FormatOptions(swiftVersion: "5.5"))
     }
 
     func testAwaitNotHoistedOutOfForCondition() {
-        let input = "for foo in bar(await baz()) {}"
-        let output = "for foo in await bar(baz()) {}"
+        let input = """
+        for foo in bar(await baz()) {}
+        """
+        let output = """
+        for foo in await bar(baz()) {}
+        """
         testFormatting(for: input, output, rule: .hoistAwait,
                        options: FormatOptions(swiftVersion: "5.5"))
     }
 
     func testAwaitNotHoistedOutOfForIndex() {
-        let input = "for await foo in asyncSequence() {}"
+        let input = """
+        for await foo in asyncSequence() {}
+        """
         testFormatting(for: input, rule: .hoistAwait,
                        options: FormatOptions(swiftVersion: "5.5"))
     }
 
     func testHoistAwaitWithInitAssignment() {
-        let input = "let variable = String(try await asyncFunction())"
-        let output = "let variable = await String(try asyncFunction())"
+        let input = """
+        let variable = String(try await asyncFunction())
+        """
+        let output = """
+        let variable = await String(try asyncFunction())
+        """
         testFormatting(for: input, output, rule: .hoistAwait,
                        options: FormatOptions(swiftVersion: "5.5"), exclude: [.hoistTry])
     }
 
     func testHoistAwaitWithAssignment() {
-        let input = "let variable = (try await asyncFunction())"
-        let output = "let variable = await (try asyncFunction())"
+        let input = """
+        let variable = (try await asyncFunction())
+        """
+        let output = """
+        let variable = await (try asyncFunction())
+        """
         testFormatting(for: input, output, rule: .hoistAwait,
                        options: FormatOptions(swiftVersion: "5.5"), exclude: [.hoistTry])
     }
@@ -168,66 +218,96 @@ class HoistAwaitTests: XCTestCase {
     }
 
     func testHoistAwaitOnlyOne() {
-        let input = "greet(name, await surname)"
-        let output = "await greet(name, surname)"
+        let input = """
+        greet(name, await surname)
+        """
+        let output = """
+        await greet(name, surname)
+        """
         testFormatting(for: input, output, rule: .hoistAwait,
                        options: FormatOptions(swiftVersion: "5.5"))
     }
 
     func testHoistAwaitRedundantAwait() {
-        let input = "await greet(await name, await surname)"
-        let output = "await greet(name, surname)"
+        let input = """
+        await greet(await name, await surname)
+        """
+        let output = """
+        await greet(name, surname)
+        """
         testFormatting(for: input, output, rule: .hoistAwait,
                        options: FormatOptions(swiftVersion: "5.5"))
     }
 
     func testHoistAwaitDoesNothing() {
-        let input = "await greet(name, surname)"
+        let input = """
+        await greet(name, surname)
+        """
         testFormatting(for: input, rule: .hoistAwait,
                        options: FormatOptions(swiftVersion: "5.5"))
     }
 
     func testNoHoistAwaitBeforeTry() {
-        let input = "try foo(await bar())"
-        let output = "try await foo(bar())"
+        let input = """
+        try foo(await bar())
+        """
+        let output = """
+        try await foo(bar())
+        """
         testFormatting(for: input, output, rule: .hoistAwait,
                        options: FormatOptions(swiftVersion: "5.5"))
     }
 
     func testNoHoistAwaitInCapturingFunction() {
-        let input = "foo(await bar)"
+        let input = """
+        foo(await bar)
+        """
         testFormatting(for: input, rule: .hoistAwait,
                        options: FormatOptions(asyncCapturing: ["foo"], swiftVersion: "5.5"))
     }
 
     func testNoHoistSecondArgumentAwaitInCapturingFunction() {
-        let input = "foo(bar, await baz)"
+        let input = """
+        foo(bar, await baz)
+        """
         testFormatting(for: input, rule: .hoistAwait,
                        options: FormatOptions(asyncCapturing: ["foo"], swiftVersion: "5.5"))
     }
 
     func testHoistAwaitAfterOrdinaryOperator() {
-        let input = "let foo = bar + (await baz)"
-        let output = "let foo = await bar + (baz)"
+        let input = """
+        let foo = bar + (await baz)
+        """
+        let output = """
+        let foo = await bar + (baz)
+        """
         testFormatting(for: input, output, rule: .hoistAwait,
                        options: FormatOptions(swiftVersion: "5.5"), exclude: [.redundantParens])
     }
 
     func testHoistAwaitAfterUnknownOperator() {
-        let input = "let foo = bar ??? (await baz)"
-        let output = "let foo = await bar ??? (baz)"
+        let input = """
+        let foo = bar ??? (await baz)
+        """
+        let output = """
+        let foo = await bar ??? (baz)
+        """
         testFormatting(for: input, output, rule: .hoistAwait,
                        options: FormatOptions(swiftVersion: "5.5"), exclude: [.redundantParens])
     }
 
     func testNoHoistAwaitAfterCapturingOperator() {
-        let input = "let foo = await bar ??? (await baz)"
+        let input = """
+        let foo = await bar ??? (await baz)
+        """
         testFormatting(for: input, rule: .hoistAwait,
                        options: FormatOptions(asyncCapturing: ["???"], swiftVersion: "5.5"))
     }
 
     func testNoHoistAwaitInMacroArgument() {
-        let input = "#expect (await monitor.isAvailable == false)"
+        let input = """
+        #expect (await monitor.isAvailable == false)
+        """
         testFormatting(for: input, rule: .hoistAwait,
                        options: FormatOptions(swiftVersion: "5.5"), exclude: [.spaceAroundParens])
     }

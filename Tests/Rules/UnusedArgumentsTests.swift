@@ -27,66 +27,105 @@ class UnusedArgumentsTests: XCTestCase {
     }
 
     func testUnusedUntypedClosureArguments() {
-        let input = "let foo = { bar, baz in\n    print(\"Hello \\(baz)\")\n}"
-        let output = "let foo = { _, baz in\n    print(\"Hello \\(baz)\")\n}"
+        let input = """
+        let foo = { bar, baz in
+            print(\"Hello \\(baz)\")
+        }
+        """
+        let output = """
+        let foo = { _, baz in
+            print(\"Hello \\(baz)\")
+        }
+        """
         testFormatting(for: input, output, rule: .unusedArguments)
     }
 
     func testNoRemoveClosureReturnType() {
-        let input = "let foo = { () -> Foo.Bar in baz() }"
+        let input = """
+        let foo = { () -> Foo.Bar in baz() }
+        """
         testFormatting(for: input, rule: .unusedArguments)
     }
 
     func testNoRemoveClosureThrows() {
-        let input = "let foo = { () throws in }"
+        let input = """
+        let foo = { () throws in }
+        """
         testFormatting(for: input, rule: .unusedArguments)
     }
 
     func testNoRemoveClosureTypedThrows() {
-        let input = "let foo = { () throws(Foo) in }"
+        let input = """
+        let foo = { () throws(Foo) in }
+        """
         testFormatting(for: input, rule: .unusedArguments)
     }
 
     func testNoRemoveClosureGenericReturnTypes() {
-        let input = "let foo = { () -> Promise<String> in bar }"
+        let input = """
+        let foo = { () -> Promise<String> in bar }
+        """
         testFormatting(for: input, rule: .unusedArguments)
     }
 
     func testNoRemoveClosureTupleReturnTypes() {
-        let input = "let foo = { () -> (Int, Int) in (5, 6) }"
+        let input = """
+        let foo = { () -> (Int, Int) in (5, 6) }
+        """
         testFormatting(for: input, rule: .unusedArguments)
     }
 
     func testNoRemoveClosureGenericArgumentTypes() {
-        let input = "let foo = { (_: Foo<Bar, Baz>) in }"
+        let input = """
+        let foo = { (_: Foo<Bar, Baz>) in }
+        """
         testFormatting(for: input, rule: .unusedArguments)
     }
 
     func testNoRemoveFunctionNameBeforeForLoop() {
-        let input = "{\n    func foo() -> Int {}\n    for a in b {}\n}"
+        let input = """
+        {
+            func foo() -> Int {}
+            for a in b {}
+        }
+        """
         testFormatting(for: input, rule: .unusedArguments)
     }
 
     func testClosureTypeInClosureArgumentsIsNotMangled() {
-        let input = "{ (foo: (Int) -> Void) in }"
-        let output = "{ (_: (Int) -> Void) in }"
+        let input = """
+        { (foo: (Int) -> Void) in }
+        """
+        let output = """
+        { (_: (Int) -> Void) in }
+        """
         testFormatting(for: input, output, rule: .unusedArguments)
     }
 
     func testUnusedUnnamedClosureArguments() {
-        let input = "{ (_ foo: Int, _ bar: Int) in }"
-        let output = "{ (_: Int, _: Int) in }"
+        let input = """
+        { (_ foo: Int, _ bar: Int) in }
+        """
+        let output = """
+        { (_: Int, _: Int) in }
+        """
         testFormatting(for: input, output, rule: .unusedArguments)
     }
 
     func testUnusedInoutClosureArgumentsNotMangled() {
-        let input = "{ (foo: inout Foo, bar: inout Bar) in }"
-        let output = "{ (_: inout Foo, _: inout Bar) in }"
+        let input = """
+        { (foo: inout Foo, bar: inout Bar) in }
+        """
+        let output = """
+        { (_: inout Foo, _: inout Bar) in }
+        """
         testFormatting(for: input, output, rule: .unusedArguments)
     }
 
     func testMalformedFunctionNotMisidentifiedAsClosure() {
-        let input = "func foo() { bar(5) {} in }"
+        let input = """
+        func foo() { bar(5) {} in }
+        """
         testFormatting(for: input, rule: .unusedArguments)
     }
 
@@ -210,24 +249,36 @@ class UnusedArgumentsTests: XCTestCase {
     }
 
     func testUnusedThrowingClosureArgument() {
-        let input = "foo = { bar throws in \"\" }"
-        let output = "foo = { _ throws in \"\" }"
+        let input = """
+        foo = { bar throws in \"\" }
+        """
+        let output = """
+        foo = { _ throws in \"\" }
+        """
         testFormatting(for: input, output, rule: .unusedArguments)
     }
 
     func testUnusedTypedThrowingClosureArgument() {
-        let input = "foo = { bar throws(Foo) in \"\" }"
-        let output = "foo = { _ throws(Foo) in \"\" }"
+        let input = """
+        foo = { bar throws(Foo) in \"\" }
+        """
+        let output = """
+        foo = { _ throws(Foo) in \"\" }
+        """
         testFormatting(for: input, output, rule: .unusedArguments)
     }
 
     func testUsedThrowingClosureArgument() {
-        let input = "let foo = { bar throws in bar + \"\" }"
+        let input = """
+        let foo = { bar throws in bar + \"\" }
+        """
         testFormatting(for: input, rule: .unusedArguments)
     }
 
     func testUsedTypedThrowingClosureArgument() {
-        let input = "let foo = { bar throws(Foo) in bar + \"\" }"
+        let input = """
+        let foo = { bar throws(Foo) in bar + \"\" }
+        """
         testFormatting(for: input, rule: .unusedArguments)
     }
 
@@ -283,7 +334,9 @@ class UnusedArgumentsTests: XCTestCase {
     }
 
     func testTrailingAsyncClosureArgumentAlreadyMarkedUnused() {
-        let input = "app.get { _ async in 5 }"
+        let input = """
+        app.get { _ async in 5 }
+        """
         testFormatting(for: input, rule: .unusedArguments)
     }
 
@@ -399,100 +452,188 @@ class UnusedArgumentsTests: XCTestCase {
     // functions
 
     func testMarkUnusedFunctionArgument() {
-        let input = "func foo(bar: Int, baz: String) {\n    print(\"Hello \\(baz)\")\n}"
-        let output = "func foo(bar _: Int, baz: String) {\n    print(\"Hello \\(baz)\")\n}"
+        let input = """
+        func foo(bar: Int, baz: String) {
+            print(\"Hello \\(baz)\")
+        }
+        """
+        let output = """
+        func foo(bar _: Int, baz: String) {
+            print(\"Hello \\(baz)\")
+        }
+        """
         testFormatting(for: input, output, rule: .unusedArguments)
     }
 
     func testMarkUnusedArgumentsInNonVoidFunction() {
-        let input = "func foo(bar: Int, baz: String) -> (A<B, C>, D & E, [F: G]) { return baz.quux }"
-        let output = "func foo(bar _: Int, baz: String) -> (A<B, C>, D & E, [F: G]) { return baz.quux }"
+        let input = """
+        func foo(bar: Int, baz: String) -> (A<B, C>, D & E, [F: G]) { return baz.quux }
+        """
+        let output = """
+        func foo(bar _: Int, baz: String) -> (A<B, C>, D & E, [F: G]) { return baz.quux }
+        """
         testFormatting(for: input, output, rule: .unusedArguments)
     }
 
     func testMarkUnusedArgumentsInThrowsFunction() {
-        let input = "func foo(bar: Int, baz: String) throws {\n    print(\"Hello \\(baz)\")\n}"
-        let output = "func foo(bar _: Int, baz: String) throws {\n    print(\"Hello \\(baz)\")\n}"
+        let input = """
+        func foo(bar: Int, baz: String) throws {
+            print(\"Hello \\(baz)\")
+        }
+        """
+        let output = """
+        func foo(bar _: Int, baz: String) throws {
+            print(\"Hello \\(baz)\")
+        }
+        """
         testFormatting(for: input, output, rule: .unusedArguments)
     }
 
     func testMarkUnusedArgumentsInOptionalReturningFunction() {
-        let input = "func foo(bar: Int, baz: String) -> String? {\n    return \"Hello \\(baz)\"\n}"
-        let output = "func foo(bar _: Int, baz: String) -> String? {\n    return \"Hello \\(baz)\"\n}"
+        let input = """
+        func foo(bar: Int, baz: String) -> String? {
+            return \"Hello \\(baz)\"
+        }
+        """
+        let output = """
+        func foo(bar _: Int, baz: String) -> String? {
+            return \"Hello \\(baz)\"
+        }
+        """
         testFormatting(for: input, output, rule: .unusedArguments)
     }
 
     func testNoMarkUnusedArgumentsInProtocolFunction() {
-        let input = "protocol Foo {\n    func foo(bar: Int) -> Int\n    var bar: Int { get }\n}"
+        let input = """
+        protocol Foo {
+            func foo(bar: Int) -> Int
+            var bar: Int { get }
+        }
+        """
         testFormatting(for: input, rule: .unusedArguments)
     }
 
     func testUnusedUnnamedFunctionArgument() {
-        let input = "func foo(_ foo: Int) {}"
-        let output = "func foo(_: Int) {}"
+        let input = """
+        func foo(_ foo: Int) {}
+        """
+        let output = """
+        func foo(_: Int) {}
+        """
         testFormatting(for: input, output, rule: .unusedArguments)
     }
 
     func testUnusedInoutFunctionArgumentIsNotMangled() {
-        let input = "func foo(_ foo: inout Foo) {}"
-        let output = "func foo(_: inout Foo) {}"
+        let input = """
+        func foo(_ foo: inout Foo) {}
+        """
+        let output = """
+        func foo(_: inout Foo) {}
+        """
         testFormatting(for: input, output, rule: .unusedArguments)
     }
 
     func testUnusedInternallyRenamedFunctionArgument() {
-        let input = "func foo(foo bar: Int) {}"
-        let output = "func foo(foo _: Int) {}"
+        let input = """
+        func foo(foo bar: Int) {}
+        """
+        let output = """
+        func foo(foo _: Int) {}
+        """
         testFormatting(for: input, output, rule: .unusedArguments)
     }
 
     func testNoMarkProtocolFunctionArgument() {
-        let input = "func foo(foo bar: Int)\nvar bar: Bool { get }"
+        let input = """
+        func foo(foo bar: Int)
+        var bar: Bool { get }
+        """
         testFormatting(for: input, rule: .unusedArguments)
     }
 
     func testMembersAreNotArguments() {
-        let input = "func foo(bar: Int, baz: String) {\n    print(\"Hello \\(bar.baz)\")\n}"
-        let output = "func foo(bar: Int, baz _: String) {\n    print(\"Hello \\(bar.baz)\")\n}"
+        let input = """
+        func foo(bar: Int, baz: String) {
+            print(\"Hello \\(bar.baz)\")
+        }
+        """
+        let output = """
+        func foo(bar: Int, baz _: String) {
+            print(\"Hello \\(bar.baz)\")
+        }
+        """
         testFormatting(for: input, output, rule: .unusedArguments)
     }
 
     func testLabelsAreNotArguments() {
-        let input = "func foo(bar: Int, baz: String) {\n    bar: while true { print(baz) }\n}"
-        let output = "func foo(bar _: Int, baz: String) {\n    bar: while true { print(baz) }\n}"
+        let input = """
+        func foo(bar: Int, baz: String) {
+            bar: while true { print(baz) }
+        }
+        """
+        let output = """
+        func foo(bar _: Int, baz: String) {
+            bar: while true { print(baz) }
+        }
+        """
         testFormatting(for: input, output, rule: .unusedArguments, exclude: [.wrapLoopBodies])
     }
 
     func testDictionaryLiteralsRuinEverything() {
-        let input = "func foo(bar: Int, baz: Int) {\n    let quux = [bar: 1, baz: 2]\n}"
+        let input = """
+        func foo(bar: Int, baz: Int) {
+            let quux = [bar: 1, baz: 2]
+        }
+        """
         testFormatting(for: input, rule: .unusedArguments)
     }
 
     func testOperatorArgumentsAreUnnamed() {
-        let input = "func == (lhs: Int, rhs: Int) { false }"
-        let output = "func == (_: Int, _: Int) { false }"
+        let input = """
+        func == (lhs: Int, rhs: Int) { false }
+        """
+        let output = """
+        func == (_: Int, _: Int) { false }
+        """
         testFormatting(for: input, output, rule: .unusedArguments)
     }
 
     func testUnusedtFailableInitArgumentsAreNotMangled() {
-        let input = "init?(foo: Bar) {}"
-        let output = "init?(foo _: Bar) {}"
+        let input = """
+        init?(foo: Bar) {}
+        """
+        let output = """
+        init?(foo _: Bar) {}
+        """
         testFormatting(for: input, output, rule: .unusedArguments)
     }
 
     func testTreatEscapedArgumentsAsUsed() {
-        let input = "func foo(default: Int) -> Int {\n    return `default`\n}"
+        let input = """
+        func foo(default: Int) -> Int {
+            return `default`
+        }
+        """
         testFormatting(for: input, rule: .unusedArguments)
     }
 
     func testPartiallyMarkedUnusedArguments() {
-        let input = "func foo(bar: Bar, baz _: Baz) {}"
-        let output = "func foo(bar _: Bar, baz _: Baz) {}"
+        let input = """
+        func foo(bar: Bar, baz _: Baz) {}
+        """
+        let output = """
+        func foo(bar _: Bar, baz _: Baz) {}
+        """
         testFormatting(for: input, output, rule: .unusedArguments)
     }
 
     func testPartiallyMarkedUnusedArguments2() {
-        let input = "func foo(bar _: Bar, baz: Baz) {}"
-        let output = "func foo(bar _: Bar, baz _: Baz) {}"
+        let input = """
+        func foo(bar _: Bar, baz: Baz) {}
+        """
+        let output = """
+        func foo(bar _: Bar, baz _: Baz) {}
+        """
         testFormatting(for: input, output, rule: .unusedArguments)
     }
 
@@ -992,7 +1133,11 @@ class UnusedArgumentsTests: XCTestCase {
     // functions (closure-only)
 
     func testNoMarkFunctionArgument() {
-        let input = "func foo(_ bar: Int, baz: String) {\n    print(\"Hello \\(baz)\")\n}"
+        let input = """
+        func foo(_ bar: Int, baz: String) {
+            print(\"Hello \\(baz)\")
+        }
+        """
         let options = FormatOptions(stripUnusedArguments: .closureOnly)
         testFormatting(for: input, rule: .unusedArguments, options: options)
     }
@@ -1010,14 +1155,20 @@ class UnusedArgumentsTests: XCTestCase {
     }
 
     func testRemoveUnnamedFunctionArgument() {
-        let input = "func foo(_ foo: Int) {}"
-        let output = "func foo(_: Int) {}"
+        let input = """
+        func foo(_ foo: Int) {}
+        """
+        let output = """
+        func foo(_: Int) {}
+        """
         let options = FormatOptions(stripUnusedArguments: .unnamedOnly)
         testFormatting(for: input, output, rule: .unusedArguments, options: options)
     }
 
     func testNoRemoveInternalFunctionArgumentName() {
-        let input = "func foo(foo bar: Int) {}"
+        let input = """
+        func foo(foo bar: Int) {}
+        """
         let options = FormatOptions(stripUnusedArguments: .unnamedOnly)
         testFormatting(for: input, rule: .unusedArguments, options: options)
     }
@@ -1047,20 +1198,44 @@ class UnusedArgumentsTests: XCTestCase {
     // subscript
 
     func testMarkUnusedSubscriptArgument() {
-        let input = "subscript(foo: Int, baz: String) -> String {\n    return get(baz)\n}"
-        let output = "subscript(_: Int, baz: String) -> String {\n    return get(baz)\n}"
+        let input = """
+        subscript(foo: Int, baz: String) -> String {
+            return get(baz)
+        }
+        """
+        let output = """
+        subscript(_: Int, baz: String) -> String {
+            return get(baz)
+        }
+        """
         testFormatting(for: input, output, rule: .unusedArguments)
     }
 
     func testMarkUnusedUnnamedSubscriptArgument() {
-        let input = "subscript(_ foo: Int, baz: String) -> String {\n    return get(baz)\n}"
-        let output = "subscript(_: Int, baz: String) -> String {\n    return get(baz)\n}"
+        let input = """
+        subscript(_ foo: Int, baz: String) -> String {
+            return get(baz)
+        }
+        """
+        let output = """
+        subscript(_: Int, baz: String) -> String {
+            return get(baz)
+        }
+        """
         testFormatting(for: input, output, rule: .unusedArguments)
     }
 
     func testMarkUnusedNamedSubscriptArgument() {
-        let input = "subscript(foo foo: Int, baz: String) -> String {\n    return get(baz)\n}"
-        let output = "subscript(foo _: Int, baz: String) -> String {\n    return get(baz)\n}"
+        let input = """
+        subscript(foo foo: Int, baz: String) -> String {
+            return get(baz)
+        }
+        """
+        let output = """
+        subscript(foo _: Int, baz: String) -> String {
+            return get(baz)
+        }
+        """
         testFormatting(for: input, output, rule: .unusedArguments)
     }
 

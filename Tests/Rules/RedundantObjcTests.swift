@@ -11,36 +11,60 @@ import XCTest
 
 class RedundantObjcTests: XCTestCase {
     func testRedundantObjcRemovedFromBeforeOutlet() {
-        let input = "@objc @IBOutlet var label: UILabel!"
-        let output = "@IBOutlet var label: UILabel!"
+        let input = """
+        @objc @IBOutlet var label: UILabel!
+        """
+        let output = """
+        @IBOutlet var label: UILabel!
+        """
         testFormatting(for: input, output, rule: .redundantObjc)
     }
 
     func testRedundantObjcRemovedFromAfterOutlet() {
-        let input = "@IBOutlet @objc var label: UILabel!"
-        let output = "@IBOutlet var label: UILabel!"
+        let input = """
+        @IBOutlet @objc var label: UILabel!
+        """
+        let output = """
+        @IBOutlet var label: UILabel!
+        """
         testFormatting(for: input, output, rule: .redundantObjc)
     }
 
     func testRedundantObjcRemovedFromLineBeforeOutlet() {
-        let input = "@objc\n@IBOutlet var label: UILabel!"
-        let output = "\n@IBOutlet var label: UILabel!"
+        let input = """
+        @objc
+        @IBOutlet var label: UILabel!
+        """
+        let output = """
+
+        @IBOutlet var label: UILabel!
+        """
         testFormatting(for: input, output, rule: .redundantObjc)
     }
 
     func testRedundantObjcCommentNotRemoved() {
-        let input = "@objc /// an outlet\n@IBOutlet var label: UILabel!"
-        let output = "/// an outlet\n@IBOutlet var label: UILabel!"
+        let input = """
+        @objc /// an outlet
+        @IBOutlet var label: UILabel!
+        """
+        let output = """
+        /// an outlet
+        @IBOutlet var label: UILabel!
+        """
         testFormatting(for: input, output, rule: .redundantObjc)
     }
 
     func testObjcNotRemovedFromNSCopying() {
-        let input = "@objc @NSCopying var foo: String!"
+        let input = """
+        @objc @NSCopying var foo: String!
+        """
         testFormatting(for: input, rule: .redundantObjc)
     }
 
     func testRenamedObjcNotRemoved() {
-        let input = "@IBOutlet @objc(uiLabel) var label: UILabel!"
+        let input = """
+        @IBOutlet @objc(uiLabel) var label: UILabel!
+        """
         testFormatting(for: input, rule: .redundantObjc)
     }
 

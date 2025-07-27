@@ -11,8 +11,17 @@ import XCTest
 
 class BracesTests: XCTestCase {
     func testAllmanBracesAreConverted() {
-        let input = "func foo()\n{\n    statement\n}"
-        let output = "func foo() {\n    statement\n}"
+        let input = """
+        func foo()
+        {
+            statement
+        }
+        """
+        let output = """
+        func foo() {
+            statement
+        }
+        """
         testFormatting(for: input, output, rule: .braces)
     }
 
@@ -37,12 +46,22 @@ class BracesTests: XCTestCase {
     }
 
     func testKnRBracesAfterComment() {
-        let input = "func foo() // comment\n{\n    statement\n}"
+        let input = """
+        func foo() // comment
+        {
+            statement
+        }
+        """
         testFormatting(for: input, rule: .braces)
     }
 
     func testKnRBracesAfterMultilineComment() {
-        let input = "func foo() /* comment/ncomment */\n{\n    statement\n}"
+        let input = """
+        func foo() /* comment/ncomment */
+        {
+            statement
+        }
+        """
         testFormatting(for: input, rule: .braces)
     }
 
@@ -59,12 +78,17 @@ class BracesTests: XCTestCase {
     }
 
     func testKnRExtraSpaceNotAddedBeforeBrace() {
-        let input = "foo({ bar })"
+        let input = """
+        foo({ bar })
+        """
         testFormatting(for: input, rule: .braces, exclude: [.trailingClosures])
     }
 
     func testKnRLinebreakNotRemovedBeforeInlineBlockNot() {
-        let input = "func foo() -> Bool\n{ return false }"
+        let input = """
+        func foo() -> Bool
+        { return false }
+        """
         testFormatting(for: input, rule: .braces)
     }
 
@@ -144,13 +168,22 @@ class BracesTests: XCTestCase {
     }
 
     func testKnRClosingBraceWrapped() {
-        let input = "func foo() {\n    print(bar) }"
-        let output = "func foo() {\n    print(bar)\n}"
+        let input = """
+        func foo() {
+            print(bar) }
+        """
+        let output = """
+        func foo() {
+            print(bar)
+        }
+        """
         testFormatting(for: input, output, rule: .braces)
     }
 
     func testKnRInlineBracesNotWrapped() {
-        let input = "func foo() { print(bar) }"
+        let input = """
+        func foo() { print(bar) }
+        """
         testFormatting(for: input, rule: .braces)
     }
 
@@ -323,87 +356,204 @@ class BracesTests: XCTestCase {
     // allman style
 
     func testKnRBracesAreConverted() {
-        let input = "func foo() {\n    statement\n}"
-        let output = "func foo()\n{\n    statement\n}"
+        let input = """
+        func foo() {
+            statement
+        }
+        """
+        let output = """
+        func foo()
+        {
+            statement
+        }
+        """
         let options = FormatOptions(allmanBraces: true)
         testFormatting(for: input, output, rule: .braces, options: options)
     }
 
     func testAllmanBlankLineAfterBraceRemoved() {
-        let input = "func foo() {\n    \n    statement\n}"
-        let output = "func foo()\n{\n    statement\n}"
+        let input = """
+        func foo() {
+
+            statement
+        }
+        """
+        let output = """
+        func foo()
+        {
+            statement
+        }
+        """
         let options = FormatOptions(allmanBraces: true)
         testFormatting(for: input, output, rule: .braces, options: options)
     }
 
     func testAllmanBraceInsideParensNotConverted() {
-        let input = "foo({\n    bar\n})"
+        let input = """
+        foo({
+            bar
+        })
+        """
         let options = FormatOptions(allmanBraces: true)
         testFormatting(for: input, rule: .braces, options: options,
                        exclude: [.trailingClosures])
     }
 
     func testAllmanBraceDoClauseIndent() {
-        let input = "do {\n    foo\n}"
-        let output = "do\n{\n    foo\n}"
+        let input = """
+        do {
+            foo
+        }
+        """
+        let output = """
+        do
+        {
+            foo
+        }
+        """
         let options = FormatOptions(allmanBraces: true)
         testFormatting(for: input, output, rule: .braces, options: options)
     }
 
     func testAllmanBraceCatchClauseIndent() {
-        let input = "do {\n    try foo\n}\ncatch {\n}"
-        let output = "do\n{\n    try foo\n}\ncatch\n{\n}"
+        let input = """
+        do {
+            try foo
+        }
+        catch {
+        }
+        """
+        let output = """
+        do
+        {
+            try foo
+        }
+        catch
+        {
+        }
+        """
         let options = FormatOptions(allmanBraces: true)
         testFormatting(for: input, output, rule: .braces, options: options,
                        exclude: [.emptyBraces])
     }
 
     func testAllmanBraceDoThrowsCatchClauseIndent() {
-        let input = "do throws(Foo) {\n    try foo\n}\ncatch {\n}"
-        let output = "do throws(Foo)\n{\n    try foo\n}\ncatch\n{\n}"
+        let input = """
+        do throws(Foo) {
+            try foo
+        }
+        catch {
+        }
+        """
+        let output = """
+        do throws(Foo)
+        {
+            try foo
+        }
+        catch
+        {
+        }
+        """
         let options = FormatOptions(allmanBraces: true)
         testFormatting(for: input, output, rule: .braces, options: options,
                        exclude: [.emptyBraces])
     }
 
     func testAllmanBraceRepeatWhileIndent() {
-        let input = "repeat {\n    foo\n}\nwhile x"
-        let output = "repeat\n{\n    foo\n}\nwhile x"
+        let input = """
+        repeat {
+            foo
+        }
+        while x
+        """
+        let output = """
+        repeat
+        {
+            foo
+        }
+        while x
+        """
         let options = FormatOptions(allmanBraces: true)
         testFormatting(for: input, output, rule: .braces, options: options)
     }
 
     func testAllmanBraceOptionalComputedPropertyIndent() {
-        let input = "var foo: Int? {\n    return 5\n}"
-        let output = "var foo: Int?\n{\n    return 5\n}"
+        let input = """
+        var foo: Int? {
+            return 5
+        }
+        """
+        let output = """
+        var foo: Int?
+        {
+            return 5
+        }
+        """
         let options = FormatOptions(allmanBraces: true)
         testFormatting(for: input, output, rule: .braces, options: options)
     }
 
     func testAllmanBraceThrowsFunctionIndent() {
-        let input = "func foo() throws {\n    bar\n}"
-        let output = "func foo() throws\n{\n    bar\n}"
+        let input = """
+        func foo() throws {
+            bar
+        }
+        """
+        let output = """
+        func foo() throws
+        {
+            bar
+        }
+        """
         let options = FormatOptions(allmanBraces: true)
         testFormatting(for: input, output, rule: .braces, options: options)
     }
 
     func testAllmanBraceAsyncFunctionIndent() {
-        let input = "func foo() async {\n    bar\n}"
-        let output = "func foo() async\n{\n    bar\n}"
+        let input = """
+        func foo() async {
+            bar
+        }
+        """
+        let output = """
+        func foo() async
+        {
+            bar
+        }
+        """
         let options = FormatOptions(allmanBraces: true)
         testFormatting(for: input, output, rule: .braces, options: options)
     }
 
     func testAllmanBraceAfterCommentIndent() {
-        let input = "func foo() { // foo\n\n    bar\n}"
-        let output = "func foo()\n{ // foo\n    bar\n}"
+        let input = """
+        func foo() { // foo
+
+            bar
+        }
+        """
+        let output = """
+        func foo()
+        { // foo
+            bar
+        }
+        """
         let options = FormatOptions(allmanBraces: true)
         testFormatting(for: input, output, rule: .braces, options: options)
     }
 
     func testAllmanBraceAfterSwitch() {
-        let input = "switch foo {\ncase bar: break\n}"
-        let output = "switch foo\n{\ncase bar: break\n}"
+        let input = """
+        switch foo {
+        case bar: break
+        }
+        """
+        let output = """
+        switch foo
+        {
+        case bar: break
+        }
+        """
         let options = FormatOptions(allmanBraces: true)
         testFormatting(for: input, output, rule: .braces, options: options)
     }

@@ -521,7 +521,9 @@ class OpaqueGenericParametersTests: XCTestCase {
     // MARK: - genericExtensions
 
     func testGenericExtensionNotModifiedBeforeSwift5_7() {
-        let input = "extension Array where Element == Foo {}"
+        let input = """
+        extension Array where Element == Foo {}
+        """
 
         let options = FormatOptions(swiftVersion: "5.6")
         testFormatting(for: input, rule: .opaqueGenericParameters, options: options, exclude: [.emptyExtensions])
@@ -685,8 +687,12 @@ class OpaqueGenericParametersTests: XCTestCase {
     }
 
     func testOpaqueGenericParametersDoesntleaveTrailingComma() {
-        let input = "func f<T, U>(x: U) -> T where T: A, U: B {}"
-        let output = "func f<T>(x: some B) -> T where T: A {}"
+        let input = """
+        func f<T, U>(x: U) -> T where T: A, U: B {}
+        """
+        let output = """
+        func f<T>(x: some B) -> T where T: A {}
+        """
         let options = FormatOptions(swiftVersion: "5.7")
         testFormatting(for: input, output, rule: .opaqueGenericParameters,
                        options: options, exclude: [.unusedArguments])

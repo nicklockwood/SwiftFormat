@@ -152,7 +152,11 @@ func printRuleInfo(for name: String, as type: CLI.OutputType) throws {
         return
     }
     if !rule.options.isEmpty {
-        print("\nOptions:\n", as: type)
+        print("""
+        
+        Options:
+        
+        """, as: type)
         print(rule.options.compactMap {
             guard let descriptor = Descriptors.byName[$0], !descriptor.isDeprecated else {
                 return nil
@@ -166,12 +170,22 @@ func printRuleInfo(for name: String, as type: CLI.OutputType) throws {
     }
     if var examples = rule.examples {
         examples = examples
-            .replacingOccurrences(of: "```diff\n", with: "")
-            .replacingOccurrences(of: "```\n", with: "")
+            .replacingOccurrences(of: """
+            ```diff
+            
+            """, with: "")
+            .replacingOccurrences(of: """
+            ```
+            
+            """, with: "")
         if examples.hasSuffix("```") {
             examples = String(examples.dropLast(3))
         }
-        print("\nExamples:\n", as: type)
+        print("""
+        
+        Examples:
+        
+        """, as: type)
         print(examples, as: type)
     }
     print("")

@@ -115,14 +115,28 @@ class FormatterTests: XCTestCase {
     // MARK: enable/disable directives
 
     func testDisableRule() {
-        let input = "//swiftformat:disable spaceAroundOperators\nlet foo : Int=5;"
-        let output = "// swiftformat:disable spaceAroundOperators\nlet foo : Int=5\n"
+        let input = """
+        //swiftformat:disable spaceAroundOperators
+        let foo : Int=5;
+        """
+        let output = """
+        // swiftformat:disable spaceAroundOperators
+        let foo : Int=5
+        
+        """
         XCTAssertEqual(try format(input, rules: FormatRules.default).output, output)
     }
 
     func testDirectiveInMiddleOfComment() {
-        let input = "//fixme: swiftformat:disable spaceAroundOperators - bug\nlet foo : Int=5;"
-        let output = "// FIXME: swiftformat:disable spaceAroundOperators - bug\nlet foo : Int=5\n"
+        let input = """
+        //fixme: swiftformat:disable spaceAroundOperators - bug
+        let foo : Int=5;
+        """
+        let output = """
+        // FIXME: swiftformat:disable spaceAroundOperators - bug
+        let foo : Int=5
+        
+        """
         XCTAssertEqual(try format(input, rules: FormatRules.default).output, output)
     }
 
@@ -163,7 +177,10 @@ class FormatterTests: XCTestCase {
     }
 
     func testDisableAllRules() {
-        let input = "//swiftformat:disable all\nlet foo : Int=5;"
+        let input = """
+        //swiftformat:disable all
+        let foo : Int=5;
+        """
         XCTAssertEqual(try format(input, rules: FormatRules.default).output, input)
     }
 
@@ -204,38 +221,84 @@ class FormatterTests: XCTestCase {
     }
 
     func testDisableAllRulesAndReEnableOneRule() {
-        let input = "//swiftformat:disable all\nlet foo : Int=5;\n//swiftformat:enable linebreakAtEndOfFile"
-        let output = "//swiftformat:disable all\nlet foo : Int=5;\n//swiftformat:enable linebreakAtEndOfFile\n"
+        let input = """
+        //swiftformat:disable all
+        let foo : Int=5;
+        //swiftformat:enable linebreakAtEndOfFile
+        """
+        let output = """
+        //swiftformat:disable all
+        let foo : Int=5;
+        //swiftformat:enable linebreakAtEndOfFile
+        
+        """
         XCTAssertEqual(try format(input, rules: FormatRules.default).output, output)
     }
 
     func testDisableNext() {
-        let input = "//swiftformat:disable:next all\nlet foo : Int=5;\nlet foo : Int=5;"
-        let output = "// swiftformat:disable:next all\nlet foo : Int=5;\nlet foo: Int = 5\n"
+        let input = """
+        //swiftformat:disable:next all
+        let foo : Int=5;
+        let foo : Int=5;
+        """
+        let output = """
+        // swiftformat:disable:next all
+        let foo : Int=5;
+        let foo: Int = 5
+        
+        """
         XCTAssertEqual(try format(input, rules: FormatRules.default).output, output)
     }
 
     func testEnableNext() {
-        let input = "//swiftformat:disable all\n//swiftformat:enable:next all\nlet foo : Int=5;\nlet foo : Int=5;"
-        let output = "//swiftformat:disable all\n//swiftformat:enable:next all\nlet foo: Int = 5\nlet foo : Int=5;"
+        let input = """
+        //swiftformat:disable all
+        //swiftformat:enable:next all
+        let foo : Int=5;
+        let foo : Int=5;
+        """
+        let output = """
+        //swiftformat:disable all
+        //swiftformat:enable:next all
+        let foo: Int = 5
+        let foo : Int=5;
+        """
         XCTAssertEqual(try format(input, rules: FormatRules.default).output, output)
     }
 
     func testDisableThis() {
-        let input = "let foo : Int=5; // swiftformat:disable:this all\nlet foo : Int=5;"
-        let output = "let foo : Int=5; // swiftformat:disable:this all\nlet foo: Int = 5\n"
+        let input = """
+        let foo : Int=5; // swiftformat:disable:this all
+        let foo : Int=5;
+        """
+        let output = """
+        let foo : Int=5; // swiftformat:disable:this all
+        let foo: Int = 5
+        
+        """
         XCTAssertEqual(try format(input, rules: FormatRules.default).output, output)
     }
 
     func testEnableThis() {
-        let input = "//swiftformat:disable all\nlet foo : Int=5; //swiftformat:enable:this all\nlet foo : Int=5;"
-        let output = "//swiftformat:disable all\nlet foo: Int = 5 // swiftformat:enable:this all\nlet foo : Int=5;"
+        let input = """
+        //swiftformat:disable all
+        let foo : Int=5; //swiftformat:enable:this all
+        let foo : Int=5;
+        """
+        let output = """
+        //swiftformat:disable all
+        let foo: Int = 5 // swiftformat:enable:this all
+        let foo : Int=5;
+        """
         XCTAssertEqual(try format(input, rules: FormatRules.default).output, output)
     }
 
     func testDisableRuleWithMultilineComment() {
         let input = "/*swiftformat:disable spaceAroundOperators*/let foo : Int=5;"
-        let output = "/* swiftformat:disable spaceAroundOperators */ let foo : Int=5\n"
+        let output = """
+        /* swiftformat:disable spaceAroundOperators */ let foo : Int=5
+        
+        """
         XCTAssertEqual(try format(input, rules: FormatRules.default).output, output)
     }
 
@@ -257,14 +320,33 @@ class FormatterTests: XCTestCase {
     }
 
     func testDisableNextWithMultilineComment() {
-        let input = "/*swiftformat:disable:next all*/\nlet foo : Int=5;\nlet foo : Int=5;"
-        let output = "/* swiftformat:disable:next all */\nlet foo : Int=5;\nlet foo: Int = 5\n"
+        let input = """
+        /*swiftformat:disable:next all*/
+        let foo : Int=5;
+        let foo : Int=5;
+        """
+        let output = """
+        /* swiftformat:disable:next all */
+        let foo : Int=5;
+        let foo: Int = 5
+        
+        """
         XCTAssertEqual(try format(input, rules: FormatRules.default).output, output)
     }
 
     func testEnableNextWithMultilineComment() {
-        let input = "//swiftformat:disable all\n/*swiftformat:enable:next all*/\nlet foo : Int=5;\nlet foo : Int=5;"
-        let output = "//swiftformat:disable all\n/*swiftformat:enable:next all*/\nlet foo: Int = 5\nlet foo : Int=5;"
+        let input = """
+        //swiftformat:disable all
+        /*swiftformat:enable:next all*/
+        let foo : Int=5;
+        let foo : Int=5;
+        """
+        let output = """
+        //swiftformat:disable all
+        /*swiftformat:enable:next all*/
+        let foo: Int = 5
+        let foo : Int=5;
+        """
         XCTAssertEqual(try format(input, rules: FormatRules.default).output, output)
     }
 
@@ -570,7 +652,10 @@ class FormatterTests: XCTestCase {
     // MARK: change tracking
 
     func testTrackChangesInFirstLine() {
-        let formatter = Formatter(tokenize("foo bar\nbaz"), trackChanges: true)
+        let formatter = Formatter(tokenize("""
+        foo bar
+        baz
+        """), trackChanges: true)
         let tokens = formatter.tokens
         formatter.removeLastToken()
         XCTAssertNotEqual(formatter.tokens, tokens)
@@ -579,7 +664,11 @@ class FormatterTests: XCTestCase {
     }
 
     func testTrackChangesInSecondLine() {
-        let formatter = Formatter(tokenize("foo\nbar\nbaz"), trackChanges: true)
+        let formatter = Formatter(tokenize("""
+        foo
+        bar
+        baz
+        """), trackChanges: true)
         let tokens = formatter.tokens
         formatter.removeToken(at: formatter.tokens.firstIndex(of: .identifier("bar"))!)
         XCTAssertNotEqual(formatter.tokens, tokens)
@@ -588,7 +677,11 @@ class FormatterTests: XCTestCase {
     }
 
     func testTrackChangesInLastLine() {
-        let formatter = Formatter(tokenize("foo\nbar\nbaz"), trackChanges: true)
+        let formatter = Formatter(tokenize("""
+        foo
+        bar
+        baz
+        """), trackChanges: true)
         let tokens = formatter.tokens
         formatter.removeLastToken()
         XCTAssertNotEqual(formatter.tokens, tokens)
@@ -614,7 +707,12 @@ class FormatterTests: XCTestCase {
     }
 
     func testTrackRemovalOfBlankLineFollowedByBlankLine() {
-        let formatter = Formatter(tokenize("foo\n\n\n"), trackChanges: true)
+        let formatter = Formatter(tokenize("""
+        foo
+        
+        
+        
+        """), trackChanges: true)
         let tokens = formatter.tokens
         formatter.removeToken(at: 2)
         XCTAssertNotEqual(formatter.tokens, tokens)
@@ -623,7 +721,12 @@ class FormatterTests: XCTestCase {
     }
 
     func testTrackRemovalOfBlankLineAfterBlankLine() {
-        let formatter = Formatter(tokenize("foo\n\n\n"), trackChanges: true)
+        let formatter = Formatter(tokenize("""
+        foo
+        
+        
+        
+        """), trackChanges: true)
         let tokens = formatter.tokens
         formatter.removeLastToken()
         XCTAssertNotEqual(formatter.tokens, tokens)
@@ -632,17 +735,33 @@ class FormatterTests: XCTestCase {
     }
 
     func testMoveTokensToEarlierPositionTrackedAsMoves() {
-        let formatter = Formatter(tokenize("foo()\nbar()\n"), trackChanges: true)
+        let formatter = Formatter(tokenize("""
+        foo()
+        bar()
+        
+        """), trackChanges: true)
         formatter.moveTokens(in: 4 ... 7, to: 0)
-        XCTAssertEqual(sourceCode(for: formatter.tokens), "bar()\nfoo()\n")
+        XCTAssertEqual(sourceCode(for: formatter.tokens), """
+        bar()
+        foo()
+        
+        """)
         XCTAssert(!formatter.changes.isEmpty)
         XCTAssert(formatter.changes.allSatisfy(\.isMove))
     }
 
     func testMoveTokensToFollowingPositionTrackedAsMoves() {
-        let formatter = Formatter(tokenize("foo()\nbar()\n"), trackChanges: true)
+        let formatter = Formatter(tokenize("""
+        foo()
+        bar()
+        
+        """), trackChanges: true)
         formatter.moveTokens(in: 0 ... 3, to: 8)
-        XCTAssertEqual(sourceCode(for: formatter.tokens), "bar()\nfoo()\n")
+        XCTAssertEqual(sourceCode(for: formatter.tokens), """
+        bar()
+        foo()
+        
+        """)
         XCTAssert(!formatter.changes.isEmpty)
         XCTAssert(formatter.changes.allSatisfy(\.isMove))
     }

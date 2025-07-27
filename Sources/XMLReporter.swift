@@ -48,11 +48,17 @@ final class XMLReporter: Reporter {
     func write() throws -> Data? {
         let fileChanges = Dictionary(grouping: changes, by: { $0.filePath ?? "<nopath>" })
         let report = [
-            "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<checkstyle version=\"4.3\">",
+            """
+            <?xml version=\"1.0\" encoding=\"utf-8\"?>
+            <checkstyle version=\"4.3\">
+            """,
             fileChanges
                 .sorted(by: { $0.key < $1.key })
                 .map(generateChangeForFile).joined(),
-            "\n</checkstyle>",
+            """
+            
+            </checkstyle>
+            """,
         ].joined()
 
         return Data(report.utf8)
@@ -62,7 +68,13 @@ final class XMLReporter: Reporter {
 private extension XMLReporter {
     func generateChangeForFile(_ file: String, fileChanges: [Formatter.Change]) -> String {
         [
-            "\n\t<file name=\"", file, "\">\n",
+            """
+            
+            \t<file name=\"
+            """, file, """
+            \">
+            
+            """,
             fileChanges.map(generateChange).joined(),
             "\t</file>",
         ].joined()
@@ -79,7 +91,10 @@ private extension XMLReporter {
             "column=\"\(col)\" ",
             "severity=\"", severity, "\" ",
             "message=\"", reason, "\" ",
-            "source=\"\(rule)\"/>\n",
+            """
+            source=\"\(rule)\"/>
+            
+            """,
         ].joined()
     }
 }

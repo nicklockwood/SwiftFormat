@@ -207,7 +207,10 @@ class FileHeaderTests: XCTestCase {
         /// func
         func foo() {}
         """
-        let options = FormatOptions(fileHeader: "// Hello\n// World")
+        let options = FormatOptions(fileHeader: """
+        // Hello
+        // World
+        """)
         testFormatting(for: input, output, rule: .fileHeader, options: options)
     }
 
@@ -231,7 +234,10 @@ class FileHeaderTests: XCTestCase {
         /// func
         func foo() {}
         """
-        let options = FormatOptions(fileHeader: "/*--- Hello ---*/\n/*--- World ---*/")
+        let options = FormatOptions(fileHeader: """
+        /*--- Hello ---*/
+        /*--- World ---*/
+        """)
         testFormatting(for: input, output, rule: .fileHeader, options: options)
     }
 
@@ -297,7 +303,11 @@ class FileHeaderTests: XCTestCase {
 
         class Foo {}
         """
-        let options = FormatOptions(fileHeader: "// Copyright (c) 2010-2024 Foobar\n//\n// SPDX-License-Identifier: EPL-2.0")
+        let options = FormatOptions(fileHeader: """
+        // Copyright (c) 2010-2024 Foobar
+        //
+        // SPDX-License-Identifier: EPL-2.0
+        """)
         testFormatting(for: input, output, rule: .fileHeader, options: options)
     }
 
@@ -316,7 +326,11 @@ class FileHeaderTests: XCTestCase {
 
         class Foo {}
         """
-        let options = FormatOptions(fileHeader: "// Copyright (c) 2010-2024 Foobar\n//\n// swiftformat:disable all")
+        let options = FormatOptions(fileHeader: """
+        // Copyright (c) 2010-2024 Foobar
+        //
+        // swiftformat:disable all
+        """)
         testFormatting(for: input, output, rule: .fileHeader, options: options)
     }
 
@@ -327,7 +341,11 @@ class FileHeaderTests: XCTestCase {
         let output: String = {
             let formatter = DateFormatter()
             formatter.dateFormat = "yyyy"
-            return "// Copyright © \(formatter.string(from: Date()))\n\nlet foo = bar"
+            return """
+            // Copyright © \(formatter.string(from: Date()))
+            
+            let foo = bar
+            """
         }()
         let options = FormatOptions(fileHeader: "// Copyright © {year}")
         testFormatting(for: input, output, rule: .fileHeader, options: options)
@@ -341,7 +359,11 @@ class FileHeaderTests: XCTestCase {
         let output: String = {
             let formatter = DateFormatter()
             formatter.dateFormat = "yyyy"
-            return "// Copyright © \(formatter.string(from: date))\n\nlet foo = bar"
+            return """
+            // Copyright © \(formatter.string(from: date))
+            
+            let foo = bar
+            """
         }()
         let fileInfo = FileInfo(creationDate: date)
         let options = FormatOptions(fileHeader: "// Copyright © {created.year}", fileInfo: fileInfo)
@@ -399,7 +421,10 @@ class FileHeaderTests: XCTestCase {
         let foo = bar
         """
         let fileInfo = FileInfo(replacements: [.authorName: .constant(name)])
-        let options = FormatOptions(fileHeader: "// Copyright © {author.name}\n// Created by {author.name}", fileInfo: fileInfo)
+        let options = FormatOptions(fileHeader: """
+        // Copyright © {author.name}
+        // Created by {author.name}
+        """, fileInfo: fileInfo)
         testFormatting(for: input, output, rule: .fileHeader, options: options)
     }
 
@@ -412,7 +437,11 @@ class FileHeaderTests: XCTestCase {
             let formatter = DateFormatter()
             formatter.dateStyle = .short
             formatter.timeStyle = .none
-            return "// Created by Nick Lockwood on \(formatter.string(from: date)).\n\nlet foo = bar"
+            return """
+            // Created by Nick Lockwood on \(formatter.string(from: date)).
+            
+            let foo = bar
+            """
         }()
         let fileInfo = FileInfo(creationDate: date)
         let options = FormatOptions(fileHeader: "// Created by Nick Lockwood on {created}.", fileInfo: fileInfo)
@@ -514,7 +543,10 @@ class FileHeaderTests: XCTestCase {
 
         class Foo {}
         """
-        let options = FormatOptions(fileHeader: "// Header line1\n// Header line2")
+        let options = FormatOptions(fileHeader: """
+        // Header line1
+        // Header line2
+        """)
         testFormatting(for: input, output, rule: .fileHeader, options: options)
     }
 
@@ -526,7 +558,11 @@ class FileHeaderTests: XCTestCase {
 
         // Something else...
         """
-        let options = FormatOptions(fileHeader: "//\n// Header\n//")
+        let options = FormatOptions(fileHeader: """
+        //
+        // Header
+        //
+        """)
         testFormatting(for: input, rule: .fileHeader, options: options)
     }
 
@@ -540,7 +576,11 @@ class FileHeaderTests: XCTestCase {
         // Something else...
         //
         """
-        let options = FormatOptions(fileHeader: "//\n// Header\n//")
+        let options = FormatOptions(fileHeader: """
+        //
+        // Header
+        //
+        """)
         testFormatting(for: input, rule: .fileHeader, options: options)
     }
 
@@ -576,7 +616,10 @@ class FileHeaderTests: XCTestCase {
 
         let foo = 5
         """
-        let options = FormatOptions(fileHeader: "// Header line1\n// Header line2")
+        let options = FormatOptions(fileHeader: """
+        // Header line1
+        // Header line2
+        """)
         testFormatting(for: input, output, rule: .fileHeader, options: options)
     }
 

@@ -104,7 +104,12 @@ class InferenceTests: XCTestCase {
     // MARK: linebreak
 
     func testInferLinebreaks() {
-        let input = "foo\nbar\r\nbaz\rquux\r\n"
+        let input = """
+        foo
+        bar\r
+        baz\rquux\r
+        
+        """
         let output = "\r\n"
         let options = inferFormatOptions(from: tokenize(input))
         XCTAssertEqual(options.linebreak, output)
@@ -119,13 +124,19 @@ class InferenceTests: XCTestCase {
     }
 
     func testInferNoAllowInlineSemicolons() {
-        let input = "let foo = 5\nlet bar = 6"
+        let input = """
+        let foo = 5
+        let bar = 6
+        """
         let options = inferFormatOptions(from: tokenize(input))
         XCTAssertEqual(options.semicolons, .never)
     }
 
     func testNoInferAllowInlineSemicolonsFromTerminatingSemicolon() {
-        let input = "let foo = 5;\nlet bar = 6"
+        let input = """
+        let foo = 5;
+        let bar = 6
+        """
         let options = inferFormatOptions(from: tokenize(input))
         XCTAssertEqual(options.semicolons, .never)
     }
@@ -147,13 +158,27 @@ class InferenceTests: XCTestCase {
     // MARK: trailingCommas
 
     func testInferTrailingCommas() {
-        let input = "let foo = [\nbar,\n]\n let baz = [\nquux\n]"
+        let input = """
+        let foo = [
+        bar,
+        ]
+         let baz = [
+        quux
+        ]
+        """
         let options = inferFormatOptions(from: tokenize(input))
         XCTAssertEqual(options.trailingCommas, .always)
     }
 
     func testInferNoTrailingCommas() {
-        let input = "let foo = [\nbar\n]\n let baz = [\nquux\n]"
+        let input = """
+        let foo = [
+        bar
+        ]
+         let baz = [
+        quux
+        ]
+        """
         let options = inferFormatOptions(from: tokenize(input))
         XCTAssertEqual(options.trailingCommas, .never)
     }
@@ -161,7 +186,17 @@ class InferenceTests: XCTestCase {
     // MARK: truncateBlankLines
 
     func testInferNoTruncateBlanklines() {
-        let input = "class Foo {\n    \nfunc bar() {\n        \n        //baz\n\n}\n    \n}"
+        let input = """
+        class Foo {
+            
+        func bar() {
+                
+                //baz
+        
+        }
+            
+        }
+        """
         let options = inferFormatOptions(from: tokenize(input))
         XCTAssertFalse(options.truncateBlankLines)
     }
@@ -169,7 +204,18 @@ class InferenceTests: XCTestCase {
     // MARK: allmanBraces
 
     func testInferAllmanComments() {
-        let input = "func foo()\n{\n}\n\nfunc bar() {\n}\n\nfunc baz()\n{\n}"
+        let input = """
+        func foo()
+        {
+        }
+        
+        func bar() {
+        }
+        
+        func baz()
+        {
+        }
+        """
         let options = inferFormatOptions(from: tokenize(input))
         XCTAssertTrue(options.allmanBraces)
     }
@@ -177,35 +223,67 @@ class InferenceTests: XCTestCase {
     // MARK: ifdefIndent
 
     func testInferIfdefIndent() {
-        let input = "#if foo\n    //foo\n#endif"
+        let input = """
+        #if foo
+            //foo
+        #endif
+        """
         let output = IndentMode.indent
         let options = inferFormatOptions(from: tokenize(input))
         XCTAssertEqual(options.ifdefIndent, output)
     }
 
     func testInferIdententIfdefIndent() {
-        let input = "{\n    {\n#    if foo\n        //foo\n    #endif\n    }\n}"
+        let input = """
+        {
+            {
+        #    if foo
+                //foo
+            #endif
+            }
+        }
+        """
         let output = IndentMode.indent
         let options = inferFormatOptions(from: tokenize(input))
         XCTAssertEqual(options.ifdefIndent, output)
     }
 
     func testInferIfdefNoIndent() {
-        let input = "#if foo\n//foo\n#endif"
+        let input = """
+        #if foo
+        //foo
+        #endif
+        """
         let output = IndentMode.noIndent
         let options = inferFormatOptions(from: tokenize(input))
         XCTAssertEqual(options.ifdefIndent, output)
     }
 
     func testInferIdententIfdefNoIndent() {
-        let input = "{\n    {\n    #if foo\n    //foo\n    #endif\n    }\n}"
+        let input = """
+        {
+            {
+            #if foo
+            //foo
+            #endif
+            }
+        }
+        """
         let output = IndentMode.noIndent
         let options = inferFormatOptions(from: tokenize(input))
         XCTAssertEqual(options.ifdefIndent, output)
     }
 
     func testInferIndentedIfdefOutdent() {
-        let input = "{\n    {\n#if foo\n        //foo\n#endif\n    }\n}"
+        let input = """
+        {
+            {
+        #if foo
+                //foo
+        #endif
+            }
+        }
+        """
         let output = IndentMode.outdent
         let options = inferFormatOptions(from: tokenize(input))
         XCTAssertEqual(options.ifdefIndent, output)
@@ -281,13 +359,19 @@ class InferenceTests: XCTestCase {
     // MARK: wrapCollections
 
     func testInferWrapElementsAfterFirstArgument() {
-        let input = "[foo: 1,\n    bar: 2, baz: 3]"
+        let input = """
+        [foo: 1,
+            bar: 2, baz: 3]
+        """
         let options = inferFormatOptions(from: tokenize(input))
         XCTAssertEqual(options.wrapCollections, .afterFirst)
     }
 
     func testInferWrapElementsAfterSecondArgument() {
-        let input = "[foo, bar,\n]"
+        let input = """
+        [foo, bar,
+        ]
+        """
         let options = inferFormatOptions(from: tokenize(input))
         XCTAssertEqual(options.wrapCollections, .afterFirst)
     }
@@ -295,13 +379,30 @@ class InferenceTests: XCTestCase {
     // MARK: closingParenPosition
 
     func testInferParenOnSameLine() {
-        let input = "func foo(\n    bar: Int,\n    baz: String) {\n}\nfunc foo(\n    bar: Int,\n    baz: String)"
+        let input = """
+        func foo(
+            bar: Int,
+            baz: String) {
+        }
+        func foo(
+            bar: Int,
+            baz: String)
+        """
         let options = inferFormatOptions(from: tokenize(input))
         XCTAssertEqual(options.closingParenPosition, .sameLine)
     }
 
     func testInferParenOnNextLine() {
-        let input = "func foo(\n    bar: Int,\n    baz: String) {\n}\nfunc foo(\n    bar: Int,\n    baz: String\n)"
+        let input = """
+        func foo(
+            bar: Int,
+            baz: String) {
+        }
+        func foo(
+            bar: Int,
+            baz: String
+        )
+        """
         let options = inferFormatOptions(from: tokenize(input))
         XCTAssertEqual(options.closingParenPosition, .balanced)
     }
@@ -579,19 +680,31 @@ class InferenceTests: XCTestCase {
     // MARK: elseOnNextLine
 
     func testInferElseOnNextLine() {
-        let input = "if foo {\n}\nelse {}"
+        let input = """
+        if foo {
+        }
+        else {}
+        """
         let options = inferFormatOptions(from: tokenize(input))
         XCTAssertEqual(options.elsePosition, .nextLine)
     }
 
     func testInferElseOnSameLine() {
-        let input = "if foo {\n} else {}"
+        let input = """
+        if foo {
+        } else {}
+        """
         let options = inferFormatOptions(from: tokenize(input))
         XCTAssertEqual(options.elsePosition, .sameLine)
     }
 
     func testIgnoreInlineIfElse() {
-        let input = "if foo {} else {}\nif foo {\n}\nelse {}"
+        let input = """
+        if foo {} else {}
+        if foo {
+        }
+        else {}
+        """
         let options = inferFormatOptions(from: tokenize(input))
         XCTAssertEqual(options.elsePosition, .nextLine)
     }
@@ -599,13 +712,21 @@ class InferenceTests: XCTestCase {
     // MARK: indentCase
 
     func testInferIndentCase() {
-        let input = "switch {\n    case foo: break\n}"
+        let input = """
+        switch {
+            case foo: break
+        }
+        """
         let options = inferFormatOptions(from: tokenize(input))
         XCTAssertTrue(options.indentCase)
     }
 
     func testInferNoIndentCase() {
-        let input = "switch {\ncase foo: break\n}"
+        let input = """
+        switch {
+        case foo: break
+        }
+        """
         let options = inferFormatOptions(from: tokenize(input))
         XCTAssertFalse(options.indentCase)
     }

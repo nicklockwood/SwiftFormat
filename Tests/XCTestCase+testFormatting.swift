@@ -109,7 +109,10 @@ extension XCTestCase {
                            output, file: file, line: line)
             if !input.hasPrefix("#!") {
                 for rule in rules {
-                    let disabled = "// swiftformat:disable \(rule)\n\(input)"
+                    let disabled = """
+                    // swiftformat:disable \(rule)
+                    \(input)
+                    """
                     XCTAssertEqual(try format(disabled, rules: [rule], options: options).output,
                                    disabled, "Failed to disable \(rule) rule", file: file, line: line)
                 }

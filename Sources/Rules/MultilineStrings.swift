@@ -38,7 +38,10 @@ public extension FormatRule {
             let currentIndent = formatter.currentIndentForLine(at: startIndex)
 
             // Convert escaped newlines to actual newlines
-            let convertedContent = stringContent.replacingOccurrences(of: "\\n", with: "\n\(currentIndent)")
+            let convertedContent = stringContent.replacingOccurrences(of: "\\n", with: """
+            
+            \(currentIndent)
+            """)
 
             // Replace with multi-line string tokens
             let newTokens: [Token] = [

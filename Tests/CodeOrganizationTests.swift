@@ -206,7 +206,10 @@ class CodeOrganizationTests: XCTestCase {
 
                 let stringContent = formatter.tokens[stringBodyRange].map(\.string).joined()
                 let currentIndent = formatter.currentIndentForLine(at: startOfString)
-                let convertedContent = stringContent.replacingOccurrences(of: "\\n", with: "\n\(currentIndent)")
+                let convertedContent = stringContent.replacingOccurrences(of: "\\n", with: """
+                
+                \(currentIndent)
+                """)
 
                 let newTokens: [Token] = [
                     .startOfScope("\"\"\""),

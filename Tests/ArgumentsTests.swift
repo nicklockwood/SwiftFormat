@@ -48,7 +48,10 @@ class ArgumentsTests: XCTestCase {
     }
 
     func testParseEscapedN() {
-        let input = "hello\\nworld"
+        let input = """
+        hello\
+        world
+        """
         let output = ["", "hellonworld"]
         XCTAssertEqual(parseArguments(input), output)
     }
@@ -72,8 +75,14 @@ class ArgumentsTests: XCTestCase {
     }
 
     func testParseQuotedEscapedN() {
-        let input = "\"hello\\nworld\""
-        let output = ["", "hello\\nworld"]
+        let input = """
+        \"hello\
+        world\"
+        """
+        let output = ["", """
+        hello\
+        world
+        """]
         XCTAssertEqual(parseArguments(input), output)
     }
 
@@ -323,9 +332,15 @@ class ArgumentsTests: XCTestCase {
     }
 
     func testFileHeaderOptionToArguments() throws {
-        let options = FormatOptions(fileHeader: "//  Hello World\n//  Goodbye World")
+        let options = FormatOptions(fileHeader: """
+        //  Hello World
+        //  Goodbye World
+        """)
         let args = argumentsFor(Options(formatOptions: options), excludingDefaults: true)
-        XCTAssertEqual(args["header"], "//  Hello World\\n//  Goodbye World")
+        XCTAssertEqual(args["header"], """
+        //  Hello World\
+        //  Goodbye World
+        """)
     }
 
     // TODO: should this go in OptionDescriptorTests instead?
@@ -437,11 +452,17 @@ class ArgumentsTests: XCTestCase {
     }
 
     func testParseArgumentsContainingEscapedCharacters() throws {
-        let config = "--header hello\\ world\\ngoodbye\\ world"
+        let config = """
+        --header hello\\ world\
+        goodbye\\ world
+        """
         let data = Data(config.utf8)
         let args = try parseConfigFile(data)
         XCTAssertEqual(args.count, 1)
-        XCTAssertEqual(args["header"], "hello world\\ngoodbye world")
+        XCTAssertEqual(args["header"], """
+        hello world\
+        goodbye world
+        """)
     }
 
     func testParseArgumentsContainingQuotedCharacters() throws {
@@ -451,7 +472,10 @@ class ArgumentsTests: XCTestCase {
         let data = Data(config.utf8)
         let args = try parseConfigFile(data)
         XCTAssertEqual(args.count, 1)
-        XCTAssertEqual(args["header"], "hello world\\ngoodbye world")
+        XCTAssertEqual(args["header"], """
+        hello world\
+        goodbye world
+        """)
     }
 
     func testParseIgnoreFileHeader() throws {
@@ -522,15 +546,27 @@ class ArgumentsTests: XCTestCase {
     }
 
     func testSerializeFileHeaderContainingLinebreak() throws {
-        let options = Options(formatOptions: FormatOptions(fileHeader: "//hello\nworld"))
+        let options = Options(formatOptions: FormatOptions(fileHeader: """
+        //hello
+        world
+        """))
         let config = serialize(options: options, excludingDefaults: true)
-        XCTAssertEqual(config, "--header //hello\\nworld")
+        XCTAssertEqual(config, """
+        --header //hello\
+        world
+        """)
     }
 
     func testSerializeFileHeaderContainingLinebreakAndSpaces() throws {
-        let options = Options(formatOptions: FormatOptions(fileHeader: "// hello\n// world"))
+        let options = Options(formatOptions: FormatOptions(fileHeader: """
+        // hello
+        // world
+        """))
         let config = serialize(options: options, excludingDefaults: true)
-        XCTAssertEqual(config, "--header \"// hello\\n// world\"")
+        XCTAssertEqual(config, """
+        --header \"// hello\
+        // world\"
+        """)
     }
 
     func testSerializeOptionsWithPoundCharacter() throws {

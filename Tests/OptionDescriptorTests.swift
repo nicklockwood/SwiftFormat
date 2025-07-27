@@ -200,27 +200,99 @@ class OptionDescriptorTests: XCTestCase {
         let validations: [FreeTextValidationExpectation] = [
             (input: "tab", isValid: true),
             (input: "", isValid: true),
-            (input: "// Bob \n\n// {year}\n", isValid: true),
-            (input: "/*\n\n\n*/", isValid: true),
+            (input: """
+            // Bob 
+            
+            // {year}
+            
+            """, isValid: true),
+            (input: """
+            /*
+            
+            
+            */
+            """, isValid: true),
             (input: "\n\n\n", isValid: true),
         ]
         let fromOptionExpectations: [OptionArgumentMapping<FileHeaderMode>] = [
             (optionValue: "", argumentValue: "strip"),
             (optionValue: "// Header", argumentValue: "// Header"),
             (optionValue: .ignore, argumentValue: "ignore"),
-            (optionValue: "/*\n\n\n*/", argumentValue: "/*\\n\\n\\n*/"),
+            (optionValue: """
+            /*
+            
+            
+            */
+            """, argumentValue: """
+            /*\
+            \
+            \
+            */
+            """),
         ]
         let fromArgumentExpectations: [OptionArgumentMapping<FileHeaderMode>] = [
             (optionValue: "", argumentValue: "strip"),
             (optionValue: "// Header", argumentValue: "// Header"),
             (optionValue: .ignore, argumentValue: "ignore"),
             (optionValue: "// {year}", argumentValue: "{year}"),
-            (optionValue: "/*\n\n\n*/", argumentValue: "/*\\n\\n\\n*/"),
-            (optionValue: "//\n//\n//\n//\n//", argumentValue: "\\n\\n\\n\\n"),
-            (optionValue: "//\n//\n// a\n//\n//", argumentValue: "\\n\\na\\n\\n"),
-            (optionValue: "//\n// a\n//\n// a\n//", argumentValue: "\\na\\n\\na\\n"),
-            (optionValue: "// a\n//", argumentValue: "a\\n"),
-            (optionValue: "//a\n//b", argumentValue: "//a\\n//b"),
+            (optionValue: """
+            /*
+            
+            
+            */
+            """, argumentValue: """
+            /*\
+            \
+            \
+            */
+            """),
+            (optionValue: """
+            //
+            //
+            //
+            //
+            //
+            """, argumentValue: "\\n\\n\\n\\n"),
+            (optionValue: """
+            //
+            //
+            // a
+            //
+            //
+            """, argumentValue: """
+            \
+            \
+            a\
+            \
+            
+            """),
+            (optionValue: """
+            //
+            // a
+            //
+            // a
+            //
+            """, argumentValue: """
+            \
+            a\
+            \
+            a\
+            
+            """),
+            (optionValue: """
+            // a
+            //
+            """, argumentValue: """
+            a\
+            
+            """),
+            (optionValue: """
+            //a
+            //b
+            """, argumentValue: """
+            //a\
+            //b
+            """),
         ]
 
         validateArgumentsFreeTextType(descriptor, expectations: validations)

@@ -36,42 +36,86 @@ class MetadataTests: XCTestCase {
 
     // NOTE: if test fails, just run it again locally to update rules file
     func testGenerateRulesDocumentation() throws {
-        var result = "# Default Rules (enabled by default)\n"
+        var result = """
+        # Default Rules (enabled by default)
+        
+        """
         for rule in FormatRules.default {
-            result += "\n* [\(rule.name)](#\(rule.name))"
+            result += """
+            
+            * [\(rule.name)](#\(rule.name))
+            """
         }
 
-        result += "\n\n# Opt-in Rules (disabled by default)\n"
+        result += """
+        
+        
+        # Opt-in Rules (disabled by default)
+        
+        """
         for rule in FormatRules.disabledByDefault {
             guard !rule.isDeprecated else {
                 continue
             }
-            result += "\n* [\(rule.name)](#\(rule.name))"
+            result += """
+            
+            * [\(rule.name)](#\(rule.name))
+            """
         }
 
         let deprecatedRules = FormatRules.all.filter(\.isDeprecated)
         if !deprecatedRules.isEmpty {
-            result += "\n\n# Deprecated Rules (do not use)\n"
+            result += """
+            
+            
+            # Deprecated Rules (do not use)
+            
+            """
             for rule in deprecatedRules {
-                result += "\n* [\(rule.name)](#\(rule.name))"
+                result += """
+                
+                * [\(rule.name)](#\(rule.name))
+                """
             }
         }
 
-        result += "\n\n----------"
+        result += """
+        
+        
+        ----------
+        """
         for rule in FormatRules.all {
-            result += "\n\n## \(rule.name)\n\n\(rule.help)"
+            result += """
+            
+            
+            ## \(rule.name)
+            
+            \(rule.help)
+            """
             if let message = rule.deprecationMessage {
-                result += "\n\n*Note: \(rule.name) rule is deprecated. \(message)*"
+                result += """
+                
+                
+                *Note: \(rule.name) rule is deprecated. \(message)*
+                """
                 continue
             }
             if !rule.options.isEmpty {
-                result += "\n\nOption | Description\n--- | ---"
+                result += """
+                
+                
+                Option | Description
+                --- | ---
+                """
                 for option in rule.options {
                     let descriptor = Descriptors.byName[option]!
                     guard !descriptor.isDeprecated else {
                         continue
                     }
-                    result += "\n`--\(option)` | \(descriptor.help)"
+                    result += """
+                    
+                    `--\(option)` | \(descriptor.help)
+                    """
                 }
             }
             if let examples = rule.examples {

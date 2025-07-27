@@ -77,7 +77,12 @@ class CommandLineTests: XCTestCase {
         CLI.print = { message, type in
             switch type {
             case .raw, .content:
-                XCTAssertEqual(message, "func foo() {\n    bar()\n}\n")
+                XCTAssertEqual(message, """
+                func foo() {
+                    bar()
+                }
+                
+                """)
             case .error, .warning:
                 XCTFail()
             case .info, .success:
@@ -89,11 +94,20 @@ class CommandLineTests: XCTestCase {
             readCount += 1
             switch readCount {
             case 1:
-                return "func foo()\n"
+                return """
+                func foo()
+                
+                """
             case 2:
-                return "{\n"
+                return """
+                {
+                
+                """
             case 3:
-                return "bar()\n"
+                return """
+                bar()
+                
+                """
             case 4:
                 return "}"
             default:
@@ -149,11 +163,20 @@ class CommandLineTests: XCTestCase {
             readCount += 1
             switch readCount {
             case 1:
-                return "func foo()\n"
+                return """
+                func foo()
+                
+                """
             case 2:
-                return "{\n"
+                return """
+                {
+                
+                """
             case 3:
-                return "bar() + baaz() + 25\n"
+                return """
+                bar() + baaz() + 25
+                
+                """
             case 4:
                 return "}"
             default:
@@ -168,7 +191,11 @@ class CommandLineTests: XCTestCase {
         CLI.print = { message, type in
             switch type {
             case .raw, .content:
-                XCTAssertEqual(message, "func foo() {\n}\n")
+                XCTAssertEqual(message, """
+                func foo() {
+                }
+                
+                """)
             case .error, .warning:
                 XCTFail()
             case .info, .success:
@@ -180,9 +207,15 @@ class CommandLineTests: XCTestCase {
             readCount += 1
             switch readCount {
             case 1:
-                return "func foo() {\n"
+                return """
+                func foo() {
+                
+                """
             case 2:
-                return "}\n"
+                return """
+                }
+                
+                """
             default:
                 return nil
             }
@@ -201,7 +234,11 @@ class CommandLineTests: XCTestCase {
         CLI.print = { message, type in
             switch type {
             case .raw, .content:
-                XCTAssertEqual(message, "func foo() {\n}\n")
+                XCTAssertEqual(message, """
+                func foo() {
+                }
+                
+                """)
             case .error, .warning:
                 XCTFail()
             case .info, .success:
@@ -213,9 +250,15 @@ class CommandLineTests: XCTestCase {
             readCount += 1
             switch readCount {
             case 1:
-                return "func foo() {\n"
+                return """
+                func foo() {
+                
+                """
             case 2:
-                return "}\n"
+                return """
+                }
+                
+                """
             default:
                 return nil
             }
@@ -236,7 +279,11 @@ class CommandLineTests: XCTestCase {
         CLI.print = { message, type in
             switch type {
             case .raw, .content:
-                XCTAssertEqual(message, "func foo() {\n}\n")
+                XCTAssertEqual(message, """
+                func foo() {
+                }
+                
+                """)
             case .error, .warning:
                 XCTFail()
             case .info, .success:
@@ -248,9 +295,15 @@ class CommandLineTests: XCTestCase {
             readCount += 1
             switch readCount {
             case 1:
-                return "func foo() {\n"
+                return """
+                func foo() {
+                
+                """
             case 2:
-                return "}\n"
+                return """
+                }
+                
+                """
             default:
                 return nil
             }
@@ -271,7 +324,10 @@ class CommandLineTests: XCTestCase {
         CLI.print = { message, type in
             switch type {
             case .raw, .content:
-                XCTAssertEqual(message, "func foo() {}\n")
+                XCTAssertEqual(message, """
+                func foo() {}
+                
+                """)
             case .error, .warning:
                 XCTFail()
             case .info, .success:
@@ -283,9 +339,15 @@ class CommandLineTests: XCTestCase {
             readCount += 1
             switch readCount {
             case 1:
-                return "func foo() {\n"
+                return """
+                func foo() {
+                
+                """
             case 2:
-                return "}\n"
+                return """
+                }
+                
+                """
             default:
                 return nil
             }
@@ -409,13 +471,19 @@ class CommandLineTests: XCTestCase {
 
     func testCacheMiss() throws {
         let input = "let foo = bar"
-        let output = "let foo = bar\n"
+        let output = """
+        let foo = bar
+        
+        """
         XCTAssertNotEqual(computeHash(input), computeHash(output))
     }
 
     func testCachePotentialFalsePositive() throws {
         let input = "let foo = bar;"
-        let output = "let foo = bar\n"
+        let output = """
+        let foo = bar
+        
+        """
         XCTAssertNotEqual(computeHash(input), computeHash(output))
     }
 
@@ -636,7 +704,11 @@ class CommandLineTests: XCTestCase {
 
     func testJSONReporterEndToEnd() throws {
         try withTmpFiles([
-            "foo.swift": "func foo() {\n}\n",
+            "foo.swift": """
+            func foo() {
+            }
+            
+            """,
         ]) { url in
             CLI.print = { message, type in
                 switch type {
@@ -663,7 +735,11 @@ class CommandLineTests: XCTestCase {
     func testJSONReporterInferredFromURL() throws {
         let outputURL = try createTmpFile("report.json", contents: "")
         try withTmpFiles([
-            "foo.swift": "func foo() {\n}\n",
+            "foo.swift": """
+            func foo() {
+            }
+            
+            """,
         ]) { url in
             CLI.print = { _, _ in }
             _ = processArguments([
@@ -680,7 +756,11 @@ class CommandLineTests: XCTestCase {
 
     func testGithubActionsLogReporterEndToEnd() throws {
         try withTmpFiles([
-            "foo.swift": "func foo() {\n}\n",
+            "foo.swift": """
+            func foo() {
+            }
+            
+            """,
         ]) { url in
             CLI.print = { message, type in
                 switch type {
@@ -708,7 +788,11 @@ class CommandLineTests: XCTestCase {
 
     func testGithubActionsLogReporterMisspelled() throws {
         try withTmpFiles([
-            "foo.swift": "func foo() {\n}\n",
+            "foo.swift": """
+            func foo() {
+            }
+            
+            """,
         ]) { url in
             CLI.print = { message, type in
                 switch type {
@@ -732,7 +816,11 @@ class CommandLineTests: XCTestCase {
 
     func testXMLReporterEndToEnd() throws {
         try withTmpFiles([
-            "foo.swift": "func foo() {\n}\n",
+            "foo.swift": """
+            func foo() {
+            }
+            
+            """,
         ]) { url in
             CLI.print = { message, type in
                 switch type {
@@ -759,7 +847,11 @@ class CommandLineTests: XCTestCase {
     func testXMLReporterInferredFromURL() throws {
         let outputURL = try createTmpFile("report.xml", contents: "")
         try withTmpFiles([
-            "foo.swift": "func foo() {\n}\n",
+            "foo.swift": """
+            func foo() {
+            }
+            
+            """,
         ]) { url in
             CLI.print = { _, _ in }
             _ = processArguments([
@@ -776,7 +868,11 @@ class CommandLineTests: XCTestCase {
 
     func testSARIFReporterEndToEnd() throws {
         try withTmpFiles([
-            "foo.swift": "func foo() {\n}\n",
+            "foo.swift": """
+            func foo() {
+            }
+            
+            """,
         ]) { url in
             CLI.print = { message, type in
                 switch type {
@@ -803,7 +899,11 @@ class CommandLineTests: XCTestCase {
     func testSARIFReporterInferredFromURL() throws {
         let outputURL = try createTmpFile("report.sarif", contents: "")
         try withTmpFiles([
-            "foo.swift": "func foo() {\n}\n",
+            "foo.swift": """
+            func foo() {
+            }
+            
+            """,
         ]) { url in
             CLI.print = { _, _ in }
             _ = processArguments([

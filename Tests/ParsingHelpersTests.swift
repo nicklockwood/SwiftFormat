@@ -190,7 +190,12 @@ class ParsingHelpersTests: XCTestCase {
     }
 
     func testNonVoidFunctionAllmanBracesNotTreatedAsClosure() {
-        let formatter = Formatter(tokenize("func foo() -> Int\n{\n    return 5\n}"))
+        let formatter = Formatter(tokenize("""
+        func foo() -> Int
+        {
+            return 5
+        }
+        """))
         XCTAssertFalse(formatter.isStartOfClosure(at: 10))
     }
 
@@ -215,7 +220,12 @@ class ParsingHelpersTests: XCTestCase {
     }
 
     func testFunctionAllmanBracesNotTreatedAsClosure() {
-        let formatter = Formatter(tokenize("func foo()\n{\n    bar = 5\n}"))
+        let formatter = Formatter(tokenize("""
+        func foo()
+        {
+            bar = 5
+        }
+        """))
         XCTAssertFalse(formatter.isStartOfClosure(at: 6))
     }
 
@@ -262,7 +272,12 @@ class ParsingHelpersTests: XCTestCase {
     }
 
     func testInitAllmanBracesNotTreatedAsClosure() {
-        let formatter = Formatter(tokenize("init()\n{\n    foo = 5\n}"))
+        let formatter = Formatter(tokenize("""
+        init()
+        {
+            foo = 5
+        }
+        """))
         XCTAssertFalse(formatter.isStartOfClosure(at: 4))
     }
 
@@ -272,7 +287,12 @@ class ParsingHelpersTests: XCTestCase {
     }
 
     func testOptionalInitAllmanBracesNotTreatedAsClosure() {
-        let formatter = Formatter(tokenize("init?()\n{\n    return nil\n}"))
+        let formatter = Formatter(tokenize("""
+        init?()
+        {
+            return nil
+        }
+        """))
         XCTAssertFalse(formatter.isStartOfClosure(at: 5))
     }
 
@@ -282,7 +302,12 @@ class ParsingHelpersTests: XCTestCase {
     }
 
     func testDeinitAllmanBracesNotTreatedAsClosure() {
-        let formatter = Formatter(tokenize("deinit\n{\n    foo = nil\n}"))
+        let formatter = Formatter(tokenize("""
+        deinit
+        {
+            foo = nil
+        }
+        """))
         XCTAssertFalse(formatter.isStartOfClosure(at: 2))
     }
 
@@ -292,7 +317,12 @@ class ParsingHelpersTests: XCTestCase {
     }
 
     func testSubscriptAllmanBracesNotTreatedAsClosure() {
-        let formatter = Formatter(tokenize("subscript(i: Int) -> Int\n{\n    foo[i]\n}"))
+        let formatter = Formatter(tokenize("""
+        subscript(i: Int) -> Int
+        {
+            foo[i]
+        }
+        """))
         XCTAssertFalse(formatter.isStartOfClosure(at: 12))
     }
 
@@ -304,12 +334,20 @@ class ParsingHelpersTests: XCTestCase {
     }
 
     func testComputedVarAllmanBracesNotTreatedAsClosure() {
-        let formatter = Formatter(tokenize("var foo: Int\n{\n    return 5\n}"))
+        let formatter = Formatter(tokenize("""
+        var foo: Int
+        {
+            return 5
+        }
+        """))
         XCTAssertFalse(formatter.isStartOfClosure(at: 7))
     }
 
     func testVarFollowedByBracesOnNextLineTreatedAsClosure() {
-        let formatter = Formatter(tokenize("var foo: Int\nfoo { return 5 }"))
+        let formatter = Formatter(tokenize("""
+        var foo: Int
+        foo { return 5 }
+        """))
         XCTAssert(formatter.isStartOfClosure(at: 9))
     }
 
@@ -1669,14 +1707,20 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(barDeclarationRange, 6 ... 16)
         XCTAssertEqual(
             formatter.tokens[barDeclarationRange].string,
-            "    let bar = \"bar\"\n"
+            """
+                let bar = \"bar\"
+            
+            """
         )
 
         let baazDeclarationRange = declarations[0].body![1].range
         XCTAssertEqual(baazDeclarationRange, 17 ... 27)
         XCTAssertEqual(
             formatter.tokens[baazDeclarationRange].string,
-            "    let baaz = \"baaz\"\n"
+            """
+                let baaz = \"baaz\"
+            
+            """
         )
     }
 
@@ -1701,14 +1745,20 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(barDeclarationRange, 4 ... 13)
         XCTAssertEqual(
             formatter.tokens[barDeclarationRange].string,
-            "let bar = \"bar\"\n"
+            """
+            let bar = \"bar\"
+            
+            """
         )
 
         let baazDeclarationRange = declarations[0].body![1].range
         XCTAssertEqual(baazDeclarationRange, 14 ... 23)
         XCTAssertEqual(
             formatter.tokens[baazDeclarationRange].string,
-            "let baaz = \"baaz\"\n"
+            """
+            let baaz = \"baaz\"
+            
+            """
         )
     }
 

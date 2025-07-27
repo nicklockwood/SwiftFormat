@@ -174,9 +174,15 @@ extension TypeDeclaration {
         // as @MainActor for maximum compatibility.
         let startOfModifiers = formatter.startOfModifiers(at: keywordIndex, includingAttributes: true)
         if !modifiers.contains("@MainActor") {
-            formatter.insert(tokenize("@MainActor @Suite(.serialized)\n"), at: startOfModifiers)
+            formatter.insert(tokenize("""
+            @MainActor @Suite(.serialized)
+            
+            """), at: startOfModifiers)
         } else {
-            formatter.insert(tokenize("@Suite(.serialized)\n"), at: startOfModifiers)
+            formatter.insert(tokenize("""
+            @Suite(.serialized)
+            
+            """), at: startOfModifiers)
         }
 
         let instanceMethods = body.filter { $0.keyword == "func" && !$0.modifiers.contains("static") }

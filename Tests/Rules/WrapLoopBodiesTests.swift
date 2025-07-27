@@ -11,7 +11,9 @@ import XCTest
 
 class WrapLoopBodiesTests: XCTestCase {
     func testWrapForLoop() {
-        let input = "for foo in bar { print(foo) }"
+        let input = """
+        for foo in bar { print(foo) }
+        """
         let output = """
         for foo in bar {
             print(foo)
@@ -21,7 +23,9 @@ class WrapLoopBodiesTests: XCTestCase {
     }
 
     func testWrapWhileLoop() {
-        let input = "while let foo = bar.next() { print(foo) }"
+        let input = """
+        while let foo = bar.next() { print(foo) }
+        """
         let output = """
         while let foo = bar.next() {
             print(foo)
@@ -31,7 +35,9 @@ class WrapLoopBodiesTests: XCTestCase {
     }
 
     func testWrapRepeatWhileLoop() {
-        let input = "repeat { print(foo) } while condition()"
+        let input = """
+        repeat { print(foo) } while condition()
+        """
         let output = """
         repeat {
             print(foo)

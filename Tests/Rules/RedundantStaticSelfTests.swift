@@ -11,14 +11,22 @@ import XCTest
 
 class RedundantStaticSelfTests: XCTestCase {
     func testRedundantStaticSelfInStaticVar() {
-        let input = "enum E { static var x: Int { Self.y } }"
-        let output = "enum E { static var x: Int { y } }"
+        let input = """
+        enum E { static var x: Int { Self.y } }
+        """
+        let output = """
+        enum E { static var x: Int { y } }
+        """
         testFormatting(for: input, output, rule: .redundantStaticSelf)
     }
 
     func testRedundantStaticSelfInStaticMethod() {
-        let input = "enum E { static func foo() { Self.bar() } }"
-        let output = "enum E { static func foo() { bar() } }"
+        let input = """
+        enum E { static func foo() { Self.bar() } }
+        """
+        let output = """
+        enum E { static func foo() { bar() } }
+        """
         testFormatting(for: input, output, rule: .redundantStaticSelf)
     }
 
@@ -42,8 +50,12 @@ class RedundantStaticSelfTests: XCTestCase {
     }
 
     func testRedundantStaticSelfWithReturn() {
-        let input = "enum E { static func foo() { return Self.bar() } }"
-        let output = "enum E { static func foo() { return bar() } }"
+        let input = """
+        enum E { static func foo() { return Self.bar() } }
+        """
+        let output = """
+        enum E { static func foo() { return bar() } }
+        """
         testFormatting(for: input, output, rule: .redundantStaticSelf)
     }
 
@@ -112,12 +124,16 @@ class RedundantStaticSelfTests: XCTestCase {
     }
 
     func testStaticSelfNotRemovedWhenUsedAsImplicitInitializer() {
-        let input = "enum E { static func foo() { Self().bar() } }"
+        let input = """
+        enum E { static func foo() { Self().bar() } }
+        """
         testFormatting(for: input, rule: .redundantStaticSelf)
     }
 
     func testStaticSelfNotRemovedWhenUsedAsExplicitInitializer() {
-        let input = "enum E { static func foo() { Self.init().bar() } }"
+        let input = """
+        enum E { static func foo() { Self.init().bar() } }
+        """
         testFormatting(for: input, rule: .redundantStaticSelf, exclude: [.redundantInit])
     }
 

@@ -11,23 +11,33 @@ import XCTest
 
 class SpaceInsideBracesTests: XCTestCase {
     func testSpaceInsideBraces() {
-        let input = "foo({bar})"
-        let output = "foo({ bar })"
+        let input = """
+        foo({bar})
+        """
+        let output = """
+        foo({ bar })
+        """
         testFormatting(for: input, output, rule: .spaceInsideBraces, exclude: [.trailingClosures])
     }
 
     func testNoExtraSpaceInsidebraces() {
-        let input = "{ foo }"
+        let input = """
+        { foo }
+        """
         testFormatting(for: input, rule: .spaceInsideBraces, exclude: [.trailingClosures])
     }
 
     func testNoSpaceAddedInsideEmptybraces() {
-        let input = "foo({})"
+        let input = """
+        foo({})
+        """
         testFormatting(for: input, rule: .spaceInsideBraces, exclude: [.trailingClosures])
     }
 
     func testNoSpaceAddedBetweenDoublebraces() {
-        let input = "func foo() -> () -> Void {{ bar() }}"
+        let input = """
+        func foo() -> () -> Void {{ bar() }}
+        """
         testFormatting(for: input, rule: .spaceInsideBraces)
     }
 }

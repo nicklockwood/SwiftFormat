@@ -11,108 +11,245 @@ import XCTest
 
 class BlankLinesBetweenScopesTests: XCTestCase {
     func testBlankLineBetweenFunctions() {
-        let input = "func foo() {\n}\nfunc bar() {\n}"
-        let output = "func foo() {\n}\n\nfunc bar() {\n}"
+        let input = """
+        func foo() {
+        }
+        func bar() {
+        }
+        """
+        let output = """
+        func foo() {
+        }
+
+        func bar() {
+        }
+        """
         testFormatting(for: input, output, rule: .blankLinesBetweenScopes,
                        exclude: [.emptyBraces])
     }
 
     func testNoBlankLineBetweenPropertyAndFunction() {
-        let input = "var foo: Int\nfunc bar() {\n}"
+        let input = """
+        var foo: Int
+        func bar() {
+        }
+        """
         testFormatting(for: input, rule: .blankLinesBetweenScopes, exclude: [.emptyBraces])
     }
 
     func testBlankLineBetweenFunctionsIsBeforeComment() {
-        let input = "func foo() {\n}\n/// headerdoc\nfunc bar() {\n}"
-        let output = "func foo() {\n}\n\n/// headerdoc\nfunc bar() {\n}"
+        let input = """
+        func foo() {
+        }
+        /// headerdoc
+        func bar() {
+        }
+        """
+        let output = """
+        func foo() {
+        }
+
+        /// headerdoc
+        func bar() {
+        }
+        """
         testFormatting(for: input, output, rule: .blankLinesBetweenScopes,
                        exclude: [.emptyBraces])
     }
 
     func testBlankLineBeforeAtObjcOnLineBeforeProtocol() {
-        let input = "@objc\nprotocol Foo {\n}\n@objc\nprotocol Bar {\n}"
-        let output = "@objc\nprotocol Foo {\n}\n\n@objc\nprotocol Bar {\n}"
+        let input = """
+        @objc
+        protocol Foo {
+        }
+        @objc
+        protocol Bar {
+        }
+        """
+        let output = """
+        @objc
+        protocol Foo {
+        }
+
+        @objc
+        protocol Bar {
+        }
+        """
         testFormatting(for: input, output, rule: .blankLinesBetweenScopes,
                        exclude: [.emptyBraces])
     }
 
     func testBlankLineBeforeAtAvailabilityOnLineBeforeClass() {
-        let input = "protocol Foo {\n}\n@available(iOS 8.0, OSX 10.10, *)\nclass Bar {\n}"
-        let output = "protocol Foo {\n}\n\n@available(iOS 8.0, OSX 10.10, *)\nclass Bar {\n}"
+        let input = """
+        protocol Foo {
+        }
+        @available(iOS 8.0, OSX 10.10, *)
+        class Bar {
+        }
+        """
+        let output = """
+        protocol Foo {
+        }
+
+        @available(iOS 8.0, OSX 10.10, *)
+        class Bar {
+        }
+        """
         testFormatting(for: input, output, rule: .blankLinesBetweenScopes,
                        exclude: [.emptyBraces])
     }
 
     func testNoExtraBlankLineBetweenFunctions() {
-        let input = "func foo() {\n}\n\nfunc bar() {\n}"
+        let input = """
+        func foo() {
+        }
+
+        func bar() {
+        }
+        """
         testFormatting(for: input, rule: .blankLinesBetweenScopes, exclude: [.emptyBraces])
     }
 
     func testNoBlankLineBetweenFunctionsInProtocol() {
-        let input = "protocol Foo {\n    func bar()\n    func baz() -> Int\n}"
+        let input = """
+        protocol Foo {
+            func bar()
+            func baz() -> Int
+        }
+        """
         testFormatting(for: input, rule: .blankLinesBetweenScopes)
     }
 
     func testNoBlankLineInsideInitFunction() {
-        let input = "init() {\n    super.init()\n}"
+        let input = """
+        init() {
+            super.init()
+        }
+        """
         testFormatting(for: input, rule: .blankLinesBetweenScopes)
     }
 
     func testBlankLineAfterProtocolBeforeProperty() {
-        let input = "protocol Foo {\n}\nvar bar: String"
-        let output = "protocol Foo {\n}\n\nvar bar: String"
+        let input = """
+        protocol Foo {
+        }
+        var bar: String
+        """
+        let output = """
+        protocol Foo {
+        }
+
+        var bar: String
+        """
         testFormatting(for: input, output, rule: .blankLinesBetweenScopes,
                        exclude: [.emptyBraces])
     }
 
     func testNoExtraBlankLineAfterSingleLineComment() {
-        let input = "var foo: Bar? // comment\n\nfunc bar() {}"
+        let input = """
+        var foo: Bar? // comment
+
+        func bar() {}
+        """
         testFormatting(for: input, rule: .blankLinesBetweenScopes)
     }
 
     func testNoExtraBlankLineAfterMultilineComment() {
-        let input = "var foo: Bar? /* comment */\n\nfunc bar() {}"
+        let input = """
+        var foo: Bar? /* comment */
+
+        func bar() {}
+        """
         testFormatting(for: input, rule: .blankLinesBetweenScopes)
     }
 
     func testNoBlankLineBeforeFuncAsIdentifier() {
-        let input = "var foo: Bar?\nfoo.func(x) {}"
+        let input = """
+        var foo: Bar?
+        foo.func(x) {}
+        """
         testFormatting(for: input, rule: .blankLinesBetweenScopes)
     }
 
     func testNoBlankLineBetweenFunctionsWithInlineBody() {
-        let input = "class Foo {\n    func foo() { print(\"foo\") }\n    func bar() { print(\"bar\") }\n}"
+        let input = """
+        class Foo {
+            func foo() { print(\"foo\") }
+            func bar() { print(\"bar\") }
+        }
+        """
         testFormatting(for: input, rule: .blankLinesBetweenScopes)
     }
 
     func testNoBlankLineBetweenIfStatements() {
-        let input = "func foo() {\n    if x {\n    }\n    if y {\n    }\n}"
+        let input = """
+        func foo() {
+            if x {
+            }
+            if y {
+            }
+        }
+        """
         testFormatting(for: input, rule: .blankLinesBetweenScopes, exclude: [.emptyBraces])
     }
 
     func testNoBlanksInsideClassFunc() {
-        let input = "class func foo {\n    if x {\n    }\n    if y {\n    }\n}"
+        let input = """
+        class func foo {
+            if x {
+            }
+            if y {
+            }
+        }
+        """
         let options = FormatOptions(fragment: true)
         testFormatting(for: input, rule: .blankLinesBetweenScopes, options: options,
                        exclude: [.emptyBraces])
     }
 
     func testNoBlanksInsideClassVar() {
-        let input = "class var foo: Int {\n    if x {\n    }\n    if y {\n    }\n}"
+        let input = """
+        class var foo: Int {
+            if x {
+            }
+            if y {
+            }
+        }
+        """
         let options = FormatOptions(fragment: true)
         testFormatting(for: input, rule: .blankLinesBetweenScopes, options: options,
                        exclude: [.emptyBraces])
     }
 
     func testBlankLineBetweenCalledClosures() {
-        let input = "class Foo {\n    var foo = {\n    }()\n    func bar {\n    }\n}"
-        let output = "class Foo {\n    var foo = {\n    }()\n\n    func bar {\n    }\n}"
+        let input = """
+        class Foo {
+            var foo = {
+            }()
+            func bar {
+            }
+        }
+        """
+        let output = """
+        class Foo {
+            var foo = {
+            }()
+
+            func bar {
+            }
+        }
+        """
         testFormatting(for: input, output, rule: .blankLinesBetweenScopes,
                        exclude: [.emptyBraces])
     }
 
     func testNoBlankLineAfterCalledClosureAtEndOfScope() {
-        let input = "class Foo {\n    var foo = {\n    }()\n}"
+        let input = """
+        class Foo {
+            var foo = {
+            }()
+        }
+        """
         testFormatting(for: input, rule: .blankLinesBetweenScopes, exclude: [.emptyBraces])
     }
 
@@ -128,8 +265,23 @@ class BlankLinesBetweenScopesTests: XCTestCase {
     }
 
     func testBlankLineBeforeWhileIfNotRepeatWhile() {
-        let input = "func foo(x)\n{\n}\nwhile true\n{\n}"
-        let output = "func foo(x)\n{\n}\n\nwhile true\n{\n}"
+        let input = """
+        func foo(x)
+        {
+        }
+        while true
+        {
+        }
+        """
+        let output = """
+        func foo(x)
+        {
+        }
+
+        while true
+        {
+        }
+        """
         let options = FormatOptions(allmanBraces: true)
         testFormatting(for: input, output, rule: .blankLinesBetweenScopes, options: options,
                        exclude: [.emptyBraces])

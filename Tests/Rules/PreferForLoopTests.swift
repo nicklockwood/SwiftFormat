@@ -75,8 +75,12 @@ class PreferForLoopTests: XCTestCase {
     }
 
     func testConvertSingleLineForEachToForLoop() {
-        let input = "potatoes.forEach({ item in item.bake() })"
-        let output = "for item in potatoes { item.bake() }"
+        let input = """
+        potatoes.forEach({ item in item.bake() })
+        """
+        let output = """
+        for item in potatoes { item.bake() }
+        """
 
         let options = FormatOptions(preserveSingleLineForEach: false)
         testFormatting(for: input, output, rule: .preferForLoop, options: options,
@@ -84,8 +88,12 @@ class PreferForLoopTests: XCTestCase {
     }
 
     func testConvertSingleLineAnonymousForEachToForLoop() {
-        let input = "potatoes.forEach({ $0.bake() })"
-        let output = "for potato in potatoes { potato.bake() }"
+        let input = """
+        potatoes.forEach({ $0.bake() })
+        """
+        let output = """
+        for potato in potatoes { potato.bake() }
+        """
 
         let options = FormatOptions(preserveSingleLineForEach: false)
         testFormatting(for: input, output, rule: .preferForLoop, options: options,

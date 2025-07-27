@@ -199,8 +199,12 @@ class OrganizeDeclarationsTests: XCTestCase {
 
         // The configuration used in Airbnb's Swift Style Guide,
         // as defined here: https://github.com/airbnb/swift#subsection-organization
-        let airbnbVisibilityOrder = "beforeMarks,instanceLifecycle,open,public,package,internal,private,fileprivate"
-        let airbnbTypeOrder = "nestedType,staticProperty,staticPropertyWithBody,classPropertyWithBody,instanceProperty,instancePropertyWithBody,staticMethod,classMethod,instanceMethod"
+        let airbnbVisibilityOrder = """
+        beforeMarks,instanceLifecycle,open,public,package,internal,private,fileprivate
+        """
+        let airbnbTypeOrder = """
+        nestedType,staticProperty,staticPropertyWithBody,classPropertyWithBody,instanceProperty,instancePropertyWithBody,staticMethod,classMethod,instanceMethod
+        """
 
         testFormatting(
             for: input, output,

@@ -11,19 +11,29 @@ import XCTest
 
 class BlockCommentsTests: XCTestCase {
     func testBlockCommentsOneLine() {
-        let input = "foo = bar /* comment */"
-        let output = "foo = bar // comment"
+        let input = """
+        foo = bar /* comment */
+        """
+        let output = """
+        foo = bar // comment
+        """
         testFormatting(for: input, output, rule: .blockComments)
     }
 
     func testDocBlockCommentsOneLine() {
-        let input = "foo = bar /** doc comment */"
-        let output = "foo = bar /// doc comment"
+        let input = """
+        foo = bar /** doc comment */
+        """
+        let output = """
+        foo = bar /// doc comment
+        """
         testFormatting(for: input, output, rule: .blockComments)
     }
 
     func testPreservesBlockCommentInSingleLineScope() {
-        let input = "if foo { /* code */ }"
+        let input = """
+        if foo { /* code */ }
+        """
         testFormatting(for: input, rule: .blockComments)
     }
 

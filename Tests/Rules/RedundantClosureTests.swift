@@ -426,7 +426,9 @@ class RedundantClosureTests: XCTestCase {
     }
 
     func testKeepsClosureThatThrowsError() {
-        let input = "let foo = try bar ?? { throw NSError() }()"
+        let input = """
+        let foo = try bar ?? { throw NSError() }()
+        """
         testFormatting(for: input, rule: .redundantClosure)
     }
 

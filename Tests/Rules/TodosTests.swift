@@ -11,32 +11,52 @@ import XCTest
 
 class TodosTests: XCTestCase {
     func testMarkIsUpdated() {
-        let input = "// MARK foo"
-        let output = "// MARK: foo"
+        let input = """
+        // MARK foo
+        """
+        let output = """
+        // MARK: foo
+        """
         testFormatting(for: input, output, rule: .todos)
     }
 
     func testTodoIsUpdated() {
-        let input = "// TODO foo"
-        let output = "// TODO: foo"
+        let input = """
+        // TODO foo
+        """
+        let output = """
+        // TODO: foo
+        """
         testFormatting(for: input, output, rule: .todos)
     }
 
     func testFixmeIsUpdated() {
-        let input = "//    FIXME foo"
-        let output = "//    FIXME: foo"
+        let input = """
+        //    FIXME foo
+        """
+        let output = """
+        //    FIXME: foo
+        """
         testFormatting(for: input, output, rule: .todos)
     }
 
     func testMarkWithColonSeparatedBySpace() {
-        let input = "// MARK : foo"
-        let output = "// MARK: foo"
+        let input = """
+        // MARK : foo
+        """
+        let output = """
+        // MARK: foo
+        """
         testFormatting(for: input, output, rule: .todos)
     }
 
     func testMarkWithTripleSlash() {
-        let input = "/// MARK: foo"
-        let output = "// MARK: foo"
+        let input = """
+        /// MARK: foo
+        """
+        let output = """
+        // MARK: foo
+        """
         testFormatting(for: input, output, rule: .todos)
     }
 
@@ -81,70 +101,110 @@ class TodosTests: XCTestCase {
 
     func testMarkWithNoSpaceAfterColon() {
         // NOTE: this was an unintended side-effect, but I like it
-        let input = "// MARK:foo"
-        let output = "// MARK: foo"
+        let input = """
+        // MARK:foo
+        """
+        let output = """
+        // MARK: foo
+        """
         testFormatting(for: input, output, rule: .todos)
     }
 
     func testMarkInsideMultilineComment() {
-        let input = "/* MARK foo */"
-        let output = "/* MARK: foo */"
+        let input = """
+        /* MARK foo */
+        """
+        let output = """
+        /* MARK: foo */
+        """
         testFormatting(for: input, output, rule: .todos)
     }
 
     func testNoExtraSpaceAddedAfterTodo() {
-        let input = "/* TODO: */"
+        let input = """
+        /* TODO: */
+        """
         testFormatting(for: input, rule: .todos)
     }
 
     func testLowercaseMarkColonIsUpdated() {
-        let input = "// mark: foo"
-        let output = "// MARK: foo"
+        let input = """
+        // mark: foo
+        """
+        let output = """
+        // MARK: foo
+        """
         testFormatting(for: input, output, rule: .todos)
     }
 
     func testMixedCaseMarkColonIsUpdated() {
-        let input = "// Mark: foo"
-        let output = "// MARK: foo"
+        let input = """
+        // Mark: foo
+        """
+        let output = """
+        // MARK: foo
+        """
         testFormatting(for: input, output, rule: .todos)
     }
 
     func testLowercaseMarkIsNotUpdated() {
-        let input = "// mark as read"
+        let input = """
+        // mark as read
+        """
         testFormatting(for: input, rule: .todos)
     }
 
     func testMixedCaseMarkIsNotUpdated() {
-        let input = "// Mark as read"
+        let input = """
+        // Mark as read
+        """
         testFormatting(for: input, rule: .todos)
     }
 
     func testLowercaseMarkDashIsUpdated() {
-        let input = "// mark - foo"
-        let output = "// MARK: - foo"
+        let input = """
+        // mark - foo
+        """
+        let output = """
+        // MARK: - foo
+        """
         testFormatting(for: input, output, rule: .todos)
     }
 
     func testSpaceAddedBeforeMarkDash() {
-        let input = "// MARK:- foo"
-        let output = "// MARK: - foo"
+        let input = """
+        // MARK:- foo
+        """
+        let output = """
+        // MARK: - foo
+        """
         testFormatting(for: input, output, rule: .todos)
     }
 
     func testSpaceAddedAfterMarkDash() {
-        let input = "// MARK: -foo"
-        let output = "// MARK: - foo"
+        let input = """
+        // MARK: -foo
+        """
+        let output = """
+        // MARK: - foo
+        """
         testFormatting(for: input, output, rule: .todos)
     }
 
     func testSpaceAddedAroundMarkDash() {
-        let input = "// MARK:-foo"
-        let output = "// MARK: - foo"
+        let input = """
+        // MARK:-foo
+        """
+        let output = """
+        // MARK: - foo
+        """
         testFormatting(for: input, output, rule: .todos)
     }
 
     func testSpaceNotAddedAfterMarkDashAtEndOfString() {
-        let input = "// MARK: -"
+        let input = """
+        // MARK: -
+        """
         testFormatting(for: input, rule: .todos)
     }
 }

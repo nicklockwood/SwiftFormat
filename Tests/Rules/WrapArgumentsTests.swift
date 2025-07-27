@@ -53,7 +53,12 @@ class WrapArgumentsTests: XCTestCase {
     }
 
     func testWrapParametersDoesNotAffectFunctionDeclaration() {
-        let input = "foo(\n    bar _: Int,\n    baz _: String\n)"
+        let input = """
+        foo(
+            bar _: Int,
+            baz _: String
+        )
+        """
         let options = FormatOptions(wrapArguments: .preserve, wrapParameters: .afterFirst)
         testFormatting(for: input, rule: .wrapArguments, options: options)
     }
@@ -69,22 +74,47 @@ class WrapArgumentsTests: XCTestCase {
     }
 
     func testWrapParametersNotSetWrapArgumentsAfterFirstDefaultsToAfterFirst() {
-        let input = "func foo(\n    bar _: Int,\n    baz _: String\n) {}"
-        let output = "func foo(bar _: Int,\n         baz _: String) {}"
+        let input = """
+        func foo(
+            bar _: Int,
+            baz _: String
+        ) {}
+        """
+        let output = """
+        func foo(bar _: Int,
+                 baz _: String) {}
+        """
         let options = FormatOptions(wrapArguments: .afterFirst)
         testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
     func testWrapParametersNotSetWrapArgumentsBeforeFirstDefaultsToBeforeFirst() {
-        let input = "func foo(bar _: Int,\n    baz _: String) {}"
-        let output = "func foo(\n    bar _: Int,\n    baz _: String\n) {}"
+        let input = """
+        func foo(bar _: Int,
+            baz _: String) {}
+        """
+        let output = """
+        func foo(
+            bar _: Int,
+            baz _: String
+        ) {}
+        """
         let options = FormatOptions(wrapArguments: .beforeFirst)
         testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
     func testWrapParametersNotSetWrapArgumentsPreserveDefaultsToPreserve() {
-        let input = "func foo(\n    bar _: Int,\n    baz _: String) {}"
-        let output = "func foo(\n    bar _: Int,\n    baz _: String\n) {}"
+        let input = """
+        func foo(
+            bar _: Int,
+            baz _: String) {}
+        """
+        let output = """
+        func foo(
+            bar _: Int,
+            baz _: String
+        ) {}
+        """
         let options = FormatOptions(wrapArguments: .preserve)
         testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
@@ -232,41 +262,81 @@ class WrapArgumentsTests: XCTestCase {
     // MARK: preserve
 
     func testAfterFirstPreserved() {
-        let input = "func foo(bar _: Int,\n         baz _: String) {}"
+        let input = """
+        func foo(bar _: Int,
+                 baz _: String) {}
+        """
         let options = FormatOptions(wrapParameters: .preserve)
         testFormatting(for: input, rule: .wrapArguments, options: options)
     }
 
     func testAfterFirstPreservedIndentFixed() {
-        let input = "func foo(bar _: Int,\n baz _: String) {}"
-        let output = "func foo(bar _: Int,\n         baz _: String) {}"
+        let input = """
+        func foo(bar _: Int,
+         baz _: String) {}
+        """
+        let output = """
+        func foo(bar _: Int,
+                 baz _: String) {}
+        """
         let options = FormatOptions(wrapParameters: .preserve)
         testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
     func testAfterFirstPreservedNewlineRemoved() {
-        let input = "func foo(bar _: Int,\n         baz _: String\n) {}"
-        let output = "func foo(bar _: Int,\n         baz _: String) {}"
+        let input = """
+        func foo(bar _: Int,
+                 baz _: String
+        ) {}
+        """
+        let output = """
+        func foo(bar _: Int,
+                 baz _: String) {}
+        """
         let options = FormatOptions(wrapParameters: .preserve)
         testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
     func testBeforeFirstPreserved() {
-        let input = "func foo(\n    bar _: Int,\n    baz _: String\n) {}"
+        let input = """
+        func foo(
+            bar _: Int,
+            baz _: String
+        ) {}
+        """
         let options = FormatOptions(wrapParameters: .preserve)
         testFormatting(for: input, rule: .wrapArguments, options: options)
     }
 
     func testBeforeFirstPreservedIndentFixed() {
-        let input = "func foo(\n    bar _: Int,\n baz _: String\n) {}"
-        let output = "func foo(\n    bar _: Int,\n    baz _: String\n) {}"
+        let input = """
+        func foo(
+            bar _: Int,
+         baz _: String
+        ) {}
+        """
+        let output = """
+        func foo(
+            bar _: Int,
+            baz _: String
+        ) {}
+        """
         let options = FormatOptions(wrapParameters: .preserve)
         testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
     func testBeforeFirstPreservedNewlineAdded() {
-        let input = "func foo(\n    bar _: Int,\n    baz _: String) {}"
-        let output = "func foo(\n    bar _: Int,\n    baz _: String\n) {}"
+        let input = """
+        func foo(
+            bar _: Int,
+            baz _: String) {}
+        """
+        let output = """
+        func foo(
+            bar _: Int,
+            baz _: String
+        ) {}
+        """
         let options = FormatOptions(wrapParameters: .preserve)
         testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
@@ -288,15 +358,31 @@ class WrapArgumentsTests: XCTestCase {
     // MARK: afterFirst
 
     func testBeforeFirstConvertedToAfterFirst() {
-        let input = "func foo(\n    bar _: Int,\n    baz _: String\n) {}"
-        let output = "func foo(bar _: Int,\n         baz _: String) {}"
+        let input = """
+        func foo(
+            bar _: Int,
+            baz _: String
+        ) {}
+        """
+        let output = """
+        func foo(bar _: Int,
+                 baz _: String) {}
+        """
         let options = FormatOptions(wrapParameters: .afterFirst)
         testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
     func testNoWrapInnerArguments() {
-        let input = "func foo(\n    bar _: Int,\n    baz _: foo(bar, baz)\n) {}"
-        let output = "func foo(bar _: Int,\n         baz _: foo(bar, baz)) {}"
+        let input = """
+        func foo(
+            bar _: Int,
+            baz _: foo(bar, baz)
+        ) {}
+        """
+        let output = """
+        func foo(bar _: Int,
+                 baz _: foo(bar, baz)) {}
+        """
         let options = FormatOptions(wrapParameters: .afterFirst)
         testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
@@ -468,22 +554,47 @@ class WrapArgumentsTests: XCTestCase {
     // MARK: beforeFirst
 
     func testWrapAfterFirstConvertedToWrapBefore() {
-        let input = "func foo(bar _: Int,\n    baz _: String) {}"
-        let output = "func foo(\n    bar _: Int,\n    baz _: String\n) {}"
+        let input = """
+        func foo(bar _: Int,
+            baz _: String) {}
+        """
+        let output = """
+        func foo(
+            bar _: Int,
+            baz _: String
+        ) {}
+        """
         let options = FormatOptions(wrapParameters: .beforeFirst)
         testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
     func testLinebreakInsertedAtEndOfWrappedFunction() {
-        let input = "func foo(\n    bar _: Int,\n    baz _: String) {}"
-        let output = "func foo(\n    bar _: Int,\n    baz _: String\n) {}"
+        let input = """
+        func foo(
+            bar _: Int,
+            baz _: String) {}
+        """
+        let output = """
+        func foo(
+            bar _: Int,
+            baz _: String
+        ) {}
+        """
         let options = FormatOptions(wrapParameters: .beforeFirst)
         testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
     func testAfterFirstConvertedToBeforeFirst() {
-        let input = "func foo(bar _: Int,\n         baz _: String) {}"
-        let output = "func foo(\n    bar _: Int,\n    baz _: String\n) {}"
+        let input = """
+        func foo(bar _: Int,
+                 baz _: String) {}
+        """
+        let output = """
+        func foo(
+            bar _: Int,
+            baz _: String
+        ) {}
+        """
         let options = FormatOptions(wrapParameters: .beforeFirst)
         testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
@@ -820,28 +931,36 @@ class WrapArgumentsTests: XCTestCase {
     }
 
     func testNoWrapSubscriptWithSingleElement() {
-        let input = "guard let foo = bar[0] {}"
+        let input = """
+        guard let foo = bar[0] {}
+        """
         let options = FormatOptions(wrapCollections: .beforeFirst, maxWidth: 20)
         testFormatting(for: input, rule: .wrapArguments, options: options,
                        exclude: [.wrap])
     }
 
     func testNoWrapArrayWithSingleElement() {
-        let input = "let foo = [0]"
+        let input = """
+        let foo = [0]
+        """
         let options = FormatOptions(wrapCollections: .beforeFirst, maxWidth: 11)
         testFormatting(for: input, rule: .wrapArguments, options: options,
                        exclude: [.wrap])
     }
 
     func testNoWrapDictionaryWithSingleElement() {
-        let input = "let foo = [bar: baz]"
+        let input = """
+        let foo = [bar: baz]
+        """
         let options = FormatOptions(wrapCollections: .beforeFirst, maxWidth: 15)
         testFormatting(for: input, rule: .wrapArguments, options: options,
                        exclude: [.wrap])
     }
 
     func testNoWrapImageLiteral() {
-        let input = "if let image = #imageLiteral(resourceName: \"abc.png\") {}"
+        let input = """
+        if let image = #imageLiteral(resourceName: \"abc.png\") {}
+        """
         let options = FormatOptions(wrapCollections: .beforeFirst, maxWidth: 30)
         testFormatting(for: input, rule: .wrapArguments, options: options,
                        exclude: [.wrap])
@@ -872,22 +991,47 @@ class WrapArgumentsTests: XCTestCase {
     // MARK: closingParenPosition = true
 
     func testParenOnSameLineWhenWrapAfterFirstConvertedToWrapBefore() {
-        let input = "func foo(bar _: Int,\n    baz _: String) {}"
-        let output = "func foo(\n    bar _: Int,\n    baz _: String) {}"
+        let input = """
+        func foo(bar _: Int,
+            baz _: String) {}
+        """
+        let output = """
+        func foo(
+            bar _: Int,
+            baz _: String) {}
+        """
         let options = FormatOptions(wrapParameters: .beforeFirst, closingParenPosition: .sameLine)
         testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
     func testParenOnSameLineWhenWrapBeforeFirstUnchanged() {
-        let input = "func foo(\n    bar _: Int,\n    baz _: String\n) {}"
-        let output = "func foo(\n    bar _: Int,\n    baz _: String) {}"
+        let input = """
+        func foo(
+            bar _: Int,
+            baz _: String
+        ) {}
+        """
+        let output = """
+        func foo(
+            bar _: Int,
+            baz _: String) {}
+        """
         let options = FormatOptions(wrapParameters: .beforeFirst, closingParenPosition: .sameLine)
         testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
     func testParenOnSameLineWhenWrapBeforeFirstPreserved() {
-        let input = "func foo(\n    bar _: Int,\n    baz _: String\n) {}"
-        let output = "func foo(\n    bar _: Int,\n    baz _: String) {}"
+        let input = """
+        func foo(
+            bar _: Int,
+            baz _: String
+        ) {}
+        """
+        let output = """
+        func foo(
+            bar _: Int,
+            baz _: String) {}
+        """
         let options = FormatOptions(wrapParameters: .preserve, closingParenPosition: .sameLine)
         testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
@@ -922,19 +1066,34 @@ class WrapArgumentsTests: XCTestCase {
     // MARK: - wrapArguments --wrapArguments
 
     func testWrapArgumentsDoesNotAffectFunctionDeclaration() {
-        let input = "func foo(\n    bar _: Int,\n    baz _: String\n) {}"
+        let input = """
+        func foo(
+            bar _: Int,
+            baz _: String
+        ) {}
+        """
         let options = FormatOptions(wrapArguments: .afterFirst, wrapParameters: .preserve)
         testFormatting(for: input, rule: .wrapArguments, options: options)
     }
 
     func testWrapArgumentsDoesNotAffectInit() {
-        let input = "init(\n    bar _: Int,\n    baz _: String\n) {}"
+        let input = """
+        init(
+            bar _: Int,
+            baz _: String
+        ) {}
+        """
         let options = FormatOptions(wrapArguments: .afterFirst, wrapParameters: .preserve)
         testFormatting(for: input, rule: .wrapArguments, options: options)
     }
 
     func testWrapArgumentsDoesNotAffectSubscript() {
-        let input = "subscript(\n    bar _: Int,\n    baz _: String\n) -> Int {}"
+        let input = """
+        subscript(
+            bar _: Int,
+            baz _: String
+        ) -> Int {}
+        """
         let options = FormatOptions(wrapArguments: .afterFirst, wrapParameters: .preserve)
         testFormatting(for: input, rule: .wrapArguments, options: options)
     }
@@ -957,14 +1116,33 @@ class WrapArgumentsTests: XCTestCase {
     }
 
     func testCorrectWrapIndentForNestedArguments() {
-        let input = "foo(\nbar: (\nx: 0,\ny: 0\n),\nbaz: (\nx: 0,\ny: 0\n)\n)"
-        let output = "foo(bar: (x: 0,\n          y: 0),\n    baz: (x: 0,\n          y: 0))"
+        let input = """
+        foo(
+        bar: (
+        x: 0,
+        y: 0
+        ),
+        baz: (
+        x: 0,
+        y: 0
+        )
+        )
+        """
+        let output = """
+        foo(bar: (x: 0,
+                  y: 0),
+            baz: (x: 0,
+                  y: 0))
+        """
         let options = FormatOptions(wrapArguments: .afterFirst)
         testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
     func testNoRemoveLinebreakAfterCommentInArguments() {
-        let input = "a(b // comment\n)"
+        let input = """
+        a(b // comment
+        )
+        """
         let options = FormatOptions(wrapArguments: .afterFirst)
         testFormatting(for: input, rule: .wrapArguments, options: options)
     }
@@ -1010,7 +1188,11 @@ class WrapArgumentsTests: XCTestCase {
     // MARK: beforeFirst
 
     func testClosureInsideParensNotWrappedOntoNextLine() {
-        let input = "foo({\n    bar()\n})"
+        let input = """
+        foo({
+            bar()
+        })
+        """
         let options = FormatOptions(wrapArguments: .beforeFirst)
         testFormatting(for: input, rule: .wrapArguments, options: options,
                        exclude: [.trailingClosures])
@@ -1207,47 +1389,99 @@ class WrapArgumentsTests: XCTestCase {
     // MARK: beforeFirst
 
     func testNoDoubleSpaceAddedToWrappedArray() {
-        let input = "[ foo,\n    bar ]"
-        let output = "[\n    foo,\n    bar\n]"
+        let input = """
+        [ foo,
+            bar ]
+        """
+        let output = """
+        [
+            foo,
+            bar
+        ]
+        """
         let options = FormatOptions(trailingCommas: .never, wrapCollections: .beforeFirst)
         testFormatting(for: input, [output], rules: [.wrapArguments, .spaceInsideBrackets],
                        options: options)
     }
 
     func testTrailingCommasAddedToWrappedArray() {
-        let input = "[foo,\n    bar]"
-        let output = "[\n    foo,\n    bar,\n]"
+        let input = """
+        [foo,
+            bar]
+        """
+        let output = """
+        [
+            foo,
+            bar,
+        ]
+        """
         let options = FormatOptions(trailingCommas: .always, wrapCollections: .beforeFirst)
         testFormatting(for: input, [output], rules: [.wrapArguments, .trailingCommas],
                        options: options)
     }
 
     func testTrailingCommasAddedToWrappedNestedDictionary() {
-        let input = "[foo: [bar: baz,\n    bar2: baz2]]"
-        let output = "[foo: [\n    bar: baz,\n    bar2: baz2,\n]]"
+        let input = """
+        [foo: [bar: baz,
+            bar2: baz2]]
+        """
+        let output = """
+        [foo: [
+            bar: baz,
+            bar2: baz2,
+        ]]
+        """
         let options = FormatOptions(trailingCommas: .always, wrapCollections: .beforeFirst)
         testFormatting(for: input, [output], rules: [.wrapArguments, .trailingCommas],
                        options: options)
     }
 
     func testTrailingCommasAddedToSingleLineNestedDictionary() {
-        let input = "[\n    foo: [bar: baz, bar2: baz2]]"
-        let output = "[\n    foo: [bar: baz, bar2: baz2],\n]"
+        let input = """
+        [
+            foo: [bar: baz, bar2: baz2]]
+        """
+        let output = """
+        [
+            foo: [bar: baz, bar2: baz2],
+        ]
+        """
         let options = FormatOptions(trailingCommas: .always, wrapCollections: .beforeFirst)
         testFormatting(for: input, [output], rules: [.wrapArguments, .trailingCommas],
                        options: options)
     }
 
     func testTrailingCommasAddedToWrappedNestedDictionaries() {
-        let input = "[foo: [bar: baz,\n    bar2: baz2],\n    foo2: [bar: baz,\n    bar2: baz2]]"
-        let output = "[\n    foo: [\n        bar: baz,\n        bar2: baz2,\n    ],\n    foo2: [\n        bar: baz,\n        bar2: baz2,\n    ],\n]"
+        let input = """
+        [foo: [bar: baz,
+            bar2: baz2],
+            foo2: [bar: baz,
+            bar2: baz2]]
+        """
+        let output = """
+        [
+            foo: [
+                bar: baz,
+                bar2: baz2,
+            ],
+            foo2: [
+                bar: baz,
+                bar2: baz2,
+            ],
+        ]
+        """
         let options = FormatOptions(trailingCommas: .always, wrapCollections: .beforeFirst)
         testFormatting(for: input, [output], rules: [.wrapArguments, .trailingCommas],
                        options: options)
     }
 
     func testSpaceAroundEnumValuesInArray() {
-        let input = "[\n    .foo,\n    .bar, .baz,\n]"
+        let input = """
+        [
+            .foo,
+            .bar, .baz,
+        ]
+        """
         let options = FormatOptions(wrapCollections: .beforeFirst)
         testFormatting(for: input, rule: .wrapArguments, options: options)
     }
@@ -1270,14 +1504,27 @@ class WrapArgumentsTests: XCTestCase {
     // MARK: afterFirst
 
     func testTrailingCommaRemovedInWrappedArray() {
-        let input = "[\n    .foo,\n    .bar,\n    .baz,\n]"
-        let output = "[.foo,\n .bar,\n .baz]"
+        let input = """
+        [
+            .foo,
+            .bar,
+            .baz,
+        ]
+        """
+        let output = """
+        [.foo,
+         .bar,
+         .baz]
+        """
         let options = FormatOptions(wrapCollections: .afterFirst)
         testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
     func testNoRemoveLinebreakAfterCommentInElements() {
-        let input = "[a, // comment\n]"
+        let input = """
+        [a, // comment
+        ]
+        """
         let options = FormatOptions(wrapCollections: .afterFirst)
         testFormatting(for: input, rule: .wrapArguments, options: options)
     }
@@ -1309,24 +1556,44 @@ class WrapArgumentsTests: XCTestCase {
     // MARK: preserve
 
     func testNoBeforeFirstPreservedAndTrailingCommaIgnoredInMultilineNestedDictionary() {
-        let input = "[foo: [bar: baz,\n    bar2: baz2]]"
-        let output = "[foo: [bar: baz,\n       bar2: baz2]]"
+        let input = """
+        [foo: [bar: baz,
+            bar2: baz2]]
+        """
+        let output = """
+        [foo: [bar: baz,
+               bar2: baz2]]
+        """
         let options = FormatOptions(trailingCommas: .always, wrapCollections: .preserve)
         testFormatting(for: input, [output], rules: [.wrapArguments, .trailingCommas],
                        options: options)
     }
 
     func testBeforeFirstPreservedAndTrailingCommaAddedInSingleLineNestedDictionary() {
-        let input = "[\n    foo: [bar: baz, bar2: baz2]]"
-        let output = "[\n    foo: [bar: baz, bar2: baz2],\n]"
+        let input = """
+        [
+            foo: [bar: baz, bar2: baz2]]
+        """
+        let output = """
+        [
+            foo: [bar: baz, bar2: baz2],
+        ]
+        """
         let options = FormatOptions(trailingCommas: .always, wrapCollections: .preserve)
         testFormatting(for: input, [output], rules: [.wrapArguments, .trailingCommas],
                        options: options)
     }
 
     func testBeforeFirstPreservedAndTrailingCommaAddedInSingleLineNestedDictionaryWithOneNestedItem() {
-        let input = "[\n    foo: [bar: baz]]"
-        let output = "[\n    foo: [bar: baz],\n]"
+        let input = """
+        [
+            foo: [bar: baz]]
+        """
+        let output = """
+        [
+            foo: [bar: baz],
+        ]
+        """
         let options = FormatOptions(trailingCommas: .always, wrapCollections: .preserve)
         testFormatting(for: input, [output], rules: [.wrapArguments, .trailingCommas],
                        options: options)

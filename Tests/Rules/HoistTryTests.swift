@@ -11,20 +11,32 @@ import XCTest
 
 class HoistTryTests: XCTestCase {
     func testHoistTry() {
-        let input = "greet(try name(), try surname())"
-        let output = "try greet(name(), surname())"
+        let input = """
+        greet(try name(), try surname())
+        """
+        let output = """
+        try greet(name(), surname())
+        """
         testFormatting(for: input, output, rule: .hoistTry)
     }
 
     func testHoistTryWithOptionalTry() {
-        let input = "greet(try name(), try? surname())"
-        let output = "try greet(name(), try? surname())"
+        let input = """
+        greet(try name(), try? surname())
+        """
+        let output = """
+        try greet(name(), try? surname())
+        """
         testFormatting(for: input, output, rule: .hoistTry)
     }
 
     func testHoistTryInsideStringInterpolation() {
-        let input = "\"\\(replace(regex: try something()))\""
-        let output = "try \"\\(replace(regex: something()))\""
+        let input = """
+        \"\\(replace(regex: try something()))\"
+        """
+        let output = """
+        try \"\\(replace(regex: something()))\"
+        """
         testFormatting(for: input, output, rule: .hoistTry)
     }
 
@@ -113,24 +125,36 @@ class HoistTryTests: XCTestCase {
     }
 
     func testNoHoistTryInsideXCTAssert() {
-        let input = "XCTAssertFalse(try foo())"
+        let input = """
+        XCTAssertFalse(try foo())
+        """
         testFormatting(for: input, rule: .hoistTry)
     }
 
     func testNoMergeTrysInsideXCTAssert() {
-        let input = "XCTAssertEqual(try foo(), try bar())"
+        let input = """
+        XCTAssertEqual(try foo(), try bar())
+        """
         testFormatting(for: input, rule: .hoistTry)
     }
 
     func testNoHoistTryInsideDo() {
-        let input = "do { rg.box.seal(.fulfilled(try body(error))) }"
-        let output = "do { try rg.box.seal(.fulfilled(body(error))) }"
+        let input = """
+        do { rg.box.seal(.fulfilled(try body(error))) }
+        """
+        let output = """
+        do { try rg.box.seal(.fulfilled(body(error))) }
+        """
         testFormatting(for: input, output, rule: .hoistTry)
     }
 
     func testNoHoistTryInsideDoThrows() {
-        let input = "do throws(Foo) { rg.box.seal(.fulfilled(try body(error))) }"
-        let output = "do throws(Foo) { try rg.box.seal(.fulfilled(body(error))) }"
+        let input = """
+        do throws(Foo) { rg.box.seal(.fulfilled(try body(error))) }
+        """
+        let output = """
+        do throws(Foo) { try rg.box.seal(.fulfilled(body(error))) }
+        """
         testFormatting(for: input, output, rule: .hoistTry)
     }
 
@@ -149,79 +173,127 @@ class HoistTryTests: XCTestCase {
     }
 
     func testHoistedTryPlacedBeforeAwait() {
-        let input = "let foo = await bar(contentsOf: try baz())"
-        let output = "let foo = try await bar(contentsOf: baz())"
+        let input = """
+        let foo = await bar(contentsOf: try baz())
+        """
+        let output = """
+        let foo = try await bar(contentsOf: baz())
+        """
         testFormatting(for: input, output, rule: .hoistTry)
     }
 
     func testHoistTryInExpressionWithNoSpaces() {
-        let input = "let foo=bar(contentsOf:try baz())"
-        let output = "let foo=try bar(contentsOf:baz())"
+        let input = """
+        let foo=bar(contentsOf:try baz())
+        """
+        let output = """
+        let foo=try bar(contentsOf:baz())
+        """
         testFormatting(for: input, output, rule: .hoistTry,
                        exclude: [.spaceAroundOperators])
     }
 
     func testHoistTryInExpressionWithExcessSpaces() {
-        let input = "let foo = bar ( contentsOf: try baz() )"
-        let output = "let foo = try bar ( contentsOf: baz() )"
+        let input = """
+        let foo = bar ( contentsOf: try baz() )
+        """
+        let output = """
+        let foo = try bar ( contentsOf: baz() )
+        """
         testFormatting(for: input, output, rule: .hoistTry,
                        exclude: [.spaceAroundParens, .spaceInsideParens])
     }
 
     func testHoistTryWithReturn() {
-        let input = "return .enumCase(try await service.greet())"
-        let output = "return try .enumCase(await service.greet())"
+        let input = """
+        return .enumCase(try await service.greet())
+        """
+        let output = """
+        return try .enumCase(await service.greet())
+        """
         testFormatting(for: input, output, rule: .hoistTry,
                        exclude: [.hoistAwait])
     }
 
     func testHoistDeeplyNestedTrys() {
-        let input = "let foo = (bar: (5, (try quux(), 6)), baz: (7, quux: try quux()))"
-        let output = "let foo = try (bar: (5, (quux(), 6)), baz: (7, quux: quux()))"
+        let input = """
+        let foo = (bar: (5, (try quux(), 6)), baz: (7, quux: try quux()))
+        """
+        let output = """
+        let foo = try (bar: (5, (quux(), 6)), baz: (7, quux: quux()))
+        """
         testFormatting(for: input, output, rule: .hoistTry)
     }
 
     func testTryNotHoistedOutOfClosure() {
-        let input = "let foo = { (try bar(), 5) }"
-        let output = "let foo = { try (bar(), 5) }"
+        let input = """
+        let foo = { (try bar(), 5) }
+        """
+        let output = """
+        let foo = { try (bar(), 5) }
+        """
         testFormatting(for: input, output, rule: .hoistTry)
     }
 
     func testTryNotHoistedOutOfClosureWithArguments() {
-        let input = "let foo = { bar in (try baz(bar), 5) }"
-        let output = "let foo = { bar in try (baz(bar), 5) }"
+        let input = """
+        let foo = { bar in (try baz(bar), 5) }
+        """
+        let output = """
+        let foo = { bar in try (baz(bar), 5) }
+        """
         testFormatting(for: input, output, rule: .hoistTry)
     }
 
     func testTryNotHoistedOutOfForCondition() {
-        let input = "for foo in bar(try baz()) {}"
-        let output = "for foo in try bar(baz()) {}"
+        let input = """
+        for foo in bar(try baz()) {}
+        """
+        let output = """
+        for foo in try bar(baz()) {}
+        """
         testFormatting(for: input, output, rule: .hoistTry)
     }
 
     func testHoistTryWithInitAssignment() {
-        let input = "let variable = String(try await asyncFunction())"
-        let output = "let variable = try String(await asyncFunction())"
+        let input = """
+        let variable = String(try await asyncFunction())
+        """
+        let output = """
+        let variable = try String(await asyncFunction())
+        """
         testFormatting(for: input, output, rule: .hoistTry,
                        exclude: [.hoistAwait])
     }
 
     func testHoistTryWithAssignment() {
-        let input = "let variable = (try await asyncFunction())"
-        let output = "let variable = try (await asyncFunction())"
+        let input = """
+        let variable = (try await asyncFunction())
+        """
+        let output = """
+        let variable = try (await asyncFunction())
+        """
         testFormatting(for: input, output, rule: .hoistTry,
                        exclude: [.hoistAwait])
     }
 
     func testHoistTryOnlyOne() {
-        let input = "greet(name, try surname())"
-        let output = "try greet(name, surname())"
+        let input = """
+        greet(name, try surname())
+        """
+        let output = """
+        try greet(name, surname())
+        """
         testFormatting(for: input, output, rule: .hoistTry)
     }
 
     func testHoistTryRedundantTry() {
-        let input = "try greet(try name(), try surname())"
-        let output = "try greet(name(), surname())"
+        let input = """
+        try greet(try name(), try surname())
+        """
+        let output = """
+        try greet(name(), surname())
+        """
         testFormatting(for: input, output, rule: .hoistTry)
     }
 
@@ -248,12 +320,16 @@ class HoistTryTests: XCTestCase {
     }
 
     func testHoistTryDoesNothing() {
-        let input = "try greet(name, surname)"
+        let input = """
+        try greet(name, surname)
+        """
         testFormatting(for: input, rule: .hoistTry)
     }
 
     func testHoistOptionalTryDoesNothing() {
-        let input = "try? greet(name, surname)"
+        let input = """
+        try? greet(name, surname)
+        """
         testFormatting(for: input, rule: .hoistTry)
     }
 
@@ -306,13 +382,17 @@ class HoistTryTests: XCTestCase {
     }
 
     func testNoHoistTryInCapturingFunction() {
-        let input = "foo(try bar)"
+        let input = """
+        foo(try bar)
+        """
         testFormatting(for: input, rule: .hoistTry,
                        options: FormatOptions(throwCapturing: ["foo"]))
     }
 
     func testNoHoistSecondArgumentTryInCapturingFunction() {
-        let input = "foo(bar, try baz)"
+        let input = """
+        foo(bar, try baz)
+        """
         testFormatting(for: input, rule: .hoistTry,
                        options: FormatOptions(throwCapturing: ["foo"]))
     }
@@ -348,37 +428,59 @@ class HoistTryTests: XCTestCase {
     }
 
     func testHoistTryInsideOptionalFunction() {
-        let input = "foo?(try bar())"
-        let output = "try foo?(bar())"
+        let input = """
+        foo?(try bar())
+        """
+        let output = """
+        try foo?(bar())
+        """
         testFormatting(for: input, output, rule: .hoistTry)
     }
 
     func testNoHoistTryAfterOptionalTry() {
-        let input = "let foo = try? bar(try baz())"
+        let input = """
+        let foo = try? bar(try baz())
+        """
         testFormatting(for: input, rule: .hoistTry)
     }
 
     func testHoistTryInsideOptionalSubscript() {
-        let input = "foo?[try bar()]"
-        let output = "try foo?[bar()]"
+        let input = """
+        foo?[try bar()]
+        """
+        let output = """
+        try foo?[bar()]
+        """
         testFormatting(for: input, output, rule: .hoistTry)
     }
 
     func testHoistTryAfterGenericType() {
-        let input = "let foo = Tree<T>.Foo(bar: try baz())"
-        let output = "let foo = try Tree<T>.Foo(bar: baz())"
+        let input = """
+        let foo = Tree<T>.Foo(bar: try baz())
+        """
+        let output = """
+        let foo = try Tree<T>.Foo(bar: baz())
+        """
         testFormatting(for: input, output, rule: .hoistTry)
     }
 
     func testHoistTryAfterArrayLiteral() {
-        let input = "if [.first, .second].contains(try foo()) {}"
-        let output = "if try [.first, .second].contains(foo()) {}"
+        let input = """
+        if [.first, .second].contains(try foo()) {}
+        """
+        let output = """
+        if try [.first, .second].contains(foo()) {}
+        """
         testFormatting(for: input, output, rule: .hoistTry)
     }
 
     func testHoistTryAfterSubscript() {
-        let input = "if foo[5].bar(try baz()) {}"
-        let output = "if try foo[5].bar(baz()) {}"
+        let input = """
+        if foo[5].bar(try baz()) {}
+        """
+        let output = """
+        if try foo[5].bar(baz()) {}
+        """
         testFormatting(for: input, output, rule: .hoistTry)
     }
 
@@ -397,8 +499,12 @@ class HoistTryTests: XCTestCase {
     }
 
     func testHoistTryInsideArrayClosure() {
-        let input = "foo[bar](try parseFile(path: $0))"
-        let output = "try foo[bar](parseFile(path: $0))"
+        let input = """
+        foo[bar](try parseFile(path: $0))
+        """
+        let output = """
+        try foo[bar](parseFile(path: $0))
+        """
         testFormatting(for: input, output, rule: .hoistTry)
     }
 

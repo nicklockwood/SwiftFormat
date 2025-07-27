@@ -11,85 +11,161 @@ import XCTest
 
 class TrailingCommasTests: XCTestCase {
     func testCommaAddedToSingleItem() {
-        let input = "[\n    foo\n]"
-        let output = "[\n    foo,\n]"
+        let input = """
+        [
+            foo
+        ]
+        """
+        let output = """
+        [
+            foo,
+        ]
+        """
         testFormatting(for: input, output, rule: .trailingCommas)
     }
 
     func testCommaAddedToLastItem() {
-        let input = "[\n    foo,\n    bar\n]"
-        let output = "[\n    foo,\n    bar,\n]"
+        let input = """
+        [
+            foo,
+            bar
+        ]
+        """
+        let output = """
+        [
+            foo,
+            bar,
+        ]
+        """
         testFormatting(for: input, output, rule: .trailingCommas)
     }
 
     func testCommaAddedToLastItemCollectionsOnly() {
-        let input = "[\n    foo,\n    bar\n]"
-        let output = "[\n    foo,\n    bar,\n]"
+        let input = """
+        [
+            foo,
+            bar
+        ]
+        """
+        let output = """
+        [
+            foo,
+            bar,
+        ]
+        """
         let options = FormatOptions(trailingCommas: .collectionsOnly)
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
     func testCommaAddedToDictionary() {
-        let input = "[\n    foo: bar\n]"
-        let output = "[\n    foo: bar,\n]"
+        let input = """
+        [
+            foo: bar
+        ]
+        """
+        let output = """
+        [
+            foo: bar,
+        ]
+        """
         testFormatting(for: input, output, rule: .trailingCommas)
     }
 
     func testCommaNotAddedToInlineArray() {
-        let input = "[foo, bar]"
+        let input = """
+        [foo, bar]
+        """
         testFormatting(for: input, rule: .trailingCommas)
     }
 
     func testCommaNotAddedToInlineDictionary() {
-        let input = "[foo: bar]"
+        let input = """
+        [foo: bar]
+        """
         testFormatting(for: input, rule: .trailingCommas)
     }
 
     func testCommaNotAddedToSubscript() {
-        let input = "foo[bar]"
+        let input = """
+        foo[bar]
+        """
         testFormatting(for: input, rule: .trailingCommas)
     }
 
     func testCommaAddedBeforeComment() {
-        let input = "[\n    foo // comment\n]"
-        let output = "[\n    foo, // comment\n]"
+        let input = """
+        [
+            foo // comment
+        ]
+        """
+        let output = """
+        [
+            foo, // comment
+        ]
+        """
         testFormatting(for: input, output, rule: .trailingCommas)
     }
 
     func testCommaNotAddedAfterComment() {
-        let input = "[\n    foo, // comment\n]"
+        let input = """
+        [
+            foo, // comment
+        ]
+        """
         testFormatting(for: input, rule: .trailingCommas)
     }
 
     func testCommaNotAddedInsideEmptyArrayLiteral() {
-        let input = "foo = [\n]"
+        let input = """
+        foo = [
+        ]
+        """
         testFormatting(for: input, rule: .trailingCommas)
     }
 
     func testCommaNotAddedInsideEmptyDictionaryLiteral() {
-        let input = "foo = [:\n]"
+        let input = """
+        foo = [:
+        ]
+        """
         let options = FormatOptions(wrapCollections: .disabled)
         testFormatting(for: input, rule: .trailingCommas, options: options)
     }
 
     func testTrailingCommaRemovedInInlineArray() {
-        let input = "[foo,]"
-        let output = "[foo]"
+        let input = """
+        [foo,]
+        """
+        let output = """
+        [foo]
+        """
         testFormatting(for: input, output, rule: .trailingCommas)
     }
 
     func testTrailingCommaNotAddedToSubscript() {
-        let input = "foo[\n    bar\n]"
+        let input = """
+        foo[
+            bar
+        ]
+        """
         testFormatting(for: input, rule: .trailingCommas)
     }
 
     func testTrailingCommaNotAddedToSubscript2() {
-        let input = "foo?[\n    bar\n]"
+        let input = """
+        foo?[
+            bar
+        ]
+        """
         testFormatting(for: input, rule: .trailingCommas)
     }
 
     func testTrailingCommaNotAddedToSubscript3() {
-        let input = "foo()[\n    bar\n]"
+        let input = """
+        foo()[
+            bar
+        ]
+        """
         testFormatting(for: input, rule: .trailingCommas)
     }
 
@@ -268,14 +344,29 @@ class TrailingCommasTests: XCTestCase {
     // trailingCommas = false
 
     func testCommaNotAddedToLastItem() {
-        let input = "[\n    foo,\n    bar\n]"
+        let input = """
+        [
+            foo,
+            bar
+        ]
+        """
         let options = FormatOptions(trailingCommas: .never)
         testFormatting(for: input, rule: .trailingCommas, options: options)
     }
 
     func testCommaRemovedFromLastItem() {
-        let input = "[\n    foo,\n    bar,\n]"
-        let output = "[\n    foo,\n    bar\n]"
+        let input = """
+        [
+            foo,
+            bar,
+        ]
+        """
+        let output = """
+        [
+            foo,
+            bar
+        ]
+        """
         let options = FormatOptions(trailingCommas: .never)
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }

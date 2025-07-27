@@ -54,6 +54,7 @@ let ruleRegistry: [String: FormatRule] = [
     "markTypes": .markTypes,
     "modifierOrder": .modifierOrder,
     "modifiersOnSameLine": .modifiersOnSameLine,
+    "multilineStrings": .multilineStrings,
     "noExplicitOwnership": .noExplicitOwnership,
     "noGuardInTests": .noGuardInTests,
     "numberFormatting": .numberFormatting,

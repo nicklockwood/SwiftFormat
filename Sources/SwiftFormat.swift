@@ -495,7 +495,7 @@ public func sourceCode(for tokens: [Token]?) -> String {
 
 /// Apply specified rules to a token array and optionally capture list of changes
 public func applyRules(
-    _ rules: [FormatRule],
+    _ originalRules: [FormatRule],
     to originalTokens: [Token],
     with options: FormatOptions,
     trackChanges: Bool,
@@ -503,32 +503,33 @@ public func applyRules(
     maxIterations: Int = 10
 ) throws -> (tokens: [Token], changes: [Formatter.Change]) {
     precondition(maxIterations > 1)
-    var rules = rules.sorted()
+
+    let originalRules = originalRules.sorted()
     var tokens = originalTokens
 
     // Ensure rule names have been set
-    if rules.first?.name == FormatRule.unnamedRule {
+    if originalRules.first?.name == FormatRule.unnamedRule {
         _ = FormatRules.all
     }
 
     // Check for parsing errors
-    if let error = parsingError(for: tokens, options: options) {
+    if let error = parsingError(for: originalTokens, options: options) {
         throw error
     }
 
     // Infer shared options
     var options = options
-    options.enabledRules = Set(rules.map(\.name))
+    options.enabledRules = Set(originalRules.map(\.name))
     let sharedOptions = FormatRules
-        .sharedOptionsForRules(rules)
+        .sharedOptionsForRules(originalRules)
         .compactMap { Descriptors.byName[$0] }
         .filter { $0.defaultArgument == $0.fromOptions(options) }
         .map(\.propertyName)
 
-    inferFormatOptions(sharedOptions, from: tokens, into: &options)
+    inferFormatOptions(sharedOptions, from: originalTokens, into: &options)
 
     // Check if required FileInfo is available
-    if rules.contains(.fileHeader) {
+    if originalRules.contains(.fileHeader) {
         let header = options.fileHeader
         let fileInfo = options.fileInfo
 
@@ -564,18 +565,21 @@ public func applyRules(
         return lines
     }
 
-    // Recursively apply rules until no changes are detected
-    let group = DispatchGroup()
-    let queue = DispatchQueue(label: "swiftformat.formatting", qos: .userInteractive)
-    let timeout = options.timeout + TimeInterval(tokens.count) / 100
-    var changes = [Formatter.Change]()
     // Apply trim/indent rule once at start
+    var rules = originalRules
     if rules.contains(.indent) {
         rules.insert(.indent, at: 0)
         if rules.contains(.trailingSpace) {
             rules.insert(.trailingSpace, at: 0)
         }
     }
+
+    // Recursively apply rules until no changes are detected
+    let group = DispatchGroup()
+    let queue = DispatchQueue(label: "swiftformat.formatting", qos: .userInteractive)
+    let timeout = options.timeout + TimeInterval(originalTokens.count) / 100
+    var changes = [Formatter.Change]()
+    var lastChanges = [Formatter.Change]()
     for iteration in 0 ..< maxIterations {
         let formatter = Formatter(tokens, options: options,
                                   trackChanges: trackChanges, range: range)
@@ -587,14 +591,23 @@ public func applyRules(
                 throw FormatError.writing("\(rule.name) rule timed out")
             }
         }
+
+        // Abort if there are fatal errors
         if let error = formatter.errors.first, !options.fragment {
             throw error
         }
-        changes += formatter.changes
-        if tokens == formatter.tokens {
+
+        // Record changes
+        lastChanges = formatter.changes
+        changes += lastChanges
+
+        // Terminate early if there were no changes
+        let newTokens = formatter.tokens
+        if tokens == newTokens {
             if changes.isEmpty {
                 return (tokens, [])
             }
+
             // Sort changes
             changes.sort(by: {
                 if $0.line == $1.line {
@@ -602,9 +615,11 @@ public func applyRules(
                 }
                 return $0.line < $1.line
             })
+
             // Get lines
             let oldLines = getLines(in: originalTokens, includingLinebreaks: true)
             let newLines = getLines(in: tokens, includingLinebreaks: true)
+
             // Filter out duplicates and lines that haven't changed
             var last: Formatter.Change?
             changes = changes.filter { change in
@@ -612,8 +627,8 @@ public func applyRules(
                     return false
                 }
                 last = change
-                // Filter out lines that haven't changed from their corresponding original line
-                // in the input code, unless the change was explicitly marked as a move.
+                // Filter out lines that haven't changed from their original line in
+                // the input code, unless the change was explicitly marked as a move.
                 if !change.isMove, newLines[change.line] == oldLines[change.line] {
                     return false
                 }
@@ -621,23 +636,27 @@ public func applyRules(
             }
             return (tokens, changes)
         }
-        tokens = formatter.tokens
+
+        // Update tokens
+        tokens = newTokens
+
+        // Remove rules that should only be run once
         if iteration == 0 {
-            if rules.first == .trailingSpace { rules.removeFirst() }
-            if rules.first == .indent { rules.removeFirst() }
-            rules.removeAll(where: { $0.runOnceOnly }) // Prevents infinite recursion
+            rules = originalRules
+            rules.removeAll(where: { $0.runOnceOnly })
         }
     }
-    let formatter = Formatter(tokens, options: options, trackChanges: true, range: range)
-    rules.sorted().forEach { $0.apply(with: formatter) }
-    let rulesApplied = Set(formatter.changes.map(\.rule.name)).sorted()
-    if rulesApplied.isEmpty {
+
+    // If we got here, formatting failed to terminate within max iterations
+    let rulesApplied = Set(lastChanges.map(\.rule.name)).sorted()
+    guard !rulesApplied.isEmpty else {
+        // No rules were applied this time (maybe something else went wrong?)
         throw FormatError.writing("Failed to terminate")
     }
     let names = rulesApplied.count == 1 ?
         "\(rulesApplied[0]) rule" :
         "\(rulesApplied.formattedList(lastSeparator: "and")) rules"
-    let changeLines = Set(formatter.changes.map { "\($0.line)" }).sorted()
+    let changeLines = Set(lastChanges.map { "\($0.line)" }).sorted()
     let lines = changeLines.count == 1 ?
         "line \(changeLines[0])" :
         "lines \(changeLines.formattedList(lastSeparator: "and"))"

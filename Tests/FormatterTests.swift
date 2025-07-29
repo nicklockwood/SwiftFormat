@@ -519,7 +519,7 @@ class FormatterTests: XCTestCase {
         ])
     }
 
-    // MARK: range
+    // MARK: Format range
 
     func testCodeOutsideRangeNotFormatted() throws {
         let input = tokenize("""
@@ -529,9 +529,14 @@ class FormatterTests: XCTestCase {
         }
         """)
         for range in [0 ..< 2, 5 ..< 7, 14 ..< 16, 17 ..< 19] {
-            XCTAssertEqual(try format(input,
-                                      rules: FormatRules.all,
-                                      range: range).tokens, input)
+            XCTAssertEqual(try sourceCode(
+                for: format(
+                    input,
+                    rules: FormatRules.all,
+                    range: range
+                ).tokens
+            ),
+            sourceCode(for: input), "range \(range)")
         }
         let output1 = tokenize("""
         func foo () {
@@ -554,6 +559,63 @@ class FormatterTests: XCTestCase {
             rules: [.blankLinesAtStartOfScope],
             range: 6 ..< 9
         ).tokens), output2)
+    }
+
+    // MARK: format line range
+
+    func testFormattingRange() {
+        let input = """
+        let  badlySpaced1:Int   = 5
+        let   badlySpaced2:Int=5
+        let   badlySpaced3 : Int = 5
+        """
+        let output = """
+        let  badlySpaced1:Int   = 5
+        let badlySpaced2: Int = 5
+        let   badlySpaced3 : Int = 5
+        """
+        XCTAssertEqual(try format(input, lineRange: 2 ... 2).output, output)
+    }
+
+    func testFormattingRange2() {
+        let input = """
+        enum ImagesToShow {
+        case none
+        case mentioned
+        case all
+        }
+        """
+        let output = """
+        enum ImagesToShow
+        {
+            case none
+        case mentioned
+        case all
+        }
+        """
+        let options = FormatOptions(allmanBraces: true)
+        XCTAssertEqual(try format(input, options: options, lineRange: 1 ... 2).output, output)
+    }
+
+    func testFormattingRangeNoCrash() {
+        let input = """
+        func foo() {
+          if bar {
+            print(  "foo")
+          }
+        }
+        """
+        let output = """
+        func foo() {
+          if bar {
+                print("foo")
+            }
+        }
+        """
+        let inputTokens = tokenize(input), outputTokens = tokenize(output)
+        XCTAssertEqual(tokenRange(forLineRange: 3 ... 4, in: inputTokens), 14 ..< 26)
+        XCTAssertEqual(tokenRange(forLineRange: 3 ... 4, in: outputTokens), 14 ..< 25)
+        XCTAssertEqual(try format(input, lineRange: 3 ... 4).output, output)
     }
 
     // MARK: endOfScope

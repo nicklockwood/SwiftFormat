@@ -155,33 +155,6 @@ class SwiftFormatTests: XCTestCase {
         XCTAssertEqual(try format(input, rules: [], options: options).output, input)
     }
 
-    // MARK: format line range
-
-    func testFormattingRange() {
-        let input = """
-        let  badlySpaced1:Int   = 5
-        let   badlySpaced2:Int=5
-        let   badlySpaced3 : Int = 5
-        """
-        let output = """
-        let  badlySpaced1:Int   = 5
-        let badlySpaced2: Int = 5
-        let   badlySpaced3 : Int = 5
-        """
-        XCTAssertEqual(try format(input, lineRange: 2 ... 2).output, output)
-    }
-
-    func testFormattingRangeNoCrash() {
-        let input = """
-        func foo() {
-          if bar {
-            print(  "foo")
-          }
-        }
-        """
-        XCTAssertNoThrow(try format(input, lineRange: 3 ... 4))
-    }
-
     // MARK: conflict markers
 
     func testFormattingFailsForConflict() {
@@ -264,7 +237,7 @@ class SwiftFormatTests: XCTestCase {
 
     func testTokenRange() {
         let tokens = tokenize("// a comment\n    let foo = 5\n")
-        XCTAssertEqual(tokenRange(forLineRange: 1 ... 1, in: tokens), 0 ..< 4)
+        XCTAssertEqual(tokenRange(forLineRange: 1 ... 1, in: tokens), 0 ..< 3)
     }
 
     // MARK: newOffset

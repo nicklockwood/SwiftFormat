@@ -475,7 +475,7 @@ Remove or insert trailing blank line at the end of a scope.
 
 Option | Description
 --- | ---
-`--type-blank-lines` | Blank lines in type declarations: "remove" (default), "insert", or "preserve"
+`--type-blank-lines` | Blank lines in type declarations: "remove" (default), "insert" or "preserve"
 
 <details>
 <summary>Examples</summary>
@@ -524,7 +524,7 @@ Remove leading blank line at the start of a scope.
 
 Option | Description
 --- | ---
-`--type-blank-lines` | Blank lines in type declarations: "remove" (default), "insert", or "preserve"
+`--type-blank-lines` | Blank lines in type declarations: "remove" (default), "insert" or "preserve"
 
 <details>
 <summary>Examples</summary>
@@ -923,7 +923,7 @@ next line).
 Option | Description
 --- | ---
 `--else-position` | Placement of else/catch: "same-line" (default) or "next-line"
-`--guard-else` | Placement of else in guard statements: "same-line", "next-line", or "auto" (default)
+`--guard-else` | Placement of else in guard statements: "same-line", "next-line" or "auto" (default)
 
 <details>
 <summary>Examples</summary>
@@ -982,7 +982,7 @@ Remove whitespace inside empty braces.
 
 Option | Description
 --- | ---
-`--empty-braces` | Empty brace spacing: "spaced", "no-space" (default), or "linebreak"
+`--empty-braces` | Empty brace spacing: "spaced", "no-space" (default) or "linebreak"
 
 <details>
 <summary>Examples</summary>
@@ -1384,7 +1384,7 @@ Option | Description
 `--tab-width` | The width of a tab character. Defaults to "unspecified"
 `--smart-tabs` | Align code independently of tab-width: "enabled" (default) or "disabled"
 `--indent-case` | Indent cases inside a switch statement: "true" or "false" (default)
-`--ifdef` | #if statement indenting: "indent" (default), "no-indent", or "outdent"
+`--ifdef` | #if statement indenting: "indent" (default), "no-indent" or "outdent"
 `--xcode-indentation` | Match Xcode indenting: "enabled" or "disabled" (default)
 `--indent-strings` | Indent multiline strings: "true" or "false" (default)
 
@@ -1524,7 +1524,7 @@ Use specified linebreak character for all linebreaks (CR, LF or CRLF).
 
 Option | Description
 --- | ---
-`--linebreaks` | Linebreak character to use: "cr", "crlf", or "lf" (default)
+`--linebreaks` | Linebreak character to use: "cr", "crlf" or "lf" (default)
 
 ## markTypes
 
@@ -1532,9 +1532,9 @@ Add a MARK comment before top-level types and extensions.
 
 Option | Description
 --- | ---
-`--mark-types` | Mark types: "always" (default), "never", or "if-not-empty"
+`--mark-types` | Mark types: "always" (default), "never" or "if-not-empty"
 `--type-mark` | Template for type mark comments. Defaults to "MARK: - %t"
-`--mark-extensions` | Mark extensions: "always" (default), "never", or "if-not-empty"
+`--mark-extensions` | Mark extensions: "always" (default), "never" or "if-not-empty"
 `--extension-mark` | Mark for standalone extensions. Defaults to "MARK: - %t + %c"
 `--grouped-extension` | Mark for extension grouped with extended type. ("MARK: %c")
 
@@ -1773,7 +1773,7 @@ Option | Description
 `--visibility-marks` | Marks for visibility groups (public:Public Fields,..)
 `--type-marks` | Marks for declaration type groups (classMethod:Baaz,..)
 `--group-blank-lines` | Require a blank line after each subgroup. Default: true
-`--sort-swiftui-properties` | SwiftUI property sorting: "none" (default), "alphabetize", or "first-appearance-sort"
+`--sort-swiftui-properties` | SwiftUI property sorting: "none" (default), "alphabetize" or "first-appearance-sort"
 
 <details>
 <summary>Examples</summary>
@@ -2077,7 +2077,7 @@ Convert property declarations to use inferred types (`let foo = Foo()`) or expli
 
 Option | Description
 --- | ---
-`--property-types` | Types in property declarations: "explicit", "inferred", or "infer-locals-only" (default)
+`--property-types` | Types in property declarations: "explicit", "inferred" or "infer-locals-only" (default)
 `--inferred-types` | Prefer inferred types: "exclude-cond-exprs" or "always" (default)
 `--preserved-property-types` | Comma-delimited list of symbols to be ignored and preserved as-is by the propertyTypes rule
 
@@ -2643,7 +2643,7 @@ Insert/remove explicit `self` where applicable.
 
 Option | Description
 --- | ---
-`--self` | Explicit self: "insert", "remove" (default), or "init-only"
+`--self` | Explicit self: "insert", "remove" (default) or "init-only"
 `--self-required` | Comma-delimited list of functions with @autoclosure arguments
 
 <details>
@@ -2719,7 +2719,7 @@ Remove redundant type from variable declarations.
 
 Option | Description
 --- | ---
-`--property-types` | Types in property declarations: "explicit", "inferred", or "infer-locals-only" (default)
+`--property-types` | Types in property declarations: "explicit", "inferred" or "infer-locals-only" (default)
 
 <details>
 <summary>Examples</summary>
@@ -2951,7 +2951,7 @@ Sort import statements alphabetically.
 
 Option | Description
 --- | ---
-`--import-grouping` | Import statement grouping: "alpha" (default), "length", "testable-first", or "testable-last"
+`--import-grouping` | Import statement grouping: "alpha" (default), "length", "testable-first" or "testable-last"
 
 <details>
 <summary>Examples</summary>
@@ -3115,10 +3115,10 @@ Add or remove space around operators or delimiters.
 
 Option | Description
 --- | ---
-`--operator-func` | Operator function spacing: "spaced" (default), "no-space", or "preserve"
+`--operator-func` | Operator function spacing: "spaced" (default), "no-space" or "preserve"
 `--no-space-operators` | Comma-delimited list of operators without surrounding space
-`--ranges` | Range operator spacing: "spaced" (default), "no-space", or "preserve"
-`--type-delimiter` | Type delimiter spacing: "spaced", "space-after" (default), or "no-space"
+`--ranges` | Range operator spacing: "spaced" (default), "no-space" or "preserve"
+`--type-delimiter` | Type delimiter spacing: "spaced", "space-after" (default) or "no-space"
 
 <details>
 <summary>Examples</summary>
@@ -3399,7 +3399,7 @@ Add or remove trailing commas in comma-separated lists.
 
 Option | Description
 --- | ---
-`--trailing-commas` | Include trailing commas: "never", "always" (default), "collections-only", or "multi-element-lists"
+`--trailing-commas` | Include trailing commas: "never", "always" (default), "collections-only" or "multi-element-lists"
 
 <details>
 <summary>Examples</summary>
@@ -3517,7 +3517,7 @@ Mark unused function arguments with `_`.
 
 Option | Description
 --- | ---
-`--strip-unused-args` | Strip unused arguments: "unnamed-only", "closure-only", or "always" (default)
+`--strip-unused-args` | Strip unused arguments: "unnamed-only", "closure-only" or "always" (default)
 
 <details>
 <summary>Examples</summary>
@@ -3662,15 +3662,15 @@ Align wrapped function arguments or collection elements.
 
 Option | Description
 --- | ---
-`--wrap-arguments` | Function argument wrapping: "before-first", "after-first", "preserve" (default), "disabled", or "default"
-`--wrap-parameters` | Function call parameter wrapping: "before-first", "after-first", "preserve", "disabled", or "default" (default)
-`--wrap-collections` | Collection literal element wrapping: "before-first", "after-first", "preserve" (default), "disabled", or "default"
-`--closing-paren` | Closing paren placement: "balanced" (default), "same-line", or "default"
-`--call-site-paren` | Closing paren placement at function call sites: "balanced", "same-line", or "default" (default)
-`--wrap-return-type` | Function return type wrapping: "preserve" (default), "if-multiline", or "never"
-`--wrap-conditions` | Conditional expression wrapping: "before-first", "after-first", "preserve" (default), "disabled", or "default"
-`--wrap-type-aliases` | Typealias wrapping: "before-first", "after-first", "preserve" (default), "disabled", or "default"
-`--wrap-effects` | Function effects (throws, async) wrapping: "preserve" (default), "if-multiline", or "never"
+`--wrap-arguments` | Function argument wrapping: "before-first", "after-first", "preserve" (default), "disabled" or "default"
+`--wrap-parameters` | Function call parameter wrapping: "before-first", "after-first", "preserve", "disabled" or "default" (default)
+`--wrap-collections` | Collection literal element wrapping: "before-first", "after-first", "preserve" (default), "disabled" or "default"
+`--closing-paren` | Closing paren placement: "balanced" (default), "same-line" or "default"
+`--call-site-paren` | Closing paren placement at function call sites: "balanced", "same-line" or "default" (default)
+`--wrap-return-type` | Function return type wrapping: "preserve" (default), "if-multiline" or "never"
+`--wrap-conditions` | Conditional expression wrapping: "before-first", "after-first", "preserve" (default), "disabled" or "default"
+`--wrap-type-aliases` | Typealias wrapping: "before-first", "after-first", "preserve" (default), "disabled" or "default"
+`--wrap-effects` | Function effects (throws, async) wrapping: "preserve" (default), "if-multiline" or "never"
 `--wrap-string-interpolation` | String interpolation wrapping: "default" (wrap if needed) or "preserve"
 
 <details>
@@ -3741,11 +3741,11 @@ Wrap @attributes onto a separate line, or keep them on the same line.
 
 Option | Description
 --- | ---
-`--func-attributes` | Placement for function @attributes: "prev-line", "same-line", or "preserve" (default)
-`--type-attributes` | Placement for type @attributes: "prev-line", "same-line", or "preserve" (default)
-`--stored-var-attributes` | Placement for stored var @attributes: "prev-line", "same-line", or "preserve" (default)
-`--computed-var-attributes` | Placement for computed var @attributes: "prev-line", "same-line", or "preserve" (default)
-`--complex-attributes` | Placement for complex @attributes: "prev-line", "same-line", or "preserve" (default)
+`--func-attributes` | Placement for function @attributes: "prev-line", "same-line" or "preserve" (default)
+`--type-attributes` | Placement for type @attributes: "prev-line", "same-line" or "preserve" (default)
+`--stored-var-attributes` | Placement for stored var @attributes: "prev-line", "same-line" or "preserve" (default)
+`--computed-var-attributes` | Placement for computed var @attributes: "prev-line", "same-line" or "preserve" (default)
+`--complex-attributes` | Placement for complex @attributes: "prev-line", "same-line" or "preserve" (default)
 `--non-complex-attributes` | List of @attributes to exclude from --complexattributes options
 
 <details>

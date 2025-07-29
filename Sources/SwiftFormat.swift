@@ -634,13 +634,13 @@ public func applyRules(
     if rulesApplied.isEmpty {
         throw FormatError.writing("Failed to terminate")
     }
-    let names = rulesApplied.count > 1 ?
-        "\(rulesApplied.dropLast().joined(separator: ", ")) and \(rulesApplied.last!) rules" :
-        "\(rulesApplied[0]) rule"
+    let names = rulesApplied.count == 1 ?
+        "\(rulesApplied[0]) rule" :
+        "\(rulesApplied.formattedList(lastSeparator: "and")) rules"
     let changeLines = Set(formatter.changes.map { "\($0.line)" }).sorted()
-    let lines = changeLines.count > 1 ?
-        "lines \(changeLines.dropLast().joined(separator: ", ")) and \(changeLines.last!)" :
-        "line \(changeLines[0])"
+    let lines = changeLines.count == 1 ?
+        "line \(changeLines[0])" :
+        "lines \(changeLines.formattedList(lastSeparator: "and"))"
     throw FormatError.writing("The \(names) failed to terminate at \(lines)")
 }
 

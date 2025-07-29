@@ -603,8 +603,15 @@ public func applyRules(
         lastChanges = formatter.changes
         changes += lastChanges
 
+        // Update range and discard unwanted changes
+        var newTokens = formatter.tokens
+        if let oldRange = range, let newRange = formatter.range {
+            // Discard changes outside of specified range
+            newTokens = Array(tokens[..<oldRange.lowerBound] + newTokens[newRange] + tokens[oldRange.upperBound...])
+            range = oldRange.lowerBound ..< (oldRange.lowerBound + newRange.count)
+        }
+
         // Terminate early if there were no changes
-        let newTokens = formatter.tokens
         if tokens == newTokens {
             if changes.isEmpty {
                 return (tokens, [])
@@ -639,9 +646,8 @@ public func applyRules(
             return (tokens, changes)
         }
 
-        // Update tokens and range
+        // Update tokens
         tokens = newTokens
-        range = formatter.range
 
         // Remove rules that should only be run once
         if iteration == 0 {

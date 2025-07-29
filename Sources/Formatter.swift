@@ -298,7 +298,7 @@ public class Formatter: NSObject {
     private let trackChanges: Bool
 
     private func trackChange(at index: Int, isMove: Bool = false) {
-        guard trackChanges else { return }
+        guard trackChanges, range?.contains(index) != false else { return }
         changes.append(Change(
             line: originalLine(at: index),
             rule: currentRule ?? .none,
@@ -310,10 +310,21 @@ public class Formatter: NSObject {
     private func updateRange(at index: Int, delta: Int) {
         autoUpdatingReferences.updateRanges(at: index, delta: delta)
 
-        guard let range, range.contains(index) else {
+        guard var startIndex = range?.lowerBound, var endIndex = range?.upperBound else {
             return
         }
-        self.range = range.lowerBound ..< range.upperBound + delta
+
+        if index < startIndex {
+            startIndex += delta
+            endIndex += delta
+        } else if index < endIndex {
+            endIndex += delta
+        } else {
+            return
+        }
+
+        // Defend against a potential crash if `endIndex` is less than `startIndex`
+        range = startIndex ..< max(startIndex, endIndex)
     }
 
     // MARK: errors and warnings

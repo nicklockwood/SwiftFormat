@@ -431,8 +431,9 @@ public func tokenRange(forLineRange lineRange: ClosedRange<Int>, in tokens: [Tok
     let startOffset = SourceOffset(line: lineRange.lowerBound, column: 0)
     let endOffset = SourceOffset(line: lineRange.upperBound + 1, column: 0)
     // NOTE: tab width is not relevant for line-based offsets
-    return tokenIndex(for: startOffset, in: tokens, tabWidth: 1)
-        ..< tokenIndex(for: endOffset, in: tokens, tabWidth: 1)
+    let tokenStart = max(0, tokenIndex(for: startOffset, in: tokens, tabWidth: 1) - 1)
+    let tokenEnd = max(tokenStart, tokenIndex(for: endOffset, in: tokens, tabWidth: 1) - 1)
+    return tokenStart ..< tokenEnd
 }
 
 /// Get new offset for an original offset (before formatting)
@@ -499,13 +500,14 @@ public func applyRules(
     to originalTokens: [Token],
     with options: FormatOptions,
     trackChanges: Bool,
-    range: Range<Int>?,
+    range originalRange: Range<Int>?,
     maxIterations: Int = 10
 ) throws -> (tokens: [Token], changes: [Formatter.Change]) {
     precondition(maxIterations > 1)
 
     let originalRules = originalRules.sorted()
     var tokens = originalTokens
+    var range = originalRange
 
     // Ensure rule names have been set
     if originalRules.first?.name == FormatRule.unnamedRule {
@@ -637,8 +639,9 @@ public func applyRules(
             return (tokens, changes)
         }
 
-        // Update tokens
+        // Update tokens and range
         tokens = newTokens
+        range = formatter.range
 
         // Remove rules that should only be run once
         if iteration == 0 {

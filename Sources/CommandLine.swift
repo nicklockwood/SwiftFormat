@@ -877,7 +877,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
             return .error
         }
         if outputFlags.filesChecked == 0, outputFlags.filesSkipped == 0 {
-            let inputPaths = inputURLs.map(\.path).joined(separator: ", ")
+            let inputPaths = inputURLs.map(\.path).formattedList(lastSeparator: "or")
             print("warning: No eligible files found at \(inputPaths).", as: .warning)
         }
         if let reporterOutput = try reporter.write() {
@@ -1032,7 +1032,7 @@ func applyRules(_ source: String, tokens: [Token]? = nil, options: Options, line
         if rulesApplied.isEmpty || updatedSource == source {
             print("-- no changes", as: .success)
         } else {
-            let sortedNames = Array(rulesApplied).sorted().joined(separator: ", ")
+            let sortedNames = Array(rulesApplied).sorted().formattedList(lastSeparator: "and")
             print("-- rules applied: \(sortedNames)", as: .success)
         }
     }

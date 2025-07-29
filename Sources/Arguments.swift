@@ -69,15 +69,21 @@ extension Array where Element: Equatable {
         let options = map {
             "\"\($0)\"\($0 == `default` ? " (default)" : "")"
         }
-        switch options.count {
+        return options.formattedList(lastSeparator: "or")
+    }
+}
+
+extension Array where Element: StringProtocol {
+    func formattedList(lastSeparator: String) -> String {
+        switch count {
         case 0:
             return ""
         case 1:
-            return String(describing: options[0])
+            return String(self[0])
         case 2:
-            return "\(options[0]) or \(options[1])"
+            return "\(self[0]) \(lastSeparator) \(self[1])"
         default:
-            return "\(options.dropLast().joined(separator: ", ")), or \(options.last!)"
+            return "\(dropLast().joined(separator: ", ")) \(lastSeparator) \(last!)"
         }
     }
 }

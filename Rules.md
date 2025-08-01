@@ -1768,6 +1768,7 @@ Option | Description
 `--mark-enum-threshold` | Minimum line count to add MARK comments in enum body. Defaults to 0
 `--mark-extension-threshold` | Minimum line count to add MARK comments in extension body. Defaults to 0
 `--organization-mode` | Organize declarations by: "visibility" (default) or "type"
+`--type-body-marks` | MARK comments in type bodies: "preserve" (default) or "remove"
 `--visibility-order` | Order for visibility groups inside declaration
 `--type-order` | Order for declaration type groups inside declaration
 `--visibility-marks` | Marks for visibility groups (public:Public Fields,..)

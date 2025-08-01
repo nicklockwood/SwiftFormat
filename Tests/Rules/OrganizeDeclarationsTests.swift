@@ -4031,4 +4031,177 @@ class OrganizeDeclarationsTests: XCTestCase {
             exclude: [.blankLinesAtStartOfScope]
         )
     }
+
+    func testTypeBodyMarksPreserved() {
+        let input = """
+        class Foo {
+
+            // MARK: Unexpected comment
+
+            var bar: String = "bar"
+
+            // MARK: Some other comment
+
+            func baz() {}
+
+            // MARK: Lifecycle
+            init() {}
+        }
+        """
+
+        let output = """
+        class Foo {
+
+            // MARK: Lifecycle
+
+            init() {}
+
+            // MARK: Internal
+
+            // MARK: Unexpected comment
+
+            var bar: String = "bar"
+
+            // MARK: Some other comment
+
+            func baz() {}
+
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: .organizeDeclarations,
+            options: FormatOptions(typeBodyMarks: .preserve),
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .blankLinesAroundMark]
+        )
+    }
+
+    func testTypeBodyMarksRemoved() {
+        let input = """
+        class Foo {
+
+            // MARK: Unexpected comment
+
+            var bar: String = "bar"
+
+            // MARK: Some other comment
+
+            func baz() {}
+
+            // MARK: Lifecycle
+
+            init() {}
+        }
+        """
+
+        let output = """
+        class Foo {
+
+            // MARK: Lifecycle
+
+            init() {}
+
+            // MARK: Internal
+
+            var bar: String = "bar"
+
+            func baz() {}
+
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: .organizeDeclarations,
+            options: FormatOptions(typeBodyMarks: .remove),
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+        )
+    }
+
+    func testTypeBodyMarksPreserveValidMarks() {
+        let input = """
+        class Foo {
+
+            // MARK: Some unexpected comment
+
+            var bar: String = "bar"
+
+            // MARK: Internal
+
+            func validComment() {}
+
+            init() {}
+        }
+        """
+
+        let output = """
+        class Foo {
+
+            // MARK: Lifecycle
+
+            init() {}
+
+            // MARK: Internal
+
+            var bar: String = "bar"
+
+            func validComment() {}
+
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: .organizeDeclarations,
+            options: FormatOptions(typeBodyMarks: .remove),
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+        )
+    }
+
+    func testTypeBodyMarksWithTypeMode() {
+        let input = """
+        class Foo {
+
+            // MARK: Unexpected section
+
+            var bar: String = "bar"
+
+            // MARK: Not a function category
+            func baz() {}
+
+            init() {}
+
+        }
+        """
+
+        let output = """
+        class Foo {
+
+            // MARK: Properties
+
+            var bar: String = "bar"
+
+            // MARK: Lifecycle
+
+            init() {}
+
+            // MARK: Functions
+
+            func baz() {}
+
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: .organizeDeclarations,
+            options: FormatOptions(
+                categoryMarkComment: "MARK: %c",
+                organizationMode: .type,
+                typeBodyMarks: .remove
+            ),
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+        )
+    }
 }

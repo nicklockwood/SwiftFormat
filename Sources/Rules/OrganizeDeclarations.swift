@@ -19,7 +19,7 @@ public extension FormatRule {
             "lifecycle", "organize-types", "struct-threshold", "class-threshold",
             "enum-threshold", "extension-threshold", "mark-struct-threshold",
             "mark-class-threshold", "mark-enum-threshold", "mark-extension-threshold",
-            "organization-mode", "visibility-order", "type-order", "visibility-marks",
+            "organization-mode", "type-body-marks", "visibility-order", "type-order", "visibility-marks",
             "type-marks", "group-blank-lines", "sort-swiftui-properties",
         ],
         sharedOptions: ["sorted-patterns", "line-after-marks", "linebreaks"]
@@ -484,7 +484,7 @@ extension Formatter {
             removeTokens(in: rangeToRemove)
 
             // We specifically iterate from start to end here, instead of in reverse,
-            // so we have to manually keep the existing inidices up to date.
+            // so we have to manually keep the existing indices up to date.
             matchingComments = matchingComments.map { commentRange in
                 (commentRange.lowerBound - rangeToRemove.count)
                     ... (commentRange.upperBound - rangeToRemove.count)
@@ -507,40 +507,48 @@ extension Formatter {
     /// The set of category separate comments like `// MARK: - Public` in the given range.
     /// Looks for approximate matches using edit distance, not exact matches.
     func matchingCategorySeparatorComments(in range: Range<Int>, order: ParsedOrder) -> [ClosedRange<Int>] {
-        // Current amount of variants to pair visibility-type is over 300,
-        // so we take only categories that could provide typemark that we want to erase
-        let potentialCategorySeparatorCommentBodies = (
-            VisibilityCategory.allCases.map { Category(visibility: $0, type: .classMethod, order: 0) }
-                + DeclarationType.allCases.map { Category(visibility: .visibility(.open), type: $0, order: 0) }
-                + DeclarationType.allCases.map { Category(visibility: .explicit($0), type: .classMethod, order: 0) }
-                + order.filter { $0.comment != nil }
-        ).flatMap {
-            Array(Set([
-                // The user's specific category separator template
-                $0.markCommentBody(from: options.categoryMarkComment, with: options.organizationMode),
-                // Always look for MARKs even if the user is using a different template
-                $0.markCommentBody(from: "MARK: %c", with: options.organizationMode),
-            ]))
-        }.compactMap { $0 }
+        switch options.typeBodyMarks {
+        case .remove:
+            return singleLineComments(in: range, matching: { commentBody in
+                commentBody.uppercased().trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("MARK:")
+            })
 
-        return singleLineComments(in: range, matching: { commentBody in
-            // Check if this comment matches an expected category separator comment
-            for potentialSeparatorCommentBody in potentialCategorySeparatorCommentBodies {
-                let existingComment = "// \(commentBody)".lowercased()
-                let potentialMatch = "// \(potentialSeparatorCommentBody)".lowercased()
+        case .preserve:
+            // Current amount of variants to pair visibility-type is over 300,
+            // so we take only categories that could provide typemark that we want to erase
+            let potentialCategorySeparatorCommentBodies = (
+                VisibilityCategory.allCases.map { Category(visibility: $0, type: .classMethod, order: 0) }
+                    + DeclarationType.allCases.map { Category(visibility: .visibility(.open), type: $0, order: 0) }
+                    + DeclarationType.allCases.map { Category(visibility: .explicit($0), type: .classMethod, order: 0) }
+                    + order.filter { $0.comment != nil }
+            ).flatMap {
+                Array(Set([
+                    // The user's specific category separator template
+                    $0.markCommentBody(from: options.categoryMarkComment, with: options.organizationMode),
+                    // Always look for MARKs even if the user is using a different template
+                    $0.markCommentBody(from: "MARK: %c", with: options.organizationMode),
+                ]))
+            }.compactMap { $0 }
 
-                // Check the edit distance of this existing comment with the potential
-                // valid category separators for this category. If they are similar or identical,
-                // we'll want to replace the existing comment with the correct comment.
-                let minimumEditDistance = Int(0.2 * Float(existingComment.count))
+            return singleLineComments(in: range, matching: { commentBody in
+                // Check if this comment matches an expected category separator comment
+                for potentialSeparatorCommentBody in potentialCategorySeparatorCommentBodies {
+                    let existingComment = "// \(commentBody)".lowercased()
+                    let potentialMatch = "// \(potentialSeparatorCommentBody)".lowercased()
 
-                if existingComment.editDistance(from: potentialMatch) <= minimumEditDistance {
-                    return true
+                    // Check the edit distance of this existing comment with the potential
+                    // valid category separators for this category. If they are similar or identical,
+                    // we'll want to replace the existing comment with the correct comment.
+                    let minimumEditDistance = Int(0.2 * Float(existingComment.count))
+
+                    if existingComment.editDistance(from: potentialMatch) <= minimumEditDistance {
+                        return true
+                    }
                 }
-            }
 
-            return false
-        })
+                return false
+            })
+        }
     }
 
     // Preserves the original spacing for groups of properties that were originally consecutive.

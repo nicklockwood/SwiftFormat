@@ -497,6 +497,14 @@ public enum DeclarationOrganizationMode: String, CaseIterable {
     case type
 }
 
+/// Treatment of MARK comments in type bodies
+public enum TypeBodyMarks: String, CaseIterable {
+    /// Preserve all existing MARK comments in type bodies
+    case preserve
+    /// Remove MARK comments that don't match expected visibility/declaration kind marks
+    case remove
+}
+
 /// Whether to insert or remove blank lines from the start / end of type bodies
 public enum TypeBlankLines: String, CaseIterable {
     case remove
@@ -781,6 +789,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var markEnumThreshold: Int
     public var markExtensionThreshold: Int
     public var organizationMode: DeclarationOrganizationMode
+    public var typeBodyMarks: TypeBodyMarks
     public var visibilityOrder: [String]?
     public var typeOrder: [String]?
     public var customVisibilityMarks: Set<String>
@@ -920,6 +929,7 @@ public struct FormatOptions: CustomStringConvertible {
                 markEnumThreshold: Int = 0,
                 markExtensionThreshold: Int = 0,
                 organizationMode: DeclarationOrganizationMode = .visibility,
+                typeBodyMarks: TypeBodyMarks = .preserve,
                 visibilityOrder: [String]? = nil,
                 typeOrder: [String]? = nil,
                 customVisibilityMarks: Set<String> = [],
@@ -1048,6 +1058,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.markEnumThreshold = markEnumThreshold
         self.markExtensionThreshold = markExtensionThreshold
         self.organizationMode = organizationMode
+        self.typeBodyMarks = typeBodyMarks
         self.visibilityOrder = visibilityOrder
         self.typeOrder = typeOrder
         self.customVisibilityMarks = customVisibilityMarks

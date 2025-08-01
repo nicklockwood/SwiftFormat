@@ -1100,6 +1100,12 @@ struct _Descriptors {
         help: "Organize declarations by:",
         keyPath: \.organizationMode
     )
+    let typeBodyMarks = OptionDescriptor(
+        argumentName: "type-body-marks",
+        displayName: "Type Body Mark Comments",
+        help: "MARK comments in type bodies: \"preserve\" (default) or \"remove\"",
+        keyPath: \.typeBodyMarks
+    )
     let visibilityOrder = OptionDescriptor(
         argumentName: "visibility-order",
         displayName: "Organization Order For Visibility",

@@ -233,6 +233,9 @@ func printHelp(as type: CLI.OutputType) {
 
     --rule-info        Display options for a given rule or rules (comma-delimited)
     --options          Prints a list of all formatting options and their usage
+
+    If followed by parenthesis and a file glob pattern, rule options and --config are only
+    applied to files matching that pattern (e.g. `--config(**/Tests/**) TestOptions.swiftformat`)
     """, as: type)
     print("")
 }
@@ -354,6 +357,29 @@ private func readMultipleConfigArgs(
             mergedConfig = try mergeArguments(config, into: mergedConfig)
         }
 
+        configURLs.append(url)
+    }
+
+    // Handle any file-specific config like `--config(**/Tests/**)`
+    let fileSpecificConfigArgs = args.filter { $0.key.hasPrefix("config(") }
+    for fileSpecificConfigPath in fileSpecificConfigArgs {
+        guard let (key, glob) = parseFileGlobArgument(fileSpecificConfigPath.key), key == "config" else {
+            continue
+        }
+
+        // Apply this config's glob to all of the arguments within the config file
+        let (url, unprocessedConfig) = try processConfigFile(at: fileSpecificConfigPath.value, for: name, in: directory)
+        var processedConfig = [String: String]()
+        for (key, value) in unprocessedConfig {
+            guard parseFileGlobArgument(key) == nil else {
+                throw FormatError.options("File-specific options not supported in file-specific config files: \(key)")
+            }
+
+            let keyWithGlob = "\(key)(\(glob))"
+            processedConfig[keyWithGlob] = value
+        }
+
+        mergedConfig = try mergeArguments(processedConfig, into: mergedConfig)
         configURLs.append(url)
     }
 
@@ -1110,6 +1136,7 @@ func processInput(_ inputURLs: [URL],
             // Override options
             var options = options
             try options.addArguments(overrides, in: "") // No need for directory as overrides are formatOptions only
+            try options.addFileSpecificArguments(path: inputURL.path)
             let formatOptions = options.formatOptions ?? .default
             let range = lineRange.map { "\($0.lowerBound),\($0.upperBound);" } ?? ""
             // Check cache

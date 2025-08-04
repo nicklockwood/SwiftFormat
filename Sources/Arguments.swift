@@ -33,7 +33,6 @@ import Foundation
 
 extension Options {
     init(_ args: [String: String], in directory: String) throws {
-        let (args, fileSpecificOptions) = processGlobArguments(args)
         fileOptions = try fileOptionsFor(args, in: directory)
         formatOptions = try formatOptionsFor(args)
         configURLs = args["config"].map {
@@ -42,7 +41,6 @@ extension Options {
         let lint = args.keys.contains("lint")
         self.lint = lint
         rules = try rulesFor(args, lint: lint)
-        self.fileSpecificOptions = fileSpecificOptions
     }
 
     mutating func addArguments(_ args: [String: String], in directory: String) throws {
@@ -54,29 +52,6 @@ extension Options {
         }
         newOptions.configURLs = configURLs
         self = newOptions
-    }
-
-    mutating func addFileSpecificArguments(path: String) throws {
-        var relevantOptions = [String: String]()
-
-        for (globKey, value) in fileSpecificOptions {
-            guard let (key, glob) = parseFileGlobArgument(globKey) else { continue }
-
-            let globExpansionPaths = ["/"]
-                + (configURLs ?? []).map { $0.deletingLastPathComponent().path }
-
-            for globExpansionPath in globExpansionPaths {
-                for glob in expandGlobs(glob, in: globExpansionPath) {
-                    if glob.matches(path) {
-                        relevantOptions[key] = value
-                        break
-                    }
-                }
-            }
-        }
-
-        guard !relevantOptions.isEmpty else { return }
-        try applyArguments(relevantOptions, lint: lint, to: &self)
     }
 }
 
@@ -257,18 +232,9 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
     var name = ""
     for arg in args {
         if arg.hasPrefix("--") {
-            var key = String(arg.unicodeScalars.dropFirst(2))
-            var keyToValidate = key
+            let key = String(arg.unicodeScalars.dropFirst(2)).lowercased()
 
-            // Ensure the option itself is lowercase
-            if let (globKey, glob) = parseFileGlobArgument(key) {
-                key = "\(globKey.lowercased())(\(glob))"
-                keyToValidate = globKey.lowercased()
-            } else {
-                key = key.lowercased()
-            }
-
-            if names.contains(keyToValidate) {
+            if names.contains(key) {
                 name = key
             }
 
@@ -329,37 +295,6 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
         }
     }
     return namedArgs
-}
-
-func parseFileGlobArgument(_ key: String) -> (key: String, glob: String)? {
-    // If this is an option like --arg(glob), parse the glob that the option applies to.
-    guard let openParenIndex = key.firstIndex(of: "("),
-          let closeParenIndex = key.firstIndex(of: ")")
-    else { return nil }
-
-    let indexAfterOpenParen = key.index(after: openParenIndex)
-    guard indexAfterOpenParen < closeParenIndex else { return nil }
-
-    let fileGlob = String(key[indexAfterOpenParen ..< closeParenIndex])
-    let keyWithoutGlob = key.replacingOccurrences(of: "(\(fileGlob))", with: "")
-    return (keyWithoutGlob, fileGlob)
-}
-
-func processGlobArguments(_ arguments: [String: String]) -> (
-    baseOptions: [String: String],
-    fileSpecificOptions: [String: String]
-) {
-    var baseOptions = arguments
-    var fileSpecificOptions = [String: String]()
-
-    for (key, value) in arguments {
-        if parseFileGlobArgument(key) != nil {
-            baseOptions[key] = nil
-            fileSpecificOptions[key] = value
-        }
-    }
-
-    return (baseOptions, fileSpecificOptions)
 }
 
 /// Parse a comma-delimited list of items
@@ -650,9 +585,6 @@ func argumentsFor(_ options: Options, excludingDefaults: Bool = false) -> [Strin
         if !disabled.isEmpty {
             args["disable"] = disabled.sorted().joined(separator: ",")
         }
-    }
-    for (key, value) in options.fileSpecificOptions {
-        args[key] = value
     }
     return args
 }

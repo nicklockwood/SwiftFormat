@@ -1198,7 +1198,6 @@ public struct Options {
     public var rules: Set<String>?
     public var configURLs: [URL]?
     public var lint: Bool
-    public var fileSpecificOptions: [String: String]
 
     public static let `default` = Options(
         fileOptions: .default,
@@ -1212,15 +1211,13 @@ public struct Options {
                 formatOptions: FormatOptions? = nil,
                 rules: Set<String>? = nil,
                 configURLs: [URL]? = nil,
-                lint: Bool = false,
-                fileSpecificOptions: [String: String] = [:])
+                lint: Bool = false)
     {
         self.fileOptions = fileOptions
         self.formatOptions = formatOptions
         self.rules = rules
         self.configURLs = configURLs
         self.lint = lint
-        self.fileSpecificOptions = fileSpecificOptions
     }
 
     public func shouldSkipFile(_ inputURL: URL) -> Bool {

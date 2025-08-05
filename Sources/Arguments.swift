@@ -32,7 +32,7 @@
 import Foundation
 
 extension Options {
-    init(_ args: [String: String], in directory: String) throws {
+    init(_ args: [String: String], filterOptions: [Glob: [String: String]] = [:], in directory: String) throws {
         fileOptions = try fileOptionsFor(args, in: directory)
         formatOptions = try formatOptionsFor(args)
         configURLs = args["config"].map {
@@ -41,17 +41,33 @@ extension Options {
         let lint = args.keys.contains("lint")
         self.lint = lint
         rules = try rulesFor(args, lint: lint)
+        self.filterOptions = filterOptions
+    }
+
+    mutating func addArguments(_ args: [[String: String]], in directory: String) throws {
+        for args in args {
+            try addArguments(args, in: directory)
+        }
     }
 
     mutating func addArguments(_ args: [String: String], in directory: String) throws {
         let oldArguments = argumentsFor(self)
         let newArguments = try mergeArguments(args, into: oldArguments)
-        var newOptions = try Options(newArguments, in: directory)
+        var newOptions = try Options(newArguments, filterOptions: filterOptions, in: directory)
         if let fileInfo = formatOptions?.fileInfo {
             newOptions.formatOptions?.fileInfo = fileInfo
         }
         newOptions.configURLs = configURLs
         self = newOptions
+    }
+
+    /// Adds arguments from any `--filter`ed config that applies to this path
+    mutating func addFilterArguments(path: String) throws {
+        for (glob, options) in filterOptions {
+            if glob.matches(path) {
+                try applyArguments(options, lint: lint, to: &self)
+            }
+        }
     }
 }
 
@@ -421,31 +437,51 @@ func mergeArguments(_ args: [String: String], into config: [String: String]) thr
     return output
 }
 
-/// Parse a configuration file into a dictionary of arguments
-public func parseConfigFile(_ data: Data) throws -> [String: String] {
+/// Parse a configuration file into a list of argument dictionaries.
+public func parseConfigFile(_ data: Data) throws -> ([[String: String]]) {
     guard let input = String(data: data, encoding: .utf8) else {
         throw FormatError.reading("Unable to read data for configuration file")
     }
     let lines = try cumulate(successiveLines: input.components(separatedBy: .newlines))
-    let arguments = try lines.flatMap { line -> [String] in
-        // TODO: parseArguments isn't a perfect fit here - should we use a different approach?
-        let line = line.replacingOccurrences(of: "\\n", with: "\n")
-        let parts = parseArguments(line, ignoreComments: false).dropFirst().map {
-            $0.replacingOccurrences(of: "\n", with: "\\n")
+
+    // Config files can have headers that separate them into separate sections.
+    // Each section is treated as if it were its own file. For example:
+    // ```
+    // --indent 4
+    //
+    // [Tests]
+    // --filter **/Tests/**
+    // --indent 2
+    // ```
+    let configSegments = lines.split(whereSeparator: { line in
+        line.starts(with: "[") && line.contains("]")
+    })
+
+    var configOptions = [[String: String]]()
+
+    for configSegmentLines in configSegments {
+        let arguments = try configSegmentLines.flatMap { line -> [String] in
+            // TODO: parseArguments isn't a perfect fit here - should we use a different approach?
+            let line = line.replacingOccurrences(of: "\\n", with: "\n")
+            let parts = parseArguments(line, ignoreComments: false).dropFirst().map {
+                $0.replacingOccurrences(of: "\n", with: "\\n")
+            }
+            guard let key = parts.first else {
+                return []
+            }
+            if !key.hasPrefix("-") {
+                throw FormatError.options("Unknown option '\(key)' in configuration file")
+            }
+            return [key, parts.dropFirst().joined(separator: " ")]
         }
-        guard let key = parts.first else {
-            return []
+        do {
+            try configOptions.append(preprocessArguments(arguments, optionsArguments))
+        } catch let FormatError.options(message) {
+            throw FormatError.options("\(message) in configuration file")
         }
-        if !key.hasPrefix("-") {
-            throw FormatError.options("Unknown option '\(key)' in configuration file")
-        }
-        return [key, parts.dropFirst().joined(separator: " ")]
     }
-    do {
-        return try preprocessArguments(arguments, optionsArguments)
-    } catch let FormatError.options(message) {
-        throw FormatError.options("\(message) in configuration file")
-    }
+
+    return configOptions
 }
 
 private func cumulate(successiveLines: [String]) throws -> [String] {
@@ -547,6 +583,7 @@ func argumentsFor(_ options: Options, excludingDefaults: Bool = false) -> [Strin
             }
             arguments.remove("min-version")
         }
+        arguments.remove("filter")
         assert(arguments.isEmpty)
     }
     if let formatOptions = options.formatOptions {
@@ -674,6 +711,11 @@ func fileOptionsFor(_ args: [String: String], in directory: String) throws -> Fi
         }
         options.minVersion = minVersion
     }
+
+    try processOption("filter", in: args, from: &arguments, handler: { _ in
+        // no-op, handled in `Options.init` and `addArguments`
+    })
+
     assert(arguments.isEmpty, "\(arguments.joined(separator: ","))")
     return containsFileOption ? options : nil
 }
@@ -752,6 +794,7 @@ let fileArguments = [
     "exclude",
     "unexclude",
     "min-version",
+    "filter",
 ]
 
 let rulesArguments = [

@@ -438,24 +438,29 @@ func mergeArguments(_ args: [String: String], into config: [String: String]) thr
 }
 
 /// Parse a configuration file into a list of argument dictionaries.
+///
+/// Config files can have headers that separate them into separate sections.
+/// Each section is treated as if it were its own file. For example:
+/// ```
+/// --indent 4
+///
+/// [Tests]
+/// --filter **/Tests/**
+/// --indent 2
+/// ```
 public func parseConfigFile(_ data: Data) throws -> ([[String: String]]) {
     guard let input = String(data: data, encoding: .utf8) else {
         throw FormatError.reading("Unable to read data for configuration file")
     }
     let lines = try cumulate(successiveLines: input.components(separatedBy: .newlines))
 
-    // Config files can have headers that separate them into separate sections.
-    // Each section is treated as if it were its own file. For example:
-    // ```
-    // --indent 4
-    //
-    // [Tests]
-    // --filter **/Tests/**
-    // --indent 2
-    // ```
     let configSegments = lines.split(whereSeparator: { line in
         line.starts(with: "[") && line.contains("]")
     })
+
+    guard !configSegments.isEmpty else {
+        return []
+    }
 
     var configOptions = [[String: String]]()
 

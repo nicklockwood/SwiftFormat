@@ -1136,33 +1136,40 @@ class CommandLineTests: XCTestCase {
         }
 
         let configURL = try createTmpFile("Test/config.swiftformat", contents: """
+        --rules indent
+        --rules braces
         --indent 1
         """)
 
         let testsConfigURL = try createTmpFile("Test/tests.swiftformat", contents: """
         --filter **/Tests/**
         --indent 2
+        --enable linebreakAtEndOfFile
         """)
 
         let toolsConfigURL = try createTmpFile("Test/tools.swiftformat", contents: """
         --filter **/Tools/**
         --indent 3
+        --disable braces
         """)
 
         let nonTestFile = try createTmpFile("Test/Foo/Sources/Foo.swift", contents: """
-        func foo() {
+        func foo()
+        {
         print("bar")
         }
         """)
 
         let testFile = try createTmpFile("Test/Foo/Tests/FooTests.swift", contents: """
-        func foo() {
+        func foo()
+        {
         print("bar")
         }
         """)
 
         let toolsFile = try createTmpFile("Test/Tools/MyTool/FooTool.swift", contents: """
-        func foo() {
+        func foo()
+        {
         print("bar")
         }
         """)
@@ -1179,7 +1186,6 @@ class CommandLineTests: XCTestCase {
         func foo() {
          print("bar")
         }
-
         """)
 
         XCTAssertEqual(try String(contentsOf: testFile, encoding: .utf8), """
@@ -1190,10 +1196,10 @@ class CommandLineTests: XCTestCase {
         """)
 
         XCTAssertEqual(try String(contentsOf: toolsFile, encoding: .utf8), """
-        func foo() {
+        func foo()
+        {
            print("bar")
         }
-
         """)
 
         let tempFiles = [configURL, testsConfigURL, toolsConfigURL, nonTestFile, testFile, toolsFile]

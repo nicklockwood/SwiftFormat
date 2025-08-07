@@ -343,8 +343,33 @@ class ArgumentsTests: XCTestCase {
         """
         let data = Data(config.utf8)
         do {
-            let args = try parseConfigFile(data)
+            let args = try parseConfigFile(data)[0]
             XCTAssertEqual(args.count, 2)
+        } catch {
+            XCTFail("\(error)")
+        }
+    }
+
+    func testParseConfigFileWithHeaders() {
+        let config = """
+        --allman true
+        --rules braces,fileHeader
+
+        [Header]
+        --filter Foo
+        --allman false
+
+        [Header2]
+        --filter Bar
+        --indent 4
+        """
+        let data = Data(config.utf8)
+        do {
+            let segments = try parseConfigFile(data)
+            XCTAssertEqual(segments.count, 3)
+            XCTAssertEqual(segments[0].count, 2)
+            XCTAssertEqual(segments[1].count, 2)
+            XCTAssertEqual(segments[2].count, 2)
         } catch {
             XCTFail("\(error)")
         }
@@ -356,7 +381,7 @@ class ArgumentsTests: XCTestCase {
         --allman true
         """
         let data = Data(config.utf8)
-        XCTAssertThrowsError(try parseConfigFile(data)) { error in
+        XCTAssertThrowsError(try parseConfigFile(data)[0]) { error in
             guard case let FormatError.options(message) = error else {
                 XCTFail("\(error)")
                 return
@@ -368,7 +393,7 @@ class ArgumentsTests: XCTestCase {
     func testParseArgumentsContainingSpaces() throws {
         let config = "--rules braces, fileHeader, consecutiveSpaces"
         let data = Data(config.utf8)
-        let args = try parseConfigFile(data)
+        let args = try parseConfigFile(data)[0]
         XCTAssertEqual(args.count, 1)
         XCTAssertEqual(args["rules"], "braces, fileHeader, consecutiveSpaces")
     }
@@ -376,7 +401,7 @@ class ArgumentsTests: XCTestCase {
     func testParseURLMacroArgumentInConfigFileFailsWithoutQuotes() throws {
         let config = "--url-macro #URL,URLFoundation"
         let data = Data(config.utf8)
-        let args = try parseConfigFile(data)
+        let args = try parseConfigFile(data)[0]
         // This should fail because #URL,URLFoundation is treated as a comment
         XCTAssertEqual(args.count, 1)
         XCTAssertEqual(args["url-macro"], "")
@@ -385,7 +410,7 @@ class ArgumentsTests: XCTestCase {
     func testParseURLMacroArgumentInConfigFileWithQuotes() throws {
         let config = "--url-macro \"#URL,URLFoundation\""
         let data = Data(config.utf8)
-        let args = try parseConfigFile(data)
+        let args = try parseConfigFile(data)[0]
         XCTAssertEqual(args.count, 1)
         XCTAssertEqual(args["url-macro"], "#URL,URLFoundation")
     }
@@ -401,7 +426,7 @@ class ArgumentsTests: XCTestCase {
                 8
         """
         let data = Data(config.utf8)
-        let args = try parseConfigFile(data)
+        let args = try parseConfigFile(data)[0]
         XCTAssertEqual(args["rules"], "braces, fileHeader, andOperator, typeSugar")
         XCTAssertEqual(args["allman"], "true")
         XCTAssertEqual(args["hex-grouping"], "4, 8")
@@ -420,7 +445,7 @@ class ArgumentsTests: XCTestCase {
                 8           # comment invalidating this line separator \\
         """
         let data = Data(config.utf8)
-        let args = try parseConfigFile(data)
+        let args = try parseConfigFile(data)[0]
         XCTAssertEqual(args["rules"], "braces, fileHeader, andOperator")
         XCTAssertEqual(args["hex-grouping"], "4, 8")
     }
@@ -431,7 +456,7 @@ class ArgumentsTests: XCTestCase {
                 fileHeader\\
         """
         let data = Data(config.utf8)
-        XCTAssertThrowsError(try parseConfigFile(data)) {
+        XCTAssertThrowsError(try parseConfigFile(data)[0]) {
             XCTAssert($0.localizedDescription.contains("line continuation character"))
         }
     }
@@ -439,7 +464,7 @@ class ArgumentsTests: XCTestCase {
     func testParseArgumentsContainingEscapedCharacters() throws {
         let config = "--header hello\\ world\\ngoodbye\\ world"
         let data = Data(config.utf8)
-        let args = try parseConfigFile(data)
+        let args = try parseConfigFile(data)[0]
         XCTAssertEqual(args.count, 1)
         XCTAssertEqual(args["header"], "hello world\\ngoodbye world")
     }
@@ -449,7 +474,7 @@ class ArgumentsTests: XCTestCase {
         --header "hello world\\ngoodbye world"
         """
         let data = Data(config.utf8)
-        let args = try parseConfigFile(data)
+        let args = try parseConfigFile(data)[0]
         XCTAssertEqual(args.count, 1)
         XCTAssertEqual(args["header"], "hello world\\ngoodbye world")
     }
@@ -457,7 +482,7 @@ class ArgumentsTests: XCTestCase {
     func testParseIgnoreFileHeader() throws {
         let config = "--header ignore"
         let data = Data(config.utf8)
-        let args = try parseConfigFile(data)
+        let args = try parseConfigFile(data)[0]
         let options = try Options(args, in: "/")
         XCTAssertEqual(options.formatOptions?.fileHeader, .ignore)
     }
@@ -465,7 +490,7 @@ class ArgumentsTests: XCTestCase {
     func testParseUppercaseIgnoreFileHeader() throws {
         let config = "--header IGNORE"
         let data = Data(config.utf8)
-        let args = try parseConfigFile(data)
+        let args = try parseConfigFile(data)[0]
         let options = try Options(args, in: "/")
         XCTAssertEqual(options.formatOptions?.fileHeader, .ignore)
     }
@@ -473,7 +498,7 @@ class ArgumentsTests: XCTestCase {
     func testParseArgumentsContainingSwiftVersion() throws {
         let config = "--swiftversion 5.1"
         let data = Data(config.utf8)
-        let args = try parseConfigFile(data)
+        let args = try parseConfigFile(data)[0]
         XCTAssertEqual(args.count, 1)
         XCTAssertEqual(args["swift-version"], "5.1")
     }
@@ -481,7 +506,7 @@ class ArgumentsTests: XCTestCase {
     func testParseArgumentsContainingLanguageVersion() throws {
         let config = "--languagemode 6"
         let data = Data(config.utf8)
-        let args = try parseConfigFile(data)
+        let args = try parseConfigFile(data)[0]
         XCTAssertEqual(args.count, 1)
         XCTAssertEqual(args["language-mode"], "6")
     }
@@ -489,7 +514,7 @@ class ArgumentsTests: XCTestCase {
     func testParseArgumentsContainingDisableAll() throws {
         let config = "--disable all"
         let data = Data(config.utf8)
-        let args = try parseConfigFile(data)
+        let args = try parseConfigFile(data)[0]
         let options = try Options(args, in: "/")
         XCTAssertEqual(options.rules, [])
     }

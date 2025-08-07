@@ -36,7 +36,7 @@ func pathContainsGlobSyntax(_ path: String) -> Bool {
 }
 
 /// Glob type represents either an exact path or wildcard
-public enum Glob: CustomStringConvertible {
+public enum Glob: CustomStringConvertible, Hashable {
     case path(String)
     case regex(String, NSRegularExpression)
 

@@ -323,14 +323,14 @@ func gatherOptions(_ options: inout Options, for inputURL: URL, with logger: Log
 }
 
 /// Process configuration files in specified directory.
-private var configCache = [URL: [String: String]]()
+private var configCache = [URL: [[String: String]]]()
 private let configQueue = DispatchQueue(label: "swiftformat.config", qos: .userInteractive)
 private func processDirectory(_ inputURL: URL, with options: inout Options, logger: Logger?) throws {
     if let args = configQueue.sync(execute: { configCache[inputURL] }) {
         try options.addArguments(args, in: inputURL.path)
         return
     }
-    var args = [String: String]()
+    var args = [[String: String]]()
     let manager = FileManager.default
     let configFile = inputURL.appendingPathComponent(swiftFormatConfigurationFile)
     if manager.fileExists(atPath: configFile.path) {
@@ -349,11 +349,15 @@ private func processDirectory(_ inputURL: URL, with options: inout Options, logg
     if manager.fileExists(atPath: versionFile.path) {
         let versionString = try String(contentsOf: versionFile, encoding: .utf8)
             .trimmingCharacters(in: .whitespacesAndNewlines)
-        if args["swift-version"] != nil {
+        if args.first(where: { $0["swift-version"] != nil }) != nil {
             logger?("Ignoring swift-version file at \(versionFile.path)")
         } else if Version(rawValue: versionString) != nil {
             logger?("Reading swift-version file at \(versionFile.path) (version \(versionString))")
-            args["swift-version"] = versionString
+            args = args.map {
+                var args = $0
+                args["swift-version"] = versionString
+                return args
+            }
         } else {
             // Don't treat as error, per: https://github.com/nicklockwood/SwiftFormat/issues/639
             // TODO: find a better solution for logging warnings here

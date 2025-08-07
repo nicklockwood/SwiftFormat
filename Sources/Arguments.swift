@@ -662,15 +662,21 @@ private func processOption(_ key: String,
 /// Parse rule names from arguments
 public func rulesFor(_ args: [String: String], lint: Bool, initial: Set<String>? = nil) throws -> Set<String> {
     var rules = initial ?? allRules
-    rules = try args["rules"].map {
-        try Set(parseRules($0))
-    } ?? rules.subtracting(FormatRules.disabledByDefault.map(\.name))
+
+    if let specifiedRules = try args["rules"].map({ try Set(parseRules($0)) }) {
+        rules = specifiedRules
+    } else if initial == nil {
+        rules = rules.subtracting(FormatRules.disabledByDefault.map(\.name))
+    }
+
     try args["disable"].map {
         try rules.subtract(parseRules($0))
     }
+
     try args["enable"].map {
         try rules.formUnion(parseRules($0))
     }
+
     try args["lint-only"].map { rulesString in
         if lint {
             try rules.formUnion(parseRules(rulesString))
@@ -678,6 +684,7 @@ public func rulesFor(_ args: [String: String], lint: Bool, initial: Set<String>?
             try rules.subtract(parseRules(rulesString))
         }
     }
+
     return rules
 }
 

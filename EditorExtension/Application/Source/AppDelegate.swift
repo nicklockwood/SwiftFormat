@@ -48,9 +48,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         let options: Options
         do {
-            let args = try parseConfigFile(data)
-            options = try Options(args, in: url.deletingLastPathComponent().path)
-            OptionsStore().inferOptions = Set(args.keys)
+            let configs = try parseConfigFile(data)
+
+            if configs.count > 1 {
+                showError(FormatError.options("""
+                SwiftFormat for Xcode doesn't support config files with segment headers, \
+                loaded first segment
+                """))
+            }
+
+            options = try Options(configs[0], in: url.deletingLastPathComponent().path)
+            OptionsStore().inferOptions = Set(configs[0].keys)
                 .intersection(formattingArguments)
                 .subtracting([Descriptors.swiftVersion.argumentName])
                 .isEmpty

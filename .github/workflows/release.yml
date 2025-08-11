@@ -67,7 +67,7 @@ jobs:
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           path: downloaded_artifacts
           pattern: swiftformat_*

@@ -1859,4 +1859,90 @@ class TrailingCommasTests: XCTestCase {
         let options = FormatOptions(trailingCommas: .multiElementLists, swiftVersion: "6.1")
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
+
+    func testTrailingCommasAddedToOptionalClosureCall() {
+        let input = """
+        myClosure?(
+            foo: 5,
+            bar: 10
+        )
+        """
+        let output = """
+        myClosure?(
+            foo: 5,
+            bar: 10,
+        )
+        """
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
+
+    func testTrailingCommasRemovedFromOptionalClosureCall() {
+        let input = """
+        myClosure!(
+            foo: 5,
+            bar: 10,
+        )
+        """
+        let output = """
+        myClosure!(
+            foo: 5,
+            bar: 10
+        )
+        """
+        let options = FormatOptions(trailingCommas: .never)
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
+
+    func testTrailingCommasAddedToOptionalClosureCallSingleParameter() {
+        let input = """
+        myClosure?(
+            foo: 5
+        )
+        """
+        let output = """
+        myClosure?(
+            foo: 5,
+        )
+        """
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
+
+    func testTrailingCommasMultiElementListsOptionalClosureCall() {
+        let input = """
+        myClosure?(
+            foo: 5,
+        )
+
+        otherClosure?(
+            foo: 5,
+            bar: 10
+        )
+        """
+        let output = """
+        myClosure?(
+            foo: 5
+        )
+
+        otherClosure?(
+            foo: 5,
+            bar: 10,
+        )
+        """
+        let options = FormatOptions(trailingCommas: .multiElementLists, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
+
+    func testTrailingCommasInTupleTypeCastNotRemovedSwift6_1() {
+        // Unexpectedly not supported in Swift 6.1
+        let input = """
+        let foo = bar as? (
+            Foo,
+            Bar
+        )
+        """
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
+        testFormatting(for: input, rule: .trailingCommas, options: options)
+    }
 }

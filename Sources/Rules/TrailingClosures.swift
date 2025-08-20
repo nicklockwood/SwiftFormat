@@ -24,10 +24,10 @@ public extension FormatRule {
         ] + formatter.options.neverTrailing)
 
         formatter.forEach(.startOfScope("(")) { i, _ in
-            guard let prevToken = formatter.last(.nonSpaceOrCommentOrLinebreak, before: i),
-                  case let .identifier(name) = prevToken, // TODO: are trailing closures allowed in other cases?
-                  !nonTrailing.contains(name), !formatter.isConditionalStatement(at: i)
-            else {
+            guard let identifierIndex = formatter.parseFunctionIdentifier(beforeStartOfScope: i) else { return }
+            let name = formatter.tokens[identifierIndex].string
+
+            guard !nonTrailing.contains(name), !formatter.isConditionalStatement(at: i) else {
                 return
             }
             guard let closingIndex = formatter.index(of: .endOfScope(")"), after: i), let closingBraceIndex =

@@ -306,6 +306,43 @@ class TrailingClosuresTests: XCTestCase {
         testFormatting(for: input, rule: .trailingClosures, options: options)
     }
 
+    func testOptionalClosureCallMadeTrailing() {
+        let input = """
+        myClosure?(foo: 5, { /* some code */ })
+        """
+        let output = """
+        myClosure?(foo: 5) { /* some code */ }
+        """
+        testFormatting(for: input, output, rule: .trailingClosures)
+    }
+
+    func testOptionalSolitaryClosureCallMadeTrailing() {
+        let input = """
+        myClosure?({ /* some code */ })
+        """
+        let output = """
+        myClosure? { /* some code */ }
+        """
+        testFormatting(for: input, output, rule: .trailingClosures)
+    }
+
+    func testOptionalClosureInChainMadeTrailing() {
+        let input = """
+        foo.myClosure?({ $0.path }).joined()
+        """
+        let output = """
+        foo.myClosure? { $0.path }.joined()
+        """
+        testFormatting(for: input, output, rule: .trailingClosures)
+    }
+
+    func testOptionalNamedClosureArgumentNotMadeTrailing() {
+        let input = """
+        myClosure?(foo: 5, bar: { /* some code */ })
+        """
+        testFormatting(for: input, rule: .trailingClosures)
+    }
+
     // multiple closures
 
     func testMultipleNestedClosures() throws {

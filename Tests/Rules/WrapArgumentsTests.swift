@@ -2948,4 +2948,120 @@ class WrapArgumentsTests: XCTestCase {
             exclude: [.wrapConditionalBodies]
         )
     }
+
+    func testWrapPartiallyWrappedFunctionCall() {
+        let input = """
+        func foo(
+            bar: Bar, baaz: Baaz,
+            quux: Quux,
+        ) {
+            print(
+                bar, baaz,
+            )
+        }
+        """
+
+        let output = """
+        func foo(
+            bar: Bar,
+            baaz: Baaz,
+            quux: Quux,
+        ) {
+            print(
+                bar,
+                baaz,
+            )
+        }
+        """
+
+        testFormatting(for: input, output, rule: .wrapArguments, options: FormatOptions(wrapArguments: .beforeFirst, allowPartialWrapping: false), exclude: [.unusedArguments])
+    }
+
+    func testWrapPartiallyWrappedFunctionCallTwoLines() {
+        let input = """
+        func foo(
+            foo: Foo, bar: Bar,
+            baaz: Baaz, quux: Quux,
+        ) {
+            print(
+                foo, bar,
+                baaz, quux,
+            )
+        }
+        """
+
+        let output = """
+        func foo(
+            foo: Foo,
+            bar: Bar,
+            baaz: Baaz,
+            quux: Quux,
+        ) {
+            print(
+                foo,
+                bar,
+                baaz,
+                quux,
+            )
+        }
+        """
+
+        testFormatting(for: input, output, rule: .wrapArguments, options: FormatOptions(wrapArguments: .beforeFirst, allowPartialWrapping: false))
+    }
+
+    func testWrapPartiallyWrappedArray() {
+        let input = """
+        let foo = [
+            foo, bar,
+            baaz, quux,
+        ]
+        """
+
+        let output = """
+        let foo = [
+            foo,
+            bar,
+            baaz,
+            quux,
+        ]
+        """
+
+        testFormatting(for: input, output, rule: .wrapArguments, options: FormatOptions(wrapArguments: .beforeFirst, allowPartialWrapping: false))
+    }
+
+    func testArrayWithBlankLine() {
+        let input = """
+        let foo = [
+            foo,
+            bar,
+
+            baaz,
+            quux,
+        ]
+        """
+
+        testFormatting(for: input, rule: .wrapArguments, options: FormatOptions(wrapArguments: .beforeFirst, allowPartialWrapping: false))
+    }
+
+    func testPartiallyWrappedArrayWithBlankLine() {
+        let input = """
+        let foo = [
+            foo, bar,
+
+            baaz, quux,
+        ]
+        """
+
+        let output = """
+        let foo = [
+            foo,
+            bar,
+
+            baaz,
+            quux,
+        ]
+        """
+
+        testFormatting(for: input, output, rule: .wrapArguments, options: FormatOptions(wrapArguments: .beforeFirst, allowPartialWrapping: false))
+    }
 }

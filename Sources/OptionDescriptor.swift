@@ -1412,6 +1412,12 @@ struct _Descriptors {
         help: "Insert line After switch cases:",
         keyPath: \.blankLineAfterSwitchCase
     )
+    let allowPartialWrapping = OptionDescriptor(
+        argumentName: "allow-partial-wrapping",
+        displayName: "Allow Partial Wrapping",
+        help: "Allow partial argument wrapping:",
+        keyPath: \.allowPartialWrapping
+    )
 
     // MARK: - Internal
 

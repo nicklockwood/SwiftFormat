@@ -426,7 +426,8 @@ extension Formatter {
                         endOfScope += insertSpace(indent + options.indent, at: linebreakIndex + 1)
                     } else if !allowGrouping || (maxWidth > 0 &&
                         lineLength(at: linebreakIndex) > maxWidth &&
-                        lineLength(upTo: linebreakIndex) <= maxWidth)
+                        lineLength(upTo: linebreakIndex) <= maxWidth),
+                        !tokens[linebreakIndex].isLinebreak
                     {
                         insertLinebreak(at: linebreakIndex)
                         endOfScope += 1 + insertSpace(indent + options.indent, at: linebreakIndex + 1)
@@ -594,15 +595,15 @@ extension Formatter {
                 case .beforeFirst:
                     wrapArgumentsBeforeFirst(startOfScope: i,
                                              endOfScope: endOfScope,
-                                             allowGrouping: firstIdentifierIndex > firstLinebreakIndex)
+                                             allowGrouping: options.allowPartialWrapping && firstIdentifierIndex > firstLinebreakIndex)
                 case .preserve where firstIdentifierIndex > firstLinebreakIndex:
                     wrapArgumentsBeforeFirst(startOfScope: i,
                                              endOfScope: endOfScope,
-                                             allowGrouping: true)
+                                             allowGrouping: options.allowPartialWrapping)
                 case .afterFirst, .preserve:
                     wrapArgumentsAfterFirst(startOfScope: i,
                                             endOfScope: endOfScope,
-                                            allowGrouping: true)
+                                            allowGrouping: options.allowPartialWrapping)
                 case .disabled, .default:
                     assertionFailure() // Shouldn't happen
                 }

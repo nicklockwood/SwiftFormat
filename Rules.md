@@ -3673,6 +3673,7 @@ Option | Description
 `--wrap-type-aliases` | Typealias wrapping: "before-first", "after-first", "preserve" (default), "disabled" or "default"
 `--wrap-effects` | Function effects (throws, async) wrapping: "preserve" (default), "if-multiline" or "never"
 `--wrap-string-interpolation` | String interpolation wrapping: "default" (wrap if needed) or "preserve"
+`--allow-partial-wrapping` | Allow partial argument wrapping: "true" (default) or "false"
 
 <details>
 <summary>Examples</summary>

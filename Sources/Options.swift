@@ -828,6 +828,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var preferFileMacro: Bool
     public var lineBetweenConsecutiveGuards: Bool
     public var blankLineAfterSwitchCase: BlankLineAfterSwitchCase
+    public var allowPartialWrapping: Bool
 
     /// Deprecated
     public var indentComments: Bool
@@ -968,6 +969,7 @@ public struct FormatOptions: CustomStringConvertible {
                 preferFileMacro: Bool = true,
                 lineBetweenConsecutiveGuards: Bool = false,
                 blankLineAfterSwitchCase: BlankLineAfterSwitchCase = .multilineOnly,
+                allowPartialWrapping: Bool = true,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -1097,6 +1099,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.preferFileMacro = preferFileMacro
         self.lineBetweenConsecutiveGuards = lineBetweenConsecutiveGuards
         self.blankLineAfterSwitchCase = blankLineAfterSwitchCase
+        self.allowPartialWrapping = allowPartialWrapping
         self.indentComments = indentComments
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

@@ -14,7 +14,7 @@ public extension FormatRule {
         options: ["max-width", "no-wrap-operators", "asset-literals", "wrap-ternary", "wrap-string-interpolation"],
         sharedOptions: ["wrap-arguments", "wrap-parameters", "wrap-collections", "closing-paren", "call-site-paren", "indent",
                         "trim-whitespace", "linebreaks", "tab-width", "max-width", "smart-tabs", "wrap-return-type",
-                        "wrap-conditions", "wrap-type-aliases", "wrap-ternary", "wrap-effects"]
+                        "wrap-conditions", "wrap-type-aliases", "wrap-ternary", "wrap-effects", "allow-partial-wrapping"]
     ) { formatter in
         let maxWidth = formatter.options.maxWidth
         guard maxWidth > 0 else { return }

@@ -260,7 +260,7 @@ final class TypeDeclaration: Declaration {
 
         // Store the expected tokens associated with each declaration.
         // This is necessary since the declarations' range values will temporarily be invalid.
-        var declarationTokens: [AnyHashable: [Token]] = [:]
+        var declarationTokens = [AnyHashable: [Token]]()
         var childDeclarationsNeedingUpdate = [AnyHashable: (originalIndexInParent: Int, originalTokens: [Token])]()
 
         for declaration in newBody {

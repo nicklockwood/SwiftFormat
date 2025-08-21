@@ -553,7 +553,7 @@ public func applyRules(
 
     // Split tokens into lines
     func getLines(in tokens: [Token], includingLinebreaks: Bool) -> [Int: ArraySlice<Token>] {
-        var lines: [Int: ArraySlice<Token>] = [:]
+        var lines = [Int: ArraySlice<Token>]()
         var startIndex = 0, nextLine = 1
         for (i, token) in tokens.enumerated() {
             if case let .linebreak(_, line) = token {

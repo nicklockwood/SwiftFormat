@@ -63,7 +63,7 @@ public class Formatter: NSObject {
     public private(set) var tokens: [Token]
 
     /// Swiftformat directives found in the file
-    private var directives: [Directive] = []
+    private var directives = [Directive]()
 
     /// Create a new formatter instance from a token array
     public init(_ tokens: [Token], options: FormatOptions = FormatOptions(),
@@ -648,7 +648,7 @@ public extension Formatter {
     /// Returns the index of the next token in the specified range that matches the block
     func index(in range: CountableRange<Int>, where matches: (Token) -> Bool) -> Int? {
         let range = range.clamped(to: 0 ..< tokens.count)
-        var scopeStack: [Token] = []
+        var scopeStack = [Token]()
         for i in range {
             let token = tokens[i]
             // TODO: find a better way to deal with this special case
@@ -720,7 +720,7 @@ public extension Formatter {
     func lastIndex(in range: CountableRange<Int>, where matches: (Token) -> Bool) -> Int? {
         let range = range.clamped(to: 0 ..< tokens.count)
         var linebreakEncountered = false
-        var scopeStack: [Token] = []
+        var scopeStack = [Token]()
         for i in range.reversed() {
             let token = tokens[i]
             if case .startOfScope = token {
@@ -912,7 +912,7 @@ public extension Formatter {
 extension String {
     /// https://stackoverflow.com/a/32306142
     func ranges(of string: some StringProtocol, options: String.CompareOptions = []) -> [Range<Index>] {
-        var result: [Range<Index>] = []
+        var result = [Range<Index>]()
         var startIndex = startIndex
         while startIndex < endIndex, let range = self[startIndex...].range(of: string, options: options) {
             result.append(range)
@@ -946,7 +946,7 @@ extension String {
 
 private extension Collection {
     func lineRanges(isLinebreak: (Element) -> Bool) -> [ClosedRange<Index>] {
-        var lineRanges: [ClosedRange<Index>] = []
+        var lineRanges = [ClosedRange<Index>]()
         var currentLine: ClosedRange<Index>?
 
         for (index, token) in zip(indices, self) {

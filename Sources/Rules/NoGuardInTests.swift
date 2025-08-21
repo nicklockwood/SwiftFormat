@@ -137,7 +137,7 @@ public extension FormatRule {
                 let linebreakToken = formatter.linebreakToken(for: guardIndex)
                 let indent = formatter.currentIndentForLine(at: guardIndex)
 
-                var replacementStatements: [Token] = []
+                var replacementStatements = [Token]()
 
                 for (index, condition) in conditions.enumerated() {
                     if index > 0 {
@@ -163,7 +163,7 @@ public extension FormatRule {
                         }
 
                         // Get the expression part (after the = if present, or just the identifier)
-                        var expressionTokens: [Token] = []
+                        var expressionTokens = [Token]()
                         if let valueInfo = property.value {
                             expressionTokens = Array(formatter.tokens[valueInfo.expressionRange])
                         } else {

@@ -35,7 +35,7 @@ final class SARIFReporter: Reporter {
     static let name: String = "sarif"
     static let fileExtension: String? = "sarif"
 
-    private var changes: [Formatter.Change] = []
+    private var changes = [Formatter.Change]()
 
     init(environment _: [String: String]) {}
 

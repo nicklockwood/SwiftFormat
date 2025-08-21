@@ -2088,7 +2088,7 @@ extension Formatter {
             let isCaseClause = !isWhereClause && index > 0 && tokens[index - 1].isSwitchCaseOrDefault
             if explicitSelf == .remove {
                 // Check if scope actually includes self before we waste a bunch of time
-                var scopeStack: [Token] = []
+                var scopeStack = [Token]()
                 loop: for i in index ..< tokens.count {
                     let token = tokens[i]
                     switch token {

@@ -77,13 +77,13 @@ extension Formatter {
     }
 
     func parseEnumCaseRanges() -> [[EnumCaseRange]] {
-        var result: [[EnumCaseRange]] = []
+        var result = [[EnumCaseRange]]()
 
         parseDeclarations().forEachRecursiveDeclaration { declaration in
             guard declaration.keyword == "case", isEnumCase(at: declaration.keywordIndex) else { return }
 
             let caseIndex = declaration.keywordIndex
-            var caseRanges: [EnumCaseRange] = []
+            var caseRanges = [EnumCaseRange]()
 
             // Split the case declaration on commas to get individual case ranges
             var currentStart = index(of: .nonSpaceOrCommentOrLinebreak, after: caseIndex) ?? caseIndex

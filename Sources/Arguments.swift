@@ -244,7 +244,7 @@ func parseArguments(_ argumentString: String, ignoreComments: Bool = true) -> [S
 /// Parse a flat array of command-line arguments into a dictionary of flags and values
 func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String: String] {
     var anonymousArgs = 0
-    var namedArgs: [String: String] = [:]
+    var namedArgs = [String: String]()
     var name = ""
     for arg in args {
         if arg.hasPrefix("--") {

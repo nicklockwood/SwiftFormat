@@ -25,7 +25,7 @@ public extension FormatRule {
         let disallowedModifiers = ["override", "@objc", "@IBAction", "@IBSegueAction", "@IBOutlet", "@IBDesignable", "@IBInspectable", "@NSManaged", "@GKInspectable"]
 
         // Collect all of the `private` or `fileprivate` declarations in the file
-        var privateDeclarations: [Declaration] = []
+        var privateDeclarations = [Declaration]()
         formatter.parseDeclarations().forEachRecursiveDeclaration { declaration in
             let declarationModifiers = Set(declaration.modifiers)
             let hasDisallowedModifiers = disallowedModifiers.contains(where: { declarationModifiers.contains($0) })
@@ -46,7 +46,7 @@ public extension FormatRule {
         }
 
         // Count the usage of each identifier in the file
-        var usage: [String: Int] = [:]
+        var usage = [String: Int]()
         formatter.forEach(.identifier) { _, token in
             usage[token.string, default: 0] += 1
         }

@@ -205,7 +205,7 @@ private func memoize<K, T>(_ keyFn: @escaping (K) -> String?,
                            _ workFn: @escaping (K) -> T) -> (K) -> T
 {
     let lock = NSLock()
-    var cache: [String: T] = [:]
+    var cache = [String: T]()
 
     return { input in
         let key = keyFn(input) ?? "@nil"

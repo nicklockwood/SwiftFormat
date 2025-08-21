@@ -37,7 +37,7 @@ final class XMLReporter: Reporter {
     static let name = "xml"
     static let fileExtension: String? = "xml"
 
-    private var changes: [Formatter.Change] = []
+    private var changes = [Formatter.Change]()
 
     init(environment _: [String: String]) {}
 

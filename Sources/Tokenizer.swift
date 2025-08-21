@@ -564,7 +564,7 @@ extension Collection<Token> where Index == Int {
     /// A string representation of this array of tokens,
     /// excluding any newlines and following indentation, comments, or leading/trailing spaces.
     var stringExcludingLinebreaksAndComments: String {
-        var tokens: [Token] = []
+        var tokens = [Token]()
 
         var index = indices.startIndex
         while index < indices.endIndex {
@@ -1194,10 +1194,10 @@ extension UnicodeScalarView {
 }
 
 public func tokenize(_ source: String) -> [Token] {
-    var scopeIndexStack: [Int] = []
-    var tokens: [Token] = []
+    var scopeIndexStack = [Int]()
+    var tokens = [Token]()
     var characters = UnicodeScalarView(source.unicodeScalars)
-    var closedGenericScopeIndexes: [Int] = []
+    var closedGenericScopeIndexes = [Int]()
     var lineNumber = 1
 
     func processLinebreak(_ char: UnicodeScalar) {

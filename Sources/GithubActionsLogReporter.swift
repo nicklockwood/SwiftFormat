@@ -40,7 +40,7 @@ final class GithubActionsLogReporter: Reporter {
     static let fileExtension: String? = nil
 
     private let workspaceRoot: String?
-    private var changes: [Formatter.Change] = []
+    private var changes = [Formatter.Change]()
 
     init(environment: [String: String]) {
         // See https://docs.github.com/en/actions/learn-github-actions/variables

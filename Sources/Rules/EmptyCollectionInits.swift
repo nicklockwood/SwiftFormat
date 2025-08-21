@@ -47,7 +47,7 @@ public extension FormatRule {
             else { return }
 
             // Extract the type from the type annotation
-            let typeTokens = formatter.tokens[typeStartIndex...typeEndIndex]
+            let typeTokens = formatter.tokens[typeStartIndex ... typeEndIndex]
 
             // Verify this is an array or dictionary type
             guard let firstTypeToken = typeTokens.first,
@@ -61,10 +61,10 @@ public extension FormatRule {
             let typeHasColon = typeContents.contains { $0 == .delimiter(":") }
 
             // Verify the literal type matches the declared type
-            if isEmptyArray && typeHasColon {
+            if isEmptyArray, typeHasColon {
                 return // Array literal but dictionary type
             }
-            if isEmptyDictionary && !typeHasColon {
+            if isEmptyDictionary, !typeHasColon {
                 return // Dictionary literal but array type
             }
 
@@ -75,14 +75,14 @@ public extension FormatRule {
             replacementTokens.append(.endOfScope(")"))
 
             // Replace the empty literal with type initializer
-            formatter.replaceTokens(in: startIndex...endIndex, with: replacementTokens)
+            formatter.replaceTokens(in: startIndex ... endIndex, with: replacementTokens)
 
             // Remove type annotation (from colon to just before equals)
             // Find the last non-space token before equals
             let lastNonSpaceBeforeEquals = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: assignmentIndex) ?? assignmentIndex - 1
 
             // Remove from colon through the type
-            formatter.removeTokens(in: colonIndex...lastNonSpaceBeforeEquals)
+            formatter.removeTokens(in: colonIndex ... lastNonSpaceBeforeEquals)
         }
     } examples: {
         """

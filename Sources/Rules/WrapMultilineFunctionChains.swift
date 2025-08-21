@@ -21,7 +21,7 @@ public extension FormatRule {
             }
 
             var foundFunctionCall = false
-            var dots: [Int] = []
+            var dots = [Int]()
             let chainStartIndex = formatter.chainStartIndex(forOperatorAtIndex: operatorIndex, foundFunctionCall: &foundFunctionCall, dots: &dots)
             dots.append(operatorIndex)
             let chainEndIndex = formatter.chainEndIndex(forOperatorAtIndex: operatorIndex, foundFunctionCall: &foundFunctionCall, dots: &dots)

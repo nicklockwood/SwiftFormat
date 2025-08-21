@@ -135,7 +135,7 @@ class MetadataTests: XCTestCase {
             }
 
             // Collect all invalid lines for this rule
-            var invalidLines: [Int] = []
+            var invalidLines = [Int]()
 
             // Validate diff formatting for each code block
             for codeBlock in codeBlocks {
@@ -465,7 +465,7 @@ extension _FormatRules {
         let formatter = Formatter(tokenize(fileContents))
 
         // Find all rules defined in the file, like `let ruleName = FormatRule(` or `let ruleName: FormatRule = ...`.
-        var definedRules: [String] = []
+        var definedRules = [String]()
         formatter.forEach(.identifier("FormatRule")) { index, _ in
             guard let nextToken = formatter.next(.nonSpaceOrComment, after: index),
                   [.startOfScope("("), .operator("=", .infix)].contains(nextToken),

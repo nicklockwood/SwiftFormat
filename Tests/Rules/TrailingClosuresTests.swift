@@ -343,6 +343,30 @@ class TrailingClosuresTests: XCTestCase {
         testFormatting(for: input, rule: .trailingClosures)
     }
 
+    func testReturnTupleNotConfusedForFunctionCall() {
+        let input = """
+        return (expectation, { state in
+            XCTAssertEqual(state, expectedStates.removeFirst())
+            expectation.fulfill()
+        })
+        """
+
+        testFormatting(for: input, rule: .trailingClosures, exclude: [.redundantParens])
+    }
+
+    func testClosureReturnTupleNotConfusedForFunctionCall() {
+        let input = """
+        { _ in
+            (expectation, { state in
+                XCTAssertEqual(state, expectedStates.removeFirst())
+                expectation.fulfill()
+            })
+        }
+        """
+
+        testFormatting(for: input, rule: .trailingClosures, exclude: [.redundantParens])
+    }
+
     // multiple closures
 
     func testMultipleNestedClosures() throws {

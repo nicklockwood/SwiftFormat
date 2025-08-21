@@ -11,8 +11,14 @@ jobs:
         uses: actions/checkout@v4
       - name: Set Version Number
         run: echo "Using version number $GITHUB_REF_NAME" && sed -i '' "s/let swiftFormatVersion = \"[^\"]*\"/let swiftFormatVersion = \"$GITHUB_REF_NAME\"/" Sources/SwiftFormat.swift
-      - name: Build macOS binary
-        run: swift build -c release --arch arm64 --arch x86_64 -Xswiftc -Osize
+      - name: Build macOS binary (arm64)
+        run: swift build -c release --arch arm64 -Xswiftc -Osize
+      - name: Build macOS binary (x86_64)
+        run: swift build -c release --arch x86_64 -Xswiftc -Osize
+      - name: Create universal binary
+        run: |
+          mkdir -p .build/apple/Products/Release
+          lipo -create -output .build/apple/Products/Release/swiftformat .build/arm64-apple-macosx/release/swiftformat .build/x86_64-apple-macosx/release/swiftformat
       - name: Strip macOS binary  
         run: strip -rSTx .build/apple/Products/Release/swiftformat
       - name: Upload artifacts

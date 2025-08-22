@@ -57,8 +57,8 @@ class PropertyTypesTests: XCTestCase {
         let bar: Bar = .staticBar
         let quux: Quux = .quuxBulder(foo: .foo, bar: .bar)
 
-        let dictionary = [Foo: Bar]()
-        let array = [Foo]()
+        let dictionary: [Foo: Bar] = .init()
+        let array: [Foo] = .init()
         let genericType: MyGenericType<Foo, Bar> = .init()
         """
 
@@ -85,8 +85,8 @@ class PropertyTypesTests: XCTestCase {
             let bar: Bar = .staticBar
             let quux: Quux = .quuxBulder(foo: .foo, bar: .bar)
 
-            let dictionary = [Foo: Bar]()
-            let array = [Foo]()
+            let dictionary: [Foo: Bar] = .init()
+            let array: [Foo] = .init()
             let genericType: MyGenericType<Foo, Bar> = .init()
         }
         """
@@ -183,22 +183,10 @@ class PropertyTypesTests: XCTestCase {
         let bar: Bar = localBar
         let int: Int64 = 1234
         let number: CGFloat = 12.345
-        let array: [String] = []
-        let dictionary: [String: Int] = [:]
-        let tuple: (String, Int) = ("foo", 123)
-        """
-
-        let output = """
-        let foo: Foo = localFoo
-        let bar: Bar = localBar
-        let int: Int64 = 1234
-        let number: CGFloat = 12.345
-        let array = [String]()
-        let dictionary = [String: Int]()
         let tuple: (String, Int) = ("foo", 123)
         """
         let options = FormatOptions(propertyTypes: .inferred)
-        testFormatting(for: input, output, rule: .propertyTypes, options: options, exclude: [.redundantType])
+        testFormatting(for: input, rule: .propertyTypes, options: options, exclude: [.redundantType])
     }
 
     func testCompatibleWithRedundantTypeInferred() {

@@ -317,9 +317,10 @@ public extension FormatRule {
 
               func method() {
         -         let view: UIView = UIView()
-        +     let view = UIView()
+        +         let view = UIView()
 
-                  let array = [Int]()
+        -         let array: [Int] = []
+        +         let array = [Int]()
               }
           }
 

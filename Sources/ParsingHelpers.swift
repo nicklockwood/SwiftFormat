@@ -2630,7 +2630,7 @@ extension Formatter {
               let fullProtocolCompositionType = parseType(at: startOfType)
         else { return nil }
 
-        var andTokenIndices = [Int]()
+        var andTokenIndices: [Int] = []
         var currentIndex = startOfType
 
         while let nextType = parseType(at: currentIndex, excludeProtocolCompositions: true),
@@ -2820,7 +2820,7 @@ extension Formatter {
         assert(tokens[startOfScope] == .startOfScope("("))
         guard let endOfScope = endOfScope(at: startOfScope) else { return [] }
 
-        var arguments = [FunctionArgument]()
+        var arguments: [FunctionArgument] = []
 
         var currentIndex = startOfScope
         while let nextArgumentColon = index(of: .delimiter(":"), in: (currentIndex + 1) ..< endOfScope) {
@@ -2941,7 +2941,7 @@ extension Formatter {
               index(of: .nonSpaceOrCommentOrLinebreak, after: startOfScope) != endOfScope
         else { return [] }
 
-        var argumentLabels = [FunctionCallArgument]()
+        var argumentLabels: [FunctionCallArgument] = []
 
         var currentIndex = startOfScope
         while currentIndex < endOfScope {
@@ -3187,7 +3187,7 @@ extension Formatter {
 
         guard let endIndex else { return [] }
 
-        var conditions = [ConditionalStatementElement]()
+        var conditions: [ConditionalStatementElement] = []
         var currentPos = guardOrIfIndex + 1
 
         while currentPos < endIndex {

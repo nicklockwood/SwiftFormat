@@ -39,7 +39,7 @@ class FormatterTests: XCTestCase {
             .identifier("bar"),
             .identifier("baz"),
         ]
-        var output = [Token]()
+        var output: [Token] = []
         let formatter = Formatter(input, options: .default)
         formatter.forEachToken { i, token in
             output.append(token)
@@ -56,7 +56,7 @@ class FormatterTests: XCTestCase {
             .identifier("bar"),
             .identifier("baz"),
         ]
-        var output = [Token]()
+        var output: [Token] = []
         let formatter = Formatter(input, options: .default)
         formatter.forEachToken { i, token in
             output.append(token)
@@ -73,7 +73,7 @@ class FormatterTests: XCTestCase {
             .identifier("bar"),
             .identifier("baz"),
         ]
-        var output = [Token]()
+        var output: [Token] = []
         let formatter = Formatter(input, options: .default)
         formatter.forEachToken { i, token in
             output.append(token)

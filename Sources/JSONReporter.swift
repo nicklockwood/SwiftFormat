@@ -35,7 +35,7 @@ final class JSONReporter: Reporter {
     static let name: String = "json"
     static let fileExtension: String? = "json"
 
-    private var changes = [Formatter.Change]()
+    private var changes: [Formatter.Change] = []
 
     init(environment _: [String: String]) {}
 

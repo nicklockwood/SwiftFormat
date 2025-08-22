@@ -372,7 +372,7 @@ extension Formatter {
             }
         }()
 
-        var formattedCategories = [Category]()
+        var formattedCategories: [Category] = []
 
         for (index, (declaration, category)) in sortedDeclarations.enumerated() {
             if options.markCategories,
@@ -604,8 +604,8 @@ extension Formatter {
 
     // Finds all of the consecutive groups of property declarations in the type body
     func consecutivePropertyDeclarationGroups(in typeDeclaration: TypeDeclaration) -> [[Declaration]] {
-        var declarationGroups = [[Declaration]]()
-        var currentGroup = [Declaration]()
+        var declarationGroups: [[Declaration]] = []
+        var currentGroup: [Declaration] = []
 
         /// Ends the current group, ensuring that groups are only recorded
         /// when they contain two or more declarations.
@@ -914,7 +914,7 @@ extension Array where Element: Equatable & Hashable {
     /// For example, this function would transform [1,2,3,1,2] into [1,2,3]
     func firstElementAppearanceOrder() -> [Element] {
         var appeared: Set<Element> = []
-        var appearedList = [Element]()
+        var appearedList: [Element] = []
 
         for element in self {
             if !appeared.contains(element) {

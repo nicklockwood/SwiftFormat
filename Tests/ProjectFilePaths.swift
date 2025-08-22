@@ -38,7 +38,7 @@ let ruleRegistryURL =
     projectDirectory.appendingPathComponent("Sources/RuleRegistry.generated.swift")
 
 private func allSwiftFiles(inDirectory directory: String) -> [URL] {
-    var swiftFiles = [URL]()
+    var swiftFiles: [URL] = []
     let directory = projectDirectory.appendingPathComponent(directory)
     let errors = enumerateFiles(withInputURL: directory) { fileURL, _, _ in
         {

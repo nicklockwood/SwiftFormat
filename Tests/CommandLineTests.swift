@@ -819,7 +819,7 @@ class CommandLineTests: XCTestCase {
     }
 
     func testLintCommandOutputsOrganizeDeclarationOrderingViolations() {
-        var output = [String]()
+        var output: [String] = []
         CLI.print = { message, _ in
             output.append(message)
         }

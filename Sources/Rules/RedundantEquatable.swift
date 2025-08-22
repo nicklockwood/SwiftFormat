@@ -146,9 +146,9 @@ extension Formatter {
     /// Finds all of the types in the current file with an Equatable conformance,
     /// which also have a manually-implemented `static func ==` method.
     func manuallyImplementedEquatableTypes(in declarations: [Declaration]) -> [EquatableType] {
-        var typeDeclarationsByFullyQualifiedName = [String: Declaration]()
+        var typeDeclarationsByFullyQualifiedName: [String: Declaration] = [:]
         var typesWithEquatableConformances: [(fullyQualifiedTypeName: String, declarationWithEquatableConformance: Declaration)] = []
-        var equatableImplementationsByFullyQualifiedName = [String: Declaration]()
+        var equatableImplementationsByFullyQualifiedName: [String: Declaration] = [:]
 
         declarations.forEachRecursiveDeclaration { declaration in
             guard let declarationName = declaration.name else { return }

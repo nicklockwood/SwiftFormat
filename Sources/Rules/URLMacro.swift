@@ -20,7 +20,7 @@ public extension FormatRule {
             return
         }
         // First collect all indices to process
-        var indicesToProcess = [(Int, Int, Int, Int)]() // (i, firstArgIndex, stringStartIndex, unwrapIndex)
+        var indicesToProcess: [(Int, Int, Int, Int)] = [] // (i, firstArgIndex, stringStartIndex, unwrapIndex)
 
         formatter.forEach(.identifier("URL")) { i, _ in
             // Look for `URL(string: "...")!` pattern

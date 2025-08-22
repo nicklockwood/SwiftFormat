@@ -362,8 +362,8 @@ private func readMultipleConfigArgs(
 
     // Split comma-separated config paths
     let paths = parseCommaDelimitedList(configPaths)
-    var configURLs = [URL]()
-    var mergedConfig = [String: String]()
+    var configURLs: [URL] = []
+    var mergedConfig: [String: String] = [:]
 
     // Process each config file in order (first as base, subsequent override)
     for (index, path) in paths.enumerated() {
@@ -1430,7 +1430,7 @@ func parseCodeBlocks(fromMarkdown markdown: String, language: String) throws -> 
     }
 
     let lines = markdown.lineRanges
-    var codeBlocks = [MarkdownCodeBlock]()
+    var codeBlocks: [MarkdownCodeBlock] = []
     var codeBlockStack = [PartialCodeBlock]()
 
     for (lineIndex, lineRange) in lines.enumerated() {

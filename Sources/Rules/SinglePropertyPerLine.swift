@@ -48,7 +48,7 @@ public extension FormatRule {
                 }
 
                 // Build replacement tokens for all declarations
-                var allReplacementTokens = [Token]()
+                var allReplacementTokens: [Token] = []
 
                 let startOfModifiers = formatter.startOfModifiers(at: i, includingAttributes: true)
                 let modifierTokens = Array(formatter.tokens[startOfModifiers ..< i])
@@ -115,7 +115,7 @@ public extension FormatRule {
                 }
 
                 // Build replacement tokens for all declarations
-                var allReplacementTokens = [Token]()
+                var allReplacementTokens: [Token] = []
 
                 let startOfModifiers = formatter.startOfModifiers(at: i, includingAttributes: true)
                 let modifierTokens = Array(formatter.tokens[startOfModifiers ..< i])

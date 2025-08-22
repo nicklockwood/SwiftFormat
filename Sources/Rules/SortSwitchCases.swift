@@ -87,10 +87,10 @@ extension Formatter {
     }
 
     func parseSwitchCaseRanges() -> [[SwitchCaseRange]] {
-        var result = [[SwitchCaseRange]]()
+        var result: [[SwitchCaseRange]] = []
 
         forEach(.endOfScope("case")) { i, _ in
-            var switchCaseRanges = [SwitchCaseRange]()
+            var switchCaseRanges: [SwitchCaseRange] = []
             guard let lastDelimiterIndex = index(of: .startOfScope(":"), after: i),
                   let endIndex = index(after: lastDelimiterIndex, where: { $0.isLinebreak }) else { return }
 

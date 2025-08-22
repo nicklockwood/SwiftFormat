@@ -18,8 +18,8 @@ public extension FormatRule {
         options: ["indent", "tab-width", "smart-tabs", "indent-case", "ifdef", "xcode-indentation", "indent-strings"],
         sharedOptions: ["trim-whitespace", "allman", "wrap-conditions", "wrap-ternary"]
     ) { formatter in
-        var scopeStack = [Token]()
-        var scopeStartLineIndexes = [Int]()
+        var scopeStack: [Token] = []
+        var scopeStartLineIndexes: [Int] = []
         var lastNonSpaceOrLinebreakIndex = -1
         var lastNonSpaceIndex = -1
         var indentStack = [""]

@@ -239,7 +239,7 @@ extension Formatter {
 
         while tokens[searchIndex].isIdentifier {
             let propertyIdentifierIndex = searchIndex
-            var typeInformation: PropertyDeclarationType?
+            var typeInformation: (colonIndex: Int, name: String, range: ClosedRange<Int>)?
 
             if let colonIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: propertyIdentifierIndex),
                tokens[colonIndex] == .delimiter(":"),

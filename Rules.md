@@ -2074,7 +2074,7 @@ Adds `private` access control to @State properties without existing access contr
 
 ## propertyTypes
 
-Convert property declarations to use inferred types (`let foo = Foo()`, `let array = [Int]()`) or explicit types (`let foo: Foo = .init()`, `let array: [Int] = .init()`).
+Convert property declarations to use inferred types (`let foo = Foo()`) or explicit types (`let foo: Foo = .init()`).
 
 Option | Description
 --- | ---
@@ -2087,39 +2087,33 @@ Option | Description
 
 ```diff
   // with --propertytypes inferred
-- let view: UIView = UIView()
+- let view: UIView = .init()
 + let view = UIView()
+
+- let color: Color = .red
++ let color = Color.red
 
 - let array: [Int] = []
 + let array = [Int]()
 
-- let dictionary: [String: Int] = [:]
-+ let dictionary = [String: Int]()
-
   // with --propertytypes explicit
-- let view: UIView = UIView()
+- let view = UIView()
 + let view: UIView = .init()
 
-- let array: [Int] = []
-+ let array: [Int] = .init()
+- let color = Color.red
++ let color: Color = .red
 
-- let dictionary: [String: Int] = [:]
-+ let dictionary: [String: Int] = .init()
+- let array = [Int]()
++ let array: [Int] = []
 
   // with --propertytypes infer-locals-only
   class Foo {
 -     let view: UIView = UIView()
 +     let view: UIView = .init()
 
--     let array: [Int] = []
-+     let array: [Int] = .init()
-
       func method() {
 -         let view: UIView = UIView()
 +         let view = UIView()
-
--         let array: [Int] = []
-+         let array = [Int]()
       }
   }
 

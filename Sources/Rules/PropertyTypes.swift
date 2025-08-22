@@ -142,6 +142,28 @@ public extension FormatRule {
                     }
                 }
 
+                // Convert `let array: [Foo] = []` to `let array = [Foo]()`
+                else if type.name.isArrayType,
+                        formatter.tokens[rhsStartIndex] == .startOfScope("["),
+                        let nextToken = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: rhsStartIndex),
+                        formatter.tokens[nextToken] == .endOfScope("]"),
+                        rhsExpressionRange.upperBound == nextToken
+                {
+                    formatter.replaceTokens(in: rhsExpressionRange, with: tokenize("\(type.name)()"))
+                }
+
+                // Convert `let array: [Foo: Bar] = [:]` to `let array = [Foo: Bar]()`
+                else if type.name.isDictionaryType,
+                        formatter.tokens[rhsStartIndex] == .startOfScope("["),
+                        let secondToken = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: rhsStartIndex),
+                        formatter.tokens[secondToken] == .delimiter(":"),
+                        let thirdToken = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: secondToken),
+                        formatter.tokens[thirdToken] == .endOfScope("]"),
+                        rhsExpressionRange.upperBound == thirdToken
+                {
+                    formatter.replaceTokens(in: rhsExpressionRange, with: tokenize("\(type.name)()"))
+                }
+
                 else {
                     return
                 }
@@ -182,13 +204,30 @@ public extension FormatRule {
 
                 // A type name followed by a `(` is an implicit `.init(`. Insert a `.init`
                 // so that the init call stays valid after we move the type to the LHS.
-                if formatter.tokens[indexAfterType] == .startOfScope("(") {
+                if formatter.tokens[indexAfterType] == .startOfScope("("),
+                   let endOfInitCallScope = formatter.endOfScope(at: indexAfterType),
+                   rhsExpressionRange.upperBound == endOfInitCallScope
+                {
                     // Preserve the existing format if `init` is manually excluded
                     if formatter.options.preservedPropertyTypes.contains("init") {
                         return
                     }
 
-                    formatter.insert([.operator(".", .prefix), .identifier("init")], at: indexAfterType)
+                    let initializerHasNoArguments = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: indexAfterType) == endOfInitCallScope
+
+                    // If this is an empty array initializer, use `[]` instead of `.init()`
+                    if rhsType.name.isArrayType, initializerHasNoArguments {
+                        formatter.replaceTokens(in: indexAfterType ... endOfInitCallScope, with: tokenize("[]"))
+                    }
+
+                    // If this is an empty dictionary initializer, use `[:]` instead of `.init()`
+                    else if rhsType.name.isDictionaryType, initializerHasNoArguments {
+                        formatter.replaceTokens(in: indexAfterType ... endOfInitCallScope, with: tokenize("[:]"))
+                    }
+
+                    else {
+                        formatter.insert([.operator(".", .prefix), .identifier("init")], at: indexAfterType)
+                    }
                 }
 
                 // If the type name is followed by an infix `.` operator, convert it to a prefix operator.
@@ -220,12 +259,24 @@ public extension FormatRule {
         """
         ```diff
           // with --propertytypes inferred
-        - let view: UIView = UIView()
+        - let view: UIView = .init()
         + let view = UIView()
 
+        - let color: Color = .red
+        + let color = Color.red
+
+        - let array: [Int] = []
+        + let array = [Int]()
+
           // with --propertytypes explicit
-        - let view: UIView = UIView()
+        - let view = UIView()
         + let view: UIView = .init()
+
+        - let color = Color.red
+        + let color: Color = .red
+
+        - let array = [Int]()
+        + let array: [Int] = []
 
           // with --propertytypes infer-locals-only
           class Foo {

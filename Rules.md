@@ -2087,12 +2087,24 @@ Option | Description
 
 ```diff
   // with --propertytypes inferred
-- let view: UIView = UIView()
+- let view: UIView = .init()
 + let view = UIView()
 
+- let color: Color = .red
++ let color = Color.red
+
+- let array: [Int] = []
++ let array = [Int]()
+
   // with --propertytypes explicit
-- let view: UIView = UIView()
+- let view = UIView()
 + let view: UIView = .init()
+
+- let color = Color.red
++ let color: Color = .red
+
+- let array = [Int]()
++ let array: [Int] = []
 
   // with --propertytypes infer-locals-only
   class Foo {

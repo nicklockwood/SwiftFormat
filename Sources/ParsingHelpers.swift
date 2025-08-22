@@ -3416,4 +3416,36 @@ extension String {
         let hasCommaInParens = formatter.index(of: .delimiter(","), in: (openParen + 1) ..< closingParen) != nil
         return hasCommaInParens
     }
+
+    /// Whether or not this type name is an array.
+    /// Assumes this string represents a valid type.
+    var isArrayType: Bool {
+        let formatter = Formatter(tokenize(self))
+
+        guard let openBrace = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: -1),
+              formatter.tokens[openBrace] == .startOfScope("["),
+              let closingBrace = formatter.endOfScope(at: openBrace),
+              openBrace + 1 != closingBrace
+        else { return false }
+
+        // [:] would be a dictionary, not an array
+        let hasColonInBraces = formatter.index(of: .delimiter(":"), in: (openBrace + 1) ..< closingBrace) != nil
+        return !hasColonInBraces
+    }
+
+    /// Whether or not this type name is an array.
+    /// Assumes this string represents a valid type.
+    var isDictionaryType: Bool {
+        let formatter = Formatter(tokenize(self))
+
+        guard let openBrace = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: -1),
+              formatter.tokens[openBrace] == .startOfScope("["),
+              let closingBrace = formatter.endOfScope(at: openBrace),
+              openBrace + 1 != closingBrace
+        else { return false }
+
+        // [] would be a dictionary, not an array
+        let hasColonInBraces = formatter.index(of: .delimiter(":"), in: (openBrace + 1) ..< closingBrace) != nil
+        return hasColonInBraces
+    }
 }

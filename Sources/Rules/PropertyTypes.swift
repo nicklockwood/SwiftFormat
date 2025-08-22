@@ -340,7 +340,7 @@ public extension FormatRule {
 
 // MARK: - Helper Extensions
 
-private extension Formatter {
+extension Formatter {
     /// Checks if the given type is a collection type (array or dictionary)
     func isCollectionType(_ type: PropertyDeclarationType) -> Bool {
         guard let scopeType = scopeType(at: type.range.lowerBound) else { return false }

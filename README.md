@@ -114,7 +114,7 @@ Another option is to include the binary artifactbundle in your `Package.swift`:
     url: "https://github.com/nicklockwood/SwiftFormat/releases/download/0.55.0/swiftformat-macos.artifactbundle.zip",
     checksum: "CHECKSUM"
 ),
-``` 
+```
 
 If you would prefer not to use a package manager, you can build the command-line app manually:
 
@@ -220,7 +220,7 @@ Alternatively, if you prefer not to use Homebrew, you'll find the latest version
 
 **Usage:**
 
-Once you have launched the app and restarted Xcode, you'll find a SwiftFormat option under Xcode's Editor menu. If the SwiftFormat menu does not appear [this thread](https://github.com/nicklockwood/SwiftFormat/issues/494) may help. 
+Once you have launched the app and restarted Xcode, you'll find a SwiftFormat option under Xcode's Editor menu. If the SwiftFormat menu does not appear [this thread](https://github.com/nicklockwood/SwiftFormat/issues/494) may help.
 
 You can configure the formatting [rules](#rules) and [options](#options) using the SwiftFormat for Xcode host application. There is currently no way to override these per-project, however, you can import and export different configurations using the File menu. You will need to do this again each time you switch projects.
 
@@ -435,11 +435,11 @@ Git pre-commit hook
     #!/bin/bash
     git-format-staged --formatter "swiftformat stdin --stdin-path '{}'" "*.swift"
     ```
-    
+
     (Note that this example uses your locally installed version of SwiftFormat, not a separate copy in your project repository. You can replace `swiftformat` with the path to a copy inside your project if you prefer.)
-    
+
 5. enable the hook by typing `chmod +x .git/hooks/pre-commit` in the terminal.
- 
+
 The pre-commit hook will now run whenever you run `git commit`. Running `git commit --no-verify` will skip the pre-commit hook.
 
 **NOTE:** If you are using Git via a GUI client such as [Tower](https://www.git-tower.com), [additional steps](https://www.git-tower.com/help/mac/faq-and-tips/faq/hook-scripts) may be needed.
@@ -531,7 +531,7 @@ New rules, options, and fixes are merged to the [`develop`](https://github.com/n
 
 **Homebrew:**
 
-The [Homebrew](http://brew.sh/) `--HEAD` option downloads, builds, and installs the latest changes from the `develop` branch. 
+The [Homebrew](http://brew.sh/) `--HEAD` option downloads, builds, and installs the latest changes from the `develop` branch.
 
 You can install a prerelease build via Homebrew by running:
 
@@ -548,7 +548,7 @@ Commit SHAs on `develop` are unstable since that branch is occasionally rebased,
 Configuration
 -------------
 
-SwiftFormat's configuration is split between **rules** and **options**. Rules are functions in the SwiftFormat library that apply changes to the code. Options are settings that control the behavior of the rules. 
+SwiftFormat's configuration is split between **rules** and **options**. Rules are functions in the SwiftFormat library that apply changes to the code. Options are settings that control the behavior of the rules.
 
 
 Options
@@ -569,7 +569,7 @@ You can configure options for specific files or code ranges by using `swiftforma
 To apply an options override only to a particular line, use the `:this`, `:next` or `:previous` modifiers:
 
 ```swift
-let indexUrl: URL // swiftformat:options:this --preserve-acronyms url 
+let indexUrl: URL // swiftformat:options:this --preserve-acronyms url
 
 // swiftformat:options:next --semicolons inline
 doTheThing(); print("Did the thing")
@@ -602,7 +602,7 @@ If you prefer, you can use multiple `--enable`/`--disable` arguments instead of 
 
 Alternatively, you can use the line continuation character `\` to wrap a single argument over multiple line:
 
-```bash         
+```bash
 --disable          \
     indent,        \
     linebreaks,    \
@@ -862,7 +862,7 @@ It is common practice to include the file name, creation date and/or the current
 * `{created}` - the date on which the file was created
 * `{created.year}` - the year in which the file was created
 * `{author.name}` - the name of the user who first committed the file
-* `{author.email}` - the email of the user who first committed the file 
+* `{author.email}` - the email of the user who first committed the file
 
 For example, a header template of:
 
@@ -888,9 +888,9 @@ SwiftFormat can format Swift code blocks inside Markdown files (`.md`). This is 
 
 ````diff
   ### Sample README
-  
+
   This is a nice project with lots of cool APIs to know about, including:
-  
+
   ```swift
   func foo(
 - bar: Bar,

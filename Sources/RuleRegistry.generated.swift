@@ -34,7 +34,6 @@ let ruleRegistry: [String: FormatRule] = [
     "duplicateImports": .duplicateImports,
     "elseOnSameLine": .elseOnSameLine,
     "emptyBraces": .emptyBraces,
-    "emptyCollectionInits": .emptyCollectionInits,
     "emptyExtensions": .emptyExtensions,
     "enumNamespaces": .enumNamespaces,
     "environmentEntry": .environmentEntry,

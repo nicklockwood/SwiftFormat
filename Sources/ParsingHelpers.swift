@@ -8,6 +8,11 @@
 
 import Foundation
 
+// MARK: - Type definitions
+
+/// Represents a property type declaration with its colon index, name, and token range
+typealias PropertyDeclarationType = (colonIndex: Int, name: String, range: ClosedRange<Int>)
+
 // MARK: - shared helper methods
 
 public extension Formatter {
@@ -1952,7 +1957,7 @@ extension Formatter {
         let identifierIndex: Int
 
         /// Information about the property's type definition, if written explicitly.
-        let type: (colonIndex: Int, name: String, range: ClosedRange<Int>)?
+        let type: PropertyDeclarationType?
 
         /// Information about the value following the property's `=` token, if present.
         let value: (assignmentIndex: Int, expressionRange: ClosedRange<Int>)?
@@ -1988,7 +1993,7 @@ extension Formatter {
               propertyIdentifier.isIdentifier
         else { return nil }
 
-        var typeInformation: (colonIndex: Int, name: String, range: ClosedRange<Int>)?
+        var typeInformation: PropertyDeclarationType?
 
         if let colonIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: propertyIdentifierIndex),
            tokens[colonIndex] == .delimiter(":"),

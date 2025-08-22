@@ -2074,7 +2074,7 @@ Adds `private` access control to @State properties without existing access contr
 
 ## propertyTypes
 
-Convert property declarations to use inferred types (`let foo = Foo()`) or explicit types (`let foo: Foo = .init()`).
+Convert property declarations to use inferred types (`let foo = Foo()`, `let array = [Int]()`) or explicit types (`let foo: Foo = .init()`, `let array: [Int] = .init()`).
 
 Option | Description
 --- | ---
@@ -2090,18 +2090,35 @@ Option | Description
 - let view: UIView = UIView()
 + let view = UIView()
 
+- let array: [Int] = []
++ let array = [Int]()
+
+- let dictionary: [String: Int] = [:]
++ let dictionary = [String: Int]()
+
   // with --propertytypes explicit
 - let view: UIView = UIView()
 + let view: UIView = .init()
+
+- let array: [Int] = []
++ let array: [Int] = .init()
+
+- let dictionary: [String: Int] = [:]
++ let dictionary: [String: Int] = .init()
 
   // with --propertytypes infer-locals-only
   class Foo {
 -     let view: UIView = UIView()
 +     let view: UIView = .init()
 
+-     let array: [Int] = []
++     let array: [Int] = .init()
+
       func method() {
 -         let view: UIView = UIView()
-+         let view = UIView()
++     let view = UIView()
+
+          let array = [Int]()
       }
   }
 

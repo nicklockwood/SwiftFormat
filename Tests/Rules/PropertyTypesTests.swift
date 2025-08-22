@@ -57,8 +57,8 @@ class PropertyTypesTests: XCTestCase {
         let bar: Bar = .staticBar
         let quux: Quux = .quuxBulder(foo: .foo, bar: .bar)
 
-        let dictionary: [Foo: Bar] = .init()
-        let array: [Foo] = .init()
+        let dictionary = [Foo: Bar]()
+        let array = [Foo]()
         let genericType: MyGenericType<Foo, Bar> = .init()
         """
 
@@ -85,8 +85,8 @@ class PropertyTypesTests: XCTestCase {
             let bar: Bar = .staticBar
             let quux: Quux = .quuxBulder(foo: .foo, bar: .bar)
 
-            let dictionary: [Foo: Bar] = .init()
-            let array: [Foo] = .init()
+            let dictionary = [Foo: Bar]()
+            let array = [Foo]()
             let genericType: MyGenericType<Foo, Bar> = .init()
         }
         """
@@ -188,8 +188,17 @@ class PropertyTypesTests: XCTestCase {
         let tuple: (String, Int) = ("foo", 123)
         """
 
+        let output = """
+        let foo: Foo = localFoo
+        let bar: Bar = localBar
+        let int: Int64 = 1234
+        let number: CGFloat = 12.345
+        let array = [String]()
+        let dictionary = [String: Int]()
+        let tuple: (String, Int) = ("foo", 123)
+        """
         let options = FormatOptions(propertyTypes: .inferred)
-        testFormatting(for: input, rule: .propertyTypes, options: options, exclude: [.redundantType])
+        testFormatting(for: input, output, rule: .propertyTypes, options: options, exclude: [.redundantType])
     }
 
     func testCompatibleWithRedundantTypeInferred() {
@@ -611,6 +620,139 @@ class PropertyTypesTests: XCTestCase {
         """
 
         let options = FormatOptions(propertyTypes: .explicit)
+        testFormatting(for: input, output, rule: .propertyTypes, options: options)
+    }
+
+    // MARK: Empty Collection Literals
+
+    func testEmptyArrayLiteralToInferredType() {
+        let input = """
+        let array: [Int] = []
+        var numbers: [Double] = []
+        let matrix: [[String]] = []
+        """
+        let output = """
+        let array = [Int]()
+        var numbers = [Double]()
+        let matrix = [[String]]()
+        """
+        let options = FormatOptions(propertyTypes: .inferred)
+        testFormatting(for: input, output, rule: .propertyTypes, options: options)
+    }
+
+    func testEmptyDictionaryLiteralToInferredType() {
+        let input = """
+        let dict: [String: Int] = [:]
+        var mapping: [Int: String] = [:]
+        let nested: [String: [Int: Bool]] = [:]
+        """
+        let output = """
+        let dict = [String: Int]()
+        var mapping = [Int: String]()
+        let nested = [String: [Int: Bool]]()
+        """
+        let options = FormatOptions(propertyTypes: .inferred)
+        testFormatting(for: input, output, rule: .propertyTypes, options: options)
+    }
+
+    func testEmptyCollectionLiteralToExplicitType() {
+        let input = """
+        let array: [Int] = []
+        let dict: [String: Int] = [:]
+        """
+        let output = """
+        let array: [Int] = .init()
+        let dict: [String: Int] = .init()
+        """
+        let options = FormatOptions(propertyTypes: .explicit)
+        testFormatting(for: input, output, rule: .propertyTypes, options: options)
+    }
+
+    func testEmptyCollectionLiteralInferLocalsOnly() {
+        let input = """
+        class Foo {
+            let array: [Int] = []
+            let dict: [String: Int] = [:]
+
+            func method() {
+                let array: [Int] = []
+                let dict: [String: Int] = [:]
+            }
+        }
+        """
+        let output = """
+        class Foo {
+            let array: [Int] = .init()
+            let dict: [String: Int] = .init()
+
+            func method() {
+                let array = [Int]()
+                let dict = [String: Int]()
+            }
+        }
+        """
+        let options = FormatOptions(propertyTypes: .inferLocalsOnly)
+        testFormatting(for: input, output, rule: .propertyTypes, options: options)
+    }
+
+    func testEmptyCollectionLiteralWithSpaces() {
+        let input = """
+        let array: [Int] = [ ]
+        let dict: [String: Int] = [ : ]
+        """
+        let output = """
+        let array = [Int]()
+        let dict = [String: Int]()
+        """
+        let options = FormatOptions(propertyTypes: .inferred)
+        testFormatting(for: input, output, rule: .propertyTypes, options: options, exclude: [.spaceInsideBrackets, .spaceAroundOperators])
+    }
+
+    func testEmptyCollectionLiteralWithComments() {
+        let input = """
+        let array: [Int] = [] // Empty array
+        let dict: [String: Int] = [:] // Empty dictionary
+        """
+        let output = """
+        let array = [Int]() // Empty array
+        let dict = [String: Int]() // Empty dictionary
+        """
+        let options = FormatOptions(propertyTypes: .inferred)
+        testFormatting(for: input, output, rule: .propertyTypes, options: options)
+    }
+
+    func testNonEmptyCollectionLiteralsNotChanged() {
+        let input = """
+        let array: [Int] = [1, 2, 3]
+        let dict: [String: Int] = ["key": 1]
+        """
+        let options = FormatOptions(propertyTypes: .inferred)
+        testFormatting(for: input, rule: .propertyTypes, options: options, exclude: [.redundantType])
+    }
+
+    func testEmptyCollectionLiteralTypeMismatch() {
+        let input = """
+        let array: [String: Int] = [] // Array literal but dictionary type
+        let dict: [Int] = [:] // Dictionary literal but array type
+        """
+        let options = FormatOptions(propertyTypes: .inferred)
+        testFormatting(for: input, rule: .propertyTypes, options: options)
+    }
+
+    func testEmptyCollectionLiteralWithComplexTypes() {
+        let input = """
+        let array: [Int?] = []
+        let dict: [String: Int?] = [:]
+        let generic: [MyType<T>] = []
+        let genericDict: [MyKey<T>: MyValue<U>] = [:]
+        """
+        let output = """
+        let array = [Int?]()
+        let dict = [String: Int?]()
+        let generic = [MyType<T>]()
+        let genericDict = [MyKey<T>: MyValue<U>]()
+        """
+        let options = FormatOptions(propertyTypes: .inferred)
         testFormatting(for: input, output, rule: .propertyTypes, options: options)
     }
 }

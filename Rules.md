@@ -324,7 +324,7 @@ Option | Description
       }
   }
 ```
-`--blank-line-after-switch-case always` 
+`--blank-line-after-switch-case always`
 
 ```diff
   func handle(_ action: SpaceshipAction) {
@@ -382,7 +382,7 @@ Option | Description
     // Multiline guard
     guard let spicy = self.makeSpicy() else {
         return
-    } 
+    }
 -
     guard let yummy = self.makeYummy() else {
         return
@@ -1047,7 +1047,7 @@ Updates SwiftUI `EnvironmentValues` definitions to use the @Entry macro.
 ```diff
 - struct ScreenNameEnvironmentKey: EnvironmentKey {
 -   static var defaultValue: Identifier? {
--      .init("undefined") 
+-      .init("undefined")
 -     }
 -   }
 
@@ -1800,7 +1800,7 @@ Default value for `--type-order` when using `--organization-mode type`:
 **NOTE:** The Swift compiler automatically synthesizes a memberwise `init` for `struct` types.
 
 To allow SwiftFormat to reorganize your code effectively, you must explicitly declare an `init`.
-Without this declaration, only functions will be reordered, while properties will remain in their original order. 
+Without this declaration, only functions will be reordered, while properties will remain in their original order.
 
 `--organization-mode visibility` (default)
 
@@ -2004,7 +2004,7 @@ Option | Description
 -     }
 - }
 + @MainActor @Suite(.serialized)
-+ final class MyFeatureTests { 
++ final class MyFeatureTests {
 +     @Test func myFeatureHasNoBugs() {
 +         let myFeature = MyFeature()
 +         myFeature.runAction()
@@ -2016,15 +2016,15 @@ Option | Description
 
 - final class MyFeatureTests: XCTestCase {
 -     var myFeature: MyFeature!
-- 
+-
 -     override func setUp() async throws {
 -         myFeature = try await MyFeature()
 -     }
-- 
+-
 -     override func tearDown() {
 -         myFeature = nil
 -     }
-- 
+-
 -     func testMyFeatureWorks() {
 -         myFeature.runAction()
 -         XCTAssertTrue(myFeature.worksProperly)
@@ -2034,15 +2034,15 @@ Option | Description
 + @MainActor
 + final class MyFeatureTests {
 +     var myFeature: MyFeature!
-+ 
++
 +     init() async throws {
 +         myFeature = try await MyFeature()
 +     }
-+ 
++
 +     deinit {
 +         myFeature = nil
 +     }
-+ 
++
 +     @Test func myFeatureWorks() {
 +         myFeature.runAction()
 +         #expect(myFeature.worksProperly)
@@ -2116,9 +2116,10 @@ Option | Description
 
       func method() {
 -         let view: UIView = UIView()
-+     let view = UIView()
++         let view = UIView()
 
-          let array = [Int]()
+-         let array: [Int] = []
++         let array = [Int]()
       }
   }
 
@@ -2220,7 +2221,7 @@ Option | Description
       let baaz: Baaz
 
 -     static func ==(lhs: Foo, rhs: Foo) -> Bool {
--         lhs.bar == rhs.bar 
+-         lhs.bar == rhs.bar
 -             && lhs.baaz == rhs.baaz
 -     }
   }

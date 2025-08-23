@@ -37,15 +37,15 @@ public extension FormatRule {
             }
 
             // Collect stored properties from the struct body
-            var storedProperties = [(name: String, type: String)]()
+            var storedProperties = [(name: String, type: TypeName)]()
 
             for childDeclaration in structDeclaration.body {
                 guard ["var", "let"].contains(childDeclaration.keyword),
                       let property = formatter.parsePropertyDeclaration(atIntroducerIndex: childDeclaration.keywordIndex),
-                      let typeInfo = property.type,
+                      let type = property.type,
                       childDeclaration.isStoredInstanceProperty
                 else { continue }
-                storedProperties.append((name: property.identifier, type: typeInfo.name))
+                storedProperties.append((name: property.identifier, type: type))
             }
 
             guard !storedProperties.isEmpty else { continue }
@@ -160,7 +160,7 @@ public extension FormatRule {
                 else { continue }
 
                 // Check if parameters match stored properties exactly
-                let parameters = functionDecl.arguments.compactMap { arg -> (name: String, type: String, externalLabel: String?, hasDefaultValue: Bool)? in
+                let parameters = functionDecl.arguments.compactMap { arg -> (name: String, type: TypeName, externalLabel: String?, hasDefaultValue: Bool)? in
                     guard let name = arg.internalLabel else { return nil }
 
                     // Check for default value by looking for '=' after the type

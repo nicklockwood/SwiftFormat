@@ -110,8 +110,8 @@ public extension FormatRule {
                 // but with `-> some Fooable` the generic type is specified by the function implementation.
                 // Because those represent different concepts, we can't convert between them,
                 // so have to mark the generic type as ineligible if it appears in the return type.
-                if let returnType = declaration.returnType?.name,
-                   tokenize(returnType).contains(where: { $0.string == genericType.name })
+                if let returnType = declaration.returnType,
+                   returnType.tokens.contains(where: { $0.string == genericType.name })
                 {
                     genericType.eligibleToRemove = false
                     continue
@@ -198,7 +198,7 @@ public extension FormatRule {
                 if let tokenAfterWhereKeyword = formatter.index(of: .nonSpaceOrLinebreak, after: whereClauseRange.lowerBound),
                    whereClauseRange.upperBound <= tokenAfterWhereKeyword
                 {
-                    formatter.removeTokens(in: whereClauseRange.range)
+                    formatter.removeTokens(in: whereClauseRange)
                 }
 
                 // remove trailing comma

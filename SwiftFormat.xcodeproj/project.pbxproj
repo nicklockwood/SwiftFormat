@@ -86,6 +86,10 @@
 		2EDC9DDC2CCE9A7C0085DBE2 /* Declaration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EDC9DD92CCE9A7C0085DBE2 /* Declaration.swift */; };
 		2EDC9DDD2CCE9A7C0085DBE2 /* Declaration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EDC9DD92CCE9A7C0085DBE2 /* Declaration.swift */; };
 		2EDC9DDF2CCE9BC70085DBE2 /* DeclarationV2Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EDC9DDE2CCE9BC70085DBE2 /* DeclarationV2Tests.swift */; };
+		2EE4007A2E595B7200CF8D5A /* TypeName.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EE400792E595B7000CF8D5A /* TypeName.swift */; };
+		2EE4007B2E595B7200CF8D5A /* TypeName.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EE400792E595B7000CF8D5A /* TypeName.swift */; };
+		2EE4007C2E595B7200CF8D5A /* TypeName.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EE400792E595B7000CF8D5A /* TypeName.swift */; };
+		2EE4007D2E595B7200CF8D5A /* TypeName.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EE400792E595B7000CF8D5A /* TypeName.swift */; };
 		2EF737522C5E881C00128F91 /* CodeOrganizationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EF737512C5E881C00128F91 /* CodeOrganizationTests.swift */; };
 		2EF737542C5E897800128F91 /* ProjectFilePaths.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EF737532C5E897800128F91 /* ProjectFilePaths.swift */; };
 		2EF8BF1B2D1E0D4F00D6F12F /* DeclarationType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EF8BF1A2D1E0D4F00D6F12F /* DeclarationType.swift */; };
@@ -248,6 +252,7 @@
 		2E7D30A32A7940C500C32174 /* Singularize.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Singularize.swift; sourceTree = "<group>"; };
 		2EDC9DD92CCE9A7C0085DBE2 /* Declaration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Declaration.swift; sourceTree = "<group>"; };
 		2EDC9DDE2CCE9BC70085DBE2 /* DeclarationV2Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeclarationV2Tests.swift; sourceTree = "<group>"; };
+		2EE400792E595B7000CF8D5A /* TypeName.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypeName.swift; sourceTree = "<group>"; };
 		2EF737512C5E881C00128F91 /* CodeOrganizationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeOrganizationTests.swift; sourceTree = "<group>"; };
 		2EF737532C5E897800128F91 /* ProjectFilePaths.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectFilePaths.swift; sourceTree = "<group>"; };
 		2EF8BF1A2D1E0D4F00D6F12F /* DeclarationType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeclarationType.swift; sourceTree = "<group>"; };
@@ -402,6 +407,7 @@
 		01A0EAA61D5DB4CF00A0A8E3 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				2EE400792E595B7000CF8D5A /* TypeName.swift */,
 				2E3A24EE2DDD621600407419 /* Rules */,
 				2E2BAB8B2C57F6B600590239 /* RuleRegistry.generated.swift */,
 				01F17E811E25870700DCD359 /* CommandLine.swift */,
@@ -884,6 +890,7 @@
 				DD9AD39E2999FCC8001C2C0E /* GithubActionsLogReporter.swift in Sources */,
 				01045A91211988F100D2BE3D /* Inference.swift in Sources */,
 				DD9AD3A32999FCC8001C2C0E /* Reporter.swift in Sources */,
+				2EE4007C2E595B7200CF8D5A /* TypeName.swift in Sources */,
 				E4FABAD5202FEF060065716E /* OptionDescriptor.swift in Sources */,
 				2EDC9DDA2CCE9A7C0085DBE2 /* Declaration.swift in Sources */,
 				01BBD85921DAA2A000457380 /* Globs.swift in Sources */,
@@ -951,6 +958,7 @@
 				01A8320724EC7F7600A9D0EB /* FormattingHelpers.swift in Sources */,
 				01F17E831E25870700DCD359 /* CommandLine.swift in Sources */,
 				015243E22B04B0A600F65221 /* Singularize.swift in Sources */,
+				2EE4007B2E595B7200CF8D5A /* TypeName.swift in Sources */,
 				6E954FF42E0DEACC004EE019 /* SARIFReporter.swift in Sources */,
 				C2FFD1832BD13C9E00774F55 /* XMLReporter.swift in Sources */,
 				01A0EACD1D5DB5F500A0A8E3 /* main.swift in Sources */,
@@ -978,6 +986,7 @@
 				2E2611C92DD94FE900FFFE09 /* XMLReporter.swift in Sources */,
 				2E2611CA2DD94FE900FFFE09 /* GithubActionsLogReporter.swift in Sources */,
 				2E2611CB2DD94FE900FFFE09 /* Reporter.swift in Sources */,
+				2EE4007A2E595B7200CF8D5A /* TypeName.swift in Sources */,
 				2E26108E2DD92CB400FFFE09 /* CommandLine.swift in Sources */,
 				015D3A562995A0340065B2D9 /* AboutViewController.swift in Sources */,
 				E41CB5C52027700100C1BEDE /* FreeTextTableCellView.swift in Sources */,
@@ -1017,6 +1026,7 @@
 				01045A9F2119D30D00D2BE3D /* Inference.swift in Sources */,
 				01A95BD2225BEDE300744931 /* ParsingHelpers.swift in Sources */,
 				90C4B6E51DA4B059009EB000 /* SourceEditorExtension.swift in Sources */,
+				2EE4007D2E595B7200CF8D5A /* TypeName.swift in Sources */,
 				0142C77023C3FB6D005D5832 /* LintFileCommand.swift in Sources */,
 				E4E4D3CC2033F17C000D7CB1 /* EnumAssociable.swift in Sources */,
 				E4FABAD8202FEF060065716E /* OptionDescriptor.swift in Sources */,

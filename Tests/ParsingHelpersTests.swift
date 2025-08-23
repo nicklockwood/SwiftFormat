@@ -2016,28 +2016,28 @@ class ParsingHelpersTests: XCTestCase {
         let formatter = Formatter(tokenize("""
         let foo: Foo = .init()
         """))
-        XCTAssertEqual(formatter.parseType(at: 5)?.name, "Foo")
+        XCTAssertEqual(formatter.parseType(at: 5)?.string, "Foo")
     }
 
     func testParseOptionalType() {
         let formatter = Formatter(tokenize("""
         let foo: Foo? = .init()
         """))
-        XCTAssertEqual(formatter.parseType(at: 5)?.name, "Foo?")
+        XCTAssertEqual(formatter.parseType(at: 5)?.string, "Foo?")
     }
 
     func testParseIOUType() {
         let formatter = Formatter(tokenize("""
         let foo: Foo! = .init()
         """))
-        XCTAssertEqual(formatter.parseType(at: 5)?.name, "Foo!")
+        XCTAssertEqual(formatter.parseType(at: 5)?.string, "Foo!")
     }
 
     func testDoesntParseTernaryOperatorAsType() {
         let formatter = Formatter(tokenize("""
         Foo.bar ? .foo : .bar
         """))
-        XCTAssertEqual(formatter.parseType(at: 0)?.name, "Foo.bar")
+        XCTAssertEqual(formatter.parseType(at: 0)?.string, "Foo.bar")
     }
 
     func testDoesntParseMacroInvocationAsType() {
@@ -2072,161 +2072,161 @@ class ParsingHelpersTests: XCTestCase {
         let formatter = Formatter(tokenize("""
         let foo = [Foo]()
         """))
-        XCTAssertEqual(formatter.parseType(at: 6)?.name, "[Foo]")
+        XCTAssertEqual(formatter.parseType(at: 6)?.string, "[Foo]")
     }
 
     func testParsesDictionaryAsType() {
         let formatter = Formatter(tokenize("""
         let foo = [Foo: Bar]()
         """))
-        XCTAssertEqual(formatter.parseType(at: 6)?.name, "[Foo: Bar]")
+        XCTAssertEqual(formatter.parseType(at: 6)?.string, "[Foo: Bar]")
     }
 
     func testParseGenericType() {
         let formatter = Formatter(tokenize("""
         let foo: Foo<Bar, Baaz> = .init()
         """))
-        XCTAssertEqual(formatter.parseType(at: 5)?.name, "Foo<Bar, Baaz>")
+        XCTAssertEqual(formatter.parseType(at: 5)?.string, "Foo<Bar, Baaz>")
     }
 
     func testParseOptionalGenericType() {
         let formatter = Formatter(tokenize("""
         let foo: Foo<Bar, Baaz>? = .init()
         """))
-        XCTAssertEqual(formatter.parseType(at: 5)?.name, "Foo<Bar, Baaz>?")
+        XCTAssertEqual(formatter.parseType(at: 5)?.string, "Foo<Bar, Baaz>?")
     }
 
     func testParseDictionaryType() {
         let formatter = Formatter(tokenize("""
         let foo: [Foo: Bar] = [:]
         """))
-        XCTAssertEqual(formatter.parseType(at: 5)?.name, "[Foo: Bar]")
+        XCTAssertEqual(formatter.parseType(at: 5)?.string, "[Foo: Bar]")
     }
 
     func testParseOptionalDictionaryType() {
         let formatter = Formatter(tokenize("""
         let foo: [Foo: Bar]? = [:]
         """))
-        XCTAssertEqual(formatter.parseType(at: 5)?.name, "[Foo: Bar]?")
+        XCTAssertEqual(formatter.parseType(at: 5)?.string, "[Foo: Bar]?")
     }
 
     func testParseTupleType() {
         let formatter = Formatter(tokenize("""
         let foo: (Foo, Bar) = (Foo(), Bar())
         """))
-        XCTAssertEqual(formatter.parseType(at: 5)?.name, "(Foo, Bar)")
+        XCTAssertEqual(formatter.parseType(at: 5)?.string, "(Foo, Bar)")
     }
 
     func testParseClosureType() {
         let formatter = Formatter(tokenize("""
         let foo: (Foo, Bar) -> (Foo, Bar) = { foo, bar in (foo, bar) }
         """))
-        XCTAssertEqual(formatter.parseType(at: 5)?.name, "(Foo, Bar) -> (Foo, Bar)")
+        XCTAssertEqual(formatter.parseType(at: 5)?.string, "(Foo, Bar) -> (Foo, Bar)")
     }
 
     func testParseThrowingClosureType() {
         let formatter = Formatter(tokenize("""
         let foo: (Foo, Bar) throws -> Void
         """))
-        XCTAssertEqual(formatter.parseType(at: 5)?.name, "(Foo, Bar) throws -> Void")
+        XCTAssertEqual(formatter.parseType(at: 5)?.string, "(Foo, Bar) throws -> Void")
     }
 
     func testParseTypedThrowingClosureType() {
         let formatter = Formatter(tokenize("""
         let foo: (Foo, Bar) throws(MyFeatureError) -> Void
         """))
-        XCTAssertEqual(formatter.parseType(at: 5)?.name, "(Foo, Bar) throws(MyFeatureError) -> Void")
+        XCTAssertEqual(formatter.parseType(at: 5)?.string, "(Foo, Bar) throws(MyFeatureError) -> Void")
     }
 
     func testParseAsyncClosureType() {
         let formatter = Formatter(tokenize("""
         let foo: (Foo, Bar) async -> Void
         """))
-        XCTAssertEqual(formatter.parseType(at: 5)?.name, "(Foo, Bar) async -> Void")
+        XCTAssertEqual(formatter.parseType(at: 5)?.string, "(Foo, Bar) async -> Void")
     }
 
     func testParseAsyncThrowsClosureType() {
         let formatter = Formatter(tokenize("""
         let foo: (Foo, Bar) async throws -> Void
         """))
-        XCTAssertEqual(formatter.parseType(at: 5)?.name, "(Foo, Bar) async throws -> Void")
+        XCTAssertEqual(formatter.parseType(at: 5)?.string, "(Foo, Bar) async throws -> Void")
     }
 
     func testParseTypedAsyncThrowsClosureType() {
         let formatter = Formatter(tokenize("""
         let foo: (Foo, Bar) async throws(MyCustomError) -> Void
         """))
-        XCTAssertEqual(formatter.parseType(at: 5)?.name, "(Foo, Bar) async throws(MyCustomError) -> Void")
+        XCTAssertEqual(formatter.parseType(at: 5)?.string, "(Foo, Bar) async throws(MyCustomError) -> Void")
     }
 
     func testParseClosureTypeWithOwnership() {
         let formatter = Formatter(tokenize("""
         let foo: (consuming Foo, borrowing Bar) -> (Foo, Bar) = { foo, bar in (foo, bar) }
         """))
-        XCTAssertEqual(formatter.parseType(at: 5)?.name, "(consuming Foo, borrowing Bar) -> (Foo, Bar)")
+        XCTAssertEqual(formatter.parseType(at: 5)?.string, "(consuming Foo, borrowing Bar) -> (Foo, Bar)")
     }
 
     func testParseOptionalReturningClosureType() {
         let formatter = Formatter(tokenize("""
         let foo: (Foo, Bar) -> (Foo, Bar)? = { foo, bar in (foo, bar) }
         """))
-        XCTAssertEqual(formatter.parseType(at: 5)?.name, "(Foo, Bar) -> (Foo, Bar)?")
+        XCTAssertEqual(formatter.parseType(at: 5)?.string, "(Foo, Bar) -> (Foo, Bar)?")
     }
 
     func testParseOptionalClosureType() {
         let formatter = Formatter(tokenize("""
         let foo: ((Foo, Bar) -> (Foo, Bar)?)? = { foo, bar in (foo, bar) }
         """))
-        XCTAssertEqual(formatter.parseType(at: 5)?.name, "((Foo, Bar) -> (Foo, Bar)?)?")
+        XCTAssertEqual(formatter.parseType(at: 5)?.string, "((Foo, Bar) -> (Foo, Bar)?)?")
     }
 
     func testParseOptionalClosureTypeWithOwnership() {
         let formatter = Formatter(tokenize("""
         let foo: ((consuming Foo, borrowing Bar) -> (Foo, Bar)?)? = { foo, bar in (foo, bar) }
         """))
-        XCTAssertEqual(formatter.parseType(at: 5)?.name, "((consuming Foo, borrowing Bar) -> (Foo, Bar)?)?")
+        XCTAssertEqual(formatter.parseType(at: 5)?.string, "((consuming Foo, borrowing Bar) -> (Foo, Bar)?)?")
     }
 
     func testParseExistentialAny() {
         let formatter = Formatter(tokenize("""
         let foo: any Foo
         """))
-        XCTAssertEqual(formatter.parseType(at: 5)?.name, "any Foo")
+        XCTAssertEqual(formatter.parseType(at: 5)?.string, "any Foo")
     }
 
     func testParseCompoundType() {
         let formatter = Formatter(tokenize("""
         let foo: Foo.Bar.Baaz
         """))
-        XCTAssertEqual(formatter.parseType(at: 5)?.name, "Foo.Bar.Baaz")
+        XCTAssertEqual(formatter.parseType(at: 5)?.string, "Foo.Bar.Baaz")
     }
 
     func testDoesntParseLeadingDotAsType() {
         let formatter = Formatter(tokenize("""
         let foo: Foo = .Bar.baaz
         """))
-        XCTAssertEqual(formatter.parseType(at: 9)?.name, nil)
+        XCTAssertEqual(formatter.parseType(at: 9)?.string, nil)
     }
 
     func testParseCompoundGenericType() {
         let formatter = Formatter(tokenize("""
         let foo: Foo<Bar>.Bar.Baaz<Quux.V2>
         """))
-        XCTAssertEqual(formatter.parseType(at: 5)?.name, "Foo<Bar>.Bar.Baaz<Quux.V2>")
+        XCTAssertEqual(formatter.parseType(at: 5)?.string, "Foo<Bar>.Bar.Baaz<Quux.V2>")
     }
 
     func testParseExistentialTypeWithSubtype() {
         let formatter = Formatter(tokenize("""
         let foo: (any Foo).Bar.Baaz
         """))
-        XCTAssertEqual(formatter.parseType(at: 5)?.name, "(any Foo).Bar.Baaz")
+        XCTAssertEqual(formatter.parseType(at: 5)?.string, "(any Foo).Bar.Baaz")
     }
 
     func testParseOpaqueReturnType() {
         let formatter = Formatter(tokenize("""
         var body: some View { EmptyView() }
         """))
-        XCTAssertEqual(formatter.parseType(at: 5)?.name, "some View")
+        XCTAssertEqual(formatter.parseType(at: 5)?.string, "some View")
     }
 
     func testParameterPackTypes() {
@@ -2239,19 +2239,19 @@ class ParsingHelpersTests: XCTestCase {
             return (repeat (each item).first)
         }
         """))
-        XCTAssertEqual(formatter.parseType(at: 4)?.name, "each T")
-        XCTAssertEqual(formatter.parseType(at: 13)?.name, "repeat each T")
-        XCTAssertEqual(formatter.parseType(at: 62)?.name, "repeat (each T).Element?")
+        XCTAssertEqual(formatter.parseType(at: 4)?.string, "each T")
+        XCTAssertEqual(formatter.parseType(at: 13)?.string, "repeat each T")
+        XCTAssertEqual(formatter.parseType(at: 62)?.string, "repeat (each T).Element?")
     }
 
     func testParseInvalidType() {
         let formatter = Formatter(tokenize("""
         let foo = { foo, bar in (foo, bar) }
         """))
-        XCTAssertEqual(formatter.parseType(at: 4)?.name, nil)
-        XCTAssertEqual(formatter.parseType(at: 5)?.name, nil)
-        XCTAssertEqual(formatter.parseType(at: 6)?.name, nil)
-        XCTAssertEqual(formatter.parseType(at: 7)?.name, nil)
+        XCTAssertEqual(formatter.parseType(at: 4)?.string, nil)
+        XCTAssertEqual(formatter.parseType(at: 5)?.string, nil)
+        XCTAssertEqual(formatter.parseType(at: 6)?.string, nil)
+        XCTAssertEqual(formatter.parseType(at: 7)?.string, nil)
     }
 
     func testMultilineType() {
@@ -2263,7 +2263,7 @@ class ParsingHelpersTests: XCTestCase {
         { }
         """))
 
-        XCTAssertEqual(formatter.parseType(at: 2)?.name, "Foo.Bar.Baaz.Quux.InnerType1.InnerType2")
+        XCTAssertEqual(formatter.parseType(at: 2)?.string, "Foo.Bar.Baaz.Quux.InnerType1.InnerType2")
     }
 
     func testParseTuples() {
@@ -2280,20 +2280,20 @@ class ParsingHelpersTests: XCTestCase {
 
         let formatter = Formatter(tokenize(input))
 
-        XCTAssertEqual(formatter.parseType(at: 5)?.name, "(foo: Foo, bar: Bar)")
-        XCTAssertTrue(formatter.isStartOfTupleType(at: 5))
+        XCTAssertEqual(formatter.parseType(at: 5)?.string, "(foo: Foo, bar: Bar)")
+        XCTAssert(formatter.parseType(at: 5)?.isTuple == true)
 
-        XCTAssertEqual(formatter.parseType(at: 23)?.name, "(foo: Foo, bar: Bar) -> Void")
-        XCTAssertFalse(formatter.isStartOfTupleType(at: 23))
+        XCTAssertEqual(formatter.parseType(at: 23)?.string, "(foo: Foo, bar: Bar) -> Void")
+        XCTAssert(formatter.parseType(at: 23)?.isTuple == false)
 
-        XCTAssertEqual(formatter.parseType(at: 45)?.name, "(Foo)")
-        XCTAssertFalse(formatter.isStartOfTupleType(at: 45))
+        XCTAssertEqual(formatter.parseType(at: 45)?.string, "(Foo)")
+        XCTAssert(formatter.parseType(at: 45)?.isTuple == false)
 
-        XCTAssertEqual(formatter.parseType(at: 54)?.name, "()")
-        XCTAssertFalse(formatter.isStartOfTupleType(at: 54))
+        XCTAssertEqual(formatter.parseType(at: 54)?.string, "()")
+        XCTAssert(formatter.parseType(at: 54)?.isTuple == false)
 
-        XCTAssertTrue(formatter.isStartOfTupleType(at: 62))
-        XCTAssertEqual(formatter.parseType(at: 62)?.name, "(bar: String,  quux: String  )")
+        XCTAssert(formatter.parseType(at: 62)?.isTuple == true)
+        XCTAssertEqual(formatter.parseType(at: 62)?.string, "(bar: String,  quux: String  )")
     }
 
     // MARK: - parseExpressionRange
@@ -2615,15 +2615,37 @@ class ParsingHelpersTests: XCTestCase {
 
         let formatter = Formatter(tokenize(input))
 
-        XCTAssertEqual(
-            formatter.parseFunctionDeclarationArguments(startOfScope: 3), // foo(...)
-            [
-                Formatter.FunctionArgument(externalLabel: nil, internalLabel: "foo", externalLabelIndex: 4, internalLabelIndex: 6, type: "Foo"),
-                Formatter.FunctionArgument(externalLabel: "bar", internalLabel: "bar", externalLabelIndex: nil, internalLabelIndex: 12, type: "Bar"),
-                Formatter.FunctionArgument(externalLabel: "quux", internalLabel: nil, externalLabelIndex: 18, internalLabelIndex: 20, type: "Quux"),
-                Formatter.FunctionArgument(externalLabel: "last", internalLabel: "baaz", externalLabelIndex: 26, internalLabelIndex: 28, type: "Baaz"),
-            ]
-        )
+        let arguments = formatter.parseFunctionDeclarationArguments(startOfScope: 3) // foo(...)
+
+        XCTAssertEqual(arguments.count, 4)
+
+        // First argument: _ foo: Foo
+        XCTAssertNil(arguments[0].externalLabel)
+        XCTAssertEqual(arguments[0].internalLabel, "foo")
+        XCTAssertEqual(arguments[0].externalLabelIndex, 4)
+        XCTAssertEqual(arguments[0].internalLabelIndex, 6)
+        XCTAssertEqual(arguments[0].type.string, "Foo")
+
+        // Second argument: bar: Bar
+        XCTAssertEqual(arguments[1].externalLabel, "bar")
+        XCTAssertEqual(arguments[1].internalLabel, "bar")
+        XCTAssertNil(arguments[1].externalLabelIndex)
+        XCTAssertEqual(arguments[1].internalLabelIndex, 12)
+        XCTAssertEqual(arguments[1].type.string, "Bar")
+
+        // Third argument: quux _: Quux
+        XCTAssertEqual(arguments[2].externalLabel, "quux")
+        XCTAssertNil(arguments[2].internalLabel)
+        XCTAssertEqual(arguments[2].externalLabelIndex, 18)
+        XCTAssertEqual(arguments[2].internalLabelIndex, 20)
+        XCTAssertEqual(arguments[2].type.string, "Quux")
+
+        // Fourth argument: last baaz: Baaz
+        XCTAssertEqual(arguments[3].externalLabel, "last")
+        XCTAssertEqual(arguments[3].internalLabel, "baaz")
+        XCTAssertEqual(arguments[3].externalLabelIndex, 26)
+        XCTAssertEqual(arguments[3].internalLabelIndex, 28)
+        XCTAssertEqual(arguments[3].type.string, "Baaz")
 
         XCTAssertEqual(
             formatter.parseFunctionDeclarationArguments(startOfScope: 40), // bar()

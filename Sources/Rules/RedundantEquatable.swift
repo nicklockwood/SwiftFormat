@@ -47,7 +47,7 @@ public extension FormatRule {
             // as long as all of the properties are themselves Equatable. This is usually true
             //
             if equatableType.typeDeclaration.keyword == "struct",
-               !storedInstanceProperties.contains(where: { $0.parsePropertyDeclaration()?.type?.name.isKnownNonEquatableType == true })
+               !storedInstanceProperties.contains(where: { $0.parsePropertyDeclaration()?.type?.isKnownNonEquatableType == true })
             {
                 equatableType.equatableFunction.remove()
             }
@@ -57,7 +57,7 @@ public extension FormatRule {
             else if case let .macro(macro, module: module) = formatter.options.equatableMacro {
                 let declarationWithEquatableConformance = equatableType.declarationWithEquatableConformance
 
-                guard let equatableConformance = formatter.parseConformancesOfType(atKeywordIndex: declarationWithEquatableConformance.keywordIndex).first(where: { $0.conformance == "Equatable" || $0.conformance == "Hashable" })
+                guard let equatableConformance = formatter.parseConformancesOfType(atKeywordIndex: declarationWithEquatableConformance.keywordIndex).first(where: { $0.conformance.string == "Equatable" || $0.conformance.string == "Hashable" })
                 else { continue }
 
                 // Exclude cases where the Equatable conformance is defined in an extension with a where clause,
@@ -73,7 +73,7 @@ public extension FormatRule {
 
                 // Remove the `: Equatable` conformance.
                 //  - If this type uses as `: Hashable` conformance, we have to preserve that.
-                if equatableConformance.conformance == "Equatable" {
+                if equatableConformance.conformance.string == "Equatable" {
                     formatter.removeConformance(at: equatableConformance.index)
                 }
 
@@ -166,7 +166,7 @@ extension Formatter {
 
                 // Both an Equatable and Hashable conformance will cause the Equatable conformance to be synthesized
                 if conformances.contains(where: {
-                    $0.conformance == "Equatable" || $0.conformance == "Hashable"
+                    $0.conformance.string == "Equatable" || $0.conformance.string == "Hashable"
                 }) {
                     typesWithEquatableConformances.append((
                         fullyQualifiedTypeName: fullyQualifiedName,
@@ -188,7 +188,7 @@ extension Formatter {
                    functionArguments[1].internalLabel == "rhs",
                    functionArguments[0].type == functionArguments[1].type
                 {
-                    var comparedTypeName = functionArguments[0].type
+                    var comparedTypeName = functionArguments[0].type.string
 
                     if let parentDeclaration = declaration.parent {
                         // If the function uses `Self`, resolve that to the name of the parent type
@@ -296,10 +296,10 @@ extension Formatter {
     }
 }
 
-extension String {
+extension TypeName {
     /// Whether or not this type name is known to be non-Equatable
     var isKnownNonEquatableType: Bool {
         let knownNonEquatableTypes = ["AnyClass"]
-        return knownNonEquatableTypes.contains(self) || isTupleType
+        return knownNonEquatableTypes.contains(string) || isTuple
     }
 }

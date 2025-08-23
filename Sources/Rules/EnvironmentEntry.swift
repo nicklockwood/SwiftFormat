@@ -70,7 +70,7 @@ extension Formatter {
         for declaration in declarations {
             guard let typeDeclaration = declaration.asTypeDeclaration,
                   typeDeclaration.keyword == "struct" || typeDeclaration.keyword == "enum",
-                  typeDeclaration.conformances.contains(where: { $0.conformance == "EnvironmentKey" }),
+                  typeDeclaration.conformances.contains(where: { $0.conformance.string == "EnvironmentKey" }),
                   let keyName = typeDeclaration.name,
                   typeDeclaration.body.count == 1,
                   let defaultValueDeclaration = typeDeclaration.body.first(where: {

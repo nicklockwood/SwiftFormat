@@ -30,7 +30,7 @@ public extension FormatRule {
             }
 
             else if let type = formatter.parseType(at: nextTokenIndex),
-                    type.name.first?.isLowercase == false
+                    type.string.first?.isLowercase == false
             {
                 isValidOwnershipModifier = true
             }

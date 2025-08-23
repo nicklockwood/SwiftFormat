@@ -96,7 +96,7 @@ public extension FormatRule {
             if declaration.keyword == "extension" {
                 let conformances = typeDeclaration.conformances.map(\.conformance)
                 if !conformances.isEmpty {
-                    conformanceNames = conformances.joined(separator: ", ")
+                    conformanceNames = conformances.map(\.string).joined(separator: ", ")
                 }
             }
 

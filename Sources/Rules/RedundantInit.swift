@@ -37,7 +37,7 @@ public extension FormatRule {
             let type = formatter.parseType(at: startOfTypeIndex),
             // Filter out values that start with a lowercase letter.
             // This covers edge cases like `super.init()`, where the `init` is not redundant.
-            let firstChar = type.name.components(separatedBy: ".").last?.first,
+            let firstChar = type.string.components(separatedBy: ".").last?.first,
             firstChar != "$",
             String(firstChar).uppercased() == String(firstChar)
             else { return }

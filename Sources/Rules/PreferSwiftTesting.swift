@@ -25,7 +25,7 @@ public extension FormatRule {
 
         let xcTestSuites = declarations
             .compactMap(\.asTypeDeclaration)
-            .filter { $0.conformances.contains(where: { $0.conformance == "XCTestCase" }) }
+            .filter { $0.conformances.contains(where: { $0.conformance.string == "XCTestCase" }) }
 
         guard !xcTestSuites.isEmpty,
               !xcTestSuites.contains(where: { $0.hasUnsupportedXCTestFunctionality() })
@@ -154,7 +154,7 @@ extension TypeDeclaration {
     /// Converts this XCTestCase implementation to a Swift Testing test suite
     func convertXCTestCaseToSwiftTestingSuite() {
         // Remove the XCTestCase conformance
-        if let xcTestCaseConformance = conformances.first(where: { $0.conformance == "XCTestCase" }) {
+        if let xcTestCaseConformance = conformances.first(where: { $0.conformance.string == "XCTestCase" }) {
             formatter.removeConformance(at: xcTestCaseConformance.index)
         }
 

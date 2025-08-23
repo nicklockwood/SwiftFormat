@@ -1982,7 +1982,7 @@ extension Formatter {
                 currentIndex = equalsIndex
             }
 
-            var rhsType: (name: String, range: ClosedRange<Int>)?
+            var rhsType: TypeName?
             if let rhsTypeIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex),
                let type = parseType(at: rhsTypeIndex)
             {
@@ -2018,7 +2018,7 @@ extension Formatter {
             // `Foo.Element == Fooable`, etc. Create a reference to this specific
             // generic parameter (`Foo` in all of these examples) that can store
             // the constraints and conformances that we encounter later.
-            let fullGenericTypeName = qualifyGenericTypeName(lhsType.name)
+            let fullGenericTypeName = qualifyGenericTypeName(lhsType.string)
 
             let baseGenericTypeName: String
             if fullGenericTypeName.contains(".") {
@@ -2040,8 +2040,8 @@ extension Formatter {
 
             if let rhsType, let conformanceType {
                 genericType.conformances.append(.init(
-                    name: rhsType.name,
-                    typeName: qualifyGenericTypeName(lhsType.name),
+                    name: rhsType.string,
+                    typeName: qualifyGenericTypeName(lhsType.string),
                     type: conformanceType,
                     sourceRange: lhsType.range.lowerBound ... currentIndex
                 ))
@@ -2931,7 +2931,7 @@ extension Formatter {
     /// by adding a blank line to the end of this declaration if not already present.
     func addTrailingBlankLineIfNeeded(in range: ClosedRange<Int>) {
         let range = range.autoUpdating(in: self)
-        while tokens[range.range].numberOfTrailingLinebreaks() < 2 {
+        while tokens[range].numberOfTrailingLinebreaks() < 2 {
             insertLinebreak(at: range.upperBound)
         }
     }
@@ -2951,7 +2951,7 @@ extension Formatter {
     /// by adding blank like to the start of this declaration if not already present.
     func addLeadingBlankLineIfNeeded(in range: ClosedRange<Int>) {
         let range = range.autoUpdating(in: self)
-        while tokens[range.range].numberOfLeadingLinebreaks() < 2 {
+        while tokens[range].numberOfLeadingLinebreaks() < 2 {
             insertLinebreak(at: range.lowerBound)
         }
     }
@@ -2960,7 +2960,7 @@ extension Formatter {
     /// by removing any trailing blank lines.
     func removeLeadingBlankLinesIfPresent(in range: ClosedRange<Int>) {
         let range = range.autoUpdating(in: self)
-        while tokens[range.range].numberOfLeadingLinebreaks() > 1 {
+        while tokens[range].numberOfLeadingLinebreaks() > 1 {
             guard let firstNewlineIndex = index(of: .linebreak, in: Range(range.range)) else { break }
             removeTokens(in: range.lowerBound ... firstNewlineIndex)
         }

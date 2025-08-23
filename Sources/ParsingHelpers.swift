@@ -689,7 +689,7 @@ extension Formatter {
     /// Whether or not the index is the start of a valid closure type
     func isStartOfClosureType(at i: Int) -> Bool {
         guard let type = parseType(at: i),
-              index(of: .operator("->", .infix), in: Range(type.range)) != nil
+              index(of: .operator("->", .infix), in: type.range) != nil
         else { return false }
 
         // Avoid confusing the arguments + return type of a function declaration with a closure type
@@ -1376,7 +1376,7 @@ extension Formatter {
         at startOfTypeIndex: Int,
         excludeLowercaseIdentifiers: Bool = false,
         excludeProtocolCompositions: Bool = false
-    ) -> (name: String, range: ClosedRange<Int>)? {
+    ) -> TypeName? {
         guard let baseType = parseNonOptionalType(
             at: startOfTypeIndex,
             excludeLowercaseIdentifiers: excludeLowercaseIdentifiers,
@@ -1393,8 +1393,7 @@ extension Formatter {
         //
         let nextTokenIndex = baseType.range.upperBound + 1
         if token(at: nextTokenIndex)?.isUnwrapOperator == true {
-            let typeRange = baseType.range.lowerBound ... nextTokenIndex
-            return (name: tokens[typeRange].stringExcludingLinebreaksAndComments, range: typeRange)
+            return TypeName(range: baseType.range.lowerBound ... nextTokenIndex, formatter: self)
         }
 
         // Any type can be followed by a `.` or `&` which can then continue the type
@@ -1410,8 +1409,7 @@ extension Formatter {
            let followingToken = index(of: .nonSpaceOrCommentOrLinebreak, after: nextTokenIndex),
            let followingType = parseType(at: followingToken, excludeLowercaseIdentifiers: excludeLowercaseIdentifiers)
         {
-            let typeRange = startOfTypeIndex ... followingType.range.upperBound
-            return (name: tokens[typeRange].stringExcludingLinebreaksAndComments, range: typeRange)
+            return TypeName(range: startOfTypeIndex ... followingType.range.upperBound, formatter: self)
         }
 
         return baseType
@@ -1421,11 +1419,11 @@ extension Formatter {
         at startOfTypeIndex: Int,
         excludeLowercaseIdentifiers: Bool,
         excludeProtocolCompositions: Bool
-    ) -> (name: String, range: ClosedRange<Int>)? {
+    ) -> TypeName? {
         let startToken = tokens[startOfTypeIndex]
 
         /// Helpers that calls `parseType` with all of the optional params passed in by default
-        func parseType(at index: Int) -> (name: String, range: ClosedRange<Int>)? {
+        func parseType(at index: Int) -> TypeName? {
             self.parseType(
                 at: index,
                 excludeLowercaseIdentifiers: excludeLowercaseIdentifiers,
@@ -1452,8 +1450,7 @@ extension Formatter {
                 else { return nil }
             }
 
-            let typeRange = startOfTypeIndex ... endOfScope
-            return (name: tokens[typeRange].stringExcludingLinebreaksAndComments, range: typeRange)
+            return TypeName(range: startOfTypeIndex ... endOfScope, formatter: self)
         }
 
         // Parse types of the form `(...)` or `(...) -> ...`
@@ -1472,13 +1469,11 @@ extension Formatter {
                let returnTypeIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: closureReturnIndex),
                let returnTypeRange = parseType(at: returnTypeIndex)?.range
             {
-                let typeRange = startOfTypeIndex ... returnTypeRange.upperBound
-                return (name: tokens[typeRange].stringExcludingLinebreaksAndComments, range: typeRange)
+                return TypeName(range: startOfTypeIndex ... returnTypeRange.upperBound, formatter: self)
             }
 
             // Otherwise this is just `(...)`
-            let typeRange = startOfTypeIndex ... endOfScope
-            return (name: tokens[typeRange].stringExcludingLinebreaksAndComments, range: typeRange)
+            return TypeName(range: startOfTypeIndex ... endOfScope, formatter: self)
         }
 
         // Parse types of the form `Foo<...>`
@@ -1486,8 +1481,7 @@ extension Formatter {
            tokens[nextTokenIndex] == .startOfScope("<"),
            let endOfScope = endOfScope(at: nextTokenIndex)
         {
-            let typeRange = startOfTypeIndex ... endOfScope
-            return (name: tokens[typeRange].stringExcludingLinebreaksAndComments, range: typeRange)
+            return TypeName(range: startOfTypeIndex ... endOfScope, formatter: self)
         }
 
         // Parse types with any of the following prefixes, along with any `@attribute`.
@@ -1496,8 +1490,7 @@ extension Formatter {
            let nextToken = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfTypeIndex),
            let followingType = parseType(at: nextToken)
         {
-            let typeRange = startOfTypeIndex ... followingType.range.upperBound
-            return (name: tokens[typeRange].stringExcludingLinebreaksAndComments, range: typeRange)
+            return TypeName(range: startOfTypeIndex ... followingType.range.upperBound, formatter: self)
         }
 
         // Otherwise this is just a single identifier
@@ -1506,15 +1499,10 @@ extension Formatter {
             let isLowercaseIdentifier = firstCharacter.uppercased() != firstCharacter
             guard !excludeLowercaseIdentifiers || !isLowercaseIdentifier else { return nil }
 
-            return (name: name, range: startOfTypeIndex ... startOfTypeIndex)
+            return TypeName(range: startOfTypeIndex ... startOfTypeIndex, formatter: self)
         }
 
         return nil
-    }
-
-    /// Whether or not the `.startOfScope("(")` token at the given index represents the start of a valid tuple type.
-    func isStartOfTupleType(at index: Int) -> Bool {
-        parseType(at: index)?.name.isTupleType == true
     }
 
     /// Whether or not the token at this index could potentially be the last token in a type.
@@ -1951,8 +1939,11 @@ extension Formatter {
         /// The index of this property's identifier / name.
         let identifierIndex: Int
 
+        /// The colon that precedes the type, if present.
+        let colonIndex: Int?
+
         /// Information about the property's type definition, if written explicitly.
-        let type: (colonIndex: Int, name: String, range: ClosedRange<Int>)?
+        let type: TypeName?
 
         /// Information about the value following the property's `=` token, if present.
         let value: (assignmentIndex: Int, expressionRange: ClosedRange<Int>)?
@@ -1988,7 +1979,7 @@ extension Formatter {
               propertyIdentifier.isIdentifier
         else { return nil }
 
-        var typeInformation: (colonIndex: Int, name: String, range: ClosedRange<Int>)?
+        var typeInformation: (colonIndex: Int, type: TypeName, range: AutoUpdatingRange)?
 
         if let colonIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: propertyIdentifierIndex),
            tokens[colonIndex] == .delimiter(":"),
@@ -1997,7 +1988,7 @@ extension Formatter {
         {
             typeInformation = (
                 colonIndex: colonIndex,
-                name: type.name,
+                type: type,
                 range: type.range
             )
         }
@@ -2047,7 +2038,8 @@ extension Formatter {
             introducerIndex: introducerIndex,
             identifier: propertyIdentifier.string,
             identifierIndex: propertyIdentifierIndex,
-            type: typeInformation,
+            colonIndex: typeInformation?.colonIndex,
+            type: typeInformation?.type,
             value: valueInformation,
             body: body
         )
@@ -2669,7 +2661,7 @@ extension Formatter {
         /// The index of the `->` operator if present
         let returnOperatorIndex: Int?
         /// The parsed return type if present
-        let returnType: (name: String, range: ClosedRange<Int>)?
+        let returnType: TypeName?
         /// The range of the `where` clause if present
         let whereClauseRange: ClosedRange<Int>?
         /// The range of the function body (`{ ... }`) if present.
@@ -2704,7 +2696,7 @@ extension Formatter {
         let internalLabelIndex: Int
 
         /// The type of the argument
-        var type: String
+        var type: TypeName
     }
 
     /// Parses the function or function-like declaration (`func`, `subscript`, `init`) at the given keyword index
@@ -2768,7 +2760,7 @@ extension Formatter {
 
         // Parse the optional return type
         let returnOperatorIndex: Int?
-        let returnType: (name: String, range: ClosedRange<Int>)?
+        let returnType: TypeName?
 
         if let parsedReturnType = parseFunctionDeclarationReturnClause(at: currentIndex) {
             returnOperatorIndex = parsedReturnType.returnOperatorIndex
@@ -2844,7 +2836,7 @@ extension Formatter {
             }
 
             guard let startOfType = index(of: .nonSpaceOrComment, after: colonIndex),
-                  let type = parseType(at: startOfType)?.name
+                  let type = parseType(at: startOfType)
             else { continue }
 
             let identifierString: (Token) -> String? = { token in
@@ -2913,7 +2905,7 @@ extension Formatter {
         }
     }
 
-    func parseFunctionDeclarationReturnClause(at startIndex: Int) -> (returnOperatorIndex: Int, returnType: (name: String, range: ClosedRange<Int>))? {
+    func parseFunctionDeclarationReturnClause(at startIndex: Int) -> (returnOperatorIndex: Int, returnType: TypeName)? {
         guard let returnIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: startIndex),
               tokens[returnIndex] == .operator("->", .infix),
               let indexAfterReturnOperator = index(of: .nonSpaceOrCommentOrLinebreak, after: returnIndex),
@@ -3018,7 +3010,7 @@ extension Formatter {
 
     /// Parses the list of conformances on this type, starting at
     /// the index of the type keyword (`struct`, `class`, `extension`, etc).
-    func parseConformancesOfType(atKeywordIndex keywordIndex: Int) -> [(conformance: String, index: Int)] {
+    func parseConformancesOfType(atKeywordIndex keywordIndex: Int) -> [(conformance: TypeName, index: Int)] {
         assert(Token.swiftTypeKeywords.contains(tokens[keywordIndex].string))
 
         guard let startOfType = index(of: .nonSpaceOrCommentOrLinebreak, after: keywordIndex),
@@ -3028,11 +3020,11 @@ extension Formatter {
               let firstConformanceIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: indexAfterType)
         else { return [] }
 
-        var conformances = [(conformance: String, index: Int)]()
+        var conformances = [(conformance: TypeName, index: Int)]()
         var nextConformanceIndex = firstConformanceIndex
 
         while let type = parseType(at: nextConformanceIndex) {
-            conformances.append((conformance: type.name, index: nextConformanceIndex))
+            conformances.append((conformance: type, index: nextConformanceIndex))
 
             if let nextTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: type.range.upperBound) {
                 nextConformanceIndex = nextTokenIndex
@@ -3143,7 +3135,7 @@ extension Formatter {
         // An extension can refer to complicated types like `Foo.Bar`, `[Foo]`, `Collection<Foo>`, etc.
         // Every other declaration type just uses a simple identifier.
         if tokens[keywordIndex].string == "extension" {
-            return parseType(at: nameIndex)?.name
+            return parseType(at: nameIndex)?.string
         } else {
             return tokens[nameIndex].string
         }
@@ -3390,62 +3382,5 @@ extension Token {
         default:
             return false
         }
-    }
-}
-
-extension String {
-    /// Whether or not this type name is a tuple.
-    /// Assumes this string represents a valid type.
-    var isTupleType: Bool {
-        let formatter = Formatter(tokenize(self))
-
-        // Tuple types start and end with parens and have a comma-separated list of elements.
-        // (There are no single-element tuples).
-        guard let openParen = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: -1),
-              formatter.tokens[openParen] == .startOfScope("("),
-              let closingParen = formatter.endOfScope(at: openParen),
-              openParen + 1 != closingParen
-        else { return false }
-
-        // The tuple could be optional, but otherwise the closing paren should be the last token.
-        let tokenAfterClosingParen = formatter.next(.nonSpaceOrCommentOrLinebreak, after: closingParen)
-        guard tokenAfterClosingParen == nil || tokenAfterClosingParen == .operator("?", .postfix) else {
-            return false
-        }
-
-        let hasCommaInParens = formatter.index(of: .delimiter(","), in: (openParen + 1) ..< closingParen) != nil
-        return hasCommaInParens
-    }
-
-    /// Whether or not this type name is an array.
-    /// Assumes this string represents a valid type.
-    var isArrayType: Bool {
-        let formatter = Formatter(tokenize(self))
-
-        guard let openBrace = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: -1),
-              formatter.tokens[openBrace] == .startOfScope("["),
-              let closingBrace = formatter.endOfScope(at: openBrace),
-              openBrace + 1 != closingBrace
-        else { return false }
-
-        // [:] would be a dictionary, not an array
-        let hasColonInBraces = formatter.index(of: .delimiter(":"), in: (openBrace + 1) ..< closingBrace) != nil
-        return !hasColonInBraces
-    }
-
-    /// Whether or not this type name is an array.
-    /// Assumes this string represents a valid type.
-    var isDictionaryType: Bool {
-        let formatter = Formatter(tokenize(self))
-
-        guard let openBrace = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: -1),
-              formatter.tokens[openBrace] == .startOfScope("["),
-              let closingBrace = formatter.endOfScope(at: openBrace),
-              openBrace + 1 != closingBrace
-        else { return false }
-
-        // [] would be a dictionary, not an array
-        let hasColonInBraces = formatter.index(of: .delimiter(":"), in: (openBrace + 1) ..< closingBrace) != nil
-        return hasColonInBraces
     }
 }

@@ -156,9 +156,9 @@ public extension FormatRule {
                         ])
 
                         // Add type annotation if present
-                        if let typeInfo = property.type {
+                        if let colonIndex = property.colonIndex, let type = property.type {
                             // Include from colon to end of type
-                            let typeTokens = formatter.tokens[typeInfo.colonIndex ... typeInfo.range.upperBound]
+                            let typeTokens = formatter.tokens[colonIndex ... type.range.upperBound]
                             replacementStatements.append(contentsOf: typeTokens)
                         }
 

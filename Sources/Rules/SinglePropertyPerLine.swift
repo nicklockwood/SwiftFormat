@@ -239,7 +239,7 @@ extension Formatter {
 
         while tokens[searchIndex].isIdentifier {
             let propertyIdentifierIndex = searchIndex
-            var typeInformation: (colonIndex: Int, name: String, range: ClosedRange<Int>)?
+            var typeInformation: (colonIndex: Int, type: TypeName)?
 
             if let colonIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: propertyIdentifierIndex),
                tokens[colonIndex] == .delimiter(":"),
@@ -248,12 +248,11 @@ extension Formatter {
             {
                 typeInformation = (
                     colonIndex: colonIndex,
-                    name: type.name,
-                    range: type.range
+                    type: type
                 )
             }
 
-            let endOfTypeOrIdentifier = typeInformation?.range.upperBound ?? propertyIdentifierIndex
+            let endOfTypeOrIdentifier = typeInformation?.type.range.upperBound ?? propertyIdentifierIndex
             var valueInformation: (assignmentIndex: Int, expressionRange: ClosedRange<Int>)?
 
             if let assignmentIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfTypeOrIdentifier),
@@ -268,7 +267,7 @@ extension Formatter {
             }
 
             var trailingCommaIndex: Int?
-            let lastTokenInProperty = valueInformation?.expressionRange.last ?? typeInformation?.range.last ?? propertyIdentifierIndex
+            let lastTokenInProperty = valueInformation?.expressionRange.last ?? typeInformation?.type.range.upperBound ?? propertyIdentifierIndex
             if let nextToken = index(of: .nonSpaceOrCommentOrLinebreak, after: lastTokenInProperty),
                tokens[nextToken] == .delimiter(",")
             {
@@ -278,7 +277,7 @@ extension Formatter {
             properties.append(MultiplePropertyDeclaration.Property(
                 identifier: tokens[propertyIdentifierIndex].string,
                 identifierIndex: propertyIdentifierIndex,
-                typeRange: typeInformation?.range,
+                typeRange: typeInformation?.type.range.range,
                 valueRange: valueInformation?.expressionRange,
                 trailingCommaIndex: trailingCommaIndex
             ))
@@ -355,11 +354,11 @@ extension Formatter {
             // If the type is a tuple, parse the individual tuple types
             if tokens[typeStart] == .startOfScope("("), type.range.upperBound == endOfScope(at: typeStart) {
                 let parsedTypes = parseTupleArguments(startOfScope: typeStart)
-                propertyType = (range: type.range, tupleTypes: parsedTypes.map { type in
+                propertyType = (range: type.range.range, tupleTypes: parsedTypes.map { type in
                     (name: type.value, range: type.valueRange)
                 })
             } else {
-                propertyType = (range: type.range, tupleTypes: nil)
+                propertyType = (range: type.range.range, tupleTypes: nil)
             }
 
             if let nextIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: type.range.upperBound) {

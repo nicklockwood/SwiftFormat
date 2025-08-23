@@ -329,7 +329,7 @@ extension TypeDeclaration {
     }
 
     /// The list of conformances of this type, not including any constraints following a `where` clause.
-    var conformances: [(conformance: String, index: Int)] {
+    var conformances: [(conformance: TypeName, index: Int)] {
         formatter.parseConformancesOfType(atKeywordIndex: keywordIndex)
     }
 }

@@ -36,7 +36,7 @@ public extension FormatRule {
             if let parentType = declaration.parentType {
                 // Check if this is in a Codable type
                 if parentType.conformances.contains(where: {
-                    ["Codable", "Decodable"].contains($0.conformance)
+                    ["Codable", "Decodable"].contains($0.conformance.string)
                 }) {
                     return
                 }
@@ -53,7 +53,7 @@ public extension FormatRule {
 
             guard let propertyDeclaration = formatter.parsePropertyDeclaration(atIntroducerIndex: varIndex),
                   let type = propertyDeclaration.type,
-                  type.name.hasSuffix("?") || type.name.hasSuffix("!")
+                  type.string.hasSuffix("?") || type.string.hasSuffix("!")
             else { return }
 
             switch formatter.options.nilInit {

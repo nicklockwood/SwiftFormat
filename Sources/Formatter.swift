@@ -331,8 +331,8 @@ public class Formatter: NSObject {
 
     private(set) var errors = [FormatError]()
 
-    func fatalError(_ error: String, at tokenIndex: Int) {
-        let line = originalLine(at: tokenIndex)
+    func fatalError(_ error: String, at tokenIndex: AnyIndex) {
+        let line = originalLine(at: tokenIndex.index)
         var message: String
         if let range = error.range(of: ". Valid options") ?? error.range(of: ". Did you mean") {
             message = "\(error[..<range.lowerBound]) on line \(line)\(error[range.lowerBound...])"
@@ -353,36 +353,36 @@ public extension Formatter {
     // MARK: access and mutation
 
     /// Returns the token at the specified index, or nil if index is invalid
-    func token(at index: Int) -> Token? {
-        tokens.indices.contains(index) ? tokens[index] : nil
+    func token(at index: AnyIndex) -> Token? {
+        tokens.indices.contains(index.index) ? tokens[index.index] : nil
     }
 
     /// Replaces the token at the specified index with one or more new tokens
-    func replaceToken(at index: Int, with tokens: ArraySlice<Token>) {
+    func replaceToken(at index: AnyIndex, with tokens: ArraySlice<Token>) {
         if tokens.isEmpty {
-            removeToken(at: index)
+            removeToken(at: index.index)
         } else if let token = tokens.first {
-            replaceToken(at: index, with: token)
-            insert(tokens.dropFirst(), at: index + 1)
+            replaceToken(at: index.index, with: token)
+            insert(tokens.dropFirst(), at: index.index + 1)
         }
     }
 
     /// Replaces the token at the specified index with one or more new tokens
-    func replaceToken(at index: Int, with tokens: [Token]) {
-        replaceToken(at: index, with: ArraySlice(tokens))
+    func replaceToken(at index: AnyIndex, with tokens: [Token]) {
+        replaceToken(at: index.index, with: ArraySlice(tokens))
     }
 
     /// Replaces the token at the specified index with a new token
-    func replaceToken(at index: Int, with token: Token) {
-        replaceToken(at: index, with: token, isMove: false)
+    func replaceToken(at index: AnyIndex, with token: Token) {
+        replaceToken(at: index.index, with: token, isMove: false)
     }
 
     /// Replaces the token at the specified index with a new token
-    private func replaceToken(at index: Int, with token: Token, isMove: Bool) {
-        if trackChanges, token.string != tokens[index].string {
-            trackChange(at: index, isMove: isMove)
+    private func replaceToken(at index: AnyIndex, with token: Token, isMove: Bool) {
+        if trackChanges, token.string != tokens[index.index].string {
+            trackChange(at: index.index, isMove: isMove)
         }
-        tokens[index] = token
+        tokens[index.index] = token
     }
 
     /// Replaces the tokens in the specified range with new tokens
@@ -431,25 +431,25 @@ public extension Formatter {
 
     /// Replaces the tokens in the specified range with new tokens
     @discardableResult
-    func replaceTokens(in range: ClosedRange<Int>, with tokens: ArraySlice<Token>) -> Int {
+    func replaceTokens(in range: AnyClosedRange, with tokens: ArraySlice<Token>) -> Int {
         replaceTokens(in: range.lowerBound ..< range.upperBound + 1, with: tokens)
     }
 
     /// Replaces the tokens in the specified closed range with new tokens
     @discardableResult
-    func replaceTokens(in range: ClosedRange<Int>, with tokens: [Token]) -> Int {
+    func replaceTokens(in range: AnyClosedRange, with tokens: [Token]) -> Int {
         replaceTokens(in: range.lowerBound ..< range.upperBound + 1, with: tokens)
     }
 
     /// Replaces the tokens in the specified closed range with a new token
     @discardableResult
-    func replaceTokens(in range: ClosedRange<Int>, with token: Token) -> Int {
+    func replaceTokens(in range: AnyClosedRange, with token: Token) -> Int {
         replaceTokens(in: range.lowerBound ..< range.upperBound + 1, with: token)
     }
 
     /// Replaces all of the tokens in the given range with the given new tokens,
     /// diffing the lines and tracking lines that move without changes.
-    func diffAndReplaceTokens(in rangeToUpdate: ClosedRange<Int>, with updatedTokens: [Token]) {
+    func diffAndReplaceTokens(in rangeToUpdate: AnyClosedRange, with updatedTokens: [Token]) {
         guard #available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *) else {
             // Swift's diffing implementation is only available in macOS 10.15+
             replaceTokens(in: rangeToUpdate, with: updatedTokens)
@@ -485,11 +485,12 @@ public extension Formatter {
     }
 
     /// Removes the token at the specified index
-    func removeToken(at index: Int) {
+    func removeToken(at index: AnyIndex) {
         removeToken(at: index, isMove: false)
     }
 
-    private func removeToken(at index: Int, isMove: Bool) {
+    private func removeToken(at index: AnyIndex, isMove: Bool) {
+        let index = index.index
         trackChange(at: index, isMove: isMove)
         updateRange(at: index, delta: -1)
         tokens.remove(at: index)
@@ -506,16 +507,16 @@ public extension Formatter {
     }
 
     /// Removes the tokens in the specified closed range
-    func removeTokens(in range: ClosedRange<Int>) {
+    func removeTokens(in range: AnyClosedRange) {
         removeTokens(in: range.lowerBound ..< range.upperBound + 1)
     }
 
     /// Removes the tokens in the specified set of ranges, that must not overlay
-    func removeTokens(in rangesToRemove: [ClosedRange<Int>]) {
+    func removeTokens(in rangesToRemove: [AnyClosedRange]) {
         // We remove the ranges in reverse order, so that removing
-        // one range doesn't invalidate the existings of the other ranges
+        // one range doesn't invalidate the indices of the other ranges
         let rangeRemovalOrder = rangesToRemove
-            .sorted(by: { $0.startIndex < $1.startIndex })
+            .sorted(by: { $0.lowerBound < $1.lowerBound })
             .reversed()
 
         for rangeToRemove in rangeRemovalOrder {
@@ -527,11 +528,11 @@ public extension Formatter {
     /// Handles additional internal bookkeeping so this change produces
     /// `Formatter.Change`s that represent moves and won't be filtered out
     /// as redundant.
-    func moveTokens(in range: ClosedRange<Int>, to newIndex: Int) {
-        let tokensToMove = tokens[range]
-        var newIndex = newIndex
+    func moveTokens(in range: AnyClosedRange, to newIndex: AnyIndex) {
+        let tokensToMove = tokens[range.range]
+        var newIndex = newIndex.index
 
-        for index in range.reversed() {
+        for index in range.range.reversed() {
             removeToken(at: index, isMove: true)
 
             if index < newIndex {
@@ -546,7 +547,7 @@ public extension Formatter {
     /// Handles additional internal bookkeeping so this change produces
     /// `Formatter.Change`s that represent moves and won't be filtered out
     /// as redundant.
-    func moveTokens(in range: Range<Int>, to index: Int) {
+    func moveTokens(in range: Range<Int>, to index: AnyIndex) {
         moveTokens(in: ClosedRange(range), to: index)
     }
 
@@ -554,8 +555,8 @@ public extension Formatter {
     /// Handles additional internal bookkeeping so this change produces
     /// `Formatter.Change`s that represent moves and won't be filtered out
     /// as redundant.
-    func moveToken(at originalIndex: Int, to newIndex: Int) {
-        moveTokens(in: originalIndex ... originalIndex, to: newIndex)
+    func moveToken(at originalIndex: AnyIndex, to newIndex: AnyIndex) {
+        moveTokens(in: originalIndex.index ... originalIndex.index, to: newIndex.index)
     }
 
     /// Removes the last token
@@ -566,11 +567,12 @@ public extension Formatter {
     }
 
     /// Inserts an array of tokens at the specified index
-    func insert(_ tokens: ArraySlice<Token>, at index: Int) {
-        insert(tokens, at: index, isMove: false)
+    func insert(_ tokens: ArraySlice<Token>, at index: AnyIndex) {
+        insert(tokens, at: index.index, isMove: false)
     }
 
-    private func insert(_ tokens: ArraySlice<Token>, at index: Int, isMove: Bool) {
+    private func insert(_ tokens: ArraySlice<Token>, at index: AnyIndex, isMove: Bool) {
+        let index = index.index
         if tokens.isEmpty { return }
         trackChange(at: index, isMove: isMove)
         updateRange(at: index, delta: tokens.count)
@@ -581,16 +583,16 @@ public extension Formatter {
     }
 
     /// Inserts an array of tokens at the specified index
-    func insert(_ tokens: [Token], at index: Int) {
+    func insert(_ tokens: [Token], at index: AnyIndex) {
         insert(ArraySlice(tokens), at: index)
     }
 
     /// Inserts a single token at the specified index
-    func insert(_ token: Token, at index: Int) {
-        trackChange(at: index)
-        updateRange(at: index, delta: 1)
-        tokens.insert(token, at: index)
-        if enumerationIndex >= index {
+    func insert(_ token: Token, at index: AnyIndex) {
+        trackChange(at: index.index)
+        updateRange(at: index.index, delta: 1)
+        tokens.insert(token, at: index.index)
+        if enumerationIndex >= index.index {
             enumerationIndex += 1
         }
     }
@@ -676,9 +678,9 @@ public extension Formatter {
     }
 
     /// Returns the index of the next token at the current scope that matches the block
-    func index(after index: Int, where matches: (Token) -> Bool) -> Int? {
-        guard index < tokens.count else { return nil }
-        return self.index(in: index + 1 ..< tokens.count, where: matches)
+    func index(after index: AnyIndex, where matches: (Token) -> Bool) -> Int? {
+        guard index.index < tokens.count else { return nil }
+        return self.index(in: index.index + 1 ..< tokens.count, where: matches)
     }
 
     /// Returns the index of the next matching token in the specified range
@@ -686,9 +688,14 @@ public extension Formatter {
         index(in: range, where: { $0 == token })
     }
 
+    /// Returns the index of the next matching token in the specified range
+    func index(of token: Token, in range: AnyClosedRange) -> Int? {
+        index(in: Range(range.range), where: { $0 == token })
+    }
+
     /// Returns the index of the next matching token at the current scope
-    func index(of token: Token, after index: Int) -> Int? {
-        self.index(after: index, where: { $0 == token })
+    func index(of token: Token, after index: AnyIndex) -> Int? {
+        self.index(after: index.index, where: { $0 == token })
     }
 
     /// Returns the index of the next token in the specified range of the specified type
@@ -697,17 +704,17 @@ public extension Formatter {
     }
 
     /// Returns the index of the next token at the current scope of the specified type
-    func index(of type: TokenType, after index: Int, if matches: (Token) -> Bool = { _ in true }) -> Int? {
+    func index(of type: TokenType, after index: AnyIndex, if matches: (Token) -> Bool = { _ in true }) -> Int? {
         self.index(after: index, where: { $0.is(type) }).flatMap { matches(tokens[$0]) ? $0 : nil }
     }
 
     /// Returns the next token at the current scope that matches the block
-    func nextToken(after index: Int, where matches: (Token) -> Bool = { _ in true }) -> Token? {
+    func nextToken(after index: AnyIndex, where matches: (Token) -> Bool = { _ in true }) -> Token? {
         self.index(after: index, where: matches).map { tokens[$0] }
     }
 
     /// Returns the next token at the current scope of the specified type
-    func next(_ type: TokenType, after index: Int, if matches: (Token) -> Bool = { _ in true }) -> Token? {
+    func next(_ type: TokenType, after index: AnyIndex, if matches: (Token) -> Bool = { _ in true }) -> Token? {
         self.index(of: type, after: index, if: matches).map { tokens[$0] }
     }
 
@@ -747,9 +754,9 @@ public extension Formatter {
     }
 
     /// Returns the index of the previous token at the current scope that matches the block
-    func index(before index: Int, where matches: (Token) -> Bool) -> Int? {
-        guard index > 0 else { return nil }
-        return lastIndex(in: 0 ..< index, where: matches)
+    func index(before index: AnyIndex, where matches: (Token) -> Bool) -> Int? {
+        guard index.index > 0 else { return nil }
+        return lastIndex(in: 0 ..< index.index, where: matches)
     }
 
     /// Returns the index of the last matching token in the specified range
@@ -758,7 +765,7 @@ public extension Formatter {
     }
 
     /// Returns the index of the previous matching token at the current scope
-    func index(of token: Token, before index: Int) -> Int? {
+    func index(of token: Token, before index: AnyIndex) -> Int? {
         self.index(before: index, where: { $0 == token })
     }
 
@@ -768,17 +775,17 @@ public extension Formatter {
     }
 
     /// Returns the index of the previous token at the current scope of the specified type
-    func index(of type: TokenType, before index: Int, if matches: (Token) -> Bool = { _ in true }) -> Int? {
+    func index(of type: TokenType, before index: AnyIndex, if matches: (Token) -> Bool = { _ in true }) -> Int? {
         self.index(before: index, where: { $0.is(type) }).flatMap { matches(tokens[$0]) ? $0 : nil }
     }
 
     /// Returns the previous token at the current scope that matches the block
-    func lastToken(before index: Int, where matches: (Token) -> Bool) -> Token? {
+    func lastToken(before index: AnyIndex, where matches: (Token) -> Bool) -> Token? {
         self.index(before: index, where: matches).map { tokens[$0] }
     }
 
     /// Returns the previous token at the current scope of the specified type
-    func last(_ type: TokenType, before index: Int, if matches: (Token) -> Bool = { _ in true }) -> Token? {
+    func last(_ type: TokenType, before index: AnyIndex, if matches: (Token) -> Bool = { _ in true }) -> Token? {
         self.index(of: type, before: index, if: matches).map { tokens[$0] }
     }
 
@@ -788,7 +795,7 @@ public extension Formatter {
     }
 
     /// Inserts a linebreak at the specified index
-    func insertLinebreak(at index: Int) {
+    func insertLinebreak(at index: AnyIndex) {
         insert(linebreakToken(for: index), at: index)
     }
 
@@ -796,7 +803,8 @@ public extension Formatter {
     /// index, or inserts a new one if there is not already a space token present.
     /// Returns the number of tokens inserted or removed
     @discardableResult
-    func insertSpace(_ space: String, at index: Int) -> Int {
+    func insertSpace(_ space: String, at index: AnyIndex) -> Int {
+        let index = index.index
         if token(at: index)?.isSpace == true {
             if space.isEmpty {
                 removeToken(at: index)
@@ -863,7 +871,8 @@ public extension Formatter {
     }
 
     /// Returns a linebreak token suitable for insertion at the specified index
-    func linebreakToken(for index: Int) -> Token {
+    func linebreakToken(for index: AnyIndex) -> Token {
+        let index = index.index
         let lineNumber: Int
         if case let .linebreak(_, index)? = token(at: index) {
             lineNumber = index
@@ -979,8 +988,17 @@ private struct WeakAutoUpdatingReference {
     weak var reference: AutoUpdatingReference?
 }
 
+/// Either an `Int` or an `AutoUpdatingIndex`
+public protocol AnyIndex {
+    var index: Int { get }
+}
+
+extension Int: AnyIndex {
+    public var index: Int { self }
+}
+
 /// An auto-updating index within an associated `Formatter`
-final class AutoUpdatingIndex: AutoUpdatingReference, CustomStringConvertible {
+final class AutoUpdatingIndex: AutoUpdatingReference, AnyIndex, Equatable, CustomStringConvertible {
     var index: Int
     let formatter: Formatter
 
@@ -1002,20 +1020,30 @@ final class AutoUpdatingIndex: AutoUpdatingReference, CustomStringConvertible {
     deinit {
         formatter.unregisterAutoUpdatingReference(self)
     }
+
+    static func == (lhs: AutoUpdatingIndex, rhs: AutoUpdatingIndex) -> Bool {
+        lhs.index == rhs.index
+    }
+}
+
+/// Either a `ClosedRange` or an `AutoUpdatingRange`
+public protocol AnyClosedRange {
+    var range: ClosedRange<Int> { get }
+}
+
+public extension AnyClosedRange {
+    var lowerBound: Int { range.lowerBound }
+    var upperBound: Int { range.upperBound }
+}
+
+extension ClosedRange: AnyClosedRange where Bound == Int {
+    public var range: ClosedRange<Int> { self }
 }
 
 // An auto-updating subrange of indicies in a `Formatter`
-final class AutoUpdatingRange: AutoUpdatingReference, CustomStringConvertible {
+final class AutoUpdatingRange: AutoUpdatingReference, AnyClosedRange, Equatable, CustomStringConvertible {
     var range: ClosedRange<Int>
     let formatter: Formatter
-
-    var lowerBound: Int {
-        range.lowerBound
-    }
-
-    var upperBound: Int {
-        range.upperBound
-    }
 
     var description: String {
         range.description
@@ -1029,6 +1057,22 @@ final class AutoUpdatingRange: AutoUpdatingReference, CustomStringConvertible {
 
     deinit {
         formatter.unregisterAutoUpdatingReference(self)
+    }
+
+    static func == (lhs: AutoUpdatingRange, rhs: AutoUpdatingRange) -> Bool {
+        lhs.range == rhs.range
+    }
+}
+
+extension Array {
+    subscript(range: AutoUpdatingRange) -> ArraySlice<Element> {
+        get { self[range.range] }
+        set { self[range.range] = newValue }
+    }
+
+    subscript(index: AutoUpdatingIndex) -> Element {
+        get { self[index.index] }
+        set { self[index.index] = newValue }
     }
 }
 

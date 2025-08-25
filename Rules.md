@@ -38,6 +38,7 @@
 * [numberFormatting](#numberFormatting)
 * [opaqueGenericParameters](#opaqueGenericParameters)
 * [preferCountWhere](#preferCountWhere)
+* [preferFinalClasses](#preferFinalClasses)
 * [preferForLoop](#preferForLoop)
 * [preferKeyPath](#preferKeyPath)
 * [redundantBackticks](#redundantBackticks)
@@ -1912,6 +1913,36 @@ Prefer `count(where:)` over `filter(_:).count`.
 +         moon.hasAtmosphere
 +     }) > 1
 + })
+```
+
+</details>
+<br/>
+
+## preferFinalClasses
+
+Add final modifier to classes that are not open.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- class Foo {}
++ final class Foo {}
+```
+
+```diff
+- public class Bar {}
++ public final class Bar {}
+```
+
+```diff
+// Does not modify open classes
+open class Baz {}
+```
+
+```diff
+// Does not modify classes that are already final
+final class Qux {}
 ```
 
 </details>

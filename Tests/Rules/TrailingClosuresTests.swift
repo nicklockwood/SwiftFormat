@@ -41,14 +41,14 @@ class TrailingClosuresTests: XCTestCase {
         testFormatting(for: input, rule: .trailingClosures)
     }
 
-    func testClosureArgumentInExpressionNotMadeTrailing() {
+    func testClosureArgumentInIfStatementNotMadeTrailing() {
         let input = """
         if let foo = foo(foo: 5, { /* some code */ }) {}
         """
         testFormatting(for: input, rule: .trailingClosures)
     }
 
-    func testClosureArgumentInCompoundExpressionNotMadeTrailing() {
+    func testClosureArgumentInCompoundIfStatementNotMadeTrailing() {
         let input = """
         if let foo = foo(foo: 5, { /* some code */ }), let bar = bar(bar: 2, { /* some code */ }) {}
         """
@@ -73,6 +73,23 @@ class TrailingClosuresTests: XCTestCase {
         foo.1(5) { bar }
         """
         testFormatting(for: input, output, rule: .trailingClosures)
+    }
+
+    func testAnonymousInitClosureArgumentMadeTrailing() {
+        let input = """
+        Foo.init({ foo = bar })
+        """
+        let output = """
+        Foo.init { foo = bar }
+        """
+        testFormatting(for: input, output, rule: .trailingClosures, exclude: [.redundantInit])
+    }
+
+    func testNamedInitClosureArgumentNotMadeTrailing() {
+        let input = """
+        Foo.init(bar: { foo = bar })
+        """
+        testFormatting(for: input, rule: .trailingClosures, exclude: [.redundantInit])
     }
 
     func testNoRemoveParensAroundClosureFollowedByOpeningBrace() {

@@ -1798,6 +1798,46 @@ class TrailingCommasTests: XCTestCase {
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
+    func testMultiElementListsRemovesCommaFromSingleElementInit() {
+        let input = """
+        public init(
+            a: Int,
+        ) {
+            print(a)
+        }
+        """
+        let output = """
+        public init(
+            a: Int
+        ) {
+            print(a)
+        }
+        """
+        let options = FormatOptions(trailingCommas: .multiElementLists, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
+
+    func testMultiElementListsAddCommaToInit() {
+        let input = """
+        public init(
+            a: Int,
+            b: Int
+        ) {
+            print(a, b)
+        }
+        """
+        let output = """
+        public init(
+            a: Int,
+            b: Int,
+        ) {
+            print(a, b)
+        }
+        """
+        let options = FormatOptions(trailingCommas: .multiElementLists, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
+
     func testTrailingCommasNotRemovedFromInitParametersWithAlwaysOption() {
         let input = """
         public init(
@@ -1808,6 +1848,25 @@ class TrailingCommasTests: XCTestCase {
         """
         let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
         testFormatting(for: input, rule: .trailingCommas, options: options, exclude: [.unusedArguments])
+    }
+
+    func testTrailingCommasAddedToInitParametersWithAlwaysOption() {
+        let input = """
+        public init(
+            parameter: Parameter
+        ) {
+            // test
+        }
+        """
+        let output = """
+        public init(
+            parameter: Parameter,
+        ) {
+            // test
+        }
+        """
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options, exclude: [.unusedArguments])
     }
 
     func testTrailingCommaNotRemovedFromTupleTypeSwift6_1() {

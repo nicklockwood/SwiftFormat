@@ -3236,7 +3236,7 @@ extension Formatter {
         /// `foo()`, `@foo()`, or `#foo()`
         /// Exclude keywords to avoid confusing `return (...)`, `as? (...)`, `{ _ in (...) }`, etc.
         let isFunctionIdentifier = { (token: Token) in
-            token.isIdentifier || token.isAttribute || (token.isKeyword && token.string.hasPrefix("#"))
+            token.isIdentifier || token.isAttribute || (token.isKeyword && token.string.hasPrefix("#") || token.string == "init")
         }
 
         if isFunctionIdentifier(tokens[previousToken]) {

@@ -2974,18 +2974,18 @@ class WrapArgumentsTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .wrapArguments, options: FormatOptions(wrapArguments: .beforeFirst, allowPartialWrapping: false), exclude: [.unusedArguments])
+        testFormatting(for: input, output, rule: .wrapArguments, options: FormatOptions(wrapArguments: .beforeFirst, allowPartialWrapping: false), exclude: [.unusedArguments, .trailingCommas])
     }
 
     func testWrapPartiallyWrappedFunctionCallTwoLines() {
         let input = """
         func foo(
             foo: Foo, bar: Bar,
-            baaz: Baaz, quux: Quux,
+            baaz: Baaz, quux: Quux
         ) {
             print(
                 foo, bar,
-                baaz, quux,
+                baaz, quux
             )
         }
         """
@@ -2995,13 +2995,13 @@ class WrapArgumentsTests: XCTestCase {
             foo: Foo,
             bar: Bar,
             baaz: Baaz,
-            quux: Quux,
+            quux: Quux
         ) {
             print(
                 foo,
                 bar,
                 baaz,
-                quux,
+                quux
             )
         }
         """

@@ -396,6 +396,31 @@ class TrailingCommasTests: XCTestCase {
         testFormatting(for: input, output, rule: .trailingCommas, options: options)
     }
 
+    func testTrailingCommasRemovedFromFunctionParametersOnUnsupportedSwiftVersion() {
+        let input = """
+        struct Foo {
+            func foo(
+                bar: Int,
+                baaz: Int,
+            ) -> Int {
+                bar + baaz
+            }
+        }
+        """
+        let output = """
+        struct Foo {
+            func foo(
+                bar: Int,
+                baaz: Int
+            ) -> Int {
+                bar + baaz
+            }
+        }
+        """
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.0")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
+
     func testTrailingCommasAddedToGenericFunctionParameters() {
         let input = """
         struct Foo {

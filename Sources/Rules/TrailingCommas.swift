@@ -23,18 +23,18 @@ public extension FormatRule {
                     formatter.addOrRemoveTrailingComma(beforeEndOfScope: i, trailingCommaSupported: true, isCollection: true)
 
                 case .subscript, .captureList:
-                    formatter.addOrRemoveTrailingComma(beforeEndOfScope: i, trailingCommaSupported: formatter.options.swiftVersion >= "6.1")
+                    let trailingCommaSupported = formatter.options.swiftVersion >= "6.1"
+                    formatter.addOrRemoveTrailingComma(beforeEndOfScope: i, trailingCommaSupported: trailingCommaSupported)
 
                 default:
                     return
                 }
 
-            case .endOfScope(")"):
-                var trailingCommaSupported = false
+            case .endOfScope(")") where formatter.options.swiftVersion >= "6.1":
+                var trailingCommaSupported: Bool?
 
                 // Trailing commas are supported in function calls, function definitions, initializers, and attributes.
-                if formatter.options.swiftVersion >= "6.1",
-                   let identifierIndex = formatter.parseFunctionIdentifier(beforeStartOfScope: startOfScope),
+                if let identifierIndex = formatter.parseFunctionIdentifier(beforeStartOfScope: startOfScope),
                    let identifierToken = formatter.token(at: identifierIndex),
                    identifierToken.isIdentifier || identifierToken.isAttribute || identifierToken.isKeyword,
                    // If the case of `@escaping` or `@Sendable`, this could be a closure type where trailing commas are not supported.
@@ -59,9 +59,8 @@ public extension FormatRule {
 
                 // If the previous token is the closing `>` of a generic list, then this is a function declaration or initializer,
                 // like `func foo<T>(args...)` or `Foo<Bar>(args...)`.
-                if formatter.options.swiftVersion >= "6.1",
-                   let tokenBeforeStartOfScope = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope),
-                   formatter.tokens[tokenBeforeStartOfScope] == .endOfScope(">")
+                else if let tokenBeforeStartOfScope = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope),
+                        formatter.tokens[tokenBeforeStartOfScope] == .endOfScope(">")
                 {
                     trailingCommaSupported = true
                 }
@@ -69,9 +68,7 @@ public extension FormatRule {
                 // In Swift 6.1, trailing commas are also supported in tuple values,
                 // but not tuple or closure types: https://github.com/swiftlang/swift/issues/81485
                 // If we know this is a tuple value, then trailing commas are supported.
-                if formatter.options.swiftVersion >= "6.1",
-                   let tokenBeforeStartOfScope = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope)
-                {
+                else if let tokenBeforeStartOfScope = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope) {
                     // `{ (...) }`, `return (...)` etc are always tuple values
                     // (except in the case of a typealias, where the rhs is a type)
                     let tokensPreceedingValuesNotTypes: Set<Token> = [.startOfScope("{"), .keyword("return"), .keyword("throw"), .keyword("switch"), .endOfScope("case")]
@@ -97,14 +94,13 @@ public extension FormatRule {
 
                 formatter.addOrRemoveTrailingComma(beforeEndOfScope: i, trailingCommaSupported: trailingCommaSupported)
 
-            case .endOfScope(">"):
+            case .endOfScope(">") where formatter.options.swiftVersion >= "6.1":
                 var trailingCommaSupported = false
 
                 // In Swift 6.1, only generic lists in concrete type / function / typealias declarations are allowed.
                 // https://github.com/swiftlang/swift/issues/81474
                 // All of these cases have the form `keyword identifier<...>`, like `class Foo<...>` or `func foo<...>`.
-                if formatter.options.swiftVersion >= "6.1",
-                   let identifierIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope),
+                if let identifierIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope),
                    formatter.tokens[identifierIndex].isIdentifier,
                    let keywordIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: identifierIndex),
                    let keyword = formatter.token(at: keywordIndex),
@@ -115,6 +111,9 @@ public extension FormatRule {
                 }
 
                 formatter.addOrRemoveTrailingComma(beforeEndOfScope: i, trailingCommaSupported: trailingCommaSupported)
+
+            case .endOfScope(")"), .endOfScope(">"):
+                formatter.addOrRemoveTrailingComma(beforeEndOfScope: i, trailingCommaSupported: false)
 
             default:
                 break
@@ -180,12 +179,16 @@ extension Formatter {
     /// Trailing commas can always be removed.
     ///  - `trailingCommaSupported` indicates whether or not a trailing comma is allowed by the language at this position.
     ///  - `isCollection` indicates whether this is an array or dictionary literal.
-    func addOrRemoveTrailingComma(beforeEndOfScope endOfListIndex: Int, trailingCommaSupported: Bool, isCollection: Bool = false) {
+    func addOrRemoveTrailingComma(
+        beforeEndOfScope endOfListIndex: Int,
+        trailingCommaSupported: Bool?,
+        isCollection: Bool = false
+    ) {
         guard let prevTokenIndex = index(of: .nonSpaceOrComment, before: endOfListIndex),
               let startOfScope = startOfScope(at: endOfListIndex)
         else { return }
 
-        // Decide whether to insert, remove, or preserve the comma in this context based on the enabled option
+        // Decide whether to insert or remove the comma in this context
         enum TrailingCommaMode {
             case insert
             case remove
@@ -198,9 +201,12 @@ extension Formatter {
             trailingCommaMode = .remove
 
         case .always:
-            if trailingCommaSupported {
+            switch trailingCommaSupported {
+            case true?:
                 trailingCommaMode = .insert
-            } else {
+            case false?:
+                trailingCommaMode = .remove
+            case nil:
                 trailingCommaMode = .preserve
             }
 
@@ -212,11 +218,12 @@ extension Formatter {
             }
 
         case .multiElementLists:
-            if commaSeparatedElementsInScope(startOfScope: startOfScope).count <= 1 {
+            switch trailingCommaSupported {
+            case _ where commaSeparatedElementsInScope(startOfScope: startOfScope).count <= 1, false?:
                 trailingCommaMode = .remove
-            } else if trailingCommaSupported {
+            case true?:
                 trailingCommaMode = .insert
-            } else {
+            case nil:
                 trailingCommaMode = .preserve
             }
         }

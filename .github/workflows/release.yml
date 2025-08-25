@@ -8,7 +8,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Set Version Number
         run: echo "Using version number $GITHUB_REF_NAME" && sed -i '' "s/let swiftFormatVersion = \"[^\"]*\"/let swiftFormatVersion = \"$GITHUB_REF_NAME\"/" Sources/SwiftFormat.swift
       - name: Build macOS binary
@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Set Version Number
         run: echo "Using version number $GITHUB_REF_NAME" && sed -i "s/let swiftFormatVersion = \"[^\"]*\"/let swiftFormatVersion = \"$GITHUB_REF_NAME\"/" Sources/SwiftFormat.swift
       - name: Set up Docker Buildx
@@ -66,8 +66,8 @@ jobs:
     needs: [macos, linux]
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+        uses: actions/checkout@v5
+      - uses: actions/download-artifact@v5
         with:
           path: downloaded_artifacts
           pattern: swiftformat_*

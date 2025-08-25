@@ -67,7 +67,7 @@ public extension FormatRule {
                 }
 
                 // In Swift 6.1, trailing commas are also supported in tuple values,
-                // but not tuple types: https://github.com/swiftlang/swift/issues/81485
+                // but not tuple or closure types: https://github.com/swiftlang/swift/issues/81485
                 // If we know this is a tuple value, then trailing commas are supported.
                 if formatter.options.swiftVersion >= "6.1",
                    let tokenBeforeStartOfScope = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope)

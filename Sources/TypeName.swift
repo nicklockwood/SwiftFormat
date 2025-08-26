@@ -80,7 +80,7 @@ extension TypeName {
         return !hasColonInBraces
     }
 
-    /// Whether or not this type is an array.
+    /// Whether or not this type is a dictionary.
     var isDictionary: Bool {
         guard let openBrace = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: range.lowerBound - 1),
               formatter.tokens[openBrace] == .startOfScope("["),
@@ -88,9 +88,27 @@ extension TypeName {
               openBrace + 1 != closingBrace
         else { return false }
 
-        // [] would be a dictionary, not an array
+        // [] would be an array, not a dictionary
         let hasColonInBraces = formatter.index(of: .delimiter(":"), in: (openBrace + 1) ..< closingBrace) != nil
         return hasColonInBraces
+    }
+
+    /// Whether or not this type is a generic type with the given name.
+    func isGenericType(named typeName: String) -> Bool {
+        guard let firstToken = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: range.lowerBound - 1),
+              formatter.tokens[firstToken] == .identifier(typeName),
+              let openAngleBrace = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: firstToken),
+              formatter.tokens[openAngleBrace] == .startOfScope("<"),
+              let closingAngleBrace = formatter.endOfScope(at: openAngleBrace),
+              openAngleBrace + 1 != closingAngleBrace
+        else { return false }
+
+        return true
+    }
+
+    /// Whether or not this type is a set.
+    var isSet: Bool {
+        isGenericType(named: "Set")
     }
 
     /// Whether or not this type is a closure

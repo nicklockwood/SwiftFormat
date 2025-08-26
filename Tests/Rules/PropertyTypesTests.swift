@@ -703,4 +703,36 @@ class PropertyTypesTests: XCTestCase {
         let options = FormatOptions(propertyTypes: .inferred)
         testFormatting(for: input, output, rule: .propertyTypes, options: options)
     }
+
+    func testEmptySetLiteralToInferredType() {
+        let input = """
+        let set: Set<Int> = []
+        var strings: Set<String> = []
+        let nested: Set<Set<Bool>> = []
+        """
+        let output = """
+        let set = Set<Int>()
+        var strings = Set<String>()
+        let nested = Set<Set<Bool>>()
+        """
+        let options = FormatOptions(propertyTypes: .inferred)
+        testFormatting(for: input, output, rule: .propertyTypes, options: options)
+    }
+
+    func testEmptySetInitToSetLiteral() {
+        let input = """
+        let set = Set<Foo>()
+        var mapping = Set<String>()
+        let nested = Set<Set<Int>>()
+        let capacitySet = Set<Int>(minimumCapacity: 10)
+        """
+        let output = """
+        let set: Set<Foo> = []
+        var mapping: Set<String> = []
+        let nested: Set<Set<Int>> = []
+        let capacitySet: Set<Int> = .init(minimumCapacity: 10)
+        """
+        let options = FormatOptions(propertyTypes: .explicit)
+        testFormatting(for: input, output, rule: .propertyTypes, options: options)
+    }
 }

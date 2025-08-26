@@ -157,6 +157,16 @@ public extension FormatRule {
                     formatter.replaceTokens(in: rhsExpressionRange, with: tokenize("\(type.string)()"))
                 }
 
+                // Convert `let set: Set<Foo> = []` to `let set = Set<Foo>()`
+                else if type.isSet,
+                        formatter.tokens[rhsStartIndex] == .startOfScope("["),
+                        let nextToken = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: rhsStartIndex),
+                        formatter.tokens[nextToken] == .endOfScope("]"),
+                        rhsExpressionRange.upperBound == nextToken
+                {
+                    formatter.replaceTokens(in: rhsExpressionRange, with: tokenize("\(type.string)()"))
+                }
+
                 else {
                     return
                 }
@@ -216,6 +226,11 @@ public extension FormatRule {
                     // If this is an empty dictionary initializer, use `[:]` instead of `.init()`
                     else if rhsType.isDictionary, initializerHasNoArguments {
                         formatter.replaceTokens(in: indexAfterType ... endOfInitCallScope, with: tokenize("[:]"))
+                    }
+
+                    // If this is an empty set initializer, use `[]` instead of `.init()`
+                    else if rhsType.isSet, initializerHasNoArguments {
+                        formatter.replaceTokens(in: indexAfterType ... endOfInitCallScope, with: tokenize("[]"))
                     }
 
                     else {

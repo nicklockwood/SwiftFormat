@@ -484,4 +484,14 @@ class TrailingClosuresTests: XCTestCase {
         """
         testFormatting(for: input, [output], rules: [.trailingClosures, .indent])
     }
+
+    func testMultipleUnlabeledClosuresNotTransformed() {
+        let input = """
+        let foo = bar(
+            { baz },
+            { quux }
+        )
+        """
+        testFormatting(for: input, rule: .trailingClosures)
+    }
 }

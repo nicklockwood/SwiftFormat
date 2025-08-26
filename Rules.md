@@ -3403,6 +3403,19 @@ Option | Description
 + let foo = bar.map { ... }.joined()
 ```
 
+```diff
+- withAnimation(.spring, {
+-   isVisible = true
+- }, completion: {
+-   handleCompletion()
+- })
++ withAnimation(.spring) {
++   isVisible = true
++ } completion: {
++   handleCompletion()
++ }
+```
+
 </details>
 <br/>
 

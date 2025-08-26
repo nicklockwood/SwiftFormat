@@ -2962,6 +2962,12 @@ extension Formatter {
                     }
                 }
 
+                // Ensure we have a valid range
+                guard valueStart <= valueEnd else {
+                    currentIndex = endOfCurrentArgument
+                    continue
+                }
+
                 let valueRange = valueStart ... valueEnd
                 argumentLabels.append(FunctionCallArgument(
                     label: tokens[argumentLabelIndex].string,
@@ -2981,6 +2987,12 @@ extension Formatter {
                     while valueEnd >= valueStart, tokens[valueEnd].isSpaceOrLinebreak {
                         valueEnd -= 1
                     }
+                }
+
+                // Ensure we have a valid range
+                guard valueStart <= valueEnd else {
+                    currentIndex = endOfCurrentArgument
+                    continue
                 }
 
                 let valueRange = valueStart ... valueEnd

@@ -466,4 +466,22 @@ class TrailingClosuresTests: XCTestCase {
         """
         testFormatting(for: input, rule: .trailingClosures)
     }
+
+    func testMultipleTrailingClosuresWithTrailingComma() {
+        let input = """
+        withAnimationIfNeeded(
+            .linear,
+            { didAppear = true },
+            completion: { animateText = true },
+        )
+        """
+        let output = """
+        withAnimationIfNeeded(
+            .linear
+        ) { didAppear = true }
+            completion: { animateText = true }
+
+        """
+        testFormatting(for: input, [output], rules: [.trailingClosures, .indent])
+    }
 }

@@ -386,6 +386,68 @@ class TrailingClosuresTests: XCTestCase {
 
     // multiple closures
 
+    func testMultipleTrailingClosuresWithFirstUnlabeled() {
+        let input = """
+        withAnimation(.linear, {
+            // perform animation
+        }, completion: {
+            // handle completion
+        })
+        """
+        let output = """
+        withAnimation(.linear) {
+            // perform animation
+        } completion: {
+            // handle completion
+        }
+        """
+        testFormatting(for: input, output, rule: .trailingClosures)
+    }
+
+    func testMultipleTrailingClosuresWithFirstLabeled() {
+        let input = """
+        withAnimation(.linear, animation: {
+            // perform animation
+        }, completion: {
+            // handle completion
+        })
+        """
+        testFormatting(for: input, rule: .trailingClosures)
+    }
+
+    func testMultipleTrailingClosuresWithThreeClosures() {
+        let input = """
+        performTask(param: 1, {
+            // first closure
+        }, onSuccess: {
+            // success handler
+        }, onFailure: {
+            // failure handler
+        })
+        """
+        let output = """
+        performTask(param: 1) {
+            // first closure
+        } onSuccess: {
+            // success handler
+        } onFailure: {
+            // failure handler
+        }
+        """
+        testFormatting(for: input, output, rule: .trailingClosures)
+    }
+
+    func testMultipleTrailingClosuresNotAppliedWhenFirstIsLabeled() {
+        let input = """
+        someFunction(param: 1, first: {
+            // first closure
+        }, second: {
+            // second closure
+        })
+        """
+        testFormatting(for: input, rule: .trailingClosures)
+    }
+
     func testMultipleNestedClosures() throws {
         let repeatCount = 10
         let input = """
@@ -401,6 +463,34 @@ class TrailingClosuresTests: XCTestCase {
 
         """, count: repeatCount))    }
         }
+        """
+        testFormatting(for: input, rule: .trailingClosures)
+    }
+
+    func testMultipleTrailingClosuresWithTrailingComma() {
+        let input = """
+        withAnimationIfNeeded(
+            .linear,
+            { didAppear = true },
+            completion: { animateText = true },
+        )
+        """
+        let output = """
+        withAnimationIfNeeded(
+            .linear
+        ) { didAppear = true }
+            completion: { animateText = true }
+
+        """
+        testFormatting(for: input, [output], rules: [.trailingClosures, .indent])
+    }
+
+    func testMultipleUnlabeledClosuresNotTransformed() {
+        let input = """
+        let foo = bar(
+            { baz },
+            { quux }
+        )
         """
         testFormatting(for: input, rule: .trailingClosures)
     }

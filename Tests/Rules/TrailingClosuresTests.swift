@@ -386,6 +386,68 @@ class TrailingClosuresTests: XCTestCase {
 
     // multiple closures
 
+    func testMultipleTrailingClosuresWithFirstUnlabeled() {
+        let input = """
+        withAnimation(.linear, {
+            // perform animation
+        }, completion: {
+            // handle completion
+        })
+        """
+        let output = """
+        withAnimation(.linear) {
+            // perform animation
+        } completion: {
+            // handle completion
+        }
+        """
+        testFormatting(for: input, output, rule: .trailingClosures)
+    }
+
+    func testMultipleTrailingClosuresWithFirstLabeled() {
+        let input = """
+        withAnimation(.linear, animation: {
+            // perform animation
+        }, completion: {
+            // handle completion
+        })
+        """
+        testFormatting(for: input, rule: .trailingClosures)
+    }
+
+    func testMultipleTrailingClosuresWithThreeClosures() {
+        let input = """
+        performTask(param: 1, {
+            // first closure
+        }, onSuccess: {
+            // success handler
+        }, onFailure: {
+            // failure handler
+        })
+        """
+        let output = """
+        performTask(param: 1) {
+            // first closure
+        } onSuccess: {
+            // success handler
+        } onFailure: {
+            // failure handler
+        }
+        """
+        testFormatting(for: input, output, rule: .trailingClosures)
+    }
+
+    func testMultipleTrailingClosuresNotAppliedWhenFirstIsLabeled() {
+        let input = """
+        someFunction(param: 1, first: {
+            // first closure
+        }, second: {
+            // second closure
+        })
+        """
+        testFormatting(for: input, rule: .trailingClosures)
+    }
+
     func testMultipleNestedClosures() throws {
         let repeatCount = 10
         let input = """

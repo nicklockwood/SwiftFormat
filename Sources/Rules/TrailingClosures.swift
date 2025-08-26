@@ -30,6 +30,74 @@ public extension FormatRule {
             guard !nonTrailing.contains(name), !formatter.isConditionalStatement(at: i) else {
                 return
             }
+            
+            // Parse all arguments to detect multiple trailing closures
+            let arguments = formatter.parseFunctionCallArguments(startOfScope: i)
+            let closures = arguments.filter { arg in
+                let range = arg.valueRange
+                guard let first = formatter.index(of: .nonSpaceOrCommentOrLinebreak, in: range.lowerBound ..< range.upperBound + 1),
+                      let last = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: range.upperBound + 1, if: { _ in true }),
+                      formatter.tokens[first] == .startOfScope("{"),
+                      formatter.tokens[last] == .endOfScope("}"),
+                      formatter.index(of: .endOfScope("}"), after: first) == last else {
+                    return false
+                }
+                return true
+            }
+            
+            // If we have multiple closures and first is unlabeled, convert all
+            if closures.count > 1 && closures[0].label == nil {
+                guard let closingIndex = formatter.index(of: .endOfScope(")"), after: i) else { return }
+                guard formatter.next(.nonSpaceOrCommentOrLinebreak, after: closingIndex) != .startOfScope("{") else { return }
+                
+                // Store the ranges before making changes to avoid index invalidation
+                var transformations: [(range: Range<Int>, tokens: [Token])] = []
+                
+                // Add the closing parenthesis removal as a transformation
+                transformations.append((range: closingIndex ..< closingIndex + 1, tokens: []))
+                
+                // Collect all transformations first
+                for closure in closures {
+                    let range = closure.valueRange
+                    guard range.lowerBound < formatter.tokens.count,
+                          range.upperBound < formatter.tokens.count,
+                          let openBrace = formatter.index(of: .nonSpaceOrCommentOrLinebreak, in: range.lowerBound ..< range.upperBound + 1),
+                          openBrace < formatter.tokens.count,
+                          formatter.tokens[openBrace] == .startOfScope("{"),
+                          let beforeBrace = formatter.index(of: .nonSpaceOrLinebreak, before: openBrace),
+                          beforeBrace < formatter.tokens.count else { continue }
+                    
+                    if closure.label == nil {
+                        // This is the first (unlabeled) closure
+                        if formatter.tokens[beforeBrace] == .delimiter(",") {
+                            transformations.append((range: beforeBrace ..< openBrace, tokens: [.endOfScope(")"), .space(" ")]))
+                        } else if formatter.tokens[beforeBrace] == .startOfScope("(") {
+                            transformations.append((range: beforeBrace ..< openBrace, tokens: [.space(" ")]))
+                        }
+                    } else {
+                        // This is a labeled closure
+                        if formatter.tokens[beforeBrace] == .delimiter(":") {
+                            if let commaIndex = formatter.index(of: .delimiter(","), before: openBrace),
+                               commaIndex < formatter.tokens.count,
+                               let label = closure.label {
+                                transformations.append((range: commaIndex ..< openBrace, tokens: [
+                                    .space(" "), .identifier(label), .delimiter(":"), .space(" ")
+                                ]))
+                            }
+                        }
+                    }
+                }
+                
+                // Apply transformations from right to left
+                for transformation in transformations.sorted(by: { $0.range.lowerBound > $1.range.lowerBound }) {
+                    formatter.replaceTokens(in: transformation.range, with: transformation.tokens)
+                }
+                
+                // Closing parenthesis removal is handled in transformations
+                return
+            }
+            
+            // Original single trailing closure logic
             guard let closingIndex = formatter.index(of: .endOfScope(")"), after: i), let closingBraceIndex =
                 formatter.index(of: .nonSpaceOrComment, before: closingIndex, if: { $0 == .endOfScope("}") }),
                 let openingBraceIndex = formatter.index(of: .startOfScope("{"), before: closingBraceIndex),

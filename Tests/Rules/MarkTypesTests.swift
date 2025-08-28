@@ -996,4 +996,34 @@ class MarkTypesTests: XCTestCase {
 
         testFormatting(for: input, output, rule: .markTypes)
     }
+
+    func testMarksTypeAfterExtension() {
+        let input = """
+        extension Foo {
+            var foo: Foo { Foo() }
+            var bar: Bar { Bar() }
+        }
+
+        struct Baaz {
+            let foo: Foo
+            let bar: Bar
+        }
+        """
+
+        let output = """
+        extension Foo {
+            var foo: Foo { Foo() }
+            var bar: Bar { Bar() }
+        }
+
+        // MARK: - Baaz
+
+        struct Baaz {
+            let foo: Foo
+            let bar: Bar
+        }
+        """
+
+        testFormatting(for: input, output, rule: .markTypes)
+    }
 }

@@ -152,7 +152,7 @@ public extension FormatRule {
             }
 
             guard let expectedCommentBody = markForType else {
-                return
+                continue
             }
 
             // When inserting a mark before the first declaration,

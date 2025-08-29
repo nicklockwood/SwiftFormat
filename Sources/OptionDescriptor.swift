@@ -1374,6 +1374,19 @@ struct _Descriptors {
         help: "Comma-delimited list of symbols that depend on XCTest",
         keyPath: \.additionalXCTestSymbols
     )
+    let defaultTestSuiteAttributes = OptionDescriptor(
+        argumentName: "default-test-suite-attributes",
+        displayName: "Default test suite attributes",
+        help: "Comma-delimited list of attributes to add when converting from XCTest. e.g. \"@MainActor,@Suite(.serialized)\"",
+        keyPath: \.defaultTestSuiteAttributes,
+        validateArray: { array in
+            for attribute in array {
+                guard attribute.starts(with: "@"), !tokenize(attribute).contains(where: \.isError) else {
+                    throw FormatError.options("Invalid attribute: \"\(attribute)\"")
+                }
+            }
+        }
+    )
     let swiftUIPropertiesSortMode = OptionDescriptor(
         argumentName: "sort-swiftui-properties",
         displayName: "Sort SwiftUI Dynamic Properties",

@@ -12,7 +12,7 @@ public extension FormatRule {
     static let preferSwiftTesting = FormatRule(
         help: "Prefer the Swift Testing library over XCTest.",
         disabledByDefault: true,
-        options: ["xctest-symbols"]
+        options: ["xctest-symbols", "default-test-suite-attributes"]
     ) { formatter in
         // Swift Testing was introduced in Xcode 16.0 with Swift 6.0
         guard formatter.options.swiftVersion >= "6.0" else { return }
@@ -68,7 +68,6 @@ public extension FormatRule {
         -         XCTAssertNil(myFeature.crashReport)
         -     }
         - }
-        + @MainActor @Suite(.serialized)
         + final class MyFeatureTests { 
         +     @Test func myFeatureHasNoBugs() {
         +         let myFeature = MyFeature()
@@ -96,7 +95,6 @@ public extension FormatRule {
         -         XCTAssertEqual(myFeature.screens.count, 8)
         -     }
         - }
-        + @MainActor
         + final class MyFeatureTests {
         +     var myFeature: MyFeature!
         + 
@@ -119,7 +117,7 @@ public extension FormatRule {
     }
 }
 
-// MARK: XCTestCase test suite convesaion
+// MARK: XCTestCase test suite conversion
 
 extension TypeDeclaration {
     /// Whether or not this declaration uses XCTest functionality that is
@@ -158,25 +156,13 @@ extension TypeDeclaration {
             formatter.removeConformance(at: xcTestCaseConformance.index)
         }
 
-        // XCTest runs test serially, but Swift Testing defaults to running tests concurrently.
-        // For compatibility, have the generate Swift Testing suite default to running tests serially.
-        //
-        // Also from the XCTest to Swift Testing migration guide:
-        // https://developer.apple.com/documentation/testing/migratingfromxctest
-        // > XCTest runs synchronous test methods on the main actor by default,
-        // > while the testing library runs all test functions on an arbitrary task.
-        // > If a test function must run on the main thread, isolate it to the main actor
-        // > with @MainActor, or run the thread-sensitive code inside a call to
-        // > MainActor.run(resultType:body:).
-        //
-        // Moving test case to a background thread may cause failures, e.g. if
-        // the test case accesses any UIKit APIs, so we mark the test suite
-        // as @MainActor for maximum compatibility.
-        let startOfModifiers = formatter.startOfModifiers(at: keywordIndex, includingAttributes: true)
-        if !modifiers.contains("@MainActor") {
-            formatter.insert(tokenize("@MainActor @Suite(.serialized)\n"), at: startOfModifiers)
-        } else {
-            formatter.insert(tokenize("@Suite(.serialized)\n"), at: startOfModifiers)
+        // Allow the user to specify additional attributes to add to the new test suite,
+        // like `@MainActor`, `@Suite(.serialized)`, etc.
+        let attributesToAdd = formatter.options.defaultTestSuiteAttributes.joined(separator: " ")
+        if !attributesToAdd.isEmpty {
+            let startOfModifiers = formatter.startOfModifiers(at: keywordIndex, includingAttributes: true)
+            let attributesWithNewline = attributesToAdd + "\n"
+            formatter.insert(tokenize(attributesWithNewline), at: startOfModifiers)
         }
 
         let instanceMethods = body.filter { $0.keyword == "func" && !$0.modifiers.contains("static") }

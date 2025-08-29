@@ -38,7 +38,6 @@ final class PreferSwiftTestingTests: XCTestCase {
         @testable import MyFeatureLib
         import Testing
 
-        @MainActor @Suite(.serialized)
         final class MyFeatureTests {
             @Test func myFeatureWorks() {
                 let myFeature = MyFeature()
@@ -93,7 +92,6 @@ final class PreferSwiftTestingTests: XCTestCase {
         @testable import MyFeatureLib
         import Testing
 
-        @MainActor @Suite(.serialized)
         final class MyFeatureTests {
             var myFeature: MyFeature!
 
@@ -178,7 +176,6 @@ final class PreferSwiftTestingTests: XCTestCase {
         import Foundation
         import Testing
 
-        @MainActor @Suite(.serialized)
         class HelperConversionTests {
             @Test func convertsSimpleXCTestHelpers() throws {
                 #expect(foo)
@@ -285,7 +282,6 @@ final class PreferSwiftTestingTests: XCTestCase {
         import Foundation
         import Testing
 
-        @MainActor @Suite(.serialized)
         class HelperConversionTests {
             @Test func converts_multiline_XCTest_helpers() {
                 #expect(foo.bar(
@@ -463,7 +459,6 @@ final class PreferSwiftTestingTests: XCTestCase {
         @testable import MyFeatureLib
         import Testing
 
-        @MainActor @Suite(.serialized)
         final class MyFeatureTests {
             @Test func myFeatureWorks() {
                 let myFeature = MyFeature()
@@ -528,7 +523,6 @@ final class PreferSwiftTestingTests: XCTestCase {
         import Foundation
         import Testing
 
-        @MainActor @Suite(.serialized)
         final class MyFeatureTests {
             @Test func test123() {
                 #expect((1 + 2) == 3)
@@ -552,7 +546,7 @@ final class PreferSwiftTestingTests: XCTestCase {
         testFormatting(for: input, [output], rules: [.preferSwiftTesting, .sortImports], options: options)
     }
 
-    func testDoesntUpTestNameToExistingFunctionName() {
+    func testDoesntUpdateTestNameToExistingFunctionName() {
         let input = """
         import XCTest
 
@@ -571,7 +565,6 @@ final class PreferSwiftTestingTests: XCTestCase {
         import Foundation
         import Testing
 
-        @MainActor @Suite(.serialized)
         final class MyFeatureTests {
             @Test func testOnePlusTwo() {
                 #expect(onePlusTwo() == 3)
@@ -607,7 +600,6 @@ final class PreferSwiftTestingTests: XCTestCase {
         import Foundation
         import Testing
 
-        @MainActor @Suite(.serialized)
         final class MyFeatureTests {
             @Test func myFeatureWorks() {
                 testMyFeatureWorks(MyFeature())
@@ -648,7 +640,6 @@ final class PreferSwiftTestingTests: XCTestCase {
         import Foundation
         import Testing
 
-        @MainActor @Suite(.serialized)
         final class MyFeatureTests {
             @Test func myFeatureWorks() throws {
                 let myFeature = MyFeature()
@@ -725,7 +716,6 @@ final class PreferSwiftTestingTests: XCTestCase {
         import Testing
         import UIKit
 
-        @MainActor @Suite(.serialized)
         final class MyFeatureTests {
             @Test func myFeatureWorks() {
                 let viewController = UIViewController()
@@ -735,6 +725,64 @@ final class PreferSwiftTestingTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "6.0")
+        testFormatting(for: input, [output], rules: [.preferSwiftTesting, .sortImports], options: options)
+    }
+
+    func testAppliesCustomTestSuiteAttribute() {
+        let input = """
+        import XCTest
+
+        final class MyFeatureTests: XCTestCase {
+            func testMyFeatureWorks() {
+                let myFeature = MyFeature()
+                XCTAssertTrue(myFeature.worksProperly)
+            }
+        }
+        """
+
+        let output = """
+        import Foundation
+        import Testing
+
+        @MainActor
+        final class MyFeatureTests {
+            @Test func myFeatureWorks() {
+                let myFeature = MyFeature()
+                #expect(myFeature.worksProperly)
+            }
+        }
+        """
+
+        let options = FormatOptions(defaultTestSuiteAttributes: ["@MainActor"], swiftVersion: "6.0")
+        testFormatting(for: input, [output], rules: [.preferSwiftTesting, .sortImports], options: options)
+    }
+
+    func testAppliesMultipleTestSuiteAttributes() {
+        let input = """
+        import XCTest
+
+        final class MyFeatureTests: XCTestCase {
+            func testMyFeatureWorks() {
+                let myFeature = MyFeature()
+                XCTAssertTrue(myFeature.worksProperly)
+            }
+        }
+        """
+
+        let output = """
+        import Foundation
+        import Testing
+
+        @MainActor @Suite(.serialized)
+        final class MyFeatureTests {
+            @Test func myFeatureWorks() {
+                let myFeature = MyFeature()
+                #expect(myFeature.worksProperly)
+            }
+        }
+        """
+
+        let options = FormatOptions(defaultTestSuiteAttributes: ["@MainActor", "@Suite(.serialized)"], swiftVersion: "6.0")
         testFormatting(for: input, [output], rules: [.preferSwiftTesting, .sortImports], options: options)
     }
 }

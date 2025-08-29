@@ -1984,6 +1984,7 @@ Prefer the Swift Testing library over XCTest.
 Option | Description
 --- | ---
 `--xctest-symbols` | Comma-delimited list of symbols that depend on XCTest
+`--default-test-suite-attributes` | Comma-delimited list of attributes to add when converting from XCTest. e.g. "@MainActor,@Suite(.serialized)"
 
 <details>
 <summary>Examples</summary>
@@ -2003,7 +2004,6 @@ Option | Description
 -         XCTAssertNil(myFeature.crashReport)
 -     }
 - }
-+ @MainActor @Suite(.serialized)
 + final class MyFeatureTests { 
 +     @Test func myFeatureHasNoBugs() {
 +         let myFeature = MyFeature()
@@ -2031,7 +2031,6 @@ Option | Description
 -         XCTAssertEqual(myFeature.screens.count, 8)
 -     }
 - }
-+ @MainActor
 + final class MyFeatureTests {
 +     var myFeature: MyFeature!
 + 

@@ -823,6 +823,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var nilInit: NilInitType
     public var preservedPrivateDeclarations: Set<String>
     public var additionalXCTestSymbols: Set<String>
+    public var defaultTestSuiteAttributes: [String]
     public var equatableMacro: EquatableMacro
     public var urlMacro: URLMacro
     public var preferFileMacro: Bool
@@ -964,6 +965,7 @@ public struct FormatOptions: CustomStringConvertible {
                 nilInit: NilInitType = .remove,
                 preservedPrivateDeclarations: Set<String> = [],
                 additionalXCTestSymbols: Set<String> = [],
+                defaultTestSuiteAttributes: [String] = [],
                 equatableMacro: EquatableMacro = .none,
                 urlMacro: URLMacro = .none,
                 preferFileMacro: Bool = true,
@@ -1094,6 +1096,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.nilInit = nilInit
         self.preservedPrivateDeclarations = preservedPrivateDeclarations
         self.additionalXCTestSymbols = additionalXCTestSymbols
+        self.defaultTestSuiteAttributes = defaultTestSuiteAttributes
         self.equatableMacro = equatableMacro
         self.urlMacro = urlMacro
         self.preferFileMacro = preferFileMacro

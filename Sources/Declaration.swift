@@ -176,6 +176,11 @@ extension Declaration {
         }
     }
 
+    /// The range of the doc comment or regular comment immediately preceding this declaration
+    var docCommentRange: ClosedRange<Int>? {
+        formatter.parseDocCommentRange(forDeclarationAt: keywordIndex)
+    }
+
     /// The `CustomDebugStringConvertible` representation of this declaration
     var debugDescription: String {
         guard isValid else {

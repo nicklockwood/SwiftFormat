@@ -2612,6 +2612,29 @@ extension Formatter {
         return matches
     }
 
+    /// Parses the range of the doc comment or regular comment immediately preceding the declaration
+    func parseDocCommentRange(forDeclarationAt keywordIndex: Int) -> ClosedRange<Int>? {
+        let startOfModifiers = startOfModifiers(at: keywordIndex, includingAttributes: true)
+
+        var parseIndex = startOfModifiers
+        var endOfComment: Int?
+
+        while let endOfPreviousLine = index(of: .linebreak, before: parseIndex),
+              let endOfPreviousLineContent = index(of: .nonSpace, before: endOfPreviousLine),
+              tokens[endOfPreviousLineContent].isComment,
+              let startOfScope = startOfScope(at: endOfPreviousLineContent)
+        {
+            parseIndex = startOfScope
+
+            if endOfComment == nil {
+                endOfComment = endOfPreviousLineContent
+            }
+        }
+
+        guard let endOfComment else { return nil }
+        return parseIndex ... endOfComment
+    }
+
     /// Parses the prorocol composition typealias declaration starting at the given `typealias` keyword index.
     /// Returns `nil` if the given index isn't a protocol composition typealias.
     func parseProtocolCompositionTypealias(at typealiasIndex: Int)

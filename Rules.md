@@ -111,6 +111,7 @@
 * [noExplicitOwnership](#noExplicitOwnership)
 * [noGuardInTests](#noGuardInTests)
 * [organizeDeclarations](#organizeDeclarations)
+* [preferFinalClasses](#preferFinalClasses)
 * [preferSwiftTesting](#preferSwiftTesting)
 * [privateStateVariables](#privateStateVariables)
 * [propertyTypes](#propertyTypes)
@@ -1912,6 +1913,39 @@ Prefer `count(where:)` over `filter(_:).count`.
 +         moon.hasAtmosphere
 +     }) > 1
 + })
+```
+
+</details>
+<br/>
+
+## preferFinalClasses
+
+Prefer defining `final` classes. To suppress this rule, add "Base" to the class name, add a doc comment with mentioning "base class" or "subclass", make the class `open`, or use a `// swiftformat:disable:next preferFinalClasses` directive.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- class Foo {}
++ final class Foo {}
+```
+
+```diff
+- public class Bar {}
++ public final class Bar {}
+```
+
+```diff
+  // Preserved classes:
+  open class Baz {}
+
+  class BaseClass {}
+
+  class MyClass {} // Subclassed in this file
+  class MySubclass: MyClass {}
+
+  /// Base class to be subclassed by other features
+  class MyCustomizationPoint {}
 ```
 
 </details>

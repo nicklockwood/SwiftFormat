@@ -60,6 +60,7 @@ let ruleRegistry: [String: FormatRule] = [
     "opaqueGenericParameters": .opaqueGenericParameters,
     "organizeDeclarations": .organizeDeclarations,
     "preferCountWhere": .preferCountWhere,
+    "preferFinalClasses": .preferFinalClasses,
     "preferForLoop": .preferForLoop,
     "preferKeyPath": .preferKeyPath,
     "preferSwiftTesting": .preferSwiftTesting,

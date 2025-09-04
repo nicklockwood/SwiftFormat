@@ -371,4 +371,16 @@ class PreferFinalClassesTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .preferFinalClasses, exclude: [.blankLinesBetweenScopes])
     }
+
+    func testNonFinalClassWithBaseCommentPreserved() {
+        let input = """
+        /// Base class to be subclassed by other features
+        public class Foo {}
+
+        //base class to be subclassed by other features
+        public class Bar {}
+        """
+
+        testFormatting(for: input, rule: .preferFinalClasses, exclude: [.docComments, .spaceInsideComments])
+    }
 }

@@ -2965,4 +2965,33 @@ class ParsingHelpersTests: XCTestCase {
             "baaz: baaz.quux",
         ])
     }
+
+    func testParseCommentRange() throws {
+        let input = """
+        import FooLib
+
+        // Class declaration
+        class MyClass {}
+
+        // Other comment
+
+        /// Foo bar
+        /// baaz quux
+        @Foo
+        struct MyStruct {}
+        """
+
+        let formatter = Formatter(tokenize(input))
+        let classCommentRange = try XCTUnwrap(formatter.parseDocCommentRange(forDeclarationAt: 9)) // class
+        let structCommentRange = try XCTUnwrap(formatter.parseDocCommentRange(forDeclarationAt: 30)) // struct
+
+        XCTAssertEqual(formatter.tokens[classCommentRange].string, """
+        // Class declaration
+        """)
+
+        XCTAssertEqual(formatter.tokens[structCommentRange].string, """
+        /// Foo bar
+        /// baaz quux
+        """)
+    }
 }

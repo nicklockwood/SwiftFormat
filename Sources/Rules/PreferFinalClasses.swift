@@ -13,8 +13,10 @@ public extension FormatRule {
     static let preferFinalClasses = FormatRule(
         help: """
         Prefer defining `final` classes. To suppress this rule, add "Base" to the class name, \
-        make the class `open`, or use a `// swiftformat:disable:next` directive. 
-        """
+        make the class `open`, add a doc comment with mentioning "base class", \
+        or use a `// swiftformat:disable:next preferFinalClasses` directive.
+        """,
+        disabledByDefault: true
     ) { formatter in
         // Parse all declarations to understand inheritance relationships
         let declarations = formatter.parseDeclarations()
@@ -28,7 +30,7 @@ public extension FormatRule {
             let conformances = formatter.parseConformancesOfType(atKeywordIndex: declaration.keywordIndex)
             for conformance in conformances {
                 // Extract base class name from generic types like "Container<String>" -> "Container"
-                let baseClassName = conformance.conformance.components(separatedBy: "<").first ?? conformance.conformance
+                let baseClassName = conformance.conformance.tokens.first?.string ?? conformance.conformance.string
                 classesWithSubclasses.insert(baseClassName)
             }
         }
@@ -53,8 +55,12 @@ public extension FormatRule {
             // Don't add final to classes that contain "Base" (they're likely meant to be subclassed)
             guard !className.contains("Base") else { return }
 
-            // Insert final before the class keyword
-            formatter.insert([.keyword("final"), .space(" ")], at: keywordIndex)
+            // Don't add final to classes with a comment like "// Base class for XYZ functionality"
+            if let docCommentRange = declaration.docCommentRange {
+                guard !formatter.tokens[docCommentRange].string.lowercased().contains("base ") else { return }
+            }
+
+            formatter.insert(tokenize("final "), at: keywordIndex)
 
             // Convert any open direct child declarations to public (since final classes can't have open members)
             if let classBody = declaration.body {
@@ -81,47 +87,16 @@ public extension FormatRule {
         ```
 
         ```diff
-        // Does not modify open classes
-        open class Baz {}
-        ```
+          // Preserved classes:
+          open class Baz {}
 
-        ```diff
-        // Does not modify classes that are already final
-        final class Qux {}
-        ```
+          class BaseClass {}
 
-        ```diff
-        // Does not modify classes that have subclasses in the same file
-        class BaseClass {}
-        - class SubClass: BaseClass {}
-        + final class SubClass: BaseClass {}
-        ```
+          class MyClass {} // Subclassed in this file
+          class MySubclass: MyClass {}
 
-        ```diff
-        // Handles generic classes correctly
-        class Container<T> {}
-        - class StringContainer: Container<String> {}
-        + final class StringContainer: Container<String> {}
-        ```
-
-        ```diff
-        // Does not modify classes with "Base" prefix or suffix
-        class BaseClass {}
-        class UtilityBase {}
-        - class RegularClass {}
-        + final class RegularClass {}
-        ```
-
-        ```diff
-        // Converts open members to public when making class final
-        - class MyClass {
-        -     open var property: String = ""
-        -     open func method() {}
-        - }
-        + final class MyClass {
-        +     public var property: String = ""
-        +     public func method() {}
-        + }
+          /// Base class to be subclassed by other features
+          class MyCustomizationPoint {}
         ```
         """
     }

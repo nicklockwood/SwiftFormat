@@ -38,7 +38,6 @@
 * [numberFormatting](#numberFormatting)
 * [opaqueGenericParameters](#opaqueGenericParameters)
 * [preferCountWhere](#preferCountWhere)
-* [preferFinalClasses](#preferFinalClasses)
 * [preferForLoop](#preferForLoop)
 * [preferKeyPath](#preferKeyPath)
 * [redundantBackticks](#redundantBackticks)
@@ -112,6 +111,7 @@
 * [noExplicitOwnership](#noExplicitOwnership)
 * [noGuardInTests](#noGuardInTests)
 * [organizeDeclarations](#organizeDeclarations)
+* [preferFinalClasses](#preferFinalClasses)
 * [preferSwiftTesting](#preferSwiftTesting)
 * [privateStateVariables](#privateStateVariables)
 * [propertyTypes](#propertyTypes)
@@ -1920,7 +1920,7 @@ Prefer `count(where:)` over `filter(_:).count`.
 
 ## preferFinalClasses
 
-Add final modifier to classes that are not open.
+Prefer defining `final` classes. To suppress this rule, add "Base" to the class name, make the class `open`, add a doc comment with mentioning "base class", or use a `// swiftformat:disable:next preferFinalClasses` directive.
 
 <details>
 <summary>Examples</summary>
@@ -1936,13 +1936,16 @@ Add final modifier to classes that are not open.
 ```
 
 ```diff
-// Does not modify open classes
-open class Baz {}
-```
+  // Preserved classes:
+  open class Baz {}
 
-```diff
-// Does not modify classes that are already final
-final class Qux {}
+  class BaseClass {}
+
+  class MyClass {} // Subclassed in this file
+  class MySubclass: MyClass {}
+
+  /// Base class to be subclassed by other features
+  class MyCustomizationPoint {}
 ```
 
 </details>

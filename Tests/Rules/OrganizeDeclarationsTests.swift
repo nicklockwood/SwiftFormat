@@ -4204,4 +4204,49 @@ class OrganizeDeclarationsTests: XCTestCase {
             exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
         )
     }
+
+    func testRemovesAllUnnecessaryMarkAfterStandardMark() {
+        let input = """
+        public class Foo {
+
+            // MARK: Public
+
+            public func bar() {}
+
+            // MARK: Internal
+
+            // MARK: Implementation
+
+            func method() {}
+
+            // MARK: Testing
+
+            func testMethod() {}
+
+        }
+        """
+
+        let output = """
+        public class Foo {
+
+            // MARK: Public
+
+            public func bar() {}
+
+            // MARK: Internal
+
+            func method() {}
+
+            func testMethod() {}
+
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: .organizeDeclarations,
+            options: FormatOptions(typeBodyMarks: .remove),
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+        )
+    }
 }

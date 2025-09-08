@@ -387,6 +387,16 @@ extension Formatter {
                 let markDeclaration = tokenize("\(indentation)// \(markCommentBody)")
                 let eligibleCommentRange = declaration.range.lowerBound ..< self.index(of: .nonSpaceOrCommentOrLinebreak, after: declaration.range.lowerBound - 1)!
 
+                // Remove any comments other than the expected mark comment if present
+                removeExistingCategorySeparators(
+                    from: declaration,
+                    previousDeclaration: index == 0 ? nil : sortedDeclarations[index - 1].declaration,
+                    order: order,
+                    preserving: { commentBody in
+                        commentBody == markCommentBody
+                    }
+                )
+
                 let matchingComments = singleLineComments(in: eligibleCommentRange, matching: { commentBody in
                     commentBody == markCommentBody
                 })
@@ -403,12 +413,6 @@ extension Formatter {
                         insertLinebreak(at: tokenAfterComment)
                     }
                 } else {
-                    removeExistingCategorySeparators(
-                        from: declaration,
-                        previousDeclaration: index == 0 ? nil : sortedDeclarations[index - 1].declaration,
-                        order: order
-                    )
-
                     insertLinebreak(at: declaration.range.lowerBound)
                     if options.lineAfterMarks {
                         insertLinebreak(at: declaration.range.lowerBound)
@@ -461,12 +465,24 @@ extension Formatter {
     func removeExistingCategorySeparators(
         from declaration: Declaration,
         previousDeclaration: Declaration?,
-        order: ParsedOrder
+        order: ParsedOrder,
+        preserving shouldPreserveComment: (_ commentBody: String) -> Bool = { _ in false }
     ) {
         var matchingComments = matchingCategorySeparatorComments(in: declaration.leadingCommentRange, order: order)
+            .map { $0.autoUpdating(in: self) }
+        var preservedComment = false
 
         while !matchingComments.isEmpty {
             let commentRange = matchingComments.removeFirst()
+
+            // Preserve the first comment matching the given closure
+            if !preservedComment,
+               let commentBody = index(after: commentRange.lowerBound, where: \.isCommentBody),
+               shouldPreserveComment(tokens[commentBody].string)
+            {
+                preservedComment = true
+                continue
+            }
 
             // Makes sure there are only whitespace or other comments before this comment.
             // Otherwise, we don't want to remove it.
@@ -483,16 +499,10 @@ extension Formatter {
             let rangeToRemove = startOfCommentLine ..< startOfNextDeclaration
             removeTokens(in: rangeToRemove)
 
-            // We specifically iterate from start to end here, instead of in reverse,
-            // so we have to manually keep the existing indices up to date.
-            matchingComments = matchingComments.map { commentRange in
-                (commentRange.lowerBound - rangeToRemove.count)
-                    ... (commentRange.upperBound - rangeToRemove.count)
-            }
-
             // Move any tokens from before the category separator into the previous declaration.
             // This makes sure that things like comments stay grouped in the same category.
-            if let previousDeclaration, startOfCommentLine != 0 {
+            // Don't do this is we preserved a previous comment, since this following comment is no longer the first one.
+            if let previousDeclaration, startOfCommentLine != 0, !preservedComment {
                 // Remove the tokens before the category separator from this declaration...
                 let rangeBeforeComment = min(startOfCommentLine, declaration.range.lowerBound) ..< startOfCommentLine
                 let tokensBeforeCommentLine = Array(tokens[rangeBeforeComment])

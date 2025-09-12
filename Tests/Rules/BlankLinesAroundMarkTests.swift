@@ -74,6 +74,17 @@ class BlankLinesAroundMarkTests: XCTestCase {
         testFormatting(for: input, rule: .blankLinesAroundMark)
     }
 
+    func testNoInsertBlankLineBeforeMarkAtStartOfScopeWithTrailingComment() {
+        let input = """
+        struct Foo { // some comment here
+            // MARK: bar
+
+            let string: String
+        }
+        """
+        testFormatting(for: input, rule: .blankLinesAroundMark)
+    }
+
     func testNoInsertBlankLineAfterMarkAtEndOfScope() {
         let input = """
         do {

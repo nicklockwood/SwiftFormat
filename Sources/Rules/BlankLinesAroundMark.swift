@@ -28,7 +28,7 @@ public extension FormatRule {
             }
             if formatter.options.insertBlankLines,
                let lastIndex = formatter.index(of: .linebreak, before: startIndex),
-               let lastToken = formatter.last(.nonSpace, before: lastIndex),
+               let lastToken = formatter.last(.nonSpaceOrComment, before: lastIndex),
                !lastToken.isLinebreak, lastToken != .startOfScope("{")
             {
                 formatter.insertLinebreak(at: lastIndex)

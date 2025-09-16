@@ -1,11 +1,11 @@
-// Created by Cal Stephens on 2025-09-16
+// Created by Cal Stephens on 2025-09-16.
 // Copyright © 2025 Airbnb Inc. All rights reserved.
 
 import Foundation
 
 public extension FormatRule {
     static let noForceUnwrapInTests = FormatRule(
-        help: "Replace force unwraps with `try XCTUnwrap(...)` / `try #require(...)` in test functions.",
+        help: "Replace force unwrap operators `!` in test functions with safer alternatives like `XCTUnwrap` or `#require`.",
         disabledByDefault: true
     ) { formatter in
         guard let testFramework = formatter.detectTestingFramework() else {
@@ -25,83 +25,119 @@ public extension FormatRule {
 
             guard let bodyRange = functionDecl.bodyRange else { return }
 
+            // Find all force unwrap operators and process unique expressions from right to left
+            // This way we don't need to adjust indices after insertions
             var foundAnyForceUnwraps = false
+            var processedExpressions = Set<ClosedRange<Int>>()
 
-            // Find all expressions that contain force unwraps, starting from assignment operators
-            for index in bodyRange {
-                guard formatter.tokens[index] == .operator("=", .infix) else { continue }
+            for index in bodyRange.reversed() {
+                guard formatter.tokens[index] == .operator("!", .postfix) else { continue }
 
-                // Look for expression after assignment
-                guard let expressionStart = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index),
-                      let expressionRange = formatter.parseExpressionRange(startingAt: expressionStart) else { continue }
-
-                // Check if this expression contains any force unwraps
-                let containsForceUnwraps = expressionRange.contains { i in
-                    formatter.tokens[i] == .operator("!", .postfix)
+                // Only convert the `!` if we are within the function body
+                guard formatter.isInFunctionBody(of: functionDecl, at: index) else {
+                    continue
                 }
 
-                guard containsForceUnwraps else { continue }
-                guard formatter.isInFunctionBody(of: functionDecl, at: expressionStart) else { continue }
+                // Skip if this is an implicitly unwrapped optional type annotation (e.g., let foo: Foo!)
+                // Look for the pattern: (let|var) identifier : Type !
+                if let colonIndex = formatter.lastIndex(of: .delimiter(":"), in: 0 ..< index),
+                   let _ = formatter.lastIndex(of: .keyword, in: 0 ..< colonIndex, if: { ["let", "var"].contains($0.string) })
+                {
+                    // Make sure there are no assignment operators between the colon and the !
+                    // This distinguishes type annotations from variable assignments with IUO types
+                    let hasAssignment = formatter.index(of: .operator("=", .infix), in: colonIndex ..< index) != nil
+                    if !hasAssignment {
+                        continue
+                    }
+                }
 
-                let unwrapFunctionName = testFramework == .xcTest ? "XCTUnwrap" : "#require"
+                // Parse the expression containing this force unwrap operator
+                guard var expressionRange = formatter.parseExpressionRange(containing: index) else {
+                    continue
+                }
 
-                // Clean the expression by converting ! to ? except the final one, and as! to as?
-                let cleanedTokens = formatter.cleanExpressionTokens(in: expressionRange)
+                // Skip if we've already processed this expression
+                if processedExpressions.contains(expressionRange) {
+                    continue
+                }
+                processedExpressions.insert(expressionRange)
 
-                let newTokens: [Token] = [
-                    .keyword("try"),
-                    .space(" "),
-                    .identifier(unwrapFunctionName),
-                    .startOfScope("("),
-                ] + cleanedTokens + [
-                    .endOfScope(")"),
-                ]
+                // If there are infix operators like == or +, only handle the lhs of the first operator.
+                // `try` isn't allowed on the RHS of an operator, and multiple nested operators is too complicated.
+                var infixOperatorIndices: [Int] = []
+                for i in expressionRange {
+                    if formatter.tokens[i].isOperator(ofType: .infix),
+                       formatter.isInFunctionBody(of: functionDecl, at: i),
+                       formatter.tokens[i] != .operator(".", .infix)
+                    {
+                        infixOperatorIndices.append(i)
+                    }
+                }
 
-                // Replace the entire expression
-                formatter.replaceTokens(in: expressionRange, with: newTokens)
+                if let infixIndex = infixOperatorIndices.first {
+                    // Find force unwraps on the LHS only
+                    let lhsForceUnwraps = (expressionRange.lowerBound ..< infixIndex).filter {
+                        formatter.tokens[$0] == .operator("!", .postfix) && formatter.isInFunctionBody(of: functionDecl, at: $0)
+                    }
+
+                    // Only process if there are force unwraps on the LHS
+                    guard !lhsForceUnwraps.isEmpty else { continue }
+
+                    // Limit the expression range to just the LHS
+                    expressionRange = expressionRange.lowerBound ... (infixIndex - 1)
+                }
+
+                // Trim whitespace from the end of the expression range
+                var trimmedExpressionRange = expressionRange
+                while trimmedExpressionRange.upperBound >= trimmedExpressionRange.lowerBound,
+                      formatter.tokens[trimmedExpressionRange.upperBound].isSpaceOrLinebreak
+                {
+                    trimmedExpressionRange = trimmedExpressionRange.lowerBound ... (trimmedExpressionRange.upperBound - 1)
+                }
+                expressionRange = trimmedExpressionRange
+
+                // Check if the expression ends with a force unwrap
+                let expressionEndsWithForceUnwrap = formatter.tokens[expressionRange.upperBound] == .operator("!", .postfix) &&
+                    formatter.isInFunctionBody(of: functionDecl, at: expressionRange.upperBound)
+
+                // Convert all ! operators in this expression to ? operators
+                for i in expressionRange {
+                    if formatter.tokens[i] == .operator("!", .postfix),
+                       formatter.isInFunctionBody(of: functionDecl, at: i)
+                    {
+                        formatter.replaceToken(at: i, with: .operator("?", .postfix))
+                    }
+                }
+
+                // The range to wrap depends on whether the expression ends with !
+                let rangeToWrap: Range<Int>
+                if expressionEndsWithForceUnwrap {
+                    // If it ends with !, wrap everything except the final !
+                    rangeToWrap = expressionRange.lowerBound ..< expressionRange.upperBound
+                    // Remove the final ! (which was converted to ? above, so we need to remove the ?)
+                    formatter.removeToken(at: expressionRange.upperBound)
+                } else {
+                    // If it doesn't end with !, wrap the entire expression
+                    rangeToWrap = expressionRange.lowerBound ..< (expressionRange.upperBound + 1)
+                }
+
+                // Build the wrapper tokens based on the test framework
+                let wrapperTokens: [Token]
+                switch testFramework {
+                case .xcTest:
+                    wrapperTokens = [.keyword("try"), .space(" "), .identifier("XCTUnwrap"), .startOfScope("(")]
+                case .swiftTesting:
+                    wrapperTokens = [.keyword("try"), .space(" "), .operator("#", .prefix), .identifier("require"), .startOfScope("(")]
+                }
+
+                // Since we're processing right to left, we can insert without worrying about shifting indices
+                formatter.insert(wrapperTokens, at: rangeToWrap.lowerBound)
+                formatter.insert(.endOfScope(")"), at: rangeToWrap.upperBound + wrapperTokens.count)
+
                 foundAnyForceUnwraps = true
             }
 
-            // Handle function call arguments and return statements - process remaining force unwraps
-            for index in bodyRange {
-                guard formatter.tokens[index] == .operator("!", .postfix) else { continue }
-                guard formatter.isInFunctionBody(of: functionDecl, at: index) else { continue }
-
-                // Skip if this force unwrap is already part of an assignment expression we processed
-                var skipThis = false
-                for assignmentIndex in bodyRange {
-                    guard formatter.tokens[assignmentIndex] == .operator("=", .infix) else { continue }
-                    if let exprStart = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: assignmentIndex),
-                       let exprRange = formatter.parseExpressionRange(startingAt: exprStart),
-                       exprRange.contains(index)
-                    {
-                        skipThis = true
-                        break
-                    }
-                }
-                guard !skipThis else { continue }
-
-                let unwrapFunctionName = testFramework == .xcTest ? "XCTUnwrap" : "#require"
-
-                // Simple approach: just replace "identifier!" with "try XCTUnwrap(identifier)"
-                if let prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: index),
-                   case let .identifier(name) = formatter.tokens[prevIndex]
-                {
-                    let newTokens: [Token] = [
-                        .keyword("try"),
-                        .space(" "),
-                        .identifier(unwrapFunctionName),
-                        .startOfScope("("),
-                        .identifier(name),
-                        .endOfScope(")"),
-                    ]
-
-                    // Replace identifier and !
-                    formatter.replaceTokens(in: prevIndex ... index, with: newTokens)
-                    foundAnyForceUnwraps = true
-                }
-            }
-
+            // If we found any force unwraps, add a `throws` if it doesn't already exist
             guard foundAnyForceUnwraps else { return }
             formatter.addThrowsEffect(to: functionDecl)
         }
@@ -111,242 +147,27 @@ public extension FormatRule {
             import Testing
 
             struct MyFeatureTests {
-        -       @Test func doSomething() {
-        +       @Test func doSomething() throws {
-        -           let value = optionalValue!
-        +           let value = try #require(optionalValue)
+        -       @Test func myFeature() {
+        -           let myValue = foo.bar!.value as! Value
+        -           #expect(myValue.property! == "foo")
+        +       @Test func myFeature() throws {
+        +           let myValue = try #require(foo.bar?.value as? Value)
+        +           #expect(try #require(myValue.property) == "foo")
               }
             }
 
             import XCTest
 
             class MyFeatureTests: XCTestCase {
-        -       func test_doSomething() {
-        +       func test_doSomething() throws {
-        -           let value = optionalValue!
-        +           let value = try XCTUnwrap(optionalValue)
+        -       func testMyFeature() {
+        -           let myValue = foo.bar!.value as! Value
+        -           XCTAssertEqual(myValue.property, "foo")
+        +       func testMyFeature() throws {
+        +           let myValue = try XCTUnwrap(foo.bar?.value as? Value)
+        +           XCTAssertEqual(try XCTUnwrap(myValue.property), "foo")
               }
             }
         ```
         """
-    }
-}
-
-extension Formatter {
-    /// Check if a given index is inside a XCTUnwrap or #require function call
-    func isInsideUnwrapCall(at index: Int, unwrapFunction: String) -> Bool {
-        var currentIndex = index
-        var parenDepth = 0
-
-        while currentIndex > 0 {
-            currentIndex -= 1
-            let token = tokens[currentIndex]
-
-            if token == .endOfScope(")") {
-                parenDepth += 1
-            } else if token == .startOfScope("(") {
-                parenDepth -= 1
-                if parenDepth < 0 {
-                    // We've found the opening paren, check if it's preceded by our unwrap function
-                    if let prevIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: currentIndex) {
-                        let prevToken = tokens[prevIndex]
-                        if case .identifier(unwrapFunction) = prevToken {
-                            return true
-                        }
-                    }
-                    break
-                }
-            }
-        }
-
-        return false
-    }
-
-    /// Find the expression range around a force unwrap that should be wrapped together
-    /// This handles cases like: optionalValue! as! String -> optionalValue as? String
-    func findUnwrappableExpressionRange(around forceUnwrapIndex: Int) -> ClosedRange<Int> {
-        var start = forceUnwrapIndex
-        var end = forceUnwrapIndex
-
-        // Walk backwards to find expression start
-        while start > 0 {
-            let prevIndex = start - 1
-            let prevToken = tokens[prevIndex]
-
-            if prevToken.isSpaceOrCommentOrLinebreak {
-                start = prevIndex
-                continue
-            }
-
-            // Include parts of the expression that should be unwrapped together
-            switch prevToken {
-            case .identifier, .number, .stringBody:
-                start = prevIndex
-            case .startOfScope("["), .endOfScope("]"), .startOfScope("("), .endOfScope(")"):
-                start = prevIndex
-            case .operator(".", .infix), .operator("?", .postfix):
-                start = prevIndex
-            default:
-                break
-            }
-        }
-
-        // Walk forwards to include as! or similar patterns
-        while end < tokens.count - 1 {
-            let nextIndex = end + 1
-            let nextToken = tokens[nextIndex]
-
-            if nextToken.isSpaceOrCommentOrLinebreak {
-                end = nextIndex
-            } else if case .keyword("as") = nextToken {
-                // Include "as" keyword
-                end = nextIndex
-                // Look for the following ! to include as!
-                if let asNextIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: nextIndex),
-                   asNextIndex < tokens.count,
-                   tokens[asNextIndex] == .operator("!", .postfix)
-                {
-                    end = asNextIndex
-                    // Include the type after as!
-                    if let typeIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: asNextIndex),
-                       typeIndex < tokens.count
-                    {
-                        end = typeIndex
-                    }
-                }
-            } else {
-                break
-            }
-        }
-
-        return start ... end
-    }
-
-    /// Find the range that contains the unwrappable expression around a force unwrap
-    /// For (someDict["key"]! as SomeType).property, this should return just someDict["key"]!
-    func findUnwrappableRange(around forceUnwrapIndex: Int) -> ClosedRange<Int> {
-        var start = forceUnwrapIndex
-        var end = forceUnwrapIndex
-
-        // Walk backwards to find the start of the unwrappable expression
-        while start > 0 {
-            let prevIndex = start - 1
-            let prevToken = tokens[prevIndex]
-
-            // Skip whitespace and comments
-            if prevToken.isSpaceOrCommentOrLinebreak {
-                start = prevIndex
-                continue
-            }
-
-            // Include tokens that are part of the core unwrappable expression
-            switch prevToken {
-            case .identifier, .number, .stringBody, .endOfScope("]"), .endOfScope(")"):
-                start = prevIndex
-            case .startOfScope("["), .startOfScope("("):
-                start = prevIndex
-            case .operator(".", .infix):
-                start = prevIndex
-            case .operator("?", .postfix):
-                start = prevIndex
-            default:
-                // Stop at anything else (operators, keywords, etc.)
-                break
-            }
-        }
-
-        // Walk forwards but be conservative - only include trailing whitespace
-        while end < tokens.count - 1 {
-            let nextIndex = end + 1
-            let nextToken = tokens[nextIndex]
-
-            if nextToken.isSpaceOrCommentOrLinebreak {
-                end = nextIndex
-            } else {
-                break
-            }
-        }
-
-        return start ... end
-    }
-
-    /// Find the start of an expression by walking backwards from a given index
-    func findExpressionStart(before index: Int) -> Int? {
-        var currentIndex = index
-
-        // Walk backwards to find expression boundaries
-        while currentIndex > 0 {
-            let previousIndex = currentIndex - 1
-            let token = tokens[previousIndex]
-
-            // Stop at statement boundaries
-            if token == .endOfScope("}") || token == .delimiter(";") || token.isLinebreak {
-                break
-            }
-
-            // Stop at assignment operators
-            if case .operator("=", .infix) = token {
-                return self.index(of: .nonSpaceOrCommentOrLinebreak, after: previousIndex)
-            }
-
-            // Stop at function call boundaries
-            if case .startOfScope("(") = token,
-               let prevTokenIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: previousIndex),
-               case .identifier = tokens[prevTokenIndex]
-            {
-                return previousIndex
-            }
-
-            // Stop at return statements
-            if case .keyword("return") = token {
-                return self.index(of: .nonSpaceOrCommentOrLinebreak, after: previousIndex)
-            }
-
-            currentIndex = previousIndex
-        }
-
-        return currentIndex
-    }
-
-    /// Clean expression tokens by converting force unwraps and force casts to safe equivalents
-    func cleanExpressionTokens(in range: ClosedRange<Int>) -> [Token] {
-        var result: [Token] = []
-        var processedIndices = Set<Int>()
-
-        for i in range {
-            if processedIndices.contains(i) {
-                continue
-            }
-
-            let token = tokens[i]
-
-            if case .keyword("as") = token {
-                // Check if this is followed by ! (force cast)
-                if let nextNonSpaceIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: i),
-                   nextNonSpaceIndex <= range.upperBound,
-                   tokens[nextNonSpaceIndex] == .operator("!", .postfix)
-                {
-                    // Convert as! to as?
-                    result.append(.keyword("as"))
-                    result.append(.operator("?", .postfix))
-                    processedIndices.insert(nextNonSpaceIndex) // Mark the ! as processed
-                } else {
-                    result.append(token)
-                }
-            } else if token == .operator("!", .postfix) {
-                // Check if this force unwrap should become optional chaining
-                if let nextNonSpaceIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: i),
-                   nextNonSpaceIndex <= range.upperBound,
-                   tokens[nextNonSpaceIndex] == .operator(".", .infix)
-                {
-                    result.append(.operator("?", .postfix))
-                }
-                // Otherwise skip the force unwrap (final one is handled by wrapper)
-            } else {
-                result.append(token)
-            }
-        }
-
-        return result
     }
 }

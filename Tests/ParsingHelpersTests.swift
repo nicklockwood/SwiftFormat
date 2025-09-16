@@ -2579,6 +2579,8 @@ class ParsingHelpersTests: XCTestCase {
 
         // Type operators
         XCTAssert(endsExpressionAt("foo as String", at: 4, expecting: "foo as String"))
+        XCTAssert(endsExpressionAt("foo as! String", at: 5, expecting: "foo as! String"))
+        XCTAssert(endsExpressionAt("foo as? String", at: 5, expecting: "foo as? String"))
         XCTAssert(endsExpressionAt("foo is String", at: 4, expecting: "foo is String"))
 
         // Complex expressions with operators in the middle
@@ -2592,6 +2594,12 @@ class ParsingHelpersTests: XCTestCase {
         // Closures and literals
         XCTAssert(endsExpressionAt("{ foo }", at: 4, expecting: "{ foo }"))
         XCTAssert(endsExpressionAt("[1, 2, 3]", at: 8, expecting: "[1, 2, 3]"))
+
+        // Assignment operators should be excluded (expression stops before =)
+        XCTAssert(endsExpressionAt("foo = bar", at: 0, expecting: "foo")) // LHS of assignment
+        XCTAssert(endsExpressionAt("foo = bar", at: 4, expecting: "bar")) // RHS of assignment
+        XCTAssert(endsExpressionAt("obj.prop = value", at: 2, expecting: "obj.prop")) // LHS with dot notation
+        XCTAssert(endsExpressionAt("obj.prop = value", at: 6, expecting: "value")) // RHS of assignment
     }
 
     func endsExpressionAt(_ input: String, at index: Int, expecting expected: String) -> Bool {
@@ -2629,6 +2637,7 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssert(containsExpression("return foo!.bar + baz", containing: "!", expecting: "foo!.bar + baz"))
         XCTAssert(containsExpression("array[foo!.bar]", containing: "!", expecting: "foo!.bar"))
         XCTAssert(containsExpression("{ foo!.bar }", containing: "!", expecting: "foo!.bar"))
+        XCTAssert(containsExpression("foo as! Foo", containing: "!", expecting: "foo as! Foo"))
 
         // Multiple force unwraps
         XCTAssert(containsExpression("foo!.bar! + baz", containing: "!", expecting: "foo!.bar! + baz"))
@@ -2647,7 +2656,8 @@ class ParsingHelpersTests: XCTestCase {
     func containsExpression(_ input: String, containing substring: String, expecting expected: String) -> Bool {
         let formatter = Formatter(tokenize(input))
         guard let tokenIndex = formatter.tokens.firstIndex(where: { $0.string == substring }),
-              let range = formatter.parseExpressionRange(containing: tokenIndex) else {
+              let range = formatter.parseExpressionRange(containing: tokenIndex)
+        else {
             XCTFail("Failed to parse expression containing '\(substring)' in '\(input)'")
             return false
         }
@@ -2658,7 +2668,6 @@ class ParsingHelpersTests: XCTestCase {
         }
         return true
     }
-
 
     // MARK: isStoredProperty
 

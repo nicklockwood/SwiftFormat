@@ -1,16 +1,16 @@
-// Created by Cal Stephens on 2025-09-16
+// Created by Cal Stephens on 2025-09-16.
 // Copyright © 2025 Airbnb Inc. All rights reserved.
 
 import XCTest
 
 final class NoForceUnwrapInTestsTests: XCTestCase {
-    func testReplaceForceUnwrapWithXCTUnwrapInAssignment() throws {
+    func testSimpleForceUnwrapInXCTest() {
         let input = """
         import XCTest
 
         class TestCase: XCTestCase {
             func test_something() {
-                let value = optionalValue!
+                let result = myOptional!.with.nested!.property!
             }
         }
         """
@@ -19,78 +19,43 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
 
         class TestCase: XCTestCase {
             func test_something() throws {
-                let value = try XCTUnwrap(optionalValue)
+                let result = try XCTUnwrap(myOptional?.with.nested?.property)
             }
         }
         """
-        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .noGuardInTests])
     }
 
-    func testReplaceForceUnwrapWithRequireInAssignment() throws {
+    func testSimpleForceUnwrapInSwiftTesting() {
         let input = """
         import Testing
 
-        @Test func something() {
-            let value = optionalValue!
-        }
-        """
-        let output = """
-        import Testing
-
-        @Test func something() throws {
-            let value = try #require(optionalValue)
-        }
-        """
-        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
-    }
-
-    func testReplaceForceUnwrapInFunctionCallArgument() throws {
-        let input = """
-        import XCTest
-
-        class TestCase: XCTestCase {
-            func test_something() {
-                doSomething(optionalValue!)
+        struct TestCase {
+            @Test func something() {
+                let result = myOptional!.with.nested!.property!
             }
-        }
-        """
-        let output = """
-        import XCTest
-
-        class TestCase: XCTestCase {
-            func test_something() throws {
-                doSomething(try XCTUnwrap(optionalValue))
-            }
-        }
-        """
-        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
-    }
-
-    func testReplaceForceUnwrapInFunctionCallArgumentWithSwiftTesting() throws {
-        let input = """
-        import Testing
-
-        @Test func something() {
-            doSomething(optionalValue!)
         }
         """
         let output = """
         import Testing
 
-        @Test func something() throws {
-            doSomething(try #require(optionalValue))
+        struct TestCase {
+            @Test func something() throws {
+                let result = try #require(myOptional?.with.nested?.property)
+            }
         }
         """
-        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .noGuardInTests])
     }
 
-    func testReplaceMultipleForcUnwrapsInChain() throws {
+    func testForceUnwrapInAssignment() {
         let input = """
         import XCTest
 
         class TestCase: XCTestCase {
-            func test_something() {
-                let value = obj?.property!.anotherProperty!
+            func test_assignment() {
+                let foo = someOptional!
+                var bar = anotherOptional!
             }
         }
         """
@@ -98,40 +63,23 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
         import XCTest
 
         class TestCase: XCTestCase {
-            func test_something() throws {
-                let value = try XCTUnwrap(obj?.property?.anotherProperty)
+            func test_assignment() throws {
+                let foo = try XCTUnwrap(someOptional)
+                var bar = try XCTUnwrap(anotherOptional)
             }
         }
         """
-        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .noGuardInTests])
     }
 
-    func testReplaceMultipleForcUnwrapsInChainWithSwiftTesting() throws {
-        let input = """
-        import Testing
-
-        @Test func something() {
-            let value = obj?.property!.anotherProperty!
-        }
-        """
-        let output = """
-        import Testing
-
-        @Test func something() throws {
-            let value = try #require(obj?.property?.anotherProperty)
-        }
-        """
-        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
-    }
-
-    func testReplaceMultipleForceUnwrapsInSeparateAssignments() throws {
+    func testForceUnwrapInFunctionCallArguments() {
         let input = """
         import XCTest
 
         class TestCase: XCTestCase {
-            func test_something() {
-                let value1 = optionalValue1!
-                let value2 = optionalValue2!
+            func test_functionCall() {
+                someFunction(myOptional!, anotherOptional!)
+                XCTAssertEqual(result!.property, "expected")
             }
         }
         """
@@ -139,23 +87,24 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
         import XCTest
 
         class TestCase: XCTestCase {
-            func test_something() throws {
-                let value1 = try XCTUnwrap(optionalValue1)
-                let value2 = try XCTUnwrap(optionalValue2)
+            func test_functionCall() throws {
+                someFunction(try XCTUnwrap(myOptional), try XCTUnwrap(anotherOptional))
+                XCTAssertEqual(try XCTUnwrap(result?.property), "expected")
             }
         }
         """
-        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .noGuardInTests])
     }
 
-    func testReplaceForceUnwrapInVariableAssignment() throws {
+    func testForceUnwrapInIfStatement() {
         let input = """
         import XCTest
 
         class TestCase: XCTestCase {
-            func test_something() {
-                var value = optionalValue!
-                value = anotherOptionalValue!
+            func test_ifStatement() {
+                if myOptional!.value == someValue {
+                    // do something
+                }
             }
         }
         """
@@ -163,22 +112,25 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
         import XCTest
 
         class TestCase: XCTestCase {
-            func test_something() throws {
-                var value = try XCTUnwrap(optionalValue)
-                value = try XCTUnwrap(anotherOptionalValue)
+            func test_ifStatement() throws {
+                if try XCTUnwrap(myOptional?.value) == someValue {
+                    // do something
+                }
             }
         }
         """
-        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .noGuardInTests])
     }
 
-    func testReplaceForceUnwrapWithTypeAnnotation() throws {
+    func testForceUnwrapInIfStatementWithMultipleOperators() {
         let input = """
         import XCTest
 
         class TestCase: XCTestCase {
-            func test_something() {
-                let value: String = optionalValue!
+            func test_ifStatement() {
+                if (myOptional!.value + 10) == (someValue!.bar + 12) {
+                    // do something
+                }
             }
         }
         """
@@ -186,21 +138,25 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
         import XCTest
 
         class TestCase: XCTestCase {
-            func test_something() throws {
-                let value: String = try XCTUnwrap(optionalValue)
+            func test_ifStatement() throws {
+                if (try XCTUnwrap(myOptional?.value) + 10) == (try XCTUnwrap(someValue?.bar) + 12) {
+                    // do something
+                }
             }
         }
         """
-        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .noGuardInTests])
     }
 
-    func testDoNotAddThrowsWhenFunctionAlreadyThrows() throws {
+    func testForceUnwrapInGuardStatement() {
         let input = """
         import XCTest
 
         class TestCase: XCTestCase {
-            func test_something() throws {
-                let value = optionalValue!
+            func test_guardStatement() {
+                guard myOptional!.value == someValue else {
+                    return
+                }
             }
         }
         """
@@ -208,75 +164,154 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
         import XCTest
 
         class TestCase: XCTestCase {
-            func test_something() throws {
-                let value = try XCTUnwrap(optionalValue)
+            func test_guardStatement() throws {
+                guard try XCTUnwrap(myOptional?.value) == someValue else {
+                    return
+                }
             }
         }
         """
-        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .noGuardInTests])
     }
 
-    func testDoNotApplyToNonTestFunction() throws {
+    func testForceUnwrapInArraySubscript() {
         let input = """
         import XCTest
 
         class TestCase: XCTestCase {
-            func someHelper() {
-                let value = optionalValue!
+            func test_arraySubscript() {
+                let element = array[myOptional!]
             }
         }
         """
-        testFormatting(for: input, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
-    }
+        let output = """
+        import XCTest
 
-    func testDoNotApplyToNonTestFunctionInSwiftTesting() throws {
-        let input = """
-        import Testing
-
-        func someHelper() {
-            let value = optionalValue!
+        class TestCase: XCTestCase {
+            func test_arraySubscript() throws {
+                let element = array[try XCTUnwrap(myOptional)]
+            }
         }
         """
-        testFormatting(for: input, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .noGuardInTests])
     }
 
-    func testDoNotApplyInsideClosures() throws {
+    func testForceUnwrapInReturnStatement() {
         let input = """
         import XCTest
 
         class TestCase: XCTestCase {
-            func test_something() {
+            func test_return() {
+                return myOptional!.array!.first(where: { foo.bar == baaz })
+            }
+        }
+        """
+        let output = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_return() throws {
+                return try XCTUnwrap(myOptional?.array?.first(where: { foo.bar == baaz }))
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .noGuardInTests])
+    }
+
+    func testMultipleForceUnwrapsInExpression() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_multipleForceUnwraps() {
+                let result = myOptional! + anotherOptional!
+            }
+        }
+        """
+        let output = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_multipleForceUnwraps() throws {
+                let result = try XCTUnwrap(myOptional) + anotherOptional!
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .noGuardInTests])
+    }
+
+    func testForceUnwrapWithPropertyAccess() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_propertyAccess() {
+                let result = object!.property!
+            }
+        }
+        """
+        let output = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_propertyAccess() throws {
+                let result = try XCTUnwrap(object?.property)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .noGuardInTests])
+    }
+
+    func testNonTestFunctionIsNotModified() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func something() {
+                let result = myOptional!
+            }
+        }
+        """
+        testFormatting(for: input, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .noGuardInTests])
+    }
+
+    func testForceUnwrapInClosureIsNotModified() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_closure() {
                 someFunction {
-                    let value = optionalValue!
+                    let result = myOptional!
                 }
             }
         }
         """
-        testFormatting(for: input, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
+        testFormatting(for: input, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .noGuardInTests])
     }
 
-    func testDoNotApplyInsideNestedFunctions() throws {
+    func testForceUnwrapInNestedFunctionIsNotModified() {
         let input = """
         import XCTest
 
         class TestCase: XCTestCase {
-            func test_something() {
+            func test_nestedFunction() {
                 func helper() {
-                    let value = optionalValue!
+                    let result = myOptional!
                 }
             }
         }
         """
-        testFormatting(for: input, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
+        testFormatting(for: input, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .noGuardInTests])
     }
 
-    func testReplaceForceUnwrapAfterOptionalChaining() throws {
+    func testAlreadyThrowingFunction() {
         let input = """
         import XCTest
 
         class TestCase: XCTestCase {
-            func test_something() {
-                let value = obj?.property!
+            func test_alreadyThrowing() throws {
+                let result = myOptional!
             }
         }
         """
@@ -284,21 +319,46 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
         import XCTest
 
         class TestCase: XCTestCase {
-            func test_something() throws {
-                let value = try XCTUnwrap(obj?.property)
+            func test_alreadyThrowing() throws {
+                let result = try XCTUnwrap(myOptional)
             }
         }
         """
-        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .noGuardInTests])
     }
 
-    func testReplaceForceUnwrapInArraySubscript() throws {
+    func testAsyncThrowingFunction() {
+        let input = """
+        import Testing
+
+        struct TestCase {
+            @Test func asyncTest() async {
+                let result = myOptional!
+            }
+        }
+        """
+        let output = """
+        import Testing
+
+        struct TestCase {
+            @Test func asyncTest() async throws {
+                let result = try #require(myOptional)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .noGuardInTests])
+    }
+
+    func testComplexExpression() {
         let input = """
         import XCTest
 
         class TestCase: XCTestCase {
-            func test_something() {
-                let value = array[index]!
+            func test_complexExpression() {
+                XCTAssertEqual(
+                    myDictionary["key"]!.processedValue(with: parameter!),
+                    expectedResult
+                )
             }
         }
         """
@@ -306,21 +366,52 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
         import XCTest
 
         class TestCase: XCTestCase {
-            func test_something() throws {
-                let value = try XCTUnwrap(array[index])
+            func test_complexExpression() throws {
+                XCTAssertEqual(
+                    try XCTUnwrap(myDictionary["key"]?.processedValue(with: try XCTUnwrap(parameter))),
+                    expectedResult
+                )
             }
         }
         """
-        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .noGuardInTests])
     }
 
-    func testReplaceForceUnwrapInDictionarySubscript() throws {
+    func testSwiftTestingWithMultipleAttributes() {
+        let input = """
+        import Testing
+
+        struct TestCase {
+            @Test
+            @available(iOS 14.0, *)
+            func multipleAttributes() {
+                let result = myOptional!
+            }
+        }
+        """
+        let output = """
+        import Testing
+
+        struct TestCase {
+            @Test
+            @available(iOS 14.0, *)
+            func multipleAttributes() throws {
+                let result = try #require(myOptional)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .noGuardInTests])
+    }
+
+    func testImplicitlyUnwrappedOptionalTypesAreNotModified() {
         let input = """
         import XCTest
 
         class TestCase: XCTestCase {
-            func test_something() {
-                let value = dict["key"]!
+            func test_implicitlyUnwrappedOptionals() {
+                let foo: String! = "test"
+                var bar: Int! = 42
+                let result = foo! + "suffix"
             }
         }
         """
@@ -328,21 +419,25 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
         import XCTest
 
         class TestCase: XCTestCase {
-            func test_something() throws {
-                let value = try XCTUnwrap(dict["key"])
+            func test_implicitlyUnwrappedOptionals() throws {
+                let foo: String! = "test"
+                var bar: Int! = 42
+                let result = try XCTUnwrap(foo) + "suffix"
             }
         }
         """
-        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .noGuardInTests])
     }
 
-    func testReplaceForceUnwrapInReturnStatement() throws {
+    func testForceCastExpressions() {
         let input = """
         import XCTest
 
         class TestCase: XCTestCase {
-            func test_something() {
-                return optionalValue!
+            func test_forceCasts() {
+                let value = someOptional as! Int
+                XCTAssertEqual(modifiedRequest.query?["start_date"] as! String, firstDayString)
+                XCTAssertEqual(modifiedRequest.query!["end_date"] as! String, lastDayString)
             }
         }
         """
@@ -350,64 +445,13 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
         import XCTest
 
         class TestCase: XCTestCase {
-            func test_something() throws {
-                return try XCTUnwrap(optionalValue)
+            func test_forceCasts() throws {
+                let value = try XCTUnwrap(someOptional as? Int)
+                XCTAssertEqual(try XCTUnwrap(modifiedRequest.query?["start_date"] as? String), firstDayString)
+                XCTAssertEqual(try XCTUnwrap(modifiedRequest.query?["end_date"] as? String), lastDayString)
             }
         }
         """
-        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
-    }
-
-    func testReplaceForceUnwrapWithForceCastInExpression() throws {
-        let input = """
-        import XCTest
-
-        class TestCase: XCTestCase {
-            func test_something() {
-                let value = (someDict["key"]! as! String).count
-            }
-        }
-        """
-        let output = """
-        import XCTest
-
-        class TestCase: XCTestCase {
-            func test_something() throws {
-                let value = try XCTUnwrap((someDict["key"] as? String).count)
-            }
-        }
-        """
-        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
-    }
-
-    func testReplaceForceUnwrapWithForceCastInFunctionArgument() throws {
-        let input = """
-        import XCTest
-
-        class TestCase: XCTestCase {
-            func test_something() {
-                doSomething(optionalValue! as! String)
-            }
-        }
-        """
-        let output = """
-        import XCTest
-
-        class TestCase: XCTestCase {
-            func test_something() throws {
-                doSomething(try XCTUnwrap(optionalValue) as! String)
-            }
-        }
-        """
-        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
-    }
-
-    func testDoNotApplyOutsideOfTestFrameworks() throws {
-        let input = """
-        func someFunction() {
-            let value = optionalValue!
-        }
-        """
-        testFormatting(for: input, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .noGuardInTests])
     }
 }

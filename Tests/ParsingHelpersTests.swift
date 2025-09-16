@@ -2585,6 +2585,7 @@ class ParsingHelpersTests: XCTestCase {
 
         // Complex expressions with operators in the middle
         XCTAssert(endsExpressionAt("foo!.bar", at: 3, expecting: "foo!.bar"))
+        XCTAssert(endsExpressionAt("foo?[bar]?.baaz", at: 7, expecting: "foo?[bar]?.baaz"))
         XCTAssert(endsExpressionAt("foo!.bar + baz", at: 7, expecting: "foo!.bar + baz"))
         XCTAssert(endsExpressionAt("obj.foo!.bar().baz", at: 9, expecting: "obj.foo!.bar().baz"))
         XCTAssert(endsExpressionAt("foo!.bar as String", at: 7, expecting: "foo!.bar as String"))

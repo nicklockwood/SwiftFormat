@@ -1688,6 +1688,166 @@ extension Formatter {
         return startIndex ... endOfExpression
     }
 
+    /// Parses the expression ending at the given index.
+    ///
+    /// This is the reverse counterpart to `parseExpressionRange(startingAt:)`.
+    /// It works backwards from an ending position to find where the expression starts.
+    ///
+    /// Can parse the same expression types as `parseExpressionRange(startingAt:)`,
+    /// but excludes if/switch expressions.
+    func parseExpressionRange(
+        endingAt endIndex: Int
+    ) -> ClosedRange<Int>? {
+        // Handle postfix operators first
+        if tokens[endIndex].isOperator(ofType: .postfix) {
+            guard let prevTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: endIndex),
+                  let precedingExpression = parseExpressionRange(endingAt: prevTokenIndex)
+            else { return nil }
+            return precedingExpression.lowerBound ... endIndex
+        }
+
+        // Find the core expression ending at this index
+        guard let baseRange = parseBaseExpressionRange(endingAt: endIndex) else { return nil }
+
+        var startOfExpression = baseRange.lowerBound
+
+        // Special case: if the base range is a method call/subscript scope,
+        // we need to check what comes immediately before it
+        if case .endOfScope = tokens[endIndex],
+           let startOfScope = index(of: .startOfScope, before: endIndex),
+           endOfScope(at: startOfScope) == endIndex,
+           let prevMethodTargetIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope),
+           tokens[prevMethodTargetIndex].isIdentifier {
+            startOfExpression = prevMethodTargetIndex
+        }
+
+        // Keep extending backwards until we can't anymore
+        while true {
+            guard let prevTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: startOfExpression) else {
+                break
+            }
+
+            let prevToken = tokens[prevTokenIndex]
+            var extended = false
+
+            switch prevToken {
+            // Handle prefix operators and keywords
+            case .operator(_, .prefix), .keyword("try"), .keyword("await"), .keyword("repeat"), .keyword("each"):
+                startOfExpression = prevTokenIndex
+                extended = true
+
+            // Handle postfix operators that are part of expressions (like ? in try?)
+            case .operator("?", .postfix), .operator("!", .postfix):
+                // Check if this is part of a try?/try! construct
+                if let prevPrevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: prevTokenIndex),
+                   tokens[prevPrevIndex].string == "try" {
+                    startOfExpression = prevPrevIndex
+                    extended = true
+                }
+
+            // Handle dot notation (foo.bar)
+            case .delimiter("."), .operator(".", _):
+                guard let identifierIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: prevTokenIndex),
+                      tokens[identifierIndex].isIdentifier
+                else { break }
+                startOfExpression = identifierIndex
+                extended = true
+
+            // Handle method calls, subscripts (foo() or foo[])
+            case .endOfScope(")"), .endOfScope("]"), .endOfScope(">"):
+                // Check for linebreak which would break the expression
+                if tokens[prevTokenIndex ..< startOfExpression].contains(where: \.isLinebreak) {
+                    break
+                }
+                guard let startOfScope = index(of: .startOfScope, before: prevTokenIndex),
+                      endOfScope(at: startOfScope) == prevTokenIndex
+                else { break }
+                startOfExpression = startOfScope
+                extended = true
+
+            // Handle infix operators (foo + bar)
+            case let .operator(operatorString, .infix) where operatorString != "=":
+                guard let leftExpressionEnd = index(of: .nonSpaceOrCommentOrLinebreak, before: prevTokenIndex),
+                      let leftExpression = parseExpressionRange(endingAt: leftExpressionEnd)
+                else { break }
+                startOfExpression = leftExpression.lowerBound
+                extended = true
+
+            // Handle type operators (is, as, as?, as!)
+            case .keyword("is"), .keyword("as"):
+                // Handle as?, as!
+                var searchIndex = prevTokenIndex
+                if prevToken.string == "as",
+                   let unwrapIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: prevTokenIndex),
+                   tokens[unwrapIndex].isUnwrapOperator {
+                    searchIndex = unwrapIndex
+                }
+
+                guard let leftExpressionEnd = index(of: .nonSpaceOrCommentOrLinebreak, before: searchIndex),
+                      let leftExpression = parseExpressionRange(endingAt: leftExpressionEnd)
+                else { break }
+                startOfExpression = leftExpression.lowerBound
+                extended = true
+
+            // Handle trailing closures
+            case .endOfScope("}"):
+                guard let startOfClosure = index(of: .startOfScope("{"), before: prevTokenIndex),
+                      endOfScope(at: startOfClosure) == prevTokenIndex,
+                      isStartOfClosure(at: startOfClosure),
+                      !isConditionalStatement(at: startOfClosure)
+                else { break }
+                startOfExpression = startOfClosure
+                extended = true
+
+            // Handle labeled trailing closures (label: { ... })
+            case .delimiter(":"):
+                guard let labelIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: prevTokenIndex),
+                      tokens[labelIndex].isIdentifier,
+                      let nextToken = index(of: .nonSpaceOrCommentOrLinebreak, after: prevTokenIndex),
+                      tokens[nextToken] == .startOfScope("{")
+                else { break }
+                startOfExpression = labelIndex
+                extended = true
+
+            default:
+                break
+            }
+
+            // If we didn't extend the expression, we're done
+            if !extended {
+                break
+            }
+        }
+
+        return startOfExpression ... endIndex
+    }
+
+    /// Helper method to parse the base expression (identifier, number, or scope) ending at the given index
+    private func parseBaseExpressionRange(endingAt endIndex: Int) -> ClosedRange<Int>? {
+        switch tokens[endIndex] {
+        case .identifier, .number:
+            return endIndex ... endIndex
+
+        case .endOfScope:
+            // Handle scopes (arrays, tuples, closures, etc.)
+            if ["#endif", "#elseif", "#else"].contains(tokens[endIndex].string) {
+                return nil
+            }
+
+            guard let startOfScope = index(of: .startOfScope, before: endIndex),
+                  endOfScope(at: startOfScope) == endIndex
+            else { return nil }
+            return startOfScope ... endIndex
+
+        case let .keyword(keyword) where keyword.hasPrefix("#"):
+            // Macro expansions
+            return endIndex ... endIndex
+
+        default:
+            return nil
+        }
+    }
+
     /// Parses all of the declarations in the source file.
     func parseDeclarations() -> [Declaration] {
         parseDeclarations(in: tokens.indices)

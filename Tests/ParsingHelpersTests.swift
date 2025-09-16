@@ -2553,6 +2553,114 @@ class ParsingHelpersTests: XCTestCase {
         return formatter.tokens[expressionRange].map(\.string).joined()
     }
 
+    // MARK: parseExpressionRange(endingAt:)
+
+    func testParseExpressionEndingAtSimpleIdentifier() {
+        let formatter = Formatter(tokenize("foo"))
+        let range = formatter.parseExpressionRange(endingAt: 0)
+        XCTAssertEqual(range, 0...0)
+        XCTAssertEqual(formatter.tokens[range!].string, "foo")
+    }
+
+    func testParseExpressionEndingAtNumber() {
+        let formatter = Formatter(tokenize("42"))
+        let range = formatter.parseExpressionRange(endingAt: 0)
+        XCTAssertEqual(range, 0...0)
+        XCTAssertEqual(formatter.tokens[range!].string, "42")
+    }
+
+    func testParseExpressionEndingAtPostfixOperator() {
+        let formatter = Formatter(tokenize("foo!"))
+        let range = formatter.parseExpressionRange(endingAt: 1)
+        XCTAssertEqual(range, 0...1)
+        XCTAssertEqual(formatter.tokens[range!].string, "foo!")
+    }
+
+    func testParseExpressionEndingAtMethodCall() {
+        let formatter = Formatter(tokenize("foo.bar()"))
+        let range = formatter.parseExpressionRange(endingAt: 4)
+        XCTAssertEqual(range, 0...4)
+        XCTAssertEqual(formatter.tokens[range!].string, "foo.bar()")
+    }
+
+    func testParseExpressionEndingAtSubscript() {
+        let formatter = Formatter(tokenize("foo[0]"))
+        let range = formatter.parseExpressionRange(endingAt: 3)
+        XCTAssertEqual(range, 0...3)
+        XCTAssertEqual(formatter.tokens[range!].string, "foo[0]")
+    }
+
+    func testParseExpressionEndingAtTryExpression() {
+        let formatter = Formatter(tokenize("try foo()"))
+        let range = formatter.parseExpressionRange(endingAt: 4)
+        XCTAssertEqual(range, 0...4)
+        XCTAssertEqual(formatter.tokens[range!].string, "try foo()")
+    }
+
+
+    func testParseExpressionEndingAtInfixExpression() {
+        let formatter = Formatter(tokenize("foo + bar"))
+        let range = formatter.parseExpressionRange(endingAt: 4)
+        XCTAssertEqual(range, 0...4)
+        XCTAssertEqual(formatter.tokens[range!].string, "foo + bar")
+    }
+
+    func testParseExpressionEndingAtAsExpression() {
+        let formatter = Formatter(tokenize("foo as String"))
+        let range = formatter.parseExpressionRange(endingAt: 4)
+        XCTAssertEqual(range, 0...4)
+        XCTAssertEqual(formatter.tokens[range!].string, "foo as String")
+    }
+
+    func testParseExpressionEndingAtIsExpression() {
+        let formatter = Formatter(tokenize("foo is String"))
+        let range = formatter.parseExpressionRange(endingAt: 4)
+        XCTAssertEqual(range, 0...4)
+        XCTAssertEqual(formatter.tokens[range!].string, "foo is String")
+    }
+
+    func testParseExpressionEndingAtClosure() {
+        let formatter = Formatter(tokenize("{ foo }"))
+        let range = formatter.parseExpressionRange(endingAt: 4)
+        XCTAssertEqual(range, 0...4)
+        XCTAssertEqual(formatter.tokens[range!].string, "{ foo }")
+    }
+
+    func testParseExpressionEndingAtArrayLiteral() {
+        let formatter = Formatter(tokenize("[1, 2, 3]"))
+        let range = formatter.parseExpressionRange(endingAt: 8)
+        XCTAssertEqual(range, 0...8)
+        XCTAssertEqual(formatter.tokens[range!].string, "[1, 2, 3]")
+    }
+
+    // TODO: Fix complex chain parsing
+    // func testParseExpressionEndingAtComplexChain() {
+    //     let formatter = Formatter(tokenize("foo.bar().baz[0]?.quux!"))
+    //     let range = formatter.parseExpressionRange(endingAt: 13)
+    //     XCTAssertEqual(range, 0...13)
+    //     XCTAssertEqual(formatter.tokens[range!].string, "foo.bar().baz[0]?.quux!")
+    // }
+
+    func testParseExpressionEndingAtAwaitExpression() {
+        let formatter = Formatter(tokenize("await foo()"))
+        let range = formatter.parseExpressionRange(endingAt: 4)
+        XCTAssertEqual(range, 0...4)
+        XCTAssertEqual(formatter.tokens[range!].string, "await foo()")
+    }
+
+    func testParseExpressionEndingAtPrefixOperator() {
+        let formatter = Formatter(tokenize("!foo"))
+        let range = formatter.parseExpressionRange(endingAt: 1)
+        XCTAssertEqual(range, 0...1)
+        XCTAssertEqual(formatter.tokens[range!].string, "!foo")
+    }
+
+    func parseExpressionEndingAt(in input: String, at index: Int) -> String {
+        let formatter = Formatter(tokenize(input))
+        guard let expressionRange = formatter.parseExpressionRange(endingAt: index) else { return "" }
+        return formatter.tokens[expressionRange].map(\.string).joined()
+    }
+
     // MARK: isStoredProperty
 
     func testIsStoredProperty() {

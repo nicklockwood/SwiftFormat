@@ -635,7 +635,6 @@ public extension Formatter {
         }
     }
 
-
     /// As above, but only loops through tokens with the specified type and string
     func forEach(_ token: Token, _ body: (Int, Token) -> Void) {
         forEachToken(where: { $0 == token }, body)

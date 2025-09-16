@@ -292,7 +292,6 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
         testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
     }
 
-
     func testReplaceForceUnwrapInArraySubscript() throws {
         let input = """
         import XCTest

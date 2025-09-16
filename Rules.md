@@ -109,6 +109,7 @@
 * [isEmpty](#isEmpty)
 * [markTypes](#markTypes)
 * [noExplicitOwnership](#noExplicitOwnership)
+* [noForceUnwrapInTests](#noForceUnwrapInTests)
 * [noGuardInTests](#noGuardInTests)
 * [organizeDeclarations](#organizeDeclarations)
 * [preferFinalClasses](#preferFinalClasses)
@@ -1628,6 +1629,38 @@ Don't use explicit ownership modifiers (borrowing / consuming).
 ```diff
 - borrowing func foo(_ bar: consuming Bar) { ... }
 + func foo(_ bar: Bar) { ... }
+```
+
+</details>
+<br/>
+
+## noForceUnwrapInTests
+
+Replace force unwraps with `try XCTUnwrap(...)` / `try #require(...)` in test functions.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+    import Testing
+
+    struct MyFeatureTests {
+-       @Test func doSomething() {
++       @Test func doSomething() throws {
+-           let value = optionalValue!
++           let value = try #require(optionalValue)
+      }
+    }
+
+    import XCTest
+
+    class MyFeatureTests: XCTestCase {
+-       func test_doSomething() {
++       func test_doSomething() throws {
+-           let value = optionalValue!
++           let value = try XCTUnwrap(optionalValue)
+      }
+    }
 ```
 
 </details>

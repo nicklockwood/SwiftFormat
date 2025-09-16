@@ -1706,6 +1706,22 @@ extension Formatter {
             return precedingExpression.lowerBound ... endIndex
         }
 
+        // Handle infix operators (when endIndex is the infix operator itself)
+        if tokens[endIndex].isOperator(ofType: .infix), tokens[endIndex].string != "=" {
+            guard let leftTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: endIndex),
+                  let leftExpression = parseExpressionRange(endingAt: leftTokenIndex)
+            else { return nil }
+            return leftExpression.lowerBound ... endIndex
+        }
+
+        // Handle type operators when endIndex is the operator itself (is, as)
+        if case let .keyword(keyword) = tokens[endIndex], keyword == "is" || keyword == "as" {
+            guard let leftTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: endIndex),
+                  let leftExpression = parseExpressionRange(endingAt: leftTokenIndex)
+            else { return nil }
+            return leftExpression.lowerBound ... endIndex
+        }
+
         // Find the core expression ending at this index
         guard let baseRange = parseBaseExpressionRange(endingAt: endIndex) else { return nil }
 
@@ -1717,7 +1733,8 @@ extension Formatter {
            let startOfScope = index(of: .startOfScope, before: endIndex),
            endOfScope(at: startOfScope) == endIndex,
            let prevMethodTargetIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope),
-           tokens[prevMethodTargetIndex].isIdentifier {
+           tokens[prevMethodTargetIndex].isIdentifier
+        {
             startOfExpression = prevMethodTargetIndex
         }
 
@@ -1740,17 +1757,18 @@ extension Formatter {
             case .operator("?", .postfix), .operator("!", .postfix):
                 // Check if this is part of a try?/try! construct
                 if let prevPrevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: prevTokenIndex),
-                   tokens[prevPrevIndex].string == "try" {
+                   tokens[prevPrevIndex].string == "try"
+                {
                     startOfExpression = prevPrevIndex
                     extended = true
                 }
 
-            // Handle dot notation (foo.bar)
+            // Handle dot notation (foo.bar, foo!.bar, etc.)
             case .delimiter("."), .operator(".", _):
-                guard let identifierIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: prevTokenIndex),
-                      tokens[identifierIndex].isIdentifier
+                guard let precedingTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: prevTokenIndex),
+                      let precedingExpression = parseExpressionRange(endingAt: precedingTokenIndex)
                 else { break }
-                startOfExpression = identifierIndex
+                startOfExpression = precedingExpression.lowerBound
                 extended = true
 
             // Handle method calls, subscripts (foo() or foo[])
@@ -1779,7 +1797,8 @@ extension Formatter {
                 var searchIndex = prevTokenIndex
                 if prevToken.string == "as",
                    let unwrapIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: prevTokenIndex),
-                   tokens[unwrapIndex].isUnwrapOperator {
+                   tokens[unwrapIndex].isUnwrapOperator
+                {
                     searchIndex = unwrapIndex
                 }
 
@@ -1820,6 +1839,46 @@ extension Formatter {
         }
 
         return startOfExpression ... endIndex
+    }
+
+    /// Parses the expression that contains the token at the given index.
+    ///
+    /// This method finds the complete expression that contains the specified token.
+    /// If the token is a postfix or infix operator, it recursively goes back to find
+    /// a token that can start an expression.
+    func parseExpressionRange(
+        containing tokenIndex: Int
+    ) -> ClosedRange<Int>? {
+        // If this token is a postfix operator, we need to find the complete expression
+        // that contains this postfix operator
+        if tokens[tokenIndex].isOperator(ofType: .postfix) {
+            // Find the expression that ends at this postfix operator
+            guard let baseExpression = parseExpressionRange(endingAt: tokenIndex) else {
+                return nil
+            }
+
+            // Now try to extend this expression forward to include anything that follows
+            // (like .bar in foo!.bar or + baz in foo!.bar + baz)
+            if let extendedRange = parseExpressionRange(startingAt: baseExpression.lowerBound) {
+                return extendedRange
+            }
+
+            return baseExpression
+        }
+
+        // If this token is an infix operator, parse the expression ending at this operator
+        if tokens[tokenIndex].isOperator(ofType: .infix) {
+            return parseExpressionRange(endingAt: tokenIndex)
+        }
+
+        // For non-operators, first try to find an expression starting at this token
+        if let forwardRange = parseExpressionRange(startingAt: tokenIndex) {
+            // Use the end of this expression to find the complete expression
+            return parseExpressionRange(endingAt: forwardRange.upperBound)
+        }
+
+        // Fallback: try to parse ending at this token
+        return parseExpressionRange(endingAt: tokenIndex)
     }
 
     /// Helper method to parse the base expression (identifier, number, or scope) ending at the given index

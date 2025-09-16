@@ -73,7 +73,8 @@ public extension FormatRule {
                     guard formatter.tokens[assignmentIndex] == .operator("=", .infix) else { continue }
                     if let exprStart = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: assignmentIndex),
                        let exprRange = formatter.parseExpressionRange(startingAt: exprStart),
-                       exprRange.contains(index) {
+                       exprRange.contains(index)
+                    {
                         skipThis = true
                         break
                     }
@@ -84,8 +85,8 @@ public extension FormatRule {
 
                 // Simple approach: just replace "identifier!" with "try XCTUnwrap(identifier)"
                 if let prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: index),
-                   case .identifier(let name) = formatter.tokens[prevIndex] {
-
+                   case let .identifier(name) = formatter.tokens[prevIndex]
+                {
                     let newTokens: [Token] = [
                         .keyword("try"),
                         .space(" "),
@@ -96,7 +97,7 @@ public extension FormatRule {
                     ]
 
                     // Replace identifier and !
-                    formatter.replaceTokens(in: prevIndex...index, with: newTokens)
+                    formatter.replaceTokens(in: prevIndex ... index, with: newTokens)
                     foundAnyForceUnwraps = true
                 }
             }
@@ -203,11 +204,13 @@ extension Formatter {
                 // Look for the following ! to include as!
                 if let asNextIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: nextIndex),
                    asNextIndex < tokens.count,
-                   tokens[asNextIndex] == .operator("!", .postfix) {
+                   tokens[asNextIndex] == .operator("!", .postfix)
+                {
                     end = asNextIndex
                     // Include the type after as!
                     if let typeIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: asNextIndex),
-                       typeIndex < tokens.count {
+                       typeIndex < tokens.count
+                    {
                         end = typeIndex
                     }
                 }
@@ -216,7 +219,7 @@ extension Formatter {
             }
         }
 
-        return start...end
+        return start ... end
     }
 
     /// Find the range that contains the unwrappable expression around a force unwrap
@@ -264,7 +267,7 @@ extension Formatter {
             }
         }
 
-        return start...end
+        return start ... end
     }
 
     /// Find the start of an expression by walking backwards from a given index
@@ -289,7 +292,8 @@ extension Formatter {
             // Stop at function call boundaries
             if case .startOfScope("(") = token,
                let prevTokenIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: previousIndex),
-               case .identifier = tokens[prevTokenIndex] {
+               case .identifier = tokens[prevTokenIndex]
+            {
                 return previousIndex
             }
 
@@ -320,7 +324,8 @@ extension Formatter {
                 // Check if this is followed by ! (force cast)
                 if let nextNonSpaceIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: i),
                    nextNonSpaceIndex <= range.upperBound,
-                   tokens[nextNonSpaceIndex] == .operator("!", .postfix) {
+                   tokens[nextNonSpaceIndex] == .operator("!", .postfix)
+                {
                     // Convert as! to as?
                     result.append(.keyword("as"))
                     result.append(.operator("?", .postfix))
@@ -332,7 +337,8 @@ extension Formatter {
                 // Check if this force unwrap should become optional chaining
                 if let nextNonSpaceIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: i),
                    nextNonSpaceIndex <= range.upperBound,
-                   tokens[nextNonSpaceIndex] == .operator(".", .infix) {
+                   tokens[nextNonSpaceIndex] == .operator(".", .infix)
+                {
                     result.append(.operator("?", .postfix))
                 }
                 // Otherwise skip the force unwrap (final one is handled by wrapper)

@@ -1721,6 +1721,15 @@ extension Formatter {
                         }
                     }
                 }
+                // Check if this scope is the RHS of an infix operator
+                else if tokens[previousToken].isOperator(ofType: .infix), tokens[previousToken] != .operator("=", .infix) {
+                    // This is the right operand of a binary expression
+                    if let leftOperandEnd = index(of: .nonSpaceOrCommentOrLinebreak, before: previousToken),
+                       let leftExpression = parseExpressionRange(endingAt: leftOperandEnd)
+                    {
+                        return leftExpression.lowerBound ... endIndex
+                    }
+                }
             }
             startOfExpression = startOfScope
         }
@@ -1825,22 +1834,31 @@ extension Formatter {
     }
 
     /// Parses the expression that contains the token at the given index.
-    /// This method finds the complete expression that contains the specified token.
     func parseExpressionRange(
         containing index: Int
     ) -> ClosedRange<Int>? {
-        // If this is an operator that can't ever be the start of an expression, parse from the previous token
-        if tokens[index].isOperator(ofType: .postfix) || tokens[index].isOperator(ofType: .infix)
-            || tokens[index] == .keyword("as") || tokens[index] == .keyword("is"),
-            let previousToken = self.index(of: .nonSpaceOrCommentOrLinebreak, before: index)
+        var forwardRange = parseExpressionRange(startingAt: index)
+
+        // If this is an operator that can't ever be the start of an expression, parse from some previous token
+        if forwardRange == nil,
+           tokens[index].isOperator(ofType: .postfix) || tokens[index].isOperator(ofType: .infix)
         {
-            return parseExpressionRange(containing: previousToken)
+            var parseToken = index
+            while let previousToken = self.index(of: .nonSpaceOrCommentOrLinebreak, before: parseToken) {
+                // Check if this previous token is the start of a subexpression that contains the given index
+                if let forwardRangeFromPreviousToken = parseExpressionRange(startingAt: parseToken),
+                   forwardRangeFromPreviousToken.contains(index)
+                {
+                    forwardRange = forwardRangeFromPreviousToken
+                    break
+                }
+
+                parseToken = previousToken
+            }
+            forwardRange = parseExpressionRange(startingAt: parseToken)
         }
 
-        guard let forwardRange = parseExpressionRange(startingAt: index) else {
-            return nil
-        }
-
+        guard let forwardRange else { return nil }
         return parseExpressionRange(endingAt: forwardRange.upperBound)
     }
 

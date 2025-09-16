@@ -2636,6 +2636,7 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssert(containsExpression("[foo!.bar, baz]", containing: "!", expecting: "foo!.bar"))
         XCTAssert(containsExpression("(foo!.bar, baz)", containing: "!", expecting: "foo!.bar"))
         XCTAssert(containsExpression("return foo!.bar + baz", containing: "!", expecting: "foo!.bar + baz"))
+        XCTAssert(containsExpression("return foo[bar]!.baaz", containing: "!", expecting: "foo[bar]!.baaz"))
         XCTAssert(containsExpression("array[foo!.bar]", containing: "!", expecting: "foo!.bar"))
         XCTAssert(containsExpression("{ foo!.bar }", containing: "!", expecting: "foo!.bar"))
         XCTAssert(containsExpression("foo as! Foo", containing: "!", expecting: "foo as! Foo"))
@@ -2654,15 +2655,21 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssert(containsExpression("foo!.bar as String", containing: "!", expecting: "foo!.bar as String"))
     }
 
-    func containsExpression(_ input: String, containing substring: String, expecting expected: String) -> Bool {
-        let formatter = Formatter(tokenize(input))
-        guard let tokenIndex = formatter.tokens.firstIndex(where: { $0.string == substring }),
+    func parseExpression(_ expression: String, containing: String) -> String? {
+        let formatter = Formatter(tokenize(expression))
+        guard let tokenIndex = formatter.tokens.firstIndex(where: { $0.string == containing }),
               let range = formatter.parseExpressionRange(containing: tokenIndex)
         else {
+            return nil
+        }
+        return formatter.tokens[range].string
+    }
+
+    func containsExpression(_ input: String, containing substring: String, expecting expected: String) -> Bool {
+        guard let actual = parseExpression(input, containing: substring) else {
             XCTFail("Failed to parse expression containing '\(substring)' in '\(input)'")
             return false
         }
-        let actual = formatter.tokens[range].string
         if actual != expected {
             XCTFail("Expected '\(expected)' but got '\(actual)' when parsing '\(input)' containing '\(substring)'")
             return false

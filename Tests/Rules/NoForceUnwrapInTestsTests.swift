@@ -26,6 +26,28 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
         testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .noGuardInTests])
     }
 
+    func testSimpleForceCast() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                let result = foo as! Foo
+            }
+        }
+        """
+        let output = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() throws {
+                let result = try XCTUnwrap(foo as? Foo)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests)
+    }
+
     func testSimpleForceUnwrapInSwiftTesting() {
         let input = """
         import Testing
@@ -438,6 +460,9 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
                 let value = someOptional as! Int
                 XCTAssertEqual(modifiedRequest.query?["start_date"] as! String, firstDayString)
                 XCTAssertEqual(modifiedRequest.query!["end_date"] as! String, lastDayString)
+                XCTAssertEqual(route.query as! [String: String], ["a": "b"])
+                XCTAssertEqual(foo.bar(baaz, quux) as! FooBar, .fooBar)
+                let foo = Foo(renderLines.last!.line, []).height + renderLines.last!.lineOrigin.y
             }
         }
         """
@@ -449,6 +474,9 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
                 let value = try XCTUnwrap(someOptional as? Int)
                 XCTAssertEqual(try XCTUnwrap(modifiedRequest.query?["start_date"] as? String), firstDayString)
                 XCTAssertEqual(try XCTUnwrap(modifiedRequest.query?["end_date"] as? String), lastDayString)
+                XCTAssertEqual(try XCTUnwrap(route.query as? [String: String]), ["a": "b"])
+                XCTAssertEqual(try XCTUnwrap(foo.bar(baaz, quux) as? FooBar), .fooBar)
+                let foo = Foo(try XCTUnwrap(renderLines.last?.line), []).height + renderLines.last!.lineOrigin.y
             }
         }
         """

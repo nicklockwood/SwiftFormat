@@ -26,12 +26,23 @@ public extension FormatRule {
             guard let bodyRange = functionDecl.bodyRange else { return }
 
             // Find all force unwrap operators and process unique expressions from right to left
-            // This way we don't need to adjust indices after insertions
+            // Using AutoUpdatingIndex to handle token insertions
             var foundAnyForceUnwraps = false
-            var processedExpressions = Set<ClosedRange<Int>>()
 
-            for index in bodyRange.reversed() {
-                guard formatter.tokens[index] == .operator("!", .postfix) else { continue }
+            var currentIndex = bodyRange.upperBound.autoUpdating(in: formatter)
+            let bodyStart = bodyRange.lowerBound
+
+            while currentIndex.index >= bodyStart {
+                let index = currentIndex.index
+                defer { currentIndex.index -= 1 }
+
+                if index >= formatter.tokens.count {
+                    continue
+                }
+
+                guard formatter.tokens[index] == .operator("!", .postfix) else {
+                    continue
+                }
 
                 // Only convert the `!` if we are within the function body
                 guard formatter.isInFunctionBody(of: functionDecl, at: index) else {
@@ -56,16 +67,16 @@ public extension FormatRule {
                     continue
                 }
 
-                // Skip if we've already processed this expression
-                if processedExpressions.contains(expressionRange) {
-                    continue
-                }
-                processedExpressions.insert(expressionRange)
-
                 // If there are infix operators like == or +, only handle the lhs of the first operator.
                 // `try` isn't allowed on the RHS of an operator, and multiple nested operators is too complicated.
+                // Note: `as` is not considered an infix operator for this purpose
                 var infixOperatorIndices: [Int] = []
                 for i in expressionRange {
+                    // Skip 'as' keyword - it's not a real infix operator for our purposes
+                    if formatter.tokens[i] == .keyword("as") {
+                        continue
+                    }
+
                     if formatter.tokens[i].isOperator(ofType: .infix),
                        formatter.isInFunctionBody(of: functionDecl, at: i),
                        formatter.tokens[i] != .operator(".", .infix)
@@ -75,16 +86,34 @@ public extension FormatRule {
                 }
 
                 if let infixIndex = infixOperatorIndices.first {
+                    // Use a sub-formatter for the LHS so we can parse just the expression in that subrange
+                    let lhsTokens = Array(formatter.tokens[expressionRange.lowerBound ..< infixIndex])
+                    let lhsFormatter = Formatter(lhsTokens)
+
                     // Find force unwraps on the LHS only
                     let lhsForceUnwraps = (expressionRange.lowerBound ..< infixIndex).filter {
                         formatter.tokens[$0] == .operator("!", .postfix) && formatter.isInFunctionBody(of: functionDecl, at: $0)
                     }
 
-                    // Only process if there are force unwraps on the LHS
-                    guard !lhsForceUnwraps.isEmpty else { continue }
+                    // Find the first force unwrap in the LHS and get its expression range
+                    var foundValidExpression = false
+                    for forceUnwrapIndex in lhsForceUnwraps {
+                        // Convert the absolute index to the sub-formatter's relative index
+                        let relativeIndex = forceUnwrapIndex - expressionRange.lowerBound
 
-                    // Limit the expression range to just the LHS
-                    expressionRange = expressionRange.lowerBound ... (infixIndex - 1)
+                        // Get the expression range in the sub-formatter
+                        if let subExpressionRange = lhsFormatter.parseExpressionRange(containing: relativeIndex) {
+                            // Convert the sub-formatter range back to absolute indices
+                            let absoluteRange = (subExpressionRange.lowerBound + expressionRange.lowerBound) ... (subExpressionRange.upperBound + expressionRange.lowerBound)
+                            expressionRange = absoluteRange
+                            foundValidExpression = true
+                            break
+                        }
+                    }
+
+                    if !foundValidExpression {
+                        continue
+                    }
                 }
 
                 // Trim whitespace from the end of the expression range

@@ -1636,7 +1636,7 @@ Don't use explicit ownership modifiers (borrowing / consuming).
 
 ## noForceUnwrapInTests
 
-Replace force unwraps with `try XCTUnwrap(...)` / `try #require(...)` in test functions.
+Replace force unwrap operators `!` in test functions with safer alternatives like `XCTUnwrap` or `#require`.
 
 <details>
 <summary>Examples</summary>
@@ -1645,20 +1645,24 @@ Replace force unwraps with `try XCTUnwrap(...)` / `try #require(...)` in test fu
     import Testing
 
     struct MyFeatureTests {
--       @Test func doSomething() {
-+       @Test func doSomething() throws {
--           let value = optionalValue!
-+           let value = try #require(optionalValue)
+-       @Test func myFeature() {
+-           let myValue = foo.bar!.value as! Value
+-           #expect(myValue.property! == "foo")
++       @Test func myFeature() throws {
++           let myValue = try #require(foo.bar?.value as? Value)
++           #expect(try #require(myValue.property) == "foo")
       }
     }
 
     import XCTest
 
     class MyFeatureTests: XCTestCase {
--       func test_doSomething() {
-+       func test_doSomething() throws {
--           let value = optionalValue!
-+           let value = try XCTUnwrap(optionalValue)
+-       func testMyFeature() {
+-           let myValue = foo.bar!.value as! Value
+-           XCTAssertEqual(myValue.property, "foo")
++       func testMyFeature() throws {
++           let myValue = try XCTUnwrap(foo.bar?.value as? Value)
++           XCTAssertEqual(try XCTUnwrap(myValue.property), "foo")
       }
     }
 ```

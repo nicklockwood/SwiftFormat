@@ -109,6 +109,7 @@
 * [isEmpty](#isEmpty)
 * [markTypes](#markTypes)
 * [noExplicitOwnership](#noExplicitOwnership)
+* [noForceUnwrapInTests](#noForceUnwrapInTests)
 * [noGuardInTests](#noGuardInTests)
 * [organizeDeclarations](#organizeDeclarations)
 * [preferFinalClasses](#preferFinalClasses)
@@ -1628,6 +1629,48 @@ Don't use explicit ownership modifiers (borrowing / consuming).
 ```diff
 - borrowing func foo(_ bar: consuming Bar) { ... }
 + func foo(_ bar: Bar) { ... }
+```
+
+</details>
+<br/>
+
+## noForceUnwrapInTests
+
+Use XCTUnwrap or #require in test cases, rather than force unwrapping.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+    import Testing
+
+    struct MyFeatureTests {
+-       @Test func myFeature() {
+-           let myValue = foo.bar!.value as! Value
+-           let otherValue = (foo! as! Other).bar
+-           otherValue.manager!.prepare()
+-           #expect(myValue.property! == other)
++       @Test func myFeature() throws {
++           let myValue = try #require(foo.bar?.value as? Value)
++           let otherValue = try #require((foo as? Other)?.bar)
++           otherValue.manager?.prepare()
++           #expect(try #require(myValue.property) == other)
+      }
+    }
+
+    import XCTest
+
+    class MyFeatureTests: XCTestCase {
+-       func testMyFeature() {
+-           let myValue = foo.bar!.value as! Value
+-           let otherValue = (foo! as! Other).bar
+-           XCTAssertEqual(myValue.property, "foo")
++       func testMyFeature() throws {
++           let myValue = try XCTUnwrap(foo.bar?.value as? Value)
++           let otherValue = try XCTUnwrap((foo as? Other)?.bar)
++           XCTAssertEqual(try XCTUnwrap(myValue.property), otherValue)
+      }
+    }
 ```
 
 </details>

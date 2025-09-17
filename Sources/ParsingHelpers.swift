@@ -549,6 +549,11 @@ extension Formatter {
             return false
         }
 
+        // If the code is in a string, then it could be inside a string interpolation
+        if tokens[startOfScopeIndex] == .startOfScope("\"") || tokens[startOfScopeIndex] == .startOfScope("\"\"\"") {
+            return false
+        }
+
         // If this is a function scope, but not the body of the function itself,
         // then this is some nested function.
         if lastSignificantKeyword(at: startOfScopeIndex, excluding: ["where"]) == "func",
@@ -1686,6 +1691,146 @@ extension Formatter {
         }
 
         return startIndex ... endOfExpression
+    }
+
+    /// Parses the expression ending at the given index.
+    ///
+    /// This is the reverse counterpart to `parseExpressionRange(startingAt:)`.
+    /// It works backwards from an ending position to find where the expression starts.
+    func parseExpressionRange(
+        endingAt endIndex: Int
+    ) -> ClosedRange<Int>? {
+        let token = tokens[endIndex]
+
+        // First, check what comes BEFORE this token to see if we're part of a larger expression
+        if let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: endIndex) {
+            let prevToken = tokens[prevIndex]
+
+            // Check for dot notation (foo.bar)
+            if prevToken == .operator(".", .infix) || prevToken == .delimiter(".") {
+                guard let beforeDotIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex),
+                      let previousExpression = parseExpressionRange(endingAt: beforeDotIndex)
+                else { return nil }
+                return previousExpression.lowerBound ... endIndex
+            }
+
+            // Check for infix operators (foo + bar, but not foo = bar)
+            if prevToken.isOperator(ofType: .infix), prevToken.string != "=" {
+                guard let beforeOperatorIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex),
+                      let previousExpression = parseExpressionRange(endingAt: beforeOperatorIndex)
+                else { return nil }
+                return previousExpression.lowerBound ... endIndex
+            }
+
+            // Prefix operators have to be the start of a subexpression,
+            // but can come after infix operators like `foo == !bar`.
+            if prevToken.isOperator(ofType: .prefix),
+               let tokenBeforeOperator = index(of: .nonSpaceOrComment, before: prevIndex),
+               tokens[tokenBeforeOperator].isOperator(ofType: .infix),
+               let previousExpression = parseExpressionRange(endingAt: prevIndex)
+            {
+                return previousExpression.lowerBound ... endIndex
+            }
+
+            // Check for type casting keywords (as, is)
+            if prevToken == .keyword("as") || prevToken == .keyword("is") {
+                guard let beforeKeywordIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex),
+                      let previousExpression = parseExpressionRange(endingAt: beforeKeywordIndex)
+                else { return nil }
+                return previousExpression.lowerBound ... endIndex
+            }
+
+            // Check for as?, as! (unwrap operator after "as")
+            if prevToken.isUnwrapOperator,
+               let asIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex),
+               tokens[asIndex] == .keyword("as")
+            {
+                guard let beforeAsIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: asIndex),
+                      let previousExpression = parseExpressionRange(endingAt: beforeAsIndex)
+                else { return nil }
+                return previousExpression.lowerBound ... endIndex
+            }
+
+            // Check for prefix operators or keywords (!, try, await)
+            let prefixKeywords = ["await", "try", "repeat", "each"]
+            if prevToken.isOperator(ofType: .prefix) || prefixKeywords.contains(prevToken.string) {
+                return prevIndex ... endIndex
+            }
+
+            // Check for operators after prefix keywords (try!, try?, await!)
+            if prevToken.isUnwrapOperator || prevToken == .operator("?", .postfix) {
+                if let beforeOperatorIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex),
+                   prefixKeywords.contains(tokens[beforeOperatorIndex].string)
+                {
+                    return beforeOperatorIndex ... endIndex
+                }
+            }
+        }
+
+        // Handle postfix and infix operators (!, ?, +) that can be preceded by other parts of the expression
+        if token.isOperator(ofType: .postfix) || token.isOperator(ofType: .infix) {
+            guard let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: endIndex),
+                  let previousExpression = parseExpressionRange(endingAt: prevIndex)
+            else { return nil }
+            return previousExpression.lowerBound ... endIndex
+        }
+
+        // Handle end of scope tokens ), ], }, "
+        if case .endOfScope = token {
+            guard let startOfScope = index(of: .startOfScope, before: endIndex) else { return nil }
+
+            // Check if there's something before the scope (method call, subscript)
+            if let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope),
+               let previousExpression = parseExpressionRange(endingAt: prevIndex)
+            {
+                return previousExpression.lowerBound ... endIndex
+            }
+
+            // The scope itself is the expression (array literal, closure, etc)
+            return startOfScope ... endIndex
+        }
+
+        // Base cases: identifiers, numbers, literals, etc.
+        if token.isIdentifier || token.isNumber {
+            return endIndex ... endIndex
+        }
+
+        return nil
+    }
+
+    /// Parses the expression that contains the token at the given index.
+    func parseExpressionRange(
+        containing index: Int
+    ) -> ClosedRange<Int>? {
+        // To find the complete expression, parse forwards from the input index to the end of the expression,
+        // and then parse backwards from the end of that expression to the start of the complete expression.
+        var forwardRange = parseExpressionRange(startingAt: index)
+
+        // If this is an operator that can't ever be the start of an expression, parse from some previous token
+        if forwardRange == nil,
+           tokens[index].isOperator(ofType: .postfix) || tokens[index].isOperator(ofType: .infix)
+        {
+            var parseToken = index
+            while let previousToken = self.index(of: .nonSpaceOrCommentOrLinebreak, before: parseToken) {
+                // Check if this previous token is the start of a subexpression that contains the given index
+                if let forwardRangeFromPreviousToken = parseExpressionRange(startingAt: parseToken),
+                   forwardRangeFromPreviousToken.contains(index)
+                {
+                    forwardRange = forwardRangeFromPreviousToken
+                    break
+                }
+
+                parseToken = previousToken
+            }
+            forwardRange = parseExpressionRange(startingAt: parseToken)
+        }
+
+        guard let forwardRange,
+              let backwardRange = parseExpressionRange(endingAt: forwardRange.upperBound),
+              backwardRange.contains(index)
+        else { return nil }
+
+        return backwardRange
     }
 
     /// Parses all of the declarations in the source file.

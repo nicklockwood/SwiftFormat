@@ -68,11 +68,28 @@ public extension FormatRule {
                     continue
                 }
 
-                // If there are infix operators like ==, +, or is, only handle the lhs of the first operator.
+                // If there are infix operators in the expression, only handle the lhs of the first operator.
                 // `try` isn't allowed on the RHS of an operator, and multiple nested operators is too complicated.
                 var infixOperatorIndices: [Int] = []
                 for i in expressionRange.range {
-                    if formatter.tokens[i].isOperator(ofType: .infix) || formatter.tokens[i] == .keyword("is"),
+                    // Handle any infix operator, including operator-like keywords like `is` and `as`.
+                    // However don't exclude `as!`, which we want to handle by converting to `as?`.
+                    let treatAsInfixOperator = {
+                        if formatter.tokens[i].isOperator(ofType: .infix) || formatter.tokens[i] == .keyword("is") {
+                            return true
+                        }
+
+                        if formatter.tokens[i] == .keyword("as"),
+                           let nextToken = formatter.index(of: .nonSpaceOrLinebreak, after: i),
+                           formatter.tokens[nextToken] != .operator("!", .postfix)
+                        {
+                            return true
+                        }
+
+                        return false
+                    }()
+
+                    if treatAsInfixOperator,
                        formatter.isInFunctionBody(of: functionDecl, at: i),
                        formatter.tokens[i] != .operator(".", .infix)
                     {

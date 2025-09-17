@@ -60,6 +60,7 @@
 * [redundantReturn](#redundantReturn)
 * [redundantSelf](#redundantSelf)
 * [redundantStaticSelf](#redundantStaticSelf)
+* [redundantThrows](#redundantThrows)
 * [redundantType](#redundantType)
 * [redundantTypedThrows](#redundantTypedThrows)
 * [redundantVoidReturnType](#redundantVoidReturnType)
@@ -2830,6 +2831,54 @@ Remove explicit `Self` where applicable.
 +         bar()
       }
   }
+```
+
+</details>
+<br/>
+
+## redundantThrows
+
+Remove redundant `throws` keyword from function declarations that don't throw any errors.
+
+Option | Description
+--- | ---
+`--redundant-throws` | Remove redundant throws from functions: "tests-only" (default) or "always"
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  // With --redundant-throws tests-only (default)
+  import Testing
+
+- @Test func myFeature() throws {
++ @Test func myFeature() throws {
+      #expect(foo == 1)
+  }
+
+  import XCTest
+
+  class TestCase: XCTestCase {
+-     func testMyFeature() throws {
++     func testMyFeature() {
+          XCTAssertEqual(foo, 1)
+      }
+  }
+```
+
+Also supports `--redundant-throws always`.
+This will cause warnings anywhere the updated method is called with `try`, since `try` is now redundant at the callsite.
+
+```diff
+  // With --redundant-throws always
+- func myNonThrowingMethod() throws -> Int {
++ func myNonThrowingMethod() -> Int {
+      return 0
+  }
+
+  // Possibly elsewhere in codebase:
+  let value = try myNonThrowingMethod()
++             `- warning: no calls to throwing functions occur within 'try' expression
 ```
 
 </details>

@@ -7,7 +7,7 @@ public extension FormatRule {
     static let noForceUnwrapInTests = FormatRule(
         help: "Use XCTUnwrap or #require in test cases, rather than force unwrapping.",
         disabledByDefault: true,
-        orderAfter: [.urlMacro, .throwingTests]
+        orderAfter: [.urlMacro, .noForceTryInTests, .throwingTests]
     ) { formatter in
         guard let testFramework = formatter.detectTestingFramework() else {
             return
@@ -57,7 +57,7 @@ public extension FormatRule {
                     continue
                 }
 
-                // Preserve `try!`s, this is handled separately by the `throwingTests` rule
+                // Preserve `try!`s, this is handled separately by the `noForceTryInTests` rule
                 if let previousToken = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: forceUnwrapOperator),
                    formatter.tokens[previousToken] == .keyword("try")
                 {

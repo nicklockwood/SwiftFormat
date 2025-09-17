@@ -1425,6 +1425,12 @@ struct _Descriptors {
         help: "Insert line After switch cases:",
         keyPath: \.blankLineAfterSwitchCase
     )
+    let redundantThrows = OptionDescriptor(
+        argumentName: "redundant-throws",
+        displayName: "Redundant Throws",
+        help: "Remove redundant throws from functions:",
+        keyPath: \.redundantThrows
+    )
     let allowPartialWrapping = OptionDescriptor(
         argumentName: "allow-partial-wrapping",
         displayName: "Allow Partial Wrapping",

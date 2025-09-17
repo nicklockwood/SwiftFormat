@@ -476,6 +476,9 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
                 XCTAssertEqual(route.query as! [String: String], ["a": "b"])
                 XCTAssert((foo! as! Bar).baaz!)
                 XCTAssert((foo! as! Bar).baaz)
+            }
+
+            func testMoreComplexForceCasts() throws {
                 XCTAssert(((foo! as! Bar).baaz as! Baaz)())
                 XCTAssert((foo as! [String: Any])["bar"])
                 XCTAssert(foo!.baaz! is Bar)
@@ -492,6 +495,9 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
                 XCTAssertEqual(try XCTUnwrap(route.query as? [String: String]), ["a": "b"])
                 XCTAssert(try XCTUnwrap((foo as? Bar)?.baaz))
                 XCTAssert(try XCTUnwrap((foo as? Bar)?.baaz))
+            }
+
+            func testMoreComplexForceCasts() throws {
                 XCTAssert(try XCTUnwrap(((foo as? Bar)?.baaz as? Baaz)?()))
                 XCTAssert(try XCTUnwrap((foo as? [String: Any])?["bar"]))
                 XCTAssert(try XCTUnwrap(foo?.baaz) is Bar)
@@ -597,5 +603,20 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
         }
         """
         testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .noGuardInTests])
+    }
+
+    func testDisableRule() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                // swiftformat:disable:next noForceUnwrapInTests
+                let result = myOptional!.with.nested!.property!
+            }
+        }
+        """
+
+        testFormatting(for: input, rule: .noForceUnwrapInTests)
     }
 }

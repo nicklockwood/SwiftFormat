@@ -12,6 +12,8 @@ public extension FormatRule {
             return
         }
 
+        // Find all of the test case functions in this file
+        var testCases = [AutoUpdatingIndex]()
         formatter.forEach(.keyword("func")) { funcKeywordIndex, _ in
             guard let functionDecl = formatter.parseFunctionDeclaration(keywordIndex: funcKeywordIndex),
                   functionDecl.returnType == nil
@@ -24,28 +26,38 @@ public extension FormatRule {
                 guard formatter.modifiersForDeclaration(at: funcKeywordIndex, contains: "@Test") else { return }
             }
 
-            guard let bodyRange = functionDecl.bodyRange else { return }
+            testCases.append(funcKeywordIndex.autoUpdating(in: formatter))
+        }
 
-            // Find all force unwrap operators in the function body
-            var foundAnyForceUnwraps = false
+        guard !testCases.isEmpty else { return }
 
-            var currentIndex = bodyRange.upperBound.autoUpdating(in: formatter)
+        // Collect all of the force unwrap operators. Doing this in its own `forEach`
+        // ensures that `disable:next` directives are supported at individual `!` indices.
+        var forceUnwrapOperators = [AutoUpdatingIndex]()
+        formatter.forEach(.operator("!", .postfix)) { forceUnwrapOperator, _ in
+            forceUnwrapOperators.append(forceUnwrapOperator.autoUpdating(in: formatter))
+        }
 
-            while currentIndex.index >= bodyRange.lowerBound {
-                let index = currentIndex.index
-                defer { currentIndex.index -= 1 }
+        for testCase in testCases {
+            guard let functionDecl = formatter.parseFunctionDeclaration(keywordIndex: testCase.index),
+                  let bodyRange = functionDecl.bodyRange
+            else { return }
 
-                guard formatter.tokens[index] == .operator("!", .postfix) else {
+            let forceUnwrapOperators = forceUnwrapOperators.filter { bodyRange.contains($0.index) }
+            var convertedAnyForceUnwrapOperators = false
+
+            for forceUnwrapOperator in forceUnwrapOperators.reversed() {
+                guard formatter.tokens[forceUnwrapOperator] == .operator("!", .postfix) else {
                     continue
                 }
 
                 // Only convert the `!` if we are within the function body
-                guard formatter.isInFunctionBody(of: functionDecl, at: index) else {
+                guard formatter.isInFunctionBody(of: functionDecl, at: forceUnwrapOperator.index) else {
                     continue
                 }
 
                 // Preserve `try!`s, this is handled separately by the `throwingTests` rule
-                if let previousToken = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: index),
+                if let previousToken = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: forceUnwrapOperator),
                    formatter.tokens[previousToken] == .keyword("try")
                 {
                     continue
@@ -53,18 +65,18 @@ public extension FormatRule {
 
                 // Skip if this is an implicitly unwrapped optional type annotation (e.g., let foo: Foo!)
                 // Look for the pattern: (let|var) identifier : Type !
-                if let colonIndex = formatter.lastIndex(of: .delimiter(":"), in: 0 ..< index),
+                if let colonIndex = formatter.lastIndex(of: .delimiter(":"), in: 0 ..< forceUnwrapOperator.index),
                    let _ = formatter.lastIndex(of: .keyword, in: 0 ..< colonIndex, if: { ["let", "var"].contains($0.string) })
                 {
                     // Make sure there are no assignment operators between the colon and the !
                     // This distinguishes type annotations from variable assignments with IUO types
-                    let hasAssignment = formatter.index(of: .operator("=", .infix), in: colonIndex ..< index) != nil
+                    let hasAssignment = formatter.index(of: .operator("=", .infix), in: colonIndex ..< forceUnwrapOperator.index) != nil
                     if !hasAssignment {
                         continue
                     }
                 }
 
-                guard let expressionRange = formatter.parseExpressionRangeContainingForceUnwrap(index, in: functionDecl) else {
+                guard let expressionRange = formatter.parseExpressionRangeContainingForceUnwrap(forceUnwrapOperator.index, in: functionDecl) else {
                     continue
                 }
 
@@ -167,12 +179,12 @@ public extension FormatRule {
                         formatter.insert(.startOfScope("("), at: insertionIndex)
                     }
 
-                    foundAnyForceUnwraps = true
+                    convertedAnyForceUnwrapOperators = true
                 }
             }
 
             // If we found any force unwraps, add a `throws` if it doesn't already exist
-            if foundAnyForceUnwraps {
+            if convertedAnyForceUnwrapOperators {
                 formatter.addThrowsEffect(to: functionDecl)
             }
         }

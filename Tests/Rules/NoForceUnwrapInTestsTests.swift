@@ -542,7 +542,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .throwingTests])
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .noForceTryInTests])
     }
 
     func testForceUnwrapInAssignmentLHS() {

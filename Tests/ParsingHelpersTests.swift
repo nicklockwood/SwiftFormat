@@ -2640,6 +2640,8 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssert(containsExpression("array[foo!.bar]", containing: "!", expecting: "foo!.bar"))
         XCTAssert(containsExpression("{ foo!.bar }", containing: "!", expecting: "foo!.bar"))
         XCTAssert(containsExpression("foo as! Foo", containing: "!", expecting: "foo as! Foo"))
+        XCTAssert(containsExpression("foo! + \"suffix\"", containing: "!", expecting: "foo! + \"suffix\""))
+        XCTAssert(containsExpression("foo(\"test\".data(using: .utf8)!)", containing: "!", expecting: "\"test\".data(using: .utf8)!"))
 
         // Multiple force unwraps
         XCTAssert(containsExpression("foo!.bar! + baz", containing: "!", expecting: "foo!.bar! + baz"))
@@ -2652,7 +2654,9 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssert(containsExpression("await foo!.bar()", containing: "!", expecting: "await foo!.bar()"))
 
         // Force unwrap with type operators
-        XCTAssert(containsExpression("foo!.bar as String", containing: "!", expecting: "foo!.bar as String"))
+        XCTAssert(containsExpression("foo!.bar as! String", containing: "!", expecting: "foo!.bar as! String"))
+
+        XCTAssert(containsExpression(#"XCTAssertEqual(route.query as! [String: String], ["a": "b"])"#, containing: "!", expecting: "route.query as! [String: String]"))
     }
 
     func parseExpression(_ expression: String, containing: String) -> String? {

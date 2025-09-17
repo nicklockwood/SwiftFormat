@@ -1695,142 +1695,85 @@ extension Formatter {
     func parseExpressionRange(
         endingAt endIndex: Int
     ) -> ClosedRange<Int>? {
-        var startOfExpression = endIndex
+        let token = tokens[endIndex]
 
-        // Handle postfix operators
-        if tokens[endIndex].isOperator(ofType: .postfix) {
-            guard let previousToken = index(of: .nonSpaceOrCommentOrLinebreak, before: endIndex) else { return nil }
-            guard let precedingExpression = parseExpressionRange(endingAt: previousToken) else { return nil }
-            return precedingExpression.lowerBound ... endIndex
-        }
-        // Handle end of scope tokens (closing parens, brackets, braces)
-        else if tokens[endIndex].isEndOfScope {
-            guard let startOfScope = startOfScope(at: endIndex) else { return nil }
+        // First, check what comes BEFORE this token to see if we're part of a larger expression
+        if let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: endIndex) {
+            let prevToken = tokens[prevIndex]
 
-            // Check if this is a method call, subscript, or closure
-            if let previousToken = index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope) {
-                // Could be a method call like foo(), a subscript like foo[], or a trailing closure
-                if tokens[startOfScope] == .startOfScope("(") ||
-                    tokens[startOfScope] == .startOfScope("[") ||
-                    (tokens[startOfScope] == .startOfScope("{") && isStartOfClosure(at: startOfScope))
-                {
-                    // If there's a linebreak before the opening paren/bracket, it's not a method call
-                    if !tokens[previousToken + 1 ..< startOfScope].contains(where: \.isLinebreak) {
-                        if let precedingExpression = parseExpressionRange(endingAt: previousToken) {
-                            return precedingExpression.lowerBound ... endIndex
-                        }
-                    }
-                }
-                // Check if this scope is the RHS of an infix operator
-                else if tokens[previousToken].isOperator(ofType: .infix), tokens[previousToken] != .operator("=", .infix) {
-                    // This is the right operand of a binary expression
-                    if let leftOperandEnd = index(of: .nonSpaceOrCommentOrLinebreak, before: previousToken),
-                       let leftExpression = parseExpressionRange(endingAt: leftOperandEnd)
-                    {
-                        return leftExpression.lowerBound ... endIndex
-                    }
-                }
+            // Check for dot notation (foo.bar)
+            if prevToken == .operator(".", .infix) || prevToken == .delimiter(".") {
+                guard let beforeDotIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex),
+                      let previousExpression = parseExpressionRange(endingAt: beforeDotIndex)
+                else { return nil }
+                return previousExpression.lowerBound ... endIndex
             }
-            startOfExpression = startOfScope
-        }
-        // Handle identifiers that might be part of a member chain or type name after as/is
-        else if tokens[endIndex].isIdentifier {
-            // Check if this is preceded by 'as' or 'as?' or 'as!'
-            if let previousToken = index(of: .nonSpaceOrCommentOrLinebreak, before: endIndex) {
-                if tokens[previousToken].isUnwrapOperator {
-                    // Check for 'as?' or 'as!'
-                    if let asKeywordIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: previousToken),
-                       tokens[asKeywordIndex] == .keyword("as")
-                    {
-                        if let expressionBeforeAs = index(of: .nonSpaceOrCommentOrLinebreak, before: asKeywordIndex),
-                           let precedingExpression = parseExpressionRange(endingAt: expressionBeforeAs)
-                        {
-                            return precedingExpression.lowerBound ... endIndex
-                        }
-                    }
-                } else if tokens[previousToken] == .keyword("as") || tokens[previousToken] == .keyword("is") {
-                    // Direct 'as' or 'is'
-                    if let expressionBeforeKeyword = index(of: .nonSpaceOrCommentOrLinebreak, before: previousToken),
-                       let precedingExpression = parseExpressionRange(endingAt: expressionBeforeKeyword)
-                    {
-                        return precedingExpression.lowerBound ... endIndex
-                    }
-                } else if tokens[previousToken] == .delimiter(".") || tokens[previousToken] == .operator(".", .infix) {
-                    // Member access
-                    if let tokenBeforeDot = index(of: .nonSpaceOrCommentOrLinebreak, before: previousToken),
-                       let precedingExpression = parseExpressionRange(endingAt: tokenBeforeDot)
-                    {
-                        return precedingExpression.lowerBound ... endIndex
-                    }
-                } else if tokens[previousToken].isOperator(ofType: .infix), tokens[previousToken] != .operator("=", .infix) {
-                    // Infix operator - parse the full binary expression
-                    if let leftOperandEnd = index(of: .nonSpaceOrCommentOrLinebreak, before: previousToken),
-                       let leftExpression = parseExpressionRange(endingAt: leftOperandEnd)
-                    {
-                        return leftExpression.lowerBound ... endIndex
-                    }
-                }
+
+            // Check for infix operators (foo + bar, but not foo = bar)
+            if case let .operator(op, .infix) = prevToken, op != "=" {
+                guard let beforeOperatorIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex),
+                      let previousExpression = parseExpressionRange(endingAt: beforeOperatorIndex)
+                else { return nil }
+                return previousExpression.lowerBound ... endIndex
             }
-            // Check if this is a label in a trailing closure
-            if let colonIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: endIndex),
-               tokens[colonIndex] == .delimiter(":"),
-               let closureIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: colonIndex),
-               tokens[closureIndex] == .startOfScope("{"),
-               let endOfClosure = endOfScope(at: closureIndex),
-               let previousToken = index(of: .nonSpaceOrCommentOrLinebreak, before: endIndex)
+
+            // Check for type casting keywords (as, is)
+            if prevToken == .keyword("as") || prevToken == .keyword("is") {
+                guard let beforeKeywordIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex),
+                      let previousExpression = parseExpressionRange(endingAt: beforeKeywordIndex)
+                else { return nil }
+                return previousExpression.lowerBound ... endIndex
+            }
+
+            // Check for as?, as! (unwrap operator after "as")
+            if prevToken.isUnwrapOperator,
+               let asIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex),
+               tokens[asIndex] == .keyword("as")
             {
-                if let precedingExpression = parseExpressionRange(endingAt: previousToken) {
-                    return precedingExpression.lowerBound ... endOfClosure
-                }
+                guard let beforeAsIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: asIndex),
+                      let previousExpression = parseExpressionRange(endingAt: beforeAsIndex)
+                else { return nil }
+                return previousExpression.lowerBound ... endIndex
             }
-            startOfExpression = endIndex
-        }
-        // Handle numbers
-        else if case .number = tokens[endIndex] {
-            // Check if this is part of a larger expression with an infix operator
-            if let previousToken = index(of: .nonSpaceOrCommentOrLinebreak, before: endIndex) {
-                if tokens[previousToken].isOperator(ofType: .infix), tokens[previousToken] != .operator("=", .infix) {
-                    // This number is the right operand of a binary expression
-                    if let leftOperandEnd = index(of: .nonSpaceOrCommentOrLinebreak, before: previousToken),
-                       let leftExpression = parseExpressionRange(endingAt: leftOperandEnd)
-                    {
-                        return leftExpression.lowerBound ... endIndex
-                    }
-                }
+
+            // Check for prefix operators or keywords (!, try, await)
+            let prefixKeywords = ["await", "try", "repeat", "each"]
+            if prevToken.isOperator(ofType: .prefix) || prefixKeywords.contains(prevToken.string) {
+                return prevIndex ... endIndex
             }
-            startOfExpression = endIndex
         }
 
-        // Now walk backwards to find prefix operators and keywords
-        var currentIndex = startOfExpression
-        while let previousToken = index(of: .nonSpaceOrCommentOrLinebreak, before: currentIndex) {
-            let token = tokens[previousToken]
+        // Now handle special cases for the current token itself
 
-            // Check for prefix operators
-            if token.isOperator(ofType: .prefix) {
-                currentIndex = previousToken
-                continue
-            }
-
-            // Check for prefix keywords like await, try, repeat, each
-            let prefixKeywords = ["await", "repeat", "each", "try"]
-            if case let .keyword(keyword) = token, prefixKeywords.contains(keyword) {
-                currentIndex = previousToken
-                // Handle try?, try!
-                if keyword == "try",
-                   let nextToken = index(of: .nonSpaceOrCommentOrLinebreak, after: previousToken),
-                   nextToken < startOfExpression,
-                   tokens[nextToken].isUnwrapOperator
-                {
-                    // The try? or try! is already included in our range
-                }
-                continue
-            }
-
-            break
+        // Handle postfix and infix operators (!, ?, +) that can be preceded by other parts of the exprssion
+        if token.isOperator(ofType: .postfix) || token.isOperator(ofType: .infix) {
+            guard let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: endIndex),
+                  let previousExpression = parseExpressionRange(endingAt: prevIndex)
+            else { return nil }
+            return previousExpression.lowerBound ... endIndex
         }
 
-        return currentIndex ... endIndex
+        // Handle end of scope tokens ), ], }, "
+        if case .endOfScope = token {
+            guard let startOfScope = index(of: .startOfScope, before: endIndex) else { return nil }
+
+            // Check if there's something before the scope (method call, subscript)
+            if let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope),
+               let previousExpression = parseExpressionRange(endingAt: prevIndex)
+            {
+                return previousExpression.lowerBound ... endIndex
+            }
+
+            // The scope itself is the expression (array literal, closure, etc)
+            return startOfScope ... endIndex
+        }
+
+        // Base cases: identifiers, numbers, literals, etc.
+        if token.isIdentifier || token.isNumber {
+            return endIndex ... endIndex
+        }
+
+        return nil
     }
 
     /// Parses the expression that contains the token at the given index.

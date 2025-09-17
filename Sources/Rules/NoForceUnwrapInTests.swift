@@ -72,11 +72,6 @@ public extension FormatRule {
                 // Note: `as` is not considered an infix operator for this purpose
                 var infixOperatorIndices: [Int] = []
                 for i in expressionRange {
-                    // Skip 'as' keyword - it's not a real infix operator for our purposes
-                    if formatter.tokens[i] == .keyword("as") {
-                        continue
-                    }
-
                     if formatter.tokens[i].isOperator(ofType: .infix),
                        formatter.isInFunctionBody(of: functionDecl, at: i),
                        formatter.tokens[i] != .operator(".", .infix)

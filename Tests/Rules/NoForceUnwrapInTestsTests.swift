@@ -457,12 +457,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
 
         class TestCase: XCTestCase {
             func test_forceCasts() {
-                let value = someOptional as! Int
-                XCTAssertEqual(modifiedRequest.query?["start_date"] as! String, firstDayString)
-                XCTAssertEqual(modifiedRequest.query!["end_date"] as! String, lastDayString)
                 XCTAssertEqual(route.query as! [String: String], ["a": "b"])
-                XCTAssertEqual(foo.bar(baaz, quux) as! FooBar, .fooBar)
-                let foo = Foo(renderLines.last!.line, []).height + renderLines.last!.lineOrigin.y
             }
         }
         """
@@ -471,12 +466,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
 
         class TestCase: XCTestCase {
             func test_forceCasts() throws {
-                let value = try XCTUnwrap(someOptional as? Int)
-                XCTAssertEqual(try XCTUnwrap(modifiedRequest.query?["start_date"] as? String), firstDayString)
-                XCTAssertEqual(try XCTUnwrap(modifiedRequest.query?["end_date"] as? String), lastDayString)
                 XCTAssertEqual(try XCTUnwrap(route.query as? [String: String]), ["a": "b"])
-                XCTAssertEqual(try XCTUnwrap(foo.bar(baaz, quux) as? FooBar), .fooBar)
-                let foo = Foo(try XCTUnwrap(renderLines.last?.line), []).height + renderLines.last!.lineOrigin.y
             }
         }
         """

@@ -109,6 +109,7 @@
 * [isEmpty](#isEmpty)
 * [markTypes](#markTypes)
 * [noExplicitOwnership](#noExplicitOwnership)
+* [noForceTryInTests](#noForceTryInTests)
 * [noForceUnwrapInTests](#noForceUnwrapInTests)
 * [noGuardInTests](#noGuardInTests)
 * [organizeDeclarations](#organizeDeclarations)
@@ -121,7 +122,6 @@
 * [redundantProperty](#redundantProperty)
 * [singlePropertyPerLine](#singlePropertyPerLine)
 * [sortSwitchCases](#sortSwitchCases)
-* [throwingTests](#throwingTests)
 * [unusedPrivateDeclarations](#unusedPrivateDeclarations)
 * [urlMacro](#urlMacro)
 * [wrapConditionalBodies](#wrapConditionalBodies)
@@ -135,6 +135,7 @@
 * [sortedImports](#sortedImports)
 * [sortedSwitchCases](#sortedSwitchCases)
 * [specifiers](#specifiers)
+* [throwingTests](#throwingTests)
 
 ----------
 
@@ -1629,6 +1630,38 @@ Don't use explicit ownership modifiers (borrowing / consuming).
 ```diff
 - borrowing func foo(_ bar: consuming Bar) { ... }
 + func foo(_ bar: Bar) { ... }
+```
+
+</details>
+<br/>
+
+## noForceTryInTests
+
+Write tests that use `throws` instead of using `try!`.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+    import Testing
+
+    struct MyFeatureTests {
+-       @Test func doSomething() {
++       @Test func doSomething() throws {
+-           try! MyFeature().doSomething()
++           try MyFeature().doSomething()
+      }
+    }
+
+    import XCTeset
+
+    class MyFeatureTests: XCTestCase {
+-       func test_doSomething() {
++       func test_doSomething() throws {
+-           try! MyFeature().doSomething()
++           try MyFeature().doSomething()
+      }
+    }
 ```
 
 </details>
@@ -3409,33 +3442,7 @@ In Swift Testing, don't prefix @Test methods with 'test'.
 
 Write tests that use `throws` instead of using `try!`.
 
-<details>
-<summary>Examples</summary>
-
-```diff
-    import Testing
-
-    struct MyFeatureTests {
--       @Test func doSomething() {
-+       @Test func doSomething() throws {
--           try! MyFeature().doSomething()
-+           try MyFeature().doSomething()
-      }
-    }
-
-    import XCTeset
-
-    class MyFeatureTests: XCTestCase {
--       func test_doSomething() {
-+       func test_doSomething() throws {
--           try! MyFeature().doSomething()
-+           try MyFeature().doSomething()
-      }
-    }
-```
-
-</details>
-<br/>
+*Note: throwingTests rule is deprecated. Renamed to `noForceTryInTests`.*
 
 ## todos
 

@@ -2553,6 +2553,109 @@ class ParsingHelpersTests: XCTestCase {
         return formatter.tokens[expressionRange].map(\.string).joined()
     }
 
+    // MARK: parseExpressionRange(endingAt:)
+
+    func testParseExpressionEndingAt() {
+        // Simple cases
+        XCTAssert(isSingleExpressionParsedFromEnd("foo"))
+        XCTAssert(isSingleExpressionParsedFromEnd("42"))
+
+        // Postfix operators
+        XCTAssert(isSingleExpressionParsedFromEnd("foo!"))
+        XCTAssert(isSingleExpressionParsedFromEnd("foo?"))
+
+        // Method calls and subscripts
+        XCTAssert(isSingleExpressionParsedFromEnd("foo.bar()"))
+        XCTAssert(isSingleExpressionParsedFromEnd("foo[0]"))
+
+        // Prefix operators and keywords
+        XCTAssert(isSingleExpressionParsedFromEnd("!foo"))
+        XCTAssert(isSingleExpressionParsedFromEnd("try foo()"))
+        XCTAssert(isSingleExpressionParsedFromEnd("await foo()"))
+
+        // Infix operators
+        XCTAssert(isSingleExpressionParsedFromEnd("foo + bar"))
+        XCTAssert(isSingleExpressionParsedFromEnd("foo * bar + baz"))
+        XCTAssert(isSingleExpressionParsedFromEnd("foo == bar.baaz"))
+        XCTAssert(isSingleExpressionParsedFromEnd("foo == .baaz"))
+        XCTAssert(isSingleExpressionParsedFromEnd("foo == !baaz"))
+        XCTAssert(isSingleExpressionParsedFromEnd("0 == -baaz"))
+
+        // Type operators
+        XCTAssert(isSingleExpressionParsedFromEnd("foo as String"))
+        XCTAssert(isSingleExpressionParsedFromEnd("foo as! String"))
+        XCTAssert(isSingleExpressionParsedFromEnd("foo as? String"))
+        XCTAssert(isSingleExpressionParsedFromEnd("foo is String"))
+
+        // Complex expressions with operators in the middle
+        XCTAssert(isSingleExpressionParsedFromEnd("foo!.bar"))
+        XCTAssert(isSingleExpressionParsedFromEnd("foo?[bar]?.baaz"))
+        XCTAssert(isSingleExpressionParsedFromEnd("foo!.bar + baz"))
+        XCTAssert(isSingleExpressionParsedFromEnd("obj.foo!.bar().baz"))
+        XCTAssert(isSingleExpressionParsedFromEnd("foo!.bar as String"))
+        XCTAssert(isSingleExpressionParsedFromEnd("try foo!.bar()"))
+        XCTAssert(isSingleExpressionParsedFromEnd("await foo!.bar()"))
+        XCTAssert(isSingleExpressionParsedFromEnd("try! foo.bar"))
+        XCTAssert(isSingleExpressionParsedFromEnd("try? foo()"))
+
+        // Closures and literals
+        XCTAssert(isSingleExpressionParsedFromEnd("{ foo }"))
+        XCTAssert(isSingleExpressionParsedFromEnd("[1, 2, 3]"))
+    }
+
+    func isSingleExpressionParsedFromEnd(_ input: String) -> Bool {
+        let formatter = Formatter(tokenize(input))
+        let lastTokenIndex = formatter.tokens.count - 1
+        guard let expressionRange = formatter.parseExpressionRange(endingAt: lastTokenIndex) else { return false }
+        return formatter.tokens[expressionRange].string == input
+    }
+
+    // MARK: parseExpressionRange(containing:)
+
+    func testParseExpressionRangeContaining() {
+        // Simple cases
+        XCTAssertEqual(parseExpression(in: "foo!", containing: "!"), "foo!")
+
+        // Force unwrap in different contexts
+        XCTAssertEqual(parseExpression(in: "foo(bar: foo!.bar)", containing: "!"), "foo!.bar")
+        XCTAssertEqual(parseExpression(in: "let foo = foo!.bar + baz", containing: "!"), "foo!.bar + baz")
+        XCTAssertEqual(parseExpression(in: "if foo, foo!.bar == quux", containing: "!"), "foo!.bar == quux")
+        XCTAssertEqual(parseExpression(in: "[foo!.bar, baz]", containing: "!"), "foo!.bar")
+        XCTAssertEqual(parseExpression(in: "(foo!.bar, baz)", containing: "!"), "foo!.bar")
+        XCTAssertEqual(parseExpression(in: "return foo!.bar + baz", containing: "!"), "foo!.bar + baz")
+        XCTAssertEqual(parseExpression(in: "return foo[bar]!.baaz", containing: "!"), "foo[bar]!.baaz")
+        XCTAssertEqual(parseExpression(in: "array[foo!.bar]", containing: "!"), "foo!.bar")
+        XCTAssertEqual(parseExpression(in: "{ foo!.bar }", containing: "!"), "foo!.bar")
+        XCTAssertEqual(parseExpression(in: "foo as! Foo", containing: "!"), "foo as! Foo")
+        XCTAssertEqual(parseExpression(in: "foo! + \"suffix\"", containing: "!"), "foo! + \"suffix\"")
+        XCTAssertEqual(parseExpression(in: "foo(\"test\".data(using: .utf8)!)", containing: "!"), "\"test\".data(using: .utf8)!")
+
+        // Multiple force unwraps
+        XCTAssertEqual(parseExpression(in: "foo!.bar! + baz", containing: "!"), "foo!.bar! + baz")
+
+        // Force unwrap in method chains
+        XCTAssertEqual(parseExpression(in: "obj.foo!.bar().baz", containing: "!"), "obj.foo!.bar().baz")
+
+        // Force unwrap with prefix operators
+        XCTAssertEqual(parseExpression(in: "try foo!.bar()", containing: "!"), "try foo!.bar()")
+        XCTAssertEqual(parseExpression(in: "await foo!.bar()", containing: "!"), "await foo!.bar()")
+
+        // Force unwrap with type operators
+        XCTAssertEqual(parseExpression(in: "foo!.bar as! String", containing: "!"), "foo!.bar as! String")
+
+        XCTAssertEqual(parseExpression(in: #"XCTAssertEqual(route.query as! [String: String], ["a": "b"])"#, containing: "!"), "route.query as! [String: String]")
+    }
+
+    func parseExpression(in expression: String, containing: String) -> String? {
+        let formatter = Formatter(tokenize(expression))
+        guard let tokenIndex = formatter.tokens.firstIndex(where: { $0.string == containing }),
+              let range = formatter.parseExpressionRange(containing: tokenIndex)
+        else {
+            return nil
+        }
+        return formatter.tokens[range].string
+    }
+
     // MARK: isStoredProperty
 
     func testIsStoredProperty() {

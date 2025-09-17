@@ -829,6 +829,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var preferFileMacro: Bool
     public var lineBetweenConsecutiveGuards: Bool
     public var blankLineAfterSwitchCase: BlankLineAfterSwitchCase
+    public var redundantThrows: RedundantThrowsMode
     public var allowPartialWrapping: Bool
 
     /// Deprecated
@@ -971,6 +972,7 @@ public struct FormatOptions: CustomStringConvertible {
                 preferFileMacro: Bool = true,
                 lineBetweenConsecutiveGuards: Bool = false,
                 blankLineAfterSwitchCase: BlankLineAfterSwitchCase = .multilineOnly,
+                redundantThrows: RedundantThrowsMode = .testsOnly,
                 allowPartialWrapping: Bool = true,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
@@ -1102,6 +1104,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.preferFileMacro = preferFileMacro
         self.lineBetweenConsecutiveGuards = lineBetweenConsecutiveGuards
         self.blankLineAfterSwitchCase = blankLineAfterSwitchCase
+        self.redundantThrows = redundantThrows
         self.allowPartialWrapping = allowPartialWrapping
         self.indentComments = indentComments
         self.fragment = fragment
@@ -1146,6 +1149,14 @@ public struct FormatOptions: CustomStringConvertible {
             return "\(value);".addingPercentEncoding(withAllowedCharacters: allowedCharacters)
         }.joined()
     }
+}
+
+/// Whether to remove redundant throws from test functions only or from all functions
+public enum RedundantThrowsMode: String, CaseIterable {
+    /// Only remove redundant throws from test functions (default)
+    case testsOnly = "tests-only"
+    /// Remove redundant throws from all functions (can cause build failures)
+    case always
 }
 
 public enum MarkdownFormattingMode: String, CaseIterable {

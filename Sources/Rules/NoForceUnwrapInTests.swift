@@ -30,7 +30,7 @@ public extension FormatRule {
 
             var currentIndex = bodyRange.upperBound.autoUpdating(in: formatter)
 
-            while currentIndex.index >= bodyRange.lowerBound {
+            functionBody: while currentIndex.index >= bodyRange.lowerBound {
                 let index = currentIndex.index
                 defer { currentIndex.index -= 1 }
 
@@ -66,6 +66,34 @@ public extension FormatRule {
                 // Parse the expression containing this force unwrap operator
                 guard var expressionRange = formatter.parseExpressionRange(containing: index)?.autoUpdating(in: formatter) else {
                     continue
+                }
+
+                // If this expression contains an `as!`, like `foo as! Bar`, if that subexpression is contained in parens
+                // like `(foo as! Bar).quux`, ensure the `expressionRange` contains any following elements.
+                // This allows us to convert `(foo as! Bar).quux` to `(foo as? Bar)?.quux` later.
+                func tokenAfterAsCastParenScope(asIndex: Int) -> Int? {
+                    guard formatter.tokens[asIndex] == .keyword("as"),
+                          let tokenAfterAs = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: asIndex),
+                          formatter.tokens[tokenAfterAs] == .operator("!", .postfix),
+                          let containingScopeIndex = formatter.startOfScope(at: asIndex),
+                          formatter.tokens[containingScopeIndex] == .startOfScope("("),
+                          let endOfScope = formatter.endOfScope(at: containingScopeIndex),
+                          let tokenAfterParenScope = formatter.index(of: .nonLinebreak, after: endOfScope),
+                          formatter.tokens[tokenAfterParenScope].isOperator || formatter.tokens[tokenAfterParenScope].isStartOfScope
+                    else { return nil }
+
+                    return tokenAfterParenScope
+                }
+
+                while let asIndexNeedingExpansion = expressionRange.range.first(where: {
+                    guard let tokenAfterAsParenScope = tokenAfterAsCastParenScope(asIndex: $0) else { return false }
+                    return !expressionRange.range.contains(tokenAfterAsParenScope)
+                }) {
+                    guard let tokenAfterAsParenScope = tokenAfterAsCastParenScope(asIndex: asIndexNeedingExpansion),
+                          let expandedExpressionRange = formatter.parseExpressionRange(containing: tokenAfterAsParenScope)?.autoUpdating(in: formatter)
+                    else { continue functionBody }
+
+                    expressionRange = expandedExpressionRange
                 }
 
                 // If there are infix operators in the expression, only handle the lhs of the first operator.
@@ -134,6 +162,15 @@ public extension FormatRule {
                           formatter.isInFunctionBody(of: functionDecl, at: i)
                     else { continue }
 
+                    // If we are about to convert an `as!` to an `as?`, and the as? is part of a broader expression with a chained value
+                    // like `(foo as! Bar).baaz`, we have to add an extra `?` after the enclosing parens: `(foo as? Bar)?.baaz`.
+                    if let previousToken = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i),
+                       formatter.tokens[previousToken] == .keyword("as"),
+                       let tokenAfterAsParenScope = tokenAfterAsCastParenScope(asIndex: previousToken)
+                    {
+                        formatter.insert(.operator("?", .postfix), at: tokenAfterAsParenScope)
+                    }
+
                     // If this is the last token in the expression, or the next token is is / as operator, remove the `!`
                     // rather than replacing it with a `?`.
                     var shouldRemoveForceUnwrap = false
@@ -156,20 +193,6 @@ public extension FormatRule {
                         formatter.removeToken(at: i)
                     } else {
                         formatter.replaceToken(at: i, with: .operator("?", .postfix))
-                    }
-
-                    // If we converted an `as!` to an `as?`, and the as? is part of a broader expression with a chained value
-                    // like `(foo as! Bar).baaz`, we have to add an extra `?` after the enclosing parens: `(foo as? Bar)?.baaz`.
-                    if let previousToken = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i),
-                       formatter.tokens[previousToken] == .keyword("as"),
-                       let containingScopeIndex = formatter.startOfScope(at: previousToken),
-                       formatter.tokens[containingScopeIndex] == .startOfScope("("),
-                       let endOfScope = formatter.endOfScope(at: containingScopeIndex),
-                       let tokenAfterParenScope = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: endOfScope),
-                       formatter.tokens[tokenAfterParenScope].isOperator,
-                       expressionRange.range.contains(tokenAfterParenScope)
-                    {
-                        formatter.insert(.operator("?", .postfix), at: tokenAfterParenScope)
                     }
                 }
 

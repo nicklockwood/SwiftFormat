@@ -2576,6 +2576,10 @@ class ParsingHelpersTests: XCTestCase {
         // Infix operators
         XCTAssert(endsExpressionAt("foo + bar", at: 4, expecting: "foo + bar"))
         XCTAssert(endsExpressionAt("foo * bar + baz", at: 8, expecting: "foo * bar + baz"))
+        XCTAssert(endsExpressionAt("foo == bar.baaz", at: 6, expecting: "foo == bar.baaz"))
+        XCTAssert(endsExpressionAt("foo == .baaz", at: 5, expecting: "foo == .baaz"))
+        XCTAssert(endsExpressionAt("foo == !baaz", at: 5, expecting: "foo == !baaz"))
+        XCTAssert(endsExpressionAt("0 == -baaz", at: 5, expecting: "0 == -baaz"))
 
         // Type operators
         XCTAssert(endsExpressionAt("foo as String", at: 4, expecting: "foo as String"))

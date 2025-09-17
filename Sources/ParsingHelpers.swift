@@ -1710,10 +1710,20 @@ extension Formatter {
             }
 
             // Check for infix operators (foo + bar, but not foo = bar)
-            if case let .operator(op, .infix) = prevToken, op != "=" {
+            if prevToken.isOperator(ofType: .infix), prevToken.string != "=" {
                 guard let beforeOperatorIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex),
                       let previousExpression = parseExpressionRange(endingAt: beforeOperatorIndex)
                 else { return nil }
+                return previousExpression.lowerBound ... endIndex
+            }
+
+            // Prefix operators have to be the start of a subexpression,
+            // but can come after infix operators like `foo == !bar`.
+            if prevToken.isOperator(ofType: .prefix),
+               let tokenBeforeOperator = index(of: .nonSpaceOrComment, before: prevIndex),
+               tokens[tokenBeforeOperator].isOperator(ofType: .infix),
+               let previousExpression = parseExpressionRange(endingAt: prevIndex)
+            {
                 return previousExpression.lowerBound ... endIndex
             }
 
@@ -1752,9 +1762,7 @@ extension Formatter {
             }
         }
 
-        // Now handle special cases for the current token itself
-
-        // Handle postfix and infix operators (!, ?, +) that can be preceded by other parts of the exprssion
+        // Handle postfix and infix operators (!, ?, +) that can be preceded by other parts of the expression
         if token.isOperator(ofType: .postfix) || token.isOperator(ofType: .infix) {
             guard let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: endIndex),
                   let previousExpression = parseExpressionRange(endingAt: prevIndex)
@@ -1810,8 +1818,12 @@ extension Formatter {
             forwardRange = parseExpressionRange(startingAt: parseToken)
         }
 
-        guard let forwardRange else { return nil }
-        return parseExpressionRange(endingAt: forwardRange.upperBound)
+        guard let forwardRange,
+              let backwardRange = parseExpressionRange(endingAt: forwardRange.upperBound),
+              backwardRange.contains(index)
+        else { return nil }
+
+        return backwardRange
     }
 
     /// Parses all of the declarations in the source file.

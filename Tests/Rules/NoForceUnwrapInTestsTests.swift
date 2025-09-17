@@ -464,6 +464,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
                 XCTAssert((foo as! [String: Any])["bar"])
                 XCTAssert(foo!.baaz! is Bar)
                 XCTAssert(foo!.baaz! as Bar)
+                XCTAssertTrue((font.attributeDictionary[NSAttributedString.Key.font] as! UIFont).pointSize > 20)
             }
         }
         """
@@ -479,6 +480,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
                 XCTAssert(try XCTUnwrap((foo as? [String: Any])?["bar"]))
                 XCTAssert(try XCTUnwrap(foo?.baaz) is Bar)
                 XCTAssert(try XCTUnwrap(foo?.baaz) as Bar)
+                XCTAssertTrue(try XCTUnwrap((font.attributeDictionary[NSAttributedString.Key.font] as? UIFont)?.pointSize) > 20)
             }
         }
         """

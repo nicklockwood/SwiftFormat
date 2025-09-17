@@ -1802,6 +1802,8 @@ extension Formatter {
     func parseExpressionRange(
         containing index: Int
     ) -> ClosedRange<Int>? {
+        // To find the complete expression, parse forwards from the input index to the end of the expression,
+        // and then parse backwards from the end of that expression to the start of the complete expression.
         var forwardRange = parseExpressionRange(startingAt: index)
 
         // If this is an operator that can't ever be the start of an expression, parse from some previous token

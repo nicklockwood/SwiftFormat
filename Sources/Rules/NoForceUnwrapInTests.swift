@@ -5,8 +5,9 @@ import Foundation
 
 public extension FormatRule {
     static let noForceUnwrapInTests = FormatRule(
-        help: "Replace force unwrap operators `!` in test functions with safer alternatives like `XCTUnwrap` or `#require`.",
-        disabledByDefault: true
+        help: "Use XCTUnwrap or #require in test cases, rather than force unwrapping.",
+        disabledByDefault: true,
+        orderAfter: [.urlMacro, .throwingTests]
     ) { formatter in
         guard let testFramework = formatter.detectTestingFramework() else {
             return
@@ -81,7 +82,7 @@ public extension FormatRule {
                 }
 
                 // Convert all eligible ! operators in this expression to ? operators
-                convertBangOperators: for i in expressionRange.range.reversed() {
+                convertForceUnwrapsInExpression: for i in expressionRange.range.reversed() {
                     guard formatter.tokens[i] == .operator("!", .postfix),
                           formatter.isInFunctionBody(of: functionDecl, at: i)
                     else { continue }
@@ -101,7 +102,7 @@ public extension FormatRule {
                             let prevToken = formatter.tokens[prevIndex]
                             if prevToken.isIdentifier || prevToken.isOperator(ofType: .postfix) || prevToken.isEndOfScope {
                                 // Skip this operator, and continue to the next one.
-                                continue convertBangOperators
+                                continue convertForceUnwrapsInExpression
                             }
                         }
 
@@ -235,7 +236,7 @@ public extension FormatRule {
         -           XCTAssertEqual(myValue.property, "foo")
         +       func testMyFeature() throws {
         +           let myValue = try XCTUnwrap(foo.bar?.value as? Value)
-        -           let otherValue = try XCTUnwrap((foo as? Other)?.bar)
+        +           let otherValue = try XCTUnwrap((foo as? Other)?.bar)
         +           XCTAssertEqual(try XCTUnwrap(myValue.property), otherValue)
               }
             }

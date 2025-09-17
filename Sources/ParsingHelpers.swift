@@ -549,6 +549,11 @@ extension Formatter {
             return false
         }
 
+        // If the code is in a string, then it could be inside a string interpolation
+        if tokens[startOfScopeIndex] == .startOfScope("\"") || tokens[startOfScopeIndex] == .startOfScope("\"\"\"") {
+            return false
+        }
+
         // If this is a function scope, but not the body of the function itself,
         // then this is some nested function.
         if lastSignificantKeyword(at: startOfScopeIndex, excluding: ["where"]) == "func",

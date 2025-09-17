@@ -13,7 +13,8 @@ public extension FormatRule {
         }
 
         formatter.forEach(.keyword("func")) { funcKeywordIndex, _ in
-            guard let functionDecl = formatter.parseFunctionDeclaration(keywordIndex: funcKeywordIndex)
+            guard let functionDecl = formatter.parseFunctionDeclaration(keywordIndex: funcKeywordIndex),
+                  functionDecl.returnType == nil
             else { return }
 
             switch testFramework {

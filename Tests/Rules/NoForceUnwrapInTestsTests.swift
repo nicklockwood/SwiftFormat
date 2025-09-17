@@ -302,10 +302,26 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
         import XCTest
 
         class TestCase: XCTestCase {
+            func testReturnValue() -> Bool {
+                foo!.bar!
+            }
+
+            func notATest() {
+                print(foo!.bar!)
+            }
+        }
+        """
+        testFormatting(for: input, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .noGuardInTests])
+    }
+
+    func testForceUnwrapInStringInterpolationIsNotModified() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
             func test_closure() {
-                someFunction {
-                    let result = myOptional!
-                }
+                // Can't be try since string interpolation is a non-throwing autoclosure
+                print("foo \\(bar!)")
             }
         }
         """

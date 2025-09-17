@@ -1741,6 +1741,15 @@ extension Formatter {
             if prevToken.isOperator(ofType: .prefix) || prefixKeywords.contains(prevToken.string) {
                 return prevIndex ... endIndex
             }
+
+            // Check for operators after prefix keywords (try!, try?, await!)
+            if prevToken.isUnwrapOperator || prevToken == .operator("?", .postfix) {
+                if let beforeOperatorIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex),
+                   prefixKeywords.contains(tokens[beforeOperatorIndex].string)
+                {
+                    return beforeOperatorIndex ... endIndex
+                }
+            }
         }
 
         // Now handle special cases for the current token itself

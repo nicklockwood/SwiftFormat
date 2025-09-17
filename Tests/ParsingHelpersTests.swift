@@ -2591,6 +2591,8 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssert(endsExpressionAt("foo!.bar as String", at: 7, expecting: "foo!.bar as String"))
         XCTAssert(endsExpressionAt("try foo!.bar()", at: 7, expecting: "try foo!.bar()"))
         XCTAssert(endsExpressionAt("await foo!.bar()", at: 7, expecting: "await foo!.bar()"))
+        XCTAssert(endsExpressionAt("try! foo.bar", at: 5, expecting: "try! foo.bar"))
+        XCTAssert(endsExpressionAt("try? foo()", at: 5, expecting: "try? foo()"))
 
         // Closures and literals
         XCTAssert(endsExpressionAt("{ foo }", at: 4, expecting: "{ foo }"))

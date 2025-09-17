@@ -476,4 +476,28 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .noGuardInTests])
     }
+
+    func testForceTryExpressions() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_force_try() {
+                let foo = try! foo.bar() // preserved
+                let bar = try! bar!.baaz()!
+            }
+        }
+        """
+        let output = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_force_try() throws {
+                let foo = try! foo.bar() // preserved
+                let bar = try XCTUnwrap(try bar?.baaz())
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .throwingTests])
+    }
 }

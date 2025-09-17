@@ -43,6 +43,13 @@ public extension FormatRule {
                     continue
                 }
 
+                // Preserve `try!`s, this is handled separately by the `throwingTests` rule
+                if let previousToken = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: index),
+                   formatter.tokens[previousToken] == .keyword("try")
+                {
+                    continue
+                }
+
                 // Skip if this is an implicitly unwrapped optional type annotation (e.g., let foo: Foo!)
                 // Look for the pattern: (let|var) identifier : Type !
                 if let colonIndex = formatter.lastIndex(of: .delimiter(":"), in: 0 ..< index),
@@ -118,6 +125,13 @@ public extension FormatRule {
                             shouldRemoveForceUnwrap = true
                         }
                     } else {
+                        shouldRemoveForceUnwrap = true
+                    }
+
+                    // Convert `try!`s within the unwrap expression to `try` instead of `try?`
+                    if let previousToken = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i),
+                       formatter.tokens[previousToken] == .keyword("try")
+                    {
                         shouldRemoveForceUnwrap = true
                     }
 

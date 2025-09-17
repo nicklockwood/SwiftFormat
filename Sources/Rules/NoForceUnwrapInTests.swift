@@ -68,11 +68,34 @@ public extension FormatRule {
                     continue
                 }
 
-                // Convert all ! operators in this expression to ? operators
-                for i in expressionRange.range.reversed() {
+                // Convert all eligible ! operators in this expression to ? operators
+                convertBangOperators: for i in expressionRange.range.reversed() {
                     guard formatter.tokens[i] == .operator("!", .postfix),
                           formatter.isInFunctionBody(of: functionDecl, at: i)
                     else { continue }
+
+                    // Check if this force unwrap is in a function call or subscript call subexpression within this expression.
+                    // If so, skip it. The `XCTUnwrap` / `#require` for the outer expression doesn't apply in this subexpression.
+                    var currentStartOfScope = i
+
+                    while let scopeStart = formatter.startOfScope(at: currentStartOfScope) {
+                        // If we've gone outside the expression range, then we know this is not part of some subexpression.
+                        if !expressionRange.range.contains(scopeStart) {
+                            break
+                        }
+
+                        // Check if this is a function call or subscript call by looking at the token before the scope
+                        if let prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: scopeStart) {
+                            let prevToken = formatter.tokens[prevIndex]
+                            if prevToken.isIdentifier || prevToken.isOperator(ofType: .postfix) || prevToken.isEndOfScope {
+                                // Skip this operator, and continue to the next one.
+                                continue convertBangOperators
+                            }
+                        }
+
+                        // Move to the next outer scope
+                        currentStartOfScope = scopeStart
+                    }
 
                     // If we are about to convert an `as!` to an `as?`, and the as? is part of a broader expression with a chained value
                     // like `(foo as! Bar).baaz`, we have to add an extra `?` after the enclosing parens: `(foo as? Bar)?.baaz`.
@@ -118,7 +141,7 @@ public extension FormatRule {
                     needsUnwrapMethod = false
                 }
 
-                // Build the wrapper tokens based on the test framework
+                // Wrap the expression in `try XCTUnwrap(...)` or `try #require(...)`
                 if needsUnwrapMethod {
                     // If the expression starts with a prefix operator like !, we have to wrap the try expression in parens.
                     // `!try XCTUnwrap(...)` is not valid -- it needs to be `!(try XCTUnwrap(...))`.

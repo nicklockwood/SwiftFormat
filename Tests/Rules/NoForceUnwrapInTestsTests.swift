@@ -32,7 +32,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
 
         class TestCase: XCTestCase {
             func test_something() {
-                let result = foo as! Foo
+                let result = fooBar(foo as! Foo)
             }
         }
         """
@@ -41,11 +41,11 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
 
         class TestCase: XCTestCase {
             func test_something() throws {
-                let result = try XCTUnwrap(foo as? Foo)
+                let result = fooBar(try XCTUnwrap(foo as? Foo))
             }
         }
         """
-        testFormatting(for: input, output, rule: .noForceUnwrapInTests)
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
     }
 
     func testSimpleForceUnwrapInSwiftTesting() {
@@ -565,6 +565,32 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
         class TestCase: XCTestCase {
             func testForceUnwrapWithPrefixOperator() throws {
                 let foo = !(try XCTUnwrap(foo?.bar?.boolean))
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .noGuardInTests])
+    }
+
+    func testForceUnwrapInForceUnwrappedMethodCall() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_alreadyThrowing() throws {
+                let foo = foo!(bar: (foo as! Bar).quux)
+                    .baaz["quux"](baaz: baaz!)
+                    .quux[quux!]!
+            }
+        }
+        """
+        let output = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_alreadyThrowing() throws {
+                let foo = try XCTUnwrap(foo?(bar: try XCTUnwrap((foo as? Bar)?.quux))
+                    .baaz["quux"](baaz: try XCTUnwrap(baaz))
+                    .quux[try XCTUnwrap(quux)])
             }
         }
         """

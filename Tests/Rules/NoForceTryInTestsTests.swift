@@ -69,6 +69,10 @@ final class NoForceTryInTestsTests: XCTestCase {
             func something() {
                 try! somethingThatThrows()
             }
+
+            func testHelper() -> String {
+                try! generateString()
+            }
         }
         """
         testFormatting(for: input, rule: .noForceTryInTests)

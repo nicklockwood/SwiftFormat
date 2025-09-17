@@ -556,6 +556,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
         class TestCase: XCTestCase {
             func testForceUnwrapWithPrefixOperator() throws {
                 let foo = !foo!.bar!.boolean
+                let bar: URL = .init(string: "foo.com")!
             }
         }
         """
@@ -565,6 +566,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
         class TestCase: XCTestCase {
             func testForceUnwrapWithPrefixOperator() throws {
                 let foo = !(try XCTUnwrap(foo?.bar?.boolean))
+                let bar: URL = try XCTUnwrap(.init(string: "foo.com"))
             }
         }
         """

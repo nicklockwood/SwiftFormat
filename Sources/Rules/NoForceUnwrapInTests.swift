@@ -146,6 +146,7 @@ public extension FormatRule {
                     // If the expression starts with a prefix operator like !, we have to wrap the try expression in parens.
                     // `!try XCTUnwrap(...)` is not valid -- it needs to be `!(try XCTUnwrap(...))`.
                     let startsWithPrefixOperator = formatter.tokens[expressionRange.lowerBound].isOperator(ofType: .prefix)
+                        && formatter.tokens[expressionRange.lowerBound] != .operator(".", .prefix)
 
                     let wrapperTokens: [Token]
                     switch testFramework {

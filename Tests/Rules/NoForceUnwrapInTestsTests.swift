@@ -548,4 +548,26 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .noForceUnwrapInTests)
     }
+
+    func testForceUnwrapWithPrefixOperator() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func testForceUnwrapWithPrefixOperator() throws {
+                let foo = !foo!.bar!.boolean
+            }
+        }
+        """
+        let output = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func testForceUnwrapWithPrefixOperator() throws {
+                let foo = !(try XCTUnwrap(foo?.bar?.boolean))
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .noGuardInTests])
+    }
 }

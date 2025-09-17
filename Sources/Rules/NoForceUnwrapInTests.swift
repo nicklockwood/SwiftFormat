@@ -120,6 +120,10 @@ public extension FormatRule {
 
                 // Build the wrapper tokens based on the test framework
                 if needsUnwrapMethod {
+                    // If the expression starts with a prefix operator like !, we have to wrap the try expression in parens.
+                    // `!try XCTUnwrap(...)` is not valid -- it needs to be `!(try XCTUnwrap(...))`.
+                    let startsWithPrefixOperator = formatter.tokens[expressionRange.lowerBound].isOperator(ofType: .prefix)
+
                     let wrapperTokens: [Token]
                     switch testFramework {
                     case .xcTest:
@@ -128,9 +132,16 @@ public extension FormatRule {
                         wrapperTokens = [.keyword("try"), .space(" "), .operator("#", .prefix), .identifier("require"), .startOfScope("(")]
                     }
 
+                    let insertionIndex = startsWithPrefixOperator ? expressionRange.lowerBound + 1 : expressionRange.lowerBound
+
                     // Since we're processing right to left, we can insert without worrying about shifting indices
                     formatter.insert(.endOfScope(")"), at: expressionRange.upperBound + 1)
-                    formatter.insert(wrapperTokens, at: expressionRange.lowerBound)
+                    formatter.insert(wrapperTokens, at: insertionIndex)
+
+                    if startsWithPrefixOperator {
+                        formatter.insert(.endOfScope(")"), at: expressionRange.upperBound + 1)
+                        formatter.insert(.startOfScope("("), at: insertionIndex)
+                    }
 
                     foundAnyForceUnwraps = true
                 }

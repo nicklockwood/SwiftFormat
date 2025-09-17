@@ -107,20 +107,32 @@ public extension FormatRule {
                     }
                 }
 
-                // Build the wrapper tokens based on the test framework
-                let wrapperTokens: [Token]
-                switch testFramework {
-                case .xcTest:
-                    wrapperTokens = [.keyword("try"), .space(" "), .identifier("XCTUnwrap"), .startOfScope("(")]
-                case .swiftTesting:
-                    wrapperTokens = [.keyword("try"), .space(" "), .operator("#", .prefix), .identifier("require"), .startOfScope("(")]
+                /// Whether or not the expression needs to be wrapped in `XCTUnwrap` / `#require`
+                var needsUnwrapMethod = true
+
+                // If this expression is the LHS of an assignment operator, changing `foo!.bar = baaz` to `foo?.bar = baaz` is a safe change as-is
+                if let tokenAfterExpression = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: expressionRange.upperBound),
+                   formatter.tokens[tokenAfterExpression] == .operator("=", .infix)
+                {
+                    needsUnwrapMethod = false
                 }
 
-                // Since we're processing right to left, we can insert without worrying about shifting indices
-                formatter.insert(.endOfScope(")"), at: expressionRange.upperBound + 1)
-                formatter.insert(wrapperTokens, at: expressionRange.lowerBound)
+                // Build the wrapper tokens based on the test framework
+                if needsUnwrapMethod {
+                    let wrapperTokens: [Token]
+                    switch testFramework {
+                    case .xcTest:
+                        wrapperTokens = [.keyword("try"), .space(" "), .identifier("XCTUnwrap"), .startOfScope("(")]
+                    case .swiftTesting:
+                        wrapperTokens = [.keyword("try"), .space(" "), .operator("#", .prefix), .identifier("require"), .startOfScope("(")]
+                    }
 
-                foundAnyForceUnwraps = true
+                    // Since we're processing right to left, we can insert without worrying about shifting indices
+                    formatter.insert(.endOfScope(")"), at: expressionRange.upperBound + 1)
+                    formatter.insert(wrapperTokens, at: expressionRange.lowerBound)
+
+                    foundAnyForceUnwraps = true
+                }
             }
 
             // If we found any force unwraps, add a `throws` if it doesn't already exist

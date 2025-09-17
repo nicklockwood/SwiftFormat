@@ -510,4 +510,26 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .throwingTests])
     }
+
+    func testForceUnwrapInAssignmentLHS() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func testForceUnwrapInAssignment() {
+                foo!.bar!.baaz = quux
+            }
+        }
+        """
+        let output = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func testForceUnwrapInAssignment() {
+                foo?.bar?.baaz = quux
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests)
+    }
 }

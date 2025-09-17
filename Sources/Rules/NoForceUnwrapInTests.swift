@@ -25,20 +25,14 @@ public extension FormatRule {
 
             guard let bodyRange = functionDecl.bodyRange else { return }
 
-            // Find all force unwrap operators and process unique expressions from right to left
-            // Using AutoUpdatingIndex to handle token insertions
+            // Find all force unwrap operators in the function body
             var foundAnyForceUnwraps = false
 
             var currentIndex = bodyRange.upperBound.autoUpdating(in: formatter)
-            let bodyStart = bodyRange.lowerBound
 
-            while currentIndex.index >= bodyStart {
+            while currentIndex.index >= bodyRange.lowerBound {
                 let index = currentIndex.index
                 defer { currentIndex.index -= 1 }
-
-                if index >= formatter.tokens.count {
-                    continue
-                }
 
                 guard formatter.tokens[index] == .operator("!", .postfix) else {
                     continue
@@ -63,16 +57,15 @@ public extension FormatRule {
                 }
 
                 // Parse the expression containing this force unwrap operator
-                guard var expressionRange = formatter.parseExpressionRange(containing: index) else {
+                guard var expressionRange = formatter.parseExpressionRange(containing: index)?.autoUpdating(in: formatter) else {
                     continue
                 }
 
-                // If there are infix operators like == or +, only handle the lhs of the first operator.
+                // If there are infix operators like ==, +, or is, only handle the lhs of the first operator.
                 // `try` isn't allowed on the RHS of an operator, and multiple nested operators is too complicated.
-                // Note: `as` is not considered an infix operator for this purpose
                 var infixOperatorIndices: [Int] = []
-                for i in expressionRange {
-                    if formatter.tokens[i].isOperator(ofType: .infix),
+                for i in expressionRange.range {
+                    if formatter.tokens[i].isOperator(ofType: .infix) || formatter.tokens[i] == .keyword("is"),
                        formatter.isInFunctionBody(of: functionDecl, at: i),
                        formatter.tokens[i] != .operator(".", .infix)
                     {
@@ -100,7 +93,7 @@ public extension FormatRule {
                         if let subExpressionRange = lhsFormatter.parseExpressionRange(containing: relativeIndex) {
                             // Convert the sub-formatter range back to absolute indices
                             let absoluteRange = (subExpressionRange.lowerBound + expressionRange.lowerBound) ... (subExpressionRange.upperBound + expressionRange.lowerBound)
-                            expressionRange = absoluteRange
+                            expressionRange = absoluteRange.autoUpdating(in: formatter)
                             foundValidExpression = true
                             break
                         }
@@ -111,38 +104,42 @@ public extension FormatRule {
                     }
                 }
 
-                // Trim whitespace from the end of the expression range
-                var trimmedExpressionRange = expressionRange
-                while trimmedExpressionRange.upperBound >= trimmedExpressionRange.lowerBound,
-                      formatter.tokens[trimmedExpressionRange.upperBound].isSpaceOrLinebreak
-                {
-                    trimmedExpressionRange = trimmedExpressionRange.lowerBound ... (trimmedExpressionRange.upperBound - 1)
-                }
-                expressionRange = trimmedExpressionRange
-
-                // Check if the expression ends with a force unwrap
-                let expressionEndsWithForceUnwrap = formatter.tokens[expressionRange.upperBound] == .operator("!", .postfix) &&
-                    formatter.isInFunctionBody(of: functionDecl, at: expressionRange.upperBound)
-
                 // Convert all ! operators in this expression to ? operators
-                for i in expressionRange {
-                    if formatter.tokens[i] == .operator("!", .postfix),
-                       formatter.isInFunctionBody(of: functionDecl, at: i)
-                    {
+                for i in expressionRange.range.reversed() {
+                    guard formatter.tokens[i] == .operator("!", .postfix),
+                          formatter.isInFunctionBody(of: functionDecl, at: i)
+                    else { continue }
+
+                    // If this is the last token in the expression, or the next token is is / as operator, remove the `!`
+                    // rather than replacing it with a `?`.
+                    var shouldRemoveForceUnwrap = false
+                    if let nextToken = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i) {
+                        if ["is", "as"].contains(formatter.tokens[nextToken].string) || !expressionRange.range.contains(nextToken) {
+                            shouldRemoveForceUnwrap = true
+                        }
+                    } else {
+                        shouldRemoveForceUnwrap = true
+                    }
+
+                    if shouldRemoveForceUnwrap {
+                        formatter.removeToken(at: i)
+                    } else {
                         formatter.replaceToken(at: i, with: .operator("?", .postfix))
                     }
-                }
 
-                // The range to wrap depends on whether the expression ends with !
-                let rangeToWrap: Range<Int>
-                if expressionEndsWithForceUnwrap {
-                    // If it ends with !, wrap everything except the final !
-                    rangeToWrap = expressionRange.lowerBound ..< expressionRange.upperBound
-                    // Remove the final ! (which was converted to ? above, so we need to remove the ?)
-                    formatter.removeToken(at: expressionRange.upperBound)
-                } else {
-                    // If it doesn't end with !, wrap the entire expression
-                    rangeToWrap = expressionRange.lowerBound ..< (expressionRange.upperBound + 1)
+                    // If we converted an `as!` to an `as?`, and the as? is part of a broader expression with a chained value
+                    // like `(foo as! Bar).baaz`, we have to add an extra `?` after the enclosing parens: `(foo as? Bar)?.baaz`.
+                    if let previousToken = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i),
+                       formatter.tokens[previousToken] == .keyword("as"),
+                       let containingScopeIndex = formatter.startOfScope(at: previousToken),
+                       formatter.tokens[containingScopeIndex] == .startOfScope("("),
+                       let endOfScope = formatter.endOfScope(at: containingScopeIndex),
+                       let tokenAfterParenScope = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: endOfScope),
+                       formatter.tokens[tokenAfterParenScope].isOperator,
+                       expressionRange.range.contains(tokenAfterParenScope)
+                    {
+                        formatter.insert(.operator("?", .postfix), at: tokenAfterParenScope)
+                    }
                 }
 
                 // Build the wrapper tokens based on the test framework
@@ -155,15 +152,16 @@ public extension FormatRule {
                 }
 
                 // Since we're processing right to left, we can insert without worrying about shifting indices
-                formatter.insert(wrapperTokens, at: rangeToWrap.lowerBound)
-                formatter.insert(.endOfScope(")"), at: rangeToWrap.upperBound + wrapperTokens.count)
+                formatter.insert(.endOfScope(")"), at: expressionRange.upperBound + 1)
+                formatter.insert(wrapperTokens, at: expressionRange.lowerBound)
 
                 foundAnyForceUnwraps = true
             }
 
             // If we found any force unwraps, add a `throws` if it doesn't already exist
-            guard foundAnyForceUnwraps else { return }
-            formatter.addThrowsEffect(to: functionDecl)
+            if foundAnyForceUnwraps {
+                formatter.addThrowsEffect(to: functionDecl)
+            }
         }
     } examples: {
         """

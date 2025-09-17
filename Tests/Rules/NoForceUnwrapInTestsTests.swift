@@ -458,6 +458,8 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
         class TestCase: XCTestCase {
             func test_forceCasts() {
                 XCTAssertEqual(route.query as! [String: String], ["a": "b"])
+                XCTAssert((foo! as! Bar).baaz!)
+                XCTAssert(foo!.baaz! is Bar)
             }
         }
         """
@@ -467,6 +469,8 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
         class TestCase: XCTestCase {
             func test_forceCasts() throws {
                 XCTAssertEqual(try XCTUnwrap(route.query as? [String: String]), ["a": "b"])
+                XCTAssert(try XCTUnwrap((foo as? Bar)?.baaz))
+                XCTAssert(try XCTUnwrap(foo?.baaz) is Bar)
             }
         }
         """

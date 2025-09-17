@@ -124,7 +124,10 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
 
         class TestCase: XCTestCase {
             func test_ifStatement() {
-                if myOptional!.value == someValue {
+                if
+                    foo!.bar(),
+                    myOptional!.value == someValue
+                {
                     // do something
                 }
             }
@@ -135,7 +138,10 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
 
         class TestCase: XCTestCase {
             func test_ifStatement() throws {
-                if try XCTUnwrap(myOptional?.value) == someValue {
+                if
+                    try XCTUnwrap(foo?.bar()),
+                    try XCTUnwrap(myOptional?.value) == someValue
+                {
                     // do something
                 }
             }
@@ -176,7 +182,10 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
 
         class TestCase: XCTestCase {
             func test_guardStatement() {
-                guard myOptional!.value == someValue else {
+                guard
+                    foo!.bar(),
+                    myOptional!.value == someValue
+                else {
                     return
                 }
             }
@@ -187,7 +196,10 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
 
         class TestCase: XCTestCase {
             func test_guardStatement() throws {
-                guard try XCTUnwrap(myOptional?.value) == someValue else {
+                guard
+                    try XCTUnwrap(foo?.bar()),
+                    try XCTUnwrap(myOptional?.value) == someValue
+                else {
                     return
                 }
             }
@@ -576,7 +588,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .noGuardInTests])
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .propertyTypes])
     }
 
     func testForceUnwrapInForceUnwrappedMethodCall() {
@@ -618,5 +630,31 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
         """
 
         testFormatting(for: input, rule: .noForceUnwrapInTests)
+    }
+
+    func testForceUnwrappedMethodCallBase() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func testForceUnwrappedMethodCallBase() throws {
+                foo!.prepareA()
+                foo!.prepareB()
+                XCTAssertNotNil(foo!.bar)
+            }
+        }
+        """
+        let output = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func testForceUnwrappedMethodCallBase() throws {
+                foo?.prepareA()
+                foo?.prepareB()
+                XCTAssertNotNil(try XCTUnwrap(foo?.bar))
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests)
     }
 }

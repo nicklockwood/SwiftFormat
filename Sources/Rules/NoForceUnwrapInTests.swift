@@ -46,7 +46,7 @@ public extension FormatRule {
             let forceUnwrapOperators = forceUnwrapOperators.filter { bodyRange.contains($0.index) }
             var convertedAnyForceUnwrapOperators = false
 
-            for forceUnwrapOperator in forceUnwrapOperators.reversed() {
+            for forceUnwrapOperator in forceUnwrapOperators {
                 guard formatter.tokens[forceUnwrapOperator] == .operator("!", .postfix) else {
                     continue
                 }
@@ -153,6 +153,25 @@ public extension FormatRule {
                     needsUnwrapMethod = false
                 }
 
+                // If this expression is a standalone method call like `foo!.bar()`, then `foo?.bar()` works perfectly well.
+                // Heuristic: If the scope containing this code is a code block, and the previous token is part of a completely
+                // separate expression (or, the start of the function body), then this is a standalone expression.
+                if let startOfScopeContainingExpression = formatter.startOfScope(at: expressionRange.lowerBound),
+                   formatter.tokens[startOfScopeContainingExpression] == .startOfScope("{"),
+                   let tokenBeforeExpression = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: expressionRange.lowerBound),
+                   !formatter.tokens[tokenBeforeExpression].isOperator
+                {
+                    if tokenBeforeExpression == functionDecl.bodyRange?.lowerBound {
+                        needsUnwrapMethod = false
+                    }
+
+                    if let previousExpressionRange = formatter.parseExpressionRange(endingAt: tokenBeforeExpression),
+                       !previousExpressionRange.overlaps(expressionRange.range)
+                    {
+                        needsUnwrapMethod = false
+                    }
+                }
+
                 // Wrap the expression in `try XCTUnwrap(...)` or `try #require(...)`
                 if needsUnwrapMethod {
                     // If the expression starts with a prefix operator like !, we have to wrap the try expression in parens.
@@ -197,10 +216,12 @@ public extension FormatRule {
         -       @Test func myFeature() {
         -           let myValue = foo.bar!.value as! Value
         -           let otherValue = (foo! as! Other).bar
+        -           otherValue.manager!.prepare()
         -           #expect(myValue.property! == other)
         +       @Test func myFeature() throws {
         +           let myValue = try #require(foo.bar?.value as? Value)
         +           let otherValue = try #require((foo as? Other)?.bar)
+        +           otherValue.manager?.prepare()
         +           #expect(try #require(myValue.property) == other)
               }
             }

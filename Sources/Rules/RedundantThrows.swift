@@ -11,6 +11,7 @@ import Foundation
 public extension FormatRule {
     static let redundantThrows = FormatRule(
         help: "Remove redundant `throws` keyword from function declarations that don't throw any errors.",
+        disabledByDefault: true,
         orderAfter: [.noForceUnwrapInTests, .noForceTryInTests, .noGuardInTests, .throwingTests],
         options: ["redundant-throws"]
     ) { formatter in
@@ -72,32 +73,7 @@ public extension FormatRule {
 
             // If the body doesn't contain any throwing code, remove the throws
             if !bodyContainsThrowingCode {
-                guard let effectsRange = functionDecl.effectsRange else { return }
-
-                // Find the throws keyword in the effects range
-                for index in effectsRange {
-                    if formatter.tokens[index] == .keyword("throws") {
-                        var endIndex = index
-
-                        // Check if there's typed throws (throws(...))
-                        if let nextTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index),
-                           formatter.tokens[nextTokenIndex] == .startOfScope("("),
-                           let endOfScope = formatter.endOfScope(at: nextTokenIndex)
-                        {
-                            endIndex = endOfScope
-                        }
-
-                        // Include trailing whitespace if present
-                        if endIndex + 1 < formatter.tokens.count,
-                           formatter.tokens[endIndex + 1].isSpace
-                        {
-                            endIndex += 1
-                        }
-
-                        formatter.removeTokens(in: index ... endIndex)
-                        break // Only remove the first throws found
-                    }
-                }
+                formatter.removeEffect("throws", from: functionDecl)
             }
         }
     } examples: {

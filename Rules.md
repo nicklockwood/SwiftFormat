@@ -60,7 +60,6 @@
 * [redundantReturn](#redundantReturn)
 * [redundantSelf](#redundantSelf)
 * [redundantStaticSelf](#redundantStaticSelf)
-* [redundantThrows](#redundantThrows)
 * [redundantType](#redundantType)
 * [redundantTypedThrows](#redundantTypedThrows)
 * [redundantVoidReturnType](#redundantVoidReturnType)
@@ -118,9 +117,11 @@
 * [preferSwiftTesting](#preferSwiftTesting)
 * [privateStateVariables](#privateStateVariables)
 * [propertyTypes](#propertyTypes)
+* [redundantAsync](#redundantAsync)
 * [redundantEquatable](#redundantEquatable)
 * [redundantMemberwiseInit](#redundantMemberwiseInit)
 * [redundantProperty](#redundantProperty)
+* [redundantThrows](#redundantThrows)
 * [singlePropertyPerLine](#singlePropertyPerLine)
 * [sortSwitchCases](#sortSwitchCases)
 * [unusedPrivateDeclarations](#unusedPrivateDeclarations)
@@ -2237,6 +2238,54 @@ Option | Description
 -     .init(baaz)
 +     Foo(baaz)
     }
+```
+
+</details>
+<br/>
+
+## redundantAsync
+
+Remove redundant `async` keyword from function declarations that don't contain any await expressions.
+
+Option | Description
+--- | ---
+`--redundant-async` | Remove redundant async from functions: "tests-only" (default) or "always"
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  // With --redundant-async tests-only (default)
+  import Testing
+
+- @Test func myFeature() async {
++ @Test func myFeature() {
+      #expect(foo == 1)
+  }
+
+  import XCTest
+
+  class TestCase: XCTestCase {
+-     func testMyFeature() async {
++     func testMyFeature() {
+          XCTAssertEqual(foo, 1)
+      }
+  }
+```
+
+Also supports `--redundant-async always`.
+This will cause warnings anywhere the updated method is called with `await`, since `await` is now redundant at the callsite.
+
+```diff
+  // With --redundant-async always
+- func myNonAsyncMethod() async -> Int {
++ func myNonAsyncMethod() -> Int {
+      return 0
+  }
+
+  // Possibly elsewhere in codebase:
+  let value = await myNonAsyncMethod()
++             `- warning: no 'async' operations occur within 'await' expression
 ```
 
 </details>

@@ -187,6 +187,7 @@ final class NoGuardInTestsTests: XCTestCase {
 
         class TestCase: XCTestCase {
             func test_something() async {
+                let optionalValue = await function()
                 guard let value = optionalValue else {
                     XCTFail()
                     return
@@ -199,6 +200,7 @@ final class NoGuardInTestsTests: XCTestCase {
 
         class TestCase: XCTestCase {
             func test_something() async throws {
+                let optionalValue = await function()
                 let value = try XCTUnwrap(optionalValue)
             }
         }
@@ -401,6 +403,7 @@ final class NoGuardInTestsTests: XCTestCase {
         struct SomeTests {
             @Test
             func something() async {
+                let optionalValue = await function()
                 guard let value = optionalValue else {
                     return
                 }
@@ -413,6 +416,7 @@ final class NoGuardInTestsTests: XCTestCase {
         struct SomeTests {
             @Test
             func something() async throws {
+                let optionalValue = await function()
                 let value = try #require(optionalValue)
             }
         }

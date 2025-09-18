@@ -1431,6 +1431,12 @@ struct _Descriptors {
         help: "Remove redundant throws from functions:",
         keyPath: \.redundantThrows
     )
+    let redundantAsync = OptionDescriptor(
+        argumentName: "redundant-async",
+        displayName: "Redundant Async",
+        help: "Remove redundant async from functions:",
+        keyPath: \.redundantAsync
+    )
     let allowPartialWrapping = OptionDescriptor(
         argumentName: "allow-partial-wrapping",
         displayName: "Allow Partial Wrapping",

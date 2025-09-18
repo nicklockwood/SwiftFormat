@@ -90,7 +90,8 @@ extension Formatter {
                 return false
             } else if [.keyword("let"),
                        .keyword("var"),
-                       .keyword("func")].contains(token),
+                       .keyword("func"),
+                       .keyword("subscript")].contains(token),
                 !modifiersForDeclaration(at: j, contains: "static")
             {
                 return false

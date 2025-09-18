@@ -240,7 +240,7 @@ class RedundantAsyncTests: XCTestCase {
         let input = """
         struct MyStruct {
             subscript(key: String) async -> String {
-                "value"
+                key
             }
         }
         """

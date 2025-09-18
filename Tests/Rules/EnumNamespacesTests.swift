@@ -454,4 +454,15 @@ class EnumNamespacesTests: XCTestCase {
         """
         testFormatting(for: input, rule: .enumNamespaces)
     }
+
+    func testEnumNamespacesNotAppliedToStructWithInstanceSubscript() {
+        let input = """
+        struct MyStruct {
+            subscript(key: String) -> String {
+                return key
+            }
+        }
+        """
+        testFormatting(for: input, rule: .enumNamespaces, exclude: [.unusedArguments])
+    }
 }

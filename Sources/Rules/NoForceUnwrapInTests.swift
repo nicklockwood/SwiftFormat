@@ -154,6 +154,34 @@ public extension FormatRule {
                     needsUnwrapMethod = false
                 }
 
+                // If this expression is followed by ==, changing `foo!.bar == bar` to `foo?.bar == bar` is a safe change as-is
+                if let tokenAfterExpression = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: expressionRange.upperBound),
+                   formatter.tokens[tokenAfterExpression] == .operator("==", .infix)
+                {
+                    needsUnwrapMethod = false
+                }
+
+                // If this expression is within XCTAssertEqual or XCTAssertNil, changing `foo!.bar` to `foo?.bar` is a safe change as-is,
+                // as long as this isn't a subexpression within a parent operator expression.
+                if let containingParenScope = formatter.startOfScope(at: expressionRange.lowerBound),
+                   formatter.tokens[containingParenScope] == .startOfScope("("),
+                   let functionNameIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: containingParenScope),
+                   formatter.tokens[functionNameIndex].isIdentifier,
+                   let tokenAfterExpression = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: expressionRange.upperBound),
+                   !formatter.tokens[tokenAfterExpression].isOperator
+                {
+                    let functionName = formatter.tokens[functionNameIndex].string
+                    if functionName == "XCTAssertNil" {
+                        needsUnwrapMethod = false
+                    } else if functionName == "XCTAssertEqual" {
+                        // Ensure this is `XCTAssertEqual(_:_:)`, not `XCTAssertEqual(_:_:accuracy:)` (which doesn't support optionals)
+                        let arguments = formatter.parseFunctionCallArguments(startOfScope: containingParenScope)
+                        if arguments.count == 2 {
+                            needsUnwrapMethod = false
+                        }
+                    }
+                }
+
                 // If this expression is a standalone method call like `foo!.bar()`, then `foo?.bar()` works perfectly well.
                 // Heuristic: If the scope containing this code is a code block, and the previous token is part of a completely
                 // separate expression (or, the start of the function body), then this is a standalone expression.
@@ -218,12 +246,12 @@ public extension FormatRule {
         -           let myValue = foo.bar!.value as! Value
         -           let otherValue = (foo! as! Other).bar
         -           otherValue.manager!.prepare()
-        -           #expect(myValue.property! == other)
+        -           #expect(myValue!.property! == other)
         +       @Test func myFeature() throws {
         +           let myValue = try #require(foo.bar?.value as? Value)
         +           let otherValue = try #require((foo as? Other)?.bar)
         +           otherValue.manager?.prepare()
-        +           #expect(try #require(myValue.property) == other)
+        +           #expect(myValue?.property == other)
               }
             }
 
@@ -233,11 +261,11 @@ public extension FormatRule {
         -       func testMyFeature() {
         -           let myValue = foo.bar!.value as! Value
         -           let otherValue = (foo! as! Other).bar
-        -           XCTAssertEqual(myValue.property, "foo")
+        -           XCTAssertEqual(myValue!.property!, "foo")
         +       func testMyFeature() throws {
         +           let myValue = try XCTUnwrap(foo.bar?.value as? Value)
         +           let otherValue = try XCTUnwrap((foo as? Other)?.bar)
-        +           XCTAssertEqual(try XCTUnwrap(myValue.property), otherValue)
+        +           XCTAssertEqual(myValue?.property, otherValue)
               }
             }
         ```

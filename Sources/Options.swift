@@ -830,6 +830,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var lineBetweenConsecutiveGuards: Bool
     public var blankLineAfterSwitchCase: BlankLineAfterSwitchCase
     public var redundantThrows: RedundantThrowsMode
+    public var redundantAsync: RedundantAsyncMode
     public var allowPartialWrapping: Bool
 
     /// Deprecated
@@ -973,6 +974,7 @@ public struct FormatOptions: CustomStringConvertible {
                 lineBetweenConsecutiveGuards: Bool = false,
                 blankLineAfterSwitchCase: BlankLineAfterSwitchCase = .multilineOnly,
                 redundantThrows: RedundantThrowsMode = .testsOnly,
+                redundantAsync: RedundantAsyncMode = .testsOnly,
                 allowPartialWrapping: Bool = true,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
@@ -1105,6 +1107,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.lineBetweenConsecutiveGuards = lineBetweenConsecutiveGuards
         self.blankLineAfterSwitchCase = blankLineAfterSwitchCase
         self.redundantThrows = redundantThrows
+        self.redundantAsync = redundantAsync
         self.allowPartialWrapping = allowPartialWrapping
         self.indentComments = indentComments
         self.fragment = fragment
@@ -1156,6 +1159,14 @@ public enum RedundantThrowsMode: String, CaseIterable {
     /// Only remove redundant throws from test functions (default)
     case testsOnly = "tests-only"
     /// Remove redundant throws from all functions (can cause build failures)
+    case always
+}
+
+/// Whether to remove redundant async from test functions only or from all functions
+public enum RedundantAsyncMode: String, CaseIterable {
+    /// Only remove redundant async from test functions (default)
+    case testsOnly = "tests-only"
+    /// Remove redundant async from all functions (can cause build failures)
     case always
 }
 

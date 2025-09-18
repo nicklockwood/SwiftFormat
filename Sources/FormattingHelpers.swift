@@ -1277,6 +1277,33 @@ extension Formatter {
         }
     }
 
+    /// Removes the given `throws` or `async` effect from the given function declaration if present
+    func removeEffect(_ effect: String, from functionDecl: FunctionDeclaration) {
+        guard let effectsRange = functionDecl.effectsRange,
+              let effectIndex = index(of: .keyword(effect), in: effectsRange) ?? index(of: .identifier(effect), in: effectsRange)
+        else { return }
+
+        var endIndex = effectIndex
+
+        // Check if there's typed throws (throws(...))
+        if effect == "throws",
+           let nextTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: effectIndex),
+           tokens[nextTokenIndex] == .startOfScope("("),
+           let endOfScope = endOfScope(at: nextTokenIndex)
+        {
+            endIndex = endOfScope
+        }
+
+        // Include trailing whitespace if present
+        if endIndex + 1 < tokens.count,
+           tokens[endIndex + 1].isSpace
+        {
+            endIndex += 1
+        }
+
+        removeTokens(in: effectIndex ... endIndex)
+    }
+
     /// Whether or not the code block starting at the given `.startOfScope` token
     /// has a single statement. This makes it eligible to be used with implicit return.
     func blockBodyHasSingleStatement(

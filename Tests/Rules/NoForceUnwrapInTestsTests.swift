@@ -383,6 +383,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
 
         struct TestCase {
             @Test func asyncTest() async {
+                let myOptional = await function()
                 let result = myOptional!
             }
         }
@@ -392,6 +393,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
 
         struct TestCase {
             @Test func asyncTest() async throws {
+                let myOptional = await function()
                 let result = try #require(myOptional)
             }
         }

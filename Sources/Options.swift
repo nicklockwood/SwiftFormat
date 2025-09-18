@@ -829,8 +829,8 @@ public struct FormatOptions: CustomStringConvertible {
     public var preferFileMacro: Bool
     public var lineBetweenConsecutiveGuards: Bool
     public var blankLineAfterSwitchCase: BlankLineAfterSwitchCase
-    public var redundantThrows: RedundantThrowsMode
-    public var redundantAsync: RedundantAsyncMode
+    public var redundantThrows: RedundantEffectMode
+    public var redundantAsync: RedundantEffectMode
     public var allowPartialWrapping: Bool
 
     /// Deprecated
@@ -973,8 +973,8 @@ public struct FormatOptions: CustomStringConvertible {
                 preferFileMacro: Bool = true,
                 lineBetweenConsecutiveGuards: Bool = false,
                 blankLineAfterSwitchCase: BlankLineAfterSwitchCase = .multilineOnly,
-                redundantThrows: RedundantThrowsMode = .testsOnly,
-                redundantAsync: RedundantAsyncMode = .testsOnly,
+                redundantThrows: RedundantEffectMode = .testsOnly,
+                redundantAsync: RedundantEffectMode = .testsOnly,
                 allowPartialWrapping: Bool = true,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
@@ -1154,19 +1154,11 @@ public struct FormatOptions: CustomStringConvertible {
     }
 }
 
-/// Whether to remove redundant throws from test functions only or from all functions
-public enum RedundantThrowsMode: String, CaseIterable {
-    /// Only remove redundant throws from test functions (default)
+/// When to remove redundant `throws` / `async` effects
+public enum RedundantEffectMode: String, CaseIterable {
+    /// Only remove redundant effects from test functions (default)
     case testsOnly = "tests-only"
-    /// Remove redundant throws from all functions (can cause build failures)
-    case always
-}
-
-/// Whether to remove redundant async from test functions only or from all functions
-public enum RedundantAsyncMode: String, CaseIterable {
-    /// Only remove redundant async from test functions (default)
-    case testsOnly = "tests-only"
-    /// Remove redundant async from all functions (can cause build failures)
+    /// Remove redundant effects from all functions (can cause additional warnings / errors)
     case always
 }
 

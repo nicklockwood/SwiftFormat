@@ -106,7 +106,9 @@ class CodeOrganizationTests: XCTestCase {
                 // If this is a function call, parse the labels to disambiguate
                 // between methods with the same base name
                 var functionCallArguments: [String?]?
-                if let functionCallStartOfScope = formatter.index(of: .startOfScope("("), after: index) {
+                if let functionCallStartOfScope = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index),
+                   formatter.tokens[functionCallStartOfScope] == .startOfScope("(")
+                {
                     functionCallArguments = formatter.parseFunctionCallArguments(startOfScope: functionCallStartOfScope).map(\.label)
                 }
 

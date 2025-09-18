@@ -111,7 +111,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
         class TestCase: XCTestCase {
             func test_functionCall() throws {
                 someFunction(try XCTUnwrap(myOptional), try XCTUnwrap(anotherOptional))
-                XCTAssertEqual(try XCTUnwrap(result?.property), "expected")
+                XCTAssertEqual(result?.property, "expected")
             }
         }
         """
@@ -140,7 +140,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
             func test_ifStatement() throws {
                 if
                     try XCTUnwrap(foo?.bar()),
-                    try XCTUnwrap(myOptional?.value) == someValue
+                    myOptional?.value == someValue
                 {
                     // do something
                 }
@@ -198,7 +198,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
             func test_guardStatement() throws {
                 guard
                     try XCTUnwrap(foo?.bar()),
-                    try XCTUnwrap(myOptional?.value) == someValue
+                    myOptional?.value == someValue
                 else {
                     return
                 }
@@ -418,7 +418,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
         class TestCase: XCTestCase {
             func test_complexExpression() throws {
                 XCTAssertEqual(
-                    try XCTUnwrap(myDictionary["key"]?.processedValue(with: try XCTUnwrap(parameter))),
+                    myDictionary["key"]?.processedValue(with: try XCTUnwrap(parameter)),
                     expectedResult
                 )
             }
@@ -504,7 +504,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
 
         class TestCase: XCTestCase {
             func test_forceCasts() throws {
-                XCTAssertEqual(try XCTUnwrap(route.query as? [String: String]), ["a": "b"])
+                XCTAssertEqual(route.query as? [String: String], ["a": "b"])
                 XCTAssert(try XCTUnwrap((foo as? Bar)?.baaz))
                 XCTAssert(try XCTUnwrap((foo as? Bar)?.baaz))
             }
@@ -653,6 +653,126 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
                 foo?.prepareB()
                 XCTAssertNotNil(try XCTUnwrap(foo?.bar))
             }
+        }
+        """
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests)
+    }
+
+    func testXCTAssertEqual_KeepsForceUnwrapsAsOptionalChaining() throws {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                XCTAssertEqual(foo!.bar, baaz!.quux)
+            }
+        }
+        """
+        let output = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                XCTAssertEqual(foo?.bar, baaz?.quux)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests)
+    }
+
+    func testXCTAssertNil_KeepsForceUnwrapsAsOptionalChaining() throws {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                XCTAssertNil(foo!.bar)
+            }
+        }
+        """
+        let output = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                XCTAssertNil(foo?.bar)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests)
+    }
+
+    func testEqualityComparison_KeepsForceUnwrapsAsOptionalChaining() throws {
+        let input = """
+        import Testing
+
+        @Test func something() {
+            #expect(foo!.bar == baaz)
+        }
+        """
+        let output = """
+        import Testing
+
+        @Test func something() {
+            #expect(foo?.bar == baaz)
+        }
+        """
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests)
+    }
+
+    func testEqualityComparisonWithNil_KeepsForceUnwrapsAsOptionalChaining() throws {
+        let input = """
+        import Testing
+
+        @Test func something() {
+            #expect(foo!.bar == nil)
+        }
+        """
+        let output = """
+        import Testing
+
+        @Test func something() {
+            #expect(foo?.bar == nil)
+        }
+        """
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests)
+    }
+
+    func testXCTAssertEqualWithAccuracy_RequiresXCTUnwrap() throws {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                XCTAssertEqual(foo!.value, 3.14, accuracy: 0.01)
+            }
+        }
+        """
+        let output = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() throws {
+                XCTAssertEqual(try XCTUnwrap(foo?.value), 3.14, accuracy: 0.01)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests)
+    }
+
+    func testForceUnwrapWithOperatorFollowing_RequiresXCTUnwrap() throws {
+        let input = """
+        import Testing
+
+        @Test func something() {
+            #expect(foo!.bar + 2 == 3)
+        }
+        """
+        let output = """
+        import Testing
+
+        @Test func something() throws {
+            #expect(try #require(foo?.bar) + 2 == 3)
         }
         """
         testFormatting(for: input, output, rule: .noForceUnwrapInTests)

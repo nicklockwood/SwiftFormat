@@ -68,6 +68,7 @@ let ruleRegistry: [String: FormatRule] = [
     "preferSwiftTesting": .preferSwiftTesting,
     "privateStateVariables": .privateStateVariables,
     "propertyTypes": .propertyTypes,
+    "redundantAsync": .redundantAsync,
     "redundantBackticks": .redundantBackticks,
     "redundantBreak": .redundantBreak,
     "redundantClosure": .redundantClosure,

@@ -83,14 +83,14 @@ final class NoForceTryInTestsTests: XCTestCase {
         import Testing
 
         @Test func something() async {
-            try! somethingThatThrows()
+            try! await somethingThatThrows()
         }
         """
         let output = """
         import Testing
 
         @Test func something() async throws {
-            try somethingThatThrows()
+            try await somethingThatThrows()
         }
         """
         testFormatting(for: input, output, rule: .noForceTryInTests)

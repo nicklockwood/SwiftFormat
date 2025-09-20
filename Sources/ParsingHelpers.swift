@@ -1949,6 +1949,7 @@ extension Formatter {
         // Get declaration keyword
         var searchIndex = declarationKeywordIndex
         let declarationKeyword = declarationType(at: declarationKeywordIndex) ?? "#if"
+        var endOfDeclaration: Int?
         switch tokens[declarationKeywordIndex] {
         case .startOfScope("#if"):
             // For conditional compilation blocks, the `declarationKeyword` _is_ the `startOfScope`
@@ -1976,21 +1977,35 @@ extension Formatter {
         case .keyword("let"), .keyword("var"):
             if let propertyDeclaration = parsePropertyDeclaration(atIntroducerIndex: declarationKeywordIndex) {
                 searchIndex = propertyDeclaration.range.upperBound
+                endOfDeclaration = propertyDeclaration.range.upperBound
+            }
+        case .keyword("func"), .keyword("subscript"), .keyword("init"):
+            if let functionDeclaration = parseFunctionDeclaration(keywordIndex: declarationKeywordIndex) {
+                searchIndex = functionDeclaration.range.upperBound
+                endOfDeclaration = functionDeclaration.range.upperBound
             }
         default:
             break
         }
 
-        // Search for the next declaration so we know where this declaration ends.
-        let nextDeclarationKeywordIndex = index(after: searchIndex, where: {
-            $0.isDeclarationTypeKeyword || $0 == .startOfScope("#if")
-        })
+        // Search for the next declaration so we know where this declaration ends
+        // (the token before the first token of the following declaration).
 
-        // Search backward from the next declaration keyword to find where declaration begins.
-        var endOfDeclaration = nextDeclarationKeywordIndex.flatMap {
-            index(before: startOfModifiers(at: $0, includingAttributes: true), where: {
-                !$0.isSpaceOrCommentOrLinebreak
-            }).map { endOfLine(at: $0) }
+        if let nextDeclarationKeywordIndex = index(after: searchIndex, where: {
+            $0.isDeclarationTypeKeyword || $0 == .startOfScope("#if")
+        }),
+            let lastIndexBeforeNextDeclaration = index(
+                before: startOfModifiers(at: nextDeclarationKeywordIndex, includingAttributes: true),
+                where: { !$0.isSpaceOrCommentOrLinebreak }
+            ).map({ endOfLine(at: $0) })
+        {
+            // If we have an existing `endOfDeclaration` index from a parsing implementation like
+            // `parsePropertyDeclaration` or `parseFunctionDeclaration`, prefer that index.
+            if let existingEndOfDeclarationValue = endOfDeclaration {
+                endOfDeclaration = max(existingEndOfDeclarationValue, lastIndexBeforeNextDeclaration)
+            } else {
+                endOfDeclaration = lastIndexBeforeNextDeclaration
+            }
         }
 
         // Prefer keeping linebreaks at the end of a declaration's tokens,
@@ -3493,6 +3508,7 @@ extension _FormatRules {
         ["static", "class"],
         mutatingModifiers,
         ["prefix", "infix", "postfix"],
+        ["async"],
     ]
 
     /// Global swift functions

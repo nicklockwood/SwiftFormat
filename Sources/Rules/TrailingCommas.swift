@@ -76,6 +76,21 @@ public extension FormatRule {
                         formatter.commaSeparatedElementsInScope(startOfScope: startOfScope).count > 1
                 {
                     trailingCommaSupported = true
+
+                    // However, this is one bug in Swift 6.2 where trailing commas are unexpectedly
+                    // not allowed  in tuple types within generic type argument lists.
+                    // https://github.com/swiftlang/swift-syntax/pull/3153
+                    if formatter.options.swiftVersion == "6.2" {
+                        var startOfScope = startOfScope
+                        while let outerScope = formatter.startOfScope(at: startOfScope) {
+                            if formatter.tokens[outerScope] == .startOfScope("<") {
+                                trailingCommaSupported = false
+                                break
+                            }
+
+                            startOfScope = outerScope
+                        }
+                    }
                 }
 
                 // In Swift 6.1, trailing commas are only supported in tuple values,
@@ -89,8 +104,8 @@ public extension FormatRule {
                 {
                     // `{ (...) }`, `return (...)` etc are always tuple values
                     // (except in the case of a typealias, where the rhs is a type)
-                    let tokensPreceedingValuesNotTypes: Set<Token> = [.startOfScope("{"), .keyword("return"), .keyword("throw"), .keyword("switch"), .endOfScope("case")]
-                    if tokensPreceedingValuesNotTypes.contains(formatter.tokens[tokenBeforeStartOfScope]) {
+                    let tokensPrecedingValuesNotTypes: Set<Token> = [.startOfScope("{"), .keyword("return"), .keyword("throw"), .keyword("switch"), .endOfScope("case")]
+                    if tokensPrecedingValuesNotTypes.contains(formatter.tokens[tokenBeforeStartOfScope]) {
                         trailingCommaSupported = true
                     }
 

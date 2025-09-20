@@ -4249,4 +4249,37 @@ class OrganizeDeclarationsTests: XCTestCase {
             exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
         )
     }
+
+    func testOrganizesProtocolWithAsync() {
+        // Async variables are not allowed in protocols
+        let input = """
+        protocol Foo {
+            func foo() async
+            var bar: Bar { get }
+
+            func baaz()
+                async
+            var quux: Quux { get }
+        }
+        """
+
+        let output = """
+        protocol Foo {
+            var bar: Bar { get }
+
+            var quux: Quux { get }
+
+            func foo() async
+            func baaz()
+                async
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: .organizeDeclarations,
+            options: FormatOptions(organizeTypes: ["protocol"]),
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+        )
+    }
 }

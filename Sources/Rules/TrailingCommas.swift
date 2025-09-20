@@ -30,24 +30,27 @@ public extension FormatRule {
                     return
                 }
 
-            case .endOfScope(")") where formatter.options.swiftVersion >= "6.1":
+            case .endOfScope(")"):
                 var trailingCommaSupported: Bool?
 
+                if formatter.options.swiftVersion < "6.1" {
+                    trailingCommaSupported = false
+                }
+
                 // Trailing commas are supported in function calls, function definitions, initializers, and attributes.
-                if let identifierIndex = formatter.parseFunctionIdentifier(beforeStartOfScope: startOfScope),
+                if formatter.options.swiftVersion >= "6.1",
+                   let identifierIndex = formatter.parseFunctionIdentifier(beforeStartOfScope: startOfScope),
                    let identifierToken = formatter.token(at: identifierIndex),
                    identifierToken.isIdentifier || identifierToken.isAttribute || identifierToken.isKeyword,
                    // If the case of `@escaping` or `@Sendable`, this could be a closure type where trailing commas are not supported.
                    !formatter.isStartOfClosureType(at: startOfScope)
                 {
-                    // In Swift 6.1, built-in attributes unexpectedly don't support trailing commas.
-                    // Other attributes like property wrappers and macros do support trailing commas.
-                    // https://github.com/swiftlang/swift/issues/81475
-                    // https://docs.swift.org/swift-book/documentation/the-swift-programming-language/attributes/
-                    // Some attributes like `@objc`, `@inline` that have parens but not comma-separated lists don't support trailing commas.
-                    let unsupportedBuiltInAttributes = ["@available", "@backDeployed", "@freestanding", "@attached", "@objc", "@inline"]
-                    if identifierToken.isAttribute, unsupportedBuiltInAttributes.contains(identifierToken.string)
-                        || identifierToken.string.hasPrefix("@_")
+                    // Built-in attributes like `@available`, `@backDeployed` don't support trailing commas.
+                    // Assume any attribute with a lowercase first letter or a leading underscore is a built-in attribute.
+                    // https://github.com/swiftlang/swift/issues/81475#issuecomment-2894879640
+                    if identifierToken.isAttribute,
+                       let firstCharacterInAttribute = identifierToken.string.dropFirst().first,
+                       firstCharacterInAttribute.isLowercase || firstCharacterInAttribute == "_"
                     {
                         trailingCommaSupported = false
                     }
@@ -59,16 +62,31 @@ public extension FormatRule {
 
                 // If the previous token is the closing `>` of a generic list, then this is a function declaration or initializer,
                 // like `func foo<T>(args...)` or `Foo<Bar>(args...)`.
-                else if let tokenBeforeStartOfScope = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope),
+                else if formatter.options.swiftVersion >= "6.1",
+                        let tokenBeforeStartOfScope = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope),
                         formatter.tokens[tokenBeforeStartOfScope] == .endOfScope(">")
                 {
                     trailingCommaSupported = true
                 }
 
-                // In Swift 6.1, trailing commas are also supported in tuple values,
+                // In Swift 6.2 and later, trailing commas are supported in tuple values and tuple types.
+                // If there are multiple values in the parens, and it's not one of the scope types we already handled above,
+                // then we know it's a tuple.
+                else if formatter.options.swiftVersion >= "6.2",
+                        formatter.commaSeparatedElementsInScope(startOfScope: startOfScope).count > 1
+                {
+                    trailingCommaSupported = true
+                }
+
+                // In Swift 6.1, trailing commas are only supported in tuple values,
                 // but not tuple or closure types: https://github.com/swiftlang/swift/issues/81485
                 // If we know this is a tuple value, then trailing commas are supported.
-                else if let tokenBeforeStartOfScope = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope) {
+                //
+                // This also handles paren scopes with only a single element (so, not a tuple)
+                // where trailing commas are allowed in Swift 6.2 and later.
+                else if formatter.options.swiftVersion >= "6.1",
+                        let tokenBeforeStartOfScope = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope)
+                {
                     // `{ (...) }`, `return (...)` etc are always tuple values
                     // (except in the case of a typealias, where the rhs is a type)
                     let tokensPreceedingValuesNotTypes: Set<Token> = [.startOfScope("{"), .keyword("return"), .keyword("throw"), .keyword("switch"), .endOfScope("case")]
@@ -92,28 +110,37 @@ public extension FormatRule {
                     }
                 }
 
-                formatter.addOrRemoveTrailingComma(beforeEndOfScope: i, trailingCommaSupported: trailingCommaSupported)
-
-            case .endOfScope(">") where formatter.options.swiftVersion >= "6.1":
-                var trailingCommaSupported = false
-
-                // In Swift 6.1, only generic lists in concrete type / function / typealias declarations are allowed.
-                // https://github.com/swiftlang/swift/issues/81474
-                // All of these cases have the form `keyword identifier<...>`, like `class Foo<...>` or `func foo<...>`.
-                if let identifierIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope),
-                   formatter.tokens[identifierIndex].isIdentifier,
-                   let keywordIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: identifierIndex),
-                   let keyword = formatter.token(at: keywordIndex),
-                   keyword.isKeyword,
-                   ["class", "actor", "struct", "enum", "typealias", "func"].contains(keyword.string)
+                // In Swift 6.2 and later, trailing commas are always supported in closure argument lists.
+                if formatter.options.swiftVersion >= "6.2",
+                   let tokenAfterEndOfScope = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i),
+                   [.identifier("async"), .keyword("throws"), .operator("->", .infix)].contains(formatter.tokens[tokenAfterEndOfScope])
                 {
                     trailingCommaSupported = true
                 }
 
                 formatter.addOrRemoveTrailingComma(beforeEndOfScope: i, trailingCommaSupported: trailingCommaSupported)
 
-            case .endOfScope(")"), .endOfScope(">"):
-                formatter.addOrRemoveTrailingComma(beforeEndOfScope: i, trailingCommaSupported: false)
+            case .endOfScope(">"):
+                var trailingCommaSupported = false
+
+                if formatter.options.swiftVersion >= "6.2" {
+                    trailingCommaSupported = true
+                } else if formatter.options.swiftVersion == "6.1" {
+                    // In Swift 6.1, only generic lists in concrete type / function / typealias declarations are allowed.
+                    // https://github.com/swiftlang/swift/issues/81474
+                    // All of these cases have the form `keyword identifier<...>`, like `class Foo<...>` or `func foo<...>`.
+                    if let identifierIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope),
+                       formatter.tokens[identifierIndex].isIdentifier,
+                       let keywordIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: identifierIndex),
+                       let keyword = formatter.token(at: keywordIndex),
+                       keyword.isKeyword,
+                       ["class", "actor", "struct", "enum", "typealias", "func"].contains(keyword.string)
+                    {
+                        trailingCommaSupported = true
+                    }
+                }
+
+                formatter.addOrRemoveTrailingComma(beforeEndOfScope: i, trailingCommaSupported: trailingCommaSupported)
 
             default:
                 break

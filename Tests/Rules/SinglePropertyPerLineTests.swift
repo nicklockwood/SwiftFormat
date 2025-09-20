@@ -1112,4 +1112,12 @@ class SinglePropertyPerLineTests: XCTestCase {
         """
         testFormatting(for: input, rule: .singlePropertyPerLine)
     }
+
+    func testAsyncLetPreserved() {
+        let input = """
+        async let (one, two) = (performOne(), performTwo())
+        let (oneResult, twoResult) = await (one, two)
+        """
+        testFormatting(for: input, rule: .singlePropertyPerLine)
+    }
 }

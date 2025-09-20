@@ -22,6 +22,11 @@ public extension FormatRule {
                 return
             }
 
+            // Skip `async let` declarations
+            if formatter.modifiersForDeclaration(at: i, contains: "async") {
+                return
+            }
+
             // If this property is within a parenthesis scope, this is probably
             // within a switch case like `case (let foo, bar):`
             if let startOfScope = formatter.startOfScope(at: i),

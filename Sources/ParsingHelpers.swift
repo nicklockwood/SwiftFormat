@@ -3493,6 +3493,7 @@ extension _FormatRules {
         ["static", "class"],
         mutatingModifiers,
         ["prefix", "infix", "postfix"],
+        ["async"],
     ]
 
     /// Global swift functions

@@ -2418,32 +2418,36 @@ class TrailingCommasTests: XCTestCase {
         testFormatting(for: input, output, rule: .trailingCommas, options: options, exclude: [.propertyTypes])
     }
 
-    func testTrailingCommasAddedToTupleTypeInGenericBracketsInSwift6_2() {
-        // Trailing commas are now supported in tuple types in Swift 6.2
+    func testTrailingCommasNotAddedToTupleTypeInGenericBracketsInSwift6_2() {
+        // In Swift 6.2, trailing commas are unexpectedly not supported in tuple types
+        // within generic arguments: https://github.com/swiftlang/swift-syntax/pull/3153
         let input = """
         let foo: Array<(
             bar: String,
             quux: String
         )>
+        """
 
-        let foo = Array<(
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.2")
+        testFormatting(for: input, rule: .trailingCommas, options: options, exclude: [.typeSugar, .propertyTypes])
+    }
+
+    func testTrailingCommasAddedToTupleTypeInGenericBracketsInSwift6_3() {
+        let input = """
+        let foo: Array<(
             bar: String,
             quux: String
-        )>()
+        )>
         """
+
         let output = """
         let foo: Array<(
             bar: String,
             quux: String,
         )>
-
-        let foo = Array<(
-            bar: String,
-            quux: String,
-        )>()
         """
 
-        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.2")
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.3")
         testFormatting(for: input, output, rule: .trailingCommas, options: options, exclude: [.typeSugar, .propertyTypes])
     }
 

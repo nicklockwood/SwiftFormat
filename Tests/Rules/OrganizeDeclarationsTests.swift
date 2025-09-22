@@ -4282,4 +4282,43 @@ class OrganizeDeclarationsTests: XCTestCase {
             exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
         )
     }
+
+    func testHandlesMalformedPropertyType() {
+        let input = """
+        extension Foo {
+            /// Invalid type, should still get handled properly
+            private var foo: FooBar++ {
+                guard
+                    let foo = foo.bar,
+                    let bar = foo.bar
+                else {
+                    return nil
+                }
+
+                return bar
+            }
+        }
+
+        extension Foo {
+            /// Invalid type, should still get handled properly
+            func foo() -> FooBar++ {
+                guard
+                    let foo = foo.bar,
+                    let bar = foo.bar
+                else {
+                    return nil
+                }
+
+                return bar
+            }
+        }
+        """
+
+        testFormatting(
+            for: input,
+            rule: .organizeDeclarations,
+            options: FormatOptions(organizeTypes: ["extension"]),
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+        )
+    }
 }

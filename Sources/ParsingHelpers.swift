@@ -1393,12 +1393,18 @@ extension Formatter {
         // There cannot be any other tokens between the type and the operator:
         //
         //   let foo: String? // allowed
+        //   let foo: String???? // allowed
         //   let foo: String ? // not allowed
         //   let foo: String/*bar*/? // not allowed
         //
-        let nextTokenIndex = baseType.range.upperBound + 1
-        if token(at: nextTokenIndex)?.isUnwrapOperator == true {
-            return TypeName(range: baseType.range.lowerBound ... nextTokenIndex, formatter: self)
+        if token(at: baseType.range.upperBound + 1)?.isUnwrapOperator == true {
+            var endOfOptionalType = baseType.range.upperBound + 1
+
+            while token(at: endOfOptionalType + 1)?.isUnwrapOperator == true {
+                endOfOptionalType += 1
+            }
+
+            return TypeName(range: baseType.range.lowerBound ... endOfOptionalType, formatter: self)
         }
 
         // Any type can be followed by a `.` or `&` which can then continue the type
@@ -1850,11 +1856,13 @@ extension Formatter {
 
         var declarations = [_Declaration]()
         var startOfDeclaration = range.lowerBound
+        let startOfScopeAtDeclaration = startOfScope(at: startOfDeclaration)
 
         forEachToken(onlyWhereEnabled: false) { index, token in
             guard range.contains(index),
                   index >= startOfDeclaration,
-                  token.isDeclarationTypeKeyword || token == .startOfScope("#if")
+                  token.isDeclarationTypeKeyword || token == .startOfScope("#if"),
+                  startOfScopeAtDeclaration == startOfScope(at: index)
             else {
                 return
             }
@@ -1988,16 +1996,22 @@ extension Formatter {
             break
         }
 
+        let nextDeclarationKeywordIndex = index(after: searchIndex, where: {
+            $0.isDeclarationTypeKeyword || $0 == .startOfScope("#if")
+        })
+
+        /// If this is the last declaration in the type body, return nil to ensure we include all remaining tokens in the type body.
+        if nextDeclarationKeywordIndex == nil {
+            return nil
+        }
+
         // Search for the next declaration so we know where this declaration ends
         // (the token before the first token of the following declaration).
-
-        if let nextDeclarationKeywordIndex = index(after: searchIndex, where: {
-            $0.isDeclarationTypeKeyword || $0 == .startOfScope("#if")
-        }),
-            let lastIndexBeforeNextDeclaration = index(
-                before: startOfModifiers(at: nextDeclarationKeywordIndex, includingAttributes: true),
-                where: { !$0.isSpaceOrCommentOrLinebreak }
-            ).map({ endOfLine(at: $0) })
+        if let nextDeclarationKeywordIndex,
+           let lastIndexBeforeNextDeclaration = index(
+               before: startOfModifiers(at: nextDeclarationKeywordIndex, includingAttributes: true),
+               where: { !$0.isSpaceOrCommentOrLinebreak }
+           ).map({ endOfLine(at: $0) })
         {
             // If we have an existing `endOfDeclaration` index from a parsing implementation like
             // `parsePropertyDeclaration` or `parseFunctionDeclaration`, prefer that index.

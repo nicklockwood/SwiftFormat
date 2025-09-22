@@ -1795,6 +1795,77 @@ class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(declarations[1].tokens.string, "private lazy var y = f()")
     }
 
+    func testParseDeclarationsWithMalformedTypes() {
+        let input = """
+        extension Foo {
+            /// Invalid type, should still get handled properly
+            private var foo: FooBar++ {
+                guard
+                    let foo = foo.bar,
+                    let bar = foo.bar
+                else {
+                    return nil
+                }
+
+                return bar
+            }
+        }
+
+        extension Foo {
+            /// Invalid type, should still get handled properly
+            func foo() -> FooBar++ {
+                guard
+                    let foo = foo.bar,
+                    let bar = foo.bar
+                else {
+                    return nil
+                }
+
+                return bar
+            }
+
+            func bar() {}
+        }
+        """
+
+        let formatter = Formatter(tokenize(input))
+        let declarations = formatter.parseDeclarations()
+        XCTAssertEqual(declarations.count, 2)
+        XCTAssertEqual(declarations[0].body?.count, 1)
+        XCTAssertEqual(declarations[1].body?.count, 2)
+
+        XCTAssertEqual(declarations[0].body?[0].tokens.string, """
+            /// Invalid type, should still get handled properly
+            private var foo: FooBar++ {
+                guard
+                    let foo = foo.bar,
+                    let bar = foo.bar
+                else {
+                    return nil
+                }
+
+                return bar
+            }
+
+        """)
+
+        XCTAssertEqual(declarations[1].body?[0].tokens.string, """
+            /// Invalid type, should still get handled properly
+            func foo() -> FooBar++ {
+                guard
+                    let foo = foo.bar,
+                    let bar = foo.bar
+                else {
+                    return nil
+                }
+
+                return bar
+            }
+
+
+        """)
+    }
+
     // MARK: declarationScope
 
     func testDeclarationScope_classAndGlobals() {
@@ -2023,16 +2094,16 @@ class ParsingHelpersTests: XCTestCase {
 
     func testParseOptionalType() {
         let formatter = Formatter(tokenize("""
-        let foo: Foo? = .init()
+        let foo: Foo??? = .init()
         """))
-        XCTAssertEqual(formatter.parseType(at: 5)?.string, "Foo?")
+        XCTAssertEqual(formatter.parseType(at: 5)?.string, "Foo???")
     }
 
     func testParseIOUType() {
         let formatter = Formatter(tokenize("""
-        let foo: Foo! = .init()
+        let foo: Foo!! = .init()
         """))
-        XCTAssertEqual(formatter.parseType(at: 5)?.string, "Foo!")
+        XCTAssertEqual(formatter.parseType(at: 5)?.string, "Foo!!")
     }
 
     func testDoesntParseTernaryOperatorAsType() {

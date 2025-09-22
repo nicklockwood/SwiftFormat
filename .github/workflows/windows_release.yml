@@ -30,7 +30,7 @@ jobs:
           branch: swift-6.1-release
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - run: swift build -c release --triple ${{ matrix.target-triple }} -Xswiftc -gnone
 
@@ -81,8 +81,8 @@ jobs:
     if: always()
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+        uses: actions/checkout@v5
+      - uses: actions/download-artifact@v5
         with:
           path: downloaded-artifacts
           pattern: SwiftFormat.*.msi

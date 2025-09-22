@@ -77,8 +77,8 @@ public extension FormatRule {
                 {
                     trailingCommaSupported = true
 
-                    // However, this is one bug in Swift 6.2 where trailing commas are unexpectedly
-                    // not allowed  in tuple types within generic type argument lists.
+                    // However, this is a bug in Swift 6.2 where trailing commas are unexpectedly
+                    // not allowed in tuple types within generic type argument lists.
                     // https://github.com/swiftlang/swift-syntax/pull/3153
                     if formatter.options.swiftVersion == "6.2" {
                         var startOfScope = startOfScope
@@ -90,6 +90,15 @@ public extension FormatRule {
 
                             startOfScope = outerScope
                         }
+                    }
+
+                    // There is also a bug in Swift 6.2 where closure tuple return types don't support trailing commas.
+                    if formatter.options.swiftVersion == "6.2",
+                       let tokenBeforeStartOfScope = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope),
+                       formatter.tokens[tokenBeforeStartOfScope] == .operator("->", .infix),
+                       formatter.isInClosureArguments(at: tokenBeforeStartOfScope)
+                    {
+                        trailingCommaSupported = false
                     }
                 }
 

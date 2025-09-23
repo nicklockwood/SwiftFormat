@@ -1,5 +1,35 @@
 # Change Log
 
+## [0.58.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.58.0) (2025-09-22)
+
+- Added `noForceUnwrapInTests` rule
+- Added `redundantThrows` rule
+- Added `redundantAsync` rule
+- Added `preferFinalClasses` rule
+- Added support for Swift 6.2 raw identifiers
+- Updated `trailingCommas` rule to handle cases now supported by Swift 6.2
+- Updated `trailingClosures` rule to support multiple trailing closures
+- Added support for filtering config file options to a specific file path glob
+- Added `--allow-partial-wrapping false` option to disallow partial wrapping of functions and collections
+- Updated `propertyTypes` rule to support array, dictionary, and set literals
+- Added `organizeDeclarations` threshold options to organize types without adding marks
+- Added `--type-body-marks remove` option to `organizeDeclarations`
+- Updated `organizeDeclarations` to support organizing protocol bodies
+- Updated `organizeDeclarations` to treat `associatedtype` declarations as nested types, like `typealias` declarations.
+- Added `--blank-line-after-switch-case always` option to `blankLineAfterSwitchCase`
+- Add `--default-test-suite-attributes` option to `preferSwiftTesting` rule
+- Renamed `--markdown-files` options to `strict` and `lenient`
+- Updated `redundantPublic` rule to apply to private types
+- Updated `trailingClosures` and `trailingCommas` rules to support optional function calls
+- Fixed bug where `markTypes` rule wouldn't add marks after extensions
+- Fixed issue where `redundantPublic` broke `@_spi` annotated members
+- Improved parsing of nested markdown code blocks
+- Fixed issue where `hoistTry` rule could break `@Test` attribute
+- Fixed issue where `redundantVoidReturnType` rule could accidentally remove closure type
+- Fix `blankLinesAroundMark` not ignoring trailing comments at start of scope
+- Renamed `throwingTests` rule to `noForceTryInTests`
+- Updated `singlePropertyPerLine` to preserve `async let` declarations
+
 ## [0.57.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.57.2) (2025-07-14)
 
 - Updated `trailingCommas` rule to handle function declarations with generic arguments.

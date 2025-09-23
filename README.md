@@ -731,6 +731,19 @@ The config file format is designed to be edited by hand. You may include blank l
 --disable elseOnSameLine,semicolons
 ```
 
+You can create multiple configuration sections within a single `.swiftformat` file to apply different formatting options to different parts of your project. Each section should specify a `--filter` glob pattern to determine which files the configuration applies to. Options in that section are used when formatting files that match `--filter` glob, in addition to the base options in the file.
+
+```
+--enable indent
+--indent 4
+
+[Tests]
+--filter **/Tests/**
+--enable noForceUnwrapInTests
+--enable noForceTryInTests
+--indent 2
+```
+
 If you would prefer not to edit the configuration file by hand, you can use the [SwiftFormat for Xcode](#xcode-source-editor-extension) app to edit the configuration and export a configuration file. You can also use the swiftformat command-line-tool's `--inferoptions` command to generate a config file from your existing project, like this:
 
 ```bash

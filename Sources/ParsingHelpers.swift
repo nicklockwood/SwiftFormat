@@ -403,6 +403,11 @@ extension Formatter {
     /// Returns true if the modifiers list for the given declaration contain a
     /// modifier matching the specified predicate
     func modifiersForDeclaration(at index: Int, contains: (Int, String) -> Bool) -> Bool {
+        var declarationType: String?
+        if tokens[index].isDeclarationTypeKeyword {
+            declarationType = tokens[index].string
+        }
+
         var index = index
         while var prevIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: index) {
             switch tokens[prevIndex] {
@@ -414,6 +419,12 @@ extension Formatter {
                     // Part of previous declaration
                     return false
                 }
+
+                // Async is only a valid modifier on local let/var declarations.
+                if token == .identifier("async"), !["let", "var"].contains(declarationType) {
+                    return false
+                }
+
                 if contains(prevIndex, token.string) {
                     return true
                 }

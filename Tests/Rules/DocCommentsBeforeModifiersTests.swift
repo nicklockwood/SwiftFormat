@@ -304,4 +304,20 @@ class DocCommentsBeforeModifiersTests: XCTestCase {
 
         testFormatting(for: input, rule: .docCommentsBeforeModifiers, exclude: [.propertyTypes])
     }
+
+    func testIssue2216() {
+        let input = """
+        protocol TestIssue2216() {
+            /// Documentation comment explaining the function
+            /// with multiple lines of explanation
+            func method1(value: String) async
+
+            /// Documentation comment explaining the function
+            /// with multiple lines of explanation
+            func method2(value: String) async
+        }
+        """
+
+        testFormatting(for: input, rule: .docCommentsBeforeModifiers)
+    }
 }

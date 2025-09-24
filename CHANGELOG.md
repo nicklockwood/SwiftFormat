@@ -1,5 +1,15 @@
 # Change Log
 
+## [0.58.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.58.1) (2025-09-24)
+
+- Fixed issue where `async` effect could be confused for `async` modifier, breaking `docCommentsBeforeModifiers` rule in protocol body with async functions
+- Fixed issue where `wrapAttributes` rule would unexpectedly wrap `async` effect
+- Fixed issue where `.swift-version` file was ignored if not also using config file
+- Fixed issue where multiple trailing closure syntax could be applied to ineligible function calls
+- Fixed issue where `redundantAsync` ignored `await` keyword in string interpolation
+- Fixed bug where `acronyms` rule would incorrectly always capitalize potentially matching acronyms one letter before end of identifier
+- Updated `redundantLet` rule to handle `#Preview` macro
+
 ## [0.58.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.58.0) (2025-09-22)
 
 - Added `noForceUnwrapInTests` rule

@@ -1234,6 +1234,11 @@ extension Formatter {
                     break
                 }
             }
+
+            if tokens[prevIndex].string == "#Preview" {
+                return true
+            }
+
             if tokens[prevIndex].isStartOfScope, i != startIndex {
                 i = startIndex
             } else {

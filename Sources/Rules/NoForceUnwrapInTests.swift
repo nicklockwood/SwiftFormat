@@ -53,7 +53,7 @@ public extension FormatRule {
                 }
 
                 // Only convert the `!` if we are within the function body
-                guard formatter.isInFunctionBody(of: functionDecl, at: forceUnwrapOperator.index) else {
+                guard formatter.tryKeywordSupported(at: forceUnwrapOperator.index, in: functionDecl) else {
                     continue
                 }
 
@@ -84,7 +84,7 @@ public extension FormatRule {
                 // Convert all eligible ! operators in this expression to ? operators
                 convertForceUnwrapsInExpression: for i in expressionRange.range.reversed() {
                     guard formatter.tokens[i] == .operator("!", .postfix),
-                          formatter.isInFunctionBody(of: functionDecl, at: i)
+                          formatter.tryKeywordSupported(at: i, in: functionDecl)
                     else { continue }
 
                     // Check if this force unwrap is in a function call or subscript call subexpression within this expression.
@@ -324,7 +324,7 @@ extension Formatter {
         let firstInfixOperator = expressionRange.range.first(where: { i in
             if treatAsInfixOperator(tokens[i], i),
                let functionDecl,
-               isInFunctionBody(of: functionDecl, at: i),
+               tryKeywordSupported(at: i, in: functionDecl),
                tokens[i] != .operator(".", .infix)
             {
                 return true
@@ -340,7 +340,7 @@ extension Formatter {
             let lhsFormatterOffset = expressionRange.lowerBound
 
             guard let lhsForceUnwrapIndex = expressionRange.range.first(where: { i in
-                tokens[i] == .operator("!", .postfix) && isInFunctionBody(of: functionDecl, at: i) && i < infixIndex
+                tokens[i] == .operator("!", .postfix) && tryKeywordSupported(at: i, in: functionDecl) && i < infixIndex
             }) else { return nil }
 
             // Convert the absolute index to the sub-formatter's relative index

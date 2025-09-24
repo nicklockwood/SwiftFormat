@@ -334,6 +334,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
             func test_closure() {
                 // Can't be try since string interpolation is a non-throwing autoclosure
                 print("foo \\(bar!)")
+                print("foo \\(foo!.bar!.baaz == quux)")
             }
         }
         """

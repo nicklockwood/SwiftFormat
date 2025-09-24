@@ -1423,4 +1423,79 @@ class CommandLineTests: XCTestCase {
             try FileManager.default.removeItem(at: tempFile)
         }
     }
+
+    func testSwiftVersionFileWithNoConfigFile() throws {
+        var errors = [String]()
+
+        CLI.print = { message, type in
+            print(message)
+            if type == .error {
+                errors.append(message)
+            }
+        }
+
+        try withTmpFiles([
+            ".swift-version": """
+            6.1
+            """,
+            "Test.swift": """
+            func foo(
+                foo: Foo,
+                bar: Bar
+            ) {}
+            """,
+        ]) { url in
+            guard url.pathExtension == "swift" else { return }
+            _ = processArguments(["", url.path, "--rules", "trailingCommas"], in: "")
+
+            XCTAssertEqual(try String(contentsOf: url, encoding: .utf8), """
+            func foo(
+                foo: Foo,
+                bar: Bar,
+            ) {}
+            """)
+        }
+
+        XCTAssertEqual(errors, [])
+    }
+
+    func testSwiftVersionFileWithConfigFile() throws {
+        var errors = [String]()
+
+        CLI.print = { message, type in
+            print(message)
+            if type == .error {
+                errors.append(message)
+            }
+        }
+
+        try withTmpFiles([
+            ".swift-version": """
+            6.1
+            """,
+            ".swiftformat": """
+            --rules trailingCommas
+            --rules indent
+            --indent 2
+            """,
+            "Test.swift": """
+            func foo(
+                foo: Foo,
+                bar: Bar
+            ) {}
+            """,
+        ]) { url in
+            guard url.pathExtension == "swift" else { return }
+            _ = processArguments(["", url.path], in: "")
+
+            XCTAssertEqual(try String(contentsOf: url, encoding: .utf8), """
+            func foo(
+              foo: Foo,
+              bar: Bar,
+            ) {}
+            """)
+        }
+
+        XCTAssertEqual(errors, [])
+    }
 }

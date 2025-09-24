@@ -92,14 +92,9 @@ jobs:
           pattern: SwiftFormat.*.msi
       - name: Display structure of downloaded files
         run: ls -R downloaded-artifacts
-      - name: Move and rename MSI files to workspace root
+      - name: Move MSI files to workspace root
         run: |
-          for dir in downloaded-artifacts/SwiftFormat.*.msi; do
-            basename="$(basename "$dir")"                  # SwiftFormat.amd64.msi
-            arch="${basename#SwiftFormat.}"                # amd64.msi
-            arch="${arch%.msi}"                            # amd64
-            mv "$dir/SwiftFormat.msi" "./SwiftFormat.${arch}.msi"
-          done
+          mv downloaded-artifacts/*/*.msi ./
           rm -rf downloaded-artifacts
       - name: Display structure of uploadable files
         run: ls -R .

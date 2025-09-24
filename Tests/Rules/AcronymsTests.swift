@@ -90,4 +90,20 @@ class AcronymsTests: XCTestCase {
         let options = FormatOptions(preserveAcronyms: ["externallyProvidedUrl", "toUrl"])
         testFormatting(for: input, output, rule: .acronyms, options: options)
     }
+
+    func testAcronymMatchesPartOfOtherWordAtEndOfIdentifier() {
+        let input = """
+        struct MasKit {}
+        struct Mask {}
+        struct MaskView {}
+        """
+
+        let output = """
+        struct MASKit {}
+        struct Mask {}
+        struct MaskView {}
+        """
+
+        testFormatting(for: input, output, rule: .acronyms, options: FormatOptions(acronyms: ["MAS"]))
+    }
 }

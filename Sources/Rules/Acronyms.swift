@@ -27,7 +27,7 @@ public extension FormatRule {
                 for replaceCandidateRange in token.string.ranges(of: find) {
                     let acronymShouldBeCapitalized: Bool
 
-                    if replaceCandidateRange.upperBound < token.string.indices.last! {
+                    if replaceCandidateRange.upperBound <= token.string.indices.last! {
                         let indexAfterMatch = replaceCandidateRange.upperBound
                         let characterAfterMatch = token.string[indexAfterMatch]
 

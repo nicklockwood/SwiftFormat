@@ -470,19 +470,25 @@ class TrailingClosuresTests: XCTestCase {
     func testMultipleTrailingClosuresWithTrailingComma() {
         let input = """
         withAnimationIfNeeded(
-            .linear,
+            .foo,
+            .bar,
             { didAppear = true },
             completion: { animateText = true },
         )
+
         """
         let output = """
         withAnimationIfNeeded(
-            .linear
-        ) { didAppear = true }
-            completion: { animateText = true }
+            .foo,
+            .bar
+        ) {
+            didAppear = true
+        } completion: {
+            animateText = true
+        }
 
         """
-        testFormatting(for: input, [output], rules: [.trailingClosures, .indent])
+        testFormatting(for: input, [output], rules: [.trailingClosures, .indent, .wrapArguments, .wrap])
     }
 
     func testMultipleUnlabeledClosuresNotTransformed() {
@@ -493,5 +499,69 @@ class TrailingClosuresTests: XCTestCase {
         )
         """
         testFormatting(for: input, rule: .trailingClosures)
+    }
+
+    func testMultipleClosuresWithNonClosureArgumentInMiddle() {
+        let input = """
+        withObservationTracking(
+            {
+                _ = self[keyPath: keyPath]
+            },
+            token: {
+                guard !isCancelled.value else {
+                    return nil
+                }
+
+                return ""
+            },
+            willChange: nil,
+            didChange: { [weak cancellable] in
+                action(self[keyPath: keyPath])
+                cancellable?.cancel()
+            }
+        )
+        """
+
+        testFormatting(for: input, rule: .trailingClosures)
+    }
+
+    func testMethodWithOnlyClosureArguments() {
+        let input = """
+        withObservationTracking(
+            {
+                _ = self[keyPath: keyPath]
+            },
+            token: {
+                guard !isCancelled.value else {
+                    return nil
+                }
+
+                return ""
+            },
+            didChange: { [weak cancellable] in
+                action(self[keyPath: keyPath])
+                cancellable?.cancel()
+            }
+        )
+
+        """
+
+        let output = """
+        withObservationTracking {
+            _ = self[keyPath: keyPath]
+        } token: {
+            guard !isCancelled.value else {
+                return nil
+            }
+
+            return ""
+        } didChange: { [weak cancellable] in
+            action(self[keyPath: keyPath])
+            cancellable?.cancel()
+        }
+
+        """
+
+        testFormatting(for: input, [output], rules: [.trailingClosures, .indent])
     }
 }

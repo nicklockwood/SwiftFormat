@@ -353,10 +353,15 @@ private func processDirectory(_ inputURL: URL, with options: inout Options, logg
             logger?("Ignoring swift-version file at \(versionFile.path)")
         } else if Version(rawValue: versionString) != nil {
             logger?("Reading swift-version file at \(versionFile.path) (version \(versionString))")
-            args = args.map {
-                var args = $0
-                args["swift-version"] = versionString
-                return args
+
+            if args.isEmpty {
+                args = [["swift-version": versionString]]
+            } else {
+                args = args.map {
+                    var args = $0
+                    args["swift-version"] = versionString
+                    return args
+                }
             }
         } else {
             // Don't treat as error, per: https://github.com/nicklockwood/SwiftFormat/issues/639

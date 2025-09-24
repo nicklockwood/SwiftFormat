@@ -102,7 +102,7 @@ class RedundantLetTests: XCTestCase {
 
     func testNoRemoveLetInIfStatementInViewBuilder() {
         let input = """
-        VStack {
+        VStack(spacing: 0) {
             if visible == "YES" {
                 let _ = print("")
             }
@@ -170,6 +170,21 @@ class RedundantLetTests: XCTestCase {
         let input = """
         let foo = bar { @Sendable
             let _ = try await baz()
+        }
+        """
+        testFormatting(for: input, rule: .redundantLet)
+    }
+
+    func testPreserveLetInPreviewMacro() {
+        let input = """
+        #Preview {
+            let _ = 1234
+            Text("Test")
+        }
+
+        #Preview(name: "Test") {
+            let _ = 1234
+            Text("Test")
         }
         """
         testFormatting(for: input, rule: .redundantLet)

@@ -570,11 +570,6 @@ extension Formatter {
             return false
         }
 
-        // If the code is in a string, then it could be inside a string interpolation
-        if tokens[startOfScopeIndex] == .startOfScope("\"") || tokens[startOfScopeIndex] == .startOfScope("\"\"\"") {
-            return false
-        }
-
         // If this is a function scope, but not the body of the function itself,
         // then this is some nested function.
         if lastSignificantKeyword(at: startOfScopeIndex, excluding: ["where"]) == "func",
@@ -585,6 +580,28 @@ extension Formatter {
 
         // Recursively check parent scope
         return isInFunctionBody(of: functionDecl, at: startOfScopeIndex)
+    }
+
+    /// Whether or not the given index is within a string body or string interpolation
+    func isInStringInterpolation(at index: Int) -> Bool {
+        guard let startOfScopeIndex = startOfScope(at: index) else {
+            return false
+        }
+
+        // If the code is in a string, then it could be inside a string interpolation
+        if tokens[startOfScopeIndex] == .startOfScope("\"") || tokens[startOfScopeIndex] == .startOfScope("\"\"\"") {
+            return true
+        }
+
+        return isInStringInterpolation(at: startOfScopeIndex)
+    }
+
+    /// Whether or not the `try` keyword is supported at the given index
+    /// within the given function declaration, if it were throwing.
+    func tryKeywordSupported(at index: Int, in functionDecl: FunctionDeclaration) -> Bool {
+        isInFunctionBody(of: functionDecl, at: index)
+            // String interpolation is a non-throwing autoclosure, so can't use `try`
+            && !isInStringInterpolation(at: index)
     }
 
     /// Whether or not this index the start of scope of a closure literal, eg `{` but not some other type of scope.

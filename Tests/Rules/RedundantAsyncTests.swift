@@ -277,4 +277,21 @@ class RedundantAsyncTests: XCTestCase {
         let options = FormatOptions(redundantAsync: .always)
         testFormatting(for: input, output, rule: .redundantAsync, options: options)
     }
+
+    func testIssue2217_asyncNotRemovedForAwaitInStringInterpolation() {
+        let input = """
+        var x: String {
+            get async {
+                "y"
+            }
+        }
+
+        func y() async {
+            "\\(await x)"
+        }
+        """
+
+        let options = FormatOptions(redundantAsync: .always)
+        testFormatting(for: input, rule: .redundantAsync, options: options)
+    }
 }

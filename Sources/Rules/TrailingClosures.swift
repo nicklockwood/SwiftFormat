@@ -23,17 +23,18 @@ public extension FormatRule {
             "expect", // Special case to support autoclosure arguments in the Nimble framework
         ] + formatter.options.neverTrailing)
 
-        formatter.forEach(.startOfScope("(")) { i, _ in
-            guard let identifierIndex = formatter.parseFunctionIdentifier(beforeStartOfScope: i) else { return }
+        formatter.forEach(.startOfScope("(")) { functionOpenParen, _ in
+            guard let identifierIndex = formatter.parseFunctionIdentifier(beforeStartOfScope: functionOpenParen) else { return }
             let name = formatter.tokens[identifierIndex].string
 
-            guard !nonTrailing.contains(name), !formatter.isConditionalStatement(at: i) else {
+            guard !nonTrailing.contains(name), !formatter.isConditionalStatement(at: functionOpenParen) else {
                 return
             }
 
             // Parse all arguments to detect multiple trailing closures
-            let arguments = formatter.parseFunctionCallArguments(startOfScope: i)
-            let closures = arguments.filter { arg in
+            let arguments = formatter.parseFunctionCallArguments(startOfScope: functionOpenParen)
+
+            let trailingClosures = arguments.suffix(while: { arg in
                 let range = arg.valueRange
                 guard let first = formatter.index(of: .nonSpaceOrCommentOrLinebreak, in: range.lowerBound ..< range.upperBound + 1),
                       let last = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: range.upperBound + 1, if: { _ in true }),
@@ -44,36 +45,20 @@ public extension FormatRule {
                     return false
                 }
                 return true
-            }
+            })
 
-            // Determine if we should apply trailing closure transformation
-            let shouldTransform: Bool
-            if closures.count > 1 {
-                // Multiple closures: first must be unlabeled, subsequent must be labeled
-                shouldTransform = closures[0].label == nil && closures.dropFirst().allSatisfy { $0.label != nil }
-            } else if closures.count == 1 {
-                // Single closure: check if it should be made trailing
-                let closure = closures[0]
-                if closure.label == nil {
-                    // Unlabeled single closure
-                    shouldTransform = true
-                } else {
-                    // Labeled single closure: only if function is in useTrailing list
-                    shouldTransform = useTrailing.contains(name)
-                }
-            } else {
-                shouldTransform = false
-            }
-
-            guard shouldTransform else { return }
-            guard let closingIndex = formatter.index(of: .endOfScope(")"), after: i) else { return }
-            guard formatter.next(.nonSpaceOrCommentOrLinebreak, after: closingIndex) != .startOfScope("{") else { return }
+            // Ensure the function doesn't already have a trailing closure
+            guard let functionCallClosingParen = formatter.endOfScope(at: functionOpenParen),
+                  formatter.next(.nonSpaceOrCommentOrLinebreak, after: functionCallClosingParen) != .startOfScope("{")
+            else { return }
 
             // Handle a single trailing closure
-            if closures.count == 1 {
-                let closure = closures[0]
+            if trailingClosures.count == 1 {
+                guard trailingClosures[0].label == nil || useTrailing.contains(name) else { return }
+
+                let closure = trailingClosures[0]
                 let range = closure.valueRange
-                guard let closingBraceIndex = formatter.index(of: .nonSpaceOrComment, before: closingIndex, if: { $0 == .endOfScope("}") }),
+                guard let closingBraceIndex = formatter.index(of: .nonSpaceOrComment, before: functionCallClosingParen, if: { $0 == .endOfScope("}") }),
                       let openingBraceIndex = formatter.index(of: .startOfScope("{"), before: closingBraceIndex),
                       formatter.index(of: .endOfScope("}"), before: openingBraceIndex) == nil,
                       var startIndex = formatter.index(of: .nonSpaceOrLinebreak, before: openingBraceIndex)
@@ -85,88 +70,84 @@ public extension FormatRule {
                 case .delimiter(":"):
                     if let commaIndex = formatter.index(of: .delimiter(","), before: openingBraceIndex) {
                         startIndex = commaIndex
-                    } else if formatter.index(of: .startOfScope("("), before: openingBraceIndex) == i {
-                        startIndex = i
+                    } else if formatter.index(of: .startOfScope("("), before: openingBraceIndex) == functionOpenParen {
+                        startIndex = functionOpenParen
                     } else {
                         return
                     }
                 default:
                     return
                 }
-                let wasParen = (startIndex == i)
-                formatter.removeParen(at: closingIndex)
+                let wasParen = (startIndex == functionOpenParen)
+                formatter.removeParen(at: functionCallClosingParen)
                 formatter.replaceTokens(in: startIndex ..< openingBraceIndex, with:
                     wasParen ? [.space(" ")] : [.endOfScope(")"), .space(" ")])
                 return
             }
 
-            // Handle multiple trailing closures
-            var transformations: [(range: Range<Int>, tokens: [Token])] = []
-            transformations.append((range: closingIndex ..< closingIndex + 1, tokens: []))
+            else if trailingClosures.count >= 2 {
+                guard trailingClosures[0].label == nil,
+                      trailingClosures.dropFirst().allSatisfy({ $0.label != nil })
+                else { return }
 
-            for (index, closure) in closures.enumerated() {
-                let range = closure.valueRange
-                guard range.lowerBound < formatter.tokens.count,
-                      range.upperBound < formatter.tokens.count,
-                      let openBrace = formatter.index(of: .nonSpaceOrCommentOrLinebreak, in: range.lowerBound ..< range.upperBound + 1),
-                      openBrace < formatter.tokens.count,
-                      formatter.tokens[openBrace] == .startOfScope("{"),
-                      let beforeBrace = formatter.index(of: .nonSpaceOrLinebreak, before: openBrace),
-                      beforeBrace < formatter.tokens.count else { continue }
+                // Remove the closing paren and any trailing comma.
+                // If the closing paren is on its own line, remove the whole line.
+                let lineWithClosingParen = formatter.startOfLine(at: functionCallClosingParen) ... formatter.endOfLine(at: functionCallClosingParen)
+                let tokenBeforeClosingParen = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: functionCallClosingParen)
 
-                if closure.label == nil {
-                    // First (unlabeled) closure
-                    if formatter.tokens[beforeBrace] == .delimiter(",") {
-                        let existingTokens = Array(formatter.tokens[(beforeBrace + 1) ..< openBrace])
-                        let hasLineBreak = existingTokens.contains { $0.isLinebreak }
-
-                        if hasLineBreak {
-                            transformations.append((range: beforeBrace ..< openBrace, tokens: [
-                                .linebreak("\n", 0), .endOfScope(")"), .space(" "),
-                            ]))
-                        } else {
-                            transformations.append((range: beforeBrace ..< openBrace, tokens: [
-                                .endOfScope(")"), .space(" "),
-                            ]))
-                        }
-                    } else if formatter.tokens[beforeBrace] == .startOfScope("(") {
-                        transformations.append((range: beforeBrace ..< openBrace, tokens: [.space(" ")]))
-                    }
+                if formatter.tokens(in: lineWithClosingParen)?.string.trimmingCharacters(in: .whitespacesAndNewlines) == ")" {
+                    formatter.removeTokens(in: lineWithClosingParen)
                 } else {
-                    // Labeled closure
-                    if let labelIndex = closure.labelIndex,
-                       let commaIndex = formatter.index(of: .delimiter(","), before: labelIndex),
-                       commaIndex < formatter.tokens.count
-                    {
-                        let hasLineBreakAfterComma = formatter.tokens[(commaIndex + 1) ..< labelIndex].contains { $0.isLinebreak }
+                    formatter.removeToken(at: functionCallClosingParen)
+                }
 
-                        if hasLineBreakAfterComma {
-                            transformations.append((range: commaIndex ..< commaIndex + 1, tokens: []))
-                        } else {
-                            let nextTokenIndex = commaIndex + 1
-                            if nextTokenIndex < labelIndex, formatter.tokens[nextTokenIndex].isSpace {
-                                transformations.append((range: commaIndex ..< commaIndex + 1, tokens: []))
-                            } else {
-                                transformations.append((range: commaIndex ..< commaIndex + 1, tokens: [.space(" ")]))
-                            }
+                if let tokenBeforeClosingParen, formatter.tokens[tokenBeforeClosingParen] == .delimiter(",") {
+                    formatter.removeToken(at: tokenBeforeClosingParen)
+                }
+
+                // Remove the comma before each closure
+                for (index, closure) in trailingClosures.enumerated().reversed() {
+                    let closureRange = closure.valueRange.autoUpdating(in: formatter)
+                    let closureOnOneLine = formatter.onSameLine(closureRange.lowerBound, closureRange.upperBound)
+
+                    if index == trailingClosures.indices.first,
+                       let indexBeforeFirstClosure = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: closure.valueRange.lowerBound)
+                    {
+                        // If all of the arguments were closures, remove the parens completely
+                        if formatter.tokens[indexBeforeFirstClosure] == .startOfScope("(") {
+                            formatter.removeToken(at: indexBeforeFirstClosure)
+                        }
+
+                        // Otherwise, the previous comma becomes the new closing paren
+                        else if formatter.tokens[indexBeforeFirstClosure] == .delimiter(",") {
+                            formatter.replaceToken(at: indexBeforeFirstClosure, with: .endOfScope(")"))
+                        }
+
+                        // Unwrap the line so the trailing closure label immediately follows the closing paren
+                        if !formatter.onSameLine(indexBeforeFirstClosure, closure.valueRange.lowerBound) {
+                            formatter.unwrapLine(before: closureRange.lowerBound, preservingComments: true)
                         }
                     }
-                }
 
-                // Remove trailing comma after last closure
-                if index == closures.count - 1 {
-                    if let closingBrace = formatter.index(of: .endOfScope("}"), after: range.upperBound - 1),
-                       let commaAfter = formatter.index(of: .delimiter(","), after: closingBrace),
-                       commaAfter < closingIndex
+                    else if let closureLabelIndex = closure.labelIndex?.autoUpdating(in: formatter),
+                            let commaIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: closureLabelIndex),
+                            formatter.tokens[commaIndex] == .delimiter(",")
                     {
-                        transformations.append((range: commaAfter ..< commaAfter + 1, tokens: []))
+                        let commaWasOnPreviousLine = !formatter.onSameLine(commaIndex, closureLabelIndex.index)
+                        formatter.removeToken(at: commaIndex)
+
+                        // Unwrap the line so the trailing closure label immediately follows the previous end of scope
+                        if commaWasOnPreviousLine {
+                            formatter.unwrapLine(before: closureLabelIndex.index, preservingComments: true)
+                        }
+                    }
+
+                    // If the closure was originally written on a single line, wrap it now.
+                    if closureOnOneLine {
+                        formatter.wrapLine(before: closureRange.upperBound)
+                        formatter.wrapLine(before: closureRange.lowerBound + 1)
                     }
                 }
-            }
-
-            // Apply transformations from right to left
-            for transformation in transformations.sorted(by: { $0.range.lowerBound > $1.range.lowerBound }) {
-                formatter.replaceTokens(in: transformation.range, with: transformation.tokens)
             }
         }
     } examples: {
@@ -194,5 +175,11 @@ public extension FormatRule {
         + }
         ```
         """
+    }
+}
+
+extension Collection {
+    func suffix(while condition: (Element) -> Bool) -> [Element] {
+        reversed().prefix(while: condition).reversed()
     }
 }

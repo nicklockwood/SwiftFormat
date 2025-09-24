@@ -354,7 +354,17 @@ public extension Formatter {
 
     /// Returns the token at the specified index, or nil if index is invalid
     func token(at index: AnyIndex) -> Token? {
-        tokens.indices.contains(index.index) ? tokens[index.index] : nil
+        guard tokens.indices.contains(index.index) else { return nil }
+        return tokens[index.index]
+    }
+
+    /// Returns the tokens at the specified range, or nil if range is invalid
+    func tokens(in range: AnyClosedRange) -> ArraySlice<Token>? {
+        guard tokens.indices.contains(range.lowerBound),
+              tokens.indices.contains(range.upperBound)
+        else { return nil }
+
+        return tokens[range.range]
     }
 
     /// Replaces the token at the specified index with one or more new tokens

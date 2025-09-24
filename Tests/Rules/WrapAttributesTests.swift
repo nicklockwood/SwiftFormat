@@ -642,4 +642,15 @@ class WrapAttributesTests: XCTestCase {
         let options = FormatOptions(storedVarAttributes: .prevLine, computedVarAttributes: .prevLine)
         testFormatting(for: input, rule: .wrapAttributes, options: options)
     }
+
+    func testIssue2215_asyncEffectNotConfusedForModifier() {
+        let input = """
+        public typealias FooBar = @Sendable (_ foo: Foo, _ bar: Bar) async -> Void
+
+        struct Foo {}
+        """
+
+        let options = FormatOptions(funcAttributes: .prevLine, typeAttributes: .prevLine)
+        testFormatting(for: input, rule: .wrapAttributes, options: options)
+    }
 }

@@ -246,4 +246,14 @@ class RedundantInitTests: XCTestCase {
         """
         testFormatting(for: input, rule: .redundantInit)
     }
+
+    func testRemoveRedundantInitBeforeTrailingClosure() {
+        let input = """
+        Handler.init { print("foo") }
+        """
+        let output = """
+        Handler { print("foo") }
+        """
+        testFormatting(for: input, output, rule: .redundantInit)
+    }
 }

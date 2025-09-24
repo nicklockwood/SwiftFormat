@@ -37,7 +37,7 @@ public extension FormatRule {
 
                 // Only remove the `!` if we are not within a closure or nested function,
                 // where it's not safe to just remove the `!` and make our function throw.
-                guard formatter.isInFunctionBody(of: functionDecl, at: index) else { continue }
+                guard formatter.tryKeywordSupported(at: index, in: functionDecl) else { continue }
 
                 formatter.removeToken(at: nextTokenIndex)
                 foundAnyTryExclamationMarks = true

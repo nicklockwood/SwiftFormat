@@ -392,47 +392,46 @@ extension Formatter {
         guard let token = token(at: index), token.isModifierKeyword else {
             return false
         }
+
         if token == .keyword("class"),
            let nextToken = next(.nonSpaceOrCommentOrLinebreak, after: index)
         {
             return nextToken.isDeclarationTypeKeyword || nextToken.isModifierKeyword
         }
+
+        // Async is only a valid modifier on local let/var declarations.
+        if token == .identifier("async") {
+            guard let nextDeclaration = self.index(after: index, where: \.isDeclarationTypeKeyword),
+                  ["let", "var"].contains(tokens[nextDeclaration].string)
+            else {
+                return false
+            }
+
+            // If we're inside a type body, this cannot be an `async let` declaration.
+            if let startOfScope = startOfScope(at: index),
+               let keyword = lastSignificantKeyword(at: startOfScope, excluding: ["where"]),
+               Token.swiftTypeKeywords.contains(keyword)
+            {
+                return false
+            }
+        }
+
         return true
     }
 
     /// Returns true if the modifiers list for the given declaration contain a
     /// modifier matching the specified predicate
     func modifiersForDeclaration(at index: Int, contains: (Int, String) -> Bool) -> Bool {
-        var declarationType: String?
-        if tokens[index].isDeclarationTypeKeyword {
-            declarationType = tokens[index].string
-        }
-
         var index = index
         while var prevIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: index) {
             switch tokens[prevIndex] {
-            case let token where token.isModifierKeyword || token.isAttribute:
+            case let token where isModifier(at: prevIndex) || token.isAttribute:
                 if case .identifier = token,
                    let nextToken = last(.nonSpaceOrCommentOrLinebreak, before: prevIndex),
                    nextToken == .keyword("case") || nextToken.isOperator(ofType: .infix) || nextToken.isOperator(ofType: .prefix)
                 {
                     // Part of previous declaration
                     return false
-                }
-
-                // Async is only a valid modifier on local let/var declarations.
-                // If we're inside a type body, this cannot be an `async let` declaration.
-                if token == .identifier("async") {
-                    guard ["let", "var"].contains(declarationType) else {
-                        return false
-                    }
-
-                    if let startOfScope = startOfScope(at: index),
-                       let keyword = lastSignificantKeyword(at: startOfScope, excluding: ["where"]),
-                       Token.swiftTypeKeywords.contains(keyword)
-                    {
-                        return false
-                    }
                 }
 
                 if contains(prevIndex, token.string) {

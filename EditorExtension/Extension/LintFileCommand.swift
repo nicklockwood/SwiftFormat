@@ -9,7 +9,7 @@
 import Foundation
 import XcodeKit
 
-class LintFileCommand: NSObject, XCSourceEditorCommand {
+final class LintFileCommand: NSObject, XCSourceEditorCommand {
     func perform(with invocation: XCSourceEditorCommandInvocation, completionHandler: @escaping (Error?) -> Void) {
         guard SupportedContentUTIs.contains(invocation.buffer.contentUTI) else {
             return completionHandler(FormatCommandError.notSwiftLanguage)

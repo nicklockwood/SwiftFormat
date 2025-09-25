@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class MarkTypesTests: XCTestCase {
+final class MarkTypesTests: XCTestCase {
     func testAddsMarkBeforeTypes() {
         let input = """
         struct Foo {}
@@ -853,7 +853,7 @@ class MarkTypesTests: XCTestCase {
         ])
     }
 
-    func testComplexTypeNames() throws {
+    func testComplexTypeNames() {
         let input = """
         extension [Foo]: TestProtocol {
             func test() {}

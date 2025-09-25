@@ -3,9 +3,9 @@
 import Layout
 import UIKit
 
-class PreviewViewController: UIViewController, LayoutLoading {}
+final class PreviewViewController: UIViewController, LayoutLoading {}
 
-class EditViewController: UIViewController {
+final class EditViewController: UIViewController {
     var textView: UITextView!
 
     override func viewDidLoad() {

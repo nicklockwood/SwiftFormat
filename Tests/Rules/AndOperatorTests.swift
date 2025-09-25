@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class AndOperatorTests: XCTestCase {
+final class AndOperatorTests: XCTestCase {
     func testIfAndReplaced() {
         let input = """
         if true && true {}

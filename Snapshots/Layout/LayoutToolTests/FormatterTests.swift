@@ -2,7 +2,7 @@
 
 import XCTest
 
-class FormatterTests: XCTestCase {
+final class FormatterTests: XCTestCase {
     // MARK: Invalid expressions
 
     func testMalformedExpression() {

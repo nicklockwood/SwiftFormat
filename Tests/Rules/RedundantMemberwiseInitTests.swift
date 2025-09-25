@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class RedundantMemberwiseInitTests: XCTestCase {
+final class RedundantMemberwiseInitTests: XCTestCase {
     func testRemoveRedundantMemberwiseInit() {
         let input = """
         struct Person {

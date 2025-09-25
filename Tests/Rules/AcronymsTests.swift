@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class AcronymsTests: XCTestCase {
+final class AcronymsTests: XCTestCase {
     func testUppercaseAcronyms() {
         let input = """
         let url: URL

@@ -15,7 +15,7 @@ let simpleFormat = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Qui
 
 let complexFormat = "Lorem %% ipsum %i dolor %3f sit %.4g amet, %d consectetur %x adipiscing %*6$i elit. %@ Quisque finibus %@ malesuada %llu eros, %hhi at %14$*15$.*16$g tincidunt %A augue %ld blandit %% sit %zi amet."
 
-class PerformanceTests: XCTestCase {
+final class PerformanceTests: XCTestCase {
     func testCreateSimpleFormatString() {
         measure {
             for _ in 0 ..< iterations {

@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class BlockCommentsTests: XCTestCase {
+final class BlockCommentsTests: XCTestCase {
     func testBlockCommentsOneLine() {
         let input = """
         foo = bar /* comment */

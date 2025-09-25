@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class RedundantBackticksTests: XCTestCase {
+final class RedundantBackticksTests: XCTestCase {
     func testRemoveRedundantBackticksInLet() {
         let input = """
         let `foo` = bar

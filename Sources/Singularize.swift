@@ -31,7 +31,7 @@
 
 import Foundation
 
-// Inspired by https://github.com/Cosmo/GrammaticalNumber
+/// Inspired by https://github.com/Cosmo/GrammaticalNumber
 private let rules: [(String, replacement: String)] = [
     ("s$", ""),
     ("eaux$", "eau"),

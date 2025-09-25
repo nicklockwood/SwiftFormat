@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class YodaConditionsTests: XCTestCase {
+final class YodaConditionsTests: XCTestCase {
     func testNumericLiteralEqualYodaCondition() {
         let input = """
         5 == foo

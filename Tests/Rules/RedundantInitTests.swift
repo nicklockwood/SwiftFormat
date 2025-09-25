@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class RedundantInitTests: XCTestCase {
+final class RedundantInitTests: XCTestCase {
     func testRemoveRedundantInit() {
         let input = """
         [1].flatMap { String.init($0) }

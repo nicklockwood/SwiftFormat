@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class SpaceAroundBracesTests: XCTestCase {
+final class SpaceAroundBracesTests: XCTestCase {
     func testSpaceAroundTrailingClosure() {
         let input = """
         if x{ y }else{ z }

@@ -1475,7 +1475,7 @@ extension Formatter {
     ) -> TypeName? {
         let startToken = tokens[startOfTypeIndex]
 
-        /// Helpers that calls `parseType` with all of the optional params passed in by default
+        // Helpers that calls `parseType` with all of the optional params passed in by default
         func parseType(at index: Int) -> TypeName? {
             self.parseType(
                 at: index,
@@ -1671,7 +1671,7 @@ extension Formatter {
                 guard let endOfScope = endOfScope(at: nextTokenIndex) else { return nil }
                 endOfExpression = endOfScope
 
-            /// Any value can be followed by a `.identifier`
+            // Any value can be followed by a `.identifier`
             case .delimiter("."), .operator(".", _):
                 guard let nextIdentifierIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: nextTokenIndex),
                       tokens[nextIdentifierIndex].isIdentifier
@@ -1679,12 +1679,12 @@ extension Formatter {
 
                 endOfExpression = nextIdentifierIndex
 
-            /// Any value can be followed by a postfix operator
+            // Any value can be followed by a postfix operator
             case .operator(_, .postfix):
                 endOfExpression = nextTokenIndex
 
-            /// Any value can be followed by an infix operator, plus another expression
-            ///  - However, the assignment operator (`=`) is special and _isn't_ an expression
+            // Any value can be followed by an infix operator, plus another expression
+            //  - However, the assignment operator (`=`) is special and _isn't_ an expression
             case let .operator(operatorString, .infix) where operatorString != "=":
                 guard let nextTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: nextTokenIndex),
                       let nextExpression = parseExpressionRange(startingAt: nextTokenIndex)
@@ -1692,7 +1692,7 @@ extension Formatter {
 
                 endOfExpression = nextExpression.upperBound
 
-            /// Any value can be followed by `is`, `as`, `as?`, or `as?`, plus another expression
+            // Any value can be followed by `is`, `as`, `as?`, or `as?`, plus another expression
             case .keyword("is"), .keyword("as"):
                 guard var nextTokenAfterKeyword = index(of: .nonSpaceOrCommentOrLinebreak, after: nextTokenIndex) else { return nil }
 
@@ -1709,7 +1709,7 @@ extension Formatter {
 
                 endOfExpression = followingExpression.upperBound
 
-            /// Any value can be followed by a trailing closure
+            // Any value can be followed by a trailing closure
             case .startOfScope("{") where isStartOfClosure(at: nextTokenIndex):
                 guard let endOfScope = endOfScope(at: nextTokenIndex) else { return nil }
 
@@ -1721,8 +1721,8 @@ extension Formatter {
 
                 endOfExpression = endOfScope
 
-            /// Some values can be followed by a labeled trailing closure,
-            /// like (expression) trailingClosure: { ... }
+            // Some values can be followed by a labeled trailing closure,
+            // like (expression) trailingClosure: { ... }
             case .identifier:
                 guard let colonIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: nextTokenIndex),
                       tokens[colonIndex] == .delimiter(":"),
@@ -1888,8 +1888,8 @@ extension Formatter {
 
     /// Parses the declarations in the given range.
     func parseDeclarations(in range: Range<Int>) -> [Declaration] {
-        /// A temporary declaration value. We can't create a `DeclarationV2` directly
-        /// within the `forEachToken` call, since `forEachToken` doesn't support reentrancy.
+        // A temporary declaration value. We can't create a `DeclarationV2` directly
+        // within the `forEachToken` call, since `forEachToken` doesn't support reentrancy.
         struct _Declaration {
             let keyword: String
             let keywordIndex: Int
@@ -2042,7 +2042,7 @@ extension Formatter {
             $0.isDeclarationTypeKeyword || $0 == .startOfScope("#if")
         })
 
-        /// If this is the last declaration in the type body, return nil to ensure we include all remaining tokens in the type body.
+        // If this is the last declaration in the type body, return nil to ensure we include all remaining tokens in the type body.
         if nextDeclarationKeywordIndex == nil {
             return nil
         }
@@ -3415,9 +3415,9 @@ extension Formatter {
 
     /// Represents a condition in a guard or if statement
     enum ConditionalStatementElement {
-        // A boolean expression like `foo == bar`
+        /// A boolean expression like `foo == bar`
         case booleanExpression(range: ClosedRange<Int>)
-        // An optional binding / unwrap condition like `let foo` or `let foo = foo`
+        /// An optional binding / unwrap condition like `let foo` or `let foo = foo`
         case optionalBinding(range: ClosedRange<Int>, property: PropertyDeclaration)
         /// A pattern matching condition like `case .foo(let bar) = baaz`
         case patternMatching(range: ClosedRange<Int>)
@@ -3505,8 +3505,8 @@ extension Formatter {
         assert(tokens[startOfScope] == .startOfScope("("))
         guard let previousToken = index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope) else { return nil }
 
-        /// `foo()`, `@foo()`, or `#foo()`
-        /// Exclude keywords to avoid confusing `return (...)`, `as? (...)`, `{ _ in (...) }`, etc.
+        // `foo()`, `@foo()`, or `#foo()`
+        // Exclude keywords to avoid confusing `return (...)`, `as? (...)`, `{ _ in (...) }`, etc.
         let isFunctionIdentifier = { (token: Token) in
             token.isIdentifier || token.isAttribute || (token.isKeyword && token.string.hasPrefix("#") || token.string == "init")
         }
@@ -3603,14 +3603,14 @@ extension Token {
         isDeclarationTypeKeyword(excluding: [])
     }
 
-    // All of the keywords defining top-level entity
-    // https://docs.swift.org/swift-book/ReferenceManual/Declarations.html#grammar_declaration
+    /// All of the keywords defining top-level entity
+    /// https://docs.swift.org/swift-book/ReferenceManual/Declarations.html#grammar_declaration
     static var swiftTypeKeywords: Set<String> {
         Set(["struct", "class", "actor", "protocol", "enum", "extension"])
     }
 
-    // All of the keywords that map to individual Declaration grammars
-    // https://docs.swift.org/swift-book/ReferenceManual/Declarations.html#grammar_declaration
+    /// All of the keywords that map to individual Declaration grammars
+    /// https://docs.swift.org/swift-book/ReferenceManual/Declarations.html#grammar_declaration
     static var declarationTypeKeywords: Set<String> {
         swiftTypeKeywords.union([
             "import", "let", "var", "typealias", "func", "enum", "case",

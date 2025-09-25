@@ -1,4 +1,4 @@
-class TestClass {
+final class TestClass {
     init(
         foo: Foo
     ) where
@@ -11,7 +11,7 @@ class TestClass {
     }
 }
 
-class MyClass: NSObject,
+final class MyClass: NSObject,
     FooProtocol,
     BarProtocol
 {

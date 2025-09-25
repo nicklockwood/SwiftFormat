@@ -5,8 +5,9 @@
 // swiftformat:options --commas inline
 // swiftformat:options --wrap-arguments before-first
 // swiftformat:options --wrap-collections before-first
+// swiftformat:disable --unusedPrivateDeclarations
 
-class ViewController: UIViewController {
+final class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
     }

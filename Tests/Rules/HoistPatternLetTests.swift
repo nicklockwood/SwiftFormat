@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class HoistPatternLetTests: XCTestCase {
+final class HoistPatternLetTests: XCTestCase {
     // hoist = true
 
     func testHoistCaseLet() {

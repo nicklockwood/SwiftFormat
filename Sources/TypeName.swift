@@ -63,8 +63,7 @@ extension TypeName {
             }
         }
 
-        let hasCommaInParens = formatter.index(of: .delimiter(","), in: (openParen + 1) ..< closingParen) != nil
-        return hasCommaInParens
+        return formatter.index(of: .delimiter(","), in: (openParen + 1) ..< closingParen) != nil
     }
 
     /// Whether or not this type is an array.
@@ -89,8 +88,7 @@ extension TypeName {
         else { return false }
 
         // [] would be an array, not a dictionary
-        let hasColonInBraces = formatter.index(of: .delimiter(":"), in: (openBrace + 1) ..< closingBrace) != nil
-        return hasColonInBraces
+        return formatter.index(of: .delimiter(":"), in: (openBrace + 1) ..< closingBrace) != nil
     }
 
     /// Whether or not this type is a generic type with the given name.
@@ -118,7 +116,7 @@ extension TypeName {
 
     /// If this type is wrapped in redundant parens, returns the inner type.
     func withoutParens() -> TypeName {
-        /// If this type is a tuple, then the parens aren't redundant
+        // If this type is a tuple, then the parens aren't redundant
         if isTuple { return self }
 
         guard formatter.tokens[range.lowerBound] == .startOfScope("("),

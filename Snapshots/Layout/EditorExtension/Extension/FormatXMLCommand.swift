@@ -3,7 +3,7 @@
 import Foundation
 import XcodeKit
 
-class FormatXMLCommand: NSObject, XCSourceEditorCommand {
+final class FormatXMLCommand: NSObject, XCSourceEditorCommand {
     func perform(with invocation: XCSourceEditorCommandInvocation, completionHandler: @escaping (Error?) -> Void) {
         guard ["public.xml"].contains(invocation.buffer.contentUTI) else {
             return completionHandler(NSError(

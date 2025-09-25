@@ -2,4 +2,4 @@
 
 import Foundation
 
-public class TestFrameworkClass {}
+public final class TestFrameworkClass {}

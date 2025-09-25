@@ -36,7 +36,7 @@ private let rulesDirectory = URL(fileURLWithPath: #file)
     .deletingLastPathComponent().deletingLastPathComponent()
     .appendingPathComponent("Sources/Rules")
 
-class PerformanceTests: XCTestCase {
+final class PerformanceTests: XCTestCase {
     static let files: [String] = {
         var files = [String]()
         _ = enumerateFiles(withInputURL: rulesDirectory) { url, _, _ in

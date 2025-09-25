@@ -11,7 +11,7 @@ import XCTest
 final class NoGuardInTestsTests: XCTestCase {
     // MARK: - XCTest tests
 
-    func testReplaceGuardXCTFailWithXCTUnwrap() throws {
+    func testReplaceGuardXCTFailWithXCTUnwrap() {
         let input = """
         import XCTest
 
@@ -38,7 +38,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
     }
 
-    func testReplaceGuardXCTFailWithMessageWithXCTUnwrap() throws {
+    func testReplaceGuardXCTFailWithMessageWithXCTUnwrap() {
         let input = """
         import XCTest
 
@@ -63,7 +63,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, output, rule: .noGuardInTests)
     }
 
-    func testDoesNotReplaceNonTestFunction() throws {
+    func testDoesNotReplaceNonTestFunction() {
         let input = """
         import XCTest
 
@@ -79,7 +79,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, rule: .noGuardInTests)
     }
 
-    func testDoesNotReplaceGuardWithDifferentElseBlock() throws {
+    func testDoesNotReplaceGuardWithDifferentElseBlock() {
         let input = """
         import XCTest
 
@@ -95,7 +95,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, rule: .noGuardInTests)
     }
 
-    func testReplacesGuardWithDifferentExpression() throws {
+    func testReplacesGuardWithDifferentExpression() {
         let input = """
         import XCTest
 
@@ -120,7 +120,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, output, rule: .noGuardInTests)
     }
 
-    func testDoesNotReplaceInClosure() throws {
+    func testDoesNotReplaceInClosure() {
         let input = """
         import XCTest
 
@@ -138,7 +138,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, rule: .noGuardInTests)
     }
 
-    func testDoesNotReplaceInNestedFunc() throws {
+    func testDoesNotReplaceInNestedFunc() {
         let input = """
         import XCTest
 
@@ -156,7 +156,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, rule: .noGuardInTests)
     }
 
-    func testPreservesExistingThrows() throws {
+    func testPreservesExistingThrows() {
         let input = """
         import XCTest
 
@@ -181,7 +181,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, output, rule: .noGuardInTests)
     }
 
-    func testHandlesAsyncFunction() throws {
+    func testHandlesAsyncFunction() {
         let input = """
         import XCTest
 
@@ -208,7 +208,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, output, rule: .noGuardInTests)
     }
 
-    func testReplaceGuardReturnWithXCTUnwrap() throws {
+    func testReplaceGuardReturnWithXCTUnwrap() {
         let input = """
         import XCTest
 
@@ -234,7 +234,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
     }
 
-    func testMultipleGuardStatements() throws {
+    func testMultipleGuardStatements() {
         let input = """
         import XCTest
 
@@ -266,7 +266,7 @@ final class NoGuardInTestsTests: XCTestCase {
 
     // MARK: - Swift Testing tests
 
-    func testReplaceGuardReturnWithRequire() throws {
+    func testReplaceGuardReturnWithRequire() {
         let input = """
         import Testing
 
@@ -294,7 +294,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
     }
 
-    func testDoesNotReplaceNonTestFunctionSwiftTesting() throws {
+    func testDoesNotReplaceNonTestFunctionSwiftTesting() {
         let input = """
         import Testing
 
@@ -309,7 +309,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, rule: .noGuardInTests)
     }
 
-    func testDoesNotReplaceGuardWithDifferentElseBlockSwiftTesting() throws {
+    func testDoesNotReplaceGuardWithDifferentElseBlockSwiftTesting() {
         let input = """
         import Testing
 
@@ -326,7 +326,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, rule: .noGuardInTests)
     }
 
-    func testDoesNotReplaceInClosureSwiftTesting() throws {
+    func testDoesNotReplaceInClosureSwiftTesting() {
         let input = """
         import Testing
 
@@ -344,7 +344,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, rule: .noGuardInTests)
     }
 
-    func testSwiftTestingAddsThrows() throws {
+    func testSwiftTestingAddsThrows() {
         let input = """
         import Testing
 
@@ -370,7 +370,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.elseOnSameLine])
     }
 
-    func testSwiftTestingPreservesExistingThrows() throws {
+    func testSwiftTestingPreservesExistingThrows() {
         let input = """
         import Testing
 
@@ -396,7 +396,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.elseOnSameLine])
     }
 
-    func testSwiftTestingAsyncFunction() throws {
+    func testSwiftTestingAsyncFunction() {
         let input = """
         import Testing
 
@@ -424,7 +424,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, output, rule: .noGuardInTests)
     }
 
-    func testSwiftTestingMultipleGuardStatements() throws {
+    func testSwiftTestingMultipleGuardStatements() {
         let input = """
         import Testing
 
@@ -454,7 +454,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
     }
 
-    func testReplaceGuardWithMultipleConditionsXCTest() throws {
+    func testReplaceGuardWithMultipleConditionsXCTest() {
         let input = """
         import XCTest
 
@@ -481,7 +481,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, output, rule: .noGuardInTests)
     }
 
-    func testDoesNotReplaceAllConditionsInMultipleGuard() throws {
+    func testDoesNotReplaceAllConditionsInMultipleGuard() {
         let input = """
         import XCTest
 
@@ -508,7 +508,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, output, rule: .noGuardInTests)
     }
 
-    func testReplaceMultipleGuardConditionsWithMixedPatterns() throws {
+    func testReplaceMultipleGuardConditionsWithMixedPatterns() {
         let input = """
         import XCTest
 
@@ -537,7 +537,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, output, rule: .noGuardInTests)
     }
 
-    func testReplaceGuardWithMultipleConditionsSwiftTesting() throws {
+    func testReplaceGuardWithMultipleConditionsSwiftTesting() {
         let input = """
         import Testing
 
@@ -565,7 +565,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, output, rule: .noGuardInTests)
     }
 
-    func testReplaceMultipleOptionalBindingsSwiftTesting() throws {
+    func testReplaceMultipleOptionalBindingsSwiftTesting() {
         let input = """
         import Testing
 
@@ -593,7 +593,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, output, rule: .noGuardInTests)
     }
 
-    func testSimpleMultipleConditions() throws {
+    func testSimpleMultipleConditions() {
         let input = """
         import XCTest
 
@@ -619,7 +619,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, output, rule: .noGuardInTests)
     }
 
-    func testSimpleMultipleConditions2() throws {
+    func testSimpleMultipleConditions2() {
         let input = """
         import XCTest
 
@@ -645,7 +645,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.wrapConditionalBodies])
     }
 
-    func testReplaceGuardIssueRecordWithRequire() throws {
+    func testReplaceGuardIssueRecordWithRequire() {
         let input = """
         import Testing
 
@@ -674,7 +674,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
     }
 
-    func testReplaceGuardIssueRecordWithMessageWithRequire() throws {
+    func testReplaceGuardIssueRecordWithMessageWithRequire() {
         let input = """
         import Testing
 
@@ -701,7 +701,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, output, rule: .noGuardInTests)
     }
 
-    func testHandlesFiveConditions() throws {
+    func testHandlesFiveConditions() {
         let input = """
         import XCTest
 
@@ -736,7 +736,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.wrapMultilineStatementBraces, .elseOnSameLine, .blankLinesAfterGuardStatements, .wrapArguments])
     }
 
-    func testHandlesTenConditions() throws {
+    func testHandlesTenConditions() {
         let input = """
         import XCTest
 
@@ -781,7 +781,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .acronyms])
     }
 
-    func testHandlesMixedComplexConditions() throws {
+    func testHandlesMixedComplexConditions() {
         let input = """
         import XCTest
 
@@ -828,7 +828,7 @@ final class NoGuardInTestsTests: XCTestCase {
 
     // MARK: - Variable shadowing tests
 
-    func testDoesNotReplaceWhenVariableShadowing() throws {
+    func testDoesNotReplaceWhenVariableShadowing() {
         let input = """
         import XCTest
 
@@ -845,7 +845,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, rule: .noGuardInTests)
     }
 
-    func testDoesNotReplaceWhenVariableShadowingWithReturn() throws {
+    func testDoesNotReplaceWhenVariableShadowingWithReturn() {
         let input = """
         import XCTest
 
@@ -861,7 +861,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, rule: .noGuardInTests)
     }
 
-    func testHandlesGuardLetShorthand() throws {
+    func testHandlesGuardLetShorthand() {
         let input = """
         import XCTest
 
@@ -892,7 +892,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
     }
 
-    func testHandlesGuardLetShorthandSwiftTesting() throws {
+    func testHandlesGuardLetShorthandSwiftTesting() {
         let input = """
         import Testing
 
@@ -920,7 +920,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
     }
 
-    func testHandlesExplicitTypeAnnotation() throws {
+    func testHandlesExplicitTypeAnnotation() {
         let input = """
         import XCTest
 
@@ -949,7 +949,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
     }
 
-    func testHandlesExplicitTypeAnnotationWithShorthand() throws {
+    func testHandlesExplicitTypeAnnotationWithShorthand() {
         let input = """
         import XCTest
 
@@ -977,7 +977,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
     }
 
-    func testHandlesComplexTypeAnnotation() throws {
+    func testHandlesComplexTypeAnnotation() {
         let input = """
         import XCTest
 
@@ -1003,7 +1003,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
     }
 
-    func testHandlesTypeAnnotationSwiftTesting() throws {
+    func testHandlesTypeAnnotationSwiftTesting() {
         let input = """
         import Testing
 
@@ -1031,7 +1031,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
     }
 
-    func testPreservesDependentConditions() throws {
+    func testPreservesDependentConditions() {
         let input = """
         import XCTest
 
@@ -1049,7 +1049,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements])
     }
 
-    func testConvertsBooleanConditionsToXCTAssert() throws {
+    func testConvertsBooleanConditionsToXCTAssert() {
         let input = """
         import XCTest
 
@@ -1078,7 +1078,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
     }
 
-    func testConvertsBooleanConditionsToExpect() throws {
+    func testConvertsBooleanConditionsToExpect() {
         let input = """
         import Testing
 
@@ -1108,7 +1108,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
     }
 
-    func testConvertsMultipleBooleanConditions() throws {
+    func testConvertsMultipleBooleanConditions() {
         let input = """
         import XCTest
 
@@ -1139,7 +1139,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, output, rule: .noGuardInTests)
     }
 
-    func testPreservesGuardWithShadowedVariable() throws {
+    func testPreservesGuardWithShadowedVariable() {
         let input = """
         import XCTest
 
@@ -1158,7 +1158,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .elseOnSameLine, .wrapMultilineStatementBraces])
     }
 
-    func testPreservesGuardWithAnyShadowing() throws {
+    func testPreservesGuardWithAnyShadowing() {
         let input = """
         import XCTest
 
@@ -1179,7 +1179,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .elseOnSameLine, .wrapMultilineStatementBraces])
     }
 
-    func testPreservesGuardWithMixedCasePattern() throws {
+    func testPreservesGuardWithMixedCasePattern() {
         let input = """
         import XCTest
 
@@ -1199,7 +1199,7 @@ final class NoGuardInTestsTests: XCTestCase {
 
     // MARK: - Await tests
 
-    func testPreservesGuardWithAwaitInCondition() throws {
+    func testPreservesGuardWithAwaitInCondition() {
         let input = """
         import XCTest
 
@@ -1216,7 +1216,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements])
     }
 
-    func testPreservesGuardWithAwaitInConditionSwiftTesting() throws {
+    func testPreservesGuardWithAwaitInConditionSwiftTesting() {
         let input = """
         import Testing
 
@@ -1233,7 +1233,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements])
     }
 
-    func testPreservesGuardWithAwaitInMultipleConditions() throws {
+    func testPreservesGuardWithAwaitInMultipleConditions() {
         let input = """
         import XCTest
 
@@ -1253,7 +1253,7 @@ final class NoGuardInTestsTests: XCTestCase {
 
     // MARK: - No import tests
 
-    func testDoesNothingWithoutImport() throws {
+    func testDoesNothingWithoutImport() {
         let input = """
         func test_something() {
             guard let value = optionalValue else {

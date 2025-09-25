@@ -2,7 +2,7 @@
 
 import XCTest
 
-class StringsTests: XCTestCase {
+final class StringsTests: XCTestCase {
     func testFindStringsInAttributes() {
         let input = "<UILabel text=\"{strings.foo} {strings.bar}\"/>"
         let output = ["bar", "foo"]

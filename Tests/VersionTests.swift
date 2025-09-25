@@ -9,49 +9,49 @@
 import XCTest
 @testable import SwiftFormat
 
-class VersionTests: XCTestCase {
+final class VersionTests: XCTestCase {
     // MARK: Version parsing
 
-    func testParseEmptyVersion() throws {
+    func testParseEmptyVersion() {
         let version = Version(rawValue: "")
         XCTAssertNil(version)
     }
 
-    func testParseOrdinaryVersion() throws {
+    func testParseOrdinaryVersion() {
         let version = Version(rawValue: "4.2")
         XCTAssertEqual(version, "4.2")
     }
 
-    func testParsePaddedVersion() throws {
+    func testParsePaddedVersion() {
         let version = Version(rawValue: " 4.2 ")
         XCTAssertEqual(version, "4.2")
     }
 
-    func testParseThreePartVersion() throws {
+    func testParseThreePartVersion() {
         let version = Version(rawValue: "3.1.5")
         XCTAssertNotNil(version)
         XCTAssertEqual(version, "3.1.5")
     }
 
-    func testParsePreviewVersion() throws {
+    func testParsePreviewVersion() {
         let version = Version(rawValue: "3.0-PREVIEW-4")
         XCTAssertNotNil(version)
         XCTAssertEqual(version, "3.0-PREVIEW-4")
     }
 
-    func testComparison() throws {
+    func testComparison() {
         let version = Version(rawValue: "3.1.5")
         XCTAssertLessThan(version ?? "0", "3.2")
         XCTAssertGreaterThan(version ?? "0", "3.1.4")
     }
 
-    func testPreviewComparison() throws {
+    func testPreviewComparison() {
         let version = Version(rawValue: "3.0-PREVIEW-4")
         XCTAssertLessThan(version ?? "0", "4.0")
         XCTAssertGreaterThan(version ?? "0", "2.0")
     }
 
-    func testWildcardVersion() throws {
+    func testWildcardVersion() {
         let version = Version(rawValue: "3.x")
         XCTAssertNotNil(version)
         XCTAssertLessThan(version ?? "0", "4.0")

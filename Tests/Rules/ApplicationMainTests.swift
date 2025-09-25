@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class ApplicationMainTests: XCTestCase {
+final class ApplicationMainTests: XCTestCase {
     func testUIApplicationMainReplacedByMain() {
         let input = """
         @UIApplicationMain

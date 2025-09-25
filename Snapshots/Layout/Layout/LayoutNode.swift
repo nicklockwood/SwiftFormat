@@ -5,7 +5,7 @@ import UIKit
 /// LayoutNode represents a single node of a layout tree
 /// The LayoutNode retains its view/view controller, so any references
 /// from the view back to the node should be weak
-public class LayoutNode: NSObject {
+public final class LayoutNode: NSObject {
     /// The view managed by this node
     /// Accessing this property will instantiate the view if it doesn't already exist
     public var view: UIView {
@@ -194,16 +194,8 @@ public class LayoutNode: NSObject {
         }
     }
 
-    private var _observingInsets = false
     private var _shouldObserveInsets: Bool {
         return viewControllerClass != nil || parent == nil
-    }
-
-    private func _stopObservingInsets() {
-        if #available(iOS 11.0, *), _observingInsets {
-            removeObserver(self, forKeyPath: "_view.safeAreaInsets")
-            _observingInsets = false
-        }
     }
 
     private func stopObserving() {
@@ -1066,9 +1058,7 @@ public class LayoutNode: NSObject {
     private var _getters = [String: Getter]()
     private var _layoutExpressions = [String: LayoutExpression]()
     private var _viewControllerExpressions = [String: LayoutExpression]()
-    private var _sortedViewControllerGetters = [Getter]()
     private var _viewExpressions = [String: LayoutExpression]()
-    private var _sortedViewGetters = [Getter]()
     private var _valueClearers = [() -> Void]()
     private var _valueHasChanged = [String: () -> Bool]()
 
@@ -1266,7 +1256,7 @@ public class LayoutNode: NSObject {
                     case "contentSize.height":
                         expression = LayoutExpression(contentHeightExpression: string, for: self)
                     default:
-                        /// Allow use of % in any vertical/horizontal property expression
+                        // Allow use of % in any vertical/horizontal property expression
                         let parts = symbol.components(separatedBy: ".")
                         if ["left", "right", "x", "width"].contains(parts.last!) {
                             expression = LayoutExpression(xExpression: string, for: self)
@@ -2956,7 +2946,7 @@ public class LayoutNode: NSObject {
 
             let viewsAndOutlets = viewsAndOutlets ?? NSMutableSet()
 
-            /// Check if this view controller instance has already been used
+            // Check if this view controller instance has already been used
             if let controller = viewController {
                 if viewsAndOutlets.contains(controller) {
                     throw LayoutError("Duplicate \(controller.classForCoder) instance in Layout hierarchy", for: self)
@@ -2972,7 +2962,7 @@ public class LayoutNode: NSObject {
                 viewsAndOutlets.add(view)
             }
 
-            /// Check if an outlet with this name has already been bound
+            // Check if an outlet with this name has already been bound
             if let outlet = outlet {
                 if viewsAndOutlets.contains(outlet) {
                     throw LayoutError("Duplicate outlet reference '\(outlet)'", for: self)

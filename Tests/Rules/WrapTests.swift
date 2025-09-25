@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class WrapTests: XCTestCase {
+final class WrapTests: XCTestCase {
     func testWrapIfStatement() {
         let input = """
         if let foo = foo, let bar = bar, let baz = baz {}
@@ -502,7 +502,7 @@ class WrapTests: XCTestCase {
                        exclude: [.indent, .wrapArguments])
     }
 
-    func testWrapColorLiteral() throws {
+    func testWrapColorLiteral() {
         let input = """
         button.setTitleColor(#colorLiteral(red: 0.2392156863, green: 0.6470588235, blue: 0.3647058824, alpha: 1), for: .normal)
         """

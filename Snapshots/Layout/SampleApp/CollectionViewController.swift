@@ -12,7 +12,7 @@ private let images = [
     UIImage(named: "Rocket"),
 ]
 
-class CollectionViewController: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource {
+final class CollectionViewController: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource {
     @IBOutlet var collectionView: UICollectionView? {
         didSet {
             collectionView?.registerLayout(

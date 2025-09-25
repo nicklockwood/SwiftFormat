@@ -32,7 +32,7 @@
 import Expression
 import XCTest
 
-class PerformanceTests: XCTestCase {
+final class PerformanceTests: XCTestCase {
     private let parseRepetitions = 500
     private let evalRepetitions = 5000
 
@@ -361,10 +361,6 @@ class PerformanceTests: XCTestCase {
         let foo: Int
         var hashValue: Int {
             return foo.hashValue
-        }
-
-        static func == (lhs: HashableStruct, rhs: HashableStruct) -> Bool {
-            return lhs.foo == rhs.foo
         }
     }
 }

@@ -35,8 +35,8 @@ let domain = "domain.com"
 // print(#URL("https://\(domain)/api/path")) // error: #URL requires a static string literal
 // print(#URL("https://not a url.com")) // error: Malformed url
 
-// Use the "wrapStoredProperties" macro to deprecate all of the stored
-// properties.
+/// Use the "wrapStoredProperties" macro to deprecate all of the stored
+/// properties.
 @wrapStoredProperties(#"available(*, deprecated, message: "hands off my data")"#)
 struct OldStorage {
   var x: Int
@@ -46,8 +46,8 @@ struct OldStorage {
 // introduced by @wrapStoredProperties on OldStorage.
 _ = OldStorage(x: 5).x
 
-// Move the storage from each of the stored properties into a dictionary
-// called `_storage`, turning the stored properties into computed properties.
+/// Move the storage from each of the stored properties into a dictionary
+/// called `_storage`, turning the stored properties into computed properties.
 @DictionaryStorage
 struct Point {
   var x: Int = 1
@@ -184,8 +184,8 @@ enum ShippingOptions {
   static let all: ShippingOptions = [.express, .priority, .standard]
 }
 
-// `@MetaEnum` adds a nested enum called `Meta` with the same cases, but no
-// associated values/payloads. Handy for e.g. describing a schema.
+/// `@MetaEnum` adds a nested enum called `Meta` with the same cases, but no
+/// associated values/payloads. Handy for e.g. describing a schema.
 @MetaEnum enum Value {
   case integer(Int)
   case text(String)

@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class DocCommentsTests: XCTestCase {
+final class DocCommentsTests: XCTestCase {
     func testConvertCommentsToDocComments() {
         let input = """
         // Multi-line comment before class with

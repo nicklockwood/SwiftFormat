@@ -18,7 +18,7 @@ actor SafeCollector {
     }
 }
 
-class NewDataController {
+final class NewDataController {
     @MainActor func save() {
         print("Saving data…")
     }

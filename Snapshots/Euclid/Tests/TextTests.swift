@@ -12,7 +12,7 @@ import Foundation
 import XCTest
 @testable import Euclid
 
-class TextTests: XCTestCase {
+final class TextTests: XCTestCase {
     func testTextPaths() {
         let text = NSAttributedString(string: "Hello")
         let paths = Path.text(text)

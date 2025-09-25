@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class PreferForLoopTests: XCTestCase {
+final class PreferForLoopTests: XCTestCase {
     func testConvertSimpleForEachToForLoop() {
         let input = """
         let placeholderStrings = ["foo", "bar", "baaz"]

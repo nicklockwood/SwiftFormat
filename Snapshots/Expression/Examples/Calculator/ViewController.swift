@@ -32,7 +32,7 @@
 import Expression
 import UIKit
 
-class ViewController: UIViewController, UITextFieldDelegate {
+final class ViewController: UIViewController, UITextFieldDelegate {
     @IBOutlet private var inputField: UITextField!
     @IBOutlet private var outputView: UITextView!
 

@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class RedundantParensTests: XCTestCase {
+final class RedundantParensTests: XCTestCase {
     // around expressions
 
     func testRedundantParensRemoved() {

@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class DocCommentsBeforeModifiersTests: XCTestCase {
+final class DocCommentsBeforeModifiersTests: XCTestCase {
     func testDocCommentsBeforeAttributes() {
         let input = """
         @MainActor

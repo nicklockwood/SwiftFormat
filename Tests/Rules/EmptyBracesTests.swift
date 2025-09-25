@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class EmptyBracesTests: XCTestCase {
+final class EmptyBracesTests: XCTestCase {
     func testLinebreaksRemovedInsideBraces() {
         let input = """
         func foo() {

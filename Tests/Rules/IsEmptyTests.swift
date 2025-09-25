@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class IsEmptyTests: XCTestCase {
+final class IsEmptyTests: XCTestCase {
     // count == 0
 
     func testCountEqualsZero() {

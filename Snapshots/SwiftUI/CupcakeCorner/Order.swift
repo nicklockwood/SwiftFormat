@@ -8,7 +8,7 @@
 
 import Foundation
 
-class Order: ObservableObject, Codable {
+final class Order: ObservableObject, Codable {
   struct Data: Codable {
     var type = 0
     var quantity = 3

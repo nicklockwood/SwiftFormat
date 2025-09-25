@@ -2,7 +2,7 @@
 
 import UIKit
 
-class PagesViewController: UIViewController, UIScrollViewDelegate {
+final class PagesViewController: UIViewController, UIScrollViewDelegate {
     @IBOutlet var scrollView: UIScrollView?
     @IBOutlet var pageControl: UIPageControl?
 

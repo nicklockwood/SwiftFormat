@@ -4,7 +4,7 @@ import UIKit
 
 private let placeholderID = NSUUID().uuidString
 
-private class Box {
+private final class Box {
     weak var node: LayoutNode?
     init(_ node: LayoutNode) {
         self.node = node
@@ -29,8 +29,8 @@ private extension UICollectionViewLayout {
     }
 }
 
-private class LayoutCollectionView: UICollectionView {
-    open override var intrinsicContentSize: CGSize {
+private final class LayoutCollectionView: UICollectionView {
+    override var intrinsicContentSize: CGSize {
         guard layoutNode != nil else {
             return super.intrinsicContentSize
         }
@@ -40,7 +40,7 @@ private class LayoutCollectionView: UICollectionView {
         )
     }
 
-    open override var contentSize: CGSize {
+    override var contentSize: CGSize {
         didSet {
             if oldValue != contentSize, let layoutNode = layoutNode {
                 layoutNode.contentSizeChanged()
@@ -388,15 +388,15 @@ public extension UICollectionView {
     }
 }
 
-private class LayoutCollectionViewCell: UICollectionViewCell {
-    open override var intrinsicContentSize: CGSize {
+private final class LayoutCollectionViewCell: UICollectionViewCell {
+    override var intrinsicContentSize: CGSize {
         guard let layoutNode = layoutNode, layoutNode.children.isEmpty else {
             return super.intrinsicContentSize
         }
         return CGSize(width: UIView.noIntrinsicMetric, height: 44)
     }
 
-    open override func sizeThatFits(_ size: CGSize) -> CGSize {
+    override func sizeThatFits(_ size: CGSize) -> CGSize {
         if let layoutNode = layoutNode {
             let height = (try? layoutNode.doubleValue(forSymbol: "height")) ?? 0
             return CGSize(width: size.width, height: CGFloat(height))

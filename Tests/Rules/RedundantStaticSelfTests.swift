@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class RedundantStaticSelfTests: XCTestCase {
+final class RedundantStaticSelfTests: XCTestCase {
     func testRedundantStaticSelfInStaticVar() {
         let input = """
         enum E { static var x: Int { Self.y } }

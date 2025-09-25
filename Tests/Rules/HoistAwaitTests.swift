@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class HoistAwaitTests: XCTestCase {
+final class HoistAwaitTests: XCTestCase {
     func testHoistAwait() {
         let input = """
         greet(await name, await surname)

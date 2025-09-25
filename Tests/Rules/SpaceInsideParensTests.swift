@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class SpaceInsideParensTests: XCTestCase {
+final class SpaceInsideParensTests: XCTestCase {
     func testSpaceInsideParens() {
         let input = """
         ( 1, ( 2, 3 ) )

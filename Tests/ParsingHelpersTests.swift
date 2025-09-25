@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class ParsingHelpersTests: XCTestCase {
+final class ParsingHelpersTests: XCTestCase {
     // MARK: isStartOfClosure
 
     // types

@@ -4,7 +4,7 @@ import UIKit
 import XCTest
 @testable import Layout
 
-class TableViewController: UIViewController, LayoutLoading, UITableViewDataSource, UITableViewDelegate {
+final class TableViewController: UIViewController, LayoutLoading, UITableViewDataSource, UITableViewDelegate {
     @objc var tableView: UITableView?
     var didLoadRows = false
 
@@ -26,7 +26,7 @@ class TableViewController: UIViewController, LayoutLoading, UITableViewDataSourc
     }
 }
 
-class TableViewTests: XCTestCase {
+final class TableViewTests: XCTestCase {
     func testTableCellSizing() {
         let vc = TableViewController()
         vc.view.frame = CGRect(x: 0, y: 0, width: 512, height: 512)

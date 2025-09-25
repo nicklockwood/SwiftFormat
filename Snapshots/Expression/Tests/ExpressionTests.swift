@@ -32,7 +32,7 @@
 import XCTest
 @testable import Expression
 
-class ExpressionTests: XCTestCase {
+final class ExpressionTests: XCTestCase {
     func testLinuxTestSuiteIncludesAllTests() {
         #if os(macOS)
             let thisClass = type(of: self)

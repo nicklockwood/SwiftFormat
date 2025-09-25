@@ -172,8 +172,8 @@ public extension FormatRule {
 }
 
 extension Formatter {
-    // Whether or not the conditional statement that starts at the given index
-    // has branches that are exhaustive
+    /// Whether or not the conditional statement that starts at the given index
+    /// has branches that are exhaustive
     func conditionalBranchesAreExhaustive(
         conditionKeywordIndex: Int,
         branches: [Formatter.ConditionalBranch]
@@ -195,11 +195,11 @@ extension Formatter {
         return false
     }
 
-    // Whether or not the given conditional branch body qualifies as a single statement
-    // that assigns a value to `identifier`. This is either:
-    //  1. a single assignment to `lvalue =`
-    //  2. a single `if` or `switch` statement where each of the branches also qualify,
-    //     and the statement is exhaustive.
+    /// Whether or not the given conditional branch body qualifies as a single statement
+    /// that assigns a value to `identifier`. This is either:
+    ///  1. a single assignment to `lvalue =`
+    ///  2. a single `if` or `switch` statement where each of the branches also qualify,
+    ///     and the statement is exhaustive.
     func isExhaustiveSingleStatementAssignment(_ branch: Formatter.ConditionalBranch, lvalueRange: ClosedRange<Int>) -> Bool {
         guard let firstTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: branch.startOfBranch) else { return false }
 
@@ -269,7 +269,7 @@ extension Formatter {
         return false
     }
 
-    // Removes the `identifier =` from each conditional branch
+    /// Removes the `identifier =` from each conditional branch
     func removeAssignmentFromAllBranches(of conditionalBranches: [ConditionalBranch]) {
         forEachRecursiveConditionalBranch(in: conditionalBranches) { branch in
             guard let firstTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: branch.startOfBranch),

@@ -34,7 +34,7 @@ import XCTest
 
 #if os(iOS)
 
-class PerformanceTests: XCTestCase {
+final class PerformanceTests: XCTestCase {
     // MARK: Descriptions
 
     func testEmojiCharacterDescription() {

@@ -305,14 +305,14 @@ extension Formatter {
             || shouldSortAlphabeticallyByDeclarationPattern
     }
 
-    // Whether or not this declaration is an instance property that can affect
-    // the parameters struct's synthesized memberwise initializer
+    /// Whether or not this declaration is an instance property that can affect
+    /// the parameters struct's synthesized memberwise initializer
     func affectsSynthesizedMemberwiseInitializer(_ declaration: Declaration) -> Bool {
         declaration.isStoredInstanceProperty
     }
 
-    // Whether or not the two given declaration orderings preserve
-    // the same synthesized memberwise initializer
+    /// Whether or not the two given declaration orderings preserve
+    /// the same synthesized memberwise initializer
     func preservesSynthesizedMemberwiseInitializer(
         _ lhs: [CategorizedDeclaration],
         _ rhs: [CategorizedDeclaration]
@@ -330,9 +330,9 @@ extension Formatter {
         })
     }
 
-    // Adjust the ranges of the type's body declarations so that any existing MARK comment
-    // is the first token in any declaration. This makes it so that any comment _before_
-    // the MARK comment is treated as part of the previous declaration.
+    /// Adjust the ranges of the type's body declarations so that any existing MARK comment
+    /// is the first token in any declaration. This makes it so that any comment _before_
+    /// the MARK comment is treated as part of the previous declaration.
     func adjustBodyDeclarationRanges(in typeDeclaration: TypeDeclaration, order: ParsedOrder) {
         for (index, declaration) in typeDeclaration.body.enumerated() {
             guard index != 0 else { continue }
@@ -561,8 +561,8 @@ extension Formatter {
         }
     }
 
-    // Preserves the original spacing for groups of properties that were originally consecutive.
-    // After sorting, only the final declaration in the group should be followed by a blank line.
+    /// Preserves the original spacing for groups of properties that were originally consecutive.
+    /// After sorting, only the final declaration in the group should be followed by a blank line.
     func preserveConsecutivePropertyGroupSpacing(
         in typeDeclaration: TypeDeclaration,
         groups consecutiveGroups: [[Declaration]],
@@ -612,13 +612,13 @@ extension Formatter {
         }
     }
 
-    // Finds all of the consecutive groups of property declarations in the type body
+    /// Finds all of the consecutive groups of property declarations in the type body
     func consecutivePropertyDeclarationGroups(in typeDeclaration: TypeDeclaration) -> [[Declaration]] {
         var declarationGroups: [[Declaration]] = []
         var currentGroup: [Declaration] = []
 
-        /// Ends the current group, ensuring that groups are only recorded
-        /// when they contain two or more declarations.
+        // Ends the current group, ensuring that groups are only recorded
+        // when they contain two or more declarations.
         func endCurrentGroup(addingToExistingGroup declarationToAdd: Declaration? = nil) {
             if let declarationToAdd {
                 currentGroup.append(declarationToAdd)

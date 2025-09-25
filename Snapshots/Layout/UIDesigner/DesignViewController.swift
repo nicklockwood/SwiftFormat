@@ -30,7 +30,7 @@ enum DeviceOrientation: Int {
     case landscape
 }
 
-class DesignView: UIControl {
+final class DesignView: UIControl {
     weak var node: LayoutNode? {
         didSet {
             update()
@@ -55,7 +55,7 @@ class DesignView: UIControl {
     }
 }
 
-class DesignViewController: UIViewController, UIToolbarDelegate, EditViewControllerDelegate, UIPopoverPresentationControllerDelegate {
+final class DesignViewController: UIViewController, UIToolbarDelegate, EditViewControllerDelegate, UIPopoverPresentationControllerDelegate {
     private(set) var errorLabel: UILabel!
 
     private(set) var toolbar: UIToolbar!

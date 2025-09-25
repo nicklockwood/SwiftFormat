@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class SpaceAroundParensTests: XCTestCase {
+final class SpaceAroundParensTests: XCTestCase {
     func testSpaceAfterSet() {
         let input = """
         private(set)var foo: Int

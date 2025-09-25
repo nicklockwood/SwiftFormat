@@ -121,7 +121,7 @@ private extension Layout {
 }
 
 /// API for loading a layout XML file
-class LayoutLoader {
+final class LayoutLoader {
     private var _originalURL: URL!
     private var _xmlURL: URL!
     private var _projectDirectory: URL?

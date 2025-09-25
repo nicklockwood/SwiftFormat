@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class RedundantPropertyTests: XCTestCase {
+final class RedundantPropertyTests: XCTestCase {
     func testRemovesRedundantProperty() {
         let input = """
         func foo() -> Foo {

@@ -37,7 +37,7 @@ import Foundation
 /// The primary advantage it provides over operating on the token array
 /// directly is that it allows mutation during enumeration, and
 /// transparently handles changes that affect the current token index.
-public class Formatter: NSObject {
+public final class Formatter: NSObject {
     private var enumerationIndex = -1
     private var autoUpdatingReferences = [WeakAutoUpdatingReference]()
 
@@ -195,7 +195,7 @@ public class Formatter: NSObject {
         }
     }
 
-    // Update `isEnabled` based on directives around the specified index
+    /// Update `isEnabled` based on directives around the specified index
     func updateEnablement(at index: Int) {
         if directives.isEmpty { return }
 
@@ -1050,7 +1050,7 @@ extension ClosedRange: AnyClosedRange where Bound == Int {
     public var range: ClosedRange<Int> { self }
 }
 
-// An auto-updating subrange of indicies in a `Formatter`
+/// An auto-updating subrange of indicies in a `Formatter`
 final class AutoUpdatingRange: AutoUpdatingReference, AnyClosedRange, Equatable, CustomStringConvertible {
     var range: ClosedRange<Int>
     let formatter: Formatter

@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class WrapEnumCasesTests: XCTestCase {
+final class WrapEnumCasesTests: XCTestCase {
     func testMultilineEnumCases() {
         let input = """
         enum Enum1: Int {

@@ -33,7 +33,7 @@ let formatter: NumberFormatter = {
     return formatter
 }()
 
-class ViewController: UITableViewController {
+final class ViewController: UITableViewController {
     var results: [(String, [[(String, Double)]])] = []
 
     @objc func update() {

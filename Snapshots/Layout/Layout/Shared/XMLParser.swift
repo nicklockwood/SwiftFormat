@@ -90,7 +90,7 @@ enum XMLNode {
     }
 }
 
-class XMLParser: NSObject, XMLParserDelegate {
+final class XMLParser: NSObject, XMLParserDelegate {
     private var options: Options = []
     private var root: [XMLNode] = []
     private var stack: [XMLNode] = []

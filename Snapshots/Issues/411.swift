@@ -1,9 +1,10 @@
+// swiftformat:disable --unusedPrivateDeclarations
 Array([]
     .map {
         ""
     }.something())
 
-class Thing {
+final class Thing {
     private let somePublisher =
         Publishers.Factory<OtherThing, Never> { _ in
             // do some stuff here

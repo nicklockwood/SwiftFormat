@@ -32,7 +32,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class ReporterTests: XCTestCase {
+final class ReporterTests: XCTestCase {
     func testWrite() throws {
         let reporter = GithubActionsLogReporter(environment: ["GITHUB_WORKSPACE": "/bar"])
         let rule = FormatRule.consecutiveSpaces

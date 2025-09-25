@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class BlankLinesAroundMarkTests: XCTestCase {
+final class BlankLinesAroundMarkTests: XCTestCase {
     func testInsertBlankLinesAroundMark() {
         let input = """
         let foo = "foo"

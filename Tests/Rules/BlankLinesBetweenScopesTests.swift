@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class BlankLinesBetweenScopesTests: XCTestCase {
+final class BlankLinesBetweenScopesTests: XCTestCase {
     func testBlankLineBetweenFunctions() {
         let input = """
         func foo() {

@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class RedundantLetTests: XCTestCase {
+final class RedundantLetTests: XCTestCase {
     func testRemoveRedundantLet() {
         let input = """
         let _ = bar {}

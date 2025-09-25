@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class StrongifiedSelfTests: XCTestCase {
+final class StrongifiedSelfTests: XCTestCase {
     func testBacktickedSelfConvertedToSelfInGuard() {
         let input = """
         { [weak self] in

@@ -9,7 +9,7 @@
 import XCTest
 @testable import Parsing
 
-class TranspilerTests: XCTestCase {
+final class TranspilerTests: XCTestCase {
 
     func testDeclaration() throws {
         let input = "let foo = 5 + 6 + 7"

@@ -7,7 +7,7 @@ extension UIColor {
     @objc static let testColor = UIColor.brown
 }
 
-class ColorExpressionTests: XCTestCase {
+final class ColorExpressionTests: XCTestCase {
     func testRed() {
         let node = LayoutNode()
         let expression = LayoutExpression(colorExpression: "red", for: node)

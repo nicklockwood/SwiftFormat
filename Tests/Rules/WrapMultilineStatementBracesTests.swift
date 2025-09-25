@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class WrapMultilineStatementBracesTests: XCTestCase {
+final class WrapMultilineStatementBracesTests: XCTestCase {
     func testMultilineIfBraceOnNextLine() {
         let input = """
         if firstConditional,

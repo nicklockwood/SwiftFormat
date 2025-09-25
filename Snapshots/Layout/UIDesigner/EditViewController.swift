@@ -28,7 +28,7 @@ protocol EditViewControllerDelegate: class {
     func didUpdateExpression(_ expression: String, for name: String, in node: LayoutNode)
 }
 
-class EditViewController: UIViewController, UITextFieldDelegate {
+final class EditViewController: UIViewController, UITextFieldDelegate {
     weak var delegate: EditViewControllerDelegate?
     var node: LayoutNode! {
         didSet {

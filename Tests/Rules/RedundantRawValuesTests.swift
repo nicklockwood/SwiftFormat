@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class RedundantRawValuesTests: XCTestCase {
+final class RedundantRawValuesTests: XCTestCase {
     func testRemoveRedundantRawString() {
         let input = """
         enum Foo: String {

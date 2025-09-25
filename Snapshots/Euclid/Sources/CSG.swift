@@ -246,7 +246,7 @@ private func reduce(_ meshesAndBounds: inout [(Mesh, Bounds)],
     return m
 }
 
-private class BSPNode {
+private final class BSPNode {
     private weak var parent: BSPNode?
     private var front: BSPNode?
     private var back: BSPNode?
@@ -261,27 +261,6 @@ private class BSPNode {
     private init(plane: Plane, parent: BSPNode?) {
         self.parent = parent
         self.plane = plane
-    }
-
-    private func enumerate(_ block: (BSPNode) -> Void) {
-        var node = self
-        var visited: BSPNode?
-        block(node)
-        while true {
-            if visited == nil, let front = node.front {
-                block(front)
-                node = front
-            } else if let back = node.back, back !== visited {
-                visited = nil
-                block(back)
-                node = back
-            } else if node !== self, let parent = node.parent {
-                visited = node
-                node = parent
-            } else {
-                return
-            }
-        }
     }
 
     enum ClipRule {

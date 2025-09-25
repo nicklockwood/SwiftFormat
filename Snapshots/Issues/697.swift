@@ -60,7 +60,7 @@ public extension Firestore {
   }
 }
 
-class _FirestoreDecoder: Decoder {
+final class _FirestoreDecoder: Decoder {
   // `_FirestoreDecoder`
 
   // MARK: Properties

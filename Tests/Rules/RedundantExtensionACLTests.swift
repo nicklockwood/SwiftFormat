@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class RedundantExtensionACLTests: XCTestCase {
+final class RedundantExtensionACLTests: XCTestCase {
     func testPublicExtensionMemberACLStripped() {
         let input = """
         public extension Foo {

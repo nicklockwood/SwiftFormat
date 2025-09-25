@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class RedundantGetTests: XCTestCase {
+final class RedundantGetTests: XCTestCase {
     func testRemoveSingleLineIsolatedGet() {
         let input = """
         var foo: Int { get { return 5 } }

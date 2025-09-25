@@ -43,21 +43,13 @@ private struct HashableStruct: Hashable {
     var hashValue: Int {
         return foo.hashValue
     }
-
-    static func == (lhs: HashableStruct, rhs: HashableStruct) -> Bool {
-        return lhs.foo == rhs.foo
-    }
 }
 
 private struct EquatableStruct: Equatable {
     let foo: Int
-
-    static func == (lhs: EquatableStruct, rhs: EquatableStruct) -> Bool {
-        return lhs.foo == rhs.foo
-    }
 }
 
-class AnyExpressionTests: XCTestCase {
+final class AnyExpressionTests: XCTestCase {
     func testLinuxTestSuiteIncludesAllTests() {
         #if os(macOS)
             let thisClass = type(of: self)

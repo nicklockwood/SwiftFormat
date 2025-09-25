@@ -9,7 +9,7 @@
 import XCTest
 @testable import Sprinter
 
-class SprinterTests: XCTestCase {
+final class SprinterTests: XCTestCase {
     // MARK: format errors
 
     func testParseTrailingPercentCharacter() {

@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class SortDeclarationsTests: XCTestCase {
+final class SortDeclarationsTests: XCTestCase {
     func testSortEnumBody() {
         let input = """
         // swiftformat:sort

@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class RedundantClosureTests: XCTestCase {
+final class RedundantClosureTests: XCTestCase {
     func testClosureAroundConditionalAssignmentNotRedundantForExplicitReturn() {
         let input = """
         let myEnum = MyEnum.a

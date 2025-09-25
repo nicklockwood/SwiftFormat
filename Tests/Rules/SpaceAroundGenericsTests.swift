@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class SpaceAroundGenericsTests: XCTestCase {
+final class SpaceAroundGenericsTests: XCTestCase {
     func testSpaceAroundGenerics() {
         let input = """
         Foo <Bar <Baz>>

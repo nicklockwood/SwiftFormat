@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class IndentTests: XCTestCase {
+final class IndentTests: XCTestCase {
     func testReduceIndentAtStartOfFile() {
         let input = """
             foo()

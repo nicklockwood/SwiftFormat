@@ -3,7 +3,7 @@
 import Layout
 import UIKit
 
-class TreeViewController: UITableViewController {
+final class TreeViewController: UITableViewController {
     func nodeName(_ node: LayoutNode) -> String {
         return node.viewController.map {
             var name = "\($0.classForCoder)"

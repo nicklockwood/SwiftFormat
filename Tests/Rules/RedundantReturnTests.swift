@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class RedundantReturnTests: XCTestCase {
+final class RedundantReturnTests: XCTestCase {
     func testRemoveRedundantReturnInClosure() {
         let input = """
         foo(with: { return 5 })

@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class LeadingDelimitersTests: XCTestCase {
+final class LeadingDelimitersTests: XCTestCase {
     func testLeadingCommaMovedToPreviousLine() {
         let input = """
         let foo = 5

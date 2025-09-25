@@ -3,7 +3,7 @@
 import XCTest
 @testable import Layout
 
-class StateTests: XCTestCase {
+final class StateTests: XCTestCase {
     struct TestState {
         var foo = 5
         var bar = "baz"
@@ -72,10 +72,6 @@ class StateTests: XCTestCase {
 
     struct ChildState: Equatable {
         var baz = false
-
-        static func == (lhs: ChildState, rhs: ChildState) -> Bool {
-            return lhs.baz == rhs.baz
-        }
     }
 
     struct NestedState {
@@ -91,7 +87,7 @@ class StateTests: XCTestCase {
         XCTAssertEqual(try node.value(forSymbol: "bar.baz") as? Bool, false)
     }
 
-    class TestVC: UIViewController {
+    final class TestVC: UIViewController {
         var updated = false
 
         override func didUpdateLayout(for _: LayoutNode) {
@@ -127,11 +123,11 @@ class StateTests: XCTestCase {
         XCTAssertFalse(vc.updated)
     }
 
-    class OptionalChildModel {
+    final class OptionalChildModel {
         var name: String?
     }
 
-    class OptionalParentModel {
+    final class OptionalParentModel {
         var nestedModel: OptionalChildModel?
     }
 

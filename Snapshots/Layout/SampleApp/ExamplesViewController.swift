@@ -3,7 +3,7 @@
 import Layout
 import UIKit
 
-class ExamplesViewController: UIViewController, LayoutLoading, UITabBarControllerDelegate {
+final class ExamplesViewController: UIViewController, LayoutLoading, UITabBarControllerDelegate {
     private var selectedTab = 0
 
     override func viewDidLoad() {

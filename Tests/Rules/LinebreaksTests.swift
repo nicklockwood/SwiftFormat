@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class LinebreaksTests: XCTestCase {
+final class LinebreaksTests: XCTestCase {
     func testCarriageReturn() {
         let input = """
         foo\rbar

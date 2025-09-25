@@ -31,7 +31,7 @@
 
 import Cocoa
 
-class ListSelectionTableCellView: NSTableCellView {
+final class ListSelectionTableCellView: NSTableCellView {
     @IBOutlet var title: NSTextField!
     @IBOutlet var dropDown: NSPopUpButton!
     @IBAction func listSelectionChanged(_: NSPopUpButton) {

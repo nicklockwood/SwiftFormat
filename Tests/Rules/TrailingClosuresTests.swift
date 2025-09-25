@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class TrailingClosuresTests: XCTestCase {
+final class TrailingClosuresTests: XCTestCase {
     func testAnonymousClosureArgumentMadeTrailing() {
         let input = """
         foo(foo: 5, { /* some code */ })
@@ -448,7 +448,7 @@ class TrailingClosuresTests: XCTestCase {
         testFormatting(for: input, rule: .trailingClosures)
     }
 
-    func testMultipleNestedClosures() throws {
+    func testMultipleNestedClosures() {
         let repeatCount = 10
         let input = """
         override func foo() {

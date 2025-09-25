@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class RedundantBreakTests: XCTestCase {
+final class RedundantBreakTests: XCTestCase {
     func testRedundantBreaksRemoved() {
         let input = """
         switch x {

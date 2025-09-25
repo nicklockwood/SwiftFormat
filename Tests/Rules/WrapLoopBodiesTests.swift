@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class WrapLoopBodiesTests: XCTestCase {
+final class WrapLoopBodiesTests: XCTestCase {
     func testWrapForLoop() {
         let input = """
         for foo in bar { print(foo) }

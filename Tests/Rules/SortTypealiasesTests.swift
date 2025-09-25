@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class SortTypealiasesTests: XCTestCase {
+final class SortTypealiasesTests: XCTestCase {
     func testSortSingleLineTypealias() {
         let input = """
         typealias Placeholders = Foo & Bar & Quux & Baaz

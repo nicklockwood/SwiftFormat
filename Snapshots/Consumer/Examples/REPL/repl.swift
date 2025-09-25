@@ -10,7 +10,7 @@ import Foundation
 
 // MARK: API
 
-public class State {
+public final class State {
     fileprivate var variables = [String: Any]()
 }
 

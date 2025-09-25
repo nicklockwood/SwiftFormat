@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class PrivateStateVariablesTests: XCTestCase {
+final class PrivateStateVariablesTests: XCTestCase {
     func testPrivateState() {
         let input = """
         @State var counter: Int

@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class AnyObjectProtocolTests: XCTestCase {
+final class AnyObjectProtocolTests: XCTestCase {
     func testClassReplacedByAnyObject() {
         let input = """
         protocol Foo: class {}

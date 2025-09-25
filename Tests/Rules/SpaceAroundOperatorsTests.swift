@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class SpaceAroundOperatorsTests: XCTestCase {
+final class SpaceAroundOperatorsTests: XCTestCase {
     func testSpaceAfterColon() {
         let input = """
         let foo:Bar = 5

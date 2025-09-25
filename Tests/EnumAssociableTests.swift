@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class EnumAssociableTests: XCTestCase {
+final class EnumAssociableTests: XCTestCase {
     // MARK: associatedValue
 
     private enum TestEnum: EnumAssociable {

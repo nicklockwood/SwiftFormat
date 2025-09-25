@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class BracesTests: XCTestCase {
+final class BracesTests: XCTestCase {
     func testAllmanBracesAreConverted() {
         let input = """
         func foo()

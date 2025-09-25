@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class RedundantFileprivateTests: XCTestCase {
+final class RedundantFileprivateTests: XCTestCase {
     func testFileScopeFileprivateVarChangedToPrivate() {
         let input = """
         fileprivate var foo = "foo"

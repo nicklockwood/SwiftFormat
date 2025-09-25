@@ -70,7 +70,7 @@ private func withTmpFiles(_ files: [String: String], fn: (URL) throws -> Void) t
     }
 }
 
-class CommandLineTests: XCTestCase {
+final class CommandLineTests: XCTestCase {
     // MARK: stdin
 
     func testStdin() {
@@ -402,24 +402,24 @@ class CommandLineTests: XCTestCase {
         XCTAssertLessThan(hashTime, formatTime)
     }
 
-    func testCacheHit() throws {
+    func testCacheHit() {
         let input = "let foo = bar"
         XCTAssertEqual(computeHash(input), computeHash(input))
     }
 
-    func testCacheMiss() throws {
+    func testCacheMiss() {
         let input = "let foo = bar"
         let output = "let foo = bar\n"
         XCTAssertNotEqual(computeHash(input), computeHash(output))
     }
 
-    func testCachePotentialFalsePositive() throws {
+    func testCachePotentialFalsePositive() {
         let input = "let foo = bar;"
         let output = "let foo = bar\n"
         XCTAssertNotEqual(computeHash(input), computeHash(output))
     }
 
-    func testCachePotentialFalsePositive2() throws {
+    func testCachePotentialFalsePositive2() {
         let input = """
         import Foo
         import Bar

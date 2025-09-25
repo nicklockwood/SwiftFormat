@@ -14,7 +14,7 @@ private let projectDirectory = URL(fileURLWithPath: #file)
     .deletingLastPathComponent()
     .deletingLastPathComponent()
 
-class LayoutLoaderTests: XCTestCase {
+final class LayoutLoaderTests: XCTestCase {
     func testFindProjectDirectory() {
         let loader = LayoutLoader()
         let file = #file

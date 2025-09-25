@@ -29,10 +29,11 @@
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //  SOFTWARE.
 //
-///  Reports changes as XML conforming to the Checkstyle specification, as defined here:
-///  https://www.jetbrains.com/help/teamcity/xml-report-processing.html
+
 import Foundation
 
+///  Reports changes as XML conforming to the Checkstyle specification, as defined here:
+///  https://www.jetbrains.com/help/teamcity/xml-report-processing.html
 final class XMLReporter: Reporter {
     static let name = "xml"
     static let fileExtension: String? = "xml"

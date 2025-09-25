@@ -3,7 +3,7 @@
 import XCTest
 @testable import Layout
 
-private class TestView: UIView {
+private final class TestView: UIView {
     var wasUpdated = false
     @objc var testProperty = "" {
         didSet {
@@ -12,7 +12,7 @@ private class TestView: UIView {
     }
 }
 
-private class TestViewController: UIViewController {
+private final class TestViewController: UIViewController {
     var labelWasSet = false
     @objc weak var label: UILabel? {
         didSet {
@@ -21,7 +21,7 @@ private class TestViewController: UIViewController {
     }
 }
 
-class LayoutNodeTests: XCTestCase {
+final class LayoutNodeTests: XCTestCase {
     // MARK: Expression errors
 
     func testInvalidExpression() {

@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class OrganizeDeclarationsTests: XCTestCase {
+final class OrganizeDeclarationsTests: XCTestCase {
     func testOrganizeClassDeclarationsIntoCategories() {
         let input = """
         public class Foo {

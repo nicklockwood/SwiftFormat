@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class SpaceAroundBracketsTests: XCTestCase {
+final class SpaceAroundBracketsTests: XCTestCase {
     func testSubscriptNoAddSpacing() {
         let input = """
         foo[bar] = baz

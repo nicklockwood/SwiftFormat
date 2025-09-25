@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class CodeOrganizationTests: XCTestCase {
+final class CodeOrganizationTests: XCTestCase {
     func testRuleFileCodeOrganization() throws {
         for ruleFile in allRuleFiles {
             let fileName = ruleFile.lastPathComponent

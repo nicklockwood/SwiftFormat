@@ -3,7 +3,7 @@
 import XCTest
 @testable import Layout
 
-class RuntimeTypeTests: XCTestCase {
+final class RuntimeTypeTests: XCTestCase {
     // MARK: Sanitized type names
 
     func testSanitizeURLName() {

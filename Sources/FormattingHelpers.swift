@@ -1836,8 +1836,8 @@ extension Formatter {
 }
 
 extension Formatter {
-    // A generic type parameter for a method
-    class GenericType {
+    /// A generic type parameter for a method
+    final class GenericType {
         /// The name of the generic parameter. For example with `<T: Fooable>` the generic parameter `name` is `T`.
         let name: String
         /// The source range within angle brackets where the generic parameter is defined
@@ -2995,8 +2995,8 @@ extension Formatter {
 }
 
 extension RandomAccessCollection where Element == Token, Index == Int {
-    // The number of trailing newlines in this array of tokens,
-    // taking into account any spaces that may be between the linebreaks.
+    /// The number of trailing newlines in this array of tokens,
+    /// taking into account any spaces that may be between the linebreaks.
     func numberOfLeadingLinebreaks() -> Int {
         guard !isEmpty else { return 0 }
 
@@ -3016,8 +3016,8 @@ extension RandomAccessCollection where Element == Token, Index == Int {
         return numberOfLeadingLinebreaks
     }
 
-    // The number of trailing newlines in this array of tokens,
-    // taking into account any spaces that may be between the linebreaks.
+    /// The number of trailing newlines in this array of tokens,
+    /// taking into account any spaces that may be between the linebreaks.
     func numberOfTrailingLinebreaks() -> Int {
         guard !isEmpty else { return 0 }
 

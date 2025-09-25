@@ -324,13 +324,15 @@ func parseCommaDelimitedList(_ string: String) -> [String] {
 /// Parse a comma-delimited string into an array of rules
 let allRules = Set(FormatRules.all.map(\.name))
 let defaultRules = Set(FormatRules.default.map(\.name))
-func parseRules(_ rules: String) throws -> [String] {
+func parseRules(_ rules: String, ignoreUnknown: Bool) throws -> [String] {
     try parseCommaDelimitedList(rules).flatMap { proposedName -> [String] in
         let lowercaseName = proposedName.lowercased()
         if let name = allRules.first(where: { $0.lowercased() == lowercaseName }) {
             return [name]
         } else if lowercaseName == "all" {
             return FormatRules.all.compactMap { $0.isDeprecated ? nil : $0.name }
+        } else if ignoreUnknown {
+            return []
         }
         if Descriptors.all.contains(where: { $0.argumentName == lowercaseName }) {
             for rule in FormatRules.all where rule.options.contains(lowercaseName) {
@@ -345,6 +347,18 @@ func parseRules(_ rules: String) throws -> [String] {
             throw FormatError.options(message)
         }
         throw FormatError.options("\(message). Did you mean '\(match)'?")
+    }
+}
+
+func curryParseRules(config: [String: String]) -> (String) throws -> [String] {
+    {
+        try parseRules($0, ignoreUnknown: config["unknown-rules"].map {
+            switch $0 {
+            case "ignore": return true
+            case "error": return false
+            default: throw FormatError.options("Unknown value '\($0)' for --unknown-rules option")
+            }
+        } ?? false)
     }
 }
 
@@ -369,6 +383,7 @@ func parsePaths(_ paths: String, in directory: String) throws -> [URL] {
 
 /// Merge two dictionaries of arguments
 func mergeArguments(_ args: [String: String], into config: [String: String]) throws -> [String: String] {
+    let parseRules = curryParseRules(config: config)
     var input = config
     var output = args
     // Merge excluded urls
@@ -661,6 +676,7 @@ private func processOption(_ key: String,
 
 /// Parse rule names from arguments
 public func rulesFor(_ args: [String: String], lint: Bool, initial: Set<String>? = nil) throws -> Set<String> {
+    let parseRules = curryParseRules(config: args)
     var rules = initial ?? allRules
 
     if let specifiedRules = try args["rules"].map({ try Set(parseRules($0)) }) {
@@ -779,6 +795,7 @@ func warningsForArguments(_ args: [String: String], ignoreUnusedOptions: Bool = 
             warnings.append("--\(option.argumentName) option is deprecated. \(message)")
         }
     }
+    let parseRules = curryParseRules(config: args)
     for name in Set(rulesArguments.flatMap { (try? args[$0].map(parseRules) ?? []) ?? [] }) {
         if let message = FormatRules.byName[name]?.deprecationMessage {
             warnings.append("\(name) rule is deprecated. \(message)")
@@ -837,6 +854,7 @@ let commandLineArguments = [
     "strict",
     "verbose",
     "quiet",
+    "unknown-rules",
     "reporter",
     "report",
     // Misc

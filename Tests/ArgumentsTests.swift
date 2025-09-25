@@ -660,7 +660,7 @@ class ArgumentsTests: XCTestCase {
         let args = ["rules": "braces,fileHeader"]
         let config = ["rules": "consecutiveSpaces,braces"]
         let result = try mergeArguments(args, into: config)
-        let rules = try parseRules(result["rules"]!)
+        let rules = try parseRules(result["rules"]!, ignoreUnknown: false)
         XCTAssertEqual(rules, ["braces", "fileHeader"])
     }
 
@@ -668,7 +668,7 @@ class ArgumentsTests: XCTestCase {
         let args = ["rules": ""]
         let config = ["rules": "consecutiveSpaces,braces"]
         let result = try mergeArguments(args, into: config)
-        let rules = try parseRules(result["rules"]!)
+        let rules = try parseRules(result["rules"]!, ignoreUnknown: false)
         XCTAssertEqual(Set(rules), Set(["braces", "consecutiveSpaces"]))
     }
 
@@ -676,7 +676,7 @@ class ArgumentsTests: XCTestCase {
         let args = ["enable": "braces,fileHeader"]
         let config = ["enable": "consecutiveSpaces,braces"]
         let result = try mergeArguments(args, into: config)
-        let enabled = try parseRules(result["enable"]!)
+        let enabled = try parseRules(result["enable"]!, ignoreUnknown: false)
         XCTAssertEqual(enabled, ["braces", "consecutiveSpaces", "fileHeader"])
     }
 
@@ -684,7 +684,7 @@ class ArgumentsTests: XCTestCase {
         let args = ["disable": "braces,fileHeader"]
         let config = ["disable": "consecutiveSpaces,braces"]
         let result = try mergeArguments(args, into: config)
-        let disabled = try parseRules(result["disable"]!)
+        let disabled = try parseRules(result["disable"]!, ignoreUnknown: false)
         XCTAssertEqual(disabled, ["braces", "consecutiveSpaces", "fileHeader"])
     }
 
@@ -692,7 +692,7 @@ class ArgumentsTests: XCTestCase {
         let args = ["rules": "braces,fileHeader"]
         let config = ["rules": "consecutiveSpaces", "disable": "braces", "enable": "redundantSelf"]
         let result = try mergeArguments(args, into: config)
-        let disabled = try parseRules(result["rules"]!)
+        let disabled = try parseRules(result["rules"]!, ignoreUnknown: false)
         XCTAssertEqual(disabled, ["braces", "fileHeader"])
         XCTAssertNil(result["enabled"])
         XCTAssertNil(result["disabled"])
@@ -702,11 +702,11 @@ class ArgumentsTests: XCTestCase {
         let args = ["enable": "braces"]
         let config = ["rules": "fileHeader", "disable": "consecutiveSpaces,braces"]
         let result = try mergeArguments(args, into: config)
-        let rules = try parseRules(result["rules"]!)
+        let rules = try parseRules(result["rules"]!, ignoreUnknown: false)
         XCTAssertEqual(rules, ["fileHeader"])
-        let enabled = try parseRules(result["enable"]!)
+        let enabled = try parseRules(result["enable"]!, ignoreUnknown: false)
         XCTAssertEqual(enabled, ["braces"])
-        let disabled = try parseRules(result["disable"]!)
+        let disabled = try parseRules(result["disable"]!, ignoreUnknown: false)
         XCTAssertEqual(disabled, ["consecutiveSpaces"])
     }
 
@@ -714,11 +714,11 @@ class ArgumentsTests: XCTestCase {
         let args = ["disable": "braces"]
         let config = ["rules": "braces,fileHeader", "enable": "consecutiveSpaces,braces"]
         let result = try mergeArguments(args, into: config)
-        let rules = try parseRules(result["rules"]!)
+        let rules = try parseRules(result["rules"]!, ignoreUnknown: false)
         XCTAssertEqual(rules, ["fileHeader"])
-        let enabled = try parseRules(result["enable"]!)
+        let enabled = try parseRules(result["enable"]!, ignoreUnknown: false)
         XCTAssertEqual(enabled, ["consecutiveSpaces"])
-        let disabled = try parseRules(result["disable"]!)
+        let disabled = try parseRules(result["disable"]!, ignoreUnknown: false)
         XCTAssertEqual(disabled, ["braces"])
     }
 
@@ -850,27 +850,37 @@ class ArgumentsTests: XCTestCase {
     // MARK: parse rules
 
     func testParseRulesCaseInsensitive() throws {
-        let rules = try parseRules("strongoutlets")
+        let rules = try parseRules("strongoutlets", ignoreUnknown: false)
         XCTAssertEqual(rules, ["strongOutlets"])
     }
 
     func testParseAllRule() throws {
-        let rules = try parseRules("all")
+        let rules = try parseRules("all", ignoreUnknown: false)
         XCTAssertEqual(rules, FormatRules.all.compactMap {
             $0.isDeprecated ? nil : $0.name
         })
     }
 
     func testParseInvalidRuleThrows() {
-        XCTAssertThrowsError(try parseRules("strongOutlet")) { error in
+        XCTAssertThrowsError(try parseRules("strongOutlet", ignoreUnknown: false)) { error in
             XCTAssertEqual("\(error)", "Unknown rule 'strongOutlet'. Did you mean 'strongOutlets'?")
         }
     }
 
     func testParseOptionAsRuleThrows() {
-        XCTAssertThrowsError(try parseRules("import-grouping")) { error in
+        XCTAssertThrowsError(try parseRules("import-grouping", ignoreUnknown: false)) { error in
             XCTAssert("\(error)".contains("'sortImports'"))
         }
+    }
+
+    func testSuppressInvalidRuleError() throws {
+        let rules = try parseRules("strongOutlet,isEmpty", ignoreUnknown: true)
+        XCTAssertEqual(rules, ["isEmpty"])
+    }
+
+    func testSuppressOptionAsRuleError() throws {
+        let rules = try parseRules("import-grouping,isEmpty", ignoreUnknown: true)
+        XCTAssertEqual(rules, ["isEmpty"])
     }
 
     // MARK: lintonly

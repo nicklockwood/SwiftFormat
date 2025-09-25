@@ -208,6 +208,7 @@ func printHelp(as type: CLI.OutputType) {
     --conflict-markers \(stripMarkdown(Descriptors.ignoreConflictMarkers.help))
     --swift-version    \(stripMarkdown(Descriptors.swiftVersion.help))
     --language-mode    \(stripMarkdown(Descriptors.languageMode.help))
+    --unknown-rules    How unknown rules are handled: "error" (default) or "ignore"
     --min-version      The minimum SwiftFormat version to be used for these files
     --cache            Path to cache file, or "clear" or "ignore" the default cache
     --dry-run          Run in "dry" mode (without actually changing any files)
@@ -492,7 +493,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
         }
 
         // Show rule info
-        if let names = try args["rule-info"].map(parseRules) {
+        if let names = try args["rule-info"].map({ try parseRules($0, ignoreUnknown: false) }) {
             let names = names.isEmpty ? allRules.sorted() : names.sorted()
             for name in names {
                 try printRuleInfo(for: name, as: .content)

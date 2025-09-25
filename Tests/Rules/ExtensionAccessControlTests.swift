@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class ExtensionAccessControlTests: XCTestCase {
+final class ExtensionAccessControlTests: XCTestCase {
     func testUpdatesVisibilityOfExtensionMembers() {
         let input = """
         private extension Foo {

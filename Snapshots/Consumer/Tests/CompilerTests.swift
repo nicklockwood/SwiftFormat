@@ -33,7 +33,7 @@ import Foundation
 import XCTest
 @testable import Consumer
 
-class CompilerTests: XCTestCase {
+final class CompilerTests: XCTestCase {
     func testString() throws {
         try compile(.string("foo"))
         XCTAssertEqual(try parse("foo"), "foo")

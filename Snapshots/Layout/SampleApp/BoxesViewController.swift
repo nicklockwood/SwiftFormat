@@ -3,7 +3,7 @@
 import Layout
 import UIKit
 
-class BoxesViewController: UIViewController {
+final class BoxesViewController: UIViewController {
     var toggled = false {
         didSet {
             layoutNode?.setState(["isToggled": toggled])

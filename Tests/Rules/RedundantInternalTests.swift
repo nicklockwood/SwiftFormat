@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class RedundantInternalTests: XCTestCase {
+final class RedundantInternalTests: XCTestCase {
     func testRemoveRedundantInternalACL() {
         let input = """
         internal class Foo {

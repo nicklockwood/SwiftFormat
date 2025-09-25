@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class RedundantPatternTests: XCTestCase {
+final class RedundantPatternTests: XCTestCase {
     func testRemoveRedundantPatternInIfCase() {
         let input = """
         if case let .foo(_, _) = bar {}

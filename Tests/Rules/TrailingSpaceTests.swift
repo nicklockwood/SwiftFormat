@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class TrailingSpaceTests: XCTestCase {
+final class TrailingSpaceTests: XCTestCase {
     // truncateBlankLines = true
 
     func testTrailingSpace() {

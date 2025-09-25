@@ -10,7 +10,7 @@ import Euclid
 import SceneKit
 import UIKit
 
-class SceneViewController: UIViewController {
+final class SceneViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 

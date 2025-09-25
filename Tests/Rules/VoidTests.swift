@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class VoidTests: XCTestCase {
+final class VoidTests: XCTestCase {
     func testEmptyParensReturnValueConvertedToVoid() {
         let input = """
         () -> ()
@@ -229,7 +229,7 @@ class VoidTests: XCTestCase {
         testFormatting(for: input, rule: .void)
     }
 
-    func testMalformedFuncDoesNotCauseInvalidOutput() throws {
+    func testMalformedFuncDoesNotCauseInvalidOutput() {
         let input = """
         func baz(Void) {}
         """

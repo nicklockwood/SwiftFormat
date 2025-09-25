@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class GlobsTests: XCTestCase {
+final class GlobsTests: XCTestCase {
     // MARK: glob matching
 
     func testExpandWildcardPathWithExactName() {

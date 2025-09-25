@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class WrapSwitchCasesTests: XCTestCase {
+final class WrapSwitchCasesTests: XCTestCase {
     func testMultilineSwitchCases() {
         let input = """
         func foo() {

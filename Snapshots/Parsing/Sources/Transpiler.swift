@@ -29,7 +29,7 @@ enum Type {
     case string
 }
 
-class Context {
+final class Context {
     var variables: [String: Type] = [:]
     var output = ""
 }

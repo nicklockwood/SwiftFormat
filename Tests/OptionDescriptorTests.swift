@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class OptionDescriptorTests: XCTestCase {
+final class OptionDescriptorTests: XCTestCase {
     private typealias OptionArgumentMapping<T> = (optionValue: T, argumentValue: String)
 
     private func validateDescriptorThrowsOptionsError(_ descriptor: OptionDescriptor,

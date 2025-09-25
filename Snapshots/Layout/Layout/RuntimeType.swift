@@ -14,7 +14,7 @@ func clearRuntimeTypeCache() {
     RuntimeType.cache.removeAll()
 }
 
-public class RuntimeType: NSObject {
+public final class RuntimeType: NSObject {
     enum Kind: Equatable, CustomStringConvertible {
         case any(Any.Type)
         case `class`(AnyClass)

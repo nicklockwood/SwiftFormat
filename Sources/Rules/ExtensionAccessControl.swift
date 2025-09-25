@@ -141,10 +141,10 @@ public extension FormatRule {
 }
 
 extension Collection<Declaration> {
-    // Performs the given operation for each declaration in this tree of declarations,
-    // including the body of any child conditional compilation blocks,
-    // but not the body of any child types. All of the iterated declarations belong
-    // directly to the parent scope holding this array of declarations.
+    /// Performs the given operation for each declaration in this tree of declarations,
+    /// including the body of any child conditional compilation blocks,
+    /// but not the body of any child types. All of the iterated declarations belong
+    /// directly to the parent scope holding this array of declarations.
     func forEachRecursiveDeclarationExcludingTypeBodies(_ operation: (Declaration) -> Void) {
         for declaration in self {
             switch declaration.kind {

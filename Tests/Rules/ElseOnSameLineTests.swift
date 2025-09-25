@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class ElseOnSameLineTests: XCTestCase {
+final class ElseOnSameLineTests: XCTestCase {
     func testElseOnSameLine() {
         let input = """
         if true {

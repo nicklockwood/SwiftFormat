@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class UnusedArgumentsTests: XCTestCase {
+final class UnusedArgumentsTests: XCTestCase {
     // closures
 
     func testUnusedTypedClosureArguments() {

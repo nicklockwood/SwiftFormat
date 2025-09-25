@@ -32,7 +32,7 @@
 import XCTest
 @testable import Consumer
 
-class ConsumerTests: XCTestCase {
+final class ConsumerTests: XCTestCase {
     // MARK: Primitives
 
     func testString() {

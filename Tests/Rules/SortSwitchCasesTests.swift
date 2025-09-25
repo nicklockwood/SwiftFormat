@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class SortSwitchCasesTests: XCTestCase {
+final class SortSwitchCasesTests: XCTestCase {
     func testSortedSwitchCaseNestedSwitchOneCaseDoesNothing() {
         let input = """
         switch result {

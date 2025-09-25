@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class NoExplicitOwnershipTests: XCTestCase {
+final class NoExplicitOwnershipTests: XCTestCase {
     func testRemovesOwnershipKeywordsFromFunc() {
         let input = """
         consuming func myMethod(consuming foo: consuming Foo, borrowing bars: borrowing [Bar]) {}

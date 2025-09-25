@@ -9,7 +9,7 @@
 import XCTest
 @testable import Parsing
 
-class FormatterTests: XCTestCase {
+final class FormatterTests: XCTestCase {
 
     func testFormatting() throws {
         let input = """

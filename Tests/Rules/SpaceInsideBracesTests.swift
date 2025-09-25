@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class SpaceInsideBracesTests: XCTestCase {
+final class SpaceInsideBracesTests: XCTestCase {
     func testSpaceInsideBraces() {
         let input = """
         foo({bar})

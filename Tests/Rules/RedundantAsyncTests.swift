@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class RedundantAsyncTests: XCTestCase {
+final class RedundantAsyncTests: XCTestCase {
     func testRemovesAsyncFromXCTestFunction() {
         let input = """
         import XCTest
@@ -47,7 +47,6 @@ class RedundantAsyncTests: XCTestCase {
             #expect(1 == 1)
         }
         """
-        let options = FormatOptions(redundantAsync: .testsOnly)
         testFormatting(for: input, output, rule: .redundantAsync)
     }
 

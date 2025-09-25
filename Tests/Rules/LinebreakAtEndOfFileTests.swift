@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class LinebreakAtEndOfFileTests: XCTestCase {
+final class LinebreakAtEndOfFileTests: XCTestCase {
     func testLinebreakAtEndOfFile() {
         let input = """
         foo

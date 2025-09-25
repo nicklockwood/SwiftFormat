@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class TypeSugarTests: XCTestCase {
+final class TypeSugarTests: XCTestCase {
     // arrays
 
     func testArrayTypeConvertedToSugar() {

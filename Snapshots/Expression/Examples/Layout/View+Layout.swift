@@ -32,7 +32,7 @@
 import Expression
 import UIKit
 
-private class LayoutData: NSObject {
+private final class LayoutData: NSObject {
     private weak var view: UIView!
     private var inProgress = Set<String>()
 

@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class RedundantSelfTests: XCTestCase {
+final class RedundantSelfTests: XCTestCase {
     // explicitSelf = .remove
 
     func testSimpleRemoveRedundantSelf() {

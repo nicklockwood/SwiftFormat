@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class RedundantPublicTests: XCTestCase {
+final class RedundantPublicTests: XCTestCase {
     func testRemovesPublicFromPropertyInInternalStruct() {
         let input = """
         struct Foo {

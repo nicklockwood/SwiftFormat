@@ -32,7 +32,7 @@
 import Foundation
 import XcodeKit
 
-class FormatFileCommand: NSObject, XCSourceEditorCommand {
+final class FormatFileCommand: NSObject, XCSourceEditorCommand {
     func perform(with invocation: XCSourceEditorCommandInvocation, completionHandler: @escaping (Error?) -> Void) {
         guard SupportedContentUTIs.contains(invocation.buffer.contentUTI) else {
             return completionHandler(FormatCommandError.notSwiftLanguage)

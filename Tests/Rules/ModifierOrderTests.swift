@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class ModifierOrderTests: XCTestCase {
+final class ModifierOrderTests: XCTestCase {
     func testVarModifiersCorrected() {
         let input = """
         unowned private static var foo

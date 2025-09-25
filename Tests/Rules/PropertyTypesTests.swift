@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class PropertyTypesTests: XCTestCase {
+final class PropertyTypesTests: XCTestCase {
     func testConvertsExplicitTypeToInferredType() {
         let input = """
         let foo: Foo = .init()

@@ -4,7 +4,7 @@ import XCTest
 @testable import Layout
 @testable import TestFramework
 
-class ImageExpressionTests: XCTestCase {
+final class ImageExpressionTests: XCTestCase {
     // MARK: Image constants
 
     func testImageConstant() {

@@ -38,7 +38,7 @@ enum Value: CustomStringConvertible, Equatable {
     }
 }
 
-class Environment {
+final class Environment {
     var variables: [String: Value] = [:]
     var output = ""
 }

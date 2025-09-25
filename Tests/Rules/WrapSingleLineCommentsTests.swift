@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class WrapSingleLineCommentsTests: XCTestCase {
+final class WrapSingleLineCommentsTests: XCTestCase {
     func testWrapSingleLineComment() {
         let input = """
         // a b cde fgh

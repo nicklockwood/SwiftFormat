@@ -9,7 +9,7 @@
 import XCTest
 @testable import Parsing
 
-class ParserTests: XCTestCase {
+final class ParserTests: XCTestCase {
 
     // MARK: declarations
 

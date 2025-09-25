@@ -16,7 +16,7 @@ import XCTest
 let parseRepetitions = 50
 let evalRepetitions = 500
 
-class Benchmarks: XCTestCase {
+final class Benchmarks: XCTestCase {
     // MARK: End-to-end
 
     func testEndToEndShortExpressions() {

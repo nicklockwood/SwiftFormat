@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class WrapMultilineFunctionChainsTests: XCTestCase {
+final class WrapMultilineFunctionChainsTests: XCTestCase {
     func testWrapIfExpressionAssignment() {
         let input = """
         let evenSquaresSum = [20, 17, 35, 4]

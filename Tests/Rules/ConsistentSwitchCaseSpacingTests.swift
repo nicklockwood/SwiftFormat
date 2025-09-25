@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class ConsistentSwitchCaseSpacingTests: XCTestCase {
+final class ConsistentSwitchCaseSpacingTests: XCTestCase {
     func testInsertsBlankLinesToMakeSwitchStatementSpacingConsistent1() {
         let input = """
         switch action {

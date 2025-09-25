@@ -31,7 +31,7 @@
 
 import Cocoa
 
-class FreeTextTableCellView: NSTableCellView {
+final class FreeTextTableCellView: NSTableCellView {
     @IBOutlet var title: NSTextField!
     @IBOutlet var freeTextField: NSTextField!
 

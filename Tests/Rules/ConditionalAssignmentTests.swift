@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class ConditionalAssignmentTests: XCTestCase {
+final class ConditionalAssignmentTests: XCTestCase {
     func testDoesntConvertIfStatementAssignmentSwift5_8() {
         let input = """
         let foo: Foo

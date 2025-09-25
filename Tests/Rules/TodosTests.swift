@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class TodosTests: XCTestCase {
+final class TodosTests: XCTestCase {
     func testMarkIsUpdated() {
         let input = """
         // MARK foo

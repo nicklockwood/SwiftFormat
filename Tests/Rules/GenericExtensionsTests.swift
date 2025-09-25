@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class GenericExtensionsTests: XCTestCase {
+final class GenericExtensionsTests: XCTestCase {
     func testUpdatesArrayGenericExtensionToAngleBracketSyntax() {
         let input = """
         extension Array where Element == Foo {}

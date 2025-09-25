@@ -32,7 +32,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class ArgumentsTests: XCTestCase {
+final class ArgumentsTests: XCTestCase {
     // MARK: arg parser
 
     func testParseSimpleArguments() {
@@ -322,14 +322,14 @@ class ArgumentsTests: XCTestCase {
         XCTAssertNil(try formatOptionsFor(["--disable": "void"]))
     }
 
-    func testFileHeaderOptionToArguments() throws {
+    func testFileHeaderOptionToArguments() {
         let options = FormatOptions(fileHeader: "//  Hello World\n//  Goodbye World")
         let args = argumentsFor(Options(formatOptions: options), excludingDefaults: true)
         XCTAssertEqual(args["header"], "//  Hello World\\n//  Goodbye World")
     }
 
     // TODO: should this go in OptionDescriptorTests instead?
-    func testRenamedArgument() throws {
+    func testRenamedArgument() {
         XCTAssert(Descriptors.specifierOrder.isRenamed)
     }
 
@@ -519,7 +519,7 @@ class ArgumentsTests: XCTestCase {
         XCTAssertEqual(options.rules, [])
     }
 
-    func testPopulatesDefaultLanguageMode() throws {
+    func testPopulatesDefaultLanguageMode() {
         let swift5Options = FormatOptions(swiftVersion: "5.0")
         XCTAssertEqual(swift5Options.languageMode, "5")
 
@@ -534,31 +534,31 @@ class ArgumentsTests: XCTestCase {
 
     // file header comment encoding
 
-    func testSerializeFileHeaderContainingSpace() throws {
+    func testSerializeFileHeaderContainingSpace() {
         let options = Options(formatOptions: FormatOptions(fileHeader: "// hello world"))
         let config = serialize(options: options, excludingDefaults: true)
         XCTAssertEqual(config, "--header \"// hello world\"")
     }
 
-    func testSerializeFileHeaderContainingEscapedSpace() throws {
+    func testSerializeFileHeaderContainingEscapedSpace() {
         let options = Options(formatOptions: FormatOptions(fileHeader: "// hello\\ world"))
         let config = serialize(options: options, excludingDefaults: true)
         XCTAssertEqual(config, "--header \"// hello\\ world\"")
     }
 
-    func testSerializeFileHeaderContainingLinebreak() throws {
+    func testSerializeFileHeaderContainingLinebreak() {
         let options = Options(formatOptions: FormatOptions(fileHeader: "//hello\nworld"))
         let config = serialize(options: options, excludingDefaults: true)
         XCTAssertEqual(config, "--header //hello\\nworld")
     }
 
-    func testSerializeFileHeaderContainingLinebreakAndSpaces() throws {
+    func testSerializeFileHeaderContainingLinebreakAndSpaces() {
         let options = Options(formatOptions: FormatOptions(fileHeader: "// hello\n// world"))
         let config = serialize(options: options, excludingDefaults: true)
         XCTAssertEqual(config, "--header \"// hello\\n// world\"")
     }
 
-    func testSerializeOptionsWithPoundCharacter() throws {
+    func testSerializeOptionsWithPoundCharacter() {
         let options = Options(formatOptions: FormatOptions(
             urlMacro: .macro("#URL", module: "URLFoundation"),
             preferFileMacro: false
@@ -572,20 +572,20 @@ class ArgumentsTests: XCTestCase {
 
     // trailing separator
 
-    func testSerializeOptionsDisabledDefaultRulesEnabledIsEmpty() throws {
+    func testSerializeOptionsDisabledDefaultRulesEnabledIsEmpty() {
         let rules = defaultRules
         let config: String = serialize(options: Options(formatOptions: nil, rules: rules))
         XCTAssertEqual(config, "")
     }
 
-    func testSerializeOptionsDisabledAllRulesEnabledNoTerminatingSeparator() throws {
+    func testSerializeOptionsDisabledAllRulesEnabledNoTerminatingSeparator() {
         let rules = allRules
         let config: String = serialize(options: Options(formatOptions: nil, rules: rules))
         XCTAssertFalse(config.contains("--disable"))
         XCTAssertNotEqual(config.last, "\n")
     }
 
-    func testSerializeOptionsDisabledSomeRulesDisabledNoTerminatingSeparator() throws {
+    func testSerializeOptionsDisabledSomeRulesDisabledNoTerminatingSeparator() {
         let rules = Set(defaultRules.prefix(3))
         let config: String = serialize(options: Options(formatOptions: nil, rules: rules))
         XCTAssertTrue(config.contains("--disable"))
@@ -593,7 +593,7 @@ class ArgumentsTests: XCTestCase {
         XCTAssertNotEqual(config.last, "\n")
     }
 
-    func testSerializeOptionsEnabledDefaultRulesEnabledNoTerminatingSeparator() throws {
+    func testSerializeOptionsEnabledDefaultRulesEnabledNoTerminatingSeparator() {
         let rules = defaultRules
         let config: String = serialize(options: Options(formatOptions: .default, rules: rules))
         XCTAssertNotEqual(config, "")
@@ -602,14 +602,14 @@ class ArgumentsTests: XCTestCase {
         XCTAssertNotEqual(config.last, "\n")
     }
 
-    func testSerializeOptionsEnabledAllRulesEnabledNoTerminatingSeparator() throws {
+    func testSerializeOptionsEnabledAllRulesEnabledNoTerminatingSeparator() {
         let rules = allRules
         let config: String = serialize(options: Options(formatOptions: .default, rules: rules))
         XCTAssertFalse(config.contains("--disable"))
         XCTAssertNotEqual(config.last, "\n")
     }
 
-    func testSerializeOptionsEnabledSomeRulesDisabledNoTerminatingSeparator() throws {
+    func testSerializeOptionsEnabledSomeRulesDisabledNoTerminatingSeparator() {
         let rules = Set(defaultRules.prefix(3))
         let config: String = serialize(options: Options(formatOptions: .default, rules: rules))
         XCTAssertTrue(config.contains("--disable"))
@@ -619,7 +619,7 @@ class ArgumentsTests: XCTestCase {
 
     // swift version
 
-    func testSerializeSwiftVersion() throws {
+    func testSerializeSwiftVersion() {
         let version = Version(rawValue: "5.2") ?? "0"
         let options = Options(formatOptions: FormatOptions(swiftVersion: version))
         let config = serialize(options: options, excludingDefaults: true)

@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class RedundantVoidReturnTypeTests: XCTestCase {
+final class RedundantVoidReturnTypeTests: XCTestCase {
     func testRemoveRedundantVoidReturnType() {
         let input = """
         func foo() -> Void {}

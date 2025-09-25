@@ -3,7 +3,7 @@
 import XCTest
 @testable import Layout
 
-class TestClass: NSObject {
+final class TestClass: NSObject {
     @objc static var foo: Double {
         return 5
     }
@@ -31,7 +31,7 @@ func makeLayout(
     )
 }
 
-class LayoutExpressionTests: XCTestCase {
+final class LayoutExpressionTests: XCTestCase {
     // MARK: Expression parsing
 
     func testParseExpressionWithoutBraces() {

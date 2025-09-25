@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class RedundantTypeTests: XCTestCase {
+final class RedundantTypeTests: XCTestCase {
     func testVarRedundantTypeRemoval() {
         let input = """
         var view: UIView = UIView()

@@ -12,7 +12,7 @@ private let images = [
     UIImage(named: "Rocket"),
 ]
 
-class TableViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
+final class TableViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
     @IBOutlet var tableView: UITableView? {
         didSet {
             tableView?.registerLayout(

@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class ConsecutiveBlankLinesTests: XCTestCase {
+final class ConsecutiveBlankLinesTests: XCTestCase {
     func testConsecutiveBlankLines() {
         let input = """
         foo

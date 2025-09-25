@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class StrongOutletsTests: XCTestCase {
+final class StrongOutletsTests: XCTestCase {
     func testRemoveWeakFromOutlet() {
         let input = """
         @IBOutlet weak var label: UILabel!

@@ -32,7 +32,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class InferenceTests: XCTestCase {
+final class InferenceTests: XCTestCase {
     // MARK: indent
 
     func testInferIndentLevel() {

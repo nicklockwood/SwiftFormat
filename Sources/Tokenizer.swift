@@ -34,7 +34,7 @@ import Foundation
 // https://developer.apple.com/library/ios/documentation/Swift/Conceptual/Swift_Programming_Language/LexicalStructure.html
 
 /// Used to speed up matching
-// Note: Any, Self, self, super, nil, true and false have been omitted deliberately, as they
+/// Note: Any, Self, self, super, nil, true and false have been omitted deliberately, as they
 /// behave like identifiers. So too have context-specific keywords such as the following:
 /// any, associativity, async, convenience, didSet, dynamic, final, get, indirect, infix, lazy,
 /// left, mutating, none, nonmutating, open, optional, override, postfix, precedence,

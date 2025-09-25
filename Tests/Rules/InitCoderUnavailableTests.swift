@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class InitCoderUnavailableTests: XCTestCase {
+final class InitCoderUnavailableTests: XCTestCase {
     func testInitCoderUnavailableEmptyFunction() {
         let input = """
         struct A: UIView {

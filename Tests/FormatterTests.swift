@@ -32,7 +32,7 @@
 import SwiftFormat
 import XCTest
 
-class FormatterTests: XCTestCase {
+final class FormatterTests: XCTestCase {
     func testRemoveCurrentTokenWhileEnumerating() {
         let input: [Token] = [
             .identifier("foo"),
@@ -620,7 +620,7 @@ class FormatterTests: XCTestCase {
 
     // MARK: endOfScope
 
-    func testEndOfScopeInSwitch() throws {
+    func testEndOfScopeInSwitch() {
         let formatter = Formatter(tokenize("""
         switch foo {
         case bar: break

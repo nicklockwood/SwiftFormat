@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class PreferFinalClassesTests: XCTestCase {
+final class PreferFinalClassesTests: XCTestCase {
     func testBasicClassMadesFinal() {
         let input = """
         class Foo {}

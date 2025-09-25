@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class HeaderFileNameTests: XCTestCase {
+final class HeaderFileNameTests: XCTestCase {
     func testHeaderFileNameReplaced() {
         let input = """
         // MyFile.swift

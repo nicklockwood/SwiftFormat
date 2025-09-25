@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class SpaceAroundCommentsTests: XCTestCase {
+final class SpaceAroundCommentsTests: XCTestCase {
     func testSpaceAroundCommentInParens() {
         let input = """
         (/* foo */)

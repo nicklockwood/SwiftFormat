@@ -119,9 +119,9 @@ public extension FormatRule {
                 return
             }
 
-            /// The names of the argument to the `forEach` closure.
-            /// e.g. `["foo"]` in `forEach { foo in ... }`
-            /// or `["foo, bar"]` in `forEach { (foo: Foo, bar: Bar) in ... }`
+            // The names of the argument to the `forEach` closure.
+            // e.g. `["foo"]` in `forEach { foo in ... }`
+            // or `["foo, bar"]` in `forEach { (foo: Foo, bar: Bar) in ... }`
             let forEachValueNames: [String]
             let inKeywordIndex: Int?
             let isAnonymousClosure: Bool
@@ -264,7 +264,7 @@ public extension FormatRule {
 }
 
 extension Formatter {
-    // Returns the start index of the chain component ending at the given index
+    /// Returns the start index of the chain component ending at the given index
     func startOfChainComponent(at index: Int, forLoopSubjectIdentifier: inout String?) -> Int? {
         // The previous item in a dot chain can either be:
         //  1. an identifier like `foo.`

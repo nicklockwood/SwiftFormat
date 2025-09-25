@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class SemicolonsTests: XCTestCase {
+final class SemicolonsTests: XCTestCase {
     func testSemicolonRemovedAtEndOfLine() {
         let input = """
         print(\"hello\");

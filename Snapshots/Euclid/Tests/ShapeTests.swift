@@ -9,7 +9,7 @@
 import XCTest
 @testable import Euclid
 
-class ShapeTests: XCTestCase {
+final class ShapeTests: XCTestCase {
     func testLinuxTestSuiteIncludesAllTests() {
         #if os(macOS)
         let thisClass = type(of: self)

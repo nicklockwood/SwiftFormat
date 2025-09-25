@@ -3,7 +3,7 @@
 import XCTest
 @testable import Layout
 
-class OptionalExpressionTests: XCTestCase {
+final class OptionalExpressionTests: XCTestCase {
     func testEquateOptionalNumbers() {
         let foo: Double? = 5
         let node = LayoutNode(constants: ["foo": foo as Any])

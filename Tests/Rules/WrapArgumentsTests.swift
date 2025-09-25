@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class WrapArgumentsTests: XCTestCase {
+final class WrapArgumentsTests: XCTestCase {
     func testIndentFirstElementWhenApplyingWrap() {
         let input = """
         let foo = Set([

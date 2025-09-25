@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class ModifiersOnSameLineTests: XCTestCase {
+final class ModifiersOnSameLineTests: XCTestCase {
     // MARK: - modifiersOnSameLine
 
     func testModifiersOnSeparateLinesAreCombined() {

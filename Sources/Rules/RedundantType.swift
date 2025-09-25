@@ -176,7 +176,7 @@ public extension FormatRule {
 }
 
 extension Formatter {
-    // Compares whether or not two types are equivalent
+    /// Compares whether or not two types are equivalent
     func compare(typeStartingAfter j: Int, withTypeStartingAfter i: Int, typeEndIndex: Int)
         -> (matches: Bool, i: Int, j: Int, wasValue: Bool)
     {

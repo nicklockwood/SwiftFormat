@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class FileHeaderTests: XCTestCase {
+final class FileHeaderTests: XCTestCase {
     func testStripHeader() {
         let input = """
         //

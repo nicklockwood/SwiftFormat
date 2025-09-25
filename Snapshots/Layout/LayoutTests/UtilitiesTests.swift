@@ -3,7 +3,7 @@
 import XCTest
 @testable import Layout
 
-class UtilitiesTests: XCTestCase {
+final class UtilitiesTests: XCTestCase {
     // MARK: StringUtils
 
     // Unicode scalars

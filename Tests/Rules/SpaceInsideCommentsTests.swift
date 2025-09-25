@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class SpaceInsideCommentsTests: XCTestCase {
+final class SpaceInsideCommentsTests: XCTestCase {
     func testSpaceInsideMultilineComment() {
         let input = """
         /*foo

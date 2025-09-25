@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class RedundantThrowsTests: XCTestCase {
+final class RedundantThrowsTests: XCTestCase {
     func testRemovesThrowsFromXCTestFunction() {
         let input = """
         import XCTest

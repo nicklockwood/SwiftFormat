@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class DuplicateImportsTests: XCTestCase {
+final class DuplicateImportsTests: XCTestCase {
     func testRemoveDuplicateImport() {
         let input = """
         import Foundation

@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class NumberFormattingTests: XCTestCase {
+final class NumberFormattingTests: XCTestCase {
     // hex case
 
     func testLowercaseLiteralConvertedToUpper() {

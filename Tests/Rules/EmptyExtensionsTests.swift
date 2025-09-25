@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class EmptyExtensionsTests: XCTestCase {
+final class EmptyExtensionsTests: XCTestCase {
     func testRemoveEmptyExtension() {
         let input = """
         extension String {}

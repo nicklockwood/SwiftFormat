@@ -30,17 +30,17 @@ public extension FormatRule {
                // because removing them could break the build.
                formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closureStartIndex) != closureEndIndex
             {
-                /// Whether or not this closure has a single, simple expression in its body.
-                /// These closures can always be simplified / removed regardless of the context.
+                // Whether or not this closure has a single, simple expression in its body.
+                // These closures can always be simplified / removed regardless of the context.
                 let hasSingleSimpleExpression = formatter.blockBodyHasSingleStatement(
                     atStartOfScope: closureStartIndex,
                     includingConditionalStatements: false,
                     includingReturnStatements: true
                 )
 
-                /// Whether or not this closure has a single if/switch expression in its body.
-                /// Since if/switch expressions are only valid in the `return` position or as an `=` assignment,
-                /// these closures can only sometimes be simplified / removed.
+                // Whether or not this closure has a single if/switch expression in its body.
+                // Since if/switch expressions are only valid in the `return` position or as an `=` assignment,
+                // these closures can only sometimes be simplified / removed.
                 let hasSingleConditionalExpression = !hasSingleSimpleExpression &&
                     formatter.blockBodyHasSingleStatement(
                         atStartOfScope: closureStartIndex,

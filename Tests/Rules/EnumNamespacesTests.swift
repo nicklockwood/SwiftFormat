@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class EnumNamespacesTests: XCTestCase {
+final class EnumNamespacesTests: XCTestCase {
     func testEnumNamespacesClassAsProtocolRestriction() {
         let input = """
         @objc protocol Foo: class {

@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class WrapConditionalBodiesTests: XCTestCase {
+final class WrapConditionalBodiesTests: XCTestCase {
     func testGuardReturnWraps() {
         let input = """
         guard let foo = bar else { return }

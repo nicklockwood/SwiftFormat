@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class RedundantOptionalBindingTests: XCTestCase {
+final class RedundantOptionalBindingTests: XCTestCase {
     func testRemovesRedundantOptionalBindingsInSwift5_7() {
         let input = """
         if let foo = foo {

@@ -270,7 +270,7 @@ func typeOfAttribute(_ key: String, inNode node: XMLNode) -> String? {
         case _ where layoutSymbols.contains(key):
             return "CGFloat"
         default:
-            /// Look up the type
+            // Look up the type
             if let props = UIKitSymbols[className] {
                 if let type = props[key] {
                     return type

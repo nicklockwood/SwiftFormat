@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class RedundantObjcTests: XCTestCase {
+final class RedundantObjcTests: XCTestCase {
     func testRedundantObjcRemovedFromBeforeOutlet() {
         let input = """
         @objc @IBOutlet var label: UILabel!

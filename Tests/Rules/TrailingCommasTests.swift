@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class TrailingCommasTests: XCTestCase {
+final class TrailingCommasTests: XCTestCase {
     func testCommaAddedToSingleItem() {
         let input = """
         [

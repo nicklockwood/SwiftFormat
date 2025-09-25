@@ -3,7 +3,7 @@
 import Layout
 import UIKit
 
-class ViewController: UIViewController, LayoutLoading {
+final class ViewController: UIViewController, LayoutLoading {
     override func viewDidLoad() {
         super.viewDidLoad()
         loadLayout(

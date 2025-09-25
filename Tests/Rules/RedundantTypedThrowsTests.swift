@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class RedundantTypedThrowsTests: XCTestCase {
+final class RedundantTypedThrowsTests: XCTestCase {
     func testRemovesRedundantNeverTypeThrows() {
         let input = """
         func foo() throws(Never) -> Int {

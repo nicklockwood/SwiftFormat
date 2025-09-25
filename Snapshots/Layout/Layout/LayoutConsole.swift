@@ -54,7 +54,7 @@ public enum LayoutConsole {
     private let reloadMessage = "Tap to Reload"
 #endif
 
-private class LayoutErrorView: UIView, LayoutLoading {
+private final class LayoutErrorView: UIView, LayoutLoading {
     private var error: LayoutError?
 
     override func layoutSubviews() {
@@ -248,7 +248,7 @@ private class LayoutErrorView: UIView, LayoutLoading {
     }
 }
 
-private class LayoutWarningView: UIView, LayoutLoading {
+private final class LayoutWarningView: UIView, LayoutLoading {
     private var warnings = [String]()
 
     override func layoutSubviews() {

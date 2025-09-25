@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class PreferKeyPathTests: XCTestCase {
+final class PreferKeyPathTests: XCTestCase {
     func testMapPropertyToKeyPath() {
         let input = """
         let foo = bar.map { $0.foo }

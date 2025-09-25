@@ -2,8 +2,8 @@
 
 import UIKit
 
-private class LayoutTableView: UITableView {
-    open override var intrinsicContentSize: CGSize {
+private final class LayoutTableView: UITableView {
+    override var intrinsicContentSize: CGSize {
         guard layoutNode != nil else {
             return super.intrinsicContentSize
         }
@@ -13,7 +13,7 @@ private class LayoutTableView: UITableView {
         )
     }
 
-    open override var contentSize: CGSize {
+    override var contentSize: CGSize {
         didSet {
             if oldValue != contentSize, let layoutNode = layoutNode {
                 layoutNode.contentSizeChanged()
@@ -468,9 +468,9 @@ public extension UITableView {
     }
 }
 
-private class LayoutTableViewHeaderFooterView: UITableViewHeaderFooterView {
+private final class LayoutTableViewHeaderFooterView: UITableViewHeaderFooterView {
     // TODO: it looks like UITableView doesn't use this for auto-sizing sections header/footer - remove it?
-    open override func sizeThatFits(_ size: CGSize) -> CGSize {
+    override func sizeThatFits(_ size: CGSize) -> CGSize {
         if let layoutNode = layoutNode {
             let height = (try? layoutNode.doubleValue(forSymbol: "height")) ?? 0
             return CGSize(width: size.width, height: CGFloat(height))
@@ -579,8 +579,8 @@ extension UITableViewHeaderFooterView: LayoutBacked {
     }
 }
 
-private class LayoutTableViewCell: UITableViewCell {
-    open override func sizeThatFits(_ size: CGSize) -> CGSize {
+private final class LayoutTableViewCell: UITableViewCell {
+    override func sizeThatFits(_ size: CGSize) -> CGSize {
         if let layoutNode = layoutNode {
             let height = (try? layoutNode.doubleValue(forSymbol: "height")) ?? 0
             return CGSize(width: size.width, height: CGFloat(height))

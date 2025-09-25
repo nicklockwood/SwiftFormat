@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class AssertionFailuresTests: XCTestCase {
+final class AssertionFailuresTests: XCTestCase {
     func testAssertionFailuresForAssertFalse() {
         let input = """
         assert(false)

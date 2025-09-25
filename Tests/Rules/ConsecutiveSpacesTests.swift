@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class ConsecutiveSpacesTests: XCTestCase {
+final class ConsecutiveSpacesTests: XCTestCase {
     func testConsecutiveSpaces() {
         let input = """
         let foo  = bar

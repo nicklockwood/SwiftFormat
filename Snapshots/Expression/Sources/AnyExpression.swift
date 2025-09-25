@@ -687,7 +687,7 @@ extension AnyExpression {
     static func stringify(_ value: Any) -> String {
         switch value {
         case let number as NSNumber:
-            /// https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/ObjCRuntimeGuide/Articles/ocrtTypeEncodings.html
+            // https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/ObjCRuntimeGuide/Articles/ocrtTypeEncodings.html
             switch UnicodeScalar(UInt8(number.objCType.pointee)) {
             case "c",
                  "B":
@@ -725,7 +725,7 @@ extension AnyExpression {
         }
     }
 
-    /// Unwraps a potentially optional value
+    // Unwraps a potentially optional value
     static func unwrap(_ value: Any) -> Any? {
         switch value {
         case let optional as _Optional:
@@ -740,7 +740,7 @@ extension AnyExpression {
         }
     }
 
-    /// Test if a value is nil
+    // Test if a value is nil
     static func isNil(_ value: Any) -> Bool {
         if let optional = value as? _Optional {
             guard let value = optional.value else {
@@ -751,7 +751,7 @@ extension AnyExpression {
         return value is NSNull
     }
 
-    /// Test if a value supports subscripting
+    // Test if a value supports subscripting
     static func isSubscriptable(_ value: Any) -> Bool {
         return value is _Array || value is _Dictionary || value is _String
     }
@@ -870,7 +870,7 @@ private extension AnyExpression {
     }
 }
 
-/// Used for casting numeric values
+// Used for casting numeric values
 private protocol _Numeric {
     init(truncating: NSNumber)
 }
@@ -896,7 +896,7 @@ extension Float: _Numeric {}
     extension CGFloat: _Numeric {}
 #endif
 
-/// Used for subscripting
+// Used for subscripting
 private protocol _Range {
     func slice(of array: _Array, for symbol: Expression.Symbol) throws -> ArraySlice<Any>
     func slice(of string: _String, for symbol: Expression.Symbol) throws -> Substring
@@ -1104,7 +1104,7 @@ extension PartialRangeFrom: _Range {
 
 #endif
 
-/// Used for string values
+// Used for string values
 private protocol _String {
     var substring: Substring { get }
 }
@@ -1127,7 +1127,7 @@ extension NSString: _String {
     }
 }
 
-/// Used for array values
+// Used for array values
 private protocol _Array {
     var values: [Any] { get }
 }
@@ -1162,7 +1162,7 @@ extension NSArray: _Array {
     }
 }
 
-/// Used for dictionary values
+// Used for dictionary values
 private protocol _Dictionary {
     func value(for key: Any) -> Any?
 }
@@ -1182,7 +1182,7 @@ extension NSDictionary: _Dictionary {
     }
 }
 
-/// Used to test if a value is Optional
+// Used to test if a value is Optional
 private protocol _Optional {
     var value: Any? { get }
     static var wrappedType: Any.Type { get }

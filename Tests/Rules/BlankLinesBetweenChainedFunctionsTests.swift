@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class BlankLinesBetweenChainedFunctionsTests: XCTestCase {
+final class BlankLinesBetweenChainedFunctionsTests: XCTestCase {
     func testBlankLinesBetweenChainedFunctions() {
         let input = """
         [0, 1, 2]

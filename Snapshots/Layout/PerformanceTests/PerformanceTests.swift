@@ -10,7 +10,7 @@ private let nodeCount: Int = {
     return rootNode.children.count
 }()
 
-class PerformanceTests: XCTestCase {
+final class PerformanceTests: XCTestCase {
     // MARK: Create and mount
 
     private func createNodes(_ count: Int) -> LayoutNode {

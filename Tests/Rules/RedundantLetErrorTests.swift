@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class RedundantLetErrorTests: XCTestCase {
+final class RedundantLetErrorTests: XCTestCase {
     func testCatchLetError() {
         let input = """
         do {} catch let error {}

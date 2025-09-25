@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class RedundantNilInitTests: XCTestCase {
+final class RedundantNilInitTests: XCTestCase {
     func testRemoveRedundantNilInit() {
         let input = """
         var foo: Int? = nil

@@ -2,4 +2,4 @@
 
 import Cocoa
 
-class ViewController: NSViewController {}
+final class ViewController: NSViewController {}

@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class BlankLineAfterSwitchCaseTests: XCTestCase {
+final class BlankLineAfterSwitchCaseTests: XCTestCase {
     func testAddsBlankLineAfterMultilineSwitchCases() {
         let input = """
         func handle(_ action: SpaceshipAction) {

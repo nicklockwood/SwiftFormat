@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class OpaqueGenericParametersTests: XCTestCase {
+final class OpaqueGenericParametersTests: XCTestCase {
     func testGenericNotModifiedBelowSwift5_7() {
         let input = """
         func foo<T>(_ value: T) {

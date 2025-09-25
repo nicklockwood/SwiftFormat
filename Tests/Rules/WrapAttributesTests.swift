@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class WrapAttributesTests: XCTestCase {
+final class WrapAttributesTests: XCTestCase {
     func testPreserveWrappedFuncAttributeByDefault() {
         let input = """
         @objc

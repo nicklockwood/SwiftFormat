@@ -3,12 +3,12 @@
 import XCTest
 @testable import Layout
 
-private class TestView: UIView, LayoutLoading {}
-private class TestViewController: UIViewController, LayoutLoading {
+private final class TestView: UIView, LayoutLoading {}
+private final class TestViewController: UIViewController, LayoutLoading {
     @IBOutlet var outlet: UIView?
 }
 
-class LayoutMountingTests: XCTestCase {
+final class LayoutMountingTests: XCTestCase {
     // MARK: mounting view in view controller
 
     func testMountUnitializedViewNodeInInitializedViewController() throws {

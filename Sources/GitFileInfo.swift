@@ -107,7 +107,7 @@ private let getGitRoot: (URL) -> URL? = memoize({ $0.relativePath }) { url in
     return URL(fileURLWithPath: root, isDirectory: true)
 }
 
-// If a file has never been committed, default to the local git user for the repository
+/// If a file has never been committed, default to the local git user for the repository
 private let getDefaultGitInfo: (URL) -> GitFileInfo = memoize({ $0.relativePath }) { url in
     let name = "git config user.name".shellOutput(cwd: url)
     let email = "git config user.email".shellOutput(cwd: url)

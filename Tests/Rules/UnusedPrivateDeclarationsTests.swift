@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class UnusedPrivateDeclarationsTests: XCTestCase {
+final class UnusedPrivateDeclarationsTests: XCTestCase {
     func testRemoveUnusedPrivate() {
         let input = """
         struct Foo {

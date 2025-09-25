@@ -26,7 +26,7 @@ private let projectFiles: [String] = {
     return files
 }()
 
-class RegressionTests: XCTestCase {
+final class RegressionTests: XCTestCase {
     func testRegressionSuite() {
         CLI.print = { message, _ in
             Swift.print(message)

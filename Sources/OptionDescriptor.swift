@@ -31,7 +31,7 @@
 
 import Foundation
 
-class OptionDescriptor {
+final class OptionDescriptor {
     enum ArgumentType: EnumAssociable {
         case binary(true: String, false: String)
         case `enum`([String])
@@ -252,7 +252,7 @@ extension OptionDescriptor {
     }
 
     // TODO: we should add some sort of range validation to this
-    /// Define an integer option
+    // Define an integer option
     convenience init(
         argumentName: String,
         displayName: String,

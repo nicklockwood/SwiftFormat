@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class SortImportsTests: XCTestCase {
+final class SortImportsTests: XCTestCase {
     func testSortImportsSimpleCase() {
         let input = """
         import Foo

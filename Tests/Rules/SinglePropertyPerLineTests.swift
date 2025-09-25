@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class SinglePropertyPerLineTests: XCTestCase {
+final class SinglePropertyPerLineTests: XCTestCase {
     func testSeparateLetDeclarations() {
         let input = """
         let a: Int, b: Int

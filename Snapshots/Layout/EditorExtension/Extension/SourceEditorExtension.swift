@@ -3,4 +3,4 @@
 import Foundation
 import XcodeKit
 
-class SourceEditorExtension: NSObject, XCSourceEditorExtension {}
+final class SourceEditorExtension: NSObject, XCSourceEditorExtension {}

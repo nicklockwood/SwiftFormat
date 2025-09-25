@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class URLMacroTests: XCTestCase {
+final class URLMacroTests: XCTestCase {
     func testBasicURLStringForceUnwrapConverted() {
         let input = """
         let url = URL(string: "https://example.com")!

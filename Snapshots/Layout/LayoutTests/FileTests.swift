@@ -3,7 +3,7 @@
 import XCTest
 @testable import Layout
 
-class FileTests: XCTestCase {
+final class FileTests: XCTestCase {
     // MARK: Ignore file
 
     func testLoadNonexistentIgnoreFile() {

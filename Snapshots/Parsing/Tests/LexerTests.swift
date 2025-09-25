@@ -9,7 +9,7 @@
 import XCTest
 @testable import Parsing
 
-class LexerTests: XCTestCase {
+final class LexerTests: XCTestCase {
 
     // MARK: identifiers
 

@@ -3,8 +3,8 @@
 import XCTest
 @testable import Layout
 
-class ReloadManagerTests: XCTestCase {
-    private class TestController: UIViewController, LayoutLoading {
+final class ReloadManagerTests: XCTestCase {
+    private final class TestController: UIViewController, LayoutLoading {
         var loadCount = 0
 
         func layoutDidLoad(_: LayoutNode) {
@@ -12,7 +12,7 @@ class ReloadManagerTests: XCTestCase {
         }
     }
 
-    private class TestView: UIView, LayoutLoading {}
+    private final class TestView: UIView, LayoutLoading {}
 
     func testReload() {
         let vc = TestController()

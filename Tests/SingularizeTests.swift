@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class SingularizeTests: XCTestCase {
+final class SingularizeTests: XCTestCase {
     func testSingularization() {
         XCTAssertEqual("aces".singularized(), "ace")
         XCTAssertEqual("addenda".singularized(), "addendum")

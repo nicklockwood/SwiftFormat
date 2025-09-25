@@ -32,7 +32,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class SwiftFormatTests: XCTestCase {
+final class SwiftFormatTests: XCTestCase {
     // MARK: enumerateFiles
 
     func testInputFileMatchesOutputFileForNilOutput() {

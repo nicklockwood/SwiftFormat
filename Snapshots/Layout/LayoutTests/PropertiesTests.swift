@@ -3,23 +3,23 @@
 import XCTest
 @testable import Layout
 
-private class TestView: UIView {
+private final class TestView: UIView {
     @objc var nestedTestView = TestView()
 
-    @objc open override class var expressionTypes: [String: RuntimeType] {
+    @objc override class var expressionTypes: [String: RuntimeType] {
         var types = super.expressionTypes
         types["backgroundColor"] = .unavailable("For reasons")
         return types
     }
 }
 
-private class TestObject: NSObject {
+private final class TestObject: NSObject {
     @objc var testView = TestView()
     @objc var testPoint = CGPoint(x: 1, y: 2)
     @objc var testRect = CGRect(x: 1, y: 2, width: 3, height: 4)
 }
 
-class PropertiesTests: XCTestCase {
+final class PropertiesTests: XCTestCase {
     // MARK: Property types
 
     func testPropertyType() {

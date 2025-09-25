@@ -41,7 +41,7 @@ time { try print("handwritten:", parseJSON2(input)) }
 // Evaluate json using compiled parser
 time { try print("compiled:", parseJSON3(input)!) }
 
-/// Update compiled parser
+// Update compiled parser
 print("Recompiling parser...")
 let compiledSwiftFile = URL(fileURLWithPath: #file)
     .deletingLastPathComponent().appendingPathComponent("compiled.swift")

@@ -11,7 +11,7 @@ import XCTest
 
 @testable import Layout
 
-class UIKitSymbols: XCTestCase {
+final class UIKitSymbols: XCTestCase {
     func getProperties() -> [String: [String: RuntimeType]] {
         // Force classes to load
         _ = AVPlayerViewController()

@@ -9,7 +9,7 @@
 import XCTest
 @testable import SwiftFormat
 
-class WrapMultilineConditionalAssignmentTests: XCTestCase {
+final class WrapMultilineConditionalAssignmentTests: XCTestCase {
     func testWrapIfExpressionAssignment() {
         let input = """
         let foo = if let bar {

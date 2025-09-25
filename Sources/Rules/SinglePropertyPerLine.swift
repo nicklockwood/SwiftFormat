@@ -35,7 +35,7 @@ public extension FormatRule {
                 return
             }
 
-            /// Handle declarations that define multiple properties like `let foo, bar: Int = 10`
+            // Handle declarations that define multiple properties like `let foo, bar: Int = 10`
             if let multiplePropertyDecl = formatter.parseMultiplePropertyDeclaration(at: i) {
                 // In `let foo, bar: String` (when only the last property has a type, and it _doesn't_ have a default value),
                 // the type applies to all of the properties.

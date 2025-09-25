@@ -7,7 +7,7 @@ extension UIFont {
     @objc static let testFont = UIFont.systemFont(ofSize: 46)
 }
 
-class FontExpressionTests: XCTestCase {
+final class FontExpressionTests: XCTestCase {
     func testBold() {
         let node = LayoutNode()
         let expression = LayoutExpression(fontExpression: "bold", for: node)

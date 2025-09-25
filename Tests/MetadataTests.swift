@@ -31,10 +31,10 @@ private let changelogTitles: [Substring] = {
     return matches
 }()
 
-class MetadataTests: XCTestCase {
+final class MetadataTests: XCTestCase {
     // MARK: generate Rules.md
 
-    // NOTE: if test fails, just run it again locally to update rules file
+    /// NOTE: if test fails, just run it again locally to update rules file
     func testGenerateRulesDocumentation() throws {
         var result = "# Default Rules (enabled by default)\n"
         for rule in FormatRules.default {

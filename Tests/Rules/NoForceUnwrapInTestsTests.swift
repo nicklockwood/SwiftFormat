@@ -620,6 +620,19 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
         testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
     }
 
+    func testTestHelperIsNotUpdated() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_helper(arg: Bool) {
+                let result = myOptional!.with.nested!.property! && arg
+            }
+        }
+        """
+        testFormatting(for: input, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
+    }
+
     func testDisableRule() {
         let input = """
         import XCTest

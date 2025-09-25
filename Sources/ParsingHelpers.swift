@@ -3259,6 +3259,27 @@ extension Formatter {
         parseFunctionCallArguments(startOfScope: startOfScope)
     }
 
+    /// Is this a test function?
+    func isTestFunction(
+        at funcKeywordIndex: Int,
+        in functionDecl: FunctionDeclaration,
+        for testingFramework: TestingFramework
+    ) -> Bool {
+        assert(token(at: funcKeywordIndex) == .keyword("func"))
+        switch testingFramework {
+        case .xcTest:
+            guard functionDecl.name?.starts(with: "test") == true,
+                  functionDecl.returnType == nil,
+                  functionDecl.arguments.isEmpty
+            else {
+                return false
+            }
+            return true
+        case .swiftTesting:
+            return modifiersForDeclaration(at: funcKeywordIndex, contains: "@Test")
+        }
+    }
+
     /// Parses the list of conformances on this type, starting at
     /// the index of the type keyword (`struct`, `class`, `extension`, etc).
     func parseConformancesOfType(atKeywordIndex keywordIndex: Int) -> [(conformance: TypeName, index: Int)] {

@@ -22,17 +22,10 @@ public extension FormatRule {
         }
 
         formatter.forEach(.keyword("func")) { funcKeywordIndex, _ in
-            guard let functionDecl = formatter.parseFunctionDeclaration(keywordIndex: funcKeywordIndex)
+            guard let functionDecl = formatter.parseFunctionDeclaration(keywordIndex: funcKeywordIndex),
+                  formatter.isTestFunction(at: funcKeywordIndex, in: functionDecl, for: testFramework),
+                  let bodyRange = functionDecl.bodyRange
             else { return }
-
-            switch testFramework {
-            case .xcTest:
-                guard functionDecl.name?.starts(with: "test") == true else { return }
-            case .swiftTesting:
-                guard formatter.modifiersForDeclaration(at: funcKeywordIndex, contains: "@Test") else { return }
-            }
-
-            guard let bodyRange = functionDecl.bodyRange else { return }
 
             // Track if we made any changes that require adding throws
             var addedTryStatement = false

@@ -61,7 +61,20 @@ final class NoForceTryInTestsTests: XCTestCase {
         testFormatting(for: input, output, rule: .noForceTryInTests)
     }
 
-    func test_nonTestCaseFunction_IsNotUpdated_for_XCTest() throws {
+    func testTestHelperIsNotUpdated_for_XCTest() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func testHelper(arg: Bool) {
+                try! somethingThatThrows(with: arg)
+            }
+        }
+        """
+        testFormatting(for: input, rule: .noForceTryInTests)
+    }
+
+    func test_nonTestCaseFunction_IsNotUpdated_for_XCTest() {
         let input = """
         import XCTest
 

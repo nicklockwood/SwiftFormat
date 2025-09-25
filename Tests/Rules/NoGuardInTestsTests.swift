@@ -866,7 +866,9 @@ final class NoGuardInTestsTests: XCTestCase {
         import XCTest
 
         class TestCase: XCTestCase {
-            func test_something(optionalValue: String?) {
+            var optionalValue: String?
+
+            func test_something() {
                 guard let optionalValue else {
                     XCTFail()
                     return
@@ -879,7 +881,9 @@ final class NoGuardInTestsTests: XCTestCase {
         import XCTest
 
         class TestCase: XCTestCase {
-            func test_something(optionalValue: String?) throws {
+            var optionalValue: String?
+
+            func test_something() throws {
                 let optionalValue = try XCTUnwrap(optionalValue)
                 print(optionalValue)
             }

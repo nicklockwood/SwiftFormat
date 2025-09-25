@@ -20,7 +20,8 @@ public extension FormatRule {
         }
 
         formatter.forEach(.keyword) { keywordIndex, keyword in
-            guard ["func", "init", "subscript"].contains(keyword.string),
+            guard case let .keyword(keyword) = keyword,
+                  ["func", "init", "subscript"].contains(keyword),
                   let functionDecl = formatter.parseFunctionDeclaration(keywordIndex: keywordIndex),
                   functionDecl.effects.contains(where: { $0.hasPrefix("async") }),
                   let bodyRange = functionDecl.bodyRange
@@ -33,14 +34,9 @@ public extension FormatRule {
 
             if formatter.options.redundantAsync == .testsOnly {
                 // Only process test functions
-                guard let testFramework, functionDecl.returnType == nil else { return }
-
-                switch testFramework {
-                case .xcTest:
-                    guard functionDecl.name?.starts(with: "test") == true else { return }
-                case .swiftTesting:
-                    guard formatter.modifiersForDeclaration(at: keywordIndex, contains: "@Test") else { return }
-                }
+                guard keyword == "func", let testFramework,
+                      formatter.isTestFunction(at: keywordIndex, in: functionDecl, for: testFramework)
+                else { return }
             }
 
             // Check if the function body contains any await keywords

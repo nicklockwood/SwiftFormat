@@ -678,7 +678,7 @@ You can specify the Swift compiler version in one of two ways:
 
 You can specify your project's Swift compiler version using the `--swift-version` command line argument. You can also add the `--swift-version` option to your `.swiftformat` file.
 
-Another option is to add a `.swift-version` file to your project directory. This is a text file that should contain the minimum Swift version supported by your project, and is also supported by some other tools. The `--swift-version` argument takes precedence over any `.swift-version` files.
+Another option is to add a `.swift-version` file to your project directory. This is a text file that should contain the minimum Swift version supported by your project, and is also supported by some other tools. Any `.swift-version` files always take precedence over the `--swift-version` argument.
 
 Both the `.swift-version` file and the `--swift-version` option in a `.swiftformat` file are applied hierarchically; If you have submodules in your project that use a different Swift version, you can add separate swift version configurations for those directories.
 

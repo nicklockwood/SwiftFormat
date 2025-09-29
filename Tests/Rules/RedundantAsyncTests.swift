@@ -47,7 +47,6 @@ class RedundantAsyncTests: XCTestCase {
             #expect(1 == 1)
         }
         """
-        let options = FormatOptions(redundantAsync: .testsOnly)
         testFormatting(for: input, output, rule: .redundantAsync)
     }
 

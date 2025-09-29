@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.58.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.58.2) (2025-09-29)
+
+- Fixed issue where `modifierOrder` rule confused `async` effect for `async` modifier
+- Fixed issue where testing related rules incorrectly treated functions with arguments as test cases
+- Updated `redundantInit` rule to apply to `init` calls with single trailing closure
+- Updated `README.md` to reflect actual precedence behavior between `.swift-version` files and `--swift-version` arguments.
+
 ## [0.58.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.58.1) (2025-09-24)
 
 - Fixed issue where `async` effect could be confused for `async` modifier, breaking `docCommentsBeforeModifiers` rule in protocol body with async functions

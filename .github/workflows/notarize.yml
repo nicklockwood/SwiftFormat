@@ -21,7 +21,7 @@ jobs:
           xcode-version: '16.3'
       
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.event.release.tag_name || inputs.tag }}
       
@@ -160,10 +160,10 @@ jobs:
     needs: [build-and-notarize]
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ github.event.release.tag_name || inputs.tag }}
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           path: downloaded_artifacts
           pattern: SwiftFormat-for-Xcode

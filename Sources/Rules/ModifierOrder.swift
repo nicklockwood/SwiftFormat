@@ -36,7 +36,7 @@ public extension FormatRule {
                     lastModifier = nil
                     lastIndex = previousIndex
                     break loop
-                case let token where token.isModifierKeyword:
+                case let token where formatter.isModifier(at: index):
                     pushModifier()
                     lastModifier = (token.string, [Token](formatter.tokens[index ..< lastIndex]))
                     previousIndex = lastIndex

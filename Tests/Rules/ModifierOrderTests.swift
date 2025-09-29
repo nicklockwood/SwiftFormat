@@ -143,4 +143,15 @@ final class ModifierOrderTests: XCTestCase {
         """
         testFormatting(for: input, rule: .modifierOrder)
     }
+
+    func testAsyncFunctionBeforeNonisolatedVar() {
+        let input = """
+        protocol Test: Actor {
+            func test() async
+            nonisolated var test2: String
+        }
+        """
+
+        testFormatting(for: input, rule: .modifierOrder)
+    }
 }

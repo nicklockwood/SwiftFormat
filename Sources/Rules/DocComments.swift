@@ -163,7 +163,7 @@ extension Formatter {
 
         // Check if this token defines a declaration that supports doc comments
         var declarationToken = tokens[nextDeclarationIndex]
-        if declarationToken.isAttribute || declarationToken.isModifierKeyword,
+        if declarationToken.isAttribute || isModifier(at: nextDeclarationIndex),
            let index = index(after: nextDeclarationIndex, where: { $0.isDeclarationTypeKeyword })
         {
             declarationToken = tokens[index]

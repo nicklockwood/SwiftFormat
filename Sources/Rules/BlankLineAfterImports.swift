@@ -21,7 +21,7 @@ public extension FormatRule {
                 return
             }
             var keyword: Token = formatter.tokens[nextIndex]
-            while keyword == .startOfScope("#if") || keyword.isModifierKeyword || keyword.isAttribute,
+            while keyword == .startOfScope("#if") || formatter.isModifier(at: nextIndex) || keyword.isAttribute,
                   let index = formatter.index(of: .keyword, after: nextIndex)
             {
                 nextIndex = index

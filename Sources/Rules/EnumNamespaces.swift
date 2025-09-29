@@ -19,11 +19,11 @@ public extension FormatRule {
     ) { formatter in
         formatter.forEachToken(where: { [.keyword("class"), .keyword("struct")].contains($0) }) { i, token in
             if token == .keyword("class") {
-                guard let next = formatter.next(.nonSpaceOrCommentOrLinebreak, after: i),
+                guard let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i),
                       // exit if structs only
                       formatter.options.enumNamespaces != .structsOnly,
                       // exit if class is a type modifier
-                      !(next.isKeywordOrAttribute || next.isModifierKeyword),
+                      !(formatter.tokens[nextIndex].isKeywordOrAttribute || formatter.isModifier(at: nextIndex)),
                       // exit for class as protocol conformance
                       formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .delimiter(":"),
                       // exit if not closed for extension

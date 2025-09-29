@@ -43,7 +43,7 @@ public extension FormatRule {
                         nextIndex = endIndex
                     }
                 case let token:
-                    guard token.isModifierKeyword else {
+                    guard formatter.isModifier(at: nextIndex) else {
                         break loop
                     }
                 }

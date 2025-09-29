@@ -94,13 +94,26 @@ jobs:
         run: ls -R downloaded-artifacts
       - name: Move MSI files to workspace root
         run: |
-          mv downloaded-artifacts/*/*.msi ./
+          mv downloaded-artifacts/*.msi ./
           rm -rf downloaded-artifacts
       - name: Display structure of uploadable files
         run: ls -R .
+      - name: Get Release ID
+        id: get-release-id
+        run: |
+          if [ -n "${{ github.event.release.id }}" ]; then
+            echo "release-id=${{ github.event.release.id }}" >> $GITHUB_OUTPUT
+          else
+            TAG="${{ inputs.tag }}"
+            RELEASE_ID=$(gh api repos/${{ github.repository }}/releases/tags/$TAG --jq '.id')
+            echo "release-id=$RELEASE_ID" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload release assets
         uses: skx/github-action-publish-binaries@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+          releaseId: ${{ steps.get-release-id.outputs.release-id }}
           args: 'SwiftFormat.*.msi'

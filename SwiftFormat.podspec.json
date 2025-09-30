@@ -33,8 +33,9 @@
     "tvos": "11.0",
     "osx": "10.14"
   },
+  "_comment": "Omit Swift 6 versions to prevent Cocoapods from using -swift-version 6",
   "swift_versions": [
-    "5.7", "5.8", "5.9", "5.10", "6.0", "6.1", "6.2"
+    "5.7", "5.8", "5.9", "5.10"
   ],
   "requires_arc": true
 }

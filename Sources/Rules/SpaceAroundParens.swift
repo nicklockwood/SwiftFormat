@@ -21,49 +21,23 @@ public extension FormatRule {
         help: "Add or remove space around parentheses."
     ) { formatter in
         formatter.forEach(.startOfScope("(")) { i, _ in
-            let index = i - 1
-            guard let prevToken = formatter.token(at: index) else {
-                return
-            }
-            switch prevToken {
-            case let .keyword(string) where formatter.spaceAfter(string, index: index):
-                fallthrough
-            case .endOfScope("]") where formatter.isInClosureArguments(at: index),
-                 .endOfScope(")") where formatter.isAttribute(at: index),
-                 .identifier where prevToken.isKeywordInTypeContext && formatter.isTypePosition(at: index):
-                formatter.insert(.space(" "), at: i)
-            case .space:
-                let index = i - 2
-                guard let token = formatter.token(at: index) else {
-                    return
-                }
-                switch token {
-                case .identifier where token.isKeywordInTypeContext && formatter.isTypePosition(at: index):
-                    break
-                case let .keyword(string) where !formatter.spaceAfter(string, index: index):
-                    fallthrough
-                case .number, .identifier:
-                    fallthrough
-                case .endOfScope("}"), .endOfScope(">"),
-                     .endOfScope("]") where !formatter.isInClosureArguments(at: index),
-                     .endOfScope(")") where !formatter.isAttribute(at: index):
-                    formatter.removeToken(at: i - 1)
-                default:
-                    break
-                }
+            let i = i - 1
+            switch formatter.token(at: i) {
+            case _ where formatter.shouldInsertSpaceAfterToken(at: i) == true:
+                formatter.insertSpace(" ", at: i + 1)
+            case .space where formatter.shouldInsertSpaceAfterToken(at: i - 1) == false:
+                formatter.removeToken(at: i)
             default:
                 break
             }
         }
         formatter.forEach(.endOfScope(")")) { i, _ in
-            guard let nextToken = formatter.token(at: i + 1) else {
-                return
-            }
-            switch nextToken {
+            let i = i + 1
+            switch formatter.token(at: i) {
             case .identifier, .keyword, .startOfScope("{"):
-                formatter.insert(.space(" "), at: i + 1)
-            case .space where formatter.token(at: i + 2) == .startOfScope("["):
-                formatter.removeToken(at: i + 1)
+                formatter.insertSpace(" ", at: i)
+            case .space where formatter.token(at: i + 1) == .startOfScope("["):
+                formatter.removeToken(at: i)
             default:
                 break
             }
@@ -84,32 +58,43 @@ public extension FormatRule {
 }
 
 extension Formatter {
-    func spaceAfter(_ keywordOrAttribute: String, index: Int) -> Bool {
-        switch keywordOrAttribute {
-        case "@autoclosure":
-            if options.swiftVersion < "3",
-               let nextIndex = self.index(of: .nonSpaceOrLinebreak, after: index),
-               next(.nonSpaceOrCommentOrLinebreak, after: nextIndex) == .identifier("escaping")
-            {
-                assert(tokens[nextIndex] == .startOfScope("("))
+    func shouldInsertSpaceAfterToken(at index: Int) -> Bool? {
+        switch token(at: index) {
+        case let .keyword(keywordOrAttribute):
+            switch keywordOrAttribute {
+            case "@autoclosure":
+                if options.swiftVersion < "3",
+                   let nextIndex = self.index(of: .nonSpaceOrLinebreak, after: index),
+                   next(.nonSpaceOrCommentOrLinebreak, after: nextIndex) == .identifier("escaping")
+                {
+                    assert(tokens[nextIndex] == .startOfScope("("))
+                    return false
+                }
+                return true
+            case "@escaping", "@noescape", "@Sendable":
+                return true
+            case _ where keywordOrAttribute.hasPrefix("@"):
+                if let i = self.index(of: .startOfScope("("), after: index) {
+                    return isParameterList(at: i)
+                }
                 return false
+            case "private", "fileprivate", "internal", "init", "subscript", "throws":
+                return false
+            case "await":
+                return options.swiftVersion >= "5.5" || options.swiftVersion == .undefined
+            default:
+                return keywordOrAttribute.first.map { !"@#".contains($0) } ?? true
             }
-            return true
-        case "@escaping", "@noescape", "@Sendable":
-            return true
-        case _ where keywordOrAttribute.hasPrefix("@"):
-            if let i = self.index(of: .startOfScope("("), after: index) {
-                return isParameterList(at: i)
-            }
+        case let .identifier(name):
+            return name.isKeywordInTypeContext && isTypePosition(at: index)
+        case .endOfScope("]"):
+            return isInClosureArguments(at: index)
+        case .endOfScope(")"):
+            return isAttribute(at: index)
+        case .number, .endOfScope("}"), .endOfScope(">"):
             return false
-        case "private", "fileprivate", "internal",
-             "init", "subscript", "throws":
-            return false
-        case "await":
-            return options.swiftVersion >= "5.5" ||
-                options.swiftVersion == .undefined
         default:
-            return keywordOrAttribute.first.map { !"@#".contains($0) } ?? true
+            return nil
         }
     }
 }

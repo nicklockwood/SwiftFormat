@@ -3665,7 +3665,7 @@ extension Token {
     var isKeywordInTypeContext: Bool {
         switch self {
         case let .keyword(keyword), let .identifier(keyword):
-            return ["borrowing", "consuming", "isolated", "sending", "some", "any", "of"].contains(keyword)
+            return keyword.isKeywordInTypeContext
         default:
             return false
         }

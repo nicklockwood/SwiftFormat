@@ -55,6 +55,11 @@ public extension String {
         swiftKeywords.contains(self)
     }
 
+    /// Is a keyword when used in a type position
+    var isKeywordInTypeContext: Bool {
+        ["borrowing", "consuming", "isolated", "sending", "some", "any", "of"].contains(self)
+    }
+
     /// Is this string a valid operator?
     var isOperator: Bool {
         let tokens = tokenize(self)

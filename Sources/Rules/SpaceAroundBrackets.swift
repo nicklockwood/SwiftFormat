@@ -25,19 +25,14 @@ public extension FormatRule {
                 return
             }
             switch prevToken {
-            case .keyword,
-                 .identifier("borrowing") where formatter.isTypePosition(at: index),
-                 .identifier("consuming") where formatter.isTypePosition(at: index),
-                 .identifier("sending") where formatter.isTypePosition(at: index):
+            case .identifier where prevToken.isKeywordInTypeContext && formatter.isTypePosition(at: index), .keyword:
                 formatter.insert(.space(" "), at: i)
             case .space:
                 let index = i - 2
                 if let token = formatter.token(at: index) {
                     switch token {
                     case .identifier("as"), .identifier("is"), // not treated as keywords inside macro
-                         .identifier("borrowing") where formatter.isTypePosition(at: index),
-                         .identifier("consuming") where formatter.isTypePosition(at: index),
-                         .identifier("sending") where formatter.isTypePosition(at: index),
+                         .identifier where token.isKeywordInTypeContext && formatter.isTypePosition(at: index),
                          .identifier("try"), .keyword("try"):
                         break
                     case .identifier, .number, .endOfScope("]"), .endOfScope("}"), .endOfScope(")"):

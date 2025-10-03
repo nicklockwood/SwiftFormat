@@ -536,4 +536,65 @@ final class SpaceAroundParensTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .spaceAroundParens)
     }
+
+    func testOfTupleSpacing() {
+        let input = """
+        let foo: [4 of(String, Int)]
+        """
+        let output = """
+        let foo: [4 of (String, Int)]
+        """
+        testFormatting(for: input, output, rule: .spaceAroundParens)
+    }
+
+    func testOfIdentifierParenSpacing() {
+        let input = """
+        if foo.of(String.self) {}
+        """
+        testFormatting(for: input, rule: .spaceAroundParens)
+    }
+
+    func testAsTupleCastingSpacing() {
+        let input = """
+        foo as(String, Int)
+        """
+        let output = """
+        foo as (String, Int)
+        """
+        testFormatting(for: input, output, rule: .spaceAroundParens)
+    }
+
+    func testAsOptionalTupleCastingSpacing() {
+        let input = """
+        foo as? (String, Int)
+        """
+        testFormatting(for: input, rule: .spaceAroundParens)
+    }
+
+    func testIsTupleTestingSpacing() {
+        let input = """
+        if foo is(String, Int) {}
+        """
+        let output = """
+        if foo is (String, Int) {}
+        """
+        testFormatting(for: input, output, rule: .spaceAroundParens)
+    }
+
+    func testIsIdentifierParenSpacing() {
+        let input = """
+        if foo.is(String.self, Int.self) {}
+        """
+        testFormatting(for: input, rule: .spaceAroundParens)
+    }
+
+    func testSpaceBeforeTupleIndexCall() {
+        let input = """
+        foo.1 (2)
+        """
+        let output = """
+        foo.1(2)
+        """
+        testFormatting(for: input, output, rule: .spaceAroundParens)
+    }
 }

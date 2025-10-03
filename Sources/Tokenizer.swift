@@ -38,7 +38,7 @@ import Foundation
 /// behave like identifiers. So too have context-specific keywords such as the following:
 /// any, associativity, async, convenience, didSet, dynamic, final, get, indirect, infix, lazy,
 /// left, mutating, none, nonmutating, open, optional, override, postfix, precedence,
-/// prefix, Protocol, required, right, set, some, any, Type, unowned, weak, willSet
+/// prefix, Protocol, required, right, set, some, any, of, Type, unowned, weak, willSet
 let swiftKeywords = Set([
     "let", "return", "func", "var", "if", "public", "as", "else", "in", "import",
     "class", "try", "guard", "case", "for", "init", "extension", "private", "static",

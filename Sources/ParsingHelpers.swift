@@ -389,14 +389,14 @@ extension Formatter {
 
     /// Returns true if the token at specified index is a modifier
     func isModifier(at index: Int) -> Bool {
-        guard let token = token(at: index), token._isModifierKeyword else {
+        guard let token = token(at: index), token.isModifierKeyword else {
             return false
         }
 
         if token == .keyword("class"),
            let nextToken = next(.nonSpaceOrCommentOrLinebreak, after: index)
         {
-            return nextToken.isDeclarationTypeKeyword || nextToken._isModifierKeyword
+            return nextToken.isDeclarationTypeKeyword || nextToken.isModifierKeyword
         }
 
         // Async is only a valid modifier on local let/var declarations.
@@ -2536,7 +2536,7 @@ extension Formatter {
                 if nextToken.isDeclarationTypeKeyword {
                     return nextToken.string
                 }
-                guard nextToken._isModifierKeyword else {
+                guard nextToken.isModifierKeyword else {
                     break
                 }
                 nextIndex = i
@@ -3652,10 +3652,20 @@ extension Token {
     /// This doesn't necessarily mean that the keyword is a modifier: some modifiers
     /// like `class` and `async` are contextual.
     /// In rule implementations, prefer using the `Formatter.isModifier(at:)` helper.
-    var _isModifierKeyword: Bool {
+    var isModifierKeyword: Bool {
         switch self {
         case let .keyword(keyword), let .identifier(keyword):
             return _FormatRules.allModifiers.contains(keyword)
+        default:
+            return false
+        }
+    }
+
+    /// These identifiers are treated as keywords when used in a type position
+    var isKeywordInTypeContext: Bool {
+        switch self {
+        case let .keyword(keyword), let .identifier(keyword):
+            return ["borrowing", "consuming", "isolated", "sending", "some", "any", "of"].contains(keyword)
         default:
             return false
         }

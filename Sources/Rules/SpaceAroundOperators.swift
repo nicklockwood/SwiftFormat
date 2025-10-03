@@ -37,7 +37,7 @@ public extension FormatRule {
                 default:
                     formatter.insert(.space(" "), at: i + 1)
                 }
-            case .operator("?", .postfix), .operator("!", .postfix):
+            case let token where token.isUnwrapOperator:
                 if let prevToken = formatter.token(at: i - 1),
                    formatter.token(at: i + 1)?.isSpaceOrLinebreak == false,
                    [.keyword("as"), .keyword("try")].contains(prevToken)

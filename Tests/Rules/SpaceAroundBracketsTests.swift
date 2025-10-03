@@ -34,6 +34,30 @@ final class SpaceAroundBracketsTests: XCTestCase {
         testFormatting(for: input, rule: .spaceAroundBrackets)
     }
 
+    func testSpaceNotRemovedAfterOfArray() {
+        let input = """
+        let foo: [4 of [String]]
+        """
+        testFormatting(for: input, rule: .spaceAroundBrackets)
+    }
+
+    func testSpaceAddedAfterOfArray() {
+        let input = """
+        let foo: [4 of[String]]
+        """
+        let output = """
+        let foo: [4 of [String]]
+        """
+        testFormatting(for: input, output, rule: .spaceAroundBrackets)
+    }
+
+    func testOfIdentifierBracketSpacing() {
+        let input = """
+        if foo.of[String.self] {}
+        """
+        testFormatting(for: input, rule: .spaceAroundBrackets)
+    }
+
     func testAsArrayCastingSpacing() {
         let input = """
         foo as[String]
@@ -61,9 +85,9 @@ final class SpaceAroundBracketsTests: XCTestCase {
         testFormatting(for: input, output, rule: .spaceAroundBrackets)
     }
 
-    func testKeywordAsIdentifierBracketSpacing() {
+    func testIsIdentifierBracketSpacing() {
         let input = """
-        if foo.is[String] {}
+        if foo.is[String.self] {}
         """
         testFormatting(for: input, rule: .spaceAroundBrackets)
     }

@@ -30,12 +30,7 @@ public extension FormatRule {
                 fallthrough
             case .endOfScope("]") where formatter.isInClosureArguments(at: index),
                  .endOfScope(")") where formatter.isAttribute(at: index),
-                 .identifier("some") where formatter.isTypePosition(at: index),
-                 .identifier("any") where formatter.isTypePosition(at: index),
-                 .identifier("borrowing") where formatter.isTypePosition(at: index),
-                 .identifier("consuming") where formatter.isTypePosition(at: index),
-                 .identifier("isolated") where formatter.isTypePosition(at: index),
-                 .identifier("sending") where formatter.isTypePosition(at: index):
+                 .identifier where prevToken.isKeywordInTypeContext && formatter.isTypePosition(at: index):
                 formatter.insert(.space(" "), at: i)
             case .space:
                 let index = i - 2
@@ -43,12 +38,7 @@ public extension FormatRule {
                     return
                 }
                 switch token {
-                case .identifier("some") where formatter.isTypePosition(at: index),
-                     .identifier("any") where formatter.isTypePosition(at: index),
-                     .identifier("borrowing") where formatter.isTypePosition(at: index),
-                     .identifier("consuming") where formatter.isTypePosition(at: index),
-                     .identifier("isolated") where formatter.isTypePosition(at: index),
-                     .identifier("sending") where formatter.isTypePosition(at: index):
+                case .identifier where token.isKeywordInTypeContext && formatter.isTypePosition(at: index):
                     break
                 case let .keyword(string) where !formatter.spaceAfter(string, index: index):
                     fallthrough

@@ -256,4 +256,27 @@ final class RedundantInitTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .redundantInit)
     }
+
+    func testInitOnOwnLine() {
+        let input = """
+        let foo = String
+            .init()
+        """
+        let output = """
+        let foo = String()
+        """
+        testFormatting(for: input, output, rule: .redundantInit, exclude: [.propertyTypes])
+    }
+
+    func testInitOnOwnLine2() {
+        let input = """
+        let foo = String /*
+             comment
+            */ .init()
+        """
+        let output = """
+        let foo = String()
+        """
+        testFormatting(for: input, output, rule: .redundantInit, exclude: [.propertyTypes])
+    }
 }

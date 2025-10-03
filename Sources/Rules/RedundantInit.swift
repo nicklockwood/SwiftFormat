@@ -66,7 +66,11 @@ public extension FormatRule {
                 formatter.removeTokens(in: initIndex + 1 ..< openParenOrOpenBraceIndex)
             }
 
-            formatter.removeTokens(in: dotIndex ... initIndex)
+            let endOfTypeIndex = (startOfTypeIndex ..< dotIndex).last(where: {
+                formatter.tokens[$0].isNonSpaceOrCommentOrLinebreak
+            }) ?? startOfTypeIndex
+
+            formatter.removeTokens(in: (endOfTypeIndex + 1) ... initIndex)
         }
     } examples: {
         """

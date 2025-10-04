@@ -1525,6 +1525,11 @@ extension Formatter {
                 return TypeName(range: startOfTypeIndex ... returnTypeRange.upperBound, formatter: self)
             }
 
+            // If we find a keyword such `as` then this is an expression
+            if tokens[startOfTypeIndex ... endOfScope].contains(where: \.isKeyword) {
+                return nil
+            }
+
             // Otherwise this is just `(...)`
             return TypeName(range: startOfTypeIndex ... endOfScope, formatter: self)
         }

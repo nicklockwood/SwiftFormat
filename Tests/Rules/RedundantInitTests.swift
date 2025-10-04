@@ -198,7 +198,23 @@ final class RedundantInitTests: XCTestCase {
         let input = """
         type(of: oldViewController).init()
         """
+        testFormatting(for: input, rule: .redundantInit)
+    }
 
+    func testPreserveAsTypeInit() {
+        let input = """
+        let foo = (MyType.self as NSObject.Type).init()
+        let bar = (MyType.self as? NSObject.Type).init()
+        """
+        testFormatting(for: input, rule: .redundantInit)
+    }
+
+    func testDontMangleSelfInitExpressions() {
+        let input = """
+        // TODO: maybe we can auto-simplify in this case?
+        let foo = MyType.self.init()
+        let bar = (MyType.self).init()
+        """
         testFormatting(for: input, rule: .redundantInit)
     }
 

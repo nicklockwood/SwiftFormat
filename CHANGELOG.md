@@ -1,5 +1,16 @@
 # Change Log
 
+## [0.58.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.58.3) (2025-10-04)
+
+- Fixed parsing of `[n of X]` syntax for `InlineArray` in Swift 6.2
+- Fixed parsing error when an opening multiline string delimiter is followed by a space
+- Fixed issue where `redundantInit` rule could leave orphaned parentheses
+- Fixed bug where `redundantInit` was incorrectly applied to `(Foo.self as Bar.Type)` expressions
+- Fixed bug with parsing empty property accessors that broke `redundantSelf` rule
+- Fixed aliasing issue with `acronyms` rule where one acronym overlaps another
+- Fixed unexpected wrapping of closing parenthesis in `wrapArguments` rule
+- Added `--unknown-rules` option to support environments with older SwiftFormat versions
+
 ## [0.58.2](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.58.2) (2025-09-29)
 
 - Fixed issue where `modifierOrder` rule confused `async` effect for `async` modifier

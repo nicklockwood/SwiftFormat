@@ -17,7 +17,7 @@ final class AcronymsTests: XCTestCase {
         let id: ID
         let screenId = "screenId" // We intentionally don't change the content of strings
         let validUrls: Set<URL>
-        let validUrlschemes: Set<URL>
+        let validUrlschemes: Set<URL> // Edge case
 
         let uniqueIdentifier = UUID()
 
@@ -34,7 +34,7 @@ final class AcronymsTests: XCTestCase {
         let id: ID
         let screenID = "screenId" // We intentionally don't change the content of strings
         let validURLs: Set<URL>
-        let validUrlschemes: Set<URL>
+        let validUrlschemes: Set<URL> // Edge case
 
         let uniqueIdentifier = UUID()
 
@@ -105,5 +105,29 @@ final class AcronymsTests: XCTestCase {
         """
 
         testFormatting(for: input, output, rule: .acronyms, options: FormatOptions(acronyms: ["MAS"]))
+    }
+
+    func testAcronymNotMatchedAsSuffixOfAnotherAcronym() {
+        let input = """
+        // Ids for ds store
+        var personIDs: [String]
+        var userIds: [Int]
+        var ids: [UUID]
+
+        /// The Ds store
+        struct DsStore {}
+        """
+
+        let output = """
+        // IDs for ds store
+        var personIDs: [String]
+        var userIDs: [Int]
+        var ids: [UUID]
+
+        /// The DS store
+        struct DSStore {}
+        """
+
+        testFormatting(for: input, output, rule: .acronyms, options: FormatOptions(acronyms: ["ID", "DS"]))
     }
 }

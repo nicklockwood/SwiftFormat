@@ -1254,8 +1254,8 @@ struct _Descriptors {
     )
     let preserveAcronyms = OptionDescriptor(
         argumentName: "preserve-acronyms",
-        displayName: "Preserve Acronymes",
-        help: "List of symbols to be ignored by the acyronyms rule",
+        displayName: "Preserve Acronyms",
+        help: "List of symbols to be ignored by the acronyms rule",
         keyPath: \.preserveAcronyms
     )
     let indentStrings = OptionDescriptor(

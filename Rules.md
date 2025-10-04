@@ -148,7 +148,7 @@ Capitalize acronyms when the first character is capitalized.
 Option | Description
 --- | ---
 `--acronyms` | Acronyms to auto-capitalize. Defaults to "ID,URL,UUID"
-`--preserve-acronyms` | List of symbols to be ignored by the acyronyms rule
+`--preserve-acronyms` | List of symbols to be ignored by the acronyms rule
 
 <details>
 <summary>Examples</summary>

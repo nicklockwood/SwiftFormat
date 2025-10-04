@@ -2837,9 +2837,12 @@ extension Formatter {
                             membersByType: &membersByType, classMembersByType: &classMembersByType,
                             usingDynamicLookup: usingDynamicLookup, classOrStatic: classOrStatic,
                             isTypeRoot: false, isInit: false)
+                index -= 1
             }
             if foundAccessors {
-                guard let endIndex = self.index(of: .endOfScope("}"), after: index) else { return }
+                guard let endIndex = self.index(of: .endOfScope("}"), after: index) else {
+                    return fatalError("Expected }", at: index)
+                }
                 index = endIndex + 1
             } else {
                 index += 1

@@ -4006,4 +4006,49 @@ final class RedundantSelfTests: XCTestCase {
 
         testFormatting(for: input, output, rule: .redundantSelf)
     }
+
+    func testRedundantSelfIssue2177() {
+        let input = """
+        final class A {
+            let v1: Int
+            var v2: Int { didSet {}}
+
+            init(v1: Int, v2: Int) {
+                self.v1 = v1
+                self.v2 = v2
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantSelf)
+    }
+
+    func testRedundantSelfIssue2177_2() {
+        let input = """
+        final class A {
+            let v1: Int
+            var v2: Int { didSet { }}
+
+            init(v1: Int, v2: Int) {
+                self.v1 = v1
+                self.v2 = v2
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantSelf, exclude: [.emptyBraces])
+    }
+
+    func testRedundantSelfIssue2177_3() {
+        let input = """
+        final class A {
+            let v1: Int
+            var v2: Int { didSet {} }
+
+            init(v1: Int, v2: Int) {
+                self.v1 = v1
+                self.v2 = v2
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantSelf, exclude: [.spaceInsideBraces])
+    }
 }

@@ -827,7 +827,7 @@ extension UnicodeScalarView {
         }
         let start = self
         if readString("\"\"") {
-            if first?.isLinebreak ?? true {
+            if first?.isSpaceOrLinebreak ?? true {
                 return .startOfScope("\"\"\"")
             }
             self = start
@@ -2000,6 +2000,9 @@ public func tokenize(_ source: String) -> [Token] {
                 processCommentBody()
             default:
                 if let delimiterType = token.stringDelimiterType {
+                    if delimiterType.isMultiline, let token = characters.parseSpace() {
+                        tokens.append(token)
+                    }
                     processStringBody(delimiterType)
                 }
             }

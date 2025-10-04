@@ -395,19 +395,6 @@ extension Formatter {
                 closingParenOnSameLine = false
             }
 
-            if closingParenOnSameLine {
-                removeLinebreakBeforeEndOfScope(at: &endOfScope)
-            } else {
-                // Insert linebreak before closing paren
-                if let lastIndex = self.index(of: .nonSpace, before: endOfScope) {
-                    endOfScope += insertSpace(indent, at: lastIndex + 1)
-                    if !tokens[lastIndex].isLinebreak {
-                        insertLinebreak(at: lastIndex + 1)
-                        endOfScope += 1
-                    }
-                }
-            }
-
             // Insert linebreak after each comma
             var index = index(of: .nonSpaceOrCommentOrLinebreak, before: endOfScope)!
             if tokens[index] != .delimiter(",") {
@@ -458,6 +445,19 @@ extension Formatter {
                         indent += options.indent
                     }
                     endOfScope += insertSpace(indent, at: nextIndex + 1)
+                }
+            }
+
+            if closingParenOnSameLine {
+                removeLinebreakBeforeEndOfScope(at: &endOfScope)
+            } else if insertLinebreakAfterOpeningParen {
+                // Insert linebreak before closing paren
+                if let lastIndex = self.index(of: .nonSpace, before: endOfScope) {
+                    endOfScope += insertSpace(indent, at: lastIndex + 1)
+                    if !tokens[lastIndex].isLinebreak {
+                        insertLinebreak(at: lastIndex + 1)
+                        endOfScope += 1
+                    }
                 }
             }
 

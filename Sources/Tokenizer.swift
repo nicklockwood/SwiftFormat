@@ -1343,10 +1343,10 @@ public func tokenize(_ source: String) -> [Token] {
                 tokens.append(.startOfScope("("))
                 return
             case "\r", "\n":
-                if string != "" {
+                if string != "" || tokens.last(where: { !$0.isSpace })?.isLinebreak ?? false {
                     tokens.append(.stringBody(string))
-                    string = ""
                 }
+                string = ""
                 processLinebreak(c)
                 if let space = characters.parseSpace() {
                     tokens.append(space)

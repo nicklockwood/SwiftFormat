@@ -117,6 +117,18 @@ final class TrailingSpaceTests: XCTestCase {
         testFormatting(for: input, rule: .trailingSpace)
     }
 
+    func testMultilineStringWhiteSpaceNotRemovedFromBlankLines() {
+        let input = """
+        func test() {
+            let foo = \"\"\"
+            Test
+            \u{20}
+            \"\"\"
+        }
+        """
+        testFormatting(for: input, rule: .trailingSpace)
+    }
+
     // truncateBlankLines = false
 
     func testNoTruncateBlankLine() {
@@ -128,6 +140,19 @@ final class TrailingSpaceTests: XCTestCase {
         }
         """
         let options = FormatOptions(truncateBlankLines: false)
+        testFormatting(for: input, rule: .trailingSpace, options: options)
+    }
+
+    func testMultilineStringWhiteSpaceNotAddedToBlankLines() {
+        let input = """
+        func test() {
+        \tlet foo = \"\"\"
+        \tTest
+        \t
+        \t\"\"\"
+        }
+        """
+        let options = FormatOptions(indent: "\t", truncateBlankLines: false)
         testFormatting(for: input, rule: .trailingSpace, options: options)
     }
 }

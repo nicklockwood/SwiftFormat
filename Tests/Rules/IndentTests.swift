@@ -3666,11 +3666,11 @@ final class IndentTests: XCTestCase {
         let output = #"""
         let generatedClass = """
             import UIKit
-
+        \#("    ")
             class ViewController: UIViewController { }
             """
         """#
-        let options = FormatOptions(indentStrings: true)
+        let options = FormatOptions(truncateBlankLines: false, indentStrings: true)
         testFormatting(for: input, output, rule: .indent, options: options)
     }
 
@@ -3678,11 +3678,11 @@ final class IndentTests: XCTestCase {
         let input = #"""
         let generatedClass = """
             import UIKit
-
+        \#("    ")
             class ViewController: UIViewController { }
             """
         """#
-        let options = FormatOptions(indentStrings: true)
+        let options = FormatOptions(truncateBlankLines: false, indentStrings: true)
         testFormatting(for: input, rule: .indent, options: options)
     }
 
@@ -3733,8 +3733,7 @@ final class IndentTests: XCTestCase {
         }
         """#
         let options = FormatOptions(truncateBlankLines: false)
-        testFormatting(for: input, output, rule: .indent,
-                       options: options)
+        testFormatting(for: input, output, rule: .indent, options: options)
     }
 
     func testIndentUnderIndentedMultilineStringDoesntAddIndent() {
@@ -3754,15 +3753,14 @@ final class IndentTests: XCTestCase {
             func main() {
                 print("""
                 That've been not indented at all.
-
+            \#("    ")
                 After SwiftFormat it causes a compiler error in the line above.
                 """)
             }
         }
         """#
         let options = FormatOptions(truncateBlankLines: false)
-        testFormatting(for: input, output, rule: .indent,
-                       options: options)
+        testFormatting(for: input, output, rule: .indent, options: options)
     }
 
     // indent multiline raw strings

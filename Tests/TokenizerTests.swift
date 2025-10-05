@@ -564,6 +564,25 @@ final class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testMultilineStringWithBlankLines() {
+        let input = """
+        \"\"\"
+        Test
+
+        \"\"\"
+        """
+        let output: [Token] = [
+            .startOfScope("\"\"\""),
+            .linebreak("\n", 1),
+            .stringBody("Test"),
+            .linebreak("\n", 2),
+            .stringBody(""),
+            .linebreak("\n", 3),
+            .endOfScope("\"\"\""),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     // MARK: Raw strings
 
     func testEmptyRawString() {

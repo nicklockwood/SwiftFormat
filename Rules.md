@@ -3082,6 +3082,9 @@ Use inline generic constraints (`<T: Foo>`) instead of where clauses
 
 - enum Result<Value, Error> where Value: Decodable, Error: Swift.Error {}
 + enum Result<Value: Decodable, Error: Swift.Error> {}
+
+- func process<T>(_ value: T) where T: Codable {}
++ func process<T: Codable>(_ value: T) {}
 ```
 
 </details>

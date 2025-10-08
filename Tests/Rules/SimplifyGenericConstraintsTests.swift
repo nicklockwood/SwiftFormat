@@ -158,12 +158,44 @@ final class SimplifyGenericConstraintsTests: XCTestCase {
         testFormatting(for: input, output, rule: .simplifyGenericConstraints, exclude: [.braces, .indent])
     }
 
-    func testDoesNotAffectFunctions() {
-        // This rule should only apply to type declarations, not functions
+    func testSimplifyFunctionGenericConstraint() {
         let input = """
         func process<T>(_ value: T) where T: Codable {}
         """
-        testFormatting(for: input, rule: .simplifyGenericConstraints, exclude: [.unusedArguments])
+        let output = """
+        func process<T: Codable>(_ value: T) {}
+        """
+        testFormatting(for: input, output, rule: .simplifyGenericConstraints, exclude: [.unusedArguments])
+    }
+
+    func testSimplifyFunctionWithMultipleGenericParameters() {
+        let input = """
+        func compare<T, U>(_ lhs: T, _ rhs: U) where T: Equatable, U: Comparable {}
+        """
+        let output = """
+        func compare<T: Equatable, U: Comparable>(_ lhs: T, _ rhs: U) {}
+        """
+        testFormatting(for: input, output, rule: .simplifyGenericConstraints, exclude: [.unusedArguments])
+    }
+
+    func testSimplifyFunctionWithMultipleConstraintsOnSameType() {
+        let input = """
+        func handle<T>(_ value: T) where T: Codable, T: Hashable {}
+        """
+        let output = """
+        func handle<T: Codable & Hashable>(_ value: T) {}
+        """
+        testFormatting(for: input, output, rule: .simplifyGenericConstraints, exclude: [.unusedArguments])
+    }
+
+    func testPreserveFunctionWithMixedConstraints() {
+        let input = """
+        func process<T>(_ value: T) where T: Collection, T.Element == String {}
+        """
+        let output = """
+        func process<T: Collection>(_ value: T) where T.Element == String {}
+        """
+        testFormatting(for: input, output, rule: .simplifyGenericConstraints, exclude: [.unusedArguments])
     }
 
     func testPartialSimplification() {

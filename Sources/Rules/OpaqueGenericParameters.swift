@@ -150,6 +150,16 @@ public extension FormatRule {
                     }
                 }
 
+                // If the generic is used as a generic argument in an `any` existential type,
+                // it can't be replaced with a `some` type.
+                for argument in declaration.arguments {
+                    if argument.type.tokens.contains(where: { $0.string == "any" }),
+                       argument.type.tokens.contains(where: { $0.string == genericType.name })
+                    {
+                        genericType.eligibleToRemove = false
+                    }
+                }
+
                 // Extract the comma-separated list of function parameters,
                 // so we can check conditions on the individual parameters
                 let parameterListTokenIndices = (declaration.argumentsRange.lowerBound + 1) ..< declaration.argumentsRange.upperBound

@@ -756,4 +756,16 @@ final class OpaqueGenericParametersTests: XCTestCase {
         let options = FormatOptions(swiftVersion: "5.7")
         testFormatting(for: input, output, rule: .opaqueGenericParameters, options: options)
     }
+
+    func testPreservesGenericInProtocolPrimaryAssociatedType() {
+        // Can't be converted to `any Collection<some StringProtocol>`:
+        // error: 'some' types cannot be used in constraints on existential types
+        let input = """
+        func foo<T: StringProtocol>(_ collection: any Collection<T>) {
+            print(collection)
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, rule: .opaqueGenericParameters, options: options)
+    }
 }

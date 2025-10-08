@@ -19,7 +19,7 @@ final class RedundantSelfTests: XCTestCase {
         let output = """
         func foo() { bar() }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.simplifyGenericConstraints])
+        testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testRemoveSelfInsideStringInterpolation() {
@@ -39,7 +39,7 @@ final class RedundantSelfTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.simplifyGenericConstraints])
+        testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testNoRemoveSelfForArgument() {
@@ -216,7 +216,7 @@ final class RedundantSelfTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.simplifyGenericConstraints])
+        testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testRemoveSelfInsideSwitchWhere() {
@@ -236,7 +236,7 @@ final class RedundantSelfTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.simplifyGenericConstraints])
+        testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testRemoveSelfInsideSwitchWhereAs() {
@@ -256,7 +256,7 @@ final class RedundantSelfTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.simplifyGenericConstraints])
+        testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testRemoveSelfInsideClassInit() {
@@ -272,7 +272,7 @@ final class RedundantSelfTests: XCTestCase {
             init() { bar = 6 }
         }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.simplifyGenericConstraints])
+        testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testNoRemoveSelfInClosureInsideIf() {
@@ -360,7 +360,7 @@ final class RedundantSelfTests: XCTestCase {
         let output = """
         var foo: Int { return bar }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.simplifyGenericConstraints])
+        testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testRemoveSelfFromOptionalComputedVar() {
@@ -370,7 +370,7 @@ final class RedundantSelfTests: XCTestCase {
         let output = """
         var foo: Int? { return bar }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.simplifyGenericConstraints])
+        testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testRemoveSelfFromNamespacedComputedVar() {
@@ -380,7 +380,7 @@ final class RedundantSelfTests: XCTestCase {
         let output = """
         var foo: Swift.String { return bar }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.simplifyGenericConstraints])
+        testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testRemoveSelfFromGenericComputedVar() {
@@ -390,7 +390,7 @@ final class RedundantSelfTests: XCTestCase {
         let output = """
         var foo: Foo<Int> { return bar }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.simplifyGenericConstraints])
+        testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testRemoveSelfFromComputedArrayVar() {
@@ -400,7 +400,7 @@ final class RedundantSelfTests: XCTestCase {
         let output = """
         var foo: [Int] { return bar }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.simplifyGenericConstraints])
+        testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testRemoveSelfFromVarSetter() {
@@ -410,7 +410,7 @@ final class RedundantSelfTests: XCTestCase {
         let output = """
         var foo: Int { didSet { bar() } }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.simplifyGenericConstraints])
+        testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testNoRemoveSelfFromVarClosure() {
@@ -487,7 +487,7 @@ final class RedundantSelfTests: XCTestCase {
         let output = """
         func foo(bar _: Int) { baz = 5 }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.simplifyGenericConstraints])
+        testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testRemoveSelfFromVarMatchingUnusedArgument() {
@@ -497,7 +497,7 @@ final class RedundantSelfTests: XCTestCase {
         let output = """
         func foo(bar _: Int) { bar = 5 }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.simplifyGenericConstraints])
+        testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testNoRemoveSelfFromVarMatchingRenamedArgument() {
@@ -524,7 +524,7 @@ final class RedundantSelfTests: XCTestCase {
             let baz = bar
         }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.simplifyGenericConstraints])
+        testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testNoRemoveSelfFromVarDeclaredLaterInScope() {
@@ -606,7 +606,7 @@ final class RedundantSelfTests: XCTestCase {
             let baz = bar
         }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.simplifyGenericConstraints])
+        testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testNoRemoveSelfForVarDeclaredInWhileCondition() {
@@ -660,7 +660,7 @@ final class RedundantSelfTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.simplifyGenericConstraints])
+        testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testRemoveSelfInStaticFunction() {
@@ -906,7 +906,7 @@ final class RedundantSelfTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.simplifyGenericConstraints])
+        testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testSwitchCaseLetVarRecognized() {
@@ -995,7 +995,7 @@ final class RedundantSelfTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.simplifyGenericConstraints])
+        testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testSelfNotRemovedInGetter() {
@@ -1051,7 +1051,7 @@ final class RedundantSelfTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.simplifyGenericConstraints])
+        testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testRedundantSelfRemovedInsideConditionalCase() {
@@ -1091,7 +1091,7 @@ final class RedundantSelfTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.simplifyGenericConstraints])
+        testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testRedundantSelfRemovedAfterConditionalLet() {
@@ -1119,7 +1119,7 @@ final class RedundantSelfTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.simplifyGenericConstraints])
+        testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testNestedClosureInNotMistakenForForLoop() {
@@ -1519,7 +1519,7 @@ final class RedundantSelfTests: XCTestCase {
             bar()
         }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.simplifyGenericConstraints])
+        testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testNoRemoveSelfInIfLetEscapedSelf() {
@@ -1539,7 +1539,7 @@ final class RedundantSelfTests: XCTestCase {
             bar()
         }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.simplifyGenericConstraints])
+        testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testNoRemoveSelfAfterGuardLetSelf() {
@@ -1618,7 +1618,7 @@ final class RedundantSelfTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.simplifyGenericConstraints])
+        testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testRemoveSelfForMemberNamedLazy() {
@@ -1628,7 +1628,7 @@ final class RedundantSelfTests: XCTestCase {
         let output = """
         func foo() { lazy() }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.simplifyGenericConstraints])
+        testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testRemoveRedundantSelfInArrayLiteral() {
@@ -1646,7 +1646,7 @@ final class RedundantSelfTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.simplifyGenericConstraints])
+        testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testRemoveRedundantSelfInArrayLiteralVar() {
@@ -1666,7 +1666,7 @@ final class RedundantSelfTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.simplifyGenericConstraints])
+        testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testRemoveRedundantSelfInGuardLet() {
@@ -1688,7 +1688,7 @@ final class RedundantSelfTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.simplifyGenericConstraints])
+        testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testSelfNotRemovedInClosureInIf() {
@@ -1943,7 +1943,7 @@ final class RedundantSelfTests: XCTestCase {
         }
 
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.simplifyGenericConstraints])
+        testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testRedundantSelfWithStaticMethodAfterForWhereLoop() {
@@ -1967,7 +1967,7 @@ final class RedundantSelfTests: XCTestCase {
         }
 
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.simplifyGenericConstraints])
+        testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testRedundantSelfRuleDoesntErrorInForInTryLoop() {
@@ -3565,7 +3565,7 @@ final class RedundantSelfTests: XCTestCase {
             static func bar() {}
         }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.simplifyGenericConstraints])
+        testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     // enable/disable
@@ -3593,7 +3593,7 @@ final class RedundantSelfTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.simplifyGenericConstraints])
+        testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testDisableRemoveSelfCaseInsensitive() {
@@ -3619,7 +3619,7 @@ final class RedundantSelfTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.simplifyGenericConstraints])
+        testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testDisableNextRemoveSelf() {
@@ -3643,7 +3643,7 @@ final class RedundantSelfTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.simplifyGenericConstraints])
+        testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testMultilineDisableRemoveSelf() {
@@ -3665,7 +3665,7 @@ final class RedundantSelfTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.simplifyGenericConstraints])
+        testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testMultilineDisableNextRemoveSelf() {
@@ -3689,7 +3689,7 @@ final class RedundantSelfTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.simplifyGenericConstraints])
+        testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testRemovesSelfInNestedFunctionInStrongSelfClosure() {
@@ -3825,7 +3825,7 @@ final class RedundantSelfTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.simplifyGenericConstraints])
+        testFormatting(for: input, output, rule: .redundantSelf)
     }
 
     func testRedundantSelfNotConfusedByParameterPack() {

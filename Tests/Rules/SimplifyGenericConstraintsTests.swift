@@ -198,6 +198,44 @@ final class SimplifyGenericConstraintsTests: XCTestCase {
         testFormatting(for: input, output, rule: .simplifyGenericConstraints, exclude: [.unusedArguments])
     }
 
+    // MARK: - Interaction with opaqueGenericParameters
+
+    func testWorksWithOpaqueGenericParametersToFullySimplify() {
+        let input = """
+        func foo<T>(_ value: T) where T: Fooable {}
+        """
+        let output = """
+        func foo(_ value: some Fooable) {}
+        """
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, [output], rules: [.simplifyGenericConstraints, .opaqueGenericParameters],
+                       options: options, exclude: [.unusedArguments])
+    }
+
+    func testWorksWithOpaqueGenericParametersFullConversion() {
+        let input = """
+        func foo<T, U>(_ t: T, _ u: U) where T: Fooable, U: Barable {}
+        """
+        let output = """
+        func foo(_ t: some Fooable, _ u: some Barable) {}
+        """
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, [output], rules: [.simplifyGenericConstraints, .opaqueGenericParameters],
+                       options: options, exclude: [.unusedArguments])
+    }
+
+    func testSimplificationOnlyWhenOpaqueCannotApply() {
+        let input = """
+        func foo<T>(_ value: T) -> T where T: Fooable {}
+        """
+        let output = """
+        func foo<T: Fooable>(_ value: T) -> T {}
+        """
+        let options = FormatOptions(swiftVersion: "5.7")
+        testFormatting(for: input, [output], rules: [.simplifyGenericConstraints, .opaqueGenericParameters],
+                       options: options, exclude: [.unusedArguments])
+    }
+
     func testPartialSimplification() {
         let input = """
         struct Foo<T, U> where T: Hashable, U.Element == String {}

@@ -133,17 +133,21 @@ extension Formatter {
         {
             removeTokens(in: whereClauseIndex.index ..< tokenAfterWhere)
         }
-        // Otherwise, clean up any trailing comma
-        else if let commaIndex = index(
-            of: .nonSpaceOrCommentOrLinebreak,
-            before: whereClauseIndex.index + 1,
-            if: { $0 == .delimiter(",") }
-        ) {
-            removeToken(at: commaIndex)
-            if tokens[commaIndex - 1].isSpace,
-               tokens[commaIndex].isSpaceOrLinebreak
-            {
-                removeToken(at: commaIndex - 1)
+        // Otherwise, clean up any trailing commas before the opening brace
+        else if let openBraceIndex = index(of: .startOfScope("{"), after: whereClauseIndex) {
+            // Search backwards from the brace to find any trailing comma
+            if let commaIndex = index(
+                of: .nonSpaceOrCommentOrLinebreak,
+                before: openBraceIndex,
+                if: { $0 == .delimiter(",") }
+            ) {
+                removeToken(at: commaIndex)
+                // Clean up extra whitespace around the removed comma
+                if tokens[commaIndex - 1].isSpace,
+                   tokens[commaIndex].isSpaceOrLinebreak
+                {
+                    removeToken(at: commaIndex - 1)
+                }
             }
         }
 

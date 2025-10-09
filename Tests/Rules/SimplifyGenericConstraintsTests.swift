@@ -245,4 +245,84 @@ final class SimplifyGenericConstraintsTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .simplifyGenericConstraints)
     }
+
+    // MARK: - Complex cases with many generics
+
+    func testStructWithFourGenerics() {
+        let input = """
+        struct Foo<A, B, C, D> where A: Hashable, B: Codable, C: Equatable, D: Comparable {}
+        """
+        let output = """
+        struct Foo<A: Hashable, B: Codable, C: Equatable, D: Comparable> {}
+        """
+        testFormatting(for: input, output, rule: .simplifyGenericConstraints)
+    }
+
+    func testStructWithSixGenerics() {
+        let input = """
+        struct Complex<A, B, C, D, E, F>
+            where A: Hashable,
+                  B: Codable,
+                  C: Equatable,
+                  D: Comparable,
+                  E: Collection,
+                  F: Sequence
+        {
+            var values: (A, B, C, D, E, F)
+        }
+        """
+        let output = """
+        struct Complex<A: Hashable, B: Codable, C: Equatable, D: Comparable, E: Collection, F: Sequence>
+            {
+            var values: (A, B, C, D, E, F)
+        }
+        """
+        testFormatting(for: input, output, rule: .simplifyGenericConstraints, exclude: [.braces, .indent])
+    }
+
+    func testFunctionWithFiveGenerics() {
+        let input = """
+        func process<A, B, C, D, E>(_ a: A, _ b: B, _ c: C, _ d: D, _ e: E)
+            where A: Codable, B: Hashable, C: Equatable, D: Comparable, E: Collection
+        {}
+        """
+        let output = """
+        func process<A: Codable, B: Hashable, C: Equatable, D: Comparable, E: Collection>(_ a: A, _ b: B, _ c: C, _ d: D, _ e: E)
+            {}
+        """
+        testFormatting(for: input, output, rule: .simplifyGenericConstraints, exclude: [.unusedArguments, .indent])
+    }
+
+    func testManyGenericsWithMixedConstraints() {
+        let input = """
+        struct Foo<A, B, C, D, E> where A: Hashable, B: Collection, B.Element == String, C: Codable, D.Index == Int, E: Equatable {
+            var values: (A, B, C, D, E)
+        }
+        """
+        let output = """
+        struct Foo<A: Hashable, B: Collection, C: Codable, D, E: Equatable> where B.Element == String, D.Index == Int {
+            var values: (A, B, C, D, E)
+        }
+        """
+        testFormatting(for: input, output, rule: .simplifyGenericConstraints)
+    }
+
+    func testManyGenericsWithMultipleConstraintsPerType() {
+        let input = """
+        func transform<A, B, C, D>(_ a: A, _ b: B, _ c: C, _ d: D)
+            where A: Hashable,
+                  A: Codable,
+                  B: Collection,
+                  B: Equatable,
+                  C: Comparable,
+                  D: Sequence,
+                  D: Sendable
+        {}
+        """
+        let output = """
+        func transform<A: Hashable & Codable, B: Collection & Equatable, C: Comparable, D: Sequence & Sendable>(_ a: A, _ b: B, _ c: C, _ d: D)
+            {}
+        """
+        testFormatting(for: input, output, rule: .simplifyGenericConstraints, exclude: [.unusedArguments, .indent])
+    }
 }

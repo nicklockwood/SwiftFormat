@@ -824,6 +824,6 @@ final class RedundantTypeTests: XCTestCase {
         """
 
         let options = FormatOptions(propertyTypes: .inferLocalsOnly)
-        testFormatting(for: input, rule: .redundantType, options: options)
+        testFormatting(for: input, rule: .redundantType, options: options, exclude: [.simplifyGenericConstraints])
     }
 }

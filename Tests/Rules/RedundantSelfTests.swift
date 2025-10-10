@@ -3221,7 +3221,7 @@ final class RedundantSelfTests: XCTestCase {
         }
         """
         let options = FormatOptions(explicitSelf: .initOnly)
-        testFormatting(for: input, rule: .redundantSelf, options: options)
+        testFormatting(for: input, rule: .redundantSelf, options: options, exclude: [.simplifyGenericConstraints])
     }
 
     func testRedundantSelfRuleDoesntErrorForClassFuncInClassWithWhere() {
@@ -3231,7 +3231,7 @@ final class RedundantSelfTests: XCTestCase {
         }
         """
         let options = FormatOptions(explicitSelf: .initOnly)
-        testFormatting(for: input, rule: .redundantSelf, options: options)
+        testFormatting(for: input, rule: .redundantSelf, options: options, exclude: [.simplifyGenericConstraints])
     }
 
     func testRedundantSelfRuleFailsInInitOnlyMode() {
@@ -4004,7 +4004,7 @@ final class RedundantSelfTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .redundantSelf)
+        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.simplifyGenericConstraints])
     }
 
     func testRedundantSelfIssue2177() {

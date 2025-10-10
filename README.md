@@ -20,6 +20,7 @@
     - [Using Swift Package Manager](#using-swift-package-manager)
     - [Using CocoaPods](#using-cocoapods)
     - [Using locally installed SwiftFormat](#using-locally-installed-swiftformat)
+    - [Using as a Build Tool Plugin Linter](#using-as-a-build-tool-plugin-linter)
   - [Swift Package Manager plugin](#swift-package-manager-plugin)
     - [Trigger Plugin From Command-Line](#trigger-plugin-from-command-line)
     - [Trigger Plugin From Xcode](#trigger-plugin-from-xcode)
@@ -342,6 +343,51 @@ or you can create a symbolic link in `/usr/local/bin` pointing to the actual bin
 ```bash
 ln -s /opt/homebrew/bin/swiftformat /usr/local/bin/swiftformat
 ```
+
+### Using as a Build Tool Plugin Linter
+
+This method allows to:
+- Use SwiftFormat as a linter, to prevent project developers to build non formatted code.
+- Keep the `ENABLE_USER_SCRIPT_SANDBOXING` (aka "User Script Sandboxing") option set to YES.
+- Make sure that all project developers use the same SwiftFormat version and config file.
+
+#### Install SwiftFormat as a Project dependency<!-- omit in toc -->
+
+- In Xcode, go to "File > Add package dependencies"
+- Past https://github.com/nicklockwood/SwiftFormat in the top right corner search box
+- Click on "Add package"
+- No need to add any target
+- Click on "Add package"
+
+#### Add Build Tool Plugin in Build Phases<!-- omit in toc -->
+
+- Click on your project in the Xcode Navigation (left panel)
+- Select your project in the Targets (2nd left panel)
+- Select the "Build Phases" Tab
+- Expand the "Run Build Tool Plug-ins" section
+- Click the + button at the bottom of the section
+- Select "SwiftFormat > SwiftFormatLinterBuildToolPlugin"
+- Click "Add"
+
+#### Create a config file<!-- omit in toc -->
+Create a `.swiftformat` file at the root of your project and add some rules or command parameters, for example:
+```properties
+--swiftversion 6.2
+--exclude build,Some/Other/Folder/OrFile.swift
+--maxwidth 120
+--allman false
+--guard-else same-line
+--commas always
+--trailingcommas always
+--wrapArguments before-first
+--disable wrapMultilineStatementBraces
+```
+
+### Build your project<!-- omit in toc -->
+
+Press CMD-B (or any other way to build your project).\
+If all the files are well formated, the build will proceed seemlessly, otherwise it will fail and display the list of files and errors.\
+You can then format all the files at once, preferably by [triggering the plugin from Xcode](#trigger-plugin-from-xcode) as this method use the same SwiftFormat version and configuration file.
 
 ## Swift Package Manager plugin
 

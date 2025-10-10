@@ -64,6 +64,7 @@
 * [redundantTypedThrows](#redundantTypedThrows)
 * [redundantVoidReturnType](#redundantVoidReturnType)
 * [semicolons](#semicolons)
+* [simplifyGenericConstraints](#simplifyGenericConstraints)
 * [sortDeclarations](#sortDeclarations)
 * [sortImports](#sortImports)
 * [sortTypealiases](#sortTypealiases)
@@ -3057,6 +3058,33 @@ Option | Description
   // semicolon is not removed if it would affect the behavior of the code
   return;
   goto(fail)
+```
+
+</details>
+<br/>
+
+## simplifyGenericConstraints
+
+Use inline generic constraints (`<T: Foo>`) instead of where clauses
+(`<T> where T: Foo`) for simple protocol conformance constraints.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- struct Foo<T, U> where T: Hashable, U: Codable {}
++ struct Foo<T: Hashable, U: Codable> {}
+
+- class Bar<Element> where Element: Equatable {
++ class Bar<Element: Equatable> {
+      // ...
+  }
+
+- enum Result<Value, Error> where Value: Decodable, Error: Swift.Error {}
++ enum Result<Value: Decodable, Error: Swift.Error> {}
+
+- func process<T>(_ value: T) where T: Codable {}
++ func process<T: Codable>(_ value: T) {}
 ```
 
 </details>

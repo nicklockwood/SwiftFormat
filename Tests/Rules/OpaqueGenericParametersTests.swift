@@ -18,7 +18,7 @@ final class OpaqueGenericParametersTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "5.6")
-        testFormatting(for: input, rule: .opaqueGenericParameters, options: options)
+        testFormatting(for: input, rule: .opaqueGenericParameters, options: options, exclude: [.simplifyGenericConstraints])
     }
 
     func testOpaqueGenericParameterWithNoConstraint() {
@@ -69,7 +69,7 @@ final class OpaqueGenericParametersTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, output, rule: .opaqueGenericParameters, options: options)
+        testFormatting(for: input, output, rule: .opaqueGenericParameters, options: options, exclude: [.simplifyGenericConstraints])
     }
 
     func testDisableSomeAnyGenericType() {
@@ -80,7 +80,7 @@ final class OpaqueGenericParametersTests: XCTestCase {
         """
 
         let options = FormatOptions(useSomeAny: false, swiftVersion: "5.7")
-        testFormatting(for: input, rule: .opaqueGenericParameters, options: options)
+        testFormatting(for: input, rule: .opaqueGenericParameters, options: options, exclude: [.simplifyGenericConstraints])
     }
 
     func testOpaqueGenericParameterWithConstraintInBracket() {
@@ -113,7 +113,7 @@ final class OpaqueGenericParametersTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, output, rule: .opaqueGenericParameters, options: options)
+        testFormatting(for: input, output, rule: .opaqueGenericParameters, options: options, exclude: [.simplifyGenericConstraints])
     }
 
     func testOpaqueGenericParameterWithConstraintsInWhereClause() {
@@ -138,7 +138,7 @@ final class OpaqueGenericParametersTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, output, rule: .opaqueGenericParameters, options: options)
+        testFormatting(for: input, output, rule: .opaqueGenericParameters, options: options, exclude: [.simplifyGenericConstraints])
     }
 
     func testOpaqueGenericParameterCanRemoveOneButNotOthers_onOneLine() {
@@ -155,7 +155,7 @@ final class OpaqueGenericParametersTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, output, rule: .opaqueGenericParameters, options: options)
+        testFormatting(for: input, output, rule: .opaqueGenericParameters, options: options, exclude: [.simplifyGenericConstraints])
     }
 
     func testOpaqueGenericParameterCanRemoveOneButNotOthers_onMultipleLines() {
@@ -186,7 +186,7 @@ final class OpaqueGenericParametersTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, output, rule: .opaqueGenericParameters, options: options)
+        testFormatting(for: input, output, rule: .opaqueGenericParameters, options: options, exclude: [.simplifyGenericConstraints])
     }
 
     func testOpaqueGenericParameterWithUnknownAssociatedTypeConstraint() {
@@ -202,7 +202,7 @@ final class OpaqueGenericParametersTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, rule: .opaqueGenericParameters, options: options)
+        testFormatting(for: input, rule: .opaqueGenericParameters, options: options, exclude: [.simplifyGenericConstraints])
     }
 
     func testOpaqueGenericParameterWithAssociatedTypeConformance() {
@@ -214,7 +214,7 @@ final class OpaqueGenericParametersTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, rule: .opaqueGenericParameters, options: options)
+        testFormatting(for: input, rule: .opaqueGenericParameters, options: options, exclude: [.simplifyGenericConstraints])
     }
 
     func testOpaqueGenericParameterWithKnownAssociatedTypeConstraint() {
@@ -233,7 +233,7 @@ final class OpaqueGenericParametersTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, output, rule: .opaqueGenericParameters, options: options)
+        testFormatting(for: input, output, rule: .opaqueGenericParameters, options: options, exclude: [.simplifyGenericConstraints])
     }
 
     func testOpaqueGenericParameterWithAssociatedTypeConstraint() {
@@ -250,7 +250,7 @@ final class OpaqueGenericParametersTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, output, rule: .opaqueGenericParameters, options: options)
+        testFormatting(for: input, output, rule: .opaqueGenericParameters, options: options, exclude: [.simplifyGenericConstraints])
     }
 
     func testGenericTypeUsedInMultipleParameters() {
@@ -261,7 +261,7 @@ final class OpaqueGenericParametersTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, rule: .opaqueGenericParameters, options: options)
+        testFormatting(for: input, rule: .opaqueGenericParameters, options: options, exclude: [.simplifyGenericConstraints])
     }
 
     func testGenericTypeUsedInClosureMultipleTimes() {
@@ -272,7 +272,7 @@ final class OpaqueGenericParametersTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, rule: .opaqueGenericParameters, options: options)
+        testFormatting(for: input, rule: .opaqueGenericParameters, options: options, exclude: [.simplifyGenericConstraints])
     }
 
     func testGenericTypeUsedAsReturnType() {
@@ -295,7 +295,7 @@ final class OpaqueGenericParametersTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, rule: .opaqueGenericParameters, options: options)
+        testFormatting(for: input, rule: .opaqueGenericParameters, options: options, exclude: [.simplifyGenericConstraints])
     }
 
     func testGenericTypeUsedAsReturnTypeAndParameter() {
@@ -311,7 +311,7 @@ final class OpaqueGenericParametersTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, rule: .opaqueGenericParameters, options: options)
+        testFormatting(for: input, rule: .opaqueGenericParameters, options: options, exclude: [.simplifyGenericConstraints])
     }
 
     func testGenericTypeWithClosureInWhereClauseDoesntCrash() {
@@ -322,7 +322,7 @@ final class OpaqueGenericParametersTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, rule: .opaqueGenericParameters, options: options)
+        testFormatting(for: input, rule: .opaqueGenericParameters, options: options, exclude: [.simplifyGenericConstraints])
     }
 
     func testGenericExtensionSameTypeConstraint() {
@@ -339,7 +339,7 @@ final class OpaqueGenericParametersTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, output, rule: .opaqueGenericParameters, options: options)
+        testFormatting(for: input, output, rule: .opaqueGenericParameters, options: options, exclude: [.simplifyGenericConstraints])
     }
 
     func testGenericExtensionSameTypeGenericConstraint() {
@@ -364,7 +364,7 @@ final class OpaqueGenericParametersTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, output, rule: .opaqueGenericParameters, options: options)
+        testFormatting(for: input, output, rule: .opaqueGenericParameters, options: options, exclude: [.simplifyGenericConstraints])
     }
 
     func testIssue1269() {
@@ -381,7 +381,7 @@ final class OpaqueGenericParametersTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, rule: .opaqueGenericParameters, options: options)
+        testFormatting(for: input, rule: .opaqueGenericParameters, options: options, exclude: [.simplifyGenericConstraints])
     }
 
     func testVariadicParameterNotConvertedToOpaqueGeneric() {
@@ -392,7 +392,7 @@ final class OpaqueGenericParametersTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, rule: .opaqueGenericParameters, options: options)
+        testFormatting(for: input, rule: .opaqueGenericParameters, options: options, exclude: [.simplifyGenericConstraints])
     }
 
     func testNonGenericVariadicParametersDoesntPreventUsingOpaqueGenerics() {
@@ -409,7 +409,7 @@ final class OpaqueGenericParametersTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, output, rule: .opaqueGenericParameters, options: options)
+        testFormatting(for: input, output, rule: .opaqueGenericParameters, options: options, exclude: [.simplifyGenericConstraints])
     }
 
     func testIssue1275() {
@@ -422,7 +422,7 @@ final class OpaqueGenericParametersTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, rule: .opaqueGenericParameters, options: options)
+        testFormatting(for: input, rule: .opaqueGenericParameters, options: options, exclude: [.simplifyGenericConstraints])
     }
 
     func testIssue1278() {
@@ -446,7 +446,7 @@ final class OpaqueGenericParametersTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, rule: .opaqueGenericParameters, options: options)
+        testFormatting(for: input, rule: .opaqueGenericParameters, options: options, exclude: [.simplifyGenericConstraints])
     }
 
     func testIssue1392() {
@@ -462,7 +462,7 @@ final class OpaqueGenericParametersTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, rule: .opaqueGenericParameters, options: options)
+        testFormatting(for: input, rule: .opaqueGenericParameters, options: options, exclude: [.simplifyGenericConstraints])
     }
 
     func testIssue1684() {
@@ -473,7 +473,7 @@ final class OpaqueGenericParametersTests: XCTestCase {
         }
         """
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, rule: .opaqueGenericParameters, options: options)
+        testFormatting(for: input, rule: .opaqueGenericParameters, options: options, exclude: [.simplifyGenericConstraints])
     }
 
     func testGenericSimplifiedInMethodWithAttributeOrMacro() {
@@ -504,7 +504,7 @@ final class OpaqueGenericParametersTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, output, rule: .opaqueGenericParameters, options: options)
+        testFormatting(for: input, output, rule: .opaqueGenericParameters, options: options, exclude: [.simplifyGenericConstraints])
     }
 
     func testGenericThrowsTypeNotTreatedAsAny() {
@@ -515,7 +515,7 @@ final class OpaqueGenericParametersTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, rule: .opaqueGenericParameters, options: options)
+        testFormatting(for: input, rule: .opaqueGenericParameters, options: options, exclude: [.simplifyGenericConstraints])
     }
 
     // MARK: - genericExtensions
@@ -526,7 +526,7 @@ final class OpaqueGenericParametersTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "5.6")
-        testFormatting(for: input, rule: .opaqueGenericParameters, options: options, exclude: [.emptyExtensions])
+        testFormatting(for: input, rule: .opaqueGenericParameters, options: options, exclude: [.simplifyGenericConstraints, .emptyExtensions])
     }
 
     func testOpaqueGenericParametersRuleSuccessfullyTerminatesInSampleCode() {
@@ -547,7 +547,7 @@ final class OpaqueGenericParametersTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, rule: .opaqueGenericParameters, options: options)
+        testFormatting(for: input, rule: .opaqueGenericParameters, options: options, exclude: [.simplifyGenericConstraints])
     }
 
     func testGenericParameterUsedInConstraintOfOtherTypeNotChanged() {
@@ -562,7 +562,7 @@ final class OpaqueGenericParametersTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, rule: .opaqueGenericParameters, options: options)
+        testFormatting(for: input, rule: .opaqueGenericParameters, options: options, exclude: [.simplifyGenericConstraints])
     }
 
     func testGenericParameterInheritedFromContextNotRemoved() {
@@ -575,7 +575,7 @@ final class OpaqueGenericParametersTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, rule: .opaqueGenericParameters, options: options)
+        testFormatting(for: input, rule: .opaqueGenericParameters, options: options, exclude: [.simplifyGenericConstraints])
     }
 
     func testGenericParameterUsedInBodyNotRemoved() {
@@ -588,7 +588,7 @@ final class OpaqueGenericParametersTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, rule: .opaqueGenericParameters, options: options)
+        testFormatting(for: input, rule: .opaqueGenericParameters, options: options, exclude: [.simplifyGenericConstraints])
     }
 
     func testGenericParameterUsedAsClosureParameterNotRemoved() {
@@ -604,7 +604,7 @@ final class OpaqueGenericParametersTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, rule: .opaqueGenericParameters, options: options)
+        testFormatting(for: input, rule: .opaqueGenericParameters, options: options, exclude: [.simplifyGenericConstraints])
     }
 
     func testFinalGenericParamRemovedProperlyWithoutHangingComma() {
@@ -623,7 +623,7 @@ final class OpaqueGenericParametersTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, output, rule: .opaqueGenericParameters, options: options)
+        testFormatting(for: input, output, rule: .opaqueGenericParameters, options: options, exclude: [.simplifyGenericConstraints])
     }
 
     func testAddsParensAroundTypeIfNecessary() {
@@ -638,7 +638,7 @@ final class OpaqueGenericParametersTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, output, rule: .opaqueGenericParameters, options: options)
+        testFormatting(for: input, output, rule: .opaqueGenericParameters, options: options, exclude: [.simplifyGenericConstraints])
     }
 
     func testHandlesSingleExactTypeGenericConstraint() {
@@ -651,7 +651,7 @@ final class OpaqueGenericParametersTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, output, rule: .opaqueGenericParameters, options: options)
+        testFormatting(for: input, output, rule: .opaqueGenericParameters, options: options, exclude: [.simplifyGenericConstraints])
     }
 
     func testGenericConstraintThatIsGeneric() {
@@ -670,7 +670,7 @@ final class OpaqueGenericParametersTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, output, rule: .opaqueGenericParameters, options: options)
+        testFormatting(for: input, output, rule: .opaqueGenericParameters, options: options, exclude: [.simplifyGenericConstraints])
     }
 
     func testDoesntChangeTypeWithConstraintThatReferencesItself() {
@@ -683,7 +683,7 @@ final class OpaqueGenericParametersTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, rule: .opaqueGenericParameters, options: options)
+        testFormatting(for: input, rule: .opaqueGenericParameters, options: options, exclude: [.simplifyGenericConstraints])
     }
 
     func testOpaqueGenericParametersDoesntleaveTrailingComma() {
@@ -695,7 +695,7 @@ final class OpaqueGenericParametersTests: XCTestCase {
         """
         let options = FormatOptions(swiftVersion: "5.7")
         testFormatting(for: input, output, rule: .opaqueGenericParameters,
-                       options: options, exclude: [.unusedArguments])
+                       options: options, exclude: [.simplifyGenericConstraints, .unusedArguments])
     }
 
     func testUpdatesProtocolRequirements() {
@@ -715,7 +715,7 @@ final class OpaqueGenericParametersTests: XCTestCase {
 
         let options = FormatOptions(swiftVersion: "5.7")
         testFormatting(for: input, output, rule: .opaqueGenericParameters,
-                       options: options, exclude: [.unusedArguments, .trailingSpace])
+                       options: options, exclude: [.simplifyGenericConstraints, .unusedArguments, .trailingSpace])
     }
 
     func testPreservesGenericUsedInBodyAtEndOfScope() {
@@ -729,7 +729,7 @@ final class OpaqueGenericParametersTests: XCTestCase {
 
         let options = FormatOptions(swiftVersion: "5.7")
         testFormatting(for: input, rule: .opaqueGenericParameters,
-                       options: options, exclude: [.unusedArguments, .indent])
+                       options: options, exclude: [.simplifyGenericConstraints, .unusedArguments, .indent])
     }
 
     func testUpdatesNestedFunction() {
@@ -754,7 +754,7 @@ final class OpaqueGenericParametersTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "5.7")
-        testFormatting(for: input, output, rule: .opaqueGenericParameters, options: options)
+        testFormatting(for: input, output, rule: .opaqueGenericParameters, options: options, exclude: [.simplifyGenericConstraints])
     }
 
     func testPreservesGenericInProtocolPrimaryAssociatedType() {

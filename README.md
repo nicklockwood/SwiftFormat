@@ -7,53 +7,56 @@
 [![License](https://img.shields.io/badge/license-MIT-lightgrey.svg)](https://opensource.org/licenses/MIT)
 [![Mastodon](https://img.shields.io/badge/mastodon-@nicklockwood@mastodon.social-636dff.svg)](https://mastodon.social/@nicklockwood)
 
-Table of Contents
------------------
+# Table of Contents<!-- omit in toc -->
 
-- [What?](#what-is-this)
-- [Why?](#why-would-i-want-to-do-that)
-- [How?](#how-do-i-install-it)
-    - [Command-line tool](#command-line-tool)
-    - [Xcode source editor extension](#xcode-source-editor-extension)
-    - [Xcode build phase](#xcode-build-phase)
-    - [Swift Package Manager plugin](#swift-package-manager-plugin)
-    - [Via Applescript](#via-applescript)
-    - [VSCode plugin](#vscode-plugin)
-    - [Sublime Text plugin](#sublime-text-plugin)
-    - [Nova plugin](nova-plugin)
-    - [Git pre-commit hook](#git-pre-commit-hook)
-    - [GitHub Actions](#github-actions)
-    - [On CI using Danger](#on-ci-using-danger)
-    - [Bazel build](#bazel-build)
-    - [Docker](#docker)
-    - [Prerelease Builds](#prerelease-builds)
+<!-- Generated using markdown-all-in-one VS Code extension -->
+
+- [What is this?](#what-is-this)
+- [Why would I want to do that?](#why-would-i-want-to-do-that)
+- [How do I install it?](#how-do-i-install-it)
+  - [Command-line tool](#command-line-tool)
+  - [Xcode source editor extension](#xcode-source-editor-extension)
+  - [Xcode build phase](#xcode-build-phase)
+    - [Using Swift Package Manager](#using-swift-package-manager)
+    - [Using CocoaPods](#using-cocoapods)
+    - [Using locally installed SwiftFormat](#using-locally-installed-swiftformat)
+  - [Swift Package Manager plugin](#swift-package-manager-plugin)
+    - [Trigger Plugin From Command-Line](#trigger-plugin-from-command-line)
+    - [Trigger Plugin From Xcode](#trigger-plugin-from-xcode)
+  - [Via AppleScript](#via-applescript)
+  - [VSCode plugin](#vscode-plugin)
+  - [Sublime Text plugin](#sublime-text-plugin)
+  - [Nova plugin](#nova-plugin)
+  - [Git pre-commit hook](#git-pre-commit-hook)
+  - [GitHub Actions](#github-actions)
+  - [On CI using Danger](#on-ci-using-danger)
+  - [Bazel Build](#bazel-build)
+  - [Docker](#docker)
+  - [Prerelease Builds](#prerelease-builds)
 - [Configuration](#configuration)
-    - [Options](#options)
-    - [Rules](#rules)
-    - [Swift version](#swift-version)
-    - [Config file](#config-file)
-    - [Globs](#globs)
-    - [Linting](#linting)
-    - [Error codes](#error-codes)
-    - [Cache](#cache)
-    - [File headers](#file-headers)
-    - [Markdown formatting](#markdown-formatting)
+  - [Options](#options)
+  - [Rules](#rules)
+  - [Swift version](#swift-version)
+  - [Swift language mode](#swift-language-mode)
+  - [Config file](#config-file)
+  - [Globs](#globs)
+  - [Linting](#linting)
+  - [Error codes](#error-codes)
+  - [Cache](#cache)
+  - [File headers](#file-headers)
+  - [Markdown formatting](#markdown-formatting)
 - [FAQ](#faq)
 - [Known issues](#known-issues)
 - [Tip Jar](#tip-jar)
 - [Credits](#credits)
 
-
-What is this?
-----------------
+# What is this?
 
 SwiftFormat is a code library and command-line tool for reformatting Swift code on macOS, Linux or Windows.
 
 SwiftFormat goes above and beyond what you might expect from a code formatter. In addition to adjusting white space it can insert or remove implicit `self`, remove redundant parentheses, and correct many other deviations from the standard Swift idioms.
 
-
-Why would I want to do that?
------------------------------
+# Why would I want to do that?
 
 Many programmers have a preferred style for formatting their code, and others seem entirely blind to the existing formatting conventions of a project (to the enragement of their colleagues).
 
@@ -61,20 +64,17 @@ When collaborating on a project, it can be helpful to agree on a common coding s
 
 Having a tool to automatically enforce a common style eliminates those issues, and lets you focus on the behavior of the code, not its presentation.
 
-
-How do I install it?
----------------------
+# How do I install it?
 
 That depends - There are several ways you can use SwiftFormat:
 
 1. As a command-line tool that you run manually, or as part of some other toolchain
 2. As a Source Editor Extension that you can invoke via the Editor > SwiftFormat menu within Xcode
-3. As a build phase in your Xcode project, so that it runs every time you press Cmd-R or Cmd-B, or
+3. As a build phase in your Xcode project, so that it runs every time you press Cmd-R or Cmd-B
 4. As a Git pre-commit hook, so that it runs on any files you've changed before you check them in
 
 
-Command-line tool
--------------------
+## Command-line tool
 
 **Installation:**
 
@@ -195,8 +195,7 @@ $ cat /path/to/file.swift | swiftformat stdin --stdinpath /path/to/file.swift
 ```
 
 
-Xcode source editor extension
------------------------------
+## Xcode source editor extension
 
 **Installation:**
 
@@ -228,9 +227,7 @@ The format of the configuration file is described in the [Config section](#confi
 
 **Note:** SwiftFormat for Xcode cannot automatically detect changes to an imported configuration file. If you update the `.swiftformat` file for your project, you will need to manually re-import that file into SwiftFormat for Xcode in order for the Xcode source editor extension to use the new configuration.
 
-
-Xcode build phase
--------------------
+## Xcode build phase
 
 **NOTE:** Adding this script will overwrite your source files as you work on them, which has the annoying side-effect of clearing the undo history. You may wish to add the script to your test target rather than your main target, so that it is invoked only when you run the unit tests, and not every time you build the app.
 
@@ -238,9 +235,11 @@ Alternatively, you might want to consider running SwiftFormat in [lint](#linting
 
 ### Using Swift Package Manager
 
+**WARNING:** If you are using Xcode 15 or later, make sure that the `ENABLE_USER_SCRIPT_SANDBOXING` (aka "User Script Sandboxing") option is set to NO, otherwise SwiftFormat won't be able to run correctly.
+
 To set up SwiftFormat as an Xcode build phase, do the following:
 
-#### 1) Create a BuildTools folder and Package.swift
+#### 1) Create a BuildTools folder and Package.swift<!-- omit in toc -->
 
 1. Create a folder called `BuildTools` in the same folder as your xcodeproj file
 2. In this folder, create a file called `Package.swift`, with the following contents:
@@ -259,7 +258,7 @@ let package = Package(
 ```
 3. If you are running Xcode 11.4 or later, in the `BuildTools` folder create a file called `Empty.swift` with nothing in it. This is to satisfy a change in Swift Package Manager.
 
-#### 2) Add a Build phase to your app target
+#### 2) Add a Build phase to your app target<!-- omit in toc -->
 
 1. Click on your project in the file list, choose your target under `TARGETS`, click the `Build Phases` tab
 2. Add a `New Run Script Phase` by clicking the little plus icon in the top left
@@ -277,11 +276,9 @@ You can also use `swift run -c release --package-path BuildTools swiftformat "$S
 
 **NOTE:** You may wish to check BuildTools/Package.swift into your source control so that the version used by your run-script phase is kept in version control. It is recommended to add the following to your .gitignore file: `BuildTools/.build` and `BuildTools/.swiftpm`.
 
-**NOTE (2):** If you are using Xcode 15 or later, make sure that the `ENABLE_USER_SCRIPT_SANDBOXING` (aka "User Script Sandboxing") option is set to NO, otherwise SwiftFormat won't be able to run correctly.
-
 ### Using CocoaPods
 
-#### 1) Add the SwiftFormat CLI to your Podfile
+#### 1) Add the SwiftFormat CLI to your Podfile<!-- omit in toc -->
 
 1. Add the `swiftformat` binary to your project directory via [CocoaPods](https://cocoapods.org/), by adding the following line to your Podfile then running `pod install`:
 
@@ -293,7 +290,7 @@ You can also use `swift run -c release --package-path BuildTools swiftformat "$S
 
 **NOTE (2):** When installing this way, GateKeeper may block swiftformat from running until you open it manually the first time by right-clicking in the Finder and selecting "Open".
 
-#### 2) Add a Build phase to your app target
+#### 2) Add a Build phase to your app target<!-- omit in toc -->
 
 1. Click on your project in the file list, choose your target under `TARGETS`, click the `Build Phases` tab
 2. Add a `New Run Script Phase` by clicking the little plus icon in the top left
@@ -304,9 +301,13 @@ You can also use `swift run -c release --package-path BuildTools swiftformat "$S
     "${PODS_ROOT}/SwiftFormat/CommandLineTool/swiftformat" "$SRCROOT"
     ```
 
-### Alternative: Locally installed SwiftFormat
+### Using locally installed SwiftFormat
 
-Alternatively, you could use a locally installed swiftformat command-line tool instead by putting the following in your Run Script build phase:
+**WARNING:** If you are using Xcode 15 or later, make sure that the `ENABLE_USER_SCRIPT_SANDBOXING` (aka "User Script Sandboxing") option is set to NO, otherwise SwiftFormat won't be able to run correctly.
+
+**WARNING (2):** This is not recommended for shared projects however, as different team members using different versions of SwiftFormat may result in noise in the commit history as code gets reformatted inconsistently.
+
+To use a locally installed swiftformat command-line tool, put the following in your Run Script build phase:
 
 ```bash
 if which swiftformat >/dev/null; then
@@ -316,9 +317,7 @@ else
 fi
 ```
 
-This is not recommended for shared projects however, as different team members using different versions of SwiftFormat may result in noise in the commit history as code gets reformatted inconsistently.
-
-If you installed SwiftFormat via Homebrew on Apple Silicon, you might experience this warning:
+**WARNING (3):** If you installed SwiftFormat via Homebrew on Apple Silicon, you might experience this warning:
 
 > warning: SwiftFormat not installed, download from https://github.com/nicklockwood/SwiftFormat
 
@@ -344,8 +343,7 @@ or you can create a symbolic link in `/usr/local/bin` pointing to the actual bin
 ln -s /opt/homebrew/bin/swiftformat /usr/local/bin/swiftformat
 ```
 
-Swift Package Manager plugin
------------------------------
+## Swift Package Manager plugin
 
 You can use `SwiftFormat` as a SwiftPM command plugin.
 
@@ -386,8 +384,7 @@ You can also specify `SwiftFormat` arguments, e.g. `--swift-version`.
 
 ![Run plugin in Xcode 14](https://user-images.githubusercontent.com/4176826/179352584-db7f7f42-452c-4a42-a329-01b115a237a7.gif)
 
-Via AppleScript
-----------------
+## Via AppleScript
 
 To run SwiftFormat on the frontmost Xcode document (project or workspace) you can use the following AppleScript:
 
@@ -401,27 +398,19 @@ end tell
 
 Some Apps you can trigger this from are [BetterTouchTool](https://folivora.ai), [Alfred](https://www.alfredapp.com) or [Keyboard Maestro](https://www.keyboardmaestro.com/main/). Another option is to define a QuickAction for Xcode via Automator and then assign a keyboard shortcut for it in the System Preferences.
 
-
-VSCode plugin
---------------
+## VSCode plugin
 
 If you prefer to use Microsoft's [VSCode](https://code.visualstudio.com) editor for writing Swift, [Valentin Knabel](https://github.com/vknabel) has created a [VSCode plugin](https://marketplace.visualstudio.com/items?itemName=vknabel.vscode-swiftformat) for SwiftFormat.
 
-
-Sublime Text plugin
---------------------
+## Sublime Text plugin
 
 If you prefer to use the [Sublime Text](https://www.sublimetext.com) editor, try the [Sublime-Swift-Format plugin](https://github.com/aerobounce/Sublime-Swift-Format) by [Aerobounce](https://github.com/aerobounce).
 
-
-Nova plugin
------------
+## Nova plugin
 
 If you prefer to use the [Nova](https://panic.com/nova) editor, try the [SwiftFormat extension](https://extensions.panic.com/extensions/org.padraig/org.padraig.SwiftFormat/) by [Pádraig Ó Cinnéide](https://mastodon.social/@PadraigOCinneide).
 
-
-Git pre-commit hook
----------------------
+## Git pre-commit hook
 
 1. Follow the instructions for installing the SwiftFormat command-line tool.
 
@@ -446,8 +435,7 @@ The pre-commit hook will now run whenever you run `git commit`. Running `git com
 
 **NOTE (2):** Unlike the Xcode build phase approach, git pre-commit hook won't be checked in to source control, and there's no way to guarantee that all users of the project are using the same version of SwiftFormat. For a collaborative project, you might want to consider a *post*-commit hook instead, which would run on your continuous integration server.
 
-GitHub Actions
----------------------
+## GitHub Actions
 
 1. SwiftFormat comes preinstalled on all macOS GitHub-hosted runners. If you are self hosting you will need to ensure SwiftFormat is installed on your runner.
 2. Create a GitHub Actions workflow using SwiftFormat, passing the `--reporter github-actions-log` command line option. The following example action lints pull requests using SwiftFormat, reporting warnings using the GitHub Actions log.
@@ -465,8 +453,7 @@ jobs:
         run: swiftformat --lint . --reporter github-actions-log
 ```
 
-On CI using Danger
--------------------
+## On CI using Danger
 
 To setup SwiftFormat to be used by your continuous integration system using [Danger](http://danger.systems/ruby/), do the following:
 
@@ -482,15 +469,11 @@ To setup SwiftFormat to be used by your continuous integration system using [Dan
 
     **NOTE:** It is recommended to add the `swiftformat` binary to your project directory to ensure the same version is used each time (see the [Xcode build phase](#xcode-build-phase) instructions above).
 
-
-Bazel Build
------------
+## Bazel Build
 
 If you use [Bazel](https://bazel.build/) to build your Swift projects and want to ensure that only properly formatted code is merged to your main branch, try [rules_swiftformat](https://github.com/cgrindel/rules_swiftformat). The repository contains Bazel rules and macros that format Swift source files using SwiftFormat, test that the formatted files exist in the workspace directory, and copy the formatted files to the workspace directory.
 
-
-Docker
------------
+## Docker
 
 SwiftFormat publishes releases into [GitHub Packages](https://github.com/features/packages) Docker registry. To pull the image call:
 
@@ -522,8 +505,7 @@ Linting example:
 docker run --rm -v /local/source/path:/work ghcr.io/nicklockwood/swiftformat:latest /work --lint
 ```
 
-Prerelease Builds
------------------
+## Prerelease Builds
 
 ***Prerelease builds are subject to breaking changes.***
 
@@ -545,14 +527,11 @@ Nightly builds of the `develop` branch are available in the [calda/SwiftFormat-n
 
 Commit SHAs on `develop` are unstable since that branch is occasionally rebased, but artifact URLs and tags in [calda/SwiftFormat-nightly](https://github.com/calda/SwiftFormat-nightly) are stable references that can be used from other repos or tools.
 
-Configuration
--------------
+# Configuration
 
 SwiftFormat's configuration is split between **rules** and **options**. Rules are functions in the SwiftFormat library that apply changes to the code. Options are settings that control the behavior of the rules. 
 
-
-Options
--------
+## Options
 
 The options available in SwiftFormat can be displayed using the `--options` command-line argument. The default value for each option is indicated in the help text.
 
@@ -575,9 +554,7 @@ let indexUrl: URL // swiftformat:options:this --preserve-acronyms url
 doTheThing(); print("Did the thing")
 ```
 
-
-Rules
------
+## Rules
 
 SwiftFormat includes over 50 rules, and new ones are added all the time. An up-to-date list can be found in [Rules.md](https://github.com/nicklockwood/SwiftFormat/blob/main/Rules.md) along with documentation for how they are used.
 
@@ -669,8 +646,7 @@ You can also use `this` or `previous` to enable or disable rules for the current
 **NOTE:** The `swiftformat:enable` directive only serves to counter a previous `swiftformat:disable` directive in the same file. It is not possible to use `swiftformat:enable` to enable a rule that was not already enabled when formatting started.
 
 
-Swift version
--------------
+## Swift version
 
 Most SwiftFormat rules are version-agnostic, but some are applicable only to newer Swift versions. These rules will be disabled automatically if the Swift version is not specified, so to make sure that the full functionality is available you should specify the version of Swift that is used by your project.
 
@@ -682,8 +658,7 @@ Another option is to add a `.swift-version` file to your project directory. This
 
 Both the `.swift-version` file and the `--swift-version` option in a `.swiftformat` file are applied hierarchically; If you have submodules in your project that use a different Swift version, you can add separate swift version configurations for those directories.
 
-Swift language mode
--------------------
+## Swift language mode
 
 SwiftFormat also allows you to specify the Swift _language mode_ used by your project. This is distinct from the Swift compiler version. For example, you can use the Swift 6.0 compiler with either the Swift 5 language mode or the Swift 6 language mode. Some SwiftFormat rules will behave differently under different Swift language modes.
 
@@ -692,8 +667,7 @@ You can specify your project's Swift language mode using the `--language-mode` c
 If not specified, SwiftFormat uses the default language mode of the specified Swift compiler version. The default language mode in Swift 5.x and Swift 6.x is the Swift 5 language mode. If your project uses the Swift 6 language mode, you should specify `--language-mode 6`.
 
 
-Config file
------------
+## Config file
 
 Although it is possible to configure SwiftFormat directly by using the command-line [options](#options) and [rules](#rules) detailed above, it is sometimes more convenient to create a configuration file, which can be added to your project and shared with other developers.
 
@@ -751,8 +725,7 @@ $ cd /path/to/project
 $ swiftformat --infer-options . --output .swiftformat
 ```
 
-Globs
------
+## Globs
 
 When excluding files from formatting using the `--exclude` option, you may wish to make use of wildcard paths (aka "Globs") to match all files that match a particular naming convention without having to manually list them all.
 
@@ -786,9 +759,7 @@ Examples:
 
 * `**/*_generated.swift` - Matches any Swift file with the suffix "_generated" in the project.
 
-
-Linting
--------
+## Linting
 
 SwiftFormat is primarily designed as a formatter rather than a linter, i.e. it is designed to fix your code rather than tell you what's wrong with it. However, sometimes it can be useful to verify that code has been formatted in a context where it is not desirable to actually change it.
 
@@ -821,9 +792,7 @@ Sometimes you may wish to autoformat some rules, but only lint others. To do tha
 --lint-only trailingClosures,unusedArguments
 ```
 
-
-Error codes
------------
+## Error codes
 
 The swiftformat command-line tool will always exit with one of the following codes:
 
@@ -831,9 +800,7 @@ The swiftformat command-line tool will always exit with one of the following cod
 * 1 - Lint failure. This code will be returned when running in `--lint` mode, or when autocorrecting in `--strict` mode, if the input requires formatting.
 * 70 - Program error. This code will be returned if there is a problem with the input or configuration arguments.
 
-
-Cache
-------
+## Cache
 
 SwiftFormat uses a cache file to avoid reformatting files that haven't changed. For a large project, this can significantly reduce processing time.
 
@@ -843,9 +810,7 @@ The cache is shared between all projects. The file is fairly small, as it only s
 
 You can specify a custom cache file location by passing a path as the `--cache` option value. For example, you might want to store the cache file inside your project directory. It is fine to check in the cache file if you want to share it between different users of your project, as the paths stored in the cache are relative to the location of the formatted files.
 
-
-File headers
--------------
+## File headers
 
 SwiftFormat can be configured to strip or replace the header comments in every file with a template. The "header comment" is defined as a comment block that begins on the first nonblank line in the file, and is followed by at least one blank line. This may consist of a single comment body, or multiple comments on consecutive lines:
 
@@ -893,9 +858,7 @@ Will be formatted as:
 
 **NOTE:** the `{year}` value and `{created}` date format are determined from the current locale and timezone of the machine running the script. `{author.name}` and `{author.email}` requires the project to be version controlled by git.
 
-
-Markdown formatting
--------------------
+## Markdown formatting
 
 SwiftFormat can format Swift code blocks inside Markdown files (`.md`). This is useful for keeping code examples in documentation, README files, and other markdown content properly formatted.
 
@@ -965,8 +928,7 @@ func example() {
 ```
 ````
 
-FAQ
------
+# FAQ
 
 *Q. How is this different from SwiftLint?*
 
@@ -1041,8 +1003,7 @@ Q. I don't want to be surprised by new rules added when I upgrade SwiftFormat. H
 
 > A. You can run the `swiftformat` command line tool via the `Swift Format (Command Line Tool)` scheme, and you can pass in arguments like `/path/to/my/code --config /path/to/my/config` as the `Arguments Passed On Launch` in Xcode's scheme editor. More instructions are available [here](https://github.com/nicklockwood/SwiftFormat/pull/1804#issuecomment-2263079432).
 
-Known issues
----------------
+# Known issues
 
 * When using the Xcode Source Editor Extension, the SwiftFormat menu sometimes disappears from Xcode. If this happens, try moving or renaming Xcode temporarily and then changing it back. Failing that, the suggestions in [this thread](https://github.com/nicklockwood/SwiftFormat/issues/494) may help.
 
@@ -1086,17 +1047,13 @@ Known issues
 
 * The `propertyTypes` rule can cause a build failure in cases like `let foo = Foo.bar` where the value is a static member that doesn't return the same time. For example, `let foo: Foo = .bar` would be invalid if the `bar` property was defined as `static var bar: Bar`. As a workaround you can write the name of the type explicitly, like `let foo: Bar = Foo.bar`, or exclude the type name and/or property name with `--preserve-symbols Bar,bar,etc`.
 
-
-Tip Jar
------------
+# Tip Jar
 
 SwiftFormat is not a commercially-funded product, it's a labor of love given freely to the community. If you find it useful, please consider making a donation.
 
 [![Donate via PayPal](https://www.paypalobjects.com/en_GB/i/btn/btn_donate_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=9ZGWNK5FEZFF6&source=url)
 
-
-Credits
-------------
+# Credits
 
 * [Cal Stephens](https://github.com/calda) - Numerous new formatting rules, options and bug fixes
 * [Tony Arnold](https://github.com/tonyarnold) - SwiftFormat for Xcode

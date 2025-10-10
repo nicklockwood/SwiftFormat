@@ -1213,7 +1213,7 @@ final class IndentTests: XCTestCase {
         }
         """
         let options = FormatOptions(xcodeIndentation: true)
-        testFormatting(for: input, output, rule: .indent, options: options)
+        testFormatting(for: input, output, rule: .indent, options: options, exclude: [.simplifyGenericConstraints])
     }
 
     func testIndentSwitchCaseDo() {

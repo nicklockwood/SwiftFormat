@@ -337,4 +337,26 @@ final class SimplifyGenericConstraintsTests: XCTestCase {
         """
         testFormatting(for: input, rule: .simplifyGenericConstraints, exclude: [.unusedArguments])
     }
+
+    func testCombineInlineAndWhereClauseConstraints() {
+        // When a generic has both inline and where clause constraints, combine with &
+        let input = """
+        struct Config<T: Hashable> where T: Codable {}
+        """
+        let output = """
+        struct Config<T: Hashable & Codable> {}
+        """
+        testFormatting(for: input, output, rule: .simplifyGenericConstraints)
+    }
+
+    func testCombineMultipleInlineAndWhereClauseConstraints() {
+        // Multiple constraints should all be combined with &
+        let input = """
+        struct Config<T: Hashable, U: Codable> where T: Sendable, U: Equatable {}
+        """
+        let output = """
+        struct Config<T: Hashable & Sendable, U: Codable & Equatable> {}
+        """
+        testFormatting(for: input, output, rule: .simplifyGenericConstraints)
+    }
 }

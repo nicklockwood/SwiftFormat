@@ -173,6 +173,10 @@ extension Formatter {
                 else { break }
 
                 if tokens[typeIndex].string == typeName {
+                    // Check if this generic parameter already has inline constraints
+                    let hasInlineConstraints = index(of: .nonSpaceOrCommentOrLinebreak, after: typeIndex)
+                        .map { tokens[$0] == .delimiter(":") } ?? false
+
                     // Find the end of this generic parameter declaration
                     // It ends at a comma or the closing >
                     var endIndex = typeIndex
@@ -183,9 +187,16 @@ extension Formatter {
                         endIndex = nextIndex
                     }
 
-                    // Build the constraint suffix (: Protocol & OtherProtocol)
+                    // Build the constraint suffix
                     let protocolNames = conformances.map(\.name)
-                    let constraintSuffix = ": \(protocolNames.joined(separator: " & "))"
+                    let constraintSuffix: String
+                    if hasInlineConstraints {
+                        // Append with & if there are already constraints
+                        constraintSuffix = " & \(protocolNames.joined(separator: " & "))"
+                    } else {
+                        // Add with : if this is the first constraint
+                        constraintSuffix = ": \(protocolNames.joined(separator: " & "))"
+                    }
 
                     // Insert the constraint after the type parameter
                     insert(tokenize(constraintSuffix), at: endIndex + 1)

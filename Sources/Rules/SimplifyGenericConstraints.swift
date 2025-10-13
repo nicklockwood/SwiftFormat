@@ -97,15 +97,20 @@ extension Formatter {
         var constraintsToMove: [(genericType: Formatter.GenericType, conformance: Formatter.GenericType.GenericConformance)] = []
 
         for genericType in genericTypes {
+            // Check if this generic type is declared in the current function's generic parameter list
+            let isGenericDeclaredInline = isGenericTypeDeclared(genericType.name, in: genericStartIndex)
+
             // Check each conformance to see if it can be moved
             for conformance in genericType.conformances {
                 // Only move if:
                 // 1. It's a protocol constraint (not a concrete type with ==)
                 // 2. The constraint is in the where clause (not already inline)
                 // 3. The typeName matches the generic type name exactly (no associated types like T.Element)
+                // 4. The generic type is declared in this function's generic parameters (not from enclosing type)
                 guard conformance.type == .protocolConstraint,
                       conformance.sourceRange.lowerBound > whereIndex,
-                      conformance.typeName == genericType.name
+                      conformance.typeName == genericType.name,
+                      isGenericDeclaredInline
                 else { continue }
 
                 constraintsToMove.append((genericType: genericType, conformance: conformance))
@@ -195,5 +200,32 @@ extension Formatter {
                 }
             }
         }
+    }
+
+    /// Checks if a generic type is declared in the generic parameter list at the given index
+    func isGenericTypeDeclared(_ typeName: String, in genericStartIndex: Int) -> Bool {
+        guard let genericEndIndex = endOfScope(at: genericStartIndex) else {
+            return false
+        }
+
+        var currentIndex = genericStartIndex + 1
+        while currentIndex < genericEndIndex {
+            guard let typeIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex - 1),
+                  typeIndex < genericEndIndex
+            else { break }
+
+            if tokens[typeIndex].string == typeName {
+                return true
+            }
+
+            // Move to next parameter
+            if let commaIndex = index(of: .delimiter(","), after: typeIndex) {
+                currentIndex = commaIndex + 1
+            } else {
+                break
+            }
+        }
+
+        return false
     }
 }

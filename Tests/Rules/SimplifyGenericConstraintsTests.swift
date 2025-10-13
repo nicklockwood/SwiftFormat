@@ -325,4 +325,16 @@ final class SimplifyGenericConstraintsTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .simplifyGenericConstraints, exclude: [.unusedArguments, .indent])
     }
+
+    // MARK: - Constraints on generics not in parameter list
+
+    func testPreserveConstraintsForGenericsNotInParameterList() {
+        // U is not in the function's generic parameters, so the constraint must be preserved
+        let input = """
+        func process<T>(value: T) where U: Hashable {
+            print(U.self)
+        }
+        """
+        testFormatting(for: input, rule: .simplifyGenericConstraints, exclude: [.unusedArguments])
+    }
 }

@@ -188,7 +188,15 @@ extension Formatter {
                     }
 
                     // Build the constraint suffix
-                    let protocolNames = conformances.map(\.name)
+                    // Normalize protocol names to remove any whitespace/ampersand issues from multiline where clauses
+                    let protocolNames = conformances.map { conformance in
+                        // Split on & and rejoin to normalize spacing
+                        conformance.name
+                            .components(separatedBy: "&")
+                            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                            .filter { !$0.isEmpty }
+                            .joined(separator: " & ")
+                    }
                     let constraintSuffix: String
                     if hasInlineConstraints {
                         // Append with & if there are already constraints

@@ -97,16 +97,35 @@ extension Formatter {
         var constraintsToMove: [(genericType: Formatter.GenericType, conformance: Formatter.GenericType.GenericConformance)] = []
 
         for genericType in genericTypes {
+            // Check if this generic type is declared in the current function's generic parameter list
+            let isGenericDeclaredInline = isGenericTypeDeclared(genericType.name, in: genericStartIndex)
+
             // Check each conformance to see if it can be moved
             for conformance in genericType.conformances {
                 // Only move if:
                 // 1. It's a protocol constraint (not a concrete type with ==)
                 // 2. The constraint is in the where clause (not already inline)
                 // 3. The typeName matches the generic type name exactly (no associated types like T.Element)
+                // 4. The generic type is declared in this function's generic parameters (not from enclosing type)
                 guard conformance.type == .protocolConstraint,
                       conformance.sourceRange.lowerBound > whereIndex,
-                      conformance.typeName == genericType.name
+                      conformance.typeName == genericType.name,
+                      isGenericDeclaredInline
                 else { continue }
+
+                // Skip multiline protocol compositions (e.g., ProviderA & ProviderB &\nProviderC)
+                // Check if there's an `&` followed by a linebreak in the conformance tokens
+                var hasMultilineComposition = false
+                for i in conformance.sourceRange {
+                    if tokens[i] == .operator("&", .infix),
+                       let nextIndex = index(of: .nonSpace, after: i),
+                       tokens[nextIndex].isLinebreak
+                    {
+                        hasMultilineComposition = true
+                        break
+                    }
+                }
+                guard !hasMultilineComposition else { continue }
 
                 constraintsToMove.append((genericType: genericType, conformance: conformance))
             }
@@ -128,13 +147,40 @@ extension Formatter {
         removeTokens(in: sourceRangesToRemove)
 
         // Check if the where clause is now empty and remove it if so
-        if let tokenAfterWhere = index(of: .nonSpaceOrCommentOrLinebreak, after: whereClauseIndex),
-           tokens[tokenAfterWhere] == .startOfScope("{")
-        {
-            removeTokens(in: whereClauseIndex.index ..< tokenAfterWhere)
+        // Find the next significant token after the where keyword
+        if let tokenAfterWhereIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: whereClauseIndex) {
+            let tokenAfterWhere = tokens[tokenAfterWhereIndex]
+            if tokenAfterWhere == .startOfScope("{") {
+                // Where clause followed by opening brace - remove everything between where and {
+                removeTokens(in: whereClauseIndex.index ..< tokenAfterWhereIndex)
+            } else if tokenAfterWhere.isLinebreak || tokenAfterWhere == .endOfScope("}") {
+                // Where clause followed by linebreak or closing brace - means it's empty
+                // Remove the where keyword and any whitespace/linebreaks after it
+                // Also remove the space before where if present
+                let startIndex = (whereClauseIndex.index > 0 && tokens[whereClauseIndex.index - 1].isSpace)
+                    ? whereClauseIndex.index - 1
+                    : whereClauseIndex.index
+
+                if let linebreakIndex = index(of: .linebreak, after: whereClauseIndex) {
+                    removeTokens(in: startIndex ..< linebreakIndex)
+                }
+            }
+        } else {
+            // No non-whitespace token after where at all - remove where and trailing content
+            // Also remove the space before where if present
+            let startIndex = (whereClauseIndex.index > 0 && tokens[whereClauseIndex.index - 1].isSpace)
+                ? whereClauseIndex.index - 1
+                : whereClauseIndex.index
+
+            var endIndex = whereClauseIndex.index + 1
+            while endIndex < tokens.count, !tokens[endIndex].isLinebreak {
+                endIndex += 1
+            }
+            removeTokens(in: startIndex ..< endIndex)
         }
-        // Otherwise, clean up any trailing commas before the opening brace
-        else if let openBraceIndex = index(of: .startOfScope("{"), after: whereClauseIndex) {
+
+        // Clean up any trailing commas before the opening brace or end of declaration
+        if let openBraceIndex = index(of: .startOfScope("{"), after: whereClauseIndex.index) {
             // Search backwards from the brace to find any trailing comma
             if let commaIndex = index(
                 of: .nonSpaceOrCommentOrLinebreak,
@@ -168,6 +214,10 @@ extension Formatter {
                 else { break }
 
                 if tokens[typeIndex].string == typeName {
+                    // Check if this generic parameter already has inline constraints
+                    let hasInlineConstraints = index(of: .nonSpaceOrCommentOrLinebreak, after: typeIndex)
+                        .map { tokens[$0] == .delimiter(":") } ?? false
+
                     // Find the end of this generic parameter declaration
                     // It ends at a comma or the closing >
                     var endIndex = typeIndex
@@ -178,9 +228,16 @@ extension Formatter {
                         endIndex = nextIndex
                     }
 
-                    // Build the constraint suffix (: Protocol & OtherProtocol)
+                    // Build the constraint suffix
                     let protocolNames = conformances.map(\.name)
-                    let constraintSuffix = ": \(protocolNames.joined(separator: " & "))"
+                    let constraintSuffix: String
+                    if hasInlineConstraints {
+                        // Append with & if there are already constraints
+                        constraintSuffix = " & \(protocolNames.joined(separator: " & "))"
+                    } else {
+                        // Add with : if this is the first constraint
+                        constraintSuffix = ": \(protocolNames.joined(separator: " & "))"
+                    }
 
                     // Insert the constraint after the type parameter
                     insert(tokenize(constraintSuffix), at: endIndex + 1)
@@ -195,5 +252,32 @@ extension Formatter {
                 }
             }
         }
+    }
+
+    /// Checks if a generic type is declared in the generic parameter list at the given index
+    func isGenericTypeDeclared(_ typeName: String, in genericStartIndex: Int) -> Bool {
+        guard let genericEndIndex = endOfScope(at: genericStartIndex) else {
+            return false
+        }
+
+        var currentIndex = genericStartIndex + 1
+        while currentIndex < genericEndIndex {
+            guard let typeIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex - 1),
+                  typeIndex < genericEndIndex
+            else { break }
+
+            if tokens[typeIndex].string == typeName {
+                return true
+            }
+
+            // Move to next parameter
+            if let commaIndex = index(of: .delimiter(","), after: typeIndex) {
+                currentIndex = commaIndex + 1
+            } else {
+                break
+            }
+        }
+
+        return false
     }
 }

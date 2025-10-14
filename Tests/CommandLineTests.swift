@@ -344,6 +344,20 @@ final class CommandLineTests: XCTestCase {
         XCTAssert(arguments.isEmpty, "\(arguments.joined(separator: ",")) not listed in help")
     }
 
+    func testRedundantDefaultsInHelpOptionsDescriptions() {
+        var descriptions = [String]()
+        CLI.print = { message, _ in
+            descriptions += message
+                .components(separatedBy: "\n")
+                .filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
+        }
+        printOptions(as: .content)
+        for description in descriptions {
+            XCTAssertFalse(description.contains("\"default\"") && description.contains("(default)"),
+                           "Found both 'default' and '(default)' in option description: \(description)")
+        }
+    }
+
     func testHelpOptionFormatting() {
         let shortOption = OptionDescriptor(
             argumentName: "option",

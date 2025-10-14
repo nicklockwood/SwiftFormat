@@ -3869,14 +3869,14 @@ Align wrapped function arguments or collection elements.
 
 Option | Description
 --- | ---
-`--wrap-arguments` | Function argument wrapping: "before-first", "after-first", "preserve" (default), "disabled" or "default"
-`--wrap-parameters` | Function call parameter wrapping: "before-first", "after-first", "preserve", "disabled" or "default" (default)
-`--wrap-collections` | Collection literal element wrapping: "before-first", "after-first", "preserve" (default), "disabled" or "default"
-`--closing-paren` | Closing paren placement: "balanced" (default), "same-line" or "default"
-`--call-site-paren` | Closing paren placement at function call sites: "balanced", "same-line" or "default" (default)
+`--wrap-arguments` | Function argument wrapping: "before-first", "after-first", "preserve" (default) or "disabled"
+`--wrap-parameters` | Function call parameter wrapping: "before-first", "after-first", "preserve", "disabled" or "default"
+`--wrap-collections` | Collection literal element wrapping: "before-first", "after-first", "preserve" (default) or "disabled"
+`--closing-paren` | Closing paren placement: "balanced" (default) or "same-line"
+`--call-site-paren` | Closing paren placement at function call sites: "balanced", "same-line" or "default"
 `--wrap-return-type` | Function return type wrapping: "preserve" (default), "if-multiline" or "never"
-`--wrap-conditions` | Conditional expression wrapping: "before-first", "after-first", "preserve" (default), "disabled" or "default"
-`--wrap-type-aliases` | Typealias wrapping: "before-first", "after-first", "preserve" (default), "disabled" or "default"
+`--wrap-conditions` | Conditional expression wrapping: "before-first", "after-first", "preserve" (default) or "disabled"
+`--wrap-type-aliases` | Typealias wrapping: "before-first", "after-first", "preserve" (default) or "disabled"
 `--wrap-effects` | Function effects (throws, async) wrapping: "preserve" (default), "if-multiline" or "never"
 `--wrap-string-interpolation` | String interpolation wrapping: "default" (wrap if needed) or "preserve"
 `--allow-partial-wrapping` | Allow partial argument wrapping: "true" (default) or "false"

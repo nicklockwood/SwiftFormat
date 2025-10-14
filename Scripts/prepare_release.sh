@@ -42,20 +42,26 @@ if ! grep -q "tag/$NEW_VERSION)" CHANGELOG.md; then
     mv "$TEMP_CHANGELOG" CHANGELOG.md
 fi
 
-# 2. Update version in SwiftFormat.podspec.json
+# 2. Update version in README.md
+echo "Updating README.md..."
+sed -i '' "s/'~> [^\']*'/'~> $NEW_VERSION'/" README.md
+sed -i '' "s/\" ~> [^ \n]*/\" ~> $NEW_VERSION/" README.md
+sed -i '' "s/from: \"[^\"]*\"/from: \"$NEW_VERSION\"/" README.md
+
+# 3. Update version in SwiftFormat.podspec.json
 echo "Updating SwiftFormat.podspec.json..."
 sed -i '' "s/\"version\": \"[^\"]*\"/\"version\": \"$NEW_VERSION\"/" SwiftFormat.podspec.json
 sed -i '' "s/\"tag\": \"[^\"]*\"/\"tag\": \"$NEW_VERSION\"/" SwiftFormat.podspec.json
 
-# 3. Update version in Sources/SwiftFormat.swift
+# 4. Update version in Sources/SwiftFormat.swift
 echo "Updating Sources/SwiftFormat.swift..."
 sed -i '' "s/let swiftFormatVersion = \"[^\"]*\"/let swiftFormatVersion = \"$NEW_VERSION\"/" Sources/SwiftFormat.swift
 
-# 4. Update version in SwiftFormat.xcodeproj
+# 5. Update version in SwiftFormat.xcodeproj
 echo "Updating SwiftFormat.xcodeproj..."
 sed -i '' "s/MARKETING_VERSION = [^;]*/MARKETING_VERSION = $NEW_VERSION/" SwiftFormat.xcodeproj/project.pbxproj
 
-# 5. Run tests
+# 6. Run tests
 echo "Running tests..."
 if ! swift test -c release --parallel --num-workers 10; then
     echo "Error: Tests failed. Please fix the issues before proceeding."
@@ -64,7 +70,7 @@ fi
 
 echo "Tests passed successfully."
 
-# 6. Archive and export executable for distribution
+# 7. Archive and export executable for distribution
 echo "Creating archive..."
 ARCHIVE_PATH="build/SwiftFormat.xcarchive"
 if ! xcodebuild -project SwiftFormat.xcodeproj -scheme "SwiftFormat (Command Line Tool)" -configuration Release -archivePath "$ARCHIVE_PATH" archive; then

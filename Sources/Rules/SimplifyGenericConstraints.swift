@@ -133,13 +133,40 @@ extension Formatter {
         removeTokens(in: sourceRangesToRemove)
 
         // Check if the where clause is now empty and remove it if so
-        if let tokenAfterWhere = index(of: .nonSpaceOrCommentOrLinebreak, after: whereClauseIndex),
-           tokens[tokenAfterWhere] == .startOfScope("{")
-        {
-            removeTokens(in: whereClauseIndex.index ..< tokenAfterWhere)
+        // Find the next significant token after the where keyword
+        if let tokenAfterWhereIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: whereClauseIndex) {
+            let tokenAfterWhere = tokens[tokenAfterWhereIndex]
+            if tokenAfterWhere == .startOfScope("{") {
+                // Where clause followed by opening brace - remove everything between where and {
+                removeTokens(in: whereClauseIndex.index ..< tokenAfterWhereIndex)
+            } else if tokenAfterWhere.isLinebreak || tokenAfterWhere == .endOfScope("}") {
+                // Where clause followed by linebreak or closing brace - means it's empty
+                // Remove the where keyword and any whitespace/linebreaks after it
+                // Also remove the space before where if present
+                let startIndex = (whereClauseIndex.index > 0 && tokens[whereClauseIndex.index - 1].isSpace)
+                    ? whereClauseIndex.index - 1
+                    : whereClauseIndex.index
+
+                if let linebreakIndex = index(of: .linebreak, after: whereClauseIndex) {
+                    removeTokens(in: startIndex ..< linebreakIndex)
+                }
+            }
+        } else {
+            // No non-whitespace token after where at all - remove where and trailing content
+            // Also remove the space before where if present
+            let startIndex = (whereClauseIndex.index > 0 && tokens[whereClauseIndex.index - 1].isSpace)
+                ? whereClauseIndex.index - 1
+                : whereClauseIndex.index
+
+            var endIndex = whereClauseIndex.index + 1
+            while endIndex < tokens.count, !tokens[endIndex].isLinebreak {
+                endIndex += 1
+            }
+            removeTokens(in: startIndex ..< endIndex)
         }
-        // Otherwise, clean up any trailing commas before the opening brace
-        else if let openBraceIndex = index(of: .startOfScope("{"), after: whereClauseIndex) {
+
+        // Clean up any trailing commas before the opening brace or end of declaration
+        if let openBraceIndex = index(of: .startOfScope("{"), after: whereClauseIndex.index) {
             // Search backwards from the brace to find any trailing comma
             if let commaIndex = index(
                 of: .nonSpaceOrCommentOrLinebreak,

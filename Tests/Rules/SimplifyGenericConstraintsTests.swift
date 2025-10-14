@@ -375,4 +375,18 @@ final class SimplifyGenericConstraintsTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .simplifyGenericConstraints, exclude: [.indent])
     }
+
+    func testProtocolMethodWithWhereClause() {
+        let input = """
+        protocol Foo {
+            func bar<T>(_ value: T) async throws -> T where T: Codable
+        }
+        """
+        let output = """
+        protocol Foo {
+            func bar<T: Codable>(_ value: T) async throws -> T
+        }
+        """
+        testFormatting(for: input, output, rule: .simplifyGenericConstraints, exclude: [.unusedArguments])
+    }
 }

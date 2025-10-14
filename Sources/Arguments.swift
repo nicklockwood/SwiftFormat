@@ -83,13 +83,12 @@ extension Array where Element: Equatable {
             assert(contains(where: { $0 == `default` }))
         }
         let options: [String] = compactMap {
-            switch ("\($0)" == "default", $0 == `default`) {
-            case (true, true), (false, false):
-                return "\"\($0)\""
-            case (false, true):
+            if "\($0)" == "default" {
+                return nil
+            } else if $0 == `default` {
                 return "\"\($0)\" (default)"
-            case (true, false):
-                return nil // Don't show "default" if it's not the default
+            } else {
+                return "\"\($0)\""
             }
         }
         return options.formattedList(lastSeparator: "or")

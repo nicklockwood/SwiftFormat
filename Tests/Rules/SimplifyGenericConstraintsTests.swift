@@ -325,4 +325,64 @@ final class SimplifyGenericConstraintsTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .simplifyGenericConstraints, exclude: [.unusedArguments, .indent])
     }
+
+    // MARK: - Constraints on generics not in parameter list
+
+    func testPreserveConstraintsForGenericsNotInParameterList() {
+        // U is not in the function's generic parameters, so the constraint must be preserved
+        let input = """
+        func process<T>(value: T) where U: Hashable {
+            print(U.self)
+        }
+        """
+        testFormatting(for: input, rule: .simplifyGenericConstraints, exclude: [.unusedArguments])
+    }
+
+    func testCombineInlineAndWhereClauseConstraints() {
+        // When a generic has both inline and where clause constraints, combine with &
+        let input = """
+        struct Config<T: Hashable> where T: Codable {}
+        """
+        let output = """
+        struct Config<T: Hashable & Codable> {}
+        """
+        testFormatting(for: input, output, rule: .simplifyGenericConstraints)
+    }
+
+    func testCombineMultipleInlineAndWhereClauseConstraints() {
+        // Multiple constraints should all be combined with &
+        let input = """
+        struct Config<T: Hashable, U: Codable> where T: Sendable, U: Equatable {}
+        """
+        let output = """
+        struct Config<T: Hashable & Sendable, U: Codable & Equatable> {}
+        """
+        testFormatting(for: input, output, rule: .simplifyGenericConstraints)
+    }
+
+    func testMultilineWhereClauseWithLineBreaksAfterAmpersand() {
+        // Don't simplify multiline where clauses with line breaks after & - too error prone
+        let input = """
+        enum Section<Context>: Component
+          where Context: ProviderA & ProviderB &
+          ProviderC &
+          ProviderD
+        {}
+        """
+        testFormatting(for: input, rule: .simplifyGenericConstraints, exclude: [.indent])
+    }
+
+    func testProtocolMethodWithWhereClause() {
+        let input = """
+        protocol Foo {
+            func bar<T>(_ value: T) async throws -> T where T: Codable
+        }
+        """
+        let output = """
+        protocol Foo {
+            func bar<T: Codable>(_ value: T) async throws -> T
+        }
+        """
+        testFormatting(for: input, output, rule: .simplifyGenericConstraints, exclude: [.unusedArguments])
+    }
 }

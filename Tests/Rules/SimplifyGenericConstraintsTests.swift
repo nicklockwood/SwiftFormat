@@ -361,7 +361,7 @@ final class SimplifyGenericConstraintsTests: XCTestCase {
     }
 
     func testMultilineWhereClauseWithLineBreaksAfterAmpersand() {
-        // Multiline where clause with line breaks after & should produce correct spacing
+        // Don't simplify multiline where clauses with line breaks after & - too error prone
         let input = """
         enum Section<Context>: Component
           where Context: ProviderA & ProviderB &
@@ -369,11 +369,7 @@ final class SimplifyGenericConstraintsTests: XCTestCase {
           ProviderD
         {}
         """
-        let output = """
-        enum Section<Context: ProviderA & ProviderB & ProviderC & ProviderD>: Component
-          {}
-        """
-        testFormatting(for: input, output, rule: .simplifyGenericConstraints, exclude: [.indent])
+        testFormatting(for: input, rule: .simplifyGenericConstraints, exclude: [.indent])
     }
 
     func testProtocolMethodWithWhereClause() {

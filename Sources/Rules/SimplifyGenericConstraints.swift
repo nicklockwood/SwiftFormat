@@ -113,6 +113,20 @@ extension Formatter {
                       isGenericDeclaredInline
                 else { continue }
 
+                // Skip multiline protocol compositions (e.g., ProviderA & ProviderB &\nProviderC)
+                // Check if there's an `&` followed by a linebreak in the conformance tokens
+                var hasMultilineComposition = false
+                for i in conformance.sourceRange {
+                    if tokens[i] == .operator("&", .infix),
+                       let nextIndex = index(of: .nonSpace, after: i),
+                       tokens[nextIndex].isLinebreak
+                    {
+                        hasMultilineComposition = true
+                        break
+                    }
+                }
+                guard !hasMultilineComposition else { continue }
+
                 constraintsToMove.append((genericType: genericType, conformance: conformance))
             }
         }
@@ -215,15 +229,7 @@ extension Formatter {
                     }
 
                     // Build the constraint suffix
-                    // Normalize protocol names to remove any whitespace/ampersand issues from multiline where clauses
-                    let protocolNames = conformances.map { conformance in
-                        // Split on & and rejoin to normalize spacing
-                        conformance.name
-                            .components(separatedBy: "&")
-                            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-                            .filter { !$0.isEmpty }
-                            .joined(separator: " & ")
-                    }
+                    let protocolNames = conformances.map(\.name)
                     let constraintSuffix: String
                     if hasInlineConstraints {
                         // Append with & if there are already constraints

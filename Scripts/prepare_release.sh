@@ -38,7 +38,9 @@ TEMP_CHANGELOG=$(mktemp)
 } > "$TEMP_CHANGELOG"
 
 # Replace the original file
-mv "$TEMP_CHANGELOG" CHANGELOG.md
+if ! grep -q "tag/$NEW_VERSION)" CHANGELOG.md; then
+    mv "$TEMP_CHANGELOG" CHANGELOG.md
+fi
 
 # 2. Update version in SwiftFormat.podspec.json
 echo "Updating SwiftFormat.podspec.json..."

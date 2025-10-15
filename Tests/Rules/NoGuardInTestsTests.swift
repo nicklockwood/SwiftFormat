@@ -35,7 +35,7 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
+        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements])
     }
 
     func testReplaceGuardXCTFailWithMessageWithXCTUnwrap() {
@@ -231,7 +231,7 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
+        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements])
     }
 
     func testMultipleGuardStatements() {
@@ -261,7 +261,267 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
+        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements])
+    }
+
+    func testReplaceGuardWithMultipleConditionsXCTest() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                guard let value = optionalValue,
+                      let other = otherValue else {
+                    XCTFail()
+                    return
+                }
+            }
+        }
+        """
+        let output = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() throws {
+                let value = try XCTUnwrap(optionalValue)
+                let other = try XCTUnwrap(otherValue)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .noGuardInTests)
+    }
+
+    func testDoesNotReplaceAllConditionsInMultipleGuard() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                guard someCondition,
+                      let value = optionalValue else {
+                    XCTFail()
+                    return
+                }
+            }
+        }
+        """
+        let output = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() throws {
+                XCTAssert(someCondition)
+                let value = try XCTUnwrap(optionalValue)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .noGuardInTests)
+    }
+
+    func testReplaceMultipleGuardConditionsWithMixedPatterns() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                guard let value = optionalValue,
+                      someCondition,
+                      let other = otherValue else {
+                    XCTFail()
+                    return
+                }
+            }
+        }
+        """
+        let output = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() throws {
+                let value = try XCTUnwrap(optionalValue)
+                XCTAssert(someCondition)
+                let other = try XCTUnwrap(otherValue)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .noGuardInTests)
+    }
+
+    func testSimpleMultipleConditions() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                guard let value = optionalValue, condition else {
+                    XCTFail()
+                    return
+                }
+            }
+        }
+        """
+        let output = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() throws {
+                let value = try XCTUnwrap(optionalValue)
+                XCTAssert(condition)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .noGuardInTests)
+    }
+
+    func testSimpleMultipleConditions2() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                guard condition, 
+                    let value = optionalValue
+                else { XCTFail()
+                    return }
+            }
+        }
+        """
+        let output = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() throws {
+                XCTAssert(condition)
+                let value = try XCTUnwrap(optionalValue)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.wrapConditionalBodies])
+    }
+
+    func testHandlesFiveConditions() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                guard let value1 = optional1,
+                      let value2 = optional2,
+                      let value3 = optional3,
+                      let value4 = optional4,
+                      let value5 = optional5 else {
+                    XCTFail()
+                    return
+                }
+                print(value1, value2, value3, value4, value5)
+            }
+        }
+        """
+        let output = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() throws {
+                let value1 = try XCTUnwrap(optional1)
+                let value2 = try XCTUnwrap(optional2)
+                let value3 = try XCTUnwrap(optional3)
+                let value4 = try XCTUnwrap(optional4)
+                let value5 = try XCTUnwrap(optional5)
+                print(value1, value2, value3, value4, value5)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.wrapMultilineStatementBraces, .elseOnSameLine, .blankLinesAfterGuardStatements, .wrapArguments])
+    }
+
+    func testHandlesTenConditions() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                guard let value1 = optional1,
+                      let value2 = optional2,
+                      let value3 = optional3,
+                      let value4 = optional4,
+                      let value5 = optional5,
+                      let value6 = optional6,
+                      let value7 = optional7,
+                      let value8 = optional8,
+                      let value9 = optional9,
+                      let value10 = optional10 else {
+                    XCTFail()
+                    return
+                }
+                print(value1, value2, value3, value4, value5, value6, value7, value8, value9, value10)
+            }
+        }
+        """
+        let output = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() throws {
+                let value1 = try XCTUnwrap(optional1)
+                let value2 = try XCTUnwrap(optional2)
+                let value3 = try XCTUnwrap(optional3)
+                let value4 = try XCTUnwrap(optional4)
+                let value5 = try XCTUnwrap(optional5)
+                let value6 = try XCTUnwrap(optional6)
+                let value7 = try XCTUnwrap(optional7)
+                let value8 = try XCTUnwrap(optional8)
+                let value9 = try XCTUnwrap(optional9)
+                let value10 = try XCTUnwrap(optional10)
+                print(value1, value2, value3, value4, value5, value6, value7, value8, value9, value10)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .acronyms])
+    }
+
+    func testHandlesMixedComplexConditions() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                guard condition1,
+                      let value1 = optional1,
+                      condition2,
+                      let value2 = optional2,
+                      let value3 = optional3,
+                      condition3,
+                      let value4 = optional4,
+                      let value5 = optional5,
+                      condition4,
+                      let value6 = optional6,
+                      condition5 else {
+                    XCTFail()
+                    return
+                }
+            }
+        }
+        """
+        let output = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() throws {
+                XCTAssert(condition1)
+                let value1 = try XCTUnwrap(optional1)
+                XCTAssert(condition2)
+                let value2 = try XCTUnwrap(optional2)
+                let value3 = try XCTUnwrap(optional3)
+                XCTAssert(condition3)
+                let value4 = try XCTUnwrap(optional4)
+                let value5 = try XCTUnwrap(optional5)
+                XCTAssert(condition4)
+                let value6 = try XCTUnwrap(optional6)
+                XCTAssert(condition5)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.wrapMultilineStatementBraces, .elseOnSameLine, .blankLinesAfterGuardStatements, .wrapArguments])
     }
 
     // MARK: - Swift Testing tests
@@ -291,7 +551,7 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
+        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements])
     }
 
     func testDoesNotReplaceNonTestFunctionSwiftTesting() {
@@ -451,90 +711,7 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
-    }
-
-    func testReplaceGuardWithMultipleConditionsXCTest() {
-        let input = """
-        import XCTest
-
-        class TestCase: XCTestCase {
-            func test_something() {
-                guard let value = optionalValue,
-                      let other = otherValue else {
-                    XCTFail()
-                    return
-                }
-            }
-        }
-        """
-        let output = """
-        import XCTest
-
-        class TestCase: XCTestCase {
-            func test_something() throws {
-                let value = try XCTUnwrap(optionalValue)
-                let other = try XCTUnwrap(otherValue)
-            }
-        }
-        """
-        testFormatting(for: input, output, rule: .noGuardInTests)
-    }
-
-    func testDoesNotReplaceAllConditionsInMultipleGuard() {
-        let input = """
-        import XCTest
-
-        class TestCase: XCTestCase {
-            func test_something() {
-                guard someCondition,
-                      let value = optionalValue else {
-                    XCTFail()
-                    return
-                }
-            }
-        }
-        """
-        let output = """
-        import XCTest
-
-        class TestCase: XCTestCase {
-            func test_something() throws {
-                XCTAssert(someCondition)
-                let value = try XCTUnwrap(optionalValue)
-            }
-        }
-        """
-        testFormatting(for: input, output, rule: .noGuardInTests)
-    }
-
-    func testReplaceMultipleGuardConditionsWithMixedPatterns() {
-        let input = """
-        import XCTest
-
-        class TestCase: XCTestCase {
-            func test_something() {
-                guard let value = optionalValue,
-                      someCondition,
-                      let other = otherValue else {
-                    XCTFail()
-                    return
-                }
-            }
-        }
-        """
-        let output = """
-        import XCTest
-
-        class TestCase: XCTestCase {
-            func test_something() throws {
-                let value = try XCTUnwrap(optionalValue)
-                XCTAssert(someCondition)
-                let other = try XCTUnwrap(otherValue)
-            }
-        }
-        """
-        testFormatting(for: input, output, rule: .noGuardInTests)
+        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements])
     }
 
     func testReplaceGuardWithMultipleConditionsSwiftTesting() {
@@ -593,58 +770,6 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, output, rule: .noGuardInTests)
     }
 
-    func testSimpleMultipleConditions() {
-        let input = """
-        import XCTest
-
-        class TestCase: XCTestCase {
-            func test_something() {
-                guard let value = optionalValue, condition else {
-                    XCTFail()
-                    return
-                }
-            }
-        }
-        """
-        let output = """
-        import XCTest
-
-        class TestCase: XCTestCase {
-            func test_something() throws {
-                let value = try XCTUnwrap(optionalValue)
-                XCTAssert(condition)
-            }
-        }
-        """
-        testFormatting(for: input, output, rule: .noGuardInTests)
-    }
-
-    func testSimpleMultipleConditions2() {
-        let input = """
-        import XCTest
-
-        class TestCase: XCTestCase {
-            func test_something() {
-                guard condition, 
-                    let value = optionalValue
-                else { XCTFail()
-                    return }
-            }
-        }
-        """
-        let output = """
-        import XCTest
-
-        class TestCase: XCTestCase {
-            func test_something() throws {
-                XCTAssert(condition)
-                let value = try XCTUnwrap(optionalValue)
-            }
-        }
-        """
-        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.wrapConditionalBodies])
-    }
-
     func testReplaceGuardIssueRecordWithRequire() {
         let input = """
         import Testing
@@ -671,7 +796,7 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
+        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements])
     }
 
     func testReplaceGuardIssueRecordWithMessageWithRequire() {
@@ -699,131 +824,6 @@ final class NoGuardInTestsTests: XCTestCase {
         }
         """
         testFormatting(for: input, output, rule: .noGuardInTests)
-    }
-
-    func testHandlesFiveConditions() {
-        let input = """
-        import XCTest
-
-        class TestCase: XCTestCase {
-            func test_something() {
-                guard let value1 = optional1,
-                      let value2 = optional2,
-                      let value3 = optional3,
-                      let value4 = optional4,
-                      let value5 = optional5 else {
-                    XCTFail()
-                    return
-                }
-                print(value1, value2, value3, value4, value5)
-            }
-        }
-        """
-        let output = """
-        import XCTest
-
-        class TestCase: XCTestCase {
-            func test_something() throws {
-                let value1 = try XCTUnwrap(optional1)
-                let value2 = try XCTUnwrap(optional2)
-                let value3 = try XCTUnwrap(optional3)
-                let value4 = try XCTUnwrap(optional4)
-                let value5 = try XCTUnwrap(optional5)
-                print(value1, value2, value3, value4, value5)
-            }
-        }
-        """
-        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.wrapMultilineStatementBraces, .elseOnSameLine, .blankLinesAfterGuardStatements, .wrapArguments])
-    }
-
-    func testHandlesTenConditions() {
-        let input = """
-        import XCTest
-
-        class TestCase: XCTestCase {
-            func test_something() {
-                guard let value1 = optional1,
-                      let value2 = optional2,
-                      let value3 = optional3,
-                      let value4 = optional4,
-                      let value5 = optional5,
-                      let value6 = optional6,
-                      let value7 = optional7,
-                      let value8 = optional8,
-                      let value9 = optional9,
-                      let value10 = optional10 else {
-                    XCTFail()
-                    return
-                }
-                print(value1, value2, value3, value4, value5, value6, value7, value8, value9, value10)
-            }
-        }
-        """
-        let output = """
-        import XCTest
-
-        class TestCase: XCTestCase {
-            func test_something() throws {
-                let value1 = try XCTUnwrap(optional1)
-                let value2 = try XCTUnwrap(optional2)
-                let value3 = try XCTUnwrap(optional3)
-                let value4 = try XCTUnwrap(optional4)
-                let value5 = try XCTUnwrap(optional5)
-                let value6 = try XCTUnwrap(optional6)
-                let value7 = try XCTUnwrap(optional7)
-                let value8 = try XCTUnwrap(optional8)
-                let value9 = try XCTUnwrap(optional9)
-                let value10 = try XCTUnwrap(optional10)
-                print(value1, value2, value3, value4, value5, value6, value7, value8, value9, value10)
-            }
-        }
-        """
-        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .acronyms])
-    }
-
-    func testHandlesMixedComplexConditions() {
-        let input = """
-        import XCTest
-
-        class TestCase: XCTestCase {
-            func test_something() {
-                guard condition1,
-                      let value1 = optional1,
-                      condition2,
-                      let value2 = optional2,
-                      let value3 = optional3,
-                      condition3,
-                      let value4 = optional4,
-                      let value5 = optional5,
-                      condition4,
-                      let value6 = optional6,
-                      condition5 else {
-                    XCTFail()
-                    return
-                }
-            }
-        }
-        """
-        let output = """
-        import XCTest
-
-        class TestCase: XCTestCase {
-            func test_something() throws {
-                XCTAssert(condition1)
-                let value1 = try XCTUnwrap(optional1)
-                XCTAssert(condition2)
-                let value2 = try XCTUnwrap(optional2)
-                let value3 = try XCTUnwrap(optional3)
-                XCTAssert(condition3)
-                let value4 = try XCTUnwrap(optional4)
-                let value5 = try XCTUnwrap(optional5)
-                XCTAssert(condition4)
-                let value6 = try XCTUnwrap(optional6)
-                XCTAssert(condition5)
-            }
-        }
-        """
-        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.wrapMultilineStatementBraces, .elseOnSameLine, .blankLinesAfterGuardStatements, .wrapArguments])
     }
 
     // MARK: - Variable shadowing tests
@@ -889,7 +889,7 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
+        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements])
     }
 
     func testHandlesGuardLetShorthandSwiftTesting() {
@@ -946,7 +946,7 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
+        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements])
     }
 
     func testHandlesExplicitTypeAnnotationWithShorthand() {
@@ -974,7 +974,7 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
+        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements])
     }
 
     func testHandlesComplexTypeAnnotation() {
@@ -1000,7 +1000,7 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
+        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements])
     }
 
     func testHandlesTypeAnnotationSwiftTesting() {
@@ -1028,7 +1028,7 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
+        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements])
     }
 
     func testPreservesDependentConditions() {
@@ -1105,7 +1105,7 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
+        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements])
     }
 
     func testConvertsMultipleBooleanConditions() {

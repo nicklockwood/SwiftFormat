@@ -3624,4 +3624,14 @@ final class TrailingCommasTests: XCTestCase {
         let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.2")
         testFormatting(for: input, rule: .trailingCommas, options: options)
     }
+
+    func testTrailingCommaNotAddedToTypedThrows() {
+        let input = """
+        func confirmCommunication(transactionID: String) async throws(
+            Either<PhoneNumberChangeConfirmCommunicationError, SkyusersV2GenericError>
+        ) -> TimeInterval
+        """
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.2")
+        testFormatting(for: input, rule: .trailingCommas, options: options)
+    }
 }

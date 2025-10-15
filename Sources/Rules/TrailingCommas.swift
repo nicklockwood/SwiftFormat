@@ -16,20 +16,25 @@ public extension FormatRule {
         formatter.forEach(.endOfScope) { i, token in
             guard let startOfScope = formatter.startOfScope(at: i) else { return }
 
+            switch formatter.scopeType(at: startOfScope) {
+            case .array, .dictionary:
+                formatter.addOrRemoveTrailingComma(beforeEndOfScope: i, trailingCommaSupported: true, isCollection: true)
+                return
+
+            case .subscript, .captureList:
+                let trailingCommaSupported = formatter.options.swiftVersion >= "6.1"
+                formatter.addOrRemoveTrailingComma(beforeEndOfScope: i, trailingCommaSupported: trailingCommaSupported)
+                return
+
+            case .arrayType, .dictionaryType, .throwsType:
+                return
+
+            case .tuple, .tupleType, nil:
+                break
+            }
+
+            // TODO: a lot of this logic could be moved into the scopeType() helper
             switch token {
-            case .endOfScope("]"):
-                switch formatter.scopeType(at: i) {
-                case .array, .dictionary:
-                    formatter.addOrRemoveTrailingComma(beforeEndOfScope: i, trailingCommaSupported: true, isCollection: true)
-
-                case .subscript, .captureList:
-                    let trailingCommaSupported = formatter.options.swiftVersion >= "6.1"
-                    formatter.addOrRemoveTrailingComma(beforeEndOfScope: i, trailingCommaSupported: trailingCommaSupported)
-
-                default:
-                    return
-                }
-
             case .endOfScope(")"):
                 var trailingCommaSupported: Bool?
 

@@ -244,6 +244,7 @@ enum ScopeType {
     case `subscript`
     case tuple
     case tupleType
+    case throwsType
 
     var isType: Bool {
         switch self {
@@ -251,6 +252,8 @@ enum ScopeType {
             return false
         case .arrayType, .dictionaryType, .tupleType:
             return true
+        case .throwsType:
+            return false // the body is a type, but the scope/parens aren't part of it
         }
     }
 }
@@ -308,7 +311,12 @@ extension Formatter {
             return scopeType(at: startIndex)
         }
         switch token {
-        case .startOfScope("["), .startOfScope("("):
+        case .startOfScope("("):
+            if last(.nonSpaceOrLinebreak, before: index) == .keyword("throws") {
+                return .throwsType
+            }
+            fallthrough
+        case .startOfScope("["):
             guard let endIndex = endOfScope(at: index) else {
                 return nil
             }
@@ -325,12 +333,12 @@ extension Formatter {
                 if tokens[prevIndex].isAttribute {
                     prevIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex) ?? prevIndex
                 }
-                let tokenBeforePrevIndex = lastToken(before: prevIndex, where: \.isNonSpaceOrCommentOrLinebreak)
-
-                switch tokens[prevIndex] {
+                let prevToken = tokens[prevIndex]
+                switch prevToken {
                 case .identifier, .endOfScope(")"), .endOfScope("]"),
-                     .operator("?", .postfix) where tokenBeforePrevIndex != .keyword("try"),
-                     .operator("!", .postfix) where tokenBeforePrevIndex != .keyword("try"),
+                     .operator where prevToken.isUnwrapOperator && ![.keyword("as"), .keyword("try")].contains(
+                         last(.nonSpaceOrComment, before: prevIndex)
+                     ),
                      .endOfScope where token.isStringDelimiter:
                     if tokens[prevIndex + 1 ..< index].contains(where: \.isLinebreak) {
                         break

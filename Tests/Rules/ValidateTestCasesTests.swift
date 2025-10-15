@@ -1219,4 +1219,202 @@ final class ValidateTestCasesTests: XCTestCase {
 
         testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments])
     }
+
+    func testSwiftTestingPreservesParameterizedTests() {
+        // Parameterized tests with @Test(arguments:) should be left as-is
+        let input = """
+        import Testing
+
+        struct FoodTests {
+            @Test(arguments: [Food.burger, .iceCream, .burrito, .noodleBowl, .kebab])
+            func foodAvailable(_ food: Food) async throws {
+                let foodTruck = FoodTruck(selling: food)
+                #expect(await foodTruck.cook(food))
+            }
+
+            @Test(arguments: [1, 2, 3, 4, 5])
+            func numberIsValid(_ number: Int) {
+                #expect(number > 0)
+            }
+        }
+        """
+
+        // Should not modify parameterized tests - they already have @Test
+        testFormatting(for: input, rule: .validateTestCases, exclude: [.unusedArguments, .redundantThrows])
+    }
+
+    func testXCTestPreservesCapitalizedDisabledTestMethods() {
+        // Capitalized disabled test prefixes should also be preserved
+        let input = """
+        import XCTest
+
+        final class MyTests: XCTestCase {
+            public func DISABLE_example() {
+                XCTAssertTrue(true)
+            }
+
+            private func X_broken() {
+                XCTAssertTrue(true)
+            }
+
+            public func Skip_ThisTest() {
+                XCTAssertTrue(true)
+            }
+
+            func testEnabled() {
+                XCTAssertTrue(true)
+            }
+        }
+        """
+
+        let output = """
+        import XCTest
+
+        final class MyTests: XCTestCase {
+            func DISABLE_example() {
+                XCTAssertTrue(true)
+            }
+
+            func X_broken() {
+                XCTAssertTrue(true)
+            }
+
+            func Skip_ThisTest() {
+                XCTAssertTrue(true)
+            }
+
+            func testEnabled() {
+                XCTAssertTrue(true)
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments])
+    }
+
+    func testSwiftTestingPreservesCapitalizedDisabledTestMethods() {
+        // Capitalized disabled test prefixes should also be preserved
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            public func DISABLE_example() {
+                #expect(true)
+            }
+
+            private func X_broken() {
+                #expect(true)
+            }
+
+            public func Skip_ThisTest() {
+                #expect(true)
+            }
+
+            func enabled() {
+                #expect(true)
+            }
+        }
+        """
+
+        let output = """
+        import Testing
+
+        struct MyFeatureTests {
+            func DISABLE_example() {
+                #expect(true)
+            }
+
+            func X_broken() {
+                #expect(true)
+            }
+
+            func Skip_ThisTest() {
+                #expect(true)
+            }
+
+            @Test func enabled() {
+                #expect(true)
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments])
+    }
+
+    func testXCTestHelperMethodWithTestPrefixAndParameters() {
+        // XCTest methods with "test" prefix but with parameters should be treated as helpers (private)
+        let input = """
+        import XCTest
+
+        final class MyTests: XCTestCase {
+            func testExample() {
+                testHelper(value: 5)
+            }
+
+            func testHelper(value: Int) {
+                XCTAssertEqual(value, 5)
+            }
+
+            public func testFormatter(string: String) -> String {
+                return string.uppercased()
+            }
+        }
+        """
+
+        let output = """
+        import XCTest
+
+        final class MyTests: XCTestCase {
+            func testExample() {
+                testHelper(value: 5)
+            }
+
+            private func testHelper(value: Int) {
+                XCTAssertEqual(value, 5)
+            }
+
+            private func testFormatter(string: String) -> String {
+                return string.uppercased()
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments])
+    }
+
+    func testSwiftTestingAddsTestAttributeWhenNameMatchesIdentifier() {
+        let input = """
+        import Testing
+
+        struct ComponentTests {
+            func button() {
+                let button = Button()
+                #expect(button.isEnabled)
+            }
+
+            func slider() {
+                let value = slider(initialValue: 50)
+                #expect(value == 50)
+            }
+        }
+        """
+
+        let output = """
+        import Testing
+
+        struct ComponentTests {
+            @Test func button() {
+                let button = Button()
+                #expect(button.isEnabled)
+            }
+
+            @Test func slider() {
+                let value = slider(initialValue: 50)
+                #expect(value == 50)
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments])
+    }
 }

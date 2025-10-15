@@ -209,16 +209,37 @@ extension Formatter {
 
         // If method has a disabled test prefix, keep it internal but don't add test attributes/prefix
         let disabledTestPrefixes = ["disable_", "disabled_", "skip_", "skipped_", "x_"]
-        if disabledTestPrefixes.contains(where: { name.hasPrefix($0) }) {
+        let lowercasedName = name.lowercased()
+        if disabledTestPrefixes.contains(where: { lowercasedName.hasPrefix($0) }) {
             validateTestMethodAccessControl(function)
             return
         }
 
+        // Check if this is already marked as a test
+        let hasTestAttribute = modifiers.contains("@Test")
+        let hasTestPrefix = name.hasPrefix("test")
+
+        // For Swift Testing with @Test attribute, or XCTest with test prefix AND test signature, it's definitely a test
+        // Note: XCTest requires no parameters and no return type for test methods
+        let hasTestSignature = functionDecl.arguments.isEmpty && functionDecl.returnType == nil
+        let isDefinitelyTest = (framework == .swiftTesting && hasTestAttribute) || (framework == .xcTest && hasTestPrefix && hasTestSignature)
+
         let isReferenced = identifierCounts[name, default: 0] > 1
 
-        // Determine if this should be a test method based on signature and whether it's referenced
-        let hasTestSignature = functionDecl.arguments.isEmpty && functionDecl.returnType == nil
-        let shouldBeTest = hasTestSignature && !isReferenced
+        // A function should be treated as a test if:
+        // 1. It's definitely a test (has @Test or test prefix), OR
+        // 2. For Swift Testing: has test signature (the @Test attribute makes intent clear)
+        // 3. For XCTest: has test signature and isn't called elsewhere
+        let shouldBeTest: Bool
+        if isDefinitelyTest {
+            shouldBeTest = true
+        } else if hasTestSignature {
+            // For Swift Testing, any test-signature function is a test (will get @Test)
+            // For XCTest, only if not referenced (to avoid breaking helper methods)
+            shouldBeTest = framework == .swiftTesting || !isReferenced
+        } else {
+            shouldBeTest = false
+        }
 
         if shouldBeTest {
             // For XCTest, ensure test methods have "test" prefix

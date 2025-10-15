@@ -2400,7 +2400,7 @@ extension Formatter {
         let hasXCTestImport = hasImport("XCTest")
 
         // If both frameworks are imported, return nil (ambiguous)
-        if hasTestingImport && hasXCTestImport {
+        if hasTestingImport, hasXCTestImport {
             return nil
         }
 

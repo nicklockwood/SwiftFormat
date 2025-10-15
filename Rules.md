@@ -127,6 +127,7 @@
 * [sortSwitchCases](#sortSwitchCases)
 * [unusedPrivateDeclarations](#unusedPrivateDeclarations)
 * [urlMacro](#urlMacro)
+* [validateTestCases](#validateTestCases)
 * [wrapConditionalBodies](#wrapConditionalBodies)
 * [wrapEnumCases](#wrapEnumCases)
 * [wrapMultilineConditionalAssignment](#wrapMultilineConditionalAssignment)
@@ -3835,6 +3836,54 @@ With `--url-macro "#URL,URLFoundation"`:
 - return URL(string: "https://api.example.com/users")!
 + import URLFoundation
 + return #URL("https://api.example.com/users")
+```
+
+</details>
+<br/>
+
+## validateTestCases
+
+Validate that test case members have the correct access control and naming.
+For XCTest: test methods should have 'test' prefix and be internal.
+For Swift Testing: test methods should have @Test attribute and be internal.
+Helper methods and properties should be private.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  import XCTest
+
+  final class MyTests: XCTestCase {
+-     public func testExample() {
++     func testExample() {
+          XCTAssertTrue(true)
+      }
+
+-     public func helperMethod() {
++     private func helperMethod() {
+          // helper code
+      }
+
+-     var someProperty: String = ""
++     private var someProperty: String = ""
+  }
+```
+
+```diff
+  import Testing
+
+  struct MyFeatureTests {
+-     public func featureWorks() {
++     @Test func featureWorks() {
+          #expect(true)
+      }
+
+-     public func helperMethod() {
++     private func helperMethod() {
+          // helper code
+      }
+  }
 ```
 
 </details>

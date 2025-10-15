@@ -129,6 +129,7 @@ let ruleRegistry: [String: FormatRule] = [
     "unusedArguments": .unusedArguments,
     "unusedPrivateDeclarations": .unusedPrivateDeclarations,
     "urlMacro": .urlMacro,
+    "validateTestCases": .validateTestCases,
     "void": .void,
     "wrap": .wrap,
     "wrapArguments": .wrapArguments,

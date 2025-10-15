@@ -2396,9 +2396,17 @@ extension Formatter {
 
     /// Detects which testing framework is being used in the file
     func detectTestingFramework() -> TestingFramework? {
-        if hasImport("Testing") {
+        let hasTestingImport = hasImport("Testing")
+        let hasXCTestImport = hasImport("XCTest")
+
+        // If both frameworks are imported, return nil (ambiguous)
+        if hasTestingImport && hasXCTestImport {
+            return nil
+        }
+
+        if hasTestingImport {
             return .swiftTesting
-        } else if hasImport("XCTest") {
+        } else if hasXCTestImport {
             return .xcTest
         } else {
             return nil

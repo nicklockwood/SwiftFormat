@@ -826,6 +826,32 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, output, rule: .noGuardInTests)
     }
 
+    func testNonUnwrapConditionsDontInsertThrows() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                guard condition, optionalValue != nil else {
+                    XCTFail()
+                    return
+                }
+            }
+        }
+        """
+        let output = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                XCTAssert(condition)
+                XCTAssert(optionalValue != nil)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .noGuardInTests)
+    }
+
     // MARK: - Variable shadowing tests
 
     func testDoesNotReplaceWhenVariableShadowing() {

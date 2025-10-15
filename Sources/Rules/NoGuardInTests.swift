@@ -175,6 +175,7 @@ public extension FormatRule {
                         ])
                         replacementStatements.append(contentsOf: expressionTokens)
                         replacementStatements.append(.endOfScope(")"))
+                        addedTryStatement = true
 
                     case let .booleanExpression(range):
                         // Transform boolean condition to assertion
@@ -191,7 +192,6 @@ public extension FormatRule {
                 }
 
                 formatter.replaceTokens(in: guardIndex ... endOfElseScope, with: replacementStatements)
-                addedTryStatement = true
             }
 
             // If we added try XCTUnwrap or try #require, ensure the function has throws

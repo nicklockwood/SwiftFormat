@@ -75,6 +75,17 @@ public extension FormatRule {
 
                 guard isValidElseBlock else { continue }
 
+                // Preserve the assertion message (if any)
+                let assertionMessage: [Token] = {
+                    guard let startIndex = formatter.index(of: .startOfScope("("), after: elseBraceIndex),
+                          let endIndex = formatter.endOfScope(at: startIndex),
+                          formatter.index(after: startIndex, where: { $0.isStringDelimiter }) != nil
+                    else {
+                        return []
+                    }
+                    return [.delimiter(","), .space(" ")] + formatter.tokens[startIndex + 1 ..< endIndex]
+                }()
+
                 // Check for variable shadowing
                 let scopeStart = bodyRange.lowerBound
                 let searchRange = scopeStart ..< guardIndex
@@ -174,6 +185,7 @@ public extension FormatRule {
                             .startOfScope("("),
                         ])
                         replacementStatements.append(contentsOf: expressionTokens)
+                        replacementStatements.append(contentsOf: assertionMessage)
                         replacementStatements.append(.endOfScope(")"))
                         addedTryStatement = true
 
@@ -183,6 +195,7 @@ public extension FormatRule {
                         replacementStatements.append(.identifier(assertFunctionName))
                         replacementStatements.append(.startOfScope("("))
                         replacementStatements.append(contentsOf: conditionTokens)
+                        replacementStatements.append(contentsOf: assertionMessage)
                         replacementStatements.append(.endOfScope(")"))
 
                     case .patternMatching:

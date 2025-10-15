@@ -56,7 +56,7 @@ final class NoGuardInTestsTests: XCTestCase {
 
         class TestCase: XCTestCase {
             func test_something() throws {
-                let value = try XCTUnwrap(optionalValue)
+                let value = try XCTUnwrap(optionalValue, "Expected value to be non-nil")
             }
         }
         """
@@ -262,6 +262,78 @@ final class NoGuardInTestsTests: XCTestCase {
         }
         """
         testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements])
+    }
+
+    func testPreserveFailMessage() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                guard let value1 = optionalValue1 else {
+                    XCTFail("Failed")
+                    return
+                }
+                guard optionalValue2 != nil else {
+                    XCTFail("Value was nil")
+                    return
+                }
+            }
+        }
+        """
+        let output = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() throws {
+                let value1 = try XCTUnwrap(optionalValue1, "Failed")
+                XCTAssert(optionalValue2 != nil, "Value was nil")
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements])
+    }
+
+    func testPreserveFailMessageWithInterpolations() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                guard optionalValue2 == nil else {
+                    XCTFail("Value was \\(String(describing: optionalValue2))")
+                    return
+                }
+            }
+        }
+        """
+        let output = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                XCTAssert(optionalValue2 == nil, "Value was \\(String(describing: optionalValue2))")
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements])
+    }
+
+    func testNoMangleNontrivialGuardBody() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                guard optionalValue2 == nil else {
+                    let value = optionalValue2 ?? ""
+                    XCTFail("Value was \\(value)")
+                    return
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements])
     }
 
     func testReplaceGuardWithMultipleConditionsXCTest() {
@@ -819,7 +891,7 @@ final class NoGuardInTestsTests: XCTestCase {
         struct SomeTests {
             @Test
             func something() throws {
-                let value = try #require(optionalValue)
+                let value = try #require(optionalValue, "Expected value to be non-nil")
             }
         }
         """

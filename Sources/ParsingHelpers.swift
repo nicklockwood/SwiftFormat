@@ -1112,7 +1112,7 @@ extension Formatter {
             }
             fallthrough
         case .startOfScope where token.isStringDelimiter && !treatingCollectionKeysAsStart,
-             .number where !treatingCollectionKeysAsStart, .identifier:
+             .number where !treatingCollectionKeysAsStart, .keyword where token.isMacro, .identifier:
             if !treatingCollectionKeysAsStart,
                let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: i),
                case let prevToken = tokens[prevIndex], [

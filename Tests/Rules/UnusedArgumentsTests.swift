@@ -1512,4 +1512,16 @@ final class UnusedArgumentsTests: XCTestCase {
 
         testFormatting(for: input, output, rule: .unusedArguments, exclude: [.trailingCommas])
     }
+
+    func testArgumentUsedInMacroTreatedAsUsed() {
+        let input = """
+        @Test
+        func something(value: String?) throws {
+            let value = try #require(value)
+            print(value)
+        }
+        """
+
+        testFormatting(for: input, rule: .unusedArguments)
+    }
 }

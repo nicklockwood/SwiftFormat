@@ -1205,7 +1205,7 @@ extension Formatter {
                 if [.startOfScope("("), .startOfScope("[")].contains(prevToken), isEffectCapturingAt(i) {
                     return
                 }
-            case let .keyword(name) where name.hasPrefix("#") && prevToken == .startOfScope("("):
+            case let .keyword(name) where name.isMacro && prevToken == .startOfScope("("):
                 return
             case .keyword where tokens[i].isAttribute && prevToken == .startOfScope("("):
                 return

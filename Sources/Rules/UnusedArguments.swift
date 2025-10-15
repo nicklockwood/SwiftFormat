@@ -107,8 +107,7 @@ public extension FormatRule {
                     let count = argCountStack.last ?? 0
                     argNames.removeSubrange(count ..< argNames.count)
                     nameIndexPairs.removeSubrange(count ..< nameIndexPairs.count)
-                case let .keyword(name) where
-                    !token.isAttribute && !name.hasPrefix("#") && name != "inout":
+                case let .keyword(name) where !token.isAttribute && !token.isMacro && name != "inout":
                     return
                 case .identifier:
                     guard argCountStack.count < 3,

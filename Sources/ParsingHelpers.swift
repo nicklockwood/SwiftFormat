@@ -1636,17 +1636,17 @@ extension Formatter {
         case .identifier, .number:
             endOfExpression = startIndex
 
-        case .startOfScope:
+        case let .startOfScope(name):
             // All types of scopes (tuples, arrays, closures, strings) are considered expressions
             // _except_ for conditional complication blocks.
-            if ["#if", "#elseif", "#else"].contains(tokens[startIndex].string) {
+            if ["#if", "#elseif", "#else"].contains(name) {
                 return nil
             }
 
             guard let endOfScope = endOfScope(at: startIndex) else { return nil }
             endOfExpression = endOfScope
 
-        case let .keyword(keyword) where keyword.hasPrefix("#"):
+        case let .keyword(keyword) where keyword.isMacroOrCompilerDirective:
             // #selector() and macro expansions like #macro() are parsed into keyword tokens.
             endOfExpression = startIndex
 
@@ -3513,7 +3513,7 @@ extension Formatter {
         // `foo()`, `@foo()`, or `#foo()`
         // Exclude keywords to avoid confusing `return (...)`, `as? (...)`, `{ _ in (...) }`, etc.
         let isFunctionIdentifier = { (token: Token) in
-            token.isIdentifier || token.isAttribute || (token.isKeyword && token.string.hasPrefix("#") || token.string == "init")
+            token.isIdentifier || token.isAttribute || token.isMacro || token.string == "init"
         }
 
         if isFunctionIdentifier(tokens[previousToken]) {

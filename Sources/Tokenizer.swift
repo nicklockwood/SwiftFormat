@@ -55,9 +55,19 @@ public extension String {
         swiftKeywords.contains(self)
     }
 
-    /// Is a keyword when used in a type position
+    /// Is a keyword when used in a type position?
     var isKeywordInTypeContext: Bool {
         ["borrowing", "consuming", "isolated", "sending", "some", "any", "of"].contains(self)
+    }
+
+    /// Is this a macro name or conditional compilation directive?
+    var isMacroOrCompilerDirective: Bool {
+        hasPrefix("#")
+    }
+
+    /// Is this a macro name?
+    var isMacro: Bool {
+        isMacroOrCompilerDirective && !["#if", "#elseif", "#else", "#endif"].contains(self)
     }
 
     /// Is this string a valid operator?
@@ -404,6 +414,13 @@ public extension Token {
     var isNonSpaceOrCommentOrLinebreak: Bool { !isSpaceOrCommentOrLinebreak }
     var isCommentOrLinebreak: Bool { isComment || isLinebreak }
 
+    var isMacro: Bool {
+        if case let .keyword(string) = self {
+            return string.isMacro
+        }
+        return false
+    }
+
     var isSwitchCaseOrDefault: Bool {
         if case let .endOfScope(string) = self {
             return ["case", "default"].contains(string)
@@ -538,8 +555,8 @@ extension Token {
              .endOfScope("}"), .endOfScope(">"),
              .endOfScope where isStringDelimiter:
             return true
-        case let .keyword(name) where name.hasPrefix("#"):
-            return true
+        case let .keyword(name):
+            return name.isMacroOrCompilerDirective
         default:
             return false
         }
@@ -553,8 +570,8 @@ extension Token {
              .startOfScope("("), .startOfScope("["), .startOfScope("{"),
              .startOfScope where isStringDelimiter:
             return true
-        case let .keyword(name) where name.hasPrefix("#"):
-            return true
+        case let .keyword(name):
+            return name.isMacroOrCompilerDirective
         default:
             return false
         }

@@ -125,8 +125,10 @@
 * [redundantThrows](#redundantThrows)
 * [singlePropertyPerLine](#singlePropertyPerLine)
 * [sortSwitchCases](#sortSwitchCases)
+* [testSuiteAccessControl](#testSuiteAccessControl)
 * [unusedPrivateDeclarations](#unusedPrivateDeclarations)
 * [urlMacro](#urlMacro)
+* [validateTestCases](#validateTestCases)
 * [wrapConditionalBodies](#wrapConditionalBodies)
 * [wrapEnumCases](#wrapEnumCases)
 * [wrapMultilineConditionalAssignment](#wrapMultilineConditionalAssignment)
@@ -3564,6 +3566,48 @@ In Swift Testing, don't prefix @Test methods with 'test'.
 </details>
 <br/>
 
+## testSuiteAccessControl
+
+Test methods should be internal, and other properties / functions in a test suite should be private.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  import XCTest
+
+  final class MyTests: XCTestCase {
+-     public func testExample() {
++     func testExample() {
+          XCTAssertTrue(true)
+      }
+
+-     func helperMethod() {
++     private func helperMethod() {
+          // helper code
+      }
+  }
+```
+
+```diff
+  import Testing
+
+  struct MyFeatureTests {
+-     @Test public func featureWorks() {
++     @Test func featureWorks() {
+          #expect(true)
+      }
+
+-     func helperMethod() {
++     private func helperMethod() {
+          // helper code
+      }
+  }
+```
+
+</details>
+<br/>
+
 ## throwingTests
 
 Write tests that use `throws` instead of using `try!`.
@@ -3835,6 +3879,43 @@ With `--url-macro "#URL,URLFoundation"`:
 - return URL(string: "https://api.example.com/users")!
 + import URLFoundation
 + return #URL("https://api.example.com/users")
+```
+
+</details>
+<br/>
+
+## validateTestCases
+
+Ensure test case methods have the correct `test` prefix or `@Test` attribute.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  import XCTest
+
+  final class MyTests: XCTestCase {
+-     func myFeatureWorksCorrectly() {
++     func testMyFeatureWorksCorrectly() {
+          XCTAssertTrue(myFeature.worksCorrectly)
+      }
+  }
+```
+
+```diff
+  import Testing
+
+  struct MyFeatureTests {
+-     func testMyFeatureWorksCorrectly() {
++     @Test func myFeatureWorksCorrectly() {
+          #expect(myFeature.worksCorrectly)
+      }
+
+-     func myFeatureHasNoBugs() {
++     @Test func myFeatureHasNoBugs() {
+          #expect(myFeature.hasNoBugs)
+      }
+  }
 ```
 
 </details>

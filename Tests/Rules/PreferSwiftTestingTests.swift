@@ -66,7 +66,7 @@ final class PreferSwiftTestingTests: XCTestCase {
         import XCTest
 
         final class MyFeatureTests: XCTestCase {
-            var myFeature: MyFeature!
+            private var myFeature: MyFeature!
 
             override func setUp() async throws {
                 try await super.setUp()
@@ -93,7 +93,7 @@ final class PreferSwiftTestingTests: XCTestCase {
         import Testing
 
         final class MyFeatureTests {
-            var myFeature: MyFeature!
+            private var myFeature: MyFeature!
 
             init() async throws {
                 myFeature = try await MyFeature()
@@ -390,7 +390,7 @@ final class PreferSwiftTestingTests: XCTestCase {
         import XCTest
 
         final class MyFeatureTests: XCTestCase {
-            var myFeature: MyFeature!
+            private var myFeature: MyFeature!
 
             override func setUp() async throws {
                 try await super.setUp()
@@ -555,7 +555,7 @@ final class PreferSwiftTestingTests: XCTestCase {
                 XCTAssertEqual(onePlusTwo(), 3)
             }
 
-            func onePlusTwo() -> Int {
+            private func onePlusTwo() -> Int {
                 1 + 2
             }
         }
@@ -570,7 +570,7 @@ final class PreferSwiftTestingTests: XCTestCase {
                 #expect(onePlusTwo() == 3)
             }
 
-            func onePlusTwo() -> Int {
+            private func onePlusTwo() -> Int {
                 1 + 2
             }
         }
@@ -589,7 +589,7 @@ final class PreferSwiftTestingTests: XCTestCase {
                 testMyFeatureWorks(MyFeature())
             }
 
-            func testMyFeatureWorks(_ feature: Feature) {
+            private func testMyFeatureWorks(_ feature: Feature) {
                 feature.runAction()
                 XCTAssertTrue(feature.worksProperly)
             }
@@ -605,7 +605,7 @@ final class PreferSwiftTestingTests: XCTestCase {
                 testMyFeatureWorks(MyFeature())
             }
 
-            func testMyFeatureWorks(_ feature: Feature) {
+            private func testMyFeatureWorks(_ feature: Feature) {
                 feature.runAction()
                 #expect(feature.worksProperly)
             }

@@ -150,7 +150,7 @@ final class SwiftTestingTestCaseNamesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .swiftTestingTestCaseNames)
+        testFormatting(for: input, rule: .swiftTestingTestCaseNames, exclude: [.testSuiteAccessControl])
     }
 
     func testPreservesXCTestMethodNames() {

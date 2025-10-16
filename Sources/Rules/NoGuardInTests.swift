@@ -23,7 +23,7 @@ public extension FormatRule {
 
         formatter.forEach(.keyword("func")) { funcKeywordIndex, _ in
             guard let functionDecl = formatter.parseFunctionDeclaration(keywordIndex: funcKeywordIndex),
-                  formatter.isTestFunction(at: funcKeywordIndex, in: functionDecl, for: testFramework),
+                  formatter.isTestCase(at: funcKeywordIndex, in: functionDecl, for: testFramework),
                   let bodyRange = functionDecl.bodyRange
             else { return }
 

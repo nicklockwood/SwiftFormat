@@ -13,7 +13,7 @@ public extension FormatRule {
         help: "Move inline `try` keyword(s) to start of expression.",
         options: ["throw-capturing"]
     ) { formatter in
-        let names = formatter.options.throwCapturing.union(["expect"])
+        let names = formatter.options.throwCapturing.union(["expect", "XCTUnwrap"])
         formatter.forEachToken(where: {
             $0 == .startOfScope("(") || $0 == .startOfScope("[")
         }) { i, _ in

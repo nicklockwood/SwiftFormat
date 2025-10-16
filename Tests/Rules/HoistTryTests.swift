@@ -131,6 +131,13 @@ final class HoistTryTests: XCTestCase {
         testFormatting(for: input, rule: .hoistTry)
     }
 
+    func testNoHoistTryInsideXCTUnwrap() {
+        let input = """
+        let foo = try XCTUnwrap(try expression() as? Bar, message, file: file, line: line)
+        """
+        testFormatting(for: input, rule: .hoistTry)
+    }
+
     func testNoMergeTrysInsideXCTAssert() {
         let input = """
         XCTAssertEqual(try foo(), try bar())

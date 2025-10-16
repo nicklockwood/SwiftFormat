@@ -76,7 +76,7 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .noGuardInTests)
+        testFormatting(for: input, rule: .noGuardInTests, exclude: [.testSuiteAccessControl, .validateTestCases])
     }
 
     func testDoesNotReplaceGuardWithDifferentElseBlock() {
@@ -638,7 +638,7 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .noGuardInTests)
+        testFormatting(for: input, rule: .noGuardInTests, exclude: [.testSuiteAccessControl, .validateTestCases])
     }
 
     func testDoesNotReplaceGuardWithDifferentElseBlockSwiftTesting() {
@@ -964,7 +964,7 @@ final class NoGuardInTestsTests: XCTestCase {
         import XCTest
 
         class TestCase: XCTestCase {
-            var optionalValue: String?
+            private var optionalValue: String?
 
             func test_something() {
                 guard let optionalValue else {
@@ -979,7 +979,7 @@ final class NoGuardInTestsTests: XCTestCase {
         import XCTest
 
         class TestCase: XCTestCase {
-            var optionalValue: String?
+            private var optionalValue: String?
 
             func test_something() throws {
                 let optionalValue = try XCTUnwrap(optionalValue)

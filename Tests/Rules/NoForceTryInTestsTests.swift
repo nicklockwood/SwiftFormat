@@ -71,7 +71,7 @@ final class NoForceTryInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .noForceTryInTests)
+        testFormatting(for: input, rule: .noForceTryInTests, exclude: [.testSuiteAccessControl])
     }
 
     func test_nonTestCaseFunction_IsNotUpdated_for_XCTest() {
@@ -88,7 +88,7 @@ final class NoForceTryInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .noForceTryInTests)
+        testFormatting(for: input, rule: .noForceTryInTests, exclude: [.testSuiteAccessControl, .validateTestCases])
     }
 
     func testTestCaseIsUpdated_for_async_test() {

@@ -1028,7 +1028,7 @@ extension Formatter {
                     return true
                 }
                 switch nextToken {
-                case .keyword, .endOfScope("case"), .endOfScope("default"):
+                case .keyword where !nextToken.isMacro, .endOfScope("case"), .endOfScope("default"):
                     return true
                 default:
                     return false
@@ -1143,7 +1143,8 @@ extension Formatter {
             switch prevToken {
             case .number, .operator(_, .postfix), .endOfScope, .identifier,
                  .startOfScope("{"), .startOfScope(":"), .delimiter(";"),
-                 .keyword("in") where lastSignificantKeyword(at: i) != "for":
+                 .keyword("in") where lastSignificantKeyword(at: i) != "for",
+                 .keyword("#else"):
                 return true
             default:
                 return false

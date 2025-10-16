@@ -5707,4 +5707,42 @@ final class IndentTests: XCTestCase {
         """
         testFormatting(for: input, rule: .indent)
     }
+
+    func testIndentConditionalCompiledMacroInvocations() {
+        let input = """
+        #if true
+            #warning("Warning")
+        #else
+            #warning("Warning")
+        #endif
+        """
+        testFormatting(for: input, rule: .indent)
+    }
+
+    func testIndentMacroInvocationsInCollection() {
+        let input = """
+        let urls = [
+            googleURL,
+            #URL("github.com"),
+            #URL("apple.com"),
+        ]
+        """
+        testFormatting(for: input, rule: .indent)
+    }
+
+    func testReturnMacroInvocation() {
+        let input = """
+        func foo() {
+            return
+            #URL("github.com")
+        }
+        """
+        let output = """
+        func foo() {
+            return
+                #URL("github.com")
+        }
+        """
+        testFormatting(for: input, output, rule: .indent)
+    }
 }

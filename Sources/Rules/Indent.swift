@@ -421,9 +421,9 @@ public extension FormatRule {
                             .endOfScope("}"), .endOfScope("]"), .endOfScope(")"),
                         ].contains(_nextToken) || _nextToken.isStringBody ||
                             formatter.isStartOfStatement(at: nextTokenIndex!, in: scopeStack.last) || (
-                                ((_nextToken.isIdentifier && !(_nextToken == .identifier("async") && formatter.currentScope(at: nextTokenIndex!) != .startOfScope("("))) || [
-                                    .keyword("try"), .keyword("await"),
-                                ].contains(_nextToken)) &&
+                                ((_nextToken.isIdentifier && !(
+                                    _nextToken == .identifier("async") && formatter.currentScope(at: nextTokenIndex!) != .startOfScope("(")
+                                )) || _nextToken.isMacro || [.keyword("try"), .keyword("await")].contains(_nextToken)) &&
                                     formatter.last(.nonSpaceOrCommentOrLinebreak, before: nextTokenIndex!).map {
                                         $0 != .keyword("return") && !$0.isOperator(ofType: .infix)
                                     } ?? false) || (

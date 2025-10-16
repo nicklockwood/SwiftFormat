@@ -1,5 +1,15 @@
 # Change Log
 
+## [0.58.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.58.4) (2025-10-16)
+
+- Whitespace is no longer added or removed from blank lines in multiline string literals
+- Fixed `trailingComma` rule incorrectly inserting commas inside typed `throws`
+- Fixed issue where `opaqueGenericParameters` rule could cause build errors with existential types
+- Fixed false positive with `unusedArguments` when argument is only referenced inside a macro
+- The `noGuardInTests` rule now preserves custom failure messages
+- The `noGuardInTests` rule no longer adds `throws` to test methods when not needed
+- Removed redundant "default" values from options help descriptions
+
 ## [0.58.3](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.58.3) (2025-10-04)
 
 - Fixed parsing of `[n of X]` syntax for `InlineArray` in Swift 6.2

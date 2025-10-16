@@ -10,12 +10,7 @@ import Foundation
 
 public extension FormatRule {
     static let testSuiteAccessControl = FormatRule(
-        help: """
-        Ensure test methods are internal and helper methods/properties are private.
-        For XCTest: test methods with 'test' prefix should be internal.
-        For Swift Testing: test methods with @Test attribute should be internal.
-        Helper methods and properties should be private.
-        """,
+        help: "Test methods should be internal, and other properties / functions in a test suite should be private.",
         disabledByDefault: true
     ) { formatter in
         guard let testFramework = formatter.detectTestingFramework() else {
@@ -24,13 +19,10 @@ public extension FormatRule {
 
         let declarations = formatter.parseDeclarations()
         let testClasses = declarations.compactMap(\.asTypeDeclaration).filter { typeDecl in
-            formatter.isLikelyTestCase(typeDecl, for: testFramework)
+            formatter.isSimpleTestSuite(typeDecl, for: testFramework)
         }
 
         for testClass in testClasses {
-            // Skip types with parameterized initializers (not test suites)
-            guard !formatter.hasParameterizedInitializer(testClass) else { continue }
-
             // The test class itself should be internal unless marked as open
             formatter.validateTestTypeAccessControl(testClass)
 
@@ -64,13 +56,10 @@ public extension FormatRule {
                   XCTAssertTrue(true)
               }
 
-        -     public func helperMethod() {
+        -     func helperMethod() {
         +     private func helperMethod() {
                   // helper code
               }
-
-        -     var someProperty: String = ""
-        +     private var someProperty: String = ""
           }
         ```
 
@@ -78,12 +67,12 @@ public extension FormatRule {
           import Testing
 
           struct MyFeatureTests {
-        -     public func featureWorks() {
+        -     @Test public func featureWorks() {
         +     @Test func featureWorks() {
                   #expect(true)
               }
 
-        -     public func helperMethod() {
+        -     func helperMethod() {
         +     private func helperMethod() {
                   // helper code
               }
@@ -128,30 +117,10 @@ extension Formatter {
               case let .identifier(name) = tokens[nameIndex]
         else { return }
 
-        // If method has a disabled test prefix, keep it internal
-        if hasDisabledTestPrefix(name) {
-            validateTestMethodAccessControl(function)
-            return
-        }
+        let treatAsTestCase = isTestCase(at: function.keywordIndex, in: functionDecl, for: framework)
+            || hasDisabledPrefix(name)
 
-        // Check if this is already marked as a test
-        let hasTestAttribute = modifiers.contains("@Test")
-        let hasTestPrefix = name.hasPrefix("test")
-
-        // For access control, only functions that already have test markers should be internal
-        // For XCTest: must have test prefix AND test signature (no params, no return)
-        // For Swift Testing: must have @Test attribute
-        let hasTestSignature = functionDecl.arguments.isEmpty && functionDecl.returnType == nil
-        let isTest: Bool
-        if framework == .swiftTesting {
-            // For Swift Testing, only @Test functions are tests
-            isTest = hasTestAttribute
-        } else {
-            // For XCTest, must have both test prefix and test signature
-            isTest = hasTestPrefix && hasTestSignature
-        }
-
-        if isTest {
+        if treatAsTestCase {
             // Test methods should be internal
             validateTestMethodAccessControl(function)
         } else {

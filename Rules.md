@@ -3568,10 +3568,7 @@ In Swift Testing, don't prefix @Test methods with 'test'.
 
 ## testSuiteAccessControl
 
-Ensure test methods are internal and helper methods/properties are private.
-For XCTest: test methods with 'test' prefix should be internal.
-For Swift Testing: test methods with @Test attribute should be internal.
-Helper methods and properties should be private.
+Test methods should be internal, and other properties / functions in a test suite should be private.
 
 <details>
 <summary>Examples</summary>
@@ -3585,13 +3582,10 @@ Helper methods and properties should be private.
           XCTAssertTrue(true)
       }
 
--     public func helperMethod() {
+-     func helperMethod() {
 +     private func helperMethod() {
           // helper code
       }
-
--     var someProperty: String = ""
-+     private var someProperty: String = ""
   }
 ```
 
@@ -3599,12 +3593,12 @@ Helper methods and properties should be private.
   import Testing
 
   struct MyFeatureTests {
--     public func featureWorks() {
+-     @Test public func featureWorks() {
 +     @Test func featureWorks() {
           #expect(true)
       }
 
--     public func helperMethod() {
+-     func helperMethod() {
 +     private func helperMethod() {
           // helper code
       }
@@ -3892,9 +3886,7 @@ With `--url-macro "#URL,URLFoundation"`:
 
 ## validateTestCases
 
-Ensure test methods have appropriate naming conventions.
-For XCTest: test methods should have 'test' prefix.
-For Swift Testing: test methods should have @Test attribute.
+Ensure test case methods have the correct `test` prefix or `@Test` attribute.
 
 <details>
 <summary>Examples</summary>
@@ -3903,9 +3895,9 @@ For Swift Testing: test methods should have @Test attribute.
   import XCTest
 
   final class MyTests: XCTestCase {
--     func example() {
-+     func testExample() {
-          XCTAssertTrue(true)
+-     func myFeatureWorksCorrectly() {
++     func testMyFeatureWorksCorrectly() {
+          XCTAssertTrue(myFeature.worksCorrectly)
       }
   }
 ```
@@ -3914,9 +3906,14 @@ For Swift Testing: test methods should have @Test attribute.
   import Testing
 
   struct MyFeatureTests {
--     func featureWorks() {
-+     @Test func featureWorks() {
-          #expect(true)
+-     func testMyFeatureWorksCorrectly() {
++     @Test func myFeatureWorksCorrectly() {
+          #expect(myFeature.worksCorrectly)
+      }
+
+-     func myFeatureHasNoBugs() {
++     @Test func myFeatureHasNoBugs() {
+          #expect(myFeature.hasNoBugs)
       }
   }
 ```

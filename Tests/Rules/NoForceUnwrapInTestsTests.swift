@@ -306,7 +306,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
+        testFormatting(for: input, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .testSuiteAccessControl, .validateTestCases])
     }
 
     func testForceUnwrapInClosureIsNotModified() {
@@ -323,7 +323,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
+        testFormatting(for: input, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .testSuiteAccessControl, .validateTestCases])
     }
 
     func testForceUnwrapInStringInterpolationIsNotModified() {
@@ -630,7 +630,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
+        testFormatting(for: input, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .testSuiteAccessControl])
     }
 
     func testDisableRule() {

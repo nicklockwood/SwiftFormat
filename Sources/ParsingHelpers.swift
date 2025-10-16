@@ -2413,6 +2413,114 @@ extension Formatter {
         }
     }
 
+    /// Is this a test function?
+    func isTestCase(
+        at funcKeywordIndex: Int,
+        in functionDecl: FunctionDeclaration,
+        for testingFramework: TestingFramework
+    ) -> Bool {
+        assert(token(at: funcKeywordIndex) == .keyword("func"))
+        switch testingFramework {
+        case .xcTest:
+            guard functionDecl.name?.starts(with: "test") == true,
+                  functionDecl.returnType == nil,
+                  functionDecl.arguments.isEmpty
+            else {
+                return false
+            }
+            return true
+        case .swiftTesting:
+            return modifiersForDeclaration(at: funcKeywordIndex, contains: "@Test")
+        }
+    }
+
+    /// Checks if a function name has a disabled test prefix.
+    /// Matches patterns like: disable_foo, disableTestFoo, disabled_test_foo, x_test, XtestFoo, _test, etc.
+    func hasDisabledPrefix(_ name: String) -> Bool {
+        // Functions starting with underscore are considered disabled
+        guard !name.hasPrefix("_") else { return true }
+
+        let disabledTestPrefixBases = ["disable", "disabled", "skip", "skipped", "x"]
+        let lowercasedName = name.lowercased()
+        return disabledTestPrefixBases.contains {
+            lowercasedName.hasPrefix($0 + "_") || lowercasedName.hasPrefix($0 + "test")
+        }
+    }
+
+    /// Determines if a type declaration is likely a simple test case suite.
+    func isSimpleTestSuite(_ typeDecl: TypeDeclaration, for testFramework: TestingFramework) -> Bool {
+        guard let name = typeDecl.name else { return false }
+
+        // Don't apply to classes likely to be subclassed, since these are unsafe to modify.
+        if isLikelyToBeSubclassed(typeDecl) {
+            return false
+        }
+
+        // Don't apply to types with parameterized initializers (not test suites)
+        let hasParameterizedInit = typeDecl.body.contains {
+            $0.keyword == "init" &&
+                parseFunctionDeclaration(keywordIndex: $0.keywordIndex)?.arguments.isEmpty == false
+        }
+        if hasParameterizedInit {
+            return false
+        }
+
+        // Valid test suffixes for identifying test types
+        let testSuffixes = ["Test", "Tests", "TestCase", "TestCases", "Suite"]
+
+        // Checks if a type has at least one function that looks like a test (no arguments, no return type).
+        lazy var hasTestLikeFunction = {
+            for member in typeDecl.body where member.keyword == "func" {
+                guard let functionDecl = parseFunctionDeclaration(keywordIndex: member.keywordIndex) else {
+                    continue
+                }
+
+                // Check if it has test-like signature (no args, no return type)
+                if functionDecl.arguments.isEmpty, functionDecl.returnType == nil {
+                    return true
+                }
+            }
+            return false
+        }()
+
+        switch testFramework {
+        case .xcTest:
+            // For XCTest, only process classes (not structs)
+            guard typeDecl.keyword == "class" else { return false }
+
+            let conformsToXCTestCase = typeDecl.conformances.contains { $0.conformance.string == "XCTestCase" }
+            let hasTestSuffix = testSuffixes.contains { name.hasSuffix($0) }
+            let hasOtherConformances = typeDecl.conformances.contains { $0.conformance.string != "XCTestCase" }
+
+            // If it has conformances other than XCTestCase, skip it entirely
+            // (methods could be protocol requirements)
+            if hasOtherConformances {
+                return false
+            }
+
+            // If it conforms to XCTestCase only, include it
+            if conformsToXCTestCase {
+                return true
+            }
+
+            // If it has a test suffix and no conformances, check if it has test-like functions
+            if hasTestSuffix, typeDecl.conformances.isEmpty {
+                return hasTestLikeFunction
+            }
+
+            // Otherwise, exclude it
+            return false
+
+        case .swiftTesting:
+            // For Swift Testing, apply to classes/structs with specific test suffixes
+            // but only if they have test-like functions
+            if testSuffixes.contains(where: { name.hasSuffix($0) }) {
+                return hasTestLikeFunction
+            }
+            return false
+        }
+    }
+
     /// Determines if a type is likely to be subclassed based on naming, documentation, and actual usage.
     /// Returns true if the type should not be marked as final or treated as a regular class/struct.
     func isLikelyToBeSubclassed(_ typeDecl: TypeDeclaration) -> Bool {
@@ -2455,88 +2563,6 @@ extension Formatter {
         }
 
         return false
-    }
-
-    /// Checks if a type has a parameterized initializer (init with arguments).
-    /// Types with parameterized initializers are not test suites.
-    func hasParameterizedInitializer(_ typeDecl: TypeDeclaration) -> Bool {
-        typeDecl.body.contains {
-            $0.keyword == "init" &&
-                parseFunctionDeclaration(keywordIndex: $0.keywordIndex)?.arguments.isEmpty == false
-        }
-    }
-
-    /// Checks if a function name has a disabled test prefix.
-    /// Matches patterns like: disable_foo, disableTestFoo, disabled_test_foo, x_test, XtestFoo, _test, etc.
-    func hasDisabledTestPrefix(_ name: String) -> Bool {
-        // Functions starting with underscore are considered disabled
-        guard !name.hasPrefix("_") else { return true }
-
-        let disabledTestPrefixBases = ["disable", "disabled", "skip", "skipped", "x"]
-        let lowercasedName = name.lowercased()
-        return disabledTestPrefixBases.contains {
-            lowercasedName.hasPrefix($0 + "_") || lowercasedName.hasPrefix($0 + "test")
-        }
-    }
-
-    /// Determines if a function should be treated as a test method based on its characteristics.
-    /// Returns true if the function should have test naming/attributes, false if it's a helper method.
-    func shouldBeTreatedAsTest(
-        _ function: Declaration,
-        for framework: TestingFramework
-    ) -> Bool {
-        guard let functionDecl = parseFunctionDeclaration(keywordIndex: function.keywordIndex) else {
-            return false
-        }
-
-        let modifiers = function.modifiers
-
-        // Skip if it's an override, has @objc, or is static (might be called from outside)
-        if modifiers.contains("override") || modifiers.contains("@objc") || modifiers.contains("static") {
-            return false
-        }
-
-        // Get function name
-        guard let nameIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: function.keywordIndex),
-              case let .identifier(name) = tokens[nameIndex]
-        else { return false }
-
-        // If method has a disabled test prefix, it's not a test
-        if hasDisabledTestPrefix(name) {
-            return false
-        }
-
-        // Skip if it's explicitly private (definitely not a test)
-        if modifiers.contains("private") || modifiers.contains("fileprivate") {
-            return false
-        }
-
-        // Check if this is already marked as a test
-        let hasTestAttribute = modifiers.contains("@Test")
-        let hasTestPrefix = name.hasPrefix("test")
-
-        // A function with test signature (no params, no return type) should be treated as a test
-        let hasTestSignature = functionDecl.arguments.isEmpty && functionDecl.returnType == nil
-
-        // For Swift Testing: treat as test if it has @Test or test signature
-        if framework == .swiftTesting {
-            return hasTestAttribute || hasTestSignature
-        }
-
-        // For XCTest: treat as test if it has test signature AND isn't referenced elsewhere
-        // Check if the function name appears more than once (definition + at least one reference)
-        var occurrences = 0
-        for token in tokens {
-            if case let .identifier(existingName) = token, existingName == name {
-                occurrences += 1
-                if occurrences > 1 {
-                    // Found at least 2 occurrences (definition + reference), so it's a helper method
-                    return false
-                }
-            }
-        }
-
-        return hasTestSignature
     }
 
     /// Adds imports for the given list of modules to this file if not already present
@@ -3404,27 +3430,6 @@ extension Formatter {
     /// token at the given index.
     func parseTupleArguments(startOfScope: Int) -> [FunctionCallArgument] {
         parseFunctionCallArguments(startOfScope: startOfScope)
-    }
-
-    /// Is this a test function?
-    func isTestFunction(
-        at funcKeywordIndex: Int,
-        in functionDecl: FunctionDeclaration,
-        for testingFramework: TestingFramework
-    ) -> Bool {
-        assert(token(at: funcKeywordIndex) == .keyword("func"))
-        switch testingFramework {
-        case .xcTest:
-            guard functionDecl.name?.starts(with: "test") == true,
-                  functionDecl.returnType == nil,
-                  functionDecl.arguments.isEmpty
-            else {
-                return false
-            }
-            return true
-        case .swiftTesting:
-            return modifiersForDeclaration(at: funcKeywordIndex, contains: "@Test")
-        }
     }
 
     /// Parses the list of conformances on this type, starting at

@@ -10,11 +10,7 @@ import Foundation
 
 public extension FormatRule {
     static let validateTestCases = FormatRule(
-        help: """
-        Ensure test methods have appropriate naming conventions.
-        For XCTest: test methods should have 'test' prefix.
-        For Swift Testing: test methods should have @Test attribute.
-        """,
+        help: "Ensure test case methods have the correct `test` prefix or `@Test` attribute.",
         disabledByDefault: true
     ) { formatter in
         guard let testFramework = formatter.detectTestingFramework() else {
@@ -23,16 +19,19 @@ public extension FormatRule {
 
         let declarations = formatter.parseDeclarations()
         let testClasses = declarations.compactMap(\.asTypeDeclaration).filter { typeDecl in
-            formatter.isLikelyTestCase(typeDecl, for: testFramework)
+            formatter.isSimpleTestSuite(typeDecl, for: testFramework)
         }
 
         for testClass in testClasses {
-            // Skip types with parameterized initializers (not test suites)
-            guard !formatter.hasParameterizedInitializer(testClass) else { continue }
-
-            // Process each member of the test class
             for member in testClass.body where member.keyword == "func" {
-                formatter.validateTestNaming(member, for: testFramework)
+                if formatter.isLikelyTestCase(member, for: testFramework) {
+                    switch testFramework {
+                    case .xcTest:
+                        formatter.addTestPrefixIfNeeded(member)
+                    case .swiftTesting:
+                        formatter.addTestAttributeIfNeeded(member)
+                    }
+                }
             }
         }
     } examples: {
@@ -41,9 +40,9 @@ public extension FormatRule {
           import XCTest
 
           final class MyTests: XCTestCase {
-        -     func example() {
-        +     func testExample() {
-                  XCTAssertTrue(true)
+        -     func myFeatureWorksCorrectly() {
+        +     func testMyFeatureWorksCorrectly() {
+                  XCTAssertTrue(myFeature.worksCorrectly)
               }
           }
         ```
@@ -52,9 +51,14 @@ public extension FormatRule {
           import Testing
 
           struct MyFeatureTests {
-        -     func featureWorks() {
-        +     @Test func featureWorks() {
-                  #expect(true)
+        -     func testMyFeatureWorksCorrectly() {
+        +     @Test func myFeatureWorksCorrectly() {
+                  #expect(myFeature.worksCorrectly)
+              }
+
+        -     func myFeatureHasNoBugs() {
+        +     @Test func myFeatureHasNoBugs() {
+                  #expect(myFeature.hasNoBugs)
               }
           }
         ```
@@ -63,90 +67,67 @@ public extension FormatRule {
 }
 
 extension Formatter {
-    /// Checks if a type has at least one function that looks like a test (no arguments, no return type).
-    func hasTestLikeFunction(in typeDecl: TypeDeclaration) -> Bool {
-        for member in typeDecl.body where member.keyword == "func" {
-            guard let functionDecl = parseFunctionDeclaration(keywordIndex: member.keywordIndex) else {
-                continue
-            }
-
-            // Check if it has test-like signature (no args, no return type)
-            if functionDecl.arguments.isEmpty, functionDecl.returnType == nil {
-                return true
-            }
-        }
-        return false
-    }
-
-    /// Determines if a type declaration is likely a test case based on naming, structure, and framework conventions.
-    /// Returns true if the type should be processed as a test suite.
-    func isLikelyTestCase(_ typeDecl: TypeDeclaration, for testFramework: TestingFramework) -> Bool {
-        guard let name = typeDecl.name else { return false }
-
-        // Don't apply to classes likely to be subclassed
-        if isLikelyToBeSubclassed(typeDecl) {
+    /// Determines if a function should be treated as a test case, even if it's currently missing
+    /// its `test` prefix or `@Test` attribute.
+    func isLikelyTestCase(
+        _ function: Declaration,
+        for framework: TestingFramework
+    ) -> Bool {
+        guard let functionDecl = parseFunctionDeclaration(keywordIndex: function.keywordIndex) else {
             return false
         }
 
-        // Valid test suffixes for identifying test types
-        let testSuffixes = ["Test", "Tests", "TestCase", "TestCases", "Suite"]
+        let modifiers = function.modifiers
 
-        switch testFramework {
-        case .xcTest:
-            // For XCTest, only process classes (not structs)
-            guard typeDecl.keyword == "class" else { return false }
-
-            let conformsToXCTestCase = typeDecl.conformances.contains { $0.conformance.string == "XCTestCase" }
-            let hasTestSuffix = testSuffixes.contains { name.hasSuffix($0) }
-            let hasOtherConformances = typeDecl.conformances.contains { $0.conformance.string != "XCTestCase" }
-
-            // If it has conformances other than XCTestCase, skip it entirely
-            // (methods could be protocol requirements)
-            if hasOtherConformances {
-                return false
-            }
-
-            // If it conforms to XCTestCase only, include it
-            if conformsToXCTestCase {
-                return true
-            }
-
-            // If it has a test suffix and no conformances, check if it has test-like functions
-            if hasTestSuffix, typeDecl.conformances.isEmpty {
-                return hasTestLikeFunction(in: typeDecl)
-            }
-
-            // Otherwise, exclude it
-            return false
-
-        case .swiftTesting:
-            // For Swift Testing, apply to classes/structs with specific test suffixes
-            // but only if they have test-like functions
-            if testSuffixes.contains(where: { name.hasSuffix($0) }) {
-                return hasTestLikeFunction(in: typeDecl)
-            }
+        // Skip if it's an override, has @objc, or is static (might be called from outside)
+        if modifiers.contains("override") || modifiers.contains("@objc") || modifiers.contains("static") {
             return false
         }
-    }
 
-    /// Validates a function in a test class has the correct naming conventions.
-    func validateTestNaming(_ function: Declaration, for framework: TestingFramework) {
-        // Use the shared helper to determine if this should be treated as a test
-        if shouldBeTreatedAsTest(function, for: framework) {
-            // For XCTest, ensure test methods have "test" prefix
-            if framework == .xcTest {
-                ensureTestPrefix(function)
-            }
+        // Get function name
+        guard let nameIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: function.keywordIndex),
+              case let .identifier(name) = tokens[nameIndex]
+        else { return false }
 
-            // For Swift Testing, ensure test methods have @Test attribute
-            if framework == .swiftTesting {
-                ensureTestAttribute(function)
+        // If method has a disabled test prefix, it's not a test
+        if hasDisabledPrefix(name) {
+            return false
+        }
+
+        // Skip if it's explicitly private (definitely not a test)
+        if modifiers.contains("private") || modifiers.contains("fileprivate") {
+            return false
+        }
+
+        // Check if this is already marked as a test
+        let hasTestAttribute = modifiers.contains("@Test")
+
+        // A function with test signature (no params, no return type) should be treated as a test
+        let hasTestSignature = functionDecl.arguments.isEmpty && functionDecl.returnType == nil
+
+        // For Swift Testing: treat as test if it has @Test or test signature
+        if framework == .swiftTesting {
+            return hasTestAttribute || hasTestSignature
+        }
+
+        // For XCTest: treat as test if it has test signature AND isn't referenced elsewhere
+        // Check if the function name appears more than once (definition + at least one reference)
+        var occurrences = 0
+        for token in tokens {
+            if case let .identifier(existingName) = token, existingName == name {
+                occurrences += 1
+                if occurrences > 1 {
+                    // Found at least 2 occurrences (definition + reference), so it's a helper method
+                    return false
+                }
             }
         }
+
+        return hasTestSignature
     }
 
     /// Ensures a function has a "test" prefix.
-    func ensureTestPrefix(_ function: Declaration) {
+    func addTestPrefixIfNeeded(_ function: Declaration) {
         guard let nameIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: function.keywordIndex),
               case let .identifier(name) = tokens[nameIndex]
         else { return }
@@ -175,7 +156,7 @@ extension Formatter {
     }
 
     /// Ensures a function has the @Test attribute.
-    func ensureTestAttribute(_ function: Declaration) {
+    func addTestAttributeIfNeeded(_ function: Declaration) {
         // Check if the function already has @Test attribute
         if modifiersForDeclaration(at: function.keywordIndex, contains: "@Test") {
             return

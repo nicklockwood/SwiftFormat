@@ -18,27 +18,11 @@ public extension FormatRule {
         """,
         disabledByDefault: true
     ) { formatter in
-        // Parse all declarations to understand inheritance relationships
         let declarations = formatter.parseDeclarations()
 
-        // Find all class names that are inherited from in this file
-        var classesWithSubclasses = Set<String>()
-        declarations.forEachRecursiveDeclaration { declaration in
-            guard declaration.keyword == "class" else { return }
-
-            // Check all conformances - any of them could be a superclass
-            let conformances = formatter.parseConformancesOfType(atKeywordIndex: declaration.keywordIndex)
-            for conformance in conformances {
-                // Extract base class name from generic types like "Container<String>" -> "Container"
-                let baseClassName = conformance.conformance.tokens.first?.string ?? conformance.conformance.string
-                classesWithSubclasses.insert(baseClassName)
-            }
-        }
-
-        // Now process each class declaration
         declarations.forEachRecursiveDeclaration { declaration in
             guard declaration.keyword == "class",
-                  let className = declaration.name else { return }
+                  let typeDecl = declaration as? TypeDeclaration else { return }
 
             let keywordIndex = declaration.keywordIndex
 
@@ -49,23 +33,8 @@ public extension FormatRule {
             // Only add final if the class doesn't already have final or open
             guard !hasFinalModifier, !hasOpenModifier else { return }
 
-            // Don't add final if this class is inherited from in the same file
-            guard !classesWithSubclasses.contains(className) else { return }
-
-            // Don't add final to classes that contain "Base" (they're likely meant to be subclassed)
-            guard !className.contains("Base") else { return }
-
-            // Don't add final to classes with a comment like "// Base class for XYZ functionality"
-            if let docCommentRange = declaration.docCommentRange {
-                let subclassRelatedTerms = ["base", "subclass"]
-                let docComment = formatter.tokens[docCommentRange].string.lowercased()
-
-                for term in subclassRelatedTerms {
-                    if docComment.contains(term) {
-                        return
-                    }
-                }
-            }
+            // Don't add final to classes likely to be subclassed
+            guard !formatter.isLikelyToBeSubclassed(typeDecl) else { return }
 
             formatter.insert(tokenize("final "), at: keywordIndex)
 

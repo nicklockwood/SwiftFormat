@@ -2413,22 +2413,56 @@ extension Formatter {
         }
     }
 
+    /// Determines if a type is likely to be subclassed based on naming, documentation, and actual usage.
+    /// Returns true if the type should not be marked as final or treated as a regular class/struct.
+    func isLikelyToBeSubclassed(_ typeDecl: TypeDeclaration) -> Bool {
+        guard let name = typeDecl.name else { return false }
+
+        // Check if name contains "Base" (common convention for base classes)
+        if name.contains("Base") {
+            return true
+        }
+
+        // Check if doc comment mentions base class or subclassing
+        if let docCommentRange = typeDecl.docCommentRange {
+            let subclassRelatedTerms = ["base", "subclass"]
+            let docComment = tokens[docCommentRange].string.lowercased()
+            for term in subclassRelatedTerms {
+                if docComment.contains(term) {
+                    return true
+                }
+            }
+        }
+
+        // Check if this class is actually subclassed in the file
+        if typeDecl.keyword == "class" {
+            let declarations = parseDeclarations()
+            for declaration in declarations where declaration.keyword == "class" {
+                let conformances = parseConformancesOfType(atKeywordIndex: declaration.keywordIndex)
+                for conformance in conformances {
+                    // Extract base class name from generic types like "Container<String>" -> "Container"
+                    let baseClassName = conformance.conformance.tokens.first?.string ?? conformance.conformance.string
+                    if baseClassName == name {
+                        return true
+                    }
+                }
+            }
+        }
+
+        return false
+    }
+
     /// Checks if a function name has a disabled test prefix.
     /// Matches patterns like: disable_foo, disableTestFoo, disabled_test_foo, x_test, XtestFoo, _test, etc.
     func hasDisabledTestPrefix(_ name: String) -> Bool {
         // Functions starting with underscore are considered disabled
-        if name.hasPrefix("_") {
-            return true
-        }
+        guard !name.hasPrefix("_") else { return true }
 
         let disabledTestPrefixBases = ["disable", "disabled", "skip", "skipped", "x"]
         let lowercasedName = name.lowercased()
-        for prefix in disabledTestPrefixBases {
-            if lowercasedName.hasPrefix(prefix + "_") || lowercasedName.hasPrefix(prefix + "test") {
-                return true
-            }
+        return disabledTestPrefixBases.contains {
+            lowercasedName.hasPrefix($0 + "_") || lowercasedName.hasPrefix($0 + "test")
         }
-        return false
     }
 
     /// Determines if a function should be treated as a test method based on its characteristics.
@@ -2476,18 +2510,10 @@ extension Formatter {
         let isReferenced = identifierCounts[name, default: 0] > 1
 
         // A function should be treated as a test if:
-        // 1. It's definitely a test (has @Test or test prefix), OR
-        // 2. For Swift Testing: has test signature (the @Test attribute makes intent clear)
-        // 3. For XCTest: has test signature and isn't called elsewhere
-        if isDefinitelyTest {
-            return true
-        } else if hasTestSignature {
-            // For Swift Testing, any test-signature function is a test (will get @Test)
-            // For XCTest, only if not referenced (to avoid breaking helper methods)
-            return framework == .swiftTesting || !isReferenced
-        } else {
-            return false
-        }
+        // 1. It's definitely a test (has @Test or test prefix with signature), OR
+        // 2. For Swift Testing: has test signature (will get @Test)
+        // 3. For XCTest: has test signature and isn't referenced
+        return isDefinitelyTest || (hasTestSignature && (framework == .swiftTesting || !isReferenced))
     }
 
     /// Adds imports for the given list of modules to this file if not already present

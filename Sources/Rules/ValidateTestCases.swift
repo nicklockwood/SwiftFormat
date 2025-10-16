@@ -35,22 +35,16 @@ public extension FormatRule {
         }
 
         for testClass in testClasses {
-            // If the type has an init with parameters, it's not a test suite
-            let hasParameterizedInit = testClass.body.contains { member in
-                guard member.keyword == "init",
-                      let initDecl = formatter.parseFunctionDeclaration(keywordIndex: member.keywordIndex)
-                else { return false }
-                return !initDecl.arguments.isEmpty
+            // Skip types with parameterized initializers (not test suites)
+            let hasParameterizedInit = testClass.body.contains {
+                $0.keyword == "init" &&
+                    formatter.parseFunctionDeclaration(keywordIndex: $0.keywordIndex)?.arguments.isEmpty == false
             }
-            if hasParameterizedInit {
-                continue
-            }
+            guard !hasParameterizedInit else { continue }
 
             // Process each member of the test class
-            for member in testClass.body {
-                if member.keyword == "func" {
-                    formatter.validateTestNaming(member, for: testFramework, identifierCounts: identifierCounts)
-                }
+            for member in testClass.body where member.keyword == "func" {
+                formatter.validateTestNaming(member, for: testFramework, identifierCounts: identifierCounts)
             }
         }
     } examples: {
@@ -101,21 +95,9 @@ extension Formatter {
     func isLikelyTestCase(_ typeDecl: TypeDeclaration, for testFramework: TestingFramework) -> Bool {
         guard let name = typeDecl.name else { return false }
 
-        // Don't apply to classes that contain "Base" (they're likely meant to be subclassed)
-        if name.contains("Base") {
+        // Don't apply to classes likely to be subclassed
+        if isLikelyToBeSubclassed(typeDecl) {
             return false
-        }
-
-        // Don't apply to classes with a doc comment like "Base class for XYZ functionality"
-        if let docCommentRange = typeDecl.docCommentRange {
-            let subclassRelatedTerms = ["base", "subclass"]
-            let docComment = tokens[docCommentRange].string.lowercased()
-
-            for term in subclassRelatedTerms {
-                if docComment.contains(term) {
-                    return false
-                }
-            }
         }
 
         // Valid test suffixes for identifying test types

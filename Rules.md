@@ -125,6 +125,7 @@
 * [redundantThrows](#redundantThrows)
 * [singlePropertyPerLine](#singlePropertyPerLine)
 * [sortSwitchCases](#sortSwitchCases)
+* [testSuiteAccessControl](#testSuiteAccessControl)
 * [unusedPrivateDeclarations](#unusedPrivateDeclarations)
 * [urlMacro](#urlMacro)
 * [validateTestCases](#validateTestCases)
@@ -3565,6 +3566,54 @@ In Swift Testing, don't prefix @Test methods with 'test'.
 </details>
 <br/>
 
+## testSuiteAccessControl
+
+Ensure test methods are internal and helper methods/properties are private.
+For XCTest: test methods with 'test' prefix should be internal.
+For Swift Testing: test methods with @Test attribute should be internal.
+Helper methods and properties should be private.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  import XCTest
+
+  final class MyTests: XCTestCase {
+-     public func testExample() {
++     func testExample() {
+          XCTAssertTrue(true)
+      }
+
+-     public func helperMethod() {
++     private func helperMethod() {
+          // helper code
+      }
+
+-     var someProperty: String = ""
++     private var someProperty: String = ""
+  }
+```
+
+```diff
+  import Testing
+
+  struct MyFeatureTests {
+-     public func featureWorks() {
++     @Test func featureWorks() {
+          #expect(true)
+      }
+
+-     public func helperMethod() {
++     private func helperMethod() {
+          // helper code
+      }
+  }
+```
+
+</details>
+<br/>
+
 ## throwingTests
 
 Write tests that use `throws` instead of using `try!`.
@@ -3843,10 +3892,9 @@ With `--url-macro "#URL,URLFoundation"`:
 
 ## validateTestCases
 
-Validate that test case members have the correct access control and naming.
-For XCTest: test methods should have 'test' prefix and be internal.
-For Swift Testing: test methods should have @Test attribute and be internal.
-Helper methods and properties should be private.
+Ensure test methods have appropriate naming conventions.
+For XCTest: test methods should have 'test' prefix.
+For Swift Testing: test methods should have @Test attribute.
 
 <details>
 <summary>Examples</summary>
@@ -3855,18 +3903,10 @@ Helper methods and properties should be private.
   import XCTest
 
   final class MyTests: XCTestCase {
--     public func testExample() {
+-     func example() {
 +     func testExample() {
           XCTAssertTrue(true)
       }
-
--     public func helperMethod() {
-+     private func helperMethod() {
-          // helper code
-      }
-
--     var someProperty: String = ""
-+     private var someProperty: String = ""
   }
 ```
 
@@ -3874,14 +3914,9 @@ Helper methods and properties should be private.
   import Testing
 
   struct MyFeatureTests {
--     public func featureWorks() {
+-     func featureWorks() {
 +     @Test func featureWorks() {
           #expect(true)
-      }
-
--     public func helperMethod() {
-+     private func helperMethod() {
-          // helper code
       }
   }
 ```

@@ -133,15 +133,15 @@ final class TestSuiteAccessControlTests: XCTestCase {
         testFormatting(for: input, output, rule: .testSuiteAccessControl, exclude: [.unusedArguments, .validateTestCases])
     }
 
-    func testXCTestInitializerIsInternal() {
+    func testXCTestWithParameterlessInitializerIsProcessed() {
         let input = """
         import XCTest
 
         final class MyTests: XCTestCase {
-            private let dependency: Dependency
+            private let dependency: Dependency = Dependency()
 
-            public init(dependency: Dependency) {
-                self.dependency = dependency
+            public init() {
+                // Custom initialization
             }
 
             func testExample() {
@@ -154,10 +154,10 @@ final class TestSuiteAccessControlTests: XCTestCase {
         import XCTest
 
         final class MyTests: XCTestCase {
-            private let dependency: Dependency
+            private let dependency: Dependency = Dependency()
 
-            init(dependency: Dependency) {
-                self.dependency = dependency
+            init() {
+                // Custom initialization
             }
 
             func testExample() {
@@ -166,7 +166,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .testSuiteAccessControl, exclude: [.unusedArguments, .validateTestCases])
+        testFormatting(for: input, output, rule: .testSuiteAccessControl, exclude: [.unusedArguments, .validateTestCases, .redundantType])
     }
 
     func testXCTestPreservesOpenTestClass() {
@@ -573,5 +573,47 @@ final class TestSuiteAccessControlTests: XCTestCase {
         """
 
         testFormatting(for: input, rule: .testSuiteAccessControl, exclude: [.unusedArguments, .validateTestCases, .sortImports])
+    }
+
+    func testXCTestIgnoresTypesWithParameterizedInit() {
+        let input = """
+        import XCTest
+
+        final class MyHelperClass: XCTestCase {
+            let dependency: String
+
+            init(dependency: String) {
+                self.dependency = dependency
+            }
+
+            func example() {
+                XCTAssertTrue(true)
+            }
+        }
+        """
+
+        // No changes should be made - types with parameterized init are not test suites
+        testFormatting(for: input, rule: .testSuiteAccessControl, exclude: [.unusedArguments, .validateTestCases])
+    }
+
+    func testSwiftTestingIgnoresTypesWithParameterizedInit() {
+        let input = """
+        import Testing
+
+        struct MyHelperStruct {
+            let dependency: String
+
+            init(dependency: String) {
+                self.dependency = dependency
+            }
+
+            func example() {
+                #expect(true)
+            }
+        }
+        """
+
+        // No changes should be made - types with parameterized init are not test suites
+        testFormatting(for: input, rule: .testSuiteAccessControl, exclude: [.unusedArguments, .validateTestCases, .redundantMemberwiseInit])
     }
 }

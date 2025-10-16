@@ -2437,19 +2437,33 @@ extension Formatter {
         // Check if this class is actually subclassed in the file
         if typeDecl.keyword == "class" {
             let declarations = parseDeclarations()
-            for declaration in declarations where declaration.keyword == "class" {
+            var isSubclassed = false
+            declarations.forEachRecursiveDeclaration { declaration in
+                guard declaration.keyword == "class" else { return }
                 let conformances = parseConformancesOfType(atKeywordIndex: declaration.keywordIndex)
                 for conformance in conformances {
                     // Extract base class name from generic types like "Container<String>" -> "Container"
                     let baseClassName = conformance.conformance.tokens.first?.string ?? conformance.conformance.string
                     if baseClassName == name {
-                        return true
+                        isSubclassed = true
                     }
                 }
+            }
+            if isSubclassed {
+                return true
             }
         }
 
         return false
+    }
+
+    /// Checks if a type has a parameterized initializer (init with arguments).
+    /// Types with parameterized initializers are not test suites.
+    func hasParameterizedInitializer(_ typeDecl: TypeDeclaration) -> Bool {
+        typeDecl.body.contains {
+            $0.keyword == "init" &&
+                parseFunctionDeclaration(keywordIndex: $0.keywordIndex)?.arguments.isEmpty == false
+        }
     }
 
     /// Checks if a function name has a disabled test prefix.
@@ -2469,8 +2483,7 @@ extension Formatter {
     /// Returns true if the function should have test naming/attributes, false if it's a helper method.
     func shouldBeTreatedAsTest(
         _ function: Declaration,
-        for framework: TestingFramework,
-        identifierCounts: [String: Int]
+        for framework: TestingFramework
     ) -> Bool {
         guard let functionDecl = parseFunctionDeclaration(keywordIndex: function.keywordIndex) else {
             return false
@@ -2502,18 +2515,28 @@ extension Formatter {
         let hasTestAttribute = modifiers.contains("@Test")
         let hasTestPrefix = name.hasPrefix("test")
 
-        // For Swift Testing with @Test attribute, or XCTest with test prefix AND test signature, it's definitely a test
-        // Note: XCTest requires no parameters and no return type for test methods
+        // A function with test signature (no params, no return type) should be treated as a test
         let hasTestSignature = functionDecl.arguments.isEmpty && functionDecl.returnType == nil
-        let isDefinitelyTest = (framework == .swiftTesting && hasTestAttribute) || (framework == .xcTest && hasTestPrefix && hasTestSignature)
 
-        let isReferenced = identifierCounts[name, default: 0] > 1
+        // For Swift Testing: treat as test if it has @Test or test signature
+        if framework == .swiftTesting {
+            return hasTestAttribute || hasTestSignature
+        }
 
-        // A function should be treated as a test if:
-        // 1. It's definitely a test (has @Test or test prefix with signature), OR
-        // 2. For Swift Testing: has test signature (will get @Test)
-        // 3. For XCTest: has test signature and isn't referenced
-        return isDefinitelyTest || (hasTestSignature && (framework == .swiftTesting || !isReferenced))
+        // For XCTest: treat as test if it has test signature AND isn't referenced elsewhere
+        // Check if the function name appears more than once (definition + at least one reference)
+        var occurrences = 0
+        for token in tokens {
+            if case let .identifier(existingName) = token, existingName == name {
+                occurrences += 1
+                if occurrences > 1 {
+                    // Found at least 2 occurrences (definition + reference), so it's a helper method
+                    return false
+                }
+            }
+        }
+
+        return hasTestSignature
     }
 
     /// Adds imports for the given list of modules to this file if not already present

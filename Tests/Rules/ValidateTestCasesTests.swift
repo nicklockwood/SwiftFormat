@@ -31,8 +31,6 @@ final class ValidateTestCasesTests: XCTestCase {
         testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments, .testSuiteAccessControl])
     }
 
-    // This test moved to TestSuiteAccessControlTests
-
     func testXCTestDoesNotAddPrefixToReferencedMethods() {
         let input = """
         import XCTest
@@ -43,7 +41,7 @@ final class ValidateTestCasesTests: XCTestCase {
             }
 
             func helperMethod() {
-                // This is called, so don't add prefix
+                // This is called elsewhere in the file, so it's not a test.
             }
         }
         """
@@ -51,42 +49,6 @@ final class ValidateTestCasesTests: XCTestCase {
         // No change expected - referenced methods don't get test prefix
         testFormatting(for: input, rule: .validateTestCases, exclude: [.unusedArguments, .testSuiteAccessControl])
     }
-
-    func testXCTestAddsPrefixToUnreferencedMethods() {
-        let input = """
-        import XCTest
-
-        final class MyTests: XCTestCase {
-            func example() {
-                XCTAssertTrue(true)
-            }
-
-            func anotherExample() {
-                XCTAssertTrue(true)
-            }
-        }
-        """
-
-        let output = """
-        import XCTest
-
-        final class MyTests: XCTestCase {
-            func testExample() {
-                XCTAssertTrue(true)
-            }
-
-            func testAnotherExample() {
-                XCTAssertTrue(true)
-            }
-        }
-        """
-
-        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments, .testSuiteAccessControl])
-    }
-
-    // testXCTestPropertiesArePrivate moved to TestSuiteAccessControlTests
-    // testXCTestClassIsInternal moved to TestSuiteAccessControlTests
-    // testXCTestInitializerIsInternal moved to TestSuiteAccessControlTests
 
     func testXCTestPreservesOverrideMethods() {
         let input = """
@@ -205,13 +167,6 @@ final class ValidateTestCasesTests: XCTestCase {
 
         testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments, .testSuiteAccessControl])
     }
-
-    // testSwiftTestingMethodsAreInternal moved to TestSuiteAccessControlTests
-    // testSwiftTestingHelperMethodsArePrivate moved to TestSuiteAccessControlTests
-    // testSwiftTestingPropertiesArePrivate moved to TestSuiteAccessControlTests
-    // testSwiftTestingStructIsInternal moved to TestSuiteAccessControlTests
-
-    // testSwiftTestingInitializerIsInternal moved to TestSuiteAccessControlTests
 
     func testSwiftTestingPreservesOpenTestClass() {
         let input = """
@@ -898,8 +853,6 @@ final class ValidateTestCasesTests: XCTestCase {
 
         testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments, .testSuiteAccessControl])
     }
-
-    // testXCTestHelperMethodWithTestPrefixAndParameters moved to TestSuiteAccessControlTests
 
     func testSwiftTestingAddsTestAttributeWhenNameMatchesIdentifier() {
         let input = """

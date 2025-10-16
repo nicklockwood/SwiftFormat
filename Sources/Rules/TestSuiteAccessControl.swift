@@ -22,20 +22,15 @@ public extension FormatRule {
             return
         }
 
-        // Collect all identifiers referenced in the file
-        // Count occurrences - if > 1, the identifier is referenced somewhere
-        let identifierCounts = formatter.tokens.reduce(into: [String: Int]()) { counts, token in
-            if case let .identifier(name) = token {
-                counts[name, default: 0] += 1
-            }
-        }
-
         let declarations = formatter.parseDeclarations()
         let testClasses = declarations.compactMap(\.asTypeDeclaration).filter { typeDecl in
             formatter.isLikelyTestCase(typeDecl, for: testFramework)
         }
 
         for testClass in testClasses {
+            // Skip types with parameterized initializers (not test suites)
+            guard !formatter.hasParameterizedInitializer(testClass) else { continue }
+
             // The test class itself should be internal unless marked as open
             formatter.validateTestTypeAccessControl(testClass)
 
@@ -43,7 +38,7 @@ public extension FormatRule {
             for member in testClass.body {
                 switch member.keyword {
                 case "func":
-                    formatter.validateTestFunctionAccessControl(member, in: testClass, for: testFramework, identifierCounts: identifierCounts)
+                    formatter.validateTestFunctionAccessControl(member, for: testFramework)
 
                 case "init":
                     // Initializers should be internal unless marked as open
@@ -111,7 +106,7 @@ extension Formatter {
     }
 
     /// Validates that a function in a test class has the correct access control.
-    func validateTestFunctionAccessControl(_ function: Declaration, in _: TypeDeclaration, for framework: TestingFramework, identifierCounts: [String: Int]) {
+    func validateTestFunctionAccessControl(_ function: Declaration, for framework: TestingFramework) {
         guard let functionDecl = parseFunctionDeclaration(keywordIndex: function.keywordIndex) else {
             return
         }

@@ -21,14 +21,6 @@ public extension FormatRule {
             return
         }
 
-        // Collect all identifiers referenced in the file
-        // Count occurrences - if > 1, the identifier is referenced somewhere
-        let identifierCounts = formatter.tokens.reduce(into: [String: Int]()) { counts, token in
-            if case let .identifier(name) = token {
-                counts[name, default: 0] += 1
-            }
-        }
-
         let declarations = formatter.parseDeclarations()
         let testClasses = declarations.compactMap(\.asTypeDeclaration).filter { typeDecl in
             formatter.isLikelyTestCase(typeDecl, for: testFramework)
@@ -36,15 +28,11 @@ public extension FormatRule {
 
         for testClass in testClasses {
             // Skip types with parameterized initializers (not test suites)
-            let hasParameterizedInit = testClass.body.contains {
-                $0.keyword == "init" &&
-                    formatter.parseFunctionDeclaration(keywordIndex: $0.keywordIndex)?.arguments.isEmpty == false
-            }
-            guard !hasParameterizedInit else { continue }
+            guard !formatter.hasParameterizedInitializer(testClass) else { continue }
 
             // Process each member of the test class
             for member in testClass.body where member.keyword == "func" {
-                formatter.validateTestNaming(member, for: testFramework, identifierCounts: identifierCounts)
+                formatter.validateTestNaming(member, for: testFramework)
             }
         }
     } examples: {
@@ -142,12 +130,12 @@ extension Formatter {
     }
 
     /// Validates a function in a test class has the correct naming conventions.
-    func validateTestNaming(_ function: Declaration, for framework: TestingFramework, identifierCounts: [String: Int]) {
+    func validateTestNaming(_ function: Declaration, for framework: TestingFramework) {
         // Use the shared helper to determine if this should be treated as a test
-        if shouldBeTreatedAsTest(function, for: framework, identifierCounts: identifierCounts) {
+        if shouldBeTreatedAsTest(function, for: framework) {
             // For XCTest, ensure test methods have "test" prefix
             if framework == .xcTest {
-                ensureTestPrefix(function, identifierCounts: identifierCounts)
+                ensureTestPrefix(function)
             }
 
             // For Swift Testing, ensure test methods have @Test attribute
@@ -158,7 +146,7 @@ extension Formatter {
     }
 
     /// Ensures a function has a "test" prefix.
-    func ensureTestPrefix(_ function: Declaration, identifierCounts: [String: Int]) {
+    func ensureTestPrefix(_ function: Declaration) {
         guard let nameIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: function.keywordIndex),
               case let .identifier(name) = tokens[nameIndex]
         else { return }
@@ -168,14 +156,21 @@ extension Formatter {
             return
         }
 
-        // If the method is referenced elsewhere in the file, don't add prefix
-        // A count > 1 means it appears in the definition and at least one other place
-        if let count = identifierCounts[name], count > 1 {
+        // Check if the new name would create a collision
+        let newName = "test" + name.prefix(1).uppercased() + name.dropFirst()
+        let existingIdentifiers = Set(tokens.compactMap { token -> String? in
+            if case let .identifier(name) = token {
+                return name
+            }
+            return nil
+        })
+
+        // If the new name already exists elsewhere, don't rename
+        if existingIdentifiers.contains(newName) {
             return
         }
 
         // Add "test" prefix to the function name
-        let newName = "test" + name.prefix(1).uppercased() + name.dropFirst()
         replaceToken(at: nameIndex, with: .identifier(newName))
     }
 

@@ -2413,6 +2413,83 @@ extension Formatter {
         }
     }
 
+    /// Checks if a function name has a disabled test prefix.
+    /// Matches patterns like: disable_foo, disableTestFoo, disabled_test_foo, x_test, XtestFoo, _test, etc.
+    func hasDisabledTestPrefix(_ name: String) -> Bool {
+        // Functions starting with underscore are considered disabled
+        if name.hasPrefix("_") {
+            return true
+        }
+
+        let disabledTestPrefixBases = ["disable", "disabled", "skip", "skipped", "x"]
+        let lowercasedName = name.lowercased()
+        for prefix in disabledTestPrefixBases {
+            if lowercasedName.hasPrefix(prefix + "_") || lowercasedName.hasPrefix(prefix + "test") {
+                return true
+            }
+        }
+        return false
+    }
+
+    /// Determines if a function should be treated as a test method based on its characteristics.
+    /// Returns true if the function should have test naming/attributes, false if it's a helper method.
+    func shouldBeTreatedAsTest(
+        _ function: Declaration,
+        for framework: TestingFramework,
+        identifierCounts: [String: Int]
+    ) -> Bool {
+        guard let functionDecl = parseFunctionDeclaration(keywordIndex: function.keywordIndex) else {
+            return false
+        }
+
+        let modifiers = function.modifiers
+
+        // Skip if it's an override, has @objc, or is static (might be called from outside)
+        if modifiers.contains("override") || modifiers.contains("@objc") || modifiers.contains("static") {
+            return false
+        }
+
+        // Get function name
+        guard let nameIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: function.keywordIndex),
+              case let .identifier(name) = tokens[nameIndex]
+        else { return false }
+
+        // If method has a disabled test prefix, it's not a test
+        if hasDisabledTestPrefix(name) {
+            return false
+        }
+
+        // Skip if it's explicitly private (definitely not a test)
+        if modifiers.contains("private") || modifiers.contains("fileprivate") {
+            return false
+        }
+
+        // Check if this is already marked as a test
+        let hasTestAttribute = modifiers.contains("@Test")
+        let hasTestPrefix = name.hasPrefix("test")
+
+        // For Swift Testing with @Test attribute, or XCTest with test prefix AND test signature, it's definitely a test
+        // Note: XCTest requires no parameters and no return type for test methods
+        let hasTestSignature = functionDecl.arguments.isEmpty && functionDecl.returnType == nil
+        let isDefinitelyTest = (framework == .swiftTesting && hasTestAttribute) || (framework == .xcTest && hasTestPrefix && hasTestSignature)
+
+        let isReferenced = identifierCounts[name, default: 0] > 1
+
+        // A function should be treated as a test if:
+        // 1. It's definitely a test (has @Test or test prefix), OR
+        // 2. For Swift Testing: has test signature (the @Test attribute makes intent clear)
+        // 3. For XCTest: has test signature and isn't called elsewhere
+        if isDefinitelyTest {
+            return true
+        } else if hasTestSignature {
+            // For Swift Testing, any test-signature function is a test (will get @Test)
+            // For XCTest, only if not referenced (to avoid breaking helper methods)
+            return framework == .swiftTesting || !isReferenced
+        } else {
+            return false
+        }
+    }
+
     /// Adds imports for the given list of modules to this file if not already present
     func addImports(_ importsToAddIfNeeded: [String]) {
         // Don't add imports in fragments

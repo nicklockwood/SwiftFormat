@@ -28,80 +28,10 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments])
+        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments, .testSuiteAccessControl])
     }
 
-    func testXCTestMethodsAreInternal() {
-        let input = """
-        import XCTest
-
-        final class MyTests: XCTestCase {
-            public func testExample() {
-                XCTAssertTrue(true)
-            }
-
-            private func testHelper() {
-                XCTAssertTrue(true)
-            }
-        }
-        """
-
-        let output = """
-        import XCTest
-
-        final class MyTests: XCTestCase {
-            func testExample() {
-                XCTAssertTrue(true)
-            }
-
-            func testHelper() {
-                XCTAssertTrue(true)
-            }
-        }
-        """
-
-        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments])
-    }
-
-    func testXCTestHelperMethodsArePrivate() {
-        let input = """
-        import XCTest
-
-        final class MyTests: XCTestCase {
-            func testExample() {
-                helperMethod(arg: 0)
-            }
-
-            func helperMethod(arg: Int) {
-                // helper code
-            }
-
-            public func publicHelper(arg: Int) {
-                // helper code
-            }
-        }
-        """
-
-        let output = """
-        import XCTest
-
-        final class MyTests: XCTestCase {
-            func testExample() {
-                helperMethod(arg: 0)
-            }
-
-            private func helperMethod(arg: Int) {
-                // helper code
-            }
-
-            private func publicHelper(arg: Int) {
-                // helper code
-            }
-        }
-        """
-
-        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments])
-    }
+    // This test moved to TestSuiteAccessControlTests
 
     func testXCTestDoesNotAddPrefixToReferencedMethods() {
         let input = """
@@ -118,21 +48,8 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        let output = """
-        import XCTest
-
-        final class MyTests: XCTestCase {
-            func testMain() {
-                helperMethod()
-            }
-
-            private func helperMethod() {
-                // This is called, so don't add prefix
-            }
-        }
-        """
-
-        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments])
+        // No change expected - referenced methods don't get test prefix
+        testFormatting(for: input, rule: .validateTestCases, exclude: [.unusedArguments, .testSuiteAccessControl])
     }
 
     func testXCTestAddsPrefixToUnreferencedMethods() {
@@ -164,98 +81,12 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments])
+        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments, .testSuiteAccessControl])
     }
 
-    func testXCTestPropertiesArePrivate() {
-        let input = """
-        import XCTest
-
-        final class MyTests: XCTestCase {
-            var someProperty: String = ""
-            public var anotherProperty: Int = 0
-
-            func testExample() {
-                XCTAssertEqual(someProperty, "")
-            }
-        }
-        """
-
-        let output = """
-        import XCTest
-
-        final class MyTests: XCTestCase {
-            private var someProperty: String = ""
-            private var anotherProperty: Int = 0
-
-            func testExample() {
-                XCTAssertEqual(someProperty, "")
-            }
-        }
-        """
-
-        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments])
-    }
-
-    func testXCTestClassIsInternal() {
-        let input = """
-        import XCTest
-
-        public final class MyTests: XCTestCase {
-            func testExample() {
-                XCTAssertTrue(true)
-            }
-        }
-        """
-
-        let output = """
-        import XCTest
-
-        final class MyTests: XCTestCase {
-            func testExample() {
-                XCTAssertTrue(true)
-            }
-        }
-        """
-
-        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments])
-    }
-
-    func testXCTestInitializerIsInternal() {
-        let input = """
-        import XCTest
-
-        final class MyTests: XCTestCase {
-            private let dependency: Dependency
-
-            public init(dependency: Dependency) {
-                self.dependency = dependency
-            }
-
-            func testExample() {
-                XCTAssertTrue(true)
-            }
-        }
-        """
-
-        let output = """
-        import XCTest
-
-        final class MyTests: XCTestCase {
-            private let dependency: Dependency
-
-            init(dependency: Dependency) {
-                self.dependency = dependency
-            }
-
-            func testExample() {
-                XCTAssertTrue(true)
-            }
-        }
-        """
-
-        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments])
-    }
+    // testXCTestPropertiesArePrivate moved to TestSuiteAccessControlTests
+    // testXCTestClassIsInternal moved to TestSuiteAccessControlTests
+    // testXCTestInitializerIsInternal moved to TestSuiteAccessControlTests
 
     func testXCTestPreservesOverrideMethods() {
         let input = """
@@ -372,170 +203,15 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments])
+        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments, .testSuiteAccessControl])
     }
 
-    func testSwiftTestingMethodsAreInternal() {
-        let input = """
-        import Testing
+    // testSwiftTestingMethodsAreInternal moved to TestSuiteAccessControlTests
+    // testSwiftTestingHelperMethodsArePrivate moved to TestSuiteAccessControlTests
+    // testSwiftTestingPropertiesArePrivate moved to TestSuiteAccessControlTests
+    // testSwiftTestingStructIsInternal moved to TestSuiteAccessControlTests
 
-        struct MyFeatureTests {
-            public @Test func featureWorks() {
-                #expect(true)
-            }
-
-            private @Test func anotherTest() {
-                #expect(true)
-            }
-        }
-        """
-
-        let output = """
-        import Testing
-
-        struct MyFeatureTests {
-            @Test func featureWorks() {
-                #expect(true)
-            }
-
-            @Test func anotherTest() {
-                #expect(true)
-            }
-        }
-        """
-
-        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments])
-    }
-
-    func testSwiftTestingHelperMethodsArePrivate() {
-        let input = """
-        import Testing
-
-        struct MyFeatureTests {
-            @Test func featureWorks() {
-                helperMethod(arg: 0)
-            }
-
-            func helperMethod(arg: Int) {
-                // helper code
-            }
-
-            public func publicHelper() -> String {
-                return "helper"
-            }
-        }
-        """
-
-        let output = """
-        import Testing
-
-        struct MyFeatureTests {
-            @Test func featureWorks() {
-                helperMethod(arg: 0)
-            }
-
-            private func helperMethod(arg: Int) {
-                // helper code
-            }
-
-            private func publicHelper() -> String {
-                return "helper"
-            }
-        }
-        """
-
-        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments])
-    }
-
-    func testSwiftTestingPropertiesArePrivate() {
-        let input = """
-        import Testing
-
-        struct MyFeatureTests {
-            var someProperty: String = ""
-            public var anotherProperty: Int = 0
-
-            @Test func featureWorks() {
-                #expect(someProperty == "")
-            }
-        }
-        """
-
-        let output = """
-        import Testing
-
-        struct MyFeatureTests {
-            private var someProperty: String = ""
-            private var anotherProperty: Int = 0
-
-            @Test func featureWorks() {
-                #expect(someProperty == "")
-            }
-        }
-        """
-
-        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments])
-    }
-
-    func testSwiftTestingStructIsInternal() {
-        let input = """
-        import Testing
-
-        public struct MyFeatureTests {
-            @Test func featureWorks() {
-                #expect(true)
-            }
-        }
-        """
-
-        let output = """
-        import Testing
-
-        struct MyFeatureTests {
-            @Test func featureWorks() {
-                #expect(true)
-            }
-        }
-        """
-
-        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments])
-    }
-
-    func testSwiftTestingInitializerIsInternal() {
-        let input = """
-        import Testing
-
-        struct MyFeatureTests {
-            private let dependency: Dependency
-
-            public init(dependency: Dependency) {
-                self.dependency = dependency
-            }
-
-            @Test func featureWorks() {
-                #expect(true)
-            }
-        }
-        """
-
-        let output = """
-        import Testing
-
-        struct MyFeatureTests {
-            private let dependency: Dependency
-
-            init(dependency: Dependency) {
-                self.dependency = dependency
-            }
-
-            @Test func featureWorks() {
-                #expect(true)
-            }
-        }
-        """
-
-        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments])
-    }
+    // testSwiftTestingInitializerIsInternal moved to TestSuiteAccessControlTests
 
     func testSwiftTestingPreservesOpenTestClass() {
         let input = """
@@ -626,77 +302,9 @@ final class ValidateTestCasesTests: XCTestCase {
         testFormatting(for: input, rule: .validateTestCases, exclude: [.unusedArguments])
     }
 
-    func testAddsXCTestCaseConformanceToClassWithTestSuffix() {
-        let input = """
-        import XCTest
-
-        final class MyTests {
-            func example() {
-                XCTAssertTrue(true)
-            }
-        }
-        """
-
-        let output = """
-        import XCTest
-
-        final class MyTests: XCTestCase {
-            func testExample() {
-                XCTAssertTrue(true)
-            }
-        }
-        """
-
-        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments])
-    }
-
-    func testAddsXCTestCaseConformanceToClassWithTestCaseSuffix() {
-        let input = """
-        import XCTest
-
-        final class MyTestCase {
-            func example() {
-                XCTAssertTrue(true)
-            }
-        }
-        """
-
-        let output = """
-        import XCTest
-
-        final class MyTestCase: XCTestCase {
-            func testExample() {
-                XCTAssertTrue(true)
-            }
-        }
-        """
-
-        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments])
-    }
-
-    func testAddsXCTestCaseConformanceToClassWithSuiteSuffix() {
-        let input = """
-        import XCTest
-
-        final class MySuite {
-            func example() {
-                XCTAssertTrue(true)
-            }
-        }
-        """
-
-        let output = """
-        import XCTest
-
-        final class MySuite: XCTestCase {
-            func testExample() {
-                XCTAssertTrue(true)
-            }
-        }
-        """
-
-        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments])
-    }
+    // testAddsXCTestCaseConformanceToClassWithTestSuffix removed - XCTestCase conformance feature removed
+    // testAddsXCTestCaseConformanceToClassWithTestCaseSuffix removed - XCTestCase conformance feature removed
+    // testAddsXCTestCaseConformanceToClassWithSuiteSuffix removed - XCTestCase conformance feature removed
 
     func testDoesNotAddXCTestCaseWithExistingConformances() {
         // When there are existing conformances, we skip adding XCTestCase
@@ -785,7 +393,7 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments])
+        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments, .testSuiteAccessControl])
     }
 
     func testSwiftTestingOnlyAppliesToTypesWithTestSuffixes() {
@@ -824,7 +432,7 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments])
+        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments, .testSuiteAccessControl])
     }
 
     func testSwiftTestingStructWithTestCaseSuffix() {
@@ -848,7 +456,7 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments])
+        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments, .testSuiteAccessControl])
     }
 
     func testSwiftTestingStructWithSuiteSuffix() {
@@ -872,7 +480,7 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments])
+        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments, .testSuiteAccessControl])
     }
 
     func testDoesNotApplyToNonTestClasses() {
@@ -948,18 +556,18 @@ final class ValidateTestCasesTests: XCTestCase {
         let output = """
         import XCTest
 
-        final class HelperTests: XCTestCase {
+        final class HelperTests {
             func testExample() {
                 XCTAssertTrue(true)
             }
 
-            private func createFixture() -> String {
+            func createFixture() -> String {
                 return "fixture"
             }
         }
         """
 
-        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments])
+        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments, .testSuiteAccessControl])
     }
 
     func testDoesNotApplyWhenBothTestingFrameworksAreImported() {
@@ -1091,38 +699,8 @@ final class ValidateTestCasesTests: XCTestCase {
     }
 
     func testXCTestPreservesDisabledTestMethods() {
-        // Methods with disabled test prefixes should remain internal without test prefix
+        // Methods with disabled test prefixes should not have test prefix added
         let input = """
-        import XCTest
-
-        final class MyTests: XCTestCase {
-            public func disable_example() {
-                XCTAssertTrue(true)
-            }
-
-            private func disabled_anotherTest() {
-                XCTAssertTrue(true)
-            }
-
-            public func skip_thisTest() {
-                XCTAssertTrue(true)
-            }
-
-            private func skipped_obsolete() {
-                XCTAssertTrue(true)
-            }
-
-            public func x_broken() {
-                XCTAssertTrue(true)
-            }
-
-            func testEnabled() {
-                XCTAssertTrue(true)
-            }
-        }
-        """
-
-        let output = """
         import XCTest
 
         final class MyTests: XCTestCase {
@@ -1152,32 +730,33 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments])
+        // No changes expected - disabled test methods don't get test prefix
+        testFormatting(for: input, rule: .validateTestCases, exclude: [.unusedArguments])
     }
 
     func testSwiftTestingPreservesDisabledTestMethods() {
-        // Methods with disabled test prefixes should remain internal without @Test attribute
+        // Methods with disabled test prefixes should not have @Test attribute added
         let input = """
         import Testing
 
         struct MyFeatureTests {
-            public func disable_example() {
+            func disable_example() {
                 #expect(true)
             }
 
-            private func disabled_anotherTest() {
+            func disabled_anotherTest() {
                 #expect(true)
             }
 
-            public func skip_thisTest() {
+            func skip_thisTest() {
                 #expect(true)
             }
 
-            private func skipped_obsolete() {
+            func skipped_obsolete() {
                 #expect(true)
             }
 
-            public func x_broken() {
+            func x_broken() {
                 #expect(true)
             }
 
@@ -1217,7 +796,7 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments])
+        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments, .testSuiteAccessControl])
     }
 
     func testSwiftTestingPreservesParameterizedTests() {
@@ -1249,28 +828,6 @@ final class ValidateTestCasesTests: XCTestCase {
         import XCTest
 
         final class MyTests: XCTestCase {
-            public func DISABLE_example() {
-                XCTAssertTrue(true)
-            }
-
-            private func X_broken() {
-                XCTAssertTrue(true)
-            }
-
-            public func Skip_ThisTest() {
-                XCTAssertTrue(true)
-            }
-
-            func testEnabled() {
-                XCTAssertTrue(true)
-            }
-        }
-        """
-
-        let output = """
-        import XCTest
-
-        final class MyTests: XCTestCase {
             func DISABLE_example() {
                 XCTAssertTrue(true)
             }
@@ -1289,7 +846,8 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments])
+        // No changes expected - disabled test methods don't get test prefix
+        testFormatting(for: input, rule: .validateTestCases, exclude: [.unusedArguments])
     }
 
     func testSwiftTestingPreservesCapitalizedDisabledTestMethods() {
@@ -1298,15 +856,15 @@ final class ValidateTestCasesTests: XCTestCase {
         import Testing
 
         struct MyFeatureTests {
-            public func DISABLE_example() {
+            func DISABLE_example() {
                 #expect(true)
             }
 
-            private func X_broken() {
+            func X_broken() {
                 #expect(true)
             }
 
-            public func Skip_ThisTest() {
+            func Skip_ThisTest() {
                 #expect(true)
             }
 
@@ -1338,49 +896,10 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments])
+        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments, .testSuiteAccessControl])
     }
 
-    func testXCTestHelperMethodWithTestPrefixAndParameters() {
-        // XCTest methods with "test" prefix but with parameters should be treated as helpers (private)
-        let input = """
-        import XCTest
-
-        final class MyTests: XCTestCase {
-            func testExample() {
-                testHelper(value: 5)
-            }
-
-            func testHelper(value: Int) {
-                XCTAssertEqual(value, 5)
-            }
-
-            public func testFormatter(string: String) -> String {
-                return string.uppercased()
-            }
-        }
-        """
-
-        let output = """
-        import XCTest
-
-        final class MyTests: XCTestCase {
-            func testExample() {
-                testHelper(value: 5)
-            }
-
-            private func testHelper(value: Int) {
-                XCTAssertEqual(value, 5)
-            }
-
-            private func testFormatter(string: String) -> String {
-                return string.uppercased()
-            }
-        }
-        """
-
-        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments])
-    }
+    // testXCTestHelperMethodWithTestPrefixAndParameters moved to TestSuiteAccessControlTests
 
     func testSwiftTestingAddsTestAttributeWhenNameMatchesIdentifier() {
         let input = """
@@ -1415,6 +934,141 @@ final class ValidateTestCasesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments])
+        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments, .testSuiteAccessControl])
+    }
+
+    func testXCTestPreservesPrivateFunctions() {
+        // Private functions should not be treated as tests
+        let input = """
+        import XCTest
+
+        final class MyTests: XCTestCase {
+            func testExample() {
+                XCTAssertTrue(true)
+            }
+
+            private func helperMethod() {
+                // This is a helper, should stay private
+            }
+        }
+        """
+
+        testFormatting(for: input, rule: .validateTestCases, exclude: [.unusedArguments])
+    }
+
+    func testSwiftTestingPreservesPrivateFunctions() {
+        // Private functions should not be treated as tests
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test func featureWorks() {
+                #expect(true)
+            }
+
+            private func helperMethod() {
+                // This is a helper, should stay private
+            }
+        }
+        """
+
+        testFormatting(for: input, rule: .validateTestCases, exclude: [.unusedArguments])
+    }
+
+    func testXCTestPreservesUnderscorePrefixedFunctions() {
+        // Functions starting with underscore are treated as disabled
+        let input = """
+        import XCTest
+
+        final class MyTests: XCTestCase {
+            func _temporarilyDisabled() {
+                XCTAssertTrue(true)
+            }
+
+            func testEnabled() {
+                XCTAssertTrue(true)
+            }
+        }
+        """
+
+        // No changes expected - underscore prefix means disabled
+        testFormatting(for: input, rule: .validateTestCases, exclude: [.unusedArguments])
+    }
+
+    func testSwiftTestingPreservesUnderscorePrefixedFunctions() {
+        // Functions starting with underscore are treated as disabled
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            func _temporarilyDisabled() {
+                #expect(true)
+            }
+
+            func enabled() {
+                #expect(true)
+            }
+        }
+        """
+
+        let output = """
+        import Testing
+
+        struct MyFeatureTests {
+            func _temporarilyDisabled() {
+                #expect(true)
+            }
+
+            @Test func enabled() {
+                #expect(true)
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: .validateTestCases, exclude: [.unusedArguments, .testSuiteAccessControl])
+    }
+
+    func testXCTestIgnoresTypesWithParameterizedInit() {
+        // Types with parameterized initializers are not test suites
+        let input = """
+        import XCTest
+
+        final class MyTests: XCTestCase {
+            let dependency: Dependency
+
+            init(dependency: Dependency) {
+                self.dependency = dependency
+            }
+
+            func example() {
+                XCTAssertTrue(true)
+            }
+        }
+        """
+
+        // No changes expected - has parameterized init
+        testFormatting(for: input, rule: .validateTestCases, exclude: [.unusedArguments, .testSuiteAccessControl])
+    }
+
+    func testSwiftTestingIgnoresTypesWithParameterizedInit() {
+        // Types with parameterized initializers are not test suites
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            let dependency: Dependency
+
+            init(dependency: Dependency) {
+                self.dependency = dependency
+            }
+
+            func example() {
+                #expect(true)
+            }
+        }
+        """
+
+        // No changes expected - has parameterized init
+        testFormatting(for: input, rule: .validateTestCases, exclude: [.unusedArguments, .testSuiteAccessControl, .redundantMemberwiseInit])
     }
 }

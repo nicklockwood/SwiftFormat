@@ -120,6 +120,7 @@ let ruleRegistry: [String: FormatRule] = [
     "strongOutlets": .strongOutlets,
     "strongifiedSelf": .strongifiedSelf,
     "swiftTestingTestCaseNames": .swiftTestingTestCaseNames,
+    "testSuiteAccessControl": .testSuiteAccessControl,
     "throwingTests": .throwingTests,
     "todos": .todos,
     "trailingClosures": .trailingClosures,

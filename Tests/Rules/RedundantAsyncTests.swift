@@ -87,7 +87,7 @@ final class RedundantAsyncTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .redundantAsync)
+        testFormatting(for: input, output, rule: .redundantAsync, exclude: [.testSuiteAccessControl])
     }
 
     func testRemovesAsyncFromAnyFunctionInAlwaysMode() {

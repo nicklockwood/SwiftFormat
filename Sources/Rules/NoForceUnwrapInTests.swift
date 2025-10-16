@@ -17,7 +17,7 @@ public extension FormatRule {
         var testCases = [AutoUpdatingIndex]()
         formatter.forEach(.keyword("func")) { funcKeywordIndex, _ in
             guard let functionDecl = formatter.parseFunctionDeclaration(keywordIndex: funcKeywordIndex),
-                  formatter.isTestFunction(at: funcKeywordIndex, in: functionDecl, for: testFramework)
+                  formatter.isTestCase(at: funcKeywordIndex, in: functionDecl, for: testFramework)
             else { return }
 
             testCases.append(funcKeywordIndex.autoUpdating(in: formatter))

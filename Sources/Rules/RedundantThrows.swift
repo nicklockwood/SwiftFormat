@@ -35,7 +35,7 @@ public extension FormatRule {
             if formatter.options.redundantThrows == .testsOnly {
                 // Only process test functions
                 guard keyword == "func", let testFramework,
-                      formatter.isTestFunction(at: keywordIndex, in: functionDecl, for: testFramework)
+                      formatter.isTestCase(at: keywordIndex, in: functionDecl, for: testFramework)
                 else { return }
             }
 

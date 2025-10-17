@@ -855,7 +855,7 @@ extension Formatter {
         }
 
         switch tokens[index].string {
-        case "let", "var":
+        case "let", "var", "await":
             guard let prevIndex = self
                 .index(of: .nonSpaceOrCommentOrLinebreak, before: index)
             else {

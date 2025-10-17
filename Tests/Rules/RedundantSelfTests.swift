@@ -4051,4 +4051,16 @@ final class RedundantSelfTests: XCTestCase {
         """
         testFormatting(for: input, rule: .redundantSelf, exclude: [.spaceInsideBraces])
     }
+
+    func testForAwaitParsingError() {
+        let input = """
+        for await case (let index, let result)? in group {
+            responses[index] = result
+        }
+        """
+        testFormatting(for: input, rule: .redundantSelf, options: FormatOptions(
+            hoistPatternLet: false,
+            explicitSelf: .initOnly
+        ))
+    }
 }

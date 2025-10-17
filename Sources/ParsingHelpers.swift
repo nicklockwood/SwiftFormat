@@ -838,7 +838,9 @@ extension Formatter {
         }
 
         if tokens[index] == .keyword("where") {
-            if self.index(of: .endOfScope("case"), before: index) != nil {
+            if lastToken(before: index, where: {
+                [.endOfScope("case"), .endOfScope("}")].contains($0)
+            }) == .endOfScope("case") {
                 return nil
             }
             index = indexOfLastSignificantKeyword(at: index, excluding: ["where"]) ?? index

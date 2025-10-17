@@ -1423,4 +1423,52 @@ final class RedundantReturnTests: XCTestCase {
                        rules: [.redundantReturn, .conditionalAssignment],
                        options: options)
     }
+
+    func testForLoopReturnAfterSwitch() {
+        let input = """
+        func foo() -> Bool {
+            switch bar {
+            case .baz:
+                break
+            }
+
+            for i in quux where quux[i].foo {
+                return i > 0
+            }
+
+            return false
+        }
+        """
+        testFormatting(for: input, rule: .redundantReturn)
+    }
+
+    func testIssue1974() {
+        let input = """
+        func selectedRow() -> Int? {
+            var selectedItem: NSManagedObjectID?
+
+            guard let selection = selectedFilterSourceBlock?() as? UserDataSourceSelection else {
+                return nil
+            }
+
+            switch selection {
+            case .user(let managedObjectID):
+                selectedItem = managedObjectID
+            case .noValue:
+                return nil
+            }
+
+            if includeEveryone && selectedItem == nil {
+                return 0
+            }
+
+            for (i, item) in _items.enumerated() where item.objectID == selectedItem {
+                return i >= _limit ? _limit : i + (includeEveryone ? 1 : 0)
+            }
+
+            return nil
+        }
+        """
+        testFormatting(for: input, rule: .redundantReturn, exclude: [.hoistPatternLet, .andOperator])
+    }
 }

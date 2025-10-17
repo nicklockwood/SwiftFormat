@@ -1,5 +1,12 @@
 # Change Log
 
+## [0.58.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.58.5) (2025-10-17)
+
+- Fixed regression with indenting of macros (introduced in 0.58.4)
+- Fixed spurious removal of `return` keyword inside `for ... where` loops
+- Fixed parsing error with `for await case ...` loops
+- Added `XCTUnwrap` to the default exclusion list for `hoistTry`
+
 ## [0.58.4](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.58.4) (2025-10-16)
 
 - Whitespace is no longer added or removed from blank lines in multiline string literals

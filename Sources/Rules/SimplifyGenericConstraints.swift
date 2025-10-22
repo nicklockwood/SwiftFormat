@@ -113,19 +113,14 @@ extension Formatter {
                       isGenericDeclaredInline
                 else { continue }
 
-                // Skip multiline protocol compositions (e.g., ProviderA & ProviderB &\nProviderC)
-                // Check if there's an `&` followed by a linebreak in the conformance tokens
-                var hasMultilineComposition = false
-                for i in conformance.sourceRange {
-                    if tokens[i] == .operator("&", .infix),
-                       let nextIndex = index(of: .nonSpace, after: i),
-                       tokens[nextIndex].isLinebreak
-                    {
-                        hasMultilineComposition = true
-                        break
-                    }
-                }
-                guard !hasMultilineComposition else { continue }
+                // Skip constraints that have linebreaks within the protocol composition itself
+                // (e.g., "ModuleName.\nProtocolA" or "ProviderA &\nProviderB")
+                // Find the last non-space/comment/linebreak token in the constraint
+                guard let lastSignificantIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: conformance.sourceRange.upperBound + 1, if: { _ in true })
+                else { continue }
+
+                // Check if the constraint spans multiple lines
+                guard onSameLine(conformance.sourceRange.lowerBound, lastSignificantIndex) else { continue }
 
                 constraintsToMove.append((genericType: genericType, conformance: conformance))
             }

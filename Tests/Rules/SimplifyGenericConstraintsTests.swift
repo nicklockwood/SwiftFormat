@@ -385,4 +385,17 @@ final class SimplifyGenericConstraintsTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .simplifyGenericConstraints, exclude: [.unusedArguments])
     }
+
+    func testMultilineConstraintWithQualifiedTypeName() {
+        // Don't simplify when protocol composition spans multiple lines with & operators
+        let input = """
+        enum Foo<T>: SomeProtocol where
+          T: ModuleName.ProtocolA & ProtocolB & ProtocolC
+          & ProtocolD & ProtocolE
+          & ProtocolF
+        {
+        }
+        """
+        testFormatting(for: input, rule: .simplifyGenericConstraints, exclude: [.indent, .emptyBraces])
+    }
 }

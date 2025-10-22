@@ -27,7 +27,9 @@ public extension FormatRule {
             guard let identifierIndex = formatter.parseFunctionIdentifier(beforeStartOfScope: functionOpenParen) else { return }
             let name = formatter.tokens[identifierIndex].string
 
-            guard !nonTrailing.contains(name), !formatter.isConditionalStatement(at: functionOpenParen) else {
+            guard !nonTrailing.contains(name), !formatter.isConditionalStatement(at: functionOpenParen),
+                  !formatter.isAttribute(at: identifierIndex)
+            else {
                 return
             }
 

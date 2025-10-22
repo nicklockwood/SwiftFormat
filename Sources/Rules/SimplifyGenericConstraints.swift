@@ -119,15 +119,8 @@ extension Formatter {
                 guard let lastSignificantIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: conformance.sourceRange.upperBound + 1, if: { _ in true })
                 else { continue }
 
-                // Check if there's a linebreak between the start and the last significant token
-                var hasInternalLinebreak = false
-                for i in conformance.sourceRange.lowerBound ... lastSignificantIndex {
-                    if tokens[i].isLinebreak {
-                        hasInternalLinebreak = true
-                        break
-                    }
-                }
-                guard !hasInternalLinebreak else { continue }
+                // Check if the constraint spans multiple lines
+                guard onSameLine(conformance.sourceRange.lowerBound, lastSignificantIndex) else { continue }
 
                 constraintsToMove.append((genericType: genericType, conformance: conformance))
             }

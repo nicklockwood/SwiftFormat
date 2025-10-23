@@ -134,6 +134,16 @@ extension Formatter {
             constraintsByType[item.genericType.name, default: []].append(item.conformance)
         }
 
+        // Check if any combined protocol composition is over 40 characters
+        // If so, skip simplification for the entire declaration
+        for conformances in constraintsByType.values {
+            let protocolNames = conformances.map(\.name)
+            let combinedComposition = protocolNames.joined(separator: " & ")
+            if combinedComposition.count > 40 {
+                return
+            }
+        }
+
         // We perform modifications in reverse order to avoid invalidating indices
 
         // First, remove constraints from the where clause

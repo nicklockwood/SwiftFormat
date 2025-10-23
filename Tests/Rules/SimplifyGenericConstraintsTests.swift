@@ -326,6 +326,21 @@ final class SimplifyGenericConstraintsTests: XCTestCase {
         testFormatting(for: input, output, rule: .simplifyGenericConstraints, exclude: [.unusedArguments, .indent])
     }
 
+    func testDoesNotSimplifyWhenCombinedCompositionIsTooLong() {
+        // When multiple constraints for the same type are combined with &,
+        // don't simplify if the result is over 40 characters
+        let input = """
+        func transform<A, B, C, D>(_ a: A, _ b: B, _ c: C, _ d: D)
+            where A: VeryLongProtocolName,
+                  A: AnotherVeryLongProtocolName,
+                  B: Collection,
+                  C: Comparable,
+                  D: Sequence
+        {}
+        """
+        testFormatting(for: input, rule: .simplifyGenericConstraints, exclude: [.unusedArguments, .indent])
+    }
+
     // MARK: - Constraints on generics not in parameter list
 
     func testPreserveConstraintsForGenericsNotInParameterList() {
@@ -397,5 +412,27 @@ final class SimplifyGenericConstraintsTests: XCTestCase {
         }
         """
         testFormatting(for: input, rule: .simplifyGenericConstraints, exclude: [.indent, .emptyBraces])
+    }
+
+    func testDoesNotSimplifyLongProtocolComposition() {
+        // Don't simplify when protocol composition is over 40 characters
+        // This prevents awkward line breaks when wrapArguments is applied
+        let input = """
+        enum Foo<T>: SomeProtocol where
+          T: ProtocolA & SomeModule.ProtocolB & ProtocolC
+        {
+        }
+        """
+        testFormatting(for: input, rule: .simplifyGenericConstraints, exclude: [.indent, .emptyBraces])
+    }
+
+    func testDoesNotSimplifySingleLongProtocolName() {
+        // Don't simplify when a single protocol name is over 40 characters
+        let input = """
+        enum Foo<T>: SomeProtocol where T: VeryLongProtocolNameThatIsOverFortyCharacters
+        {
+        }
+        """
+        testFormatting(for: input, rule: .simplifyGenericConstraints, exclude: [.indent, .emptyBraces, .braces])
     }
 }

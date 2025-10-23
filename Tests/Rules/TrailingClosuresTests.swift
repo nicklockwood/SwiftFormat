@@ -564,4 +564,16 @@ final class TrailingClosuresTests: XCTestCase {
 
         testFormatting(for: input, [output], rules: [.trailingClosures, .indent])
     }
+
+    // property wrapper
+
+    func testPropertyWrapperDoesntFormat() {
+        let input = """
+        class A {
+            @BlockEquatable({ $0.isEqualTo($1) })
+            var field: [B] = []
+        }
+        """
+        testFormatting(for: input, rule: .trailingClosures)
+    }
 }

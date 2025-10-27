@@ -65,14 +65,14 @@ jobs:
         run: mv artifacts\SwiftFormat.msi artifacts\SwiftFormat.${{ matrix.product-arch }}.msi
 
       - name: 'Upload EXE'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: swiftformat.${{ matrix.product-arch }}.exe
           path: .build/${{ matrix.target-triple }}/release/swiftformat.exe
           retention-days: 5
 
       - name: 'Upload MSI'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: SwiftFormat.${{ matrix.product-arch }}.msi
           path: artifacts\SwiftFormat.${{ matrix.product-arch }}.msi
@@ -86,7 +86,7 @@ jobs:
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v5
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v6
         with:
           path: downloaded-artifacts
           pattern: SwiftFormat.*.msi

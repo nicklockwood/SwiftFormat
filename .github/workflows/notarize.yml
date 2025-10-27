@@ -149,7 +149,7 @@ jobs:
           echo "ZIP_DIR=$(pwd)" >> $GITHUB_ENV
       
       - name: Upload App Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: SwiftFormat-for-Xcode
           path: ${{ env.ZIP_DIR }}/SwiftFormat.for.Xcode.app.zip
@@ -163,7 +163,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           ref: ${{ github.event.release.tag_name || inputs.tag }}
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v6
         with:
           path: downloaded_artifacts
           pattern: SwiftFormat-for-Xcode

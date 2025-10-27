@@ -22,7 +22,7 @@ jobs:
       - name: Strip macOS binary  
         run: strip -rSTx .build/apple/Products/Release/swiftformat
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: swiftformat_macos
           path: .build/apple/Products/Release/swiftformat
@@ -54,13 +54,13 @@ jobs:
           aarch64-linux-gnu-strip artifacts/linux_arm64/workspace/swiftformat
           mv artifacts/linux_arm64/workspace/swiftformat "${HOME}/swiftformat_linux_aarch64"
       - name: Upload AMD64 Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: swiftformat_linux
           path: ~/swiftformat_linux
           retention-days: 5
       - name: Upload ARM64 Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: swiftformat_linux_aarch64
           path: ~/swiftformat_linux_aarch64
@@ -73,7 +73,7 @@ jobs:
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v5
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v6
         with:
           path: downloaded_artifacts
           pattern: swiftformat_*

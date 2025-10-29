@@ -3767,10 +3767,15 @@ Prefer shorthand syntax for Arrays, Dictionaries and Optionals.
 
 Option | Description
 --- | ---
-`--short-optionals` | Prefer ? shorthand for optionals: "except-properties" (default) or "always"
+`--short-optionals` | Prefer ? shorthand for optionals: "preserve-struct-inits" (default) or "always"
 
 <details>
 <summary>Examples</summary>
+
+```diff
+- var foo: Optional<String>
++ var foo: String?
+```
 
 ```diff
 - var foo: Array<String>
@@ -3782,10 +3787,15 @@ Option | Description
 + var foo: [String: Int]
 ```
 
-```diff
-- var foo: Optional<(Int) -> Void>
-+ var foo: ((Int) -> Void)?
+By default, preserves `Optional` types that affect a struct's synthesized memberwise initializer:
+
+```swift
+struct Foo {
+    var bar: Optional<String>
+}
 ```
+
+With `var bar: Optional<String>`, `Foo`'s initializer is `init(bar: String?)`. If updated to `var bar String?`, `Foo`'s initializer would become `init(bar: String? = nil)`, which may be unexpected.
 
 </details>
 <br/>

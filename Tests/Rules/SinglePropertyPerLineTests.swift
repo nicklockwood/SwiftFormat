@@ -90,7 +90,7 @@ final class SinglePropertyPerLineTests: XCTestCase {
         var optional: Optional<String>
         var result: Result<Int, Error>
         """
-        testFormatting(for: input, output, rule: .singlePropertyPerLine)
+        testFormatting(for: input, output, rule: .singlePropertyPerLine, exclude: [.typeSugar])
     }
 
     func testSeparateDeclarationsWithClosureTypes() {

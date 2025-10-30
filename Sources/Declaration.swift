@@ -377,6 +377,25 @@ extension Collection<Declaration> {
             (declaration.body ?? []).forEachRecursiveDeclaration(operation)
         }
     }
+
+    /// Searches for and returns the inner-most declaration that contains the given index
+    func declaration(containing index: Int) -> Declaration? {
+        var containingDeclaration: Declaration?
+
+        forEachRecursiveDeclaration { declaration in
+            guard declaration.range.contains(index) else { return }
+
+            if let containingDeclaration,
+               !containingDeclaration.range.contains(declaration.range)
+            {
+                return
+            }
+
+            containingDeclaration = declaration
+        }
+
+        return containingDeclaration
+    }
 }
 
 extension Declaration {

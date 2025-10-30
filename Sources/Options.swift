@@ -453,7 +453,8 @@ public enum SelfMode: String, CaseIterable {
 
 /// Optionals mode
 public enum OptionalsMode: String, CaseIterable {
-    case exceptProperties = "except-properties"
+    case preserveStructInits = "preserve-struct-inits"
+    case exceptPropertiesDeprecated = "except-properties"
     case always
 }
 
@@ -906,7 +907,7 @@ public struct FormatOptions: CustomStringConvertible {
                 noSpaceOperators: Set<String> = [],
                 noWrapOperators: Set<String> = [],
                 modifierOrder: [String] = [],
-                shortOptionals: OptionalsMode = .exceptProperties,
+                shortOptionals: OptionalsMode = .preserveStructInits,
                 funcAttributes: AttributeMode = .preserve,
                 typeAttributes: AttributeMode = .preserve,
                 varAttributes: AttributeMode = .preserve,

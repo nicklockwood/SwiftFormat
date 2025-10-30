@@ -1907,6 +1907,16 @@ extension Formatter {
 
     /// Parses the declarations in the given range.
     func parseDeclarations(in range: Range<Int>) -> [Declaration] {
+        parseDeclarations(in: range, _useForEachToken: true)
+    }
+
+    /// Parses the declarations in the given range.
+    ///
+    /// Uses `forEachToken` to iterate through the tokens in the given range.
+    /// This enables declarations to read the `isEnabled` state from comment directives.
+    /// This can be disabled with `_useForEachToken: false` to avoid reentrancy if you
+    /// need to call `parseDeclarations` from within an existing `forEachToken` call.
+    private func parseDeclarations(in range: Range<Int>, _useForEachToken: Bool) -> [Declaration] {
         // A temporary declaration value. We can't create a `DeclarationV2` directly
         // within the `forEachToken` call, since `forEachToken` doesn't support reentrancy.
         struct _Declaration {
@@ -1919,7 +1929,7 @@ extension Formatter {
         var startOfDeclaration = range.lowerBound
         let startOfScopeAtDeclaration = startOfScope(at: startOfDeclaration)
 
-        forEachToken(onlyWhereEnabled: false) { index, token in
+        let handleIndex = { [self] (index: Int, token: Token) in
             guard range.contains(index),
                   index >= startOfDeclaration,
                   token.isDeclarationTypeKeyword || token == .startOfScope("#if"),
@@ -1930,7 +1940,7 @@ extension Formatter {
 
             let keywordIndex = index
             let declarationKeyword = declarationType(at: keywordIndex) ?? "#if"
-            let endOfDeclaration = self._endOfDeclarationInTypeBody(atDeclarationKeyword: keywordIndex)
+            let endOfDeclaration = _endOfDeclarationInTypeBody(atDeclarationKeyword: keywordIndex)
 
             let declarationRange = startOfDeclaration ... min(endOfDeclaration ?? .max, range.upperBound - 1)
             startOfDeclaration = declarationRange.upperBound + 1
@@ -1944,6 +1954,16 @@ extension Formatter {
                     keywordIndex: keywordIndex,
                     range: declarationRange
                 ))
+            }
+        }
+
+        if _useForEachToken {
+            forEachToken(onlyWhereEnabled: false) { index, token in
+                handleIndex(index, token)
+            }
+        } else {
+            for (index, token) in tokens.enumerated() {
+                handleIndex(index, token)
             }
         }
 
@@ -2084,7 +2104,7 @@ extension Formatter {
         }
 
         // Prefer keeping linebreaks at the end of a declaration's tokens,
-        // instead of the start of the next delaration's tokens.
+        // instead of the start of the next declaration's tokens.
         //  - This includes any spaces on blank lines, but doesn't include the
         //    indentation associated with the next declaration.
         while let linebreakSearchIndex = endOfDeclaration,
@@ -2101,6 +2121,30 @@ extension Formatter {
         }
 
         return endOfDeclaration
+    }
+
+    /// Parses the inner-most type that contains the given index.
+    func parseEnclosingType(containing index: Int) -> TypeDeclaration? {
+        guard let startOfScope = startOfScope(at: index) else { return nil }
+
+        if let typeKeyword = indexOfLastSignificantKeyword(at: startOfScope, excluding: ["where"]),
+           Token.swiftTypeKeywords.contains(tokens[typeKeyword].string),
+           let bodyOpenBrace = self.index(of: .startOfScope("{"), after: typeKeyword),
+           let endOfScope = endOfScope(at: bodyOpenBrace)
+        {
+            // When parsing the body, use `_useForEachToken: false` to enable
+            // `parseEnclosingType` to be called from within `forEachToken` loops.
+            return TypeDeclaration(
+                keyword: tokens[typeKeyword].string,
+                range: startOfModifiers(at: typeKeyword, includingAttributes: true) ... endOfScope,
+                body: parseDeclarations(in: (bodyOpenBrace + 1) ..< endOfScope, _useForEachToken: false),
+                formatter: self
+            )
+        }
+
+        else {
+            return parseEnclosingType(containing: startOfScope)
+        }
     }
 
     /// Whether or not the body within this scope is a single expression

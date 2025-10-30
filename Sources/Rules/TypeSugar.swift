@@ -56,10 +56,12 @@ public extension FormatRule {
                     break
                 }
             }
+
             switch formatter.tokens[typeIndex] {
             case .identifier("Array"):
                 formatter.replaceTokens(in: typeIndex ... endIndex, with:
                     [.startOfScope("[")] + formatter.tokens[typeStart ... typeEnd] + [.endOfScope("]")])
+
             case .identifier("Dictionary"):
                 guard let commaIndex = formatter.index(of: .delimiter(","), in: typeStart ..< typeEnd) else {
                     return
@@ -67,13 +69,28 @@ public extension FormatRule {
                 formatter.replaceToken(at: commaIndex, with: .delimiter(":"))
                 formatter.replaceTokens(in: typeIndex ... endIndex, with:
                     [.startOfScope("[")] + formatter.tokens[typeStart ... typeEnd] + [.endOfScope("]")])
+
             case .identifier("Optional"):
-                if formatter.options.shortOptionals == .exceptProperties,
-                   let lastKeyword = formatter.lastSignificantKeyword(at: i),
-                   ["var", "let"].contains(lastKeyword)
-                {
-                    return
+                switch formatter.options.shortOptionals {
+                case .always:
+                    break
+                case .preserveStructInits, .exceptPropertiesDeprecated:
+                    if let parentType = formatter.parseEnclosingType(containing: i),
+                       let property = parentType.body.declaration(containing: i),
+                       property.keyword == "var"
+                    {
+                        let inStructWithSynthesizedMemberwiseInit = parentType.keyword == "struct"
+                            && !parentType.body.contains(where: { $0.keyword == "init" })
+
+                        let isStoredInstanceProperty = property.isStoredInstanceProperty
+                        let hasNoDefaultValue = property.parsePropertyDeclaration()?.value == nil
+
+                        if inStructWithSynthesizedMemberwiseInit, isStoredInstanceProperty, hasNoDefaultValue {
+                            return
+                        }
+                    }
                 }
+
                 if formatter.lastSignificantKeyword(at: i) == "case" ||
                     formatter.last(.endOfScope, before: i) == .endOfScope("case")
                 {
@@ -89,9 +106,11 @@ public extension FormatRule {
                 }
                 typeTokens.append(.operator("?", .postfix))
                 formatter.replaceTokens(in: typeIndex ... endIndex, with: typeTokens)
+
             default:
                 return
             }
+
             // Drop leading Swift. namespace
             if let dotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: typeIndex, if: {
                 $0.isOperator(".")
@@ -104,6 +123,11 @@ public extension FormatRule {
     } examples: {
         """
         ```diff
+        - var foo: Optional<String>
+        + var foo: String?
+        ```
+
+        ```diff
         - var foo: Array<String>
         + var foo: [String]
         ```
@@ -113,10 +137,15 @@ public extension FormatRule {
         + var foo: [String: Int]
         ```
 
-        ```diff
-        - var foo: Optional<(Int) -> Void>
-        + var foo: ((Int) -> Void)?
+        By default, preserves `Optional` types that affect a struct's synthesized memberwise initializer:
+
+        ```swift
+        struct Foo {
+            var bar: Optional<String>
+        }
         ```
+
+        With `var bar: Optional<String>`, `Foo`'s initializer is `init(bar: String?)`. If updated to `var bar String?`, `Foo`'s initializer would become `init(bar: String? = nil)`, which may be unexpected.
         """
     }
 }

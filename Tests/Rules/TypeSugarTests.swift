@@ -129,17 +129,49 @@ final class TypeSugarTests: XCTestCase {
 
     func testOptionalPropertyTypeNotConvertedToSugarByDefault() {
         let input = """
-        var bar: Optional<String>
+        struct Bar {
+            var bar: Optional<String>
+        }
         """
         testFormatting(for: input, rule: .typeSugar)
     }
 
     func testOptionalTypeConvertedToSugar() {
         let input = """
-        var foo: Optional<String>
+        struct Bar {
+            init() {
+                foo = "foo"
+            }
+
+            var foo: Optional<String>
+        }
+
+        struct Baaz {
+            var bar: Optional<String> = nil
+            let bar: Optional<String>
+        }
+
+        struct Quuz {
+            let bar: Optional<String>
+        }
         """
         let output = """
-        var foo: String?
+        struct Bar {
+            init() {
+                foo = "foo"
+            }
+
+            var foo: String?
+        }
+
+        struct Baaz {
+            var bar: String? = nil
+            let bar: String?
+        }
+
+        struct Quuz {
+            let bar: String?
+        }
         """
         let options = FormatOptions(shortOptionals: .always)
         testFormatting(for: input, output, rule: .typeSugar, options: options)

@@ -983,7 +983,7 @@ struct _Descriptors {
     let shortOptionals = OptionDescriptor(
         argumentName: "short-optionals",
         displayName: "Short Optional Syntax",
-        help: "Prefer ? shorthand for optionals:",
+        help: "Prefer ? shorthand for optionals: \"preserve-struct-inits\" (default) or \"always\"",
         keyPath: \.shortOptionals
     )
     let markTypes = OptionDescriptor(

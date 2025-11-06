@@ -20,44 +20,36 @@ jobs:
         include:
           - target-triple: x86_64-unknown-windows-msvc
             product-arch: amd64
-        # Disabled since the build was always failing
-        # - target-triple: aarch64-unknown-windows-msvc
-        #   product-arch: arm64
+          - target-triple: aarch64-unknown-windows-msvc
+            product-arch: arm64
 
     steps:
       - uses: compnerd/gha-setup-swift@main
         with:
-          tag: 6.1-RELEASE
-          branch: swift-6.1-release
+          swift-version: development
+          # Note: This snapshot includes the WindowsExperimental.sdk needed for static linking support,
+          # this will be merged into Windows.sdk in the near future and $ExperimentalSDK related flags below will need to be removed
+          swift-build: DEVELOPMENT-SNAPSHOT-2025-08-27-a
+          update-sdk-modules: true
 
       - name: Checkout
         uses: actions/checkout@v5
 
-      - run: swift build -c release --triple ${{ matrix.target-triple }} -Xswiftc -gnone
+      - shell: pwsh
+        run: |
+          $ExperimentalSDK = "$(Split-Path -Path ${env:SDKROOT} -Parent)/WindowsExperimental.sdk"
+          swift build -c release --triple ${{ matrix.target-triple }} -debug-info-format none -Xswiftc -static-stdlib `
+            -Xswiftc -sdk -Xswiftc ${ExperimentalSDK}
 
       - uses: microsoft/setup-msbuild@v2.0.0
 
       - shell: pwsh
         run: |
-          # Bundle the Swift runtime if the version we're using ships with a redistributable
-          $SwiftExePath = (& where.exe swift.exe)
-          if (-not ($SwiftExePath -match "(.+)\\Toolchains\\(\d+\.\d+\.\d+)[^\\]*\\.*")) {
-            throw "Unexpected Swift installation path format"
-          }
-
-          $SwiftInstallRoot = $Matches[1]
-          $SwiftRuntimeVersion = $Matches[2]
-          $SwiftRedistDir = "$SwiftInstallRoot\Redistributables\$SwiftRuntimeVersion"
-          if (-not (Test-Path $SwiftRedistDir)) {
-            throw "Swift redistributable not found at $SwiftRedistDir"
-          }
-
           & msbuild -nologo -restore Platforms\Windows\SwiftFormat.wixproj `
             -p:Configuration=Release `
             -p:ProductArchitecture=${{ matrix.product-arch }} `
             -p:ProductVersion=${{ github.event.release.tag_name || inputs.tag }} `
             -p:SwiftFormatBuildDir=${{ github.workspace }}\.build\${{ matrix.target-triple }}\release `
-            -p:SwiftRedistDir=$SwiftRedistDir `
             -p:OutputPath=${{ github.workspace }}\artifacts `
             -p:RunWixToolsOutOfProc=true
 

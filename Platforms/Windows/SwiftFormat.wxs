@@ -22,7 +22,6 @@
     <StandardDirectory Id="ProgramFiles64Folder">
       <Directory Id="ManufacturerFolder" Name="nicklockwood">
         <Directory Id="INSTALLDIR" Name="SwiftFormat">
-          <Merge Id="SwiftRuntime" DiskId="1" Language="0" SourceFile="$(SwiftRedistDir)\$(MergeModuleFileName)" />
         </Directory>
       </Directory>
     </StandardDirectory>
@@ -41,7 +40,6 @@
     </ComponentGroup>
 
     <Feature Id="SwiftFormat" Level="1">
-      <MergeRef Id="SwiftRuntime" />
       <ComponentRef Id="swiftformat.exe" />
       <ComponentGroupRef Id="EnvironmentVariables" />
     </Feature>

@@ -71,17 +71,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          # Version used by the release workflow
-          - branch: swift-6.1-release
-            tag: 6.1-RELEASE
+        hosts: [x86_64-unknown-windows-msvc, aarch64-unknown-windows-msvc]
+        swift:
+          - version: development
+          # Version used by the release workflow (includes static linking support)
+            build: DEVELOPMENT-SNAPSHOT-2025-08-27-a
     runs-on: windows-latest
-    name: windows (${{ matrix.tag }})
+    name: windows (${{ matrix.swift.build }})
     steps:
       - uses: compnerd/gha-setup-swift@main
         with:
-          tag: ${{ matrix.tag }}
-          branch: ${{ matrix.branch }}
+          swift-version: ${{ matrix.swift.version }}
+          swift-build: ${{ matrix.swift.build }}
       - uses: actions/checkout@v5
       - run: swift test
 

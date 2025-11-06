@@ -28,6 +28,9 @@ jobs:
       - uses: compnerd/gha-setup-swift@main
         with:
           swift-version: development
+          # Note: This snapshot includes the WindowsExperimental.sdk needed for static linking support,
+          # this will be turned into Windows.sdk in the near future and $ExperimentalSDK code below will need to be updated
+          # https://github.com/nicklockwood/SwiftFormat/pull/2265#discussion_r2496568069
           swift-build: DEVELOPMENT-SNAPSHOT-2025-08-27-a
           update-sdk-modules: true
 

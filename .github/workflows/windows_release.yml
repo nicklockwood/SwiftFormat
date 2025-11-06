@@ -20,9 +20,8 @@ jobs:
         include:
           - target-triple: x86_64-unknown-windows-msvc
             product-arch: amd64
-        # Disabled since the build was always failing
-        # - target-triple: aarch64-unknown-windows-msvc
-        #   product-arch: arm64
+          - target-triple: aarch64-unknown-windows-msvc
+            product-arch: arm64
 
     steps:
       - uses: compnerd/gha-setup-swift@main
@@ -46,25 +45,11 @@ jobs:
 
       - shell: pwsh
         run: |
-          # Bundle the Swift runtime if the version we're using ships with a redistributable
-          $SwiftExePath = (& where.exe swift.exe)
-          if (-not ($SwiftExePath -match "(.+)\\Toolchains\\(\d+\.\d+\.\d+)[^\\]*\\.*")) {
-            throw "Unexpected Swift installation path format"
-          }
-
-          $SwiftInstallRoot = $Matches[1]
-          $SwiftRuntimeVersion = $Matches[2]
-          $SwiftRedistDir = "$SwiftInstallRoot\Redistributables\$SwiftRuntimeVersion"
-          if (-not (Test-Path $SwiftRedistDir)) {
-            throw "Swift redistributable not found at $SwiftRedistDir"
-          }
-
           & msbuild -nologo -restore Platforms\Windows\SwiftFormat.wixproj `
             -p:Configuration=Release `
             -p:ProductArchitecture=${{ matrix.product-arch }} `
             -p:ProductVersion=${{ github.event.release.tag_name || inputs.tag }} `
             -p:SwiftFormatBuildDir=${{ github.workspace }}\.build\${{ matrix.target-triple }}\release `
-            -p:SwiftRedistDir=$SwiftRedistDir `
             -p:OutputPath=${{ github.workspace }}\artifacts `
             -p:RunWixToolsOutOfProc=true
 

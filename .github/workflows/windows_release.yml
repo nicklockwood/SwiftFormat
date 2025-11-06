@@ -29,8 +29,7 @@ jobs:
         with:
           swift-version: development
           # Note: This snapshot includes the WindowsExperimental.sdk needed for static linking support,
-          # this will be turned into Windows.sdk in the near future and $ExperimentalSDK code below will need to be updated
-          # https://github.com/nicklockwood/SwiftFormat/pull/2265#discussion_r2496568069
+          # this will be merged into Windows.sdk in the near future and $ExperimentalSDK related flags below will need to be removed
           swift-build: DEVELOPMENT-SNAPSHOT-2025-08-27-a
           update-sdk-modules: true
 
@@ -40,7 +39,8 @@ jobs:
       - shell: pwsh
         run: |
           $ExperimentalSDK = "$(Split-Path -Path ${env:SDKROOT} -Parent)/WindowsExperimental.sdk"
-          swift build --triple ${{ matrix.target-triple }} -c release -debug-info-format none -Xswiftc -sdk -Xswiftc ${ExperimentalSDK} -Xswiftc -static-stdlib
+          swift build -c release --triple ${{ matrix.target-triple }} -debug-info-format none -Xswiftc -static-stdlib `
+            -Xswiftc -sdk -Xswiftc ${ExperimentalSDK}
 
       - uses: microsoft/setup-msbuild@v2.0.0
 

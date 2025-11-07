@@ -588,7 +588,7 @@ public func applyRules(
     // Recursively apply rules until no changes are detected
     let group = DispatchGroup()
     let queue = DispatchQueue(label: "swiftformat.formatting", qos: .userInteractive)
-    let timeout = options.timeout + TimeInterval(originalTokens.count) / 100
+    let timeout = options.timeout + TimeInterval(originalTokens.count) / 1000
     var changes = [Formatter.Change]()
     var lastChanges = [Formatter.Change]()
     for iteration in 0 ..< maxIterations {

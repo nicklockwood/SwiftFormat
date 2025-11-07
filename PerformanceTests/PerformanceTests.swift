@@ -91,7 +91,7 @@ final class PerformanceTests: XCTestCase {
             octalGrouping: .group(1, 1),
             hexGrouping: .group(1, 1),
             hoistPatternLet: false,
-            elseOnNextLine: true,
+            elsePosition: .nextLine,
             explicitSelf: .insert,
             experimentalRules: true,
             typeBlankLines: .insert

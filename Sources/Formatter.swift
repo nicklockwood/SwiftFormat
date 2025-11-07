@@ -1053,7 +1053,7 @@ extension ClosedRange: AnyClosedRange where Bound == Int {
 /// An auto-updating subrange of indicies in a `Formatter`
 final class AutoUpdatingRange: AutoUpdatingReference, AnyClosedRange, Equatable, CustomStringConvertible {
     var range: ClosedRange<Int>
-    let formatter: Formatter
+    private weak var formatter: Formatter?
 
     var description: String {
         range.description
@@ -1066,7 +1066,7 @@ final class AutoUpdatingRange: AutoUpdatingReference, AnyClosedRange, Equatable,
     }
 
     deinit {
-        formatter.unregisterAutoUpdatingReference(self)
+        formatter?.unregisterAutoUpdatingReference(self)
     }
 
     static func == (lhs: AutoUpdatingRange, rhs: AutoUpdatingRange) -> Bool {

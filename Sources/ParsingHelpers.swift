@@ -2177,6 +2177,9 @@ extension Formatter {
         /// Information about the property's type definition, if written explicitly.
         let type: TypeName?
 
+        /// Auto-updating range for the property's type.
+        let typeRange: AutoUpdatingRange?
+
         /// Information about the value following the property's `=` token, if present.
         let value: (assignmentIndex: Int, expressionRange: ClosedRange<Int>)?
 
@@ -2191,8 +2194,8 @@ extension Formatter {
                 return startOfModifiersIndex ... bodyScopeRange.upperBound
             } else if let value {
                 return startOfModifiersIndex ... value.expressionRange.upperBound
-            } else if let type {
-                return startOfModifiersIndex ... type.range.upperBound
+            } else if let typeRange {
+                return startOfModifiersIndex ... typeRange.range.upperBound
             } else {
                 return startOfModifiersIndex ... identifierIndex
             }
@@ -2221,7 +2224,7 @@ extension Formatter {
             typeInformation = (
                 colonIndex: colonIndex,
                 type: type,
-                range: type.range
+                range: AutoUpdatingRange(range: type.range, formatter: self)
             )
         }
 
@@ -2272,6 +2275,7 @@ extension Formatter {
             identifierIndex: propertyIdentifierIndex,
             colonIndex: typeInformation?.colonIndex,
             type: typeInformation?.type,
+            typeRange: typeInformation?.range,
             value: valueInformation,
             body: body
         )

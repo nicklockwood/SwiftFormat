@@ -57,7 +57,7 @@ public extension FormatRule {
                let property = formatter.parsePropertyDeclaration(atIntroducerIndex: introducerIndex),
                formatter.tokens[lvalueRange.lowerBound].string == property.identifier,
                property.value == nil,
-               let typeRange = property.type?.range,
+               let typeRange = property.typeRange,
                let nextTokenAfterProperty = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: typeRange.upperBound),
                nextTokenAfterProperty == startOfConditional
             {

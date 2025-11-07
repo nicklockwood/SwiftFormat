@@ -10,17 +10,17 @@
 
 /// A Swift type parsed by the `formatter.parseType(at:)` parsing helper
 struct TypeName {
-    var range: AutoUpdatingRange
-    let formatter: Formatter
+    let range: ClosedRange<Int>
+    private let formatter: Formatter
 
     init(range: ClosedRange<Int>, formatter: Formatter) {
-        self.range = AutoUpdatingRange(range: range, formatter: formatter)
+        self.range = range
         self.formatter = formatter
     }
 
     /// The string representation of this type, excluding linebreaks or comments
     var string: String {
-        formatter.tokens[range].stringExcludingLinebreaksAndComments
+        tokens.stringExcludingLinebreaksAndComments
     }
 
     var tokens: ArraySlice<Token> {

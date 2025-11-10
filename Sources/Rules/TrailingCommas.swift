@@ -46,7 +46,8 @@ public extension FormatRule {
                 if formatter.options.swiftVersion >= "6.1",
                    let identifierIndex = formatter.parseFunctionIdentifier(beforeStartOfScope: startOfScope),
                    let identifierToken = formatter.token(at: identifierIndex),
-                   identifierToken.isIdentifier || identifierToken.isAttribute || identifierToken.isKeyword,
+                   ![.keyword("#selector")].contains(identifierToken),
+                   identifierToken.isIdentifier || identifierToken.isKeywordOrAttribute,
                    // If the case of `@escaping` or `@Sendable`, this could be a closure type where trailing commas are not supported.
                    !formatter.isStartOfClosureType(at: startOfScope)
                 {

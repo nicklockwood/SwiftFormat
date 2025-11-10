@@ -3634,4 +3634,14 @@ final class TrailingCommasTests: XCTestCase {
         let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.2")
         testFormatting(for: input, rule: .trailingCommas, options: options)
     }
+
+    func testTrailingCommaNotAddedToSelector() {
+        let input = """
+        foo(action: #selector(
+            reallyLongFunctionName(withLongParameters:)
+        ))
+        """
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.2")
+        testFormatting(for: input, rule: .trailingCommas, options: options)
+    }
 }

@@ -21,7 +21,7 @@ public extension FormatRule {
                 formatter.addOrRemoveTrailingComma(beforeEndOfScope: i, trailingCommaSupported: true, isCollection: true)
                 return
 
-            case .subscript, .captureList:
+            case .subscript, .captureList, .functionCall, .parameterList:
                 let trailingCommaSupported = formatter.options.swiftVersion >= "6.1"
                 formatter.addOrRemoveTrailingComma(beforeEndOfScope: i, trailingCommaSupported: trailingCommaSupported)
                 return

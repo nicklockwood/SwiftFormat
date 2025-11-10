@@ -241,6 +241,8 @@ enum ScopeType {
     case captureList
     case dictionary
     case dictionaryType
+    case functionCall
+    case parameterList
     case `subscript`
     case tuple
     case tupleType
@@ -248,7 +250,7 @@ enum ScopeType {
 
     var isType: Bool {
         switch self {
-        case .array, .captureList, .dictionary, .subscript, .tuple:
+        case .array, .captureList, .parameterList, .dictionary, .subscript, .functionCall, .tuple:
             return false
         case .arrayType, .dictionaryType, .tupleType:
             return true
@@ -335,17 +337,18 @@ extension Formatter {
                 }
                 let prevToken = tokens[prevIndex]
                 switch prevToken {
-                case .identifier, .endOfScope(")"), .endOfScope("]"),
-                     .operator where prevToken.isUnwrapOperator && ![.keyword("as"), .keyword("try")].contains(
-                         last(.nonSpaceOrComment, before: prevIndex)
-                     ),
-                     .endOfScope where token.isStringDelimiter:
+                case .operator where prevToken.isUnwrapOperator:
+                    if ![.keyword("as"), .keyword("try")].contains(last(.nonSpaceOrComment, before: prevIndex)) {
+                        fallthrough
+                    }
+                    isType = true
+                case .endOfScope where token.isStringDelimiter, .identifier, .endOfScope(")"), .endOfScope("]"):
                     if tokens[prevIndex + 1 ..< index].contains(where: \.isLinebreak) {
                         break
                     }
-                    return .subscript
+                    return token == .startOfScope("(") ? .functionCall : .subscript
                 case .startOfScope("{") where isInClosureArguments(at: index):
-                    return .captureList
+                    return token == .startOfScope("(") ? .parameterList : .captureList
                 case .delimiter(":"), .delimiter(","):
                     // Check for type declaration
                     if let scopeStart = self.index(of: .startOfScope, before: prevIndex) {
@@ -385,11 +388,11 @@ extension Formatter {
             }
             if token == .startOfScope("(") {
                 return isType ? .tupleType : .tuple
+            } else if self.index(of: .delimiter(":"), after: index) != nil {
+                return isType ? .dictionaryType : .dictionary
+            } else {
+                return isType ? .arrayType : .array
             }
-            if !isType {
-                return self.index(of: .delimiter(":"), after: index) == nil ? .array : .dictionary
-            }
-            return self.index(of: .delimiter(":"), after: index) == nil ? .arrayType : .dictionaryType
         default:
             return nil
         }

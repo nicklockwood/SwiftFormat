@@ -1471,4 +1471,20 @@ final class RedundantReturnTests: XCTestCase {
         """
         testFormatting(for: input, rule: .redundantReturn, exclude: [.hoistPatternLet, .andOperator])
     }
+
+    func testIssue2263() {
+        let input = """
+        func firstNonNilValue<O>() async -> O where V == O? {
+            var it = values.makeAsyncIterator()
+            repeat {
+                if let value = await it.next(), let value {
+                    return value
+                }
+            }
+            while true
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: .redundantReturn, options: options, exclude: [.elseOnSameLine])
+    }
 }

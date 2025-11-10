@@ -870,7 +870,7 @@ extension Formatter {
             default:
                 return nil
             }
-        case "if", "guard", "while", "for", "case":
+        case "if", "guard", "while", "for", "repeat", "case":
             return index
         case "switch":
             return next(.startOfScope, after: i) == .startOfScope(":") ? nil : index

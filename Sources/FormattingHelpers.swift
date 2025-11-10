@@ -913,7 +913,8 @@ extension Formatter {
 
         func addBreakPoint(at i: Int, relativePriority: Int) {
             guard stringLiteralDepth == 0, currentPriority + relativePriority >= lastBreakPointPriority,
-                  !isInClosureArguments(at: i + 1)
+                  !isInClosureArguments(at: i + 1),
+                  next(.nonSpace, after: i + 1) != .startOfScope("//")
             else {
                 return
             }

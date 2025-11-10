@@ -793,4 +793,45 @@ final class WrapTests: XCTestCase {
         let changes = try lint(input, rules: [.wrap, .indent], options: options)
         XCTAssertEqual(changes, [.init(line: 13, rule: .indent, filePath: nil, isMove: false)])
     }
+
+    func testKeepTrailingCommentWithLine() {
+        // https://github.com/nicklockwood/SwiftFormat/issues/2261
+        let input = """
+        [
+            item1, // Comment 1
+            item2, // Comment 2
+            item3 // Comment 3
+        ]
+        """
+
+        let options = FormatOptions(maxWidth: 20)
+        testFormatting(for: input, rule: .wrap, options: options,
+                       exclude: [.trailingCommas, .wrapSingleLineComments])
+    }
+
+    func testKeepTrailingCommentWithLine2() {
+        let input = """
+        [
+            item1, // Comment 1
+            item2, // Comment 2
+            item3 // Comment 3
+        ]
+        """
+
+        let output = """
+        [
+            item1, // Comment
+            // 1
+            item2, // Comment
+            // 2
+            item3 // Comment
+            // 3
+        ]
+        """
+
+        testFormatting(for: input, [output],
+                       rules: [.wrap, .wrapSingleLineComments],
+                       options: FormatOptions(maxWidth: 20),
+                       exclude: [.trailingCommas])
+    }
 }

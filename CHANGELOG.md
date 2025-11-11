@@ -1,5 +1,16 @@
 # Change Log
 
+## [0.58.6](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.58.6) (2025-11-11)
+
+- Fixed `docComments` not being applied correctly after conditional `switch...case`
+- Trailing commas are no longer inserted inside `#selector(...)` expressions
+- Source files listed with `--filelist` are now formatted concurrently
+- Trailing comments are now kept with the same line when wrapping
+- Fixed spurious `return` removal inside `repeat...while` loops
+- Fixed bug with `trailingClosures` rule and property wrappers
+- Fixed performance regression introduced in 0.58.5
+- Reduced timeout threshold to 1ms per token
+
 ## [0.58.5](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.58.5) (2025-10-17)
 
 - Fixed regression with indenting of macros (introduced in 0.58.4)

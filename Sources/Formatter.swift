@@ -740,30 +740,31 @@ public extension Formatter {
         var scopeStack: [Token] = []
         for i in range.reversed() {
             let token = tokens[i]
-            if token == .startOfScope(":"), scopeStack.last == .endOfScope("#endif") {
-                continue
-            } else if [.endOfScope("case"), .endOfScope("default")].contains(token),
-                      scopeStack.last == .endOfScope("#endif")
-            {
-                continue
-            } else if case .startOfScope = token {
-                if let scope = scopeStack.last, scope.isEndOfScope(token) {
-                    scopeStack.removeLast()
-                } else if token.string == "//", linebreakEncountered {
-                    linebreakEncountered = false
-                } else if matches(token) {
-                    return i
-                } else if token.string == "//", self.token(at: range.upperBound)?.isLinebreak == true {
-                    continue
-                } else {
-                    return nil
-                }
-            } else if scopeStack.isEmpty, matches(token) {
+            switch token {
+            case .startOfScope(":") where scopeStack.last == .endOfScope("#endif"):
+                break
+            case .startOfScope where scopeStack.last?.isEndOfScope(token) == true:
+                scopeStack.removeLast()
+            case .startOfScope("//") where linebreakEncountered:
+                linebreakEncountered = false
+            case .startOfScope where matches(token):
                 return i
-            } else if case .linebreak = token {
+            case .startOfScope("//") where self.token(at: range.upperBound)?.isLinebreak == true:
+                break
+            case .startOfScope:
+                return nil
+            case _ where scopeStack.isEmpty && matches(token):
+                return i
+            case .linebreak:
                 linebreakEncountered = true
-            } else if case .endOfScope = token {
+            case .endOfScope("case"), .endOfScope("default"):
+                if scopeStack.last != .endOfScope("#endif") {
+                    fallthrough
+                }
+            case .endOfScope:
                 scopeStack.append(token)
+            default:
+                break
             }
         }
         return nil

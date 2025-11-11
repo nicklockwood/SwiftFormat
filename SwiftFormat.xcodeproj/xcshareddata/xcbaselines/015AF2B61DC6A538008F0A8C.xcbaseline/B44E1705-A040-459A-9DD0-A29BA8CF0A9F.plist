@@ -11,7 +11,7 @@
 				<key>com.apple.XCTPerformanceMetric_WallClockTime</key>
 				<dict>
 					<key>baselineAverage</key>
-					<real>1.3658</real>
+					<real>1.365800</real>
 					<key>baselineIntegrationDisplayName</key>
 					<string>27 Jan 2019 at 10:00:01</string>
 				</dict>
@@ -21,7 +21,7 @@
 				<key>com.apple.XCTPerformanceMetric_WallClockTime</key>
 				<dict>
 					<key>baselineAverage</key>
-					<real>0.30645</real>
+					<real>0.306450</real>
 					<key>baselineIntegrationDisplayName</key>
 					<string>27 Jan 2019 at 10:25:29</string>
 				</dict>
@@ -31,7 +31,7 @@
 				<key>com.apple.XCTPerformanceMetric_WallClockTime</key>
 				<dict>
 					<key>baselineAverage</key>
-					<real>0.46798</real>
+					<real>0.467980</real>
 					<key>baselineIntegrationDisplayName</key>
 					<string>27 Jan 2019 at 10:25:29</string>
 				</dict>
@@ -41,7 +41,7 @@
 				<key>com.apple.XCTPerformanceMetric_WallClockTime</key>
 				<dict>
 					<key>baselineAverage</key>
-					<real>0.02985</real>
+					<real>0.029850</real>
 					<key>baselineIntegrationDisplayName</key>
 					<string>27 Jan 2019 at 10:25:29</string>
 				</dict>
@@ -61,7 +61,7 @@
 				<key>com.apple.XCTPerformanceMetric_WallClockTime</key>
 				<dict>
 					<key>baselineAverage</key>
-					<real>0.49928</real>
+					<real>0.499280</real>
 					<key>baselineIntegrationDisplayName</key>
 					<string>27 Jan 2019 at 10:25:29</string>
 				</dict>
@@ -71,7 +71,7 @@
 				<key>com.apple.XCTPerformanceMetric_WallClockTime</key>
 				<dict>
 					<key>baselineAverage</key>
-					<real>2.794</real>
+					<real>2.794000</real>
 					<key>baselineIntegrationDisplayName</key>
 					<string>27 Jan 2019 at 10:25:29</string>
 				</dict>
@@ -81,7 +81,7 @@
 				<key>com.apple.XCTPerformanceMetric_WallClockTime</key>
 				<dict>
 					<key>baselineAverage</key>
-					<real>0.27162</real>
+					<real>0.271620</real>
 					<key>baselineIntegrationDisplayName</key>
 					<string>27 Jan 2019 at 10:25:29</string>
 				</dict>
@@ -101,7 +101,7 @@
 				<key>com.apple.XCTPerformanceMetric_WallClockTime</key>
 				<dict>
 					<key>baselineAverage</key>
-					<real>0.25376</real>
+					<real>0.253760</real>
 					<key>baselineIntegrationDisplayName</key>
 					<string>27 Jan 2019 at 10:25:29</string>
 				</dict>

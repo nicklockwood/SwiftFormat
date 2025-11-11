@@ -40,9 +40,9 @@ let ruleRegistryURL =
 private func allSwiftFiles(inDirectory directory: String) -> [URL] {
     var swiftFiles: [URL] = []
     let directory = projectDirectory.appendingPathComponent(directory)
-    let errors = enumerateFiles(withInputURL: directory) { fileURL, _, _ in
+    let options = Options(fileOptions: .init(supportedFileExtensions: ["swift"]))
+    let errors = enumerateFiles(withInputURLs: [directory], options: options) { fileURL, _, _ in
         {
-            guard fileURL.pathExtension == "swift" else { return }
             swiftFiles.append(fileURL)
         }
     }

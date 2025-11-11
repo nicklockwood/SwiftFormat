@@ -14,11 +14,10 @@ let projectDirectory = URL(fileURLWithPath: #file)
 
 private let projectFiles: [String] = {
     var files = [String]()
-    _ = enumerateFiles(withInputURL: projectDirectory) { url, _, _ in
+    let options = Options(fileOptions: .init(supportedFileExtensions: ["swift"]))
+    _ = enumerateFiles(withInputURLs: [projectDirectory], options: options) { url, _, _ in
         {
-            if url.pathExtension == "swift",
-               let source = try? String(contentsOf: url, encoding: .utf8)
-            {
+            if let source = try? String(contentsOf: url, encoding: .utf8) {
                 files.append(source)
             }
         }

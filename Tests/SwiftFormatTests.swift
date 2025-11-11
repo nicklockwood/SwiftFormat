@@ -38,7 +38,7 @@ final class SwiftFormatTests: XCTestCase {
     func testInputFileMatchesOutputFileForNilOutput() {
         var files = [URL]()
         let inputURL = URL(fileURLWithPath: #file)
-        let errors = enumerateFiles(withInputURL: inputURL) { inputURL, outputURL, _ in
+        let errors = enumerateFiles(withInputURLs: [inputURL]) { inputURL, outputURL, _ in
             XCTAssertEqual(inputURL, outputURL)
             XCTAssertEqual(inputURL, URL(fileURLWithPath: #file))
             return { files.append(inputURL) }
@@ -50,7 +50,7 @@ final class SwiftFormatTests: XCTestCase {
     func testInputFileMatchesOutputFileForSameOutput() {
         var files = [URL]()
         let inputURL = URL(fileURLWithPath: #file)
-        let errors = enumerateFiles(withInputURL: inputURL, outputURL: inputURL) { inputURL, outputURL, _ in
+        let errors = enumerateFiles(withInputURLs: [inputURL], outputURL: inputURL) { inputURL, outputURL, _ in
             XCTAssertEqual(inputURL, outputURL)
             XCTAssertEqual(inputURL, URL(fileURLWithPath: #file))
             return { files.append(inputURL) }
@@ -62,7 +62,7 @@ final class SwiftFormatTests: XCTestCase {
     func testInputFilesMatchOutputFilesForNilOutput() {
         var files = [URL]()
         let inputURL = URL(fileURLWithPath: #file).deletingLastPathComponent().deletingLastPathComponent()
-        let errors = enumerateFiles(withInputURL: inputURL) { inputURL, outputURL, _ in
+        let errors = enumerateFiles(withInputURLs: [inputURL]) { inputURL, outputURL, _ in
             XCTAssertEqual(inputURL, outputURL)
             return { files.append(inputURL) }
         }
@@ -73,7 +73,7 @@ final class SwiftFormatTests: XCTestCase {
     func testInputFilesMatchOutputFilesForSameOutput() {
         var files = [URL]()
         let inputURL = URL(fileURLWithPath: #file).deletingLastPathComponent().deletingLastPathComponent()
-        let errors = enumerateFiles(withInputURL: inputURL, outputURL: inputURL) { inputURL, outputURL, _ in
+        let errors = enumerateFiles(withInputURLs: [inputURL], outputURL: inputURL) { inputURL, outputURL, _ in
             XCTAssertEqual(inputURL, outputURL)
             return { files.append(inputURL) }
         }
@@ -88,14 +88,14 @@ final class SwiftFormatTests: XCTestCase {
             Glob.path(currentFile.deletingLastPathComponent().path),
         ]))
         let inputURL = currentFile.deletingLastPathComponent().deletingLastPathComponent()
-        let errors = enumerateFiles(withInputURL: inputURL, outputURL: inputURL, options: options) { inputURL, outputURL, _ in
+        let errors = enumerateFiles(withInputURLs: [inputURL], outputURL: inputURL, options: options) { inputURL, outputURL, _ in
             XCTAssertEqual(inputURL, outputURL)
             return { files.append(inputURL) }
         }
 
         var allFiles = [URL]()
         let allFilesInputURL = URL(fileURLWithPath: #file).deletingLastPathComponent().deletingLastPathComponent()
-        _ = enumerateFiles(withInputURL: allFilesInputURL, outputURL: allFilesInputURL) { inputURL, outputURL, _ in
+        _ = enumerateFiles(withInputURLs: [allFilesInputURL], outputURL: allFilesInputURL) { inputURL, outputURL, _ in
             XCTAssertEqual(inputURL, outputURL)
             return { allFiles.append(inputURL) }
         }

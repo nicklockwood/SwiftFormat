@@ -39,7 +39,7 @@ private let rulesDirectory = URL(fileURLWithPath: #file)
 final class PerformanceTests: XCTestCase {
     static let files: [String] = {
         var files = [String]()
-        _ = enumerateFiles(withInputURL: rulesDirectory) { url, _, _ in
+        _ = enumerateFiles(withInputURLs: [rulesDirectory]) { url, _, _ in
             {
                 if let source = try? String(contentsOf: url) {
                     files.append(source)

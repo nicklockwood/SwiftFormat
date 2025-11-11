@@ -990,27 +990,24 @@ func printResult(_ dryrun: Bool, _ lint: Bool, _ lenient: Bool, _ strict: Bool, 
 
 func inferOptions(from inputURLs: [URL], options: FileOptions) -> (Int, FormatOptions, [Error]) {
     var tokens = [Token]()
-    var errors = [Error]()
     var filesParsed = 0
     var options = options
     // Avoid trying to tokenize markdown files
     // TODO: need a more robust solution
     options.supportedFileExtensions.removeAll(where: { $0 == "md" })
     let baseOptions = Options(fileOptions: options)
-    for inputURL in inputURLs {
-        errors += enumerateFiles(
-            withInputURL: inputURL,
-            options: baseOptions,
-            logger: { print($0, as: .info) }
-        ) { inputURL, _, _ in
-            guard let input = try? String(contentsOf: inputURL) else {
-                throw FormatError.reading("Failed to read file \(inputURL.path)")
-            }
-            let _tokens = tokenize(input)
-            return {
-                filesParsed += 1
-                tokens += _tokens
-            }
+    let errors = enumerateFiles(
+        withInputURLs: inputURLs,
+        options: baseOptions,
+        logger: { print($0, as: .info) }
+    ) { inputURL, _, _ in
+        guard let input = try? String(contentsOf: inputURL) else {
+            throw FormatError.reading("Failed to read file \(inputURL.path)")
+        }
+        let _tokens = tokenize(input)
+        return {
+            filesParsed += 1
+            tokens += _tokens
         }
     }
     return (filesParsed, inferFormatOptions(from: tokens), errors)
@@ -1125,212 +1122,209 @@ func processInput(_ inputURLs: [URL],
         showedConfigurationWarnings = true
     }
     // Format files
-    var errors = [Error]()
-    for inputURL in inputURLs {
-        errors += enumerateFiles(
-            withInputURL: inputURL,
-            outputURL: outputURL,
-            options: options,
-            concurrent: !verbose,
-            logger: { print($0, as: .info) },
-            skipped: skippedHandler
-        ) { inputURL, outputURL, options in
-            guard let input = try? String(contentsOf: inputURL) else {
-                throw FormatError.reading("Failed to read file \(inputURL.path)")
+    var errors = enumerateFiles(
+        withInputURLs: inputURLs,
+        outputURL: outputURL,
+        options: options,
+        concurrent: !verbose,
+        logger: { print($0, as: .info) },
+        skipped: skippedHandler
+    ) { inputURL, outputURL, options in
+        guard let input = try? String(contentsOf: inputURL) else {
+            throw FormatError.reading("Failed to read file \(inputURL.path)")
+        }
+        // Override options
+        var options = options
+        try options.addArguments(overrides, in: "") // No need for directory as overrides are formatOptions only
+        try options.addFilterArguments(path: inputURL.path)
+        let formatOptions = options.formatOptions ?? .default
+        let range = lineRange.map { "\($0.lowerBound),\($0.upperBound);" } ?? ""
+        // Check cache
+        let rules = options.rules ?? defaultRules
+        let configHash = computeHash("\(formatOptions)\(range)\(rules.sorted().joined(separator: ","))")
+        let cachePrefix = "\(version);\(configHash);"
+        let cacheKey: String = {
+            var path = inputURL.absoluteURL.path
+            if let cacheDirectory {
+                let commonPrefix = path.commonPrefix(with: cacheDirectory.path)
+                path = String(path[commonPrefix.endIndex ..< path.endIndex])
             }
-            // Override options
-            var options = options
-            try options.addArguments(overrides, in: "") // No need for directory as overrides are formatOptions only
-            try options.addFilterArguments(path: inputURL.path)
-            let formatOptions = options.formatOptions ?? .default
-            let range = lineRange.map { "\($0.lowerBound),\($0.upperBound);" } ?? ""
-            // Check cache
-            let rules = options.rules ?? defaultRules
-            let configHash = computeHash("\(formatOptions)\(range)\(rules.sorted().joined(separator: ","))")
-            let cachePrefix = "\(version);\(configHash);"
-            let cacheKey: String = {
-                var path = inputURL.absoluteURL.path
-                if let cacheDirectory {
-                    let commonPrefix = path.commonPrefix(with: cacheDirectory.path)
-                    path = String(path[commonPrefix.endIndex ..< path.endIndex])
+            return path
+        }()
+        do {
+            var cacheHash: String?
+            var sourceHash: String?
+            if let cacheEntry = cache?[cacheKey], cacheEntry.hasPrefix(cachePrefix) {
+                cacheHash = String(cacheEntry[cachePrefix.endIndex...])
+                sourceHash = computeHash(input)
+            }
+            let output: String
+            if let cacheHash, cacheHash == sourceHash {
+                output = input
+                if verbose {
+                    print("\(lint ? "Linting" : "Formatting") \(inputURL.path)", as: .info)
+                    print("-- no changes (cached)", as: .success)
                 }
-                return path
-            }()
-            do {
-                var cacheHash: String?
-                var sourceHash: String?
-                if let cacheEntry = cache?[cacheKey], cacheEntry.hasPrefix(cachePrefix) {
-                    cacheHash = String(cacheEntry[cachePrefix.endIndex...])
-                    sourceHash = computeHash(input)
+            } else if inputURL.pathExtension == "md" {
+                var markdown = input
+                let swiftCodeBlocks: [MarkdownCodeBlock]
+                do {
+                    swiftCodeBlocks = try parseCodeBlocks(fromMarkdown: input, language: "swift")
+                } catch {
+                    switch (options.formatOptions ?? .default).markdownFiles {
+                    case .strict:
+                        throw error
+                    case .lenient, .ignore:
+                        swiftCodeBlocks = []
+                    }
                 }
-                let output: String
-                if let cacheHash, cacheHash == sourceHash {
-                    output = input
-                    if verbose {
-                        print("\(lint ? "Linting" : "Formatting") \(inputURL.path)", as: .info)
-                        print("-- no changes (cached)", as: .success)
-                    }
-                } else if inputURL.pathExtension == "md" {
-                    var markdown = input
-                    let swiftCodeBlocks: [MarkdownCodeBlock]
-                    do {
-                        swiftCodeBlocks = try parseCodeBlocks(fromMarkdown: input, language: "swift")
-                    } catch {
-                        switch (options.formatOptions ?? .default).markdownFiles {
-                        case .strict:
-                            throw error
-                        case .lenient, .ignore:
-                            swiftCodeBlocks = []
-                        }
+
+                // Iterate backwards through the code blocks to not invalidate existing indices
+                for swiftCodeBlock in swiftCodeBlocks.reversed() {
+                    // Determine the options to use when formatting this block
+                    var options = options
+                    if swiftCodeBlock.options?.contains("no-format") == true {
+                        continue
+                    } else if let args = swiftCodeBlock.options?.components(separatedBy: " "), !args.isEmpty {
+                        let arguments = try preprocessArguments(args, commandLineArguments)
+                        try applyArguments(arguments, lint: lint, to: &options)
                     }
 
-                    // Iterate backwards through the code blocks to not invalidate existing indices
-                    for swiftCodeBlock in swiftCodeBlocks.reversed() {
-                        // Determine the options to use when formatting this block
-                        var options = options
-                        if swiftCodeBlock.options?.contains("no-format") == true {
-                            continue
-                        } else if let args = swiftCodeBlock.options?.components(separatedBy: " "), !args.isEmpty {
-                            let arguments = try preprocessArguments(args, commandLineArguments)
-                            try applyArguments(arguments, lint: lint, to: &options)
-                        }
+                    // Set fragment mode
+                    var formatOptions = options.formatOptions ?? .default
+                    if formatOptions.markdownFiles == .ignore {
+                        continue
+                    }
+                    formatOptions.fragment = true
+                    options.formatOptions = formatOptions
 
-                        // Set fragment mode
-                        var formatOptions = options.formatOptions ?? .default
-                        if formatOptions.markdownFiles == .ignore {
-                            continue
-                        }
-                        formatOptions.fragment = true
-                        options.formatOptions = formatOptions
-
-                        // Update linebreak line numbers to reflect the actual line in the markdown file
-                        // rather than only the line within the code block. This makes it easier to
-                        // understand printed diagnostics that include line numbers.
-                        let inputTokens = tokenize(swiftCodeBlock.text).map { token in
-                            if case let .linebreak(string, lineInCodeBlock) = token {
-                                return Token.linebreak(string, lineInCodeBlock + swiftCodeBlock.lineStartIndex)
-                            } else {
-                                return token
-                            }
-                        }
-
-                        var outputTokens: [Token]?
-                        let parsingError = parsingError(for: inputTokens, options: formatOptions,
-                                                        allowErrorsInFragments: false)
-
-                        switch formatOptions.markdownFiles {
-                        case .lenient, .ignore:
-                            // Ignore code blocks that fail to parse
-                            if parsingError == nil {
-                                outputTokens = try? applyRules(swiftCodeBlock.text, tokens: inputTokens,
-                                                               options: options, lineRange: lineRange,
-                                                               verbose: verbose, lint: lint, reporter: reporter)
-                            }
-                        case .strict:
-                            if let parsingError {
-                                throw parsingError
-                            }
-
-                            outputTokens = try applyRules(swiftCodeBlock.text, tokens: inputTokens,
-                                                          options: options, lineRange: lineRange,
-                                                          verbose: verbose, lint: lint, reporter: reporter)
-                        }
-
-                        if let outputTokens {
-                            assert(markdown[swiftCodeBlock.range] == swiftCodeBlock.text)
-                            markdown.replaceSubrange(swiftCodeBlock.range, with: sourceCode(for: outputTokens))
+                    // Update linebreak line numbers to reflect the actual line in the markdown file
+                    // rather than only the line within the code block. This makes it easier to
+                    // understand printed diagnostics that include line numbers.
+                    let inputTokens = tokenize(swiftCodeBlock.text).map { token in
+                        if case let .linebreak(string, lineInCodeBlock) = token {
+                            return Token.linebreak(string, lineInCodeBlock + swiftCodeBlock.lineStartIndex)
+                        } else {
+                            return token
                         }
                     }
 
-                    output = markdown
-                    if markdown != input {
-                        sourceHash = nil
-                    }
-                } else {
-                    // Regular swift file
-                    let outputTokens = try applyRules(input, options: options, lineRange: lineRange,
+                    var outputTokens: [Token]?
+                    let parsingError = parsingError(for: inputTokens, options: formatOptions,
+                                                    allowErrorsInFragments: false)
+
+                    switch formatOptions.markdownFiles {
+                    case .lenient, .ignore:
+                        // Ignore code blocks that fail to parse
+                        if parsingError == nil {
+                            outputTokens = try? applyRules(swiftCodeBlock.text, tokens: inputTokens,
+                                                           options: options, lineRange: lineRange,
+                                                           verbose: verbose, lint: lint, reporter: reporter)
+                        }
+                    case .strict:
+                        if let parsingError {
+                            throw parsingError
+                        }
+
+                        outputTokens = try applyRules(swiftCodeBlock.text, tokens: inputTokens,
+                                                      options: options, lineRange: lineRange,
                                                       verbose: verbose, lint: lint, reporter: reporter)
-                    output = sourceCode(for: outputTokens)
-                    if output != input {
-                        sourceHash = nil
+                    }
+
+                    if let outputTokens {
+                        assert(markdown[swiftCodeBlock.range] == swiftCodeBlock.text)
+                        markdown.replaceSubrange(swiftCodeBlock.range, with: sourceCode(for: outputTokens))
                     }
                 }
-                let cacheValue = cache.map { _ in
-                    // Only bother computing this if cache is enabled
-                    cachePrefix + (sourceHash ?? computeHash(output))
+
+                output = markdown
+                if markdown != input {
+                    sourceHash = nil
                 }
-                if outputURL.path.components(separatedBy: "/").contains("stdout") {
-                    if !dryrun {
-                        // Write to stdout
-                        print(output, as: .raw)
-                        return {
-                            outputFlags.filesChecked += 1
-                            outputFlags.filesFailed += 1
-                            outputFlags.filesWritten += 1
-                            showConfigurationWarnings(options)
-                        }
-                    }
-                } else if outputURL != inputURL, (try? String(contentsOf: outputURL)) != output {
-                    if !dryrun {
-                        do {
-                            try FileManager.default.createDirectory(at: outputURL.deletingLastPathComponent(),
-                                                                    withIntermediateDirectories: true,
-                                                                    attributes: nil)
-                        } catch {
-                            throw FormatError.writing("Failed to create directory at \(outputURL.path), \(error)")
-                        }
-                    }
-                } else if output == input {
-                    // No changes needed
-                    return {
-                        outputFlags.filesChecked += 1
-                        cache?[cacheKey] = cacheValue
-                        showConfigurationWarnings(options)
-                    }
+            } else {
+                // Regular swift file
+                let outputTokens = try applyRules(input, options: options, lineRange: lineRange,
+                                                  verbose: verbose, lint: lint, reporter: reporter)
+                output = sourceCode(for: outputTokens)
+                if output != input {
+                    sourceHash = nil
                 }
-                if dryrun {
-                    return {
-                        outputFlags.filesChecked += 1
-                        outputFlags.filesFailed += 1
-                        showConfigurationWarnings(options)
-                    }
-                } else {
-                    if verbose {
-                        print("Writing \(outputURL.path)", as: .info)
-                    }
-                    try write(output, to: outputURL)
+            }
+            let cacheValue = cache.map { _ in
+                // Only bother computing this if cache is enabled
+                cachePrefix + (sourceHash ?? computeHash(output))
+            }
+            if outputURL.path.components(separatedBy: "/").contains("stdout") {
+                if !dryrun {
+                    // Write to stdout
+                    print(output, as: .raw)
                     return {
                         outputFlags.filesChecked += 1
                         outputFlags.filesFailed += 1
                         outputFlags.filesWritten += 1
-                        cache?[cacheKey] = cacheValue
                         showConfigurationWarnings(options)
                     }
                 }
-            } catch {
-                if verbose {
-                    var message = "\(error)"
-                    if !".?!".contains(message.last ?? " ") {
-                        message += "."
+            } else if outputURL != inputURL, (try? String(contentsOf: outputURL)) != output {
+                if !dryrun {
+                    do {
+                        try FileManager.default.createDirectory(at: outputURL.deletingLastPathComponent(),
+                                                                withIntermediateDirectories: true,
+                                                                attributes: nil)
+                    } catch {
+                        throw FormatError.writing("Failed to create directory at \(outputURL.path), \(error)")
                     }
-                    print("-- error: \(message)", as: .error)
                 }
+            } else if output == input {
+                // No changes needed
                 return {
                     outputFlags.filesChecked += 1
+                    cache?[cacheKey] = cacheValue
                     showConfigurationWarnings(options)
-                    switch error {
-                    case let FormatError.parsing(message):
-                        if let range = message.range(of: ". Valid options") ?? message.range(of: ". Did you mean") {
-                            throw FormatError.parsing("""
-                            \(message[..<range.lowerBound]) in \(inputURL.path)\(message[range.lowerBound...])
-                            """)
-                        }
-                        throw FormatError.parsing("\(message) in \(inputURL.path)")
-                    case let FormatError.writing(message):
-                        throw FormatError.writing("\(message) in \(inputURL.path)")
-                    default:
-                        throw error
+                }
+            }
+            if dryrun {
+                return {
+                    outputFlags.filesChecked += 1
+                    outputFlags.filesFailed += 1
+                    showConfigurationWarnings(options)
+                }
+            } else {
+                if verbose {
+                    print("Writing \(outputURL.path)", as: .info)
+                }
+                try write(output, to: outputURL)
+                return {
+                    outputFlags.filesChecked += 1
+                    outputFlags.filesFailed += 1
+                    outputFlags.filesWritten += 1
+                    cache?[cacheKey] = cacheValue
+                    showConfigurationWarnings(options)
+                }
+            }
+        } catch {
+            if verbose {
+                var message = "\(error)"
+                if !".?!".contains(message.last ?? " ") {
+                    message += "."
+                }
+                print("-- error: \(message)", as: .error)
+            }
+            return {
+                outputFlags.filesChecked += 1
+                showConfigurationWarnings(options)
+                switch error {
+                case let FormatError.parsing(message):
+                    if let range = message.range(of: ". Valid options") ?? message.range(of: ". Did you mean") {
+                        throw FormatError.parsing("""
+                        \(message[..<range.lowerBound]) in \(inputURL.path)\(message[range.lowerBound...])
+                        """)
                     }
+                    throw FormatError.parsing("\(message) in \(inputURL.path)")
+                case let FormatError.writing(message):
+                    throw FormatError.writing("\(message) in \(inputURL.path)")
+                default:
+                    throw error
                 }
             }
         }
@@ -1355,9 +1349,7 @@ func processInput(_ inputURLs: [URL],
         }
     }
     // Save cache
-    if outputFlags.filesChecked > 0, let cache, let cacheURL,
-       let cacheDirectory
-    {
+    if outputFlags.filesChecked > 0, let cache, let cacheURL, let cacheDirectory {
         do {
             let data = try JSONEncoder().encode(cache)
             try data.write(to: cacheURL, options: .atomic)

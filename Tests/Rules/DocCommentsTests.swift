@@ -604,4 +604,42 @@ final class DocCommentsTests: XCTestCase {
 
         testFormatting(for: input, output, rule: .docComments)
     }
+
+    func testDocCommentsAfterSwitchCase() {
+        let input = """
+        func foo() {
+            switch bar {
+            case .foo:
+                break
+            default:
+                break
+            }
+        }
+
+        /// Baz
+        func baz() {}
+        """
+
+        testFormatting(for: input, rule: .docComments)
+    }
+
+    func testDocCommentsAfterConditionalSwitchCase() {
+        let input = """
+        func foo() {
+            switch bar {
+            #if DEBUG
+                case .foo:
+                    break
+            #endif
+            default:
+                break
+            }
+        }
+
+        /// Baz
+        func baz() {}
+        """
+
+        testFormatting(for: input, rule: .docComments)
+    }
 }

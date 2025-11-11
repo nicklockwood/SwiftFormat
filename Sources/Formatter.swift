@@ -740,7 +740,13 @@ public extension Formatter {
         var scopeStack: [Token] = []
         for i in range.reversed() {
             let token = tokens[i]
-            if case .startOfScope = token {
+            if token == .startOfScope(":"), scopeStack.last == .endOfScope("#endif") {
+                continue
+            } else if [.endOfScope("case"), .endOfScope("default")].contains(token),
+                      scopeStack.last == .endOfScope("#endif")
+            {
+                continue
+            } else if case .startOfScope = token {
                 if let scope = scopeStack.last, scope.isEndOfScope(token) {
                     scopeStack.removeLast()
                 } else if token.string == "//", linebreakEncountered {

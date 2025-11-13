@@ -109,9 +109,8 @@ public enum ExitCode: Int32 {
     case error = 70 // EX_SOFTWARE
 }
 
-func printOptions(_ options: [OptionDescriptor] = Descriptors.formatting, as type: CLI.OutputType) {
-    print("")
-    print(options.compactMap {
+private func formatOptions(_ options: [OptionDescriptor]) -> String {
+    options.compactMap {
         guard !$0.isDeprecated else { return nil }
         var result = "--\($0.argumentName)"
 
@@ -130,7 +129,12 @@ func printOptions(_ options: [OptionDescriptor] = Descriptors.formatting, as typ
             }
             return result + stripMarkdown($0.help)
         }
-    }.sorted().joined(separator: "\n"), as: type)
+    }.sorted().joined(separator: "\n")
+}
+
+func printOptions(_ options: [OptionDescriptor] = Descriptors.formatting, as type: CLI.OutputType) {
+    print("")
+    print(formatOptions(options), as: type)
     print("")
 }
 
@@ -153,16 +157,12 @@ func printRuleInfo(for name: String, as type: CLI.OutputType) throws {
     }
     if !rule.options.isEmpty {
         print("\nOptions:\n", as: type)
-        print(rule.options.compactMap {
+        print(formatOptions(rule.options.compactMap {
             guard let descriptor = Descriptors.byName[$0], !descriptor.isDeprecated else {
                 return nil
             }
-            var result = "--\(descriptor.argumentName)"
-            for _ in 0 ..< 19 - result.count {
-                result += " "
-            }
-            return result + stripMarkdown(descriptor.help)
-        }.sorted().joined(separator: "\n"), as: type)
+            return descriptor
+        }), as: type)
     }
     if var examples = rule.examples {
         examples = examples

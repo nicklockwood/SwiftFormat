@@ -1328,4 +1328,220 @@ final class CommandLineTests: XCTestCase {
         XCTAssertEqual(errors.count, 1)
         XCTAssert(errors[0].contains("Unbalanced code block delimiters in markdown"))
     }
+
+    // MARK: Reporters
+
+    func testWrite() throws {
+        let reporter = GithubActionsLogReporter(environment: ["GITHUB_WORKSPACE": "/bar"])
+        let rule = FormatRule.consecutiveSpaces
+        reporter.report([
+            .init(line: 1, rule: rule, filePath: "/bar/foo.swift", isMove: false),
+            .init(line: 2, rule: rule, filePath: "/bar/foo.swift", isMove: false),
+        ])
+        let expectedOutput = """
+        ::warning file=foo.swift,line=1::\(rule.help) (\(rule.name))
+        ::warning file=foo.swift,line=2::\(rule.help) (\(rule.name))
+
+        """
+        let output = try XCTUnwrap(reporter.write())
+        let outputString = String(decoding: output, as: UTF8.self)
+        XCTAssertEqual(outputString, expectedOutput)
+    }
+
+    func testJSONReporterEndToEnd() throws {
+        try withTmpFiles([
+            "foo.swift": "func foo() {\n}\n",
+        ]) { url in
+            CLI.print = { message, type in
+                switch type {
+                case .raw:
+                    XCTAssert(message.contains("\"rule_id\" : \"emptyBraces\""))
+                case .error, .warning:
+                    break
+                case .info, .success:
+                    break
+                case .content:
+                    XCTFail()
+                }
+            }
+            _ = processArguments([
+                "",
+                "--lint",
+                "--reporter",
+                "json",
+                url.path,
+            ], in: "")
+        }
+    }
+
+    func testJSONReporterInferredFromURL() throws {
+        let outputURL = try createTmpFile("report.json", contents: "")
+        try withTmpFiles([
+            "foo.swift": "func foo() {\n}\n",
+        ]) { url in
+            CLI.print = { _, _ in }
+            _ = processArguments([
+                "",
+                "--lint",
+                "--report",
+                outputURL.path,
+                url.path,
+            ], in: "")
+        }
+        let output = try String(contentsOf: outputURL)
+        XCTAssert(output.contains("\"rule_id\" : \"emptyBraces\""))
+    }
+
+    func testGithubActionsLogReporterEndToEnd() throws {
+        try withTmpFiles([
+            "foo.swift": "func foo() {\n}\n",
+        ]) { url in
+            CLI.print = { message, type in
+                switch type {
+                case .raw:
+                    XCTAssert(message.hasPrefix("::warning file=foo.swift,line=1::"))
+                case .error, .warning:
+                    break
+                case .info, .success:
+                    break
+                case .content:
+                    XCTFail()
+                }
+            }
+            _ = processArguments([
+                "",
+                "--lint",
+                "--reporter",
+                "github-actions-log",
+                url.path,
+            ],
+            environment: ["GITHUB_WORKSPACE": url.deletingLastPathComponent().path],
+            in: "")
+        }
+    }
+
+    func testGithubActionsLogReporterMisspelled() throws {
+        try withTmpFiles([
+            "foo.swift": "func foo() {\n}\n",
+        ]) { url in
+            CLI.print = { message, type in
+                switch type {
+                case .raw, .warning, .info:
+                    break
+                case .error:
+                    XCTAssert(message.contains("Did you mean 'github-actions-log'?"))
+                case .content, .success:
+                    XCTFail()
+                }
+            }
+            _ = processArguments([
+                "",
+                "--lint",
+                "--reporter",
+                "github-action-log",
+                url.path,
+            ], in: "")
+        }
+    }
+
+    func testXMLReporterEndToEnd() throws {
+        try withTmpFiles([
+            "foo.swift": "func foo() {\n}\n",
+        ]) { url in
+            CLI.print = { message, type in
+                switch type {
+                case .raw:
+                    XCTAssert(message.contains("<error line=\"1\" column=\"0\" severity=\"warning\""))
+                case .error, .warning:
+                    break
+                case .info, .success:
+                    break
+                case .content:
+                    XCTFail()
+                }
+            }
+            _ = processArguments([
+                "",
+                "--lint",
+                "--reporter",
+                "xml",
+                url.path,
+            ], in: "")
+        }
+    }
+
+    func testXMLReporterInferredFromURL() throws {
+        let outputURL = try createTmpFile("report.xml", contents: "")
+        try withTmpFiles([
+            "foo.swift": "func foo() {\n}\n",
+        ]) { url in
+            CLI.print = { _, _ in }
+            _ = processArguments([
+                "",
+                "--lint",
+                "--report",
+                outputURL.path,
+                url.path,
+            ], in: "")
+        }
+        let output = try String(contentsOf: outputURL)
+        XCTAssert(output.contains("<error line=\"1\" column=\"0\" severity=\"warning\""))
+    }
+
+    func testSARIFReporterEndToEnd() throws {
+        try withTmpFiles([
+            "foo.swift": "func foo() {\n}\n",
+        ]) { url in
+            CLI.print = { message, type in
+                switch type {
+                case .raw:
+                    XCTAssert(message.contains("\"ruleId\" : \"emptyBraces\""))
+                case .error, .warning:
+                    break
+                case .info, .success:
+                    break
+                case .content:
+                    XCTFail()
+                }
+            }
+            _ = processArguments([
+                "",
+                "--lint",
+                "--reporter",
+                "sarif",
+                url.path,
+            ], in: "")
+        }
+    }
+
+    func testSARIFReporterInferredFromURL() throws {
+        let outputURL = try createTmpFile("report.sarif", contents: "")
+        try withTmpFiles([
+            "foo.swift": "func foo() {\n}\n",
+        ]) { url in
+            CLI.print = { _, _ in }
+            _ = processArguments([
+                "",
+                "--lint",
+                "--report",
+                outputURL.path,
+                url.path,
+            ], in: "")
+        }
+        let output = try String(contentsOf: outputURL)
+        XCTAssert(output.contains("\"ruleId\" : \"emptyBraces\""))
+    }
+
+    // MARK: Rule info
+
+    func testRuleInfo() {
+        CLI.print = { _, _ in }
+        for rule in FormatRules.all {
+            do {
+                try printRuleInfo(for: rule.name, as: .content)
+            } catch {
+                XCTFail("RuleInfo for \(rule.name) threw error: \(error)")
+            }
+        }
+    }
 }

@@ -3,45 +3,45 @@
 import XCTest
 
 final class RenamerTests: XCTestCase {
-    func testRenameStandaloneVariable() {
+    func testRenameStandaloneVariable() throws {
         let input = "<Foo bar=\"foo\"/>"
         let expected = "<Foo bar=\"bar\"/>\n"
-        let output = try! rename("foo", to: "bar", in: input)
+        let output = try rename("foo", to: "bar", in: input)
         XCTAssertEqual(output, expected)
     }
 
-    func testRenameVariableInExpression() {
+    func testRenameVariableInExpression() throws {
         let input = "<Foo bar=\"(foo + bar) * 5\"/>"
         let expected = "<Foo bar=\"(bar + bar) * 5\"/>\n"
-        let output = try! rename("foo", to: "bar", in: input)
+        let output = try rename("foo", to: "bar", in: input)
         XCTAssertEqual(output, expected)
     }
 
-    func testNoRenameTextInStringExpression() {
+    func testNoRenameTextInStringExpression() throws {
         let input = "<Foo title=\"foo + bar\"/>"
         let expected = "<Foo title=\"foo + bar\"/>\n"
-        let output = try! rename("foo", to: "bar", in: input)
+        let output = try rename("foo", to: "bar", in: input)
         XCTAssertEqual(output, expected)
     }
 
-    func testRenameVariableInEscapedStringExpression() {
+    func testRenameVariableInEscapedStringExpression() throws {
         let input = "<Foo title=\"{foo + bar}\"/>"
         let expected = "<Foo title=\"{bar + bar}\"/>\n"
-        let output = try! rename("foo", to: "bar", in: input)
+        let output = try rename("foo", to: "bar", in: input)
         XCTAssertEqual(output, expected)
     }
 
-    func testRenameClass() {
+    func testRenameClass() throws {
         let input = "<Foo bar=\"bar\"/>"
         let expected = "<Bar bar=\"bar\"/>\n"
-        let output = try! rename("Foo", to: "Bar", in: input)
+        let output = try rename("Foo", to: "Bar", in: input)
         XCTAssertEqual(output, expected)
     }
 
-    func testNoRenameHTML() {
+    func testNoRenameHTML() throws {
         let input = "<UILabel align=\"center\">\n    <center>foo</center>\n</UILabel>\n"
         let expected = "<UILabel align=\"centered\">\n    <center>foo</center>\n</UILabel>\n"
-        let output = try! rename("center", to: "centered", in: input)
+        let output = try rename("center", to: "centered", in: input)
         XCTAssertEqual(output, expected)
     }
 }

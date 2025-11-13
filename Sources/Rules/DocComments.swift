@@ -11,7 +11,6 @@ import Foundation
 public extension FormatRule {
     static let docComments = FormatRule(
         help: "Use doc comments for API declarations, otherwise use regular comments.",
-        disabledByDefault: true,
         orderAfter: [.fileHeader],
         options: ["doc-comments"]
     ) { formatter in

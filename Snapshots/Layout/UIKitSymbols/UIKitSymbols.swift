@@ -8,7 +8,6 @@ import SpriteKit
 import UIKit
 import WebKit
 import XCTest
-
 @testable import Layout
 
 final class UIKitSymbols: XCTestCase {

@@ -5,8 +5,7 @@ import Foundation
 
 public extension FormatRule {
     static let noForceTryInTests = FormatRule(
-        help: "Write tests that use `throws` instead of using `try!`.",
-        disabledByDefault: true
+        help: "Write tests that use `throws` instead of using `try!`."
     ) { formatter in
         guard let testFramework = formatter.detectTestingFramework() else {
             return

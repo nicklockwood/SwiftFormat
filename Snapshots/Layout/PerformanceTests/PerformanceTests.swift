@@ -67,10 +67,10 @@ final class PerformanceTests: XCTestCase {
         }
     }
 
-    func testUpdate() {
+    func testUpdate() throws {
         let rootNode = createNodes(nodeCount)
         let view = UIView(frame: CGRect(x: 0, y: 0, width: 300, height: 400))
-        try! rootNode.mount(in: view)
+        try rootNode.mount(in: view)
         measure {
             view.frame.size.width += 1
             view.frame.size.height -= 1
@@ -205,10 +205,10 @@ final class PerformanceTests: XCTestCase {
         )
     }
 
-    func testUpdateTextNodes() {
+    func testUpdateTextNodes() throws {
         let rootNode = createTextNodes(textNodesCount)
         let view = UIView(frame: CGRect(x: 0, y: 0, width: 300, height: 400))
-        try! rootNode.mount(in: view)
+        try rootNode.mount(in: view)
         measure {
             view.frame.size.width += 1
             view.frame.size.height -= 1
@@ -216,10 +216,10 @@ final class PerformanceTests: XCTestCase {
         }
     }
 
-    func testUpdateRichTextNodes() {
+    func testUpdateRichTextNodes() throws {
         let rootNode = createRichTextNodes(textNodesCount)
         let view = UIView(frame: CGRect(x: 0, y: 0, width: 300, height: 400))
-        try! rootNode.mount(in: view)
+        try rootNode.mount(in: view)
         measure {
             view.frame.size.width += 1
             view.frame.size.height -= 1
@@ -229,8 +229,8 @@ final class PerformanceTests: XCTestCase {
 
     // MARK: XML loading and parsing
 
-    func testParseXML() {
-        let xmlData = try! Data(contentsOf: xmlURL)
+    func testParseXML() throws {
+        let xmlData = try Data(contentsOf: xmlURL)
         measure {
             Layout.clearAllCaches()
             _ = try! LayoutNode(xmlData: xmlData)

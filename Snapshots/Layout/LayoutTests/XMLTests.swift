@@ -139,10 +139,10 @@ final class XMLTests: XCTestCase {
 
     // MARK: White space
 
-    func testDiscardLeadingWhitespace() {
+    func testDiscardLeadingWhitespace() throws {
         let input = "    <UIView/>"
         let xmlData = input.data(using: .utf8)!
-        let xml = try! XMLParser.parse(data: xmlData)
+        let xml = try XMLParser.parse(data: xmlData)
         guard xml.count == 1, case let .node(name, _, _) = xml[0] else {
             XCTFail()
             return
@@ -150,33 +150,33 @@ final class XMLTests: XCTestCase {
         XCTAssertEqual(name, "UIView")
     }
 
-    func testDiscardWhitespaceInsideLabel() {
+    func testDiscardWhitespaceInsideLabel() throws {
         let input = "<UILabel>\n    Foo\n</UILabel>"
         let xmlData = input.data(using: .utf8)!
-        let layout = try! Layout(xmlData: xmlData)
+        let layout = try Layout(xmlData: xmlData)
         XCTAssertEqual(layout.body, "Foo")
     }
 
-    func testInterleavedTextAndViewsInsideLabel() {
+    func testInterleavedTextAndViewsInsideLabel() throws {
         let input = "<UILabel>Foo<UIView/>Bar</UILabel>"
         let xmlData = input.data(using: .utf8)!
-        let layout = try! Layout(xmlData: xmlData)
+        let layout = try Layout(xmlData: xmlData)
         XCTAssertEqual(layout.body, "FooBar")
     }
 
-    func testPreserveWhitespaceInsideHTML() {
+    func testPreserveWhitespaceInsideHTML() throws {
         let html = "Some <b>bold </b>and<i> italic</i> text"
         let input = "<UILabel>\n    \(html)\n</UILabel>"
         let xmlData = input.data(using: .utf8)!
-        let layout = try! Layout(xmlData: xmlData)
+        let layout = try Layout(xmlData: xmlData)
         XCTAssertEqual(layout.body, html)
     }
 
-    func testPreserveHTMLAttributes() {
+    func testPreserveHTMLAttributes() throws {
         let html = "An <img src=\"foo.jpg\"/> tag"
         let input = "<UILabel>\n    \(html)\n</UILabel>"
         let xmlData = input.data(using: .utf8)!
-        let layout = try! Layout(xmlData: xmlData)
+        let layout = try Layout(xmlData: xmlData)
         XCTAssertEqual(layout.body, html)
     }
 
@@ -188,35 +188,35 @@ final class XMLTests: XCTestCase {
         XCTAssertEqual(input.xmlEncoded(), expected)
     }
 
-    func testNoEncodeHTMLEntitiesInText() {
+    func testNoEncodeHTMLEntitiesInText() throws {
         let text = "2 legs are < 4 legs"
         let input = "<UILabel>\(text.xmlEncoded())</UILabel>"
         let xmlData = input.data(using: .utf8)!
-        let layout = try! Layout(xmlData: xmlData)
+        let layout = try Layout(xmlData: xmlData)
         XCTAssertEqual(layout.body, text)
     }
 
-    func testEncodeHTMLEntitiesInHTML() {
+    func testEncodeHTMLEntitiesInHTML() throws {
         let html = "2 legs are &lt; 4 legs<br/>"
         let input = "<UILabel>\(html)</UILabel>"
         let xmlData = input.data(using: .utf8)!
-        let layout = try! Layout(xmlData: xmlData)
+        let layout = try Layout(xmlData: xmlData)
         XCTAssertEqual(layout.body, html)
     }
 
-    func testEncodeHTMLEntitiesInHTML2() {
+    func testEncodeHTMLEntitiesInHTML2() throws {
         let html = "<p>2 legs are &lt; 4 legs</p>"
         let input = "<UILabel>\(html)</UILabel>"
         let xmlData = input.data(using: .utf8)!
-        let layout = try! Layout(xmlData: xmlData)
+        let layout = try Layout(xmlData: xmlData)
         XCTAssertEqual(layout.body, html)
     }
 
-    func testEncodeHTMLEntitiesInHTML3() {
+    func testEncodeHTMLEntitiesInHTML3() throws {
         let html = "<b>trial</b> &amp; error"
         let input = "<UILabel>\(html)</UILabel>"
         let xmlData = input.data(using: .utf8)!
-        let layout = try! Layout(xmlData: xmlData)
+        let layout = try Layout(xmlData: xmlData)
         XCTAssertEqual(layout.body, html)
     }
 }

@@ -59,9 +59,9 @@ final class LayoutNodeTests: XCTestCase {
         }
     }
 
-    func testCircularMacroReference() {
+    func testCircularMacroReference() throws {
         let xmlData = "<UIView><macro name=\"foo\" value=\"foo\"/><UILabel text=\"{foo}\"/></UIView>".data(using: .utf8)!
-        let node = try! LayoutNode(xmlData: xmlData)
+        let node = try LayoutNode(xmlData: xmlData)
         let errors = node.validate()
         XCTAssertGreaterThanOrEqual(errors.count, 1)
         for error in errors {
@@ -71,9 +71,9 @@ final class LayoutNodeTests: XCTestCase {
         }
     }
 
-    func testMutualMacroReferences() {
+    func testMutualMacroReferences() throws {
         let xmlData = "<UIView><macro name=\"foo\" value=\"bar\"/><macro name=\"bar\" value=\"foo\"/><UILabel text=\"{foo}\"/></UIView>".data(using: .utf8)!
-        let node = try! LayoutNode(xmlData: xmlData)
+        let node = try LayoutNode(xmlData: xmlData)
         let errors = node.validate()
         XCTAssertGreaterThanOrEqual(errors.count, 1)
         for error in errors {
@@ -112,15 +112,15 @@ final class LayoutNodeTests: XCTestCase {
 
     // MARK: Invalid node errors
 
-    func testUnknownClass() {
-        let layout = try! Layout(xmlData: "<Foo/>".data(using: .utf8)!)
+    func testUnknownClass() throws {
+        let layout = try Layout(xmlData: "<Foo/>".data(using: .utf8)!)
         XCTAssertThrowsError(try LayoutNode(layout: layout)) { error in
             XCTAssert("\(error)".contains("Unknown class Foo"))
         }
     }
 
-    func testInvalidClass() {
-        let layout = try! Layout(xmlData: "<NSObject/>".data(using: .utf8)!)
+    func testInvalidClass() throws {
+        let layout = try Layout(xmlData: "<NSObject/>".data(using: .utf8)!)
         XCTAssertThrowsError(try LayoutNode(layout: layout)) { error in
             XCTAssert("\(error)".contains("NSObject is not a subclass of UIView"))
         }
@@ -238,25 +238,25 @@ final class LayoutNodeTests: XCTestCase {
         XCTAssertEqual(try child.doubleValue(forSymbol: "top"), 10)
     }
 
-    func testParameterNameShadowsState() {
+    func testParameterNameShadowsState() throws {
         let xmlData = "<UILabel text=\"{name}\" name=\"{name}\"><param name=\"name\" type=\"String\"/></UILabel>".data(using: .utf8)!
-        let node = try! LayoutNode(xmlData: xmlData)
+        let node = try LayoutNode(xmlData: xmlData)
         node.setState(["name": "Foo"])
         node.update()
         XCTAssertEqual((node.view as! UILabel).text, "Foo")
     }
 
-    func testMacroNameShadowsState() {
+    func testMacroNameShadowsState() throws {
         let xmlData = "<UIView name=\"{foo}\"><macro name=\"name\" value=\"name\"/><UILabel text=\"{name}\"/></UIView>".data(using: .utf8)!
-        let node = try! LayoutNode(xmlData: xmlData)
+        let node = try LayoutNode(xmlData: xmlData)
         node.setState(["name": "Foo"])
         node.update()
         XCTAssertEqual((node.view.subviews[0] as! UILabel).text, "Foo")
     }
 
-    func testMacroNameShadowsConstant() {
+    func testMacroNameShadowsConstant() throws {
         let xmlData = "<UIView><macro name=\"foo\" value=\"foo + 'baz'\"/><UILabel text=\"{foo}\"/></UIView>".data(using: .utf8)!
-        let node = try! LayoutNode(xmlData: xmlData)
+        let node = try LayoutNode(xmlData: xmlData)
         node.constants = ["foo": "bar"]
         let errors = node.validate()
         XCTAssert(errors.isEmpty)
@@ -267,20 +267,20 @@ final class LayoutNodeTests: XCTestCase {
 
     // MARK: update(with:)
 
-    func testUpdateViewWithSameClass() {
+    func testUpdateViewWithSameClass() throws {
         let node = LayoutNode(view: UIView())
         let oldView = node.view
         XCTAssertTrue(oldView.classForCoder == UIView.self)
         let layout = Layout(node)
-        try! node.update(with: layout)
+        try node.update(with: layout)
         XCTAssertTrue(oldView === node.view)
     }
 
-    func testUpdateViewWithSubclass() {
+    func testUpdateViewWithSubclass() throws {
         let node = LayoutNode(view: UIView())
         XCTAssertTrue(node.view.classForCoder == UIView.self)
         let layout = Layout(LayoutNode(view: UILabel()))
-        try! node.update(with: layout)
+        try node.update(with: layout)
         XCTAssertTrue(node.view.classForCoder == UILabel.self)
     }
 
@@ -290,20 +290,20 @@ final class LayoutNodeTests: XCTestCase {
         XCTAssertThrowsError(try node.update(with: layout))
     }
 
-    func testUpdateViewControllerWithSameClass() {
+    func testUpdateViewControllerWithSameClass() throws {
         let node = LayoutNode(viewController: UIViewController())
         let oldViewController = node.viewController
         XCTAssertTrue(oldViewController?.classForCoder == UIViewController.self)
         let layout = Layout(node)
-        try! node.update(with: layout)
+        try node.update(with: layout)
         XCTAssertTrue(oldViewController === node.viewController)
     }
 
-    func testUpdateViewControllerWithSubclass() {
+    func testUpdateViewControllerWithSubclass() throws {
         let node = LayoutNode(viewController: UIViewController())
         XCTAssertTrue(node.viewController?.classForCoder == UIViewController.self)
         let layout = Layout(LayoutNode(viewController: UITabBarController()))
-        try! node.update(with: layout)
+        try node.update(with: layout)
         XCTAssertTrue(node.viewController?.classForCoder == UITabBarController.self)
     }
 

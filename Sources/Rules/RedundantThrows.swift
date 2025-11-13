@@ -11,7 +11,6 @@ import Foundation
 public extension FormatRule {
     static let redundantThrows = FormatRule(
         help: "Remove redundant `throws` keyword from function declarations that don't throw any errors.",
-        disabledByDefault: true,
         orderAfter: [.noForceUnwrapInTests, .noForceTryInTests, .noGuardInTests, .throwingTests],
         options: ["redundant-throws"]
     ) { formatter in

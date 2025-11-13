@@ -22,8 +22,8 @@ final class LayoutLoaderTests: XCTestCase {
         XCTAssertEqual(path, projectDirectory)
     }
 
-    func testFindProjectDirectoryIfPathContainsDot() {
-        let directory = try! createTempDirectory("foo-4.5/bar")
+    func testFindProjectDirectoryIfPathContainsDot() throws {
+        let directory = try createTempDirectory("foo-4.5/bar")
         let projectURL = directory.deletingLastPathComponent().appendingPathComponent("Project.xcodeproj")
         let fileURL = directory.appendingPathComponent("baz.swift")
         do {
@@ -35,7 +35,7 @@ final class LayoutLoaderTests: XCTestCase {
         } catch {
             XCTFail("\(error)")
         }
-        try! FileManager.default.removeItem(at: directory)
+        try FileManager.default.removeItem(at: directory)
     }
 
     func testFindXMLSourceFile() {

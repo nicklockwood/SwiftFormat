@@ -11,7 +11,6 @@ import Foundation
 public extension FormatRule {
     static let redundantProperty = FormatRule(
         help: "Simplifies redundant property definitions that are immediately returned.",
-        disabledByDefault: true,
         orderAfter: [.propertyTypes]
     ) { formatter in
         formatter.forEach(.keyword) { introducerIndex, introducerToken in

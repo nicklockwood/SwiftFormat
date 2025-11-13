@@ -95,10 +95,10 @@ final class StateTests: XCTestCase {
         }
     }
 
-    func testStateDictionaryUpdates() {
+    func testStateDictionaryUpdates() throws {
         let node = LayoutNode(state: ["foo": 5, "bar": "baz"], expressions: ["top": "foo"])
         let vc = TestVC()
-        try! node.mount(in: vc)
+        try node.mount(in: vc)
         XCTAssertTrue(vc.updated)
         vc.updated = false
         node.setState(["foo": 6, "bar": "baz"]) // Changed
@@ -108,11 +108,11 @@ final class StateTests: XCTestCase {
         XCTAssertFalse(vc.updated)
     }
 
-    func testStateStructUpdates() {
+    func testStateStructUpdates() throws {
         var state = TestState()
         let node = LayoutNode(state: state, expressions: ["top": "foo"])
         let vc = TestVC()
-        try! node.mount(in: vc)
+        try node.mount(in: vc)
         XCTAssertTrue(vc.updated)
         vc.updated = false
         state.foo = 6
@@ -131,7 +131,7 @@ final class StateTests: XCTestCase {
         var nestedModel: OptionalChildModel?
     }
 
-    func testStateClass() {
+    func testStateClass() throws {
         let state = OptionalParentModel()
         state.nestedModel = OptionalChildModel()
         let label = UILabel()
@@ -141,7 +141,7 @@ final class StateTests: XCTestCase {
             expressions: ["text": "{nestedModel.name}"]
         )
         let vc = TestVC()
-        try! node.mount(in: vc)
+        try node.mount(in: vc)
         XCTAssertEqual(label.text, "")
         state.nestedModel?.name = "Foo"
         node.setState(state)

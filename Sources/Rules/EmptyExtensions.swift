@@ -11,8 +11,7 @@ import Foundation
 public extension FormatRule {
     /// Remove empty, non-conforming, extensions.
     static let emptyExtensions = FormatRule(
-        help: "Remove empty, non-conforming, extensions.",
-        disabledByDefault: true,
+        help: "Remove empty, non-protocol-conforming extensions.",
         orderAfter: [.unusedPrivateDeclarations]
     ) { formatter in
         var emptyExtensions = [TypeDeclaration]()

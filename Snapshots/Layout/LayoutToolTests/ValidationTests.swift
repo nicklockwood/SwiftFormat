@@ -31,15 +31,15 @@ final class ValidationTests: XCTestCase {
 
     // MARK: Format identification
 
-    func testValidLayout() {
+    func testValidLayout() throws {
         let input = "<Foo left=\"5\"/>"
-        let xml = try! parseXML(input)
+        let xml = try parseXML(input)
         XCTAssertTrue(xml.isLayout)
     }
 
-    func testInvalidLayout() {
+    func testInvalidLayout() throws {
         let input = "<html><p> Hello </p></html>"
-        let xml = try! parseXML(input)
+        let xml = try parseXML(input)
         XCTAssertFalse(xml.isLayout)
     }
 
@@ -55,49 +55,49 @@ final class ValidationTests: XCTestCase {
 
     // MARK: Known node properties
 
-    func testNonStringViewPropertyType() {
+    func testNonStringViewPropertyType() throws {
         let cls = "UILabel"
         let prop = "numberOfLines"
-        let node = try! parseXML("<\(cls) \(prop)=\"\"/>")[0]
+        let node = try parseXML("<\(cls) \(prop)=\"\"/>")[0]
         let type = typeOfAttribute(prop, inNode: node) ?? "<unknown>"
         XCTAssertEqual(type, "Int")
         XCTAssertFalse(isStringType(type))
         XCTAssertEqual(attributeIsString(prop, inNode: node), false)
     }
 
-    func testStringViewPropertyType() {
+    func testStringViewPropertyType() throws {
         let cls = "UILabel"
         let prop = "text"
-        let node = try! parseXML("<\(cls) \(prop)=\"\"/>")[0]
+        let node = try parseXML("<\(cls) \(prop)=\"\"/>")[0]
         let type = typeOfAttribute(prop, inNode: node) ?? "<unknown>"
         XCTAssertEqual(type, "String")
         XCTAssertTrue(isStringType(type))
         XCTAssertEqual(attributeIsString(prop, inNode: node), true)
     }
 
-    func testUnknownViewPropertyType() {
+    func testUnknownViewPropertyType() throws {
         let cls = "UILabel"
         let prop = "foo"
-        let node = try! parseXML("<\(cls) \(prop)=\"\"/>")[0]
+        let node = try parseXML("<\(cls) \(prop)=\"\"/>")[0]
         let type = typeOfAttribute(prop, inNode: node)
         XCTAssertNil(type)
         XCTAssertNil(attributeIsString(prop, inNode: node))
     }
 
-    func testViewParameterType() {
+    func testViewParameterType() throws {
         let cls = "UILabel"
         let prop = "foo"
-        let node = try! parseXML("<\(cls) \(prop)=\"\"><param name=\"foo\" type=\"Int\"/></\(cls)>")[0]
+        let node = try parseXML("<\(cls) \(prop)=\"\"><param name=\"foo\" type=\"Int\"/></\(cls)>")[0]
         let type = typeOfAttribute(prop, inNode: node) ?? "<unknown>"
         XCTAssertEqual(type, "Int")
         XCTAssertFalse(isStringType(type))
         XCTAssertEqual(attributeIsString(prop, inNode: node), false)
     }
 
-    func testBuiltinAttributeType() {
+    func testBuiltinAttributeType() throws {
         let cls = "UILabel"
         let prop = "template"
-        let node = try! parseXML("<\(cls) \(prop)=\"\"/>")[0]
+        let node = try parseXML("<\(cls) \(prop)=\"\"/>")[0]
         let type = typeOfAttribute(prop, inNode: node) ?? "<unknown>"
         XCTAssertEqual(type, "URL")
         XCTAssertTrue(isStringType(type))
@@ -106,37 +106,37 @@ final class ValidationTests: XCTestCase {
 
     // MARK: Unknown node properties
 
-    func testUIViewPropertyOfUnknownNode() {
+    func testUIViewPropertyOfUnknownNode() throws {
         let cls = "Foo"
         let prop = "contentMode"
-        let node = try! parseXML("<\(cls) \(prop)=\"\"/>")[0]
+        let node = try parseXML("<\(cls) \(prop)=\"\"/>")[0]
         let type = typeOfAttribute(prop, inNode: node)
         XCTAssertEqual(type, "UIViewContentMode")
         XCTAssertEqual(attributeIsString(prop, inNode: node), false)
     }
 
-    func testUIViewControllerPropertyOfUnknownNode() {
+    func testUIViewControllerPropertyOfUnknownNode() throws {
         let cls = "Foo"
         let prop = "tabBarItem.systemItem"
-        let node = try! parseXML("<\(cls) \(prop)=\"\"/>")[0]
+        let node = try parseXML("<\(cls) \(prop)=\"\"/>")[0]
         let type = typeOfAttribute(prop, inNode: node)
         XCTAssertNil(type)
         XCTAssertNil(attributeIsString(prop, inNode: node))
     }
 
-    func testUIViewPropertyOfUnknownControllerNode() {
+    func testUIViewPropertyOfUnknownControllerNode() throws {
         let cls = "FooController"
         let prop = "contentMode"
-        let node = try! parseXML("<\(cls) \(prop)=\"\"/>")[0]
+        let node = try parseXML("<\(cls) \(prop)=\"\"/>")[0]
         let type = typeOfAttribute(prop, inNode: node)
         XCTAssertEqual(type, "UIViewContentMode")
         XCTAssertEqual(attributeIsString(prop, inNode: node), false)
     }
 
-    func testUIViewControllerPropertyOfUnknownControllerNode() {
+    func testUIViewControllerPropertyOfUnknownControllerNode() throws {
         let cls = "FooController"
         let prop = "tabBarItem.systemItem"
-        let node = try! parseXML("<\(cls) \(prop)=\"\"/>")[0]
+        let node = try parseXML("<\(cls) \(prop)=\"\"/>")[0]
         let type = typeOfAttribute(prop, inNode: node)
         XCTAssertEqual(type, "UITabBarSystemItem")
         XCTAssertEqual(attributeIsString(prop, inNode: node), false)

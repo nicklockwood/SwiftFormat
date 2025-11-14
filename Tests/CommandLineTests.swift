@@ -646,192 +646,6 @@ final class CommandLineTests: XCTestCase {
         }
     }
 
-    // MARK: reporter
-
-    func testJSONReporterEndToEnd() throws {
-        try withTmpFiles([
-            "foo.swift": "func foo() {\n}\n",
-        ]) { url in
-            CLI.print = { message, type in
-                switch type {
-                case .raw:
-                    XCTAssert(message.contains("\"rule_id\" : \"emptyBraces\""))
-                case .error, .warning:
-                    break
-                case .info, .success:
-                    break
-                case .content:
-                    XCTFail()
-                }
-            }
-            _ = processArguments([
-                "",
-                "--lint",
-                "--reporter",
-                "json",
-                url.path,
-            ], in: "")
-        }
-    }
-
-    func testJSONReporterInferredFromURL() throws {
-        let outputURL = try createTmpFile("report.json", contents: "")
-        try withTmpFiles([
-            "foo.swift": "func foo() {\n}\n",
-        ]) { url in
-            CLI.print = { _, _ in }
-            _ = processArguments([
-                "",
-                "--lint",
-                "--report",
-                outputURL.path,
-                url.path,
-            ], in: "")
-        }
-        let output = try String(contentsOf: outputURL)
-        XCTAssert(output.contains("\"rule_id\" : \"emptyBraces\""))
-    }
-
-    func testGithubActionsLogReporterEndToEnd() throws {
-        try withTmpFiles([
-            "foo.swift": "func foo() {\n}\n",
-        ]) { url in
-            CLI.print = { message, type in
-                switch type {
-                case .raw:
-                    XCTAssert(message.hasPrefix("::warning file=foo.swift,line=1::"))
-                case .error, .warning:
-                    break
-                case .info, .success:
-                    break
-                case .content:
-                    XCTFail()
-                }
-            }
-            _ = processArguments([
-                "",
-                "--lint",
-                "--reporter",
-                "github-actions-log",
-                url.path,
-            ],
-            environment: ["GITHUB_WORKSPACE": url.deletingLastPathComponent().path],
-            in: "")
-        }
-    }
-
-    func testGithubActionsLogReporterMisspelled() throws {
-        try withTmpFiles([
-            "foo.swift": "func foo() {\n}\n",
-        ]) { url in
-            CLI.print = { message, type in
-                switch type {
-                case .raw, .warning, .info:
-                    break
-                case .error:
-                    XCTAssert(message.contains("Did you mean 'github-actions-log'?"))
-                case .content, .success:
-                    XCTFail()
-                }
-            }
-            _ = processArguments([
-                "",
-                "--lint",
-                "--reporter",
-                "github-action-log",
-                url.path,
-            ], in: "")
-        }
-    }
-
-    func testXMLReporterEndToEnd() throws {
-        try withTmpFiles([
-            "foo.swift": "func foo() {\n}\n",
-        ]) { url in
-            CLI.print = { message, type in
-                switch type {
-                case .raw:
-                    XCTAssert(message.contains("<error line=\"1\" column=\"0\" severity=\"warning\""))
-                case .error, .warning:
-                    break
-                case .info, .success:
-                    break
-                case .content:
-                    XCTFail()
-                }
-            }
-            _ = processArguments([
-                "",
-                "--lint",
-                "--reporter",
-                "xml",
-                url.path,
-            ], in: "")
-        }
-    }
-
-    func testXMLReporterInferredFromURL() throws {
-        let outputURL = try createTmpFile("report.xml", contents: "")
-        try withTmpFiles([
-            "foo.swift": "func foo() {\n}\n",
-        ]) { url in
-            CLI.print = { _, _ in }
-            _ = processArguments([
-                "",
-                "--lint",
-                "--report",
-                outputURL.path,
-                url.path,
-            ], in: "")
-        }
-        let output = try String(contentsOf: outputURL)
-        XCTAssert(output.contains("<error line=\"1\" column=\"0\" severity=\"warning\""))
-    }
-
-    func testSARIFReporterEndToEnd() throws {
-        try withTmpFiles([
-            "foo.swift": "func foo() {\n}\n",
-        ]) { url in
-            CLI.print = { message, type in
-                switch type {
-                case .raw:
-                    XCTAssert(message.contains("\"ruleId\" : \"emptyBraces\""))
-                case .error, .warning:
-                    break
-                case .info, .success:
-                    break
-                case .content:
-                    XCTFail()
-                }
-            }
-            _ = processArguments([
-                "",
-                "--lint",
-                "--reporter",
-                "sarif",
-                url.path,
-            ], in: "")
-        }
-    }
-
-    func testSARIFReporterInferredFromURL() throws {
-        let outputURL = try createTmpFile("report.sarif", contents: "")
-        try withTmpFiles([
-            "foo.swift": "func foo() {\n}\n",
-        ]) { url in
-            CLI.print = { _, _ in }
-            _ = processArguments([
-                "",
-                "--lint",
-                "--report",
-                outputURL.path,
-                url.path,
-            ], in: "")
-        }
-        let output = try String(contentsOf: outputURL)
-        XCTAssert(output.contains("\"ruleId\" : \"emptyBraces\""))
-    }
-
     func testLintCommandOutputsOrganizeDeclarationOrderingViolations() {
         var output: [String] = []
         CLI.print = { message, _ in
@@ -868,257 +682,6 @@ final class CommandLineTests: XCTestCase {
             ":5:1: error: (organizeDeclarations) Organize declarations within class, struct, enum, actor, and extension bodies.",
             "Source input did not pass lint check.",
         ])
-    }
-
-    func testFormatMarkdownFile() throws {
-        CLI.print = { message, type in
-            if type == .error {
-                XCTFail(message)
-            }
-        }
-
-        try withTmpFiles([
-            "README.md": """
-            # Sample README
-
-            This is a nice project with lots of cool APIs to know about, including:
-
-            ```swift
-            func foo(
-            bar: Bar,
-            baaz: Baaz
-            ) -> Foo { ... }
-            ```
-
-              ```swift --indent 2
-              func foo(
-              bar: Bar,
-              baaz: Baaz
-              ) -> Foo { ... }
-              ```
-
-            ```swift --disable indent
-            print( "foo" )
-              print( "bar" )
-                print( "baaz" )
-            ```
-
-            ```swift --disable spaceInsideParens
-            print( "foo" )
-              print( "bar" )
-                print( "baaz" )
-            ```
-
-            ```swift --enable organizeDeclarations
-            class Foo {
-                init() {}
-                func bar() {}
-            }
-            ```
-
-            ```swift
-            --markdownfiles format-lenient ignores blocks that can't be parsed:
-            print("Foo
-            ```
-
-            Thanks for reading!
-            """,
-        ]) { url in
-            _ = processArguments([
-                "",
-                url.path,
-                "--markdownfiles", "format-lenient",
-                "--rules", "indent",
-                "--rules", "braces",
-                "--rules", "spaceInsideParens",
-                "--rules", "linebreakAtEndOfFile",
-            ], in: "")
-
-            let updatedReadme = try String(contentsOf: url, encoding: .utf8)
-
-            // The Swift code blocks should be indented correctly:
-            XCTAssertEqual(updatedReadme, """
-            # Sample README
-
-            This is a nice project with lots of cool APIs to know about, including:
-
-            ```swift
-            func foo(
-                bar: Bar,
-                baaz: Baaz
-            ) -> Foo { ... }
-            ```
-
-              ```swift --indent 2
-              func foo(
-                bar: Bar,
-                baaz: Baaz
-              ) -> Foo { ... }
-              ```
-
-            ```swift --disable indent
-            print("foo")
-              print("bar")
-                print("baaz")
-            ```
-
-            ```swift --disable spaceInsideParens
-            print( "foo" )
-            print( "bar" )
-            print( "baaz" )
-            ```
-
-            ```swift --enable organizeDeclarations
-            class Foo {
-
-                // MARK: Lifecycle
-
-                init() {}
-
-                // MARK: Internal
-
-                func bar() {}
-            }
-            ```
-
-            ```swift
-            --markdownfiles format-lenient ignores blocks that can't be parsed:
-            print("Foo
-            ```
-
-            Thanks for reading!
-            """)
-        }
-    }
-
-    func testStrictMarkdownFormatting() throws {
-        var errors = [String]()
-
-        CLI.print = { message, type in
-            if type == .error {
-                errors.append(message)
-            }
-        }
-
-        try withTmpFiles([
-            "README.md": """
-            # Sample README
-
-            This is a nice project with lots of cool APIs to know about, including:
-
-            ```swift
-            --markdownfiles format-strict fails if there are parsing errors:
-            print("Foo
-            ```
-
-            ```swift no-format
-            This block is ignored
-            print("Foo
-            ```
-
-            Thanks for reading!
-            """,
-        ]) { url in
-            _ = processArguments([
-                "",
-                url.path,
-                "--markdownfiles", "format-strict",
-                "--rules", "indent",
-            ], in: "")
-        }
-
-        XCTAssertEqual(errors.count, 1)
-        XCTAssert(errors[0].contains("Unexpected end of file at 7:11"))
-    }
-
-    func testDoesntFormatSwiftBlockInDiffBlock() throws {
-        var errors = [String]()
-
-        CLI.print = { message, type in
-            if type == .error {
-                errors.append(message)
-            }
-        }
-
-        try withTmpFiles([
-            "README.md": """
-            ````diff
-              ```swift
-            - func    foo(   ) {    }
-            + func foo() {    }
-              ```
-            ````
-
-            ```swift
-            func    foo(   ) {    }
-            ```
-
-            ```swift
-            ```
-            """,
-        ]) { url in
-            _ = processArguments([
-                "",
-                url.path,
-                "--markdownfiles", "format-strict",
-                "--rules", "consecutiveSpaces",
-                "--rules", "spaceInsideBrackets",
-                "--rules", "spaceInsideParens",
-            ], in: "")
-
-            let updatedReadme = try String(contentsOf: url, encoding: .utf8)
-            XCTAssertEqual(updatedReadme, """
-            ````diff
-              ```swift
-            - func    foo(   ) {    }
-            + func foo() {    }
-              ```
-            ````
-
-            ```swift
-            func foo() { }
-            ```
-
-            ```swift
-            ```
-            """)
-        }
-
-        XCTAssertEqual(errors, [])
-    }
-
-    func testUnbalancedCodeBlockTokens() throws {
-        var errors = [String]()
-
-        CLI.print = { message, type in
-            if type == .error {
-                errors.append(message)
-            }
-        }
-
-        try withTmpFiles([
-            "README.md": """
-            # Sample README
-
-            This markdown file has unbalanced code block tokens:
-
-            ```swift
-            print("Hello, world!")
-            // Missing closing ```
-
-            This should cause an error in strict mode.
-            """,
-        ]) { url in
-            _ = processArguments([
-                "",
-                url.path,
-                "--markdownfiles", "format-strict",
-                "--rules", "indent",
-            ], in: "")
-        }
-
-        XCTAssertEqual(errors.count, 1)
-        XCTAssert(errors[0].contains("Unbalanced code block delimiters in markdown"))
     }
 
     func testTrailingCommasCollectionsOnlyDoesNotTriggerDeprecationWarning_issue_2141() throws {
@@ -1511,5 +1074,474 @@ final class CommandLineTests: XCTestCase {
         }
 
         XCTAssertEqual(errors, [])
+    }
+
+    // MARK: Markdown
+
+    func testFormatMarkdownFile() throws {
+        CLI.print = { message, type in
+            if type == .error {
+                XCTFail(message)
+            }
+        }
+
+        try withTmpFiles([
+            "README.md": """
+            # Sample README
+
+            This is a nice project with lots of cool APIs to know about, including:
+
+            ```swift
+            func foo(
+            bar: Bar,
+            baaz: Baaz
+            ) -> Foo { ... }
+            ```
+
+              ```swift --indent 2
+              func foo(
+              bar: Bar,
+              baaz: Baaz
+              ) -> Foo { ... }
+              ```
+
+            ```swift --disable indent
+            print( "foo" )
+              print( "bar" )
+                print( "baaz" )
+            ```
+
+            ```swift --disable spaceInsideParens
+            print( "foo" )
+              print( "bar" )
+                print( "baaz" )
+            ```
+
+            ```swift --enable organizeDeclarations
+            class Foo {
+                init() {}
+                func bar() {}
+            }
+            ```
+
+            ```swift
+            --markdownfiles format-lenient ignores blocks that can't be parsed:
+            print("Foo
+            ```
+
+            Thanks for reading!
+            """,
+        ]) { url in
+            _ = processArguments([
+                "",
+                url.path,
+                "--markdownfiles", "format-lenient",
+                "--rules", "indent",
+                "--rules", "braces",
+                "--rules", "spaceInsideParens",
+                "--rules", "linebreakAtEndOfFile",
+            ], in: "")
+
+            let updatedReadme = try String(contentsOf: url, encoding: .utf8)
+
+            // The Swift code blocks should be indented correctly:
+            XCTAssertEqual(updatedReadme, """
+            # Sample README
+
+            This is a nice project with lots of cool APIs to know about, including:
+
+            ```swift
+            func foo(
+                bar: Bar,
+                baaz: Baaz
+            ) -> Foo { ... }
+            ```
+
+              ```swift --indent 2
+              func foo(
+                bar: Bar,
+                baaz: Baaz
+              ) -> Foo { ... }
+              ```
+
+            ```swift --disable indent
+            print("foo")
+              print("bar")
+                print("baaz")
+            ```
+
+            ```swift --disable spaceInsideParens
+            print( "foo" )
+            print( "bar" )
+            print( "baaz" )
+            ```
+
+            ```swift --enable organizeDeclarations
+            class Foo {
+
+                // MARK: Lifecycle
+
+                init() {}
+
+                // MARK: Internal
+
+                func bar() {}
+            }
+            ```
+
+            ```swift
+            --markdownfiles format-lenient ignores blocks that can't be parsed:
+            print("Foo
+            ```
+
+            Thanks for reading!
+            """)
+        }
+    }
+
+    func testStrictMarkdownFormatting() throws {
+        var errors = [String]()
+
+        CLI.print = { message, type in
+            if type == .error {
+                errors.append(message)
+            }
+        }
+
+        try withTmpFiles([
+            "README.md": """
+            # Sample README
+
+            This is a nice project with lots of cool APIs to know about, including:
+
+            ```swift
+            --markdownfiles format-strict fails if there are parsing errors:
+            print("Foo
+            ```
+
+            ```swift no-format
+            This block is ignored
+            print("Foo
+            ```
+
+            Thanks for reading!
+            """,
+        ]) { url in
+            _ = processArguments([
+                "",
+                url.path,
+                "--markdownfiles", "format-strict",
+                "--rules", "indent",
+            ], in: "")
+        }
+
+        XCTAssertEqual(errors.count, 1)
+        XCTAssert(errors[0].contains("Unexpected end of file at 7:11"))
+    }
+
+    func testDoesntFormatSwiftBlockInDiffBlock() throws {
+        var errors = [String]()
+
+        CLI.print = { message, type in
+            if type == .error {
+                errors.append(message)
+            }
+        }
+
+        try withTmpFiles([
+            "README.md": """
+            ````diff
+              ```swift
+            - func    foo(   ) {    }
+            + func foo() {    }
+              ```
+            ````
+
+            ```swift
+            func    foo(   ) {    }
+            ```
+
+            ```swift
+            ```
+            """,
+        ]) { url in
+            _ = processArguments([
+                "",
+                url.path,
+                "--markdownfiles", "format-strict",
+                "--rules", "consecutiveSpaces",
+                "--rules", "spaceInsideBrackets",
+                "--rules", "spaceInsideParens",
+            ], in: "")
+
+            let updatedReadme = try String(contentsOf: url, encoding: .utf8)
+            XCTAssertEqual(updatedReadme, """
+            ````diff
+              ```swift
+            - func    foo(   ) {    }
+            + func foo() {    }
+              ```
+            ````
+
+            ```swift
+            func foo() { }
+            ```
+
+            ```swift
+            ```
+            """)
+        }
+
+        XCTAssertEqual(errors, [])
+    }
+
+    func testUnbalancedCodeBlockTokens() throws {
+        var errors = [String]()
+
+        CLI.print = { message, type in
+            if type == .error {
+                errors.append(message)
+            }
+        }
+
+        try withTmpFiles([
+            "README.md": """
+            # Sample README
+
+            This markdown file has unbalanced code block tokens:
+
+            ```swift
+            print("Hello, world!")
+            // Missing closing ```
+
+            This should cause an error in strict mode.
+            """,
+        ]) { url in
+            _ = processArguments([
+                "",
+                url.path,
+                "--markdownfiles", "format-strict",
+                "--rules", "indent",
+            ], in: "")
+        }
+
+        XCTAssertEqual(errors.count, 1)
+        XCTAssert(errors[0].contains("Unbalanced code block delimiters in markdown"))
+    }
+
+    // MARK: Reporters
+
+    func testWrite() throws {
+        let reporter = GithubActionsLogReporter(environment: ["GITHUB_WORKSPACE": "/bar"])
+        let rule = FormatRule.consecutiveSpaces
+        reporter.report([
+            .init(line: 1, rule: rule, filePath: "/bar/foo.swift", isMove: false),
+            .init(line: 2, rule: rule, filePath: "/bar/foo.swift", isMove: false),
+        ])
+        let expectedOutput = """
+        ::warning file=foo.swift,line=1::\(rule.help) (\(rule.name))
+        ::warning file=foo.swift,line=2::\(rule.help) (\(rule.name))
+
+        """
+        let output = try XCTUnwrap(reporter.write())
+        let outputString = String(decoding: output, as: UTF8.self)
+        XCTAssertEqual(outputString, expectedOutput)
+    }
+
+    func testJSONReporterEndToEnd() throws {
+        try withTmpFiles([
+            "foo.swift": "func foo() {\n}\n",
+        ]) { url in
+            CLI.print = { message, type in
+                switch type {
+                case .raw:
+                    XCTAssert(message.contains("\"rule_id\" : \"emptyBraces\""))
+                case .error, .warning:
+                    break
+                case .info, .success:
+                    break
+                case .content:
+                    XCTFail()
+                }
+            }
+            _ = processArguments([
+                "",
+                "--lint",
+                "--reporter",
+                "json",
+                url.path,
+            ], in: "")
+        }
+    }
+
+    func testJSONReporterInferredFromURL() throws {
+        let outputURL = try createTmpFile("report.json", contents: "")
+        try withTmpFiles([
+            "foo.swift": "func foo() {\n}\n",
+        ]) { url in
+            CLI.print = { _, _ in }
+            _ = processArguments([
+                "",
+                "--lint",
+                "--report",
+                outputURL.path,
+                url.path,
+            ], in: "")
+        }
+        let output = try String(contentsOf: outputURL)
+        XCTAssert(output.contains("\"rule_id\" : \"emptyBraces\""))
+    }
+
+    func testGithubActionsLogReporterEndToEnd() throws {
+        try withTmpFiles([
+            "foo.swift": "func foo() {\n}\n",
+        ]) { url in
+            CLI.print = { message, type in
+                switch type {
+                case .raw:
+                    XCTAssert(message.hasPrefix("::warning file=foo.swift,line=1::"))
+                case .error, .warning:
+                    break
+                case .info, .success:
+                    break
+                case .content:
+                    XCTFail()
+                }
+            }
+            _ = processArguments([
+                "",
+                "--lint",
+                "--reporter",
+                "github-actions-log",
+                url.path,
+            ],
+            environment: ["GITHUB_WORKSPACE": url.deletingLastPathComponent().path],
+            in: "")
+        }
+    }
+
+    func testGithubActionsLogReporterMisspelled() throws {
+        try withTmpFiles([
+            "foo.swift": "func foo() {\n}\n",
+        ]) { url in
+            CLI.print = { message, type in
+                switch type {
+                case .raw, .warning, .info:
+                    break
+                case .error:
+                    XCTAssert(message.contains("Did you mean 'github-actions-log'?"))
+                case .content, .success:
+                    XCTFail()
+                }
+            }
+            _ = processArguments([
+                "",
+                "--lint",
+                "--reporter",
+                "github-action-log",
+                url.path,
+            ], in: "")
+        }
+    }
+
+    func testXMLReporterEndToEnd() throws {
+        try withTmpFiles([
+            "foo.swift": "func foo() {\n}\n",
+        ]) { url in
+            CLI.print = { message, type in
+                switch type {
+                case .raw:
+                    XCTAssert(message.contains("<error line=\"1\" column=\"0\" severity=\"warning\""))
+                case .error, .warning:
+                    break
+                case .info, .success:
+                    break
+                case .content:
+                    XCTFail()
+                }
+            }
+            _ = processArguments([
+                "",
+                "--lint",
+                "--reporter",
+                "xml",
+                url.path,
+            ], in: "")
+        }
+    }
+
+    func testXMLReporterInferredFromURL() throws {
+        let outputURL = try createTmpFile("report.xml", contents: "")
+        try withTmpFiles([
+            "foo.swift": "func foo() {\n}\n",
+        ]) { url in
+            CLI.print = { _, _ in }
+            _ = processArguments([
+                "",
+                "--lint",
+                "--report",
+                outputURL.path,
+                url.path,
+            ], in: "")
+        }
+        let output = try String(contentsOf: outputURL)
+        XCTAssert(output.contains("<error line=\"1\" column=\"0\" severity=\"warning\""))
+    }
+
+    func testSARIFReporterEndToEnd() throws {
+        try withTmpFiles([
+            "foo.swift": "func foo() {\n}\n",
+        ]) { url in
+            CLI.print = { message, type in
+                switch type {
+                case .raw:
+                    XCTAssert(message.contains("\"ruleId\" : \"emptyBraces\""))
+                case .error, .warning:
+                    break
+                case .info, .success:
+                    break
+                case .content:
+                    XCTFail()
+                }
+            }
+            _ = processArguments([
+                "",
+                "--lint",
+                "--reporter",
+                "sarif",
+                url.path,
+            ], in: "")
+        }
+    }
+
+    func testSARIFReporterInferredFromURL() throws {
+        let outputURL = try createTmpFile("report.sarif", contents: "")
+        try withTmpFiles([
+            "foo.swift": "func foo() {\n}\n",
+        ]) { url in
+            CLI.print = { _, _ in }
+            _ = processArguments([
+                "",
+                "--lint",
+                "--report",
+                outputURL.path,
+                url.path,
+            ], in: "")
+        }
+        let output = try String(contentsOf: outputURL)
+        XCTAssert(output.contains("\"ruleId\" : \"emptyBraces\""))
+    }
+
+    // MARK: Rule info
+
+    func testRuleInfo() {
+        CLI.print = { _, _ in }
+        for rule in FormatRules.all {
+            do {
+                try printRuleInfo(for: rule.name, as: .content)
+            } catch {
+                XCTFail("RuleInfo for \(rule.name) threw error: \(error)")
+            }
+        }
     }
 }

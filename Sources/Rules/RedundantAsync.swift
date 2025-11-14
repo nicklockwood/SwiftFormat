@@ -11,7 +11,6 @@ import Foundation
 public extension FormatRule {
     static let redundantAsync = FormatRule(
         help: "Remove redundant `async` keyword from function declarations that don't contain any await expressions.",
-        disabledByDefault: true,
         options: ["redundant-async"]
     ) { formatter in
         let testFramework = formatter.detectTestingFramework()
@@ -35,7 +34,7 @@ public extension FormatRule {
             if formatter.options.redundantAsync == .testsOnly {
                 // Only process test functions
                 guard keyword == "func", let testFramework,
-                      formatter.isTestFunction(at: keywordIndex, in: functionDecl, for: testFramework)
+                      formatter.isTestCase(at: keywordIndex, in: functionDecl, for: testFramework)
                 else { return }
             }
 

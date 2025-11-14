@@ -37,16 +37,8 @@
 
 # rules
 
---enable unusedPrivateDeclarations
---enable emptyExtensions
 --enable isEmpty
---enable docComments
-# --enable noForceTryInTests
+# --enable docComments
 # --enable noForceUnwrapInTests
 # --enable noGuardInTests
 --enable preferFinalClasses
---enable redundantAsync
---enable redundantEquatable
---enable redundantMemberwiseInit
---enable redundantProperty
---enable redundantThrows

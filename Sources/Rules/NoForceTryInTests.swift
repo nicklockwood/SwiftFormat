@@ -5,8 +5,7 @@ import Foundation
 
 public extension FormatRule {
     static let noForceTryInTests = FormatRule(
-        help: "Write tests that use `throws` instead of using `try!`.",
-        disabledByDefault: true
+        help: "Write tests that use `throws` instead of using `try!`."
     ) { formatter in
         guard let testFramework = formatter.detectTestingFramework() else {
             return
@@ -14,7 +13,7 @@ public extension FormatRule {
 
         formatter.forEach(.keyword("func")) { funcKeywordIndex, _ in
             guard let functionDecl = formatter.parseFunctionDeclaration(keywordIndex: funcKeywordIndex),
-                  formatter.isTestFunction(at: funcKeywordIndex, in: functionDecl, for: testFramework),
+                  formatter.isTestCase(at: funcKeywordIndex, in: functionDecl, for: testFramework),
                   let bodyRange = functionDecl.bodyRange
             else { return }
 

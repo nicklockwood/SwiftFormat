@@ -1907,6 +1907,16 @@ extension Formatter {
 
     /// Parses the declarations in the given range.
     func parseDeclarations(in range: Range<Int>) -> [Declaration] {
+        parseDeclarations(in: range, _useForEachToken: true)
+    }
+
+    /// Parses the declarations in the given range.
+    ///
+    /// Uses `forEachToken` to iterate through the tokens in the given range.
+    /// This enables declarations to read the `isEnabled` state from comment directives.
+    /// This can be disabled with `_useForEachToken: false` to avoid reentrancy if you
+    /// need to call `parseDeclarations` from within an existing `forEachToken` call.
+    private func parseDeclarations(in range: Range<Int>, _useForEachToken: Bool) -> [Declaration] {
         // A temporary declaration value. We can't create a `DeclarationV2` directly
         // within the `forEachToken` call, since `forEachToken` doesn't support reentrancy.
         struct _Declaration {
@@ -1919,7 +1929,7 @@ extension Formatter {
         var startOfDeclaration = range.lowerBound
         let startOfScopeAtDeclaration = startOfScope(at: startOfDeclaration)
 
-        forEachToken(onlyWhereEnabled: false) { index, token in
+        let handleIndex = { [self] (index: Int, token: Token) in
             guard range.contains(index),
                   index >= startOfDeclaration,
                   token.isDeclarationTypeKeyword || token == .startOfScope("#if"),
@@ -1930,7 +1940,7 @@ extension Formatter {
 
             let keywordIndex = index
             let declarationKeyword = declarationType(at: keywordIndex) ?? "#if"
-            let endOfDeclaration = self._endOfDeclarationInTypeBody(atDeclarationKeyword: keywordIndex)
+            let endOfDeclaration = _endOfDeclarationInTypeBody(atDeclarationKeyword: keywordIndex)
 
             let declarationRange = startOfDeclaration ... min(endOfDeclaration ?? .max, range.upperBound - 1)
             startOfDeclaration = declarationRange.upperBound + 1
@@ -1944,6 +1954,16 @@ extension Formatter {
                     keywordIndex: keywordIndex,
                     range: declarationRange
                 ))
+            }
+        }
+
+        if _useForEachToken {
+            forEachToken(onlyWhereEnabled: false) { index, token in
+                handleIndex(index, token)
+            }
+        } else {
+            for (index, token) in tokens.enumerated() {
+                handleIndex(index, token)
             }
         }
 
@@ -2084,7 +2104,7 @@ extension Formatter {
         }
 
         // Prefer keeping linebreaks at the end of a declaration's tokens,
-        // instead of the start of the next delaration's tokens.
+        // instead of the start of the next declaration's tokens.
         //  - This includes any spaces on blank lines, but doesn't include the
         //    indentation associated with the next declaration.
         while let linebreakSearchIndex = endOfDeclaration,
@@ -2101,6 +2121,30 @@ extension Formatter {
         }
 
         return endOfDeclaration
+    }
+
+    /// Parses the inner-most type that contains the given index.
+    func parseEnclosingType(containing index: Int) -> TypeDeclaration? {
+        guard let startOfScope = startOfScope(at: index) else { return nil }
+
+        if let typeKeyword = indexOfLastSignificantKeyword(at: startOfScope, excluding: ["where"]),
+           Token.swiftTypeKeywords.contains(tokens[typeKeyword].string),
+           let bodyOpenBrace = self.index(of: .startOfScope("{"), after: typeKeyword),
+           let endOfScope = endOfScope(at: bodyOpenBrace)
+        {
+            // When parsing the body, use `_useForEachToken: false` to enable
+            // `parseEnclosingType` to be called from within `forEachToken` loops.
+            return TypeDeclaration(
+                keyword: tokens[typeKeyword].string,
+                range: startOfModifiers(at: typeKeyword, includingAttributes: true) ... endOfScope,
+                body: parseDeclarations(in: (bodyOpenBrace + 1) ..< endOfScope, _useForEachToken: false),
+                formatter: self
+            )
+        }
+
+        else {
+            return parseEnclosingType(containing: startOfScope)
+        }
     }
 
     /// Whether or not the body within this scope is a single expression
@@ -2406,13 +2450,173 @@ extension Formatter {
 
     /// Detects which testing framework is being used in the file
     func detectTestingFramework() -> TestingFramework? {
-        if hasImport("Testing") {
+        let hasTestingImport = hasImport("Testing")
+        let hasXCTestImport = hasImport("XCTest")
+
+        // If both frameworks are imported, return nil (ambiguous)
+        if hasTestingImport, hasXCTestImport {
+            return nil
+        }
+
+        if hasTestingImport {
             return .swiftTesting
-        } else if hasImport("XCTest") {
+        } else if hasXCTestImport {
             return .xcTest
         } else {
             return nil
         }
+    }
+
+    /// Is this a test function?
+    func isTestCase(
+        at funcKeywordIndex: Int,
+        in functionDecl: FunctionDeclaration,
+        for testingFramework: TestingFramework
+    ) -> Bool {
+        assert(token(at: funcKeywordIndex) == .keyword("func"))
+        switch testingFramework {
+        case .xcTest:
+            guard functionDecl.name?.starts(with: "test") == true,
+                  functionDecl.returnType == nil,
+                  functionDecl.arguments.isEmpty
+            else {
+                return false
+            }
+            return true
+        case .swiftTesting:
+            return modifiersForDeclaration(at: funcKeywordIndex, contains: "@Test")
+        }
+    }
+
+    /// Checks if a function name has a disabled test prefix.
+    /// Matches patterns like: disable_foo, disableTestFoo, disabled_test_foo, x_test, XtestFoo, _test, etc.
+    func hasDisabledPrefix(_ name: String) -> Bool {
+        // Functions starting with underscore are considered disabled
+        guard !name.hasPrefix("_") else { return true }
+
+        let disabledTestPrefixBases = ["disable", "disabled", "skip", "skipped", "x"]
+        let lowercasedName = name.lowercased()
+        return disabledTestPrefixBases.contains {
+            lowercasedName.hasPrefix($0 + "_") || lowercasedName.hasPrefix($0 + "test")
+        }
+    }
+
+    /// Determines if a type declaration is likely a simple test case suite.
+    func isSimpleTestSuite(_ typeDecl: TypeDeclaration, for testFramework: TestingFramework) -> Bool {
+        guard let name = typeDecl.name else { return false }
+
+        // Don't apply to classes likely to be subclassed, since these are unsafe to modify.
+        if isLikelyToBeSubclassed(typeDecl) {
+            return false
+        }
+
+        // Don't apply to types with parameterized initializers (not test suites)
+        let hasParameterizedInit = typeDecl.body.contains {
+            $0.keyword == "init" &&
+                parseFunctionDeclaration(keywordIndex: $0.keywordIndex)?.arguments.isEmpty == false
+        }
+        if hasParameterizedInit {
+            return false
+        }
+
+        // Valid test suffixes for identifying test types
+        let testSuffixes = ["Test", "Tests", "TestCase", "TestCases", "Suite"]
+
+        // Checks if a type has at least one function that looks like a test (no arguments, no return type).
+        lazy var hasTestLikeFunction = {
+            for member in typeDecl.body where member.keyword == "func" {
+                guard let functionDecl = parseFunctionDeclaration(keywordIndex: member.keywordIndex) else {
+                    continue
+                }
+
+                // Check if it has test-like signature (no args, no return type)
+                if functionDecl.arguments.isEmpty, functionDecl.returnType == nil {
+                    return true
+                }
+            }
+            return false
+        }()
+
+        switch testFramework {
+        case .xcTest:
+            // For XCTest, only process classes (not structs)
+            guard typeDecl.keyword == "class" else { return false }
+
+            let conformsToXCTestCase = typeDecl.conformances.contains { $0.conformance.string == "XCTestCase" }
+            let hasTestSuffix = testSuffixes.contains { name.hasSuffix($0) }
+            let hasOtherConformances = typeDecl.conformances.contains { $0.conformance.string != "XCTestCase" }
+
+            // If it has conformances other than XCTestCase, skip it entirely
+            // (methods could be protocol requirements)
+            if hasOtherConformances {
+                return false
+            }
+
+            // If it conforms to XCTestCase only, include it
+            if conformsToXCTestCase {
+                return true
+            }
+
+            // If it has a test suffix and no conformances, check if it has test-like functions
+            if hasTestSuffix, typeDecl.conformances.isEmpty {
+                return hasTestLikeFunction
+            }
+
+            // Otherwise, exclude it
+            return false
+
+        case .swiftTesting:
+            // For Swift Testing, apply to classes/structs with specific test suffixes
+            // but only if they have test-like functions
+            if testSuffixes.contains(where: { name.hasSuffix($0) }) {
+                return hasTestLikeFunction
+            }
+            return false
+        }
+    }
+
+    /// Determines if a type is likely to be subclassed based on naming, documentation, and actual usage.
+    /// Returns true if the type should not be marked as final or treated as a regular class/struct.
+    func isLikelyToBeSubclassed(_ typeDecl: TypeDeclaration) -> Bool {
+        guard let name = typeDecl.name else { return false }
+
+        // Check if name contains "Base" (common convention for base classes)
+        if name.contains("Base") {
+            return true
+        }
+
+        // Check if doc comment mentions base class or subclassing
+        if let docCommentRange = typeDecl.docCommentRange {
+            let subclassRelatedTerms = ["base", "subclass"]
+            let docComment = tokens[docCommentRange].string.lowercased()
+            for term in subclassRelatedTerms {
+                if docComment.contains(term) {
+                    return true
+                }
+            }
+        }
+
+        // Check if this class is actually subclassed in the file
+        if typeDecl.keyword == "class" {
+            let declarations = parseDeclarations()
+            var isSubclassed = false
+            declarations.forEachRecursiveDeclaration { declaration in
+                guard declaration.keyword == "class" else { return }
+                let conformances = parseConformancesOfType(atKeywordIndex: declaration.keywordIndex)
+                for conformance in conformances {
+                    // Extract base class name from generic types like "Container<String>" -> "Container"
+                    let baseClassName = conformance.conformance.tokens.first?.string ?? conformance.conformance.string
+                    if baseClassName == name {
+                        isSubclassed = true
+                    }
+                }
+            }
+            if isSubclassed {
+                return true
+            }
+        }
+
+        return false
     }
 
     /// Adds imports for the given list of modules to this file if not already present
@@ -3280,27 +3484,6 @@ extension Formatter {
     /// token at the given index.
     func parseTupleArguments(startOfScope: Int) -> [FunctionCallArgument] {
         parseFunctionCallArguments(startOfScope: startOfScope)
-    }
-
-    /// Is this a test function?
-    func isTestFunction(
-        at funcKeywordIndex: Int,
-        in functionDecl: FunctionDeclaration,
-        for testingFramework: TestingFramework
-    ) -> Bool {
-        assert(token(at: funcKeywordIndex) == .keyword("func"))
-        switch testingFramework {
-        case .xcTest:
-            guard functionDecl.name?.starts(with: "test") == true,
-                  functionDecl.returnType == nil,
-                  functionDecl.arguments.isEmpty
-            else {
-                return false
-            }
-            return true
-        case .swiftTesting:
-            return modifiersForDeclaration(at: funcKeywordIndex, contains: "@Test")
-        }
     }
 
     /// Parses the list of conformances on this type, starting at

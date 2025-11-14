@@ -292,7 +292,7 @@ final class FontExpressionTests: XCTestCase {
         XCTAssertEqual(try (expression?.evaluate() as? UIFont)?.fontWeight, .heavy)
     }
 
-    func testBuiltInFontWeights() {
+    func testBuiltInFontWeights() throws {
         let node = LayoutNode()
         for familyName in UIFont.familyNames {
             for weightKey in RuntimeType.uiFont_Weight.values.keys {
@@ -301,7 +301,7 @@ final class FontExpressionTests: XCTestCase {
                     $0.lowercased().contains("-\(weightKey.lowercased())")
                 }
                 if !expected.isEmpty {
-                    let name = try! (expression!.evaluate() as! UIFont).fontName
+                    let name = try (expression!.evaluate() as! UIFont).fontName
                     XCTAssertTrue(expected.contains(name), "\(expected) does not contain \(name)")
                 }
             }

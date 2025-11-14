@@ -6,8 +6,7 @@ import Foundation
 public extension FormatRule {
     /// Removes types conforming `EnvironmentKey` and replaces them with the @Entry macro
     static let environmentEntry = FormatRule(
-        help: "Updates SwiftUI `EnvironmentValues` definitions to use the @Entry macro.",
-        disabledByDefault: true
+        help: "Updates SwiftUI `EnvironmentValues` definitions to use the @Entry macro."
     ) { formatter in
         // The @Entry macro is only available in Xcode 16 therefore this rule requires the same Xcode version to work.
         guard formatter.options.swiftVersion >= "6.0" else { return }

@@ -9,6 +9,7 @@
 * [blankLinesAtEndOfScope](#blankLinesAtEndOfScope)
 * [blankLinesAtStartOfScope](#blankLinesAtStartOfScope)
 * [blankLinesBetweenChainedFunctions](#blankLinesBetweenChainedFunctions)
+* [blankLinesBetweenImports](#blankLinesBetweenImports)
 * [blankLinesBetweenScopes](#blankLinesBetweenScopes)
 * [braces](#braces)
 * [conditionalAssignment](#conditionalAssignment)
@@ -19,7 +20,9 @@
 * [duplicateImports](#duplicateImports)
 * [elseOnSameLine](#elseOnSameLine)
 * [emptyBraces](#emptyBraces)
+* [emptyExtensions](#emptyExtensions)
 * [enumNamespaces](#enumNamespaces)
+* [environmentEntry](#environmentEntry)
 * [extensionAccessControl](#extensionAccessControl)
 * [fileHeader](#fileHeader)
 * [fileMacro](#fileMacro)
@@ -35,14 +38,17 @@
 * [linebreaks](#linebreaks)
 * [modifierOrder](#modifierOrder)
 * [modifiersOnSameLine](#modifiersOnSameLine)
+* [noForceTryInTests](#noForceTryInTests)
 * [numberFormatting](#numberFormatting)
 * [opaqueGenericParameters](#opaqueGenericParameters)
 * [preferCountWhere](#preferCountWhere)
 * [preferForLoop](#preferForLoop)
 * [preferKeyPath](#preferKeyPath)
+* [redundantAsync](#redundantAsync)
 * [redundantBackticks](#redundantBackticks)
 * [redundantBreak](#redundantBreak)
 * [redundantClosure](#redundantClosure)
+* [redundantEquatable](#redundantEquatable)
 * [redundantExtensionACL](#redundantExtensionACL)
 * [redundantFileprivate](#redundantFileprivate)
 * [redundantGet](#redundantGet)
@@ -50,20 +56,24 @@
 * [redundantInternal](#redundantInternal)
 * [redundantLet](#redundantLet)
 * [redundantLetError](#redundantLetError)
+* [redundantMemberwiseInit](#redundantMemberwiseInit)
 * [redundantNilInit](#redundantNilInit)
 * [redundantObjc](#redundantObjc)
 * [redundantOptionalBinding](#redundantOptionalBinding)
 * [redundantParens](#redundantParens)
 * [redundantPattern](#redundantPattern)
+* [redundantProperty](#redundantProperty)
 * [redundantPublic](#redundantPublic)
 * [redundantRawValues](#redundantRawValues)
 * [redundantReturn](#redundantReturn)
 * [redundantSelf](#redundantSelf)
 * [redundantStaticSelf](#redundantStaticSelf)
+* [redundantThrows](#redundantThrows)
 * [redundantType](#redundantType)
 * [redundantTypedThrows](#redundantTypedThrows)
 * [redundantVoidReturnType](#redundantVoidReturnType)
 * [semicolons](#semicolons)
+* [simplifyGenericConstraints](#simplifyGenericConstraints)
 * [sortDeclarations](#sortDeclarations)
 * [sortImports](#sortImports)
 * [sortTypealiases](#sortTypealiases)
@@ -87,6 +97,7 @@
 * [trailingSpace](#trailingSpace)
 * [typeSugar](#typeSugar)
 * [unusedArguments](#unusedArguments)
+* [unusedPrivateDeclarations](#unusedPrivateDeclarations)
 * [void](#void)
 * [wrap](#wrap)
 * [wrapArguments](#wrapArguments)
@@ -101,15 +112,11 @@
 * [acronyms](#acronyms)
 * [blankLineAfterSwitchCase](#blankLineAfterSwitchCase)
 * [blankLinesAfterGuardStatements](#blankLinesAfterGuardStatements)
-* [blankLinesBetweenImports](#blankLinesBetweenImports)
 * [blockComments](#blockComments)
 * [docComments](#docComments)
-* [emptyExtensions](#emptyExtensions)
-* [environmentEntry](#environmentEntry)
 * [isEmpty](#isEmpty)
 * [markTypes](#markTypes)
 * [noExplicitOwnership](#noExplicitOwnership)
-* [noForceTryInTests](#noForceTryInTests)
 * [noForceUnwrapInTests](#noForceUnwrapInTests)
 * [noGuardInTests](#noGuardInTests)
 * [organizeDeclarations](#organizeDeclarations)
@@ -117,15 +124,11 @@
 * [preferSwiftTesting](#preferSwiftTesting)
 * [privateStateVariables](#privateStateVariables)
 * [propertyTypes](#propertyTypes)
-* [redundantAsync](#redundantAsync)
-* [redundantEquatable](#redundantEquatable)
-* [redundantMemberwiseInit](#redundantMemberwiseInit)
-* [redundantProperty](#redundantProperty)
-* [redundantThrows](#redundantThrows)
 * [singlePropertyPerLine](#singlePropertyPerLine)
 * [sortSwitchCases](#sortSwitchCases)
-* [unusedPrivateDeclarations](#unusedPrivateDeclarations)
+* [testSuiteAccessControl](#testSuiteAccessControl)
 * [urlMacro](#urlMacro)
+* [validateTestCases](#validateTestCases)
 * [wrapConditionalBodies](#wrapConditionalBodies)
 * [wrapEnumCases](#wrapEnumCases)
 * [wrapMultilineConditionalAssignment](#wrapMultilineConditionalAssignment)
@@ -1005,7 +1008,7 @@ Option | Description
 
 ## emptyExtensions
 
-Remove empty, non-conforming, extensions.
+Remove empty, non-protocol-conforming extensions.
 
 <details>
 <summary>Examples</summary>
@@ -3062,6 +3065,33 @@ Option | Description
 </details>
 <br/>
 
+## simplifyGenericConstraints
+
+Use inline generic constraints (`<T: Foo>`) instead of where clauses
+(`<T> where T: Foo`) for simple protocol conformance constraints.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- struct Foo<T, U> where T: Hashable, U: Codable {}
++ struct Foo<T: Hashable, U: Codable> {}
+
+- class Bar<Element> where Element: Equatable {
++ class Bar<Element: Equatable> {
+      // ...
+  }
+
+- enum Result<Value, Error> where Value: Decodable, Error: Swift.Error {}
++ enum Result<Value: Decodable, Error: Swift.Error> {}
+
+- func process<T>(_ value: T) where T: Codable {}
++ func process<T: Codable>(_ value: T) {}
+```
+
+</details>
+<br/>
+
 ## singlePropertyPerLine
 
 Use a separate let/var declaration on its own line for every property definition.
@@ -3536,6 +3566,48 @@ In Swift Testing, don't prefix @Test methods with 'test'.
 </details>
 <br/>
 
+## testSuiteAccessControl
+
+Test methods should be internal, and other properties / functions in a test suite should be private.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  import XCTest
+
+  final class MyTests: XCTestCase {
+-     public func testExample() {
++     func testExample() {
+          XCTAssertTrue(true)
+      }
+
+-     func helperMethod() {
++     private func helperMethod() {
+          // helper code
+      }
+  }
+```
+
+```diff
+  import Testing
+
+  struct MyFeatureTests {
+-     @Test public func featureWorks() {
++     @Test func featureWorks() {
+          #expect(true)
+      }
+
+-     func helperMethod() {
++     private func helperMethod() {
+          // helper code
+      }
+  }
+```
+
+</details>
+<br/>
+
 ## throwingTests
 
 Write tests that use `throws` instead of using `try!`.
@@ -3695,10 +3767,15 @@ Prefer shorthand syntax for Arrays, Dictionaries and Optionals.
 
 Option | Description
 --- | ---
-`--short-optionals` | Prefer ? shorthand for optionals: "except-properties" (default) or "always"
+`--short-optionals` | Prefer ? shorthand for optionals: "preserve-struct-inits" (default) or "always"
 
 <details>
 <summary>Examples</summary>
+
+```diff
+- var foo: Optional<String>
++ var foo: String?
+```
 
 ```diff
 - var foo: Array<String>
@@ -3710,10 +3787,15 @@ Option | Description
 + var foo: [String: Int]
 ```
 
-```diff
-- var foo: Optional<(Int) -> Void>
-+ var foo: ((Int) -> Void)?
+By default, preserves `Optional` types that affect a struct's synthesized memberwise initializer:
+
+```swift
+struct Foo {
+    var bar: Optional<String>
+}
 ```
+
+With `var bar: Optional<String>`, `Foo`'s initializer is `init(bar: String?)`. If updated to `var bar String?`, `Foo`'s initializer would become `init(bar: String? = nil)`, which may be unexpected.
 
 </details>
 <br/>
@@ -3807,6 +3889,43 @@ With `--url-macro "#URL,URLFoundation"`:
 - return URL(string: "https://api.example.com/users")!
 + import URLFoundation
 + return #URL("https://api.example.com/users")
+```
+
+</details>
+<br/>
+
+## validateTestCases
+
+Ensure test case methods have the correct `test` prefix or `@Test` attribute.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  import XCTest
+
+  final class MyTests: XCTestCase {
+-     func myFeatureWorksCorrectly() {
++     func testMyFeatureWorksCorrectly() {
+          XCTAssertTrue(myFeature.worksCorrectly)
+      }
+  }
+```
+
+```diff
+  import Testing
+
+  struct MyFeatureTests {
+-     func testMyFeatureWorksCorrectly() {
++     @Test func myFeatureWorksCorrectly() {
+          #expect(myFeature.worksCorrectly)
+      }
+
+-     func myFeatureHasNoBugs() {
++     @Test func myFeatureHasNoBugs() {
+          #expect(myFeature.hasNoBugs)
+      }
+  }
 ```
 
 </details>

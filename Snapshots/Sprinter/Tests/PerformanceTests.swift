@@ -24,8 +24,8 @@ final class PerformanceTests: XCTestCase {
         }
     }
 
-    func testPrintSimpleFormatString() {
-        let formatString = try! FormatString(simpleFormat)
+    func testPrintSimpleFormatString() throws {
+        let formatString = try FormatString(simpleFormat)
         measure {
             for _ in 0 ..< iterations {
                 _ = try! formatString.print()
@@ -49,8 +49,8 @@ final class PerformanceTests: XCTestCase {
         }
     }
 
-    func testPrintComplexFormatString() {
-        let formatString = try! FormatString(complexFormat)
+    func testPrintComplexFormatString() throws {
+        let formatString = try FormatString(complexFormat)
         measure {
             for _ in 0 ..< iterations {
                 _ = try! formatString.print(

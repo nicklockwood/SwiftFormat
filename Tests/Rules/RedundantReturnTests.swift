@@ -406,7 +406,7 @@ final class RedundantReturnTests: XCTestCase {
         """
         let options = FormatOptions(swiftVersion: "5.1")
         testFormatting(for: input, output, rule: .redundantReturn,
-                       options: options)
+                       options: options, exclude: [.simplifyGenericConstraints])
     }
 
     func testRemoveRedundantReturnInSubscriptWithWhereClause() {
@@ -422,7 +422,7 @@ final class RedundantReturnTests: XCTestCase {
         """
         let options = FormatOptions(swiftVersion: "5.1")
         testFormatting(for: input, output, rule: .redundantReturn,
-                       options: options)
+                       options: options, exclude: [.simplifyGenericConstraints])
     }
 
     func testNoRemoveReturnFollowedByMoreCode() {

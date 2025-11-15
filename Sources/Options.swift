@@ -35,6 +35,7 @@ import Foundation
 public enum IndentMode: String, CaseIterable {
     case indent
     case noIndent = "no-indent"
+    case preserve
     case outdent
 
     public init?(rawValue: String) {
@@ -43,6 +44,8 @@ public enum IndentMode: String, CaseIterable {
             self = .indent
         case "no-indent", "noindent":
             self = .noIndent
+        case "preserve":
+            self = .preserve
         case "outdent":
             self = .outdent
         default:

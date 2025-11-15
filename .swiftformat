@@ -38,6 +38,5 @@
 # rules
 
 --enable isEmpty
-# --enable noForceUnwrapInTests
 # --enable noGuardInTests
 --enable preferFinalClasses

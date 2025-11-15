@@ -202,7 +202,7 @@ final class UIKitSymbols: XCTestCase {
         return result
     }
 
-    func testBuildLayoutToolSymbols() {
+    func testBuildLayoutToolSymbols() throws {
         if #available(iOS 11.0, *) {} else {
             XCTFail("Must be run with latest iOS SDK to ensure all symbols are supported")
             return
@@ -212,7 +212,7 @@ final class UIKitSymbols: XCTestCase {
         var output = ""
         let properties = getProperties()
         for name in properties.keys.sorted() {
-            let props = properties[name]!
+            let props = try XCTUnwrap(properties[name])
             var superclassName: String?
             if let cls = NSClassFromString(name), let superclass = class_getSuperclass(cls),
                superclass is UIView.Type || superclass is UIViewController.Type
@@ -228,7 +228,7 @@ final class UIKitSymbols: XCTestCase {
             } else {
                 output += "\n"
                 for prop in props.keys.sorted() {
-                    let type = props[prop]!
+                    let type = try XCTUnwrap(props[prop])
                     output += "        \"\(prop)\": \"\(type)\",\n"
                 }
                 output += "    ]\n"
@@ -257,7 +257,7 @@ final class UIKitSymbols: XCTestCase {
         XCTAssertNoThrow(try output.write(to: url, atomically: true, encoding: .utf8))
     }
 
-    func testBuildSublimeCompletions() {
+    func testBuildSublimeCompletions() throws {
         if #available(iOS 11.0, *) {} else {
             XCTFail("Must be run with latest iOS SDK to ensure all symbols are supported")
             return
@@ -275,10 +275,10 @@ final class UIKitSymbols: XCTestCase {
         }
         let properties = getProperties()
         for name in properties.keys.sorted() {
-            let props = properties[name]!
+            let props = try XCTUnwrap(properties[name])
             rows.append("{ \"trigger\": \"\(name)\", \"contents\": \"\(name) $0/>\" }")
             for prop in props.keys.sorted() {
-                let type = props[prop]!
+                let type = try XCTUnwrap(props[prop])
                 let row = "{ \"trigger\": \"\(prop)\t\(type)\", \"contents\": \"\(prop)\" }"
                 if !rows.contains(row) {
                     rows.append(row)

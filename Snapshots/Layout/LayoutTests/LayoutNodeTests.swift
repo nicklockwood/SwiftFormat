@@ -113,14 +113,14 @@ final class LayoutNodeTests: XCTestCase {
     // MARK: Invalid node errors
 
     func testUnknownClass() throws {
-        let layout = try Layout(xmlData: "<Foo/>".data(using: .utf8)!)
+        let layout = try Layout(xmlData: XCTUnwrap("<Foo/>".data(using: .utf8)))
         XCTAssertThrowsError(try LayoutNode(layout: layout)) { error in
             XCTAssert("\(error)".contains("Unknown class Foo"))
         }
     }
 
     func testInvalidClass() throws {
-        let layout = try Layout(xmlData: "<NSObject/>".data(using: .utf8)!)
+        let layout = try Layout(xmlData: XCTUnwrap("<NSObject/>".data(using: .utf8)))
         XCTAssertThrowsError(try LayoutNode(layout: layout)) { error in
             XCTAssert("\(error)".contains("NSObject is not a subclass of UIView"))
         }
@@ -243,7 +243,7 @@ final class LayoutNodeTests: XCTestCase {
         let node = try LayoutNode(xmlData: xmlData)
         node.setState(["name": "Foo"])
         node.update()
-        XCTAssertEqual((node.view as! UILabel).text, "Foo")
+        XCTAssertEqual((node.view as? UILabel)?.text, "Foo")
     }
 
     func testMacroNameShadowsState() throws {
@@ -251,7 +251,7 @@ final class LayoutNodeTests: XCTestCase {
         let node = try LayoutNode(xmlData: xmlData)
         node.setState(["name": "Foo"])
         node.update()
-        XCTAssertEqual((node.view.subviews[0] as! UILabel).text, "Foo")
+        XCTAssertEqual((node.view.subviews[0] as? UILabel)?.text, "Foo")
     }
 
     func testMacroNameShadowsConstant() throws {

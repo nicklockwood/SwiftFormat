@@ -563,4 +563,16 @@ final class HoistTryTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .hoistTry)
     }
+
+    func testCorrectTryPlacementForWrappedAssert() {
+        let input = """
+        XCTAssertEqual(Consumer<String>
+            .character(in: try foo()))
+        """
+        let output = """
+        XCTAssertEqual(try Consumer<String>
+            .character(in: foo()))
+        """
+        testFormatting(for: input, output, rule: .hoistTry)
+    }
 }

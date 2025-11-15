@@ -107,6 +107,8 @@ public extension FormatRule {
                         indent += formatter.options.indent
                     case .noIndent:
                         i += formatter.insertSpaceIfEnabled(indent, at: formatter.startOfLine(at: i))
+                    case .preserve:
+                        indent = formatter.currentIndentForLine(at: i)
                     case .outdent:
                         i += formatter.insertSpaceIfEnabled("", at: formatter.startOfLine(at: i))
                     }
@@ -216,6 +218,8 @@ public extension FormatRule {
                     i += formatter.insertSpaceIfEnabled(indent, at: start)
                 case .outdent:
                     i += formatter.insertSpaceIfEnabled("", at: start)
+                case .preserve:
+                    break
                 }
             case .keyword("@unknown") where scopeStack.last != .startOfScope("#if"):
                 var indent = indentStack[indentStack.count - 2]
@@ -329,8 +333,22 @@ public extension FormatRule {
                         break
                     }
 
-                    if token == .endOfScope("#endif"), formatter.options.ifdefIndent == .outdent {
-                        i += formatter.insertSpaceIfEnabled("", at: start)
+                    if token == .endOfScope("#endif") {
+                        switch formatter.options.ifdefIndent {
+                        case .outdent:
+                            i += formatter.insertSpaceIfEnabled("", at: start)
+                        case .preserve:
+                            break
+                        default:
+                            var indent = indentStack.last ?? ""
+                            if token.isSwitchCaseOrDefault,
+                               formatter.options.indentCase, !formatter.isInIfdef(at: i, scopeStack: scopeStack)
+                            {
+                                indent += formatter.options.indent
+                            }
+                            let stringIndent = stringBodyIndentStack.last!
+                            i += formatter.insertSpaceIfEnabled(stringIndent + indent, at: start)
+                        }
                     } else {
                         var indent = indentStack.last ?? ""
                         if token.isSwitchCaseOrDefault,
@@ -355,6 +373,8 @@ public extension FormatRule {
                         i += formatter.insertSpaceIfEnabled(indent, at: formatter.startOfLine(at: i))
                     case .outdent:
                         i += formatter.insertSpaceIfEnabled("", at: formatter.startOfLine(at: i))
+                    case .preserve:
+                        break
                     }
                     if scopeStack.last == .startOfScope("#if") {
                         popScope()

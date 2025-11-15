@@ -656,7 +656,7 @@ final class SprinterTests: XCTestCase {
         let string = "%c"
         let formatString = try FormatString(string)
         XCTAssertEqual(try formatString.print("a"), "a")
-        XCTAssertEqual(try formatString.print("a"), String(format: string, UnicodeScalar("a")!.value))
+        XCTAssertEqual(try formatString.print("a"), try String(format: string, XCTUnwrap(UnicodeScalar("a")?.value)))
     }
 
     func testPrintUnicodeChar() throws {
@@ -669,7 +669,7 @@ final class SprinterTests: XCTestCase {
         let string = "%C"
         let formatString = try FormatString(string)
         XCTAssertEqual(try formatString.print("ü"), "ü")
-        XCTAssertEqual(try formatString.print("ü"), String(format: string, UnicodeScalar("ü")!.value))
+        XCTAssertEqual(try formatString.print("ü"), try String(format: string, XCTUnwrap(UnicodeScalar("ü")?.value)))
     }
 
     func testPrintUnicodeWideChar() throws {

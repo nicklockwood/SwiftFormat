@@ -145,11 +145,11 @@ final class TransformTests: XCTestCase {
         XCTAssert(plane.translated(by: offset).isEqual(to: expected))
     }
 
-    func testRotatePlane() {
+    func testRotatePlane() throws {
         let normal = Vector(0.5, 1, 0.5).normalized()
         let position = Vector(10, 5, -3)
         let plane = Plane(unchecked: normal, pointOnPlane: position)
-        let rotation = Rotation(axis: Vector(12, 3, 4).normalized(), radians: 0.2)!
+        let rotation = try XCTUnwrap(Rotation(axis: Vector(12, 3, 4).normalized(), radians: 0.2))
         let rotatedNormal = normal.rotated(by: rotation)
         let rotatedPosition = position.rotated(by: rotation)
         let expected = Plane(unchecked: rotatedNormal, pointOnPlane: rotatedPosition)
@@ -175,19 +175,19 @@ final class TransformTests: XCTestCase {
         XCTAssert(plane.scaled(by: scale).isEqual(to: expected))
     }
 
-    func testTransformPlane() {
+    func testTransformPlane() throws {
         let path = Path(unchecked: [
             .point(1, 2, 3),
             .point(7, -2, 12),
             .point(-2, 7, 14),
         ])
-        let plane = path.plane!
-        let transform = Transform(
+        let plane = try XCTUnwrap(path.plane)
+        let transform = try Transform(
             offset: Vector(-7, 3, 4.5),
-            rotation: Rotation(axis: Vector(11, 3, -1).normalized(), radians: 1.3)!,
+            rotation: XCTUnwrap(Rotation(axis: Vector(11, 3, -1).normalized(), radians: 1.3)),
             scale: Vector(7, 2.0, 0.3)
         )
-        let expected = path.transformed(by: transform).plane!
+        let expected = try XCTUnwrap(path.transformed(by: transform).plane)
         XCTAssert(plane.transformed(by: transform).isEqual(to: expected))
     }
 }

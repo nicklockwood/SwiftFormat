@@ -20,7 +20,7 @@ final class StateTests: XCTestCase {
 
     func testNestedStateDictionary() {
         let node = LayoutNode(state: ["foo": ["bar": "baz"]])
-        XCTAssertEqual(try node.value(forSymbol: "foo") as! [String: String], ["bar": "baz"])
+        XCTAssertEqual(try node.value(forSymbol: "foo") as? [String: String], ["bar": "baz"])
         XCTAssertEqual(try node.value(forSymbol: "foo.bar") as? String, "baz")
     }
 
@@ -42,13 +42,13 @@ final class StateTests: XCTestCase {
         XCTAssertEqual(try node.value(forSymbol: "bar") as? String, "baz")
     }
 
-    func testOptionalStruct() {
+    func testOptionalStruct() throws {
         var state: TestState? = TestState()
         let node = LayoutNode(state: state as Any)
         XCTAssertEqual(try node.value(forSymbol: "foo") as? Int, 5)
         XCTAssertEqual(try node.value(forSymbol: "bar") as? String, "baz")
         state?.foo = 10
-        node.setState(state!) // Force unwrap
+        try node.setState(XCTUnwrap(state)) // Force unwrap
         XCTAssertEqual(try node.value(forSymbol: "foo") as? Int, 10)
     }
 

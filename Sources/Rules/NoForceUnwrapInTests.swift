@@ -6,7 +6,6 @@ import Foundation
 public extension FormatRule {
     static let noForceUnwrapInTests = FormatRule(
         help: "Use XCTUnwrap or #require in test cases, rather than force unwrapping.",
-        disabledByDefault: true,
         orderAfter: [.urlMacro, .noForceTryInTests, .throwingTests]
     ) { formatter in
         guard let testFramework = formatter.detectTestingFramework() else {

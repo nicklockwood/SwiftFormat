@@ -14,11 +14,11 @@ private final class TestViewController: UIViewController {
 }
 
 final class SelectorExpressionTests: XCTestCase {
-    func testSetControlAction() {
+    func testSetControlAction() throws {
         let node = LayoutNode(view: UIControl(), expressions: ["touchUpInside": "foo:"])
         let viewController = TestViewController()
         XCTAssertNoThrow(try node.mount(in: viewController))
-        let control = node.view as! UIControl
+        let control = try XCTUnwrap(node.view as? UIControl)
         XCTAssertEqual(control.actions(forTarget: viewController, forControlEvent: .touchUpInside)?.first, "foo:")
     }
 

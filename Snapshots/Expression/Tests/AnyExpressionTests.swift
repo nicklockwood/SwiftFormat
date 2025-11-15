@@ -854,9 +854,9 @@ final class AnyExpressionTests: XCTestCase {
         }
     }
 
-    func testSubscriptStringWithHalfOpenIndexRange() {
-        let expression = AnyExpression("'foo'[range]", constants: [
-            "range": "foo".range(of: "fo")!,
+    func testSubscriptStringWithHalfOpenIndexRange() throws {
+        let expression = try AnyExpression("'foo'[range]", constants: [
+            "range": XCTUnwrap("foo".range(of: "fo")),
         ])
         XCTAssertEqual(try expression.evaluate(), "fo")
     }
@@ -868,84 +868,84 @@ final class AnyExpressionTests: XCTestCase {
         XCTAssertEqual(try expression.evaluate(), "fo")
     }
 
-    func testSubscriptSubstringWithHalfOpenIndexRange() {
-        let expression = AnyExpression("foo[range]", constants: [
+    func testSubscriptSubstringWithHalfOpenIndexRange() throws {
+        let expression = try AnyExpression("foo[range]", constants: [
             "foo": Substring("foo"),
-            "range": "foo".range(of: "fo")!,
+            "range": XCTUnwrap("foo".range(of: "fo")),
         ])
         XCTAssertEqual(try expression.evaluate(), "fo")
     }
 
-    func testSubscriptNSStringWithHalfOpenIndexRange() {
-        let expression = AnyExpression("foo[range]", constants: [
+    func testSubscriptNSStringWithHalfOpenIndexRange() throws {
+        let expression = try AnyExpression("foo[range]", constants: [
             "foo": "foo" as NSString,
-            "range": "foo".range(of: "fo")!,
+            "range": XCTUnwrap("foo".range(of: "fo")),
         ])
         XCTAssertEqual(try expression.evaluate(), "fo")
     }
 
-    func testSubscriptStringWithInvalidHalfOpenIndexRange() {
-        let expression = AnyExpression("'foo'[range]", constants: [
-            "range": "foobar".range(of: "bar")!,
+    func testSubscriptStringWithInvalidHalfOpenIndexRange() throws {
+        let expression = try AnyExpression("'foo'[range]", constants: [
+            "range": XCTUnwrap("foobar".range(of: "bar")),
         ])
         XCTAssertThrowsError(try expression.evaluate() as Any) { error in
             XCTAssertEqual(error as? Expression.Error, .stringBounds("foo", 3))
         }
     }
 
-    func testSubscriptStringWithInvalidClosedIndexRange() {
-        let expression = AnyExpression("'foo'[range]", constants: [
-            "range": "foobar".range(of: "bar")!.lowerBound ... "foobar".endIndex,
+    func testSubscriptStringWithInvalidClosedIndexRange() throws {
+        let expression = try AnyExpression("'foo'[range]", constants: [
+            "range": XCTUnwrap("foobar".range(of: "bar")?.lowerBound) ... "foobar".endIndex,
         ])
         XCTAssertThrowsError(try expression.evaluate() as Any) { error in
             XCTAssertEqual(error as? Expression.Error, .stringBounds("foo", 3))
         }
     }
 
-    func testSubscriptSubstringWithInvalidHalfOpenIndexRange() {
-        let expression = AnyExpression("foo[range]", constants: [
+    func testSubscriptSubstringWithInvalidHalfOpenIndexRange() throws {
+        let expression = try AnyExpression("foo[range]", constants: [
             "foo": "barfoo".suffix(3),
-            "range": "barfoo".range(of: "bar")!,
+            "range": XCTUnwrap("barfoo".range(of: "bar")),
         ])
         XCTAssertThrowsError(try expression.evaluate() as Any) { error in
             XCTAssertEqual(error as? Expression.Error, .stringBounds("foo", -3))
         }
     }
 
-    func testSubscriptNSStringWithInvalidHalfOpenIndexRangeLowerBound() {
-        let expression = AnyExpression("foo[range]", constants: [
+    func testSubscriptNSStringWithInvalidHalfOpenIndexRangeLowerBound() throws {
+        let expression = try AnyExpression("foo[range]", constants: [
             "foo": "foo" as NSString,
-            "range": "foobarbaz".range(of: "baz")!,
+            "range": XCTUnwrap("foobarbaz".range(of: "baz")),
         ])
         XCTAssertThrowsError(try expression.evaluate() as Any) { error in
             XCTAssertEqual(error as? Expression.Error, .stringBounds("foo", 6))
         }
     }
 
-    func testSubscriptNSStringWithInvalidHalfOpenIndexRangeUpperBound() {
-        let expression = AnyExpression("foo[range]", constants: [
+    func testSubscriptNSStringWithInvalidHalfOpenIndexRangeUpperBound() throws {
+        let expression = try AnyExpression("foo[range]", constants: [
             "foo": "foo" as NSString,
-            "range": "foobar".range(of: "obar")!,
+            "range": XCTUnwrap("foobar".range(of: "obar")),
         ])
         XCTAssertThrowsError(try expression.evaluate() as Any) { error in
             XCTAssertEqual(error as? Expression.Error, .stringBounds("foo", 6))
         }
     }
 
-    func testSubscriptNSStringWithInvalidClosedIndexRangeLowerBound() {
-        let expression = AnyExpression("foo[range]", constants: [
+    func testSubscriptNSStringWithInvalidClosedIndexRangeLowerBound() throws {
+        let expression = try AnyExpression("foo[range]", constants: [
             "foo": "foo" as NSString,
-            "range": "foobarbaz".range(of: "baz")!.lowerBound ... "foobarbaz".endIndex,
+            "range": XCTUnwrap("foobarbaz".range(of: "baz")?.lowerBound) ... "foobarbaz".endIndex,
         ])
         XCTAssertThrowsError(try expression.evaluate() as Any) { error in
             XCTAssertEqual(error as? Expression.Error, .stringBounds("foo", 6))
         }
     }
 
-    func testSubscriptNSStringWithInvalidClosedIndexRangeUpperBound() {
-        let expression = AnyExpression("foo[range]", constants: [
+    func testSubscriptNSStringWithInvalidClosedIndexRangeUpperBound() throws {
+        let expression = try AnyExpression("foo[range]", constants: [
             "foo": "foo" as NSString,
-            "range": "foobar".range(of: "obar")!.lowerBound ... "foobar".endIndex,
+            "range": XCTUnwrap("foobar".range(of: "obar")?.lowerBound) ... "foobar".endIndex,
         ])
         XCTAssertThrowsError(try expression.evaluate() as Any) { error in
             XCTAssertEqual(error as? Expression.Error, .stringBounds("foo", 6))
@@ -1070,26 +1070,26 @@ final class AnyExpressionTests: XCTestCase {
         }
     }
 
-    func testSubscriptStringFromIndexRange() {
-        let expression = AnyExpression("'foo'[index...]", constants: [
-            "index": "foo".index(of: "o")!,
+    func testSubscriptStringFromIndexRange() throws {
+        let expression = try AnyExpression("'foo'[index...]", constants: [
+            "index": XCTUnwrap("foo".index(of: "o")),
         ])
         XCTAssertEqual(try expression.evaluate(), "oo")
     }
 
-    func testSubscriptStringFromInvalidIndexRange() {
-        let expression = AnyExpression("'foo'[index...]", constants: [
-            "index": "food".index(of: "d")!,
+    func testSubscriptStringFromInvalidIndexRange() throws {
+        let expression = try AnyExpression("'foo'[index...]", constants: [
+            "index": XCTUnwrap("food".index(of: "d")),
         ])
         XCTAssertThrowsError(try expression.evaluate() as Any) { error in
             XCTAssertEqual(error as? Expression.Error, .stringBounds("foo", 3))
         }
     }
 
-    func testSubscriptStringFromInvalidIndexRange2() {
+    func testSubscriptStringFromInvalidIndexRange2() throws {
         #if swift(>=4)
-            let expression = AnyExpression("foo[index...]", constants: [
-                "foo": "afoo"["afoo".range(of: "foo")!],
+            let expression = try AnyExpression("foo[index...]", constants: [
+                "foo": "afoo"[XCTUnwrap("afoo".range(of: "foo"))],
                 "index": "afoo".startIndex,
             ])
             XCTAssertThrowsError(try expression.evaluate() as Any) { error in
@@ -1146,10 +1146,10 @@ final class AnyExpressionTests: XCTestCase {
         }
     }
 
-    func testSubscriptStringThroughInvalidIndexRange2() {
+    func testSubscriptStringThroughInvalidIndexRange2() throws {
         #if swift(>=4)
-            let expression = AnyExpression("foo[...index]", constants: [
-                "foo": "afoo"["afoo".range(of: "foo")!],
+            let expression = try AnyExpression("foo[...index]", constants: [
+                "foo": "afoo"[XCTUnwrap("afoo".range(of: "foo"))],
                 "index": "afoo".startIndex,
             ])
             XCTAssertThrowsError(try expression.evaluate() as Any) { error in

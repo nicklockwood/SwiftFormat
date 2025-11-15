@@ -27,8 +27,8 @@ final class LayoutLoaderTests: XCTestCase {
         let projectURL = directory.deletingLastPathComponent().appendingPathComponent("Project.xcodeproj")
         let fileURL = directory.appendingPathComponent("baz.swift")
         do {
-            try "project".data(using: .utf8)!.write(to: projectURL)
-            try "file".data(using: .utf8)!.write(to: fileURL)
+            try try XCTUnwrap("project".data(using: .utf8)?.write(to: projectURL))
+            try try XCTUnwrap("file".data(using: .utf8)?.write(to: fileURL))
             let loader = LayoutLoader()
             let path = loader.findProjectDirectory(at: fileURL.path)
             XCTAssertEqual(path, projectURL.deletingLastPathComponent())

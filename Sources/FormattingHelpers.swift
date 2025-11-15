@@ -1234,7 +1234,7 @@ extension Formatter {
                  .endOfScope(">"), .endOfScope("]"), .endOfScope(")"),
                  .endOfScope where tokens[i].isStringDelimiter:
                 switch prevToken {
-                case .operator(_, .infix), .operator(_, .postfix), .stringBody,
+                case .operator(_, .infix), .operator(_, .postfix), .stringBody, .linebreak,
                      .startOfScope("<"), .startOfScope("["), .startOfScope("("),
                      _ where currentScope(at: i + 1)?.isMultilineStringDelimiter == true:
                     break
@@ -1246,9 +1246,15 @@ extension Formatter {
                     continue
                 }
             case .linebreak:
-                if prevToken.isOperator(ofType: .infix) {
-                    insertIndex = index(of: .nonSpaceOrLinebreak, before: i) ?? i
+                if prevToken.isOperator(ofType: .infix) || prevToken.isStringBody {
+                    break
+                } else if let i = index(of: .nonSpaceOrLinebreak, before: i, if: {
+                    $0.isOperator(ofType: .infix)
+                }) {
+                    insertIndex = i
                     continue
+                } else {
+                    break loop
                 }
             default:
                 break loop

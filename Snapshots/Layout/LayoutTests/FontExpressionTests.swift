@@ -28,11 +28,11 @@ final class FontExpressionTests: XCTestCase {
 
     #endif
 
-    func testBoldTrait() {
+    func testBoldTrait() throws {
         let node = LayoutNode()
         let expression = LayoutExpression(fontExpression: "{UIFontDescriptorSymbolicTraits.traitBold}", for: node)
         let descriptor = UIFont.systemFont(ofSize: UIFont.defaultSize).fontDescriptor
-        let expected = UIFont(descriptor: descriptor.withSymbolicTraits([.traitBold])!, size: UIFont.defaultSize)
+        let expected = try UIFont(descriptor: XCTUnwrap(descriptor.withSymbolicTraits([.traitBold])), size: UIFont.defaultSize)
         XCTAssertEqual(try expression?.evaluate() as? UIFont, expected)
     }
 
@@ -57,39 +57,39 @@ final class FontExpressionTests: XCTestCase {
         XCTAssertEqual(try expression?.evaluate() as? UIFont, expected)
     }
 
-    func testBoldItalic() {
+    func testBoldItalic() throws {
         let node = LayoutNode()
         let expression = LayoutExpression(fontExpression: "bold italic", for: node)
         let descriptor = UIFont.systemFont(ofSize: UIFont.defaultSize, weight: .bold).fontDescriptor
         let traits = descriptor.symbolicTraits.union([.traitBold, .traitItalic])
-        let expected = UIFont(descriptor: descriptor.withSymbolicTraits(traits)!, size: UIFont.defaultSize)
+        let expected = try UIFont(descriptor: XCTUnwrap(descriptor.withSymbolicTraits(traits)), size: UIFont.defaultSize)
         XCTAssertEqual(try expression?.evaluate() as? UIFont, expected)
     }
 
-    func testCondensed() {
+    func testCondensed() throws {
         let node = LayoutNode()
         let expression = LayoutExpression(fontExpression: "condensed", for: node)
         let descriptor = UIFont.systemFont(ofSize: UIFont.defaultSize).fontDescriptor
         let traits = descriptor.symbolicTraits.union([.traitCondensed])
-        let expected = UIFont(descriptor: descriptor.withSymbolicTraits(traits)!, size: UIFont.defaultSize)
+        let expected = try UIFont(descriptor: XCTUnwrap(descriptor.withSymbolicTraits(traits)), size: UIFont.defaultSize)
         XCTAssertEqual(try expression?.evaluate() as? UIFont, expected)
     }
 
-    func testBlackCondensed() {
+    func testBlackCondensed() throws {
         let node = LayoutNode()
         let expression = LayoutExpression(fontExpression: "black condensed", for: node)
         let descriptor = UIFont.systemFont(ofSize: UIFont.defaultSize, weight: .black).fontDescriptor
         let traits = descriptor.symbolicTraits.union([.traitCondensed])
-        let expected = UIFont(descriptor: descriptor.withSymbolicTraits(traits)!, size: UIFont.defaultSize)
+        let expected = try UIFont(descriptor: XCTUnwrap(descriptor.withSymbolicTraits(traits)), size: UIFont.defaultSize)
         XCTAssertEqual(try expression?.evaluate() as? UIFont, expected)
     }
 
-    func testMonospace() {
+    func testMonospace() throws {
         let node = LayoutNode()
         let expression = LayoutExpression(fontExpression: "monospace", for: node)
-        let descriptor = UIFont(name: "Courier", size: UIFont.defaultSize)!.fontDescriptor
+        let descriptor = try XCTUnwrap(UIFont(name: "Courier", size: UIFont.defaultSize)?.fontDescriptor)
         let traits = descriptor.symbolicTraits.union([.traitMonoSpace])
-        let expected = UIFont(descriptor: descriptor.withSymbolicTraits(traits)!, size: UIFont.defaultSize)
+        let expected = try UIFont(descriptor: XCTUnwrap(descriptor.withSymbolicTraits(traits)), size: UIFont.defaultSize)
         XCTAssertEqual(try expression?.evaluate() as? UIFont, expected)
     }
 
@@ -109,68 +109,68 @@ final class FontExpressionTests: XCTestCase {
         XCTAssertEqual(try expression?.evaluate() as? UIFont, expected)
     }
 
-    func testBoldEscapedFontNameWithSpaces() {
+    func testBoldEscapedFontNameWithSpaces() throws {
         let node = LayoutNode()
         let name = "helvetica neue"
         let expression = LayoutExpression(fontExpression: "'\(name)' bold", for: node)
-        let descriptor = UIFont(name: name, size: UIFont.defaultSize)!.fontDescriptor
+        let descriptor = try XCTUnwrap(UIFont(name: name, size: UIFont.defaultSize)?.fontDescriptor)
         let traits = descriptor.symbolicTraits.union([.traitBold])
-        let expected = UIFont(descriptor: descriptor.withSymbolicTraits(traits)!, size: UIFont.defaultSize)
+        let expected = try UIFont(descriptor: XCTUnwrap(descriptor.withSymbolicTraits(traits)), size: UIFont.defaultSize)
         XCTAssertEqual(try expression?.evaluate() as? UIFont, expected)
     }
 
-    func testBlackEscapedFontNameWithSpaces() {
+    func testBlackEscapedFontNameWithSpaces() throws {
         let node = LayoutNode()
         let expression = LayoutExpression(fontExpression: "'helvetica neue' black", for: node)
-        let expected = UIFont(name: "HelveticaNeue-CondensedBlack", size: UIFont.defaultSize)!
+        let expected = try XCTUnwrap(UIFont(name: "HelveticaNeue-CondensedBlack", size: UIFont.defaultSize))
         XCTAssertEqual(try expression?.evaluate() as? UIFont, expected)
     }
 
-    func testUltralightEscapedFontNameWithSpaces() {
+    func testUltralightEscapedFontNameWithSpaces() throws {
         let node = LayoutNode()
         let expression = LayoutExpression(fontExpression: "'helvetica neue' ultralight", for: node)
-        let expected = UIFont(name: "HelveticaNeue-UltraLight", size: UIFont.defaultSize)!
+        let expected = try XCTUnwrap(UIFont(name: "HelveticaNeue-UltraLight", size: UIFont.defaultSize))
         XCTAssertEqual(try expression?.evaluate() as? UIFont, expected)
     }
 
-    func testBoldUnescapedFontNameWithSpaces() {
+    func testBoldUnescapedFontNameWithSpaces() throws {
         let node = LayoutNode()
         let name = "helvetica neue"
         let expression = LayoutExpression(fontExpression: "\(name) bold", for: node)
-        let descriptor = UIFont(name: name, size: UIFont.defaultSize)!.fontDescriptor
+        let descriptor = try XCTUnwrap(UIFont(name: name, size: UIFont.defaultSize)?.fontDescriptor)
         let traits = descriptor.symbolicTraits.union([.traitBold])
-        let expected = UIFont(descriptor: descriptor.withSymbolicTraits(traits)!, size: UIFont.defaultSize)
+        let expected = try UIFont(descriptor: XCTUnwrap(descriptor.withSymbolicTraits(traits)), size: UIFont.defaultSize)
         XCTAssertEqual(try expression?.evaluate() as? UIFont, expected)
     }
 
-    func testBlackUnescapedFontNameWithSpaces() {
+    func testBlackUnescapedFontNameWithSpaces() throws {
         let node = LayoutNode()
         let expression = LayoutExpression(fontExpression: "helvetica neue black", for: node)
-        let expected = UIFont(name: "HelveticaNeue-CondensedBlack", size: UIFont.defaultSize)!
+        let expected = try XCTUnwrap(UIFont(name: "HelveticaNeue-CondensedBlack", size: UIFont.defaultSize))
         XCTAssertEqual(try expression?.evaluate() as? UIFont, expected)
     }
 
-    func testBlackUnescapedFontNameWithSpaces2() {
+    func testBlackUnescapedFontNameWithSpaces2() throws {
         let node = LayoutNode()
         let expression = LayoutExpression(fontExpression: "Apple SD Gothic Neo light", for: node)
-        let expected = UIFont(name: "AppleSDGothicNeo-Light", size: UIFont.defaultSize)!
+        let expected = try XCTUnwrap(UIFont(name: "AppleSDGothicNeo-Light", size: UIFont.defaultSize))
         XCTAssertEqual(try expression?.evaluate() as? UIFont, expected)
     }
 
-    func testUltralightUnescapedFontNameWithSpaces() {
+    func testUltralightUnescapedFontNameWithSpaces() throws {
         let node = LayoutNode()
         let expression = LayoutExpression(fontExpression: "helvetica neue ultralight", for: node)
-        let expected = UIFont(name: "HelveticaNeue-UltraLight", size: UIFont.defaultSize)!
+        let expected = try XCTUnwrap(UIFont(name: "HelveticaNeue-UltraLight", size: UIFont.defaultSize))
         XCTAssertEqual(try expression?.evaluate() as? UIFont, expected)
     }
 
-    func testExplicitFontWithBoldAttributes() {
-        let font = UIFont(name: "courier", size: 15)!
+    func testExplicitFontWithBoldAttributes() throws {
+        let font = try XCTUnwrap(UIFont(name: "courier", size: 15))
         let node = LayoutNode(constants: ["font": font])
         let expression = LayoutExpression(fontExpression: "{font} bold", for: node)
         let descriptor = font.fontDescriptor
         let traits = descriptor.symbolicTraits.union([.traitBold])
-        let expected = UIFont(descriptor: descriptor.withSymbolicTraits(traits)!, size: font.pointSize)
+        let expected = try UIFont(descriptor: XCTUnwrap(descriptor.withSymbolicTraits(traits)), size: font.pointSize)
         XCTAssertEqual(try expression?.evaluate() as? UIFont, expected)
     }
 
@@ -301,7 +301,7 @@ final class FontExpressionTests: XCTestCase {
                     $0.lowercased().contains("-\(weightKey.lowercased())")
                 }
                 if !expected.isEmpty {
-                    let name = try (expression!.evaluate() as! UIFont).fontName
+                    let name = try try XCTUnwrap((expression?.evaluate() as? UIFont)?.fontName)
                     XCTAssertTrue(expected.contains(name), "\(expected) does not contain \(name)")
                 }
             }

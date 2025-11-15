@@ -95,8 +95,8 @@ final class PerformanceTests: XCTestCase {
         }
     }
 
-    func testJSONSerialization() {
-        let data = json.data(using: .utf8)!
+    func testJSONSerialization() throws {
+        let data = try XCTUnwrap(json.data(using: .utf8))
         measure {
             _ = try! JSONSerialization.jsonObject(with: data, options: [])
         }

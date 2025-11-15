@@ -35,8 +35,8 @@ final class PropertiesTests: XCTestCase {
         XCTAssertNil(result) // Not supoported yet
     }
 
-    func testCGPointPropertyType() {
-        let result = TestObject.allPropertyTypes()["testPoint"]!
+    func testCGPointPropertyType() throws {
+        let result = try XCTUnwrap(TestObject.allPropertyTypes()["testPoint"])
         let expected = RuntimeType(CGPoint.self)
         let control = RuntimeType(NSValue.self)
         XCTAssertEqual(result, expected)

@@ -4662,6 +4662,24 @@ final class IndentTests: XCTestCase {
         testFormatting(for: input, rule: .indent, options: options)
     }
 
+    func testIfDefPreserveWithinIndentedChain() {
+        let input = """
+        struct ContentView: View {
+            var body: some View {
+                VStack {
+                    Text("Hello World")
+                }
+                .foregroundStyle(Color.white)
+                #if os(iOS)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                #endif
+            }
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .preserve)
+        testFormatting(for: input, rule: .indent, options: options)
+    }
+
     // indent #if/#else/#elseif/#endif (mode: outdent)
 
     func testIfEndifOutdenting() {

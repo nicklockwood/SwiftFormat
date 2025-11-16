@@ -47,8 +47,10 @@ public extension FormatRule {
 
         // Count the usage of each identifier in the file
         var usage: [String: Int] = [:]
-        formatter.forEach(.identifier) { _, token in
-            usage[token.string, default: 0] += 1
+        formatter.forEachToken(onlyWhereEnabled: false) { _, token in
+            if case let .identifier(name) = token {
+                usage[name, default: 0] += 1
+            }
         }
 
         // Remove any private or fileprivate declaration whose name only

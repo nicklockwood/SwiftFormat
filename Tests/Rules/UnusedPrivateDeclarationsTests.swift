@@ -377,4 +377,19 @@ final class UnusedPrivateDeclarationsTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .unusedPrivateDeclarations)
     }
+
+    func testDeclarationNotRemovedWhenUsedOutsideFormatRange() {
+        let input = """
+        private let used: Int = 22
+        // swiftformat:disable:all
+        struct Formatting {
+            let a: Int
+
+            init() {
+                self.a = used
+            }
+        }
+        """
+        testFormatting(for: input, rule: .unusedPrivateDeclarations)
+    }
 }

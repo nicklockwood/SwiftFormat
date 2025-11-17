@@ -613,7 +613,7 @@ public extension FormatRule {
                                 indent = formatter.currentIndentForLine(at: lastNonSpaceOrLinebreakIndex)
                             }
                             if formatter.options.ifdefIndent == .preserve,
-                               scopeStack.last == .startOfScope("#if")
+                               formatter.isInIfdef(at: i, scopeStack: scopeStack)
                             {
                                 // keep relative indentation unchanged
                             } else if !lastToken.isEndOfScope || lastToken == .endOfScope("case") ||

@@ -4822,7 +4822,7 @@ final class IndentTests: XCTestCase {
                         }
                     #else
                     .foregroundColor(.gray)
-                        .shadow(radius: 2)
+                    .shadow(radius: 2)
                     #endif
             }
         }

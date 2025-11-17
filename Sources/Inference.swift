@@ -304,15 +304,6 @@ private struct Inference {
     let ifdefIndent = OptionInferrer { formatter, options in
         var indented = 0, notIndented = 0, outdented = 0, preserveCandidates = 0
 
-        func recordPreserveCandidate(after linebreakIndex: Int) {
-            guard let token = formatter.next(.nonSpaceOrCommentOrLinebreak, after: linebreakIndex) else {
-                return
-            }
-            if case .operator(".", _) = token {
-                preserveCandidates += 1
-            }
-        }
-
         formatter.forEach(.startOfScope("#if")) { i, _ in
             if let indent = formatter.token(at: i - 1), case let .space(string) = indent,
                !string.isEmpty
@@ -328,7 +319,11 @@ private struct Inference {
                             return
                         } else if innerString == string {
                             notIndented += 1
-                            recordPreserveCandidate(after: nextLineIndex)
+                            if let token = formatter.next(.nonSpaceOrCommentOrLinebreak, after: nextLineIndex),
+                               case .operator(".", _) = token
+                            {
+                                preserveCandidates += 1
+                            }
                         } else {
                             // Assume more indented, as less would be a mistake
                             indented += 1

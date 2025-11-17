@@ -600,7 +600,11 @@ public extension FormatRule {
                             if lastToken.isEndOfScope {
                                 indent = formatter.currentIndentForLine(at: lastNonSpaceOrLinebreakIndex)
                             }
-                            if !lastToken.isEndOfScope || lastToken == .endOfScope("case") ||
+                            if formatter.options.ifdefIndent == .preserve,
+                               scopeStack.last == .startOfScope("#if")
+                            {
+                                // keep relative indentation unchanged
+                            } else if !lastToken.isEndOfScope || lastToken == .endOfScope("case") ||
                                 formatter.options.xcodeIndentation, ![
                                     .endOfScope("}"), .endOfScope(")"),
                                 ].contains(lastToken)
@@ -663,6 +667,11 @@ public extension FormatRule {
                         }
                     }
                 default:
+                    if formatter.options.ifdefIndent == .preserve,
+                       formatter.isInIfdef(at: nextNonSpaceIndex, scopeStack: scopeStack)
+                    {
+                        break
+                    }
                     var lastIndex = lastNonSpaceOrLinebreakIndex > -1 ? lastNonSpaceOrLinebreakIndex : i
                     while formatter.token(at: lastIndex) == .endOfScope("#endif"),
                           let index = formatter.index(of: .startOfScope, before: lastIndex, if: {

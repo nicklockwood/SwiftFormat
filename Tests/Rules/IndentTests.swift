@@ -4778,6 +4778,59 @@ final class IndentTests: XCTestCase {
         testFormatting(for: input, rule: .indent, options: options)
     }
 
+    func testIfDefPreserveMultipleModifiersInChain() {
+        let input = """
+        struct ContentView: View {
+            var body: some View {
+                Text("Example")
+                    .frame(maxWidth: 200)
+                    #if os(iOS)
+                    .padding(4)
+                    .background {
+                        Color.red
+                            .overlay {
+                                Text("Inner")
+                            }
+                    }
+                    .cornerRadius(8)
+                    #endif
+            }
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .preserve)
+        testFormatting(for: input, rule: .indent, options: options)
+    }
+
+    func testIfDefPreserveWithElseIfBranches() {
+        let input = """
+        struct ContentView: View {
+            var body: some View {
+                Text("Example")
+                    .frame(maxWidth: 200)
+                    #if os(iOS)
+                    .padding(4)
+                        .background {
+                            Color.red
+                        }
+                    #elseif os(macOS)
+                    .padding(10)
+                        .background {
+                            Color.blue
+                                .overlay {
+                                    Circle()
+                                }
+                        }
+                    #else
+                    .foregroundColor(.gray)
+                        .shadow(radius: 2)
+                    #endif
+            }
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .preserve)
+        testFormatting(for: input, rule: .indent, options: options)
+    }
+
     // indent #if/#else/#elseif/#endif (mode: outdent)
 
     func testIfEndifOutdenting() {

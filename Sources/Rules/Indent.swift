@@ -347,7 +347,13 @@ public extension FormatRule {
                                 indent += formatter.options.indent
                             }
                             let stringIndent = stringBodyIndentStack.last!
-                            i += formatter.insertSpaceIfEnabled(stringIndent + indent, at: start)
+                            if formatter.options.ifdefIndent == .preserve,
+                               formatter.isInIfdef(at: i, scopeStack: scopeStack)
+                            {
+                                // Keep indentation as written inside preserve blocks
+                            } else {
+                                i += formatter.insertSpaceIfEnabled(stringIndent + indent, at: start)
+                            }
                         }
                     } else {
                         var indent = indentStack.last ?? ""
@@ -357,7 +363,13 @@ public extension FormatRule {
                             indent += formatter.options.indent
                         }
                         let stringIndent = stringBodyIndentStack.last!
-                        i += formatter.insertSpaceIfEnabled(stringIndent + indent, at: start)
+                        if formatter.options.ifdefIndent == .preserve,
+                           formatter.isInIfdef(at: i, scopeStack: scopeStack)
+                        {
+                            // Preserve indentation inside #if when requested
+                        } else {
+                            i += formatter.insertSpaceIfEnabled(stringIndent + indent, at: start)
+                        }
                     }
                 } else if token == .endOfScope("#endif"), indentStack.count > 1 {
                     var indent = indentStack[indentStack.count - 2]
@@ -866,7 +878,7 @@ extension Formatter {
     }
 
     func isInIfdef(at i: Int, scopeStack: [Token]) -> Bool {
-        guard scopeStack.last == .startOfScope("#if") else {
+        guard scopeStack.contains(.startOfScope("#if")) else {
             return false
         }
         var index = i - 1

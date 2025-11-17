@@ -4680,6 +4680,104 @@ final class IndentTests: XCTestCase {
         testFormatting(for: input, rule: .indent, options: options)
     }
 
+    func testIfDefPreserveWithinNestedChainBlock() {
+        let input = """
+        struct ContentView: View {
+            var body: some View {
+                VStack {
+                    Text("Hello World")
+                }
+                .foregroundStyle(Color.white)
+                #if os(iOS)
+                .background {
+                    Color.black
+                }
+                #endif
+            }
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .preserve)
+        testFormatting(for: input, rule: .indent, options: options)
+    }
+
+    func testIfDefPreserveWithinNestedChainBlock2() {
+        let input = """
+        struct ContentView: View {
+            var body: some View {
+                VStack {
+                    Text("Hello World")
+                }
+                .foregroundStyle(Color.white)
+                #if os(iOS)
+                .background {
+                    Color.black
+                        .overlay {
+                            Color.white
+                        }
+                }
+                #endif
+            }
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .preserve)
+        testFormatting(for: input, rule: .indent, options: options)
+    }
+
+    func testIfDefPreserveWithinNestedChainBlock3() {
+        let input = """
+        struct ContentView: View {
+            var body: some View {
+                VStack {
+                    Text("Hello World")
+                }
+                .foregroundStyle(Color.white)
+                #if os(iOS)
+                .background {
+                    Color.black
+                        .overlay {
+                            Color.white
+                                .mask {
+                                    Circle()
+                                }
+                        }
+                }
+                #endif
+            }
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .preserve)
+        testFormatting(for: input, rule: .indent, options: options)
+    }
+
+    func testIfDefPreserveWithinNestedChainBlock4() {
+        let input = """
+        struct ContentView: View {
+            var body: some View {
+                VStack {
+                    Text("Hello World")
+                }
+                .foregroundStyle(Color.white)
+                #if os(iOS)
+                .background {
+                    Color.black
+                        .overlay {
+                            Color.white
+                                .mask {
+                                    Circle()
+                                        .overlay {
+                                            Rectangle()
+                                        }
+                                }
+                        }
+                }
+                #endif
+            }
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .preserve)
+        testFormatting(for: input, rule: .indent, options: options)
+    }
+
     // indent #if/#else/#elseif/#endif (mode: outdent)
 
     func testIfEndifOutdenting() {

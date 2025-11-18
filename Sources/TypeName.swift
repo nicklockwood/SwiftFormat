@@ -150,34 +150,7 @@ extension TypeName {
     }
 
     private var containsTopLevelFunctionArrow: Bool {
-        var parenDepth = 0
-        var squareDepth = 0
-        var angleDepth = 0
-
-        var index = range.lowerBound
-        while index <= range.upperBound {
-            switch formatter.tokens[index] {
-            case .startOfScope("("):
-                parenDepth += 1
-            case .endOfScope(")"):
-                parenDepth = max(parenDepth - 1, 0)
-            case .startOfScope("["):
-                squareDepth += 1
-            case .endOfScope("]"):
-                squareDepth = max(squareDepth - 1, 0)
-            case .startOfScope("<"):
-                angleDepth += 1
-            case .endOfScope(">"):
-                angleDepth = max(angleDepth - 1, 0)
-            case .operator("->", .infix)
-                where parenDepth == 0 && squareDepth == 0 && angleDepth == 0:
-                return true
-            default:
-                break
-            }
-            index += 1
-        }
-
-        return false
+        formatter.index(of: .operator("->", .infix),
+                        in: range.lowerBound ..< range.upperBound + 1) != nil
     }
 }

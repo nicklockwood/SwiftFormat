@@ -144,14 +144,16 @@ extension TypeName {
 
     /// Whether this type has a top-level optional suffix (`?` or `!`) applied to it.
     var isOptionalType: Bool {
-        guard trailingUnwrapOperatorIndex != nil else { return false }
-        return !isClosure
+        return trailingUnwrapOperatorIndex != nil && !isClosure
     }
 
     private var trailingUnwrapOperatorIndex: Int? {
-        guard let index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: range.upperBound + 1),
-              formatter.tokens[index].isUnwrapOperator
-        else { return nil }
-        return index
+        if let index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: range.upperBound + 1),
+           formatter.tokens[index].isUnwrapOperator
+        {
+            return index
+        } else {
+            return nil
+        }
     }
 }

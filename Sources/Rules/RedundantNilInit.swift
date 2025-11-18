@@ -53,7 +53,7 @@ public extension FormatRule {
 
             guard let propertyDeclaration = formatter.parsePropertyDeclaration(atIntroducerIndex: varIndex),
                   let type = propertyDeclaration.type,
-                  type.string.hasSuffix("?") || type.string.hasSuffix("!")
+                  type.isOptionalType
             else { return }
 
             switch formatter.options.nilInit {

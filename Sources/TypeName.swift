@@ -111,7 +111,19 @@ extension TypeName {
 
     /// Whether or not this type is a closure
     var isClosure: Bool {
-        formatter.isStartOfClosureType(at: range.lowerBound)
+        guard formatter.isStartOfClosureType(at: range.lowerBound) else {
+            return false
+        }
+
+        if let unwrapIndex = trailingUnwrapOperatorIndex,
+           formatter.tokens[range.lowerBound] == .startOfScope("("),
+           formatter.tokens[range.upperBound] == .endOfScope(")"),
+           formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: range.upperBound) == unwrapIndex
+        {
+            return false
+        }
+
+        return true
     }
 
     /// If this type is wrapped in redundant parens, returns the inner type.
@@ -128,5 +140,20 @@ extension TypeName {
 
         let newType = TypeName(range: tokenAfterFirst ... tokenBeforeLast, formatter: formatter)
         return newType.withoutParens()
+    }
+
+    /// Whether this type has a top-level optional suffix (`?` or `!`) applied to it.
+    var isOptionalType: Bool {
+        return trailingUnwrapOperatorIndex != nil && !isClosure
+    }
+
+    private var trailingUnwrapOperatorIndex: Int? {
+        if let index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: range.upperBound + 1),
+           formatter.tokens[index].isUnwrapOperator
+        {
+            return index
+        } else {
+            return nil
+        }
     }
 }

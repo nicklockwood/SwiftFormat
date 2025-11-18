@@ -111,7 +111,21 @@ extension TypeName {
 
     /// Whether or not this type is a closure
     var isClosure: Bool {
-        formatter.isStartOfClosureType(at: range.lowerBound) && !hasTopLevelUnwrapOperator
+        guard formatter.isStartOfClosureType(at: range.lowerBound) else {
+            return false
+        }
+
+        // If the closure is wrapped in parens followed by a trailing optional (`(() -> Void)?`),
+        // treat it as a non-closure from the perspective of this helper.
+        if formatter.tokens[range.lowerBound] == .startOfScope("("),
+           formatter.tokens[range.upperBound] == .endOfScope(")"),
+           let tokenAfterClosing = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: range.upperBound),
+           formatter.tokens[tokenAfterClosing].isUnwrapOperator
+        {
+            return false
+        }
+
+        return true
     }
 
     /// If this type is wrapped in redundant parens, returns the inner type.
@@ -132,20 +146,9 @@ extension TypeName {
 
     /// Whether this type has a top-level optional suffix (`?` or `!`) applied to it.
     var isOptionalType: Bool {
-        guard hasTopLevelUnwrapOperator else { return false }
-        return !isClosure
-    }
-
-    private var hasTopLevelUnwrapOperator: Bool {
-        guard var index = formatter
-            .index(of: .nonSpaceOrCommentOrLinebreak, before: range.upperBound + 1),
-            formatter.tokens[index].isUnwrapOperator
+        guard let unwrapIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: range.upperBound + 1),
+              formatter.tokens[unwrapIndex].isUnwrapOperator
         else { return false }
-
-        repeat {
-            index -= 1
-        } while index >= range.lowerBound && formatter.tokens[index].isUnwrapOperator
-
-        return true
+        return !isClosure
     }
 }

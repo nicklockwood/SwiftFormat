@@ -847,6 +847,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var languageMode: Version
     public var fileInfo: FileInfo
     public var markdownFiles: MarkdownFormattingMode
+    public var regexRules: [String]
     public var timeout: TimeInterval
 
     /// Enabled rules - this is a hack used to allow rules to vary their behavior
@@ -987,6 +988,7 @@ public struct FormatOptions: CustomStringConvertible {
                 languageMode: Version? = nil,
                 fileInfo: FileInfo = FileInfo(),
                 markdownFiles: MarkdownFormattingMode = .ignore,
+                regexRules: [String] = [],
                 timeout: TimeInterval = 1)
     {
         self.lineAfterMarks = lineAfterMarks
@@ -1120,6 +1122,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.languageMode = languageMode ?? defaultLanguageMode(for: swiftVersion)
         self.fileInfo = fileInfo
         self.markdownFiles = markdownFiles
+        self.regexRules = regexRules
         self.timeout = timeout
     }
 

@@ -115,12 +115,10 @@ extension TypeName {
             return false
         }
 
-        // If the closure is wrapped in parens followed by a trailing optional (`(() -> Void)?`),
-        // treat it as a non-closure from the perspective of this helper.
-        if formatter.tokens[range.lowerBound] == .startOfScope("("),
+        if let unwrapIndex = trailingUnwrapOperatorIndex,
+           formatter.tokens[range.lowerBound] == .startOfScope("("),
            formatter.tokens[range.upperBound] == .endOfScope(")"),
-           let tokenAfterClosing = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: range.upperBound),
-           formatter.tokens[tokenAfterClosing].isUnwrapOperator
+           formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: range.upperBound) == unwrapIndex
         {
             return false
         }
@@ -146,9 +144,14 @@ extension TypeName {
 
     /// Whether this type has a top-level optional suffix (`?` or `!`) applied to it.
     var isOptionalType: Bool {
-        guard let unwrapIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: range.upperBound + 1),
-              formatter.tokens[unwrapIndex].isUnwrapOperator
-        else { return false }
+        guard trailingUnwrapOperatorIndex != nil else { return false }
         return !isClosure
+    }
+
+    private var trailingUnwrapOperatorIndex: Int? {
+        guard let index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: range.upperBound + 1),
+              formatter.tokens[index].isUnwrapOperator
+        else { return nil }
+        return index
     }
 }

@@ -111,7 +111,7 @@ extension TypeName {
 
     /// Whether or not this type is a closure
     var isClosure: Bool {
-        formatter.isStartOfClosureType(at: range.lowerBound)
+        formatter.isStartOfClosureType(at: range.lowerBound) && !hasTopLevelUnwrapOperator
     }
 
     /// If this type is wrapped in redundant parens, returns the inner type.
@@ -133,7 +133,7 @@ extension TypeName {
     /// Whether this type has a top-level optional suffix (`?` or `!`) applied to it.
     var isOptionalType: Bool {
         guard hasTopLevelUnwrapOperator else { return false }
-        return !containsTopLevelFunctionArrow
+        return !isClosure
     }
 
     private var hasTopLevelUnwrapOperator: Bool {
@@ -147,10 +147,5 @@ extension TypeName {
         } while index >= range.lowerBound && formatter.tokens[index].isUnwrapOperator
 
         return true
-    }
-
-    private var containsTopLevelFunctionArrow: Bool {
-        formatter.index(of: .operator("->", .infix),
-                        in: range.lowerBound ..< range.upperBound + 1) != nil
     }
 }

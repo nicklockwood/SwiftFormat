@@ -350,7 +350,7 @@ public extension FormatRule {
                     } else {
                         var indent = indentStack.last ?? ""
                         if token.isSwitchCaseOrDefault,
-                           formatter.options.indentCase, !(formatter.options.ifdefIndent == .preserve && preserveIfdefDepth > 0)
+                           formatter.options.indentCase, !formatter.isInIfdef(at: i, scopeStack: scopeStack)
                         {
                             indent += formatter.options.indent
                         }
@@ -863,6 +863,24 @@ extension Formatter {
         default:
             return false
         }
+    }
+
+    func isInIfdef(at i: Int, scopeStack: [Token]) -> Bool {
+        guard scopeStack.contains(.startOfScope("#if")) else {
+            return false
+        }
+        var index = i - 1
+        while index > 0 {
+            switch tokens[index] {
+            case .keyword("switch"):
+                return false
+            case .startOfScope("#if"), .keyword("#else"), .keyword("#elseif"):
+                return true
+            default:
+                index -= 1
+            }
+        }
+        return false
     }
 
 

@@ -301,13 +301,12 @@ func preprocessArguments(_ args: [String], _ names: [String]) throws -> [String:
         if hasTrailingComma {
             arg = String(arg.dropLast())
         }
-        if let existing = namedArgs[name], !existing.isEmpty,
-           // TODO: find a more general way to represent merge-able options
-           ["exclude", "unexclude", "disable", "enable", "lint-only", "rules", "config"].contains(name) ||
-           Descriptors.all.contains(where: {
-               $0.argumentName == name && $0.isSetType
-           })
-        {
+        if let existing = namedArgs[name], !existing.isEmpty, [
+            // TODO: find a more general way to represent merge-able options
+            "exclude", "unexclude", "disable", "enable", "lint-only", "rules", "config", "regex"
+        ].contains(name) || Descriptors.all.contains(where: {
+            $0.argumentName == name && $0.isSetType
+        }) {
             namedArgs[name] = existing + "," + arg
         } else {
             namedArgs[name] = arg

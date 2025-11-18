@@ -302,4 +302,73 @@ final class SwiftFormatTests: XCTestCase {
         let output = "class Foo {\r  func bar() {\r  }\r\r  func baz() {\r  }\r}"
         XCTAssertEqual(try format(input, rules: [.blankLinesBetweenScopes]).output, output)
     }
+
+    // MARK: regex
+
+    func testRegexReplace() throws {
+        let input = """
+        class NetworkService {
+            private let baseURL = URL(string: "https://api.example.com")!
+
+            func makeRequest() {
+                let url = URL(string: "https://api.example.com/endpoint")!
+                // Use url...
+            }
+        }
+        """
+        let output = """
+        class NetworkService {
+            private let baseURL = #URL("https://api.example.com")
+
+            func makeRequest() {
+                let url = #URL("https://api.example.com/endpoint")
+                // Use url...
+            }
+        }
+        """
+        let options = FormatOptions(regexRules: ["urls/URL\\(string: \"([^\\\"]*)\"\\)!/#URL(\"$1\")/"])
+        XCTAssertEqual(try format(input, rules: [], options: options).output, output)
+    }
+
+    func testRegexRuleDisabled() throws {
+        let input = """
+        class NetworkService {
+            private let baseURL = URL(string: "https://api.example.com")!
+
+            func makeRequest() {
+                // swiftformat:disable:next urls
+                let url = URL(string: "https://api.example.com/endpoint")!
+                // Use url...
+            }
+        }
+        """
+        let output = """
+        class NetworkService {
+            private let baseURL = #URL("https://api.example.com")
+
+            func makeRequest() {
+                // swiftformat:disable:next urls
+                let url = URL(string: "https://api.example.com/endpoint")!
+                // Use url...
+            }
+        }
+        """
+        let options = FormatOptions(regexRules: ["urls/URL\\(string: \"([^\\\"]*)\"\\)!/#URL(\"$1\")/"])
+        XCTAssertEqual(try format(input, rules: [], options: options).output, output)
+    }
+
+    func testRegexCaretMatchesStartOfLine() throws {
+        let input = """
+        import Foo
+        import Bar
+
+        struct Baz {}
+        """
+        let output = """
+
+        struct Baz {}
+        """
+        let options = FormatOptions(regexRules: ["no-imports/^import\\s+[^\\n]*\\n//"])
+        XCTAssertEqual(try format(input, rules: [], options: options).output, output)
+    }
 }

@@ -151,6 +151,10 @@
 		E4FABAD6202FEF060065716E /* OptionDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4FABAD4202FEF060065716E /* OptionDescriptor.swift */; };
 		E4FABAD7202FEF060065716E /* OptionDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4FABAD4202FEF060065716E /* OptionDescriptor.swift */; };
 		E4FABAD8202FEF060065716E /* OptionDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4FABAD4202FEF060065716E /* OptionDescriptor.swift */; };
+		EA3403872ECC86AE00A817DE /* RegexRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA3403862ECC86AE00A817DE /* RegexRule.swift */; };
+		EA3403882ECC86AE00A817DE /* RegexRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA3403862ECC86AE00A817DE /* RegexRule.swift */; };
+		EA3403892ECC86AE00A817DE /* RegexRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA3403862ECC86AE00A817DE /* RegexRule.swift */; };
+		EA34038A2ECC86AE00A817DE /* RegexRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA3403862ECC86AE00A817DE /* RegexRule.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -287,6 +291,7 @@
 		E4E4D3C82033F17C000D7CB1 /* EnumAssociable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnumAssociable.swift; sourceTree = "<group>"; };
 		E4E4D3CD2033F1EF000D7CB1 /* EnumAssociableTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnumAssociableTests.swift; sourceTree = "<group>"; };
 		E4FABAD4202FEF060065716E /* OptionDescriptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionDescriptor.swift; sourceTree = "<group>"; };
+		EA3403862ECC86AE00A817DE /* RegexRule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegexRule.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -407,6 +412,7 @@
 			children = (
 				2E3A24EE2DDD621600407419 /* Rules */,
 				2E2BAB8B2C57F6B600590239 /* RuleRegistry.generated.swift */,
+				EA3403862ECC86AE00A817DE /* RegexRule.swift */,
 				01F17E811E25870700DCD359 /* CommandLine.swift */,
 				E4E4D3C82033F17C000D7CB1 /* EnumAssociable.swift */,
 				01B3987C1D763493009ADE61 /* Formatter.swift */,
@@ -904,6 +910,7 @@
 				2EF8BF1B2D1E0D4F00D6F12F /* DeclarationType.swift in Sources */,
 				01F17E821E25870700DCD359 /* CommandLine.swift in Sources */,
 				01F3DF8C1DB9FD3F00454944 /* Options.swift in Sources */,
+				EA3403872ECC86AE00A817DE /* RegexRule.swift in Sources */,
 				01A0EAC21D5DB4F700A0A8E3 /* Tokenizer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -955,6 +962,7 @@
 				01F17E831E25870700DCD359 /* CommandLine.swift in Sources */,
 				015243E22B04B0A600F65221 /* Singularize.swift in Sources */,
 				2EE4007B2E595B7200CF8D5A /* TypeName.swift in Sources */,
+				EA3403882ECC86AE00A817DE /* RegexRule.swift in Sources */,
 				6E954FF42E0DEACC004EE019 /* SARIFReporter.swift in Sources */,
 				C2FFD1832BD13C9E00774F55 /* XMLReporter.swift in Sources */,
 				01A0EACD1D5DB5F500A0A8E3 /* main.swift in Sources */,
@@ -979,6 +987,7 @@
 				E4083191202C049200CAF11D /* SwiftFormat.swift in Sources */,
 				E4FABAD7202FEF060065716E /* OptionDescriptor.swift in Sources */,
 				2E2611C82DD94FE900FFFE09 /* JSONReporter.swift in Sources */,
+				EA3403892ECC86AE00A817DE /* RegexRule.swift in Sources */,
 				2E2611C92DD94FE900FFFE09 /* XMLReporter.swift in Sources */,
 				2E2611CA2DD94FE900FFFE09 /* GithubActionsLogReporter.swift in Sources */,
 				2E2611CB2DD94FE900FFFE09 /* Reporter.swift in Sources */,
@@ -1019,6 +1028,7 @@
 				01045AA0211A1EE300D2BE3D /* Arguments.swift in Sources */,
 				01BBD85C21DAA2A700457380 /* Globs.swift in Sources */,
 				2E26108F2DD92CB400FFFE09 /* CommandLine.swift in Sources */,
+				EA34038A2ECC86AE00A817DE /* RegexRule.swift in Sources */,
 				01045A9F2119D30D00D2BE3D /* Inference.swift in Sources */,
 				01A95BD2225BEDE300744931 /* ParsingHelpers.swift in Sources */,
 				90C4B6E51DA4B059009EB000 /* SourceEditorExtension.swift in Sources */,

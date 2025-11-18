@@ -235,6 +235,11 @@ func printHelp(as type: CLI.OutputType) {
 
     --rule-info        Display options for a given rule or rules (comma-delimited)
     --options          Prints a list of all formatting options and their usage
+
+    In addition to the built-in rules, you can also provide your own rules using
+    regular expressions. Multiple regex rules can be provided, separated by commas.
+
+    --regex-rules      \(stripMarkdown(Descriptors.regexRules.help))
     """, as: type)
     print("")
 }
@@ -1031,7 +1036,7 @@ func applyRules(_ source: String, tokens: [Token]? = nil, options: Options, line
 
     // Get rules
     let rulesByName = FormatRules.byName
-    let ruleNames = Array(options.rules ?? defaultRules).sorted()
+    let ruleNames = (options.rules ?? defaultRules).sorted()
     let rules = ruleNames.compactMap { rulesByName[$0] }
 
     if verbose, let path = options.formatOptions?.fileInfo.filePath {

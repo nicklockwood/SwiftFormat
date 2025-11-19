@@ -144,7 +144,7 @@ extension TypeName {
 
     /// Whether this type has a top-level optional suffix (`?` or `!`) applied to it.
     var isOptionalType: Bool {
-        return trailingUnwrapOperatorIndex != nil && !isClosure
+        trailingUnwrapOperatorIndex != nil && !isClosure
     }
 
     private var trailingUnwrapOperatorIndex: Int? {

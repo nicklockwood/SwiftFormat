@@ -577,33 +577,33 @@ final class WrapTests: XCTestCase {
 
     func testWrapSimpleTernaryOperator() {
         let input = """
-        let foo = fooCondition ? longValueThatContainsFoo : longValueThatContainsBar
+        let foo = fooCondition ? longValueThatContainsFoo(bar) : longValueThatContainsBar(baaz)
         """
 
         let output = """
         let foo = fooCondition
-            ? longValueThatContainsFoo
-            : longValueThatContainsBar
+            ? longValueThatContainsFoo(bar)
+            : longValueThatContainsBar(baaz)
         """
 
-        let options = FormatOptions(wrapTernaryOperators: .beforeOperators, maxWidth: 60)
-        testFormatting(for: input, output, rule: .wrap, options: options)
+        let options = FormatOptions(wrapTernaryOperators: .beforeOperators, maxWidth: 40)
+        testFormatting(for: input, [output], rules: [.wrap, .wrapArguments], options: options)
     }
 
     func testRewrapsSimpleTernaryOperator() {
         let input = """
-        let foo = fooCondition ? longValueThatContainsFoo :
-            longValueThatContainsBar
+        let foo = fooCondition ? longValueThatContainsFoo(bar) :
+            longValueThatContainsBar(baaz)
         """
 
         let output = """
         let foo = fooCondition
-            ? longValueThatContainsFoo
-            : longValueThatContainsBar
+            ? longValueThatContainsFoo(bar)
+            : longValueThatContainsBar(baaz)
         """
 
-        let options = FormatOptions(wrapTernaryOperators: .beforeOperators, maxWidth: 60)
-        testFormatting(for: input, output, rule: .wrap, options: options)
+        let options = FormatOptions(wrapTernaryOperators: .beforeOperators, maxWidth: 40)
+        testFormatting(for: input, [output], rules: [.wrap, .wrapArguments], options: options)
     }
 
     func testWrapComplexTernaryOperator() {

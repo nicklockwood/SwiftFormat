@@ -23,5 +23,4 @@ let somethingReallyReallyLongJson = a(s: b(status: """
                                               "header": "<h1>",
                                               "div": "<div>"
                                            }
-                                           """)
-)
+                                           """))

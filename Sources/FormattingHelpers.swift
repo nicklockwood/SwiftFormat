@@ -448,9 +448,11 @@ extension Formatter {
                 }
             }
 
+            let hasLineBreakAfterOpeningParen = nextToken(after: i, where: { !$0.isComment })?.isLinebreak == true
+
             if closingParenOnSameLine {
                 removeLinebreakBeforeEndOfScope(at: &endOfScope)
-            } else if insertLinebreakAfterOpeningParen {
+            } else if hasLineBreakAfterOpeningParen {
                 // Insert linebreak before closing paren
                 if let lastIndex = self.index(of: .nonSpace, before: endOfScope) {
                     endOfScope += insertSpace(indent, at: lastIndex + 1)
@@ -519,6 +521,98 @@ extension Formatter {
             wrapReturnAndEffectsIfNecessary(
                 startOfScope: i,
                 endOfFunctionScope: endOfScope
+            )
+        }
+
+        // Wrap nested structures like typealiases and ternary operators first since this may
+        // prevent the need to do wrap the child expressions.
+
+        // -- wraptypealiases
+        forEach(.keyword("typealias")) { typealiasIndex, _ in
+            guard options.wrapTypealiases == .beforeFirst || options.wrapTypealiases == .afterFirst,
+                  let (equalsIndex, andTokenIndices, lastIdentifierIndex) = parseProtocolCompositionTypealias(at: typealiasIndex)
+            else { return }
+
+            // Decide which indices to wrap at
+            //  - We always wrap at each `&`
+            //  - For `beforeFirst`, we also wrap before the `=`
+            let wrapIndices: [Int]
+            switch options.wrapTypealiases {
+            case .afterFirst:
+                wrapIndices = andTokenIndices
+            case .beforeFirst:
+                wrapIndices = [equalsIndex] + andTokenIndices
+            case .default, .disabled, .preserve:
+                return
+            }
+
+            let didWrap = wrapMultilineStatement(
+                startIndex: typealiasIndex,
+                delimiterIndices: wrapIndices,
+                endIndex: lastIdentifierIndex
+            )
+
+            guard didWrap else { return }
+
+            // If we're using `afterFirst` and there was unexpectedly a linebreak
+            // between the `typealias` and the `=`, we need to remove it
+            let rangeBetweenTypealiasAndEquals = (typealiasIndex + 1) ..< equalsIndex
+            if options.wrapTypealiases == .afterFirst,
+               let linebreakIndex = rangeBetweenTypealiasAndEquals.first(where: { tokens[$0].isLinebreak })
+            {
+                removeToken(at: linebreakIndex)
+                if tokens[linebreakIndex].isSpace, tokens[linebreakIndex] != .space(" ") {
+                    replaceToken(at: linebreakIndex, with: .space(" "))
+                }
+            }
+        }
+
+        // --wrapternary
+        forEach(.operator("?", .infix)) { conditionIndex, _ in
+            guard options.wrapTernaryOperators != .default,
+                  let expressionStartIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: conditionIndex),
+                  !isInStringLiteralWithWrappingDisabled(at: conditionIndex)
+            else { return }
+
+            // Find the : operator that separates the true and false branches
+            // of this ternary operator
+            //  - You can have nested ternary operators, so the immediate-next colon
+            //    is not necessarily the colon of _this_ ternary operator.
+            //  - To track nested ternary operators, we maintain a count of
+            //    the unterminated `?` tokens that we've seen.
+            //  - This ternary's colon token is the first colon we find
+            //    where there isn't an unterminated `?`.
+            var unterimatedTernaryCount = 0
+            var currentIndex = conditionIndex + 1
+            var foundColonIndex: Int?
+
+            while foundColonIndex == nil,
+                  currentIndex < tokens.count
+            {
+                switch tokens[currentIndex] {
+                case .operator("?", .infix):
+                    unterimatedTernaryCount += 1
+                case .operator(":", .infix):
+                    if unterimatedTernaryCount == 0 {
+                        foundColonIndex = currentIndex
+                    } else {
+                        unterimatedTernaryCount -= 1
+                    }
+                default:
+                    break
+                }
+
+                currentIndex += 1
+            }
+
+            guard let colonIndex = foundColonIndex,
+                  let endOfElseExpression = endOfExpression(at: colonIndex, upTo: [])
+            else { return }
+
+            wrapMultilineStatement(
+                startIndex: expressionStartIndex,
+                delimiterIndices: [conditionIndex, colonIndex],
+                endIndex: endOfElseExpression
             )
         }
 
@@ -799,95 +893,6 @@ extension Formatter {
             }
 
             return true
-        }
-
-        // -- wraptypealiases
-        forEach(.keyword("typealias")) { typealiasIndex, _ in
-            guard options.wrapTypealiases == .beforeFirst || options.wrapTypealiases == .afterFirst,
-                  let (equalsIndex, andTokenIndices, lastIdentifierIndex) = parseProtocolCompositionTypealias(at: typealiasIndex)
-            else { return }
-
-            // Decide which indices to wrap at
-            //  - We always wrap at each `&`
-            //  - For `beforeFirst`, we also wrap before the `=`
-            let wrapIndices: [Int]
-            switch options.wrapTypealiases {
-            case .afterFirst:
-                wrapIndices = andTokenIndices
-            case .beforeFirst:
-                wrapIndices = [equalsIndex] + andTokenIndices
-            case .default, .disabled, .preserve:
-                return
-            }
-
-            let didWrap = wrapMultilineStatement(
-                startIndex: typealiasIndex,
-                delimiterIndices: wrapIndices,
-                endIndex: lastIdentifierIndex
-            )
-
-            guard didWrap else { return }
-
-            // If we're using `afterFirst` and there was unexpectedly a linebreak
-            // between the `typealias` and the `=`, we need to remove it
-            let rangeBetweenTypealiasAndEquals = (typealiasIndex + 1) ..< equalsIndex
-            if options.wrapTypealiases == .afterFirst,
-               let linebreakIndex = rangeBetweenTypealiasAndEquals.first(where: { tokens[$0].isLinebreak })
-            {
-                removeToken(at: linebreakIndex)
-                if tokens[linebreakIndex].isSpace, tokens[linebreakIndex] != .space(" ") {
-                    replaceToken(at: linebreakIndex, with: .space(" "))
-                }
-            }
-        }
-
-        // --wrapternary
-        forEach(.operator("?", .infix)) { conditionIndex, _ in
-            guard options.wrapTernaryOperators != .default,
-                  let expressionStartIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: conditionIndex),
-                  !isInStringLiteralWithWrappingDisabled(at: conditionIndex)
-            else { return }
-
-            // Find the : operator that separates the true and false branches
-            // of this ternary operator
-            //  - You can have nested ternary operators, so the immediate-next colon
-            //    is not necessarily the colon of _this_ ternary operator.
-            //  - To track nested ternary operators, we maintain a count of
-            //    the unterminated `?` tokens that we've seen.
-            //  - This ternary's colon token is the first colon we find
-            //    where there isn't an unterminated `?`.
-            var unterimatedTernaryCount = 0
-            var currentIndex = conditionIndex + 1
-            var foundColonIndex: Int?
-
-            while foundColonIndex == nil,
-                  currentIndex < tokens.count
-            {
-                switch tokens[currentIndex] {
-                case .operator("?", .infix):
-                    unterimatedTernaryCount += 1
-                case .operator(":", .infix):
-                    if unterimatedTernaryCount == 0 {
-                        foundColonIndex = currentIndex
-                    } else {
-                        unterimatedTernaryCount -= 1
-                    }
-                default:
-                    break
-                }
-
-                currentIndex += 1
-            }
-
-            guard let colonIndex = foundColonIndex,
-                  let endOfElseExpression = endOfExpression(at: colonIndex, upTo: [])
-            else { return }
-
-            wrapMultilineStatement(
-                startIndex: expressionStartIndex,
-                delimiterIndices: [conditionIndex, colonIndex],
-                endIndex: endOfElseExpression
-            )
         }
     }
 

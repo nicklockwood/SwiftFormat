@@ -22,8 +22,8 @@ struct ContentView: View {
       List {
         ForEach(books, id: \.self) { book in
           NavigationLink(destination:
-            DetailView(book: book).environment(\.managedObjectContext, self.moc)
-          ) {
+            DetailView(book: book).environment(\.managedObjectContext, self.moc))
+          {
             EmojiRatingView(rating: book.rating)
               .font(.largeTitle)
 

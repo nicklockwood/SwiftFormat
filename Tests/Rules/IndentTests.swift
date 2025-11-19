@@ -246,7 +246,7 @@ final class IndentTests: XCTestCase {
                 View()
             }
         """
-        testFormatting(for: input, rule: .indent)
+        testFormatting(for: input, rule: .indent, exclude: [.wrapArguments])
     }
 
     func testIndentChainedCallAfterClosingParen2() {
@@ -594,7 +594,7 @@ final class IndentTests: XCTestCase {
         }
         """
         testFormatting(for: input, rule: .indent,
-                       exclude: [.braces, .wrapMultilineStatementBraces, .redundantProperty])
+                       exclude: [.braces, .wrapMultilineStatementBraces, .redundantProperty, .wrapArguments])
     }
 
     func testIndentLineAfterIndentedInlineClosure() {
@@ -606,7 +606,7 @@ final class IndentTests: XCTestCase {
             return viewController
         }
         """
-        testFormatting(for: input, rule: .indent, exclude: [.redundantProperty])
+        testFormatting(for: input, rule: .indent, exclude: [.redundantProperty, .wrapArguments])
     }
 
     func testIndentLineAfterNonIndentedClosure() {
@@ -3558,7 +3558,7 @@ final class IndentTests: XCTestCase {
             \"\""
         }
         """
-        testFormatting(for: input, rule: .indent)
+        testFormatting(for: input, rule: .indent, exclude: [.wrapArguments])
     }
 
     // indentStrings = true

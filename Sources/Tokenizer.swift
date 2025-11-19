@@ -1897,8 +1897,7 @@ public func tokenize(_ source: String) -> [Token] {
                         convertOpeningChevronToOperator(at: scopeIndex)
                     }
                 case .delimiter(":") where scopeIndexStack.count > 1 &&
-                    [.endOfScope("case"), .operator("?", .infix)].contains(tokens[scopeIndexStack[scopeIndexStack.count - 2]]
-                    ):
+                    [.endOfScope("case"), .operator("?", .infix)].contains(tokens[scopeIndexStack[scopeIndexStack.count - 2]]):
                     // Not a generic scope
                     convertOpeningChevronToOperator(at: scopeIndex)
                     processToken()

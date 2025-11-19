@@ -448,9 +448,11 @@ extension Formatter {
                 }
             }
 
+            let hasLineBreakAfterOpeningParen = nextToken(after: i, where: { !$0.isComment })?.isLinebreak == true
+
             if closingParenOnSameLine {
                 removeLinebreakBeforeEndOfScope(at: &endOfScope)
-            } else if insertLinebreakAfterOpeningParen {
+            } else if hasLineBreakAfterOpeningParen {
                 // Insert linebreak before closing paren
                 if let lastIndex = self.index(of: .nonSpace, before: endOfScope) {
                     endOfScope += insertSpace(indent, at: lastIndex + 1)

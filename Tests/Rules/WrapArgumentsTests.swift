@@ -193,7 +193,7 @@ final class WrapArgumentsTests: XCTestCase {
             bar _: Int
         ) {}
         """
-        let options = FormatOptions(wrapArguments: .beforeFirst, closingParenPosition: .balanced)
+        let options = FormatOptions(wrapArguments: .beforeFirst, closingParenPosition: .balanced, maxWidth: 100)
         testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
@@ -239,7 +239,7 @@ final class WrapArgumentsTests: XCTestCase {
             bar: 42
         )
         """
-        let options = FormatOptions(wrapArguments: .beforeFirst, closingParenPosition: .sameLine, callSiteClosingParenPosition: .balanced)
+        let options = FormatOptions(wrapArguments: .beforeFirst, closingParenPosition: .sameLine, callSiteClosingParenPosition: .balanced, maxWidth: 100)
         testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
@@ -996,7 +996,7 @@ final class WrapArgumentsTests: XCTestCase {
             0,
         ]
         """
-        let options = FormatOptions(wrapCollections: .beforeFirst)
+        let options = FormatOptions(wrapCollections: .beforeFirst, maxWidth: 100)
         testFormatting(for: input, [output], rules: [.wrapArguments, .trailingCommas], options: options,
                        exclude: [.wrap])
     }
@@ -3131,7 +3131,7 @@ final class WrapArgumentsTests: XCTestCase {
         """
 
         testFormatting(for: input, rule: .wrapArguments, options: FormatOptions(
-            wrapArguments: .beforeFirst, maxWidth: 1000
+            wrapArguments: .beforeFirst, closingParenPosition: .balanced, maxWidth: 1000
         ))
     }
 }

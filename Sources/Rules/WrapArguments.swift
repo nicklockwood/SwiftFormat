@@ -19,7 +19,7 @@ public extension FormatRule {
                         "tab-width", "max-width", "smart-tabs", "asset-literals", "wrap-ternary"]
     ) { formatter in
         formatter.wrapCollectionsAndArguments(completePartialWrapping: true,
-                                              wrapSingleArguments: false)
+                                              wrapSingleArguments: true)
     } examples: {
         """
         **NOTE:** For backwards compatibility with previous versions, if no value is

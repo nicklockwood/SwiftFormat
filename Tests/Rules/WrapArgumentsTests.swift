@@ -962,26 +962,56 @@ final class WrapArgumentsTests: XCTestCase {
         let input = """
         guard let foo = bar[0] {}
         """
+        let output = """
+        guard let foo = bar[
+            0
+        ] {}
+        """
         let options = FormatOptions(wrapCollections: .beforeFirst, maxWidth: 20)
-        testFormatting(for: input, rule: .wrapArguments, options: options,
+        testFormatting(for: input, output, rule: .wrapArguments, options: options,
                        exclude: [.wrap])
     }
 
-    func testNoWrapArrayWithSingleElement() {
+    func testWrapArrayWithSingleElementIfOverMaxWidth() {
         let input = """
         let foo = [0]
         """
+        let output = """
+        let foo = [
+            0,
+        ]
+        """
         let options = FormatOptions(wrapCollections: .beforeFirst, maxWidth: 11)
-        testFormatting(for: input, rule: .wrapArguments, options: options,
+        testFormatting(for: input, [output], rules: [.wrapArguments, .trailingCommas], options: options,
                        exclude: [.wrap])
     }
 
-    func testNoWrapDictionaryWithSingleElement() {
+    func testWrapPartiallyWrappedArrayWithSingleElement() {
+        let input = """
+        let foo = [
+            0]
+        """
+        let output = """
+        let foo = [
+            0,
+        ]
+        """
+        let options = FormatOptions(wrapCollections: .beforeFirst)
+        testFormatting(for: input, [output], rules: [.wrapArguments, .trailingCommas], options: options,
+                       exclude: [.wrap])
+    }
+
+    func testWrapDictionaryWithSingleElementIfOverMaxWidth() {
         let input = """
         let foo = [bar: baz]
         """
+        let output = """
+        let foo = [
+            bar: baz,
+        ]
+        """
         let options = FormatOptions(wrapCollections: .beforeFirst, maxWidth: 15)
-        testFormatting(for: input, rule: .wrapArguments, options: options,
+        testFormatting(for: input, [output], rules: [.wrapArguments, .trailingCommas], options: options,
                        exclude: [.wrap])
     }
 
@@ -1520,13 +1550,13 @@ final class WrapArgumentsTests: XCTestCase {
         let input = """
         let foo = ["bar", "baz"].quux(quuz)
         """
-        let output2 = """
+        let output = """
         let foo = ["bar", "baz"]
             .quux(quuz)
         """
         let options = FormatOptions(wrapCollections: .beforeFirst, maxWidth: 26)
-        testFormatting(for: input, [input, output2],
-                       rules: [.wrapArguments], options: options)
+        testFormatting(for: input, [output],
+                       rules: [.wrap, .wrapArguments], options: options)
     }
 
     // MARK: afterFirst

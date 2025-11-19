@@ -222,8 +222,8 @@ extension Formatter {
                 //  }
                 //
                 if conditionalBranchHasUnsupportedCastOperator(
-                    startOfScopeIndex: branch.startOfBranch)
-                {
+                    startOfScopeIndex: branch.startOfBranch
+                ) {
                     return nil
                 }
 

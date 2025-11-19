@@ -183,6 +183,20 @@ final class WrapArgumentsTests: XCTestCase {
         testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
+    func testWrapParametersFunctionDeclarationClosingParenOnNextLineSingleArgument() {
+        let input = """
+        func foo(
+            bar _: Int) {}
+        """
+        let output = """
+        func foo(
+            bar _: Int
+        ) {}
+        """
+        let options = FormatOptions(wrapArguments: .beforeFirst, closingParenPosition: .balanced)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
+    }
+
     func testWrapParametersFunctionCallClosingParenOnNextLineAndForce() {
         let input = """
         foo(
@@ -209,6 +223,20 @@ final class WrapArgumentsTests: XCTestCase {
         foo(
             bar: 42,
             baz: "foo"
+        )
+        """
+        let options = FormatOptions(wrapArguments: .beforeFirst, closingParenPosition: .sameLine, callSiteClosingParenPosition: .balanced)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
+    }
+
+    func testWrapParametersFunctionCallClosingParenBalancedSingleArgument() {
+        let input = """
+        foo(
+            bar: 42)
+        """
+        let output = """
+        foo(
+            bar: 42
         )
         """
         let options = FormatOptions(wrapArguments: .beforeFirst, closingParenPosition: .sameLine, callSiteClosingParenPosition: .balanced)

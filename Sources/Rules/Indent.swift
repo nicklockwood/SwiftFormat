@@ -883,7 +883,6 @@ extension Formatter {
         return false
     }
 
-
     func isWrappedDeclaration(at i: Int) -> Bool {
         guard let keywordIndex = indexOfLastSignificantKeyword(at: i, excluding: [
             "where", "throws", "rethrows",

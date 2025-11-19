@@ -447,12 +447,12 @@ public extension FormatRule {
                                 )) || _nextToken.isMacro || [.keyword("try"), .keyword("await")].contains(_nextToken)) &&
                                     formatter.last(.nonSpaceOrCommentOrLinebreak, before: nextTokenIndex!).map {
                                         $0 != .keyword("return") && !$0.isOperator(ofType: .infix)
-                                    } ?? false) || (
+                                    } ?? false
+                            ) || (
                                 _nextToken == .delimiter(",") && [
                                     "<", "[", "(", "case",
                                 ].contains(formatter.currentScope(at: nextTokenIndex!)?.string ?? "")
-                            )
-                        )
+                            ))
                 )
 
                 // Determine current indent
@@ -506,7 +506,8 @@ public extension FormatRule {
                                    formatter.isTrailingClosureLabel(at: startIndex)) &&
                                    formatter.last(.nonSpaceOrCommentOrLinebreak, before: startIndex).map {
                                        $0 != .keyword("return") && !$0.isOperator(ofType: .infix)
-                                   } ?? false)
+                                   } ?? false
+                           )
                         {
                             indent += formatter.options.indent
                             indentStack[indentStack.count - 1] = indent

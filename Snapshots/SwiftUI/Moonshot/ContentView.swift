@@ -30,8 +30,7 @@ struct ContentView: View {
               .font(.headline)
             Text(self.showCrew ?
               self.astronauts(in: mission) :
-              mission.formattedLaunchDate
-            )
+              mission.formattedLaunchDate)
           }
         }
       }

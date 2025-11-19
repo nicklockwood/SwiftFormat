@@ -10,8 +10,8 @@ import Foundation
 
 public extension FormatRule {
     static let preferCountWhere = FormatRule(
-        help: "Prefer `count(where:)` over `filter(_:).count`.")
-    { formatter in
+        help: "Prefer `count(where:)` over `filter(_:).count`."
+    ) { formatter in
         // count(where:) was added in Swift 6.0
         guard formatter.options.swiftVersion >= "6.0" else { return }
 

@@ -741,7 +741,7 @@ public extension Formatter {
         for i in range.reversed() {
             let token = tokens[i]
             switch token {
-            case .startOfScope(":") where scopeStack.last == .endOfScope("#endif"):
+            case .startOfScope(":") where [.endOfScope("#endif"), .endOfScope("}")].contains(scopeStack.last):
                 break
             case .startOfScope where scopeStack.last?.isEndOfScope(token) == true:
                 scopeStack.removeLast()
@@ -758,7 +758,7 @@ public extension Formatter {
             case .linebreak:
                 linebreakEncountered = true
             case .endOfScope("case"), .endOfScope("default"):
-                if scopeStack.last != .endOfScope("#endif") {
+                if ![.endOfScope("#endif"), .endOfScope("}")].contains(scopeStack.last) {
                     fallthrough
                 }
             case .endOfScope:

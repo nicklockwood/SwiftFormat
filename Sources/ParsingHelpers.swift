@@ -173,12 +173,14 @@ public extension Formatter {
                     $0.isEndOfScope(startToken) || $0 == .endOfScope("#endif")
                 })
             }
+            assert(endIndex ?? index >= index)
             return endIndex
         }
         while let endIndex = self.index(after: startIndex, where: {
             $0.isEndOfScope(startToken)
         }), let token = token(at: endIndex) {
             if token == .endOfScope("}") {
+                assert(endIndex >= index)
                 return endIndex
             }
             startIndex = endIndex

@@ -1524,4 +1524,38 @@ final class UnusedArgumentsTests: XCTestCase {
 
         testFormatting(for: input, rule: .unusedArguments)
     }
+
+    func testIfdefCrash() {
+        let input = """
+        func test(unused: Int) {
+            foo {
+                if true {
+                    #if FOO
+                        switch 1 {
+                        default: ()
+                        }
+                    #endif
+                } else if true {
+                    ()
+                }
+            }
+        }
+        """
+        let output = """
+        func test(unused _: Int) {
+            foo {
+                if true {
+                    #if FOO
+                        switch 1 {
+                        default: ()
+                        }
+                    #endif
+                } else if true {
+                    ()
+                }
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .unusedArguments)
+    }
 }

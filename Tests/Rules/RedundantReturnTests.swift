@@ -1401,7 +1401,7 @@ final class RedundantReturnTests: XCTestCase {
         let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input,
                        rules: [.redundantReturn, .conditionalAssignment],
-                       options: options)
+                       options: options, exclude: [.redundantSelf])
     }
 
     func testReturnNotRemovedFromCatchWhere() {

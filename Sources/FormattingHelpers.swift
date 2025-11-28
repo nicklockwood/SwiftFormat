@@ -2421,7 +2421,7 @@ extension Formatter {
                     continue
                 case .keyword("while") where lastKeyword == "repeat":
                     lastKeyword = ""
-                case let .keyword(name):
+                case let .keyword(name) where !name.isMacro:
                     lastKeyword = name
                     lastKeywordIndex = index
                 case .startOfScope("/*"), .startOfScope("//"):
@@ -2681,7 +2681,7 @@ extension Formatter {
                     }), next(.nonSpaceOrCommentOrLinebreak, after: parenIndex) == .identifier("of") else {
                         fallthrough
                     }
-                case .identifier:
+                case .keyword where token.isMacro, .identifier:
                     guard isEnabled && !isTypeRoot else {
                         break
                     }

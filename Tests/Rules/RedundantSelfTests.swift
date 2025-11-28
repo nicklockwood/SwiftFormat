@@ -4063,4 +4063,54 @@ final class RedundantSelfTests: XCTestCase {
             explicitSelf: .initOnly
         ))
     }
+
+    func testConditionallyCompiledSelfRemoved() {
+        let input = """
+        extension View {
+            @ViewBuilder
+            func compatibleSearchable(
+                text: Binding<String>,
+                isPresented: Binding<Bool>,
+                prompt: Text?
+            ) -> some View {
+                if #available(iOS 17, *) {
+                    self.searchable(
+                        text: text,
+                        isPresented: isPresented,
+                        prompt: prompt
+                    )
+                } else {
+                    self.searchable(
+                        text: text,
+                        prompt: prompt
+                    )
+                }
+            }
+        }
+        """
+        let output = """
+        extension View {
+            @ViewBuilder
+            func compatibleSearchable(
+                text: Binding<String>,
+                isPresented: Binding<Bool>,
+                prompt: Text?
+            ) -> some View {
+                if #available(iOS 17, *) {
+                    searchable(
+                        text: text,
+                        isPresented: isPresented,
+                        prompt: prompt
+                    )
+                } else {
+                    searchable(
+                        text: text,
+                        prompt: prompt
+                    )
+                }
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantSelf)
+    }
 }

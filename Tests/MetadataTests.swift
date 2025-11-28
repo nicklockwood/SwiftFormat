@@ -333,7 +333,7 @@ final class MetadataTests: XCTestCase {
                 else {
                     return
                 }
-                guard keywords.contains(keyword) || keyword.isMacroOrCompilerDirective || keyword.hasPrefix("@") else {
+                guard keywords.contains(keyword) || keyword.isMacroOrCompilerDirective || keyword.isAttribute else {
                     let line = formatter.originalLine(at: i)
                     XCTFail("'\(keyword)' referenced on line \(line) of '\(sourceFile)' is not a valid Swift keyword. "
                         + "Contextual keywords should be referenced with `.identifier(...)`")

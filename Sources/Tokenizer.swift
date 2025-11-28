@@ -70,6 +70,16 @@ public extension String {
         isMacroOrCompilerDirective && !["#if", "#elseif", "#else", "#endif"].contains(self)
     }
 
+    /// Is this an attribute name?
+    var isAttribute: Bool {
+        hasPrefix("@")
+    }
+
+    /// Is this a macro name or conditional compilation directive?
+    var isMacroOrAttribute: Bool {
+        isMacro || isAttribute
+    }
+
     /// Is this string a valid operator?
     var isOperator: Bool {
         let tokens = tokenize(self)
@@ -392,7 +402,7 @@ public extension Token {
         }
     }
 
-    var isAttribute: Bool { isKeywordOrAttribute && string.hasPrefix("@") }
+    var isAttribute: Bool { isKeywordOrAttribute && string.isAttribute }
     var isDelimiter: Bool { hasType(of: .delimiter("")) }
     var isOperator: Bool { hasType(of: .operator("", .none)) }
     var isUnwrapOperator: Bool { isOperator("?", .postfix) || isOperator("!", .postfix) }
@@ -401,7 +411,7 @@ public extension Token {
     var isError: Bool { hasType(of: .error("")) }
     var isStartOfScope: Bool { hasType(of: .startOfScope("")) }
     var isEndOfScope: Bool { hasType(of: .endOfScope("")) }
-    var isKeyword: Bool { isKeywordOrAttribute && !string.hasPrefix("@") }
+    var isKeyword: Bool { isKeywordOrAttribute && !string.isAttribute }
     var isKeywordOrAttribute: Bool { hasType(of: .keyword("")) }
     var isIdentifier: Bool { hasType(of: .identifier("")) }
     var isIdentifierOrKeyword: Bool { isIdentifier || isKeywordOrAttribute }

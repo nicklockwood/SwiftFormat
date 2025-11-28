@@ -2421,7 +2421,7 @@ extension Formatter {
                     continue
                 case .keyword("while") where lastKeyword == "repeat":
                     lastKeyword = ""
-                case let .keyword(name):
+                case let .keyword(name) where !name.isMacroOrAttribute:
                     lastKeyword = name
                     lastKeywordIndex = index
                 case .startOfScope("/*"), .startOfScope("//"):
@@ -2738,12 +2738,6 @@ extension Formatter {
                     }
                     if let lastToken = last(.nonSpaceOrCommentOrLinebreak, before: index),
                        lastToken.isOperator(".")
-                    {
-                        break
-                    }
-                    if lastKeyword.hasPrefix("@"), let startIndex = startOfScope(at: index),
-                       tokens[startIndex] == .startOfScope("("),
-                       lastKeywordIndex == self.index(of: .nonSpaceOrComment, before: startIndex)
                     {
                         break
                     }

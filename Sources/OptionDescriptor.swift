@@ -1381,7 +1381,7 @@ struct _Descriptors {
         keyPath: \.defaultTestSuiteAttributes,
         validateArray: { array in
             for attribute in array {
-                guard attribute.starts(with: "@"), !tokenize(attribute).contains(where: \.isError) else {
+                guard attribute.isAttribute, !tokenize(attribute).contains(where: \.isError) else {
                     throw FormatError.options("Invalid attribute: \"\(attribute)\"")
                 }
             }

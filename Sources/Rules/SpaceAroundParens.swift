@@ -73,7 +73,7 @@ extension Formatter {
                 return true
             case "@escaping", "@noescape", "@Sendable":
                 return true
-            case _ where keywordOrAttribute.hasPrefix("@"):
+            case _ where keywordOrAttribute.isAttribute:
                 if let i = self.index(of: .startOfScope("("), after: index) {
                     return isParameterList(at: i)
                 }
@@ -83,7 +83,7 @@ extension Formatter {
             case "await":
                 return options.swiftVersion >= "5.5" || options.swiftVersion == .undefined
             default:
-                return keywordOrAttribute.first.map { !"@#".contains($0) } ?? true
+                return !keywordOrAttribute.isMacroOrAttribute
             }
         case let .identifier(name):
             return name.isKeywordInTypeContext && isTypePosition(at: index)

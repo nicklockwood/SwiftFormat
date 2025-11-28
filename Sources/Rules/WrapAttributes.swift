@@ -153,7 +153,7 @@ extension Formatter {
     ///  - any named arguments
     ///  - more than one unnamed argument
     func isComplexAttribute(at attributeIndex: Int) -> Bool {
-        assert(tokens[attributeIndex].string.hasPrefix("@"))
+        assert(tokens[attributeIndex].isAttribute)
 
         guard let startOfScopeIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: attributeIndex),
               tokens[startOfScopeIndex] == .startOfScope("("),

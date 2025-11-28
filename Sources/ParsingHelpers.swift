@@ -506,7 +506,7 @@ extension Formatter {
     func startOfModifiers(at index: Int, includingAttributes: Bool) -> Int {
         var startIndex = index
         _ = modifiersForDeclaration(at: index, contains: { i, name in
-            if !includingAttributes, name.hasPrefix("@") {
+            if !includingAttributes, name.isAttribute {
                 return true
             }
             startIndex = i

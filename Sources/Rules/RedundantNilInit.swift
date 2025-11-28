@@ -23,7 +23,7 @@ public extension FormatRule {
 
             // Check modifiers don't include `lazy` or property wrappers
             if declaration.modifiers.contains(where: {
-                $0 == "lazy" || ($0 != "@objc" && $0.hasPrefix("@"))
+                $0 == "lazy" || ($0 != "@objc" && $0.isAttribute)
             }) {
                 return
             }

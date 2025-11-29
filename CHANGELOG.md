@@ -1,5 +1,16 @@
 # Change Log
 
+## [0.58.7](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.58.7) (2025-11-29)
+
+- Fixed `redundantSelf` not being applied inside `if #available(...) { ... }` clauses
+- Fixed `fileHeader` rule incorrectly setting creation year to current when file path contains spaces
+- Fixed mis-insertion for `nil-init` rule related to optional closure return values
+- Fixed `unusedPrivateDeclarations` false positive when call site was outside enabled range
+- Fixed `sortImports` rule incorrectly moving `// swift-tools-version:` comment directive
+- Fixed `hoistTry` rule sometimes producing mangled code when hoisting across line boundaries
+- Fixed crash in `--ruleinfo` command when rule options exceed the old max length requirement
+- Fixed crash in `unusedArguments` due to scope range bug
+
 ## [0.58.6](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.58.6) (2025-11-11)
 
 - Fixed `docComments` not being applied correctly after conditional `switch...case`

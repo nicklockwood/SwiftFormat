@@ -2331,7 +2331,8 @@ extension Formatter {
             if last(.nonSpaceOrCommentOrLinebreak, before: startIndex) == nil {
                 for case let .commentBody(body) in tokens[startIndex ..< codeStartIndex] {
                     if body.contains("created") || body.contains("Created") ||
-                        body.contains(options.fileInfo.fileName ?? ".swift")
+                        body.contains(options.fileInfo.fileName ?? ".swift") ||
+                        body.commentDirective == "swift-tools-version"
                     {
                         startIndex = codeStartIndex
                         break

@@ -388,4 +388,18 @@ final class SortImportsTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .sortImports)
     }
+
+    func testNoMoveSwiftToolsVersionLine() {
+        let input = """
+        // swift-tools-version: 6.2
+        import PackageDescription
+        import CompilerPluginSupport
+        """
+        let output = """
+        // swift-tools-version: 6.2
+        import CompilerPluginSupport
+        import PackageDescription
+        """
+        testFormatting(for: input, output, rule: .sortImports)
+    }
 }

@@ -33,7 +33,7 @@ jobs:
           update-sdk-modules: true
 
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - shell: pwsh
         run: |
@@ -77,7 +77,7 @@ jobs:
     if: always()
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - uses: actions/download-artifact@v5
         with:
           path: downloaded-artifacts

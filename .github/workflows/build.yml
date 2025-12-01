@@ -19,7 +19,7 @@ jobs:
         with:
           xcode-version: ${{ matrix.xcode }}
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Build and Test
         run: |
           # Set up a git user for the git tests
@@ -55,7 +55,7 @@ jobs:
       options: --cap-add=SYS_PTRACE --security-opt seccomp=unconfined --security-opt apparmor=unconfined
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Build and Test
         run: |
           # Set up a git user for the git tests
@@ -83,7 +83,7 @@ jobs:
         with:
           swift-version: ${{ matrix.swift.version }}
           swift-build: ${{ matrix.swift.build }}
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - run: swift test
 
   command-line-tool:
@@ -101,7 +101,7 @@ jobs:
         with:
           xcode-version: ${{ matrix.xcode }}
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Build Command Line Tool
         run: xcodebuild -project SwiftFormat.xcodeproj -scheme "SwiftFormat (Command Line Tool)" -sdk macosx clean build
 
@@ -120,7 +120,7 @@ jobs:
         with:
           xcode-version: ${{ matrix.xcode }}
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Build Swift Format for Xcode app
         run: xcodebuild -project SwiftFormat.xcodeproj -scheme "SwiftFormat for Xcode" -sdk macosx clean build
 
@@ -139,7 +139,7 @@ jobs:
         with:
           xcode-version: ${{ matrix.xcode }}
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Build Editor Extension
         run: xcodebuild -project SwiftFormat.xcodeproj -scheme "SwiftFormat (Editor Extension)" -sdk macosx clean build
 
@@ -158,7 +158,7 @@ jobs:
         with:
           xcode-version: ${{ matrix.xcode }}
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Run Regression Tests
         run: xcodebuild -project SwiftFormat.xcodeproj -scheme "Regression Tests" test
 
@@ -177,6 +177,6 @@ jobs:
         with:
           xcode-version: ${{ matrix.xcode }}
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Build Target
         run: xcodebuild -project SwiftFormat.xcodeproj -scheme "Performance Tests" build

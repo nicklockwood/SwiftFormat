@@ -12,31 +12,20 @@ public extension FormatRule {
     /// Remove redundant explicit memberwise initializers from structs
     static let redundantMemberwiseInit = FormatRule(
         help: "Remove explicit internal memberwise initializers that are redundant.",
-        orderAfter: [.redundantInit]
+        orderAfter: [.redundantInit],
+        options: ["prefer-synthesized-init-for-internal-structs"]
     ) { formatter in
         // Parse all struct declarations
         let allDeclarations = formatter.parseDeclarations()
 
         for declaration in allDeclarations where declaration.keyword == "struct" {
-            guard case let .type(structDeclaration) = declaration.kind else { continue }
+            guard let structDeclaration = declaration.asTypeDeclaration else { continue }
 
             // Get the struct's access level
             let structAccessLevel = declaration.accessLevel()
 
-            // Check if there are any private properties (which would make synthesized init private)
-            var hasPrivateStoredProperties = false
-            for childDeclaration in structDeclaration.body {
-                guard ["var", "let"].contains(childDeclaration.keyword) else { continue }
-
-                let propertyAccessLevel = childDeclaration.accessLevel()
-                if propertyAccessLevel == .private || propertyAccessLevel == .fileprivate {
-                    hasPrivateStoredProperties = true
-                    break
-                }
-            }
-
             // Collect stored properties from the struct body
-            var storedProperties = [(name: String, type: TypeName)]()
+            var storedProperties = [(name: String, type: TypeName, declaration: Declaration)]()
 
             for childDeclaration in structDeclaration.body {
                 guard ["var", "let"].contains(childDeclaration.keyword),
@@ -44,7 +33,7 @@ public extension FormatRule {
                       let type = property.type,
                       childDeclaration.isStoredInstanceProperty
                 else { continue }
-                storedProperties.append((name: property.identifier, type: type))
+                storedProperties.append((name: property.identifier, type: type, declaration: childDeclaration))
             }
 
             guard !storedProperties.isEmpty else { continue }
@@ -67,21 +56,63 @@ public extension FormatRule {
                     continue
                 }
 
-                // Handle private property access level implications
-                if hasPrivateStoredProperties {
-                    // If there are ANY private properties, the synthesized init will be private
-                    // Don't remove the explicit init if it's more accessible than private
-                    if initAccessLevel != .private {
-                        continue
+                // Determine if we should try to remove private access control from properties
+                let shouldRemovePrivateACL = formatter.options.preferSynthesizedInitForInternalStructs
+                    && structAccessLevel != .public
+                    && structAccessLevel != .package
+                    && initAccessLevel != .public
+                    && initAccessLevel != .package
+
+                // Compute what visibility the synthesized init would have after any modifications.
+                // The synthesized init has the minimum visibility of all stored properties in the memberwise init.
+                // We can only remove private ACL from properties that:
+                // - Don't have attributes (like @State)
+                // - Don't have default values (we only modify properties without defaults)
+                let synthesizedInitVisibility: Visibility = structDeclaration.body.reduce(.internal) { minVisibility, childDeclaration in
+                    guard ["var", "let"].contains(childDeclaration.keyword),
+                          childDeclaration.isStoredInstanceProperty
+                    else { return minVisibility }
+
+                    let accessLevel = childDeclaration.accessLevel()
+                    guard accessLevel == .private || accessLevel == .fileprivate else { return minVisibility }
+
+                    // @Environment properties are NOT part of memberwise init
+                    if childDeclaration.modifiers.contains("@Environment") {
+                        return minVisibility
                     }
-                    // If both the current init and synthesized init would be private,
-                    // it's safe to remove (no access level change)
-                } else {
-                    // No private properties, so synthesized init would match struct access level
-                    // Don't remove private inits if synthesized would be more accessible
-                    if initAccessLevel == .private || initAccessLevel == .fileprivate {
-                        continue
+
+                    let property = formatter.parsePropertyDeclaration(atIntroducerIndex: childDeclaration.keywordIndex)
+                    let hasDefaultValue = property?.value != nil
+
+                    // Private `let` with default value is NOT in memberwise init
+                    if childDeclaration.keyword == "let", hasDefaultValue {
+                        return minVisibility
                     }
+
+                    // If we're not removing private ACL, this property affects init visibility
+                    guard shouldRemovePrivateACL else {
+                        return min(minVisibility, accessLevel)
+                    }
+
+                    // Private property with attribute (and no default) - we won't modify it
+                    let hasAttribute = childDeclaration.modifiers.contains { $0.hasPrefix("@") }
+                    if hasAttribute, !hasDefaultValue {
+                        return min(minVisibility, accessLevel)
+                    }
+
+                    // Private `var` with default value - we won't modify it
+                    if childDeclaration.keyword == "var", hasDefaultValue {
+                        return min(minVisibility, accessLevel)
+                    }
+
+                    // We'll remove private ACL from this property, so it won't affect visibility
+                    return minVisibility
+                }
+
+                // Don't remove init if it would change the access level
+                // Only remove if explicit init visibility matches synthesized init visibility
+                if initAccessLevel != synthesizedInitVisibility {
+                    continue
                 }
 
                 // Check if the init has documentation comments
@@ -167,6 +198,10 @@ public extension FormatRule {
 
                     return (name: name, type: arg.type, externalLabel: arg.externalLabel, hasDefaultValue: hasDefaultValue)
                 }
+
+                // Don't remove if init has more arguments than we can process
+                // (e.g., parameters with `_` internal labels are filtered out above)
+                guard functionDecl.arguments.count == parameters.count else { continue }
 
                 // Don't remove if any parameter has a default value
                 guard !parameters.contains(where: \.hasDefaultValue) else { continue }
@@ -277,14 +312,32 @@ public extension FormatRule {
                         }
                     }
 
+                    // Remove the init
                     formatter.removeTokens(in: actualStartIndex ... actualEndIndex)
+
+                    // Remove private access control from eligible properties
+                    // (only when option is enabled and synthesized init would be internal)
+                    if shouldRemovePrivateACL, synthesizedInitVisibility == .internal {
+                        for property in propertiesWithoutDefaults {
+                            let propertyDecl = property.declaration
+                            // Don't remove private from properties with attributes (like @State)
+                            let hasAttribute = propertyDecl.modifiers.contains { $0.hasPrefix("@") }
+                            guard !hasAttribute else { continue }
+
+                            if propertyDecl.visibility() == .private {
+                                propertyDecl.removeVisibility(.private)
+                            } else if propertyDecl.visibility() == .fileprivate {
+                                propertyDecl.removeVisibility(.fileprivate)
+                            }
+                        }
+                    }
                 }
             }
         }
     } examples: {
         """
         ```diff
-          struct Person {
+          struct User {
               var name: String
               var age: Int
 
@@ -292,6 +345,24 @@ public extension FormatRule {
         -         self.name = name
         -         self.age = age
         -     }
+          }
+        ```
+
+        `--prefer-synthesized-init-for-internal-structs true`:
+
+        ```diff
+          struct ProfileView: View {
+        -     init(user: User, settings: Settings) {
+        -         self.user = user
+        -         self.settings = settings
+        -     }
+        -
+        -     private let user: User
+        -     private let settings: Settings
+        +     let user: User
+        +     let settings: Settings
+
+              var body: some View { ... }
           }
         ```
         """

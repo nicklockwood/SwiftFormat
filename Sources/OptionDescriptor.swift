@@ -1443,6 +1443,12 @@ struct _Descriptors {
         help: "Allow partial argument wrapping:",
         keyPath: \.allowPartialWrapping
     )
+    let preferSynthesizedInitForInternalStructs = OptionDescriptor(
+        argumentName: "prefer-synthesized-init-for-internal-structs",
+        displayName: "Prefer Synthesized Init For Internal Structs",
+        help: "For internal structs, remove private access control from properties to enable the synthesized initializer:",
+        keyPath: \.preferSynthesizedInitForInternalStructs
+    )
 
     // MARK: - Internal
 

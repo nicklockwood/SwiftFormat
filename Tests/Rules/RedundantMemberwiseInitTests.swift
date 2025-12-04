@@ -52,6 +52,48 @@ final class RedundantMemberwiseInitTests: XCTestCase {
         testFormatting(for: input, output, rule: .redundantMemberwiseInit)
     }
 
+    func testRemoveRedundantMemberwiseInitFromPrivateType() {
+        let input = """
+        private struct Person {
+            var name: String
+            var age: Int
+
+            init(name: String, age: Int) {
+                self.name = name
+                self.age = age
+            }
+        }
+        """
+        let output = """
+        private struct Person {
+            var name: String
+            var age: Int
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit)
+    }
+
+    func testRemoveRedundantMemberwiseInitFromFileprivateType() {
+        let input = """
+        fileprivate struct Person {
+            var name: String
+            var age: Int
+
+            init(name: String, age: Int) {
+                self.name = name
+                self.age = age
+            }
+        }
+        """
+        let output = """
+        fileprivate struct Person {
+            var name: String
+            var age: Int
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit, exclude: [.redundantFileprivate])
+    }
+
     func testRemoveRedundantMemberwiseInitMixedProperties() {
         let input = """
         struct User {
@@ -1380,5 +1422,459 @@ final class RedundantMemberwiseInitTests: XCTestCase {
         }
         """
         testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+    }
+
+    // MARK: - preferSynthesizedInitForInternalTypes option
+
+    func testRemovePrivateACLWhenOptionEnabled() {
+        let input = """
+        struct InternalSwiftUIView: View {
+            init(foo: Foo, bar: Bar) {
+                self.foo = foo
+                self.bar = bar
+            }
+
+            private let foo: Foo
+            private let bar: Bar
+
+            var body: some View {}
+        }
+        """
+        let output = """
+        struct InternalSwiftUIView: View {
+            let foo: Foo
+            let bar: Bar
+
+            var body: some View {}
+        }
+        """
+        let options = FormatOptions(preferSynthesizedInitForInternalStructs: true)
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options)
+    }
+
+    func testRemovePrivateACLFromSwiftUIView() {
+        let input = """
+        struct ProfileView: View {
+            init(user: User, settings: Settings) {
+                self.user = user
+                self.settings = settings
+            }
+
+            private let user: User
+            private let settings: Settings
+
+            var body: some View {
+                VStack {
+                    Text(user.name)
+                    if settings.showEmail {
+                        Text(user.email)
+                    }
+                }
+            }
+        }
+        """
+        let output = """
+        struct ProfileView: View {
+            let user: User
+            let settings: Settings
+
+            var body: some View {
+                VStack {
+                    Text(user.name)
+                    if settings.showEmail {
+                        Text(user.email)
+                    }
+                }
+            }
+        }
+        """
+        let options = FormatOptions(preferSynthesizedInitForInternalStructs: true)
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options)
+    }
+
+    func testRemoveFileprivateACLWhenOptionEnabled() {
+        let input = """
+        struct MyView {
+            init(value: Int) {
+                self.value = value
+            }
+
+            fileprivate let value: Int
+        }
+        """
+        let output = """
+        struct MyView {
+            let value: Int
+        }
+        """
+        let options = FormatOptions(preferSynthesizedInitForInternalStructs: true)
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options)
+    }
+
+    func testDontRemovePrivateACLWhenOptionDisabled() {
+        let input = """
+        struct InternalSwiftUIView: View {
+            init(foo: Foo, bar: Bar) {
+                self.foo = foo
+                self.bar = bar
+            }
+
+            private let foo: Foo
+            private let bar: Bar
+
+            var body: some View {}
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
+    }
+
+    func testDontRemovePrivateACLForPublicStruct() {
+        let input = """
+        public struct PublicView {
+            init(value: Int) {
+                self.value = value
+            }
+
+            private let value: Int
+        }
+        """
+        let options = FormatOptions(preferSynthesizedInitForInternalStructs: true)
+        testFormatting(for: input, rule: .redundantMemberwiseInit, options: options, exclude: [.redundantSelf, .trailingSpace, .indent])
+    }
+
+    func testDontRemovePrivateACLForPackageStruct() {
+        let input = """
+        package struct PackageView {
+            init(value: Int) {
+                self.value = value
+            }
+
+            private let value: Int
+        }
+        """
+        let options = FormatOptions(preferSynthesizedInitForInternalStructs: true)
+        testFormatting(for: input, rule: .redundantMemberwiseInit, options: options, exclude: [.redundantSelf, .trailingSpace, .indent])
+    }
+
+    func testRemovePrivateACLFromMultipleProperties() {
+        let input = """
+        struct DataModel {
+            init(id: String, name: String, value: Int) {
+                self.id = id
+                self.name = name
+                self.value = value
+            }
+
+            private let id: String
+            private var name: String
+            private let value: Int
+        }
+        """
+        let output = """
+        struct DataModel {
+            let id: String
+            var name: String
+            let value: Int
+        }
+        """
+        let options = FormatOptions(preferSynthesizedInitForInternalStructs: true)
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options)
+    }
+
+    func testRemovePrivateACLWithMixedAccessLevels() {
+        let input = """
+        struct MixedView {
+            init(publicValue: Int, privateValue: String) {
+                self.publicValue = publicValue
+                self.privateValue = privateValue
+            }
+
+            let publicValue: Int
+            private let privateValue: String
+        }
+        """
+        let output = """
+        struct MixedView {
+            let publicValue: Int
+            let privateValue: String
+        }
+        """
+        let options = FormatOptions(preferSynthesizedInitForInternalStructs: true)
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options)
+    }
+
+    func testRemovePrivateACLPreservesPropertyOrder() {
+        let input = """
+        struct OrderedView {
+            private let first: Int
+            private let second: String
+            private let third: Bool
+
+            init(first: Int, second: String, third: Bool) {
+                self.first = first
+                self.second = second
+                self.third = third
+            }
+        }
+        """
+        let output = """
+        struct OrderedView {
+            let first: Int
+            let second: String
+            let third: Bool
+        }
+        """
+        let options = FormatOptions(preferSynthesizedInitForInternalStructs: true)
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options)
+    }
+
+    func testDontApplyOptionToClasses() {
+        // Classes don't have synthesized memberwise inits, so the option should not apply
+        let input = """
+        class ProfileViewModel {
+            init(user: User, settings: Settings) {
+                self.user = user
+                self.settings = settings
+            }
+
+            private let user: User
+            private let settings: Settings
+        }
+        """
+        let options = FormatOptions(preferSynthesizedInitForInternalStructs: true)
+        testFormatting(for: input, rule: .redundantMemberwiseInit, options: options, exclude: [.redundantSelf])
+    }
+
+    func testRemovePrivateACLForPrivateStruct() {
+        let input = """
+        private struct PrivateView {
+            init(value: Int) {
+                self.value = value
+            }
+
+            private let value: Int
+        }
+        """
+        let output = """
+        private struct PrivateView {
+            let value: Int
+        }
+        """
+        let options = FormatOptions(preferSynthesizedInitForInternalStructs: true)
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options)
+    }
+
+    func testRemovePrivateACLForFileprivateStruct() {
+        let input = """
+        fileprivate struct FileprivateView {
+            init(value: Int) {
+                self.value = value
+            }
+
+            private let value: Int
+        }
+        """
+        let output = """
+        fileprivate struct FileprivateView {
+            let value: Int
+        }
+        """
+        let options = FormatOptions(preferSynthesizedInitForInternalStructs: true)
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options, exclude: [.redundantFileprivate])
+    }
+
+    func testPreservePrivateOnPropertiesWithDefaultValues() {
+        let input = """
+        struct Foo: View {
+            init(bar: Bar) {
+                self.bar = bar
+            }
+
+            private let bar: Bar
+            @State private let enabled = false
+            private let baaz = Baaz()
+        }
+        """
+        let output = """
+        struct Foo: View {
+            let bar: Bar
+            @State private let enabled = false
+            private let baaz = Baaz()
+        }
+        """
+        let options = FormatOptions(preferSynthesizedInitForInternalStructs: true)
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options, exclude: [.propertyTypes])
+    }
+
+    func testPreserveInitWhenPrivatePropertyWithStateAttributeInMemberwiseInit() {
+        let input = """
+        struct Foo: View {
+            init(bar: Bar, enabled: Bool) {
+                self.bar = bar
+                self.enabled = enabled
+            }
+
+            private let bar: Bar
+            @State private var enabled: Bool
+        }
+        """
+        let options = FormatOptions(preferSynthesizedInitForInternalStructs: true)
+        testFormatting(for: input, rule: .redundantMemberwiseInit, options: options)
+    }
+
+    func testPreserveInitWhenPrivatePropertyWithCustomPropertyWrapperInMemberwiseInit() {
+        let input = """
+        struct Foo {
+            init(bar: Bar, value: String) {
+                self.bar = bar
+                self.value = value
+            }
+
+            private let bar: Bar
+            @SomeCustomPropertyWrapper private var value: String
+        }
+        """
+        let options = FormatOptions(preferSynthesizedInitForInternalStructs: true)
+        testFormatting(for: input, rule: .redundantMemberwiseInit, options: options)
+    }
+
+    func testPreserveInitWhenPrivateVarWithDefaultValue() {
+        // private var with default value is still part of memberwise init (optional param),
+        // so synthesized init would be private
+        let input = """
+        struct Foo {
+            init(foo: String) {
+                self.foo = foo
+            }
+
+            let foo: String
+            private var bar = "bar"
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit)
+    }
+
+    func testRemoveInitWhenPrivateLetWithDefaultValue() {
+        // private let with default value is NOT part of memberwise init,
+        // so it doesn't affect synthesized init visibility
+        let input = """
+        struct Foo {
+            init(foo: String) {
+                self.foo = foo
+            }
+
+            let foo: String
+            private let bar = "bar"
+        }
+        """
+        let output = """
+        struct Foo {
+            let foo: String
+            private let bar = "bar"
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit)
+    }
+
+    func testRemovePrivateACLWithOrganizeDeclarations() {
+        // When preferSynthesizedInitForInternalStructs removes private from a property,
+        // organizeDeclarations should move it from the private section to the internal section.
+        // @Environment properties stay private (attribute prevents ACL removal).
+        let input = """
+        struct ProfileView: View {
+            // MARK: Lifecycle
+
+            init(user: User, settings: Settings) {
+                self.user = user
+                self.settings = settings
+            }
+
+            // MARK: Internal
+
+            var body: some View { fatalError() }
+
+            // MARK: Private
+
+            @Environment(\\.colorScheme) private var colorScheme
+            private let user: User
+            private let settings: Settings
+        }
+        """
+        let output = """
+        struct ProfileView: View {
+            // MARK: Internal
+
+            let user: User
+            let settings: Settings
+
+            var body: some View { fatalError() }
+
+            // MARK: Private
+
+            @Environment(\\.colorScheme) private var colorScheme
+        }
+        """
+        let options = FormatOptions(preferSynthesizedInitForInternalStructs: true)
+        testFormatting(for: input, [output], rules: [.redundantMemberwiseInit, .organizeDeclarations, .blankLinesAtEndOfScope, .blankLinesAtStartOfScope], options: options)
+    }
+
+    func testPreserveInitWhenPrivateVarWithDefaultValueAndOptionEnabled() {
+        // Even with preferSynthesizedInitForInternalStructs enabled, we can't remove
+        // the init if there's a private var with default value that we won't modify
+        // (because the synthesized init would still be private)
+        let input = """
+        struct Foo {
+            init(foo: String) {
+                self.foo = foo
+            }
+
+            let foo: String
+            private var bar = "default"
+        }
+        """
+        let options = FormatOptions(preferSynthesizedInitForInternalStructs: true)
+        testFormatting(for: input, rule: .redundantMemberwiseInit, options: options)
+    }
+
+    func testRemoveInitWhenPrivateLetWithDefaultValueAndOptionEnabled() {
+        // With preferSynthesizedInitForInternalStructs enabled, we CAN remove the init
+        // if there's a private let with default value (not part of memberwise init)
+        let input = """
+        struct Foo {
+            init(foo: String) {
+                self.foo = foo
+            }
+
+            private let foo: String
+            private let bar = "default"
+        }
+        """
+        let output = """
+        struct Foo {
+            let foo: String
+            private let bar = "default"
+        }
+        """
+        let options = FormatOptions(preferSynthesizedInitForInternalStructs: true)
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options)
+    }
+
+    func testPreserveInitWithUnusedParameters() {
+        // Init has parameters with `_` internal labels that are ignored.
+        // This is not a memberwise init - it takes extra parameters.
+        let input = """
+        struct Foo {
+            init(
+                loggingID _: String,
+                viewModel: ViewModel,
+                context _: Context
+            ) {
+                self.viewModel = viewModel
+            }
+
+            let viewModel: ViewModel
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit)
     }
 }

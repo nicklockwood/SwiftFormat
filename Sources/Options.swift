@@ -836,6 +836,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var redundantThrows: RedundantEffectMode
     public var redundantAsync: RedundantEffectMode
     public var allowPartialWrapping: Bool
+    public var preferSynthesizedInitForInternalStructs: Bool
 
     /// Deprecated
     public var indentComments: Bool
@@ -980,6 +981,7 @@ public struct FormatOptions: CustomStringConvertible {
                 redundantThrows: RedundantEffectMode = .testsOnly,
                 redundantAsync: RedundantEffectMode = .testsOnly,
                 allowPartialWrapping: Bool = true,
+                preferSynthesizedInitForInternalStructs: Bool = false,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -1113,6 +1115,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.redundantThrows = redundantThrows
         self.redundantAsync = redundantAsync
         self.allowPartialWrapping = allowPartialWrapping
+        self.preferSynthesizedInitForInternalStructs = preferSynthesizedInitForInternalStructs
         self.indentComments = indentComments
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

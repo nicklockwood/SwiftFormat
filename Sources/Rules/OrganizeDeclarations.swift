@@ -13,7 +13,7 @@ public extension FormatRule {
         help: "Organize declarations within class, struct, enum, actor, and extension bodies.",
         runOnceOnly: true,
         disabledByDefault: true,
-        orderAfter: [.extensionAccessControl, .redundantFileprivate, .redundantPublic, .validateTestCases],
+        orderAfter: [.extensionAccessControl, .redundantFileprivate, .redundantPublic, .validateTestCases, .redundantMemberwiseInit],
         options: [
             "category-mark", "mark-categories", "before-marks",
             "lifecycle", "organize-types", "struct-threshold", "class-threshold",
@@ -308,7 +308,24 @@ extension Formatter {
     /// Whether or not this declaration is an instance property that can affect
     /// the parameters struct's synthesized memberwise initializer
     func affectsSynthesizedMemberwiseInitializer(_ declaration: Declaration) -> Bool {
-        declaration.isStoredInstanceProperty
+        guard declaration.isStoredInstanceProperty else { return false }
+
+        // @Environment properties are not part of the synthesized memberwise init
+        // because they get their value from the SwiftUI environment.
+        if declaration.modifiers.contains("@Environment") {
+            return false
+        }
+
+        // `let` properties with default values are not part of the memberwise init.
+        // `var` properties with default values ARE part of it (as optional params).
+        if declaration.keyword == "let",
+           let property = declaration.parsePropertyDeclaration(),
+           property.value != nil
+        {
+            return false
+        }
+
+        return true
     }
 
     /// Whether or not the two given declaration orderings preserve

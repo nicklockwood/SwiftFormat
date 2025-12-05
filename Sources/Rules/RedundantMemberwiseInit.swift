@@ -94,9 +94,8 @@ public extension FormatRule {
                         return min(minVisibility, accessLevel)
                     }
 
-                    // Private property with attribute (and no default) - we won't modify it
-                    let hasAttribute = childDeclaration.modifiers.contains { $0.hasPrefix("@") }
-                    if hasAttribute, !hasDefaultValue {
+                    // Private property with SwiftUI property wrapper (and no default) - we won't modify it
+                    if childDeclaration.swiftUIPropertyWrapper != nil, !hasDefaultValue {
                         return min(minVisibility, accessLevel)
                     }
 
@@ -320,9 +319,8 @@ public extension FormatRule {
                     if shouldRemovePrivateACL, synthesizedInitVisibility == .internal {
                         for property in propertiesWithoutDefaults {
                             let propertyDecl = property.declaration
-                            // Don't remove private from properties with attributes (like @State)
-                            let hasAttribute = propertyDecl.modifiers.contains { $0.hasPrefix("@") }
-                            guard !hasAttribute else { continue }
+                            // Don't remove private from properties with SwiftUI property wrappers (like @State)
+                            guard propertyDecl.swiftUIPropertyWrapper == nil else { continue }
 
                             if propertyDecl.visibility() == .private {
                                 propertyDecl.removeVisibility(.private)

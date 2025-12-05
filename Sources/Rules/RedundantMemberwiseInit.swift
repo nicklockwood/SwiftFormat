@@ -114,63 +114,10 @@ public extension FormatRule {
                     continue
                 }
 
-                // Check if the init has documentation comments
-                var hasDocumentation = false
-
-                // Start from the init keyword and look backwards
-                let initKeywordIndex = initDeclaration.keywordIndex
-                var checkIndex = initKeywordIndex - 1
-
-                // Look backwards from the init keyword to find documentation comments
-                while checkIndex >= 0 {
-                    let token = formatter.tokens[checkIndex]
-
-                    if token.isComment {
-                        let commentText = token.string
-
-                        // Check if it's documentation comment (/// or /** */)
-                        if commentText.hasPrefix("///") || commentText.hasPrefix("/**") {
-                            hasDocumentation = true
-                            break
-                        }
-
-                        // Also check for the case where SwiftFormat splits /// into separate tokens
-                        // Look for // followed by / (indicating the third slash for ///)
-                        if commentText == "//", checkIndex + 1 < formatter.tokens.count {
-                            let nextToken = formatter.tokens[checkIndex + 1]
-                            // Must be exactly "/" (the third slash) followed by content, not just any / content
-                            // For ///, SwiftFormat splits it as "//" + "/ content"
-                            if nextToken.isComment, nextToken.string.hasPrefix("/ ") {
-                                // This is /// split as // + / content (note the space after /)
-                                hasDocumentation = true
-                                break
-                            }
-                        }
-
-                        // Also check for block comments that start with /**
-                        if commentText.contains("/**") {
-                            hasDocumentation = true
-                            break
-                        }
-
-                        // Check for split block comment pattern: /* followed by *
-                        if commentText == "/*", checkIndex + 1 < formatter.tokens.count {
-                            let nextToken = formatter.tokens[checkIndex + 1]
-                            if nextToken.isComment, nextToken.string == "*" {
-                                hasDocumentation = true
-                                break
-                            }
-                        }
-                    } else if !token.isSpaceOrLinebreak {
-                        // Hit non-whitespace, non-comment token, stop looking
-                        break
-                    }
-
-                    checkIndex -= 1
-                }
-
-                // Don't remove init if it has documentation
-                if hasDocumentation {
+                // Don't remove init if it has a doc comment
+                if let docCommentRange = initDeclaration.docCommentRange,
+                   formatter.isDocComment(startOfComment: docCommentRange.lowerBound)
+                {
                     continue
                 }
 

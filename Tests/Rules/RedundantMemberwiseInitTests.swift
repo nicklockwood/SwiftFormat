@@ -728,7 +728,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             var name: String
             var age: Int
 
-            /// Initializes a person with name and age
+            // Initializes a person with name and age
             @inlinable
             internal init(name: String, age: Int) {
                 self.name = name
@@ -742,7 +742,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             var age: Int
         }
         """
-        testFormatting(for: input, output, rule: .redundantMemberwiseInit)
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit, exclude: [.docComments])
     }
 
     func testDontRemoveInitWithPrivateStoredProperty() {
@@ -950,28 +950,6 @@ final class RedundantMemberwiseInitTests: XCTestCase {
         }
         """
         testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
-    }
-
-    func testRemoveInitWithRegularComments() {
-        let input = """
-        struct Person {
-            var name: String
-            var age: Int
-
-            // This is just a regular comment
-            init(name: String, age: Int) {
-                self.name = name
-                self.age = age
-            }
-        }
-        """
-        let output = """
-        struct Person {
-            var name: String
-            var age: Int
-        }
-        """
-        testFormatting(for: input, output, rule: .redundantMemberwiseInit)
     }
 
     func testDontRemoveRedundantPublicMemberwiseInitWithProperFormattingOfFirstProperty() {

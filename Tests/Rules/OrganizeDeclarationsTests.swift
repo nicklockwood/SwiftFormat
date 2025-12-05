@@ -2839,7 +2839,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
             for: input, output,
             rule: .organizeDeclarations,
             options: FormatOptions(organizeTypes: ["struct"], organizationMode: .visibility),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateStateVariables]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateStateVariables, .redundantMemberwiseInit]
         )
     }
 
@@ -3435,13 +3435,15 @@ final class OrganizeDeclarationsTests: XCTestCase {
     }
 
     func testSwiftUIPropertyWrappersSortDoesntBreakViewSynthesizedMemberwiseInitializer() {
+        // @Environment properties don't affect memberwise init, so they can be freely reordered.
+        // The stored properties (foo, baaz) maintain their relative order to preserve memberwise init.
         let input = """
         struct ContentView: View {
 
             let foo: Foo
-            @Environment(\\.colorScheme) var colorScheme
+            @Environment(\\.colorScheme) private var colorScheme
             let baaz: Baaz
-            @Environment(\\.quux) let quux: Quux
+            @Environment(\\.quux) private let quux: Quux
 
             @ViewBuilder
             private var toggle: some View {
@@ -3455,8 +3457,34 @@ final class OrganizeDeclarationsTests: XCTestCase {
         }
         """
 
+        let output = """
+        struct ContentView: View {
+
+            // MARK: Internal
+
+            let foo: Foo
+            let baaz: Baaz
+
+            @ViewBuilder
+            var body: some View {
+                toggle
+            }
+
+            // MARK: Private
+
+            @Environment(\\.colorScheme) private var colorScheme
+            @Environment(\\.quux) private let quux: Quux
+
+            @ViewBuilder
+            private var toggle: some View {
+                Toggle(label, isOn: $isOn)
+            }
+
+        }
+        """
+
         testFormatting(
-            for: input,
+            for: input, output,
             rule: .organizeDeclarations,
             options: FormatOptions(organizeTypes: ["struct"], organizationMode: .visibility),
             exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
@@ -4319,6 +4347,114 @@ final class OrganizeDeclarationsTests: XCTestCase {
             rule: .organizeDeclarations,
             options: FormatOptions(organizeTypes: ["extension"]),
             exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+        )
+    }
+
+    func testMovesInternalPropertyOutOfPrivateSection() {
+        // Internal property `placement` should be moved from Private section to Internal section
+        let input = """
+        private struct Foo: View {
+
+            // MARK: Internal
+
+            var body: some View {
+                EmptyView()
+            }
+
+            // MARK: Private
+
+            @Environment(\\.bar) private var bar
+            @Environment(\\.baz) private var baz
+
+            let placement: Placement
+
+        }
+        """
+
+        let output = """
+        private struct Foo: View {
+
+            // MARK: Internal
+
+            let placement: Placement
+
+            var body: some View {
+                EmptyView()
+            }
+
+            // MARK: Private
+
+            @Environment(\\.bar) private var bar
+            @Environment(\\.baz) private var baz
+
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: .organizeDeclarations,
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+        )
+    }
+
+    func testPrivateVarWithDefaultValuePreventsReordering() {
+        // private var with default value is still part of memberwise init (optional param),
+        // so reordering stored properties would break the init.
+        // Section headers can be added, but the order must be preserved (bar before baz).
+        let input = """
+        struct Foo {
+            let bar: Bar
+            private var baz = Baz()
+        }
+        """
+
+        let output = """
+        struct Foo {
+
+            // MARK: Internal
+
+            let bar: Bar
+
+            // MARK: Private
+
+            private var baz = Baz()
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: .organizeDeclarations,
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .propertyTypes]
+        )
+    }
+
+    func testPrivateLetWithDefaultValueAllowsReordering() {
+        // private let with default value is NOT part of memberwise init,
+        // so it can be freely reordered (baz moves after bar)
+        let input = """
+        struct Foo {
+            private let baz = Baz()
+            let bar: Bar
+        }
+        """
+
+        let output = """
+        struct Foo {
+
+            // MARK: Internal
+
+            let bar: Bar
+
+            // MARK: Private
+
+            private let baz = Baz()
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: .organizeDeclarations,
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .propertyTypes]
         )
     }
 }

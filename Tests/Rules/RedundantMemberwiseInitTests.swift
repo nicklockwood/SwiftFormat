@@ -1722,7 +1722,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
         testFormatting(for: input, rule: .redundantMemberwiseInit, options: options)
     }
 
-    func testPreserveInitWhenPrivatePropertyWithCustomPropertyWrapperInMemberwiseInit() {
+    func testRemovePrivateACLFromPropertyWithCustomPropertyWrapper() {
         let input = """
         struct Foo {
             init(bar: Bar, value: String) {
@@ -1734,8 +1734,14 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             @SomeCustomPropertyWrapper private var value: String
         }
         """
+        let output = """
+        struct Foo {
+            let bar: Bar
+            @SomeCustomPropertyWrapper var value: String
+        }
+        """
         let options = FormatOptions(preferSynthesizedInitForInternalStructs: true)
-        testFormatting(for: input, rule: .redundantMemberwiseInit, options: options)
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options)
     }
 
     func testPreserveInitWhenPrivateVarWithDefaultValue() {

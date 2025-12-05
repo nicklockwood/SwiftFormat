@@ -96,5 +96,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.event.release.tag_name || inputs.tag }}
-          files: |
-            SwiftFormat.*.msi
+          files: SwiftFormat.*.msi/SwiftFormat.*.msi

@@ -476,6 +476,24 @@ final class SpaceAroundParensTests: XCTestCase {
                        options: FormatOptions(swiftVersion: "5.4.9"))
     }
 
+    func testAddSpaceBetweenParenAndUnsafe() {
+        let input = """
+        unsafe(["sudo"] + args).map { unsafe strdup($0) }
+        """
+        let output = """
+        unsafe (["sudo"] + args).map { unsafe strdup($0) }
+        """
+        testFormatting(for: input, output, rule: .spaceAroundParens)
+    }
+
+    func testNoAddSpaceBetweenParenAndAwaitForSwiftLessThan6_2() {
+        let input = """
+        unsafe(["sudo"] + args).map { unsafe strdup($0) }
+        """
+        testFormatting(for: input, rule: .spaceAroundParens,
+                       options: FormatOptions(swiftVersion: "6.1"))
+    }
+
     func testRemoveSpaceBetweenParenAndConsume() {
         let input = """
         let foo = consume (bar)

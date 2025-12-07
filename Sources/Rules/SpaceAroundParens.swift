@@ -85,6 +85,8 @@ extension Formatter {
             default:
                 return !keywordOrAttribute.isMacroOrAttribute
             }
+        case .identifier("unsafe"):
+            return options.swiftVersion >= "6.2" || options.swiftVersion == .undefined
         case let .identifier(name):
             return name.isKeywordInTypeContext && isTypePosition(at: index)
         case .endOfScope("]"):

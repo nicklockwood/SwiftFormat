@@ -188,4 +188,51 @@ final class SpaceAroundBracketsTests: XCTestCase {
         """
         testFormatting(for: input, rule: .spaceAroundBrackets)
     }
+
+    func testAddSpaceBetweenBracketAndAwait() {
+        let input = """
+        let foo = await[bar: 5]
+        """
+        let output = """
+        let foo = await [bar: 5]
+        """
+        testFormatting(for: input, output, rule: .spaceAroundBrackets)
+    }
+
+    func testAddSpaceBetweenParenAndAwaitForSwift5_5() {
+        let input = """
+        let foo = await[bar: 5]
+        """
+        let output = """
+        let foo = await [bar: 5]
+        """
+        testFormatting(for: input, output, rule: .spaceAroundBrackets,
+                       options: FormatOptions(swiftVersion: "5.5"))
+    }
+
+    func testNoAddSpaceBetweenParenAndAwaitForSwiftLessThan5_5() {
+        let input = """
+        let foo = await[bar: 5]
+        """
+        testFormatting(for: input, rule: .spaceAroundBrackets,
+                       options: FormatOptions(swiftVersion: "5.4.9"))
+    }
+
+    func testAddSpaceBetweenParenAndUnsafe() {
+        let input = """
+        unsafe[kinfo_proc](repeating: kinfo_proc(), count: length / MemoryLayout<kinfo_proc>.stride)
+        """
+        let output = """
+        unsafe [kinfo_proc](repeating: kinfo_proc(), count: length / MemoryLayout<kinfo_proc>.stride)
+        """
+        testFormatting(for: input, output, rule: .spaceAroundBrackets)
+    }
+
+    func testNoAddSpaceBetweenParenAndAwaitForSwiftLessThan6_2() {
+        let input = """
+        unsafe[kinfo_proc](repeating: kinfo_proc(), count: length / MemoryLayout<kinfo_proc>.stride)
+        """
+        testFormatting(for: input, rule: .spaceAroundBrackets,
+                       options: FormatOptions(swiftVersion: "6.1"))
+    }
 }

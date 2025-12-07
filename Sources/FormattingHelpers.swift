@@ -36,6 +36,54 @@ extension Formatter {
         return false
     }
 
+    /// Should the specified token be followed by a space if next token is an opening paren, bracket, etc?
+    func shouldInsertSpaceAfterToken(at index: Int) -> Bool? {
+        switch token(at: index) {
+        case let .keyword(keywordOrAttribute):
+            switch keywordOrAttribute {
+            case "@autoclosure":
+                if options.swiftVersion < "3",
+                   let nextIndex = self.index(of: .nonSpaceOrLinebreak, after: index),
+                   next(.nonSpaceOrCommentOrLinebreak, after: nextIndex) == .identifier("escaping")
+                {
+                    assert(tokens[nextIndex] == .startOfScope("("))
+                    return false
+                }
+                return true
+            case "@escaping", "@noescape", "@Sendable", "@MainActor":
+                return true
+            case _ where keywordOrAttribute.isAttribute:
+                if let i = self.index(of: .startOfScope("("), after: index) {
+                    return isParameterList(at: i)
+                }
+                return false
+            case "private", "fileprivate", "internal", "init", "subscript", "throws":
+                return false
+            case "await":
+                return options.swiftVersion >= "5.5" || options.swiftVersion == .undefined
+            default:
+                return !keywordOrAttribute.isMacroOrAttribute
+            }
+        case let .identifier(name):
+            switch name {
+            case "as", "is", "try": // not treated as keywords inside macro
+                return token(at: index - 1)?.isOperator(".") != true
+            case "unsafe":
+                return options.swiftVersion >= "6.2" || options.swiftVersion == .undefined
+            default:
+                return name.isKeywordInTypeContext && isTypePosition(at: index)
+            }
+        case .endOfScope("]"):
+            return isInClosureArguments(at: index)
+        case .endOfScope(")"):
+            return isAttribute(at: index)
+        case .number, .endOfScope("}"), .endOfScope(">"):
+            return false
+        default:
+            return nil
+        }
+    }
+
     /// remove self if possible
     func removeSelf(at i: Int, exclude: Set<String>, include: Set<String>? = nil) -> Bool {
         guard case let .identifier(selfKeyword) = tokens[i], ["self", "Self"].contains(selfKeyword) else {

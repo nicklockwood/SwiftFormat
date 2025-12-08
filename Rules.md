@@ -2563,11 +2563,15 @@ Remove redundant `let error` from `catch` clause.
 
 Remove explicit internal memberwise initializers that are redundant.
 
+Option | Description
+--- | ---
+`--prefer-synthesized-init-for-internal-structs` | For internal structs, remove private access control from properties to enable the synthesized initializer: "never" (default), "always", or comma-separated list of conformances (e.g. "View,ViewModifier")
+
 <details>
 <summary>Examples</summary>
 
 ```diff
-  struct Person {
+  struct User {
       var name: String
       var age: Int
 
@@ -2575,6 +2579,24 @@ Remove explicit internal memberwise initializers that are redundant.
 -         self.name = name
 -         self.age = age
 -     }
+  }
+```
+
+`--prefer-synthesized-init-for-internal-structs View,ViewModifier`:
+
+```diff
+  struct ProfileView: View {
+-     init(user: User, settings: Settings) {
+-         self.user = user
+-         self.settings = settings
+-     }
+-
+-     private let user: User
+-     private let settings: Settings
++     let user: User
++     let settings: Settings
+
+      var body: some View { ... }
   }
 ```
 

@@ -2565,7 +2565,7 @@ Remove explicit internal memberwise initializers that are redundant.
 
 Option | Description
 --- | ---
-`--prefer-synthesized-init-for-internal-structs` | For internal structs, remove private access control from properties to enable the synthesized initializer: "true" or "false" (default)
+`--prefer-synthesized-init-for-internal-structs` | For internal structs, remove private access control from properties to enable the synthesized initializer: "never" (default), "always", or comma-separated list of conformances (e.g. "View,ViewModifier")
 
 <details>
 <summary>Examples</summary>
@@ -2582,7 +2582,7 @@ Option | Description
   }
 ```
 
-`--prefer-synthesized-init-for-internal-structs true`:
+`--prefer-synthesized-init-for-internal-structs View,ViewModifier`:
 
 ```diff
   struct ProfileView: View {

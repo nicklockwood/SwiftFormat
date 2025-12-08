@@ -1426,7 +1426,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             var body: some View {}
         }
         """
-        let options = FormatOptions(preferSynthesizedInitForInternalStructs: true)
+        let options = FormatOptions(preferSynthesizedInitForInternalStructs: .always)
         testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options)
     }
 
@@ -1466,7 +1466,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        let options = FormatOptions(preferSynthesizedInitForInternalStructs: true)
+        let options = FormatOptions(preferSynthesizedInitForInternalStructs: .always)
         testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options)
     }
 
@@ -1485,7 +1485,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             let value: Int
         }
         """
-        let options = FormatOptions(preferSynthesizedInitForInternalStructs: true)
+        let options = FormatOptions(preferSynthesizedInitForInternalStructs: .always)
         testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options)
     }
 
@@ -1516,7 +1516,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             private let value: Int
         }
         """
-        let options = FormatOptions(preferSynthesizedInitForInternalStructs: true)
+        let options = FormatOptions(preferSynthesizedInitForInternalStructs: .always)
         testFormatting(for: input, rule: .redundantMemberwiseInit, options: options, exclude: [.redundantSelf, .trailingSpace, .indent])
     }
 
@@ -1530,7 +1530,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             private let value: Int
         }
         """
-        let options = FormatOptions(preferSynthesizedInitForInternalStructs: true)
+        let options = FormatOptions(preferSynthesizedInitForInternalStructs: .always)
         testFormatting(for: input, rule: .redundantMemberwiseInit, options: options, exclude: [.redundantSelf, .trailingSpace, .indent])
     }
 
@@ -1555,7 +1555,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             let value: Int
         }
         """
-        let options = FormatOptions(preferSynthesizedInitForInternalStructs: true)
+        let options = FormatOptions(preferSynthesizedInitForInternalStructs: .always)
         testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options)
     }
 
@@ -1577,7 +1577,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             let privateValue: String
         }
         """
-        let options = FormatOptions(preferSynthesizedInitForInternalStructs: true)
+        let options = FormatOptions(preferSynthesizedInitForInternalStructs: .always)
         testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options)
     }
 
@@ -1602,7 +1602,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             let third: Bool
         }
         """
-        let options = FormatOptions(preferSynthesizedInitForInternalStructs: true)
+        let options = FormatOptions(preferSynthesizedInitForInternalStructs: .always)
         testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options)
     }
 
@@ -1619,7 +1619,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             private let settings: Settings
         }
         """
-        let options = FormatOptions(preferSynthesizedInitForInternalStructs: true)
+        let options = FormatOptions(preferSynthesizedInitForInternalStructs: .always)
         testFormatting(for: input, rule: .redundantMemberwiseInit, options: options, exclude: [.redundantSelf])
     }
 
@@ -1638,7 +1638,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             let value: Int
         }
         """
-        let options = FormatOptions(preferSynthesizedInitForInternalStructs: true)
+        let options = FormatOptions(preferSynthesizedInitForInternalStructs: .always)
         testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options)
     }
 
@@ -1657,7 +1657,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             let value: Int
         }
         """
-        let options = FormatOptions(preferSynthesizedInitForInternalStructs: true)
+        let options = FormatOptions(preferSynthesizedInitForInternalStructs: .always)
         testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options, exclude: [.redundantFileprivate])
     }
 
@@ -1680,7 +1680,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             private let baaz = Baaz()
         }
         """
-        let options = FormatOptions(preferSynthesizedInitForInternalStructs: true)
+        let options = FormatOptions(preferSynthesizedInitForInternalStructs: .always)
         testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options, exclude: [.propertyTypes])
     }
 
@@ -1696,7 +1696,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             @State private var enabled: Bool
         }
         """
-        let options = FormatOptions(preferSynthesizedInitForInternalStructs: true)
+        let options = FormatOptions(preferSynthesizedInitForInternalStructs: .always)
         testFormatting(for: input, rule: .redundantMemberwiseInit, options: options)
     }
 
@@ -1718,7 +1718,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             @SomeCustomPropertyWrapper var value: String
         }
         """
-        let options = FormatOptions(preferSynthesizedInitForInternalStructs: true)
+        let options = FormatOptions(preferSynthesizedInitForInternalStructs: .always)
         testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options)
     }
 
@@ -1798,7 +1798,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             @Environment(\\.colorScheme) private var colorScheme
         }
         """
-        let options = FormatOptions(preferSynthesizedInitForInternalStructs: true)
+        let options = FormatOptions(preferSynthesizedInitForInternalStructs: .always)
         testFormatting(for: input, [output], rules: [.redundantMemberwiseInit, .organizeDeclarations, .blankLinesAtEndOfScope, .blankLinesAtStartOfScope], options: options)
     }
 
@@ -1816,7 +1816,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             private var bar = "default"
         }
         """
-        let options = FormatOptions(preferSynthesizedInitForInternalStructs: true)
+        let options = FormatOptions(preferSynthesizedInitForInternalStructs: .always)
         testFormatting(for: input, rule: .redundantMemberwiseInit, options: options)
     }
 
@@ -1839,7 +1839,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             private let bar = "default"
         }
         """
-        let options = FormatOptions(preferSynthesizedInitForInternalStructs: true)
+        let options = FormatOptions(preferSynthesizedInitForInternalStructs: .always)
         testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options)
     }
 
@@ -1860,5 +1860,94 @@ final class RedundantMemberwiseInitTests: XCTestCase {
         }
         """
         testFormatting(for: input, rule: .redundantMemberwiseInit)
+    }
+
+    // MARK: - conformances mode
+
+    func testRemovePrivateACLForConformingStruct() {
+        let input = """
+        struct ProfileView: View {
+            init(user: User) {
+                self.user = user
+            }
+
+            private let user: User
+
+            var body: some View {}
+        }
+        """
+        let output = """
+        struct ProfileView: View {
+            let user: User
+
+            var body: some View {}
+        }
+        """
+        let options = FormatOptions(preferSynthesizedInitForInternalStructs: .conformances(["View"]))
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options)
+    }
+
+    func testDontRemovePrivateACLForNonConformingStruct() {
+        let input = """
+        struct ProfileModel {
+            init(user: User) {
+                self.user = user
+            }
+
+            private let user: User
+        }
+        """
+        let options = FormatOptions(preferSynthesizedInitForInternalStructs: .conformances(["View"]))
+        testFormatting(for: input, rule: .redundantMemberwiseInit, options: options)
+    }
+
+    func testRemovePrivateACLForMultipleConformances() {
+        let input = """
+        struct ProfileView: View, Equatable {
+            init(user: User) {
+                self.user = user
+            }
+
+            private let user: User
+
+            var body: some View {}
+        }
+        """
+        let output = """
+        struct ProfileView: View, Equatable {
+            let user: User
+
+            var body: some View {}
+        }
+        """
+        let options = FormatOptions(preferSynthesizedInitForInternalStructs: .conformances(["View", "ViewModifier"]))
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options)
+    }
+
+    func testRemovePrivateACLForViewModifierConformance() {
+        let input = """
+        struct MyModifier: ViewModifier {
+            init(isEnabled: Bool) {
+                self.isEnabled = isEnabled
+            }
+
+            private let isEnabled: Bool
+
+            func body(content: Content) -> some View {
+                content
+            }
+        }
+        """
+        let output = """
+        struct MyModifier: ViewModifier {
+            let isEnabled: Bool
+
+            func body(content: Content) -> some View {
+                content
+            }
+        }
+        """
+        let options = FormatOptions(preferSynthesizedInitForInternalStructs: .conformances(["View", "ViewModifier"]))
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options)
     }
 }

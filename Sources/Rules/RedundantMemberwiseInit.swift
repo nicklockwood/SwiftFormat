@@ -57,11 +57,11 @@ public extension FormatRule {
                 }
 
                 // Determine if we should try to remove private access control from properties
-                let shouldRemovePrivateACL = formatter.options.preferSynthesizedInitForInternalStructs
-                    && structAccessLevel != .public
-                    && structAccessLevel != .package
-                    && initAccessLevel != .public
-                    && initAccessLevel != .package
+                let shouldRemovePrivateACL = formatter.shouldPreferSynthesizedInit(
+                    for: structDeclaration,
+                    structAccessLevel: structAccessLevel,
+                    initAccessLevel: initAccessLevel
+                )
 
                 // Compute what visibility the synthesized init would have after any modifications.
                 // The synthesized init has the minimum visibility of all stored properties in the memberwise init.
@@ -293,7 +293,7 @@ public extension FormatRule {
           }
         ```
 
-        `--prefer-synthesized-init-for-internal-structs true`:
+        `--prefer-synthesized-init-for-internal-structs View,ViewModifier`:
 
         ```diff
           struct ProfileView: View {
@@ -364,5 +364,29 @@ extension Formatter {
         }
 
         return false
+    }
+
+    /// Determines whether we should prefer synthesized init for the given struct
+    func shouldPreferSynthesizedInit(
+        for structDeclaration: TypeDeclaration,
+        structAccessLevel: Visibility,
+        initAccessLevel: Visibility
+    ) -> Bool {
+        // Must be internal or lower access level
+        guard structAccessLevel != .public,
+              structAccessLevel != .package,
+              initAccessLevel != .public,
+              initAccessLevel != .package
+        else { return false }
+
+        switch options.preferSynthesizedInitForInternalStructs {
+        case .never:
+            return false
+        case .always:
+            return true
+        case let .conformances(requiredConformances):
+            let structConformances = Set(structDeclaration.conformances.map(\.conformance.string))
+            return requiredConformances.contains { structConformances.contains($0) }
+        }
     }
 }

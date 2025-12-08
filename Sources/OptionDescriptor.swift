@@ -1446,8 +1446,11 @@ struct _Descriptors {
     let preferSynthesizedInitForInternalStructs = OptionDescriptor(
         argumentName: "prefer-synthesized-init-for-internal-structs",
         displayName: "Prefer Synthesized Init For Internal Structs",
-        help: "For internal structs, remove private access control from properties to enable the synthesized initializer:",
-        keyPath: \.preferSynthesizedInitForInternalStructs
+        help: "For internal structs, remove private access control from properties to enable the synthesized initializer: \"never\" (default), \"always\", or comma-separated list of conformances (e.g. \"View,ViewModifier\")",
+        keyPath: \.preferSynthesizedInitForInternalStructs,
+        type: .text,
+        fromArgument: { PreferSynthesizedInitMode(rawValue: $0) },
+        toArgument: { $0.rawValue }
     )
 
     // MARK: - Internal

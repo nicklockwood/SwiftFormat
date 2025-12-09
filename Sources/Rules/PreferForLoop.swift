@@ -11,7 +11,7 @@ import Foundation
 public extension FormatRule {
     static let preferForLoop = FormatRule(
         help: "Convert functional `forEach` calls to for loops.",
-        options: ["anonymous-for-each", "single-line-for-each"]
+        options: ["anonymous-for-each", "single-line-for-each", "optional-for-each"]
     ) { formatter in
         formatter.forEach(.identifier("forEach")) { forEachIndex, _ in
             // Make sure this is a function call preceded by a `.`
@@ -66,6 +66,7 @@ public extension FormatRule {
             // Parse the value that `forEach` is being called on
             let forLoopSubjectRange: ClosedRange<Int>
             var forLoopSubjectIdentifier: String?
+            var containsOptionalChaining = false
 
             // Parse a functional chain backwards from the `forEach` token
             var currentIndex = forEachIndex
@@ -74,7 +75,7 @@ public extension FormatRule {
                   formatter.tokens[previousDotIndex] == .operator(".", .infix),
                   let tokenBeforeDotIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: previousDotIndex)
             {
-                guard let startOfChainComponent = formatter.startOfChainComponent(at: tokenBeforeDotIndex, forLoopSubjectIdentifier: &forLoopSubjectIdentifier) else {
+                guard let startOfChainComponent = formatter.startOfChainComponent(at: tokenBeforeDotIndex, forLoopSubjectIdentifier: &forLoopSubjectIdentifier, containsOptionalChaining: &containsOptionalChaining) else {
                     // If we parse a dot we expect to parse at least one additional component in the chain.
                     // Otherwise we'd have a malformed chain that starts with a dot, so abort.
                     return
@@ -84,7 +85,23 @@ public extension FormatRule {
             }
 
             guard currentIndex != forEachIndex else { return }
-            forLoopSubjectRange = currentIndex ... indexBeforeFunctionCallDot
+
+            // Exclude the trailing `?` from the subject range if it's immediately before `.forEach`
+            // e.g., for `foo?.forEach`, we want `foo` not `foo?`
+            var subjectEndIndex = indexBeforeFunctionCallDot
+            if formatter.tokens[subjectEndIndex] == .operator("?", .postfix) {
+                containsOptionalChaining = true
+                if let tokenBeforeOptional = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: subjectEndIndex) {
+                    subjectEndIndex = tokenBeforeOptional
+                }
+            }
+
+            forLoopSubjectRange = currentIndex ... subjectEndIndex
+
+            // Skip optional forEach (e.g. `foo?.forEach`) unless the option is enabled
+            if containsOptionalChaining, !formatter.options.convertOptionalForEach {
+                return
+            }
 
             // If there is a `try` before the `forEach` we cannot know if the subject is async/throwing or the body,
             // which makes it impossible to know if we should move it or *remove* it, so we must abort (same for await).
@@ -130,6 +147,14 @@ public extension FormatRule {
                 isAnonymousClosure = false
                 forEachValueNames = argumentList.argumentNames
                 inKeywordIndex = argumentList.inKeywordIndex
+
+                // When optional chaining is present and the closure has multiple arguments
+                // (e.g. `dict?.forEach { key, value in }` or `array?.enumerated().forEach { index, item in }`),
+                // we can't use `?? []` because the empty collection type is ambiguous
+                // (could be a dictionary, enumerated sequence, etc.)
+                if containsOptionalChaining, forEachValueNames.count > 1 {
+                    return
+                }
             } else {
                 isAnonymousClosure = true
                 inKeywordIndex = nil
@@ -221,6 +246,18 @@ public extension FormatRule {
 
             newTokens.append(contentsOf: formatter.tokens[forLoopSubjectRange])
 
+            // When the subject contains optional chaining (e.g. `foo?.bar?.forEach`),
+            // add nil-coalescing to an empty array: `(foo?.bar ?? [])`
+            if containsOptionalChaining {
+                newTokens.append(contentsOf: [
+                    .space(" "),
+                    .operator("??", .infix),
+                    .space(" "),
+                    .startOfScope("["),
+                    .endOfScope("]"),
+                ])
+            }
+
             newTokens.append(contentsOf: [
                 .space(" "),
                 .startOfScope("{"),
@@ -253,6 +290,12 @@ public extension FormatRule {
         +     print(baazValue)
           }
 
+          // --optional-for-each convert
+        - foo?.bar?.forEach { item in
+        + for item in foo?.bar ?? [] {
+              print(item)
+          }
+
           // Doesn't affect long multiline functional chains
           placeholderStrings
               .filter { $0.style == .fooBar }
@@ -265,7 +308,7 @@ public extension FormatRule {
 
 extension Formatter {
     /// Returns the start index of the chain component ending at the given index
-    func startOfChainComponent(at index: Int, forLoopSubjectIdentifier: inout String?) -> Int? {
+    func startOfChainComponent(at index: Int, forLoopSubjectIdentifier: inout String?, containsOptionalChaining: inout Bool) -> Int? {
         // The previous item in a dot chain can either be:
         //  1. an identifier like `foo.`
         //  2. a function call like `foo(...).`
@@ -302,7 +345,7 @@ extension Formatter {
             // continue parsing at the previous non-space non-comment token.
             //  - If the previous token is a newline then this isn't a function call
             //    and we'd stop parsing. `foo   ()` is a function call but `foo\n()` isn't.
-            return startOfChainComponent(at: previousNonSpaceNonCommentIndex, forLoopSubjectIdentifier: &forLoopSubjectIdentifier) ?? startOfScopeIndex
+            return startOfChainComponent(at: previousNonSpaceNonCommentIndex, forLoopSubjectIdentifier: &forLoopSubjectIdentifier, containsOptionalChaining: &containsOptionalChaining) ?? startOfScopeIndex
 
         case .endOfScope("}"):
             // Stop parsing if we reach a trailing closure.
@@ -312,6 +355,14 @@ extension Formatter {
             // confusable with the body of the statement; pass as a parenthesized argument
             // to silence this warning".
             return nil
+
+        case .operator("?", .postfix):
+            // Handle optional chaining like `foo?.bar` or `foo.bar?.baaz`
+            containsOptionalChaining = true
+            guard let tokenBeforeOptional = self.index(of: .nonSpaceOrCommentOrLinebreak, before: index) else {
+                return nil
+            }
+            return startOfChainComponent(at: tokenBeforeOptional, forLoopSubjectIdentifier: &forLoopSubjectIdentifier, containsOptionalChaining: &containsOptionalChaining)
 
         default:
             return nil

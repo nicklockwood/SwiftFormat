@@ -2040,6 +2040,7 @@ Option | Description
 --- | ---
 `--anonymous-for-each` | Convert anonymous forEach closures to for loops: "ignore" or "convert" (default)
 `--single-line-for-each` | Convert single-line forEach closures to for loops: "ignore" (default) or "convert"
+`--optional-for-each` | Convert optional forEach calls to for loops: "convert" or "ignore" (default)
 
 <details>
 <summary>Examples</summary>
@@ -2062,6 +2063,12 @@ Option | Description
 + for baazValue in foo.item().bar[2].baazValues(option: true) {
 -     print($0)
 +     print(baazValue)
+  }
+
+  // --optional-for-each convert
+- foo?.bar?.forEach { item in
++ for item in foo?.bar ?? [] {
+      print(item)
   }
 
   // Doesn't affect long multiline functional chains

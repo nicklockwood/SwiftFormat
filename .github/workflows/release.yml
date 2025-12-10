@@ -39,7 +39,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Install cross-binutils for aarch64
-        run: sudo apt install -y binutils-aarch64-linux-gnu
+        run: sudo apt-get update && sudo apt-get install -y binutils-aarch64-linux-gnu
       - name: Build and export binaries
         uses: docker/build-push-action@v6
         with:

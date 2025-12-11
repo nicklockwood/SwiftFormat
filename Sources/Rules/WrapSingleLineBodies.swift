@@ -15,9 +15,24 @@ public extension FormatRule {
         disabledByDefault: true,
         sharedOptions: ["linebreaks", "indent"]
     ) { formatter in
-        formatter.forEach(.startOfScope("{")) { i, _ in
-            guard formatter.isFunctionOrComputedPropertyBody(at: i) else { return }
-            formatter.wrapStatementBody(at: i)
+        // Handle func, init, subscript declarations
+        formatter.forEach(.keyword) { keywordIndex, keyword in
+            guard ["func", "init", "subscript"].contains(keyword.string),
+                  let declaration = formatter.parseFunctionDeclaration(keywordIndex: keywordIndex),
+                  let bodyRange = declaration.bodyRange
+            else { return }
+
+            formatter.wrapStatementBody(at: bodyRange.lowerBound)
+        }
+
+        // Handle computed properties
+        formatter.forEach(.keyword("var")) { varIndex, _ in
+            guard let property = formatter.parsePropertyDeclaration(atIntroducerIndex: varIndex),
+                  let bodyScopeRange = property.body?.scopeRange,
+                  !formatter.isStoredProperty(atIntroducerIndex: varIndex)
+            else { return }
+
+            formatter.wrapStatementBody(at: bodyScopeRange.lowerBound)
         }
     } examples: {
         """
@@ -43,29 +58,5 @@ public extension FormatRule {
         + }
         ```
         """
-    }
-}
-
-extension Formatter {
-    /// Whether the brace at the given index is the start of a function, init, subscript,
-    /// or computed property body (not a closure or control flow statement).
-    func isFunctionOrComputedPropertyBody(at i: Int) -> Bool {
-        guard tokens[i] == .startOfScope("{"),
-              !isStartOfClosure(at: i),
-              let keyword = last(.keyword, before: i)
-        else { return false }
-
-        switch keyword {
-        case .keyword("func"), .keyword("init"), .keyword("subscript"):
-            return true
-        case .keyword("var"):
-            // Must be a computed property, not a stored property with willSet/didSet
-            if let varIndex = index(of: .keyword("var"), before: i) {
-                return !isStoredProperty(atIntroducerIndex: varIndex)
-            }
-            return false
-        default:
-            return false
-        }
     }
 }

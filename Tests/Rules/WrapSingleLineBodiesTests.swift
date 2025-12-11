@@ -218,4 +218,28 @@ final class WrapSingleLineBodiesTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .wrapSingleLineBodies, exclude: [.blankLinesBetweenScopes])
     }
+
+    func testWrapFunctionWithAnyReturnType() {
+        let input = """
+        func foo() -> any Bar { baz() }
+        """
+        let output = """
+        func foo() -> any Bar {
+            baz()
+        }
+        """
+        testFormatting(for: input, output, rule: .wrapSingleLineBodies)
+    }
+
+    func testWrapFunctionWithSomeReturnType() {
+        let input = """
+        func foo() -> some View { Text("hello") }
+        """
+        let output = """
+        func foo() -> some View {
+            Text("hello")
+        }
+        """
+        testFormatting(for: input, output, rule: .wrapSingleLineBodies)
+    }
 }

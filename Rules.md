@@ -4331,7 +4331,7 @@ Wrap the opening brace of multiline statements.
 
 ## wrapSingleLineBodies
 
-Wrap single-line function and computed property bodies onto multiple lines.
+Wrap single-line function, init, subscript, and computed property bodies onto multiple lines.
 
 <details>
 <summary>Examples</summary>
@@ -4340,6 +4340,16 @@ Wrap single-line function and computed property bodies onto multiple lines.
 - func foo() { print("bar") }
 + func foo() {
 +     print("bar")
++ }
+
+- init() { self.value = 0 }
++ init() {
++     self.value = 0
++ }
+
+- subscript(index: Int) -> Int { array[index] }
++ subscript(index: Int) -> Int {
++     array[index]
 + }
 
 - var bar: String { "bar" }

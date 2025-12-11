@@ -17,7 +17,7 @@ final class RedundantGetTests: XCTestCase {
         let output = """
         var foo: Int { return 5 }
         """
-        testFormatting(for: input, output, rule: .redundantGet)
+        testFormatting(for: input, output, rule: .redundantGet, exclude: [.wrapSingleLineBodies])
     }
 
     func testRemoveMultilineIsolatedGet() {
@@ -50,7 +50,7 @@ final class RedundantGetTests: XCTestCase {
         let input = """
         var enabled: Bool { @objc(isEnabled) get { true } }
         """
-        testFormatting(for: input, rule: .redundantGet)
+        testFormatting(for: input, rule: .redundantGet, exclude: [.wrapSingleLineBodies])
     }
 
     func testRemoveSubscriptGet() {

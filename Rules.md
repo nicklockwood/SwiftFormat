@@ -133,6 +133,7 @@
 * [wrapEnumCases](#wrapEnumCases)
 * [wrapMultilineConditionalAssignment](#wrapMultilineConditionalAssignment)
 * [wrapMultilineFunctionChains](#wrapMultilineFunctionChains)
+* [wrapSingleLineBodies](#wrapSingleLineBodies)
 * [wrapSwitchCases](#wrapSwitchCases)
 
 # Deprecated Rules (do not use)
@@ -4323,6 +4324,28 @@ Wrap the opening brace of multiline statements.
 + {
     // ...
   }
+```
+
+</details>
+<br/>
+
+## wrapSingleLineBodies
+
+Wrap single-line function and computed property bodies onto multiple lines.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- func foo() { print("bar") }
++ func foo() {
++     print("bar")
++ }
+
+- var bar: String { "bar" }
++ var bar: String {
++     "bar"
++ }
 ```
 
 </details>

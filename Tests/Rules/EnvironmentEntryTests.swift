@@ -169,7 +169,7 @@ final class EnvironmentEntryTests: XCTestCase {
             static var defaultValue: Bool { false }
         }
         """
-        testFormatting(for: input, rule: .environmentEntry, options: FormatOptions(swiftVersion: "6.0"))
+        testFormatting(for: input, rule: .environmentEntry, options: FormatOptions(swiftVersion: "6.0"), exclude: [.wrapSingleLineBodies])
     }
 
     func testReplaceEnvironmentKeyWithMultipleLinesInDefaultValue() {
@@ -269,7 +269,7 @@ final class EnvironmentEntryTests: XCTestCase {
             static var defaultValue: Bool { false }
         }
         """
-        testFormatting(for: input, rule: .environmentEntry, options: FormatOptions(swiftVersion: "6.0"))
+        testFormatting(for: input, rule: .environmentEntry, options: FormatOptions(swiftVersion: "6.0"), exclude: [.wrapSingleLineBodies])
     }
 
     func testEntryMacroReplacementWhenDefaultValueIsNotComputed() {

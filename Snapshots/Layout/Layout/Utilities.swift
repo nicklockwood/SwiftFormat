@@ -175,8 +175,13 @@ struct UIntOptionSet: OptionSet {
     }
 
     extension UILayoutPriority {
-        var rawValue: Float { return self }
-        init(rawValue: Float) { self = rawValue }
+        var rawValue: Float {
+            return self
+        }
+
+        init(rawValue: Float) {
+            self = rawValue
+        }
 
         static let required = UILayoutPriorityRequired
         static let defaultHigh = UILayoutPriorityDefaultHigh

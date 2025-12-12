@@ -34,7 +34,9 @@ extension OptionSetMacroDiagnostic: DiagnosticMessage {
     }
   }
 
-  var severity: DiagnosticSeverity { .error }
+  var severity: DiagnosticSeverity {
+    .error
+  }
 
   var diagnosticID: MessageID {
     MessageID(domain: "Swift", id: "OptionSet.\(self)")

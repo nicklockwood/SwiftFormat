@@ -402,27 +402,89 @@ public extension Token {
         }
     }
 
-    var isAttribute: Bool { isKeywordOrAttribute && string.isAttribute }
-    var isDelimiter: Bool { hasType(of: .delimiter("")) }
-    var isOperator: Bool { hasType(of: .operator("", .none)) }
-    var isUnwrapOperator: Bool { isOperator("?", .postfix) || isOperator("!", .postfix) }
-    var isRangeOperator: Bool { isOperator("...") || isOperator("..<") }
-    var isNumber: Bool { hasType(of: .number("", .integer)) }
-    var isError: Bool { hasType(of: .error("")) }
-    var isStartOfScope: Bool { hasType(of: .startOfScope("")) }
-    var isEndOfScope: Bool { hasType(of: .endOfScope("")) }
-    var isKeyword: Bool { isKeywordOrAttribute && !string.isAttribute }
-    var isKeywordOrAttribute: Bool { hasType(of: .keyword("")) }
-    var isIdentifier: Bool { hasType(of: .identifier("")) }
-    var isIdentifierOrKeyword: Bool { isIdentifier || isKeywordOrAttribute }
-    var isSpace: Bool { hasType(of: .space("")) }
-    var isLinebreak: Bool { hasType(of: .linebreak("", 0)) }
-    var isEndOfStatement: Bool { self == .delimiter(";") || isLinebreak }
-    var isSpaceOrLinebreak: Bool { isSpace || isLinebreak }
-    var isSpaceOrComment: Bool { isSpace || isComment }
-    var isSpaceOrCommentOrLinebreak: Bool { isSpaceOrComment || isLinebreak }
-    var isNonSpaceOrCommentOrLinebreak: Bool { !isSpaceOrCommentOrLinebreak }
-    var isCommentOrLinebreak: Bool { isComment || isLinebreak }
+    var isAttribute: Bool {
+        isKeywordOrAttribute && string.isAttribute
+    }
+
+    var isDelimiter: Bool {
+        hasType(of: .delimiter(""))
+    }
+
+    var isOperator: Bool {
+        hasType(of: .operator("", .none))
+    }
+
+    var isUnwrapOperator: Bool {
+        isOperator("?", .postfix) || isOperator("!", .postfix)
+    }
+
+    var isRangeOperator: Bool {
+        isOperator("...") || isOperator("..<")
+    }
+
+    var isNumber: Bool {
+        hasType(of: .number("", .integer))
+    }
+
+    var isError: Bool {
+        hasType(of: .error(""))
+    }
+
+    var isStartOfScope: Bool {
+        hasType(of: .startOfScope(""))
+    }
+
+    var isEndOfScope: Bool {
+        hasType(of: .endOfScope(""))
+    }
+
+    var isKeyword: Bool {
+        isKeywordOrAttribute && !string.isAttribute
+    }
+
+    var isKeywordOrAttribute: Bool {
+        hasType(of: .keyword(""))
+    }
+
+    var isIdentifier: Bool {
+        hasType(of: .identifier(""))
+    }
+
+    var isIdentifierOrKeyword: Bool {
+        isIdentifier || isKeywordOrAttribute
+    }
+
+    var isSpace: Bool {
+        hasType(of: .space(""))
+    }
+
+    var isLinebreak: Bool {
+        hasType(of: .linebreak("", 0))
+    }
+
+    var isEndOfStatement: Bool {
+        self == .delimiter(";") || isLinebreak
+    }
+
+    var isSpaceOrLinebreak: Bool {
+        isSpace || isLinebreak
+    }
+
+    var isSpaceOrComment: Bool {
+        isSpace || isComment
+    }
+
+    var isSpaceOrCommentOrLinebreak: Bool {
+        isSpaceOrComment || isLinebreak
+    }
+
+    var isNonSpaceOrCommentOrLinebreak: Bool {
+        !isSpaceOrCommentOrLinebreak
+    }
+
+    var isCommentOrLinebreak: Bool {
+        isComment || isLinebreak
+    }
 
     var isMacro: Bool {
         if case let .keyword(string) = self {
@@ -624,9 +686,18 @@ extension Collection<Token> where Index == Int {
 }
 
 extension UnicodeScalar {
-    var isDigit: Bool { isdigit(Int32(value)) > 0 }
-    var isHexDigit: Bool { isxdigit(Int32(value)) > 0 }
-    var isLinebreak: Bool { "\n\r\u{000B}\u{000C}".unicodeScalars.contains(self) }
+    var isDigit: Bool {
+        isdigit(Int32(value)) > 0
+    }
+
+    var isHexDigit: Bool {
+        isxdigit(Int32(value)) > 0
+    }
+
+    var isLinebreak: Bool {
+        "\n\r\u{000B}\u{000C}".unicodeScalars.contains(self)
+    }
+
     var isSpace: Bool {
         switch value {
         case 0x0009, 0x0011, 0x0012, 0x0020,

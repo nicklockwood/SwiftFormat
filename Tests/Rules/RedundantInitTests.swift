@@ -44,14 +44,14 @@ final class RedundantInitTests: XCTestCase {
         let input = """
         class C: NSObject { override init() { super.init() } }
         """
-        testFormatting(for: input, rule: .redundantInit)
+        testFormatting(for: input, rule: .redundantInit, exclude: [.wrapSingleLineBodies])
     }
 
     func testDontRemoveInitInSelfCall() {
         let input = """
         struct S { let n: Int }; extension S { init() { self.init(n: 1) } }
         """
-        testFormatting(for: input, rule: .redundantInit)
+        testFormatting(for: input, rule: .redundantInit, exclude: [.wrapSingleLineBodies])
     }
 
     func testDontRemoveInitWhenPassedAsFunction() {

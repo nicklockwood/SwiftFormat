@@ -62,7 +62,9 @@ final class DefaultReporter: Reporter {
     }
 
     // TODO: support file output?
-    func write() throws -> Data? { nil }
+    func write() throws -> Data? {
+        nil
+    }
 }
 
 enum Reporters {

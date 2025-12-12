@@ -1799,7 +1799,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
         }
         """
         let options = FormatOptions(preferSynthesizedInitForInternalStructs: .always)
-        testFormatting(for: input, [output], rules: [.redundantMemberwiseInit, .organizeDeclarations, .blankLinesAtEndOfScope, .blankLinesAtStartOfScope], options: options)
+        testFormatting(for: input, [output], rules: [.redundantMemberwiseInit, .organizeDeclarations, .blankLinesAtEndOfScope, .blankLinesAtStartOfScope], options: options, exclude: [.wrapSingleLineBodies])
     }
 
     func testPreserveInitWhenPrivateVarWithDefaultValueAndOptionEnabled() {

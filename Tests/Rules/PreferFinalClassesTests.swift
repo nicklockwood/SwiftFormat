@@ -93,7 +93,7 @@ final class PreferFinalClassesTests: XCTestCase {
             class var bar: String { "bar" }
         }
         """
-        testFormatting(for: input, rule: .preferFinalClasses)
+        testFormatting(for: input, rule: .preferFinalClasses, exclude: [.wrapSingleLineBodies])
     }
 
     func testNestedClass() {

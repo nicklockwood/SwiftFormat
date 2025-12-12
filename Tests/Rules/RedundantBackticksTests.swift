@@ -48,7 +48,7 @@ final class RedundantBackticksTests: XCTestCase {
         let output = """
         func foo(bar: Self) { print(bar) }
         """
-        testFormatting(for: input, output, rule: .redundantBackticks)
+        testFormatting(for: input, output, rule: .redundantBackticks, exclude: [.wrapSingleLineBodies])
     }
 
     func testRemoveBackticksAroundClassSelfAsParameterType() {
@@ -68,7 +68,7 @@ final class RedundantBackticksTests: XCTestCase {
         let output = """
         func foo(Self: Foo) { print(Self) }
         """
-        testFormatting(for: input, output, rule: .redundantBackticks)
+        testFormatting(for: input, output, rule: .redundantBackticks, exclude: [.wrapSingleLineBodies])
     }
 
     func testNoRemoveBackticksAroundKeywordFollowedByType() {
@@ -95,7 +95,7 @@ final class RedundantBackticksTests: XCTestCase {
         let output = """
         func foo(get value: Int) { print(value) }
         """
-        testFormatting(for: input, output, rule: .redundantBackticks)
+        testFormatting(for: input, output, rule: .redundantBackticks, exclude: [.wrapSingleLineBodies])
     }
 
     func testRemoveBackticksAroundTypeAtRootLevel() {
@@ -121,14 +121,14 @@ final class RedundantBackticksTests: XCTestCase {
         let input = """
         func foo(`let`: Foo) { print(`let`) }
         """
-        testFormatting(for: input, rule: .redundantBackticks)
+        testFormatting(for: input, rule: .redundantBackticks, exclude: [.wrapSingleLineBodies])
     }
 
     func testNoRemoveBackticksAroundTrueArgument() {
         let input = """
         func foo(`true`: Foo) { print(`true`) }
         """
-        testFormatting(for: input, rule: .redundantBackticks)
+        testFormatting(for: input, rule: .redundantBackticks, exclude: [.wrapSingleLineBodies])
     }
 
     func testRemoveBackticksAroundTrueArgument() {
@@ -139,7 +139,7 @@ final class RedundantBackticksTests: XCTestCase {
         func foo(true: Foo) { print(`true`) }
         """
         let options = FormatOptions(swiftVersion: "4")
-        testFormatting(for: input, output, rule: .redundantBackticks, options: options)
+        testFormatting(for: input, output, rule: .redundantBackticks, options: options, exclude: [.wrapSingleLineBodies])
     }
 
     func testNoRemoveBackticksAroundTypeProperty() {
@@ -291,7 +291,7 @@ final class RedundantBackticksTests: XCTestCase {
         let input = """
         func `_`<T>(_ foo: T) -> T { foo }
         """
-        testFormatting(for: input, rule: .redundantBackticks)
+        testFormatting(for: input, rule: .redundantBackticks, exclude: [.wrapSingleLineBodies])
     }
 
     func testNoRemoveBackticksAroundShadowedSelf() {

@@ -35,9 +35,17 @@ struct ParsedLayoutExpression: CustomStringConvertible {
         return "\(expression) // \(comment)"
     }
 
-    var isEmpty: Bool { return error == .unexpectedToken("") }
-    var symbols: Set<Expression.Symbol> { return expression.symbols }
-    var error: Expression.Error? { return expression.error }
+    var isEmpty: Bool {
+        return error == .unexpectedToken("")
+    }
+
+    var symbols: Set<Expression.Symbol> {
+        return expression.symbols
+    }
+
+    var error: Expression.Error? {
+        return expression.error
+    }
 }
 
 enum ParsedExpressionPart: CustomStringConvertible {

@@ -64,13 +64,17 @@ public extension Consumer {
     }
 
     /// Will the consumer match empty input?
-    var isOptional: Bool { return _isOptional }
+    var isOptional: Bool {
+        return _isOptional
+    }
 
     /// Source location
     struct Location: Equatable {
         fileprivate var source: String.UnicodeScalarView
         public let range: Range<String.Index>
-        public var offset: (line: Int, column: Int) { _offset }
+        public var offset: (line: Int, column: Int) {
+            _offset
+        }
     }
 
     /// Abstract syntax tree returned by consumer
@@ -79,7 +83,9 @@ public extension Consumer {
         case node(Label?, [Match])
 
         /// The location of the match in the original source (if known)
-        public var location: Location? { return _location }
+        public var location: Location? {
+            return _location
+        }
 
         /// Transform generic AST to application-specific form
         public func transform(_ fn: Transform) rethrows -> Any? {

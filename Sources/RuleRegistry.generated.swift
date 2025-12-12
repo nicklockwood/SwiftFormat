@@ -141,6 +141,7 @@ let ruleRegistry: [String: FormatRule] = [
     "wrapMultilineConditionalAssignment": .wrapMultilineConditionalAssignment,
     "wrapMultilineFunctionChains": .wrapMultilineFunctionChains,
     "wrapMultilineStatementBraces": .wrapMultilineStatementBraces,
+    "wrapSingleLineBodies": .wrapSingleLineBodies,
     "wrapSingleLineComments": .wrapSingleLineComments,
     "wrapSwitchCases": .wrapSwitchCases,
     "yodaConditions": .yodaConditions,

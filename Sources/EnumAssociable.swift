@@ -63,5 +63,7 @@ protocol _Optional {
 }
 
 extension Optional: _Optional {
-    static var _none: Optional { none }
+    static var _none: Optional {
+        none
+    }
 }

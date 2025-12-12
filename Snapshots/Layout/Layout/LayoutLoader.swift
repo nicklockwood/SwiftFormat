@@ -533,8 +533,14 @@ final class LayoutLoader {
 
 #else
 
-    private func _findProjectDirectory(at _: String) -> URL? { return nil }
-    private func _findSourceURL(forRelativePath _: String, in _: URL, ignoring _: [URL], usingCache _: Bool) throws -> URL? { return nil }
+    private func _findProjectDirectory(at _: String) -> URL? {
+        return nil
+    }
+
+    private func _findSourceURL(forRelativePath _: String, in _: URL, ignoring _: [URL], usingCache _: Bool) throws -> URL? {
+        return nil
+    }
+
     private func _setSourceURL(_: URL, for _: String) {}
     private func _clearSourceURLs() {}
 

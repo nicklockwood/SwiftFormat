@@ -160,7 +160,9 @@ public extension RuntimeType {
 
     // Deprecated
 
-    @objc static var uiActivityType: RuntimeType { return uiActivity_ActivityType }
+    @objc static var uiActivityType: RuntimeType {
+        return uiActivity_ActivityType
+    }
 
     // MARK: Accessibility
 
@@ -320,8 +322,13 @@ public extension RuntimeType {
 
     // Deprecated
 
-    @objc static var uiFontDescriptorSymbolicTraits: RuntimeType { return uiFontDescriptor_SymbolicTraits }
-    @objc static var uiFontTextStyle: RuntimeType { return uiFont_TextStyle }
+    @objc static var uiFontDescriptorSymbolicTraits: RuntimeType {
+        return uiFontDescriptor_SymbolicTraits
+    }
+
+    @objc static var uiFontTextStyle: RuntimeType {
+        return uiFont_TextStyle
+    }
 
     // MARK: TextInput
 
@@ -530,8 +537,13 @@ public extension RuntimeType {
 
     // Deprecated
 
-    @objc static var uiTextBorderStyle: RuntimeType { return uiTextField_BorderStyle }
-    @objc static var uiTextFieldViewMode: RuntimeType { return uiTextField_ViewMode }
+    @objc static var uiTextBorderStyle: RuntimeType {
+        return uiTextField_BorderStyle
+    }
+
+    @objc static var uiTextFieldViewMode: RuntimeType {
+        return uiTextField_ViewMode
+    }
 
     // MARK: UISegmentedControl
 
@@ -545,7 +557,9 @@ public extension RuntimeType {
 
     // Deprecated
 
-    @objc static var uiSegmentedControlSegment: RuntimeType { return uiSegmentedControl_Segment }
+    @objc static var uiSegmentedControlSegment: RuntimeType {
+        return uiSegmentedControl_Segment
+    }
 
     // MARK: Toolbars
 
@@ -610,10 +624,21 @@ public extension RuntimeType {
 
     // Deprecated
 
-    @objc static var uiSearchBarStyle: RuntimeType { return uiSearchBar_Style }
-    @objc static var uiBarButtonSystemItem: RuntimeType { return uiBarButtonItem_SystemItem }
-    @objc static var uiBarButtonItemStyle: RuntimeType { return uiBarButtonItem_Style }
-    @objc static var uiTabBarSystemItem: RuntimeType { return uiTabBarItem_SystemItem }
+    @objc static var uiSearchBarStyle: RuntimeType {
+        return uiSearchBar_Style
+    }
+
+    @objc static var uiBarButtonSystemItem: RuntimeType {
+        return uiBarButtonItem_SystemItem
+    }
+
+    @objc static var uiBarButtonItemStyle: RuntimeType {
+        return uiBarButtonItem_Style
+    }
+
+    @objc static var uiTabBarSystemItem: RuntimeType {
+        return uiTabBarItem_SystemItem
+    }
 
     // MARK: Drag and drop
 
@@ -682,9 +707,17 @@ public extension RuntimeType {
 
     // Deprecated
 
-    @objc static var uiViewAutoresizing: RuntimeType { return uiView_AutoresizingMask }
-    @objc static var uiViewContentMode: RuntimeType { return uiView_ContentMode }
-    @objc static var uiViewTintAdjustmentMode: RuntimeType { return uiView_TintAdjustmentMode }
+    @objc static var uiViewAutoresizing: RuntimeType {
+        return uiView_AutoresizingMask
+    }
+
+    @objc static var uiViewContentMode: RuntimeType {
+        return uiView_ContentMode
+    }
+
+    @objc static var uiViewTintAdjustmentMode: RuntimeType {
+        return uiView_TintAdjustmentMode
+    }
 
     // MARK: UIControl
 
@@ -703,8 +736,13 @@ public extension RuntimeType {
 
     // Deprecated
 
-    @objc static var uiControlContentVerticalAlignment: RuntimeType { return uiControl_ContentVerticalAlignment }
-    @objc static var uiControlContentHorizontalAlignment: RuntimeType { return uiControl_ContentHorizontalAlignment }
+    @objc static var uiControlContentVerticalAlignment: RuntimeType {
+        return uiControl_ContentVerticalAlignment
+    }
+
+    @objc static var uiControlContentHorizontalAlignment: RuntimeType {
+        return uiControl_ContentHorizontalAlignment
+    }
 
     // MARK: UIButton
 
@@ -719,7 +757,9 @@ public extension RuntimeType {
 
     // Deprecated
 
-    @objc static var uiButtonType: RuntimeType { return uiButton_ButtonType }
+    @objc static var uiButtonType: RuntimeType {
+        return uiButton_ButtonType
+    }
 
     // MARK: UIActivityIndicatorView
 
@@ -731,7 +771,9 @@ public extension RuntimeType {
 
     // Deprecated
 
-    @objc static var uiActivityIndicatorViewStyle: RuntimeType { return uiActivityIndicatorView_Style }
+    @objc static var uiActivityIndicatorViewStyle: RuntimeType {
+        return uiActivityIndicatorView_Style
+    }
 
     // MARK: UIProgressView
 
@@ -742,7 +784,9 @@ public extension RuntimeType {
 
     // Deprecated
 
-    @objc static var uiProgressViewStyle: RuntimeType { return uiProgressView_Style }
+    @objc static var uiProgressViewStyle: RuntimeType {
+        return uiProgressView_Style
+    }
 
     // MARK: UIInputView
 
@@ -753,7 +797,9 @@ public extension RuntimeType {
 
     // Deprecated
 
-    @objc static var uiInputViewStyle: RuntimeType { return uiInputView_Style }
+    @objc static var uiInputViewStyle: RuntimeType {
+        return uiInputView_Style
+    }
 
     // MARK: UIDatePicker
 
@@ -766,7 +812,9 @@ public extension RuntimeType {
 
     // Deprecated
 
-    @objc static var uiDatePickerMode: RuntimeType { return uiDatePicker_Mode }
+    @objc static var uiDatePickerMode: RuntimeType {
+        return uiDatePicker_Mode
+    }
 
     // MARK: UIScrollView
 
@@ -813,10 +861,21 @@ public extension RuntimeType {
 
     // Deprecated
 
-    @objc static var uiScrollViewContentInsetAdjustmentBehavior: RuntimeType { return uiScrollView_ContentInsetAdjustmentBehavior }
-    @objc static var uiScrollViewIndicatorStyle: RuntimeType { return uiScrollView_IndicatorStyle }
-    @objc static var uiScrollViewIndexDisplayMode: RuntimeType { return uiScrollView_IndexDisplayMode }
-    @objc static var uiScrollViewKeyboardDismissMode: RuntimeType { return uiScrollView_KeyboardDismissMode }
+    @objc static var uiScrollViewContentInsetAdjustmentBehavior: RuntimeType {
+        return uiScrollView_ContentInsetAdjustmentBehavior
+    }
+
+    @objc static var uiScrollViewIndicatorStyle: RuntimeType {
+        return uiScrollView_IndicatorStyle
+    }
+
+    @objc static var uiScrollViewIndexDisplayMode: RuntimeType {
+        return uiScrollView_IndexDisplayMode
+    }
+
+    @objc static var uiScrollViewKeyboardDismissMode: RuntimeType {
+        return uiScrollView_KeyboardDismissMode
+    }
 
     // MARK: UICollectionView
 
@@ -866,9 +925,17 @@ public extension RuntimeType {
 
     // Deprecated
 
-    @objc static var uiCollectionViewScrollDirection: RuntimeType { return uiCollectionView_ScrollDirection }
-    @objc static var uiCollectionViewReorderingCadence: RuntimeType { return uiCollectionView_ReorderingCadence }
-    @objc static var uiCollectionViewFlowLayoutSectionInsetReference: RuntimeType { return uiCollectionViewFlowLayout_SectionInsetReference }
+    @objc static var uiCollectionViewScrollDirection: RuntimeType {
+        return uiCollectionView_ScrollDirection
+    }
+
+    @objc static var uiCollectionViewReorderingCadence: RuntimeType {
+        return uiCollectionView_ReorderingCadence
+    }
+
+    @objc static var uiCollectionViewFlowLayoutSectionInsetReference: RuntimeType {
+        return uiCollectionViewFlowLayout_SectionInsetReference
+    }
 
     // MARK: UIStackView
 
@@ -904,9 +971,17 @@ public extension RuntimeType {
 
     // Deprecated
 
-    @objc static var uiLayoutConstraintAxis: RuntimeType { return nsLayoutConstraint_Axis }
-    @objc static var uiStackViewDistribution: RuntimeType { return uiStackView_Distribution }
-    @objc static var uiStackViewAlignment: RuntimeType { return uiStackView_Alignment }
+    @objc static var uiLayoutConstraintAxis: RuntimeType {
+        return nsLayoutConstraint_Axis
+    }
+
+    @objc static var uiStackViewDistribution: RuntimeType {
+        return uiStackView_Distribution
+    }
+
+    @objc static var uiStackViewAlignment: RuntimeType {
+        return uiStackView_Alignment
+    }
 
     // MARK: UITableViewCell
 
@@ -941,11 +1016,25 @@ public extension RuntimeType {
 
     // Deprecated
 
-    @objc static var uiTableViewCellAccessoryType: RuntimeType { return uiTableViewCell_AccessoryType }
-    @objc static var uiTableViewCellFocusStyle: RuntimeType { return uiTableViewCell_FocusStyle }
-    @objc static var uiTableViewCellSelectionStyle: RuntimeType { return uiTableViewCell_SelectionStyle }
-    @objc static var uiTableViewCellSeparatorStyle: RuntimeType { return uiTableViewCell_SeparatorStyle }
-    @objc static var uiTableViewCellStyle: RuntimeType { return uiTableViewCell_CellStyle }
+    @objc static var uiTableViewCellAccessoryType: RuntimeType {
+        return uiTableViewCell_AccessoryType
+    }
+
+    @objc static var uiTableViewCellFocusStyle: RuntimeType {
+        return uiTableViewCell_FocusStyle
+    }
+
+    @objc static var uiTableViewCellSelectionStyle: RuntimeType {
+        return uiTableViewCell_SelectionStyle
+    }
+
+    @objc static var uiTableViewCellSeparatorStyle: RuntimeType {
+        return uiTableViewCell_SeparatorStyle
+    }
+
+    @objc static var uiTableViewCellStyle: RuntimeType {
+        return uiTableViewCell_CellStyle
+    }
 
     // MARK: UITableView
 
@@ -973,8 +1062,13 @@ public extension RuntimeType {
 
     // Deprecated
 
-    @objc static var uiTableViewStyle: RuntimeType { return uiTableView_Style }
-    @objc static var uiTableViewSeparatorInsetReference: RuntimeType { return uiTableView_SeparatorInsetReference }
+    @objc static var uiTableViewStyle: RuntimeType {
+        return uiTableView_Style
+    }
+
+    @objc static var uiTableViewSeparatorInsetReference: RuntimeType {
+        return uiTableView_SeparatorInsetReference
+    }
 
     // MARK: UIWebView
 
@@ -992,8 +1086,13 @@ public extension RuntimeType {
 
     // Deprecated
 
-    @objc static var uiWebPaginationMode: RuntimeType { return uiWebView_PaginationMode }
-    @objc static var uiWebPaginationBreakingMode: RuntimeType { return uiWebView_PaginationBreakingMode }
+    @objc static var uiWebPaginationMode: RuntimeType {
+        return uiWebView_PaginationMode
+    }
+
+    @objc static var uiWebPaginationBreakingMode: RuntimeType {
+        return uiWebView_PaginationBreakingMode
+    }
 
     // MARK: WebKit
 
@@ -1076,7 +1175,9 @@ public extension RuntimeType {
 
     // Deprecated
 
-    @objc static var uiAlertControllerStyle: RuntimeType { return uiAlertController_Style }
+    @objc static var uiAlertControllerStyle: RuntimeType {
+        return uiAlertController_Style
+    }
 
     // MARK: UICloudSharingViewController
 
@@ -1104,7 +1205,9 @@ public extension RuntimeType {
 
     // Deprecated
 
-    @objc static var uiCloudSharingPermissionOptions: RuntimeType { return uiCloudSharingController_PermissionOptions }
+    @objc static var uiCloudSharingPermissionOptions: RuntimeType {
+        return uiCloudSharingController_PermissionOptions
+    }
 
     // MARK: UIImagePickerController
 
@@ -1155,12 +1258,29 @@ public extension RuntimeType {
 
     // Deprecated
 
-    @objc static var uiImagePickerControllerCameraCaptureMode: RuntimeType { return uiImagePickerController_CameraCaptureMode }
-    @objc static var uiImagePickerControllerCameraDevice: RuntimeType { return uiImagePickerController_CameraDevice }
-    @objc static var uiImagePickerControllerCameraFlashMode: RuntimeType { return uiImagePickerController_CameraFlashMode }
-    @objc static var uiImagePickerControllerImageURLExportPreset: RuntimeType { return uiImagePickerController_ImageURLExportPreset }
-    @objc static var uiImagePickerControllerSourceType: RuntimeType { return uiImagePickerController_SourceType }
-    @objc static var uiImagePickerControllerQualityType: RuntimeType { return uiImagePickerController_QualityType }
+    @objc static var uiImagePickerControllerCameraCaptureMode: RuntimeType {
+        return uiImagePickerController_CameraCaptureMode
+    }
+
+    @objc static var uiImagePickerControllerCameraDevice: RuntimeType {
+        return uiImagePickerController_CameraDevice
+    }
+
+    @objc static var uiImagePickerControllerCameraFlashMode: RuntimeType {
+        return uiImagePickerController_CameraFlashMode
+    }
+
+    @objc static var uiImagePickerControllerImageURLExportPreset: RuntimeType {
+        return uiImagePickerController_ImageURLExportPreset
+    }
+
+    @objc static var uiImagePickerControllerSourceType: RuntimeType {
+        return uiImagePickerController_SourceType
+    }
+
+    @objc static var uiImagePickerControllerQualityType: RuntimeType {
+        return uiImagePickerController_QualityType
+    }
 
     // MARK: UISplitViewController
 
@@ -1190,8 +1310,13 @@ public extension RuntimeType {
 
     // Deprecated
 
-    @objc static var uiSplitViewControllerDisplayMode: RuntimeType { return uiSplitViewController_DisplayMode }
-    @objc static var uiSplitViewControllerPrimaryEdge: RuntimeType { return uiSplitViewController_PrimaryEdge }
+    @objc static var uiSplitViewControllerDisplayMode: RuntimeType {
+        return uiSplitViewController_DisplayMode
+    }
+
+    @objc static var uiSplitViewControllerPrimaryEdge: RuntimeType {
+        return uiSplitViewController_PrimaryEdge
+    }
 
     // MARK: UIVisualEffectView
 
@@ -1225,5 +1350,7 @@ public extension RuntimeType {
 
     // Deprecated
 
-    @objc static var uiBlurEffectStyle: RuntimeType { return uiBlurEffect_Style }
+    @objc static var uiBlurEffectStyle: RuntimeType {
+        return uiBlurEffect_Style
+    }
 }

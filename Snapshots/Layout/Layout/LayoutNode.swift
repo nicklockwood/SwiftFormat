@@ -66,10 +66,14 @@ public final class LayoutNode: NSObject {
     }
 
     /// Get the view class without side-effects of accessing view
-    public var viewClass: UIView.Type { return _class as? UIView.Type ?? UIView.self }
+    public var viewClass: UIView.Type {
+        return _class as? UIView.Type ?? UIView.self
+    }
 
     /// Get the view controller class without side-effects of accessing view
-    public var viewControllerClass: UIViewController.Type? { return _class as? UIViewController.Type }
+    public var viewControllerClass: UIViewController.Type? {
+        return _class as? UIViewController.Type
+    }
 
     /// Global legacy rendering mode toggle - affects all LayoutNodes created after setting
     public static var useLegacyLayoutMode: Bool?

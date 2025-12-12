@@ -103,7 +103,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
         testFormatting(
             for: input, output,
             rule: .organizeDeclarations,
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .wrapSingleLineBodies]
         )
     }
 
@@ -213,7 +213,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
                 visibilityOrder: airbnbVisibilityOrder.components(separatedBy: ","),
                 typeOrder: airbnbTypeOrder.components(separatedBy: ",")
             ),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .wrapSingleLineBodies]
         )
     }
 
@@ -313,7 +313,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
 
         testFormatting(
             for: input, rule: .organizeDeclarations,
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .sortImports]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .sortImports, .wrapSingleLineBodies]
         )
     }
 
@@ -374,7 +374,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
             for: input, output,
             rule: .organizeDeclarations,
             options: FormatOptions(organizationMode: .type),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .sortImports]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .sortImports, .wrapSingleLineBodies]
         )
     }
 
@@ -2097,7 +2097,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
         testFormatting(
             for: input, rule: .organizeDeclarations,
             options: FormatOptions(organizeStructThreshold: 20),
-            exclude: [.blankLinesAtStartOfScope]
+            exclude: [.blankLinesAtStartOfScope, .wrapSingleLineBodies]
         )
     }
 
@@ -3514,7 +3514,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
 
         testFormatting(
             for: input, output,
-            rule: .organizeDeclarations
+            rule: .organizeDeclarations, exclude: [.wrapSingleLineBodies]
         )
     }
 
@@ -3886,7 +3886,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
         """
 
         let options = FormatOptions(indent: "  ")
-        testFormatting(for: input, rule: .organizeDeclarations, options: options, exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope])
+        testFormatting(for: input, rule: .organizeDeclarations, options: options, exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .wrapSingleLineBodies])
     }
 
     func testOrganizesProtocol() {
@@ -3915,7 +3915,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
         """
 
         let options = FormatOptions(organizeTypes: ["protocol"])
-        testFormatting(for: input, output, rule: .organizeDeclarations, options: options)
+        testFormatting(for: input, output, rule: .organizeDeclarations, options: options, exclude: [.wrapSingleLineBodies])
     }
 
     func testOrganizesProtocolWithInit() {
@@ -4307,7 +4307,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
             for: input, output,
             rule: .organizeDeclarations,
             options: FormatOptions(organizeTypes: ["protocol"]),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .wrapSingleLineBodies]
         )
     }
 

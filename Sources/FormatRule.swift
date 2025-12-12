@@ -138,19 +138,29 @@ private let _defaultRules = allRules(except: _disabledByDefault)
 
 public extension _FormatRules {
     /// A Dictionary of rules by name
-    var byName: [String: FormatRule] { rulesByName }
+    var byName: [String: FormatRule] {
+        rulesByName
+    }
 
     /// All rules
-    var all: [FormatRule] { _allRules }
+    var all: [FormatRule] {
+        _allRules
+    }
 
     /// Default active rules
-    var `default`: [FormatRule] { _defaultRules }
+    var `default`: [FormatRule] {
+        _defaultRules
+    }
 
     /// Rules that are disabled by default
-    var disabledByDefault: [FormatRule] { _disabledByDefault }
+    var disabledByDefault: [FormatRule] {
+        _disabledByDefault
+    }
 
     /// Rules that are deprecated
-    var deprecated: [FormatRule] { _deprecatedRules }
+    var deprecated: [FormatRule] {
+        _deprecatedRules
+    }
 
     /// Just the specified rules
     func named(_ names: [String]) -> [FormatRule] {

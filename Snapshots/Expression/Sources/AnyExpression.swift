@@ -577,11 +577,15 @@ public struct AnyExpression: CustomStringConvertible {
     }
 
     /// All symbols used in the expression
-    public var symbols: Set<Symbol> { return expression.symbols }
+    public var symbols: Set<Symbol> {
+        return expression.symbols
+    }
 
     /// Returns the optmized, pretty-printed expression if it was valid
     /// Otherwise, returns the original (invalid) expression string
-    public var description: String { return describer() }
+    public var description: String {
+        return describer()
+    }
 }
 
 // MARK: Internal API
@@ -1189,15 +1193,25 @@ private protocol _Optional {
 }
 
 extension Optional: _Optional {
-    fileprivate var value: Any? { return self }
-    fileprivate static var wrappedType: Any.Type { return Wrapped.self }
+    fileprivate var value: Any? {
+        return self
+    }
+
+    fileprivate static var wrappedType: Any.Type {
+        return Wrapped.self
+    }
 }
 
 #if !swift(>=3.4) || (swift(>=4) && !swift(>=4.1.5))
 
     extension ImplicitlyUnwrappedOptional: _Optional {
-        fileprivate var value: Any? { return self }
-        fileprivate static var wrappedType: Any.Type { return Wrapped.self }
+        fileprivate var value: Any? {
+            return self
+        }
+
+        fileprivate static var wrappedType: Any.Type {
+            return Wrapped.self
+        }
     }
 
 #endif

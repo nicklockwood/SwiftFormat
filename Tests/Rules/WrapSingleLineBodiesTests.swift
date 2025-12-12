@@ -242,4 +242,42 @@ final class WrapSingleLineBodiesTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .wrapSingleLineBodies)
     }
+
+    // MARK: - Protocols (should NOT be wrapped)
+
+    func testDoesNotWrapFunctionInProtocol() {
+        let input = """
+        protocol Foo {
+            func bar() -> String { "bar" }
+        }
+        """
+        testFormatting(for: input, rule: .wrapSingleLineBodies)
+    }
+
+    func testDoesNotWrapComputedPropertyInProtocol() {
+        let input = """
+        protocol Expandable: ExpandableView {
+            var expansionStateDidChange: ((Self) -> Void)? { get set }
+        }
+        """
+        testFormatting(for: input, rule: .wrapSingleLineBodies)
+    }
+
+    func testDoesNotWrapSubscriptInProtocol() {
+        let input = """
+        protocol Foo {
+            subscript(index: Int) -> Int { get }
+        }
+        """
+        testFormatting(for: input, rule: .wrapSingleLineBodies, exclude: [.unusedArguments])
+    }
+
+    func testDoesNotWrapInitInProtocol() {
+        let input = """
+        protocol Foo {
+            init() { }
+        }
+        """
+        testFormatting(for: input, rule: .wrapSingleLineBodies, exclude: [.emptyBraces])
+    }
 }

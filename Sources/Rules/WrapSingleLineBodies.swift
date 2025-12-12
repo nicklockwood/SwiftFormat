@@ -19,7 +19,8 @@ public extension FormatRule {
         formatter.forEach(.keyword) { keywordIndex, keyword in
             guard ["func", "init", "subscript"].contains(keyword.string),
                   let declaration = formatter.parseFunctionDeclaration(keywordIndex: keywordIndex),
-                  let bodyRange = declaration.bodyRange
+                  let bodyRange = declaration.bodyRange,
+                  !formatter.isInsideProtocol(at: keywordIndex)
             else { return }
 
             formatter.wrapStatementBody(at: bodyRange.lowerBound)
@@ -29,7 +30,8 @@ public extension FormatRule {
         formatter.forEach(.keyword("var")) { varIndex, _ in
             guard let property = formatter.parsePropertyDeclaration(atIntroducerIndex: varIndex),
                   let bodyScopeRange = property.body?.scopeRange,
-                  !formatter.isStoredProperty(atIntroducerIndex: varIndex)
+                  !formatter.isStoredProperty(atIntroducerIndex: varIndex),
+                  !formatter.isInsideProtocol(at: varIndex)
             else { return }
 
             formatter.wrapStatementBody(at: bodyScopeRange.lowerBound)
@@ -58,5 +60,16 @@ public extension FormatRule {
         + }
         ```
         """
+    }
+}
+
+extension Formatter {
+    /// Returns true if the given index is inside a protocol declaration
+    func isInsideProtocol(at index: Int) -> Bool {
+        guard let scopeStart = startOfScope(at: index) else {
+            return false
+        }
+
+        return lastSignificantKeyword(at: scopeStart, excluding: ["where"]) == "protocol"
     }
 }

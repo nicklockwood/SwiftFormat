@@ -78,6 +78,40 @@ public final class FormatRule: Hashable, Comparable, CustomStringConvertible {
         self.examples = examples()
     }
 
+    convenience init(regexRule: RegexRule) {
+        self.init(help: "") { formatter in
+            var wasEnabled = true
+            var start = 0
+            func apply(upTo index: Int) {
+                let range = start ..< index
+                guard wasEnabled, !range.isEmpty else {
+                    return
+                }
+                let tokens = formatter.tokens[start ..< index]
+                let input = sourceCode(for: Array(tokens[range]))
+                let output = regexRule.apply(to: input)
+                if output != input {
+                    formatter.replaceTokens(in: range, with: tokenize(output))
+                }
+            }
+            formatter.forEachToken(onlyWhereEnabled: false) { index, _ in
+                if formatter.isEnabled {
+                    if !wasEnabled {
+                        start = index
+                        wasEnabled = true
+                    }
+                } else {
+                    apply(upTo: index)
+                    wasEnabled = false
+                }
+            }
+            apply(upTo: formatter.tokens.count)
+        } examples: {
+            nil
+        }
+        name = regexRule.name
+    }
+
     public func apply(with formatter: Formatter) {
         formatter.currentRule = self
         fn(formatter)

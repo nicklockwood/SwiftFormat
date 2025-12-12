@@ -106,6 +106,7 @@
 * [wrapAttributes](#wrapAttributes)
 * [wrapLoopBodies](#wrapLoopBodies)
 * [wrapMultilineStatementBraces](#wrapMultilineStatementBraces)
+* [wrapSingleLineBodies](#wrapSingleLineBodies)
 * [wrapSingleLineComments](#wrapSingleLineComments)
 * [yodaConditions](#yodaConditions)
 
@@ -4323,6 +4324,38 @@ Wrap the opening brace of multiline statements.
 + {
     // ...
   }
+```
+
+</details>
+<br/>
+
+## wrapSingleLineBodies
+
+Wrap single-line function, init, subscript, and computed property bodies onto multiple lines.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- func foo() { print("bar") }
++ func foo() {
++     print("bar")
++ }
+
+- init() { self.value = 0 }
++ init() {
++     self.value = 0
++ }
+
+- subscript(index: Int) -> Int { array[index] }
++ subscript(index: Int) -> Int {
++     array[index]
++ }
+
+- var bar: String { "bar" }
++ var bar: String {
++     "bar"
++ }
 ```
 
 </details>

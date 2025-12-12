@@ -17,7 +17,7 @@ final class RedundantStaticSelfTests: XCTestCase {
         let output = """
         enum E { static var x: Int { y } }
         """
-        testFormatting(for: input, output, rule: .redundantStaticSelf)
+        testFormatting(for: input, output, rule: .redundantStaticSelf, exclude: [.wrapSingleLineBodies])
     }
 
     func testRedundantStaticSelfInStaticMethod() {
@@ -27,7 +27,7 @@ final class RedundantStaticSelfTests: XCTestCase {
         let output = """
         enum E { static func foo() { bar() } }
         """
-        testFormatting(for: input, output, rule: .redundantStaticSelf)
+        testFormatting(for: input, output, rule: .redundantStaticSelf, exclude: [.wrapSingleLineBodies])
     }
 
     func testRedundantStaticSelfOnNextLine() {
@@ -56,7 +56,7 @@ final class RedundantStaticSelfTests: XCTestCase {
         let output = """
         enum E { static func foo() { return bar() } }
         """
-        testFormatting(for: input, output, rule: .redundantStaticSelf)
+        testFormatting(for: input, output, rule: .redundantStaticSelf, exclude: [.wrapSingleLineBodies])
     }
 
     func testRedundantStaticSelfInConditional() {
@@ -120,21 +120,21 @@ final class RedundantStaticSelfTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .redundantStaticSelf)
+        testFormatting(for: input, output, rule: .redundantStaticSelf, exclude: [.wrapSingleLineBodies])
     }
 
     func testStaticSelfNotRemovedWhenUsedAsImplicitInitializer() {
         let input = """
         enum E { static func foo() { Self().bar() } }
         """
-        testFormatting(for: input, rule: .redundantStaticSelf)
+        testFormatting(for: input, rule: .redundantStaticSelf, exclude: [.wrapSingleLineBodies])
     }
 
     func testStaticSelfNotRemovedWhenUsedAsExplicitInitializer() {
         let input = """
         enum E { static func foo() { Self.init().bar() } }
         """
-        testFormatting(for: input, rule: .redundantStaticSelf, exclude: [.redundantInit])
+        testFormatting(for: input, rule: .redundantStaticSelf, exclude: [.redundantInit, .wrapSingleLineBodies])
     }
 
     func testPreservesStaticSelfInFunctionAfterStaticVar() {
@@ -238,6 +238,6 @@ final class RedundantStaticSelfTests: XCTestCase {
         let input = """
         class A { static let defaultName = "A"; let name: String; init() { name = Self.defaultName }}
         """
-        testFormatting(for: input, rule: .redundantStaticSelf)
+        testFormatting(for: input, rule: .redundantStaticSelf, exclude: [.wrapSingleLineBodies])
     }
 }

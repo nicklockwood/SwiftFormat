@@ -89,7 +89,7 @@ final class BracesTests: XCTestCase {
         func foo() -> Bool
         { return false }
         """
-        testFormatting(for: input, rule: .braces)
+        testFormatting(for: input, rule: .braces, exclude: [.wrapSingleLineBodies])
     }
 
     func testKnRNoMangleCommentBeforeClosure() {
@@ -184,7 +184,7 @@ final class BracesTests: XCTestCase {
         let input = """
         func foo() { print(bar) }
         """
-        testFormatting(for: input, rule: .braces)
+        testFormatting(for: input, rule: .braces, exclude: [.wrapSingleLineBodies])
     }
 
     func testAllmanComputedPropertyBracesConverted() {

@@ -71,7 +71,7 @@ final class RedundantPublicTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, [output], rules: [.redundantPublic], exclude: [.redundantMemberwiseInit])
+        testFormatting(for: input, [output], rules: [.redundantPublic], exclude: [.redundantMemberwiseInit, .wrapSingleLineBodies])
     }
 
     func testDoesNotRemovePublicFromPublicType() {
@@ -81,7 +81,7 @@ final class RedundantPublicTests: XCTestCase {
             public func getValue() -> String { value }
         }
         """
-        testFormatting(for: input, rules: [.redundantPublic])
+        testFormatting(for: input, rules: [.redundantPublic], exclude: [.wrapSingleLineBodies])
     }
 
     func testRemovesPublicFromExplicitlyInternalType() {
@@ -97,7 +97,7 @@ final class RedundantPublicTests: XCTestCase {
             func increment() { count += 1 }
         }
         """
-        testFormatting(for: input, [output], rules: [.redundantPublic], exclude: [.redundantInternal])
+        testFormatting(for: input, [output], rules: [.redundantPublic], exclude: [.redundantInternal, .wrapSingleLineBodies])
     }
 
     func testRemovesPublicFromPrivateType() {
@@ -152,7 +152,7 @@ final class RedundantPublicTests: XCTestCase {
             public var isNotEmpty: Bool { !isEmpty }
         }
         """
-        testFormatting(for: input, rules: [.redundantPublic])
+        testFormatting(for: input, rules: [.redundantPublic], exclude: [.wrapSingleLineBodies])
     }
 
     func testPreservesPublicInTypeInPublicExtension() {
@@ -219,7 +219,7 @@ final class RedundantPublicTests: XCTestCase {
             func calculate() -> Int { num * 2 }
         }
         """
-        testFormatting(for: input, [output], rules: [.redundantPublic])
+        testFormatting(for: input, [output], rules: [.redundantPublic], exclude: [.wrapSingleLineBodies])
     }
 
     func testRemovesPublicInTypeInExtension() {
@@ -307,7 +307,7 @@ final class RedundantPublicTests: XCTestCase {
             #endif
         }
         """
-        testFormatting(for: input, rules: [.redundantPublic], exclude: [.indent])
+        testFormatting(for: input, rules: [.redundantPublic], exclude: [.indent, .wrapSingleLineBodies])
     }
 
     func testPreservesPublicInNestedTypeInsidePublicExtension() {

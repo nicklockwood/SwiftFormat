@@ -579,7 +579,7 @@ final class SpaceAroundOperatorsTests: XCTestCase {
         let output = """
         func == (lhs: Int, rhs: Int) -> Bool { return lhs === rhs }
         """
-        testFormatting(for: input, output, rule: .spaceAroundOperators)
+        testFormatting(for: input, output, rule: .spaceAroundOperators, exclude: [.wrapSingleLineBodies])
     }
 
     func testRemoveSpaceAfterFuncEquals() {
@@ -590,7 +590,7 @@ final class SpaceAroundOperatorsTests: XCTestCase {
         func ==(lhs: Int, rhs: Int) -> Bool { return lhs === rhs }
         """
         let options = FormatOptions(spaceAroundOperatorDeclarations: .remove)
-        testFormatting(for: input, output, rule: .spaceAroundOperators, options: options)
+        testFormatting(for: input, output, rule: .spaceAroundOperators, options: options, exclude: [.wrapSingleLineBodies])
     }
 
     func testPreserveSpaceAfterFuncEquals() {
@@ -599,7 +599,7 @@ final class SpaceAroundOperatorsTests: XCTestCase {
         func !=(lhs: Int, rhs: Int) -> Bool { return lhs !== rhs }
         """
         let options = FormatOptions(spaceAroundOperatorDeclarations: .preserve)
-        testFormatting(for: input, rule: .spaceAroundOperators, options: options)
+        testFormatting(for: input, rule: .spaceAroundOperators, options: options, exclude: [.wrapSingleLineBodies])
     }
 
     func testAddSpaceAfterOperatorEquals() {

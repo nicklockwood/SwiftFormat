@@ -44,7 +44,7 @@ final class RedundantReturnTests: XCTestCase {
         let input = """
         var foo: Int { return 5 }
         """
-        testFormatting(for: input, rule: .redundantReturn)
+        testFormatting(for: input, rule: .redundantReturn, exclude: [.wrapSingleLineBodies])
     }
 
     func testRemoveReturnInComputedVar() {
@@ -55,7 +55,7 @@ final class RedundantReturnTests: XCTestCase {
         var foo: Int { 5 }
         """
         let options = FormatOptions(swiftVersion: "5.1")
-        testFormatting(for: input, output, rule: .redundantReturn, options: options)
+        testFormatting(for: input, output, rule: .redundantReturn, options: options, exclude: [.wrapSingleLineBodies])
     }
 
     func testNoRemoveReturnInGet() {
@@ -119,7 +119,7 @@ final class RedundantReturnTests: XCTestCase {
         let input = """
         func foo() -> Int { return 5 }
         """
-        testFormatting(for: input, rule: .redundantReturn)
+        testFormatting(for: input, rule: .redundantReturn, exclude: [.wrapSingleLineBodies])
     }
 
     func testRemoveReturnInFunction() {
@@ -130,14 +130,14 @@ final class RedundantReturnTests: XCTestCase {
         func foo() -> Int { 5 }
         """
         let options = FormatOptions(swiftVersion: "5.1")
-        testFormatting(for: input, output, rule: .redundantReturn, options: options)
+        testFormatting(for: input, output, rule: .redundantReturn, options: options, exclude: [.wrapSingleLineBodies])
     }
 
     func testNoRemoveReturnInOperatorFunction() {
         let input = """
         func + (lhs: Int, rhs: Int) -> Int { return 5 }
         """
-        testFormatting(for: input, rule: .redundantReturn, exclude: [.unusedArguments])
+        testFormatting(for: input, rule: .redundantReturn, exclude: [.unusedArguments, .wrapSingleLineBodies])
     }
 
     func testRemoveReturnInOperatorFunction() {
@@ -149,14 +149,14 @@ final class RedundantReturnTests: XCTestCase {
         """
         let options = FormatOptions(swiftVersion: "5.1")
         testFormatting(for: input, output, rule: .redundantReturn, options: options,
-                       exclude: [.unusedArguments])
+                       exclude: [.unusedArguments, .wrapSingleLineBodies])
     }
 
     func testNoRemoveReturnInFailableInit() {
         let input = """
         init?() { return nil }
         """
-        testFormatting(for: input, rule: .redundantReturn)
+        testFormatting(for: input, rule: .redundantReturn, exclude: [.wrapSingleLineBodies])
     }
 
     func testNoRemoveReturnInFailableInitWithConditional() {
@@ -200,14 +200,15 @@ final class RedundantReturnTests: XCTestCase {
         init?() { nil }
         """
         let options = FormatOptions(swiftVersion: "5.1")
-        testFormatting(for: input, output, rule: .redundantReturn, options: options)
+        testFormatting(for: input, output, rule: .redundantReturn, options: options,
+                       exclude: [.wrapSingleLineBodies])
     }
 
     func testNoRemoveReturnInSubscript() {
         let input = """
         subscript(index: Int) -> String { return nil }
         """
-        testFormatting(for: input, rule: .redundantReturn, exclude: [.unusedArguments])
+        testFormatting(for: input, rule: .redundantReturn, exclude: [.unusedArguments, .wrapSingleLineBodies])
     }
 
     func testRemoveReturnInSubscript() {
@@ -219,7 +220,7 @@ final class RedundantReturnTests: XCTestCase {
         """
         let options = FormatOptions(swiftVersion: "5.1")
         testFormatting(for: input, output, rule: .redundantReturn, options: options,
-                       exclude: [.unusedArguments])
+                       exclude: [.unusedArguments, .wrapSingleLineBodies])
     }
 
     func testNoRemoveReturnInDoCatch() {
@@ -331,7 +332,7 @@ final class RedundantReturnTests: XCTestCase {
         func foo() { if bar == #keyPath(baz) { return 5 } }
         """
         testFormatting(for: input, rule: .redundantReturn,
-                       exclude: [.wrapConditionalBodies])
+                       exclude: [.wrapConditionalBodies, .wrapSingleLineBodies])
     }
 
     func testNoRemoveReturnAfterParentheses() {
@@ -350,7 +351,7 @@ final class RedundantReturnTests: XCTestCase {
         var foo: (Int, Int) { (1, 2) }
         """
         let options = FormatOptions(swiftVersion: "5.1")
-        testFormatting(for: input, output, rule: .redundantReturn, options: options)
+        testFormatting(for: input, output, rule: .redundantReturn, options: options, exclude: [.wrapSingleLineBodies])
     }
 
     func testNoRemoveReturnInIfLetWithNoSpaceAfterParen() {

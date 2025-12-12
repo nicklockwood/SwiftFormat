@@ -2168,7 +2168,9 @@ extension Formatter {
                          isTypeRoot: Bool,
                          isInit: Bool)
         {
-            var explicitSelf: SelfMode { staticSelf ? .remove : options.explicitSelf }
+            var explicitSelf: SelfMode {
+                staticSelf ? .remove : options.explicitSelf
+            }
             let isWhereClause = index > 0 && tokens[index - 1] == .keyword("where")
             assert(isWhereClause || currentScope(at: index).map { token -> Bool in
                 [.startOfScope("{"), .startOfScope(":"), .startOfScope("#if")].contains(token)

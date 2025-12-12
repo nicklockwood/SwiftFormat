@@ -342,7 +342,7 @@ final class SpaceAroundParensTests: XCTestCase {
         let output = """
         func foo() { foo }
         """
-        testFormatting(for: input, output, rule: .spaceAroundParens)
+        testFormatting(for: input, output, rule: .spaceAroundParens, exclude: [.wrapSingleLineBodies])
     }
 
     func testNoSpaceBetweenClosingBraceAndParens() {

@@ -162,7 +162,7 @@ final class RedundantVoidReturnTypeTests: XCTestCase {
             func bazz()
         }
         """
-        testFormatting(for: input, output, rule: .redundantVoidReturnType)
+        testFormatting(for: input, output, rule: .redundantVoidReturnType, exclude: [.wrapSingleLineBodies])
     }
 
     func testNoRemoveThrowingClosureVoidReturnType() {

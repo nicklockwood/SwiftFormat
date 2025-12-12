@@ -36,7 +36,7 @@ final class ExtensionAccessControlTests: XCTestCase {
         testFormatting(
             for: input, output, rule: .extensionAccessControl,
             options: FormatOptions(extensionACLPlacement: .onDeclarations),
-            exclude: [.redundantInternal]
+            exclude: [.redundantInternal, .wrapSingleLineBodies]
         )
     }
 
@@ -59,7 +59,8 @@ final class ExtensionAccessControlTests: XCTestCase {
 
         testFormatting(
             for: input, output, rule: .extensionAccessControl,
-            options: FormatOptions(extensionACLPlacement: .onDeclarations)
+            options: FormatOptions(extensionACLPlacement: .onDeclarations),
+            exclude: [.wrapSingleLineBodies]
         )
     }
 
@@ -82,7 +83,8 @@ final class ExtensionAccessControlTests: XCTestCase {
 
         testFormatting(
             for: input, output, rule: .extensionAccessControl,
-            options: FormatOptions(extensionACLPlacement: .onDeclarations)
+            options: FormatOptions(extensionACLPlacement: .onDeclarations),
+            exclude: [.wrapSingleLineBodies]
         )
     }
 
@@ -107,7 +109,8 @@ final class ExtensionAccessControlTests: XCTestCase {
 
         testFormatting(
             for: input, output, rule: .extensionAccessControl,
-            options: FormatOptions(extensionACLPlacement: .onDeclarations)
+            options: FormatOptions(extensionACLPlacement: .onDeclarations),
+            exclude: [.wrapSingleLineBodies]
         )
     }
 
@@ -159,7 +162,8 @@ final class ExtensionAccessControlTests: XCTestCase {
 
         testFormatting(
             for: input, output, rule: .extensionAccessControl,
-            options: FormatOptions(extensionACLPlacement: .onDeclarations)
+            options: FormatOptions(extensionACLPlacement: .onDeclarations),
+            exclude: [.wrapSingleLineBodies]
         )
     }
 
@@ -212,7 +216,7 @@ final class ExtensionAccessControlTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .extensionAccessControl)
+        testFormatting(for: input, output, rule: .extensionAccessControl, exclude: [.wrapSingleLineBodies])
     }
 
     func testUpdatedVisibilityOfExtensionWithDeclarationsInConditionalCompilation() {
@@ -234,7 +238,7 @@ final class ExtensionAccessControlTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .extensionAccessControl)
+        testFormatting(for: input, output, rule: .extensionAccessControl, exclude: [.wrapSingleLineBodies])
     }
 
     func testDoesntUpdateExtensionVisibilityWithoutMajorityBodyVisibility() {
@@ -247,7 +251,7 @@ final class ExtensionAccessControlTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .extensionAccessControl)
+        testFormatting(for: input, rule: .extensionAccessControl, exclude: [.wrapSingleLineBodies])
     }
 
     func testUpdateExtensionVisibilityWithMajorityBodyVisibility() {
@@ -269,7 +273,7 @@ final class ExtensionAccessControlTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .extensionAccessControl)
+        testFormatting(for: input, output, rule: .extensionAccessControl, exclude: [.wrapSingleLineBodies])
     }
 
     func testDoesntUpdateExtensionVisibilityWhenMajorityBodyVisibilityIsntMostVisible() {
@@ -281,7 +285,7 @@ final class ExtensionAccessControlTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .extensionAccessControl)
+        testFormatting(for: input, rule: .extensionAccessControl, exclude: [.wrapSingleLineBodies])
     }
 
     func testDoesntUpdateExtensionVisibilityWithInternalDeclarations() {
@@ -292,7 +296,7 @@ final class ExtensionAccessControlTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .extensionAccessControl)
+        testFormatting(for: input, rule: .extensionAccessControl, exclude: [.wrapSingleLineBodies])
     }
 
     func testDoesntUpdateExtensionThatAlreadyHasCorrectVisibilityKeyword() {

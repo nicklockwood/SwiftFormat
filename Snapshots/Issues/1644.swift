@@ -465,6 +465,8 @@ public extension Playdate {
             _ userdata: UnsafeMutableRawPointer?
         ) -> Bool)?
 
-        private static var system: playdate_sys { playdateAPI.system.pointee }
+        private static var system: playdate_sys {
+            playdateAPI.system.pointee
+        }
     }
 }

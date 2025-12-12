@@ -17,7 +17,9 @@ public func parseJSON2(_ input: String) throws -> Any {
 
     struct Error: Swift.Error, CustomStringConvertible {
         var string: String
-        var description: String { return string }
+        var description: String {
+            return string
+        }
     }
 
     func readChar(where fn: (UnicodeScalar) -> Bool = { _ in true }) -> Character? {

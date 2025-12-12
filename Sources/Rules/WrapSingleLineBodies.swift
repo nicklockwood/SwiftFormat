@@ -12,7 +12,6 @@ public extension FormatRule {
     /// Wrap single-line function, init, subscript, and computed property bodies onto multiple lines.
     static let wrapSingleLineBodies = FormatRule(
         help: "Wrap single-line function, init, subscript, and computed property bodies onto multiple lines.",
-        disabledByDefault: true,
         sharedOptions: ["linebreaks", "indent"]
     ) { formatter in
         // Handle func, init, subscript declarations
@@ -70,6 +69,7 @@ extension Formatter {
             return false
         }
 
-        return lastSignificantKeyword(at: scopeStart, excluding: ["where"]) == "protocol"
+        // Exclude "class" because `protocol Foo: class { }` uses class as a constraint, not a type keyword
+        return lastSignificantKeyword(at: scopeStart, excluding: ["where", "class"]) == "protocol"
     }
 }

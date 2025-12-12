@@ -510,10 +510,14 @@ public final class Expression: CustomStringConvertible {
 
     /// Returns the optmized, pretty-printed expression if it was valid
     /// Otherwise, returns the original (invalid) expression string
-    public var description: String { return root.description }
+    public var description: String {
+        return root.description
+    }
 
     /// All symbols used in the expression
-    public var symbols: Set<Symbol> { return root.symbols }
+    public var symbols: Set<Symbol> {
+        return root.symbols
+    }
 
     /// Evaluate the expression
     public func evaluate() throws -> Double {
@@ -789,10 +793,14 @@ public struct ParsedExpression: CustomStringConvertible {
 
     /// Returns the pretty-printed expression if it was valid
     /// Otherwise, returns the original (invalid) expression string
-    public var description: String { return root.description }
+    public var description: String {
+        return root.description
+    }
 
     /// All symbols used in the expression
-    public var symbols: Set<Expression.Symbol> { return root.symbols }
+    public var symbols: Set<Expression.Symbol> {
+        return root.symbols
+    }
 
     /// Any error detected during parsing
     public var error: Expression.Error? {

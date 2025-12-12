@@ -551,13 +551,19 @@ extension _Descriptors {
     }
 
     /// An Array of all descriptors
-    var all: [OptionDescriptor] { _allDescriptors }
+    var all: [OptionDescriptor] {
+        _allDescriptors
+    }
 
     /// All deprecated descriptors
-    var deprecated: [OptionDescriptor] { _allDescriptors.filter(\.isDeprecated) }
+    var deprecated: [OptionDescriptor] {
+        _allDescriptors.filter(\.isDeprecated)
+    }
 
     /// All renamed descriptors
-    var renamed: [OptionDescriptor] { _allDescriptors.filter(\.isRenamed) }
+    var renamed: [OptionDescriptor] {
+        _allDescriptors.filter(\.isRenamed)
+    }
 
     /// A Dictionary of descriptors by name
     var byName: [String: OptionDescriptor] {

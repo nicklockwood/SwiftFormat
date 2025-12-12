@@ -10,8 +10,13 @@ private let aToZ = "a".unicodeScalars.first!.value ... "z".unicodeScalars.first!
 private let aMinusA = "a".unicodeScalars.first!.value - "A".unicodeScalars.first!.value
 
 extension Unicode.Scalar {
-    var isUppercase: Bool { return AToZ.contains(value) }
-    var isLowercase: Bool { return aToZ.contains(value) }
+    var isUppercase: Bool {
+        return AToZ.contains(value)
+    }
+
+    var isLowercase: Bool {
+        return aToZ.contains(value)
+    }
 
     func lowercased() -> Unicode.Scalar {
         return isUppercase ? UnicodeScalar(value + aMinusA)! : self
@@ -23,8 +28,13 @@ extension Unicode.Scalar {
 }
 
 extension Character {
-    var isUppercase: Bool { return unicodeScalars.first!.isUppercase }
-    var isLowercase: Bool { return unicodeScalars.first!.isLowercase }
+    var isUppercase: Bool {
+        return unicodeScalars.first!.isUppercase
+    }
+
+    var isLowercase: Bool {
+        return unicodeScalars.first!.isLowercase
+    }
 
     func lowercased() -> Character {
         return unicodeScalars.count == 1 ? Character(unicodeScalars.first!.lowercased()) : self

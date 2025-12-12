@@ -112,7 +112,9 @@ struct Password:
   Hashable,
   CustomStringConvertible
 {
-  var description: String { "(redacted)" }
+  var description: String {
+    "(redacted)"
+  }
 }
 
 let hostname = Hostname("localhost")

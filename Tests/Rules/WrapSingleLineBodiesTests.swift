@@ -280,4 +280,13 @@ final class WrapSingleLineBodiesTests: XCTestCase {
         """
         testFormatting(for: input, rule: .wrapSingleLineBodies, exclude: [.emptyBraces])
     }
+
+    func testDoesNotWrapComputedPropertyInProtocolWithClassConstraint() {
+        let input = """
+        protocol LayoutBacked: class {
+            var layoutNode: LayoutNode? { get }
+        }
+        """
+        testFormatting(for: input, rule: .wrapSingleLineBodies)
+    }
 }

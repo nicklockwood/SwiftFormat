@@ -1011,7 +1011,9 @@ public protocol AnyIndex {
 }
 
 extension Int: AnyIndex {
-    public var index: Int { self }
+    public var index: Int {
+        self
+    }
 }
 
 /// An auto-updating index within an associated `Formatter`
@@ -1049,12 +1051,19 @@ public protocol AnyClosedRange {
 }
 
 public extension AnyClosedRange {
-    var lowerBound: Int { range.lowerBound }
-    var upperBound: Int { range.upperBound }
+    var lowerBound: Int {
+        range.lowerBound
+    }
+
+    var upperBound: Int {
+        range.upperBound
+    }
 }
 
 extension ClosedRange: AnyClosedRange where Bound == Int {
-    public var range: ClosedRange<Int> { self }
+    public var range: ClosedRange<Int> {
+        self
+    }
 }
 
 /// An auto-updating subrange of indicies in a `Formatter`

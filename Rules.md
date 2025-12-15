@@ -4235,7 +4235,7 @@ Option | Description
 
 ## wrapFunctionBodies
 
-Wrap single-line function and init bodies onto multiple lines.
+Wrap single-line function, init, and subscript bodies onto multiple lines.
 
 <details>
 <summary>Examples</summary>
@@ -4249,6 +4249,11 @@ Wrap single-line function and init bodies onto multiple lines.
 - init() { self.value = 0 }
 + init() {
 +     self.value = 0
++ }
+
+- subscript(index: Int) -> Int { array[index] }
++ subscript(index: Int) -> Int {
++     array[index]
 + }
 ```
 

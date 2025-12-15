@@ -90,13 +90,18 @@ final class WrapFunctionBodiesTests: XCTestCase {
         testFormatting(for: input, output, rule: .wrapFunctionBodies)
     }
 
-    // MARK: - Subscripts (should NOT be wrapped by this rule)
+    // MARK: - Subscripts
 
-    func testDoesNotWrapSubscript() {
+    func testWrapSingleLineSubscript() {
         let input = """
         subscript(index: Int) -> Int { array[index] }
         """
-        testFormatting(for: input, rule: .wrapFunctionBodies)
+        let output = """
+        subscript(index: Int) -> Int {
+            array[index]
+        }
+        """
+        testFormatting(for: input, output, rule: .wrapFunctionBodies)
     }
 
     // MARK: - Closures (should NOT be wrapped)
@@ -124,18 +129,18 @@ final class WrapFunctionBodiesTests: XCTestCase {
         testFormatting(for: input, rule: .wrapFunctionBodies, exclude: [.wrapPropertyBodies])
     }
 
-    // MARK: - Protocols (should NOT be wrapped)
+    // MARK: - Protocols
 
-    func testDoesNotWrapFunctionInProtocol() {
+    func testDoesNotWrapFunctionDeclarationInProtocol() {
         let input = """
         protocol Foo {
-            func bar() -> String { "bar" }
+            func bar() -> String
         }
         """
         testFormatting(for: input, rule: .wrapFunctionBodies)
     }
 
-    func testDoesNotWrapSubscriptInProtocol() {
+    func testDoesNotWrapSubscriptDeclarationInProtocol() {
         let input = """
         protocol Foo {
             subscript(index: Int) -> Int { get }
@@ -144,13 +149,22 @@ final class WrapFunctionBodiesTests: XCTestCase {
         testFormatting(for: input, rule: .wrapFunctionBodies, exclude: [.unusedArguments])
     }
 
-    func testDoesNotWrapInitInProtocol() {
+    func testDoesNotWrapInitDeclarationInProtocol() {
         let input = """
         protocol Foo {
-            init() { }
+            init()
         }
         """
-        testFormatting(for: input, rule: .wrapFunctionBodies, exclude: [.emptyBraces])
+        testFormatting(for: input, rule: .wrapFunctionBodies)
+    }
+
+    func testDoesNotWrapDefaultImplementationInProtocol() {
+        let input = """
+        protocol Foo {
+            func bar() -> String { "bar" }
+        }
+        """
+        testFormatting(for: input, rule: .wrapFunctionBodies)
     }
 
     // MARK: - Edge Cases

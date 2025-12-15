@@ -133,7 +133,7 @@ final class WrapPropertyBodiesTests: XCTestCase {
         let input = """
         subscript(index: Int) -> Int { array[index] }
         """
-        testFormatting(for: input, rule: .wrapPropertyBodies)
+        testFormatting(for: input, rule: .wrapPropertyBodies, exclude: [.wrapFunctionBodies])
     }
 
     // MARK: - Protocols (should NOT be wrapped)

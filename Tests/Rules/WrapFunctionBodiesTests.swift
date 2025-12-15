@@ -90,18 +90,13 @@ final class WrapFunctionBodiesTests: XCTestCase {
         testFormatting(for: input, output, rule: .wrapFunctionBodies)
     }
 
-    // MARK: - Subscripts
+    // MARK: - Subscripts (should NOT be wrapped by this rule)
 
-    func testWrapSingleLineSubscript() {
+    func testDoesNotWrapSubscript() {
         let input = """
         subscript(index: Int) -> Int { array[index] }
         """
-        let output = """
-        subscript(index: Int) -> Int {
-            array[index]
-        }
-        """
-        testFormatting(for: input, output, rule: .wrapFunctionBodies)
+        testFormatting(for: input, rule: .wrapFunctionBodies)
     }
 
     // MARK: - Closures (should NOT be wrapped)

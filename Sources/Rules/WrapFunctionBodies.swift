@@ -9,13 +9,13 @@
 import Foundation
 
 public extension FormatRule {
-    /// Wrap single-line function, init, and subscript bodies onto multiple lines.
+    /// Wrap single-line function and init bodies onto multiple lines.
     static let wrapFunctionBodies = FormatRule(
-        help: "Wrap single-line function, init, and subscript bodies onto multiple lines.",
+        help: "Wrap single-line function and init bodies onto multiple lines.",
         sharedOptions: ["linebreaks", "indent"]
     ) { formatter in
         formatter.forEach(.keyword) { keywordIndex, keyword in
-            guard ["func", "init", "subscript"].contains(keyword.string),
+            guard ["func", "init"].contains(keyword.string),
                   let declaration = formatter.parseFunctionDeclaration(keywordIndex: keywordIndex),
                   let bodyRange = declaration.bodyRange,
                   !formatter.isInsideProtocol(at: keywordIndex)
@@ -34,11 +34,6 @@ public extension FormatRule {
         - init() { self.value = 0 }
         + init() {
         +     self.value = 0
-        + }
-
-        - subscript(index: Int) -> Int { array[index] }
-        + subscript(index: Int) -> Int {
-        +     array[index]
         + }
         ```
         """

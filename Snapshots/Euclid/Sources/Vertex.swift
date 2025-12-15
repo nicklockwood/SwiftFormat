@@ -32,11 +32,15 @@
 /// A polygon vertex
 public struct Vertex: Hashable {
     public var position: Vector {
-        didSet { position = position.quantized() }
+        didSet {
+            position = position.quantized()
+        }
     }
 
     public var normal: Vector {
-        didSet { normal = normal.normalized() }
+        didSet {
+            normal = normal.normalized()
+        }
     }
 
     public var texcoord: Vector

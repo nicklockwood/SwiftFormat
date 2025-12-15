@@ -10,7 +10,6 @@ import XCTest
 @testable import SwiftFormat
 
 final class RedundantViewBuilderTests: XCTestCase {
-
     func testRemoveRedundantViewBuilderOnViewBody() {
         let input = """
         struct MyView: View {
@@ -268,5 +267,68 @@ final class RedundantViewBuilderTests: XCTestCase {
         }
         """
         testFormatting(for: input, output, rule: .redundantViewBuilder)
+    }
+
+    func testKeepViewBuilderOnHelperFuncWithIfWithoutElse() {
+        let input = """
+        struct Foo: View {
+            var body: some View {
+                if let bar {
+                    baz(bar: bar)
+                }
+            }
+
+            @ViewBuilder
+            func baz(bar: Bar) -> some View {
+                if bar.useA {
+                    ViewA()
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantViewBuilder)
+    }
+
+    func testKeepViewBuilderOnFuncNamedBodyInView() {
+        // A function named "body" in a View is NOT the View.body protocol requirement
+        // (which must be a property), so @ViewBuilder should be preserved if needed
+        let input = """
+        struct Foo: View {
+            var body: some View {
+                if let bar {
+                    body(bar: bar)
+                }
+            }
+
+            @ViewBuilder
+            func body(bar: Bar) -> some View {
+                if bar.useA {
+                    ViewA()
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantViewBuilder)
+    }
+
+    func testKeepViewBuilderOnVarNamedBodyInViewModifier() {
+        // A property named "body" in a ViewModifier is NOT the ViewModifier.body protocol requirement
+        // (which must be a function), so @ViewBuilder should be preserved if needed
+        let input = """
+        struct Foo: ViewModifier {
+            func body(content: Content) -> some View {
+                content
+                    .overlay(overlay)
+            }
+
+            @ViewBuilder
+            var body: some View {
+                if condition {
+                    ViewA()
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantViewBuilder)
     }
 }

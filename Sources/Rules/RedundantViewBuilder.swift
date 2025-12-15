@@ -28,12 +28,16 @@ public extension FormatRule {
                let property = declaration.parsePropertyDeclaration()
             {
                 bodyScope = property.body?.scopeRange
-                isBodyMember = property.identifier == "body"
+                // A var named "body" is only the protocol body if it's on a View
+                // (ViewModifier.body must be a function, not a property)
+                isBodyMember = property.identifier == "body" && formatter.isViewType(declaration.parentType)
             } else if declaration.keyword == "func",
                       let function = formatter.parseFunctionDeclaration(keywordIndex: declaration.keywordIndex)
             {
                 bodyScope = function.bodyRange
-                isBodyMember = function.name == "body"
+                // A func named "body" is only the protocol body if it's on a ViewModifier
+                // (View.body must be a property, not a function)
+                isBodyMember = function.name == "body" && formatter.isViewModifierType(declaration.parentType)
             } else {
                 return
             }
@@ -41,9 +45,9 @@ public extension FormatRule {
             guard let bodyScope else { return }
 
             // @ViewBuilder is redundant if:
-            // 1. It's on a body member of a View/ViewModifier, OR
+            // 1. It's the body protocol requirement of a View/ViewModifier, OR
             // 2. The body contains only a single non-conditional expression
-            let isRedundant = (isBodyMember && formatter.isViewOrViewModifierType(declaration.parentType))
+            let isRedundant = isBodyMember
                 || formatter.scopeBodyIsSingleNonConditionalExpression(at: bodyScope.lowerBound)
 
             if isRedundant {
@@ -86,11 +90,19 @@ public extension FormatRule {
 }
 
 extension Formatter {
-    /// Whether the given type conforms to View or ViewModifier
-    func isViewOrViewModifierType(_ type: TypeDeclaration?) -> Bool {
+    /// Whether the given type conforms to View
+    func isViewType(_ type: TypeDeclaration?) -> Bool {
         guard let type else { return false }
         return type.conformances.contains { conformance in
-            conformance.conformance.string == "View" || conformance.conformance.string == "ViewModifier"
+            conformance.conformance.string == "View"
+        }
+    }
+
+    /// Whether the given type conforms to ViewModifier
+    func isViewModifierType(_ type: TypeDeclaration?) -> Bool {
+        guard let type else { return false }
+        return type.conformances.contains { conformance in
+            conformance.conformance.string == "ViewModifier"
         }
     }
 

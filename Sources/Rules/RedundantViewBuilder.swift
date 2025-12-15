@@ -137,13 +137,13 @@ extension Formatter {
         removeTokens(in: startIndex ... endIndex)
     }
 
-    /// Whether the body is a single non-conditional expression (doesn't include if/switch)
+    /// Whether the body is a single expression that is not a conditional (if/switch).
+    /// Conditional expressions need @ViewBuilder when branches return different types.
     func scopeBodyIsSingleNonConditionalExpression(at startOfScopeIndex: Int) -> Bool {
-        guard let endOfScopeIndex = endOfScope(at: startOfScopeIndex),
-              startOfScopeIndex + 1 != endOfScopeIndex,
-              let firstTokenInBody = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfScopeIndex + 1),
-              let expressionRange = parseExpressionRange(startingAt: firstTokenInBody, allowConditionalExpressions: false)
+        guard let firstTokenInBody = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfScopeIndex),
+              tokens[firstTokenInBody] != .keyword("if"),
+              tokens[firstTokenInBody] != .keyword("switch")
         else { return false }
-        return index(of: .nonSpaceOrCommentOrLinebreak, after: expressionRange.upperBound) == endOfScopeIndex
+        return scopeBodyIsSingleExpression(at: startOfScopeIndex)
     }
 }

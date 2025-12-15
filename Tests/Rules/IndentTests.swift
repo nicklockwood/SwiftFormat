@@ -2390,7 +2390,7 @@ final class IndentTests: XCTestCase {
         @discardableResult
         func foo() -> Int { 5 }
         """
-        testFormatting(for: input, rule: .indent, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
+        testFormatting(for: input, rule: .indent, exclude: [.wrapFunctionBodies])
     }
 
     func testIndentWrappedClosureAfterSwitch() {

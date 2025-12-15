@@ -126,7 +126,7 @@ final class UnusedArgumentsTests: XCTestCase {
         let input = """
         func foo() { bar(5) {} in }
         """
-        testFormatting(for: input, rule: .unusedArguments, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
+        testFormatting(for: input, rule: .unusedArguments, exclude: [.wrapFunctionBodies])
     }
 
     func testShadowedUsedArguments() {
@@ -472,7 +472,7 @@ final class UnusedArgumentsTests: XCTestCase {
         let output = """
         func foo(bar _: Int, baz: String) -> (A<B, C>, D & E, [F: G]) { return baz.quux }
         """
-        testFormatting(for: input, output, rule: .unusedArguments, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
+        testFormatting(for: input, output, rule: .unusedArguments, exclude: [.wrapFunctionBodies])
     }
 
     func testMarkUnusedArgumentsInThrowsFunction() {
@@ -595,7 +595,7 @@ final class UnusedArgumentsTests: XCTestCase {
         let output = """
         func == (_: Int, _: Int) { false }
         """
-        testFormatting(for: input, output, rule: .unusedArguments, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
+        testFormatting(for: input, output, rule: .unusedArguments, exclude: [.wrapFunctionBodies])
     }
 
     func testUnusedtFailableInitArgumentsAreNotMangled() {

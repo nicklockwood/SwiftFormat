@@ -579,7 +579,7 @@ final class SpaceAroundOperatorsTests: XCTestCase {
         let output = """
         func == (lhs: Int, rhs: Int) -> Bool { return lhs === rhs }
         """
-        testFormatting(for: input, output, rule: .spaceAroundOperators, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
+        testFormatting(for: input, output, rule: .spaceAroundOperators, exclude: [.wrapFunctionBodies])
     }
 
     func testRemoveSpaceAfterFuncEquals() {
@@ -590,7 +590,7 @@ final class SpaceAroundOperatorsTests: XCTestCase {
         func ==(lhs: Int, rhs: Int) -> Bool { return lhs === rhs }
         """
         let options = FormatOptions(spaceAroundOperatorDeclarations: .remove)
-        testFormatting(for: input, output, rule: .spaceAroundOperators, options: options, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
+        testFormatting(for: input, output, rule: .spaceAroundOperators, options: options, exclude: [.wrapFunctionBodies])
     }
 
     func testPreserveSpaceAfterFuncEquals() {
@@ -599,7 +599,7 @@ final class SpaceAroundOperatorsTests: XCTestCase {
         func !=(lhs: Int, rhs: Int) -> Bool { return lhs !== rhs }
         """
         let options = FormatOptions(spaceAroundOperatorDeclarations: .preserve)
-        testFormatting(for: input, rule: .spaceAroundOperators, options: options, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
+        testFormatting(for: input, rule: .spaceAroundOperators, options: options, exclude: [.wrapFunctionBodies])
     }
 
     func testAddSpaceAfterOperatorEquals() {

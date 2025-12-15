@@ -213,7 +213,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
                 visibilityOrder: airbnbVisibilityOrder.components(separatedBy: ","),
                 typeOrder: airbnbTypeOrder.components(separatedBy: ",")
             ),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .wrapFunctionBodies, .wrapPropertyBodies]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .wrapPropertyBodies]
         )
     }
 
@@ -2097,7 +2097,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
         testFormatting(
             for: input, rule: .organizeDeclarations,
             options: FormatOptions(organizeStructThreshold: 20),
-            exclude: [.blankLinesAtStartOfScope, .wrapFunctionBodies, .wrapPropertyBodies]
+            exclude: [.blankLinesAtStartOfScope, .wrapPropertyBodies]
         )
     }
 
@@ -3886,7 +3886,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
         """
 
         let options = FormatOptions(indent: "  ")
-        testFormatting(for: input, rule: .organizeDeclarations, options: options, exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .wrapFunctionBodies, .wrapPropertyBodies])
+        testFormatting(for: input, rule: .organizeDeclarations, options: options, exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .wrapFunctionBodies])
     }
 
     func testOrganizesProtocol() {

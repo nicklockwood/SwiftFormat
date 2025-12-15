@@ -163,7 +163,7 @@ final class ExtensionAccessControlTests: XCTestCase {
         testFormatting(
             for: input, output, rule: .extensionAccessControl,
             options: FormatOptions(extensionACLPlacement: .onDeclarations),
-            exclude: [.wrapFunctionBodies, .wrapPropertyBodies]
+            exclude: [.wrapFunctionBodies]
         )
     }
 

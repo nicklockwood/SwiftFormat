@@ -71,7 +71,7 @@ final class RedundantPublicTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, [output], rules: [.redundantPublic], exclude: [.redundantMemberwiseInit, .wrapFunctionBodies, .wrapPropertyBodies])
+        testFormatting(for: input, [output], rules: [.redundantPublic], exclude: [.redundantMemberwiseInit, .wrapFunctionBodies])
     }
 
     func testDoesNotRemovePublicFromPublicType() {
@@ -81,7 +81,7 @@ final class RedundantPublicTests: XCTestCase {
             public func getValue() -> String { value }
         }
         """
-        testFormatting(for: input, rules: [.redundantPublic], exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
+        testFormatting(for: input, rules: [.redundantPublic], exclude: [.wrapFunctionBodies])
     }
 
     func testRemovesPublicFromExplicitlyInternalType() {
@@ -97,7 +97,7 @@ final class RedundantPublicTests: XCTestCase {
             func increment() { count += 1 }
         }
         """
-        testFormatting(for: input, [output], rules: [.redundantPublic], exclude: [.redundantInternal, .wrapFunctionBodies, .wrapPropertyBodies])
+        testFormatting(for: input, [output], rules: [.redundantPublic], exclude: [.redundantInternal, .wrapFunctionBodies])
     }
 
     func testRemovesPublicFromPrivateType() {
@@ -219,7 +219,7 @@ final class RedundantPublicTests: XCTestCase {
             func calculate() -> Int { num * 2 }
         }
         """
-        testFormatting(for: input, [output], rules: [.redundantPublic], exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
+        testFormatting(for: input, [output], rules: [.redundantPublic], exclude: [.wrapFunctionBodies])
     }
 
     func testRemovesPublicInTypeInExtension() {

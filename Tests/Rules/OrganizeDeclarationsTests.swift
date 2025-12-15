@@ -467,7 +467,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
             for: input, output,
             rule: .organizeDeclarations,
             options: FormatOptions(categoryMarkComment: "MARK: %c", organizationMode: .type),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateStateVariables]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateStateVariables, .redundantViewBuilder]
         )
     }
 
@@ -541,7 +541,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
             for: input, output,
             rule: .organizeDeclarations,
             options: FormatOptions(categoryMarkComment: "MARK: %c", organizationMode: .type),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateStateVariables]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateStateVariables, .redundantViewBuilder]
         )
     }
 
@@ -2772,7 +2772,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
             for: input, output,
             rule: .organizeDeclarations,
             options: FormatOptions(organizeTypes: ["struct"], organizationMode: .visibility),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateStateVariables]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateStateVariables, .redundantViewBuilder]
         )
     }
 
@@ -2839,7 +2839,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
             for: input, output,
             rule: .organizeDeclarations,
             options: FormatOptions(organizeTypes: ["struct"], organizationMode: .visibility),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateStateVariables, .redundantMemberwiseInit]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateStateVariables, .redundantMemberwiseInit, .redundantViewBuilder]
         )
     }
 
@@ -2910,7 +2910,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
             for: input, output,
             rule: .organizeDeclarations,
             options: FormatOptions(organizeTypes: ["struct"], organizationMode: .visibility),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .redundantViewBuilder]
         )
     }
 
@@ -2977,7 +2977,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
             for: input, output,
             rule: .organizeDeclarations,
             options: FormatOptions(organizeTypes: ["struct"], organizationMode: .visibility),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .redundantViewBuilder]
         )
     }
 
@@ -3080,7 +3080,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
                 blankLineAfterSubgroups: false,
                 swiftUIPropertiesSortMode: .alphabetize
             ),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateStateVariables]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateStateVariables, .redundantViewBuilder]
         )
     }
 
@@ -3137,7 +3137,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
                 blankLineAfterSubgroups: false,
                 swiftUIPropertiesSortMode: .alphabetize
             ),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateStateVariables]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateStateVariables, .redundantViewBuilder]
         )
     }
 
@@ -3188,7 +3188,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
                 blankLineAfterSubgroups: false,
                 swiftUIPropertiesSortMode: .firstAppearanceSort
             ),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateStateVariables]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateStateVariables, .redundantViewBuilder]
         )
     }
 
@@ -3245,7 +3245,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
                 blankLineAfterSubgroups: false,
                 swiftUIPropertiesSortMode: .firstAppearanceSort
             ),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateStateVariables]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateStateVariables, .redundantViewBuilder]
         )
     }
 
@@ -3487,7 +3487,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
             for: input, output,
             rule: .organizeDeclarations,
             options: FormatOptions(organizeTypes: ["struct"], organizationMode: .visibility),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .redundantViewBuilder]
         )
     }
 

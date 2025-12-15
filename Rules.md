@@ -73,6 +73,7 @@
 * [redundantThrows](#redundantThrows)
 * [redundantType](#redundantType)
 * [redundantTypedThrows](#redundantTypedThrows)
+* [redundantViewBuilder](#redundantViewBuilder)
 * [redundantVoidReturnType](#redundantVoidReturnType)
 * [semicolons](#semicolons)
 * [simplifyGenericConstraints](#simplifyGenericConstraints)
@@ -3034,6 +3035,41 @@ Converts `throws(any Error)` to `throws`, and converts `throws(Never)` to non-th
 - func foo() throws(any Error) -> Int {
 + func foo() throws -> Int {
       throw MyError.foo
+  }
+```
+
+</details>
+<br/>
+
+## redundantViewBuilder
+
+Remove redundant @ViewBuilder attribute when it's not needed.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  struct MyView: View {
+-   @ViewBuilder
+    var body: some View {
+      Text("foo")
+      Text("bar")
+    }
+
+-   @ViewBuilder
+    var helper: some View {
+      VStack {
+        Text("baaz")
+        Text("quux")
+      }
+    }
+
+    // Not redundant - multiple top-level views
+    @ViewBuilder
+    var helper2: some View {
+      Text("foo")
+      Text("bar")
+    }
   }
 ```
 

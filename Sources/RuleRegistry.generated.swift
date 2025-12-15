@@ -95,6 +95,7 @@ let ruleRegistry: [String: FormatRule] = [
     "redundantThrows": .redundantThrows,
     "redundantType": .redundantType,
     "redundantTypedThrows": .redundantTypedThrows,
+    "redundantViewBuilder": .redundantViewBuilder,
     "redundantVoidReturnType": .redundantVoidReturnType,
     "semicolons": .semicolons,
     "simplifyGenericConstraints": .simplifyGenericConstraints,

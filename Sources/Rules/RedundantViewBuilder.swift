@@ -20,55 +20,31 @@ public extension FormatRule {
             guard let viewBuilderIndex = formatter.indexOfViewBuilderAttribute(for: declaration)
             else { return }
 
-            var bodyScope: ClosedRange<Int>?
-            var isBodyOnViewOrModifier = false
+            let bodyScope: ClosedRange<Int>?
+            let isBodyMember: Bool
 
-            // Try parsing as a property
+            // Parse the declaration to get body scope and check if it's a body member
             if declaration.keyword == "var" || declaration.keyword == "let",
                let property = declaration.parsePropertyDeclaration()
             {
                 bodyScope = property.body?.scopeRange
-
-                // Check if this is a `body` property on a View or ViewModifier type
-                if property.identifier == "body",
-                   let parentType = declaration.parentType,
-                   parentType.conformances.contains(where: { conformance in
-                       conformance.conformance.string == "View" || conformance.conformance.string == "ViewModifier"
-                   })
-                {
-                    isBodyOnViewOrModifier = true
-                }
-            }
-            // Try parsing as a function
-            else if declaration.keyword == "func",
-                    let function = formatter.parseFunctionDeclaration(keywordIndex: declaration.keywordIndex)
+                isBodyMember = property.identifier == "body"
+            } else if declaration.keyword == "func",
+                      let function = formatter.parseFunctionDeclaration(keywordIndex: declaration.keywordIndex)
             {
                 bodyScope = function.bodyRange
-
-                // Check if this is a `body` function on a ViewModifier type
-                if function.name == "body",
-                   let parentType = declaration.parentType,
-                   parentType.conformances.contains(where: { conformance in
-                       conformance.conformance.string == "ViewModifier"
-                   })
-                {
-                    isBodyOnViewOrModifier = true
-                }
+                isBodyMember = function.name == "body"
+            } else {
+                return
             }
 
             guard let bodyScope else { return }
 
-            // Determine if @ViewBuilder is redundant
-            let isRedundant: Bool
-
-            if isBodyOnViewOrModifier {
-                // Always redundant on View/ViewModifier body properties/methods
-                isRedundant = true
-            } else {
-                // @ViewBuilder is redundant only if the body contains a single expression
-                // and that expression is NOT an if/switch statement (which needs @ViewBuilder)
-                isRedundant = formatter.scopeBodyIsSingleNonConditionalExpression(at: bodyScope.lowerBound)
-            }
+            // @ViewBuilder is redundant if:
+            // 1. It's on a body member of a View/ViewModifier, OR
+            // 2. The body contains only a single non-conditional expression
+            let isRedundant = (isBodyMember && formatter.isViewOrViewModifierType(declaration.parentType))
+                || formatter.scopeBodyIsSingleNonConditionalExpression(at: bodyScope.lowerBound)
 
             if isRedundant {
                 attributeIndicesToRemove.append(viewBuilderIndex)
@@ -110,6 +86,14 @@ public extension FormatRule {
 }
 
 extension Formatter {
+    /// Whether the given type conforms to View or ViewModifier
+    func isViewOrViewModifierType(_ type: TypeDeclaration?) -> Bool {
+        guard let type else { return false }
+        return type.conformances.contains { conformance in
+            conformance.conformance.string == "View" || conformance.conformance.string == "ViewModifier"
+        }
+    }
+
     /// Finds the index of a @ViewBuilder attribute for the given declaration, if present
     func indexOfViewBuilderAttribute(for declaration: Declaration) -> Int? {
         let startOfModifiers = declaration.startOfModifiersIndex(includingAttributes: true)
@@ -153,20 +137,13 @@ extension Formatter {
         removeTokens(in: startIndex ... endIndex)
     }
 
-    /// Whether the body within this scope is a single expression that is NOT a conditional expression (if/switch)
+    /// Whether the body is a single non-conditional expression (doesn't include if/switch)
     func scopeBodyIsSingleNonConditionalExpression(at startOfScopeIndex: Int) -> Bool {
         guard let endOfScopeIndex = endOfScope(at: startOfScopeIndex),
               startOfScopeIndex + 1 != endOfScopeIndex,
-              let firstTokenInBody = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfScopeIndex + 1)
+              let firstTokenInBody = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfScopeIndex + 1),
+              let expressionRange = parseExpressionRange(startingAt: firstTokenInBody, allowConditionalExpressions: false)
         else { return false }
-
-        if tokens[firstTokenInBody] == .keyword("if") || tokens[firstTokenInBody] == .keyword("switch") {
-            return false
-        }
-
-        guard let expressionRange = parseExpressionRange(startingAt: firstTokenInBody, allowConditionalExpressions: false)
-        else { return false }
-
         return index(of: .nonSpaceOrCommentOrLinebreak, after: expressionRange.upperBound) == endOfScopeIndex
     }
 }

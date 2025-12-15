@@ -10,7 +10,6 @@ import XCTest
 @testable import SwiftFormat
 
 final class RedundantViewBuilderTests: XCTestCase {
-    // MARK: - View body tests
 
     func testRemoveRedundantViewBuilderOnViewBody() {
         let input = """
@@ -53,8 +52,6 @@ final class RedundantViewBuilderTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .redundantViewBuilder)
     }
-
-    // MARK: - Single expression tests
 
     func testRemoveRedundantViewBuilderOnSingleExpression() {
         let input = """
@@ -107,8 +104,6 @@ final class RedundantViewBuilderTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .redundantViewBuilder)
     }
-
-    // MARK: - Keep @ViewBuilder when needed
 
     func testKeepViewBuilderWithMultipleTopLevelViews() {
         let input = """
@@ -170,8 +165,6 @@ final class RedundantViewBuilderTests: XCTestCase {
         """
         testFormatting(for: input, rule: .redundantViewBuilder)
     }
-
-    // MARK: - Edge cases
 
     func testRemoveRedundantViewBuilderBeforeComputedProperty() {
         let input = """

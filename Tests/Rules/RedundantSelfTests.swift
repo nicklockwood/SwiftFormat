@@ -19,7 +19,7 @@ final class RedundantSelfTests: XCTestCase {
         let output = """
         func foo() { bar() }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testRemoveSelfInsideStringInterpolation() {
@@ -46,14 +46,14 @@ final class RedundantSelfTests: XCTestCase {
         let input = """
         func foo(bar: Int) { self.bar = bar }
         """
-        testFormatting(for: input, rule: .redundantSelf, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, rule: .redundantSelf, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testNoRemoveSelfForLocalVariable() {
         let input = """
         func foo() { var bar = self.bar }
         """
-        testFormatting(for: input, rule: .redundantSelf, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, rule: .redundantSelf, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testRemoveSelfForLocalVariableOn5_4() {
@@ -65,14 +65,14 @@ final class RedundantSelfTests: XCTestCase {
         """
         let options = FormatOptions(swiftVersion: "5.4")
         testFormatting(for: input, output, rule: .redundantSelf,
-                       options: options, exclude: [.wrapSingleLineBodies])
+                       options: options, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testNoRemoveSelfForCommaDelimitedLocalVariables() {
         let input = """
         func foo() { let foo = self.foo, bar = self.bar }
         """
-        testFormatting(for: input, rule: .redundantSelf, exclude: [.singlePropertyPerLine, .wrapSingleLineBodies])
+        testFormatting(for: input, rule: .redundantSelf, exclude: [.singlePropertyPerLine, .wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testRemoveSelfForCommaDelimitedLocalVariablesOn5_4() {
@@ -84,7 +84,7 @@ final class RedundantSelfTests: XCTestCase {
         """
         let options = FormatOptions(swiftVersion: "5.4")
         testFormatting(for: input, output, rule: .redundantSelf,
-                       options: options, exclude: [.singlePropertyPerLine, .wrapSingleLineBodies])
+                       options: options, exclude: [.singlePropertyPerLine, .wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testNoRemoveSelfForCommaDelimitedLocalVariables2() {
@@ -102,7 +102,7 @@ final class RedundantSelfTests: XCTestCase {
         let input = """
         func foo() { let (bar, baz) = (self.bar, self.baz) }
         """
-        testFormatting(for: input, rule: .redundantSelf, exclude: [.singlePropertyPerLine, .wrapSingleLineBodies])
+        testFormatting(for: input, rule: .redundantSelf, exclude: [.singlePropertyPerLine, .wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     // TODO: make this work
@@ -137,7 +137,7 @@ final class RedundantSelfTests: XCTestCase {
         let input = """
         func foo() { func bar() { self.bar() } }
         """
-        testFormatting(for: input, rule: .redundantSelf, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, rule: .redundantSelf, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testNoRemoveNonRedundantNestedFunctionSelf2() {
@@ -154,14 +154,14 @@ final class RedundantSelfTests: XCTestCase {
         let input = """
         func foo() { let bar = 5; func bar() { self.bar = bar } }
         """
-        testFormatting(for: input, rule: .redundantSelf, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, rule: .redundantSelf, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testNoRemoveClosureSelf() {
         let input = """
         func foo() { bar { self.bar = 5 } }
         """
-        testFormatting(for: input, rule: .redundantSelf, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, rule: .redundantSelf, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testNoRemoveSelfAfterOptionalReturn() {
@@ -196,7 +196,7 @@ final class RedundantSelfTests: XCTestCase {
         let input = """
         convenience init() { self.init(5) }
         """
-        testFormatting(for: input, rule: .redundantSelf, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, rule: .redundantSelf, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testRemoveSelfInsideSwitch() {
@@ -272,7 +272,7 @@ final class RedundantSelfTests: XCTestCase {
             init() { bar = 6 }
         }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testNoRemoveSelfInClosureInsideIf() {
@@ -301,14 +301,14 @@ final class RedundantSelfTests: XCTestCase {
         let input = """
         var foo: Int { set { self.newValue = newValue } get { return 0 } }
         """
-        testFormatting(for: input, rule: .redundantSelf, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, rule: .redundantSelf, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testNoRemoveSelfForCustomNewValueInSet() {
         let input = """
         var foo: Int { set(n00b) { self.n00b = n00b } get { return 0 } }
         """
-        testFormatting(for: input, rule: .redundantSelf, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, rule: .redundantSelf, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testNoRemoveSelfForNewValueInWillSet() {
@@ -360,7 +360,7 @@ final class RedundantSelfTests: XCTestCase {
         let output = """
         var foo: Int { return bar }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testRemoveSelfFromOptionalComputedVar() {
@@ -370,7 +370,7 @@ final class RedundantSelfTests: XCTestCase {
         let output = """
         var foo: Int? { return bar }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testRemoveSelfFromNamespacedComputedVar() {
@@ -380,7 +380,7 @@ final class RedundantSelfTests: XCTestCase {
         let output = """
         var foo: Swift.String { return bar }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testRemoveSelfFromGenericComputedVar() {
@@ -390,7 +390,7 @@ final class RedundantSelfTests: XCTestCase {
         let output = """
         var foo: Foo<Int> { return bar }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testRemoveSelfFromComputedArrayVar() {
@@ -400,7 +400,7 @@ final class RedundantSelfTests: XCTestCase {
         let output = """
         var foo: [Int] { return bar }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testRemoveSelfFromVarSetter() {
@@ -487,7 +487,7 @@ final class RedundantSelfTests: XCTestCase {
         let output = """
         func foo(bar _: Int) { baz = 5 }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testRemoveSelfFromVarMatchingUnusedArgument() {
@@ -497,14 +497,14 @@ final class RedundantSelfTests: XCTestCase {
         let output = """
         func foo(bar _: Int) { bar = 5 }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testNoRemoveSelfFromVarMatchingRenamedArgument() {
         let input = """
         func foo(bar baz: Int) { self.baz = baz }
         """
-        testFormatting(for: input, rule: .redundantSelf, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, rule: .redundantSelf, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testNoRemoveSelfFromVarRedeclaredInSubscope() {
@@ -660,7 +660,7 @@ final class RedundantSelfTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testRemoveSelfInStaticFunction() {
@@ -678,7 +678,7 @@ final class RedundantSelfTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.enumNamespaces, .wrapSingleLineBodies])
+        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.enumNamespaces, .wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testRemoveSelfInClassFunctionWithModifiers() {
@@ -697,7 +697,7 @@ final class RedundantSelfTests: XCTestCase {
         }
         """
         testFormatting(for: input, output, rule: .redundantSelf,
-                       exclude: [.modifierOrder, .wrapSingleLineBodies])
+                       exclude: [.modifierOrder, .wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testNoRemoveSelfInClassFunction() {
@@ -709,7 +709,7 @@ final class RedundantSelfTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantSelf, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, rule: .redundantSelf, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testNoRemoveSelfForVarDeclaredAfterRepeatWhile() {
@@ -1628,7 +1628,7 @@ final class RedundantSelfTests: XCTestCase {
         let output = """
         func foo() { lazy() }
         """
-        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testRemoveRedundantSelfInArrayLiteral() {
@@ -2211,7 +2211,7 @@ final class RedundantSelfTests: XCTestCase {
         """
         let options = FormatOptions(explicitSelf: .insert)
         testFormatting(for: input, output, rule: .redundantSelf, options: options,
-                       exclude: [.wrapSingleLineBodies])
+                       exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testInsertSelfInActor() {
@@ -2229,7 +2229,7 @@ final class RedundantSelfTests: XCTestCase {
         """
         let options = FormatOptions(explicitSelf: .insert)
         testFormatting(for: input, output, rule: .redundantSelf, options: options,
-                       exclude: [.wrapSingleLineBodies])
+                       exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testInsertSelfAfterReturn() {
@@ -2246,7 +2246,7 @@ final class RedundantSelfTests: XCTestCase {
         }
         """
         let options = FormatOptions(explicitSelf: .insert)
-        testFormatting(for: input, output, rule: .redundantSelf, options: options, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, output, rule: .redundantSelf, options: options, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testInsertSelfInsideStringInterpolation() {
@@ -2279,7 +2279,7 @@ final class RedundantSelfTests: XCTestCase {
         """
         let options = FormatOptions(explicitSelf: .insert)
         testFormatting(for: input, rule: .redundantSelf, options: options,
-                       exclude: [.wrapSingleLineBodies])
+                       exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testInsertSelfForStaticMemberInClassFunction() {
@@ -2296,7 +2296,7 @@ final class RedundantSelfTests: XCTestCase {
         }
         """
         let options = FormatOptions(explicitSelf: .insert)
-        testFormatting(for: input, output, rule: .redundantSelf, options: options, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, output, rule: .redundantSelf, options: options, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testNoInsertSelfForInstanceMemberInClassFunction() {
@@ -2307,7 +2307,7 @@ final class RedundantSelfTests: XCTestCase {
         }
         """
         let options = FormatOptions(explicitSelf: .insert)
-        testFormatting(for: input, rule: .redundantSelf, options: options, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, rule: .redundantSelf, options: options, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testNoInsertSelfForStaticMemberInInstanceFunction() {
@@ -2318,7 +2318,7 @@ final class RedundantSelfTests: XCTestCase {
         }
         """
         let options = FormatOptions(explicitSelf: .insert)
-        testFormatting(for: input, rule: .redundantSelf, options: options, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, rule: .redundantSelf, options: options, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testNoInsertSelfForShadowedClassMemberInClassFunction() {
@@ -2331,7 +2331,7 @@ final class RedundantSelfTests: XCTestCase {
         }
         """
         let options = FormatOptions(explicitSelf: .insert)
-        testFormatting(for: input, rule: .redundantSelf, options: options, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, rule: .redundantSelf, options: options, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testNoInsertSelfInForLoopTuple() {
@@ -2342,7 +2342,7 @@ final class RedundantSelfTests: XCTestCase {
         }
         """
         let options = FormatOptions(explicitSelf: .insert)
-        testFormatting(for: input, rule: .redundantSelf, options: options, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, rule: .redundantSelf, options: options, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testNoInsertSelfForTupleTypeMembers() {
@@ -2365,7 +2365,7 @@ final class RedundantSelfTests: XCTestCase {
         }
         """
         let options = FormatOptions(explicitSelf: .insert)
-        testFormatting(for: input, rule: .redundantSelf, options: options, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, rule: .redundantSelf, options: options, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testNoInsertSelfForNestedVarReference() {
@@ -2924,7 +2924,7 @@ final class RedundantSelfTests: XCTestCase {
         }
         """
         let options = FormatOptions(explicitSelf: .insert)
-        testFormatting(for: input, rule: .redundantSelf, options: options, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, rule: .redundantSelf, options: options, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testNoInsertSelfInCaptureList2() {
@@ -2938,7 +2938,7 @@ final class RedundantSelfTests: XCTestCase {
         }
         """
         let options = FormatOptions(explicitSelf: .insert)
-        testFormatting(for: input, rule: .redundantSelf, options: options, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, rule: .redundantSelf, options: options, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testNoInsertSelfInCaptureList3() {
@@ -2955,7 +2955,7 @@ final class RedundantSelfTests: XCTestCase {
         }
         """
         let options = FormatOptions(explicitSelf: .insert)
-        testFormatting(for: input, rule: .redundantSelf, options: options, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, rule: .redundantSelf, options: options, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testBodilessFunctionDoesntBreakParser() {

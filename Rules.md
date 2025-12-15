@@ -105,9 +105,10 @@
 * [wrap](#wrap)
 * [wrapArguments](#wrapArguments)
 * [wrapAttributes](#wrapAttributes)
+* [wrapFunctionBodies](#wrapFunctionBodies)
 * [wrapLoopBodies](#wrapLoopBodies)
 * [wrapMultilineStatementBraces](#wrapMultilineStatementBraces)
-* [wrapSingleLineBodies](#wrapSingleLineBodies)
+* [wrapPropertyBodies](#wrapPropertyBodies)
 * [wrapSingleLineComments](#wrapSingleLineComments)
 * [yodaConditions](#yodaConditions)
 
@@ -4232,6 +4233,33 @@ Option | Description
 </details>
 <br/>
 
+## wrapFunctionBodies
+
+Wrap single-line function, init, and subscript bodies onto multiple lines.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- func foo() { print("bar") }
++ func foo() {
++     print("bar")
++ }
+
+- init() { self.value = 0 }
++ init() {
++     self.value = 0
++ }
+
+- subscript(index: Int) -> Int { array[index] }
++ subscript(index: Int) -> Int {
++     array[index]
++ }
+```
+
+</details>
+<br/>
+
 ## wrapLoopBodies
 
 Wrap the bodies of inline loop statements onto a new line.
@@ -4365,29 +4393,14 @@ Wrap the opening brace of multiline statements.
 </details>
 <br/>
 
-## wrapSingleLineBodies
+## wrapPropertyBodies
 
-Wrap single-line function, init, subscript, and computed property bodies onto multiple lines.
+Wrap single-line computed property bodies onto multiple lines.
 
 <details>
 <summary>Examples</summary>
 
 ```diff
-- func foo() { print("bar") }
-+ func foo() {
-+     print("bar")
-+ }
-
-- init() { self.value = 0 }
-+ init() {
-+     self.value = 0
-+ }
-
-- subscript(index: Int) -> Int { array[index] }
-+ subscript(index: Int) -> Int {
-+     array[index]
-+ }
-
 - var bar: String { "bar" }
 + var bar: String {
 +     "bar"

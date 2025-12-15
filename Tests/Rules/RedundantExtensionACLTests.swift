@@ -25,7 +25,7 @@ final class RedundantExtensionACLTests: XCTestCase {
             func quux() {}
         }
         """
-        testFormatting(for: input, output, rule: .redundantExtensionACL, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, output, rule: .redundantExtensionACL, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testPrivateExtensionMemberACLNotStrippedUnlessFileprivate() {
@@ -43,6 +43,6 @@ final class RedundantExtensionACLTests: XCTestCase {
             func quux() {}
         }
         """
-        testFormatting(for: input, output, rule: .redundantExtensionACL, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, output, rule: .redundantExtensionACL, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 }

@@ -95,7 +95,7 @@ final class AndOperatorTests: XCTestCase {
         let output = """
         func someFunc() { if bar, baz {} }
         """
-        testFormatting(for: input, output, rule: .andOperator, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, output, rule: .andOperator, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testNoReplaceIfCaseLetAnd() {

@@ -3880,3 +3880,15 @@ extension Token {
         }
     }
 }
+
+extension Formatter {
+    /// Returns true if the given index is inside a protocol declaration
+    func isInsideProtocol(at index: Int) -> Bool {
+        guard let scopeStart = startOfScope(at: index) else {
+            return false
+        }
+
+        // Exclude "class" because `protocol Foo: class { }` uses class as a constraint, not a type keyword
+        return lastSignificantKeyword(at: scopeStart, excluding: ["where", "class"]) == "protocol"
+    }
+}

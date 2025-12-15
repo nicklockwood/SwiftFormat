@@ -549,7 +549,7 @@ final class DocCommentsTests: XCTestCase {
             func returnNumber() { 3 }
         #endif
         """
-        testFormatting(for: input, output, rule: .docComments, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, output, rule: .docComments, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testDocCommentInsideIfdefElse() {
@@ -563,7 +563,7 @@ final class DocCommentsTests: XCTestCase {
             func returnNumber() { 3 }
         #endif
         """
-        testFormatting(for: input, rule: .docComments, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, rule: .docComments, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testDocCommentForMacro() {

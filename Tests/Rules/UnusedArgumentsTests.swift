@@ -126,7 +126,7 @@ final class UnusedArgumentsTests: XCTestCase {
         let input = """
         func foo() { bar(5) {} in }
         """
-        testFormatting(for: input, rule: .unusedArguments, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, rule: .unusedArguments, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testShadowedUsedArguments() {
@@ -472,7 +472,7 @@ final class UnusedArgumentsTests: XCTestCase {
         let output = """
         func foo(bar _: Int, baz: String) -> (A<B, C>, D & E, [F: G]) { return baz.quux }
         """
-        testFormatting(for: input, output, rule: .unusedArguments, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, output, rule: .unusedArguments, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testMarkUnusedArgumentsInThrowsFunction() {
@@ -510,7 +510,7 @@ final class UnusedArgumentsTests: XCTestCase {
             var bar: Int { get }
         }
         """
-        testFormatting(for: input, rule: .unusedArguments, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, rule: .unusedArguments, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testUnusedUnnamedFunctionArgument() {
@@ -548,7 +548,7 @@ final class UnusedArgumentsTests: XCTestCase {
         func foo(foo bar: Int)
         var bar: Bool { get }
         """
-        testFormatting(for: input, rule: .unusedArguments, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, rule: .unusedArguments, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testMembersAreNotArguments() {
@@ -595,7 +595,7 @@ final class UnusedArgumentsTests: XCTestCase {
         let output = """
         func == (_: Int, _: Int) { false }
         """
-        testFormatting(for: input, output, rule: .unusedArguments, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, output, rule: .unusedArguments, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testUnusedtFailableInitArgumentsAreNotMangled() {

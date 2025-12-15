@@ -315,28 +315,28 @@ final class RedundantSelfTests: XCTestCase {
         let input = """
         var foo: Int { willSet { self.newValue = newValue } }
         """
-        testFormatting(for: input, rule: .redundantSelf)
+        testFormatting(for: input, rule: .redundantSelf, exclude: [.wrapPropertyBodies])
     }
 
     func testNoRemoveSelfForCustomNewValueInWillSet() {
         let input = """
         var foo: Int { willSet(n00b) { self.n00b = n00b } }
         """
-        testFormatting(for: input, rule: .redundantSelf)
+        testFormatting(for: input, rule: .redundantSelf, exclude: [.wrapPropertyBodies])
     }
 
     func testNoRemoveSelfForOldValueInDidSet() {
         let input = """
         var foo: Int { didSet { self.oldValue = oldValue } }
         """
-        testFormatting(for: input, rule: .redundantSelf)
+        testFormatting(for: input, rule: .redundantSelf, exclude: [.wrapPropertyBodies])
     }
 
     func testNoRemoveSelfForCustomOldValueInDidSet() {
         let input = """
         var foo: Int { didSet(oldz) { self.oldz = oldz } }
         """
-        testFormatting(for: input, rule: .redundantSelf)
+        testFormatting(for: input, rule: .redundantSelf, exclude: [.wrapPropertyBodies])
     }
 
     func testNoRemoveSelfForIndexVarInFor() {
@@ -410,7 +410,7 @@ final class RedundantSelfTests: XCTestCase {
         let output = """
         var foo: Int { didSet { bar() } }
         """
-        testFormatting(for: input, output, rule: .redundantSelf)
+        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.wrapPropertyBodies])
     }
 
     func testNoRemoveSelfFromVarClosure() {
@@ -4022,7 +4022,7 @@ final class RedundantSelfTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantSelf)
+        testFormatting(for: input, rule: .redundantSelf, exclude: [.wrapPropertyBodies])
     }
 
     func testRedundantSelfIssue2177_2() {
@@ -4037,7 +4037,7 @@ final class RedundantSelfTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantSelf, exclude: [.emptyBraces])
+        testFormatting(for: input, rule: .redundantSelf, exclude: [.emptyBraces, .wrapPropertyBodies])
     }
 
     func testRedundantSelfIssue2177_3() {
@@ -4052,7 +4052,7 @@ final class RedundantSelfTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .redundantSelf, exclude: [.spaceInsideBraces])
+        testFormatting(for: input, rule: .redundantSelf, exclude: [.spaceInsideBraces, .wrapPropertyBodies])
     }
 
     func testForAwaitParsingError() {

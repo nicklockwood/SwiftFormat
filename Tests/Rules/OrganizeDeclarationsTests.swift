@@ -2144,7 +2144,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .organizeDeclarations, exclude: [.redundantClosure])
+        testFormatting(for: input, rule: .organizeDeclarations, exclude: [.redundantClosure, .wrapPropertyBodies])
     }
 
     func testFuncWithNestedInitNotTreatedAsLifecycle() {

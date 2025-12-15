@@ -4390,7 +4390,7 @@ Wrap the opening brace of multiline statements.
 
 ## wrapPropertyBodies
 
-Wrap single-line computed property bodies onto multiple lines.
+Wrap single-line property bodies onto multiple lines.
 
 <details>
 <summary>Examples</summary>
@@ -4399,6 +4399,13 @@ Wrap single-line computed property bodies onto multiple lines.
 - var bar: String { "bar" }
 + var bar: String {
 +     "bar"
++ }
+
+- var foo: Int { didSet { bar() } }
++ var foo: Int {
++     didSet {
++         bar()
++     }
 + }
 ```
 

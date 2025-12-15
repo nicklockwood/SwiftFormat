@@ -45,18 +45,46 @@ final class WrapPropertyBodiesTests: XCTestCase {
         testFormatting(for: input, rule: .wrapPropertyBodies)
     }
 
-    func testDoesNotWrapStoredPropertyWithDidSet() {
+    func testWrapStoredPropertyWithDidSet() {
         let input = """
         var value: Int = 0 { didSet { print("changed") } }
         """
-        testFormatting(for: input, rule: .wrapPropertyBodies)
+        let output = """
+        var value: Int = 0 {
+            didSet {
+                print("changed")
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .wrapPropertyBodies)
     }
 
-    func testDoesNotWrapStoredPropertyWithWillSet() {
+    func testWrapStoredPropertyWithWillSet() {
         let input = """
         var value: Int = 0 { willSet { print("will change") } }
         """
-        testFormatting(for: input, rule: .wrapPropertyBodies)
+        let output = """
+        var value: Int = 0 {
+            willSet {
+                print("will change")
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .wrapPropertyBodies)
+    }
+
+    func testWrapStoredPropertyWithDidSetNoInitialValue() {
+        let input = """
+        var foo: Int { didSet { bar() } }
+        """
+        let output = """
+        var foo: Int {
+            didSet {
+                bar()
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .wrapPropertyBodies)
     }
 
     func testWrapComputedPropertyInStruct() {
@@ -73,6 +101,16 @@ final class WrapPropertyBodiesTests: XCTestCase {
         }
         """
         testFormatting(for: input, output, rule: .wrapPropertyBodies)
+    }
+
+    func testWrapComputedPropertyWithGetterSetter() {
+        let input = """
+        var foo: Int {
+            get { _foo }
+            set { _foo = newValue }
+        }
+        """
+        testFormatting(for: input, rule: .wrapPropertyBodies)
     }
 
     // MARK: - Functions (should NOT be wrapped by this rule)

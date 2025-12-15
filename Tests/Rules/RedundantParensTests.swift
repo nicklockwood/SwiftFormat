@@ -1052,7 +1052,7 @@ final class RedundantParensTests: XCTestCase {
         let input = """
         var foo = bar() { didSet {} }
         """
-        testFormatting(for: input, rule: .redundantParens)
+        testFormatting(for: input, rule: .redundantParens, exclude: [.wrapPropertyBodies])
     }
 
     func testParensNotRemovedBeforeFunctionBody() {

@@ -314,7 +314,7 @@ final class WrapMultilineStatementBracesTests: XCTestCase {
         testFormatting(for: input, [output], rules: [
             .wrapMultilineStatementBraces,
             .indent,
-        ], options: options, exclude: [.propertyTypes])
+        ], options: options, exclude: [.propertyTypes, .wrapPropertyBodies])
     }
 
     func testMultilineBraceAppliedToTrailingClosure_wrapAfterFirst() {
@@ -357,7 +357,7 @@ final class WrapMultilineStatementBracesTests: XCTestCase {
         testFormatting(for: input, [], rules: [
             .wrapMultilineStatementBraces,
             .wrapArguments,
-        ], options: options, exclude: [.propertyTypes])
+        ], options: options, exclude: [.propertyTypes, .wrapPropertyBodies])
     }
 
     func testMultilineBraceAppliedToSubscriptBody() {

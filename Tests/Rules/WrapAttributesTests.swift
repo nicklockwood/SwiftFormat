@@ -611,7 +611,7 @@ final class WrapAttributesTests: XCTestCase {
         """
 
         let options = FormatOptions(varAttributes: .sameLine, storedVarAttributes: .sameLine, computedVarAttributes: .prevLine)
-        testFormatting(for: input, rule: .wrapAttributes, options: options)
+        testFormatting(for: input, rule: .wrapAttributes, options: options, exclude: [.redundantViewBuilder])
     }
 
     func testWrapAttributesInSwiftUIView() {
@@ -631,7 +631,7 @@ final class WrapAttributesTests: XCTestCase {
         """
 
         let options = FormatOptions(varAttributes: .sameLine, complexAttributes: .prevLine)
-        testFormatting(for: input, rule: .wrapAttributes, options: options)
+        testFormatting(for: input, rule: .wrapAttributes, options: options, exclude: [.redundantViewBuilder])
     }
 
     func testInlineMainActorAttributeNotWrapped() {

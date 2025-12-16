@@ -178,7 +178,7 @@ final class BlankLinesBetweenScopesTests: XCTestCase {
             func bar() { print(\"bar\") }
         }
         """
-        testFormatting(for: input, rule: .blankLinesBetweenScopes, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, rule: .blankLinesBetweenScopes, exclude: [.wrapFunctionBodies])
     }
 
     func testNoBlankLineBetweenIfStatements() {

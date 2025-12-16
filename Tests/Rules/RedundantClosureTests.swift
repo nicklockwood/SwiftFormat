@@ -441,7 +441,7 @@ final class RedundantClosureTests: XCTestCase {
         /// would return a String instead.
         let void: Void = { discardableResult() }()
         """
-        testFormatting(for: input, rule: .redundantClosure, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, rule: .redundantClosure, exclude: [.wrapFunctionBodies])
     }
 
     func testKeepsDiscardableResultClosure2() {
@@ -453,7 +453,7 @@ final class RedundantClosureTests: XCTestCase {
         /// would return a String instead.
         let void: () = { discardableResult() }()
         """
-        testFormatting(for: input, rule: .redundantClosure, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, rule: .redundantClosure, exclude: [.wrapFunctionBodies])
     }
 
     func testRedundantClosureDoesntLeaveStrayTry() {

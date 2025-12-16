@@ -103,7 +103,7 @@ final class ModifierOrderTests: XCTestCase {
         public override var foo: Int { 5 }
         """
         let options = FormatOptions(modifierOrder: ["public", "override"])
-        testFormatting(for: input, output, rule: .modifierOrder, options: options, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, output, rule: .modifierOrder, options: options, exclude: [.wrapPropertyBodies])
     }
 
     func testConsumingModifierOrder() {

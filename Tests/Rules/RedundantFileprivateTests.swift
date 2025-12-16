@@ -129,7 +129,7 @@ final class RedundantFileprivateTests: XCTestCase {
         var kFoo: String { return Foo().foo }
         """
         let options = FormatOptions(swiftVersion: "4")
-        testFormatting(for: input, rule: .redundantFileprivate, options: options, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, rule: .redundantFileprivate, options: options, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testFileprivateVarNotChangedToPrivateIfAccessedFromCode() {

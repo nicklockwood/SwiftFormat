@@ -38,6 +38,6 @@ final class SpaceInsideBracesTests: XCTestCase {
         let input = """
         func foo() -> () -> Void {{ bar() }}
         """
-        testFormatting(for: input, rule: .spaceInsideBraces, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, rule: .spaceInsideBraces, exclude: [.wrapFunctionBodies])
     }
 }

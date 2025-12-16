@@ -1024,6 +1024,6 @@ final class MarkTypesTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .markTypes, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, output, rule: .markTypes, exclude: [.wrapPropertyBodies])
     }
 }

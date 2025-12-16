@@ -20,13 +20,7 @@ public extension FormatRule {
                   !formatter.isInsideProtocol(at: varIndex)
             else { return }
 
-            if formatter.isStoredProperty(atIntroducerIndex: varIndex) {
-                // For stored properties with observers, wrap each didSet/willSet block
-                formatter.wrapStatementBody(at: bodyScopeRange.lowerBound)
-            } else {
-                // For computed properties, wrap the body
-                formatter.wrapStatementBody(at: bodyScopeRange.lowerBound)
-            }
+            formatter.wrapStatementBody(at: bodyScopeRange.lowerBound)
         }
     } examples: {
         """

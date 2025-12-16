@@ -103,7 +103,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
         testFormatting(
             for: input, output,
             rule: .organizeDeclarations,
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .wrapFunctionBodies, .wrapPropertyBodies]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .wrapPropertyBodies]
         )
     }
 
@@ -313,7 +313,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
 
         testFormatting(
             for: input, rule: .organizeDeclarations,
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .sortImports, .wrapFunctionBodies, .wrapPropertyBodies]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .sortImports, .wrapPropertyBodies]
         )
     }
 
@@ -374,7 +374,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
             for: input, output,
             rule: .organizeDeclarations,
             options: FormatOptions(organizationMode: .type),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .sortImports, .wrapFunctionBodies, .wrapPropertyBodies]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .sortImports, .wrapPropertyBodies]
         )
     }
 
@@ -3514,7 +3514,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
 
         testFormatting(
             for: input, output,
-            rule: .organizeDeclarations, exclude: [.wrapFunctionBodies, .wrapPropertyBodies]
+            rule: .organizeDeclarations, exclude: [.wrapPropertyBodies]
         )
     }
 

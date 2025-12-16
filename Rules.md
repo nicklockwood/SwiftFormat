@@ -4408,9 +4408,7 @@ Wrap single-line property bodies onto multiple lines.
 
 - var foo: Int { didSet { bar() } }
 + var foo: Int {
-+     didSet {
-+         bar()
-+     }
++     didSet { bar() }
 + }
 ```
 

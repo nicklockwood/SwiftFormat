@@ -510,7 +510,7 @@ final class UnusedArgumentsTests: XCTestCase {
             var bar: Int { get }
         }
         """
-        testFormatting(for: input, rule: .unusedArguments, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
+        testFormatting(for: input, rule: .unusedArguments)
     }
 
     func testUnusedUnnamedFunctionArgument() {
@@ -548,7 +548,7 @@ final class UnusedArgumentsTests: XCTestCase {
         func foo(foo bar: Int)
         var bar: Bool { get }
         """
-        testFormatting(for: input, rule: .unusedArguments, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
+        testFormatting(for: input, rule: .unusedArguments, exclude: [.wrapPropertyBodies])
     }
 
     func testMembersAreNotArguments() {

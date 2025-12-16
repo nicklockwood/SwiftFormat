@@ -16,7 +16,7 @@ final class EnumNamespacesTests: XCTestCase {
             @objc static var expressionTypes: [String: RuntimeType] { get }
         }
         """
-        testFormatting(for: input, rule: .enumNamespaces, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
+        testFormatting(for: input, rule: .enumNamespaces)
     }
 
     func testEnumNamespacesConformingOtherType() {

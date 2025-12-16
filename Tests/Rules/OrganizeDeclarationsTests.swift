@@ -4307,7 +4307,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
             for: input, output,
             rule: .organizeDeclarations,
             options: FormatOptions(organizeTypes: ["protocol"]),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .wrapFunctionBodies, .wrapPropertyBodies]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
         )
     }
 

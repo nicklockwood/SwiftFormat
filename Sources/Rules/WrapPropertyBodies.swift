@@ -22,7 +22,7 @@ public extension FormatRule {
 
             if formatter.isStoredProperty(atIntroducerIndex: varIndex) {
                 // For stored properties with observers, wrap each didSet/willSet block
-                formatter.wrapPropertyObservers(in: bodyScopeRange)
+                formatter.wrapStatementBody(at: bodyScopeRange.lowerBound)
             } else {
                 // For computed properties, wrap the body
                 formatter.wrapStatementBody(at: bodyScopeRange.lowerBound)
@@ -42,13 +42,5 @@ public extension FormatRule {
         + }
         ```
         """
-    }
-}
-
-extension Formatter {
-    /// Wraps property observer blocks (didSet/willSet) within the given scope range
-    func wrapPropertyObservers(in scopeRange: ClosedRange<Int>) {
-        // Only wrap the outer braces, keeping didSet/willSet bodies on single lines
-        wrapStatementBody(at: scopeRange.lowerBound)
     }
 }

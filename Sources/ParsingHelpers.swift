@@ -893,6 +893,16 @@ extension Formatter {
         return keyword
     }
 
+    /// Returns true if the given index is inside a protocol declaration
+    func isInsideProtocol(at index: Int) -> Bool {
+        guard let scopeStart = startOfScope(at: index) else {
+            return false
+        }
+
+        // Exclude "class" because `protocol Foo: class { }` uses class as a constraint, not a type keyword
+        return lastSignificantKeyword(at: scopeStart, excluding: ["where", "class"]) == "protocol"
+    }
+
     func indexOfLastSignificantKeyword(at i: Int, excluding: Set<String> = []) -> Int? {
         guard let token = token(at: i),
               let index = token.isKeyword ? i : index(of: .keyword, before: i),
@@ -3878,17 +3888,5 @@ extension Token {
         default:
             return false
         }
-    }
-}
-
-extension Formatter {
-    /// Returns true if the given index is inside a protocol declaration
-    func isInsideProtocol(at index: Int) -> Bool {
-        guard let scopeStart = startOfScope(at: index) else {
-            return false
-        }
-
-        // Exclude "class" because `protocol Foo: class { }` uses class as a constraint, not a type keyword
-        return lastSignificantKeyword(at: scopeStart, excluding: ["where", "class"]) == "protocol"
     }
 }

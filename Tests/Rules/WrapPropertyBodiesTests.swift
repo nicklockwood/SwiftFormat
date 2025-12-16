@@ -51,9 +51,7 @@ final class WrapPropertyBodiesTests: XCTestCase {
         """
         let output = """
         var value: Int = 0 {
-            didSet {
-                print("changed")
-            }
+            didSet { print("changed") }
         }
         """
         testFormatting(for: input, output, rule: .wrapPropertyBodies)
@@ -65,9 +63,7 @@ final class WrapPropertyBodiesTests: XCTestCase {
         """
         let output = """
         var value: Int = 0 {
-            willSet {
-                print("will change")
-            }
+            willSet { print("will change") }
         }
         """
         testFormatting(for: input, output, rule: .wrapPropertyBodies)
@@ -79,9 +75,7 @@ final class WrapPropertyBodiesTests: XCTestCase {
         """
         let output = """
         var foo: Int {
-            didSet {
-                bar()
-            }
+            didSet { bar() }
         }
         """
         testFormatting(for: input, output, rule: .wrapPropertyBodies)

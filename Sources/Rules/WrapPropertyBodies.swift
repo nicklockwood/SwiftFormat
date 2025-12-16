@@ -38,9 +38,7 @@ public extension FormatRule {
 
         - var foo: Int { didSet { bar() } }
         + var foo: Int {
-        +     didSet {
-        +         bar()
-        +     }
+        +     didSet { bar() }
         + }
         ```
         """
@@ -50,21 +48,7 @@ public extension FormatRule {
 extension Formatter {
     /// Wraps property observer blocks (didSet/willSet) within the given scope range
     func wrapPropertyObservers(in scopeRange: ClosedRange<Int>) {
-        // First wrap the outer braces
+        // Only wrap the outer braces, keeping didSet/willSet bodies on single lines
         wrapStatementBody(at: scopeRange.lowerBound)
-
-        // Then find and wrap each didSet/willSet block
-        var searchIndex = scopeRange.lowerBound
-        while let observerIndex = index(of: .nonSpaceOrCommentOrLinebreak, in: searchIndex ..< scopeRange.upperBound) {
-            let token = tokens[observerIndex]
-            if [.identifier("didSet"), .identifier("willSet")].contains(token),
-               let openBrace = index(of: .startOfScope("{"), after: observerIndex)
-            {
-                wrapStatementBody(at: openBrace)
-                searchIndex = openBrace + 1
-            } else {
-                searchIndex = observerIndex + 1
-            }
-        }
     }
 }

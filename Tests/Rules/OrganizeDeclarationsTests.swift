@@ -3915,7 +3915,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
         """
 
         let options = FormatOptions(organizeTypes: ["protocol"])
-        testFormatting(for: input, output, rule: .organizeDeclarations, options: options, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
+        testFormatting(for: input, output, rule: .organizeDeclarations, options: options)
     }
 
     func testOrganizesProtocolWithInit() {

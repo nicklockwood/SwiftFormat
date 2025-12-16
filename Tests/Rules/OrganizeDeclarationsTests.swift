@@ -103,7 +103,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
         testFormatting(
             for: input, output,
             rule: .organizeDeclarations,
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .wrapSingleLineBodies]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .wrapPropertyBodies]
         )
     }
 
@@ -213,7 +213,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
                 visibilityOrder: airbnbVisibilityOrder.components(separatedBy: ","),
                 typeOrder: airbnbTypeOrder.components(separatedBy: ",")
             ),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .wrapSingleLineBodies]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .wrapPropertyBodies]
         )
     }
 
@@ -313,7 +313,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
 
         testFormatting(
             for: input, rule: .organizeDeclarations,
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .sortImports, .wrapSingleLineBodies]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .sortImports, .wrapPropertyBodies]
         )
     }
 
@@ -374,7 +374,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
             for: input, output,
             rule: .organizeDeclarations,
             options: FormatOptions(organizationMode: .type),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .sortImports, .wrapSingleLineBodies]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .sortImports, .wrapPropertyBodies]
         )
     }
 
@@ -2097,7 +2097,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
         testFormatting(
             for: input, rule: .organizeDeclarations,
             options: FormatOptions(organizeStructThreshold: 20),
-            exclude: [.blankLinesAtStartOfScope, .wrapSingleLineBodies]
+            exclude: [.blankLinesAtStartOfScope, .wrapPropertyBodies]
         )
     }
 
@@ -2144,7 +2144,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .organizeDeclarations, exclude: [.redundantClosure])
+        testFormatting(for: input, rule: .organizeDeclarations, exclude: [.redundantClosure, .wrapPropertyBodies])
     }
 
     func testFuncWithNestedInitNotTreatedAsLifecycle() {
@@ -3514,7 +3514,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
 
         testFormatting(
             for: input, output,
-            rule: .organizeDeclarations, exclude: [.wrapSingleLineBodies]
+            rule: .organizeDeclarations, exclude: [.wrapPropertyBodies]
         )
     }
 
@@ -3886,7 +3886,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
         """
 
         let options = FormatOptions(indent: "  ")
-        testFormatting(for: input, rule: .organizeDeclarations, options: options, exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .wrapSingleLineBodies])
+        testFormatting(for: input, rule: .organizeDeclarations, options: options, exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .wrapFunctionBodies])
     }
 
     func testOrganizesProtocol() {
@@ -3915,7 +3915,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
         """
 
         let options = FormatOptions(organizeTypes: ["protocol"])
-        testFormatting(for: input, output, rule: .organizeDeclarations, options: options, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, output, rule: .organizeDeclarations, options: options)
     }
 
     func testOrganizesProtocolWithInit() {
@@ -4307,7 +4307,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
             for: input, output,
             rule: .organizeDeclarations,
             options: FormatOptions(organizeTypes: ["protocol"]),
-            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .wrapSingleLineBodies]
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
         )
     }
 

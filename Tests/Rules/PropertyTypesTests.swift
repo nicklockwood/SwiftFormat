@@ -359,7 +359,7 @@ final class PropertyTypesTests: XCTestCase {
         """
 
         let options = FormatOptions(propertyTypes: .inferred)
-        testFormatting(for: input, rule: .propertyTypes, options: options, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, rule: .propertyTypes, options: options, exclude: [.wrapFunctionBodies, .wrapPropertyBodies])
     }
 
     func testPreservesTypeWithSomeKeyword() {

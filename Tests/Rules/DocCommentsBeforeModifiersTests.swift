@@ -322,6 +322,6 @@ final class DocCommentsBeforeModifiersTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .docCommentsBeforeModifiers, exclude: [.wrapSingleLineBodies])
+        testFormatting(for: input, rule: .docCommentsBeforeModifiers)
     }
 }

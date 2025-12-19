@@ -53,6 +53,8 @@ public extension FormatRule {
                     elementEndIndex = formatter.endOfLine(at: elementEndIndex) - 1
                 }
 
+                guard elementEndIndex >= elementStartIndex else { return }
+
                 let tokens = Array(formatter.tokens[elementStartIndex ... elementEndIndex])
                 let typeName = tokens
                     .filter { !$0.isSpaceOrCommentOrLinebreak && !$0.isOperator }

@@ -1320,14 +1320,6 @@ struct _Descriptors {
         trueValues: ["ignore", "preserve"],
         falseValues: ["convert"]
     )
-    let convertOptionalForEach = OptionDescriptor(
-        argumentName: "optional-for-each",
-        displayName: "Optional forEach closures",
-        help: "Convert optional forEach calls to for loops:",
-        keyPath: \.convertOptionalForEach,
-        trueValues: ["convert"],
-        falseValues: ["ignore", "preserve"]
-    )
     let preserveDocComments = OptionDescriptor(
         argumentName: "doc-comments",
         displayName: "Doc comments",

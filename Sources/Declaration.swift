@@ -133,6 +133,11 @@ extension Declaration {
         return allModifiers
     }
 
+    /// Whether or not this declaration has the given modifier
+    func hasModifier(_ modifier: String) -> Bool {
+        formatter.modifiersForDeclaration(at: keywordIndex, contains: modifier)
+    }
+
     /// Whether or not this declaration represents a stored instance property
     var isStoredInstanceProperty: Bool {
         // A static property is not an instance property
@@ -336,6 +341,17 @@ extension TypeDeclaration {
     /// The list of conformances of this type, not including any constraints following a `where` clause.
     var conformances: [(conformance: TypeName, index: Int)] {
         formatter.parseConformancesOfType(atKeywordIndex: keywordIndex)
+    }
+
+    /// The generic parameters of this type, e.g. between angle brackets `Foo<Bar, Baaz>`.
+    var genericParameters: (types: [Formatter.GenericType], range: ClosedRange<Int>)? {
+        guard let identifierIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: keywordIndex),
+              tokens[identifierIndex].isIdentifier,
+              let openAngleBracketIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: identifierIndex),
+              tokens[openAngleBracketIndex] == .startOfScope("<")
+        else { return nil }
+
+        return formatter.parseGenericTypes(from: openAngleBracketIndex)
     }
 }
 

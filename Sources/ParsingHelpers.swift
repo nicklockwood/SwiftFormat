@@ -447,7 +447,17 @@ extension Formatter {
                     return false
                 }
 
-                if contains(prevIndex, token.string) {
+                // Modifiers can be fully-qualified types like `@ArrayBuilder<String>`, or macros like `@Foo(.bar)`.
+                // Use the full modifier name instead of just the first token.
+                var modifierRange = prevIndex ... prevIndex
+                if let nextIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: prevIndex),
+                   tokens[nextIndex] == .startOfScope("<") || tokens[nextIndex] == .startOfScope("("),
+                   let endOfScope = endOfScope(at: nextIndex)
+                {
+                    modifierRange = prevIndex ... endOfScope
+                }
+
+                if contains(prevIndex, tokens[modifierRange].string) {
                     return true
                 }
             case .endOfScope(")"):
@@ -487,9 +497,11 @@ extension Formatter {
     }
 
     /// Returns true if the modifiers list for the given declaration contain the
-    /// specified modifier
-    func modifiersForDeclaration(at index: Int, contains: String) -> Bool {
-        modifiersForDeclaration(at: index, contains: { $1 == contains })
+    /// specified modifier, ignoring any arguments that the modifier may have.
+    func modifiersForDeclaration(at index: Int, contains expectedModifier: String) -> Bool {
+        modifiersForDeclaration(at: index, contains: { firstIndex, fullModifier in
+            tokens[firstIndex].string == expectedModifier || fullModifier == expectedModifier
+        })
     }
 
     /// Returns the index of the specified modifier for a given declaration, or
@@ -3176,6 +3188,9 @@ extension Formatter {
 
         /// The type of the argument
         var type: TypeName
+
+        /// Any attributes present before the argument, like `@ViewBuilder content: Content`
+        var attributes: [String]
     }
 
     /// Parses the function or function-like declaration (`func`, `subscript`, `init`) at the given keyword index
@@ -3300,19 +3315,31 @@ extension Formatter {
 
             // If there is only one label, the param has the same internal and external label.
             // If there are two labels, the first one is the external label.
+            // We need to exclude attributes from being treated as labels
             guard let internalLabelIndex = index(of: .nonSpaceOrComment, before: colonIndex),
-                  tokens[internalLabelIndex].isIdentifier || tokens[internalLabelIndex].string == "_"
+                  tokens[internalLabelIndex].isIdentifier || tokens[internalLabelIndex].string == "_",
+                  !tokens[internalLabelIndex].isAttribute
             else { continue }
 
             var externalLabelIndex = internalLabelIndex
             var hasExplicitExternalLabel = false
 
             if let possibleExternalLabelIndex = index(of: .nonSpaceOrComment, before: internalLabelIndex),
-               tokens[possibleExternalLabelIndex].isIdentifier || tokens[possibleExternalLabelIndex].string == "_"
+               tokens[possibleExternalLabelIndex].isIdentifier || tokens[possibleExternalLabelIndex].string == "_",
+               !tokens[possibleExternalLabelIndex].isAttribute
             {
                 externalLabelIndex = possibleExternalLabelIndex
                 hasExplicitExternalLabel = true
             }
+
+            // Collect any attributes before the external label, like `@ViewBuilder`.
+            var attributes = [String]()
+            _ = modifiersForDeclaration(at: externalLabelIndex, contains: { _, modifier in
+                if modifier.isAttribute {
+                    attributes.append(modifier)
+                }
+                return false
+            })
 
             guard let startOfType = index(of: .nonSpaceOrComment, after: colonIndex),
                   let type = parseType(at: startOfType)
@@ -3331,7 +3358,8 @@ extension Formatter {
                 internalLabel: identifierString(tokens[internalLabelIndex]),
                 externalLabelIndex: hasExplicitExternalLabel ? externalLabelIndex : nil,
                 internalLabelIndex: internalLabelIndex,
-                type: type
+                type: type,
+                attributes: attributes
             ))
         }
 

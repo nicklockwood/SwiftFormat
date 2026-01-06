@@ -77,7 +77,7 @@ public extension FormatRule {
                     guard accessLevel == .private || accessLevel == .fileprivate else { return minVisibility }
 
                     // @Environment properties are NOT part of memberwise init
-                    if childDeclaration.modifiers.contains("@Environment") {
+                    if childDeclaration.hasModifier("@Environment") {
                         return minVisibility
                     }
 
@@ -136,13 +136,22 @@ public extension FormatRule {
                 else { continue }
 
                 // Check if parameters match stored properties exactly
-                let parameters = functionDecl.arguments.compactMap { arg -> (name: String, type: TypeName, externalLabel: String?, hasDefaultValue: Bool)? in
+                let parameters = functionDecl.arguments.compactMap { arg -> Formatter.InitParameter? in
                     guard let name = arg.internalLabel else { return nil }
 
                     // Check for default value by looking for '=' after the type
                     let hasDefaultValue = formatter.checkForDefaultValue(arg: arg)
 
-                    return (name: name, type: arg.type, externalLabel: arg.externalLabel, hasDefaultValue: hasDefaultValue)
+                    // Check if the property has a result builder attribute
+                    let resultBuilderAttribute = arg.attributes.first(where: { $0.contains("Builder") })
+
+                    return Formatter.InitParameter(
+                        name: name,
+                        type: arg.type,
+                        externalLabel: arg.externalLabel,
+                        hasDefaultValue: hasDefaultValue,
+                        resultBuilderAttribute: resultBuilderAttribute
+                    )
                 }
 
                 // Don't remove if init has more arguments than we can process
@@ -160,6 +169,16 @@ public extension FormatRule {
                     param.externalLabel == nil || (param.externalLabel != nil && param.externalLabel != param.name)
                 }) else { continue }
 
+                // Before Swift 6.4 there's a bug where synthesized inits with result builder attributes
+                // in _non-generic structs_ behave incorrectly and can crash at runtime:
+                // https://github.com/swiftlang/swift/pull/86272
+                // Only apply this change to generic structs before Swift 6.4.
+                if formatter.options.swiftVersion < "6.4",
+                   parameters.contains(where: { $0.resultBuilderAttribute != nil })
+                {
+                    guard structDeclaration.genericParameters != nil else { continue }
+                }
+
                 // Only consider properties that don't have default values for memberwise init comparison
                 // Properties with default values are optional in memberwise init
                 let propertiesWithoutDefaults = storedProperties.filter { prop in
@@ -168,7 +187,7 @@ public extension FormatRule {
                 }
 
                 guard parameters.count == propertiesWithoutDefaults.count,
-                      zip(parameters, propertiesWithoutDefaults).allSatisfy({ $0.name == $1.name && $0.type == $1.type })
+                      zip(parameters, propertiesWithoutDefaults).allSatisfy({ formatter.parameterMatchesProperty($0, property: $1) })
                 else { continue }
 
                 // Check if body only contains memberwise assignments
@@ -186,6 +205,9 @@ public extension FormatRule {
                         break
                     }
                 }
+
+                // Track which parameters are assigned via closure invocation (need result builder on property)
+                var closureInvocationAssignments = Set<String>()
 
                 if isRedundant {
                     while let nextToken = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: bodyIndex - 1),
@@ -211,8 +233,20 @@ public extension FormatRule {
                                 break
                             }
 
+                            // Check if this is a closure invocation: `self.prop = param()`
+                            var nextAfterValue = valueIndex + 1
+                            if let parenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: valueIndex),
+                               formatter.tokens[parenIndex] == .startOfScope("("),
+                               let endParen = formatter.endOfScope(at: parenIndex),
+                               formatter.index(of: .nonSpaceOrCommentOrLinebreak, in: parenIndex + 1 ..< endParen) == nil
+                            {
+                                // This is `param()` - a closure invocation with no arguments
+                                closureInvocationAssignments.insert(propToken.string)
+                                nextAfterValue = endParen + 1
+                            }
+
                             assignmentCount += 1
-                            bodyIndex = valueIndex + 1
+                            bodyIndex = nextAfterValue
                         } else {
                             isRedundant = false
                             break
@@ -222,9 +256,21 @@ public extension FormatRule {
 
                 // Remove redundant init if all assignments match (only for properties without defaults)
                 if isRedundant, assignmentCount == propertiesWithoutDefaults.count {
+                    // Add result builder attribute to properties that need them
+                    for property in propertiesWithoutDefaults {
+                        guard closureInvocationAssignments.contains(property.name),
+                              let attribute = parameters.first(where: { $0.name == property.name })?.resultBuilderAttribute
+                        else { continue }
+
+                        let insertIndex = property.declaration.startOfModifiersIndex(includingAttributes: true)
+                        formatter.insert(tokenize(attribute) + [.space(" ")], at: insertIndex)
+                    }
+
+                    // Re-calculate the removal range after potential insertions
                     // Use the declaration's range which includes leading comments
                     let startRemovalIndex = initDeclaration.range.lowerBound
-                    let endRemovalIndex = bodyRange.upperBound
+                    let updatedBodyRange = formatter.parseFunctionDeclaration(keywordIndex: initDeclaration.keywordIndex)?.bodyRange ?? bodyRange
+                    let endRemovalIndex = updatedBodyRange.upperBound
 
                     // Find the range including preceding whitespace, but be conservative about trailing
                     var actualStartIndex = startRemovalIndex
@@ -293,6 +339,21 @@ public extension FormatRule {
           }
         ```
 
+        ```diff
+          struct MyView<Content: View>: View {
+        +     @ViewBuilder let content: Content
+        -     let content: Content
+        -
+        -     init(@ViewBuilder content: () -> Content) {
+        -         self.content = content()
+        -     }
+
+              var body: some View {
+                  content
+              }
+          }
+        ```
+
         `--prefer-synthesized-init-for-internal-structs View,ViewModifier`:
 
         ```diff
@@ -322,6 +383,15 @@ extension Declaration {
 }
 
 extension Formatter {
+    /// A parsed init parameter with additional metadata
+    struct InitParameter {
+        let name: String
+        let type: TypeName
+        let externalLabel: String?
+        let hasDefaultValue: Bool
+        let resultBuilderAttribute: String?
+    }
+
     /// Helper function to check if a stored property has a default value
     func hasDefaultValue(propertyName: String, in structDeclaration: TypeDeclaration) -> Bool {
         for childDeclaration in structDeclaration.body {
@@ -388,5 +458,44 @@ extension Formatter {
             let structConformances = Set(structDeclaration.conformances.map(\.conformance.string))
             return requiredConformances.contains { structConformances.contains($0) }
         }
+    }
+
+    /// Collects all tokens for an attribute starting at the given index.
+    /// Handles generic attributes like @ArrayBuilder<String> by including the generic clause.
+    func collectAttributeTokens(startingAt index: Int) -> [Token] {
+        var result = [tokens[index]]
+        var currentIndex = index
+
+        // Check if there's a generic clause following the attribute
+        if let nextIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex),
+           tokens[nextIndex] == .startOfScope("<"),
+           let endOfGeneric = endOfScope(at: nextIndex)
+        {
+            // Include all tokens from attribute to end of generic clause
+            for i in (index + 1) ... endOfGeneric {
+                result.append(tokens[i])
+            }
+        }
+
+        return result
+    }
+
+    /// Checks if a parameter matches a property, accounting for result builder closure patterns
+    func parameterMatchesProperty(
+        _ param: InitParameter,
+        property: (name: String, type: TypeName, declaration: Declaration)
+    ) -> Bool {
+        // Names must match
+        guard param.name == property.name else { return false }
+
+        // If it's a result builder parameter with a closure type, check if the closure's return type matches the property type
+        if let resultBuilderAttribute = param.resultBuilderAttribute,
+           param.type.string == "() -> \(property.type.string)"
+        {
+            return true
+        }
+
+        // Otherwise, types must match exactly
+        return param.type == property.type
     }
 }

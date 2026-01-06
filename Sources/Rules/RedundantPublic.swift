@@ -50,7 +50,7 @@ public extension FormatRule {
                 return
             }
 
-            if declaration.modifiers.contains("@_spi") {
+            if declaration.hasModifier("@_spi") {
                 return
             }
 

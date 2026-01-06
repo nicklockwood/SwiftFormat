@@ -262,10 +262,10 @@ extension Declaration {
         }
     }
 
+    /// The SwiftUI property wrapper type attached to this declaration, if present.
+    /// Only returns the base attribute name, e.g. `@Environment`, not `@Environment(\.type)`
     var swiftUIPropertyWrapper: String? {
-        modifiers.first { modifier in
-            swiftUIPropertyWrappers.contains(modifier)
-        }
+        swiftUIPropertyWrappers.first(where: { hasModifier($0) })
     }
 
     /// Represents all the native SwiftUI property wrappers that conform to `DynamicProperty` and cause a SwiftUI view to re-render.

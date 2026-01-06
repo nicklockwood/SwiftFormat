@@ -1761,9 +1761,6 @@ final class RedundantMemberwiseInitTests: XCTestCase {
     }
 
     func testRemovePrivateACLWithOrganizeDeclarations() {
-        // When preferSynthesizedInitForInternalStructs removes private from a property,
-        // organizeDeclarations should move it from the private section to the internal section.
-        // @Environment properties stay private (attribute prevents ACL removal).
         let input = """
         struct ProfileView: View {
             // MARK: Lifecycle
@@ -1949,5 +1946,332 @@ final class RedundantMemberwiseInitTests: XCTestCase {
         """
         let options = FormatOptions(preferSynthesizedInitForInternalStructs: .conformances(["View", "ViewModifier"]))
         testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options)
+    }
+
+    // MARK: - @ViewBuilder closure parameter handling
+
+    func testRemoveInitWithViewBuilderClosureParameter() {
+        let input = """
+        struct MyView<Content: View>: View {
+            let content: Content
+
+            init(@ViewBuilder content: () -> Content) {
+                self.content = content()
+            }
+
+            var body: some View {
+                content
+            }
+        }
+        """
+        let output = """
+        struct MyView<Content: View>: View {
+            @ViewBuilder let content: Content
+
+            var body: some View {
+                content
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "6.4")
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options)
+    }
+
+    func testRemoveInitWithViewBuilderAndRegularParameters() {
+        let input = """
+        struct MyView<Content: View>: View {
+            let title: String
+            let content: Content
+
+            init(title: String, @ViewBuilder content: () -> Content) {
+                self.title = title
+                self.content = content()
+            }
+
+            var body: some View {
+                VStack {
+                    Text(title)
+                    content
+                }
+            }
+        }
+        """
+        let output = """
+        struct MyView<Content: View>: View {
+            let title: String
+            @ViewBuilder let content: Content
+
+            var body: some View {
+                VStack {
+                    Text(title)
+                    content
+                }
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "6.4")
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options)
+    }
+
+    func testRemoveInitWithPrivateViewBuilderProperty() {
+        // When preferSynthesizedInitForInternalStructs is .always, private ACL is removed
+        // so the synthesized init can have internal access
+        let input = """
+        struct MyView<Content: View>: View {
+            private let content: Content
+
+            init(@ViewBuilder content: () -> Content) {
+                self.content = content()
+            }
+
+            var body: some View {
+                content
+            }
+        }
+        """
+        let output = """
+        struct MyView<Content: View>: View {
+            @ViewBuilder let content: Content
+
+            var body: some View {
+                content
+            }
+        }
+        """
+        let options = FormatOptions(preferSynthesizedInitForInternalStructs: .always, swiftVersion: "6.4")
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options)
+    }
+
+    func testDontRemoveInitWithPrivateViewBuilderPropertyWithoutOption() {
+        // Without preferSynthesizedInitForInternalStructs, we can't remove private ACL
+        // so the synthesized init would be private, not matching the internal init
+        let input = """
+        struct MyView<Content: View>: View {
+            private let content: Content
+
+            init(@ViewBuilder content: () -> Content) {
+                self.content = content()
+            }
+
+            var body: some View {
+                content
+            }
+        }
+        """
+        // No options set, so init should be preserved
+        testFormatting(for: input, rule: .redundantMemberwiseInit)
+    }
+
+    func testDontRemoveInitWithViewBuilderButNoClosureInvocation() {
+        // If the init doesn't call the closure, don't remove it
+        let input = """
+        struct MyView<Content: View>: View {
+            let content: () -> Content
+
+            init(@ViewBuilder content: @escaping () -> Content) {
+                self.content = content
+            }
+
+            var body: some View {
+                content()
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit)
+    }
+
+    func testDontRemoveInitWithNonEmptyClosureParameter() {
+        // Closures with parameters like (Int) -> Content are not handled
+        let input = """
+        struct MyView<Content: View>: View {
+            let content: Content
+
+            init(@ViewBuilder content: (Int) -> Content) {
+                self.content = content(0)
+            }
+
+            var body: some View {
+                content
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit)
+    }
+
+    func testDontRemoveInitWithViewBuilderWhenParameterOrderDiffers() {
+        // The synthesized init uses property declaration order, not init parameter order
+        // So we can't remove an init where the order differs
+        let input = """
+        struct MyView<Content: View>: View {
+            let title: String
+            let content: Content
+
+            init(@ViewBuilder content: () -> Content, title: String) {
+                self.content = content()
+                self.title = title
+            }
+
+            var body: some View {
+                Text(title)
+                content
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantMemberwiseInit)
+    }
+
+    func testRemoveInitWithMultipleViewBuilderParameters() {
+        let input = """
+        struct TwoColumnView<Left: View, Right: View>: View {
+            let left: Left
+            let right: Right
+
+            init(@ViewBuilder left: () -> Left, @ViewBuilder right: () -> Right) {
+                self.left = left()
+                self.right = right()
+            }
+
+            var body: some View {
+                HStack {
+                    left
+                    right
+                }
+            }
+        }
+        """
+        let output = """
+        struct TwoColumnView<Left: View, Right: View>: View {
+            @ViewBuilder let left: Left
+            @ViewBuilder let right: Right
+
+            var body: some View {
+                HStack {
+                    left
+                    right
+                }
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "6.4")
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options)
+    }
+
+    func testRemoveInitWithCustomResultBuilder() {
+        let input = """
+        struct MyContainer<Content>: View {
+            let content: Content
+
+            init(@CustomBuilder content: () -> Content) {
+                self.content = content()
+            }
+
+            var body: some View {
+                // ...
+            }
+        }
+        """
+        let output = """
+        struct MyContainer<Content>: View {
+            @CustomBuilder let content: Content
+
+            var body: some View {
+                // ...
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "6.4")
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options, exclude: [.docComments])
+    }
+
+    func testViewBuilderInitWithOrganizeDeclarationsPreservesPropertyOrder() {
+        // When redundantMemberwiseInit removes an init with @ViewBuilder parameters,
+        // the property order must be preserved so the synthesized init has the same API.
+        // organizeDeclarations runs after redundantMemberwiseInit and should not reorder.
+        let input = """
+        struct Footer<ActionBar: View>: View {
+            init(
+                @ViewBuilder actionBar: () -> ActionBar,
+                disclaimerText: String?,
+                handler: Handler
+            ) {
+                self.actionBar = actionBar()
+                self.disclaimerText = disclaimerText
+                self.handler = handler
+            }
+
+            var body: some View {
+                Text("test")
+            }
+
+            @Environment(\\.sizeClass) private var sizeClass
+
+            private let actionBar: ActionBar
+            private let disclaimerText: String?
+            private let handler: Handler
+        }
+        """
+        let output = """
+        struct Footer<ActionBar: View>: View {
+            // MARK: Internal
+
+            @ViewBuilder let actionBar: ActionBar
+            let disclaimerText: String?
+            let handler: Handler
+
+            var body: some View {
+                Text("test")
+            }
+
+            // MARK: Private
+
+            @Environment(\\.sizeClass) private var sizeClass
+        }
+        """
+        let options = FormatOptions(
+            markCategories: true,
+            preferSynthesizedInitForInternalStructs: .conformances(["View"]),
+            swiftVersion: "6.4"
+        )
+        testFormatting(
+            for: input,
+            [output],
+            rules: [.redundantMemberwiseInit, .organizeDeclarations, .blankLinesAtStartOfScope, .blankLinesAtEndOfScope],
+            options: options
+        )
+    }
+
+    func testRemoveInitWithGenericResultBuilder() {
+        let input = """
+        struct ItemList {
+            let items: [String]
+
+            init(@ArrayBuilder<String> items: () -> [String]) {
+                self.items = items()
+            }
+        }
+        """
+        let output = """
+        struct ItemList {
+            @ArrayBuilder<String> let items: [String]
+        }
+        """
+        let options = FormatOptions(swiftVersion: "6.4")
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options)
+    }
+
+    func testDoesntApplySynythesizedInitWithResultBuilderInNonGenericTypeSwift6_2() {
+        // Result builder properties aren't supported properly in non-generic types before Swift 6.4:
+        // https://github.com/swiftlang/swift/pull/86272
+        let input = """
+        struct ItemList {
+            let items: [String]
+
+            init(@ArrayBuilder<String> items: () -> [String]) {
+                self.items = items()
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "6.2")
+        testFormatting(for: input, rule: .redundantMemberwiseInit, options: options)
     }
 }

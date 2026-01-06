@@ -1989,11 +1989,11 @@ public func tokenize(_ source: String) -> [Token] {
                    let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: count - 1),
                    tokens[prevIndex].isIdentifierOrKeyword
                 {
-                    if case let .keyword(name) = tokens[prevIndex] {
+                    if case let .keyword(name) = tokens[prevIndex], !name.isAttribute {
                         tokens[prevIndex] = .identifier(name)
                     }
                     if let prevPrevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex),
-                       case let .keyword(name) = tokens[prevPrevIndex]
+                       case let .keyword(name) = tokens[prevPrevIndex], !name.isAttribute
                     {
                         tokens[prevPrevIndex] = .identifier(name)
                     }

@@ -2585,6 +2585,21 @@ Option | Description
   }
 ```
 
+```diff
+  struct MyView<Content: View>: View {
++     @ViewBuilder let content: Content
+-     let content: Content
+-
+-     init(@ViewBuilder content: () -> Content) {
+-         self.content = content()
+-     }
+
+      var body: some View {
+          content
+      }
+  }
+```
+
 `--prefer-synthesized-init-for-internal-structs View,ViewModifier`:
 
 ```diff

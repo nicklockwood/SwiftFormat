@@ -312,7 +312,7 @@ extension Formatter {
 
         // @Environment properties are not part of the synthesized memberwise init
         // because they get their value from the SwiftUI environment.
-        if declaration.modifiers.contains("@Environment") {
+        if declaration.hasModifier("@Environment") {
             return false
         }
 

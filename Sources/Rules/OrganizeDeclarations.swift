@@ -306,21 +306,29 @@ extension Formatter {
     }
 
     /// Whether or not this declaration is an instance property that can affect
-    /// the parameters struct's synthesized memberwise initializer
-    func affectsSynthesizedMemberwiseInitializer(_ declaration: Declaration) -> Bool {
+    /// the the ordering of parameters in the struct's synthesized memberwise initializer
+    func affectsSynthesizedMemberwiseInitializerParameterOrdering(_ declaration: Declaration) -> Bool {
         guard declaration.isStoredInstanceProperty else { return false }
 
-        // @Environment properties are not part of the synthesized memberwise init
-        // because they get their value from the SwiftUI environment.
-        if declaration.hasModifier("@Environment") {
-            return false
-        }
+        lazy var hasDefaultValue = {
+            // The SwiftUI `@Environment` modifier always provides a default value
+            if declaration.hasModifier("@Environment") {
+                return true
+            }
+
+            return declaration.parsePropertyDeclaration()?.value != nil
+        }()
 
         // `let` properties with default values are not part of the memberwise init.
         // `var` properties with default values ARE part of it (as optional params).
-        if declaration.keyword == "let",
-           let property = declaration.parsePropertyDeclaration(),
-           property.value != nil
+        if declaration.keyword == "let", hasDefaultValue {
+            return false
+        }
+
+        // Private property wrappers with a default value are excluded from the memberwise initializer
+        if declaration.swiftUIPropertyWrapper != nil,
+           [.private, .fileprivate].contains(declaration.visibility()),
+           hasDefaultValue
         {
             return false
         }
@@ -335,11 +343,11 @@ extension Formatter {
         _ rhs: [CategorizedDeclaration]
     ) -> Bool {
         let lhsPropertiesOrder = lhs
-            .filter { affectsSynthesizedMemberwiseInitializer($0.declaration) }
+            .filter { affectsSynthesizedMemberwiseInitializerParameterOrdering($0.declaration) }
             .map(\.declaration)
 
         let rhsPropertiesOrder = rhs
-            .filter { affectsSynthesizedMemberwiseInitializer($0.declaration) }
+            .filter { affectsSynthesizedMemberwiseInitializerParameterOrdering($0.declaration) }
             .map(\.declaration)
 
         return lhsPropertiesOrder.elementsEqual(rhsPropertiesOrder, by: { lhs, rhs in

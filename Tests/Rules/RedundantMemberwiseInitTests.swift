@@ -1546,6 +1546,8 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             private let id: String
             private var name: String
             private let value: Int
+            private var variableWithDefault = false
+            private let constantWithDefault = true
         }
         """
         let output = """
@@ -1553,6 +1555,8 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             let id: String
             var name: String
             let value: Int
+            var variableWithDefault = false
+            private let constantWithDefault = true
         }
         """
         let options = FormatOptions(preferSynthesizedInitForInternalStructs: .always)
@@ -1799,10 +1803,9 @@ final class RedundantMemberwiseInitTests: XCTestCase {
         testFormatting(for: input, [output], rules: [.redundantMemberwiseInit, .organizeDeclarations, .blankLinesAtEndOfScope, .blankLinesAtStartOfScope], options: options, exclude: [.wrapPropertyBodies])
     }
 
-    func testPreserveInitWhenPrivateVarWithDefaultValueAndOptionEnabled() {
-        // Even with preferSynthesizedInitForInternalStructs enabled, we can't remove
-        // the init if there's a private var with default value that we won't modify
-        // (because the synthesized init would still be private)
+    func testRemoveInitAndPrivateACLWhenPrivateVarWithDefaultValueAndOptionEnabled() {
+        // With preferSynthesizedInitForInternalStructs enabled, we CAN remove the init
+        // if there's a private var with default value, and we'll also remove its private ACL
         let input = """
         struct Foo {
             init(foo: String) {
@@ -1813,8 +1816,14 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             private var bar = "default"
         }
         """
+        let output = """
+        struct Foo {
+            let foo: String
+            var bar = "default"
+        }
+        """
         let options = FormatOptions(preferSynthesizedInitForInternalStructs: .always)
-        testFormatting(for: input, rule: .redundantMemberwiseInit, options: options)
+        testFormatting(for: input, output, rule: .redundantMemberwiseInit, options: options)
     }
 
     func testRemoveInitWhenPrivateLetWithDefaultValueAndOptionEnabled() {

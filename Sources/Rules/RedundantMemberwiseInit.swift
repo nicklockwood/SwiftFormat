@@ -65,9 +65,7 @@ public extension FormatRule {
 
                 // Compute what visibility the synthesized init would have after any modifications.
                 // The synthesized init has the minimum visibility of all stored properties in the memberwise init.
-                // We can only remove private ACL from properties that:
-                // - Don't have attributes (like @State)
-                // - Don't have default values (we only modify properties without defaults)
+                // We can only remove private ACL from properties that don't have SwiftUI attributes (like @State).
                 let synthesizedInitVisibility: Visibility = structDeclaration.body.reduce(.internal) { minVisibility, childDeclaration in
                     guard ["var", "let"].contains(childDeclaration.keyword),
                           childDeclaration.isStoredInstanceProperty
@@ -96,11 +94,6 @@ public extension FormatRule {
 
                     // Private property with SwiftUI property wrapper (and no default) - we won't modify it
                     if childDeclaration.swiftUIPropertyWrapper != nil, !hasDefaultValue {
-                        return min(minVisibility, accessLevel)
-                    }
-
-                    // Private `var` with default value - we won't modify it
-                    if childDeclaration.keyword == "var", hasDefaultValue {
                         return min(minVisibility, accessLevel)
                     }
 
@@ -266,7 +259,35 @@ public extension FormatRule {
                         formatter.insert(tokenize(attribute) + [.space(" ")], at: insertIndex)
                     }
 
-                    // Re-calculate the removal range after potential insertions
+                    // Remove private access control from eligible properties
+                    // (only when option is enabled and synthesized init would be internal)
+                    if shouldRemovePrivateACL, synthesizedInitVisibility == .internal {
+                        for childDeclaration in structDeclaration.body {
+                            guard ["var", "let"].contains(childDeclaration.keyword),
+                                  childDeclaration.isStoredInstanceProperty
+                            else { continue }
+
+                            // Don't remove private from properties with SwiftUI property wrappers (like @State)
+                            guard childDeclaration.swiftUIPropertyWrapper == nil else { continue }
+
+                            // Don't remove private from `let` properties with default values
+                            // (they're not in the memberwise init)
+                            if childDeclaration.keyword == "let" {
+                                let prop = formatter.parsePropertyDeclaration(atIntroducerIndex: childDeclaration.keywordIndex)
+                                if prop?.value != nil {
+                                    continue
+                                }
+                            }
+
+                            if childDeclaration.visibility() == .private {
+                                childDeclaration.removeVisibility(.private)
+                            } else if childDeclaration.visibility() == .fileprivate {
+                                childDeclaration.removeVisibility(.fileprivate)
+                            }
+                        }
+                    }
+
+                    // Re-calculate the removal range after potential insertions and ACL removals
                     // Use the declaration's range which includes leading comments
                     let startRemovalIndex = initDeclaration.range.lowerBound
                     let updatedBodyRange = formatter.parseFunctionDeclaration(keywordIndex: initDeclaration.keywordIndex)?.bodyRange ?? bodyRange
@@ -306,22 +327,6 @@ public extension FormatRule {
 
                     // Remove the init
                     formatter.removeTokens(in: actualStartIndex ... actualEndIndex)
-
-                    // Remove private access control from eligible properties
-                    // (only when option is enabled and synthesized init would be internal)
-                    if shouldRemovePrivateACL, synthesizedInitVisibility == .internal {
-                        for property in propertiesWithoutDefaults {
-                            let propertyDecl = property.declaration
-                            // Don't remove private from properties with SwiftUI property wrappers (like @State)
-                            guard propertyDecl.swiftUIPropertyWrapper == nil else { continue }
-
-                            if propertyDecl.visibility() == .private {
-                                propertyDecl.removeVisibility(.private)
-                            } else if propertyDecl.visibility() == .fileprivate {
-                                propertyDecl.removeVisibility(.fileprivate)
-                            }
-                        }
-                    }
                 }
             }
         }

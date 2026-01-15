@@ -1781,6 +1781,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             // MARK: Private
 
             @Environment(\\.colorScheme) private var colorScheme
+            @State private var foo = "default"
             private let user: User
             private let settings: Settings
         }
@@ -1797,6 +1798,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             // MARK: Private
 
             @Environment(\\.colorScheme) private var colorScheme
+            @State private var foo = "default"
         }
         """
         let options = FormatOptions(preferSynthesizedInitForInternalStructs: .always)

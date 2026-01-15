@@ -62,7 +62,7 @@ final class XMLReporter: Reporter {
 
 private extension XMLReporter {
     func escapeXML(_ string: String) -> String {
-        return string
+        string
             .replacingOccurrences(of: "&", with: "&amp;")
             .replacingOccurrences(of: "<", with: "&lt;")
             .replacingOccurrences(of: ">", with: "&gt;")

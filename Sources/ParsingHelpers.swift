@@ -3156,7 +3156,7 @@ extension Formatter {
         /// The range of the `where` clause if present
         let whereClauseRange: ClosedRange<Int>?
         /// The range of the function body (`{ ... }`) if present.
-        /// A protocol method requirement doesn't have a body.
+        /// A protocol method requirement, or a function with a `@_silgen` attribute, doesn't have a body.
         let bodyRange: ClosedRange<Int>?
 
         /// The full range of this declaration

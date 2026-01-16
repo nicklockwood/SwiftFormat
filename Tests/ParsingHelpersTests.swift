@@ -1180,6 +1180,9 @@ final class ParsingHelpersTests: XCTestCase {
             private(set)
             var instanceVar = "test" // trailing comment
 
+            @_silgen_name("__MARKER_functionWithNoBody")
+            func functionWithNoBody(_ x: String) -> Int?
+
             @objc
             private var computed: String {
                 get {
@@ -1304,6 +1307,9 @@ final class ParsingHelpersTests: XCTestCase {
                 private(set)
                 var instanceVar = "test" // trailing comment
 
+                @_silgen_name("__MARKER_functionWithNoBody")
+                func functionWithNoBody(_ x: String) -> Int?
+
                 @objc
                 private var computed: String {
                     get {
@@ -1363,6 +1369,16 @@ final class ParsingHelpersTests: XCTestCase {
 
         XCTAssertEqual(
             declarations[7].body?[2].tokens.string,
+            """
+                @_silgen_name(\"__MARKER_functionWithNoBody\")
+                func functionWithNoBody(_ x: String) -> Int?
+
+
+            """
+        )
+
+        XCTAssertEqual(
+            declarations[7].body?[3].tokens.string,
             """
                 @objc
                 private var computed: String {

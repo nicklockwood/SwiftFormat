@@ -2973,6 +2973,35 @@ final class RedundantSelfTests: XCTestCase {
         testFormatting(for: input, rule: .redundantSelf, options: options)
     }
 
+    func testFunctionWithNoBodyFollowedByStaticFunction() {
+        let input = """
+        struct Foo {
+            let foo: String
+
+            @_silgen_name("__MARKER_doIt")
+            func doIt(_ x: String) -> Int?
+
+            static func bar() {
+                print(self.foo)
+            }
+        }
+        """
+
+        let output = """
+        struct Foo {
+            let foo: String
+
+            @_silgen_name("__MARKER_doIt")
+            func doIt(_ x: String) -> Int?
+
+            static func bar() {
+                print(foo)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantSelf)
+    }
+
     func testNoInsertSelfBeforeSet() {
         let input = """
         class Foo {

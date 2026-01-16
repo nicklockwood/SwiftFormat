@@ -642,4 +642,43 @@ final class DocCommentsTests: XCTestCase {
 
         testFormatting(for: input, rule: .docComments)
     }
+
+    func testPreserveDocCommentContinuousWithMarkComment() {
+        let input = """
+        // MARK: - PlaceholderFlowOrigin
+        /// Placeholder text describing a sample flow origin.
+        public enum PlaceholderFlowOrigin {
+            case standard(ScreenAuthenticationType)
+            case premium(sampleType: ScreenAuthenticationType?)
+        }
+        """
+
+        testFormatting(for: input, rule: .docComments, exclude: [.blankLinesAroundMark])
+    }
+
+    func testPreserveDocCommentAfterSwiftFormatDirective() {
+        let input = """
+        // swiftformat:enable docComments
+        /// Placeholder text describing a sample flow origin.
+        public enum PlaceholderFlowOrigin {
+            case standard(ScreenAuthenticationType)
+            case premium(sampleType: ScreenAuthenticationType?)
+        }
+        """
+
+        testFormatting(for: input, rule: .docComments)
+    }
+
+    func testPreserveDocCommentBeforeSwiftFormatDirective() {
+        let input = """
+        /// Placeholder text describing a sample flow origin.
+        // swiftformat:enable:next docComments
+        public enum PlaceholderFlowOrigin {
+            case standard(ScreenAuthenticationType)
+            case premium(sampleType: ScreenAuthenticationType?)
+        }
+        """
+
+        testFormatting(for: input, rule: .docComments)
+    }
 }

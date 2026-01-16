@@ -2924,6 +2924,7 @@ extension Formatter {
                              usingDynamicLookup: Bool,
                              classOrStatic: Bool)
         {
+            let funcKeywordIndex = index
             let startToken = tokens[index]
             var localNames = localNames
             guard let startIndex = self.index(of: .startOfScope("("), after: index),
@@ -2952,23 +2953,38 @@ extension Formatter {
                 }
                 index = self.index(of: .delimiter(","), after: index) ?? endIndex
             }
-            guard let bodyStartIndex = self.index(after: endIndex, where: {
-                switch $0 {
-                case .startOfScope("{"): // What we're looking for
-                    return true
-                case .keyword("throws"),
-                     .keyword("rethrows"),
-                     .keyword("where"),
-                     .keyword("is"),
-                     .keyword("repeat"):
-                    return false // Keep looking
-                case .keyword where !$0.isAttribute:
-                    return true // Not valid between end of arguments and start of body
-                default:
-                    return false // Keep looking
+
+            let bodyStartIndex: Int
+            if let functionDeclaration = parseFunctionDeclaration(keywordIndex: funcKeywordIndex) {
+                guard let validBodyStartIndex = functionDeclaration.bodyRange?.lowerBound else {
+                    // Ensure we move the `redundantSelf` work index to the end of the function declaration
+                    index = functionDeclaration.range.upperBound
+                    return
                 }
-            }), tokens[bodyStartIndex] == .startOfScope("{") else {
-                return
+
+                bodyStartIndex = validBodyStartIndex
+            } else {
+                // If `parseFunctionDeclaration` fails due to some unsupported pattern, use a more permissive search.
+                guard let validBodyStartIndex = self.index(after: endIndex, where: {
+                    switch $0 {
+                    case .startOfScope("{"): // What we're looking for
+                        return true
+                    case .keyword("throws"),
+                         .keyword("rethrows"),
+                         .keyword("where"),
+                         .keyword("is"),
+                         .keyword("repeat"):
+                        return false // Keep looking
+                    case .keyword where !$0.isAttribute:
+                        return true // Not valid between end of arguments and start of body
+                    default:
+                        return false // Keep looking
+                    }
+                }), tokens[validBodyStartIndex] == .startOfScope("{") else {
+                    return
+                }
+
+                bodyStartIndex = validBodyStartIndex
             }
 
             // Functions defined inside closures with `[weak self]` captures can

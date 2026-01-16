@@ -744,7 +744,7 @@ You can create multiple configuration sections within a single `.swiftformat` fi
 --indent 2
 ```
 
-If you would prefer not to edit the configuration file by hand, you can use the [SwiftFormat for Xcode](#xcode-source-editor-extension) app to edit the configuration and export a configuration file. You can also use the swiftformat command-line-tool's `--inferoptions` command to generate a config file from your existing project, like this:
+If you would prefer not to edit the configuration file by hand, you can use the [SwiftFormat for Xcode](#xcode-source-editor-extension) app to edit the configuration and export a configuration file. You can also use the swiftformat command-line-tool's `--infer-options` command to generate a config file from your existing project, like this:
 
 ```bash
 $ cd /path/to/project

@@ -316,7 +316,20 @@ extension Formatter {
                 return true
             }
 
-            return declaration.parsePropertyDeclaration()?.value != nil
+            guard let property = declaration.parsePropertyDeclaration() else {
+                return false
+            }
+
+            if property.value != nil {
+                return true
+            }
+
+            // Optional properties default to `nil`
+            if property.type?.isOptionalType == true {
+                return true
+            }
+
+            return false
         }()
 
         // `let` properties with default values are not part of the memberwise init.

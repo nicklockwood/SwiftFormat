@@ -4429,11 +4429,12 @@ final class OrganizeDeclarationsTests: XCTestCase {
     }
 
     func testPrivateLetWithDefaultValueAllowsReordering() {
-        // private let with default value is NOT part of memberwise init,
-        // so it can be freely reordered (baz moves after bar)
+        // `private let` with default value, or `@State private var` with default value,
+        // is NOT part of memberwise init so it can be freely reordered (baz moves after bar)
         let input = """
         struct Foo {
             private let baz = Baz()
+            @State private var foo: Foo?
             let bar: Bar
         }
         """
@@ -4446,6 +4447,8 @@ final class OrganizeDeclarationsTests: XCTestCase {
             let bar: Bar
 
             // MARK: Private
+
+            @State private var foo: Foo?
 
             private let baz = Baz()
         }

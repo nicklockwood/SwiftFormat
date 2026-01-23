@@ -1904,18 +1904,44 @@ final class OrganizeDeclarationsTests: XCTestCase {
     func testDoesntBreakStructSynthesizedMemberwiseInitializer() {
         let input = """
         public struct Foo {
-            var bar: Int {
-                didSet {}
-            }
+            
+            let foo: Foo
+            @State var bar: Bar?
+            @ObservedObject var baaz: Baaz
+            public let quux: Quux
 
-            var baz: Int
-            public let quux: Int
+            public var content: some View {
+                foo
+            }
         }
 
-        Foo(bar: 1, baz: 2, quux: 3)
+        Foo(foo: 1, bar: 2, baaz: 3, quux: 4)
         """
 
-        testFormatting(for: input, rule: .organizeDeclarations)
+        let output = """
+        public struct Foo {
+
+            // MARK: Public
+
+            public var content: some View {
+                foo
+            }
+
+            // MARK: Internal
+
+            let foo: Foo
+
+            @State var bar: Bar?
+            @ObservedObject var baaz: Baaz
+
+            public let quux: Quux
+
+        }
+
+        Foo(foo: 1, bar: 2, baaz: 3, quux: 4)
+        """
+
+        testFormatting(for: input, [output], rules: [.organizeDeclarations, .consecutiveBlankLines], exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .privateStateVariables])
     }
 
     func testOrganizesStructPropertiesThatDontBreakMemberwiseInitializer() {

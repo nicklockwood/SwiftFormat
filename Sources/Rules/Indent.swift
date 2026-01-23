@@ -115,7 +115,14 @@ public extension FormatRule {
                         i += applyIndent(indent, at: formatter.startOfLine(at: i))
                         indent += formatter.options.indent
                     case .noIndent:
-                        i += applyIndent(indent, at: formatter.startOfLine(at: i))
+                        let currentIndent = formatter.currentIndentForLine(at: i)
+                        if currentIndent.count < indent.count {
+                            // Under-indented, fix it
+                            i += applyIndent(indent, at: formatter.startOfLine(at: i))
+                        } else {
+                            // At or above expected level (e.g., in method chain), keep it
+                            indent = currentIndent
+                        }
                     case .preserve:
                         indent = formatter.currentIndentForLine(at: i)
                     case .outdent:
@@ -226,12 +233,17 @@ public extension FormatRule {
                 }
                 let start = formatter.startOfLine(at: i)
                 switch formatter.options.ifdefIndent {
-                case .indent, .noIndent:
+                case .indent:
                     i += applyIndent(indent, at: start)
-                case .outdent:
-                    i += applyIndent("", at: start)
+                case .noIndent:
+                    let currentIndent = formatter.currentIndentForLine(at: i)
+                    if currentIndent.count < indent.count {
+                        i += applyIndent(indent, at: start)
+                    }
                 case .preserve:
                     break
+                case .outdent:
+                    i += applyIndent("", at: start)
                 }
             case .keyword("@unknown") where scopeStack.last != .startOfScope("#if"):
                 var indent = indentStack[indentStack.count - 2]
@@ -347,6 +359,16 @@ public extension FormatRule {
 
                     if token == .endOfScope("#endif"), formatter.options.ifdefIndent == .outdent {
                         i += applyIndent("", at: start)
+                    } else if token == .endOfScope("#endif"), formatter.options.ifdefIndent == .noIndent {
+                        var indent = indentStack.last ?? ""
+                        let stringIndent = stringBodyIndentStack.last!
+                        let expectedIndent = stringIndent + indent
+                        let currentIndent = formatter.currentIndentForLine(at: i)
+                        if currentIndent.count < expectedIndent.count {
+                            i += applyIndent(expectedIndent, at: start)
+                        }
+                    } else if token == .endOfScope("#endif"), formatter.options.ifdefIndent == .preserve {
+                        // Do nothing - preserve current position
                     } else {
                         var indent = indentStack.last ?? ""
                         if token.isSwitchCaseOrDefault,
@@ -367,12 +389,17 @@ public extension FormatRule {
                         popScope()
                     }
                     switch formatter.options.ifdefIndent {
-                    case .indent, .noIndent:
+                    case .indent:
                         i += applyIndent(indent, at: formatter.startOfLine(at: i))
-                    case .outdent:
-                        i += applyIndent("", at: formatter.startOfLine(at: i))
+                    case .noIndent:
+                        let currentIndent = formatter.currentIndentForLine(at: i)
+                        if currentIndent.count < indent.count {
+                            i += applyIndent(indent, at: formatter.startOfLine(at: i))
+                        }
                     case .preserve:
                         break
+                    case .outdent:
+                        i += applyIndent("", at: formatter.startOfLine(at: i))
                     }
                     if scopeStack.last == .startOfScope("#if") {
                         popScope()

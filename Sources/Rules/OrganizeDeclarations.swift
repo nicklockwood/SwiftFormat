@@ -209,22 +209,27 @@ extension Formatter {
             sortAlphabeticallyWithinSubcategories: sortAlphabeticallyWithinSubcategories
         )
 
-        // The compiler will synthesize a memberwise init for `struct`
-        // declarations that don't have an `init` declaration.
-        // We have to take care to not reorder any properties (but reordering functions etc is ok!)
-        if !sortAlphabeticallyWithinSubcategories, typeDeclaration.keyword == "struct",
-           !typeDeclaration.body.contains(where: { $0.keyword == "init" }),
-           !preservesSynthesizedMemberwiseInitializer(categorizedDeclarations, sortedDeclarations)
+        // The compiler will synthesize a memberwise init for `struct` declarations that don't have an `init` declaration.
+        // We have to ensure we preserve the relative order of declarations that appear in the synthesized init.
+        if typeDeclaration.keyword == "struct",
+           !sortAlphabeticallyWithinSubcategories,
+           !typeDeclaration.body.contains(where: { $0.keyword == "init" })
         {
-            // If sorting by category and by type could cause compilation failures
-            // by not correctly preserving the synthesized memberwise initializer,
-            // try to sort _only_ by category (so we can try to preserve the correct category separators)
-            sortedDeclarations = sortDeclarations(categorizedDeclarations, sortAlphabeticallyWithinSubcategories: false)
+            let requiredSubordering = categorizedDeclarations.filter { affectsSynthesizedMemberwiseInitializerParameterOrdering($0.declaration) }
 
-            // If sorting _only_ by category still changes the synthesized memberwise initializer,
-            // then there's nothing we can do to organize this struct.
-            if !preservesSynthesizedMemberwiseInitializer(categorizedDeclarations, sortedDeclarations) {
-                return nil
+            if !requiredSubordering.isEmpty {
+                for index in requiredSubordering.indices.dropFirst() {
+                    let declarationToReorder = requiredSubordering[index]
+                    let currentIndex = sortedDeclarations.firstIndex(where: { $0.declaration === declarationToReorder.declaration })!
+                    let requiredPreviousDeclaration = requiredSubordering[index - 1]
+                    let currentIndexOfPreviousDeclaration = sortedDeclarations.firstIndex(where: { $0.declaration === requiredPreviousDeclaration.declaration })!
+
+                    // If this declaration is ordered before the next required declaration, move it to be after it. This preserves the required ordering.
+                    if currentIndex < currentIndexOfPreviousDeclaration {
+                        sortedDeclarations.insert(declarationToReorder, at: currentIndexOfPreviousDeclaration + 1)
+                        sortedDeclarations.remove(at: currentIndex)
+                    }
+                }
             }
         }
 

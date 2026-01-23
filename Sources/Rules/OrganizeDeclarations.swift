@@ -324,8 +324,8 @@ extension Formatter {
                 return true
             }
 
-            // Optional properties default to `nil`
-            if property.type?.isOptionalType == true {
+            // Optional variables default to `nil`
+            if declaration.keyword == "var", property.type?.isOptionalType == true {
                 return true
             }
 
@@ -343,6 +343,12 @@ extension Formatter {
            [.private, .fileprivate].contains(declaration.visibility()),
            hasDefaultValue
         {
+            return false
+        }
+
+        // Assumption: in practice, any private property would only affect a private memberwise init,
+        // which is not very common or useful.
+        if declaration.visibility() == .private {
             return false
         }
 

@@ -3880,13 +3880,13 @@ final class IndentTests: XCTestCase {
                 Text("Hello, world!")
                 // Comment above
                 #if os(macOS)
-                    .padding()
+                .padding()
                 #endif
 
                 Text("Hello, world!")
                 #if os(macOS)
-                    // Comment inside
-                    .padding()
+                // Comment inside
+                .padding()
                 #endif
 
                 // swiftformat:options --ifdef outdent
@@ -4575,8 +4575,22 @@ final class IndentTests: XCTestCase {
             }
         }
         """
+        let output = """
+        class Bar {
+            func foo() {
+                Text("Hello")
+                #if os(iOS)
+                .font(.largeTitle)
+                #elseif os(macOS)
+                .font(.headline)
+                #else
+                .font(.headline)
+                #endif
+            }
+        }
+        """
         let options = FormatOptions(ifdefIndent: .noIndent)
-        testFormatting(for: input, rule: .indent, options: options)
+        testFormatting(for: input, output, rule: .indent, options: options)
     }
 
     func testIfDefPostfixMemberSyntaxNoIndenting2() {
@@ -4643,6 +4657,396 @@ final class IndentTests: XCTestCase {
         """
         let options = FormatOptions(ifdefIndent: .noIndent)
         testFormatting(for: input, rule: .indent, options: options)
+    }
+
+    // MARK: - noIndent spec scenarios
+
+    func testNoIndentBasicIfBlock() {
+        let input = """
+        func foo() {
+            #if DEBUG
+                print("debug")
+            #endif
+        }
+        """
+        let output = """
+        func foo() {
+            #if DEBUG
+            print("debug")
+            #endif
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        testFormatting(for: input, output, rule: .indent, options: options)
+    }
+
+    func testNoIndentIfElse() {
+        let input = """
+        func foo() {
+            #if DEBUG
+                print("debug")
+            #else
+                print("release")
+            #endif
+        }
+        """
+        let output = """
+        func foo() {
+            #if DEBUG
+            print("debug")
+            #else
+            print("release")
+            #endif
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        testFormatting(for: input, output, rule: .indent, options: options)
+    }
+
+    func testNoIndentIfElseIf() {
+        let input = """
+        func foo() {
+            #if os(iOS)
+                print("iOS")
+            #elseif os(macOS)
+                print("macOS")
+            #else
+                print("other")
+            #endif
+        }
+        """
+        let output = """
+        func foo() {
+            #if os(iOS)
+            print("iOS")
+            #elseif os(macOS)
+            print("macOS")
+            #else
+            print("other")
+            #endif
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        testFormatting(for: input, output, rule: .indent, options: options)
+    }
+
+    func testNoIndentMethodChainAfterClosingBrace() {
+        let input = """
+        var body: some View {
+            VStack {
+                Text("Hello")
+            }
+            #if os(iOS)
+                .padding()
+            #endif
+        }
+        """
+        let output = """
+        var body: some View {
+            VStack {
+                Text("Hello")
+            }
+            #if os(iOS)
+            .padding()
+            #endif
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        testFormatting(for: input, output, rule: .indent, options: options)
+    }
+
+    func testNoIndentMethodChainInlineWithModifiers() {
+        let input = """
+        var body: some View {
+            Text("Hello")
+                .font(.title)
+                #if os(iOS)
+                    .padding()
+                #endif
+        }
+        """
+        let output = """
+        var body: some View {
+            Text("Hello")
+                .font(.title)
+                #if os(iOS)
+                .padding()
+                #endif
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        testFormatting(for: input, output, rule: .indent, options: options)
+    }
+
+    func testNoIndentAlreadyCorrectLevel() {
+        let input = """
+        var body: some View {
+            Text("Hello")
+                .font(.title)
+                #if os(iOS)
+                .padding()
+                #endif
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        testFormatting(for: input, rule: .indent, options: options)
+    }
+
+    func testNoIndentUnderIndentedIfGetFixed() {
+        let input = """
+        func foo() {
+        #if DEBUG
+        print("debug")
+        #endif
+        }
+        """
+        let output = """
+        func foo() {
+            #if DEBUG
+            print("debug")
+            #endif
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        testFormatting(for: input, output, rule: .indent, options: options)
+    }
+
+    func testNoIndentSwitchCases() {
+        let input = """
+        switch value {
+        case .a:
+            break
+        #if DEBUG
+            case .b:
+                break
+        #endif
+        }
+        """
+        let output = """
+        switch value {
+        case .a:
+            break
+        #if DEBUG
+        case .b:
+            break
+        #endif
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        testFormatting(for: input, output, rule: .indent, options: options)
+    }
+
+    func testNoIndentNestedIfBlocks() {
+        let input = """
+        func foo() {
+            #if os(iOS)
+                #if DEBUG
+                    print("iOS debug")
+                #endif
+            #endif
+        }
+        """
+        let output = """
+        func foo() {
+            #if os(iOS)
+            #if DEBUG
+            print("iOS debug")
+            #endif
+            #endif
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        testFormatting(for: input, output, rule: .indent, options: options)
+    }
+
+    func testNoIndentMultipleStatements() {
+        let input = """
+        func foo() {
+            #if DEBUG
+                let x = 1
+                let y = 2
+                print(x + y)
+            #endif
+        }
+        """
+        let output = """
+        func foo() {
+            #if DEBUG
+            let x = 1
+            let y = 2
+            print(x + y)
+            #endif
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        testFormatting(for: input, output, rule: .indent, options: options)
+    }
+
+    func testNoIndentMethodChainMultipleModifiers() {
+        let input = """
+        var body: some View {
+            Text("Hello")
+                #if os(iOS)
+                    .font(.title)
+                    .foregroundColor(.blue)
+                    .padding()
+                #elseif os(macOS)
+                    .font(.headline)
+                    .padding(.all, 20)
+                #endif
+        }
+        """
+        let output = """
+        var body: some View {
+            Text("Hello")
+                #if os(iOS)
+                .font(.title)
+                .foregroundColor(.blue)
+                .padding()
+                #elseif os(macOS)
+                .font(.headline)
+                .padding(.all, 20)
+                #endif
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        testFormatting(for: input, output, rule: .indent, options: options)
+    }
+
+    func testNoIndentMethodChainContinuesAfterEndif() {
+        let input = """
+        var body: some View {
+            Text("Hello")
+                .font(.title)
+                #if os(iOS)
+                    .padding()
+                #endif
+                .background(Color.white)
+        }
+        """
+        let output = """
+        var body: some View {
+            Text("Hello")
+                .font(.title)
+                #if os(iOS)
+                .padding()
+                #endif
+                .background(Color.white)
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        testFormatting(for: input, output, rule: .indent, options: options)
+    }
+
+    func testNoIndentFileScope() {
+        let input = """
+        #if DEBUG
+            let debugMode = true
+        #else
+            let debugMode = false
+        #endif
+        """
+        let output = """
+        #if DEBUG
+        let debugMode = true
+        #else
+        let debugMode = false
+        #endif
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        testFormatting(for: input, output, rule: .indent, options: options)
+    }
+
+    func testNoIndentTypeMembers() {
+        let input = """
+        struct Foo {
+            #if DEBUG
+                var debugValue: Int
+            #endif
+
+            var normalValue: String
+        }
+        """
+        let output = """
+        struct Foo {
+            #if DEBUG
+            var debugValue: Int
+            #endif
+
+            var normalValue: String
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        testFormatting(for: input, output, rule: .indent, options: options)
+    }
+
+    func testNoIndentWithCommentsInside() {
+        let input = """
+        func foo() {
+            #if DEBUG
+                // This is a debug comment
+                print("debug")
+            #endif
+        }
+        """
+        let output = """
+        func foo() {
+            #if DEBUG
+            // This is a debug comment
+            print("debug")
+            #endif
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        testFormatting(for: input, output, rule: .indent, options: options)
+    }
+
+    func testNoIndentPreservesCorrectLinewrapPosition() {
+        let input = """
+        var body: some View {
+            Text("Hello")
+                #if os(iOS)
+                .padding()
+                #endif
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        testFormatting(for: input, rule: .indent, options: options)
+    }
+
+    func testNoIndentComplexNestedView() {
+        let input = """
+        var body: some View {
+            HStack {
+                List {
+                    Text("Item")
+                }
+                .listStyle(.plain)
+                #if os(iOS)
+                    .introspect(.list, on: .iOS(.v15)) { _ in }
+                #elseif os(macOS)
+                    .introspect(.list, on: .macOS(.v12)) { _ in }
+                #endif
+            }
+        }
+        """
+        let output = """
+        var body: some View {
+            HStack {
+                List {
+                    Text("Item")
+                }
+                .listStyle(.plain)
+                #if os(iOS)
+                .introspect(.list, on: .iOS(.v15)) { _ in }
+                #elseif os(macOS)
+                .introspect(.list, on: .macOS(.v12)) { _ in }
+                #endif
+            }
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        testFormatting(for: input, output, rule: .indent, options: options)
     }
 
     func testIfDefPostfixMemberSyntaxPreserveKeepsAlignment() {

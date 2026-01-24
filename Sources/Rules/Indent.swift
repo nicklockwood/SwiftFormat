@@ -58,6 +58,18 @@ public extension FormatRule {
                 scopeStack.removeLast()
             }
 
+            // Returns the change in index after applying indent if needed for noIndent ifdef
+            func applyNoIndentIfdefFix(ifdefIndent: String, at startIndex: Int) -> Int {
+                let currentIndent = formatter.currentIndentForLine(at: startIndex)
+                let isNested = noIndentIfdefDepth > 1
+                if currentIndent.count < ifdefIndent.count ||
+                    (isNested && currentIndent.count > ifdefIndent.count)
+                {
+                    return applyIndent(ifdefIndent, at: startIndex)
+                }
+                return 0
+            }
+
             var i = i
             switch token {
             case let .startOfScope(string):
@@ -252,15 +264,7 @@ public extension FormatRule {
                     i += applyIndent(indent, at: start)
                 case .noIndent:
                     // #else/#elseif should be at same level as corresponding #if
-                    let ifdefIndent = indentStack.last ?? ""
-                    let currentIndent = formatter.currentIndentForLine(at: i)
-                    // Fix if under-indented, or over-indented when nested (depth > 1)
-                    let isNested = noIndentIfdefDepth > 1
-                    if currentIndent.count < ifdefIndent.count ||
-                        (isNested && currentIndent.count > ifdefIndent.count)
-                    {
-                        i += applyIndent(ifdefIndent, at: start)
-                    }
+                    i += applyNoIndentIfdefFix(ifdefIndent: indentStack.last ?? "", at: start)
                 case .preserve:
                     break
                 case .outdent:
@@ -387,14 +391,7 @@ public extension FormatRule {
                         // #endif should be at same level as corresponding #if
                         // Use indent captured before popScope, fall back to current stack
                         let ifdefIndent = ifdefIndentBeforePop ?? indentStack.last ?? ""
-                        let currentIndent = formatter.currentIndentForLine(at: i)
-                        // Fix if under-indented, or over-indented when nested (depth > 1)
-                        let isNested = noIndentIfdefDepth > 1
-                        if currentIndent.count < ifdefIndent.count ||
-                            (isNested && currentIndent.count > ifdefIndent.count)
-                        {
-                            i += applyIndent(ifdefIndent, at: start)
-                        }
+                        i += applyNoIndentIfdefFix(ifdefIndent: ifdefIndent, at: start)
                     } else if token == .endOfScope("#endif"), formatter.options.ifdefIndent == .preserve {
                         // Do nothing - preserve current position
                     } else {
@@ -421,15 +418,7 @@ public extension FormatRule {
                         i += applyIndent(indent, at: formatter.startOfLine(at: i))
                     case .noIndent:
                         // #endif should be at same level as corresponding #if
-                        let ifdefIndent = indentStack.last ?? indent
-                        let currentIndent = formatter.currentIndentForLine(at: i)
-                        // Fix if under-indented, or over-indented when nested (depth > 1)
-                        let isNested = noIndentIfdefDepth > 1
-                        if currentIndent.count < ifdefIndent.count ||
-                            (isNested && currentIndent.count > ifdefIndent.count)
-                        {
-                            i += applyIndent(ifdefIndent, at: formatter.startOfLine(at: i))
-                        }
+                        i += applyNoIndentIfdefFix(ifdefIndent: indentStack.last ?? indent, at: formatter.startOfLine(at: i))
                     case .preserve:
                         break
                     case .outdent:

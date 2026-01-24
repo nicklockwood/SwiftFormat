@@ -653,8 +653,8 @@ public extension FormatRule {
                         {
                             indent = formatter.currentIndentForLine(at: lineStart)
                         } else if formatter.options.ifdefIndent == .noIndent,
-                                  let startToken,
-                                  [.startOfScope("#if"), .keyword("#else"), .keyword("#elseif")].contains(startToken)
+                            let startToken,
+                            [.startOfScope("#if"), .keyword("#else"), .keyword("#elseif")].contains(startToken)
                         {
                             // For noIndent mode, content directly after #if/#else/#elseif should
                             // stay at the directive's level, not be indented as a method chain

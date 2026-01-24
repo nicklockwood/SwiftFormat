@@ -28,6 +28,7 @@ public extension FormatRule {
         var linewrapStack = [false]
         var lineIndex = 0
         var preserveIfdefDepth = 0
+        var noIndentIfdefDepth = 0
 
         @discardableResult
         func applyIndent(_ indent: String, at index: Int) -> Int {
@@ -55,6 +56,18 @@ public extension FormatRule {
                 linewrapStack.removeLast()
                 scopeStartLineIndexes.removeLast()
                 scopeStack.removeLast()
+            }
+
+            // Returns the change in index after applying indent if needed for noIndent ifdef
+            func applyNoIndentIfdefFix(ifdefIndent: String, at startIndex: Int) -> Int {
+                let currentIndent = formatter.currentIndentForLine(at: startIndex)
+                let isNested = noIndentIfdefDepth > 1
+                if currentIndent.count < ifdefIndent.count ||
+                    (isNested && currentIndent.count > ifdefIndent.count)
+                {
+                    return applyIndent(ifdefIndent, at: startIndex)
+                }
+                return 0
             }
 
             var i = i
@@ -115,7 +128,26 @@ public extension FormatRule {
                         i += applyIndent(indent, at: formatter.startOfLine(at: i))
                         indent += formatter.options.indent
                     case .noIndent:
-                        i += applyIndent(indent, at: formatter.startOfLine(at: i))
+                        let currentIndent = formatter.currentIndentForLine(at: i)
+                        // Check if previous non-blank line starts with #if/#else/#elseif (directly nested)
+                        var directlyNestedInIfdef = false
+                        if noIndentIfdefDepth > 0,
+                           let prevLinebreakIndex = formatter.index(of: .linebreak, before: i)
+                        {
+                            let prevLineStartIndex = formatter.startOfLine(at: prevLinebreakIndex, excludingIndent: true)
+                            if let prevLineStartToken = formatter.token(at: prevLineStartIndex),
+                               [.startOfScope("#if"), .keyword("#else"), .keyword("#elseif")].contains(prevLineStartToken)
+                            {
+                                directlyNestedInIfdef = true
+                            }
+                        }
+                        if currentIndent.count < indent.count || directlyNestedInIfdef {
+                            // Under-indented, or directly nested #if (should be at outer #if level)
+                            i += applyIndent(indent, at: formatter.startOfLine(at: i))
+                        } else {
+                            // At or above expected level (e.g., in method chain), keep it
+                            indent = currentIndent
+                        }
                     case .preserve:
                         indent = formatter.currentIndentForLine(at: i)
                     case .outdent:
@@ -123,6 +155,8 @@ public extension FormatRule {
                     }
                     if formatter.options.ifdefIndent == .preserve {
                         preserveIfdefDepth += 1
+                    } else if formatter.options.ifdefIndent == .noIndent {
+                        noIndentIfdefDepth += 1
                     }
                 case "{" where formatter.isFirstStackedClosureArgument(at: i):
                     guard var prevIndex = formatter.index(of: .nonSpace, before: i) else {
@@ -226,12 +260,15 @@ public extension FormatRule {
                 }
                 let start = formatter.startOfLine(at: i)
                 switch formatter.options.ifdefIndent {
-                case .indent, .noIndent:
+                case .indent:
                     i += applyIndent(indent, at: start)
-                case .outdent:
-                    i += applyIndent("", at: start)
+                case .noIndent:
+                    // #else/#elseif should be at same level as corresponding #if
+                    i += applyNoIndentIfdefFix(ifdefIndent: indentStack.last ?? "", at: start)
                 case .preserve:
                     break
+                case .outdent:
+                    i += applyIndent("", at: start)
                 }
             case .keyword("@unknown") where scopeStack.last != .startOfScope("#if"):
                 var indent = indentStack[indentStack.count - 2]
@@ -297,6 +334,9 @@ public extension FormatRule {
                 // Handle end of scope
                 if let scope = scopeStack.last, token.isEndOfScope(scope) {
                     let indentCount = indentCounts.last! - 1
+                    // Capture #if indent before popScope for noIndent handling
+                    let ifdefIndentBeforePop = (token == .endOfScope("#endif") && formatter.options.ifdefIndent == .noIndent)
+                        ? indentStack.last : nil
                     popScope()
                     guard !token.isLinebreak, lineIndex > scopeStartLineIndexes.last ?? -1 else {
                         break
@@ -347,6 +387,13 @@ public extension FormatRule {
 
                     if token == .endOfScope("#endif"), formatter.options.ifdefIndent == .outdent {
                         i += applyIndent("", at: start)
+                    } else if token == .endOfScope("#endif"), formatter.options.ifdefIndent == .noIndent {
+                        // #endif should be at same level as corresponding #if
+                        // Use indent captured before popScope, fall back to current stack
+                        let ifdefIndent = ifdefIndentBeforePop ?? indentStack.last ?? ""
+                        i += applyNoIndentIfdefFix(ifdefIndent: ifdefIndent, at: start)
+                    } else if token == .endOfScope("#endif"), formatter.options.ifdefIndent == .preserve {
+                        // Do nothing - preserve current position
                     } else {
                         var indent = indentStack.last ?? ""
                         if token.isSwitchCaseOrDefault,
@@ -367,19 +414,26 @@ public extension FormatRule {
                         popScope()
                     }
                     switch formatter.options.ifdefIndent {
-                    case .indent, .noIndent:
+                    case .indent:
                         i += applyIndent(indent, at: formatter.startOfLine(at: i))
-                    case .outdent:
-                        i += applyIndent("", at: formatter.startOfLine(at: i))
+                    case .noIndent:
+                        // #endif should be at same level as corresponding #if
+                        i += applyNoIndentIfdefFix(ifdefIndent: indentStack.last ?? indent, at: formatter.startOfLine(at: i))
                     case .preserve:
                         break
+                    case .outdent:
+                        i += applyIndent("", at: formatter.startOfLine(at: i))
                     }
                     if scopeStack.last == .startOfScope("#if") {
                         popScope()
                     }
                 }
-                if token == .endOfScope("#endif"), formatter.options.ifdefIndent == .preserve {
-                    preserveIfdefDepth = max(preserveIfdefDepth - 1, 0)
+                if token == .endOfScope("#endif") {
+                    if formatter.options.ifdefIndent == .preserve {
+                        preserveIfdefDepth = max(preserveIfdefDepth - 1, 0)
+                    } else if formatter.options.ifdefIndent == .noIndent {
+                        noIndentIfdefDepth = max(noIndentIfdefDepth - 1, 0)
+                    }
                 }
             }
             switch token {
@@ -457,7 +511,9 @@ public extension FormatRule {
 
                 // Determine current indent
                 var indent = indentStack.last ?? ""
-                if linewrapped, lineIndex == scopeStartLineIndexes.last {
+                if linewrapped, lineIndex == scopeStartLineIndexes.last,
+                   !(formatter.options.ifdefIndent == .noIndent && noIndentIfdefDepth > 0)
+                {
                     indent = indentStack.count > 1 ? indentStack[indentStack.count - 2] : ""
                 }
                 lineIndex += 1
@@ -596,6 +652,13 @@ public extension FormatRule {
                            [.keyword("#else"), .keyword("#elseif"), .endOfScope("#endif")].contains(startToken)
                         {
                             indent = formatter.currentIndentForLine(at: lineStart)
+                        } else if formatter.options.ifdefIndent == .noIndent,
+                            let startToken,
+                            [.startOfScope("#if"), .keyword("#else"), .keyword("#elseif")].contains(startToken)
+                        {
+                            // For noIndent mode, content directly after #if/#else/#elseif should
+                            // stay at the directive's level, not be indented as a method chain
+                            // (indent already set to indentStack.last which is the #if level)
                         } else if formatter.tokens[lineStart ..< lastNonSpaceOrLinebreakIndex].allSatisfy({
                             $0.isEndOfScope || $0.isSpaceOrComment
                         }) {

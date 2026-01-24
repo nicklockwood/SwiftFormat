@@ -5049,6 +5049,452 @@ final class IndentTests: XCTestCase {
         testFormatting(for: input, output, rule: .indent, options: options)
     }
 
+    // MARK: - noIndent advanced scenarios (swiftui-introspect patterns)
+
+    func testNoIndentFileLevelWrapperWithNestedCode() {
+        // Pattern: File wrapped in #if with deeply nested struct/function content
+        let input = """
+        #if !os(tvOS)
+        import SwiftUI
+
+        @MainActor
+        struct ListTests {
+            typealias PlatformList = UIScrollView
+
+            @Test func introspect() async throws {
+                let entity = try await introspection { spy in
+                    HStack {
+                        List {
+                            Text("Item 1")
+                        }
+                        .listStyle(.plain)
+                    }
+                }
+            }
+        }
+        #endif
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        testFormatting(for: input, rule: .indent, options: options, exclude: [.unusedArguments])
+    }
+
+    func testNoIndentFileLevelWrapperWithNestedIfdef() {
+        // Pattern: File-level #if with nested #if for platform-specific typealias
+        let input = """
+        #if !os(tvOS)
+        import SwiftUI
+
+        struct ListTests {
+            #if canImport(UIKit)
+            typealias PlatformList = UIScrollView
+            #elseif canImport(AppKit)
+            typealias PlatformList = NSTableView
+            #endif
+
+            func test() {
+                print("test")
+            }
+        }
+        #endif
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        testFormatting(for: input, rule: .indent, options: options)
+    }
+
+    func testNoIndentMethodChainWithCommentInsideIfdef() {
+        // Pattern: #if block with comment before the modifier
+        let input = """
+        var body: some View {
+            NavigationView {
+                Text("Hello")
+            }
+            .navigationViewStyle(.columns)
+            #if os(iOS)
+                // NB: this is necessary for introspection to work
+                .introspect(.navigationView, on: .iOS(.v15)) {
+                    $0.preferredDisplayMode = .oneOverSecondary
+                }
+            #endif
+        }
+        """
+        let output = """
+        var body: some View {
+            NavigationView {
+                Text("Hello")
+            }
+            .navigationViewStyle(.columns)
+            #if os(iOS)
+            // NB: this is necessary for introspection to work
+            .introspect(.navigationView, on: .iOS(.v15)) {
+                $0.preferredDisplayMode = .oneOverSecondary
+            }
+            #endif
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        testFormatting(for: input, output, rule: .indent, options: options)
+    }
+
+    func testNoIndentMethodChainWithTrailingClosureInsideIfdef() {
+        // Pattern: #if with modifier containing trailing closure
+        let input = """
+        var body: some View {
+            List {
+                Text("Item")
+            }
+            .listStyle(.plain)
+            #if os(iOS)
+                .introspect(.list, on: .iOS(.v15, .v16)) { tableView in
+                    tableView.backgroundColor = .clear
+                    tableView.separatorStyle = .none
+                }
+            #endif
+        }
+        """
+        let output = """
+        var body: some View {
+            List {
+                Text("Item")
+            }
+            .listStyle(.plain)
+            #if os(iOS)
+            .introspect(.list, on: .iOS(.v15, .v16)) { tableView in
+                tableView.backgroundColor = .clear
+                tableView.separatorStyle = .none
+            }
+            #endif
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        testFormatting(for: input, output, rule: .indent, options: options)
+    }
+
+    func testNoIndentNestedIfdefAtLinewrapLevel() {
+        // Pattern: #if at linewrap level inside file-level #if wrapper
+        let input = """
+        #if !os(tvOS)
+        struct Tests {
+            func test() {
+                let view = HStack {
+                    List {
+                        Text("Item")
+                            #if os(iOS)
+                            .introspect(.list, on: .iOS(.v15), scope: .ancestor) { _ in }
+                            #elseif os(macOS)
+                            .introspect(.list, on: .macOS(.v12), scope: .ancestor) { _ in }
+                            #endif
+                    }
+                    .listStyle(.inset)
+                }
+            }
+        }
+        #endif
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        testFormatting(for: input, rule: .indent, options: options)
+    }
+
+    func testNoIndentMultipleConsecutiveIfdefBlocks() {
+        // Pattern: Multiple #if blocks in the same method chain
+        let input = """
+        var body: some View {
+            Text("Hello")
+                .font(.title)
+                #if os(iOS)
+                .padding()
+                #endif
+                #if DEBUG
+                .border(Color.red)
+                #endif
+                .background(Color.white)
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        testFormatting(for: input, rule: .indent, options: options)
+    }
+
+    func testNoIndentIfdefWithMultiplePlatformBranches() {
+        // Pattern: Complex #if with multiple #elseif branches
+        let input = """
+        struct Tests {
+            func introspect() {
+                let view = NavigationView {
+                    Text("Content")
+                }
+                .navigationViewStyle(.columns)
+                #if os(iOS)
+                    .introspect(.navigationView, on: .iOS(.v13, .v14, .v15)) { spy in
+                        spy.preferredDisplayMode = .oneOverSecondary
+                    }
+                #elseif os(tvOS)
+                    .introspect(.navigationView, on: .tvOS(.v13, .v14, .v15)) { spy in
+                        // tvOS specific
+                    }
+                #elseif os(macOS)
+                    .introspect(.navigationView, on: .macOS(.v10_15, .v11, .v12)) { spy in
+                        // macOS specific
+                    }
+                #endif
+            }
+        }
+        """
+        let output = """
+        struct Tests {
+            func introspect() {
+                let view = NavigationView {
+                    Text("Content")
+                }
+                .navigationViewStyle(.columns)
+                #if os(iOS)
+                .introspect(.navigationView, on: .iOS(.v13, .v14, .v15)) { spy in
+                    spy.preferredDisplayMode = .oneOverSecondary
+                }
+                #elseif os(tvOS)
+                .introspect(.navigationView, on: .tvOS(.v13, .v14, .v15)) { spy in
+                    // tvOS specific
+                }
+                #elseif os(macOS)
+                .introspect(.navigationView, on: .macOS(.v10_15, .v11, .v12)) { spy in
+                    // macOS specific
+                }
+                #endif
+            }
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        testFormatting(for: input, output, rule: .indent, options: options, exclude: [.unusedArguments])
+    }
+
+    func testNoIndentIfdefInsideClosureArgument() {
+        // Pattern: #if inside a closure that's a function argument
+        let input = """
+        func test() {
+            let result = try await introspection(of: UIScrollView.self) { spy1, spy2 in
+                HStack {
+                    List {
+                        Text("Item 1")
+                    }
+                    .listStyle(.grouped)
+                    #if os(iOS)
+                        .introspect(.list(style: .grouped), on: .iOS(.v16, .v17)) { spy in
+                            spy1(spy)
+                        }
+                    #endif
+
+                    List {
+                        Text("Item 2")
+                    }
+                    .listStyle(.grouped)
+                }
+            }
+        }
+        """
+        let output = """
+        func test() {
+            let result = try await introspection(of: UIScrollView.self) { spy1, spy2 in
+                HStack {
+                    List {
+                        Text("Item 1")
+                    }
+                    .listStyle(.grouped)
+                    #if os(iOS)
+                    .introspect(.list(style: .grouped), on: .iOS(.v16, .v17)) { spy in
+                        spy1(spy)
+                    }
+                    #endif
+
+                    List {
+                        Text("Item 2")
+                    }
+                    .listStyle(.grouped)
+                }
+            }
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        testFormatting(for: input, output, rule: .indent, options: options, exclude: [.unusedArguments])
+    }
+
+    func testNoIndentIfdefAfterClosingBraceInChain() {
+        // Pattern: #if immediately after a closing brace in method chain
+        let input = """
+        var body: some View {
+            VStack {
+                Text("Hello")
+            }
+            #if os(iOS)
+                .padding()
+            #endif
+        }
+        """
+        let output = """
+        var body: some View {
+            VStack {
+                Text("Hello")
+            }
+            #if os(iOS)
+            .padding()
+            #endif
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        testFormatting(for: input, output, rule: .indent, options: options)
+    }
+
+    func testNoIndentDeepNestedIfdefInFileLevelWrapper() {
+        // Pattern: Deeply nested #if inside file-level #if wrapper
+        let input = """
+        #if !os(macOS)
+        import SwiftUI
+
+        @MainActor
+        struct SearchFieldTests {
+            typealias PlatformSearchField = UISearchBar
+
+            @Test func introspect() async throws {
+                try await introspection(of: PlatformSearchField.self) { spy in
+                    TabView {
+                        NavigationView {
+                            Text("Customized")
+                                .searchable(text: .constant(""))
+                                #if os(iOS)
+                                    .introspect(.searchField, on: .iOS(.v15, .v16)) { searchBar in
+                                        spy(searchBar)
+                                    }
+                                #elseif os(tvOS)
+                                    .introspect(.searchField, on: .tvOS(.v15, .v16)) { searchBar in
+                                        spy(searchBar)
+                                    }
+                                #endif
+                        }
+                        .navigationViewStyle(.stack)
+                    }
+                }
+            }
+        }
+        #endif
+        """
+        let output = """
+        #if !os(macOS)
+        import SwiftUI
+
+        @MainActor
+        struct SearchFieldTests {
+            typealias PlatformSearchField = UISearchBar
+
+            @Test func introspect() async throws {
+                try await introspection(of: PlatformSearchField.self) { spy in
+                    TabView {
+                        NavigationView {
+                            Text("Customized")
+                                .searchable(text: .constant(""))
+                                #if os(iOS)
+                                .introspect(.searchField, on: .iOS(.v15, .v16)) { searchBar in
+                                    spy(searchBar)
+                                }
+                                #elseif os(tvOS)
+                                .introspect(.searchField, on: .tvOS(.v15, .v16)) { searchBar in
+                                    spy(searchBar)
+                                }
+                                #endif
+                        }
+                        .navigationViewStyle(.stack)
+                    }
+                }
+            }
+        }
+        #endif
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        testFormatting(for: input, output, rule: .indent, options: options, exclude: [.unusedArguments])
+    }
+
+    func testNoIndentIfdefPreservesCorrectEndifLevel() {
+        // Pattern: Ensure #endif stays at same level as #if when at linewrap position
+        let input = """
+        #if !os(tvOS)
+        struct ListTests {
+            func test() {
+                let view = HStack {
+                    List {
+                        Text("Item 1")
+                            #if os(iOS) || os(visionOS)
+                            .introspect(.list, on: .iOS(.v14, .v15)) { _ in }
+                            .introspect(.list, on: .iOS(.v16, .v17)) { _ in }
+                            #elseif os(macOS)
+                            .introspect(.list, on: .macOS(.v11, .v12)) { _ in }
+                            #endif
+                    }
+                    .listStyle(.inset)
+                }
+            }
+        }
+        #endif
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        testFormatting(for: input, rule: .indent, options: options, exclude: [.unusedArguments])
+    }
+
+    func testNoIndentIfdefWithNestedTypealiasAndFunctions() {
+        // Pattern: Struct with #if for typealias followed by functions
+        let input = """
+        #if !os(tvOS)
+        struct ListWithInsetStyleTests {
+            #if canImport(UIKit)
+                typealias PlatformListWithInsetStyle = UIScrollView
+            #elseif canImport(AppKit)
+                typealias PlatformListWithInsetStyle = NSTableView
+            #endif
+
+            @Test func introspect() async throws {
+                let (entity1, entity2) = try await introspection(of: PlatformListWithInsetStyle.self) { spy1, spy2 in
+                    HStack {
+                        List {
+                            Text("Item 1")
+                        }
+                        .listStyle(.inset)
+                        #if os(iOS) || os(visionOS)
+                            .introspect(.list(style: .inset), on: .iOS(.v14, .v15), customize: spy1)
+                        #elseif os(macOS)
+                            .introspect(.list(style: .inset), on: .macOS(.v11, .v12), customize: spy1)
+                        #endif
+                    }
+                }
+            }
+        }
+        #endif
+        """
+        let output = """
+        #if !os(tvOS)
+        struct ListWithInsetStyleTests {
+            #if canImport(UIKit)
+            typealias PlatformListWithInsetStyle = UIScrollView
+            #elseif canImport(AppKit)
+            typealias PlatformListWithInsetStyle = NSTableView
+            #endif
+
+            @Test func introspect() async throws {
+                let (entity1, entity2) = try await introspection(of: PlatformListWithInsetStyle.self) { spy1, spy2 in
+                    HStack {
+                        List {
+                            Text("Item 1")
+                        }
+                        .listStyle(.inset)
+                        #if os(iOS) || os(visionOS)
+                        .introspect(.list(style: .inset), on: .iOS(.v14, .v15), customize: spy1)
+                        #elseif os(macOS)
+                        .introspect(.list(style: .inset), on: .macOS(.v11, .v12), customize: spy1)
+                        #endif
+                    }
+                }
+            }
+        }
+        #endif
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        testFormatting(for: input, output, rule: .indent, options: options, exclude: [.unusedArguments])
+    }
+
     func testIfDefPostfixMemberSyntaxPreserveKeepsAlignment() {
         let input = """
         struct Example: View {

@@ -1395,7 +1395,7 @@ Option | Description
 `--tab-width` | The width of a tab character. Defaults to "unspecified"
 `--smart-tabs` | Align code independently of tab-width: "enabled" (default) or "disabled"
 `--indent-case` | Indent cases inside a switch statement: "true" or "false" (default)
-`--ifdef` | #if statement indenting: "indent" (default), "no-indent", "preserve" or "outdent"
+`--ifdef` | #if statement indenting: "indent" (default), "no-indent" or "outdent"
 `--xcode-indentation` | Match Xcode indenting: "enabled" or "disabled" (default)
 `--indent-strings` | Indent multiline strings: "true" or "false" (default)
 

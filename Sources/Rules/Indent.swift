@@ -27,14 +27,10 @@ public extension FormatRule {
         var indentCounts = [1]
         var linewrapStack = [false]
         var lineIndex = 0
-        var preserveIfdefDepth = 0
         var noIndentIfdefDepth = 0
 
         @discardableResult
         func applyIndent(_ indent: String, at index: Int) -> Int {
-            if formatter.options.ifdefIndent == .preserve, preserveIfdefDepth > 0 {
-                return 0
-            }
             return formatter.insertSpaceIfEnabled(indent, at: index)
         }
 
@@ -148,14 +144,10 @@ public extension FormatRule {
                             // At or above expected level (e.g., in method chain), keep it
                             indent = currentIndent
                         }
-                    case .preserve:
-                        indent = formatter.currentIndentForLine(at: i)
                     case .outdent:
                         i += applyIndent("", at: formatter.startOfLine(at: i))
                     }
-                    if formatter.options.ifdefIndent == .preserve {
-                        preserveIfdefDepth += 1
-                    } else if formatter.options.ifdefIndent == .noIndent {
+                    if formatter.options.ifdefIndent == .noIndent {
                         noIndentIfdefDepth += 1
                     }
                 case "{" where formatter.isFirstStackedClosureArgument(at: i):
@@ -265,8 +257,6 @@ public extension FormatRule {
                 case .noIndent:
                     // #else/#elseif should be at same level as corresponding #if
                     i += applyNoIndentIfdefFix(ifdefIndent: indentStack.last ?? "", at: start)
-                case .preserve:
-                    break
                 case .outdent:
                     i += applyIndent("", at: start)
                 }
@@ -392,8 +382,6 @@ public extension FormatRule {
                         // Use indent captured before popScope, fall back to current stack
                         let ifdefIndent = ifdefIndentBeforePop ?? indentStack.last ?? ""
                         i += applyNoIndentIfdefFix(ifdefIndent: ifdefIndent, at: start)
-                    } else if token == .endOfScope("#endif"), formatter.options.ifdefIndent == .preserve {
-                        // Do nothing - preserve current position
                     } else {
                         var indent = indentStack.last ?? ""
                         if token.isSwitchCaseOrDefault,
@@ -419,8 +407,6 @@ public extension FormatRule {
                     case .noIndent:
                         // #endif should be at same level as corresponding #if
                         i += applyNoIndentIfdefFix(ifdefIndent: indentStack.last ?? indent, at: formatter.startOfLine(at: i))
-                    case .preserve:
-                        break
                     case .outdent:
                         i += applyIndent("", at: formatter.startOfLine(at: i))
                     }
@@ -428,12 +414,8 @@ public extension FormatRule {
                         popScope()
                     }
                 }
-                if token == .endOfScope("#endif") {
-                    if formatter.options.ifdefIndent == .preserve {
-                        preserveIfdefDepth = max(preserveIfdefDepth - 1, 0)
-                    } else if formatter.options.ifdefIndent == .noIndent {
-                        noIndentIfdefDepth = max(noIndentIfdefDepth - 1, 0)
-                    }
+                if token == .endOfScope("#endif"), formatter.options.ifdefIndent == .noIndent {
+                    noIndentIfdefDepth = max(noIndentIfdefDepth - 1, 0)
                 }
             }
             switch token {
@@ -665,9 +647,7 @@ public extension FormatRule {
                             if lastToken.isEndOfScope {
                                 indent = formatter.currentIndentForLine(at: lastNonSpaceOrLinebreakIndex)
                             }
-                            if formatter.options.ifdefIndent == .preserve, preserveIfdefDepth > 0 {
-                                // keep relative indentation unchanged
-                            } else if !lastToken.isEndOfScope || lastToken == .endOfScope("case") ||
+                            if !lastToken.isEndOfScope || lastToken == .endOfScope("case") ||
                                 formatter.options.xcodeIndentation, ![
                                     .endOfScope("}"), .endOfScope(")"),
                                 ].contains(lastToken)
@@ -687,9 +667,6 @@ public extension FormatRule {
                 }
                 // Avoid indenting commented code
                 guard !formatter.isCommentedCode(at: nextNonSpaceIndex) else {
-                    break
-                }
-                if formatter.options.ifdefIndent == .preserve, preserveIfdefDepth > 0 {
                     break
                 }
                 // Apply indent
@@ -733,9 +710,6 @@ public extension FormatRule {
                         }
                     }
                 default:
-                    if formatter.options.ifdefIndent == .preserve, preserveIfdefDepth > 0 {
-                        break
-                    }
                     var lastIndex = lastNonSpaceOrLinebreakIndex > -1 ? lastNonSpaceOrLinebreakIndex : i
                     while formatter.token(at: lastIndex) == .endOfScope("#endif"),
                           let index = formatter.index(of: .startOfScope, before: lastIndex, if: {

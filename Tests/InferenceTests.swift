@@ -204,24 +204,6 @@ final class InferenceTests: XCTestCase {
         XCTAssertEqual(options.ifdefIndent, output)
     }
 
-    func testInferIfdefPreserve() {
-        let input = """
-        struct ContentView {
-            var body: some View {
-                Text("Example")
-                    .frame(maxWidth: 200)
-                    #if DEBUG
-                    .font(.body)
-                    #endif
-                    .padding()
-            }
-        }
-        """
-        let output = IndentMode.preserve
-        let options = inferFormatOptions(from: tokenize(input))
-        XCTAssertEqual(options.ifdefIndent, output)
-    }
-
     func testInferIndentedIfdefOutdent() {
         let input = "{\n    {\n#if foo\n        //foo\n#endif\n    }\n}"
         let output = IndentMode.outdent

@@ -5495,6 +5495,30 @@ final class IndentTests: XCTestCase {
         testFormatting(for: input, output, rule: .indent, options: options, exclude: [.unusedArguments])
     }
 
+    func testNoIndentIfdefInsideImmediatelyInvokedClosure() {
+        // Pattern: #if inside a closure that's immediately invoked for conditional values
+        let input = """
+        struct ContentView: View {
+            var body: some View {
+                Text("Hello")
+                    .toolbar {
+                        ToolbarItem(placement: {
+                            #if os(iOS)
+                            .cancellationAction
+                            #else
+                            .automatic
+                            #endif
+                        }()) {
+                            Button("Cancel") {}
+                        }
+                    }
+            }
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        testFormatting(for: input, rule: .indent, options: options)
+    }
+
     func testIfDefPostfixMemberSyntaxPreserveKeepsAlignment() {
         let input = """
         struct Example: View {

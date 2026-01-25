@@ -1,8 +1,7 @@
 // Unused, but required for Mint install
 
-import XCTest
-
 import SwiftFormatTests
+import XCTest
 
 var tests = [XCTestCaseEntry]()
 

@@ -677,9 +677,9 @@ final class FileHeaderTests: XCTestCase {
         ])
     }
 
-    func testFileHeaderDateTimeZoneAbbreviations() {
+    func testFileHeaderDateTimeZoneAbbreviations() throws {
         // GMT+0530
-        testTimeZone(timeZone: FormatTimeZone(rawValue: "IST")!, tests: [
+        try testTimeZone(timeZone: XCTUnwrap(FormatTimeZone(rawValue: "IST")), tests: [
             "15:00Z": "20:30",
             "16:00+1": "20:30",
             "01:00+10": "20:30",
@@ -687,9 +687,9 @@ final class FileHeaderTests: XCTestCase {
         ])
     }
 
-    func testFileHeaderDateTimeZoneIdentifiers() {
+    func testFileHeaderDateTimeZoneIdentifiers() throws {
         // GMT+0845
-        testTimeZone(timeZone: FormatTimeZone(rawValue: "Australia/Eucla")!, tests: [
+        try testTimeZone(timeZone: XCTUnwrap(FormatTimeZone(rawValue: "Australia/Eucla")), tests: [
             "15:00Z": "23:45",
             "16:00+1": "23:45",
             "01:00+10": "23:45",

@@ -67,7 +67,7 @@ final class MetadataTests: XCTestCase {
             if !rule.options.isEmpty {
                 result += "\n\nOption | Description\n--- | ---"
                 for option in rule.options {
-                    let descriptor = Descriptors.byName[option]!
+                    let descriptor = try XCTUnwrap(Descriptors.byName[option])
                     guard !descriptor.isDeprecated else {
                         continue
                     }
@@ -144,7 +144,7 @@ final class MetadataTests: XCTestCase {
                     guard !line.isEmpty else { continue }
 
                     // Check diff formatting: first column must be space/+/-, second column must be space
-                    let firstChar = line.first!
+                    let firstChar = try XCTUnwrap(line.first)
                     let secondChar = line.count >= 2 ? line[line.index(line.startIndex, offsetBy: 1)] : " "
 
                     let isValidDiffLine = (firstChar == " " || firstChar == "+" || firstChar == "-") &&

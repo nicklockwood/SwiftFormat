@@ -10,7 +10,7 @@ import XCTest
 @testable import SwiftFormat
 
 final class DeclarationTests: XCTestCase {
-    func testModifyingDeclarations() {
+    func testModifyingDeclarations() throws {
         let input = """
         import FooLib
 
@@ -23,9 +23,9 @@ final class DeclarationTests: XCTestCase {
         let formatter = Formatter(tokenize(input))
         let declarations = formatter.parseDeclarations()
 
-        let fooType = declarations[1] as! TypeDeclaration
-        let barProperty = fooType.body[0] as! SimpleDeclaration
-        let baazProperty = fooType.body[1] as! SimpleDeclaration
+        let fooType = try XCTUnwrap(declarations[1] as? TypeDeclaration)
+        let barProperty = try XCTUnwrap(fooType.body[0] as? SimpleDeclaration)
+        let baazProperty = try XCTUnwrap(fooType.body[1] as? SimpleDeclaration)
 
         XCTAssertEqual(barProperty.tokens.string, """
             internal var bar: Bar\n

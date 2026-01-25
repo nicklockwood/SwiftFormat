@@ -14,7 +14,7 @@ final class CodeOrganizationTests: XCTestCase {
         for ruleFile in allRuleFiles {
             let fileName = ruleFile.lastPathComponent
             let titleCaseRuleName = fileName.replacingOccurrences(of: ".swift", with: "")
-            var ruleName = titleCaseRuleName.first!.lowercased() + titleCaseRuleName.dropFirst()
+            var ruleName = try XCTUnwrap(titleCaseRuleName.first?.lowercased()) + titleCaseRuleName.dropFirst()
             if titleCaseRuleName == "URLMacro" {
                 ruleName = "urlMacro"
             }
@@ -25,7 +25,7 @@ final class CodeOrganizationTests: XCTestCase {
             let extensions = declarations.filter { $0.keyword == "extension" }
 
             for extensionDecl in extensions {
-                let extendedType = extensionDecl.name!
+                let extendedType = try XCTUnwrap(extensionDecl.name)
                 let extensionVisibility = extensionDecl.visibility() ?? .internal
 
                 if extendedType == "FormatRule" {
@@ -142,7 +142,7 @@ final class CodeOrganizationTests: XCTestCase {
         }
     }
 
-    func testRuleTestFilesHaveMatchingRule() {
+    func testRuleTestFilesHaveMatchingRule() throws {
         let allRuleNames = Set(allRuleFiles.map { ruleFile -> String in
             let fileName = ruleFile.lastPathComponent
             let titleCaseRuleName = fileName.replacingOccurrences(of: ".swift", with: "")
@@ -157,7 +157,7 @@ final class CodeOrganizationTests: XCTestCase {
             let testFileName = testFile.lastPathComponent
             let expectedTestClassName = testFileName.replacingOccurrences(of: ".swift", with: "")
             let titleCaseRuleName = expectedTestClassName.hasSuffix("Tests") ? String(expectedTestClassName.dropLast(5)) : expectedTestClassName
-            var ruleName = titleCaseRuleName.first!.lowercased() + titleCaseRuleName.dropFirst()
+            var ruleName = try XCTUnwrap(titleCaseRuleName.first?.lowercased()) + titleCaseRuleName.dropFirst()
             if titleCaseRuleName == "URLMacro" {
                 ruleName = "urlMacro"
             }
@@ -183,7 +183,7 @@ final class CodeOrganizationTests: XCTestCase {
 
             let expectedTestClassName = testFileName.replacingOccurrences(of: ".swift", with: "")
 
-            XCTAssertEqual(testClass.name!, expectedTestClassName, """
+            XCTAssertEqual(try XCTUnwrap(testClass.name), expectedTestClassName, """
             class \(testClass.name!) and file \(testFileName) should have same name.
             """)
         }

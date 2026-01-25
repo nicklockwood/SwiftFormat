@@ -640,10 +640,10 @@ final class FormatterTests: XCTestCase {
         XCTAssertEqual(formatter.changes.first?.line, 2)
     }
 
-    func testTrackChangesInSecondLine() {
+    func testTrackChangesInSecondLine() throws {
         let formatter = Formatter(tokenize("foo\nbar\nbaz"), trackChanges: true)
         let tokens = formatter.tokens
-        formatter.removeToken(at: formatter.tokens.firstIndex(of: .identifier("bar"))!)
+        try formatter.removeToken(at: XCTUnwrap(formatter.tokens.firstIndex(of: .identifier("bar"))))
         XCTAssertNotEqual(formatter.tokens, tokens)
         XCTAssertEqual(formatter.changes.count, 1)
         XCTAssertEqual(formatter.changes.first?.line, 2)

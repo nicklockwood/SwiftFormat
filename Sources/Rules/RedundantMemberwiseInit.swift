@@ -469,10 +469,9 @@ extension Formatter {
     /// Handles generic attributes like @ArrayBuilder<String> by including the generic clause.
     func collectAttributeTokens(startingAt index: Int) -> [Token] {
         var result = [tokens[index]]
-        var currentIndex = index
 
         // Check if there's a generic clause following the attribute
-        if let nextIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex),
+        if let nextIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index),
            tokens[nextIndex] == .startOfScope("<"),
            let endOfGeneric = endOfScope(at: nextIndex)
         {
@@ -494,7 +493,7 @@ extension Formatter {
         guard param.name == property.name else { return false }
 
         // If it's a result builder parameter with a closure type, check if the closure's return type matches the property type
-        if let resultBuilderAttribute = param.resultBuilderAttribute,
+        if param.resultBuilderAttribute != nil,
            param.type.string == "() -> \(property.type.string)"
         {
             return true

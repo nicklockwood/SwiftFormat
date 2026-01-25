@@ -275,7 +275,7 @@ public struct AnyExpression: CustomStringConvertible {
         let boolSymbols = options.contains(.boolSymbols) ? Expression.boolSymbols : [:]
         let shouldOptimize = !options.contains(.noOptimize)
 
-        // Evaluators
+        /// Evaluators
         func defaultEvaluator(for symbol: Symbol) -> Expression.SymbolEvaluator? {
             if let fn = AnyExpression.standardSymbols[symbol] {
                 return fn

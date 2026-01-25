@@ -597,7 +597,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
             inputURLs += try parseScriptInput(from: environment)
         }
 
-        // Treat values for arguments that do not take a value as input paths
+        /// Treat values for arguments that do not take a value as input paths
         func addInputPaths(for argName: String) throws {
             guard let arg = args[argName], !arg.isEmpty else {
                 return

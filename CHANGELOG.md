@@ -1,5 +1,28 @@
 # Change Log
 
+## [0.59.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.59.0) (2026-01-25)
+
+- Added `simplifyGenericConstraints` rule
+- Added `validateTestCases` rule
+- Added `testSuiteAccessControl` rule
+- Added `wrapPropertyBodies` rule
+- Added `wrapFunctionBodies` rule
+- Added `redundantViewBuilder` rule
+- Added `--ifdef preserve` option to `indent` rule
+- Added `--prefer-synthesized-init-for-internal-structs` option to `redundantMemberwiseInit` rule
+- Enabled more rules by default: `blankLinesBetweenImports`, `docComments`, `emptyExtensions`, `environmentEntry`, `noForceTryInTests`, `noForceUnwrapInTests`, `redundantAsync`, `redundantEquatable`, `redundantMemberwiseInit`, `redundantProperty`, `redundantThrows`
+- Updated `typeSugar` to only preserve explicit `Optional<T>` in structs with a synthesized memberwise initializer
+- Updated closing paren of single-argument functions and collections to wrap if needed
+- Updated `redundantMemberwiseInit` rule to support result builder attributes
+- Improved how `organizeDeclarations` handles structs with a synthesized memberwise initializer
+- Updated `docComments` rule to preserve formatting of comments with directives
+- Fixed `--ifdef no-indent` handling of method chains and nested directives
+- Fixed issue where `XMLReporter` did not properly escape strings
+- Fixed support for `unsafe` keyword
+- Fixed edge cases in `spaceAroundBrackets` rule
+- Fixed crash in `sortTypealiases` rule
+- Fixed issue where `redundantSelf` rule could crash if encountering a function with no body (e.g.`@_silgen_name`)
+
 ## [0.58.7](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.58.7) (2025-11-29)
 
 - Fixed `redundantSelf` not being applied inside `if #available(...) { ... }` clauses

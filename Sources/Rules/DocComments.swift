@@ -174,8 +174,10 @@ extension Formatter {
             return false
         }
 
-        // Only use doc comments on declarations in type bodies, or top-level declarations
-        if let startOfEnclosingScope = index(of: .startOfScope, before: startIndex) {
+        // For local declarations other than nested functions, use standard comments.
+        if declarationToken != .keyword("func"),
+           let startOfEnclosingScope = index(of: .startOfScope, before: startIndex)
+        {
             switch tokens[startOfEnclosingScope] {
             case .startOfScope("#if"):
                 break

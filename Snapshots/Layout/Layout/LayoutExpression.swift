@@ -827,7 +827,7 @@ struct LayoutExpression {
             return nil
         }
 
-        // Parse a stringified font part
+        /// Parse a stringified font part
         func fontPart(for string: String) -> Any? {
             switch string.lowercased() {
             case "italic":

@@ -576,7 +576,7 @@ public func applyRules(
         }
     }
 
-    // Split tokens into lines
+    /// Split tokens into lines
     func getLines(in tokens: [Token], includingLinebreaks: Bool) -> [Int: ArraySlice<Token>] {
         var lines: [Int: ArraySlice<Token>] = [:]
         var startIndex = 0, nextLine = 1

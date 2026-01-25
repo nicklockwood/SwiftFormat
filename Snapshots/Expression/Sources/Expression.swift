@@ -319,7 +319,7 @@ public final class Expression: CustomStringConvertible {
         let shouldOptimize = !options.contains(.noOptimize)
         let pureSymbols = options.contains(.pureSymbols)
 
-        // Evaluators
+        /// Evaluators
         func symbolEvaluator(for symbol: Symbol) -> SymbolEvaluator? {
             if let fn = symbols[symbol] {
                 return fn

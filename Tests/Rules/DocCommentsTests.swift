@@ -681,4 +681,28 @@ final class DocCommentsTests: XCTestCase {
 
         testFormatting(for: input, rule: .docComments)
     }
+
+    func testDocCommentOnNestedFunction() {
+        let input = """
+        // Parent function at file scope
+        func parentFunction() {
+            // Nested function inside parent function
+            func nestedFunction() {
+                print("foo bar")
+            }
+        }
+        """
+
+        let output = """
+        /// Parent function at file scope
+        func parentFunction() {
+            /// Nested function inside parent function
+            func nestedFunction() {
+                print("foo bar")
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: .docComments)
+    }
 }

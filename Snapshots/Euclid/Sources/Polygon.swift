@@ -290,7 +290,7 @@ extension Polygon {
         }
         let join2 = result.count - 1
 
-        // can the merged points be removed?
+        /// can the merged points be removed?
         func testPoint(_ index: Int) {
             let prev = (index == 0) ? result.count - 1 : index - 1
             let va = (result[index].position - result[prev].position).normalized()

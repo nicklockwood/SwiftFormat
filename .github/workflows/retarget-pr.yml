@@ -1,0 +1,34 @@
+name: Retarget PR to develop
+
+on:
+  pull_request_target:
+    types: [opened]
+    branches: [main]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  retarget:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Change base branch to develop
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const pull_number = context.payload.pull_request.number;
+
+            await github.rest.pulls.update({
+              owner,
+              repo,
+              pull_number,
+              base: 'develop'
+            });
+
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: pull_number,
+              body: '👋 Thanks for your PR! I\'ve automatically changed the base branch from `main` to `develop`, as that\'s where we accept contributions. See [CONTRIBUTING.md](https://github.com/nicklockwood/SwiftFormat/blob/main/CONTRIBUTING.md) for details.'
+            });

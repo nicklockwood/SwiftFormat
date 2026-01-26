@@ -1513,7 +1513,7 @@ extension Formatter {
     ) -> TypeName? {
         let startToken = tokens[startOfTypeIndex]
 
-        /// Helpers that calls `parseType` with all of the optional params passed in by default
+        // Helpers that calls `parseType` with all of the optional params passed in by default
         func parseType(at index: Int) -> TypeName? {
             self.parseType(
                 at: index,

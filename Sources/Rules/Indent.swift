@@ -70,6 +70,27 @@ public extension FormatRule {
                 return 0
             }
 
+            func matchingIfdefIndent(forDirectiveAt directiveIndex: Int) -> String? {
+                var nestedEndifCount = 0
+                var index = directiveIndex - 1
+                while index >= 0 {
+                    let token = formatter.tokens[index]
+                    switch token {
+                    case .endOfScope("#endif"):
+                        nestedEndifCount += 1
+                    case .startOfScope("#if"):
+                        if nestedEndifCount == 0 {
+                            return formatter.currentIndentForLine(at: index)
+                        }
+                        nestedEndifCount -= 1
+                    default:
+                        break
+                    }
+                    index -= 1
+                }
+                return nil
+            }
+
             var i = i
             switch token {
             case let .startOfScope(string):
@@ -264,7 +285,12 @@ public extension FormatRule {
                     i += applyIndent(indent, at: start)
                 case .noIndent:
                     // #else/#elseif should be at same level as corresponding #if
-                    i += applyNoIndentIfdefFix(ifdefIndent: indentStack.last ?? "", at: start)
+                    let targetIndent = matchingIfdefIndent(forDirectiveAt: i)
+                        ?? indentStack.last
+                        ?? ""
+                    if formatter.currentIndentForLine(at: start) != targetIndent {
+                        i += applyIndent(targetIndent, at: start)
+                    }
                 case .preserve:
                     break
                 case .outdent:
@@ -389,9 +415,14 @@ public extension FormatRule {
                         i += applyIndent("", at: start)
                     } else if token == .endOfScope("#endif"), formatter.options.ifdefIndent == .noIndent {
                         // #endif should be at same level as corresponding #if
-                        // Use indent captured before popScope, fall back to current stack
-                        let ifdefIndent = ifdefIndentBeforePop ?? indentStack.last ?? ""
-                        i += applyNoIndentIfdefFix(ifdefIndent: ifdefIndent, at: start)
+                        // Align to the indent of the matching #if when available.
+                        let targetIndent = matchingIfdefIndent(forDirectiveAt: i)
+                            ?? ifdefIndentBeforePop
+                            ?? indentStack.last
+                            ?? ""
+                        if formatter.currentIndentForLine(at: start) != targetIndent {
+                            i += applyIndent(targetIndent, at: start)
+                        }
                     } else if token == .endOfScope("#endif"), formatter.options.ifdefIndent == .preserve {
                         // Do nothing - preserve current position
                     } else {

@@ -631,6 +631,12 @@ public extension FormatRule {
                 } else if linewrapped {
                     // Don't indent line starting with dot if previous line was just a closing brace
                     var lastToken = formatter.tokens[lastNonSpaceOrLinebreakIndex]
+                    let isConditionalAssignmentLinebreak =
+                        formatter.options.ifdefIndent == .noIndent &&
+                        noIndentIfdefDepth > 0 &&
+                        scopeStack.last == .operator("=", .infix) &&
+                        lastNonSpaceOrLinebreakIndex > -1 &&
+                        formatter.tokens[lastNonSpaceOrLinebreakIndex] == .operator("=", .infix)
                     if formatter.options.allmanBraces, nextToken == .startOfScope("{"),
                        formatter.isStartOfClosure(at: nextNonSpaceIndex)
                     {
@@ -675,10 +681,14 @@ public extension FormatRule {
                                 indent += formatter.options.indent
                             }
                         } else if !formatter.options.xcodeIndentation || !formatter.isWrappedDeclaration(at: i) {
-                            indent += formatter.linewrapIndent(at: i)
+                            if !isConditionalAssignmentLinebreak {
+                                indent += formatter.linewrapIndent(at: i)
+                            }
                         }
                     } else if !formatter.options.xcodeIndentation || !formatter.isWrappedDeclaration(at: i) {
-                        indent += formatter.linewrapIndent(at: i)
+                        if !isConditionalAssignmentLinebreak {
+                            indent += formatter.linewrapIndent(at: i)
+                        }
                     }
 
                     linewrapStack[linewrapStack.count - 1] = true

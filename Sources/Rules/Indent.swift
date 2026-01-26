@@ -58,7 +58,7 @@ public extension FormatRule {
                 scopeStack.removeLast()
             }
 
-            /// Returns the change in index after applying indent if needed for noIndent ifdef
+            // Returns the change in index after applying indent if needed for noIndent ifdef
             func applyNoIndentIfdefFix(ifdefIndent: String, at startIndex: Int) -> Int {
                 let currentIndent = formatter.currentIndentForLine(at: startIndex)
                 let isNested = noIndentIfdefDepth > 1

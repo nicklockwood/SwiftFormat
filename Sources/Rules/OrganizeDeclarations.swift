@@ -666,8 +666,8 @@ extension Formatter {
         var declarationGroups: [[Declaration]] = []
         var currentGroup: [Declaration] = []
 
-        /// Ends the current group, ensuring that groups are only recorded
-        /// when they contain two or more declarations.
+        // Ends the current group, ensuring that groups are only recorded
+        // when they contain two or more declarations.
         func endCurrentGroup(addingToExistingGroup declarationToAdd: Declaration? = nil) {
             if let declarationToAdd {
                 currentGroup.append(declarationToAdd)

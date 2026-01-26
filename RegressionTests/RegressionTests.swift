@@ -31,7 +31,7 @@ final class RegressionTests: XCTestCase {
             Swift.print(message)
         }
         // NOTE: to update regression suite, run again without `--lint` argument
-        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "Snapshots Sources --unexclude Snapshots --symlinks follow --cache ignore --lint"), .ok)
+        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "Snapshots --unexclude Snapshots --symlinks follow --cache ignore --lint"), .ok)
     }
 
     func testCache() {
@@ -39,7 +39,7 @@ final class RegressionTests: XCTestCase {
             Swift.print(message)
         }
         // NOTE: to update regression suite, run again without `--lint` argument
-        let result = CLI.run(in: projectDirectory.path, with: "Sources --cache clear --lint")
+        let result = CLI.run(in: projectDirectory.path, with: "Snapshots --unexclude Snapshots --cache clear --lint")
         XCTAssertEqual(result, .ok)
 
         // Test cache
@@ -49,7 +49,7 @@ final class RegressionTests: XCTestCase {
                 Swift.print(message)
                 messages.append(message)
             }
-            XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "Sources --symlinks follow --lint --verbose"), .ok)
+            XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "Snapshots --unexclude Snapshots --symlinks follow --lint --verbose"), .ok)
             XCTAssert(messages.contains("-- no changes (cached)"))
         }
     }

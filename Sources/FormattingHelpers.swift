@@ -884,10 +884,10 @@ extension Formatter {
             }
         }
 
-        /// Wraps / re-wraps a multi-line statement where each delimiter index
-        /// should be the first token on its line, if the statement
-        /// is longer than the max width or there is already a linebreak
-        /// adjacent to one of the delimiters
+        // Wraps / re-wraps a multi-line statement where each delimiter index
+        // should be the first token on its line, if the statement
+        // is longer than the max width or there is already a linebreak
+        // adjacent to one of the delimiters
         @discardableResult
         func wrapMultilineStatement(
             startIndex: Int,
@@ -2650,14 +2650,14 @@ extension Formatter {
                         closureLocalNames.insert("self")
                     }
 
-                    /// Whether or not the closure at the current index permits implicit self.
-                    ///
-                    /// SE-0269 (in Swift 5.3) allows implicit self when:
-                    ///  - the closure captures self explicitly using [self] or [unowned self]
-                    ///  - self is not a reference type
-                    ///
-                    /// SE-0365 (in Swift 5.8) additionally allows implicit self using
-                    /// [weak self] captures after self has been unwrapped.
+                    // Whether or not the closure at the current index permits implicit self.
+                    //
+                    // SE-0269 (in Swift 5.3) allows implicit self when:
+                    //  - the closure captures self explicitly using [self] or [unowned self]
+                    //  - self is not a reference type
+                    //
+                    // SE-0365 (in Swift 5.8) additionally allows implicit self using
+                    // [weak self] captures after self has been unwrapped.
                     func closureAllowsImplicitSelf() -> Bool {
                         guard options.swiftVersion >= "5.3" else {
                             return false

@@ -401,10 +401,13 @@ extension Collection<Declaration> {
         forEachRecursiveDeclaration { declaration in
             guard declaration.range.contains(index) else { return }
 
-            if let containingDeclaration,
-               !containingDeclaration.range.contains(declaration.range)
-            {
-                return
+            // Back-deployable range containment check (avoids macOS 13+ API)
+            if let outer = containingDeclaration?.range {
+                let containsInner = outer.lowerBound <= declaration.range.lowerBound
+                    && outer.upperBound >= declaration.range.upperBound
+                if !containsInner {
+                    return
+                }
             }
 
             containingDeclaration = declaration

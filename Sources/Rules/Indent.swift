@@ -70,7 +70,7 @@ public extension FormatRule {
                 return 0
             }
 
-            func matchingIfdefIndent(forDirectiveAt directiveIndex: Int) -> String? {
+            func matchingIfdefIndent(forDirectiveAt directiveIndex: Int, fallbackIndent: String) -> String {
                 var nestedEndifCount = 0
                 var index = directiveIndex - 1
                 while index >= 0 {
@@ -88,7 +88,7 @@ public extension FormatRule {
                     }
                     index -= 1
                 }
-                return nil
+                return fallbackIndent
             }
 
             var i = i
@@ -285,9 +285,8 @@ public extension FormatRule {
                     i += applyIndent(indent, at: start)
                 case .noIndent:
                     // #else/#elseif should be at same level as corresponding #if
-                    let targetIndent = matchingIfdefIndent(forDirectiveAt: i)
-                        ?? indentStack.last
-                        ?? ""
+                    let fallbackIndent = indentStack.last ?? ""
+                    let targetIndent = matchingIfdefIndent(forDirectiveAt: i, fallbackIndent: fallbackIndent)
                     if formatter.currentIndentForLine(at: start) != targetIndent {
                         i += applyIndent(targetIndent, at: start)
                     }
@@ -416,10 +415,8 @@ public extension FormatRule {
                     } else if token == .endOfScope("#endif"), formatter.options.ifdefIndent == .noIndent {
                         // #endif should be at same level as corresponding #if
                         // Align to the indent of the matching #if when available.
-                        let targetIndent = matchingIfdefIndent(forDirectiveAt: i)
-                            ?? ifdefIndentBeforePop
-                            ?? indentStack.last
-                            ?? ""
+                        let fallbackIndent = ifdefIndentBeforePop ?? indentStack.last ?? ""
+                        let targetIndent = matchingIfdefIndent(forDirectiveAt: i, fallbackIndent: fallbackIndent)
                         if formatter.currentIndentForLine(at: start) != targetIndent {
                             i += applyIndent(targetIndent, at: start)
                         }

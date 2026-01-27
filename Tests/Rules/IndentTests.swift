@@ -4726,6 +4726,23 @@ final class IndentTests: XCTestCase {
         testFormatting(for: input, output, rule: .indent, options: options)
     }
 
+    func testNoIndentIfdefFragmentWithUnmatchedDirectivesInsideScope() {
+        let input = """
+        {
+            #endif
+                #else
+        }
+        """
+        let output = """
+        {
+            #endif
+            #else
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent, fragment: true)
+        testFormatting(for: input, output, rule: .indent, options: options)
+    }
+
     func testNoIndentIfElse() {
         let input = """
         func foo() {

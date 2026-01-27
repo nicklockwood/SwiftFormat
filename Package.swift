@@ -1,4 +1,4 @@
-// swift-tools-version:5.7
+// swift-tools-version:5.9
 import PackageDescription
 
 let package = Package(
@@ -7,8 +7,15 @@ let package = Package(
         .executable(name: "swiftformat", targets: ["CommandLineTool"]),
         .library(name: "SwiftFormat", targets: ["SwiftFormat"]),
         .plugin(name: "SwiftFormatPlugin", targets: ["SwiftFormatPlugin"]),
+        .plugin(name: "SwiftFormatLinterBuildToolPlugin", targets: ["SwiftFormatLinterBuildToolPlugin"]),
     ],
     targets: [
+        .plugin(
+            name: "SwiftFormatLinterBuildToolPlugin",
+            capability: .buildTool(),
+            dependencies: [.target(name: "CommandLineTool")],
+            path: "Plugins/SwiftFormatLinterBuildToolPlugin"
+        ),
         .executableTarget(
             name: "CommandLineTool", dependencies: ["SwiftFormat"], path: "CommandLineTool",
             exclude: ["swiftformat"]

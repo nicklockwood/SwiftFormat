@@ -199,8 +199,8 @@ public extension FormatRule {
                     }
                 }
 
-                // Track which parameters are assigned via closure invocation (need result builder on property)
-                var closureInvocationAssignments = Set<String>()
+                // Track which parameters need result builder attributes transferred to the property
+                var assignmentsNeedingResultBuilder = Set<String>()
 
                 if isRedundant {
                     while let nextToken = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: bodyIndex - 1),
@@ -234,8 +234,13 @@ public extension FormatRule {
                                formatter.index(of: .nonSpaceOrCommentOrLinebreak, in: parenIndex + 1 ..< endParen) == nil
                             {
                                 // This is `param()` - a closure invocation with no arguments
-                                closureInvocationAssignments.insert(propToken.string)
+                                assignmentsNeedingResultBuilder.insert(propToken.string)
                                 nextAfterValue = endParen + 1
+                            } else if let param = parameters.first(where: { $0.name == propToken.string }),
+                                      param.resultBuilderAttribute != nil
+                            {
+                                // This is a direct closure assignment with a result builder attribute
+                                assignmentsNeedingResultBuilder.insert(propToken.string)
                             }
 
                             assignmentCount += 1
@@ -250,8 +255,9 @@ public extension FormatRule {
                 // Remove redundant init if all assignments match (only for properties without defaults)
                 if isRedundant, assignmentCount == propertiesWithoutDefaults.count {
                     // Add result builder attribute to properties that need them
+                    // This includes both closure invocations (self.prop = param()) and direct assignments (self.prop = param)
                     for property in propertiesWithoutDefaults {
-                        guard closureInvocationAssignments.contains(property.name),
+                        guard assignmentsNeedingResultBuilder.contains(property.name),
                               let attribute = parameters.first(where: { $0.name == property.name })?.resultBuilderAttribute
                         else { continue }
 
@@ -499,7 +505,20 @@ extension Formatter {
             return true
         }
 
-        // Otherwise, types must match exactly
-        return param.type == property.type
+        // Check if types match exactly
+        if param.type == property.type {
+            return true
+        }
+
+        // Check if types match after stripping @escaping from the parameter type.
+        // Stored closure properties are implicitly escaping, so `@escaping () -> Void` parameter
+        // is equivalent to `() -> Void` property.
+        let paramTypeWithoutEscaping = param.type.string
+            .replacingOccurrences(of: "@escaping ", with: "")
+        if paramTypeWithoutEscaping == property.type.string {
+            return true
+        }
+
+        return false
     }
 }

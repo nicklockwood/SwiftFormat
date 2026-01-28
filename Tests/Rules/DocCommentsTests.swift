@@ -115,6 +115,11 @@ final class DocCommentsTests: XCTestCase {
                 /// an entire following block of code (not just the property)
                 let bar: Bar? = Bar()
                 print(bar)
+
+                #if DEBUG
+                    /// This comment is in a conditional compilation block
+                    let baaz = Baaz()
+                #endif
             }
 
             var baaz: Baaz {
@@ -150,6 +155,11 @@ final class DocCommentsTests: XCTestCase {
                 // an entire following block of code (not just the property)
                 let bar: Bar? = Bar()
                 print(bar)
+
+                #if DEBUG
+                    // This comment is in a conditional compilation block
+                    let baaz = Baaz()
+                #endif
             }
 
             var baaz: Baaz {

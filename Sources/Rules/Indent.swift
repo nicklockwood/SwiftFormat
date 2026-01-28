@@ -659,12 +659,19 @@ public extension FormatRule {
                 } else if linewrapped {
                     // Don't indent line starting with dot if previous line was just a closing brace
                     var lastToken = formatter.tokens[lastNonSpaceOrLinebreakIndex]
-                    let isConditionalAssignmentLinebreak =
-                        formatter.options.ifdefIndent == .noIndent &&
-                        noIndentIfdefDepth > 0 &&
-                        scopeStack.last == .operator("=", .infix) &&
-                        lastNonSpaceOrLinebreakIndex > -1 &&
-                        formatter.tokens[lastNonSpaceOrLinebreakIndex] == .operator("=", .infix)
+                    // In noIndent #if blocks, skip extra linewrap indent for conditional
+                    // assignments and top-level code (not nested in { scopes)
+                    let isInNoIndentIfdef = formatter.options.ifdefIndent == .noIndent && noIndentIfdefDepth > 0
+                    let skipLinewrapIndent = isInNoIndentIfdef && (
+                        // Conditional assignment (let x = if ...)
+                        (scopeStack.last == .operator("=", .infix) &&
+                            formatter.tokens[lastNonSpaceOrLinebreakIndex] == .operator("=", .infix)) ||
+                            // Top-level code - allow ( and [ for argument/array continuation
+                            (!indent.isEmpty && scopeStack.allSatisfy {
+                                [.startOfScope("#if"), .keyword("#else"), .keyword("#elseif"),
+                                 .startOfScope("("), .startOfScope("[")].contains($0)
+                            })
+                    )
                     if formatter.options.allmanBraces, nextToken == .startOfScope("{"),
                        formatter.isStartOfClosure(at: nextNonSpaceIndex)
                     {
@@ -709,12 +716,12 @@ public extension FormatRule {
                                 indent += formatter.options.indent
                             }
                         } else if !formatter.options.xcodeIndentation || !formatter.isWrappedDeclaration(at: i) {
-                            if !isConditionalAssignmentLinebreak {
+                            if !skipLinewrapIndent {
                                 indent += formatter.linewrapIndent(at: i)
                             }
                         }
                     } else if !formatter.options.xcodeIndentation || !formatter.isWrappedDeclaration(at: i) {
-                        if !isConditionalAssignmentLinebreak {
+                        if !skipLinewrapIndent {
                             indent += formatter.linewrapIndent(at: i)
                         }
                     }
@@ -732,9 +739,33 @@ public extension FormatRule {
                 }
                 // Apply indent
                 switch nextToken {
-                case .linebreak, .error, .keyword("#else"), .keyword("#elseif"), .endOfScope("#endif"),
-                     .startOfScope("#if") where formatter.options.ifdefIndent != .indent:
+                case .linebreak, .error:
                     break
+                case .keyword("#else"), .keyword("#elseif"), .endOfScope("#endif"),
+                     .startOfScope("#if") where formatter.options.ifdefIndent != .indent:
+                    // In noIndent mode, indent #if blocks in method chains at the top level
+                    let ifdefTokens: [Token] = [.startOfScope("#if"), .keyword("#else"), .keyword("#elseif")]
+                    if !linewrapped, linewrapStack.last != true,
+                       scopeStack.isEmpty || scopeStack.allSatisfy({ ifdefTokens.contains($0) }),
+                       formatter.isIfdefInMethodChain(at: nextNonSpaceIndex),
+                       formatter.tokens[lastNonSpaceOrLinebreakIndex] != .endOfScope("}")
+                    {
+                        let currentLineIndent = formatter.currentIndentForLine(at: nextNonSpaceIndex)
+                        let prevLineIndent = formatter.currentIndentForLine(at: lastNonSpaceOrLinebreakIndex)
+                        // Only indent if the #if is under-indented or at the same level as previous line
+                        if currentLineIndent.count <= prevLineIndent.count {
+                            let expectedIndent = prevLineIndent + formatter.options.indent
+                            if nextToken == .startOfScope("#if") {
+                                applyIndent(expectedIndent, at: i + 1)
+                            } else {
+                                // For #else/#elseif/#endif, match the corresponding #if indent
+                                let ifdefIndent = matchingIfdefIndent(forDirectiveAt: nextNonSpaceIndex, fallbackIndent: expectedIndent)
+                                if currentLineIndent.count < ifdefIndent.count {
+                                    applyIndent(ifdefIndent, at: i + 1)
+                                }
+                            }
+                        }
+                    }
                 case .startOfScope("/*"), .commentBody, .endOfScope("*/"):
                     nextNonSpaceIndex = formatter.endOfScope(at: nextNonSpaceIndex) ?? nextNonSpaceIndex
                     fallthrough
@@ -1016,5 +1047,48 @@ extension Formatter {
         else { return false }
 
         return true
+    }
+
+    /// Whether the given #if/#else/#elseif/#endif at `index` is part of a method chain.
+    /// This is determined by checking if the content inside the #if block starts with `.`,
+    /// indicating it's a continuation of a method chain.
+    func isIfdefInMethodChain(at index: Int) -> Bool {
+        guard [.startOfScope("#if"), .keyword("#else"), .keyword("#elseif"), .endOfScope("#endif")]
+            .contains(tokens[index])
+        else { return false }
+
+        // For #else, #elseif, #endif: check if the corresponding #if is in a method chain
+        if tokens[index] != .startOfScope("#if") {
+            var depth = tokens[index] == .endOfScope("#endif") ? 1 : 0
+            var i = index - 1
+            while i >= 0 {
+                if tokens[i] == .endOfScope("#endif") {
+                    depth += 1
+                } else if tokens[i] == .startOfScope("#if") {
+                    if depth == 0 {
+                        return isIfdefInMethodChain(at: i)
+                    }
+                    depth -= 1
+                }
+                i -= 1
+            }
+            return false
+        }
+
+        // For #if: check if the first content after the condition starts with `.`
+        guard let linebreakIndex = self.index(of: .linebreak, after: index),
+              let firstContentIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: linebreakIndex)
+        else { return false }
+
+        // Skip nested #if directives to find actual content
+        var contentIndex = firstContentIndex
+        while [.startOfScope("#if"), .keyword("#else"), .keyword("#elseif")].contains(tokens[contentIndex]) {
+            guard let nextLinebreak = self.index(of: .linebreak, after: contentIndex),
+                  let nextContent = self.index(of: .nonSpaceOrCommentOrLinebreak, after: nextLinebreak)
+            else { return false }
+            contentIndex = nextContent
+        }
+
+        return tokens[contentIndex] == .operator(".", .infix)
     }
 }

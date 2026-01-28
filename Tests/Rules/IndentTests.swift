@@ -6972,4 +6972,92 @@ final class IndentTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .indent)
     }
+
+    func testNoIndentIfDefInMethodChain() {
+        let input = """
+        MyView()
+        #if DEBUG
+        .debugModifier()
+        #else
+        .modifier()
+        #endif
+        """
+        let output = """
+        MyView()
+            #if DEBUG
+            .debugModifier()
+            #else
+            .modifier()
+            #endif
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        testFormatting(for: input, output, rule: .indent, options: options)
+    }
+
+    func testNoIndentIfDefInMethodChainNestedInIfDef() {
+        let input = """
+        #if DEBUG
+        MyView()
+        #if os(iOS)
+        .iOSModifier()
+        #else
+        .otherModifier()
+        #endif
+        #endif
+        """
+        let output = """
+        #if DEBUG
+        MyView()
+            #if os(iOS)
+            .iOSModifier()
+            #else
+            .otherModifier()
+            #endif
+        #endif
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        testFormatting(for: input, output, rule: .indent, options: options)
+    }
+
+    func testNoIndentIfDefInMethodChainWithClosure() {
+        // Inside a function body, #if in method chains stays at the statement level
+        // (consistent with testIfDefPostfixMemberSyntaxNoIndenting)
+        let input = """
+        extension View {
+            func foo() -> some View {
+                self.animation(animation, value: value)
+                #if DEBUG
+                .transaction {
+                    if condition {
+                        $0.disablesAnimations = true
+                    }
+                }
+                #endif
+            }
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        testFormatting(for: input, rule: .indent, options: options,
+                       exclude: [.redundantSelf])
+    }
+
+    func testNoDoubleIndentForMethodChainInsideIfDef() {
+        let input = """
+        #if ALPHA || DEBUG
+        HostingController(view: MyView()
+                .modifier()
+        )
+        #endif
+        """
+        let output = """
+        #if ALPHA || DEBUG
+        HostingController(view: MyView()
+            .modifier()
+        )
+        #endif
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        testFormatting(for: input, output, rule: .indent, options: options,
+                       exclude: [.wrapArguments])
+    }
 }

@@ -677,7 +677,9 @@ final class RedundantMemberwiseInitTests: XCTestCase {
         testFormatting(for: input, rule: .redundantMemberwiseInit, exclude: [.redundantSelf, .trailingSpace, .indent])
     }
 
-    func testRemoveInitWithAttributes() {
+    func testPreserveInitWithAttributes() {
+        // Inits with attributes like @inlinable can't be removed because
+        // synthesized memberwise inits don't support these attributes
         let input = """
         struct Person {
             var name: String
@@ -690,59 +692,7 @@ final class RedundantMemberwiseInitTests: XCTestCase {
             }
         }
         """
-        let output = """
-        struct Person {
-            var name: String
-            var age: Int
-        }
-        """
-        testFormatting(for: input, output, rule: .redundantMemberwiseInit)
-    }
-
-    func testRemoveInitWithMultipleAttributes() {
-        let input = """
-        struct Person {
-            var name: String
-            var age: Int
-
-            @inlinable
-            @available(iOS 13.0, *)
-            init(name: String, age: Int) {
-                self.name = name
-                self.age = age
-            }
-        }
-        """
-        let output = """
-        struct Person {
-            var name: String
-            var age: Int
-        }
-        """
-        testFormatting(for: input, output, rule: .redundantMemberwiseInit)
-    }
-
-    func testRemoveInitWithAttributesAndComments() {
-        let input = """
-        struct Person {
-            var name: String
-            var age: Int
-
-            // Initializes a person with name and age
-            @inlinable
-            internal init(name: String, age: Int) {
-                self.name = name
-                self.age = age
-            }
-        }
-        """
-        let output = """
-        struct Person {
-            var name: String
-            var age: Int
-        }
-        """
-        testFormatting(for: input, output, rule: .redundantMemberwiseInit, exclude: [.docComments])
+        testFormatting(for: input, rule: .redundantMemberwiseInit)
     }
 
     func testDontRemoveInitWithPrivateStoredProperty() {

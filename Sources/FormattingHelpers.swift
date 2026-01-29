@@ -53,6 +53,9 @@ extension Formatter {
             case "@escaping", "@noescape", "@Sendable", "@MainActor":
                 return true
             case _ where keywordOrAttribute.isAttribute:
+                if next(.nonSpaceOrCommentOrLinebreak, after: index) == .startOfScope("[") {
+                    return true
+                }
                 if let i = self.index(of: .startOfScope("("), after: index) {
                     return isParameterList(at: i)
                 }

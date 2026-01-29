@@ -96,28 +96,8 @@ final class SortTypealiasesTests: XCTestCase {
         let input = """
         typealias Dependencies
             = any FooProviding
-            & any BarProviding
-            & any BaazProviding
-            & any QuuxProviding
-        """
-
-        let output = """
-        typealias Dependencies
-            = any BaazProviding
-            & any BarProviding
-            & any FooProviding
-            & any QuuxProviding
-        """
-
-        testFormatting(for: input, output, rule: .sortTypealiases)
-    }
-
-    func testSortWrappedMultilineTypealiasWithMixedAny() {
-        let input = """
-        typealias Dependencies
-            = any FooProviding
             & BarProviding
-            & any BaazProviding
+            & BaazProviding
             & QuuxProviding
         """
 
@@ -125,7 +105,7 @@ final class SortTypealiasesTests: XCTestCase {
         typealias Dependencies
             = any BaazProviding
             & BarProviding
-            & any FooProviding
+            & FooProviding
             & QuuxProviding
         """
 
@@ -216,11 +196,14 @@ final class SortTypealiasesTests: XCTestCase {
         testFormatting(for: input, output, rule: .sortTypealiases)
     }
 
-    func testSortSingleLineTypealiasBeginningWithAny() {
+    func testSortSingleLineTypealiasWithLeadingAny() {
         let input = """
-        typealias Placeholders = any Bar & Foo
+        typealias Wrapped = any UIView & UIContentView
         """
-        testFormatting(for: input, rule: .sortTypealiases)
+        let output = """
+        typealias Wrapped = any UIContentView & UIView
+        """
+        testFormatting(for: input, output, rule: .sortTypealiases)
     }
 
     func testCollectionTypealiasWithArrayOfExistentialTypes() {

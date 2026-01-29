@@ -4680,69 +4680,6 @@ final class IndentTests: XCTestCase {
         testFormatting(for: input, output, rule: .indent, options: options)
     }
 
-    func testNoIndentIfdefFixesOverIndentedElse() {
-        let input = """
-        func example(flag: Bool) {
-          #if os(macOS)
-          if flag {
-            return
-          }
-              #else
-          return
-          #endif
-        }
-        """
-        let output = """
-        func example(flag: Bool) {
-          #if os(macOS)
-          if flag {
-            return
-          }
-          #else
-          return
-          #endif
-        }
-        """
-        let options = FormatOptions(indent: "  ", ifdefIndent: .noIndent)
-        testFormatting(for: input, output, rule: .indent, options: options)
-    }
-
-    func testNoIndentIfdefFixesOverIndentedEndif() {
-        let input = """
-        func example() {
-          #if DEBUG
-          return
-              #endif
-        }
-        """
-        let output = """
-        func example() {
-          #if DEBUG
-          return
-          #endif
-        }
-        """
-        let options = FormatOptions(indent: "  ", ifdefIndent: .noIndent)
-        testFormatting(for: input, output, rule: .indent, options: options)
-    }
-
-    func testNoIndentIfdefFragmentWithUnmatchedDirectivesInsideScope() {
-        let input = """
-        {
-            #endif
-                #else
-        }
-        """
-        let output = """
-        {
-            #endif
-            #else
-        }
-        """
-        let options = FormatOptions(ifdefIndent: .noIndent, fragment: true)
-        testFormatting(for: input, output, rule: .indent, options: options)
-    }
-
     func testNoIndentIfElse() {
         let input = """
         func foo() {

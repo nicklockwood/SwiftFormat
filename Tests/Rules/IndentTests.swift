@@ -7026,13 +7026,13 @@ final class IndentTests: XCTestCase {
         extension View {
             func foo() -> some View {
                 self.animation(animation, value: value)
-                #if DEBUG
-                .transaction {
-                    if condition {
-                        $0.disablesAnimations = true
+                    #if DEBUG
+                    .transaction {
+                        if condition {
+                            $0.disablesAnimations = true
+                        }
                     }
-                }
-                #endif
+                    #endif
             }
         }
         """

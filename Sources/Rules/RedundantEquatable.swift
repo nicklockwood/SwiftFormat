@@ -42,6 +42,12 @@ public extension FormatRule {
                 continue
             }
 
+            // Don't remove functions that have attributes (e.g. @usableFromInline, @inlinable)
+            // since these attributes can't be applied to synthesized Equatable conformances
+            guard equatableType.equatableFunction.attributes.isEmpty else {
+                continue
+            }
+
             // The compiler automatically synthesizes Equatable implementations for structs
             // as long as all of the properties are themselves Equatable. This is usually true
             //

@@ -123,6 +123,12 @@ public extension FormatRule {
                     continue
                 }
 
+                // Don't remove inits that have attributes (e.g. @usableFromInline, @inlinable)
+                // since these attributes can't be applied to synthesized memberwise inits
+                if !initDeclaration.attributes.isEmpty {
+                    continue
+                }
+
                 // Parse the init function using the parseFunctionDeclaration helper
                 guard let functionDecl = formatter.parseFunctionDeclaration(keywordIndex: initDeclaration.keywordIndex),
                       let bodyRange = functionDecl.bodyRange

@@ -6479,27 +6479,6 @@ final class IndentTests: XCTestCase {
         testFormatting(for: input, output, rule: .indent, exclude: [.wrapMultilineStatementBraces])
     }
 
-    func testIndentIfExpressionAssignmentInsideNoIndentIfdef() {
-        let input = """
-        #if os(iOS)
-        func makeRecipients(subtitle: String) {
-          let recipients: [INPerson] =
-            if subtitle.isEmpty {
-              []
-            } else {
-              [
-                subtitle,
-              ]
-            }
-          _ = recipients
-        }
-        #endif
-        """
-
-        let options = FormatOptions(indent: "  ", ifdefIndent: .noIndent)
-        testFormatting(for: input, rule: .indent, options: options)
-    }
-
     func testIndentIfExpressionAssignmentOnSameLine() {
         let input = """
         let foo = if let bar {

@@ -235,4 +235,17 @@ final class SpaceAroundBracketsTests: XCTestCase {
         testFormatting(for: input, rule: .spaceAroundBrackets,
                        options: FormatOptions(swiftVersion: "6.1"))
     }
+
+    func testSpacePreservedBetweenGlobalActorAndCaptureList() {
+        let input = """
+        Task { @MainActor [capturedProperty] in
+            print(capturedProperty)
+        }
+
+        Task { @MyGlobalActor [capturedProperty] in
+            print(capturedProperty)
+        }
+        """
+        testFormatting(for: input, rule: .spaceAroundBrackets)
+    }
 }

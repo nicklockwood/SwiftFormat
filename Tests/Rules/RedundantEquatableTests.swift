@@ -619,4 +619,34 @@ final class RedundantEquatableTests: XCTestCase {
 
         testFormatting(for: input, rule: .redundantEquatable)
     }
+
+    func testPreserveEquatableImplementationWithUsableFromInlineAttribute() {
+        let input = """
+        public struct Foo: Equatable {
+            let bar: String
+
+            @usableFromInline
+            static func == (lhs: Foo, rhs: Foo) -> Bool {
+                lhs.bar == rhs.bar
+            }
+        }
+        """
+
+        testFormatting(for: input, rule: .redundantEquatable)
+    }
+
+    func testPreserveEquatableImplementationWithInlinableAttribute() {
+        let input = """
+        public struct Foo: Equatable {
+            let bar: String
+
+            @inlinable
+            static func == (lhs: Foo, rhs: Foo) -> Bool {
+                lhs.bar == rhs.bar
+            }
+        }
+        """
+
+        testFormatting(for: input, rule: .redundantEquatable)
+    }
 }

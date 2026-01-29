@@ -133,6 +133,11 @@ extension Declaration {
         return allModifiers
     }
 
+    /// The attributes before this declaration's keyword.
+    var attributes: [String] {
+        modifiers.filter(\.isAttribute)
+    }
+
     /// Whether or not this declaration has the given modifier
     func hasModifier(_ modifier: String) -> Bool {
         formatter.modifiersForDeclaration(at: keywordIndex, contains: modifier)

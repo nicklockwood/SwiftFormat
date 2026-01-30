@@ -32,7 +32,7 @@
 import Foundation
 
 /// The current SwiftFormat version
-let swiftFormatVersion = "0.59.0"
+let swiftFormatVersion = "0.59.1"
 public let version = swiftFormatVersion
 
 /// The standard SwiftFormat config file name
@@ -576,7 +576,7 @@ public func applyRules(
         }
     }
 
-    // Split tokens into lines
+    /// Split tokens into lines
     func getLines(in tokens: [Token], includingLinebreaks: Bool) -> [Int: ArraySlice<Token>] {
         var lines: [Int: ArraySlice<Token>] = [:]
         var startIndex = 0, nextLine = 1

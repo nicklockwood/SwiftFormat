@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.59.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.59.1) (2026-01-29)
+
+- Reverted changes to `indent` rule `--ifdef` handling from 0.59.0
+- Updated `docComments` rule to use doc comments on nested functions and handle conditional compilation blocks in function bodies
+- Updated `spaceAroundBrackets` to preserve space between global actor attribute and closure capture list
+- Updated `redundantMemberwiseInit` to preserve inits with attributes
+- Fixed handling of `any` keyword in `sortTypealiases` rule
+- Resolved build issue related to macOS 13 SDK availability
+
 ## [0.59.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.59.0) (2026-01-25)
 
 - Added `simplifyGenericConstraints` rule

@@ -90,6 +90,10 @@ fi
 echo "Replacing Command Line Tool executable with archived version..."
 cp "$ARCHIVE_EXECUTABLE" CommandLineTool/swiftformat
 
+# 8. Run format.sh to format the codebase with the new version
+echo "Formatting using new binary..."
+bash format.sh
+
 echo ""
 echo "✅ Release preparation completed successfully for version $NEW_VERSION!"
 echo ""

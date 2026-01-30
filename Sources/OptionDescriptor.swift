@@ -547,6 +547,7 @@ extension _Descriptors {
             swiftVersion,
             languageMode,
             markdownFiles,
+            regexRules,
         ]
     }
 
@@ -1492,9 +1493,16 @@ struct _Descriptors {
     let markdownFiles = OptionDescriptor(
         argumentName: "markdown-files",
         displayName: "Markdown Files",
-        help: "Swift in markdown files:",
+        help: "Swift in markdown:",
         keyPath: \.markdownFiles,
         altOptions: ["format-lenient": .lenient, "format-strict": .strict]
+    )
+    let regexRules = OptionDescriptor(
+        argumentName: "regex-rules",
+        displayName: "Regex Replace",
+        help: "Regex rules. Format: [name]/pattern/replacement/[,...]",
+        keyPath: \.regexRules,
+        validate: { _ = try RegexRule(pattern: $0) }
     )
 
     // MARK: - DEPRECATED

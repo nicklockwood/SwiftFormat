@@ -534,7 +534,12 @@ public func applyRules(
 ) throws -> (tokens: [Token], changes: [Formatter.Change]) {
     precondition(maxIterations > 1)
 
-    let originalRules = originalRules.sorted()
+    let originalRules = originalRules.sorted() + options.regexRules.compactMap {
+        guard let rule = RegexRule(rawValue: $0) else {
+            return nil
+        }
+        return FormatRule(regexRule: rule)
+    }
     var tokens = originalTokens
     var range = originalRange
 

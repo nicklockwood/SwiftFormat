@@ -139,17 +139,15 @@ extension Formatter {
             startIndex = attributeIndex - 1
             // Don't remove trailing linebreak - preserve the line structure
             // Don't remove trailing space - it separates from the next token
-        } else {
+        } else if hasTrailingLinebreak, let nextIndex = nextNonSpaceIndex {
             // @ViewBuilder is at the start of the line (possibly with indentation)
-            if hasTrailingLinebreak, let nextIndex = nextNonSpaceIndex {
-                endIndex = nextIndex
-                // Also remove leading indentation
-                if hasLeadingSpace, attributeIndex > 1, tokens[attributeIndex - 2].isLinebreak {
-                    startIndex = attributeIndex - 1
-                }
-            } else if hasTrailingSpace {
-                endIndex = attributeIndex + 1
+            endIndex = nextIndex
+            // Also remove leading indentation
+            if hasLeadingSpace, attributeIndex > 1, tokens[attributeIndex - 2].isLinebreak {
+                startIndex = attributeIndex - 1
             }
+        } else if hasTrailingSpace {
+            endIndex = attributeIndex + 1
         }
 
         removeTokens(in: startIndex ... endIndex)

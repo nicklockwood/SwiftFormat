@@ -1973,9 +1973,9 @@ public func tokenize(_ source: String) -> [Token] {
                     convertOpeningChevronToOperator(at: scopeIndex)
                     processToken()
                     return
-                case .keyword("throws"):
+                case .keyword("throws"), .keyword("repeat"), .keyword("let"):
                     break
-                case .keyword where !token.isAttribute && token != .keyword("repeat"), .endOfScope:
+                case .keyword where !token.isAttribute, .endOfScope:
                     // If we encountered a keyword other than `repeat`, or closing scope
                     // token that wasn't > then the opening < must have been an operator after all
                     convertOpeningChevronToOperator(at: scopeIndex)

@@ -2609,6 +2609,36 @@ final class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testValueGeneric() {
+        let input = "func value<let count: Int>() -> InlineArray<count, UInt8>"
+        let output: [Token] = [
+            .keyword("func"),
+            .space(" "),
+            .identifier("value"),
+            .startOfScope("<"),
+            .keyword("let"),
+            .space(" "),
+            .identifier("count"),
+            .delimiter(":"),
+            .space(" "),
+            .identifier("Int"),
+            .endOfScope(">"),
+            .startOfScope("("),
+            .endOfScope(")"),
+            .space(" "),
+            .operator("->", .infix),
+            .space(" "),
+            .identifier("InlineArray"),
+            .startOfScope("<"),
+            .identifier("count"),
+            .delimiter(","),
+            .space(" "),
+            .identifier("UInt8"),
+            .endOfScope(">"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     func testFunctionThatLooksLikeGenericType() {
         let input = "y<CGRectGetMaxY(r)"
         let output: [Token] = [

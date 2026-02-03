@@ -331,4 +331,170 @@ final class RedundantViewBuilderTests: XCTestCase {
         """
         testFormatting(for: input, rule: .redundantViewBuilder)
     }
+
+    func testRemoveRedundantViewBuilderAfterMainActorOnSameLine() {
+        let input = """
+        struct MyView: View {
+            var body: some View {
+                testView()
+            }
+
+            @MainActor @ViewBuilder
+            func testView() -> some View {
+                Text("Hello")
+            }
+        }
+        """
+        let output = """
+        struct MyView: View {
+            var body: some View {
+                testView()
+            }
+
+            @MainActor
+            func testView() -> some View {
+                Text("Hello")
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantViewBuilder)
+    }
+
+    func testRemoveRedundantViewBuilderAfterMainActorOnSameLineAsDeclaration() {
+        let input = """
+        struct MyView: View {
+            var body: some View {
+                testView()
+            }
+
+            @MainActor @ViewBuilder func testView() -> some View {
+                Text("Hello")
+            }
+        }
+        """
+        let output = """
+        struct MyView: View {
+            var body: some View {
+                testView()
+            }
+
+            @MainActor func testView() -> some View {
+                Text("Hello")
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantViewBuilder)
+    }
+
+    func testRemoveRedundantViewBuilderBeforeMainActorOnSameLine() {
+        let input = """
+        struct MyView: View {
+            var body: some View {
+                testView()
+            }
+
+            @ViewBuilder @MainActor
+            func testView() -> some View {
+                Text("Hello")
+            }
+        }
+        """
+        let output = """
+        struct MyView: View {
+            var body: some View {
+                testView()
+            }
+
+            @MainActor
+            func testView() -> some View {
+                Text("Hello")
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantViewBuilder)
+    }
+
+    func testRemoveRedundantViewBuilderBeforeMainActorOnSameLineAsDeclaration() {
+        let input = """
+        struct MyView: View {
+            var body: some View {
+                testView()
+            }
+
+            @ViewBuilder @MainActor func testView() -> some View {
+                Text("Hello")
+            }
+        }
+        """
+        let output = """
+        struct MyView: View {
+            var body: some View {
+                testView()
+            }
+
+            @MainActor func testView() -> some View {
+                Text("Hello")
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantViewBuilder)
+    }
+
+    func testRemoveRedundantViewBuilderAfterMainActorOnSeparateLines() {
+        let input = """
+        struct MyView: View {
+            var body: some View {
+                testView()
+            }
+
+            @MainActor
+            @ViewBuilder
+            func testView() -> some View {
+                Text("Hello")
+            }
+        }
+        """
+        let output = """
+        struct MyView: View {
+            var body: some View {
+                testView()
+            }
+
+            @MainActor
+            func testView() -> some View {
+                Text("Hello")
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantViewBuilder)
+    }
+
+    func testRemoveRedundantViewBuilderBeforeMainActorOnSeparateLines() {
+        let input = """
+        struct MyView: View {
+            var body: some View {
+                testView()
+            }
+
+            @ViewBuilder
+            @MainActor
+            func testView() -> some View {
+                Text("Hello")
+            }
+        }
+        """
+        let output = """
+        struct MyView: View {
+            var body: some View {
+                testView()
+            }
+
+            @MainActor
+            func testView() -> some View {
+                Text("Hello")
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantViewBuilder)
+    }
 }

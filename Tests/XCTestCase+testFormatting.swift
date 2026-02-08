@@ -83,6 +83,7 @@ extension XCTestCase {
             .blockComments,
             .unusedPrivateDeclarations,
             .preferFinalClasses,
+            .preferExplicitFalse,
         ]
         let exclude = exclude + defaultExclusions.filter { !rules.contains($0) }
         let formatResult: (output: String, changes: [SwiftFormat.Formatter.Change])

@@ -122,6 +122,7 @@
 * [noExplicitOwnership](#noExplicitOwnership)
 * [noGuardInTests](#noGuardInTests)
 * [organizeDeclarations](#organizeDeclarations)
+* [preferExplicitFalse](#preferExplicitFalse)
 * [preferFinalClasses](#preferFinalClasses)
 * [preferSwiftTesting](#preferSwiftTesting)
 * [privateStateVariables](#privateStateVariables)
@@ -1997,6 +1998,26 @@ Prefer `count(where:)` over `filter(_:).count`.
 +         moon.hasAtmosphere
 +     }) > 1
 + })
+```
+
+</details>
+<br/>
+
+## preferExplicitFalse
+
+Prefer `== false` over `!` prefix negation.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- if !flag {
++ if flag == false {
+```
+
+```diff
+- guard !array.isEmpty else { return }
++ guard array.isEmpty == false else { return }
 ```
 
 </details>

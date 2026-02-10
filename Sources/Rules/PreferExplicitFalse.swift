@@ -79,7 +79,7 @@ public extension FormatRule {
 // MARK: - Helpers
 
 extension Formatter {
-    private static let comparisonOperators: Set<String> = [
+    static let comparisonOperators: Set<String> = [
         "==", "!=", "===", "!==", "~=", "<", ">", "<=", ">=",
     ]
 

@@ -425,6 +425,20 @@ final class PreferExplicitFalseTests: XCTestCase {
         testFormatting(for: input, rule: .preferExplicitFalse)
     }
 
+    func testNoChangeForNegationAfterEquals() {
+        let input = """
+        print(a == !b)
+        """
+        testFormatting(for: input, rule: .preferExplicitFalse)
+    }
+
+    func testNoChangeForNegationAfterNotEquals() {
+        let input = """
+        print(a != !b)
+        """
+        testFormatting(for: input, rule: .preferExplicitFalse)
+    }
+
     func testNoChangeForPreprocessorDirective() {
         let input = """
         #if !DEBUG
@@ -441,5 +455,33 @@ final class PreferExplicitFalseTests: XCTestCase {
         #endif
         """
         testFormatting(for: input, rule: .preferExplicitFalse, exclude: [.indent])
+    }
+
+    func testNoChangeForNegationBeforeIs() {
+        let input = """
+        print(!foo is Bar)
+        """
+        testFormatting(for: input, rule: .preferExplicitFalse)
+    }
+
+    func testNoChangeForNegationBeforeAs() {
+        let input = """
+        print(!foo as? Bar)
+        """
+        testFormatting(for: input, rule: .preferExplicitFalse)
+    }
+
+    func testForceUnwrappedNegationBeforeEquals() {
+        let input = """
+        print(!foo! == bar)
+        """
+        testFormatting(for: input, rule: .preferExplicitFalse)
+    }
+
+    func testDoubleNegationAfterEquals() {
+        let input = """
+        print(a == !!b)
+        """
+        testFormatting(for: input, rule: .preferExplicitFalse)
     }
 }

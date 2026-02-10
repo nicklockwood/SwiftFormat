@@ -31,16 +31,24 @@ public extension FormatRule {
                 return
             }
 
+            // Skip if adjacent to a comparison or casting operator —
+            // inserting `== false` would create a non-associative chain
+            // or change precedence. e.g., `a == !b` → `a == b == false`
+            if let prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: notIndex),
+               formatter.isComparisonOrCastingOperator(at: prevIndex)
+            {
+                return
+            }
+
             guard let operandEnd = formatter.endOfPrefixOperand(
                 at: operandStart
             ) else {
                 return
             }
 
-            // Skip if followed by a comparison operator — inserting `== false`
-            // before another comparison creates a non-associative operator chain.
-            // e.g., `!a == b` would become `a == false == b` (compile error)
-            if formatter.isFollowedByComparisonOperator(at: operandEnd) {
+            if let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: operandEnd),
+               formatter.isComparisonOrCastingOperator(at: nextIndex)
+            {
                 return
             }
 
@@ -71,6 +79,10 @@ public extension FormatRule {
 // MARK: - Helpers
 
 extension Formatter {
+    private static let comparisonOperators: Set<String> = [
+        "==", "!=", "===", "!==", "~=", "<", ">", "<=", ">=",
+    ]
+
     /// Finds the end of the postfix expression starting at `index`, which is the
     /// first non-space token after a prefix `!`. Uses `parseExpressionRange` for
     /// expression parsing, then finds the boundary before any infix operators,
@@ -83,35 +95,30 @@ extension Formatter {
         }
 
         // parseExpressionRange includes infix operators in the expression range,
-        // but `!` binds tighter than any infix operator. Scan through the range
-        // and stop at the first infix operator (excluding member access `.`).
-        var i = index
-        while i <= expressionRange.upperBound {
-            let token = tokens[i]
-            if token.isStartOfScope {
-                guard let scopeEnd = endOfScope(at: i) else { break }
-                i = scopeEnd + 1
-                continue
-            }
-            if token.isOperator(ofType: .infix), token != .operator(".", .infix) {
-                return self.index(of: .nonSpaceOrCommentOrLinebreak, before: i)
-            }
-            if token == .keyword("is") || token == .keyword("as") {
-                return self.index(of: .nonSpaceOrCommentOrLinebreak, before: i)
-            }
-            i += 1
+        // but `!` binds tighter than any infix operator. Find the earliest
+        // infix operator (excluding member access `.`) or `is`/`as` keyword.
+        let searchRange = index ..< expressionRange.upperBound + 1
+        let infixIndex = self.index(in: searchRange, where: {
+            $0.isOperator(ofType: .infix) && $0 != .operator(".", .infix)
+        })
+        let isIndex = self.index(of: .keyword("is"), in: index ... expressionRange.upperBound)
+        let asIndex = self.index(of: .keyword("as"), in: index ... expressionRange.upperBound)
+
+        if let breakIndex = [infixIndex, isIndex, asIndex].compactMap({ $0 }).min() {
+            return self.index(of: .nonSpaceOrCommentOrLinebreak, before: breakIndex)
         }
+
         return expressionRange.upperBound
     }
 
-    /// Whether the token after `index` is a comparison operator (`==`, `!=`, etc.)
-    /// in Swift's non-associative `ComparisonPrecedence` group.
-    func isFollowedByComparisonOperator(at index: Int) -> Bool {
-        guard let nextIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index),
-              case let .operator(op, .infix) = tokens[nextIndex]
-        else {
-            return false
+    /// Whether the token at `index` is a comparison operator (`==`, `!=`, etc.)
+    /// or a casting keyword (`is`, `as`) — operators that would conflict with
+    /// an inserted `== false`.
+    func isComparisonOrCastingOperator(at index: Int) -> Bool {
+        let token = tokens[index]
+        if case let .operator(op, .infix) = token {
+            return Self.comparisonOperators.contains(op)
         }
-        return ["==", "!=", "===", "!==", "~=", "<", ">", "<=", ">="].contains(op)
+        return token == .keyword("is") || token == .keyword("as")
     }
 }

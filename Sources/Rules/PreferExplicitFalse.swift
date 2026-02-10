@@ -31,9 +31,16 @@ public extension FormatRule {
                 return
             }
 
-            guard let operandEnd = formatter.endOfPrefixNegationOperand(
-                startingAt: operandStart
+            guard let operandEnd = formatter.endOfPrefixOperand(
+                at: operandStart
             ) else {
+                return
+            }
+
+            // Skip if followed by a comparison operator — inserting `== false`
+            // before another comparison creates a non-associative operator chain.
+            // e.g., `!a == b` would become `a == false == b` (compile error)
+            if formatter.isFollowedByComparisonOperator(at: operandEnd) {
                 return
             }
 
@@ -65,55 +72,46 @@ public extension FormatRule {
 
 extension Formatter {
     /// Finds the end of the postfix expression starting at `index`, which is the
-    /// first non-space token after a prefix `!`. This includes member access chains,
-    /// method calls, subscripts, and postfix operators, but stops before infix
-    /// operators, `is`/`as`, trailing closures, or linebreaks.
-    func endOfPrefixNegationOperand(startingAt index: Int) -> Int? {
-        var endOfExpression: Int
-        switch tokens[index] {
-        case .identifier:
-            endOfExpression = index
-
-        case .startOfScope("("), .startOfScope("["):
-            guard let end = endOfScope(at: index) else { return nil }
-            endOfExpression = end
-
-        case let .keyword(keyword) where keyword.isMacroOrCompilerDirective:
-            endOfExpression = index
-
-        default:
+    /// first non-space token after a prefix `!`. Uses `parseExpressionRange` for
+    /// expression parsing, then finds the boundary before any infix operators,
+    /// since the prefix `!` only binds to the immediate postfix expression.
+    func endOfPrefixOperand(at index: Int) -> Int? {
+        guard let expressionRange = parseExpressionRange(
+            startingAt: index
+        ) else {
             return nil
         }
 
-        while let nextTokenIndex = self.index(
-            of: .nonSpaceOrCommentOrLinebreak,
-            after: endOfExpression
-        ), let nextToken = token(at: nextTokenIndex) {
-            switch nextToken {
-            case .startOfScope("("), .startOfScope("["), .startOfScope("<"):
-                if tokens[endOfExpression ..< nextTokenIndex].contains(where: \.isLinebreak) {
-                    return endOfExpression
-                }
-                guard let end = endOfScope(at: nextTokenIndex) else { return nil }
-                endOfExpression = end
-
-            case .delimiter("."), .operator(".", _):
-                guard let nextIdentIndex = self.index(
-                    of: .nonSpaceOrCommentOrLinebreak,
-                    after: nextTokenIndex
-                ), tokens[nextIdentIndex].isIdentifier else {
-                    return endOfExpression
-                }
-                endOfExpression = nextIdentIndex
-
-            case .operator(_, .postfix):
-                endOfExpression = nextTokenIndex
-
-            default:
-                return endOfExpression
+        // parseExpressionRange includes infix operators in the expression range,
+        // but `!` binds tighter than any infix operator. Scan through the range
+        // and stop at the first infix operator (excluding member access `.`).
+        var i = index
+        while i <= expressionRange.upperBound {
+            let token = tokens[i]
+            if token.isStartOfScope {
+                guard let scopeEnd = endOfScope(at: i) else { break }
+                i = scopeEnd + 1
+                continue
             }
+            if token.isOperator(ofType: .infix), token != .operator(".", .infix) {
+                return self.index(of: .nonSpaceOrCommentOrLinebreak, before: i)
+            }
+            if token == .keyword("is") || token == .keyword("as") {
+                return self.index(of: .nonSpaceOrCommentOrLinebreak, before: i)
+            }
+            i += 1
         }
+        return expressionRange.upperBound
+    }
 
-        return endOfExpression
+    /// Whether the token after `index` is a comparison operator (`==`, `!=`, etc.)
+    /// in Swift's non-associative `ComparisonPrecedence` group.
+    func isFollowedByComparisonOperator(at index: Int) -> Bool {
+        guard let nextIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index),
+              case let .operator(op, .infix) = tokens[nextIndex]
+        else {
+            return false
+        }
+        return ["==", "!=", "===", "!==", "~=", "<", ">", "<=", ">="].contains(op)
     }
 }

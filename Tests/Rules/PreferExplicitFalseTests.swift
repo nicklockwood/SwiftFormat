@@ -387,6 +387,44 @@ final class PreferExplicitFalseTests: XCTestCase {
         testFormatting(for: input, output, rule: .preferExplicitFalse)
     }
 
+    func testClosureArgumentNegation() {
+        let input = """
+        let result = !items.contains(where: { $0.isValid })
+        """
+        let output = """
+        let result = items.contains(where: { $0.isValid }) == false
+        """
+        testFormatting(for: input, output, rule: .preferExplicitFalse)
+    }
+
+    func testTrailingClosureNegation() {
+        let input = """
+        let result = !myArray.contains {
+            $0 == value
+        }
+        """
+        let output = """
+        let result = myArray.contains {
+            $0 == value
+        } == false
+        """
+        testFormatting(for: input, output, rule: .preferExplicitFalse)
+    }
+
+    func testNoChangeForNegationBeforeEquals() {
+        let input = """
+        print(!a == b)
+        """
+        testFormatting(for: input, rule: .preferExplicitFalse)
+    }
+
+    func testNoChangeForNegationBeforeNotEquals() {
+        let input = """
+        print(!a != b)
+        """
+        testFormatting(for: input, rule: .preferExplicitFalse)
+    }
+
     func testNoChangeForPreprocessorDirective() {
         let input = """
         #if !DEBUG

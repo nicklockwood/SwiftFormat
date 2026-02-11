@@ -402,4 +402,73 @@ final class SortImportsTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .sortImports)
     }
+
+    func testAccessControlSortImports() {
+        let input = """
+        import Foo
+        private import Bar
+        public import Baz
+        """
+        let output = """
+        public import Baz
+        private import Bar
+        import Foo
+        """
+        var options = FormatOptions.default
+        options.importSortByAccessControl = true
+        testFormatting(for: input, output, rule: .sortImports, options: options)
+    }
+
+    func testAccessControlSortAlphaWithinLevel() {
+        let input = """
+        public import Zebra
+        public import Alpha
+        public import Middle
+        """
+        let output = """
+        public import Alpha
+        public import Middle
+        public import Zebra
+        """
+        var options = FormatOptions.default
+        options.importSortByAccessControl = true
+        testFormatting(for: input, output, rule: .sortImports, options: options)
+    }
+
+    func testAccessControlWithTestableFirst() {
+        // With testableFirst + importSortByAccessControl: testable group first, then by access within each group
+        let input = """
+        import Foo
+        @testable import Bar
+        public import Baz
+        @testable public import Qux
+        """
+        let output = """
+        @testable import Bar
+        public import Baz
+        import Foo
+        @testable public import Qux
+        """
+        var options = FormatOptions.default
+        options.importGrouping = .testableFirst
+        options.importSortByAccessControl = true
+        testFormatting(for: input, output, rule: .sortImports, options: options)
+    }
+
+    func testAccessControlWithTestableLast() {
+        let input = """
+        public import Baz
+        @testable import Bar
+        import Foo
+        """
+        let output = """
+        public import Baz
+        import Foo
+        @testable import Bar
+        """
+        var options = FormatOptions.default
+        options.importGrouping = .testableLast
+        options.importSortByAccessControl = true
+        testFormatting(for: input, output, rule: .sortImports, options: options)
+    }
 }

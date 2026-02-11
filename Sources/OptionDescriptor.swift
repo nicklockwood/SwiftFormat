@@ -865,6 +865,14 @@ struct _Descriptors {
             "testable-bottom": .testableLast,
         ]
     )
+    let importSortByAccessControl = OptionDescriptor(
+        argumentName: "import-sort-by-access-control",
+        displayName: "Import Sort By Access Control",
+        help: "Sort imports by access level (public, internal, package, fileprivate, private); unlabeled imports last:",
+        keyPath: \FormatOptions.importSortByAccessControl,
+        trueValues: ["enabled", "true"],
+        falseValues: ["disabled", "false"]
+    )
     let trailingClosures = OptionDescriptor(
         argumentName: "trailing-closures",
         displayName: "Trailing Closure Functions",

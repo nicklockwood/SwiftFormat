@@ -797,6 +797,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var asyncCapturing: Set<String>
     public var experimentalRules: Bool
     public var importGrouping: ImportGrouping
+    public var importSortByAccessControl: Bool
     public var trailingClosures: Set<String>
     public var neverTrailing: Set<String>
     public var xcodeIndentation: Bool
@@ -942,6 +943,7 @@ public struct FormatOptions: CustomStringConvertible {
                 asyncCapturing: Set<String> = [],
                 experimentalRules: Bool = false,
                 importGrouping: ImportGrouping = .alpha,
+                importSortByAccessControl: Bool = false,
                 trailingClosures: Set<String> = [],
                 neverTrailing: Set<String> = [],
                 xcodeIndentation: Bool = false,
@@ -1076,6 +1078,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.asyncCapturing = asyncCapturing
         self.experimentalRules = experimentalRules
         self.importGrouping = importGrouping
+        self.importSortByAccessControl = importSortByAccessControl
         self.trailingClosures = trailingClosures
         self.neverTrailing = neverTrailing
         self.xcodeIndentation = xcodeIndentation

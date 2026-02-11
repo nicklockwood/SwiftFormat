@@ -3298,6 +3298,7 @@ Sort import statements alphabetically.
 Option | Description
 --- | ---
 `--import-grouping` | Import statement grouping: "alpha" (default), "length", "testable-first" or "testable-last"
+`--import-sort-by-access-control` | Sort imports by access level (public, internal, package, fileprivate, private); unlabeled imports last: "enabled" or "disabled" (default)
 
 <details>
 <summary>Examples</summary>

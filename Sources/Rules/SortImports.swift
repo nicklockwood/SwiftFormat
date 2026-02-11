@@ -12,7 +12,7 @@ public extension FormatRule {
     /// Sort import statements
     static let sortImports = FormatRule(
         help: "Sort import statements alphabetically.",
-        options: ["import-grouping"],
+        options: ["import-grouping", "import-sort-by-access-control"],
         sharedOptions: ["linebreaks"]
     ) { formatter in
         for var importRanges in formatter.parseImports().reversed() {
@@ -62,19 +62,42 @@ public extension FormatRule {
 
 extension Formatter {
     func sortRanges(_ ranges: [Formatter.ImportRange]) -> [Formatter.ImportRange] {
-        if case .alpha = options.importGrouping {
-            return ranges.sorted(by: <)
-        } else if case .length = options.importGrouping {
-            return ranges.sorted { $0.module.count < $1.module.count }
-        }
-        // Group @testable imports at the top or bottom
-        // TODO: need more general solution for handling other import attributes
-        return ranges.sorted {
-            // If both have a @testable keyword, or neither has one, just sort alphabetically
-            guard $0.isTestable != $1.isTestable else {
-                return $0 < $1
+        let sortByAccessThenAlpha: (Formatter.ImportRange, Formatter.ImportRange) -> Bool = { lhs, rhs in
+            if lhs.accessLevelSortOrder != rhs.accessLevelSortOrder {
+                return lhs.accessLevelSortOrder < rhs.accessLevelSortOrder
             }
-            return options.importGrouping == .testableFirst ? $0.isTestable : $1.isTestable
+            return lhs < rhs
+        }
+
+        let sortByAccessThenLength: (Formatter.ImportRange, Formatter.ImportRange) -> Bool = { lhs, rhs in
+            if lhs.accessLevelSortOrder != rhs.accessLevelSortOrder {
+                return lhs.accessLevelSortOrder < rhs.accessLevelSortOrder
+            }
+            return lhs.module.count < rhs.module.count
+        }
+        
+        let partitions: [[Formatter.ImportRange]] =switch options.importGrouping {
+        case .testableFirst:
+            [ranges.filter(\.isTestable), ranges.filter { !$0.isTestable }]
+        case .testableLast:
+            [ranges.filter { !$0.isTestable }, ranges.filter(\.isTestable)]
+        case .alpha, .length:
+            [ranges]
+        }
+
+        return partitions.flatMap { partition in
+            if options.importSortByAccessControl {
+                return partition.sorted(by: options.importGrouping == .length ? sortByAccessThenLength : sortByAccessThenAlpha)
+            }
+            
+            return switch options.importGrouping {
+            case .alpha:
+                partition.sorted(by: <)
+            case .length:
+                partition.sorted { $0.module.count < $1.module.count }
+            case .testableFirst, .testableLast:
+                partition.sorted(by: <)
+            }
         }
     }
 }

@@ -414,8 +414,7 @@ final class SortImportsTests: XCTestCase {
         private import Bar
         import Foo
         """
-        var options = FormatOptions.default
-        options.importSortByAccessControl = true
+        let options = FormatOptions(importSortByAccessControl: true)
         testFormatting(for: input, output, rule: .sortImports, options: options)
     }
 
@@ -430,8 +429,7 @@ final class SortImportsTests: XCTestCase {
         public import Middle
         public import Zebra
         """
-        var options = FormatOptions.default
-        options.importSortByAccessControl = true
+        let options = FormatOptions(importSortByAccessControl: true)
         testFormatting(for: input, output, rule: .sortImports, options: options)
     }
 
@@ -449,9 +447,7 @@ final class SortImportsTests: XCTestCase {
         import Foo
         @testable public import Qux
         """
-        var options = FormatOptions.default
-        options.importGrouping = .testableFirst
-        options.importSortByAccessControl = true
+        let options = FormatOptions(importGrouping: .testableFirst, importSortByAccessControl: true)
         testFormatting(for: input, output, rule: .sortImports, options: options)
     }
 
@@ -466,9 +462,7 @@ final class SortImportsTests: XCTestCase {
         import Foo
         @testable import Bar
         """
-        var options = FormatOptions.default
-        options.importGrouping = .testableLast
-        options.importSortByAccessControl = true
+        let options = FormatOptions(importGrouping: .testableLast, importSortByAccessControl: true)
         testFormatting(for: input, output, rule: .sortImports, options: options)
     }
 }

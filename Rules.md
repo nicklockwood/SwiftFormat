@@ -3632,7 +3632,11 @@ set to 4.2 or above.
 
 ## swiftTestingTestCaseNames
 
-In Swift Testing, don't prefix @Test methods with 'test'.
+In Swift Testing, don't prefix @Test methods with 'test', and use raw identifier test function names.
+
+Option | Description
+--- | ---
+`--test-case-name-format` | Swift Testing test case name format: "preserve" or "raw-identifiers" (default)
 
 <details>
 <summary>Examples</summary>
@@ -3642,7 +3646,7 @@ In Swift Testing, don't prefix @Test methods with 'test'.
 
   struct MyFeatureTests {
 -     @Test func testMyFeatureHasNoBugs() {
-+     @Test func myFeatureHasNoBugs() {
++     @Test func `my feature has no bugs`() {
           let myFeature = MyFeature()
           myFeature.runAction()
           #expect(!myFeature.hasBugs, "My feature has no bugs")

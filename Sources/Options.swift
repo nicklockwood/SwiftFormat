@@ -187,6 +187,12 @@ public enum ClosureVoidReturn: String, CaseIterable {
     case preserve
 }
 
+/// Format for Swift Testing test case names
+public enum TestCaseNameFormat: String, CaseIterable {
+    case preserve
+    case rawIdentifiers = "raw-identifiers"
+}
+
 public enum TrailingCommas: String, CaseIterable {
     case never
     case always
@@ -878,6 +884,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var redundantAsync: RedundantEffectMode
     public var allowPartialWrapping: Bool
     public var preferSynthesizedInitForInternalStructs: PreferSynthesizedInitMode
+    public var testCaseNameFormat: TestCaseNameFormat
 
     /// Deprecated
     public var indentComments: Bool
@@ -1023,6 +1030,7 @@ public struct FormatOptions: CustomStringConvertible {
                 redundantAsync: RedundantEffectMode = .testsOnly,
                 allowPartialWrapping: Bool = true,
                 preferSynthesizedInitForInternalStructs: PreferSynthesizedInitMode = .never,
+                testCaseNameFormat: TestCaseNameFormat = .rawIdentifiers,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -1157,6 +1165,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.redundantAsync = redundantAsync
         self.allowPartialWrapping = allowPartialWrapping
         self.preferSynthesizedInitForInternalStructs = preferSynthesizedInitForInternalStructs
+        self.testCaseNameFormat = testCaseNameFormat
         self.indentComments = indentComments
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

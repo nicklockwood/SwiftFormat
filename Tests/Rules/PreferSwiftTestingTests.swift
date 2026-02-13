@@ -39,14 +39,14 @@ final class PreferSwiftTestingTests: XCTestCase {
         import Testing
 
         final class MyFeatureTests {
-            @Test func myFeatureWorks() {
+            @Test func `my feature works`() {
                 let myFeature = MyFeature()
                 myFeature.runAction()
                 #expect(myFeature.worksProperly)
                 #expect(myFeature.screens.count == 8)
             }
 
-            @Test func myFeatureHasNoBugs() {
+            @Test func `my feature has no bugs`() {
                 let myFeature = MyFeature()
                 myFeature.runAction()
                 #expect(!myFeature.hasBugs, "My feature has no bugs")
@@ -56,8 +56,8 @@ final class PreferSwiftTestingTests: XCTestCase {
         }
         """
 
-        let options = FormatOptions(swiftVersion: "6.0")
-        testFormatting(for: input, [output], rules: [.preferSwiftTesting, .sortImports, .isEmpty], options: options)
+        let options = FormatOptions(swiftVersion: "6.2")
+        testFormatting(for: input, [output], rules: [.preferSwiftTesting, .sortImports, .isEmpty, .swiftTestingTestCaseNames], options: options)
     }
 
     func testConvertsTestSuiteWithSetUpTearDown() {

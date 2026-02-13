@@ -166,4 +166,365 @@ final class SwiftTestingTestCaseNamesTests: XCTestCase {
 
         testFormatting(for: input, rule: .swiftTestingTestCaseNames)
     }
+
+    func testConvertsCamelCaseToRawIdentifier() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func testMyTestCase() {
+                #expect(true)
+            }
+        }
+        """
+
+        let output = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func `my test case`() {
+                #expect(true)
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(swiftVersion: "6.2"))
+    }
+
+    func testConvertsTestPrefixCamelCaseToRawIdentifier() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func testMyFeatureHasNoBugs() {
+                #expect(true)
+            }
+        }
+        """
+
+        let output = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func `my feature has no bugs`() {
+                #expect(true)
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(swiftVersion: "6.2"))
+    }
+
+    func testUsesDisplayNameForRawIdentifier() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test("My test case")
+            func myTestCase() {
+                #expect(true)
+            }
+        }
+        """
+
+        let output = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func `My test case`() {
+                #expect(true)
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(swiftVersion: "6.2"))
+    }
+
+    func testUsesDisplayNameForRawIdentifierWithExistingRawIdentifier() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test("My test case")
+            func `my test case`() {
+                #expect(true)
+            }
+        }
+        """
+
+        let output = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func `My test case`() {
+                #expect(true)
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(swiftVersion: "6.2"))
+    }
+
+    func testUsesDisplayNameForRawIdentifierWithTestPrefix() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test("My test case")
+            func testMyTestCase() {
+                #expect(true)
+            }
+        }
+        """
+
+        let output = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func `My test case`() {
+                #expect(true)
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(swiftVersion: "6.2"))
+    }
+
+    func testConvertsUnderscoresToSpacesInRawIdentifier() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func test_myFeature_hasBehavior() {
+                #expect(true)
+            }
+        }
+        """
+
+        let output = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func `my feature has behavior`() {
+                #expect(true)
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(swiftVersion: "6.2"))
+    }
+
+    func testUsesDisplayNameForRawIdentifierWithArguments() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test("Features work as expected", arguments: [
+                .foo,
+                .bar,
+            ])
+            func testFeatureWorksAsExpected(_ feature: Feature) {
+                #expect(true)
+            }
+        }
+        """
+
+        let output = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test(arguments: [
+                .foo,
+                .bar,
+            ])
+            func `Features work as expected`(_ feature: Feature) {
+                #expect(true)
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(swiftVersion: "6.2"),
+                       exclude: [.unusedArguments])
+    }
+
+    func testRawIdentifiersFallsBackToPreserveBelowSwift6_2() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func testMyFeatureHasNoBugs() {
+                #expect(true)
+            }
+        }
+        """
+
+        let output = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func myFeatureHasNoBugs() {
+                #expect(true)
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(swiftVersion: "6.1"))
+    }
+
+    func testPreservesAlreadyCorrectRawIdentifier() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func `my feature has no bugs`() {
+                #expect(true)
+            }
+        }
+        """
+
+        testFormatting(for: input, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(swiftVersion: "6.2"))
+    }
+
+    func testRawIdentifiersPreservesNonTestMethod() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            func helperMethod() {
+                // not a test
+            }
+        }
+        """
+
+        testFormatting(for: input, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(swiftVersion: "6.2"),
+                       exclude: [.testSuiteAccessControl, .validateTestCases])
+    }
+
+    func testRawIdentifiersRemovesDisplayNameOnSameLine() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test("My test case")
+            func myTestCase() {
+                #expect(true)
+            }
+        }
+        """
+
+        let output = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func `My test case`() {
+                #expect(true)
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(swiftVersion: "6.2"))
+    }
+
+    func testRemovesBackticksFromTestName() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test("`MyFeature` works as expected")
+            func myTestCase() {
+                #expect(true)
+            }
+        }
+        """
+
+        let output = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func `MyFeature works as expected`() {
+                #expect(true)
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(swiftVersion: "6.2"))
+    }
+
+    func testPreserveOptionKeepsCamelCase() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test func myFeatureWorks() {
+                #expect(true)
+            }
+        }
+        """
+
+        testFormatting(for: input, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(testCaseNameFormat: .preserve, swiftVersion: "6.2"))
+    }
+
+    func testDoesntCreateRawIdentifierTestFunctionWithSameNameAsExistingSymbol() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test("Test MyFeature")
+            func myTestCase() {
+                #expect(MyFeature().works)
+            }
+
+            @Test("MyFeature")
+            func myOtherTestCase() {
+                #expect(MyFeature().works)
+            }
+        }
+        """
+
+        let output = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func `Test MyFeature`() {
+                #expect(MyFeature().works)
+            }
+
+            @Test
+            func `my other test case`() {
+                #expect(MyFeature().works)
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(swiftVersion: "6.2"))
+    }
 }

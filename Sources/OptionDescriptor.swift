@@ -868,7 +868,7 @@ struct _Descriptors {
     let importSortByAccessControl = OptionDescriptor(
         argumentName: "import-sort-by-access-control",
         displayName: "Import Sort By Access Control",
-        help: "Sort imports by access level (public, internal, package, fileprivate, private); unlabeled imports last:",
+        help: "Sort imports by access control level (unlabeled imports last):",
         keyPath: \FormatOptions.importSortByAccessControl,
         trueValues: ["enabled", "true"],
         falseValues: ["disabled", "false"]

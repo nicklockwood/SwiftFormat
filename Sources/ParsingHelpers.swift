@@ -2236,31 +2236,14 @@ extension Formatter {
         return commentBody.string.hasPrefix(startOfDocCommentBody)
     }
 
-    /// Access control keywords valid on import (Swift 6 SE-0409)
-    private static let importAccessLevelKeywords = Set(["public", "private", "internal", "fileprivate", "package"])
-
     struct ImportRange: Comparable {
         var module: String
         var range: Range<Int>
         var attributes: [String]
-        /// Explicit access level on import, if any ("public", "private", "internal", "fileprivate", "package")
         var accessLevel: String?
 
         var isTestable: Bool {
             attributes.contains("@testable")
-        }
-
-        /// Sort order for access level (lower = earlier). No modifier (nil) comes last.
-        var accessLevelSortOrder: Int {
-            guard let accessLevel else { return 6 }
-            switch accessLevel {
-            case "public": return 0
-            case "internal": return 1
-            case "package": return 2
-            case "fileprivate": return 3
-            case "private": return 4
-            default: return 5
-            }
         }
 
         static func < (lhs: ImportRange, rhs: ImportRange) -> Bool {
@@ -2468,7 +2451,7 @@ extension Formatter {
                 }
                 let range = startIndex ..< endIndex as Range
                 let accessLevel: String? = tokens[range].lazy.compactMap { token -> String? in
-                    guard case let .keyword(kw) = token, Self.importAccessLevelKeywords.contains(kw) else { return nil }
+                    guard case let .keyword(kw) = token, _FormatRules.aclModifiers.contains(kw) else { return nil }
                     return kw
                 }.first
                 importRanges.append(ImportRange(
@@ -2499,7 +2482,7 @@ extension Formatter {
                 let nextToken = tokens[nextTokenIndex]
                 let isImportKeyword = nextToken == .keyword("import")
                 // Access modifier (e.g. "public") can precede "import" on the same line (Swift 6)
-                let isAccessModifierBeforeImport = nextToken.isKeyword && Self.importAccessLevelKeywords.contains(nextToken.string)
+                let isAccessModifierBeforeImport = nextToken.isKeyword && _FormatRules.aclModifiers.contains(nextToken.string)
                 if !isImportKeyword, !isAccessModifierBeforeImport {
                     // End of imports
                     pushStack()

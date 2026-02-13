@@ -1459,6 +1459,13 @@ struct _Descriptors {
         toArgument: { $0.rawValue }
     )
 
+    let testCaseNameFormat = OptionDescriptor(
+        argumentName: "test-case-name-format",
+        displayName: "Test Case Name Format",
+        help: "Swift Testing test case name format:",
+        keyPath: \.testCaseNameFormat
+    )
+
     // MARK: - Internal
 
     let fragment = OptionDescriptor(

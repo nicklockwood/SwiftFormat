@@ -1888,10 +1888,13 @@ extension Formatter {
 
         // Ensure that the new identifier is valid (e.g. starts with a letter, not a number),
         // and is unique / doesn't already exist somewhere in the file.
+        let unescapedName = newMethodName.hasPrefix("`") && newMethodName.hasSuffix("`")
+            ? String(newMethodName.dropFirst().dropLast()) : newMethodName
         guard !newMethodName.isEmpty,
               newMethodName.first?.isLetter == true || newMethodName.first == "`",
               !tokens.contains(.identifier(newMethodName)),
-              !swiftKeywords.union(["Any", "Self", "self", "super", "nil", "true", "false"]).contains(newMethodName)
+              !tokens.contains(.identifier(unescapedName)),
+              !swiftKeywords.union(["Any", "Self", "self", "super", "nil", "true", "false"]).contains(unescapedName)
         else { return }
 
         replaceToken(at: methodNameIndex, with: .identifier(newMethodName))

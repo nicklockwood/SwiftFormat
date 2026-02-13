@@ -62,21 +62,35 @@ public extension FormatRule {
 
 extension Formatter {
     func sortRanges(_ ranges: [Formatter.ImportRange]) -> [Formatter.ImportRange] {
+        /// Sort order for import access level using aclModifiers (higher index = more visible). Unlabeled imports return -1 (last).
+        func accessLevelSortOrder(for range: Formatter.ImportRange) -> Int {
+            guard let level = range.accessLevel else { return -1 }
+            return _FormatRules.aclModifiers.firstIndex(of: level) ?? -1
+        }
+
         let sortByAccessThenAlpha: (Formatter.ImportRange, Formatter.ImportRange) -> Bool = { lhs, rhs in
-            if lhs.accessLevelSortOrder != rhs.accessLevelSortOrder {
-                return lhs.accessLevelSortOrder < rhs.accessLevelSortOrder
+            let lhsAccessOrder = accessLevelSortOrder(for: lhs)
+            let rhsAccessOrder = accessLevelSortOrder(for: rhs)
+
+            return if lhsAccessOrder != rhsAccessOrder {
+                lhsAccessOrder > rhsAccessOrder
+            } else {
+                lhs < rhs
             }
-            return lhs < rhs
         }
 
         let sortByAccessThenLength: (Formatter.ImportRange, Formatter.ImportRange) -> Bool = { lhs, rhs in
-            if lhs.accessLevelSortOrder != rhs.accessLevelSortOrder {
-                return lhs.accessLevelSortOrder < rhs.accessLevelSortOrder
+            let lhsAccessOrder = accessLevelSortOrder(for: lhs)
+            let rhsAccessOrder = accessLevelSortOrder(for: rhs)
+
+            return if lhsAccessOrder != rhsAccessOrder {
+                lhsAccessOrder > rhsAccessOrder
+            } else {
+                lhs.module.count < rhs.module.count
             }
-            return lhs.module.count < rhs.module.count
         }
-        
-        let partitions: [[Formatter.ImportRange]] =switch options.importGrouping {
+
+        let partitions: [[Formatter.ImportRange]] = switch options.importGrouping {
         case .testableFirst:
             [ranges.filter(\.isTestable), ranges.filter { !$0.isTestable }]
         case .testableLast:
@@ -89,7 +103,7 @@ extension Formatter {
             if options.importSortByAccessControl {
                 return partition.sorted(by: options.importGrouping == .length ? sortByAccessThenLength : sortByAccessThenAlpha)
             }
-            
+
             return switch options.importGrouping {
             case .alpha:
                 partition.sorted(by: <)

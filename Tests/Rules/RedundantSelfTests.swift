@@ -4331,7 +4331,7 @@ final class RedundantSelfTests: XCTestCase {
             func foo(state: Bool?) {
                 if let value =
                     switch state {
-                    case true: self.bar
+                    case true: bar
                     case false: 0
                     default: nil
                     }

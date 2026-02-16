@@ -3655,3 +3655,14 @@ final class TrailingCommasTests: XCTestCase {
         testFormatting(for: input, rule: .trailingCommas, options: options)
     }
 }
+
+    func testNoTrailingCommaAddedToAvailableCheck() {
+        let input = """
+        if #available(
+            iOS 16.0,
+            *
+        ) {}
+        """
+        let options = FormatOptions(swiftVersion: "6.2")
+        testFormatting(for: input, rule: .trailingCommas, options: options)
+    }

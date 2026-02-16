@@ -4348,4 +4348,114 @@ final class RedundantSelfTests: XCTestCase {
                        exclude: [.wrapMultilineStatementBraces, .indent,
                                  .wrapMultilineConditionalAssignment])
     }
+
+    func testSelfNotRemovedInsideIfLetSwitchExpressionBody() {
+        let input = """
+        class Foo {
+            var value: Int = 0
+            func foo(state: Bool?) {
+                if let value = switch state {
+                case true: 1
+                case false: 0
+                default: nil
+                } {
+                    print(self.value)
+                }
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: .redundantSelf, options: options,
+                       exclude: [.wrapMultilineStatementBraces, .indent,
+                                 .wrapMultilineConditionalAssignment])
+    }
+
+    func testSelfRemovedBeforeAndInElseOfIfLetSwitchExpression() {
+        let input = """
+        class Foo {
+            var value: Int = 0
+            func foo(state: Bool?) {
+                print(self.value)
+                if let value = switch state {
+                case true: 1
+                case false: 0
+                default: nil
+                } {
+                    print(self.value)
+                } else {
+                    print(self.value)
+                }
+            }
+        }
+        """
+        let output = """
+        class Foo {
+            var value: Int = 0
+            func foo(state: Bool?) {
+                print(value)
+                if let value = switch state {
+                case true: 1
+                case false: 0
+                default: nil
+                } {
+                    print(self.value)
+                } else {
+                    print(value)
+                }
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, output, rule: .redundantSelf, options: options,
+                       exclude: [.wrapMultilineStatementBraces, .indent,
+                                 .wrapMultilineConditionalAssignment])
+    }
+
+    func testSelfNotRemovedAfterGuardLetSwitchExpression() {
+        let input = """
+        class Foo {
+            var value: Int = 0
+            func foo(state: Bool?) {
+                guard let value = switch state {
+                case true: 1
+                case false: 0
+                default: nil
+                } else {
+                    return
+                }
+                print(self.value)
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: .redundantSelf, options: options,
+                       exclude: [.wrapMultilineStatementBraces, .indent,
+                                 .wrapMultilineConditionalAssignment,
+                                 .blankLinesAfterGuardStatements])
+    }
+
+    func testSelfRemovedBeforeAndInElseOfGuardLetSwitchExpression() {
+        let input = """
+        class Foo {
+            var value: Int = 0
+            func foo(state: Bool?) {
+                print(self.value)
+                guard let value = switch state {
+                case true: 1
+                case false: 0
+                default: nil
+                } else {
+                    print(self.value)
+                    return
+                }
+                print(self.value)
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: .redundantSelf, options: options,
+                       exclude: [.wrapMultilineStatementBraces, .indent,
+                                 .wrapMultilineConditionalAssignment,
+                                 .blankLinesAfterGuardStatements])
+    }
 }

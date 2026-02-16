@@ -490,7 +490,6 @@ public extension FormatRule {
                         } else {
                             shouldIndentLeadingDotStatement = (
                                 formatter.startOfConditionalStatement(at: i) != nil
-                                    && formatter.options.wrapConditions == .beforeFirst
                             )
                         }
                         if shouldIndentLeadingDotStatement,
@@ -515,20 +514,27 @@ public extension FormatRule {
 
                         // When inside conditionals, unindent after any commas (which separate conditions)
                         // that were indented by the block above
-                        if !formatter.options.xcodeIndentation,
-                           formatter.options.wrapConditions == .beforeFirst,
-                           formatter.isConditionalStatement(at: i),
-                           formatter.lastToken(before: i, where: {
+                        if formatter.lastToken(before: i, where: {
                                $0.is(.nonSpaceOrCommentOrLinebreak)
                            }) == .delimiter(","),
+                           indent.hasSuffix(formatter.options.indent),
                            let conditionBeginIndex = formatter.index(before: i, where: {
                                ["if", "guard", "while", "for"].contains($0.string)
                            }),
                            formatter.currentIndentForLine(at: conditionBeginIndex)
-                           .count < indent.count + formatter.options.indent.count
+                               .count < indent.count
                         {
-                            indent = formatter.currentIndentForLine(at: conditionBeginIndex) + formatter.options.indent
-                            indentStack[indentStack.count - 1] = indent
+                            // Only unindent if the dot indent was actually applied
+                            // by checking if a previous line in this condition started with a dot
+                            let prevLineStart = formatter.startOfLine(at: lastNonSpaceOrLinebreakIndex, excludingIndent: true)
+                            if formatter.tokens[prevLineStart] == .operator(".", .infix) ||
+                                (formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: prevLineStart).map {
+                                    formatter.tokens[formatter.startOfLine(at: $0, excludingIndent: true)] == .operator(".", .infix)
+                                } ?? false)
+                            {
+                                indent = String(indent.dropLast(formatter.options.indent.count))
+                                indentStack[indentStack.count - 1] = indent
+                            }
                         }
 
                         let startOfLineIndex = formatter.startOfLine(at: i, excludingIndent: true)

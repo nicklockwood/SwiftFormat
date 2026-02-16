@@ -2866,7 +2866,14 @@ final class IndentTests: XCTestCase {
             .baz
         else { return }
         """
-        testFormatting(for: input, rule: .indent,
+        let output = """
+        guard
+            let baz = foo
+                .bar
+                .baz
+        else { return }
+        """
+        testFormatting(for: input, output, rule: .indent,
                        exclude: [.wrapConditionalBodies])
     }
 
@@ -2901,7 +2908,17 @@ final class IndentTests: XCTestCase {
               yetAnotherBool
         else { return }
         """
-        testFormatting(for: input, rule: .indent,
+        let output = """
+        guard aBool,
+              anotherBool,
+              aTestArray
+                  .map { $0 * 2 }
+                  .filter { $0 == 4 }
+                  .isEmpty,
+              yetAnotherBool
+        else { return }
+        """
+        testFormatting(for: input, output, rule: .indent,
                        exclude: [.wrapConditionalBodies])
     }
 
@@ -2916,7 +2933,6 @@ final class IndentTests: XCTestCase {
             yetAnotherBool
         else { return }
         """
-        // TODO: fix indent for `yetAnotherBool`
         let output = """
         guard aBool,
               anotherBool,
@@ -2924,12 +2940,88 @@ final class IndentTests: XCTestCase {
                   .map { $0 * 2 }
                   .filter { $0 == 4 }
                   .isEmpty,
-                  yetAnotherBool
+              yetAnotherBool
         else { return }
         """
         let options = FormatOptions(xcodeIndentation: true)
         testFormatting(for: input, output, rule: .indent,
                        options: options, exclude: [.wrapConditionalBodies, .blankLinesAfterGuardStatements])
+    }
+
+    func testChainedFunctionInIfLetCondition() {
+        let input = """
+        func someMethod() {
+            if let bar = foo.removingPercentEncoding,
+               let baz = bar
+                   .uppercased()
+                   .removingPercentEncoding,
+               let qux = baz
+                   .lowercased()
+                   .removingPercentEncoding
+            {
+                // do something
+            }
+        }
+        """
+        testFormatting(for: input, rule: .indent)
+    }
+
+    func testChainedFunctionInGuardLetCondition() {
+        let input = """
+        func someMethod() {
+            guard let bar = foo.removingPercentEncoding,
+                  let baz = bar
+                      .uppercased()
+                      .removingPercentEncoding,
+                  let qux = baz
+                      .lowercased()
+                      .removingPercentEncoding
+            else {
+                return
+            }
+        }
+        """
+        testFormatting(for: input, rule: .indent,
+                       exclude: [.wrapConditionalBodies, .blankLinesAfterGuardStatements])
+    }
+
+    func testChainedFunctionInIfLetConditionWithXcodeIndentation() {
+        let input = """
+        func someMethod() {
+            if let bar = foo.removingPercentEncoding,
+               let baz = bar
+                   .uppercased()
+                   .removingPercentEncoding,
+               let qux = baz
+                   .lowercased()
+                   .removingPercentEncoding
+            {
+                // do something
+            }
+        }
+        """
+        let options = FormatOptions(xcodeIndentation: true)
+        testFormatting(for: input, rule: .indent, options: options)
+    }
+
+    func testChainedFunctionInGuardLetConditionWithXcodeIndentation() {
+        let input = """
+        func someMethod() {
+            guard let bar = foo.removingPercentEncoding,
+                  let baz = bar
+                      .uppercased()
+                      .removingPercentEncoding,
+                  let qux = baz
+                      .lowercased()
+                      .removingPercentEncoding
+            else {
+                return
+            }
+        }
+        """
+        let options = FormatOptions(xcodeIndentation: true)
+        testFormatting(for: input, rule: .indent, options: options,
+                       exclude: [.wrapConditionalBodies, .blankLinesAfterGuardStatements])
     }
 
     func testWrappedChainedFunctionsWithNestedScopeIndent() {

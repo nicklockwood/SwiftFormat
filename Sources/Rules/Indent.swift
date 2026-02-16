@@ -16,7 +16,7 @@ public extension FormatRule {
         help: "Indent code in accordance with the scope level.",
         orderAfter: [.trailingSpace, .wrap, .wrapArguments],
         options: ["indent", "tab-width", "smart-tabs", "indent-case", "ifdef", "xcode-indentation", "indent-strings"],
-        sharedOptions: ["allman", "wrap-conditions", "wrap-ternary"]
+        sharedOptions: ["allman", "wrap-ternary"]
     ) { formatter in
         var scopeStack: [Token] = []
         var scopeStartLineIndexes: [Int] = []
@@ -525,13 +525,9 @@ public extension FormatRule {
                                .count < indent.count
                         {
                             // Only unindent if the dot indent was actually applied
-                            // by checking if a previous line in this condition started with a dot
-                            let prevLineStart = formatter.startOfLine(at: lastNonSpaceOrLinebreakIndex, excludingIndent: true)
-                            if formatter.tokens[prevLineStart] == .operator(".", .infix) ||
-                                (formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: prevLineStart).map {
-                                    formatter.tokens[formatter.startOfLine(at: $0, excludingIndent: true)] == .operator(".", .infix)
-                                } ?? false)
-                            {
+                            // by checking if the line ending with the comma starts with a dot
+                            let commaLineStart = formatter.startOfLine(at: lastNonSpaceOrLinebreakIndex, excludingIndent: true)
+                            if formatter.tokens[commaLineStart] == .operator(".", .infix) {
                                 indent = String(indent.dropLast(formatter.options.indent.count))
                                 indentStack[indentStack.count - 1] = indent
                             }

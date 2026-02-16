@@ -3007,6 +3007,51 @@ final class WrapArgumentsTests: XCTestCase {
         )
     }
 
+    func testWrapConditionsAfterFirstGuardElseOnOwnLine() {
+        let input = """
+        guard let something = complexCall(...),
+              isOnline,
+              shouldReallyRefresh
+        else { return }
+        """
+        testFormatting(
+            for: input, rule: .wrapArguments,
+            options: FormatOptions(wrapConditions: .afterFirst),
+            exclude: [.wrapConditionalBodies]
+        )
+    }
+
+    func testWrapConditionsBeforeFirstGuardElseOnOwnLine() {
+        let input = """
+        guard
+            let something = complexCall(...),
+            isOnline,
+            shouldReallyRefresh
+        else { return }
+        """
+        testFormatting(
+            for: input, rule: .wrapArguments,
+            options: FormatOptions(wrapConditions: .beforeFirst),
+            exclude: [.wrapConditionalBodies]
+        )
+    }
+
+    func testWrapConditionsAfterFirstGuardElseOnOwnLineIndented() {
+        let input = """
+        func foo() {
+            guard let something = complexCall(...),
+                  isOnline,
+                  shouldReallyRefresh
+            else { return }
+        }
+        """
+        testFormatting(
+            for: input, rule: .wrapArguments,
+            options: FormatOptions(wrapConditions: .afterFirst),
+            exclude: [.wrapConditionalBodies]
+        )
+    }
+
     func testWrapPartiallyWrappedFunctionCall() {
         let input = """
         func foo(

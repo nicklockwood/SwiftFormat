@@ -861,10 +861,17 @@ extension Formatter {
                     insertLinebreak(at: index + 1)
                 }
                 // Re-indent lines
+                let guardIndent = currentIndentForLine(at: index)
                 var linebreakIndex: Int? = index + 1
-                let indent = currentIndentForLine(at: index) + options.indent
+                let indent = guardIndent + options.indent
                 while let index = linebreakIndex, index < endIndex {
-                    insertSpace(indent, at: index + 1)
+                    if endOfConditionsToken == .keyword("else"),
+                       self.index(of: .nonSpaceOrLinebreak, after: index) == endIndex
+                    {
+                        insertSpace(guardIndent, at: index + 1)
+                    } else {
+                        insertSpace(indent, at: index + 1)
+                    }
                     linebreakIndex = self.index(of: .linebreak, after: index)
                 }
             case .afterFirst:
@@ -878,10 +885,17 @@ extension Formatter {
                 // Make sure there is exactly one space after control flow keyword
                 insertSpace(" ", at: index + 1)
                 // Re-indent lines
+                let keywordIndent = currentIndentForLine(at: index)
                 var lastIndex = index + 1
                 let indent = spaceEquivalentToTokens(from: startOfLine(at: index), upTo: index) + indent
                 while let index = self.index(of: .linebreak, after: lastIndex), index < endIndex {
-                    insertSpace(indent, at: index + 1)
+                    if endOfConditionsToken == .keyword("else"),
+                       self.index(of: .nonSpaceOrLinebreak, after: index) == endIndex
+                    {
+                        insertSpace(keywordIndent, at: index + 1)
+                    } else {
+                        insertSpace(indent, at: index + 1)
+                    }
                     lastIndex = index
                 }
             }

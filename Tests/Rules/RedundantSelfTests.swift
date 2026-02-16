@@ -4241,4 +4241,111 @@ final class RedundantSelfTests: XCTestCase {
             .unusedArguments, .blankLinesAfterGuardStatements,
         ])
     }
+
+    func testRedundantSelfWithIfLetSwitchExpression() {
+        let input = """
+        func foo(state: Bool?) {
+            _ = self
+
+            if let value = switch state {
+            case true: 1
+            case false: 0
+            default: nil
+            } {
+                print("Number: \\(value)")
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: .redundantSelf, options: options,
+                       exclude: [.wrapMultilineStatementBraces, .indent,
+                                 .wrapMultilineConditionalAssignment])
+    }
+
+    func testRedundantSelfWithIfLetIfExpression() {
+        let input = """
+        func foo(state: Bool) {
+            _ = self
+
+            if let value = if state {
+                1
+            } else {
+                nil
+            } {
+                print("Number: \\(value)")
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: .redundantSelf, options: options,
+                       exclude: [.wrapMultilineStatementBraces, .indent,
+                                 .wrapMultilineConditionalAssignment])
+    }
+
+    func testRedundantSelfWithGuardLetSwitchExpression() {
+        let input = """
+        func foo(state: Bool?) {
+            _ = self
+
+            guard let value = switch state {
+            case true: 1
+            case false: 0
+            default: nil
+            } else {
+                print("Nil")
+                return
+            }
+            print(value)
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: .redundantSelf, options: options,
+                       exclude: [.wrapMultilineStatementBraces, .indent,
+                                 .wrapMultilineConditionalAssignment,
+                                 .blankLinesAfterGuardStatements])
+    }
+
+    func testRedundantSelfWithGuardLetIfExpression() {
+        let input = """
+        func foo(state: Bool) {
+            _ = self
+
+            guard let value = if state {
+                1
+            } else {
+                nil
+            } else {
+                print("Nil")
+                return
+            }
+            print(value)
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: .redundantSelf, options: options,
+                       exclude: [.wrapMultilineStatementBraces, .indent,
+                                 .wrapMultilineConditionalAssignment,
+                                 .blankLinesAfterGuardStatements])
+    }
+
+    func testRedundantSelfWithSwitchExpressionAndSelfUsage() {
+        let input = """
+        class Foo {
+            var bar: Int = 0
+            func foo(state: Bool?) {
+                if let value = switch state {
+                case true: self.bar
+                case false: 0
+                default: nil
+                } {
+                    print("Number: \\(value)")
+                }
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: .redundantSelf, options: options,
+                       exclude: [.wrapMultilineStatementBraces, .indent,
+                                 .wrapMultilineConditionalAssignment])
+    }
 }

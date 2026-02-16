@@ -4174,6 +4174,32 @@ final class RedundantSelfTests: XCTestCase {
         ])
     }
 
+    func testStaticFunctionReturningTypedThrowsClosure() {
+        // Test typed throws like throws(MyError)
+        let input = """
+        class Foo {
+            static var handler: (() throws(MyError) -> Void)?
+
+            static func bar() -> (() throws(MyError) -> Void) {
+                baz()
+            }
+
+            static func baz() -> (() throws(MyError) -> Void) {
+                {}
+            }
+
+            func qux() {
+                guard let x = Self.handler else { return }
+                print(x)
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.1")
+        testFormatting(for: input, rule: .redundantSelf, options: options, exclude: [
+            .emptyBraces, .wrapConditionalBodies, .blankLinesAfterGuardStatements,
+        ])
+    }
+
     func testStaticFunctionReturningClosure() {
         let input = """
         class MockURLProtocol: URLProtocol {

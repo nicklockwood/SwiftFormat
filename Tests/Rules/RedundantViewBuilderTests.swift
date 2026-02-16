@@ -497,4 +497,45 @@ final class RedundantViewBuilderTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .redundantViewBuilder)
     }
+
+    func testKeepViewBuilderOnProtocolMember() {
+        // Protocol members with @ViewBuilder should not have it removed,
+        // as conforming types rely on the implicit result builder
+        let input = """
+        protocol Foo {
+            associatedtype MyFoo: View
+
+            @ViewBuilder
+            var myBody: MyFoo { get }
+        }
+        """
+        testFormatting(for: input, rule: .redundantViewBuilder)
+    }
+
+    func testKeepViewBuilderOnProtocolFunction() {
+        let input = """
+        protocol ViewProvider {
+            @ViewBuilder
+            func makeView() -> some View
+        }
+        """
+        testFormatting(for: input, rule: .redundantViewBuilder)
+    }
+
+    func testKeepViewBuilderOnProtocolComputedProperty() {
+        let input = """
+        protocol ContentProvider {
+            @ViewBuilder
+            var content: some View { get }
+        }
+
+        struct MyContent: ContentProvider {
+            var content: some View {
+                Text("Hello")
+                Text("World")
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantViewBuilder)
+    }
 }

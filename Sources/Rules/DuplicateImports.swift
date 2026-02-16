@@ -15,14 +15,18 @@ public extension FormatRule {
     ) { formatter in
         let importBatches = formatter.parseImports()
         
-        // Process each batch for internal duplicates and cross-batch duplicates
+        // Process each batch for internal duplicates and cross-batch duplicates.
+        // We process batches in reverse order so that later imports are removed
+        // in favor of earlier ones (which typically appear at the top of the file).
         for batchIndex in importBatches.indices.reversed() {
             var batch = importBatches[batchIndex]
             
             // Get all imports from earlier batches (those that appear first in the file)
             let importsFromEarlierBatches = importBatches[..<batchIndex].flatMap { $0 }
             
-            // Process imports in this batch in reverse order
+            // Process imports in this batch in reverse order.
+            // Note: We're using the same algorithm as the original implementation
+            // within each batch, but now also checking against earlier batches.
             for i in batch.indices.reversed() {
                 let range = batch.remove(at: i)
                 

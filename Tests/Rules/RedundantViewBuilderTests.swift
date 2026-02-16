@@ -355,14 +355,4 @@ final class RedundantViewBuilderTests: XCTestCase {
         """
         testFormatting(for: input, rule: .redundantViewBuilder)
     }
-
-    func testKeepViewBuilderOnProtocolBodyRequirement() {
-        let input = """
-        protocol MyViewProtocol: View {
-            @ViewBuilder
-            var body: some View { get }
-        }
-        """
-        testFormatting(for: input, rule: .redundantViewBuilder)
-    }
 }

@@ -861,14 +861,12 @@ extension Formatter {
                     insertLinebreak(at: index + 1)
                 }
                 // Re-indent lines
-                let guardIndent = currentIndentForLine(at: index)
+                let keywordIndent = currentIndentForLine(at: index)
                 var linebreakIndex: Int? = index + 1
-                let indent = guardIndent + options.indent
+                let indent = keywordIndent + options.indent
                 while let index = linebreakIndex, index < endIndex {
-                    if endOfConditionsToken == .keyword("else"),
-                       self.index(of: .nonSpaceOrLinebreak, after: index) == endIndex
-                    {
-                        insertSpace(guardIndent, at: index + 1)
+                    if self.index(of: .nonSpaceOrLinebreak, after: index) == endIndex {
+                        insertSpace(keywordIndent, at: index + 1)
                     } else {
                         insertSpace(indent, at: index + 1)
                     }
@@ -889,9 +887,7 @@ extension Formatter {
                 var lastIndex = index + 1
                 let indent = spaceEquivalentToTokens(from: startOfLine(at: index), upTo: index) + indent
                 while let index = self.index(of: .linebreak, after: lastIndex), index < endIndex {
-                    if endOfConditionsToken == .keyword("else"),
-                       self.index(of: .nonSpaceOrLinebreak, after: index) == endIndex
-                    {
+                    if self.index(of: .nonSpaceOrLinebreak, after: index) == endIndex {
                         insertSpace(keywordIndent, at: index + 1)
                     } else {
                         insertSpace(indent, at: index + 1)

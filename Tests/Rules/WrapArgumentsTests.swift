@@ -3052,6 +3052,37 @@ final class WrapArgumentsTests: XCTestCase {
         )
     }
 
+    func testWrapConditionsAfterFirstIfBraceOnOwnLine() {
+        let input = """
+        if let something = complexCall(...),
+           isOnline,
+           shouldReallyRefresh
+        {
+            print("True branch")
+        }
+        """
+        testFormatting(
+            for: input, rule: .wrapArguments,
+            options: FormatOptions(wrapConditions: .afterFirst)
+        )
+    }
+
+    func testWrapConditionsBeforeFirstIfBraceOnOwnLine() {
+        let input = """
+        if
+            let something = complexCall(...),
+            isOnline,
+            shouldReallyRefresh
+        {
+            print("True branch")
+        }
+        """
+        testFormatting(
+            for: input, rule: .wrapArguments,
+            options: FormatOptions(wrapConditions: .beforeFirst)
+        )
+    }
+
     func testWrapPartiallyWrappedFunctionCall() {
         let input = """
         func foo(

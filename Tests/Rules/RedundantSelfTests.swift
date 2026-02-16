@@ -4258,7 +4258,7 @@ final class RedundantSelfTests: XCTestCase {
         """
         let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, rule: .redundantSelf, options: options,
-                       exclude: [.wrapMultilineStatementBraces, .indent,
+                       exclude: [.wrapMultilineStatementBraces,
                                  .wrapMultilineConditionalAssignment])
     }
 
@@ -4278,7 +4278,7 @@ final class RedundantSelfTests: XCTestCase {
         """
         let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, rule: .redundantSelf, options: options,
-                       exclude: [.wrapMultilineStatementBraces, .indent,
+                       exclude: [.wrapMultilineStatementBraces,
                                  .wrapMultilineConditionalAssignment])
     }
 
@@ -4300,7 +4300,7 @@ final class RedundantSelfTests: XCTestCase {
         """
         let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, rule: .redundantSelf, options: options,
-                       exclude: [.wrapMultilineStatementBraces, .indent,
+                       exclude: [.wrapMultilineStatementBraces,
                                  .wrapMultilineConditionalAssignment,
                                  .blankLinesAfterGuardStatements])
     }
@@ -4323,7 +4323,7 @@ final class RedundantSelfTests: XCTestCase {
         """
         let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, rule: .redundantSelf, options: options,
-                       exclude: [.wrapMultilineStatementBraces, .indent,
+                       exclude: [.wrapMultilineStatementBraces,
                                  .wrapMultilineConditionalAssignment,
                                  .blankLinesAfterGuardStatements])
     }
@@ -4345,7 +4345,7 @@ final class RedundantSelfTests: XCTestCase {
         """
         let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, rule: .redundantSelf, options: options,
-                       exclude: [.wrapMultilineStatementBraces, .indent,
+                       exclude: [.wrapMultilineStatementBraces,
                                  .wrapMultilineConditionalAssignment])
     }
 
@@ -4366,7 +4366,7 @@ final class RedundantSelfTests: XCTestCase {
         """
         let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, rule: .redundantSelf, options: options,
-                       exclude: [.wrapMultilineStatementBraces, .indent,
+                       exclude: [.wrapMultilineStatementBraces,
                                  .wrapMultilineConditionalAssignment])
     }
 
@@ -4407,7 +4407,7 @@ final class RedundantSelfTests: XCTestCase {
         """
         let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, output, rule: .redundantSelf, options: options,
-                       exclude: [.wrapMultilineStatementBraces, .indent,
+                       exclude: [.wrapMultilineStatementBraces,
                                  .wrapMultilineConditionalAssignment])
     }
 
@@ -4429,7 +4429,7 @@ final class RedundantSelfTests: XCTestCase {
         """
         let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, rule: .redundantSelf, options: options,
-                       exclude: [.wrapMultilineStatementBraces, .indent,
+                       exclude: [.wrapMultilineStatementBraces,
                                  .wrapMultilineConditionalAssignment,
                                  .blankLinesAfterGuardStatements])
     }
@@ -4454,7 +4454,7 @@ final class RedundantSelfTests: XCTestCase {
         """
         let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, rule: .redundantSelf, options: options,
-                       exclude: [.wrapMultilineStatementBraces, .indent,
+                       exclude: [.wrapMultilineStatementBraces,
                                  .wrapMultilineConditionalAssignment,
                                  .blankLinesAfterGuardStatements])
     }

@@ -4145,4 +4145,100 @@ final class RedundantSelfTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .redundantSelf)
     }
+
+    // MARK: - issue #2338
+
+    func testStaticFunctionReturningThrowingClosure() {
+        // Minimal repro: guard let Self inside function body after static funcs returning throws closure
+        let input = """
+        class Foo {
+            static var handler: (() throws -> Void)?
+
+            static func bar() -> (() throws -> Void) {
+                baz()
+            }
+
+            static func baz() -> (() throws -> Void) {
+                {}
+            }
+
+            func qux() {
+                guard let x = Self.handler else { return }
+                print(x)
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.1")
+        testFormatting(for: input, rule: .redundantSelf, options: options, exclude: [
+            .emptyBraces, .wrapConditionalBodies, .blankLinesAfterGuardStatements,
+        ])
+    }
+
+    func testStaticFunctionReturningTypedThrowsClosure() {
+        // Test typed throws like throws(MyError)
+        let input = """
+        class Foo {
+            static var handler: (() throws(MyError) -> Void)?
+
+            static func bar() -> (() throws(MyError) -> Void) {
+                baz()
+            }
+
+            static func baz() -> (() throws(MyError) -> Void) {
+                {}
+            }
+
+            func qux() {
+                guard let x = Self.handler else { return }
+                print(x)
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.1")
+        testFormatting(for: input, rule: .redundantSelf, options: options, exclude: [
+            .emptyBraces, .wrapConditionalBodies, .blankLinesAfterGuardStatements,
+        ])
+    }
+
+    func testStaticFunctionReturningClosure() {
+        let input = """
+        class MockURLProtocol: URLProtocol {
+            static var requestHandler: ((URLRequest) throws -> (HTTPURLResponse, Data?))?
+
+            static func simpleSuccessHandler(data: Data) -> ((URLRequest) throws -> (HTTPURLResponse, Data?)) {
+                simpleRequestHandler(statusCode: 200, data: data)
+            }
+
+            static func simpleRequestHandler(
+                statusCode: Int,
+                data: Data? = nil,
+                cancelRequest: Bool = false
+            ) -> ((URLRequest) throws -> (HTTPURLResponse, Data?)) {
+                { (request: URLRequest) in
+                    guard let url = request.url else {
+                        preconditionFailure("expected valid URL in URLRequest")
+                    }
+                    return (HTTPURLResponse(), data)
+                }
+            }
+
+            override func startLoading() {
+                guard let handler = Self.requestHandler else {
+                    fatalError("fail")
+                }
+
+                do {
+                    let (response, data) = try handler(request)
+                    print(response, data as Any)
+                } catch {
+                    print(error)
+                }
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.1")
+        testFormatting(for: input, rule: .redundantSelf, options: options, exclude: [
+            .unusedArguments, .blankLinesAfterGuardStatements,
+        ])
+    }
 }

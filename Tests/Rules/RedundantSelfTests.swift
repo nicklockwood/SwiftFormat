@@ -4149,16 +4149,16 @@ final class RedundantSelfTests: XCTestCase {
     // MARK: - issue #2338
 
     func testStaticFunctionReturningThrowingClosure() {
-        // Minimal repro - does throws matter?
+        // Minimal repro: guard let Self inside function body after static funcs returning throws closure
         let input = """
         class Foo {
-            static var handler: (() -> Void)?
+            static var handler: (() throws -> Void)?
 
-            static func bar() -> (() -> Void) {
+            static func bar() -> (() throws -> Void) {
                 baz()
             }
 
-            static func baz() -> (() -> Void) {
+            static func baz() -> (() throws -> Void) {
                 {}
             }
 
@@ -4169,7 +4169,9 @@ final class RedundantSelfTests: XCTestCase {
         }
         """
         let options = FormatOptions(swiftVersion: "5.1")
-        testFormatting(for: input, rule: .redundantSelf, options: options, exclude: [.emptyBraces])
+        testFormatting(for: input, rule: .redundantSelf, options: options, exclude: [
+            .emptyBraces, .wrapConditionalBodies, .blankLinesAfterGuardStatements,
+        ])
     }
 
     func testStaticFunctionReturningClosure() {
@@ -4209,6 +4211,8 @@ final class RedundantSelfTests: XCTestCase {
         }
         """
         let options = FormatOptions(swiftVersion: "5.1")
-        testFormatting(for: input, rule: .redundantSelf, options: options)
+        testFormatting(for: input, rule: .redundantSelf, options: options, exclude: [
+            .unusedArguments, .blankLinesAfterGuardStatements,
+        ])
     }
 }

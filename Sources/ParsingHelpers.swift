@@ -1564,7 +1564,12 @@ extension Formatter {
             }
 
             // If we find a keyword such `as` then this is an expression
-            if tokens[startOfTypeIndex ... endOfScope].contains(where: \.isKeyword) {
+            // But we need to allow function-type keywords like `throws`, `rethrows`, `async`
+            // that can appear in nested closure types like `(() throws -> Void)`
+            let functionTypeKeywords = Set(["throws", "rethrows", "async"])
+            if tokens[startOfTypeIndex ... endOfScope].contains(where: {
+                $0.isKeyword && !functionTypeKeywords.contains($0.string)
+            }) {
                 return nil
             }
 

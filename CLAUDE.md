@@ -12,6 +12,10 @@ SwiftFormat is a code formatting tool for Swift. It applies a set of rules to Sw
 - `Sources/Options.swift` - Options for configuring the behavior of individual rules
 - `Sources/OptionDescriptor.swift` - Command line flag configuration for rule options
 
+## Branching
+
+All changes and pull requests should target the `develop` branch, not `main`.
+
 ## Building and Testing
 
 ```sh

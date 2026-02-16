@@ -20,6 +20,12 @@ public extension FormatRule {
             guard let viewBuilderIndex = formatter.indexOfViewBuilderAttribute(for: declaration)
             else { return }
 
+            // Don't remove @ViewBuilder from protocol members, as result builders on protocol
+            // members are implicitly added to conforming types
+            if declaration.parentType?.keyword == "protocol" {
+                return
+            }
+
             let bodyScope: ClosedRange<Int>?
             let isBodyMember: Bool
 

@@ -113,4 +113,45 @@ final class DuplicateImportsTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .duplicateImports)
     }
+
+    func testRemoveDuplicateImportsBelowCode() {
+        let input = """
+        import A
+        import B
+        import C
+
+        struct Data {
+            var x: Int
+        }
+
+        final class BigClass {
+            var y: String
+        }
+
+        import B
+
+        final class SmallClass {
+            var z: Double
+        }
+        """
+        let output = """
+        import A
+        import B
+        import C
+
+        struct Data {
+            var x: Int
+        }
+
+        final class BigClass {
+            var y: String
+        }
+
+        final class SmallClass {
+            var z: Double
+        }
+        """
+        testFormatting(for: input, output, rule: .duplicateImports,
+                       exclude: [.blankLineAfterImports])
+    }
 }

@@ -61,6 +61,11 @@ public extension FormatRule {
                         trailingCommaSupported = false
                     }
 
+                    // Built-in condition-checking macros like `#available`, `#unavailable` don't support trailing commas.
+                    else if [.keyword("#available"), .keyword("#unavailable")].contains(identifierToken) {
+                        trailingCommaSupported = false
+                    }
+
                     else {
                         trailingCommaSupported = true
                     }

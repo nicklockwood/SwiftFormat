@@ -139,8 +139,9 @@ func testMyRule() {
 
 - Create several test scenarios covering different cases, but don't exhaustively test every configuration.
 - Use `testFormatting(for: input, [output], rules: [.myRule, .otherRule])` to test multiple rules together.
-- Use `exclude: [.someRule]` if another rule conflicts with your test case. However, only exclude a rule from a test case if the test case would fail otherwise.
-- ALways use multi-line string literals (""") for input and output code.
+- Prefer formatting `input` and `output` code to match the behavior of other rules, instead of excluding other rules with `exclude:`. Only use `exclude:` if the other rule being applied directly conflicts with what the test case is trying to test.
+- Do not use `// MARK` comments in tests.
+- Always use multi-line string literals (""") for input and output code.
 
 ### Debugging
 

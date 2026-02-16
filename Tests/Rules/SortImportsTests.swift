@@ -298,7 +298,7 @@ final class SortImportsTests: XCTestCase {
         import Bar
         """
         testFormatting(for: input, output, rule: .sortImports,
-                       exclude: [.blankLineAfterImports])
+                       exclude: [.blankLineAfterImports, .duplicateImports])
     }
 
     func testNoDeleteCodeBetweenImports3() {

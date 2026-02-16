@@ -4244,57 +4244,97 @@ final class RedundantSelfTests: XCTestCase {
 
     func testRedundantSelfWithIfLetSwitchExpression() {
         let input = """
-        func foo(state: Bool?) {
-            _ = self
-
-            if let value =
-                switch state {
-                case true: 1
-                case false: 0
-                default: nil
-                } {
+        class Foo {
+            var value: Int = 0
+            func foo(state: Bool?) {
+                if let value =
+                    switch state {
+                    case true: 1
+                    case false: 0
+                    default: nil
+                    }
+                {
                     print("Number: \\(value)")
                 }
+                print(self.value)
+            }
+        }
+        """
+        let output = """
+        class Foo {
+            var value: Int = 0
+            func foo(state: Bool?) {
+                if let value =
+                    switch state {
+                    case true: 1
+                    case false: 0
+                    default: nil
+                    }
+                {
+                    print("Number: \\(value)")
+                }
+                print(value)
+            }
         }
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, rule: .redundantSelf, options: options)
+        testFormatting(for: input, output, rule: .redundantSelf, options: options)
     }
 
     func testRedundantSelfWithIfLetIfExpression() {
         let input = """
-        func foo(state: Bool) {
-            _ = self
-
-            if let value =
-                if state {
-                    1
-                } else {
-                    nil
-                } {
+        class Foo {
+            var value: Int = 0
+            func foo(state: Bool) {
+                if let value =
+                    if state {
+                        1
+                    } else {
+                        nil
+                    } {
                     print("Number: \\(value)")
                 }
+                print(self.value)
+            }
+        }
+        """
+        let output = """
+        class Foo {
+            var value: Int = 0
+            func foo(state: Bool) {
+                if let value =
+                    if state {
+                        1
+                    } else {
+                        nil
+                    } {
+                    print("Number: \\(value)")
+                }
+                print(value)
+            }
         }
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, rule: .redundantSelf, options: options)
+        testFormatting(for: input, output, rule: .redundantSelf, options: options)
     }
 
     func testRedundantSelfWithGuardLetSwitchExpression() {
         let input = """
-        func foo(state: Bool?) {
-            _ = self
-
-            guard let value =
-                switch state {
-                case true: 1
-                case false: 0
-                default: nil
-                } else {
-                    print("Nil")
+        class Foo {
+            var value: Int = 0
+            func foo(state: Bool?) {
+                guard let value =
+                    switch state {
+                    case true: 1
+                    case false: 0
+                    default: nil
+                    } else
+                {
+                    print(self.value)
                     return
                 }
-                print(value)
+                print(self.value)
+            }
         }
         """
         let options = FormatOptions(swiftVersion: "5.9")
@@ -4359,11 +4399,29 @@ final class RedundantSelfTests: XCTestCase {
                 {
                     print(self.value)
                 }
+                print(self.value)
+            }
+        }
+        """
+        let output = """
+        class Foo {
+            var value: Int = 0
+            func foo(state: Bool?) {
+                if let value =
+                    switch state {
+                    case true: 1
+                    case false: 0
+                    default: nil
+                    }
+                {
+                    print(self.value)
+                }
+                print(value)
             }
         }
         """
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, rule: .redundantSelf, options: options)
+        testFormatting(for: input, output, rule: .redundantSelf, options: options)
     }
 
     func testSelfRemovedBeforeAndInElseOfIfLetSwitchExpression() {

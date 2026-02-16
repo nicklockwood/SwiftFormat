@@ -12,6 +12,9 @@ jobs:
     runs-on: ubuntu-latest
     # Only run if the PR was actually merged (not just closed)
     if: github.event.pull_request.merged == true
+    permissions:
+      issues: write
+      pull-requests: read
     steps:
       - name: Extract issue numbers from PR
         id: extract_issues

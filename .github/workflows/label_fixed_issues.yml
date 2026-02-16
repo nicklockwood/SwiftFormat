@@ -25,14 +25,14 @@ jobs:
             const prTitle = context.payload.pull_request.title || '';
             const combinedText = `${prTitle}\n${prBody}`;
 
-            // Match patterns like "fixes #123", "closes #456",
-            // "resolves #789", "#123", etc.
+            // Match patterns like "fixes #123", "fixes owner/repo#456",
+            // "fixes https://github.com/owner/repo/issues/789", etc.
             // This regex matches common GitHub issue reference patterns
-            const issueRegex = /(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?|ref(?:erence)?|see|issue)\s*[:#]?\s*(\d+)|#(\d+)/gi;
+            const issueRegex = /(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?|ref(?:erence)?|see|issue)\s+(?:https?:\/\/github\.com\/[^\/]+\/[^\/]+\/issues\/(\d+)|[^\/\s]+\/[^\/\s]+#(\d+)|[:#]?\s*(\d+))|#(\d+)/gi;
             const matches = [...combinedText.matchAll(issueRegex)];
 
             // Extract unique issue numbers
-            const issueNumbers = [...new Set(matches.map(match => match[1] || match[2]))];
+            const issueNumbers = [...new Set(matches.map(match => match[1] || match[2] || match[3] || match[4]))];
 
             console.log(`Found issue references: ${issueNumbers.join(', ')}`);
             return issueNumbers;
@@ -54,30 +54,6 @@ jobs:
 
             for (const issueNumber of issueNumbers) {
               try {
-                // First, ensure the label exists in the repository
-                try {
-                  await github.rest.issues.getLabel({
-                    owner,
-                    repo,
-                    name: label,
-                  });
-                } catch (error) {
-                  if (error.status === 404) {
-                    // Create the label if it doesn't exist
-                    await github.rest.issues.createLabel({
-                      owner,
-                      repo,
-                      name: label,
-                      color: '0E8A16', // Green color
-                      description: 'Issue has been fixed in the develop branch',
-                    });
-                    console.log(`Created label: ${label}`);
-                  } else {
-                    // Log other errors but continue
-                    console.warn(`Warning checking label: ${error.message}`);
-                  }
-                }
-
                 // Add the label to the issue
                 await github.rest.issues.addLabels({
                   owner,

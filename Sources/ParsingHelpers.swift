@@ -1563,8 +1563,13 @@ extension Formatter {
                 return TypeName(range: startOfTypeIndex ... returnTypeRange.upperBound, formatter: self)
             }
 
-            // If we find a keyword such `as` then this is an expression
-            if tokens[startOfTypeIndex ... endOfScope].contains(where: \.isKeyword) {
+            // If we find an expression-only keyword (like `as`, `is`, `try`) then this is
+            // an expression, not a type. But we allow function-type keywords like `throws`,
+            // `rethrows`, `async` that can appear in nested closure types like `(() throws -> Void)`
+            let expressionKeywords = Set(["as", "is", "try", "await", "if", "switch", "for", "while", "repeat", "guard", "in", "return", "throw"])
+            if tokens[startOfTypeIndex ... endOfScope].contains(where: {
+                $0.isKeyword && expressionKeywords.contains($0.string)
+            }) {
                 return nil
             }
 

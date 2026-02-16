@@ -2276,6 +2276,48 @@ final class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(formatter.parseType(at: 5)?.string, "((consuming Foo, borrowing Bar) -> (Foo, Bar)?)?")
     }
 
+    func testParseNestedThrowingClosureType() {
+        let formatter = Formatter(tokenize("""
+        let foo: (() throws -> Void)?
+        """))
+        XCTAssertEqual(formatter.parseType(at: 5)?.string, "(() throws -> Void)?")
+    }
+
+    func testParseNestedTypedThrowsClosureType() {
+        let formatter = Formatter(tokenize("""
+        let foo: (() throws(MyError) -> Void)?
+        """))
+        XCTAssertEqual(formatter.parseType(at: 5)?.string, "(() throws(MyError) -> Void)?")
+    }
+
+    func testParseNestedAsyncClosureType() {
+        let formatter = Formatter(tokenize("""
+        let foo: (() async -> Void)?
+        """))
+        XCTAssertEqual(formatter.parseType(at: 5)?.string, "(() async -> Void)?")
+    }
+
+    func testParseNestedAsyncThrowsClosureType() {
+        let formatter = Formatter(tokenize("""
+        let foo: (() async throws -> Void)?
+        """))
+        XCTAssertEqual(formatter.parseType(at: 5)?.string, "(() async throws -> Void)?")
+    }
+
+    func testParseNestedAsyncTypedThrowsClosureType() {
+        let formatter = Formatter(tokenize("""
+        let foo: (() async throws(MyError) -> Void)?
+        """))
+        XCTAssertEqual(formatter.parseType(at: 5)?.string, "(() async throws(MyError) -> Void)?")
+    }
+
+    func testParseNestedRethrowsClosureType() {
+        let formatter = Formatter(tokenize("""
+        let foo: ((Foo) rethrows -> Void)?
+        """))
+        XCTAssertEqual(formatter.parseType(at: 5)?.string, "((Foo) rethrows -> Void)?")
+    }
+
     func testParseExistentialAny() {
         let formatter = Formatter(tokenize("""
         let foo: any Foo

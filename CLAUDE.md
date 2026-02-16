@@ -12,16 +12,25 @@ SwiftFormat is a code formatting tool for Swift. It applies a set of rules to Sw
 - `Sources/Options.swift` - Options for configuring the behavior of individual rules
 - `Sources/OptionDescriptor.swift` - Command line flag configuration for rule options
 
+## Branching
+
+All changes and pull requests should target the `develop` branch, not `main`.
+
 ## Building and Testing
 
 ```sh
 # Build the project
 swift build
 
-# Run all tests
+# Run all tests (on macOS)
 swift test
 
-# Test a specific rule
+# Run all tests (on Linux)
+# --enable-test-discovery is required because LinuxMain.swift (kept for Mint
+# compatibility) has an empty test list that overrides automatic discovery.
+swift test --enable-test-discovery
+
+# Test a specific rule (works on both macOS and Linux)
 ./Scripts/test_rule.sh <ruleName>
 ```
 
@@ -140,13 +149,17 @@ To debug a rule, run the existing tests or create new test cases. **NEVER** try 
 Use print debugging as necessary to gather more context. Run individual test cases using:
 
 ```sh
+# On macOS:
 swift test --filter <TestClassName>.<testMethodName>
+
+# On Linux (--enable-test-discovery required):
+swift test --enable-test-discovery --filter <TestClassName>.<testMethodName>
 ```
 
 ### After Writing the Rule
 
 1. **Run the rule tests:** `./Scripts/test_rule.sh <ruleName>`
-2. **Run the full test suite:** `swift test`
+2. **Run the full test suite:** `swift test` (or `swift test --enable-test-discovery` on Linux)
 3. **[VERY IMPORTANT] Review your code** - ensure it follows all best practices above
 4. **[VERY IMPORTANT] Simplify further** - look for functionality that could be removed to reduce complexity
 

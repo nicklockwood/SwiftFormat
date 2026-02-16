@@ -39,5 +39,8 @@ echo "Testing ${rule_name} rule..."
 ./format.sh > /dev/null 2>&1
 
 # Run tests for the specific rule using swift test
+# --enable-test-discovery is needed on Linux because LinuxMain.swift
+# (kept for Mint compatibility) has an empty test list that overrides
+# automatic test discovery.
 SWIFT_TEST_TARGET="SwiftFormatTests"
-swift test --filter "${SWIFT_TEST_TARGET}.${TEST_CLASS_NAME}" 2>&1
+swift test --enable-test-discovery --filter "${SWIFT_TEST_TARGET}.${TEST_CLASS_NAME}" 2>&1

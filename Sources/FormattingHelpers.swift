@@ -244,6 +244,16 @@ extension Formatter {
                             return
                         }
                         continue inner
+                    case .keyword("switch"):
+                        // Handle switch expressions (SE-0380)
+                        guard let braceIndex = self.index(of: .startOfScope("{"), after: nextIndex),
+                              let endIndex = endOfScope(at: braceIndex)
+                        else {
+                            names.formUnion(locals)
+                            return
+                        }
+                        index = endIndex
+                        continue inner
                     case .keyword("let"), .keyword("var"):
                         names.formUnion(locals)
                         declarationIndex = nextIndex

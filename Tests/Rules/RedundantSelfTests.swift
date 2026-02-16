@@ -4241,4 +4241,74 @@ final class RedundantSelfTests: XCTestCase {
             .unusedArguments, .blankLinesAfterGuardStatements,
         ])
     }
+
+    func testRedundantSelfBeforeGuardLetElse() {
+        let input = """
+        class Foo {
+            let value = "foo"
+
+            func test() {
+                print(self.value)
+                guard let value else {
+                    print(self.value)
+                    return
+                }
+
+                print(value)
+                print(self.value)
+            }
+        }
+        """
+        let output = """
+        class Foo {
+            let value = "foo"
+
+            func test() {
+                print(value)
+                guard let value else {
+                    print(value)
+                    return
+                }
+
+                print(value)
+                print(self.value)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantSelf, exclude: [.blankLinesAfterGuardStatements])
+    }
+
+    func testRedundantSelfBeforeIfLetElse() {
+        let input = """
+        class Foo {
+            let value = "foo"
+
+            func test() {
+                print(self.value)
+                if let value {
+                    print(value)
+                    print(self.value)
+                } else {
+                    print(self.value)
+                }
+            }
+        }
+        """
+        let output = """
+        class Foo {
+            let value = "foo"
+
+            func test() {
+                print(value)
+                if let value {
+                    print(value)
+                    print(self.value)
+                } else {
+                    print(value)
+                }
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantSelf)
+    }
 }

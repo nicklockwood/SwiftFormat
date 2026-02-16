@@ -2251,7 +2251,7 @@ extension Formatter {
                             // Probably a parameter pack
                             break
                         }
-                    case .keyword("if"), .keyword("for"), .keyword("while"):
+                    case .keyword("if"), .keyword("for"), .keyword("while"), .keyword("guard"):
                         if explicitSelf == .insert {
                             break
                         }
@@ -2458,11 +2458,17 @@ extension Formatter {
                             startIndex = j
                         }
                         index = startIndex + 1
-                        processBody(at: &index, localNames: scopedNames, members: members,
+                        // For guard, the body is the else block where guard vars are not in scope
+                        let bodyLocalNames = (lastKeyword == "guard") ? localNames : scopedNames
+                        processBody(at: &index, localNames: bodyLocalNames, members: members,
                                     typeStack: &typeStack, closureStack: &closureStack,
                                     membersByType: &membersByType, classMembersByType: &classMembersByType,
                                     usingDynamicLookup: usingDynamicLookup, classOrStatic: classOrStatic,
                                     isTypeRoot: false, isInit: isInit)
+                        // Guard-declared variables are available after the guard statement
+                        if lastKeyword == "guard" {
+                            localNames = scopedNames
+                        }
                         index -= 1
                         lastKeyword = ""
                     default:

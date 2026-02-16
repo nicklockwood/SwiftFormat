@@ -3654,4 +3654,38 @@ final class TrailingCommasTests: XCTestCase {
         let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.2")
         testFormatting(for: input, rule: .trailingCommas, options: options)
     }
+
+    func testNoTrailingCommaAddedToAvailableCheck() {
+        let input = """
+        if #available(
+            iOS 16.0,
+            *
+        ) {}
+        """
+        let options = FormatOptions(swiftVersion: "6.2")
+        testFormatting(for: input, rule: .trailingCommas, options: options)
+    }
+
+    func testNoTrailingCommaAddedToUnavailableCheck() {
+        let input = """
+        if #unavailable(
+            iOS 16.0,
+            *
+        ) {}
+        """
+        let options = FormatOptions(swiftVersion: "6.2")
+        testFormatting(for: input, rule: .trailingCommas, options: options)
+    }
+
+    func testNoTrailingCommaAddedToAvailableCheckWithMultiplePlatforms() {
+        let input = """
+        if #available(
+            iOS 16.0,
+            macOS 13.0,
+            *
+        ) {}
+        """
+        let options = FormatOptions(swiftVersion: "6.2")
+        testFormatting(for: input, rule: .trailingCommas, options: options)
+    }
 }

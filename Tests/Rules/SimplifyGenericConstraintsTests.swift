@@ -435,4 +435,54 @@ final class SimplifyGenericConstraintsTests: XCTestCase {
         """
         testFormatting(for: input, rule: .simplifyGenericConstraints, exclude: [.indent, .emptyBraces, .braces])
     }
+
+    func testPreserveProtocolMethodWithWhereClauseButNoGenericParameters() {
+        // Issue #2366: Protocol methods may have where clauses referencing associated types
+        // rather than generic parameters defined on the function itself
+        let input = """
+        protocol DatabaseMigrator {
+            func runDatabaseMigration(migration: T.Type, version: Int, databaseVersions: inout [Int]) throws where T: Migration
+        }
+        """
+        testFormatting(for: input, rule: .simplifyGenericConstraints)
+    }
+
+    func testPreserveProtocolMethodWithAssociatedTypeConstraint() {
+        // Issue #2366: Protocol with associatedtype - the function has no generic
+        // parameters but has a where clause referencing the associated type
+        let input = """
+        protocol Migration {}
+
+        protocol DatabaseMigrator {
+            associatedtype T
+            func runDatabaseMigration(migration: T.Type, version: Int, databaseVersions: inout [Int]) throws where T: Migration
+        }
+        """
+        testFormatting(for: input, rule: .simplifyGenericConstraints)
+    }
+
+    func testPreserveMethodWithWhereClauseReferencingOuterGeneric() {
+        // Function with no generic parameters referencing generic from containing type
+        let input = """
+        struct Container<T> {
+            func process() where T: Codable {}
+        }
+        """
+        testFormatting(for: input, rule: .simplifyGenericConstraints)
+    }
+
+    func testSimplifyProtocolMethodWithGenerics() {
+        // Protocol method with <T> generic parameters should be simplified
+        let input = """
+        protocol DatabaseMigrator {
+            func runDatabaseMigration<T>(migration: T.Type, version: Int, databaseVersions: inout [Int]) throws where T: Migration
+        }
+        """
+        let output = """
+        protocol DatabaseMigrator {
+            func runDatabaseMigration<T: Migration>(migration: T.Type, version: Int, databaseVersions: inout [Int]) throws
+        }
+        """
+        testFormatting(for: input, output, rule: .simplifyGenericConstraints)
+    }
 }

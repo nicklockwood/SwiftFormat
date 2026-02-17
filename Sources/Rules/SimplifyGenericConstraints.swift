@@ -24,6 +24,7 @@ public extension FormatRule {
                 else { return }
 
                 formatter.simplifyGenericConstraints(
+                    keywordIndex: keywordIndex,
                     genericStartIndex: genericParameterRange.lowerBound,
                     genericEndIndex: genericParameterRange.upperBound,
                     whereIndex: whereClauseRange.lowerBound
@@ -51,6 +52,7 @@ public extension FormatRule {
             else { return }
 
             formatter.simplifyGenericConstraints(
+                keywordIndex: keywordIndex,
                 genericStartIndex: genericStartIndex,
                 genericEndIndex: genericEndIndex,
                 whereIndex: whereIndex
@@ -78,7 +80,7 @@ public extension FormatRule {
 }
 
 extension Formatter {
-    func simplifyGenericConstraints(genericStartIndex: Int, genericEndIndex _: Int, whereIndex: Int) {
+    func simplifyGenericConstraints(keywordIndex: Int, genericStartIndex: Int, genericEndIndex _: Int, whereIndex: Int) {
         // Parse generics from angle brackets
         var genericTypes = [Formatter.GenericType]()
         parseGenericTypes(
@@ -152,36 +154,62 @@ extension Formatter {
         removeTokens(in: sourceRangesToRemove)
 
         // Check if the where clause is now empty and remove it if so
-        // Find the next significant token after the where keyword
-        if let tokenAfterWhereIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: whereClauseIndex) {
-            let tokenAfterWhere = tokens[tokenAfterWhereIndex]
-            if tokenAfterWhere == .startOfScope("{") {
-                // Where clause followed by opening brace - remove everything between where and {
-                removeTokens(in: whereClauseIndex.index ..< tokenAfterWhereIndex)
+        // For function declarations, re-parse to check if where clause still has constraints
+        let shouldRemoveWhereClause: Bool
+        if tokens[keywordIndex] == .keyword("func"),
+           let declaration = parseFunctionDeclaration(keywordIndex: keywordIndex),
+           let updatedWhereRange = declaration.whereClauseRange
+        {
+            // Parse the where clause to see if it still has any constraints
+            let (whereTypes, _) = parseGenericTypes(from: updatedWhereRange.lowerBound)
+            // If the where clause has no constraints (empty), remove it
+            shouldRemoveWhereClause = whereTypes.allSatisfy({ $0.conformances.isEmpty })
+        } else {
+            // For non-function declarations, use the simpler token-based detection
+            // Find the next significant token after the where keyword
+            if let tokenAfterWhereIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: whereClauseIndex) {
+                let tokenAfterWhere = tokens[tokenAfterWhereIndex]
+                // Where clause is empty if next token is { or linebreak/}
+                shouldRemoveWhereClause = (tokenAfterWhere == .startOfScope("{") ||
+                                         tokenAfterWhere.isLinebreak ||
+                                         tokenAfterWhere == .endOfScope("}"))
             } else {
-                // Where clause is empty (next significant token is not {)
-                // Remove the where keyword and any whitespace/linebreaks after it
-                // Also remove the space before where if present
+                // No token after where - it's empty
+                shouldRemoveWhereClause = true
+            }
+        }
+        
+        if shouldRemoveWhereClause {
+            // Remove the where keyword and surrounding whitespace
+            // Use original removal logic that handles all cases
+            if let tokenAfterWhereIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: whereClauseIndex) {
+                let tokenAfterWhere = tokens[tokenAfterWhereIndex]
+                if tokenAfterWhere == .startOfScope("{") {
+                    // Where clause followed by opening brace - remove everything between where and {
+                    removeTokens(in: whereClauseIndex.index ..< tokenAfterWhereIndex)
+                } else {
+                    // Where clause followed by something else
+                    // Remove the where keyword and any whitespace before it
+                    let startIndex = (whereClauseIndex.index > 0 && tokens[whereClauseIndex.index - 1].isSpace)
+                        ? whereClauseIndex.index - 1
+                        : whereClauseIndex.index
+
+                    if let linebreakIndex = index(of: .linebreak, after: whereClauseIndex) {
+                        removeTokens(in: startIndex ..< linebreakIndex)
+                    }
+                }
+            } else {
+                // No non-whitespace token after where at all - remove where and trailing content
                 let startIndex = (whereClauseIndex.index > 0 && tokens[whereClauseIndex.index - 1].isSpace)
                     ? whereClauseIndex.index - 1
                     : whereClauseIndex.index
 
-                if let linebreakIndex = index(of: .linebreak, after: whereClauseIndex) {
-                    removeTokens(in: startIndex ..< linebreakIndex)
+                var endIndex = whereClauseIndex.index + 1
+                while endIndex < tokens.count, !tokens[endIndex].isLinebreak {
+                    endIndex += 1
                 }
+                removeTokens(in: startIndex ..< endIndex)
             }
-        } else {
-            // No non-whitespace token after where at all - remove where and trailing content
-            // Also remove the space before where if present
-            let startIndex = (whereClauseIndex.index > 0 && tokens[whereClauseIndex.index - 1].isSpace)
-                ? whereClauseIndex.index - 1
-                : whereClauseIndex.index
-
-            var endIndex = whereClauseIndex.index + 1
-            while endIndex < tokens.count, !tokens[endIndex].isLinebreak {
-                endIndex += 1
-            }
-            removeTokens(in: startIndex ..< endIndex)
         }
 
         // Clean up any trailing commas before the opening brace or end of declaration

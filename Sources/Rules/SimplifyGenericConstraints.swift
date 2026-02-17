@@ -155,60 +155,63 @@ extension Formatter {
 
         // Check if the where clause is now empty and remove it if so
         // For function declarations, re-parse to check if where clause still has constraints
-        let shouldRemoveWhereClause: Bool
+        let tokenAfterWhereKeyword: Int?
         if tokens[keywordIndex] == .keyword("func"),
            let declaration = parseFunctionDeclaration(keywordIndex: keywordIndex),
            let updatedWhereRange = declaration.whereClauseRange
         {
             // Parse the where clause to see if it still has any constraints
             let (whereTypes, _) = parseGenericTypes(from: updatedWhereRange.lowerBound)
-            // If the where clause has no constraints (empty), remove it
-            shouldRemoveWhereClause = whereTypes.allSatisfy({ $0.conformances.isEmpty })
-        } else {
-            // For non-function declarations, use the simpler token-based detection
-            // Find the next significant token after the where keyword
-            if let tokenAfterWhereIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: whereClauseIndex) {
-                let tokenAfterWhere = tokens[tokenAfterWhereIndex]
-                // Where clause is empty if next token is { or linebreak/}
-                shouldRemoveWhereClause = (tokenAfterWhere == .startOfScope("{") ||
-                                         tokenAfterWhere.isLinebreak ||
-                                         tokenAfterWhere == .endOfScope("}"))
+            // If the where clause has no constraints (empty), get the token after the where keyword
+            if whereTypes.allSatisfy({ $0.conformances.isEmpty }) {
+                tokenAfterWhereKeyword = index(of: .nonSpaceOrCommentOrLinebreak, after: updatedWhereRange.lowerBound)
             } else {
-                // No token after where - it's empty
-                shouldRemoveWhereClause = true
+                tokenAfterWhereKeyword = nil
             }
+        } else if let nextToken = index(of: .nonSpaceOrCommentOrLinebreak, after: whereClauseIndex) {
+            // For non-function declarations, check if where clause looks empty based on next token
+            let tokenAfterWhere = tokens[nextToken]
+            if tokenAfterWhere == .startOfScope("{") || tokenAfterWhere.isLinebreak || tokenAfterWhere == .endOfScope("}") {
+                tokenAfterWhereKeyword = nextToken
+            } else {
+                tokenAfterWhereKeyword = nil
+            }
+        } else {
+            tokenAfterWhereKeyword = nil
         }
         
-        if shouldRemoveWhereClause {
-            // Remove the where keyword and surrounding whitespace
-            // Use original removal logic that handles all cases
-            if let tokenAfterWhereIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: whereClauseIndex) {
-                let tokenAfterWhere = tokens[tokenAfterWhereIndex]
-                if tokenAfterWhere == .startOfScope("{") {
-                    // Where clause followed by opening brace - remove everything between where and {
-                    removeTokens(in: whereClauseIndex.index ..< tokenAfterWhereIndex)
-                } else {
-                    // Where clause followed by something else
-                    // Remove the where keyword and any whitespace before it
-                    let startIndex = (whereClauseIndex.index > 0 && tokens[whereClauseIndex.index - 1].isSpace)
-                        ? whereClauseIndex.index - 1
-                        : whereClauseIndex.index
-
-                    if let linebreakIndex = index(of: .linebreak, after: whereClauseIndex) {
-                        removeTokens(in: startIndex ..< linebreakIndex)
-                    }
-                }
-            } else {
-                // No non-whitespace token after where at all - remove where and trailing content
+        // If tokenAfterWhereKeyword is set, the where clause is empty and should be removed
+        if let tokenAfterWhereIndex = tokenAfterWhereKeyword {
+            let tokenAfterWhere = tokens[tokenAfterWhereIndex]
+            if tokenAfterWhere == .startOfScope("{") {
+                // Where clause followed by opening brace - remove everything between where and {
+                removeTokens(in: whereClauseIndex.index ..< tokenAfterWhereIndex)
+            } else if tokenAfterWhere.isLinebreak || tokenAfterWhere == .endOfScope("}") {
+                // Where clause followed by linebreak or closing brace - remove where and whitespace
                 let startIndex = (whereClauseIndex.index > 0 && tokens[whereClauseIndex.index - 1].isSpace)
                     ? whereClauseIndex.index - 1
                     : whereClauseIndex.index
 
-                var endIndex = whereClauseIndex.index + 1
-                while endIndex < tokens.count, !tokens[endIndex].isLinebreak {
-                    endIndex += 1
+                if let linebreakIndex = index(of: .linebreak, after: whereClauseIndex) {
+                    removeTokens(in: startIndex ..< linebreakIndex)
                 }
-                removeTokens(in: startIndex ..< endIndex)
+            } else {
+                // Where clause followed by something else (e.g., next function in protocol)
+                // Remove where and any trailing whitespace up to linebreak
+                let startIndex = (whereClauseIndex.index > 0 && tokens[whereClauseIndex.index - 1].isSpace)
+                    ? whereClauseIndex.index - 1
+                    : whereClauseIndex.index
+
+                if let linebreakIndex = index(of: .linebreak, after: whereClauseIndex) {
+                    removeTokens(in: startIndex ..< linebreakIndex)
+                } else {
+                    // No linebreak found - remove where and trailing content
+                    var endIndex = whereClauseIndex.index + 1
+                    while endIndex < tokens.count, !tokens[endIndex].isLinebreak {
+                        endIndex += 1
+                    }
+                    removeTokens(in: startIndex ..< endIndex)
+                }
             }
         }
 

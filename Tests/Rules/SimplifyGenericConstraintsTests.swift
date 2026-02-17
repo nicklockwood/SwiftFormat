@@ -485,4 +485,21 @@ final class SimplifyGenericConstraintsTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .simplifyGenericConstraints)
     }
+
+    func testSimplifyProtocolMethodWithGenericsFollowedByAnotherMethod() {
+        // Issue #2366: Protocol method with <T> should be simplified even when followed by another method
+        let input = """
+        protocol DatabaseMigrator {
+            func runDatabaseMigration<T>(migration: T.Type, version: Int, databaseVersions: inout [Int]) throws where T: Migration
+            func migrateDatabase(version: Int, databaseVersions: inout [Int], migration: () throws -> Void) throws
+        }
+        """
+        let output = """
+        protocol DatabaseMigrator {
+            func runDatabaseMigration<T: Migration>(migration: T.Type, version: Int, databaseVersions: inout [Int]) throws
+            func migrateDatabase(version: Int, databaseVersions: inout [Int], migration: () throws -> Void) throws
+        }
+        """
+        testFormatting(for: input, output, rule: .simplifyGenericConstraints)
+    }
 }

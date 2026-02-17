@@ -158,8 +158,8 @@ extension Formatter {
             if tokenAfterWhere == .startOfScope("{") {
                 // Where clause followed by opening brace - remove everything between where and {
                 removeTokens(in: whereClauseIndex.index ..< tokenAfterWhereIndex)
-            } else if tokenAfterWhere.isLinebreak || tokenAfterWhere == .endOfScope("}") {
-                // Where clause followed by linebreak or closing brace - means it's empty
+            } else {
+                // Where clause is empty (next significant token is not {)
                 // Remove the where keyword and any whitespace/linebreaks after it
                 // Also remove the space before where if present
                 let startIndex = (whereClauseIndex.index > 0 && tokens[whereClauseIndex.index - 1].isSpace)

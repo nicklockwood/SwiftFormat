@@ -2261,7 +2261,7 @@ extension Formatter {
                             // Probably a parameter pack
                             break
                         }
-                    case .keyword("if"), .keyword("for"), .keyword("while"), .keyword("guard"):
+                    case .keyword("if"), .keyword("for"), .keyword("while"):
                         if explicitSelf == .insert {
                             break
                         }
@@ -2436,6 +2436,18 @@ extension Formatter {
                         let removeSelf = explicitSelf != .insert && !usingDynamicLookup && (
                             (staticSelf && classOrStatic) || (!staticSelf && !inClosureDisallowingImplicitSelf)
                         )
+                        // For guard, collect declared variable names separately
+                        // so we can exclude them from the else body's scope
+                        var guardDeclaredNames = Set<String>()
+                        if lastKeyword == "guard" {
+                            var tempIndex = index
+                            processDeclaredVariables(
+                                at: &tempIndex, names: &guardDeclaredNames,
+                                removeSelfKeyword: nil,
+                                onlyLocal: false,
+                                scopeAllowsImplicitSelfRebinding: false
+                            )
+                        }
                         processDeclaredVariables(
                             at: &index, names: &scopedNames,
                             removeSelfKeyword: removeSelf ? selfKeyword : nil,
@@ -2469,16 +2481,12 @@ extension Formatter {
                         }
                         index = startIndex + 1
                         // For guard, the body is the else block where guard vars are not in scope
-                        let bodyLocalNames = (lastKeyword == "guard") ? localNames : scopedNames
+                        let bodyLocalNames = (lastKeyword == "guard") ? localNames.subtracting(guardDeclaredNames) : scopedNames
                         processBody(at: &index, localNames: bodyLocalNames, members: members,
                                     typeStack: &typeStack, closureStack: &closureStack,
                                     membersByType: &membersByType, classMembersByType: &classMembersByType,
                                     usingDynamicLookup: usingDynamicLookup, classOrStatic: classOrStatic,
                                     isTypeRoot: false, isInit: isInit)
-                        // Guard-declared variables are available after the guard statement
-                        if lastKeyword == "guard" {
-                            localNames = scopedNames
-                        }
                         index -= 1
                         lastKeyword = ""
                     default:

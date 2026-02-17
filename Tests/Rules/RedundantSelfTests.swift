@@ -4264,7 +4264,7 @@ final class RedundantSelfTests: XCTestCase {
             let value = "foo"
 
             func test() {
-                print(value)
+                print(self.value)
                 guard let value else {
                     print(value)
                     return
@@ -4576,5 +4576,79 @@ final class RedundantSelfTests: XCTestCase {
         let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, rule: .redundantSelf, options: options,
                        exclude: [.blankLinesAfterGuardStatements])
+    }
+
+    func testSelfNotRemovedAfterGuardLetShadowing() {
+        let input = """
+        class Foo: Bar {
+            var attributedText: NSAttributedString?
+
+            override func drawText(in rect: CGRect) {
+                guard let attributedText else {
+                    super.drawText(in: rect)
+                    return
+                }
+
+                drawRoundedBackgrounds(for: attributedText, in: rect)
+
+                let textWithoutBackgrounds = NSMutableAttributedString(attributedString: attributedText)
+                textWithoutBackgrounds.removeAttribute(
+                    .backgroundColor,
+                    range: NSRange(location: 0, length: textWithoutBackgrounds.length)
+                )
+
+                let originalText = self.attributedText
+                self.attributedText = textWithoutBackgrounds
+
+                let insetRect = rect.inset(by: highlightPadding)
+                super.drawText(in: insetRect)
+
+                self.attributedText = originalText
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantSelf, exclude: [.blankLinesAfterGuardStatements])
+    }
+
+    func testSelfNotRemovedAfterGuardLetWithMultipleMembers() {
+        let input = """
+        class Foo: Bar {
+            override func drawText(in rect: CGRect) {
+                guard let attributedText else {
+                    super.drawText(in: rect)
+                    return
+                }
+
+                let textWithoutBackgrounds = NSMutableAttributedString(attributedString: attributedText)
+                let originalText = self.attributedText
+                self.attributedText = textWithoutBackgrounds
+                super.drawText(in: rect)
+                self.attributedText = originalText
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantSelf, exclude: [.blankLinesAfterGuardStatements])
+    }
+
+    func testSelfNotRemovedAfterGuardLetShadowingSwift5() {
+        let input = """
+        class Foo: Bar {
+            override func drawText(in rect: CGRect) {
+                guard let attributedText else {
+                    super.drawText(in: rect)
+                    return
+                }
+
+                let textWithoutBackgrounds = NSMutableAttributedString(attributedString: attributedText)
+
+                let originalText = self.attributedText
+                self.attributedText = textWithoutBackgrounds
+                super.drawText(in: rect)
+                self.attributedText = originalText
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: .redundantSelf, options: options, exclude: [.blankLinesAfterGuardStatements])
     }
 }

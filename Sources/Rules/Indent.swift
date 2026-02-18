@@ -840,37 +840,16 @@ extension Formatter {
         }
         
         // Use parseClosureArguments to properly parse the closure structure
-        guard let closureArgs = parseClosureArguments(at: closureStartIndex) else {
+        guard let closureArgs = parseClosureArguments(at: closureStartIndex),
+              !closureArgs.argumentIndices.isEmpty
+        else {
             return false
         }
         
-        // We're in the parameter list if we're before the 'in' keyword
-        guard i < closureArgs.inKeywordIndex else {
-            return false
-        }
-        
-        // Check if we're in the capture list
-        if let captureListRange = closureArgs.captureListRange,
-           i > captureListRange.lowerBound && i < captureListRange.upperBound
-        {
-            return true
-        }
-        
-        // Check if we're in the parameters range
-        if let parametersRange = closureArgs.parametersRange {
-            return i > parametersRange.lowerBound && i < parametersRange.upperBound
-        }
-        
-        // If there's no parameters range but we have a capture list, check if we're after it
-        // This handles cases like { [weak self] param1, param2 in } where params are bare identifiers
-        if closureArgs.captureListRange != nil,
-           let captureEnd = closureArgs.captureListRange?.upperBound
-        {
-            return i > captureEnd && i < closureArgs.inKeywordIndex
-        }
-        
-        // For bare identifiers without capture list
-        return i > closureStartIndex && i < closureArgs.inKeywordIndex
+        // Check if we're between the first closure argument and the 'in' keyword
+        // This includes all the argument identifiers, commas, spaces, and type annotations
+        let firstArgIndex = closureArgs.argumentIndices.first!
+        return i >= firstArgIndex && i < closureArgs.inKeywordIndex
     }
 
     func stringBodyIndent(at i: Int) -> String {

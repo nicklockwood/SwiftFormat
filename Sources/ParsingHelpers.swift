@@ -790,7 +790,7 @@ extension Formatter {
                 return true
             case .startOfScope("("), .startOfScope("["), .startOfScope("<"),
                  .endOfScope(")"), .endOfScope("]"), .endOfScope(">"),
-                 .keyword where token.isAttribute, _ where token.isComment:
+                 .keyword where token.isAttribute || token.isMacro, _ where token.isComment:
                 break
             case .keyword, .startOfScope, .endOfScope:
                 return false

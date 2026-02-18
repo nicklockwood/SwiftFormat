@@ -854,19 +854,41 @@ extension Formatter {
             searchStartIndex = captureListEnd
         }
         
-        // Try to parse closure arguments starting after any capture list
-        // parseClosureArgumentList only works when called with the closure start,
-        // not after a capture list, so we need to handle this case manually
-        
-        // Manually check for 'in' keyword
-        guard let closureEndIndex = endOfScope(at: closureStartIndex),
-              let inKeywordIndex = index(of: .keyword("in"), in: i ..< closureEndIndex)
-        else {
+        // Find the first 'in' keyword at the top level of the closure
+        // (not nested inside any sub-scopes like for-in loops)
+        guard let closureEndIndex = endOfScope(at: closureStartIndex) else {
             return false
         }
         
-        // Make sure this isn't a for-in loop
-        guard index(of: .keyword("for"), in: closureStartIndex ..< inKeywordIndex) == nil else {
+        var inKeywordIndex: Int?
+        var currentIndex = searchStartIndex + 1
+        
+        while currentIndex < closureEndIndex {
+            let token = tokens[currentIndex]
+            
+            // Skip over any nested scopes
+            if token.isStartOfScope {
+                if let endOfNestedScope = endOfScope(at: currentIndex) {
+                    currentIndex = endOfNestedScope + 1
+                    continue
+                }
+            }
+            
+            // Found the 'in' keyword at the top level
+            if token == .keyword("in") {
+                inKeywordIndex = currentIndex
+                break
+            }
+            
+            currentIndex += 1
+        }
+        
+        guard let inKeywordIndex = inKeywordIndex else {
+            return false
+        }
+        
+        // We only care about positions before the 'in' keyword
+        guard i < inKeywordIndex else {
             return false
         }
         

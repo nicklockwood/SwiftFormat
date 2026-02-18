@@ -102,11 +102,6 @@ extension Formatter {
 
         let modifiers = function.modifiers
 
-        // Skip if it's already private/fileprivate (respect explicit access control)
-        if modifiers.contains("private") || modifiers.contains("fileprivate") {
-            return
-        }
-
         // Skip if it's an override, has @objc, or is static (might be called from outside)
         if modifiers.contains("override") || modifiers.contains("@objc") || modifiers.contains("static") {
             return
@@ -121,10 +116,18 @@ extension Formatter {
             || hasDisabledPrefix(name)
 
         if treatAsTestCase {
+            // For XCTest: Skip if it's already private/fileprivate (respect explicit access control)
+            // For Swift Testing: Always make internal (private @Test functions are still executed)
+            if framework == .xcTest, modifiers.contains("private") || modifiers.contains("fileprivate") {
+                return
+            }
             // Test methods should be internal
             validateTestMethodAccessControl(function)
         } else {
-            // Non-test methods should be private
+            // Non-test methods should be private (but skip if already private/fileprivate)
+            if modifiers.contains("private") || modifiers.contains("fileprivate") {
+                return
+            }
             ensurePrivateAccessControl(function)
         }
     }

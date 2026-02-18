@@ -868,6 +868,25 @@ extension Formatter {
             {
                 return true
             }
+            // If we found a closure parameter list with parens (not just capture list),
+            // and we're after it, then we're NOT in the parameter list anymore
+            // (we might be in throws/return type area)
+            if tokens[paramStartIndex] == .startOfScope("(") {
+                return false
+            }
+            // If we found only a capture list (with []), but we're after it and before 'in',
+            // then we might be in bare parameters after the capture list
+            // Check if there's a parameter list with parens after this capture list
+            if let parenIndex = index(of: .startOfScope("("), in: paramEndIndex + 1 ..< inKeywordIndex),
+               endOfScope(at: parenIndex) != nil
+            {
+                // There's a paren-wrapped parameter list, so we're not in bare params
+                return false
+            }
+            // No paren-wrapped params found, so we're in bare parameters
+            if i > paramEndIndex && i < inKeywordIndex {
+                return true
+            }
             return false
         }
         

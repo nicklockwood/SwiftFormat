@@ -170,7 +170,7 @@ extension TypeDeclaration {
     func convertToSwiftTestingSuite() {
         // Only remove conformance and add attributes for non-extension declarations
         let isExtension = keyword == "extension"
-        
+
         if !isExtension {
             // Remove the XCTestCase conformance
             if let xcTestCaseConformance = conformances.first(where: { $0.conformance.string == "XCTestCase" }) {

@@ -77,7 +77,7 @@ extension Formatter {
     /// Converts a declaration name to use a raw identifier (backtick-quoted name with spaces).
     /// If the macro attribute has a display name, uses that as the name and removes it from the attribute.
     /// Otherwise, converts the camelCase/underscore name to a space-separated raw identifier.
-    func convertToRawIdentifier(forDeclarationAt keywordIndex: Int, macroName: String, upperCamelCase: Bool) {
+    func convertToRawIdentifier(forDeclarationAt keywordIndex: Int, macroName: String, upperCamelCase _: Bool) {
         guard let nameIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: keywordIndex),
               tokens[nameIndex].isIdentifier
         else { return }

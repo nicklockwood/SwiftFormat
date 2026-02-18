@@ -1001,7 +1001,7 @@ final class CommandLineTests: XCTestCase {
         }
     }
 
-    func testStdinPathWithNonExistingFile() throws {
+    func testStdinPathWithNonExistingFile() {
         var output = [String]()
         CLI.print = { message, type in
             switch type {
@@ -1048,7 +1048,7 @@ final class CommandLineTests: XCTestCase {
         """])
     }
 
-    func testStdinPathWithNonExistingFileExcluded() throws {
+    func testStdinPathWithNonExistingFileExcluded() {
         var output = [String]()
         CLI.print = { message, type in
             switch type {

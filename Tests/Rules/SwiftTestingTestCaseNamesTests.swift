@@ -710,7 +710,8 @@ final class SwiftTestingTestCaseNamesTests: XCTestCase {
         """
 
         testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
-                       options: FormatOptions(testCaseNameFormat: .preserve, swiftVersion: "6.2"))
+                       options: FormatOptions(testCaseNameFormat: .preserve, swiftVersion: "6.2"),
+                       exclude: [.redundantSwiftTestingSuite])
     }
 
     func testSuiteStandardIdentifiersConvertsRawIdentifier() {
@@ -733,7 +734,8 @@ final class SwiftTestingTestCaseNamesTests: XCTestCase {
         """
 
         testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
-                       options: FormatOptions(testCaseNameFormat: .preserve, swiftVersion: "6.2"))
+                       options: FormatOptions(testCaseNameFormat: .preserve, swiftVersion: "6.2"),
+                       exclude: [.redundantSwiftTestingSuite])
     }
 
     func testSuiteStandardIdentifiersRemovesDisplayNameAndConvertsRawIdentifier() {
@@ -756,7 +758,8 @@ final class SwiftTestingTestCaseNamesTests: XCTestCase {
         """
 
         testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
-                       options: FormatOptions(testCaseNameFormat: .preserve, swiftVersion: "6.2"))
+                       options: FormatOptions(testCaseNameFormat: .preserve, swiftVersion: "6.2"),
+                       exclude: [.redundantSwiftTestingSuite])
     }
 
     func testSuiteStandardIdentifiersPreservesStandardName() {
@@ -770,7 +773,8 @@ final class SwiftTestingTestCaseNamesTests: XCTestCase {
         """
 
         testFormatting(for: input, rule: .swiftTestingTestCaseNames,
-                       options: FormatOptions(testCaseNameFormat: .preserve, swiftVersion: "6.2"))
+                       options: FormatOptions(testCaseNameFormat: .preserve, swiftVersion: "6.2"),
+                       exclude: [.redundantSwiftTestingSuite])
     }
 
     func testSuiteStandardIdentifiersRemovesDisplayNameWithOtherArgs() {
@@ -820,7 +824,8 @@ final class SwiftTestingTestCaseNamesTests: XCTestCase {
         testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
                        options: FormatOptions(testCaseNameFormat: .preserve,
                                               suiteNameFormat: .rawIdentifiers,
-                                              swiftVersion: "6.2"))
+                                              swiftVersion: "6.2"),
+                       exclude: [.redundantSwiftTestingSuite])
     }
 
     func testSuiteRawIdentifiersUsesDisplayName() {
@@ -845,7 +850,8 @@ final class SwiftTestingTestCaseNamesTests: XCTestCase {
         testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
                        options: FormatOptions(testCaseNameFormat: .preserve,
                                               suiteNameFormat: .rawIdentifiers,
-                                              swiftVersion: "6.2"))
+                                              swiftVersion: "6.2"),
+                       exclude: [.redundantSwiftTestingSuite])
     }
 
     func testSuiteRawIdentifiersFallsBackToPreserveBelowSwift6_2() {
@@ -861,7 +867,8 @@ final class SwiftTestingTestCaseNamesTests: XCTestCase {
         testFormatting(for: input, rule: .swiftTestingTestCaseNames,
                        options: FormatOptions(testCaseNameFormat: .preserve,
                                               suiteNameFormat: .rawIdentifiers,
-                                              swiftVersion: "6.1"))
+                                              swiftVersion: "6.1"),
+                       exclude: [.redundantSwiftTestingSuite])
     }
 
     // MARK: - @Suite with preserve
@@ -904,7 +911,8 @@ final class SwiftTestingTestCaseNamesTests: XCTestCase {
         """
 
         testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
-                       options: FormatOptions(testCaseNameFormat: .preserve, swiftVersion: "6.2"))
+                       options: FormatOptions(testCaseNameFormat: .preserve, swiftVersion: "6.2"),
+                       exclude: [.redundantSwiftTestingSuite])
     }
 
     func testSuiteWorksWithActor() {
@@ -927,7 +935,8 @@ final class SwiftTestingTestCaseNamesTests: XCTestCase {
         """
 
         testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
-                       options: FormatOptions(testCaseNameFormat: .preserve, swiftVersion: "6.2"))
+                       options: FormatOptions(testCaseNameFormat: .preserve, swiftVersion: "6.2"),
+                       exclude: [.redundantSwiftTestingSuite])
     }
 
     func testSuiteWorksWithEnum() {
@@ -950,7 +959,8 @@ final class SwiftTestingTestCaseNamesTests: XCTestCase {
         """
 
         testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
-                       options: FormatOptions(testCaseNameFormat: .preserve, swiftVersion: "6.2"))
+                       options: FormatOptions(testCaseNameFormat: .preserve, swiftVersion: "6.2"),
+                       exclude: [.redundantSwiftTestingSuite])
     }
 
     func testSuiteNameNotUpdatedWhenReferencedAsStaticMember() {
@@ -981,6 +991,7 @@ final class SwiftTestingTestCaseNamesTests: XCTestCase {
         """
 
         testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
-                       options: FormatOptions(testCaseNameFormat: .preserve, swiftVersion: "6.2"))
+                       options: FormatOptions(testCaseNameFormat: .preserve, swiftVersion: "6.2"),
+                       exclude: [.redundantSwiftTestingSuite])
     }
 }

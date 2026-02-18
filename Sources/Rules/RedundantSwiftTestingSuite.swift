@@ -10,7 +10,8 @@ import Foundation
 
 public extension FormatRule {
     static let redundantSwiftTestingSuite = FormatRule(
-        help: "Remove redundant @Suite attribute with no arguments."
+        help: "Remove redundant @Suite attribute with no arguments.",
+        orderAfter: [.swiftTestingTestCaseNames]
     ) { formatter in
         guard formatter.hasImport("Testing") else { return }
 

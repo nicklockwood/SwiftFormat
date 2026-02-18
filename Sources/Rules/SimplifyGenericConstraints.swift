@@ -154,9 +154,9 @@ extension Formatter {
         // Check if the where clause is now empty and remove it if so
         // Re-parse the where clause to get the updated range and check if it has any constraints
         let (whereTypes, updatedWhereRange) = parseGenericTypes(from: whereIndex)
-        
+
         // If the where clause has no constraints (empty), remove it
-        if whereTypes.allSatisfy({ $0.conformances.isEmpty }) {
+        if whereTypes.allSatisfy(\.conformances.isEmpty) {
             // Get the token after the where keyword
             if let tokenAfterWhereIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: updatedWhereRange.lowerBound) {
                 let tokenAfterWhere = tokens[tokenAfterWhereIndex]

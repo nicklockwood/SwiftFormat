@@ -187,10 +187,11 @@ public enum ClosureVoidReturn: String, CaseIterable {
     case preserve
 }
 
-/// Format for Swift Testing test case names
-public enum TestCaseNameFormat: String, CaseIterable {
+/// Format for Swift Testing test case / suite names
+public enum SwiftTestingNameFormat: String, CaseIterable {
     case preserve
     case rawIdentifiers = "raw-identifiers"
+    case standardIdentifiers = "standard-identifiers"
 }
 
 public enum TrailingCommas: String, CaseIterable {
@@ -884,7 +885,8 @@ public struct FormatOptions: CustomStringConvertible {
     public var redundantAsync: RedundantEffectMode
     public var allowPartialWrapping: Bool
     public var preferSynthesizedInitForInternalStructs: PreferSynthesizedInitMode
-    public var testCaseNameFormat: TestCaseNameFormat
+    public var testCaseNameFormat: SwiftTestingNameFormat
+    public var suiteNameFormat: SwiftTestingNameFormat
 
     /// Deprecated
     public var indentComments: Bool
@@ -1030,7 +1032,8 @@ public struct FormatOptions: CustomStringConvertible {
                 redundantAsync: RedundantEffectMode = .testsOnly,
                 allowPartialWrapping: Bool = true,
                 preferSynthesizedInitForInternalStructs: PreferSynthesizedInitMode = .never,
-                testCaseNameFormat: TestCaseNameFormat = .rawIdentifiers,
+                testCaseNameFormat: SwiftTestingNameFormat = .rawIdentifiers,
+                suiteNameFormat: SwiftTestingNameFormat = .standardIdentifiers,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -1166,6 +1169,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.allowPartialWrapping = allowPartialWrapping
         self.preferSynthesizedInitForInternalStructs = preferSynthesizedInitForInternalStructs
         self.testCaseNameFormat = testCaseNameFormat
+        self.suiteNameFormat = suiteNameFormat
         self.indentComments = indentComments
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

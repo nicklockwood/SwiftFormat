@@ -527,4 +527,460 @@ final class SwiftTestingTestCaseNamesTests: XCTestCase {
         testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
                        options: FormatOptions(swiftVersion: "6.2"))
     }
+
+    // MARK: - standard-identifiers for @Test
+
+    func testStandardIdentifiersConvertsRawIdentifierToLowerCamelCase() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func `my feature has no bugs`() {
+                #expect(true)
+            }
+        }
+        """
+
+        let output = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func myFeatureHasNoBugs() {
+                #expect(true)
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(testCaseNameFormat: .standardIdentifiers, swiftVersion: "6.2"))
+    }
+
+    func testStandardIdentifiersRemovesDisplayNameFromTest() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test("My feature works")
+            func myFeatureWorks() {
+                #expect(true)
+            }
+        }
+        """
+
+        let output = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func myFeatureWorks() {
+                #expect(true)
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(testCaseNameFormat: .standardIdentifiers, swiftVersion: "6.2"))
+    }
+
+    func testStandardIdentifiersRemovesDisplayNameAndConvertsRawIdentifier() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test("My feature works")
+            func `my feature works`() {
+                #expect(true)
+            }
+        }
+        """
+
+        let output = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func myFeatureWorks() {
+                #expect(true)
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(testCaseNameFormat: .standardIdentifiers, swiftVersion: "6.2"))
+    }
+
+    func testStandardIdentifiersRemovesDisplayNameWithArguments() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test("Features work as expected", arguments: [
+                .foo,
+                .bar,
+            ])
+            func `features work as expected`(_ feature: Feature) {
+                #expect(true)
+            }
+        }
+        """
+
+        let output = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test(arguments: [
+                .foo,
+                .bar,
+            ])
+            func featuresWorkAsExpected(_ feature: Feature) {
+                #expect(true)
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(testCaseNameFormat: .standardIdentifiers, swiftVersion: "6.2"),
+                       exclude: [.unusedArguments])
+    }
+
+    func testStandardIdentifiersPreservesStandardIdentifierFunction() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func myFeatureWorks() {
+                #expect(true)
+            }
+        }
+        """
+
+        testFormatting(for: input, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(testCaseNameFormat: .standardIdentifiers, swiftVersion: "6.2"))
+    }
+
+    func testStandardIdentifiersStillRemovesTestPrefix() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func testMyFeatureWorks() {
+                #expect(true)
+            }
+        }
+        """
+
+        let output = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func myFeatureWorks() {
+                #expect(true)
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(testCaseNameFormat: .standardIdentifiers, swiftVersion: "6.2"))
+    }
+
+    // MARK: - @Suite with standard-identifiers (default)
+
+    func testSuiteStandardIdentifiersRemovesDisplayName() {
+        let input = """
+        import Testing
+
+        @Suite("My Feature Tests")
+        struct MyFeatureTests {
+            @Test func myTest() {}
+        }
+        """
+
+        let output = """
+        import Testing
+
+        @Suite
+        struct MyFeatureTests {
+            @Test func myTest() {}
+        }
+        """
+
+        testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(testCaseNameFormat: .preserve, swiftVersion: "6.2"))
+    }
+
+    func testSuiteStandardIdentifiersConvertsRawIdentifier() {
+        let input = """
+        import Testing
+
+        @Suite
+        struct `My test suite` {
+            @Test func myTest() {}
+        }
+        """
+
+        let output = """
+        import Testing
+
+        @Suite
+        struct MyTestSuite {
+            @Test func myTest() {}
+        }
+        """
+
+        testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(testCaseNameFormat: .preserve, swiftVersion: "6.2"))
+    }
+
+    func testSuiteStandardIdentifiersRemovesDisplayNameAndConvertsRawIdentifier() {
+        let input = """
+        import Testing
+
+        @Suite("My test suite")
+        struct `My test suite` {
+            @Test func myTest() {}
+        }
+        """
+
+        let output = """
+        import Testing
+
+        @Suite
+        struct MyTestSuite {
+            @Test func myTest() {}
+        }
+        """
+
+        testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(testCaseNameFormat: .preserve, swiftVersion: "6.2"))
+    }
+
+    func testSuiteStandardIdentifiersPreservesStandardName() {
+        let input = """
+        import Testing
+
+        @Suite
+        struct MyFeatureTests {
+            @Test func myTest() {}
+        }
+        """
+
+        testFormatting(for: input, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(testCaseNameFormat: .preserve, swiftVersion: "6.2"))
+    }
+
+    func testSuiteStandardIdentifiersRemovesDisplayNameWithOtherArgs() {
+        let input = """
+        import Testing
+
+        @Suite("My Feature Tests", .serialized)
+        struct MyFeatureTests {
+            @Test func myTest() {}
+        }
+        """
+
+        let output = """
+        import Testing
+
+        @Suite(.serialized)
+        struct MyFeatureTests {
+            @Test func myTest() {}
+        }
+        """
+
+        testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(testCaseNameFormat: .preserve, swiftVersion: "6.2"))
+    }
+
+    // MARK: - @Suite with raw-identifiers
+
+    func testSuiteRawIdentifiersConvertsCamelCase() {
+        let input = """
+        import Testing
+
+        @Suite
+        struct MyFeatureTests {
+            @Test func myTest() {}
+        }
+        """
+
+        let output = """
+        import Testing
+
+        @Suite
+        struct `my feature tests` {
+            @Test func myTest() {}
+        }
+        """
+
+        testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(testCaseNameFormat: .preserve,
+                                              suiteNameFormat: .rawIdentifiers,
+                                              swiftVersion: "6.2"))
+    }
+
+    func testSuiteRawIdentifiersUsesDisplayName() {
+        let input = """
+        import Testing
+
+        @Suite("My Feature Tests")
+        struct MyFeatureTests {
+            @Test func myTest() {}
+        }
+        """
+
+        let output = """
+        import Testing
+
+        @Suite
+        struct `My Feature Tests` {
+            @Test func myTest() {}
+        }
+        """
+
+        testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(testCaseNameFormat: .preserve,
+                                              suiteNameFormat: .rawIdentifiers,
+                                              swiftVersion: "6.2"))
+    }
+
+    func testSuiteRawIdentifiersFallsBackToPreserveBelowSwift6_2() {
+        let input = """
+        import Testing
+
+        @Suite
+        struct MyFeatureTests {
+            @Test func myTest() {}
+        }
+        """
+
+        testFormatting(for: input, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(testCaseNameFormat: .preserve,
+                                              suiteNameFormat: .rawIdentifiers,
+                                              swiftVersion: "6.1"))
+    }
+
+    // MARK: - @Suite with preserve
+
+    func testSuitePreserveKeepsEverything() {
+        let input = """
+        import Testing
+
+        @Suite("My Feature Tests")
+        struct MyFeatureTests {
+            @Test func myTest() {}
+        }
+        """
+
+        testFormatting(for: input, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(testCaseNameFormat: .preserve,
+                                              suiteNameFormat: .preserve,
+                                              swiftVersion: "6.2"))
+    }
+
+    // MARK: - @Suite on class/actor/enum
+
+    func testSuiteWorksWithClass() {
+        let input = """
+        import Testing
+
+        @Suite("My Feature Tests")
+        class MyFeatureTests {
+            @Test func myTest() {}
+        }
+        """
+
+        let output = """
+        import Testing
+
+        @Suite
+        class MyFeatureTests {
+            @Test func myTest() {}
+        }
+        """
+
+        testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(testCaseNameFormat: .preserve, swiftVersion: "6.2"))
+    }
+
+    func testSuiteWorksWithActor() {
+        let input = """
+        import Testing
+
+        @Suite("My Feature Tests")
+        actor MyFeatureTests {
+            @Test func myTest() {}
+        }
+        """
+
+        let output = """
+        import Testing
+
+        @Suite
+        actor MyFeatureTests {
+            @Test func myTest() {}
+        }
+        """
+
+        testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(testCaseNameFormat: .preserve, swiftVersion: "6.2"))
+    }
+
+    func testSuiteWorksWithEnum() {
+        let input = """
+        import Testing
+
+        @Suite("My Feature Tests")
+        enum MyFeatureTests {
+            @Test static func myTest() {}
+        }
+        """
+
+        let output = """
+        import Testing
+
+        @Suite
+        enum MyFeatureTests {
+            @Test static func myTest() {}
+        }
+        """
+
+        testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(testCaseNameFormat: .preserve, swiftVersion: "6.2"))
+    }
+
+    func testSuiteNameNotUpdatedWhenReferencedAsStaticMember() {
+        let input = """
+        import Testing
+
+        @Suite("My Feature Tests")
+        struct `My Feature Tests` {
+            @Test func myTest() {}
+        }
+
+        func runTests() {
+            `My Feature Tests`.runAll()
+        }
+        """
+
+        let output = """
+        import Testing
+
+        @Suite
+        struct `My Feature Tests` {
+            @Test func myTest() {}
+        }
+
+        func runTests() {
+            `My Feature Tests`.runAll()
+        }
+        """
+
+        testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(testCaseNameFormat: .preserve, swiftVersion: "6.2"))
+    }
 }

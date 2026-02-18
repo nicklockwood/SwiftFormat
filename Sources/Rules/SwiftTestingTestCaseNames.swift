@@ -5,8 +5,8 @@ import Foundation
 
 public extension FormatRule {
     static let swiftTestingTestCaseNames = FormatRule(
-        help: "In Swift Testing, don't prefix @Test methods with 'test', and use raw identifier test function names.",
-        options: ["test-case-name-format"]
+        help: "Format Swift Testing @Test and @Suite names.",
+        options: ["test-case-name-format", "suite-name-format"]
     ) { formatter in
         guard formatter.hasImport("Testing") else { return }
 
@@ -18,10 +18,32 @@ public extension FormatRule {
             switch formatter.options.testCaseNameFormat {
             case .rawIdentifiers:
                 guard formatter.options.swiftVersion >= "6.2" else { return }
-                formatter.convertToRawIdentifier(forTestFunctionAt: funcKeywordIndex)
+                formatter.convertToRawIdentifier(forDeclarationAt: funcKeywordIndex, macroName: "@Test", upperCamelCase: false)
+
+            case .standardIdentifiers:
+                formatter.convertToStandardIdentifier(forDeclarationAt: funcKeywordIndex, macroName: "@Test", upperCamelCase: false)
 
             case .preserve:
                 break
+            }
+        }
+
+        let typeKeywords: [String] = ["struct", "class", "actor", "enum"]
+        for typeKeyword in typeKeywords {
+            formatter.forEach(.keyword(typeKeyword)) { keywordIndex, _ in
+                guard formatter.modifiersForDeclaration(at: keywordIndex, contains: "@Suite") else { return }
+
+                switch formatter.options.suiteNameFormat {
+                case .rawIdentifiers:
+                    guard formatter.options.swiftVersion >= "6.2" else { return }
+                    formatter.convertToRawIdentifier(forDeclarationAt: keywordIndex, macroName: "@Suite", upperCamelCase: true)
+
+                case .standardIdentifiers:
+                    formatter.convertToStandardIdentifier(forDeclarationAt: keywordIndex, macroName: "@Suite", upperCamelCase: true)
+
+                case .preserve:
+                    break
+                }
             }
         }
     } examples: {
@@ -52,49 +74,70 @@ public extension FormatRule {
 }
 
 extension Formatter {
-    /// Converts a `@Test` function name to use a raw identifier (backtick-quoted name with spaces).
-    /// If the `@Test` attribute has a display name, uses that as the function name and removes it from the attribute.
-    /// Otherwise, converts the camelCase/underscore function name to a space-separated raw identifier.
-    func convertToRawIdentifier(forTestFunctionAt funcKeywordIndex: Int) {
-        guard let methodNameIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: funcKeywordIndex),
-              tokens[methodNameIndex].isIdentifier
+    /// Converts a declaration name to use a raw identifier (backtick-quoted name with spaces).
+    /// If the macro attribute has a display name, uses that as the name and removes it from the attribute.
+    /// Otherwise, converts the camelCase/underscore name to a space-separated raw identifier.
+    func convertToRawIdentifier(forDeclarationAt keywordIndex: Int, macroName: String, upperCamelCase: Bool) {
+        guard let nameIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: keywordIndex),
+              tokens[nameIndex].isIdentifier
         else { return }
 
-        let methodName = tokens[methodNameIndex].string
+        let name = tokens[nameIndex].string
 
-        // Check if the @Test attribute has a display name argument
-        if var displayName = testDisplayName(forDeclarationAt: funcKeywordIndex) {
-            // Remove any existing backticks from the test name, since raw identifiers cant contain backticks
+        // Check if the macro attribute has a display name argument
+        if var displayName = macroDisplayName(forDeclarationAt: keywordIndex, macroName: macroName) {
+            // Remove any existing backticks from the name, since raw identifiers can't contain backticks
             displayName = displayName.replacingOccurrences(of: "`", with: "")
 
-            let newMethodName = "`\(displayName)`"
-            updateFunctionName(forFunctionAt: funcKeywordIndex, to: newMethodName)
-            removeTestDisplayNameString(forDeclarationAt: funcKeywordIndex)
+            let newName = "`\(displayName)`"
+            updateDeclarationName(forDeclarationAt: keywordIndex, to: newName)
+            removeMacroDisplayNameString(forDeclarationAt: keywordIndex, macroName: macroName)
         } else {
-            // Convert the method name to a raw identifier
-            let baseName = methodName.camelCaseToWords()
-            guard !baseName.isEmpty, baseName != methodName else { return }
+            // Convert the name to a raw identifier
+            let baseName = name.camelCaseToWords()
+            guard !baseName.isEmpty, baseName != name else { return }
 
-            let newMethodName = "`\(baseName)`"
-            guard tokens[methodNameIndex] != .identifier(newMethodName) else { return }
+            let newName = "`\(baseName)`"
+            guard tokens[nameIndex] != .identifier(newName) else { return }
 
-            updateFunctionName(forFunctionAt: funcKeywordIndex, to: newMethodName)
+            updateDeclarationName(forDeclarationAt: keywordIndex, to: newName)
         }
     }
 
-    /// Extracts the display name string from a `@Test("display name")` attribute, if present.
-    func testDisplayName(forDeclarationAt funcKeywordIndex: Int) -> String? {
-        // Walk backwards from `func` to find `@Test`
-        var testAttrIndex: Int?
-        _ = modifiersForDeclaration(at: funcKeywordIndex, contains: { index, modifier in
-            if modifier.hasPrefix("@Test(") || modifier.hasPrefix("@Test (") {
-                testAttrIndex = index
+    /// Converts a raw identifier declaration name to a standard identifier, and removes
+    /// any display name string from the macro attribute.
+    func convertToStandardIdentifier(forDeclarationAt keywordIndex: Int, macroName: String, upperCamelCase: Bool) {
+        // Remove display name string from the macro attribute if present
+        removeMacroDisplayNameString(forDeclarationAt: keywordIndex, macroName: macroName)
+
+        guard let nameIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: keywordIndex),
+              tokens[nameIndex].isIdentifier
+        else { return }
+
+        let name = tokens[nameIndex].string
+
+        // Only convert raw identifiers (backtick-quoted names)
+        guard name.hasPrefix("`"), name.hasSuffix("`") else { return }
+
+        let rawName = String(name.dropFirst().dropLast())
+        let newName = rawName.wordsToIdentifier(upperCamelCase: upperCamelCase)
+        guard !newName.isEmpty, newName != name else { return }
+
+        updateDeclarationName(forDeclarationAt: keywordIndex, to: newName)
+    }
+
+    /// Extracts the display name string from a macro attribute like `@Test("display name")` or `@Suite("display name")`.
+    func macroDisplayName(forDeclarationAt keywordIndex: Int, macroName: String) -> String? {
+        var macroAttrIndex: Int?
+        _ = modifiersForDeclaration(at: keywordIndex, contains: { index, modifier in
+            if modifier.hasPrefix("\(macroName)(") || modifier.hasPrefix("\(macroName) (") {
+                macroAttrIndex = index
                 return true
             }
             return false
         })
 
-        guard let attrIndex = testAttrIndex,
+        guard let attrIndex = macroAttrIndex,
               let parenStart = index(of: .startOfScope("("), after: attrIndex),
               let firstToken = index(of: .nonSpaceOrCommentOrLinebreak, after: parenStart),
               tokens[firstToken] == .startOfScope("\"")
@@ -112,18 +155,18 @@ extension Formatter {
         return displayName.isEmpty ? nil : displayName
     }
 
-    /// Removes the display name from a `@Test("display name")` or `@Test("display name", ...)` attribute.
-    func removeTestDisplayNameString(forDeclarationAt funcKeywordIndex: Int) {
-        var testAttrIndex: Int?
-        _ = modifiersForDeclaration(at: funcKeywordIndex, contains: { index, modifier in
-            if modifier.hasPrefix("@Test(") || modifier.hasPrefix("@Test (") {
-                testAttrIndex = index
+    /// Removes the display name from a macro attribute like `@Test("display name")` or `@Suite("display name", ...)`.
+    func removeMacroDisplayNameString(forDeclarationAt keywordIndex: Int, macroName: String) {
+        var macroAttrIndex: Int?
+        _ = modifiersForDeclaration(at: keywordIndex, contains: { index, modifier in
+            if modifier.hasPrefix("\(macroName)(") || modifier.hasPrefix("\(macroName) (") {
+                macroAttrIndex = index
                 return true
             }
             return false
         })
 
-        guard let attrIndex = testAttrIndex,
+        guard let attrIndex = macroAttrIndex,
               let parenStart = index(of: .startOfScope("("), after: attrIndex),
               let firstToken = index(of: .nonSpaceOrCommentOrLinebreak, after: parenStart),
               tokens[firstToken] == .startOfScope("\""),
@@ -141,7 +184,7 @@ extension Formatter {
             removeTokens(in: firstToken ..< removeEnd)
         } else {
             // This is the only argument — remove the entire parentheses
-            // Also remove any space between @Test and (
+            // Also remove any space between the macro and (
             let removeStart = (index(of: .nonSpaceOrComment, after: attrIndex) == parenStart)
                 ? (attrIndex + 1) : parenStart
             removeTokens(in: removeStart ... parenEnd)
@@ -190,5 +233,23 @@ extension String {
         }
 
         return words
+    }
+
+    /// Converts a space-separated string to a standard identifier (camelCase or UpperCamelCase).
+    /// For example: "my test case" -> "myTestCase" (lowerCamelCase) or "MyTestCase" (upperCamelCase).
+    func wordsToIdentifier(upperCamelCase: Bool) -> String {
+        let words = split(separator: " ").map(String.init)
+        guard !words.isEmpty else { return "" }
+
+        var result = ""
+        for (index, word) in words.enumerated() {
+            guard !word.isEmpty else { continue }
+            if index == 0, !upperCamelCase {
+                result += word.prefix(1).lowercased() + word.dropFirst()
+            } else {
+                result += word.prefix(1).uppercased() + word.dropFirst()
+            }
+        }
+        return result
     }
 }

@@ -2248,6 +2248,7 @@ extension Formatter {
             let type = (isTypeRoot && typeStack.count == 1) ? typeStack.first : nil
             var members = (type?.name).flatMap { membersByType[$0] } ?? members
             var classMembers = (type?.name).flatMap { classMembersByType[$0] } ?? Set<String>()
+            let inputLocalNames = localNames
             var localNames = localNames
             if !isTypeRoot || explicitSelf != .remove {
                 var i = index
@@ -2491,7 +2492,8 @@ extension Formatter {
                         }
                         index = startIndex + 1
                         // For guard, the body is the else block where guard vars are not in scope
-                        let bodyLocalNames = (lastKeyword == "guard") ? localNames.subtracting(guardDeclaredNames) : scopedNames
+                        // (but pre-existing locals like function params remain in scope)
+                        let bodyLocalNames = (lastKeyword == "guard") ? localNames.subtracting(guardDeclaredNames.subtracting(inputLocalNames)) : scopedNames
                         processBody(at: &index, localNames: bodyLocalNames, members: members,
                                     typeStack: &typeStack, closureStack: &closureStack,
                                     membersByType: &membersByType, classMembersByType: &classMembersByType,

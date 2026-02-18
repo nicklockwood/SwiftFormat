@@ -615,7 +615,7 @@ public extension FormatRule {
                             indent += formatter.linewrapIndent(at: i)
                         }
                     } else if (!formatter.options.xcodeIndentation || !formatter.isWrappedDeclaration(at: i)),
-                              !formatter.isInClosureParameterList(at: i)
+                              !formatter.isInClosureArguments(at: i)
                     {
                         indent += formatter.linewrapIndent(at: i)
                     }
@@ -828,28 +828,6 @@ extension Formatter {
             return true
         }
         return false
-    }
-
-    func isInClosureParameterList(at i: Int) -> Bool {
-        // Check if we're currently in a closure scope
-        guard let closureStartIndex = startOfScope(at: i),
-              tokens[closureStartIndex] == .startOfScope("{"),
-              isStartOfClosure(at: closureStartIndex)
-        else {
-            return false
-        }
-        
-        // Use parseClosureArguments to properly parse the closure structure
-        guard let closureArgs = parseClosureArguments(at: closureStartIndex),
-              !closureArgs.argumentIndices.isEmpty
-        else {
-            return false
-        }
-        
-        // Check if we're between the first closure argument and the 'in' keyword
-        // This includes all the argument identifiers, commas, spaces, and type annotations
-        let firstArgIndex = closureArgs.argumentIndices.first!
-        return i >= firstArgIndex && i < closureArgs.inKeywordIndex
     }
 
     func stringBodyIndent(at i: Int) -> String {

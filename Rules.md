@@ -70,6 +70,7 @@
 * [redundantReturn](#redundantReturn)
 * [redundantSelf](#redundantSelf)
 * [redundantStaticSelf](#redundantStaticSelf)
+* [redundantSwiftTestingSuite](#redundantSwiftTestingSuite)
 * [redundantThrows](#redundantThrows)
 * [redundantType](#redundantType)
 * [redundantTypedThrows](#redundantTypedThrows)
@@ -2942,6 +2943,42 @@ Remove explicit `Self` where applicable.
       static func baaz() -> Bar {
 -         Self.bar()
 +         bar()
+      }
+  }
+```
+
+</details>
+<br/>
+
+## redundantSwiftTestingSuite
+
+Remove redundant @Suite attribute with no arguments.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  import Testing
+
+- @Suite
+  struct MyFeatureTests {
+      @Test func myFeature() {
+          #expect(true)
+      }
+  }
+
+- @Suite()
+  struct OtherTests {
+      @Test func otherFeature() {
+          #expect(true)
+      }
+  }
+
+  // Not redundant - @Suite has arguments
+  @Suite(.serialized)
+  struct SerializedTests {
+      @Test func feature() {
+          #expect(true)
       }
   }
 ```

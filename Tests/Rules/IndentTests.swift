@@ -4802,7 +4802,7 @@ final class IndentTests: XCTestCase {
         import Testing
 
         @MainActor
-        @Suite
+        @Suite(.serialized)
         struct NavigationViewWithColumnsStyleTests {
             #if canImport(UIKit) && (os(iOS) || os(visionOS))
             typealias PlatformNavigationViewWithColumnsStyle = UISplitViewController

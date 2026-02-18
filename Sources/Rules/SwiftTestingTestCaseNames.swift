@@ -90,7 +90,7 @@ extension Formatter {
             displayName = displayName.replacingOccurrences(of: "`", with: "")
 
             let newName = "`\(displayName)`"
-            updateDeclarationName(at: keywordIndex, to: newName)
+            updateDeclarationName(forDeclarationAt: keywordIndex, to: newName)
             removeMacroDisplayNameString(forDeclarationAt: keywordIndex, macroName: macroName)
         } else {
             // Convert the name to a raw identifier
@@ -100,7 +100,7 @@ extension Formatter {
             let newName = "`\(baseName)`"
             guard tokens[nameIndex] != .identifier(newName) else { return }
 
-            updateDeclarationName(at: keywordIndex, to: newName)
+            updateDeclarationName(forDeclarationAt: keywordIndex, to: newName)
         }
     }
 
@@ -123,7 +123,7 @@ extension Formatter {
         let newName = rawName.wordsToIdentifier(upperCamelCase: upperCamelCase)
         guard !newName.isEmpty, newName != name else { return }
 
-        updateDeclarationName(at: keywordIndex, to: newName)
+        updateDeclarationName(forDeclarationAt: keywordIndex, to: newName)
     }
 
     /// Extracts the display name string from a macro attribute like `@Test("display name")` or `@Suite("display name")`.
@@ -189,25 +189,6 @@ extension Formatter {
                 ? (attrIndex + 1) : parenStart
             removeTokens(in: removeStart ... parenEnd)
         }
-    }
-
-    /// Updates the name of the given declaration (function or type), unless that change could cause a build failure.
-    func updateDeclarationName(at keywordIndex: Int, to newName: String) {
-        guard let nameIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: keywordIndex),
-              tokens[nameIndex].isIdentifier
-        else { return }
-
-        // Ensure that the new identifier is valid and unique
-        let unescapedName = newName.hasPrefix("`") && newName.hasSuffix("`")
-            ? String(newName.dropFirst().dropLast()) : newName
-        guard !newName.isEmpty,
-              newName.first?.isLetter == true || newName.first == "`",
-              !tokens.contains(.identifier(newName)),
-              !tokens.contains(.identifier(unescapedName)),
-              !swiftKeywords.union(["Any", "Self", "self", "super", "nil", "true", "false"]).contains(unescapedName)
-        else { return }
-
-        replaceToken(at: nameIndex, with: .identifier(newName))
     }
 }
 

@@ -952,4 +952,35 @@ final class SwiftTestingTestCaseNamesTests: XCTestCase {
         testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
                        options: FormatOptions(testCaseNameFormat: .preserve, swiftVersion: "6.2"))
     }
+
+    func testSuiteNameNotUpdatedWhenReferencedAsStaticMember() {
+        let input = """
+        import Testing
+
+        @Suite("My Feature Tests")
+        struct `My Feature Tests` {
+            @Test func myTest() {}
+        }
+
+        func runTests() {
+            `My Feature Tests`.runAll()
+        }
+        """
+
+        let output = """
+        import Testing
+
+        @Suite
+        struct `My Feature Tests` {
+            @Test func myTest() {}
+        }
+
+        func runTests() {
+            `My Feature Tests`.runAll()
+        }
+        """
+
+        testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(testCaseNameFormat: .preserve, swiftVersion: "6.2"))
+    }
 }

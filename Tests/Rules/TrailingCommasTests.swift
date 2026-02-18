@@ -330,6 +330,44 @@ final class TrailingCommasTests: XCTestCase {
         testFormatting(for: input, rule: .trailingCommas)
     }
 
+    func testTrailingCommaNotAddedToCaptureListWithMacro() {
+        let input = """
+        { [
+            a = a(),
+            b = #b
+        ] in
+            a + b
+        }
+        """
+        testFormatting(for: input, rule: .trailingCommas)
+    }
+
+    func testTrailingCommaNotAddedToCaptureListWithMacroCollectionsOnly() {
+        let input = """
+        { [
+            a = a(),
+            b = #b
+        ] in
+            a + b
+        }
+        """
+        let options = FormatOptions(trailingCommas: .collectionsOnly)
+        testFormatting(for: input, rule: .trailingCommas, options: options)
+    }
+
+    func testTrailingCommaNotAddedToCaptureListWithMacroSwift6() {
+        let input = """
+        { [
+            a = a(),
+            b = #b
+        ] in
+            a + b
+        }
+        """
+        let options = FormatOptions(swiftVersion: "6.0")
+        testFormatting(for: input, rule: .trailingCommas, options: options)
+    }
+
     func testTrailingCommaNotAddedToArrayExtension() {
         let input = """
         extension [
@@ -1451,6 +1489,27 @@ final class TrailingCommasTests: XCTestCase {
             capturedValue1,
             capturedValue2,
         ] in
+        }
+        """
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options)
+    }
+
+    func testTrailingCommasAddedToCaptureListWithMacro() {
+        let input = """
+        { [
+            a = a(),
+            b = #b
+        ] in
+            a + b
+        }
+        """
+        let output = """
+        { [
+            a = a(),
+            b = #b,
+        ] in
+            a + b
         }
         """
         let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.1")

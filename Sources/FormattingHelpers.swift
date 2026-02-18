@@ -1886,7 +1886,7 @@ extension Formatter {
                 newMethodName = String(newMethodName.dropFirst())
             }
 
-            updateFunctionName(forFunctionAt: funcKeywordIndex, to: newMethodName)
+            updateDeclarationName(forDeclarationAt: funcKeywordIndex, to: newMethodName)
         }
 
         // Handle names like ``func `test feature`()``, ``func `Test Feature`()``
@@ -1895,29 +1895,39 @@ extension Formatter {
             newMethodName = String(newMethodName.first!) + newMethodName.dropFirst()
             newMethodName = "`" + newMethodName
 
-            updateFunctionName(forFunctionAt: funcKeywordIndex, to: newMethodName)
+            updateDeclarationName(forDeclarationAt: funcKeywordIndex, to: newMethodName)
         }
     }
 
-    /// Updates the name of the given method / function, unless that change could cause a build failure.
-    func updateFunctionName(forFunctionAt funcKeywordIndex: Int, to newMethodName: String) {
-        // The name of a function always immediately follows the `func` keyword
-        guard let methodNameIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: funcKeywordIndex),
-              tokens[methodNameIndex].isIdentifier
+    /// Updates the name of the given declaration (function or type), unless that change could cause a build failure.
+    func updateDeclarationName(forDeclarationAt keywordIndex: Int, to newName: String) {
+        // The name of a declaration always immediately follows the keyword (e.g. `func`, `struct`, etc.)
+        guard let nameIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: keywordIndex),
+              tokens[nameIndex].isIdentifier
         else { return }
+
+        // For type declarations (struct, class, actor, enum), don't rename if the current
+        // name is referenced elsewhere in the file, since renaming would break those references.
+        if case let .keyword(keyword) = tokens[keywordIndex],
+           Token.swiftTypeKeywords.contains(keyword)
+        {
+            let currentIdentifier = tokens[nameIndex]
+            let referenceCount = tokens.filter { $0 == currentIdentifier }.count
+            guard referenceCount <= 1 else { return }
+        }
 
         // Ensure that the new identifier is valid (e.g. starts with a letter, not a number),
         // and is unique / doesn't already exist somewhere in the file.
-        let unescapedName = newMethodName.hasPrefix("`") && newMethodName.hasSuffix("`")
-            ? String(newMethodName.dropFirst().dropLast()) : newMethodName
-        guard !newMethodName.isEmpty,
-              newMethodName.first?.isLetter == true || newMethodName.first == "`",
-              !tokens.contains(.identifier(newMethodName)),
+        let unescapedName = newName.hasPrefix("`") && newName.hasSuffix("`")
+            ? String(newName.dropFirst().dropLast()) : newName
+        guard !newName.isEmpty,
+              newName.first?.isLetter == true || newName.first == "`",
+              !tokens.contains(.identifier(newName)),
               !tokens.contains(.identifier(unescapedName)),
               !swiftKeywords.union(["Any", "Self", "self", "super", "nil", "true", "false"]).contains(unescapedName)
         else { return }
 
-        replaceToken(at: methodNameIndex, with: .identifier(newMethodName))
+        replaceToken(at: nameIndex, with: .identifier(newName))
     }
 }
 

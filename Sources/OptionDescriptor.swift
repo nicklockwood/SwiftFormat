@@ -1466,6 +1466,13 @@ struct _Descriptors {
         keyPath: \.testCaseNameFormat
     )
 
+    let suiteNameFormat = OptionDescriptor(
+        argumentName: "suite-name-format",
+        displayName: "Suite Name Format",
+        help: "Swift Testing suite name format:",
+        keyPath: \.suiteNameFormat
+    )
+
     // MARK: - Internal
 
     let fragment = OptionDescriptor(

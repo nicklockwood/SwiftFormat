@@ -2613,6 +2613,20 @@ final class TrailingCommasTests: XCTestCase {
         testFormatting(for: input, output, rule: .trailingCommas, options: options, exclude: [.typeSugar, .propertyTypes])
     }
 
+    func testTrailingCommaNotAddedToClosureReturnTypeWithBareArgs() {
+        let input = """
+        let closure = { foo, bar -> (
+            foo: String,
+            bar: String
+        ) in
+            (foo: foo, bar: bar)
+        }
+        """
+
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.2")
+        testFormatting(for: input, rule: .trailingCommas, options: options, exclude: [.typeSugar, .propertyTypes])
+    }
+
     func testTrailingCommasAddedToClosureTupleReturnTypeSwift6_3() {
         let input = """
         let closure = { () -> (

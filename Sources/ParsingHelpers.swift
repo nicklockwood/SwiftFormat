@@ -2904,7 +2904,12 @@ extension Formatter {
                             // Continue to next parameter
                             argIndex = nextNonSpace + 1
                             continue
-                        } else if tokens[nextNonSpace] == .keyword("in") {
+                        } else if tokens[nextNonSpace] == .keyword("in")
+                            || tokens[nextNonSpace] == .operator("->", .infix)
+                            || tokens[nextNonSpace] == .keyword("throws")
+                            || tokens[nextNonSpace] == .keyword("rethrows")
+                            || tokens[nextNonSpace] == .identifier("async")
+                        {
                             // Found the end of parameters
                             break
                         } else {
@@ -2927,6 +2932,35 @@ extension Formatter {
             }
 
             currentIndex = paramsEnd
+
+            // Skip past throws/rethrows/async keywords and return type
+            if let nextTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex) {
+                var idx = nextTokenIndex
+                // Skip throws/rethrows/async (including typed throws like throws(Foo))
+                while [.keyword("throws"), .keyword("rethrows"), .identifier("async")].contains(tokens[idx]) {
+                    if let parenStart = index(of: .nonSpaceOrCommentOrLinebreak, after: idx),
+                       tokens[parenStart] == .startOfScope("("),
+                       let parenEnd = endOfScope(at: parenStart),
+                       let next = index(of: .nonSpaceOrCommentOrLinebreak, after: parenEnd)
+                    {
+                        idx = next
+                    } else if let next = index(of: .nonSpaceOrCommentOrLinebreak, after: idx) {
+                        idx = next
+                    } else {
+                        break
+                    }
+                }
+                // Skip return type (-> Type)
+                if tokens[idx] == .operator("->", .infix),
+                   let returnTypeStart = index(of: .nonSpaceOrCommentOrLinebreak, after: idx),
+                   let returnType = parseType(at: returnTypeStart)
+                {
+                    returnTypeRange = nextTokenIndex ... returnType.range.upperBound
+                    currentIndex = returnType.range.upperBound
+                } else if idx != nextTokenIndex {
+                    currentIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: idx) ?? currentIndex
+                }
+            }
         }
 
         // Must find 'in' keyword

@@ -459,6 +459,22 @@ final class IndentTests: XCTestCase {
         testFormatting(for: input, rule: .indent)
     }
 
+    func testIndentMultilineClosureParametersWithoutParens() {
+        let input = """
+        let observable = Observable.combineLatest(
+            relay1.asObservable(),
+            relay2.asObservable(),
+            relay3.asObservable()
+        ) {
+            test1,
+            test2,
+            test3 in
+            test1 && test2 && test3
+        }
+        """
+        testFormatting(for: input, rule: .indent, exclude: [.propertyTypes])
+    }
+
     func testIndentWrappedClosureCaptureList() {
         let input = """
         foo { [
@@ -472,7 +488,6 @@ final class IndentTests: XCTestCase {
         testFormatting(for: input, rule: .indent)
     }
 
-    // TODO: add `unwrap` rule to improve this case
     func testIndentWrappedClosureCaptureList2() {
         let input = """
         class A {}
@@ -492,7 +507,25 @@ final class IndentTests: XCTestCase {
             return x + y
         }
         """
-        testFormatting(for: input, rule: .indent, exclude: [.propertyTypes])
+        let output = """
+        class A {}
+        let a = A()
+        let f = { [
+            weak a
+        ]
+        (
+            x: Int,
+            y: Int
+        )
+        throws
+        ->
+        Int
+        in
+            print("Hello, World! " + String(x + y))
+            return x + y
+        }
+        """
+        testFormatting(for: input, output, rule: .indent, exclude: [.propertyTypes])
     }
 
     func testIndentWrappedClosureCaptureListWithUnwrappedParameters() {

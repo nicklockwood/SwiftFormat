@@ -614,7 +614,9 @@ public extension FormatRule {
                         } else if !formatter.options.xcodeIndentation || !formatter.isWrappedDeclaration(at: i) {
                             indent += formatter.linewrapIndent(at: i)
                         }
-                    } else if !formatter.options.xcodeIndentation || !formatter.isWrappedDeclaration(at: i) {
+                    } else if (!formatter.options.xcodeIndentation || !formatter.isWrappedDeclaration(at: i)),
+                              !formatter.isInClosureArguments(at: i)
+                    {
                         indent += formatter.linewrapIndent(at: i)
                     }
 

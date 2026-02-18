@@ -839,60 +839,52 @@ extension Formatter {
             return false
         }
         
-        // Check if there's an 'in' keyword in this closure after our position
+        var searchStartIndex = closureStartIndex
+        
+        // Check if there's a capture list [weak self] at the start
+        if let firstNonSpace = index(of: .nonSpaceOrCommentOrLinebreak, after: closureStartIndex),
+           tokens[firstNonSpace] == .startOfScope("["),
+           let captureListEnd = endOfScope(at: firstNonSpace)
+        {
+            // If we're inside the capture list, we're in the parameter list
+            if i > firstNonSpace && i < captureListEnd {
+                return true
+            }
+            // After capture list, continue looking for parameters
+            searchStartIndex = captureListEnd
+        }
+        
+        // Try to parse closure arguments starting after any capture list
+        // parseClosureArgumentList only works when called with the closure start,
+        // not after a capture list, so we need to handle this case manually
+        
+        // Manually check for 'in' keyword
         guard let closureEndIndex = endOfScope(at: closureStartIndex),
               let inKeywordIndex = index(of: .keyword("in"), in: i ..< closureEndIndex)
         else {
             return false
         }
         
-        // Make sure this isn't a for-in loop by checking there's no 'for' keyword
+        // Make sure this isn't a for-in loop
         guard index(of: .keyword("for"), in: closureStartIndex ..< inKeywordIndex) == nil else {
             return false
         }
         
-        // Look for a parameter/capture list start scope after the opening {
-        if let paramStartIndex = index(of: .startOfScope, in: closureStartIndex + 1 ..< inKeywordIndex),
-           [.startOfScope("("), .startOfScope("[")].contains(tokens[paramStartIndex]),
-           let paramEndIndex = endOfScope(at: paramStartIndex)
+        // Check if there's a parameter list with parens after any capture list
+        if let firstNonSpace = index(of: .nonSpaceOrCommentOrLinebreak, after: searchStartIndex),
+           tokens[firstNonSpace] == .startOfScope("("),
+           let paramsEnd = endOfScope(at: firstNonSpace)
         {
-            // If we're between the param list start and end, we're in the parameter list
-            if i > paramStartIndex && i < paramEndIndex {
+            // We're in the parameter list if between the parens
+            if i > firstNonSpace && i < paramsEnd {
                 return true
             }
-            // If there are multiple param lists (capture list + params), check both
-            if let nextParamStart = index(of: .startOfScope, in: paramEndIndex + 1 ..< inKeywordIndex),
-               [.startOfScope("("), .startOfScope("[")].contains(tokens[nextParamStart]),
-               let nextParamEnd = endOfScope(at: nextParamStart),
-               i > nextParamStart && i < nextParamEnd
-            {
-                return true
-            }
-            // If we found a closure parameter list with parens (not just capture list),
-            // and we're after it, then we're NOT in the parameter list anymore
-            // (we might be in throws/return type area)
-            if tokens[paramStartIndex] == .startOfScope("(") {
-                return false
-            }
-            // If we found only a capture list (with []), but we're after it and before 'in',
-            // then we might be in bare parameters after the capture list
-            // Check if there's a parameter list with parens after this capture list
-            if let parenIndex = index(of: .startOfScope("("), in: paramEndIndex + 1 ..< inKeywordIndex),
-               endOfScope(at: parenIndex) != nil
-            {
-                // There's a paren-wrapped parameter list, so we're not in bare params
-                return false
-            }
-            // No paren-wrapped params found, so we're in bare parameters
-            if i > paramEndIndex && i < inKeywordIndex {
-                return true
-            }
+            // After the closing paren but before 'in', we're NOT in param list
             return false
         }
         
-        // If there's no parentheses or brackets, the parameters are directly between { and in
-        // In this case, we're in the parameter list
-        return true
+        // No parens, so parameters are bare identifiers between search start and 'in'
+        return i > searchStartIndex && i < inKeywordIndex
     }
 
     func stringBodyIndent(at i: Int) -> String {

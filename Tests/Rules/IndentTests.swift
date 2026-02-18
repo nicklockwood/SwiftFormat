@@ -472,19 +472,7 @@ final class IndentTests: XCTestCase {
             test1 && test2 && test3
         }
         """
-        let output = """
-        let observable: Observable = .combineLatest(
-            relay1.asObservable(),
-            relay2.asObservable(),
-            relay3.asObservable()
-        ) {
-            test1,
-            test2,
-            test3 in
-            test1 && test2 && test3
-        }
-        """
-        testFormatting(for: input, [input, output], rules: [.indent])
+        testFormatting(for: input, rule: .indent, exclude: [.propertyTypes])
     }
 
     func testIndentWrappedClosureCaptureList() {

@@ -14,10 +14,6 @@ public extension FormatRule {
     ) { formatter in
         guard formatter.hasImport("Testing") else { return }
 
-        // Collect all @Suite attributes to remove first (to avoid re-entrancy issues)
-        var attributeIndicesToRemove = [Int]()
-
-        // Find all @Suite attributes
         formatter.forEach(.attribute) { attrIndex, token in
             guard token.string == "@Suite" else { return }
 
@@ -38,17 +34,9 @@ public extension FormatRule {
                     // Has arguments - keep it
                     return
                 }
-
-                // Empty parens @Suite() - remove the entire attribute
-                attributeIndicesToRemove.append(attrIndex)
-            } else {
-                // No parens after @Suite - remove the entire attribute
-                attributeIndicesToRemove.append(attrIndex)
             }
-        }
 
-        // Remove the attributes in reverse order to not invalidate indices
-        for attrIndex in attributeIndicesToRemove.reversed() {
+            // Remove the @Suite attribute
             formatter.removeSuiteAttribute(at: attrIndex)
         }
     } examples: {

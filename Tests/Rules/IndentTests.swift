@@ -488,7 +488,6 @@ final class IndentTests: XCTestCase {
         testFormatting(for: input, rule: .indent)
     }
 
-    // TODO: add `unwrap` rule to improve this case
     func testIndentWrappedClosureCaptureList2() {
         let input = """
         class A {}
@@ -508,7 +507,25 @@ final class IndentTests: XCTestCase {
             return x + y
         }
         """
-        testFormatting(for: input, rule: .indent, exclude: [.propertyTypes])
+        let output = """
+        class A {}
+        let a = A()
+        let f = { [
+            weak a
+        ]
+        (
+            x: Int,
+            y: Int
+        )
+        throws
+        ->
+        Int
+        in
+            print("Hello, World! " + String(x + y))
+            return x + y
+        }
+        """
+        testFormatting(for: input, output, rule: .indent, exclude: [.propertyTypes])
     }
 
     func testIndentWrappedClosureCaptureListWithUnwrappedParameters() {

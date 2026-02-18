@@ -771,10 +771,8 @@ extension Formatter {
         return true
     }
 
-    /// Returns true if the index is within a closure's argument list.
-    /// When `bareParametersOnly` is true, only matches bare (non-parenthesized) parameter lists
-    /// and checks the parameter range specifically, excluding throws/return type declarations.
-    func isInClosureArguments(at i: Int, bareParametersOnly: Bool = false) -> Bool {
+    /// Returns true if the index is within a closure's argument list (between `{` and `in`).
+    func isInClosureArguments(at i: Int) -> Bool {
         // Find the enclosing `{` scope, walking past any nested scopes
         var scopeStart = i
         while let startIndex = startOfScope(at: scopeStart) {
@@ -783,14 +781,6 @@ extension Formatter {
                       let closureArgs = parseClosureArguments(at: startIndex)
                 else {
                     return false
-                }
-                if bareParametersOnly {
-                    guard let parametersRange = closureArgs.parametersRange,
-                          tokens[parametersRange.lowerBound] != .startOfScope("(")
-                    else {
-                        return false
-                    }
-                    return i > startIndex && i <= parametersRange.upperBound
                 }
                 return i > startIndex && i <= closureArgs.inKeywordIndex
             }

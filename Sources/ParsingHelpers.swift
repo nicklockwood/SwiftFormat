@@ -2786,9 +2786,9 @@ extension Formatter {
     /// Returns nil if the closure has no arguments or if parsing fails.
     func parseClosureArguments(at closureStartIndex: Int) -> ClosureArguments? {
         assert(tokens[closureStartIndex] == .startOfScope("{"))
-        
+
         var currentIndex = closureStartIndex
-        
+
         // Check for global actor like @MainActor (can appear before capture list)
         var globalActorIndex: Int?
         if let nextToken = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex),
@@ -2797,7 +2797,7 @@ extension Formatter {
             globalActorIndex = nextToken
             currentIndex = nextToken
         }
-        
+
         // Parse optional capture list [weak self, unowned bar]
         var captureListRange: ClosedRange<Int>?
         if let firstToken = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex),
@@ -2807,7 +2807,7 @@ extension Formatter {
             captureListRange = firstToken ... captureListEnd
             currentIndex = captureListEnd
         }
-        
+
         // Check for global actor after capture list (if not found before)
         if globalActorIndex == nil,
            let nextToken = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex),
@@ -2816,24 +2816,24 @@ extension Formatter {
             globalActorIndex = nextToken
             currentIndex = nextToken
         }
-        
+
         // Now look for arguments - either bare identifiers or parenthesized list
         guard let firstParamToken = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex) else {
             return nil
         }
-        
+
         var argumentIndices: [Int] = []
         var parametersRange: ClosedRange<Int>?
         var returnTypeRange: ClosedRange<Int>?
-        
+
         // Case 1: Parenthesized parameters like { (foo: Int, bar: String) in }
         if tokens[firstParamToken] == .startOfScope("(") {
             guard let paramsEnd = endOfScope(at: firstParamToken) else {
                 return nil
             }
-            
+
             parametersRange = firstParamToken ... paramsEnd
-            
+
             // Parse arguments inside parens
             var argIndex = firstParamToken + 1
             while argIndex < paramsEnd {
@@ -2841,7 +2841,7 @@ extension Formatter {
                    tokens[nextNonSpace].isIdentifierOrKeyword
                 {
                     argumentIndices.append(nextNonSpace)
-                    
+
                     // Skip to next comma or end of scope
                     if let nextComma = index(of: .delimiter(","), in: nextNonSpace ..< paramsEnd) {
                         argIndex = nextComma + 1
@@ -2852,9 +2852,9 @@ extension Formatter {
                     break
                 }
             }
-            
+
             currentIndex = paramsEnd
-            
+
             // Skip past throws/rethrows/async keywords and return type
             if let nextTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex) {
                 var idx = nextTokenIndex
@@ -2890,14 +2890,14 @@ extension Formatter {
         else if tokens[firstParamToken].isIdentifier {
             let paramsStart = firstParamToken
             var paramsEnd = firstParamToken
-            
+
             // Parse bare identifier list
             var argIndex = firstParamToken
             while argIndex < tokens.count {
                 if tokens[argIndex].isIdentifier {
                     argumentIndices.append(argIndex)
                     paramsEnd = argIndex
-                    
+
                     // Check what comes after this identifier
                     if let nextNonSpace = index(of: .nonSpaceOrCommentOrLinebreak, after: argIndex) {
                         if tokens[nextNonSpace] == .delimiter(",") {
@@ -2921,21 +2921,21 @@ extension Formatter {
                     return nil
                 }
             }
-            
+
             if !argumentIndices.isEmpty {
                 parametersRange = paramsStart ... paramsEnd
             }
-            
+
             currentIndex = paramsEnd
         }
-        
+
         // Must find 'in' keyword
         guard let inKeywordIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex),
               tokens[inKeywordIndex] == .keyword("in")
         else {
             return nil
         }
-        
+
         return ClosureArguments(
             captureListRange: captureListRange,
             globalActorIndex: globalActorIndex,

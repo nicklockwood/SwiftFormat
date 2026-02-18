@@ -3314,14 +3314,14 @@ final class ParsingHelpersTests: XCTestCase {
     func testParseClosureArgumentsSimpleBareIdentifiers() {
         let input = "foo { bar, baz in print(bar + baz) }"
         let formatter = Formatter(tokenize(input))
-        
+
         guard let braceIndex = formatter.index(of: .startOfScope("{"), after: -1),
               let closureArgs = formatter.parseClosureArguments(at: braceIndex)
         else {
             XCTFail("Failed to parse closure arguments")
             return
         }
-        
+
         XCTAssertNil(closureArgs.captureListRange)
         XCTAssertNil(closureArgs.globalActorIndex)
         XCTAssertNil(closureArgs.returnTypeRange)
@@ -3332,14 +3332,14 @@ final class ParsingHelpersTests: XCTestCase {
     func testParseClosureArgumentsWithParens() {
         let input = "foo { (bar, baz) in print(bar + baz) }"
         let formatter = Formatter(tokenize(input))
-        
+
         guard let braceIndex = formatter.index(of: .startOfScope("{"), after: -1),
               let closureArgs = formatter.parseClosureArguments(at: braceIndex)
         else {
             XCTFail("Failed to parse closure arguments")
             return
         }
-        
+
         XCTAssertNil(closureArgs.captureListRange)
         XCTAssertNil(closureArgs.globalActorIndex)
         XCTAssertNotNil(closureArgs.parametersRange)
@@ -3351,14 +3351,14 @@ final class ParsingHelpersTests: XCTestCase {
     func testParseClosureArgumentsWithExplicitTypes() {
         let input = "foo { (bar: Int, baz: String) -> Bool in return true }"
         let formatter = Formatter(tokenize(input))
-        
+
         guard let braceIndex = formatter.index(of: .startOfScope("{"), after: -1),
               let closureArgs = formatter.parseClosureArguments(at: braceIndex)
         else {
             XCTFail("Failed to parse closure arguments")
             return
         }
-        
+
         XCTAssertNil(closureArgs.captureListRange)
         XCTAssertNil(closureArgs.globalActorIndex)
         XCTAssertNotNil(closureArgs.parametersRange)
@@ -3370,14 +3370,14 @@ final class ParsingHelpersTests: XCTestCase {
     func testParseClosureArgumentsCaptureListNoParams() {
         let input = "foo { [weak self, unowned bar] in self?.doSomething() }"
         let formatter = Formatter(tokenize(input))
-        
+
         guard let braceIndex = formatter.index(of: .startOfScope("{"), after: -1),
               let closureArgs = formatter.parseClosureArguments(at: braceIndex)
         else {
             XCTFail("Failed to parse closure arguments")
             return
         }
-        
+
         XCTAssertNotNil(closureArgs.captureListRange)
         XCTAssertNil(closureArgs.globalActorIndex)
         XCTAssertNil(closureArgs.returnTypeRange)
@@ -3388,14 +3388,14 @@ final class ParsingHelpersTests: XCTestCase {
     func testParseClosureArgumentsCaptureListWithBareParams() {
         let input = "foo { [weak self] bar in self?.process(bar) }"
         let formatter = Formatter(tokenize(input))
-        
+
         guard let braceIndex = formatter.index(of: .startOfScope("{"), after: -1),
               let closureArgs = formatter.parseClosureArguments(at: braceIndex)
         else {
             XCTFail("Failed to parse closure arguments")
             return
         }
-        
+
         XCTAssertNotNil(closureArgs.captureListRange)
         XCTAssertNil(closureArgs.globalActorIndex)
         XCTAssertNil(closureArgs.returnTypeRange)
@@ -3406,14 +3406,14 @@ final class ParsingHelpersTests: XCTestCase {
     func testParseClosureArgumentsGlobalActorNoParams() {
         let input = "foo { @MainActor in print(\"test\") }"
         let formatter = Formatter(tokenize(input))
-        
+
         guard let braceIndex = formatter.index(of: .startOfScope("{"), after: -1),
               let closureArgs = formatter.parseClosureArguments(at: braceIndex)
         else {
             XCTFail("Failed to parse closure arguments")
             return
         }
-        
+
         XCTAssertNil(closureArgs.captureListRange)
         XCTAssertNotNil(closureArgs.globalActorIndex)
         XCTAssertNil(closureArgs.returnTypeRange)
@@ -3424,14 +3424,14 @@ final class ParsingHelpersTests: XCTestCase {
     func testParseClosureArgumentsGlobalActorWithParams() {
         let input = "foo { @MainActor (bar: Int) in print(bar) }"
         let formatter = Formatter(tokenize(input))
-        
+
         guard let braceIndex = formatter.index(of: .startOfScope("{"), after: -1),
               let closureArgs = formatter.parseClosureArguments(at: braceIndex)
         else {
             XCTFail("Failed to parse closure arguments")
             return
         }
-        
+
         XCTAssertNil(closureArgs.captureListRange)
         XCTAssertNotNil(closureArgs.globalActorIndex)
         XCTAssertNotNil(closureArgs.parametersRange)
@@ -3443,14 +3443,14 @@ final class ParsingHelpersTests: XCTestCase {
     func testParseClosureArgumentsThrowsReturnType() {
         let input = "foo { (x: Int, y: Int) throws -> Int in x + y }"
         let formatter = Formatter(tokenize(input))
-        
+
         guard let braceIndex = formatter.index(of: .startOfScope("{"), after: -1),
               let closureArgs = formatter.parseClosureArguments(at: braceIndex)
         else {
             XCTFail("Failed to parse closure arguments")
             return
         }
-        
+
         XCTAssertNil(closureArgs.captureListRange)
         XCTAssertNil(closureArgs.globalActorIndex)
         XCTAssertNotNil(closureArgs.parametersRange)

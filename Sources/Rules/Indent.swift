@@ -614,7 +614,9 @@ public extension FormatRule {
                         } else if !formatter.options.xcodeIndentation || !formatter.isWrappedDeclaration(at: i) {
                             indent += formatter.linewrapIndent(at: i)
                         }
-                    } else if !formatter.options.xcodeIndentation || !formatter.isWrappedDeclaration(at: i) {
+                    } else if (!formatter.options.xcodeIndentation || !formatter.isWrappedDeclaration(at: i)),
+                              !formatter.isInClosureParameterList(at: i)
+                    {
                         indent += formatter.linewrapIndent(at: i)
                     }
 
@@ -826,6 +828,52 @@ extension Formatter {
             return true
         }
         return false
+    }
+
+    func isInClosureParameterList(at i: Int) -> Bool {
+        // Check if we're currently in a closure scope
+        guard let closureStartIndex = startOfScope(at: i),
+              tokens[closureStartIndex] == .startOfScope("{"),
+              isStartOfClosure(at: closureStartIndex)
+        else {
+            return false
+        }
+        
+        // Check if there's an 'in' keyword in this closure after our position
+        guard let closureEndIndex = endOfScope(at: closureStartIndex),
+              let inKeywordIndex = index(of: .keyword("in"), in: i ..< closureEndIndex)
+        else {
+            return false
+        }
+        
+        // Make sure this isn't a for-in loop by checking there's no 'for' keyword
+        guard index(of: .keyword("for"), in: closureStartIndex ..< inKeywordIndex) == nil else {
+            return false
+        }
+        
+        // Look for a parameter/capture list start scope after the opening {
+        if let paramStartIndex = index(of: .startOfScope, in: closureStartIndex + 1 ..< inKeywordIndex),
+           [.startOfScope("("), .startOfScope("[")].contains(tokens[paramStartIndex]),
+           let paramEndIndex = endOfScope(at: paramStartIndex)
+        {
+            // If we're between the param list start and end, we're in the parameter list
+            if i > paramStartIndex && i < paramEndIndex {
+                return true
+            }
+            // If there are multiple param lists (capture list + params), check both
+            if let nextParamStart = index(of: .startOfScope, in: paramEndIndex + 1 ..< inKeywordIndex),
+               [.startOfScope("("), .startOfScope("[")].contains(tokens[nextParamStart]),
+               let nextParamEnd = endOfScope(at: nextParamStart),
+               i > nextParamStart && i < nextParamEnd
+            {
+                return true
+            }
+            return false
+        }
+        
+        // If there's no parentheses or brackets, the parameters are directly between { and in
+        // In this case, we're in the parameter list
+        return true
     }
 
     func stringBodyIndent(at i: Int) -> String {

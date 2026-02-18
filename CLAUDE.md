@@ -89,6 +89,7 @@ Rule tests are implemented in `Tests/Rules/MyRuleTests.swift`.
 
 ### Best Practices
 
+- **File author names:** when creating new files, always use the name of the actual user / human author, and the current date. **NEVER** write a file header like "Created by Claude Code" or "Created by GitHub Copilot". Prefer the user's full name as opposed to just their username.
 - **Minimal changes only.** Only modify tokens when an actual change is needed. Any modification triggers a lint error in `--lint` mode.
 - **Preserve comments.** Prefer preserving code as-is if updating would require removing comments.
 - **Keep it simple.** Write as little code as possible. If a change dramatically increases complexity, consider asking if it should be de-scoped.

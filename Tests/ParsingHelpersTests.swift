@@ -3308,4 +3308,154 @@ final class ParsingHelpersTests: XCTestCase {
         let properties = typeDecl.body.filter { $0.keyword == "var" || $0.keyword == "let" }
         XCTAssertEqual(properties.count, 3, "Should find 3 properties: sizeClass, actionBar, title")
     }
+
+    // MARK: parseClosureArguments
+
+    func testParseClosureArgumentsSimpleBareIdentifiers() {
+        let input = "foo { bar, baz in print(bar + baz) }"
+        let formatter = Formatter(tokenize(input))
+        
+        guard let braceIndex = formatter.index(of: .startOfScope("{"), after: -1),
+              let closureArgs = formatter.parseClosureArguments(at: braceIndex)
+        else {
+            XCTFail("Failed to parse closure arguments")
+            return
+        }
+        
+        XCTAssertNil(closureArgs.captureListRange)
+        XCTAssertNil(closureArgs.globalActorIndex)
+        XCTAssertNil(closureArgs.returnTypeRange)
+        XCTAssertEqual(closureArgs.argumentIndices.count, 2)
+        XCTAssertEqual(formatter.tokens[closureArgs.inKeywordIndex], .keyword("in"))
+    }
+
+    func testParseClosureArgumentsWithParens() {
+        let input = "foo { (bar, baz) in print(bar + baz) }"
+        let formatter = Formatter(tokenize(input))
+        
+        guard let braceIndex = formatter.index(of: .startOfScope("{"), after: -1),
+              let closureArgs = formatter.parseClosureArguments(at: braceIndex)
+        else {
+            XCTFail("Failed to parse closure arguments")
+            return
+        }
+        
+        XCTAssertNil(closureArgs.captureListRange)
+        XCTAssertNil(closureArgs.globalActorIndex)
+        XCTAssertNotNil(closureArgs.parametersRange)
+        XCTAssertNil(closureArgs.returnTypeRange)
+        XCTAssertEqual(closureArgs.argumentIndices.count, 2)
+        XCTAssertEqual(formatter.tokens[closureArgs.inKeywordIndex], .keyword("in"))
+    }
+
+    func testParseClosureArgumentsWithExplicitTypes() {
+        let input = "foo { (bar: Int, baz: String) -> Bool in return true }"
+        let formatter = Formatter(tokenize(input))
+        
+        guard let braceIndex = formatter.index(of: .startOfScope("{"), after: -1),
+              let closureArgs = formatter.parseClosureArguments(at: braceIndex)
+        else {
+            XCTFail("Failed to parse closure arguments")
+            return
+        }
+        
+        XCTAssertNil(closureArgs.captureListRange)
+        XCTAssertNil(closureArgs.globalActorIndex)
+        XCTAssertNotNil(closureArgs.parametersRange)
+        XCTAssertNotNil(closureArgs.returnTypeRange)
+        XCTAssertEqual(closureArgs.argumentIndices.count, 2)
+        XCTAssertEqual(formatter.tokens[closureArgs.inKeywordIndex], .keyword("in"))
+    }
+
+    func testParseClosureArgumentsCaptureListNoParams() {
+        let input = "foo { [weak self, unowned bar] in self?.doSomething() }"
+        let formatter = Formatter(tokenize(input))
+        
+        guard let braceIndex = formatter.index(of: .startOfScope("{"), after: -1),
+              let closureArgs = formatter.parseClosureArguments(at: braceIndex)
+        else {
+            XCTFail("Failed to parse closure arguments")
+            return
+        }
+        
+        XCTAssertNotNil(closureArgs.captureListRange)
+        XCTAssertNil(closureArgs.globalActorIndex)
+        XCTAssertNil(closureArgs.returnTypeRange)
+        XCTAssertEqual(closureArgs.argumentIndices.count, 0)
+        XCTAssertEqual(formatter.tokens[closureArgs.inKeywordIndex], .keyword("in"))
+    }
+
+    func testParseClosureArgumentsCaptureListWithBareParams() {
+        let input = "foo { [weak self] bar in self?.process(bar) }"
+        let formatter = Formatter(tokenize(input))
+        
+        guard let braceIndex = formatter.index(of: .startOfScope("{"), after: -1),
+              let closureArgs = formatter.parseClosureArguments(at: braceIndex)
+        else {
+            XCTFail("Failed to parse closure arguments")
+            return
+        }
+        
+        XCTAssertNotNil(closureArgs.captureListRange)
+        XCTAssertNil(closureArgs.globalActorIndex)
+        XCTAssertNil(closureArgs.returnTypeRange)
+        XCTAssertEqual(closureArgs.argumentIndices.count, 1)
+        XCTAssertEqual(formatter.tokens[closureArgs.inKeywordIndex], .keyword("in"))
+    }
+
+    func testParseClosureArgumentsGlobalActorNoParams() {
+        let input = "foo { @MainActor in print(\"test\") }"
+        let formatter = Formatter(tokenize(input))
+        
+        guard let braceIndex = formatter.index(of: .startOfScope("{"), after: -1),
+              let closureArgs = formatter.parseClosureArguments(at: braceIndex)
+        else {
+            XCTFail("Failed to parse closure arguments")
+            return
+        }
+        
+        XCTAssertNil(closureArgs.captureListRange)
+        XCTAssertNotNil(closureArgs.globalActorIndex)
+        XCTAssertNil(closureArgs.returnTypeRange)
+        XCTAssertEqual(closureArgs.argumentIndices.count, 0)
+        XCTAssertEqual(formatter.tokens[closureArgs.inKeywordIndex], .keyword("in"))
+    }
+
+    func testParseClosureArgumentsGlobalActorWithParams() {
+        let input = "foo { @MainActor (bar: Int) in print(bar) }"
+        let formatter = Formatter(tokenize(input))
+        
+        guard let braceIndex = formatter.index(of: .startOfScope("{"), after: -1),
+              let closureArgs = formatter.parseClosureArguments(at: braceIndex)
+        else {
+            XCTFail("Failed to parse closure arguments")
+            return
+        }
+        
+        XCTAssertNil(closureArgs.captureListRange)
+        XCTAssertNotNil(closureArgs.globalActorIndex)
+        XCTAssertNotNil(closureArgs.parametersRange)
+        XCTAssertNil(closureArgs.returnTypeRange)
+        XCTAssertEqual(closureArgs.argumentIndices.count, 1)
+        XCTAssertEqual(formatter.tokens[closureArgs.inKeywordIndex], .keyword("in"))
+    }
+
+    func testParseClosureArgumentsThrowsReturnType() {
+        let input = "foo { (x: Int, y: Int) throws -> Int in x + y }"
+        let formatter = Formatter(tokenize(input))
+        
+        guard let braceIndex = formatter.index(of: .startOfScope("{"), after: -1),
+              let closureArgs = formatter.parseClosureArguments(at: braceIndex)
+        else {
+            XCTFail("Failed to parse closure arguments")
+            return
+        }
+        
+        XCTAssertNil(closureArgs.captureListRange)
+        XCTAssertNil(closureArgs.globalActorIndex)
+        XCTAssertNotNil(closureArgs.parametersRange)
+        XCTAssertNotNil(closureArgs.returnTypeRange)
+        XCTAssertEqual(closureArgs.argumentIndices.count, 2)
+        XCTAssertEqual(formatter.tokens[closureArgs.inKeywordIndex], .keyword("in"))
+    }
 }

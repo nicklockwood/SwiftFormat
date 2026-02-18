@@ -771,33 +771,20 @@ extension Formatter {
         return true
     }
 
+    /// Returns true if the index is within a closure's argument list (between `{` and `in`).
     func isInClosureArguments(at i: Int) -> Bool {
-        var i = i
-        while let token = token(at: i) {
-            switch token {
-            case .keyword("in"), .keyword("throws"), .keyword("rethrows"), .identifier("async"):
-                guard let scopeIndex = index(of: .startOfScope, before: i, if: {
-                    $0 == .startOfScope("{")
-                }), isStartOfClosure(at: scopeIndex) else {
+        // Find the enclosing `{` scope, walking past any nested scopes
+        var scopeStart = i
+        while let startIndex = startOfScope(at: scopeStart) {
+            if tokens[startIndex] == .startOfScope("{") {
+                guard isStartOfClosure(at: startIndex),
+                      let closureArgs = parseClosureArguments(at: startIndex)
+                else {
                     return false
                 }
-                if token != .keyword("in"),
-                   let arrowIndex = index(of: .operator("->", .infix), after: i),
-                   next(.keyword, after: arrowIndex) != .keyword("in")
-                {
-                    return false
-                }
-                return true
-            case .startOfScope("("), .startOfScope("["), .startOfScope("<"),
-                 .endOfScope(")"), .endOfScope("]"), .endOfScope(">"),
-                 .keyword where token.isAttribute || token.isMacro, _ where token.isComment:
-                break
-            case .keyword, .startOfScope, .endOfScope:
-                return false
-            default:
-                break
+                return i > startIndex && i <= closureArgs.inKeywordIndex
             }
-            i += 1
+            scopeStart = startIndex
         }
         return false
     }
@@ -2777,6 +2764,186 @@ extension Formatter {
         }
 
         return (argumentNames: argumentNames, inKeywordIndex: inKeywordIndex)
+    }
+
+    /// A fully parsed closure arguments list
+    struct ClosureArguments {
+        /// The range of the capture list `[...]` if present
+        let captureListRange: ClosedRange<Int>?
+        /// The index of any global actor attribute like `@MainActor`
+        let globalActorIndex: Int?
+        /// The range of the parameters (either bare identifiers or parenthesized list)
+        let parametersRange: ClosedRange<Int>?
+        /// The indices of individual argument identifiers
+        let argumentIndices: [Int]
+        /// The range of the return type `-> Type` if present
+        let returnTypeRange: ClosedRange<Int>?
+        /// The index of the `in` keyword
+        let inKeywordIndex: Int
+    }
+
+    /// Parses closure arguments from the `{` start of closure through to the `in` keyword.
+    /// Returns nil if the closure has no arguments or if parsing fails.
+    func parseClosureArguments(at closureStartIndex: Int) -> ClosureArguments? {
+        assert(tokens[closureStartIndex] == .startOfScope("{"))
+        
+        var currentIndex = closureStartIndex
+        
+        // Check for global actor like @MainActor (can appear before capture list)
+        var globalActorIndex: Int?
+        if let nextToken = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex),
+           tokens[nextToken].isAttribute
+        {
+            globalActorIndex = nextToken
+            currentIndex = nextToken
+        }
+        
+        // Parse optional capture list [weak self, unowned bar]
+        var captureListRange: ClosedRange<Int>?
+        if let firstToken = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex),
+           tokens[firstToken] == .startOfScope("["),
+           let captureListEnd = endOfScope(at: firstToken)
+        {
+            captureListRange = firstToken ... captureListEnd
+            currentIndex = captureListEnd
+        }
+        
+        // Check for global actor after capture list (if not found before)
+        if globalActorIndex == nil,
+           let nextToken = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex),
+           tokens[nextToken].isAttribute
+        {
+            globalActorIndex = nextToken
+            currentIndex = nextToken
+        }
+        
+        // Now look for arguments - either bare identifiers or parenthesized list
+        guard let firstParamToken = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex) else {
+            return nil
+        }
+        
+        var argumentIndices: [Int] = []
+        var parametersRange: ClosedRange<Int>?
+        var returnTypeRange: ClosedRange<Int>?
+        
+        // Case 1: Parenthesized parameters like { (foo: Int, bar: String) in }
+        if tokens[firstParamToken] == .startOfScope("(") {
+            guard let paramsEnd = endOfScope(at: firstParamToken) else {
+                return nil
+            }
+            
+            parametersRange = firstParamToken ... paramsEnd
+            
+            // Parse arguments inside parens
+            var argIndex = firstParamToken + 1
+            while argIndex < paramsEnd {
+                if let nextNonSpace = index(of: .nonSpaceOrCommentOrLinebreak, in: argIndex ..< paramsEnd),
+                   tokens[nextNonSpace].isIdentifierOrKeyword
+                {
+                    argumentIndices.append(nextNonSpace)
+                    
+                    // Skip to next comma or end of scope
+                    if let nextComma = index(of: .delimiter(","), in: nextNonSpace ..< paramsEnd) {
+                        argIndex = nextComma + 1
+                    } else {
+                        break
+                    }
+                } else {
+                    break
+                }
+            }
+            
+            currentIndex = paramsEnd
+            
+            // Skip past throws/rethrows/async keywords and return type
+            if let nextTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex) {
+                var idx = nextTokenIndex
+                // Skip throws/rethrows/async (including typed throws like throws(Foo))
+                while [.keyword("throws"), .keyword("rethrows"), .identifier("async")].contains(tokens[idx]) {
+                    // Handle typed throws: throws(ErrorType)
+                    if let parenStart = index(of: .nonSpaceOrCommentOrLinebreak, after: idx),
+                       tokens[parenStart] == .startOfScope("("),
+                       let parenEnd = endOfScope(at: parenStart),
+                       let next = index(of: .nonSpaceOrCommentOrLinebreak, after: parenEnd)
+                    {
+                        idx = next
+                    } else if let next = index(of: .nonSpaceOrCommentOrLinebreak, after: idx) {
+                        idx = next
+                    } else {
+                        break
+                    }
+                }
+                // Skip return type (-> Type)
+                if tokens[idx] == .operator("->", .infix),
+                   let returnTypeStart = index(of: .nonSpaceOrCommentOrLinebreak, after: idx),
+                   let returnType = parseType(at: returnTypeStart)
+                {
+                    returnTypeRange = nextTokenIndex ... returnType.range.upperBound
+                    currentIndex = returnType.range.upperBound
+                } else if idx != nextTokenIndex {
+                    // Had throws/rethrows/async keywords - advance past them
+                    currentIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: idx) ?? currentIndex
+                }
+            }
+        }
+        // Case 2: Bare identifiers like { foo, bar in }
+        else if tokens[firstParamToken].isIdentifier {
+            let paramsStart = firstParamToken
+            var paramsEnd = firstParamToken
+            
+            // Parse bare identifier list
+            var argIndex = firstParamToken
+            while argIndex < tokens.count {
+                if tokens[argIndex].isIdentifier {
+                    argumentIndices.append(argIndex)
+                    paramsEnd = argIndex
+                    
+                    // Check what comes after this identifier
+                    if let nextNonSpace = index(of: .nonSpaceOrCommentOrLinebreak, after: argIndex) {
+                        if tokens[nextNonSpace] == .delimiter(",") {
+                            // Continue to next parameter
+                            argIndex = nextNonSpace + 1
+                            continue
+                        } else if tokens[nextNonSpace] == .keyword("in") {
+                            // Found the end of parameters
+                            break
+                        } else {
+                            // Unexpected token
+                            return nil
+                        }
+                    } else {
+                        break
+                    }
+                } else if tokens[argIndex].isSpaceOrCommentOrLinebreak {
+                    argIndex += 1
+                } else {
+                    // Unexpected token
+                    return nil
+                }
+            }
+            
+            if !argumentIndices.isEmpty {
+                parametersRange = paramsStart ... paramsEnd
+            }
+            
+            currentIndex = paramsEnd
+        }
+        
+        // Must find 'in' keyword
+        guard let inKeywordIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex),
+              tokens[inKeywordIndex] == .keyword("in")
+        else {
+            return nil
+        }
+        
+        return ClosureArguments(
+            captureListRange: captureListRange,
+            globalActorIndex: globalActorIndex,
+            parametersRange: parametersRange,
+            argumentIndices: argumentIndices,
+            returnTypeRange: returnTypeRange,
+            inKeywordIndex: inKeywordIndex
+        )
     }
 
     /// Get the type of the declaration starting at the index of the declaration keyword

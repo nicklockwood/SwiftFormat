@@ -194,9 +194,6 @@ public enum SwiftTestingNameFormat: String, CaseIterable {
     case standardIdentifiers = "standard-identifiers"
 }
 
-/// Deprecated, use SwiftTestingNameFormat instead
-public typealias TestCaseNameFormat = SwiftTestingNameFormat
-
 public enum TrailingCommas: String, CaseIterable {
     case never
     case always

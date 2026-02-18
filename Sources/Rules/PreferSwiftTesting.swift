@@ -31,6 +31,16 @@ public extension FormatRule {
               !xcTestSuites.contains(where: { $0.hasUnsupportedXCTestFunctionality() })
         else { return }
 
+        // Find extensions of the test case types in the same file
+        let xcTestSuiteNames = Set(xcTestSuites.compactMap(\.name))
+        let xcTestSuiteExtensions = declarations
+            .compactMap(\.asTypeDeclaration)
+            .filter { $0.keyword == "extension" && xcTestSuiteNames.contains($0.name ?? "") }
+
+        // Check if any extension has unsupported functionality
+        guard !xcTestSuiteExtensions.contains(where: { $0.hasUnsupportedXCTestFunctionality() })
+        else { return }
+
         // Replace `import XCTest` with `import Testing`.
         // XCTest also exports Foundation, so add an explicit Foundation import for compatibility.
         formatter.addImports(["Testing", "Foundation"])
@@ -44,6 +54,11 @@ public extension FormatRule {
 
         for xcTestSuite in xcTestSuites {
             xcTestSuite.convertXCTestCaseToSwiftTestingSuite()
+        }
+
+        // Also convert test methods in extensions of the test case types
+        for xcTestSuiteExtension in xcTestSuiteExtensions {
+            xcTestSuiteExtension.convertXCTestCaseExtensionMethods()
         }
 
         formatter.forEach(.identifier) { identifierIndex, token in
@@ -165,6 +180,60 @@ extension TypeDeclaration {
             formatter.insert(tokenize(attributesWithNewline), at: startOfModifiers)
         }
 
+        let instanceMethods = body.filter { $0.keyword == "func" && !$0.modifiers.contains("static") }
+
+        for instanceMethod in instanceMethods {
+            guard let methodName = instanceMethod.name,
+                  let startOfParameters = formatter.index(of: .startOfScope("("), after: instanceMethod.keywordIndex),
+                  let endOfParameters = formatter.endOfScope(at: startOfParameters),
+                  let startOfFunctionBody = formatter.index(of: .startOfScope("{"), after: endOfParameters),
+                  let endOfFunctionBody = formatter.endOfScope(at: startOfFunctionBody)
+            else { continue }
+
+            // Convert the setUp method to an initializer
+            if methodName == "setUp" || methodName == "setUpWithError" {
+                formatter.convertXCTestOverride(
+                    at: instanceMethod.keywordIndex,
+                    toLifecycleMethod: "init"
+                )
+            }
+
+            // Convert the tearDown method to a deinit
+            if methodName == "tearDown" {
+                formatter.convertXCTestOverride(
+                    at: instanceMethod.keywordIndex,
+                    toLifecycleMethod: "deinit"
+                )
+            }
+
+            // Convert any test case method to a @Test method
+            if methodName.hasPrefix("test") {
+                let arguments = formatter.parseFunctionDeclarationArguments(startOfScope: startOfParameters)
+                guard arguments.isEmpty else { continue }
+
+                // In Swift Testing, idiomatic test case names don't start with "test".
+                formatter.removeTestPrefix(fromFunctionAt: instanceMethod.keywordIndex)
+
+                // XCTest assertions have throwing autoclosures, so can include a `try`
+                // without the test case being `throws`. If the test case method isn't `throws`
+                // but has any `try`s in the method body, we have to add `throws`.
+                if !tokens[endOfParameters ..< startOfFunctionBody].contains(.keyword("throws")),
+                   tokens[startOfFunctionBody ... endOfFunctionBody].contains(.keyword("try")),
+                   let indexBeforeStartOfFunctionBody = formatter.index(of: .nonSpaceOrComment, before: startOfFunctionBody)
+                {
+                    formatter.insert([.space(" "), .keyword("throws")], at: indexBeforeStartOfFunctionBody + 1)
+                }
+
+                // Add the @Test macro
+                formatter.insert(tokenize("@Test "), at: formatter.startOfModifiers(at: instanceMethod.keywordIndex, includingAttributes: true))
+            }
+        }
+    }
+
+    /// Converts test methods in an extension of an XCTestCase to Swift Testing @Test methods.
+    /// Unlike the main suite conversion, extensions don't remove conformances or add attributes,
+    /// but they do convert test methods.
+    func convertXCTestCaseExtensionMethods() {
         let instanceMethods = body.filter { $0.keyword == "func" && !$0.modifiers.contains("static") }
 
         for instanceMethod in instanceMethods {

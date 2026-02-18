@@ -580,16 +580,17 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
             if !useStdin {
                 print("warning: --stdin-path option only applies when using stdin", as: .warning)
             }
-            let stdinURL = try parsePath(stdinPath, for: "stdin-path", in: directory)
-            let resourceValues = try getResourceValues(
+            let stdinURL = try parsePath(stdinPath, for: "stdin-path", in: directory, allowNonExisting: true)
+            // Try to get resource values, but if file doesn't exist, just use the path
+            let resourceValues = try? getResourceValues(
                 for: stdinURL.standardizedFileURL,
                 keys: [.creationDateKey, .pathKey]
             )
             var formatOptions = options.formatOptions ?? .default
 
             formatOptions.fileInfo = FileInfo(
-                filePath: resourceValues.path,
-                creationDate: resourceValues.creationDate
+                filePath: resourceValues?.path ?? stdinURL.standardizedFileURL.path,
+                creationDate: resourceValues?.creationDate
             )
             options.formatOptions = formatOptions
         }
@@ -793,7 +794,8 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
                             return
                         }
 
-                        let resourceValues = try getResourceValues(
+                        // Try to get resource values, but allow nil for non-existing files
+                        let resourceValues = try? getResourceValues(
                             for: stdinURL.standardizedFileURL,
                             keys: [.creationDateKey, .pathKey]
                         )

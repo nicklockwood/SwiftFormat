@@ -728,6 +728,29 @@ final class FileHeaderTests: XCTestCase {
         let options = FormatOptions(fileHeader: "// {file}.", fileInfo: FileInfo())
         XCTAssertThrowsError(try format(input, rules: [.fileHeader], options: options))
     }
+
+    func testFileHeaderWithFilePathButNoCreationDate() {
+        let input = """
+        let foo = bar
+        """
+        let output = """
+        // File: test.swift
+
+        let foo = bar
+        """
+        let fileInfo = FileInfo(filePath: "/path/to/test.swift", creationDate: nil)
+        let options = FormatOptions(fileHeader: "// File: {file}", fileInfo: fileInfo)
+        testFormatting(for: input, output, rule: .fileHeader, options: options)
+    }
+
+    func testFileHeaderWithFilePathButNoCreationDateDoesNotUseCreatedPlaceholder() {
+        let input = """
+        let foo = bar
+        """
+        let fileInfo = FileInfo(filePath: "/path/to/test.swift", creationDate: nil)
+        let options = FormatOptions(fileHeader: "// Created: {created}", fileInfo: fileInfo)
+        XCTAssertThrowsError(try format(input, rules: [.fileHeader], options: options))
+    }
 }
 
 private enum TestDateFormat: String {

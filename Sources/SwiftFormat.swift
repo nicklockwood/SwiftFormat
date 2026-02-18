@@ -312,7 +312,7 @@ public func enumerateFiles(withInputURL inputURL: URL,
                    handler: handler)
 }
 
-func collectFileInfo(inputURL: URL, options: Options, resourceValues: URLResourceValues) -> FileInfo {
+func collectFileInfo(inputURL: URL, options: Options, resourceValues: URLResourceValues?) -> FileInfo {
     let fileHeaderRuleEnabled = options.rules?.contains(FormatRule.fileHeader.name) ?? false
     let shouldGetGitInfo = fileHeaderRuleEnabled &&
         options.formatOptions?.fileHeader.needsGitInfo == true
@@ -320,8 +320,8 @@ func collectFileInfo(inputURL: URL, options: Options, resourceValues: URLResourc
     let gitInfo = shouldGetGitInfo ? GitFileInfo(url: inputURL) : nil
 
     return FileInfo(
-        filePath: resourceValues.path,
-        creationDate: gitInfo?.creationDate ?? resourceValues.creationDate,
+        filePath: resourceValues?.path ?? inputURL.path,
+        creationDate: gitInfo?.creationDate ?? resourceValues?.creationDate,
         replacements: [
             .author: ReplacementType(gitInfo?.author),
             .authorName: ReplacementType(gitInfo?.authorName),

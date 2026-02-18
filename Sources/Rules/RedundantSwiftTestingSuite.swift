@@ -2,7 +2,7 @@
 //  RedundantSwiftTestingSuite.swift
 //  SwiftFormat
 //
-//  Created by GitHub Copilot on 2/18/26.
+//  Created by Cal Stephens on 2/18/26.
 //  Copyright © 2026 Nick Lockwood. All rights reserved.
 //
 

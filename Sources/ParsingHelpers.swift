@@ -772,33 +772,34 @@ extension Formatter {
     }
 
     func isInClosureArguments(at i: Int) -> Bool {
-        // Find the enclosing closure scope
-        guard let closureStartIndex = index(of: .startOfScope("{"), before: i + 1),
-              isStartOfClosure(at: closureStartIndex)
-        else {
-            return false
+        var i = i
+        while let token = token(at: i) {
+            switch token {
+            case .keyword("in"), .keyword("throws"), .keyword("rethrows"), .identifier("async"):
+                guard let scopeIndex = index(of: .startOfScope, before: i, if: {
+                    $0 == .startOfScope("{")
+                }), isStartOfClosure(at: scopeIndex) else {
+                    return false
+                }
+                if token != .keyword("in"),
+                   let arrowIndex = index(of: .operator("->", .infix), after: i),
+                   next(.keyword, after: arrowIndex) != .keyword("in")
+                {
+                    return false
+                }
+                return true
+            case .startOfScope("("), .startOfScope("["), .startOfScope("<"),
+                 .endOfScope(")"), .endOfScope("]"), .endOfScope(">"),
+                 .keyword where token.isAttribute || token.isMacro, _ where token.isComment:
+                break
+            case .keyword, .startOfScope, .endOfScope:
+                return false
+            default:
+                break
+            }
+            i += 1
         }
-        
-        // Use parseClosureArguments to properly parse the closure structure
-        guard let closureArgs = parseClosureArguments(at: closureStartIndex) else {
-            return false
-        }
-        
-        // If there are no arguments, return false
-        guard !closureArgs.argumentIndices.isEmpty else {
-            return false
-        }
-        
-        // Determine the start of the arguments area (after any capture list)
-        let argumentsStart: Int
-        if let captureListRange = closureArgs.captureListRange {
-            argumentsStart = captureListRange.upperBound
-        } else {
-            argumentsStart = closureStartIndex
-        }
-        
-        // Check if we're between the arguments start and the 'in' keyword
-        return i > argumentsStart && i < closureArgs.inKeywordIndex
+        return false
     }
 
     func isAccessorKeyword(at i: Int, checkKeyword: Bool = true) -> Bool {

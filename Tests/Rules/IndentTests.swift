@@ -485,7 +485,7 @@ final class IndentTests: XCTestCase {
             _ = topView
         }
         """
-        testFormatting(for: input, rule: .indent, exclude: [.trailingCommas])
+        testFormatting(for: input, rule: .indent)
     }
 
     // TODO: add `unwrap` rule to improve this case
@@ -508,7 +508,7 @@ final class IndentTests: XCTestCase {
             return x + y
         }
         """
-        testFormatting(for: input, rule: .indent, exclude: [.propertyTypes, .trailingCommas])
+        testFormatting(for: input, rule: .indent, exclude: [.propertyTypes])
     }
 
     func testIndentWrappedClosureCaptureListWithUnwrappedParameters() {
@@ -521,7 +521,7 @@ final class IndentTests: XCTestCase {
             _ = topView
         }
         """
-        testFormatting(for: input, rule: .indent, exclude: [.trailingCommas, .spaceAroundBrackets, .redundantParens, .spaceAroundParens])
+        testFormatting(for: input, rule: .indent)
     }
 
     func testIndentTrailingClosureArgumentsAfterFunction() {

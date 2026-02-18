@@ -615,7 +615,7 @@ public extension FormatRule {
                             indent += formatter.linewrapIndent(at: i)
                         }
                     } else if (!formatter.options.xcodeIndentation || !formatter.isWrappedDeclaration(at: i)),
-                              !formatter.isInClosureArguments(at: i)
+                              !formatter.isInBareClosureArguments(at: i)
                     {
                         indent += formatter.linewrapIndent(at: i)
                     }
@@ -828,6 +828,30 @@ extension Formatter {
             return true
         }
         return false
+    }
+
+    /// Returns true if the index is within bare (non-parenthesized) closure arguments.
+    /// This is used specifically by the indent rule to prevent continuation indent
+    /// on multiline closure parameter lists like `{ foo,\n bar in }`.
+    func isInBareClosureArguments(at i: Int) -> Bool {
+        guard let closureStartIndex = startOfScope(at: i),
+              tokens[closureStartIndex] == .startOfScope("{"),
+              isStartOfClosure(at: closureStartIndex),
+              let closureArgs = parseClosureArguments(at: closureStartIndex),
+              !closureArgs.argumentIndices.isEmpty
+        else {
+            return false
+        }
+
+        // Only skip continuation indent for bare (non-parenthesized) closure arguments.
+        // Parenthesized arguments already have correct scope-based indentation.
+        if let parametersRange = closureArgs.parametersRange,
+           tokens[parametersRange.lowerBound] == .startOfScope("(")
+        {
+            return false
+        }
+
+        return i > closureStartIndex && i < closureArgs.inKeywordIndex
     }
 
     func stringBodyIndent(at i: Int) -> String {

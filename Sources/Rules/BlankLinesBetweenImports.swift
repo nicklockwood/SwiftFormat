@@ -23,7 +23,13 @@ public extension FormatRule {
                 return
             }
 
-            formatter.replaceTokens(in: endOfLine ..< nextImportIndex, with: formatter.linebreakToken(for: currentImportIndex + 1))
+            // Preserve indentation at the start of the next import line
+            let nextLineIndent = formatter.currentIndentForLine(at: nextImportIndex)
+            var replacementTokens = [formatter.linebreakToken(for: currentImportIndex + 1)]
+            if !nextLineIndent.isEmpty {
+                replacementTokens.append(.space(nextLineIndent))
+            }
+            formatter.replaceTokens(in: endOfLine ..< nextImportIndex, with: replacementTokens)
         }
     } examples: {
         """

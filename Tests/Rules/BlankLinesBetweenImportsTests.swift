@@ -72,4 +72,38 @@ final class BlankLinesBetweenImportsTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .blankLinesBetweenImports)
     }
+
+    func testBlankLinesBetweenImportsPreservesIndentation() {
+        let input = """
+        // swiftformat:disable indent
+
+        import UIKit
+
+        #if DEBUG && canImport(SwiftUI)
+          import ClientModels
+
+          import MediaInterfaceFeature
+          import SwiftUI
+
+        #endif
+
+        // swiftformat:enable indent
+        """
+        let output = """
+        // swiftformat:disable indent
+
+        import UIKit
+
+        #if DEBUG && canImport(SwiftUI)
+          import ClientModels
+          import MediaInterfaceFeature
+          import SwiftUI
+
+        #endif
+
+        // swiftformat:enable indent
+        """
+        testFormatting(for: input, output, rule: .blankLinesBetweenImports,
+                       exclude: [.indent])
+    }
 }

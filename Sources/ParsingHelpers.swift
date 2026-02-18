@@ -772,32 +772,18 @@ extension Formatter {
     }
 
     func isInClosureArguments(at i: Int) -> Bool {
-        var i = i
-        while let token = token(at: i) {
-            switch token {
-            case .keyword("in"), .keyword("throws"), .keyword("rethrows"), .identifier("async"):
-                guard let scopeIndex = index(of: .startOfScope, before: i, if: {
-                    $0 == .startOfScope("{")
-                }), isStartOfClosure(at: scopeIndex) else {
+        // Find the enclosing `{` scope, walking past any nested scopes
+        var scopeStart = i
+        while let startIndex = startOfScope(at: scopeStart) {
+            if tokens[startIndex] == .startOfScope("{") {
+                guard isStartOfClosure(at: startIndex),
+                      let closureArgs = parseClosureArguments(at: startIndex)
+                else {
                     return false
                 }
-                if token != .keyword("in"),
-                   let arrowIndex = index(of: .operator("->", .infix), after: i),
-                   next(.keyword, after: arrowIndex) != .keyword("in")
-                {
-                    return false
-                }
-                return true
-            case .startOfScope("("), .startOfScope("["), .startOfScope("<"),
-                 .endOfScope(")"), .endOfScope("]"), .endOfScope(">"),
-                 .keyword where token.isAttribute || token.isMacro, _ where token.isComment:
-                break
-            case .keyword, .startOfScope, .endOfScope:
-                return false
-            default:
-                break
+                return i > startIndex && i <= closureArgs.inKeywordIndex
             }
-            i += 1
+            scopeStart = startIndex
         }
         return false
     }
@@ -2802,6 +2788,15 @@ extension Formatter {
         
         var currentIndex = closureStartIndex
         
+        // Check for global actor like @MainActor (can appear before capture list)
+        var globalActorIndex: Int?
+        if let nextToken = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex),
+           tokens[nextToken].isAttribute
+        {
+            globalActorIndex = nextToken
+            currentIndex = nextToken
+        }
+        
         // Parse optional capture list [weak self, unowned bar]
         var captureListRange: ClosedRange<Int>?
         if let firstToken = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex),
@@ -2812,9 +2807,9 @@ extension Formatter {
             currentIndex = captureListEnd
         }
         
-        // Check for global actor like @MainActor
-        var globalActorIndex: Int?
-        if let nextToken = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex),
+        // Check for global actor after capture list (if not found before)
+        if globalActorIndex == nil,
+           let nextToken = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex),
            tokens[nextToken].isAttribute
         {
             globalActorIndex = nextToken
@@ -2859,14 +2854,35 @@ extension Formatter {
             
             currentIndex = paramsEnd
             
-            // Check for return type like -> Int
-            if let arrowIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex),
-               tokens[arrowIndex] == .operator("->", .infix),
-               let returnTypeStart = index(of: .nonSpaceOrCommentOrLinebreak, after: arrowIndex),
-               let returnType = parseType(at: returnTypeStart)
-            {
-                returnTypeRange = arrowIndex ... returnType.range.upperBound
-                currentIndex = returnType.range.upperBound
+            // Skip past throws/rethrows/async keywords and return type
+            if let nextTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex) {
+                var idx = nextTokenIndex
+                // Skip throws/rethrows/async (including typed throws like throws(Foo))
+                while [.keyword("throws"), .keyword("rethrows"), .identifier("async")].contains(tokens[idx]) {
+                    // Handle typed throws: throws(ErrorType)
+                    if let parenStart = index(of: .nonSpaceOrCommentOrLinebreak, after: idx),
+                       tokens[parenStart] == .startOfScope("("),
+                       let parenEnd = endOfScope(at: parenStart),
+                       let next = index(of: .nonSpaceOrCommentOrLinebreak, after: parenEnd)
+                    {
+                        idx = next
+                    } else if let next = index(of: .nonSpaceOrCommentOrLinebreak, after: idx) {
+                        idx = next
+                    } else {
+                        break
+                    }
+                }
+                // Skip return type (-> Type)
+                if tokens[idx] == .operator("->", .infix),
+                   let returnTypeStart = index(of: .nonSpaceOrCommentOrLinebreak, after: idx),
+                   let returnType = parseType(at: returnTypeStart)
+                {
+                    returnTypeRange = nextTokenIndex ... returnType.range.upperBound
+                    currentIndex = returnType.range.upperBound
+                } else if idx != nextTokenIndex {
+                    // Had throws/rethrows/async keywords - advance past them
+                    currentIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: idx) ?? currentIndex
+                }
             }
         }
         // Case 2: Bare identifiers like { foo, bar in }

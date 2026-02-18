@@ -830,28 +830,29 @@ extension Formatter {
         return false
     }
 
-    /// Returns true if the index is within bare (non-parenthesized) closure arguments.
-    /// This is used specifically by the indent rule to prevent continuation indent
-    /// on multiline closure parameter lists like `{ foo,\n bar in }`.
+    /// Returns true if the index is within a bare (non-parenthesized) closure
+    /// parameter list. This prevents continuation indent for multiline bare
+    /// closure params like `{ foo,\n bar in }`, while preserving it for
+    /// throws/return type declarations and parenthesized parameter lists.
     func isInBareClosureArguments(at i: Int) -> Bool {
-        guard let closureStartIndex = startOfScope(at: i),
-              tokens[closureStartIndex] == .startOfScope("{"),
-              isStartOfClosure(at: closureStartIndex),
-              let closureArgs = parseClosureArguments(at: closureStartIndex),
-              !closureArgs.argumentIndices.isEmpty
-        else {
-            return false
+        // Walk back to find the enclosing `{` scope
+        var scopeStart = i
+        while let startIndex = startOfScope(at: scopeStart) {
+            if tokens[startIndex] == .startOfScope("{") {
+                guard isStartOfClosure(at: startIndex),
+                      let closureArgs = parseClosureArguments(at: startIndex),
+                      let parametersRange = closureArgs.parametersRange,
+                      // Only bare (non-parenthesized) parameters need this fix.
+                      // Parenthesized parameters already have correct scope-based indentation.
+                      tokens[parametersRange.lowerBound] != .startOfScope("(")
+                else {
+                    return false
+                }
+                return i > startIndex && i <= parametersRange.upperBound
+            }
+            scopeStart = startIndex
         }
-
-        // Only skip continuation indent for bare (non-parenthesized) closure arguments.
-        // Parenthesized arguments already have correct scope-based indentation.
-        if let parametersRange = closureArgs.parametersRange,
-           tokens[parametersRange.lowerBound] == .startOfScope("(")
-        {
-            return false
-        }
-
-        return i > closureStartIndex && i < closureArgs.inKeywordIndex
+        return false
     }
 
     func stringBodyIndent(at i: Int) -> String {

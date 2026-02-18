@@ -3439,4 +3439,23 @@ final class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(closureArgs.argumentIndices.count, 1)
         XCTAssertEqual(formatter.tokens[closureArgs.inKeywordIndex], .keyword("in"))
     }
+
+    func testParseClosureArgumentsThrowsReturnType() {
+        let input = "foo { (x: Int, y: Int) throws -> Int in x + y }"
+        let formatter = Formatter(tokenize(input))
+        
+        guard let braceIndex = formatter.index(of: .startOfScope("{"), after: -1),
+              let closureArgs = formatter.parseClosureArguments(at: braceIndex)
+        else {
+            XCTFail("Failed to parse closure arguments")
+            return
+        }
+        
+        XCTAssertNil(closureArgs.captureListRange)
+        XCTAssertNil(closureArgs.globalActorIndex)
+        XCTAssertNotNil(closureArgs.parametersRange)
+        XCTAssertNotNil(closureArgs.returnTypeRange)
+        XCTAssertEqual(closureArgs.argumentIndices.count, 2)
+        XCTAssertEqual(formatter.tokens[closureArgs.inKeywordIndex], .keyword("in"))
+    }
 }

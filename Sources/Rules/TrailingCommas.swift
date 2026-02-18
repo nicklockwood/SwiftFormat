@@ -103,8 +103,8 @@ public extension FormatRule {
                         }
                     }
 
-                    // There is also a bug in Swift 6.2 where closure tuple return types don't support trailing commas.
-                    if formatter.options.swiftVersion == "6.2",
+                    // In Swift 6.2 and earlier, closure tuple return types don't support trailing commas.
+                    if formatter.options.swiftVersion < "6.3",
                        let tokenBeforeStartOfScope = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope),
                        formatter.tokens[tokenBeforeStartOfScope] == .operator("->", .infix),
                        formatter.isInClosureArguments(at: tokenBeforeStartOfScope)

@@ -2511,7 +2511,7 @@ final class TrailingCommasTests: XCTestCase {
     }
 
     func testTrailingCommasNotAddedToClosureTupleReturnType() {
-        // Trailing commas are unexpectedly not allowed here in Swift 6.2
+        // Trailing commas are not supported in closure return types in Swift 6.2 and earlier
         let input = """
         let closure = { () -> (
             foo: String,
@@ -2546,6 +2546,85 @@ final class TrailingCommasTests: XCTestCase {
 
         let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.2")
         testFormatting(for: input, output, rule: .trailingCommas, options: options, exclude: [.typeSugar, .propertyTypes])
+    }
+
+    func testTrailingCommaInClosureArgsButNotReturnType() {
+        // Trailing commas are allowed in closure arguments but not in closure return types
+        let input = """
+        let closure1 = { (
+            foo: String,
+            bar: String
+        ) in
+            print(foo, bar)
+        }
+
+        let closure2 = { () -> (
+            foo: String,
+            bar: String
+        ) in
+            return (foo: "foo", bar: "bar")
+        }
+        """
+
+        let output = """
+        let closure1 = { (
+            foo: String,
+            bar: String,
+        ) in
+            print(foo, bar)
+        }
+
+        let closure2 = { () -> (
+            foo: String,
+            bar: String
+        ) in
+            return (foo: "foo", bar: "bar")
+        }
+        """
+
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.2")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options, exclude: [.typeSugar, .propertyTypes])
+    }
+
+    func testTrailingCommaNotAddedToClosureReturnTypeWithArgs() {
+        let input = """
+        let closure = { (
+            arg: String
+        ) -> (
+            foo: String,
+            bar: String
+        ) in
+            return (foo: arg, bar: arg)
+        }
+        """
+
+        let output = """
+        let closure = { (
+            arg: String,
+        ) -> (
+            foo: String,
+            bar: String
+        ) in
+            return (foo: arg, bar: arg)
+        }
+        """
+
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.2")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options, exclude: [.typeSugar, .propertyTypes])
+    }
+
+    func testTrailingCommaNotAddedToClosureReturnTypeWithBareArgs() {
+        let input = """
+        let closure = { foo, bar -> (
+            foo: String,
+            bar: String
+        ) in
+            (foo: foo, bar: bar)
+        }
+        """
+
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.2")
+        testFormatting(for: input, rule: .trailingCommas, options: options, exclude: [.typeSugar, .propertyTypes])
     }
 
     func testTrailingCommasAddedToClosureTupleReturnTypeSwift6_3() {

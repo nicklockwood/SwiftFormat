@@ -1001,6 +1001,96 @@ final class CommandLineTests: XCTestCase {
         }
     }
 
+    func testStdinPathWithNonExistingFile() throws {
+        var output = [String]()
+        CLI.print = { message, type in
+            switch type {
+            case .raw, .content:
+                output.append(message)
+            case .error, .warning:
+                XCTFail(message)
+            case .info, .success:
+                break
+            }
+        }
+        var readCount = 0
+        CLI.readLine = {
+            readCount += 1
+            switch readCount {
+            case 1:
+                return "func foo()\n"
+            case 2:
+                return "{\n"
+            case 3:
+                return "bar()\n"
+            case 4:
+                return "}"
+            default:
+                return nil
+            }
+        }
+
+        // Use a path that doesn't exist
+        let nonExistingPath = "/tmp/deleted_file_\(UUID().uuidString).swift"
+
+        _ = processArguments([
+            "",
+            "stdin",
+            "--stdin-path", nonExistingPath,
+        ], in: "")
+
+        // Should still format the input, despite file not existing
+        XCTAssertEqual(output, ["""
+        func foo() {
+            bar()
+        }
+
+        """])
+    }
+
+    func testStdinPathWithNonExistingFileExcluded() throws {
+        var output = [String]()
+        CLI.print = { message, type in
+            switch type {
+            case .raw, .content:
+                output.append(message)
+            case .error, .warning:
+                XCTFail(message)
+            case .info, .success:
+                break
+            }
+        }
+        var readCount = 0
+        CLI.readLine = {
+            readCount += 1
+            switch readCount {
+            case 1:
+                return "func foo()\n"
+            case 2:
+                return "{\n"
+            case 3:
+                return "bar()\n"
+            case 4:
+                return "}"
+            default:
+                return nil
+            }
+        }
+
+        // Use a path that doesn't exist but matches exclusion pattern
+        let nonExistingPath = "/tmp/excluded/deleted_file.swift"
+
+        _ = processArguments([
+            "",
+            "stdin",
+            "--stdin-path", nonExistingPath,
+            "--exclude", "/tmp/excluded",
+        ], in: "")
+
+        // Should NOT format because the path is excluded
+        XCTAssertEqual(output, ["func foo()\n{\nbar()\n}"])
+    }
+
     func testSwiftVersionFileWithNoConfigFile() throws {
         var errors = [String]()
 

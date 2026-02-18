@@ -4651,4 +4651,22 @@ final class RedundantSelfTests: XCTestCase {
         let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, rule: .redundantSelf, options: options, exclude: [.blankLinesAfterGuardStatements])
     }
+
+    func testSelfNotRemovedInGuardElseWhenParamShadowsProperty() {
+        let input = """
+        class Foo {
+            var foo: String?
+
+            func setFoo(_ foo: String?) {
+                guard let foo else {
+                    self.foo = nil
+                    return
+                }
+
+                self.foo = foo
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantSelf, exclude: [.blankLinesAfterGuardStatements])
+    }
 }

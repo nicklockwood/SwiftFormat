@@ -395,6 +395,38 @@ final class TestSuiteAccessControlTests: XCTestCase {
         testFormatting(for: input, output, rule: .testSuiteAccessControl, exclude: [.unusedArguments, .validateTestCases])
     }
 
+    func testSwiftTestingPrivateTestFunctionsAreMadeInternal() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test private func featureWorks() {
+                #expect(true)
+            }
+
+            @Test fileprivate func anotherFeature() {
+                #expect(true)
+            }
+        }
+        """
+
+        let output = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test func featureWorks() {
+                #expect(true)
+            }
+
+            @Test func anotherFeature() {
+                #expect(true)
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: .testSuiteAccessControl, exclude: [.unusedArguments, .validateTestCases])
+    }
+
     // MARK: Base Classes
 
     func testDoesNotApplyToBaseTestClasses() {

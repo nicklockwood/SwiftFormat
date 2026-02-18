@@ -22,7 +22,7 @@ public extension FormatRule {
         //    and it's more difficult to track the usage of other declaration
         //    types like `init`, `subscript`, `operator`, etc.
         let allowlist = ["let", "var", "func", "typealias"]
-        let disallowedModifiers = ["override", "@objc", "@IBAction", "@IBSegueAction", "@IBOutlet", "@IBDesignable", "@IBInspectable", "@NSManaged", "@GKInspectable"]
+        let disallowedModifiers = ["override", "@objc", "@IBAction", "@IBSegueAction", "@IBOutlet", "@IBDesignable", "@IBInspectable", "@NSManaged", "@GKInspectable", "@Test"]
 
         // Collect all of the `private` or `fileprivate` declarations in the file
         var privateDeclarations: [Declaration] = []

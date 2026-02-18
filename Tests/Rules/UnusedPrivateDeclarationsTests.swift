@@ -392,4 +392,30 @@ final class UnusedPrivateDeclarationsTests: XCTestCase {
         """
         testFormatting(for: input, rule: .unusedPrivateDeclarations)
     }
+
+    func testDoNotRemovePrivateTestFunction() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test private func featureWorks() {
+                #expect(true)
+            }
+        }
+        """
+        testFormatting(for: input, rule: .unusedPrivateDeclarations, exclude: [.testSuiteAccessControl])
+    }
+
+    func testDoNotRemoveFileprivateTestFunction() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test fileprivate func featureWorks() {
+                #expect(true)
+            }
+        }
+        """
+        testFormatting(for: input, rule: .unusedPrivateDeclarations, exclude: [.testSuiteAccessControl])
+    }
 }

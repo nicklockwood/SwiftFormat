@@ -751,6 +751,19 @@ final class FileHeaderTests: XCTestCase {
         let options = FormatOptions(fileHeader: "// Created: {created}", fileInfo: fileInfo)
         XCTAssertThrowsError(try format(input, rules: [.fileHeader], options: options))
     }
+
+    func testFileHeaderWithExistingHeaderAndNoCreationDate() {
+        let input = """
+        // Existing header
+        // Created on 2020-01-01
+
+        let foo = bar
+        """
+        let fileInfo = FileInfo(filePath: "/path/to/test.swift", creationDate: nil)
+        let options = FormatOptions(fileHeader: "// New header\n// Created: {created}", fileInfo: fileInfo)
+        // When creation date is unavailable and template uses {created}, throws error even if file has existing header
+        XCTAssertThrowsError(try format(input, rules: [.fileHeader], options: options))
+    }
 }
 
 private enum TestDateFormat: String {

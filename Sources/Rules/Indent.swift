@@ -839,74 +839,38 @@ extension Formatter {
             return false
         }
         
-        var searchStartIndex = closureStartIndex
+        // Use parseClosureArguments to properly parse the closure structure
+        guard let closureArgs = parseClosureArguments(at: closureStartIndex) else {
+            return false
+        }
         
-        // Check if there's a capture list [weak self] at the start
-        if let firstNonSpace = index(of: .nonSpaceOrCommentOrLinebreak, after: closureStartIndex),
-           tokens[firstNonSpace] == .startOfScope("["),
-           let captureListEnd = endOfScope(at: firstNonSpace)
+        // We're in the parameter list if we're before the 'in' keyword
+        guard i < closureArgs.inKeywordIndex else {
+            return false
+        }
+        
+        // Check if we're in the capture list
+        if let captureListRange = closureArgs.captureListRange,
+           i > captureListRange.lowerBound && i < captureListRange.upperBound
         {
-            // If we're inside the capture list, we're in the parameter list
-            if i > firstNonSpace && i < captureListEnd {
-                return true
-            }
-            // After capture list, continue looking for parameters
-            searchStartIndex = captureListEnd
+            return true
         }
         
-        // Find the first 'in' keyword at the top level of the closure
-        // (not nested inside any sub-scopes like for-in loops)
-        guard let closureEndIndex = endOfScope(at: closureStartIndex) else {
-            return false
+        // Check if we're in the parameters range
+        if let parametersRange = closureArgs.parametersRange {
+            return i > parametersRange.lowerBound && i < parametersRange.upperBound
         }
         
-        var inKeywordIndex: Int?
-        var currentIndex = searchStartIndex + 1
-        
-        while currentIndex < closureEndIndex {
-            let token = tokens[currentIndex]
-            
-            // Skip over any nested scopes
-            if token.isStartOfScope {
-                if let endOfNestedScope = endOfScope(at: currentIndex) {
-                    currentIndex = endOfNestedScope + 1
-                    continue
-                }
-            }
-            
-            // Found the 'in' keyword at the top level
-            if token == .keyword("in") {
-                inKeywordIndex = currentIndex
-                break
-            }
-            
-            currentIndex += 1
-        }
-        
-        guard let inKeywordIndex = inKeywordIndex else {
-            return false
-        }
-        
-        // We only care about positions before the 'in' keyword
-        guard i < inKeywordIndex else {
-            return false
-        }
-        
-        // Check if there's a parameter list with parens after any capture list
-        if let firstNonSpace = index(of: .nonSpaceOrCommentOrLinebreak, after: searchStartIndex),
-           tokens[firstNonSpace] == .startOfScope("("),
-           let paramsEnd = endOfScope(at: firstNonSpace)
+        // If there's no parameters range but we have a capture list, check if we're after it
+        // This handles cases like { [weak self] param1, param2 in } where params are bare identifiers
+        if closureArgs.captureListRange != nil,
+           let captureEnd = closureArgs.captureListRange?.upperBound
         {
-            // We're in the parameter list if between the parens
-            if i > firstNonSpace && i < paramsEnd {
-                return true
-            }
-            // After the closing paren but before 'in', we're NOT in param list
-            return false
+            return i > captureEnd && i < closureArgs.inKeywordIndex
         }
         
-        // No parens, so parameters are bare identifiers between search start and 'in'
-        return i > searchStartIndex && i < inKeywordIndex
+        // For bare identifiers without capture list
+        return i > closureStartIndex && i < closureArgs.inKeywordIndex
     }
 
     func stringBodyIndent(at i: Int) -> String {

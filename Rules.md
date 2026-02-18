@@ -3632,11 +3632,12 @@ set to 4.2 or above.
 
 ## swiftTestingTestCaseNames
 
-In Swift Testing, don't prefix @Test methods with 'test', and use raw identifier test function names.
+Format Swift Testing @Test and @Suite names.
 
 Option | Description
 --- | ---
-`--test-case-name-format` | Swift Testing test case name format: "preserve" or "raw-identifiers" (default)
+`--test-case-name-format` | Swift Testing test case name format: "preserve", "raw-identifiers" (default) or "standard-identifiers"
+`--suite-name-format` | Swift Testing suite name format: "preserve", "raw-identifiers" or "standard-identifiers" (default)
 
 <details>
 <summary>Examples</summary>

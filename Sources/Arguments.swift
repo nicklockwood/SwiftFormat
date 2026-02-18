@@ -370,14 +370,15 @@ func curryParseRules(config: [String: String]) -> (String) throws -> [String] {
 
 /// Parse single file path, disallowing globs or commas
 func parsePath(_ path: String, for argument: String, in directory: String) throws -> URL {
-    // Always validate that path doesn't contain commas or globs
-    if path.contains(",") {
-        throw FormatError.options("\(argument) argument does not support multiple paths")
-    }
-    if pathContainsGlobSyntax(path) {
-        throw FormatError.options("\(argument) path cannot contain wildcards")
-    }
     let expandedPath = expandPath(path, in: directory)
+    if !FileManager.default.fileExists(atPath: expandedPath.path) {
+        if path.contains(",") {
+            throw FormatError.options("\(argument) argument does not support multiple paths")
+        }
+        if pathContainsGlobSyntax(path) {
+            throw FormatError.options("\(argument) path cannot contain wildcards")
+        }
+    }
     return expandedPath
 }
 

@@ -615,7 +615,7 @@ public extension FormatRule {
                             indent += formatter.linewrapIndent(at: i)
                         }
                     } else if (!formatter.options.xcodeIndentation || !formatter.isWrappedDeclaration(at: i)),
-                              !formatter.isInBareClosureArguments(at: i)
+                              !formatter.isInClosureArguments(at: i, bareParametersOnly: true)
                     {
                         indent += formatter.linewrapIndent(at: i)
                     }
@@ -826,31 +826,6 @@ extension Formatter {
            next(.nonSpaceOrComment, after: commaIndex)?.isLinebreak == true
         {
             return true
-        }
-        return false
-    }
-
-    /// Returns true if the index is within a bare (non-parenthesized) closure
-    /// parameter list. This prevents continuation indent for multiline bare
-    /// closure params like `{ foo,\n bar in }`, while preserving it for
-    /// throws/return type declarations and parenthesized parameter lists.
-    func isInBareClosureArguments(at i: Int) -> Bool {
-        // Walk back to find the enclosing `{` scope
-        var scopeStart = i
-        while let startIndex = startOfScope(at: scopeStart) {
-            if tokens[startIndex] == .startOfScope("{") {
-                guard isStartOfClosure(at: startIndex),
-                      let closureArgs = parseClosureArguments(at: startIndex),
-                      let parametersRange = closureArgs.parametersRange,
-                      // Only bare (non-parenthesized) parameters need this fix.
-                      // Parenthesized parameters already have correct scope-based indentation.
-                      tokens[parametersRange.lowerBound] != .startOfScope("(")
-                else {
-                    return false
-                }
-                return i > startIndex && i <= parametersRange.upperBound
-            }
-            scopeStart = startIndex
         }
         return false
     }

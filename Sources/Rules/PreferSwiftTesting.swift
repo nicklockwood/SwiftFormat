@@ -31,6 +31,16 @@ public extension FormatRule {
               !xcTestSuites.contains(where: { $0.hasUnsupportedXCTestFunctionality() })
         else { return }
 
+        // Find extensions of the test case types in the same file
+        let xcTestSuiteNames = Set(xcTestSuites.compactMap(\.name))
+        let xcTestSuiteExtensions = declarations
+            .compactMap(\.asTypeDeclaration)
+            .filter { $0.keyword == "extension" && xcTestSuiteNames.contains($0.name ?? "") }
+
+        // Check if any extension has unsupported functionality
+        guard !xcTestSuiteExtensions.contains(where: { $0.hasUnsupportedXCTestFunctionality() })
+        else { return }
+
         // Replace `import XCTest` with `import Testing`.
         // XCTest also exports Foundation, so add an explicit Foundation import for compatibility.
         formatter.addImports(["Testing", "Foundation"])
@@ -43,7 +53,12 @@ public extension FormatRule {
         }
 
         for xcTestSuite in xcTestSuites {
-            xcTestSuite.convertXCTestCaseToSwiftTestingSuite()
+            xcTestSuite.convertToSwiftTestingSuite()
+        }
+
+        // Also convert test methods in extensions of the test case types
+        for xcTestSuiteExtension in xcTestSuiteExtensions {
+            xcTestSuiteExtension.convertToSwiftTestingSuite()
         }
 
         formatter.forEach(.identifier) { identifierIndex, token in
@@ -149,20 +164,27 @@ extension TypeDeclaration {
         return false
     }
 
-    /// Converts this XCTestCase implementation to a Swift Testing test suite
-    func convertXCTestCaseToSwiftTestingSuite() {
-        // Remove the XCTestCase conformance
-        if let xcTestCaseConformance = conformances.first(where: { $0.conformance.string == "XCTestCase" }) {
-            formatter.removeConformance(at: xcTestCaseConformance.index)
-        }
+    /// Converts this XCTestCase implementation to a Swift Testing test suite.
+    /// For non-extension types, removes XCTestCase conformance and adds suite attributes.
+    /// For extensions, only converts test methods without modifying the type declaration.
+    func convertToSwiftTestingSuite() {
+        // Only remove conformance and add attributes for non-extension declarations
+        let isExtension = keyword == "extension"
+        
+        if !isExtension {
+            // Remove the XCTestCase conformance
+            if let xcTestCaseConformance = conformances.first(where: { $0.conformance.string == "XCTestCase" }) {
+                formatter.removeConformance(at: xcTestCaseConformance.index)
+            }
 
-        // Allow the user to specify additional attributes to add to the new test suite,
-        // like `@MainActor`, `@Suite(.serialized)`, etc.
-        let attributesToAdd = formatter.options.defaultTestSuiteAttributes.joined(separator: " ")
-        if !attributesToAdd.isEmpty {
-            let startOfModifiers = formatter.startOfModifiers(at: keywordIndex, includingAttributes: true)
-            let attributesWithNewline = attributesToAdd + "\n"
-            formatter.insert(tokenize(attributesWithNewline), at: startOfModifiers)
+            // Allow the user to specify additional attributes to add to the new test suite,
+            // like `@MainActor`, `@Suite(.serialized)`, etc.
+            let attributesToAdd = formatter.options.defaultTestSuiteAttributes.joined(separator: " ")
+            if !attributesToAdd.isEmpty {
+                let startOfModifiers = formatter.startOfModifiers(at: keywordIndex, includingAttributes: true)
+                let attributesWithNewline = attributesToAdd + "\n"
+                formatter.insert(tokenize(attributesWithNewline), at: startOfModifiers)
+            }
         }
 
         let instanceMethods = body.filter { $0.keyword == "func" && !$0.modifiers.contains("static") }

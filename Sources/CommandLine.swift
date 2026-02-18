@@ -580,7 +580,7 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
             if !useStdin {
                 print("warning: --stdin-path option only applies when using stdin", as: .warning)
             }
-            let stdinURL = try parsePath(stdinPath, for: "stdin-path", in: directory, allowNonExisting: true)
+            let stdinURL = try parsePath(stdinPath, for: "stdin-path", in: directory)
             // Try to get resource values, but if file doesn't exist, just use the path
             let resourceValues = try? getResourceValues(
                 for: stdinURL.standardizedFileURL,

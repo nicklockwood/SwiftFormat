@@ -3323,7 +3323,7 @@ final class ParsingHelpersTests: XCTestCase {
         }
         
         XCTAssertNil(closureArgs.captureListRange)
-        XCTAssertNil(closureArgs.globalActorRange)
+        XCTAssertNil(closureArgs.globalActorIndex)
         XCTAssertNil(closureArgs.returnTypeRange)
         XCTAssertEqual(closureArgs.argumentIndices.count, 2)
         XCTAssertEqual(formatter.tokens[closureArgs.inKeywordIndex], .keyword("in"))
@@ -3341,7 +3341,7 @@ final class ParsingHelpersTests: XCTestCase {
         }
         
         XCTAssertNil(closureArgs.captureListRange)
-        XCTAssertNil(closureArgs.globalActorRange)
+        XCTAssertNil(closureArgs.globalActorIndex)
         XCTAssertNotNil(closureArgs.parametersRange)
         XCTAssertNil(closureArgs.returnTypeRange)
         XCTAssertEqual(closureArgs.argumentIndices.count, 2)
@@ -3360,7 +3360,7 @@ final class ParsingHelpersTests: XCTestCase {
         }
         
         XCTAssertNil(closureArgs.captureListRange)
-        XCTAssertNil(closureArgs.globalActorRange)
+        XCTAssertNil(closureArgs.globalActorIndex)
         XCTAssertNotNil(closureArgs.parametersRange)
         XCTAssertNotNil(closureArgs.returnTypeRange)
         XCTAssertEqual(closureArgs.argumentIndices.count, 2)
@@ -3379,7 +3379,7 @@ final class ParsingHelpersTests: XCTestCase {
         }
         
         XCTAssertNotNil(closureArgs.captureListRange)
-        XCTAssertNil(closureArgs.globalActorRange)
+        XCTAssertNil(closureArgs.globalActorIndex)
         XCTAssertNil(closureArgs.returnTypeRange)
         XCTAssertEqual(closureArgs.argumentIndices.count, 0)
         XCTAssertEqual(formatter.tokens[closureArgs.inKeywordIndex], .keyword("in"))
@@ -3397,7 +3397,7 @@ final class ParsingHelpersTests: XCTestCase {
         }
         
         XCTAssertNotNil(closureArgs.captureListRange)
-        XCTAssertNil(closureArgs.globalActorRange)
+        XCTAssertNil(closureArgs.globalActorIndex)
         XCTAssertNil(closureArgs.returnTypeRange)
         XCTAssertEqual(closureArgs.argumentIndices.count, 1)
         XCTAssertEqual(formatter.tokens[closureArgs.inKeywordIndex], .keyword("in"))
@@ -3415,7 +3415,7 @@ final class ParsingHelpersTests: XCTestCase {
         }
         
         XCTAssertNil(closureArgs.captureListRange)
-        XCTAssertNotNil(closureArgs.globalActorRange)
+        XCTAssertNotNil(closureArgs.globalActorIndex)
         XCTAssertNil(closureArgs.returnTypeRange)
         XCTAssertEqual(closureArgs.argumentIndices.count, 0)
         XCTAssertEqual(formatter.tokens[closureArgs.inKeywordIndex], .keyword("in"))
@@ -3433,7 +3433,7 @@ final class ParsingHelpersTests: XCTestCase {
         }
         
         XCTAssertNil(closureArgs.captureListRange)
-        XCTAssertNotNil(closureArgs.globalActorRange)
+        XCTAssertNotNil(closureArgs.globalActorIndex)
         XCTAssertNotNil(closureArgs.parametersRange)
         XCTAssertNil(closureArgs.returnTypeRange)
         XCTAssertEqual(closureArgs.argumentIndices.count, 1)

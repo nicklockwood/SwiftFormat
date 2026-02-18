@@ -2783,8 +2783,8 @@ extension Formatter {
     struct ClosureArguments {
         /// The range of the capture list `[...]` if present
         let captureListRange: ClosedRange<Int>?
-        /// The range of any global actor attribute like `@MainActor`
-        let globalActorRange: ClosedRange<Int>?
+        /// The index of any global actor attribute like `@MainActor`
+        let globalActorIndex: Int?
         /// The range of the parameters (either bare identifiers or parenthesized list)
         let parametersRange: ClosedRange<Int>?
         /// The indices of individual argument identifiers
@@ -2813,11 +2813,11 @@ extension Formatter {
         }
         
         // Check for global actor like @MainActor
-        var globalActorRange: ClosedRange<Int>?
+        var globalActorIndex: Int?
         if let nextToken = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex),
            tokens[nextToken].isAttribute
         {
-            globalActorRange = nextToken ... nextToken
+            globalActorIndex = nextToken
             currentIndex = nextToken
         }
         
@@ -2921,7 +2921,7 @@ extension Formatter {
         
         return ClosureArguments(
             captureListRange: captureListRange,
-            globalActorRange: globalActorRange,
+            globalActorIndex: globalActorIndex,
             parametersRange: parametersRange,
             argumentIndices: argumentIndices,
             returnTypeRange: returnTypeRange,

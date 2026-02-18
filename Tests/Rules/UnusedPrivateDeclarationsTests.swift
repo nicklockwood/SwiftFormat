@@ -403,7 +403,7 @@ final class UnusedPrivateDeclarationsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .unusedPrivateDeclarations)
+        testFormatting(for: input, rule: .unusedPrivateDeclarations, exclude: [.testSuiteAccessControl])
     }
 
     func testDoNotRemoveFileprivateTestFunction() {
@@ -416,6 +416,6 @@ final class UnusedPrivateDeclarationsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .unusedPrivateDeclarations)
+        testFormatting(for: input, rule: .unusedPrivateDeclarations, exclude: [.testSuiteAccessControl])
     }
 }

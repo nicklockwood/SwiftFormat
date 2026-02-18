@@ -233,4 +233,29 @@ final class RedundantSwiftTestingSuiteTests: XCTestCase {
         """
         testFormatting(for: input, rule: .redundantSwiftTestingSuite)
     }
+
+    func testRemoveSuiteWithDocComment() {
+        let input = """
+        import Testing
+
+        /// This is a test suite
+        @Suite
+        struct MyTests {
+            @Test func feature() {
+                #expect(true)
+            }
+        }
+        """
+        let output = """
+        import Testing
+
+        /// This is a test suite
+        struct MyTests {
+            @Test func feature() {
+                #expect(true)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantSwiftTestingSuite)
+    }
 }

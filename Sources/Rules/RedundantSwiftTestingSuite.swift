@@ -37,7 +37,44 @@ public extension FormatRule {
             }
 
             // Remove the @Suite attribute
-            formatter.removeSuiteAttribute(at: attrIndex)
+            var attributeEndIndex = attrIndex
+
+            // Check if there are parentheses after @Suite
+            if let nextTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: attrIndex),
+               formatter.tokens[nextTokenIndex] == .startOfScope("("),
+               let endOfScope = formatter.endOfScope(at: nextTokenIndex)
+            {
+                attributeEndIndex = endOfScope
+            }
+
+            var startIndex = attrIndex
+            var endIndex = attributeEndIndex
+
+            // Check if there's a leading space (between another attribute and this one)
+            let hasLeadingSpace = attrIndex > 0 && formatter.tokens[attrIndex - 1].isSpace
+            let leadingSpaceIsAfterAttribute = hasLeadingSpace && attrIndex > 1 && !formatter.tokens[attrIndex - 2].isLinebreak
+
+            let nextNonSpaceIndex = formatter.index(of: .nonSpace, after: attributeEndIndex)
+            let hasTrailingLinebreak = nextNonSpaceIndex != nil && formatter.tokens[nextNonSpaceIndex!].isLinebreak
+            let hasTrailingSpace = attributeEndIndex + 1 < formatter.tokens.count && formatter.tokens[attributeEndIndex + 1].isSpace
+
+            if leadingSpaceIsAfterAttribute {
+                // Remove the space before @Suite (space between attributes)
+                startIndex = attrIndex - 1
+                // Don't remove trailing linebreak - preserve the line structure
+                // Don't remove trailing space - it separates from the next token
+            } else if hasTrailingLinebreak, let nextIndex = nextNonSpaceIndex {
+                // @Suite is at the start of the line (possibly with indentation)
+                endIndex = nextIndex
+                // Also remove leading indentation
+                if hasLeadingSpace, attrIndex > 1, formatter.tokens[attrIndex - 2].isLinebreak {
+                    startIndex = attrIndex - 1
+                }
+            } else if hasTrailingSpace {
+                endIndex = attributeEndIndex + 1
+            }
+
+            formatter.removeTokens(in: startIndex ... endIndex)
         }
     } examples: {
         """
@@ -67,49 +104,5 @@ public extension FormatRule {
           }
         ```
         """
-    }
-}
-
-extension Formatter {
-    /// Removes a @Suite attribute at the given index, including the trailing linebreak if on its own line
-    func removeSuiteAttribute(at atSuiteIndex: Int) {
-        var attributeEndIndex = atSuiteIndex
-
-        // Check if there are parentheses after @Suite
-        if let nextTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: atSuiteIndex),
-           tokens[nextTokenIndex] == .startOfScope("("),
-           let endOfScope = endOfScope(at: nextTokenIndex)
-        {
-            attributeEndIndex = endOfScope
-        }
-
-        var startIndex = atSuiteIndex
-        var endIndex = attributeEndIndex
-
-        // Check if there's a leading space (between another attribute and this one)
-        let hasLeadingSpace = atSuiteIndex > 0 && tokens[atSuiteIndex - 1].isSpace
-        let leadingSpaceIsAfterAttribute = hasLeadingSpace && atSuiteIndex > 1 && !tokens[atSuiteIndex - 2].isLinebreak
-
-        let nextNonSpaceIndex = index(of: .nonSpace, after: attributeEndIndex)
-        let hasTrailingLinebreak = nextNonSpaceIndex != nil && tokens[nextNonSpaceIndex!].isLinebreak
-        let hasTrailingSpace = attributeEndIndex + 1 < tokens.count && tokens[attributeEndIndex + 1].isSpace
-
-        if leadingSpaceIsAfterAttribute {
-            // Remove the space before @Suite (space between attributes)
-            startIndex = atSuiteIndex - 1
-            // Don't remove trailing linebreak - preserve the line structure
-            // Don't remove trailing space - it separates from the next token
-        } else if hasTrailingLinebreak, let nextIndex = nextNonSpaceIndex {
-            // @Suite is at the start of the line (possibly with indentation)
-            endIndex = nextIndex
-            // Also remove leading indentation
-            if hasLeadingSpace, atSuiteIndex > 1, tokens[atSuiteIndex - 2].isLinebreak {
-                startIndex = atSuiteIndex - 1
-            }
-        } else if hasTrailingSpace {
-            endIndex = attributeEndIndex + 1
-        }
-
-        removeTokens(in: startIndex ... endIndex)
     }
 }

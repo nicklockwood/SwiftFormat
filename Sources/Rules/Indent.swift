@@ -616,6 +616,7 @@ public extension FormatRule {
                         }
                     } else if !formatter.options.xcodeIndentation || !formatter.isWrappedDeclaration(at: i),
                               !formatter.isInClosureArguments(at: i)
+                              || (lineIndex - 1) == scopeStartLineIndexes.last
                     {
                         indent += formatter.linewrapIndent(at: i)
                     }

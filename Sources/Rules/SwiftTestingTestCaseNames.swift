@@ -29,21 +29,23 @@ public extension FormatRule {
         }
 
         let typeKeywords: [String] = ["struct", "class", "actor", "enum"]
-        for typeKeyword in typeKeywords {
-            formatter.forEach(.keyword(typeKeyword)) { keywordIndex, _ in
-                guard formatter.modifiersForDeclaration(at: keywordIndex, contains: "@Suite") else { return }
+        formatter.parseDeclarations().forEachRecursiveDeclaration { declaration in
+            guard typeKeywords.contains(declaration.keyword) else { return }
+            guard declaration.hasModifier("@Suite")
+                || declaration.body?.contains(where: { $0.keyword == "func" && $0.hasModifier("@Test") }) == true
+            else { return }
 
-                switch formatter.options.suiteNameFormat {
-                case .rawIdentifiers:
-                    guard formatter.options.swiftVersion >= "6.2" else { return }
-                    formatter.convertToRawIdentifier(forDeclarationAt: keywordIndex, macroName: "@Suite", upperCamelCase: true)
+            let keywordIndex = declaration.keywordIndex
+            switch formatter.options.suiteNameFormat {
+            case .rawIdentifiers:
+                guard formatter.options.swiftVersion >= "6.2" else { return }
+                formatter.convertToRawIdentifier(forDeclarationAt: keywordIndex, macroName: "@Suite", upperCamelCase: true)
 
-                case .standardIdentifiers:
-                    formatter.convertToStandardIdentifier(forDeclarationAt: keywordIndex, macroName: "@Suite", upperCamelCase: true)
+            case .standardIdentifiers:
+                formatter.convertToStandardIdentifier(forDeclarationAt: keywordIndex, macroName: "@Suite", upperCamelCase: true)
 
-                case .preserve:
-                    break
-                }
+            case .preserve:
+                break
             }
         }
     } examples: {

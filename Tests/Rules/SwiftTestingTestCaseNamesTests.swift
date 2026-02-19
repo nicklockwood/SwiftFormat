@@ -994,4 +994,110 @@ final class SwiftTestingTestCaseNamesTests: XCTestCase {
                        options: FormatOptions(testCaseNameFormat: .preserve, swiftVersion: "6.2"),
                        exclude: [.redundantSwiftTestingSuite])
     }
+
+    // MARK: - Suite without @Suite macro
+
+    func testSuiteWithoutMacroRawIdentifiersConvertsCamelCase() {
+        let input = """
+        import Testing
+
+        struct my_feature_tests {
+            @Test func myTest() {}
+        }
+        """
+
+        let output = """
+        import Testing
+
+        struct `my feature tests` {
+            @Test func myTest() {}
+        }
+        """
+
+        testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(testCaseNameFormat: .preserve,
+                                              suiteNameFormat: .rawIdentifiers,
+                                              swiftVersion: "6.2"))
+    }
+
+    func testSuiteWithoutMacroStandardIdentifiersConvertsRawIdentifier() {
+        let input = """
+        import Testing
+
+        struct `my feature tests` {
+            @Test func myTest() {}
+        }
+        """
+
+        let output = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test func myTest() {}
+        }
+        """
+
+        testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(testCaseNameFormat: .preserve,
+                                              suiteNameFormat: .standardIdentifiers,
+                                              swiftVersion: "6.2"))
+    }
+
+    func testSuiteWithoutMacroPreservesName() {
+        let input = """
+        import Testing
+
+        struct my_feature_tests {
+            @Test func myTest() {}
+        }
+        """
+
+        testFormatting(for: input, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(testCaseNameFormat: .preserve,
+                                              suiteNameFormat: .preserve,
+                                              swiftVersion: "6.2"))
+    }
+
+    func testSuiteWithoutMacroNotRenamedWhenNoTestFunctions() {
+        let input = """
+        import Testing
+
+        struct my_feature_tests {
+            func myHelper() {}
+        }
+        """
+
+        testFormatting(for: input, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(testCaseNameFormat: .preserve,
+                                              suiteNameFormat: .rawIdentifiers,
+                                              swiftVersion: "6.2"))
+    }
+
+    func testNestedSuiteWithoutMacroNotRenamedFromOuterType() {
+        let input = """
+        import Testing
+
+        struct outer_tests {
+            struct inner_tests {
+                @Test func myTest() {}
+            }
+        }
+        """
+
+        let output = """
+        import Testing
+
+        struct outer_tests {
+            struct `inner tests` {
+                @Test func myTest() {}
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(testCaseNameFormat: .preserve,
+                                              suiteNameFormat: .rawIdentifiers,
+                                              swiftVersion: "6.2"),
+                       exclude: [.enumNamespaces])
+    }
 }

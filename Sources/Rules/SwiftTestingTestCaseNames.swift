@@ -31,7 +31,9 @@ public extension FormatRule {
         let typeKeywords: [String] = ["struct", "class", "actor", "enum"]
         for typeKeyword in typeKeywords {
             formatter.forEach(.keyword(typeKeyword)) { keywordIndex, _ in
-                guard formatter.modifiersForDeclaration(at: keywordIndex, contains: "@Suite") else { return }
+                guard formatter.modifiersForDeclaration(at: keywordIndex, contains: "@Suite")
+                    || formatter.typeContainsTestFunction(at: keywordIndex)
+                else { return }
 
                 switch formatter.options.suiteNameFormat {
                 case .rawIdentifiers:
@@ -74,6 +76,31 @@ public extension FormatRule {
 }
 
 extension Formatter {
+    /// Returns true if the type declaration at `typeKeywordIndex` directly contains any `@Test` function declarations.
+    func typeContainsTestFunction(at typeKeywordIndex: Int) -> Bool {
+        guard let bodyStart = index(of: .startOfScope("{"), after: typeKeywordIndex),
+              let bodyEnd = endOfScope(at: bodyStart)
+        else { return false }
+
+        var i = bodyStart + 1
+        while i < bodyEnd {
+            // Skip nested { } scopes (function bodies, inner type bodies, closures, etc.)
+            if tokens[i] == .startOfScope("{"),
+               let scopeEnd = endOfScope(at: i)
+            {
+                i = scopeEnd + 1
+                continue
+            }
+            if tokens[i] == .keyword("func"),
+               modifiersForDeclaration(at: i, contains: "@Test")
+            {
+                return true
+            }
+            i += 1
+        }
+        return false
+    }
+
     /// Converts a declaration name to use a raw identifier (backtick-quoted name with spaces).
     /// If the macro attribute has a display name, uses that as the name and removes it from the attribute.
     /// Otherwise, converts the camelCase/underscore name to a space-separated raw identifier.

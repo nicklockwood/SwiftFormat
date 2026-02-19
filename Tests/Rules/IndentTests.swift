@@ -541,6 +541,37 @@ final class IndentTests: XCTestCase {
         testFormatting(for: input, rule: .indent)
     }
 
+    func testIndentClosureParamsWrappedAfterReturnArrow() {
+        let input = """
+        let closure = { foo, bar ->
+            MyReturnType in
+            return MyReturnType(foo, bar)
+        }
+        """
+        testFormatting(for: input, rule: .indent)
+    }
+
+    func testIndentClosureParamsWrappedBeforeReturnArrow() {
+        let input = """
+        let closure = { foo, bar
+            -> MyReturnType in
+            return MyReturnType(foo, bar)
+        }
+        """
+        testFormatting(for: input, rule: .indent)
+    }
+
+    func testIndentClosureParamsWrappedBeforeReturnArrowAndIn() {
+        let input = """
+        let closure = { foo, bar
+            -> MyReturnType
+            in
+            return MyReturnType(foo, bar)
+        }
+        """
+        testFormatting(for: input, rule: .indent)
+    }
+
     func testIndentTrailingClosureArgumentsAfterFunction() {
         let input = """
         var epoxyViewportLogger = EpoxyViewportLogger(

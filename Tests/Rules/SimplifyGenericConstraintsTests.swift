@@ -502,4 +502,34 @@ final class SimplifyGenericConstraintsTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .simplifyGenericConstraints)
     }
+
+    func testDeduplicateConstraintAlreadyPresentInline() {
+        // Constraint appears both inline and in the where clause; should not duplicate
+        let input = """
+        func test<T: Service>(
+            service: T.Type
+        ) async throws -> String? where T: Service {
+            return nil
+        }
+        """
+        let output = """
+        func test<T: Service>(
+            service: T.Type
+        ) async throws -> String? {
+            return nil
+        }
+        """
+        testFormatting(for: input, output, rule: .simplifyGenericConstraints, exclude: [.unusedArguments])
+    }
+
+    func testDeduplicateDuplicateConstraintsInWhereClause() {
+        // Same constraint listed twice in the where clause; should add only once
+        let input = """
+        func test<T>(_ value: T) where T: Service, T: Service {}
+        """
+        let output = """
+        func test<T: Service>(_ value: T) {}
+        """
+        testFormatting(for: input, output, rule: .simplifyGenericConstraints, exclude: [.unusedArguments])
+    }
 }

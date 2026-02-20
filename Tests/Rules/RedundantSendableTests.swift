@@ -1,14 +1,14 @@
 //
-//  RedundantNonPublicSendableTests.swift
+//  RedundantSendableTests.swift
 //  SwiftFormatTests
 //
-//  Created by Codex on 2/20/2026.
+//  Created by Nacho Soto on 2/20/2026.
 //
 
 import XCTest
 @testable import SwiftFormat
 
-final class RedundantNonPublicSendableTests: XCTestCase {
+final class RedundantSendableTests: XCTestCase {
     func testRemovesSendableFromNestedAndTopLevelNonPublicValueTypes() {
         let input = """
         struct Outer {
@@ -37,7 +37,7 @@ final class RedundantNonPublicSendableTests: XCTestCase {
         testFormatting(
             for: input,
             [output],
-            rules: [.redundantNonPublicSendable],
+            rules: [.redundantSendable],
             exclude: [.enumNamespaces, .redundantFileprivate]
         )
     }
@@ -52,7 +52,7 @@ final class RedundantNonPublicSendableTests: XCTestCase {
         struct Generic<T>: Equatable where T: Sendable {}
         """
 
-        testFormatting(for: input, rules: [.redundantNonPublicSendable], exclude: [.simplifyGenericConstraints])
+        testFormatting(for: input, rules: [.redundantSendable], exclude: [.simplifyGenericConstraints])
     }
 
     func testIgnoresCommentsAndStrings() {
@@ -70,7 +70,7 @@ final class RedundantNonPublicSendableTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rules: [.redundantNonPublicSendable], exclude: [.indent])
+        testFormatting(for: input, rules: [.redundantSendable], exclude: [.indent])
     }
 
     func testRemovesQualifiedSendableFromMixedConformanceLists() {
@@ -90,6 +90,30 @@ final class RedundantNonPublicSendableTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, [output], rules: [.redundantNonPublicSendable])
+        testFormatting(for: input, [output], rules: [.redundantSendable])
+    }
+
+    func testRemovesSendableFromPackageValueTypes() {
+        let input = """
+        package struct PackageStruct: Sendable {
+            package let value: Int
+        }
+
+        package enum PackageEnum: Sendable {
+            case value(Int)
+        }
+        """
+
+        let output = """
+        package struct PackageStruct {
+            package let value: Int
+        }
+
+        package enum PackageEnum {
+            case value(Int)
+        }
+        """
+
+        testFormatting(for: input, [output], rules: [.redundantSendable])
     }
 }

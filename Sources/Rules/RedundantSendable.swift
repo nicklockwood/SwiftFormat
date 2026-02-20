@@ -1,14 +1,14 @@
 //
-//  RedundantNonPublicSendable.swift
+//  RedundantSendable.swift
 //  SwiftFormat
 //
-//  Created by Codex on 2/20/2026.
+//  Created by Nacho Soto on 2/20/2026.
 //
 
 import Foundation
 
 public extension FormatRule {
-    static let redundantNonPublicSendable = FormatRule(
+    static let redundantSendable = FormatRule(
         help: "Remove redundant explicit Sendable conformance from non-public structs and enums."
     ) { formatter in
         let declarations = formatter.parseDeclarations()
@@ -26,7 +26,7 @@ public extension FormatRule {
             }
 
             guard let sendableConformance = typeDeclaration.conformances.first(where: {
-                formatter.isRedundantNonPublicSendableConformance($0.conformance)
+                formatter.isRedundantSendableConformance($0.conformance)
             }) else { return }
 
             formatter.removeConformance(
@@ -52,8 +52,8 @@ public extension FormatRule {
     }
 }
 
-private extension Formatter {
-    func isRedundantNonPublicSendableConformance(_ conformance: TypeName) -> Bool {
+extension Formatter {
+    func isRedundantSendableConformance(_ conformance: TypeName) -> Bool {
         let significantTokens = conformance.tokens.filter { !$0.isSpaceOrCommentOrLinebreak }
 
         guard !significantTokens.contains(where: { $0.isAttribute && $0.string == "@unchecked" }) else {

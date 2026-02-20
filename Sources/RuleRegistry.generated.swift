@@ -92,6 +92,7 @@ let ruleRegistry: [String: FormatRule] = [
     "redundantRawValues": .redundantRawValues,
     "redundantReturn": .redundantReturn,
     "redundantSelf": .redundantSelf,
+    "redundantSendable": .redundantSendable,
     "redundantStaticSelf": .redundantStaticSelf,
     "redundantSwiftTestingSuite": .redundantSwiftTestingSuite,
     "redundantThrows": .redundantThrows,

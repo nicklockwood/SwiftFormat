@@ -242,8 +242,24 @@ extension Formatter {
                         endIndex = nextIndex
                     }
 
-                    // Build the constraint suffix
-                    let protocolNames = conformances.map(\.name)
+                    // Build the constraint suffix, filtering out duplicates.
+                    // A constraint is a duplicate if it already appears in the inline
+                    // generic parameters (sourceRange before the where keyword) or if
+                    // it appears more than once in the where clause itself.
+                    let inlineConformanceNames = Set(
+                        genericTypes
+                            .first(where: { $0.name == typeName })?
+                            .conformances
+                            .filter { $0.sourceRange.lowerBound < whereIndex }
+                            .map(\.name)
+                            ?? []
+                    )
+                    var seen = Set<String>()
+                    let protocolNames = conformances.map(\.name).filter { name in
+                        !inlineConformanceNames.contains(name) && seen.insert(name).inserted
+                    }
+                    // If all constraints were already inline, nothing new to insert
+                    guard !protocolNames.isEmpty else { break }
                     let constraintSuffix: String
                     if hasInlineConstraints {
                         // Append with & if there are already constraints

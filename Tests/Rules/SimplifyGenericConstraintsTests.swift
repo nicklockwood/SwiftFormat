@@ -532,4 +532,27 @@ final class SimplifyGenericConstraintsTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .simplifyGenericConstraints, exclude: [.unusedArguments])
     }
+
+    func testSameConstraintOnDifferentTypesInWhereClauseNotDeduplicated() {
+        // T: Service and U: Service are constraints on different types — both should be moved inline
+        let input = """
+        func test<T, U>(_ a: T, _ b: U) where T: Service, U: Service {}
+        """
+        let output = """
+        func test<T: Service, U: Service>(_ a: T, _ b: U) {}
+        """
+        testFormatting(for: input, output, rule: .simplifyGenericConstraints, exclude: [.unusedArguments])
+    }
+
+    func testSameConstraintInlineForOneTypeAndWhereClauseForAnotherNotDeduplicated() {
+        // T already has Service inline; U has Service in the where clause.
+        // The existing T: Service inline should not prevent U: Service from being moved inline.
+        let input = """
+        func test<T: Service, U>(_ a: T, _ b: U) where U: Service {}
+        """
+        let output = """
+        func test<T: Service, U: Service>(_ a: T, _ b: U) {}
+        """
+        testFormatting(for: input, output, rule: .simplifyGenericConstraints, exclude: [.unusedArguments])
+    }
 }

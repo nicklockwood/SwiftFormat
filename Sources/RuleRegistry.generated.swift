@@ -82,6 +82,7 @@ let ruleRegistry: [String: FormatRule] = [
     "redundantLetError": .redundantLetError,
     "redundantMemberwiseInit": .redundantMemberwiseInit,
     "redundantNilInit": .redundantNilInit,
+    "redundantNonPublicSendable": .redundantNonPublicSendable,
     "redundantObjc": .redundantObjc,
     "redundantOptionalBinding": .redundantOptionalBinding,
     "redundantParens": .redundantParens,

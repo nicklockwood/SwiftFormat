@@ -69,6 +69,7 @@
 * [redundantRawValues](#redundantRawValues)
 * [redundantReturn](#redundantReturn)
 * [redundantSelf](#redundantSelf)
+* [redundantSendable](#redundantSendable)
 * [redundantStaticSelf](#redundantStaticSelf)
 * [redundantSwiftTestingSuite](#redundantSwiftTestingSuite)
 * [redundantThrows](#redundantThrows)
@@ -2923,6 +2924,29 @@ by using `--self init-only`:
     self.foo = foo
     self.bar = bar
 +   self.baz = 42
+  }
+```
+
+</details>
+<br/>
+
+## redundantSendable
+
+Remove redundant explicit Sendable conformance from non-public structs and enums.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- struct CacheEntry: Sendable {
++ struct CacheEntry {
+      let id: String
+  }
+
+- fileprivate enum ParsingState: Sendable {
++ fileprivate enum ParsingState {
+      case idle
+      case running
   }
 ```
 

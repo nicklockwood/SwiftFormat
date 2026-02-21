@@ -897,6 +897,73 @@ final class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(formatter.startOfModifiers(at: 4, includingAttributes: true), 0)
     }
 
+    func testStartOfModifiersWithModuleSelector() {
+        let formatter = Formatter(tokenize("@SwiftUI::State var foo: Int"))
+        // @SwiftUI=0, ::=1, State=2, " "=3, var=4
+        XCTAssertEqual(formatter.startOfModifiers(at: 4, includingAttributes: true), 0)
+    }
+
+    func testStartOfModifiersWithModuleSelectorAndArgs() {
+        let formatter = Formatter(tokenize("@SwiftUI::Environment(\\.bar) var bar"))
+        // @SwiftUI=0, ::=1, Environment=2, (=3, \=4, .=5, bar=6, )=7, " "=8, var=9
+        XCTAssertEqual(formatter.startOfModifiers(at: 9, includingAttributes: true), 0)
+    }
+
+    func testStartOfModifiersExcludingModuleSelectorAttribute() {
+        let formatter = Formatter(tokenize("@SwiftUI::State var foo: Int"))
+        // @SwiftUI=0, ::=1, State=2, " "=3, var=4
+        XCTAssertEqual(formatter.startOfModifiers(at: 4, includingAttributes: false), 4)
+    }
+
+    func testModifiersForDeclarationWithModuleSelector() {
+        let formatter = Formatter(tokenize("@SwiftUI::State var foo: Int"))
+        var allModifiers = [String]()
+        _ = formatter.modifiersForDeclaration(at: 4, contains: { _, modifier in
+            allModifiers.append(modifier)
+            return false
+        })
+        XCTAssertEqual(allModifiers, ["@SwiftUI::State"])
+    }
+
+    func testModifiersForDeclarationWithModuleSelectorAndArgs() {
+        let formatter = Formatter(tokenize("@SwiftUI::Environment(\\.bar) var bar"))
+        var allModifiers = [String]()
+        _ = formatter.modifiersForDeclaration(at: 9, contains: { _, modifier in
+            allModifiers.append(modifier)
+            return false
+        })
+        XCTAssertEqual(allModifiers, ["@SwiftUI::Environment(\\.bar)"])
+    }
+
+    func testModifiersForDeclarationWithModuleSelectorOnFunc() {
+        let formatter = Formatter(tokenize("@MyModule::MyAttribute(foo, bar) func myFunction() {}"))
+        var allModifiers = [String]()
+        let funcIndex = formatter.tokens.firstIndex(of: .keyword("func"))!
+        _ = formatter.modifiersForDeclaration(at: funcIndex, contains: { _, modifier in
+            allModifiers.append(modifier)
+            return false
+        })
+        XCTAssertEqual(allModifiers, ["@MyModule::MyAttribute(foo, bar)"])
+    }
+
+    func testStartOfAttributeWithModuleSelector() {
+        let formatter = Formatter(tokenize("@SwiftUI::State var foo: Int"))
+        // State at index 2 should trace back to @SwiftUI at index 0
+        XCTAssertEqual(formatter.startOfAttribute(at: 2), 0)
+    }
+
+    func testEndOfAttributeWithModuleSelector() {
+        let formatter = Formatter(tokenize("@SwiftUI::State var foo: Int"))
+        // @SwiftUI at index 0 should extend to State at index 2
+        XCTAssertEqual(formatter.endOfAttribute(at: 0), 2)
+    }
+
+    func testEndOfAttributeWithModuleSelectorAndArgs() {
+        let formatter = Formatter(tokenize("@SwiftUI::Environment(\\.bar) var bar"))
+        // @SwiftUI at index 0 should extend to ) at index 7
+        XCTAssertEqual(formatter.endOfAttribute(at: 0), 7)
+    }
+
     // MARK: processDeclaredVariables
 
     func testProcessCommaDelimitedDeclaredVariables() {
@@ -3489,41 +3556,4 @@ final class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(formatter.tokens[closureArgs.inKeywordIndex], .keyword("in"))
     }
 
-    // MARK: Temp tokenization test
-    func testTempTokenization() {
-        // @SwiftUI::State var foo: Int
-        let formatter1 = Formatter(tokenize("@SwiftUI::State var foo: Int"))
-        let varIdx1 = 4
-        print("=== @SwiftUI::State var foo: Int ===")
-        print("startOfModifiers(includingAttributes: true): \(formatter1.startOfModifiers(at: varIdx1, includingAttributes: true))")
-        print("startOfModifiers(includingAttributes: false): \(formatter1.startOfModifiers(at: varIdx1, includingAttributes: false))")
-        print("isAttribute(at: 0): \(formatter1.isAttribute(at: 0))")
-        print("isAttribute(at: 2): \(formatter1.isAttribute(at: 2))")
-        print("startOfAttribute(at: 0): \(String(describing: formatter1.startOfAttribute(at: 0)))")
-        print("startOfAttribute(at: 2): \(String(describing: formatter1.startOfAttribute(at: 2)))")
-        print("endOfAttribute(at: 0): \(String(describing: formatter1.endOfAttribute(at: 0)))")
-        var allMods1 = [String]()
-        _ = formatter1.modifiersForDeclaration(at: varIdx1, contains: { _, mod in
-            allMods1.append(mod)
-            return false
-        })
-        print("modifiers: \(allMods1)")
-        print("modifiersForDeclaration contains @SwiftUI: \(formatter1.modifiersForDeclaration(at: varIdx1, contains: "@SwiftUI"))")
-        
-        print("")
-        
-        // @SwiftUI::Environment(\.bar) var bar
-        let formatter2 = Formatter(tokenize("@SwiftUI::Environment(\\.bar) var bar"))
-        let varIdx2 = 9
-        print("=== @SwiftUI::Environment(\\.bar) var bar ===")
-        print("startOfModifiers(includingAttributes: true): \(formatter2.startOfModifiers(at: varIdx2, includingAttributes: true))")
-        print("startOfModifiers(includingAttributes: false): \(formatter2.startOfModifiers(at: varIdx2, includingAttributes: false))")
-        print("endOfAttribute(at: 0): \(String(describing: formatter2.endOfAttribute(at: 0)))")
-        var allMods2 = [String]()
-        _ = formatter2.modifiersForDeclaration(at: varIdx2, contains: { _, mod in
-            allMods2.append(mod)
-            return false
-        })
-        print("modifiers: \(allMods2)")
-    }
 }

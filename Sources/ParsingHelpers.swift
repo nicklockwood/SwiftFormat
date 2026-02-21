@@ -447,10 +447,13 @@ extension Formatter {
                     return false
                 }
 
-                // Modifiers can be fully-qualified types like `@ArrayBuilder<String>`, or macros like `@Foo(.bar)`.
+                // Modifiers can be fully-qualified types like `@ArrayBuilder<String>`, macros like `@Foo(.bar)`,
+                // or module-qualified attributes like `@SwiftUI::State`.
                 // Use the full modifier name instead of just the first token.
                 var modifierRange = prevIndex ... prevIndex
-                if let nextIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: prevIndex),
+                if token.isAttribute, let endOfAttr = endOfAttribute(at: prevIndex), endOfAttr > prevIndex {
+                    modifierRange = prevIndex ... endOfAttr
+                } else if let nextIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: prevIndex),
                    tokens[nextIndex] == .startOfScope("<") || tokens[nextIndex] == .startOfScope("("),
                    let endOfScope = endOfScope(at: nextIndex)
                 {
@@ -462,9 +465,16 @@ extension Formatter {
                 }
             case .endOfScope(")"):
                 guard let startIndex = self.index(of: .startOfScope("("), before: prevIndex),
-                      let identifierIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: startIndex, if: {
-                          $0.isAttribute || _FormatRules.allModifiers.contains($0.string) || $0 == .endOfScope(">")
-                      })
+                      let identifierIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: startIndex)
+                else {
+                    return false
+                }
+                let identifierToken = tokens[identifierIndex]
+                guard identifierToken.isAttribute
+                    || _FormatRules.allModifiers.contains(identifierToken.string)
+                    || identifierToken == .endOfScope(">")
+                    || (identifierToken.isIdentifier
+                        && self.index(of: .nonSpaceOrCommentOrLinebreak, before: identifierIndex, if: { $0.isOperator("::") }) != nil)
                 else {
                     return false
                 }
@@ -483,7 +493,9 @@ extension Formatter {
                 prevIndex = startIndex
             case .identifier:
                 guard let startIndex = startOfAttribute(at: prevIndex),
-                      let nextIndex = self.index(of: .operator(".", .infix), after: startIndex)
+                      let nextIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: startIndex, if: {
+                          $0.isOperator(".") || $0.isOperator("::")
+                      })
                 else {
                     return false
                 }
@@ -964,9 +976,9 @@ extension Formatter {
             }
             return startOfAttribute(at: prevTokenIndex)
         case .identifier:
-            guard let dotIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: i, if: {
-                $0.isOperator(".")
-            }), let prevTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: dotIndex) else {
+            guard let separatorIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: i, if: {
+                $0.isOperator(".") || $0.isOperator("::")
+            }), let prevTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: separatorIndex) else {
                 return nil
             }
             return startOfAttribute(at: prevTokenIndex)
@@ -989,6 +1001,11 @@ extension Formatter {
             return closeParenIndex
         case .operator(".", .infix):
             guard let nextIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: startIndex) else {
+                return nil
+            }
+            return endOfAttribute(at: nextIndex)
+        case .operator("::", .infix) where !tokens[i + 1 ..< startIndex].contains(where: \.isLinebreak):
+            guard let nextIndex = index(of: .nonSpaceOrComment, after: startIndex) else {
                 return nil
             }
             return endOfAttribute(at: nextIndex)

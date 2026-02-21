@@ -914,7 +914,10 @@ extension UnicodeScalarView {
     }
 
     mutating func parseDelimiter() -> Token? {
-        readCharacter(where: {
+        if readString("::") {
+            return .operator("::", .none)
+        }
+        return readCharacter(where: {
             ":;,".unicodeScalars.contains($0)
         }).map { .delimiter(String($0)) }
     }
@@ -1687,7 +1690,7 @@ public func tokenize(_ source: String) -> [Token] {
         let prevToken: Token = tokens[i - 1]
         let type: OperatorType
         switch string {
-        case ":", "=", "->":
+        case ":", "::", "=", "->":
             type = .infix
         case ".":
             var _type = OperatorType.prefix

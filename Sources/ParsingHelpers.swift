@@ -1490,6 +1490,17 @@ extension Formatter {
             return TypeName(range: startOfTypeIndex ... followingType.range.upperBound, formatter: self)
         }
 
+        // `::` can also continue a type (e.g. `Module::Type`), but unlike `.` and `&`,
+        // there must be no newline between `::` and the following identifier.
+        if let nextTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: baseType.range.upperBound),
+           tokens[nextTokenIndex] == .operator("::", .infix),
+           let afterDoubleColonIndex = index(of: .nonSpaceOrComment, after: nextTokenIndex),
+           !tokens[afterDoubleColonIndex].isLinebreak,
+           let followingType = parseType(at: afterDoubleColonIndex, excludeLowercaseIdentifiers: excludeLowercaseIdentifiers)
+        {
+            return TypeName(range: startOfTypeIndex ... followingType.range.upperBound, formatter: self)
+        }
+
         return baseType
     }
 

@@ -295,4 +295,42 @@ final class RedundantInitTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .redundantInit, exclude: [.propertyTypes])
     }
+
+    func testPreserveInitOnCollectionTypeWithTrailingClosureBeforeSwift64() {
+        let input = """
+        [String].init { "foo" }
+        [String: Int].init { ("key", 1) }
+        [[String]].init { ["foo"] }
+        """
+        let options = FormatOptions(swiftVersion: "6.3")
+        testFormatting(for: input, rule: .redundantInit, options: options)
+    }
+
+    func testRemoveInitOnCollectionTypeWithTrailingClosureInSwift64() {
+        let input = """
+        [String].init { "foo" }
+        [String: Int].init { ("key", 1) }
+        [[String]].init { ["foo"] }
+        """
+        let output = """
+        [String] { "foo" }
+        [String: Int] { ("key", 1) }
+        [[String]] { ["foo"] }
+        """
+        let options = FormatOptions(swiftVersion: "6.4")
+        testFormatting(for: input, output, rule: .redundantInit, options: options)
+    }
+
+    func testRemoveInitOnCollectionTypeWithParensUnaffectedBySwiftVersion() {
+        let input = """
+        let array = [String].init()
+        let dictionary = [String: Int].init()
+        """
+        let output = """
+        let array = [String]()
+        let dictionary = [String: Int]()
+        """
+        let options = FormatOptions(swiftVersion: "6.3")
+        testFormatting(for: input, output, rule: .redundantInit, options: options, exclude: [.propertyTypes])
+    }
 }

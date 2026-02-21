@@ -46,6 +46,14 @@ public extension FormatRule {
             if [.startOfScope("#if"), .keyword("#elseif")].contains(formatter.tokens[lineStart]) {
                 return
             }
+            // In Swift < 6.4, trailing closure syntax is not allowed after array/dictionary
+            // literals (e.g. `[String] { "foo" }`). This was fixed in SE-0508 for Swift 6.4+.
+            if formatter.tokens[openParenOrOpenBraceIndex] == .startOfScope("{"),
+               prevToken == .endOfScope("]"),
+               formatter.options.swiftVersion < "6.4"
+            {
+                return
+            }
             var j = dotIndex
             while let prevIndex = formatter.index(
                 of: prevToken, before: j

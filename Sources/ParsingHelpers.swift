@@ -1339,6 +1339,10 @@ extension Formatter {
             }
             return true
         }
+        if index(of: .nonSpaceOrCommentOrLinebreak, before: i, if: { $0.isOperator("::") }) != nil {
+            // After :: (module selector), keywords are ordinary identifiers except for these
+            return ["deinit", "init", "subscript"].contains(unescaped)
+        }
         guard !["let", "var"].contains(unescaped) else {
             return true
         }

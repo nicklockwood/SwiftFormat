@@ -839,18 +839,12 @@ final class WrapTests: XCTestCase {
         let input = """
         NationalAeronauticsAndSpaceAdministration::RocketEngine
         """
-        // wrap-only output (no spaceAroundOperators)
         let output = """
         NationalAeronauticsAndSpaceAdministration
             ::RocketEngine
         """
-        // all-rules output (spaceAroundOperators adds space after ::)
-        let output2 = """
-        NationalAeronauticsAndSpaceAdministration
-            :: RocketEngine
-        """
         let options = FormatOptions(maxWidth: 50)
-        testFormatting(for: input, [output, output2], rules: [.wrap], options: options)
+        testFormatting(for: input, output, rule: .wrap, options: options)
     }
 
     func testWrapDoubleColonWithSpacesBreaksBeforeOperator() {
@@ -861,7 +855,11 @@ final class WrapTests: XCTestCase {
         NationalAeronauticsAndSpaceAdministration
             :: RocketEngine
         """
+        let output2 = """
+        NationalAeronauticsAndSpaceAdministration
+            ::RocketEngine
+        """
         let options = FormatOptions(maxWidth: 50)
-        testFormatting(for: input, output, rule: .wrap, options: options)
+        testFormatting(for: input, [output, output2], rules: [.wrap], options: options)
     }
 }

@@ -914,10 +914,7 @@ extension UnicodeScalarView {
     }
 
     mutating func parseDelimiter() -> Token? {
-        if readString("::") {
-            return .operator("::", .none)
-        }
-        return readCharacter(where: {
+        readCharacter(where: {
             ":;,".unicodeScalars.contains($0)
         }).map { .delimiter(String($0)) }
     }
@@ -949,6 +946,9 @@ extension UnicodeScalarView {
     }
 
     mutating func parseOperator() -> Token? {
+        if readString("::") {
+            return .operator("::", .none)
+        }
         func isHead(_ c: UnicodeScalar) -> Bool {
             if "./\\=­-+!*%&|^~?".unicodeScalars.contains(c) {
                 return true

@@ -989,6 +989,12 @@ extension UnicodeScalarView {
             }
         }
 
+        // `::` is always parsed as a single operator.
+        // `:` is not a valid operator head, so it must be handled specially here.
+        if readString("::") {
+            return .operator("::", .none)
+        }
+
         var start = self
         if var tail = readCharacter(where: isHead) {
             switch tail {
@@ -1687,7 +1693,7 @@ public func tokenize(_ source: String) -> [Token] {
         let prevToken: Token = tokens[i - 1]
         let type: OperatorType
         switch string {
-        case ":", "=", "->":
+        case ":", "::", "=", "->":
             type = .infix
         case ".":
             var _type = OperatorType.prefix

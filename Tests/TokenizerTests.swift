@@ -2402,6 +2402,39 @@ final class TokenizerTests: XCTestCase {
         XCTAssertEqual(tokenize(input), output)
     }
 
+    func testDoubleColonOperator() {
+        let input = "Module::Type"
+        let output: [Token] = [
+            .identifier("Module"),
+            .operator("::", .infix),
+            .identifier("Type"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testDoubleColonOperatorWithSpaces() {
+        let input = "Module :: Type"
+        let output: [Token] = [
+            .identifier("Module"),
+            .space(" "),
+            .operator("::", .infix),
+            .space(" "),
+            .identifier("Type"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
+    func testDoubleColonOperatorWithLeadingNewline() {
+        let input = "Module\n::Type"
+        let output: [Token] = [
+            .identifier("Module"),
+            .linebreak("\n", 1),
+            .operator("::", .infix),
+            .identifier("Type"),
+        ]
+        XCTAssertEqual(tokenize(input), output)
+    }
+
     // MARK: chevrons (might be operators or generics)
 
     func testLessThanGreaterThan() {

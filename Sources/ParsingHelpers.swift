@@ -1005,8 +1005,9 @@ extension Formatter {
             }
             return endOfAttribute(at: nextIndex)
         case .operator("::", .infix) where !tokens[i + 1 ..< startIndex].contains(where: \.isLinebreak):
-            guard let nextIndex = index(of: .nonSpaceOrComment, after: startIndex) else {
-                return nil
+            guard let nextIndex = index(of: .nonSpaceOrComment, after: startIndex),
+                  !tokens[nextIndex].isLinebreak else {
+                return i
             }
             return endOfAttribute(at: nextIndex)
         case .startOfScope("<"):

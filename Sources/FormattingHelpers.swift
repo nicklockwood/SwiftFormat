@@ -1025,7 +1025,7 @@ extension Formatter {
                 addBreakPoint(at: i, relativePriority: 0)
             case .operator("=", .infix) where self.token(at: i + 1)?.isSpace == true:
                 addBreakPoint(at: i, relativePriority: -9)
-            case .operator(".", .infix):
+            case .operator(".", .infix), .operator("::", .infix):
                 addBreakPoint(at: i - 1, relativePriority: -2)
             case .operator("->", .infix):
                 if isInReturnType(at: i) {

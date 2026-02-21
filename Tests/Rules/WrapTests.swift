@@ -834,4 +834,34 @@ final class WrapTests: XCTestCase {
                        options: FormatOptions(maxWidth: 20),
                        exclude: [.trailingCommas])
     }
+
+    func testWrapDoubleColonBreaksBeforeOperator() {
+        let input = """
+        NationalAeronauticsAndSpaceAdministration::RocketEngine
+        """
+        // wrap-only output (no spaceAroundOperators)
+        let output = """
+        NationalAeronauticsAndSpaceAdministration
+            ::RocketEngine
+        """
+        // all-rules output (spaceAroundOperators adds space after ::)
+        let output2 = """
+        NationalAeronauticsAndSpaceAdministration
+            :: RocketEngine
+        """
+        let options = FormatOptions(maxWidth: 50)
+        testFormatting(for: input, [output, output2], rules: [.wrap], options: options)
+    }
+
+    func testWrapDoubleColonWithSpacesBreaksBeforeOperator() {
+        let input = """
+        NationalAeronauticsAndSpaceAdministration :: RocketEngine
+        """
+        let output = """
+        NationalAeronauticsAndSpaceAdministration
+            :: RocketEngine
+        """
+        let options = FormatOptions(maxWidth: 50)
+        testFormatting(for: input, output, rule: .wrap, options: options)
+    }
 }

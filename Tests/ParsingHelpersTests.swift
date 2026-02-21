@@ -897,6 +897,73 @@ final class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(formatter.startOfModifiers(at: 4, includingAttributes: true), 0)
     }
 
+    func testStartOfModifiersWithModuleSelector() {
+        let formatter = Formatter(tokenize("@SwiftUI::State var foo: Int"))
+        // @SwiftUI=0, ::=1, State=2, " "=3, var=4
+        XCTAssertEqual(formatter.startOfModifiers(at: 4, includingAttributes: true), 0)
+    }
+
+    func testStartOfModifiersWithModuleSelectorAndArgs() {
+        let formatter = Formatter(tokenize("@SwiftUI::Environment(\\.bar) var bar"))
+        // @SwiftUI=0, ::=1, Environment=2, (=3, \=4, .=5, bar=6, )=7, " "=8, var=9
+        XCTAssertEqual(formatter.startOfModifiers(at: 9, includingAttributes: true), 0)
+    }
+
+    func testStartOfModifiersExcludingModuleSelectorAttribute() {
+        let formatter = Formatter(tokenize("@SwiftUI::State var foo: Int"))
+        // @SwiftUI=0, ::=1, State=2, " "=3, var=4
+        XCTAssertEqual(formatter.startOfModifiers(at: 4, includingAttributes: false), 4)
+    }
+
+    func testModifiersForDeclarationWithModuleSelector() {
+        let formatter = Formatter(tokenize("@SwiftUI::State var foo: Int"))
+        var allModifiers = [String]()
+        _ = formatter.modifiersForDeclaration(at: 4, contains: { _, modifier in
+            allModifiers.append(modifier)
+            return false
+        })
+        XCTAssertEqual(allModifiers, ["@SwiftUI::State"])
+    }
+
+    func testModifiersForDeclarationWithModuleSelectorAndArgs() {
+        let formatter = Formatter(tokenize("@SwiftUI::Environment(\\.bar) var bar"))
+        var allModifiers = [String]()
+        _ = formatter.modifiersForDeclaration(at: 9, contains: { _, modifier in
+            allModifiers.append(modifier)
+            return false
+        })
+        XCTAssertEqual(allModifiers, ["@SwiftUI::Environment(\\.bar)"])
+    }
+
+    func testModifiersForDeclarationWithModuleSelectorOnFunc() throws {
+        let formatter = Formatter(tokenize("@MyModule::MyAttribute(foo, bar) func myFunction() {}"))
+        var allModifiers = [String]()
+        let funcIndex = try XCTUnwrap(formatter.tokens.firstIndex(of: .keyword("func")))
+        _ = formatter.modifiersForDeclaration(at: funcIndex, contains: { _, modifier in
+            allModifiers.append(modifier)
+            return false
+        })
+        XCTAssertEqual(allModifiers, ["@MyModule::MyAttribute(foo, bar)"])
+    }
+
+    func testStartOfAttributeWithModuleSelector() {
+        let formatter = Formatter(tokenize("@SwiftUI::State var foo: Int"))
+        // State at index 2 should trace back to @SwiftUI at index 0
+        XCTAssertEqual(formatter.startOfAttribute(at: 2), 0)
+    }
+
+    func testEndOfAttributeWithModuleSelector() {
+        let formatter = Formatter(tokenize("@SwiftUI::State var foo: Int"))
+        // @SwiftUI at index 0 should extend to State at index 2
+        XCTAssertEqual(formatter.endOfAttribute(at: 0), 2)
+    }
+
+    func testEndOfAttributeWithModuleSelectorAndArgs() {
+        let formatter = Formatter(tokenize("@SwiftUI::Environment(\\.bar) var bar"))
+        // @SwiftUI at index 0 should extend to ) at index 7
+        XCTAssertEqual(formatter.endOfAttribute(at: 0), 7)
+    }
+
     // MARK: processDeclaredVariables
 
     func testProcessCommaDelimitedDeclaredVariables() {

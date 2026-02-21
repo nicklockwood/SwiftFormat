@@ -3488,4 +3488,42 @@ final class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(closureArgs.argumentIndices.count, 2)
         XCTAssertEqual(formatter.tokens[closureArgs.inKeywordIndex], .keyword("in"))
     }
+
+    // MARK: Temp tokenization test
+    func testTempTokenization() {
+        // @SwiftUI::State var foo: Int
+        let formatter1 = Formatter(tokenize("@SwiftUI::State var foo: Int"))
+        let varIdx1 = 4
+        print("=== @SwiftUI::State var foo: Int ===")
+        print("startOfModifiers(includingAttributes: true): \(formatter1.startOfModifiers(at: varIdx1, includingAttributes: true))")
+        print("startOfModifiers(includingAttributes: false): \(formatter1.startOfModifiers(at: varIdx1, includingAttributes: false))")
+        print("isAttribute(at: 0): \(formatter1.isAttribute(at: 0))")
+        print("isAttribute(at: 2): \(formatter1.isAttribute(at: 2))")
+        print("startOfAttribute(at: 0): \(String(describing: formatter1.startOfAttribute(at: 0)))")
+        print("startOfAttribute(at: 2): \(String(describing: formatter1.startOfAttribute(at: 2)))")
+        print("endOfAttribute(at: 0): \(String(describing: formatter1.endOfAttribute(at: 0)))")
+        var allMods1 = [String]()
+        _ = formatter1.modifiersForDeclaration(at: varIdx1, contains: { _, mod in
+            allMods1.append(mod)
+            return false
+        })
+        print("modifiers: \(allMods1)")
+        print("modifiersForDeclaration contains @SwiftUI: \(formatter1.modifiersForDeclaration(at: varIdx1, contains: "@SwiftUI"))")
+        
+        print("")
+        
+        // @SwiftUI::Environment(\.bar) var bar
+        let formatter2 = Formatter(tokenize("@SwiftUI::Environment(\\.bar) var bar"))
+        let varIdx2 = 9
+        print("=== @SwiftUI::Environment(\\.bar) var bar ===")
+        print("startOfModifiers(includingAttributes: true): \(formatter2.startOfModifiers(at: varIdx2, includingAttributes: true))")
+        print("startOfModifiers(includingAttributes: false): \(formatter2.startOfModifiers(at: varIdx2, includingAttributes: false))")
+        print("endOfAttribute(at: 0): \(String(describing: formatter2.endOfAttribute(at: 0)))")
+        var allMods2 = [String]()
+        _ = formatter2.modifiersForDeclaration(at: varIdx2, contains: { _, mod in
+            allMods2.append(mod)
+            return false
+        })
+        print("modifiers: \(allMods2)")
+    }
 }

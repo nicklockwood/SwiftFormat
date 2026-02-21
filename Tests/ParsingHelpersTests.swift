@@ -2397,6 +2397,36 @@ final class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(formatter.parseType(at: 2)?.string, "Foo.Bar.Baaz.Quux.InnerType1.InnerType2")
     }
 
+    func testParseModuleQualifiedType() {
+        let formatter = Formatter(tokenize("""
+        let foo: Module::Type
+        """))
+        XCTAssertEqual(formatter.parseType(at: 5)?.string, "Module::Type")
+    }
+
+    func testParseNestedModuleQualifiedType() {
+        let formatter = Formatter(tokenize("""
+        let foo: Module::Type.Module::Subtype
+        """))
+        XCTAssertEqual(formatter.parseType(at: 5)?.string, "Module::Type.Module::Subtype")
+    }
+
+    func testParseModuleQualifiedTypeWithNewlineBeforeDoubleColon() {
+        let formatter = Formatter(tokenize("""
+        let foo: NationalAeronauticsAndSpaceAdministration
+            ::RocketEngine
+        """))
+        XCTAssertEqual(formatter.parseType(at: 5)?.string, "NationalAeronauticsAndSpaceAdministration::RocketEngine")
+    }
+
+    func testDoesntParseModuleQualifiedTypeWithNewlineAfterDoubleColon() {
+        let formatter = Formatter(tokenize("""
+        let foo: NationalAeronauticsAndSpaceAdministration::
+            RocketEngine
+        """))
+        XCTAssertEqual(formatter.parseType(at: 5)?.string, "NationalAeronauticsAndSpaceAdministration")
+    }
+
     func testParseTuples() {
         let input = """
         let tuple: (foo: Foo, bar: Bar)

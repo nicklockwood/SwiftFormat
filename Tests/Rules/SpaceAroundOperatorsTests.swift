@@ -1170,4 +1170,28 @@ final class SpaceAroundOperatorsTests: XCTestCase {
             options: options
         )
     }
+
+    func testNoSpaceAroundDoubleColonOperator() {
+        let input = """
+        let x = Module::TypeName
+        """
+        testFormatting(for: input, rule: .spaceAroundOperators)
+    }
+
+    func testSpaceRemovedAroundDoubleColonOperator() {
+        let input = """
+        let x = Module :: TypeName
+        """
+        let output = """
+        let x = Module::TypeName
+        """
+        testFormatting(for: input, output, rule: .spaceAroundOperators)
+    }
+
+    func testNoSpaceAroundDoubleColonInMemberAccess() {
+        let input = """
+        let x = foo.Module::functionName()
+        """
+        testFormatting(for: input, rule: .spaceAroundOperators)
+    }
 }

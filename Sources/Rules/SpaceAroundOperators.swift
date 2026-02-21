@@ -44,6 +44,13 @@ public extension FormatRule {
                 {
                     formatter.insert(.space(" "), at: i + 1)
                 }
+            case .operator("::", _):
+                if formatter.token(at: i + 1)?.isSpace == true {
+                    formatter.removeToken(at: i + 1)
+                }
+                if formatter.token(at: i - 1)?.isSpace == true {
+                    formatter.removeToken(at: i - 1)
+                }
             case .operator(".", _):
                 if formatter.token(at: i + 1)?.isSpace == true {
                     formatter.removeToken(at: i + 1)

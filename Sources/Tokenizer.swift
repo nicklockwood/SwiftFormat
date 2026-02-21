@@ -946,9 +946,6 @@ extension UnicodeScalarView {
     }
 
     mutating func parseOperator() -> Token? {
-        if readString("::") {
-            return .operator("::", .none)
-        }
         func isHead(_ c: UnicodeScalar) -> Bool {
             if "./\\=­-+!*%&|^~?".unicodeScalars.contains(c) {
                 return true
@@ -990,6 +987,12 @@ extension UnicodeScalarView {
             default:
                 return c == ">"
             }
+        }
+
+        // `::` is always parsed as a single operator.
+        // `:` is not a valid operator head, so it must be handled specially here.
+        if readString("::") {
+            return .operator("::", .none)
         }
 
         var start = self

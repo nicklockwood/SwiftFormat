@@ -144,7 +144,7 @@ final class TrailingClosuresTests: XCTestCase {
 
     func testParensAroundOptionalTrailingClosureInForLoopNotRemoved() {
         let input = """
-        for foo in bar?.map({ $0.baz }) ?? [] {}
+        for _ in bar?.map({ $0.baz }) ?? [] {}
         """
         testFormatting(for: input, rule: .trailingClosures)
     }
@@ -159,7 +159,7 @@ final class TrailingClosuresTests: XCTestCase {
 
     func testParensAroundTrailingClosureInWhereClauseLetNotRemoved() {
         let input = """
-        for foo in bar where baz.filter({ $0 == quux }).isEmpty {}
+        for _ in bar where baz.filter({ $0 == quux }).isEmpty {}
         """
         testFormatting(for: input, rule: .trailingClosures)
     }

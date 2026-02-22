@@ -565,12 +565,9 @@ final class RedundantParensTests: XCTestCase {
         for (x) in (y) {}
         """
         let output = """
-        for x in y {}
-        """
-        let output2 = """
         for _ in y {}
         """
-        testFormatting(for: input, [output, output2], rules: [.redundantParens])
+        testFormatting(for: input, [output], rules: [.redundantParens, .unusedArguments])
     }
 
     func testParensForLoopWhereClauseMethodNotRemoved() {
@@ -992,15 +989,10 @@ final class RedundantParensTests: XCTestCase {
     func testNoRemoveParensAroundForIndexInsideClosure() {
         let input = """
         let foo = {
-            for (i, token) in bar {}
-        }()
-        """
-        let output = """
-        let foo = {
             for (_, _) in bar {}
         }()
         """
-        testFormatting(for: input, [input, output], rules: [.redundantParens])
+        testFormatting(for: input, rule: .redundantParens)
     }
 
     func testNoRemoveRequiredParensInsideClosure() {
@@ -1123,12 +1115,9 @@ final class RedundantParensTests: XCTestCase {
 
     func testParensNotRemovedBeforeForBody() {
         let input = """
-        for foo in bar() { /* some code */ }
-        """
-        let output = """
         for _ in bar() { /* some code */ }
         """
-        testFormatting(for: input, [input, output], rules: [.redundantParens])
+        testFormatting(for: input, rule: .redundantParens)
     }
 
     func testParensNotRemovedBeforeWhileBody() {

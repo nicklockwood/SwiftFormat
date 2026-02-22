@@ -281,22 +281,16 @@ final class RedundantReturnTests: XCTestCase {
 
     func testNoRemoveReturnInForIn() {
         let input = """
-        for foo in bar { return 5 }
-        """
-        let output = """
         for _ in bar { return 5 }
         """
-        testFormatting(for: input, [input, output], rules: [.redundantReturn], exclude: [.wrapLoopBodies])
+        testFormatting(for: input, rule: .redundantReturn, exclude: [.wrapLoopBodies])
     }
 
     func testNoRemoveReturnInForWhere() {
         let input = """
-        for foo in bar where baz { return 5 }
-        """
-        let output = """
         for _ in bar where baz { return 5 }
         """
-        testFormatting(for: input, [input, output], rules: [.redundantReturn], exclude: [.wrapLoopBodies])
+        testFormatting(for: input, rule: .redundantReturn, exclude: [.wrapLoopBodies])
     }
 
     func testNoRemoveReturnInIfLetTry() {

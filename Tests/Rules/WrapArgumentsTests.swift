@@ -1156,6 +1156,30 @@ final class WrapArgumentsTests: XCTestCase {
         testFormatting(for: input, rule: .wrapArguments, options: options)
     }
 
+    func testWrapArgumentsDoesNotAffectAsyncFunctionDeclaration() {
+        let input = """
+        func foo(
+            bar _: Int,
+            baz _: String
+        ) async {}
+        """
+        let options = FormatOptions(wrapArguments: .afterFirst, wrapParameters: .preserve)
+        testFormatting(for: input, rule: .wrapArguments, options: options)
+    }
+
+    func testWrapParametersUsedForAsyncFunctionDeclaration() {
+        let input = """
+        func testAsync(first: String,
+                       second: String,
+                       third: String) async {
+            debugPrint("")
+        }
+        """
+        let options = FormatOptions(wrapArguments: .beforeFirst, wrapParameters: .afterFirst)
+        testFormatting(for: input, rule: .wrapArguments, options: options,
+                       exclude: [.unusedArguments, .wrapMultilineStatementBraces])
+    }
+
     // MARK: afterFirst
 
     func testWrapArgumentsConvertBeforeFirstToAfterFirst() {

@@ -1684,7 +1684,11 @@ final class IndentTests: XCTestCase {
         for
             i in range {}
         """
-        testFormatting(for: input, output, rule: .indent)
+        let output2 = """
+        for
+            _ in range {}
+        """
+        testFormatting(for: input, [output, output2], rules: [.indent])
     }
 
     func testWrappedLineAfterInKeyword() {
@@ -1696,7 +1700,11 @@ final class IndentTests: XCTestCase {
         for i in
             range {}
         """
-        testFormatting(for: input, output, rule: .indent)
+        let output2 = """
+        for _ in
+            range {}
+        """
+        testFormatting(for: input, [output, output2], rules: [.indent])
     }
 
     func testWrappedLineAfterDot() {
@@ -2242,7 +2250,16 @@ final class IndentTests: XCTestCase {
                 .quux()
         }
         """
-        testFormatting(for: input, output, rule: .indent)
+        let output2 = """
+        for _ in y {
+            foo
+                .bar {
+                    baz()
+                }
+                .quux()
+        }
+        """
+        testFormatting(for: input, [output, output2], rules: [.indent])
     }
 
     func testChainedFunctionsAfterAnIfStatement() {

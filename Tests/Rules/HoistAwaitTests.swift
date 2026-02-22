@@ -170,7 +170,10 @@ final class HoistAwaitTests: XCTestCase {
         let output = """
         for foo in await bar(baz()) {}
         """
-        testFormatting(for: input, output, rule: .hoistAwait,
+        let output2 = """
+        for _ in await bar(baz()) {}
+        """
+        testFormatting(for: input, [output, output2], rules: [.hoistAwait],
                        options: FormatOptions(swiftVersion: "5.5"))
     }
 
@@ -178,7 +181,10 @@ final class HoistAwaitTests: XCTestCase {
         let input = """
         for await foo in asyncSequence() {}
         """
-        testFormatting(for: input, rule: .hoistAwait,
+        let output = """
+        for await _ in asyncSequence() {}
+        """
+        testFormatting(for: input, [input, output], rules: [.hoistAwait],
                        options: FormatOptions(swiftVersion: "5.5"))
     }
 

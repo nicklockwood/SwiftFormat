@@ -259,7 +259,10 @@ final class HoistTryTests: XCTestCase {
         let output = """
         for foo in try bar(baz()) {}
         """
-        testFormatting(for: input, output, rule: .hoistTry)
+        let output2 = """
+        for _ in try bar(baz()) {}
+        """
+        testFormatting(for: input, [output, output2], rules: [.hoistTry])
     }
 
     func testHoistTryWithInitAssignment() {

@@ -4003,6 +4003,16 @@ Option | Description
   }
 ```
 
+```diff
+- for (key, value) in dictionary {
+    print(key)
+  }
+
++ for (key, _) in dictionary {
+    print(key)
+  }
+```
+
 </details>
 <br/>
 

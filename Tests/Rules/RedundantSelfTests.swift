@@ -1943,7 +1943,17 @@ final class RedundantSelfTests: XCTestCase {
         }
 
         """
-        testFormatting(for: input, output, rule: .redundantSelf)
+        let output2 = """
+        struct Foo {
+            init() {
+                for _ in bar {}
+            }
+
+            static func foo() {}
+        }
+
+        """
+        testFormatting(for: input, [output, output2], rules: [.redundantSelf])
     }
 
     func testRedundantSelfWithStaticMethodAfterForWhereLoop() {
@@ -1967,14 +1977,27 @@ final class RedundantSelfTests: XCTestCase {
         }
 
         """
-        testFormatting(for: input, output, rule: .redundantSelf)
+        let output2 = """
+        struct Foo {
+            init() {
+                for _ in bar where !bar.isEmpty {}
+            }
+
+            static func foo() {}
+        }
+
+        """
+        testFormatting(for: input, [output, output2], rules: [.redundantSelf])
     }
 
     func testRedundantSelfRuleDoesntErrorInForInTryLoop() {
         let input = """
         for foo in try bar() {}
         """
-        testFormatting(for: input, rule: .redundantSelf)
+        let output = """
+        for _ in try bar() {}
+        """
+        testFormatting(for: input, [input, output], rules: [.redundantSelf])
     }
 
     func testRedundantSelfInInitWithActorLabel() {
@@ -2341,8 +2364,14 @@ final class RedundantSelfTests: XCTestCase {
             func foo() { for (bar, baz) in quux {} }
         }
         """
+        let output = """
+        class Foo {
+            var bar: Int
+            func foo() { for (_, _) in quux {} }
+        }
+        """
         let options = FormatOptions(explicitSelf: .insert)
-        testFormatting(for: input, rule: .redundantSelf, options: options, exclude: [.wrapFunctionBodies])
+        testFormatting(for: input, [input, output], rules: [.redundantSelf], options: options, exclude: [.wrapFunctionBodies])
     }
 
     func testNoInsertSelfForTupleTypeMembers() {
@@ -3416,8 +3445,17 @@ final class RedundantSelfTests: XCTestCase {
             static func baz() {}
         }
         """
+        let output = """
+        struct Foo {
+            func bar() {
+                for _ in [] where [].filter({ true }) {}
+            }
+
+            static func baz() {}
+        }
+        """
         let options = FormatOptions(explicitSelf: .insert)
-        testFormatting(for: input, rule: .redundantSelf, options: options)
+        testFormatting(for: input, [input, output], rules: [.redundantSelf], options: options)
     }
 
     func testSelfRemovalParsingBug5() {

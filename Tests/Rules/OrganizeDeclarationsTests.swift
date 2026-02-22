@@ -2227,7 +2227,7 @@ final class OrganizeDeclarationsTests: XCTestCase {
         """
 
         testFormatting(for: input, output, rule: .organizeDeclarations,
-                       exclude: [.blankLinesAtStartOfScope])
+                       exclude: [.blankLinesAtStartOfScope, .blankLinesAroundMark])
     }
 
     func testOrganizeClassDeclarationsIntoCategoriesWithNoBlankLineAfterMark() {

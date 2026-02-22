@@ -324,4 +324,82 @@ final class ConsistentSwitchCaseSpacingTests: XCTestCase {
 
         testFormatting(for: input, rule: .consistentSwitchCaseSpacing, exclude: [.blankLineAfterSwitchCase])
     }
+
+    func testConsistentSpacingWithIfdefWrappedCase() {
+        let input = """
+        switch action {
+        case .engageWarpDrive:
+            warpDrive.activate()
+
+        #if CLOAKING
+        case .engageCloakingDevice:
+            cloakingDevice.activate()
+        #endif
+
+        case .handleIncomingEnergyBlast:
+            energyShields.engage()
+        }
+        """
+
+        testFormatting(for: input, rule: .consistentSwitchCaseSpacing)
+    }
+
+    func testConsistentSpacingWithMultilineIfdefWrappedCase() {
+        let input = """
+        switch action {
+        case .engageWarpDrive:
+            navigationComputer.destination = targetedDestination
+            await warpDrive.spinUp()
+            warpDrive.activate()
+        #if CLOAKING
+        case .engageCloakingDevice:
+            await cloakingDevice.spinUp()
+            cloakingDevice.activate()
+        #endif
+        case .handleIncomingEnergyBlast:
+            await energyShields.prepare()
+            energyShields.engage()
+        }
+        """
+
+        let output = """
+        switch action {
+        case .engageWarpDrive:
+            navigationComputer.destination = targetedDestination
+            await warpDrive.spinUp()
+            warpDrive.activate()
+
+        #if CLOAKING
+        case .engageCloakingDevice:
+            await cloakingDevice.spinUp()
+            cloakingDevice.activate()
+        #endif
+
+        case .handleIncomingEnergyBlast:
+            await energyShields.prepare()
+            energyShields.engage()
+        }
+        """
+
+        testFormatting(for: input, output, rule: .consistentSwitchCaseSpacing)
+    }
+
+    func testConsistentSpacingWithCasesInIfElseBlock() {
+        let input = """
+        switch action {
+        case .engageWarpDrive:
+            warpDrive.activate()
+
+        #if CLOAKING
+        case .engageCloakingDevice:
+            cloakingDevice.activate()
+        #else
+        case .handleIncomingEnergyBlast:
+            energyShields.engage()
+        #endif
+        }
+        """
+
+        testFormatting(for: input, rule: .consistentSwitchCaseSpacing)
+    }
 }

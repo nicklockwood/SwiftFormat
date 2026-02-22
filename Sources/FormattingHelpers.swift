@@ -1541,98 +1541,183 @@ extension Formatter {
     }
 
     /// Finds all of the branch bodies in a switch statement.
-    /// Returns the index of the `startOfScope` and `endOfScope` of each branch.
+    /// Returns the index of the `startOfScope` and `endOfScope` of each branch,
+    /// including branches that are inside `#if` conditional compilation blocks.
     func switchStatementBranches(at switchIndex: Int) -> [ConditionalBranch]? {
         assert(tokens[switchIndex] == .keyword("switch"))
         guard let startOfSwitchScope = index(of: .startOfScope("{"), after: switchIndex),
               let endOfSwitchScope = endOfScope(at: startOfSwitchScope)
         else { return nil }
 
-        // Collect all switch case start indices within the switch body,
-        // including those inside #if conditional compilation blocks.
-        // We scan linearly rather than using the scope-aware index(in:where:) since
-        // that skips case/default tokens that are direct children of #if scopes.
-        var allCaseIndices = [Int]()
-        var nonIfdefScopeDepth = 0
+        // Linearly collect all case/default/@unknown entries in the switch body,
+        // including those inside #if blocks, tracking each entry's #if nesting context.
+        struct CaseEntry {
+            /// Index of the `case`, `default`, or `@unknown` token.
+            let caseIndex: Int
+            /// How many `#if` levels deep this case is within the switch body.
+            let ifdefDepth: Int
+            /// Index of the innermost `#if` token enclosing this case (nil = top-level).
+            let enclosingIfdef: Int?
+        }
+
+        var caseEntries = [CaseEntry]()
+        var ifdefStack = [Int]()  // stack of #if token indices
+        var braceDepth = 0        // depth of non-#if nested scopes ({}, (), [])
         var i = startOfSwitchScope + 1
+
         while i < endOfSwitchScope {
             let token = tokens[i]
             switch token {
             case .startOfScope("{"), .startOfScope("("), .startOfScope("["):
-                nonIfdefScopeDepth += 1
+                braceDepth += 1
             case .endOfScope("}"), .endOfScope(")"), .endOfScope("]"):
-                nonIfdefScopeDepth -= 1
-            case .keyword("@unknown") where nonIfdefScopeDepth == 0:
-                allCaseIndices.append(i)
-                // Skip the following "default" token – it's part of "@unknown default:"
-                // and shouldn't be treated as a separate case entry.
+                braceDepth -= 1
+            case .startOfScope("#if") where braceDepth == 0:
+                ifdefStack.append(i)
+            case .endOfScope("#endif") where braceDepth == 0:
+                if !ifdefStack.isEmpty { ifdefStack.removeLast() }
+            case .keyword("@unknown") where braceDepth == 0:
+                caseEntries.append(CaseEntry(
+                    caseIndex: i,
+                    ifdefDepth: ifdefStack.count,
+                    enclosingIfdef: ifdefStack.last
+                ))
+                // Advance past the associated `default` token so it isn't treated
+                // as a separate case entry.
                 i += 1
                 while i < endOfSwitchScope, tokens[i].isSpaceOrCommentOrLinebreak { i += 1 }
             default:
-                if nonIfdefScopeDepth == 0, token.isSwitchCaseOrDefault {
-                    allCaseIndices.append(i)
+                if braceDepth == 0, token.isSwitchCaseOrDefault {
+                    caseEntries.append(CaseEntry(
+                        caseIndex: i,
+                        ifdefDepth: ifdefStack.count,
+                        enclosingIfdef: ifdefStack.last
+                    ))
                 }
             }
             i += 1
         }
 
-        guard !allCaseIndices.isEmpty else { return nil }
+        guard !caseEntries.isEmpty else { return nil }
 
-        // Build branches from the collected case indices.
-        // Each branch starts at the case's ":" scope and ends at the start of the next case
-        // (or at the closing "}" of the switch for the last case).
+        // Build branches. For each case, `endOfBranch` is computed relative to the
+        // next case's #if context so that `#if`/`#endif` directives are NOT included
+        // in the "body" of the preceding case (which would falsely inflate its line count).
         var branches = [(startOfBranch: Int, endOfBranch: Int)]()
-        for (offset, caseIndex) in allCaseIndices.enumerated() {
-            let endOfBody = offset + 1 < allCaseIndices.count
-                ? allCaseIndices[offset + 1]
-                : endOfSwitchScope
 
-            // For @unknown, find the associated "default" token before looking for ":".
-            var lookupIndex = caseIndex
-            if tokens[caseIndex] == .keyword("@unknown") {
-                var j = caseIndex + 1
+        for (offset, entry) in caseEntries.enumerated() {
+            // Find the ":" that opens this case's body.
+            var lookupIndex = entry.caseIndex
+            if tokens[entry.caseIndex] == .keyword("@unknown") {
+                var j = entry.caseIndex + 1
                 while j < endOfSwitchScope, tokens[j].isSpaceOrCommentOrLinebreak { j += 1 }
                 if j < endOfSwitchScope, tokens[j] == .endOfScope("default") {
                     lookupIndex = j
                 }
             }
-
-            guard let startOfBody = index(of: .startOfScope(":"), after: lookupIndex) else {
+            guard let startOfBody = self.index(of: .startOfScope(":"), after: lookupIndex) else {
                 return nil
             }
 
-            branches.append((startOfBranch: startOfBody, endOfBranch: endOfBody))
+            let endOfBranch: Int
+            if offset + 1 < caseEntries.count {
+                let next = caseEntries[offset + 1]
+                if next.ifdefDepth > entry.ifdefDepth {
+                    // Next case is inside a deeper #if block.
+                    // Use the opening `#if` as the boundary so that the directive line
+                    // itself is not counted as part of this case's body.
+                    endOfBranch = firstIfdef(after: entry.caseIndex, before: next.caseIndex)
+                        ?? endOfSwitchScope
+                } else if next.ifdefDepth < entry.ifdefDepth,
+                          let enclosing = entry.enclosingIfdef,
+                          let closing = endifIndex(matching: enclosing, before: endOfSwitchScope)
+                {
+                    // Current case is inside a #if that the next case is outside of.
+                    // Use the matching #endif as the boundary.
+                    endOfBranch = closing
+                } else if next.enclosingIfdef != entry.enclosingIfdef,
+                          let enclosing = entry.enclosingIfdef,
+                          let closing = endifIndex(matching: enclosing, before: next.caseIndex)
+                {
+                    // Same depth but different #if blocks (e.g. consecutive #if/#endif pairs).
+                    // Use the #endif that closes the current block as the boundary.
+                    endOfBranch = closing
+                } else {
+                    // Next case is at the same level within the same #if context.
+                    // But if there's a #else or #elseif between them, the two cases are in
+                    // opposite branches of the same #if block. Use that directive as the
+                    // boundary so the directive line is not counted as part of this case's body.
+                    if let elseOrElseif = firstElseOrElseif(after: entry.caseIndex, before: next.caseIndex) {
+                        endOfBranch = elseOrElseif
+                    } else {
+                        endOfBranch = next.caseIndex
+                    }
+                }
+            } else {
+                endOfBranch = endOfSwitchScope
+            }
+
+            branches.append((startOfBranch: startOfBody, endOfBranch: endOfBranch))
         }
 
         return branches
     }
 
-    /// Parses the switch statement case starting at the given index,
-    /// which should be one of: `case`, `default`, or `@unknown`.
-    private func parseSwitchStatementCase(caseOrDefaultIndex: Int) -> (startOfBody: Int, endOfBody: Int)? {
-        assert(tokens[caseOrDefaultIndex].isSwitchCaseOrDefault)
-
-        // `@unknown` (a keyword) is handled differently from `case` and `default` (endOfScope tokens).
-        // In this case we have `.keyword("@unknown"), .endOfScope("default"), .startOfScope(":")`.
-        var caseOrDefaultIndex = caseOrDefaultIndex
-        if tokens[caseOrDefaultIndex] == .keyword("@unknown") {
-            guard let nextEndOfScope = endOfScope(at: caseOrDefaultIndex) else { return nil }
-            caseOrDefaultIndex = nextEndOfScope
+    /// Returns the index of the first `#if` token at brace-depth 0 in `(after, before)`.
+    private func firstIfdef(after start: Int, before end: Int) -> Int? {
+        var braceDepth = 0
+        for i in (start + 1) ..< end {
+            switch tokens[i] {
+            case .startOfScope("{"), .startOfScope("("), .startOfScope("["):
+                braceDepth += 1
+            case .endOfScope("}"), .endOfScope(")"), .endOfScope("]"):
+                braceDepth -= 1
+            case .startOfScope("#if") where braceDepth == 0:
+                return i
+            default:
+                break
+            }
         }
-
-        guard let startOfBody = index(of: .startOfScope(":"), after: caseOrDefaultIndex),
-              var endOfBody = endOfScope(at: startOfBody)
-        else { return nil }
-
-        // If the next case has the `@unknown` prefix, make sure that token isn't included in the body of this branch.
-        if let unknownKeyword = index(of: .nonSpaceOrCommentOrLinebreak, before: endOfBody),
-           tokens[unknownKeyword] == .keyword("@unknown")
-        {
-            endOfBody = unknownKeyword
-        }
-
-        return (startOfBody: startOfBody, endOfBody: endOfBody)
+        return nil
     }
+
+    /// Returns the index of the first `#else` or `#elseif` at the top `#if` depth in `(after, before)`.
+    /// Used to detect when two cases are in opposite branches of the same `#if`/`#else` block.
+    private func firstElseOrElseif(after start: Int, before end: Int) -> Int? {
+        var depth = 0
+        for i in (start + 1) ..< end {
+            switch tokens[i] {
+            case .startOfScope("#if"):
+                depth += 1
+            case .endOfScope("#endif"):
+                if depth == 0 { return nil }
+                depth -= 1
+            case .keyword("#else"), .keyword("#elseif") where depth == 0:
+                return i
+            default:
+                break
+            }
+        }
+        return nil
+    }
+
+    /// Returns the index of the `#endif` token that closes the given `#if` token.
+    private func endifIndex(matching ifStart: Int, before limit: Int) -> Int? {
+        var depth = 0
+        for i in (ifStart + 1) ..< limit {
+            switch tokens[i] {
+            case .startOfScope("#if"):
+                depth += 1
+            case .endOfScope("#endif"):
+                if depth == 0 { return i }
+                depth -= 1
+            default:
+                break
+            }
+        }
+        return nil
+    }
+
 
     /// In Swift 5.9, there's a bug that prevents you from writing an
     /// if or switch expression using an `as?` on one of the branches:

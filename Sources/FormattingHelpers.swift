@@ -1771,16 +1771,6 @@ extension Formatter {
 
             var endOfBranchExcludingTrailingComments = switchCase.endOfBranch
 
-            // If the case's body is entirely wrapped in a `#if` block (its boundary is `#endif`),
-            // the blank-line separator conventionally follows the `#endif` rather than preceding
-            // it. Advance past `#endif` so spacing and insertion/removal are measured from after
-            // the end of the conditional compilation block.
-            if tokens[endOfBranchExcludingTrailingComments] == .endOfScope("#endif"),
-               let tokenAfterEndif = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfBranchExcludingTrailingComments)
-            {
-                endOfBranchExcludingTrailingComments = tokenAfterEndif
-            }
-
             while let tokenBeforeEndOfScope = index(of: .nonSpace, before: endOfBranchExcludingTrailingComments),
                   tokens[tokenBeforeEndOfScope].isLinebreak,
                   let commentBeforeEndOfScope = index(of: .nonSpace, before: tokenBeforeEndOfScope),
@@ -1802,7 +1792,21 @@ extension Formatter {
             var linebreakBeforeEndOfScope: Int?
             var linebreakBeforeBlankLine: Int?
 
-            if let tokenBeforeEndOfScope = index(of: .nonSpace, before: endOfBranchExcludingTrailingComments),
+            // If the case body is bounded by `#endif`, the blank-line separator lives
+            // *after* the `#endif` line rather than before it. Use the next non-whitespace
+            // token after `#endif` as the reference point for blank-line detection so that
+            // an existing blank line between `#endif` and the next case is correctly
+            // identified, and a missing one can be inserted/removed in the right place.
+            let endForBlankLineDetection: Int
+            if tokens[switchCase.endOfBranch] == .endOfScope("#endif"),
+               let tokenAfterEndif = index(of: .nonSpaceOrCommentOrLinebreak, after: switchCase.endOfBranch)
+            {
+                endForBlankLineDetection = tokenAfterEndif
+            } else {
+                endForBlankLineDetection = endOfBranchExcludingTrailingComments
+            }
+
+            if let tokenBeforeEndOfScope = index(of: .nonSpace, before: endForBlankLineDetection),
                tokens[tokenBeforeEndOfScope].isLinebreak
             {
                 linebreakBeforeEndOfScope = tokenBeforeEndOfScope

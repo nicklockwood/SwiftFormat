@@ -285,14 +285,13 @@ final class BlankLineAfterSwitchCaseTests: XCTestCase {
 
     func testAddsBlankLineAfterMultilineSwitchCaseInsideIfdefBlock() {
         // A multi-line case inside a #if block gets a blank line inserted after the #endif.
-        // A single-line case before the #if does not get a blank line (default mode only
-        // adds blank lines after multi-line cases).
         let input = """
         switch action {
         case .engageWarpDrive:
             warpDrive.activate()
         #if CLOAKING
             case .engageCloakingDevice:
+                cloakingDevice.spinUp()
                 cloakingDevice.activate()
         #endif
         case .handleIncomingEnergyBlast:
@@ -306,6 +305,7 @@ final class BlankLineAfterSwitchCaseTests: XCTestCase {
             warpDrive.activate()
         #if CLOAKING
             case .engageCloakingDevice:
+                cloakingDevice.spinUp()
                 cloakingDevice.activate()
         #endif
 

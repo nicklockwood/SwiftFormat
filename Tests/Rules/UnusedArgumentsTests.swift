@@ -1019,7 +1019,6 @@ final class UnusedArgumentsTests: XCTestCase {
                 case 1:
                     print("ONE")
             #endif
-
             default:
                 print("NOT ONE")
             }
@@ -1405,7 +1404,6 @@ final class UnusedArgumentsTests: XCTestCase {
                             case .a35:
                                 A31.a32(.a33(.a34Failed))
                         #endif
-
                         case .a36:
                             break
                         }

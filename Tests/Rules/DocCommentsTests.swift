@@ -641,7 +641,6 @@ final class DocCommentsTests: XCTestCase {
                 case .foo:
                     break
             #endif
-
             default:
                 break
             }

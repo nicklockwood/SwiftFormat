@@ -1549,40 +1549,65 @@ extension Formatter {
               let endOfSwitchScope = endOfScope(at: startOfSwitchScope)
         else { return nil }
 
-        // Find all case/default/@unknown tokens in the switch body, treating
-        // #if blocks as transparent (cases inside #if are included). We track
-        // only non-#if brace depth to avoid collecting cases inside nested
-        // closures or function calls.
+        // Collect all case/default/@unknown indices in the switch body, including
+        // those inside #if conditional compilation blocks. Use endOfScope() to skip
+        // over nested non-#if scopes naturally rather than tracking depth manually.
         var caseIndices = [Int]()
-        var braceDepth = 0
-        var i = startOfSwitchScope + 1
-        while i < endOfSwitchScope {
+        var index = self.index(of: .nonSpaceOrCommentOrLinebreak, after: startOfSwitchScope)
+        while let i = index, i < endOfSwitchScope {
             let token = tokens[i]
-            switch token {
-            case .startOfScope("{"), .startOfScope("("), .startOfScope("["):
-                braceDepth += 1
-            case .endOfScope("}"), .endOfScope(")"), .endOfScope("]"):
-                braceDepth -= 1
-            case .keyword("@unknown") where braceDepth == 0:
+            if token.isSwitchCaseOrDefault || token == .keyword("@unknown") {
                 caseIndices.append(i)
-            default:
-                if braceDepth == 0, token.isSwitchCaseOrDefault {
-                    caseIndices.append(i)
-                }
+                index = self.index(of: .nonSpaceOrCommentOrLinebreak, after: i)
+            } else if token == .startOfScope("{") || token == .startOfScope("(") || token == .startOfScope("[") {
+                // Skip over nested scopes ({}, (), []) but not :, #if, or string scopes
+                index = endOfScope(at: i).flatMap { self.index(of: .nonSpaceOrCommentOrLinebreak, after: $0) }
+            } else {
+                index = self.index(of: .nonSpaceOrCommentOrLinebreak, after: i)
             }
-            i += 1
         }
 
         guard !caseIndices.isEmpty else { return nil }
 
         var branches = [(startOfBranch: Int, endOfBranch: Int)]()
-        for caseIndex in caseIndices {
-            guard let (startOfBody, endOfBody) = parseSwitchStatementCase(caseOrDefaultIndex: caseIndex) else {
+        for (offset, caseIndex) in caseIndices.enumerated() {
+            guard let (startOfBody, _) = parseSwitchStatementCase(caseOrDefaultIndex: caseIndex) else {
                 return nil
+            }
+            let endOfBody: Int
+            if offset + 1 < caseIndices.count {
+                let nextCaseIndex = caseIndices[offset + 1]
+                // If there is a #if, #else, or #elseif directive between this case body
+                // and the next case, use that directive as the boundary so preprocessor
+                // lines are not counted as part of this case's content.
+                endOfBody = firstIfdefBoundary(after: startOfBody, before: nextCaseIndex) ?? nextCaseIndex
+            } else {
+                endOfBody = endOfSwitchScope
             }
             branches.append((startOfBranch: startOfBody, endOfBranch: endOfBody))
         }
+
         return branches
+    }
+
+    /// Returns the index of the first `#if`, `#else`, `#elseif`, or `#endif` token in the
+    /// range `(start, end)`, skipping over nested non-#if scopes.
+    private func firstIfdefBoundary(after start: Int, before end: Int) -> Int? {
+        var braceDepth = 0
+        for i in (start + 1) ..< end {
+            switch tokens[i] {
+            case .startOfScope("{"), .startOfScope("("), .startOfScope("["):
+                braceDepth += 1
+            case .endOfScope("}"), .endOfScope(")"), .endOfScope("]"):
+                braceDepth -= 1
+            case .startOfScope("#if"), .keyword("#else"), .keyword("#elseif"),
+                 .endOfScope("#endif") where braceDepth == 0:
+                return i
+            default:
+                break
+            }
+        }
+        return nil
     }
 
     /// Parses the switch statement case starting at the given index,

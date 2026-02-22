@@ -1541,39 +1541,88 @@ extension Formatter {
     }
 
     /// Finds all of the branch bodies in a switch statement.
-    /// Returns the index of the `startOfScope` and `endOfScope` of each branch.
+    /// Returns the index of the `startOfScope` and `endOfScope` of each branch,
+    /// including branches that are inside `#if` conditional compilation blocks.
     func switchStatementBranches(at switchIndex: Int) -> [ConditionalBranch]? {
         assert(tokens[switchIndex] == .keyword("switch"))
         guard let startOfSwitchScope = index(of: .startOfScope("{"), after: switchIndex),
-              let firstCaseIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfSwitchScope),
-              tokens[firstCaseIndex].isSwitchCaseOrDefault
+              let endOfSwitchScope = endOfScope(at: startOfSwitchScope)
         else { return nil }
 
-        var branches = [(startOfBranch: Int, endOfBranch: Int)]()
-        var nextConditionalBranchIndex: Int? = firstCaseIndex
-
-        while let conditionalBranchIndex = nextConditionalBranchIndex,
-              tokens[conditionalBranchIndex].isSwitchCaseOrDefault,
-              let (startOfBody, endOfBody) = parseSwitchStatementCase(caseOrDefaultIndex: conditionalBranchIndex)
-        {
-            branches.append((startOfBranch: startOfBody, endOfBranch: endOfBody))
-
-            if tokens[endOfBody].isSwitchCaseOrDefault || tokens[endOfBody] == .keyword("@unknown") {
-                nextConditionalBranchIndex = endOfBody
-            } else if tokens[startOfBody ..< endOfBody].contains(.startOfScope("#if")) {
-                return nil
+        // Collect all case/default/@unknown indices in the switch body, including
+        // those inside #if conditional compilation blocks. Use endOfScope() to skip
+        // over nested non-#if scopes naturally rather than tracking depth manually.
+        var caseIndices = [Int]()
+        var index = self.index(of: .nonSpaceOrCommentOrLinebreak, after: startOfSwitchScope)
+        while let i = index, i < endOfSwitchScope {
+            let token = tokens[i]
+            if token.isSwitchCaseOrDefault {
+                caseIndices.append(i)
+                // For `@unknown`, skip past the associated `case`/`default` token so it
+                // isn't collected as a second, separate case entry.
+                if token == .keyword("@unknown"),
+                   let next = self.index(of: .nonSpaceOrCommentOrLinebreak, after: i),
+                   tokens[next].isSwitchCaseOrDefault
+                {
+                    index = self.index(of: .nonSpaceOrCommentOrLinebreak, after: next)
+                } else {
+                    index = self.index(of: .nonSpaceOrCommentOrLinebreak, after: i)
+                }
+            } else if token == .startOfScope("{") || token == .startOfScope("(") || token == .startOfScope("[") {
+                // Skip over nested scopes ({}, (), []) but not :, #if, or string scopes
+                index = endOfScope(at: i).flatMap { self.index(of: .nonSpaceOrCommentOrLinebreak, after: $0) }
             } else {
-                break
+                index = self.index(of: .nonSpaceOrCommentOrLinebreak, after: i)
             }
+        }
+
+        guard !caseIndices.isEmpty else { return nil }
+
+        var branches = [(startOfBranch: Int, endOfBranch: Int)]()
+        for (offset, caseIndex) in caseIndices.enumerated() {
+            guard let (startOfBody, _) = parseSwitchStatementCase(caseOrDefaultIndex: caseIndex) else {
+                return nil
+            }
+            let endOfBody: Int
+            if offset + 1 < caseIndices.count {
+                let nextCaseIndex = caseIndices[offset + 1]
+                // If there is a #if, #else, or #elseif directive between this case body
+                // and the next case, use that directive as the boundary so preprocessor
+                // lines are not counted as part of this case's content.
+                endOfBody = firstIfdefBoundary(after: startOfBody, before: nextCaseIndex) ?? nextCaseIndex
+            } else {
+                endOfBody = endOfSwitchScope
+            }
+            branches.append((startOfBranch: startOfBody, endOfBranch: endOfBody))
         }
 
         return branches
     }
 
+    /// Returns the index of the first `#if`, `#else`, `#elseif`, or `#endif` token in the
+    /// range `(start, end)`, skipping over nested non-#if scopes.
+    private func firstIfdefBoundary(after start: Int, before end: Int) -> Int? {
+        var braceDepth = 0
+        for i in (start + 1) ..< end {
+            switch tokens[i] {
+            case .startOfScope("{"), .startOfScope("("), .startOfScope("["):
+                braceDepth += 1
+            case .endOfScope("}"), .endOfScope(")"), .endOfScope("]"):
+                braceDepth -= 1
+            case .startOfScope("#if"), .keyword("#else"), .keyword("#elseif"),
+                 .endOfScope("#endif") where braceDepth == 0:
+                return i
+            default:
+                break
+            }
+        }
+        return nil
+    }
+
     /// Parses the switch statement case starting at the given index,
     /// which should be one of: `case`, `default`, or `@unknown`.
     private func parseSwitchStatementCase(caseOrDefaultIndex: Int) -> (startOfBody: Int, endOfBody: Int)? {
-        assert(tokens[caseOrDefaultIndex].isSwitchCaseOrDefault)
+        assert(tokens[caseOrDefaultIndex].isSwitchCaseOrDefault || tokens[caseOrDefaultIndex] == .keyword("@unknown"))
 
         // `@unknown` (a keyword) is handled differently from `case` and `default` (endOfScope tokens).
         // In this case we have `.keyword("@unknown"), .endOfScope("default"), .startOfScope(":")`.
@@ -1596,6 +1645,7 @@ extension Formatter {
 
         return (startOfBody: startOfBody, endOfBody: endOfBody)
     }
+
 
     /// In Swift 5.9, there's a bug that prevents you from writing an
     /// if or switch expression using an `as?` on one of the branches:
@@ -1695,6 +1745,14 @@ extension Formatter {
         guard let switchStatementBranches = switchStatementBranches(at: switchIndex) else { return nil }
 
         return switchStatementBranches.enumerated().compactMap { caseIndex, switchCase -> SwitchStatementBranchWithSpacingInfo? in
+            // Cases that end at a `#else` or `#elseif` boundary are in mutually-exclusive
+            // compilation branches, where blank-line rules don't apply.
+            if tokens[switchCase.endOfBranch] == .keyword("#else") ||
+               tokens[switchCase.endOfBranch] == .keyword("#elseif")
+            {
+                return nil
+            }
+
             // Exclude any comments when considering if this is a single line or multi-line branch
             var startOfBranchExcludingLeadingComments = switchCase.startOfBranch
             while let tokenAfterStartOfScope = index(of: .nonSpace, after: startOfBranchExcludingLeadingComments),
@@ -1712,6 +1770,7 @@ extension Formatter {
             }
 
             var endOfBranchExcludingTrailingComments = switchCase.endOfBranch
+
             while let tokenBeforeEndOfScope = index(of: .nonSpace, before: endOfBranchExcludingTrailingComments),
                   tokens[tokenBeforeEndOfScope].isLinebreak,
                   let commentBeforeEndOfScope = index(of: .nonSpace, before: tokenBeforeEndOfScope),
@@ -1733,7 +1792,21 @@ extension Formatter {
             var linebreakBeforeEndOfScope: Int?
             var linebreakBeforeBlankLine: Int?
 
-            if let tokenBeforeEndOfScope = index(of: .nonSpace, before: endOfBranchExcludingTrailingComments),
+            // If the case body is bounded by `#endif`, the blank-line separator lives
+            // *after* the `#endif` line rather than before it. Use the next non-whitespace
+            // token after `#endif` as the reference point for blank-line detection so that
+            // an existing blank line between `#endif` and the next case is correctly
+            // identified, and a missing one can be inserted/removed in the right place.
+            let endForBlankLineDetection: Int
+            if tokens[switchCase.endOfBranch] == .endOfScope("#endif"),
+               let tokenAfterEndif = index(of: .nonSpaceOrCommentOrLinebreak, after: switchCase.endOfBranch)
+            {
+                endForBlankLineDetection = tokenAfterEndif
+            } else {
+                endForBlankLineDetection = endOfBranchExcludingTrailingComments
+            }
+
+            if let tokenBeforeEndOfScope = index(of: .nonSpace, before: endForBlankLineDetection),
                tokens[tokenBeforeEndOfScope].isLinebreak
             {
                 linebreakBeforeEndOfScope = tokenBeforeEndOfScope

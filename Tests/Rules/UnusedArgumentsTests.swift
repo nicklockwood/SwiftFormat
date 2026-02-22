@@ -1691,4 +1691,102 @@ final class UnusedArgumentsTests: XCTestCase {
         """
         testFormatting(for: input, rule: .unusedArguments)
     }
+
+    func testForLoopVariableShadowingFunctionArgument() {
+        let input = """
+        func foo(foo: [String]) {
+            for foo in foo {
+                print(foo)
+            }
+        }
+        """
+        testFormatting(for: input, rule: .unusedArguments)
+    }
+
+    func testForLoopVariableShadowingUnusedFunctionArgument() {
+        let input = """
+        func foo(bar: [String]) {
+            for bar in bar {
+                print(bar)
+            }
+        }
+        """
+        testFormatting(for: input, rule: .unusedArguments)
+    }
+
+    func testNestedForLoopOuterVariableUnused() {
+        let input = """
+        for outer in array {
+            for inner in outer {
+                print(inner)
+            }
+        }
+        """
+        testFormatting(for: input, rule: .unusedArguments)
+    }
+
+    func testNestedForLoopOuterVariableTrulyUnused() {
+        let input = """
+        for outer in array {
+            for inner in otherArray {
+                print(inner)
+            }
+        }
+        """
+        let output = """
+        for _ in array {
+            for inner in otherArray {
+                print(inner)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .unusedArguments)
+    }
+
+    func testNestedForLoopInnerVariableUnused() {
+        let input = """
+        for outer in array {
+            for inner in outer {
+                print(outer)
+            }
+        }
+        """
+        let output = """
+        for outer in array {
+            for _ in outer {
+                print(outer)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .unusedArguments)
+    }
+
+    func testForLoopInsideFunctionBody() {
+        let input = """
+        func processItems(_ items: [String]) {
+            for item in items {
+                print("hello")
+            }
+        }
+        """
+        let output = """
+        func processItems(_ items: [String]) {
+            for _ in items {
+                print("hello")
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .unusedArguments)
+    }
+
+    func testForLoopInsideFunctionBodyWithUsedVariable() {
+        let input = """
+        func processItems(_ items: [String]) {
+            for item in items {
+                print(item)
+            }
+        }
+        """
+        testFormatting(for: input, rule: .unusedArguments)
+    }
 }

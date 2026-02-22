@@ -1545,26 +1545,63 @@ extension Formatter {
     func switchStatementBranches(at switchIndex: Int) -> [ConditionalBranch]? {
         assert(tokens[switchIndex] == .keyword("switch"))
         guard let startOfSwitchScope = index(of: .startOfScope("{"), after: switchIndex),
-              let firstCaseIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfSwitchScope),
-              tokens[firstCaseIndex].isSwitchCaseOrDefault
+              let endOfSwitchScope = endOfScope(at: startOfSwitchScope)
         else { return nil }
 
-        var branches = [(startOfBranch: Int, endOfBranch: Int)]()
-        var nextConditionalBranchIndex: Int? = firstCaseIndex
-
-        while let conditionalBranchIndex = nextConditionalBranchIndex,
-              tokens[conditionalBranchIndex].isSwitchCaseOrDefault,
-              let (startOfBody, endOfBody) = parseSwitchStatementCase(caseOrDefaultIndex: conditionalBranchIndex)
-        {
-            branches.append((startOfBranch: startOfBody, endOfBranch: endOfBody))
-
-            if tokens[endOfBody].isSwitchCaseOrDefault || tokens[endOfBody] == .keyword("@unknown") {
-                nextConditionalBranchIndex = endOfBody
-            } else if tokens[startOfBody ..< endOfBody].contains(.startOfScope("#if")) {
-                return nil
-            } else {
-                break
+        // Collect all switch case start indices within the switch body,
+        // including those inside #if conditional compilation blocks.
+        // We scan linearly rather than using the scope-aware index(in:where:) since
+        // that skips case/default tokens that are direct children of #if scopes.
+        var allCaseIndices = [Int]()
+        var nonIfdefScopeDepth = 0
+        var i = startOfSwitchScope + 1
+        while i < endOfSwitchScope {
+            let token = tokens[i]
+            switch token {
+            case .startOfScope("{"), .startOfScope("("), .startOfScope("["):
+                nonIfdefScopeDepth += 1
+            case .endOfScope("}"), .endOfScope(")"), .endOfScope("]"):
+                nonIfdefScopeDepth -= 1
+            case .keyword("@unknown") where nonIfdefScopeDepth == 0:
+                allCaseIndices.append(i)
+                // Skip the following "default" token – it's part of "@unknown default:"
+                // and shouldn't be treated as a separate case entry.
+                i += 1
+                while i < endOfSwitchScope, tokens[i].isSpaceOrCommentOrLinebreak { i += 1 }
+            default:
+                if nonIfdefScopeDepth == 0, token.isSwitchCaseOrDefault {
+                    allCaseIndices.append(i)
+                }
             }
+            i += 1
+        }
+
+        guard !allCaseIndices.isEmpty else { return nil }
+
+        // Build branches from the collected case indices.
+        // Each branch starts at the case's ":" scope and ends at the start of the next case
+        // (or at the closing "}" of the switch for the last case).
+        var branches = [(startOfBranch: Int, endOfBranch: Int)]()
+        for (offset, caseIndex) in allCaseIndices.enumerated() {
+            let endOfBody = offset + 1 < allCaseIndices.count
+                ? allCaseIndices[offset + 1]
+                : endOfSwitchScope
+
+            // For @unknown, find the associated "default" token before looking for ":".
+            var lookupIndex = caseIndex
+            if tokens[caseIndex] == .keyword("@unknown") {
+                var j = caseIndex + 1
+                while j < endOfSwitchScope, tokens[j].isSpaceOrCommentOrLinebreak { j += 1 }
+                if j < endOfSwitchScope, tokens[j] == .endOfScope("default") {
+                    lookupIndex = j
+                }
+            }
+
+            guard let startOfBody = index(of: .startOfScope(":"), after: lookupIndex) else {
+                return nil
+            }
+
+            branches.append((startOfBranch: startOfBody, endOfBranch: endOfBody))
         }
 
         return branches

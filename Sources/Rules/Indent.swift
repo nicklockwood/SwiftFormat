@@ -281,25 +281,15 @@ public extension FormatRule {
 
                         // Make sure the `=` actually created a new scope
                         if scopeStack.last == .operator("=", .infix),
+                           // Parse the conditional branches following the `=` assignment operator
                            let previousAssignmentIndex,
-                           let nextTokenAfterAssignment = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: previousAssignmentIndex)
+                           let nextTokenAfterAssignment = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: previousAssignmentIndex),
+                           let conditionalBranches = formatter.conditionalBranches(at: nextTokenAfterAssignment),
+                           // If this is the very end of the conditional assignment following the `=`,
+                           // then we can end the scope.
+                           conditionalBranches.last?.endOfBranch == i
                         {
-                            if let conditionalBranches = formatter.conditionalBranches(at: nextTokenAfterAssignment),
-                               // If this is the very end of the conditional assignment following the `=`,
-                               // then we can end the scope.
-                               conditionalBranches.last?.endOfBranch == i
-                            {
-                                popScope()
-                            } else if formatter.tokens[nextTokenAfterAssignment] == .keyword("switch"),
-                                      // Fallback for switch expressions containing #if blocks, where
-                                      // conditionalBranches may return incorrect endOfBranch values
-                                      // (e.g. #endif instead of }) when the last case is inside a #if block.
-                                      // Check if this `}` is the direct closing brace of the switch body.
-                                      let switchBodyStart = formatter.index(of: .startOfScope("{"), after: nextTokenAfterAssignment),
-                                      formatter.endOfScope(at: switchBodyStart) == i
-                            {
-                                popScope()
-                            }
+                            popScope()
                         }
                     }
                 }

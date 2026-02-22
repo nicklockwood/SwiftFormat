@@ -63,7 +63,7 @@ final class BlankLinesAroundMarkTests: XCTestCase {
         testFormatting(for: input, output, rule: .blankLinesAroundMark)
     }
 
-    func testNoInsertBlankLineBeforeMarkAtStartOfScope() {
+    func testInsertBlankLineBeforeMarkAtStartOfScope() {
         let input = """
         do {
             // MARK: foo
@@ -71,10 +71,21 @@ final class BlankLinesAroundMarkTests: XCTestCase {
             let foo = "foo"
         }
         """
-        testFormatting(for: input, rule: .blankLinesAroundMark)
+        let output = """
+        do {
+
+            // MARK: foo
+
+            let foo = "foo"
+        }
+        """
+        // When only blankLinesAroundMark runs (without blankLinesAtStartOfScope), a blank line is
+        // inserted before the MARK. The second output (input) represents what happens when all rules
+        // run together, where blankLinesAtStartOfScope removes the blank line at the start of scope.
+        testFormatting(for: input, [output, input], rules: [.blankLinesAroundMark])
     }
 
-    func testNoInsertBlankLineBeforeMarkAtStartOfScopeWithTrailingComment() {
+    func testInsertBlankLineBeforeMarkAtStartOfScopeWithTrailingComment() {
         let input = """
         struct Foo { // some comment here
             // MARK: bar
@@ -82,7 +93,69 @@ final class BlankLinesAroundMarkTests: XCTestCase {
             let string: String
         }
         """
-        testFormatting(for: input, rule: .blankLinesAroundMark)
+        let output = """
+        struct Foo { // some comment here
+
+            // MARK: bar
+
+            let string: String
+        }
+        """
+        // When only blankLinesAroundMark runs (without blankLinesAtStartOfScope), a blank line is
+        // inserted before the MARK. The second output (input) represents what happens when all rules
+        // run together, where blankLinesAtStartOfScope removes the blank line at the start of scope.
+        testFormatting(for: input, [output, input], rules: [.blankLinesAroundMark])
+    }
+
+    func testNoInsertBlankLineBeforeMarkAtStartOfScopeWhenBlankLinesAtStartOfScopeEnabled() {
+        let input = """
+        do {
+            // MARK: foo
+
+            let foo = "foo"
+        }
+        """
+        testFormatting(for: input, rules: [.blankLinesAroundMark, .blankLinesAtStartOfScope])
+    }
+
+    func testNoInsertBlankLineBeforeMarkAtStartOfTypeBodyWithRemoveOption() {
+        let input = """
+        struct Foo {
+            // MARK: bar
+
+            let string: String
+        }
+        """
+        testFormatting(for: input, rules: [.blankLinesAroundMark, .blankLinesAtStartOfScope])
+    }
+
+    func testInsertBlankLineBeforeMarkAtStartOfTypeBodyWithInsertOption() {
+        let input = """
+        struct Foo {
+            // MARK: bar
+
+            let string: String
+        }
+        """
+        let output = """
+        struct Foo {
+
+            // MARK: bar
+
+            let string: String
+        }
+        """
+        let outputAllRules = """
+        struct Foo {
+
+            // MARK: bar
+
+            let string: String
+
+        }
+        """
+        let options = FormatOptions(typeBlankLines: .insert)
+        testFormatting(for: input, [output, outputAllRules], rules: [.blankLinesAroundMark, .blankLinesAtStartOfScope], options: options)
     }
 
     func testNoInsertBlankLineAfterMarkAtEndOfScope() {

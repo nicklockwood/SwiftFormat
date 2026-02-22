@@ -826,4 +826,82 @@ final class RedundantTypeTests: XCTestCase {
         let options = FormatOptions(propertyTypes: .inferLocalsOnly)
         testFormatting(for: input, rule: .redundantType, options: options, exclude: [.simplifyGenericConstraints])
     }
+
+    func testRedundantGenericArgRemovedForSetLiteral() {
+        let input = """
+        let set: Set<String> = ["a", "b", "c"]
+        """
+        let output = """
+        let set: Set = ["a", "b", "c"]
+        """
+        let options = FormatOptions(propertyTypes: .inferred)
+        testFormatting(for: input, output, rule: .redundantType, options: options)
+    }
+
+    func testNoRedundantGenericArgRemovedForSetLiteralExplicit() {
+        let input = """
+        let set: Set<String> = ["a", "b", "c"]
+        """
+        let options = FormatOptions(propertyTypes: .explicit)
+        testFormatting(for: input, rule: .redundantType, options: options)
+    }
+
+    func testNoRedundantGenericArgRemovedForArrayTypeLiteral() {
+        let input = """
+        let array: Array<String> = ["a", "b", "c"]
+        """
+        let options = FormatOptions(propertyTypes: .inferred)
+        testFormatting(for: input, rule: .redundantType, options: options, exclude: [.typeSugar])
+    }
+
+    func testNoRedundantGenericArgRemovedForArrayTypeLiteralExplicit() {
+        let input = """
+        let array: Array<String> = ["a", "b", "c"]
+        """
+        let options = FormatOptions(propertyTypes: .explicit)
+        testFormatting(for: input, rule: .redundantType, options: options, exclude: [.typeSugar])
+    }
+
+    func testNoRedundantGenericArgRemovedForCustomArrayLiteralType() {
+        let input = """
+        let custom: MyCustomArrayLiteralType<String> = ["a", "b", "c"]
+        """
+        let options = FormatOptions(propertyTypes: .inferred)
+        testFormatting(for: input, rule: .redundantType, options: options)
+    }
+
+    func testRedundantGenericArgRemovedForSetIntLiteral() {
+        let input = """
+        let set: Set<Int> = [1, 2, 3]
+        """
+        let output = """
+        let set: Set = [1, 2, 3]
+        """
+        let options = FormatOptions(propertyTypes: .inferred)
+        testFormatting(for: input, output, rule: .redundantType, options: options)
+    }
+
+    func testNoRedundantGenericArgRemovedForMismatchedType() {
+        let input = """
+        let set: Set<Double> = [1, 2, 3]
+        """
+        let options = FormatOptions(propertyTypes: .inferred)
+        testFormatting(for: input, rule: .redundantType, options: options)
+    }
+
+    func testNoRedundantGenericArgRemovedForDictionaryLiteral() {
+        let input = """
+        let dict: MyType<String> = ["key": "value"]
+        """
+        let options = FormatOptions(propertyTypes: .inferred)
+        testFormatting(for: input, rule: .redundantType, options: options)
+    }
+
+    func testNoRedundantGenericArgRemovedForMultipleGenericArgs() {
+        let input = """
+        let pair: MyPair<String, Int> = ["a", 1]
+        """
+        let options = FormatOptions(propertyTypes: .inferred)
+        testFormatting(for: input, rule: .redundantType, options: options)
+    }
 }

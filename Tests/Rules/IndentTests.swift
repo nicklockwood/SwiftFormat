@@ -5815,6 +5815,131 @@ final class IndentTests: XCTestCase {
         testFormatting(for: input, output, rule: .indent)
     }
 
+    func testIndentSwitchExpressionAssignmentWithIfdefBlock() {
+        let input = """
+        func format(someEnum: SomeEnum?) {
+            let result =
+            switch someEnum {
+            case .none: "none"
+            #if MY_PREPROC_DEF
+            case .many: "many"
+            #endif
+            case .some: "some"
+            }
+
+            print(result)
+        }
+
+        func myOtherFunction() {
+            format("some")
+        }
+        """
+
+        let output = """
+        func format(someEnum: SomeEnum?) {
+            let result =
+                switch someEnum {
+                case .none: "none"
+                #if MY_PREPROC_DEF
+                    case .many: "many"
+                #endif
+                case .some: "some"
+                }
+
+            print(result)
+        }
+
+        func myOtherFunction() {
+            format("some")
+        }
+        """
+
+        testFormatting(for: input, output, rule: .indent, exclude: [.blankLineAfterSwitchCase])
+    }
+
+    func testIndentSwitchExpressionAssignmentWithIfdefBlockOutdentMode() {
+        let input = """
+        func format(someEnum: SomeEnum?) {
+            let result =
+            switch someEnum {
+            case .none: "none"
+            #if MY_PREPROC_DEF
+            case .many: "many"
+            #endif
+            case .some: "some"
+            }
+
+            print(result)
+        }
+
+        func myOtherFunction() {
+            format("some")
+        }
+        """
+
+        let output = """
+        func format(someEnum: SomeEnum?) {
+            let result =
+                switch someEnum {
+                case .none: "none"
+        #if MY_PREPROC_DEF
+                case .many: "many"
+        #endif
+                case .some: "some"
+                }
+
+            print(result)
+        }
+
+        func myOtherFunction() {
+            format("some")
+        }
+        """
+
+        let options = FormatOptions(ifdefIndent: .outdent)
+        testFormatting(for: input, output, rule: .indent, options: options, exclude: [.blankLineAfterSwitchCase])
+    }
+
+    func testIndentSwitchExpressionAssignmentWithIfdefOnlyBlock() {
+        let input = """
+        func format(someEnum: SomeEnum?) {
+            let result =
+            switch someEnum {
+            case .some: "some"
+            #if MY_PREPROC_DEF
+            case .many: "many"
+            #endif
+            }
+
+            print(result)
+        }
+
+        func myOtherFunction() {
+            format("some")
+        }
+        """
+
+        let output = """
+        func format(someEnum: SomeEnum?) {
+            let result =
+                switch someEnum {
+                case .some: "some"
+                #if MY_PREPROC_DEF
+                    case .many: "many"
+                #endif
+                }
+
+            print(result)
+        }
+
+        func myOtherFunction() {
+            format("some")
+        }
+        """
+
+        testFormatting(for: input, output, rule: .indent, exclude: [.blankLineAfterSwitchCase])
+    }
+
     func testIndentIfExpressionWithSingleComment() {
         let input = """
         let foo =

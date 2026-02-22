@@ -368,9 +368,9 @@ private func processDirectory(_ inputURL: URL, with options: inout Options, logg
     let versionFile = inputURL.appendingPathComponent(swiftVersionFile)
     if manager.fileExists(atPath: versionFile.path) {
         // Don't read .swift-version from directories that will be excluded (affects no files)
-        var checkOptions = options
-        try checkOptions.addArguments(args, in: inputURL.standardizedFileURL.path)
-        if !checkOptions.shouldSkipFile(inputURL) {
+        var tempOptions = options
+        try tempOptions.addArguments(args, in: inputURL.standardizedFileURL.path)
+        if !tempOptions.shouldSkipFile(inputURL) {
             let versionString = try String(contentsOf: versionFile, encoding: .utf8)
                 .trimmingCharacters(in: .whitespacesAndNewlines)
             if args.first(where: { $0["swift-version"] != nil }) != nil {

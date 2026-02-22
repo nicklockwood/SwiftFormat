@@ -168,15 +168,15 @@ final class HoistAwaitTests: XCTestCase {
         for foo in bar(await baz()) {}
         """
         let output = """
-        for foo in await bar(baz()) {}
+        for _ in await bar(baz()) {}
         """
-        testFormatting(for: input, output, rule: .hoistAwait,
+        testFormatting(for: input, [output], rules: [.hoistAwait, .unusedArguments],
                        options: FormatOptions(swiftVersion: "5.5"))
     }
 
     func testAwaitNotHoistedOutOfForIndex() {
         let input = """
-        for await foo in asyncSequence() {}
+        for await _ in asyncSequence() {}
         """
         testFormatting(for: input, rule: .hoistAwait,
                        options: FormatOptions(swiftVersion: "5.5"))

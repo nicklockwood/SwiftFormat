@@ -76,6 +76,56 @@ public extension FormatRule {
             }
         }
 
+        // For loop variables (only when --strip-unused-args is "always")
+        if formatter.options.stripUnusedArguments == .all {
+            formatter.forEach(.keyword("for")) { i, _ in
+                // Find the "in" keyword that belongs to this for loop
+                guard let inIndex = formatter.index(of: .keyword("in"), after: i) else { return }
+
+                // Collect binding names between "for" and "in"
+                var argNames = [String]()
+                var nameIndexes = [Int]()
+                var index = i + 1
+                while index < inIndex {
+                    switch formatter.tokens[index] {
+                    case .keyword("case"):
+                        // Skip `for case .foo in ...` pattern-matching for loops
+                        return
+                    case .identifier("await"), .keyword("await"):
+                        // Skip `for await ...` async sequence iteration marker
+                        break
+                    case let .identifier(name) where name != "_":
+                        argNames.append(name)
+                        nameIndexes.append(index)
+                    default:
+                        break
+                    }
+                    index += 1
+                }
+
+                guard !argNames.isEmpty else { return }
+
+                // Find the loop body
+                guard let bodyStart = formatter.index(of: .startOfScope("{"), after: inIndex),
+                      let bodyEnd = formatter.endOfScope(at: bodyStart) else { return }
+
+                // Check usage in the body
+                formatter.removeUsed(from: &argNames, with: &nameIndexes, in: bodyStart + 1 ..< bodyEnd)
+
+                // Check usage in the `where` clause (if present)
+                if let whereIndex = formatter.index(of: .keyword("where"), after: inIndex),
+                   whereIndex < bodyStart
+                {
+                    formatter.removeUsed(from: &argNames, with: &nameIndexes, in: whereIndex + 1 ..< bodyStart)
+                }
+
+                // Replace unused bindings with `_`
+                for nameIndex in nameIndexes.reversed() {
+                    formatter.replaceToken(at: nameIndex, with: .identifier("_"))
+                }
+            }
+        }
+
         // Closure arguments
         formatter.forEach(.keyword("in")) { i, _ in
             var argNames = [String]()
@@ -181,6 +231,16 @@ public extension FormatRule {
 
         + request { _, data in
             self.data += data
+          }
+        ```
+
+        ```diff
+        - for (key, value) in dictionary {
+            print(key)
+          }
+
+        + for (key, _) in dictionary {
+            print(key)
           }
         ```
         """

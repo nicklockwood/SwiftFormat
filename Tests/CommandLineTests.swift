@@ -1166,6 +1166,67 @@ final class CommandLineTests: XCTestCase {
         XCTAssertEqual(errors, [])
     }
 
+    func testSwiftVersionNotReadFromExcludedDirectory() throws {
+        var logMessages: [String] = []
+
+        CLI.print = { message, type in
+            print(message)
+            logMessages.append(message)
+        }
+
+        let prefix = UUID().uuidString
+
+        // Test: .swift-version should NOT be read from a directory that ends up excluded.
+        // This exercises the case where a directory's own .swiftformat causes it to be
+        // excluded (so no files within it will be formatted), but the .swift-version
+        // in that directory was already read before the exclusion was detected.
+        //
+        // Structure:
+        //   root/
+        //     main.swift
+        //     build/
+        //       .swiftformat (--exclude <absolute path to build>)  <- self-excludes
+        //       .swift-version (5.9)   <- should NOT be read/logged
+        //       GeneratedFile.swift
+        let mainFile = try createTmpFile("\(prefix)/main.swift", contents: "let x = 1\n")
+        let rootDir = mainFile.deletingLastPathComponent()
+        let buildDir = rootDir.appendingPathComponent("build")
+        try FileManager.default.createDirectory(at: buildDir, withIntermediateDirectories: true)
+        // The .swiftformat causes the build directory to exclude itself
+        try "--exclude \(buildDir.path)\n".write(
+            to: buildDir.appendingPathComponent(".swiftformat"),
+            atomically: true,
+            encoding: .utf8
+        )
+        try "5.9\n".write(
+            to: buildDir.appendingPathComponent(".swift-version"),
+            atomically: true,
+            encoding: .utf8
+        )
+        try "let y = 2\n".write(
+            to: buildDir.appendingPathComponent("GeneratedFile.swift"),
+            atomically: true,
+            encoding: .utf8
+        )
+
+        defer {
+            try? FileManager.default.removeItem(at: rootDir)
+        }
+
+        _ = processArguments([
+            "",
+            rootDir.path,
+        ], in: rootDir.path)
+
+        let buildVersionMsgs = logMessages.filter {
+            $0.contains("swift-version") && $0.contains("build")
+        }
+        XCTAssertTrue(
+            buildVersionMsgs.isEmpty,
+            "Expected no swift-version messages from self-excluded build directory, got: \(buildVersionMsgs)"
+        )
+    }
+
     // MARK: Markdown
 
     func testFormatMarkdownFile() throws {

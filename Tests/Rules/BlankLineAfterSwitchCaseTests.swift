@@ -252,9 +252,9 @@ final class BlankLineAfterSwitchCaseTests: XCTestCase {
             await warpDrive.spinUp()
             warpDrive.activate()
         #if CLOAKING
-        case .engageCloakingDevice:
-            await cloakingDevice.spinUp()
-            cloakingDevice.activate()
+            case .engageCloakingDevice:
+                await cloakingDevice.spinUp()
+                cloakingDevice.activate()
         #endif
         case .handleIncomingEnergyBlast:
             await energyShields.prepare()
@@ -270,10 +270,11 @@ final class BlankLineAfterSwitchCaseTests: XCTestCase {
             warpDrive.activate()
 
         #if CLOAKING
-        case .engageCloakingDevice:
-            await cloakingDevice.spinUp()
-            cloakingDevice.activate()
+            case .engageCloakingDevice:
+                await cloakingDevice.spinUp()
+                cloakingDevice.activate()
         #endif
+
         case .handleIncomingEnergyBlast:
             await energyShields.prepare()
             energyShields.engage()
@@ -282,32 +283,48 @@ final class BlankLineAfterSwitchCaseTests: XCTestCase {
         testFormatting(for: input, output, rule: .blankLineAfterSwitchCase, exclude: [.consistentSwitchCaseSpacing])
     }
 
-    func testDoesntAddBlankLineAfterSingleLineSwitchCaseWithIfdefBlock() {
+    func testAddsBlankLineAfterMultilineSwitchCaseInsideIfdefBlock() {
+        // A multi-line case inside a #if block gets a blank line inserted after the #endif.
+        // A single-line case before the #if does not get a blank line (default mode only
+        // adds blank lines after multi-line cases).
         let input = """
         switch action {
         case .engageWarpDrive:
             warpDrive.activate()
         #if CLOAKING
-        case .engageCloakingDevice:
-            cloakingDevice.activate()
+            case .engageCloakingDevice:
+                cloakingDevice.activate()
         #endif
         case .handleIncomingEnergyBlast:
             energyShields.engage()
         }
         """
 
-        testFormatting(for: input, rule: .blankLineAfterSwitchCase)
+        let output = """
+        switch action {
+        case .engageWarpDrive:
+            warpDrive.activate()
+        #if CLOAKING
+            case .engageCloakingDevice:
+                cloakingDevice.activate()
+        #endif
+
+        case .handleIncomingEnergyBlast:
+            energyShields.engage()
+        }
+        """
+        testFormatting(for: input, output, rule: .blankLineAfterSwitchCase, exclude: [.consistentSwitchCaseSpacing])
     }
 
     func testDoesntAddBlankLineForCasesInIfElseBlock() {
         let input = """
         switch action {
         #if CLOAKING
-        case .engageCloakingDevice:
-            cloakingDevice.activate()
+            case .engageCloakingDevice:
+                cloakingDevice.activate()
         #else
-        case .handleIncomingEnergyBlast:
-            energyShields.engage()
+            case .handleIncomingEnergyBlast:
+                energyShields.engage()
         #endif
         }
         """

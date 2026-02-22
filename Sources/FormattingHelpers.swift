@@ -1556,9 +1556,18 @@ extension Formatter {
         var index = self.index(of: .nonSpaceOrCommentOrLinebreak, after: startOfSwitchScope)
         while let i = index, i < endOfSwitchScope {
             let token = tokens[i]
-            if token.isSwitchCaseOrDefault || token == .keyword("@unknown") {
+            if token.isSwitchCaseOrDefault {
                 caseIndices.append(i)
-                index = self.index(of: .nonSpaceOrCommentOrLinebreak, after: i)
+                // For `@unknown`, skip past the associated `case`/`default` token so it
+                // isn't collected as a second, separate case entry.
+                if token == .keyword("@unknown"),
+                   let next = self.index(of: .nonSpaceOrCommentOrLinebreak, after: i),
+                   tokens[next].isSwitchCaseOrDefault
+                {
+                    index = self.index(of: .nonSpaceOrCommentOrLinebreak, after: next)
+                } else {
+                    index = self.index(of: .nonSpaceOrCommentOrLinebreak, after: i)
+                }
             } else if token == .startOfScope("{") || token == .startOfScope("(") || token == .startOfScope("[") {
                 // Skip over nested scopes ({}, (), []) but not :, #if, or string scopes
                 index = endOfScope(at: i).flatMap { self.index(of: .nonSpaceOrCommentOrLinebreak, after: $0) }
@@ -1736,6 +1745,14 @@ extension Formatter {
         guard let switchStatementBranches = switchStatementBranches(at: switchIndex) else { return nil }
 
         return switchStatementBranches.enumerated().compactMap { caseIndex, switchCase -> SwitchStatementBranchWithSpacingInfo? in
+            // Cases that end at a `#else` or `#elseif` boundary are in mutually-exclusive
+            // compilation branches, where blank-line rules don't apply.
+            if tokens[switchCase.endOfBranch] == .keyword("#else") ||
+               tokens[switchCase.endOfBranch] == .keyword("#elseif")
+            {
+                return nil
+            }
+
             // Exclude any comments when considering if this is a single line or multi-line branch
             var startOfBranchExcludingLeadingComments = switchCase.startOfBranch
             while let tokenAfterStartOfScope = index(of: .nonSpace, after: startOfBranchExcludingLeadingComments),
@@ -1753,6 +1770,17 @@ extension Formatter {
             }
 
             var endOfBranchExcludingTrailingComments = switchCase.endOfBranch
+
+            // If the case's body is entirely wrapped in a `#if` block (its boundary is `#endif`),
+            // the blank-line separator conventionally follows the `#endif` rather than preceding
+            // it. Advance past `#endif` so spacing and insertion/removal are measured from after
+            // the end of the conditional compilation block.
+            if tokens[endOfBranchExcludingTrailingComments] == .endOfScope("#endif"),
+               let tokenAfterEndif = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfBranchExcludingTrailingComments)
+            {
+                endOfBranchExcludingTrailingComments = tokenAfterEndif
+            }
+
             while let tokenBeforeEndOfScope = index(of: .nonSpace, before: endOfBranchExcludingTrailingComments),
                   tokens[tokenBeforeEndOfScope].isLinebreak,
                   let commentBeforeEndOfScope = index(of: .nonSpace, before: tokenBeforeEndOfScope),

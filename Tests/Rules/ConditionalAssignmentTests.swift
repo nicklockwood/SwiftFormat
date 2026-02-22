@@ -424,6 +424,7 @@ final class ConditionalAssignmentTests: XCTestCase {
             case .foo:
                 result = method(string: foo as? String)
             #endif
+
             case .bar:
                 return nil
             }

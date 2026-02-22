@@ -1030,6 +1030,7 @@ final class RedundantSelfTests: XCTestCase {
                     case .baz:
                         break
                 #endif
+
                 default:
                     break
                 }
@@ -1045,6 +1046,7 @@ final class RedundantSelfTests: XCTestCase {
                     case .baz:
                         break
                 #endif
+
                 default:
                     break
                 }
@@ -1067,6 +1069,7 @@ final class RedundantSelfTests: XCTestCase {
                     case .quux:
                         self.method2(self.value)
                 #endif
+
                 default:
                     break
                 }
@@ -1085,6 +1088,7 @@ final class RedundantSelfTests: XCTestCase {
                     case .quux:
                         self.method2(value)
                 #endif
+
                 default:
                     break
                 }

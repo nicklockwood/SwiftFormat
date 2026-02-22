@@ -326,14 +326,16 @@ final class ConsistentSwitchCaseSpacingTests: XCTestCase {
     }
 
     func testConsistentSpacingWithIfdefWrappedCase() {
+        // When the case inside #if already has a blank line after #endif (matching the
+        // other cases), consistentSwitchCaseSpacing should make no changes.
         let input = """
         switch action {
         case .engageWarpDrive:
             warpDrive.activate()
 
         #if CLOAKING
-        case .engageCloakingDevice:
-            cloakingDevice.activate()
+            case .engageCloakingDevice:
+                cloakingDevice.activate()
         #endif
 
         case .handleIncomingEnergyBlast:
@@ -345,16 +347,19 @@ final class ConsistentSwitchCaseSpacingTests: XCTestCase {
     }
 
     func testConsistentSpacingWithMultilineIfdefWrappedCase() {
+        // When the case inside #if doesn't have a blank line after #endif but all
+        // other cases do, consistentSwitchCaseSpacing should insert the blank line after #endif.
         let input = """
         switch action {
         case .engageWarpDrive:
             navigationComputer.destination = targetedDestination
             await warpDrive.spinUp()
             warpDrive.activate()
+
         #if CLOAKING
-        case .engageCloakingDevice:
-            await cloakingDevice.spinUp()
-            cloakingDevice.activate()
+            case .engageCloakingDevice:
+                await cloakingDevice.spinUp()
+                cloakingDevice.activate()
         #endif
         case .handleIncomingEnergyBlast:
             await energyShields.prepare()
@@ -370,9 +375,9 @@ final class ConsistentSwitchCaseSpacingTests: XCTestCase {
             warpDrive.activate()
 
         #if CLOAKING
-        case .engageCloakingDevice:
-            await cloakingDevice.spinUp()
-            cloakingDevice.activate()
+            case .engageCloakingDevice:
+                await cloakingDevice.spinUp()
+                cloakingDevice.activate()
         #endif
 
         case .handleIncomingEnergyBlast:
@@ -385,17 +390,19 @@ final class ConsistentSwitchCaseSpacingTests: XCTestCase {
     }
 
     func testConsistentSpacingWithCasesInIfElseBlock() {
+        // Cases in #if/#else branches are mutually exclusive, so no blank lines are
+        // added between them regardless of the other cases' spacing.
         let input = """
         switch action {
         case .engageWarpDrive:
             warpDrive.activate()
 
         #if CLOAKING
-        case .engageCloakingDevice:
-            cloakingDevice.activate()
+            case .engageCloakingDevice:
+                cloakingDevice.activate()
         #else
-        case .handleIncomingEnergyBlast:
-            energyShields.engage()
+            case .handleIncomingEnergyBlast:
+                energyShields.engage()
         #endif
         }
         """

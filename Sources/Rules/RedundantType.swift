@@ -129,7 +129,8 @@ public extension FormatRule {
                 let (matches, i, j, wasValue) = formatter.compare(typeStartingAfter: equalsIndex, withTypeStartingAfter: colonIndex, typeEndIndex: typeEndIndex)
                 if matches {
                     removeType(after: equalsIndex, i: i, j: j, wasValue: wasValue)
-                } else if let tokenAfterEquals = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
+                } else if isInferred,
+                          let tokenAfterEquals = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
                           formatter.tokens[tokenAfterEquals] == .startOfScope("["),
                           let (baseTypeIndex, openAngle, argTypeIndex) = formatter.singleGenericArgType(afterColon: colonIndex, typeEndIndex: typeEndIndex),
                           let elementType = formatter.inferredArrayLiteralElementType(at: tokenAfterEquals),
@@ -137,7 +138,7 @@ public extension FormatRule {
                 {
                     // The generic argument is redundant (inferred from the array literal)
                     let baseTypeName = formatter.tokens[baseTypeIndex].string
-                    if isInferred, baseTypeName == "Array" {
+                    if baseTypeName == "Array" {
                         // Array<String> = [...] in inferred mode -> remove entire type annotation
                         formatter.removeTokens(in: colonIndex ... typeEndIndex)
                         if formatter.tokens[colonIndex - 1].isSpace {

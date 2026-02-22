@@ -1193,6 +1193,27 @@ final class CommandLineTests: XCTestCase {
                 "Expected no swift-version messages from excluded build directory, got: \(buildVersionMsgs)"
             )
         }
+
+        logMessages.removeAll()
+
+        // .swift-version should also NOT be read from a directory excluded by
+        // the root .swiftformat file via "--exclude build".
+        try withTmpFiles([
+            ".swiftformat": "--exclude build\n",
+            "main.swift": "let x = 1\n",
+            "build/.swift-version": "5.9\n",
+        ]) { url in
+            let rootDir = url.deletingLastPathComponent()
+            _ = processArguments(["", rootDir.path], in: rootDir.path)
+
+            let buildVersionMsgs = logMessages.filter {
+                $0.contains("swift-version") && $0.contains("build")
+            }
+            XCTAssertTrue(
+                buildVersionMsgs.isEmpty,
+                "Expected no swift-version messages from build directory excluded by root config, got: \(buildVersionMsgs)"
+            )
+        }
     }
 
     // MARK: Markdown

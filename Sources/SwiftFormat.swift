@@ -367,26 +367,31 @@ private func processDirectory(_ inputURL: URL, with options: inout Options, logg
     }
     let versionFile = inputURL.appendingPathComponent(swiftVersionFile)
     if manager.fileExists(atPath: versionFile.path) {
-        let versionString = try String(contentsOf: versionFile, encoding: .utf8)
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        if args.first(where: { $0["swift-version"] != nil }) != nil {
-            logger?("Ignoring swift-version file at \(versionFile.path)")
-        } else if Version(rawValue: versionString) != nil {
-            logger?("Reading swift-version file at \(versionFile.path) (version \(versionString))")
+        // Don't read .swift-version from directories that will be excluded (affects no files)
+        var tempOptions = options
+        try tempOptions.addArguments(args, in: inputURL.standardizedFileURL.path)
+        if !tempOptions.shouldSkipFile(inputURL) {
+            let versionString = try String(contentsOf: versionFile, encoding: .utf8)
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            if args.first(where: { $0["swift-version"] != nil }) != nil {
+                logger?("Ignoring swift-version file at \(versionFile.path)")
+            } else if Version(rawValue: versionString) != nil {
+                logger?("Reading swift-version file at \(versionFile.path) (version \(versionString))")
 
-            if args.isEmpty {
-                args = [["swift-version": versionString]]
-            } else {
-                args = args.map {
-                    var args = $0
-                    args["swift-version"] = versionString
-                    return args
+                if args.isEmpty {
+                    args = [["swift-version": versionString]]
+                } else {
+                    args = args.map {
+                        var args = $0
+                        args["swift-version"] = versionString
+                        return args
+                    }
                 }
+            } else {
+                // Don't treat as error, per: https://github.com/nicklockwood/SwiftFormat/issues/639
+                // TODO: find a better solution for logging warnings here
+                logger?("Unrecognized swift version string '\(versionString)' in \(versionFile.path)")
             }
-        } else {
-            // Don't treat as error, per: https://github.com/nicklockwood/SwiftFormat/issues/639
-            // TODO: find a better solution for logging warnings here
-            logger?("Unrecognized swift version string '\(versionString)' in \(versionFile.path)")
         }
     }
     configQueue.async {

@@ -1166,6 +1166,56 @@ final class CommandLineTests: XCTestCase {
         XCTAssertEqual(errors, [])
     }
 
+    func testSwiftVersionNotReadFromExcludedDirectory() throws {
+        var logMessages: [String] = []
+
+        CLI.print = { message, _ in
+            print(message)
+            logMessages.append(message)
+        }
+
+        // .swift-version should NOT be read from a directory that ends up excluded.
+        // The build/.swiftformat excludes itself via "--exclude ." so no files inside
+        // it will be formatted, making the .swift-version there irrelevant.
+        try withTmpFiles([
+            "main.swift": "let x = 1\n",
+            "build/.swiftformat": "--exclude .\n",
+            "build/.swift-version": "5.9\n",
+        ]) { url in
+            let rootDir = url.deletingLastPathComponent()
+            _ = processArguments(["", rootDir.path], in: rootDir.path)
+
+            let buildVersionMsgs = logMessages.filter {
+                $0.contains("swift-version") && $0.contains("build")
+            }
+            XCTAssertTrue(
+                buildVersionMsgs.isEmpty,
+                "Expected no swift-version messages from excluded build directory, got: \(buildVersionMsgs)"
+            )
+        }
+
+        logMessages.removeAll()
+
+        // .swift-version should also NOT be read from a directory excluded by
+        // the root .swiftformat file via "--exclude build".
+        try withTmpFiles([
+            ".swiftformat": "--exclude build\n",
+            "main.swift": "let x = 1\n",
+            "build/.swift-version": "5.9\n",
+        ]) { url in
+            let rootDir = url.deletingLastPathComponent()
+            _ = processArguments(["", rootDir.path], in: rootDir.path)
+
+            let buildVersionMsgs = logMessages.filter {
+                $0.contains("swift-version") && $0.contains("build")
+            }
+            XCTAssertTrue(
+                buildVersionMsgs.isEmpty,
+                "Expected no swift-version messages from build directory excluded by root config, got: \(buildVersionMsgs)"
+            )
+        }
+    }
+
     // MARK: Markdown
 
     func testFormatMarkdownFile() throws {

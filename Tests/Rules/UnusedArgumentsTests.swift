@@ -89,7 +89,13 @@ final class UnusedArgumentsTests: XCTestCase {
             for a in b {}
         }
         """
-        testFormatting(for: input, rule: .unusedArguments)
+        let output = """
+        {
+            func foo() -> Int {}
+            for _ in b {}
+        }
+        """
+        testFormatting(for: input, output, rule: .unusedArguments)
     }
 
     func testClosureTypeInClosureArgumentsIsNotMangled() {
@@ -1557,5 +1563,132 @@ final class UnusedArgumentsTests: XCTestCase {
         }
         """
         testFormatting(for: input, output, rule: .unusedArguments)
+    }
+
+    // for loops
+
+    func testUnusedForLoopVariable() {
+        let input = """
+        for value in array {
+            print("hello")
+        }
+        """
+        let output = """
+        for _ in array {
+            print("hello")
+        }
+        """
+        testFormatting(for: input, output, rule: .unusedArguments)
+    }
+
+    func testUsedForLoopVariable() {
+        let input = """
+        for value in array {
+            print(value)
+        }
+        """
+        testFormatting(for: input, rule: .unusedArguments)
+    }
+
+    func testUnusedForLoopTupleVariable() {
+        let input = """
+        for (key, value) in dictionary {
+            print(key)
+        }
+        """
+        let output = """
+        for (key, _) in dictionary {
+            print(key)
+        }
+        """
+        testFormatting(for: input, output, rule: .unusedArguments)
+    }
+
+    func testUnusedForLoopTupleVariables() {
+        let input = """
+        for (key, value) in dictionary {
+            print("hello")
+        }
+        """
+        let output = """
+        for (_, _) in dictionary {
+            print("hello")
+        }
+        """
+        testFormatting(for: input, output, rule: .unusedArguments)
+    }
+
+    func testUsedForLoopTupleVariables() {
+        let input = """
+        for (key, value) in dictionary {
+            print(key, value)
+        }
+        """
+        testFormatting(for: input, rule: .unusedArguments)
+    }
+
+    func testForLoopVariableAlreadyUnderscore() {
+        let input = """
+        for _ in array {
+            print("hello")
+        }
+        """
+        testFormatting(for: input, rule: .unusedArguments)
+    }
+
+    func testForLoopTupleVariableAlreadyUnderscore() {
+        let input = """
+        for (key, _) in dictionary {
+            print(key)
+        }
+        """
+        testFormatting(for: input, rule: .unusedArguments)
+    }
+
+    func testForLoopVariableUsedInWhereClause() {
+        let input = """
+        for value in array where value > 0 {
+            print("positive")
+        }
+        """
+        testFormatting(for: input, rule: .unusedArguments)
+    }
+
+    func testForLoopVariableUnusedWithClosureOnlyOption() {
+        let input = """
+        for value in array {
+            print("hello")
+        }
+        """
+        let options = FormatOptions(stripUnusedArguments: .closureOnly)
+        testFormatting(for: input, rule: .unusedArguments, options: options)
+    }
+
+    func testForLoopVariableUnusedWithUnnamedOnlyOption() {
+        let input = """
+        for value in array {
+            print("hello")
+        }
+        """
+        let options = FormatOptions(stripUnusedArguments: .unnamedOnly)
+        testFormatting(for: input, rule: .unusedArguments, options: options)
+    }
+
+    func testPatternMatchingForLoopNotModified() {
+        let input = """
+        for case let .foo(bar) in array {
+            print(bar)
+        }
+        """
+        testFormatting(for: input, rule: .unusedArguments)
+    }
+
+    func testUnusedPatternMatchingForLoopVariableNotModified() {
+        let input = """
+        for case let .foo(bar) in array {
+            print("hello")
+        }
+        """
+        testFormatting(for: input, rule: .unusedArguments)
     }
 }

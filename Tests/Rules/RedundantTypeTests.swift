@@ -846,15 +846,12 @@ final class RedundantTypeTests: XCTestCase {
         testFormatting(for: input, rule: .redundantType, options: options)
     }
 
-    func testRedundantTypeRemovedForArrayTypeLiteral() {
+    func testNoRedundantGenericArgRemovedForArrayTypeLiteral() {
         let input = """
         let array: Array<String> = ["a", "b", "c"]
         """
-        let output = """
-        let array: Array = ["a", "b", "c"]
-        """
         let options = FormatOptions(propertyTypes: .inferred)
-        testFormatting(for: input, output, rule: .redundantType, options: options, exclude: [.typeSugar])
+        testFormatting(for: input, rule: .redundantType, options: options, exclude: [.typeSugar])
     }
 
     func testNoRedundantGenericArgRemovedForArrayTypeLiteralExplicit() {
@@ -865,15 +862,12 @@ final class RedundantTypeTests: XCTestCase {
         testFormatting(for: input, rule: .redundantType, options: options, exclude: [.typeSugar])
     }
 
-    func testRedundantGenericArgRemovedForCustomArrayLiteralType() {
+    func testNoRedundantGenericArgRemovedForCustomArrayLiteralType() {
         let input = """
         let custom: MyCustomArrayLiteralType<String> = ["a", "b", "c"]
         """
-        let output = """
-        let custom: MyCustomArrayLiteralType = ["a", "b", "c"]
-        """
         let options = FormatOptions(propertyTypes: .inferred)
-        testFormatting(for: input, output, rule: .redundantType, options: options)
+        testFormatting(for: input, rule: .redundantType, options: options)
     }
 
     func testRedundantGenericArgRemovedForSetIntLiteral() {

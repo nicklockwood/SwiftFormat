@@ -132,7 +132,8 @@ public extension FormatRule {
                 } else if isInferred,
                           let tokenAfterEquals = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
                           formatter.tokens[tokenAfterEquals] == .startOfScope("["),
-                          let (openAngle, argTypeIndex) = formatter.singleGenericArgType(afterColon: colonIndex, typeEndIndex: typeEndIndex),
+                          let (baseTypeIndex, openAngle, argTypeIndex) = formatter.singleGenericArgType(afterColon: colonIndex, typeEndIndex: typeEndIndex),
+                          formatter.tokens[baseTypeIndex] == .identifier("Set"),
                           let elementType = formatter.inferredArrayLiteralElementType(at: tokenAfterEquals),
                           formatter.tokens[argTypeIndex] == elementType
                 {
@@ -240,11 +241,11 @@ extension Formatter {
     }
 
     /// For a type annotation of the form `TypeName<SingleArg>`, returns the indices of
-    /// the opening `<` and the generic argument token.
+    /// the base type, the opening `<`, and the generic argument token.
     /// Returns nil if the type has multiple generic arguments, a complex argument type,
     /// or no generic argument at all.
     func singleGenericArgType(afterColon colonIndex: Int, typeEndIndex: Int)
-        -> (openAngle: Int, argTypeIndex: Int)?
+        -> (baseTypeIndex: Int, openAngle: Int, argTypeIndex: Int)?
     {
         guard let baseTypeIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: colonIndex),
               case .identifier = tokens[baseTypeIndex],
@@ -256,7 +257,7 @@ extension Formatter {
               closeAngle == typeEndIndex,
               tokens[closeAngle] == .endOfScope(">")
         else { return nil }
-        return (openAngle, argTypeIndex)
+        return (baseTypeIndex, openAngle, argTypeIndex)
     }
 
     /// Returns the inferred element type for a homogeneous array literal, or nil if the

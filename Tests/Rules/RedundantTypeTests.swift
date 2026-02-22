@@ -851,10 +851,10 @@ final class RedundantTypeTests: XCTestCase {
         let array: Array<String> = ["a", "b", "c"]
         """
         let output = """
-        let array = ["a", "b", "c"]
+        let array: Array = ["a", "b", "c"]
         """
         let options = FormatOptions(propertyTypes: .inferred)
-        testFormatting(for: input, output, rule: .redundantType, options: options)
+        testFormatting(for: input, output, rule: .redundantType, options: options, exclude: [.typeSugar])
     }
 
     func testNoRedundantGenericArgRemovedForArrayTypeLiteralExplicit() {

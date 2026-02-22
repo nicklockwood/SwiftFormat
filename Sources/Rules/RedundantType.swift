@@ -132,22 +132,12 @@ public extension FormatRule {
                 } else if isInferred,
                           let tokenAfterEquals = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: equalsIndex),
                           formatter.tokens[tokenAfterEquals] == .startOfScope("["),
-                          let (baseTypeIndex, openAngle, argTypeIndex) = formatter.singleGenericArgType(afterColon: colonIndex, typeEndIndex: typeEndIndex),
+                          let (openAngle, argTypeIndex) = formatter.singleGenericArgType(afterColon: colonIndex, typeEndIndex: typeEndIndex),
                           let elementType = formatter.inferredArrayLiteralElementType(at: tokenAfterEquals),
                           formatter.tokens[argTypeIndex] == elementType
                 {
                     // The generic argument is redundant (inferred from the array literal)
-                    let baseTypeName = formatter.tokens[baseTypeIndex].string
-                    if baseTypeName == "Array" {
-                        // Array<String> = [...] in inferred mode -> remove entire type annotation
-                        formatter.removeTokens(in: colonIndex ... typeEndIndex)
-                        if formatter.tokens[colonIndex - 1].isSpace {
-                            formatter.removeToken(at: colonIndex - 1)
-                        }
-                    } else {
-                        // Set<String> = [...] -> Set = [...], MyType<String> = [...] -> MyType = [...]
-                        formatter.removeTokens(in: openAngle ... typeEndIndex)
-                    }
+                    formatter.removeTokens(in: openAngle ... typeEndIndex)
                 }
             }
         }
@@ -250,11 +240,11 @@ extension Formatter {
     }
 
     /// For a type annotation of the form `TypeName<SingleArg>`, returns the indices of
-    /// the base type, the opening `<`, and the generic argument token.
+    /// the opening `<` and the generic argument token.
     /// Returns nil if the type has multiple generic arguments, a complex argument type,
     /// or no generic argument at all.
     func singleGenericArgType(afterColon colonIndex: Int, typeEndIndex: Int)
-        -> (baseTypeIndex: Int, openAngle: Int, argTypeIndex: Int)?
+        -> (openAngle: Int, argTypeIndex: Int)?
     {
         guard let baseTypeIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: colonIndex),
               case .identifier = tokens[baseTypeIndex],
@@ -266,7 +256,7 @@ extension Formatter {
               closeAngle == typeEndIndex,
               tokens[closeAngle] == .endOfScope(">")
         else { return nil }
-        return (baseTypeIndex, openAngle, argTypeIndex)
+        return (openAngle, argTypeIndex)
     }
 
     /// Returns the inferred element type for a homogeneous array literal, or nil if the
@@ -289,25 +279,16 @@ extension Formatter {
                 continue
             }
 
-            let inferred: Token
-            if token.isStringDelimiter {
-                inferred = .identifier("String")
-                i = endOfScope(at: nextIndex) ?? nextIndex
-            } else if case .number = token {
-                inferred = typeToken(forValueToken: token)
-                i = nextIndex
-            } else if token == .identifier("true") || token == .identifier("false") {
-                inferred = typeToken(forValueToken: token)
-                i = nextIndex
-            } else {
-                return nil
-            }
+            let inferred = typeToken(forValueToken: token)
+            // typeToken returns the token unchanged for non-literals; skip those
+            guard inferred != token else { return nil }
 
             if let existing = elementType {
                 if existing != inferred { return nil }
             } else {
                 elementType = inferred
             }
+            i = token.isStringDelimiter ? (endOfScope(at: nextIndex) ?? nextIndex) : nextIndex
         }
 
         return elementType

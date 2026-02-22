@@ -1421,7 +1421,8 @@ extension Formatter {
             return last(.nonSpaceOrLinebreak, before: i) != .keyword("for")
         case .identifier("async"):
             if let nextToken = next(.nonSpaceOrCommentOrLinebreak, after: nextIndex),
-               [.operator("->", .infix), .keyword("throws"), .keyword("rethrows")].contains(nextToken)
+               [.operator("->", .infix), .keyword("throws"), .keyword("rethrows"),
+                .startOfScope("{")].contains(nextToken)
             {
                 return true
             }

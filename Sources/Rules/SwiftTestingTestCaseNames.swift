@@ -213,18 +213,46 @@ extension String {
             words.append(contentsOf: String(segment).splitCamelCase())
         }
 
+        // Merge a lone single lowercase leading character with a following all-uppercase word.
+        // This handles acronym-first names after test prefix removal, e.g. "uUID" (from "testUUID") → "uuid".
+        if words.count >= 2,
+           words[0].count == 1,
+           words[0].first?.isLowercase == true,
+           words[1].allSatisfy({ $0.isUppercase })
+        {
+            words = [words[0] + words[1]] + Array(words.dropFirst(2))
+        }
+
         return words.joined(separator: " ").lowercased()
     }
 
-    /// Splits a camelCase string into individual words.
+    /// Splits a camelCase string into individual words, treating consecutive uppercase letters as acronyms.
+    /// For example: "UUIDIsValid" → ["UUID", "Is", "Valid"], "alphabetStartsWithABC" → ["alphabet", "Starts", "With", "ABC"].
     func splitCamelCase() -> [String] {
         var words: [String] = []
         var currentWord = ""
+        let chars = Array(self)
 
-        for char in self {
-            if char.isUppercase, !currentWord.isEmpty {
-                words.append(currentWord)
-                currentWord = String(char)
+        for i in 0 ..< chars.count {
+            let char = chars[i]
+            let nextChar = i + 1 < chars.count ? chars[i + 1] : nil
+
+            if char.isUppercase {
+                if currentWord.isEmpty {
+                    currentWord.append(char)
+                } else if currentWord.last!.isLowercase {
+                    // Lower→Upper transition: start a new word
+                    words.append(currentWord)
+                    currentWord = String(char)
+                } else if let next = nextChar, next.isLowercase {
+                    // Uppercase sequence followed by lowercase: this char starts a new word
+                    // e.g. "UUIDIs" → "UUID" + "Is"
+                    words.append(currentWord)
+                    currentWord = String(char)
+                } else {
+                    // Continue accumulating the uppercase sequence (acronym)
+                    currentWord.append(char)
+                }
             } else {
                 currentWord.append(char)
             }

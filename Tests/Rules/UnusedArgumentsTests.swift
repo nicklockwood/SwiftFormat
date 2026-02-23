@@ -1789,4 +1789,27 @@ final class UnusedArgumentsTests: XCTestCase {
         """
         testFormatting(for: input, rule: .unusedArguments)
     }
+
+    func testUnusedForLoopVariableWithTypeAnnotation() {
+        let input = """
+        for resizeScale: CGFloat? in [nil, 1, 2] {
+            print("hello")
+        }
+        """
+        let output = """
+        for _: CGFloat? in [nil, 1, 2] {
+            print("hello")
+        }
+        """
+        testFormatting(for: input, output, rule: .unusedArguments)
+    }
+
+    func testUsedForLoopVariableWithTypeAnnotation() {
+        let input = """
+        for resizeScale: CGFloat? in [nil, 1, 2] {
+            print(resizeScale)
+        }
+        """
+        testFormatting(for: input, rule: .unusedArguments)
+    }
 }

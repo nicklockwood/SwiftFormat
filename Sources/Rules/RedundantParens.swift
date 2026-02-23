@@ -58,6 +58,13 @@ public extension FormatRule {
             default:
                 break
             }
+            if prevToken.isAttribute,
+               formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i) == closingIndex
+            {
+                formatter.removeParen(at: closingIndex)
+                formatter.removeParen(at: i)
+                return
+            }
             switch prevToken {
             case .stringBody, .operator("?", .postfix), .operator("!", .postfix), .operator("->", .infix):
                 return
@@ -233,6 +240,11 @@ public extension FormatRule {
         ```diff
         - let foo: Int = ({ ... })()
         + let foo: Int = { ... }()
+        ```
+
+        ```diff
+        - @Test()
+        + @Test
         ```
         """
     }

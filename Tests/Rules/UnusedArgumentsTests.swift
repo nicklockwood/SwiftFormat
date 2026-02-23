@@ -1812,4 +1812,13 @@ final class UnusedArgumentsTests: XCTestCase {
         """
         testFormatting(for: input, rule: .unusedArguments)
     }
+
+    func testEscapedKeywordForLoopVariableNotReplaced() {
+        let input = """
+        for `extension` in extensions {
+            print(`extension`)
+        }
+        """
+        testFormatting(for: input, rule: .unusedArguments)
+    }
 }

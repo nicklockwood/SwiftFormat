@@ -94,7 +94,9 @@ public extension FormatRule {
                     case .identifier("await"), .keyword("await"):
                         // Skip `for await ...` async sequence iteration marker
                         break
-                    case let .identifier(name) where name != "_":
+                    case .identifier:
+                        let name = formatter.tokens[index].unescaped()
+                        guard name != "_" else { break }
                         argNames.append(name)
                         nameIndexes.append(index)
                     case .delimiter(":"):

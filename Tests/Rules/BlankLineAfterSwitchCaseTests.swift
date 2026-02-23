@@ -331,4 +331,76 @@ final class BlankLineAfterSwitchCaseTests: XCTestCase {
 
         testFormatting(for: input, rule: .blankLineAfterSwitchCase)
     }
+
+    func testNoBlankLineInsertedBeforeIfdefInsideSwitchCase() {
+        let input = """
+        switch foo {
+        case .bar:
+            #if DEBUG
+                print("foo")
+            #endif
+            print("bar")
+
+        case .baaz:
+            print("baaz")
+        }
+        """
+
+        testFormatting(for: input, rule: .blankLineAfterSwitchCase)
+    }
+
+    func testNoBlankLineInsertedBeforeIfdefWithNestedSwitchInsideCase() {
+        let input = """
+        switch foo {
+        case .bar:
+            #if DEBUG
+                switch nested {
+                case .a:
+                    print("a")
+                case .b:
+                    print("b")
+                }
+            #endif
+            print("bar")
+
+        case .baaz:
+            print("baaz")
+        }
+        """
+
+        testFormatting(for: input, rule: .blankLineAfterSwitchCase)
+    }
+
+    func testBlankLineAfterMultilineSwitchCaseWithIfdefInsideCase() {
+        let input = """
+        switch foo {
+        case .bar:
+            #if DEBUG
+                print("foo")
+            #endif
+            print("bar")
+        case .baaz:
+            print("baaz")
+        case .quux:
+            print("quux")
+        }
+        """
+
+        let output = """
+        switch foo {
+        case .bar:
+            #if DEBUG
+                print("foo")
+            #endif
+            print("bar")
+
+        case .baaz:
+            print("baaz")
+        case .quux:
+            print("quux")
+        }
+        """
+
+        testFormatting(for: input, output, rule: .blankLineAfterSwitchCase, exclude: [.consistentSwitchCaseSpacing])
+    }
 }

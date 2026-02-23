@@ -409,4 +409,43 @@ final class ConsistentSwitchCaseSpacingTests: XCTestCase {
 
         testFormatting(for: input, rule: .consistentSwitchCaseSpacing)
     }
+
+    func testConsistentSpacingWithIfdefInsideSwitchCase() {
+        let input = """
+        switch foo {
+        case .bar:
+            #if DEBUG
+                print("foo")
+            #endif
+            print("bar")
+
+        case .baaz:
+            print("baaz")
+        }
+        """
+
+        testFormatting(for: input, rule: .consistentSwitchCaseSpacing)
+    }
+
+    func testConsistentSpacingWithIfdefContainingNestedSwitchInsideCase() {
+        let input = """
+        switch foo {
+        case .bar:
+            #if DEBUG
+                switch nested {
+                case .a:
+                    print("a")
+                case .b:
+                    print("b")
+                }
+            #endif
+            print("bar")
+
+        case .baaz:
+            print("baaz")
+        }
+        """
+
+        testFormatting(for: input, rule: .consistentSwitchCaseSpacing)
+    }
 }

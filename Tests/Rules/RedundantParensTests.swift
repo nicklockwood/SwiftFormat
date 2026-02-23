@@ -1552,6 +1552,48 @@ final class RedundantParensTests: XCTestCase {
         testFormatting(for: input, rule: .redundantParens)
     }
 
+    // in attributes
+
+    func testEmptyParensRemovedFromAttribute() {
+        let input = """
+        @Test()
+        func testFoo() {}
+        """
+        let output = """
+        @Test
+        func testFoo() {}
+        """
+        testFormatting(for: input, output, rule: .redundantParens)
+    }
+
+    func testEmptyParensRemovedFromStateAttribute() {
+        let input = """
+        @State()
+        private var foo: Int
+        """
+        let output = """
+        @State
+        private var foo: Int
+        """
+        testFormatting(for: input, output, rule: .redundantParens)
+    }
+
+    func testParensWithContentNotRemovedFromAttribute() {
+        let input = """
+        @Test(arguments: foo)
+        func testFoo() {}
+        """
+        testFormatting(for: input, rule: .redundantParens)
+    }
+
+    func testParensWithContentNotRemovedFromAvailableAttribute() {
+        let input = """
+        @available(iOS 15, *)
+        func foo() {}
+        """
+        testFormatting(for: input, rule: .redundantParens)
+    }
+
     // in async expression
 
     func testRequiredParensNotRemovedInAsyncLet() {

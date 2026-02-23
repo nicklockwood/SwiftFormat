@@ -1566,14 +1566,14 @@ final class RedundantParensTests: XCTestCase {
         testFormatting(for: input, output, rule: .redundantParens)
     }
 
-    func testEmptyParensRemovedFromObjcAttribute() {
+    func testEmptyParensRemovedFromStateAttribute() {
         let input = """
-        @objc()
-        var foo: Int
+        @State()
+        private var foo: Int
         """
         let output = """
-        @objc
-        var foo: Int
+        @State
+        private var foo: Int
         """
         testFormatting(for: input, output, rule: .redundantParens)
     }

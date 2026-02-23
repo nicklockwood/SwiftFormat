@@ -2768,6 +2768,11 @@ Remove redundant parentheses.
 + let foo: Int = { ... }()
 ```
 
+```diff
+- @Test()
++ @Test
+```
+
 </details>
 <br/>
 

@@ -97,6 +97,13 @@ public extension FormatRule {
                     case let .identifier(name) where name != "_":
                         argNames.append(name)
                         nameIndexes.append(index)
+                    case .delimiter(":"):
+                        // Skip type annotation after `:` (e.g. `for x: CGFloat? in`)
+                        if let typeStart = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index),
+                           let type = formatter.parseType(at: typeStart)
+                        {
+                            index = type.range.upperBound
+                        }
                     default:
                         break
                     }

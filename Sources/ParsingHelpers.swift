@@ -2400,8 +2400,13 @@ extension Formatter {
                     }
                     previousKeywordIndex = index(of: .keywordOrAttribute, before: previousIndex)
                     startIndex = nextStart ?? startIndex
+                } else if case let .keyword(kw) = tokens[previousIndex],
+                          _FormatRules.aclModifiers.contains(kw)
+                {
+                    // Allow import access modifiers (Swift 6 SE-0409)
+                    previousKeywordIndex = index(of: .keywordOrAttribute, before: previousIndex)
+                    if let prev = previousKeywordIndex, prev >= startIndex { return }
                 } else if previousIndex >= startIndex {
-                    // Can't handle another keyword on same line as import
                     return
                 } else {
                     break

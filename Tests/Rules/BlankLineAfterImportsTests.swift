@@ -105,6 +105,6 @@ final class BlankLineAfterImportsTests: XCTestCase {
 
         public class Foo {}
         """
-        testFormatting(for: input, output, rule: .blankLineAfterImports)
+        testFormatting(for: input, output, rule: .blankLineAfterImports, exclude: [.sortImports])
     }
 }

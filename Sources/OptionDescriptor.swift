@@ -856,22 +856,16 @@ struct _Descriptors {
     let importGrouping = OptionDescriptor(
         argumentName: "import-grouping",
         displayName: "Import Grouping",
-        help: "Import statement grouping:",
+        help: "Comma-delimited list of import sorting/grouping options",
         keyPath: \FormatOptions.importGrouping,
-        altOptions: [
-            "alphabetized": .alpha,
-            "alphabetical": .alpha,
-            "testable-top": .testableFirst,
-            "testable-bottom": .testableLast,
-        ]
-    )
-    let importSortByAccessControl = OptionDescriptor(
-        argumentName: "import-sort-by-access-control",
-        displayName: "Import Sort By Access Control",
-        help: "Sort imports by access control level (unlabeled imports last):",
-        keyPath: \FormatOptions.importSortByAccessControl,
-        trueValues: ["enabled", "true"],
-        falseValues: ["disabled", "false"]
+        type: .text,
+        fromArgument: { arg in
+            return Set(parseCommaDelimitedList(arg).compactMap { ImportGrouping(rawValue: $0) })
+        },
+        toArgument: { options in
+            let order: [ImportGrouping] = [.accessControl, .alpha, .length, .testableFirst, .testableBottom]
+            return order.filter { options.contains($0) }.map(\.rawValue).joined(separator: ",")
+        }
     )
     let trailingClosures = OptionDescriptor(
         argumentName: "trailing-closures",

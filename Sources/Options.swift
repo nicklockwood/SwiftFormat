@@ -446,12 +446,13 @@ public enum Grouping: Equatable, RawRepresentable, CustomStringConvertible {
     }
 }
 
-/// Grouping for sorting imports
-public enum ImportGrouping: String, CaseIterable {
+/// Individual import sorting/grouping options, combined as a Set
+public enum ImportGrouping: String, CaseIterable, Hashable {
     case alpha
     case length
+    case accessControl = "access-control"
     case testableFirst = "testable-first"
-    case testableLast = "testable-last"
+    case testableBottom = "testable-bottom"
 }
 
 /// Self insertion mode
@@ -803,8 +804,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var throwCapturing: Set<String>
     public var asyncCapturing: Set<String>
     public var experimentalRules: Bool
-    public var importGrouping: ImportGrouping
-    public var importSortByAccessControl: Bool
+    public var importGrouping: Set<ImportGrouping>
     public var trailingClosures: Set<String>
     public var neverTrailing: Set<String>
     public var xcodeIndentation: Bool
@@ -951,8 +951,7 @@ public struct FormatOptions: CustomStringConvertible {
                 throwCapturing: Set<String> = [],
                 asyncCapturing: Set<String> = [],
                 experimentalRules: Bool = false,
-                importGrouping: ImportGrouping = .alpha,
-                importSortByAccessControl: Bool = false,
+                importGrouping: Set<ImportGrouping> = [.alpha],
                 trailingClosures: Set<String> = [],
                 neverTrailing: Set<String> = [],
                 xcodeIndentation: Bool = false,
@@ -1089,7 +1088,6 @@ public struct FormatOptions: CustomStringConvertible {
         self.asyncCapturing = asyncCapturing
         self.experimentalRules = experimentalRules
         self.importGrouping = importGrouping
-        self.importSortByAccessControl = importSortByAccessControl
         self.trailingClosures = trailingClosures
         self.neverTrailing = neverTrailing
         self.xcodeIndentation = xcodeIndentation

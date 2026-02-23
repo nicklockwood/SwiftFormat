@@ -11,8 +11,8 @@ import Foundation
 public extension FormatRule {
     /// Sort import statements
     static let sortImports = FormatRule(
-        help: "Sort import statements alphabetically.",
-        options: ["import-grouping", "import-sort-by-access-control"],
+        help: "Sort and group import statements.",
+        options: ["import-grouping"],
         sharedOptions: ["linebreaks"]
     ) { formatter in
         for var importRanges in formatter.parseImports().reversed() {
@@ -62,56 +62,40 @@ public extension FormatRule {
 
 extension Formatter {
     func sortRanges(_ ranges: [Formatter.ImportRange]) -> [Formatter.ImportRange] {
-        /// Sort order for import access level using aclModifiers (higher index = more visible). Unlabeled imports return -1 (last).
-        func accessLevelSortOrder(for range: Formatter.ImportRange) -> Int {
-            guard let level = range.accessLevel else { return -1 }
-            return _FormatRules.aclModifiers.firstIndex(of: level) ?? -1
-        }
+        let grouping = options.importGrouping
 
-        let sortByAccessThenAlpha: (Formatter.ImportRange, Formatter.ImportRange) -> Bool = { lhs, rhs in
-            let lhsAccessOrder = accessLevelSortOrder(for: lhs)
-            let rhsAccessOrder = accessLevelSortOrder(for: rhs)
-
-            return if lhsAccessOrder != rhsAccessOrder {
-                lhsAccessOrder > rhsAccessOrder
-            } else {
-                lhs < rhs
-            }
-        }
-
-        let sortByAccessThenLength: (Formatter.ImportRange, Formatter.ImportRange) -> Bool = { lhs, rhs in
-            let lhsAccessOrder = accessLevelSortOrder(for: lhs)
-            let rhsAccessOrder = accessLevelSortOrder(for: rhs)
-
-            return if lhsAccessOrder != rhsAccessOrder {
-                lhsAccessOrder > rhsAccessOrder
-            } else {
-                lhs.module.count < rhs.module.count
-            }
-        }
-
-        let partitions: [[Formatter.ImportRange]] = switch options.importGrouping {
-        case .testableFirst:
-            [ranges.filter(\.isTestable), ranges.filter { !$0.isTestable }]
-        case .testableLast:
-            [ranges.filter { !$0.isTestable }, ranges.filter(\.isTestable)]
-        case .alpha, .length:
-            [ranges]
+        let partitions: [[Formatter.ImportRange]]
+        if grouping.contains(.testableFirst) {
+            partitions = [ranges.filter(\.isTestable), ranges.filter { !$0.isTestable }]
+        } else if grouping.contains(.testableBottom) {
+            partitions = [ranges.filter { !$0.isTestable }, ranges.filter(\.isTestable)]
+        } else {
+            partitions = [ranges]
         }
 
         return partitions.flatMap { partition in
-            if options.importSortByAccessControl {
-                return partition.sorted(by: options.importGrouping == .length ? sortByAccessThenLength : sortByAccessThenAlpha)
-            }
+            partition.sorted { lhs, rhs in
+                if grouping.contains(.accessControl) {
+                    let lhsAccessOrder = accessLevelSortOrder(for: lhs)
+                    let rhsAccessOrder = accessLevelSortOrder(for: rhs)
+                    if lhsAccessOrder != rhsAccessOrder {
+                        return lhsAccessOrder > rhsAccessOrder
+                    }
+                }
 
-            return switch options.importGrouping {
-            case .alpha:
-                partition.sorted(by: <)
-            case .length:
-                partition.sorted { $0.module.count < $1.module.count }
-            case .testableFirst, .testableLast:
-                partition.sorted(by: <)
+                if grouping.contains(.length) {
+                    return lhs.module.count < rhs.module.count
+                }
+                // Default to alphabetical
+                return lhs < rhs
             }
         }
+    }
+
+    /// Sort order for import access level using aclModifiers (higher index = more visible).
+    /// Unlabeled imports return -1 (sorted last).
+    func accessLevelSortOrder(for range: Formatter.ImportRange) -> Int {
+        guard let level = range.accessLevel else { return -1 }
+        return _FormatRules.aclModifiers.firstIndex(of: level) ?? -1
     }
 }

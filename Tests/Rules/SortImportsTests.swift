@@ -198,7 +198,7 @@ final class SortImportsTests: XCTestCase {
         import Bar3
         import Module
         """
-        let options = FormatOptions(importGrouping: .length)
+        let options = FormatOptions(importGrouping: [.length])
         testFormatting(for: input, output, rule: .sortImports, options: options)
     }
 
@@ -227,7 +227,7 @@ final class SortImportsTests: XCTestCase {
         @testable import Bar
         @testable import UIKit
         """
-        let options = FormatOptions(importGrouping: .testableLast)
+        let options = FormatOptions(importGrouping: [.alpha, .testableBottom])
         testFormatting(for: input, output, rule: .sortImports, options: options)
     }
 
@@ -242,7 +242,7 @@ final class SortImportsTests: XCTestCase {
         @testable import UIKit
         import Foo
         """
-        let options = FormatOptions(importGrouping: .testableFirst)
+        let options = FormatOptions(importGrouping: [.alpha, .testableFirst])
         testFormatting(for: input, output, rule: .sortImports, options: options)
     }
 
@@ -403,6 +403,8 @@ final class SortImportsTests: XCTestCase {
         testFormatting(for: input, output, rule: .sortImports)
     }
 
+    // MARK: - Access control sorting
+
     func testAccessControlSortImports() {
         let input = """
         import Foo
@@ -414,7 +416,7 @@ final class SortImportsTests: XCTestCase {
         private import Bar
         import Foo
         """
-        let options = FormatOptions(importSortByAccessControl: true)
+        let options = FormatOptions(importGrouping: [.alpha, .accessControl])
         testFormatting(for: input, output, rule: .sortImports, options: options)
     }
 
@@ -429,25 +431,37 @@ final class SortImportsTests: XCTestCase {
         public import Middle
         public import Zebra
         """
-        let options = FormatOptions(importSortByAccessControl: true)
+        let options = FormatOptions(importGrouping: [.alpha, .accessControl])
+        testFormatting(for: input, output, rule: .sortImports, options: options)
+    }
+
+    func testAccessControlSortLengthWithinLevel() {
+        let input = """
+        public import Zebra
+        public import Al
+        public import Middle
+        """
+        let output = """
+        public import Al
+        public import Zebra
+        public import Middle
+        """
+        let options = FormatOptions(importGrouping: [.length, .accessControl])
         testFormatting(for: input, output, rule: .sortImports, options: options)
     }
 
     func testAccessControlWithTestableFirst() {
-        // With testableFirst + importSortByAccessControl: testable group first, then by access within each group
         let input = """
         import Foo
         @testable import Bar
         public import Baz
-        @testable public import Qux
         """
         let output = """
         @testable import Bar
         public import Baz
         import Foo
-        @testable public import Qux
         """
-        let options = FormatOptions(importGrouping: .testableFirst, importSortByAccessControl: true)
+        let options = FormatOptions(importGrouping: [.alpha, .accessControl, .testableFirst])
         testFormatting(for: input, output, rule: .sortImports, options: options)
     }
 
@@ -462,7 +476,60 @@ final class SortImportsTests: XCTestCase {
         import Foo
         @testable import Bar
         """
-        let options = FormatOptions(importGrouping: .testableLast, importSortByAccessControl: true)
+        let options = FormatOptions(importGrouping: [.alpha, .accessControl, .testableBottom])
+        testFormatting(for: input, output, rule: .sortImports, options: options)
+    }
+
+    func testUnlabeledImportsSortLast() {
+        let input = """
+        import Foo
+        public import Bar
+        internal import Baz
+        import Qux
+        """
+        let output = """
+        public import Bar
+        internal import Baz
+        import Foo
+        import Qux
+        """
+        let options = FormatOptions(importGrouping: [.alpha, .accessControl])
+        testFormatting(for: input, output, rule: .sortImports, options: options)
+    }
+
+    // MARK: - Length + testable combinations
+
+    func testLengthSortWithTestableTop() {
+        let input = """
+        import Foo
+        @testable import LongModule
+        import Ba
+        @testable import Az
+        """
+        let output = """
+        @testable import Az
+        @testable import LongModule
+        import Ba
+        import Foo
+        """
+        let options = FormatOptions(importGrouping: [.length, .testableFirst])
+        testFormatting(for: input, output, rule: .sortImports, options: options)
+    }
+
+    func testLengthSortWithTestableBottom() {
+        let input = """
+        @testable import LongModule
+        import Foo
+        import Ba
+        @testable import Az
+        """
+        let output = """
+        import Ba
+        import Foo
+        @testable import Az
+        @testable import LongModule
+        """
+        let options = FormatOptions(importGrouping: [.length, .testableBottom])
         testFormatting(for: input, output, rule: .sortImports, options: options)
     }
 }

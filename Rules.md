@@ -3371,12 +3371,11 @@ Option | Description
 
 ## sortImports
 
-Sort import statements alphabetically.
+Sort and group import statements.
 
 Option | Description
 --- | ---
-`--import-grouping` | Import statement grouping: "alpha" (default), "length", "testable-first" or "testable-last"
-`--import-sort-by-access-control` | Sort imports by access control level (unlabeled imports last): "enabled" or "disabled" (default)
+`--import-grouping` | Comma-delimited list of import sorting/grouping options
 
 <details>
 <summary>Examples</summary>

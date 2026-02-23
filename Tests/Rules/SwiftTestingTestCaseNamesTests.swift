@@ -1118,7 +1118,7 @@ final class SwiftTestingTestCaseNamesTests: XCTestCase {
 
         struct MyFeatureTests {
             @Test
-            func `uuid is valid`() {
+            func `UUID is valid`() {
                 #expect(true)
             }
         }
@@ -1145,7 +1145,7 @@ final class SwiftTestingTestCaseNamesTests: XCTestCase {
 
         struct MyFeatureTests {
             @Test
-            func `alphabet starts with abc`() {
+            func `alphabet starts with ABC`() {
                 #expect(true)
             }
         }
@@ -1172,7 +1172,7 @@ final class SwiftTestingTestCaseNamesTests: XCTestCase {
 
         struct MyFeatureTests {
             @Test
-            func `my url is valid`() {
+            func `my URL is valid`() {
                 #expect(true)
             }
         }

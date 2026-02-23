@@ -214,16 +214,17 @@ extension String {
         }
 
         // Merge a lone single lowercase leading character with a following all-uppercase word.
-        // This handles acronym-first names after test prefix removal, e.g. "uUID" (from "testUUID") → "uuid".
+        // This handles acronym-first names after test prefix removal, e.g. "uUID" (from "testUUID") → "UUID".
         if words.count >= 2,
            words[0].count == 1,
            words[0].first?.isLowercase == true,
            words[1].allSatisfy({ $0.isUppercase })
         {
-            words = [words[0] + words[1]] + Array(words.dropFirst(2))
+            words = [words[0].uppercased() + words[1]] + Array(words.dropFirst(2))
         }
 
-        return words.joined(separator: " ").lowercased()
+        // Lowercase each word, but preserve all-uppercase words (acronyms like UUID, URL, ABC).
+        return words.map { $0.allSatisfy({ $0.isUppercase }) ? $0 : $0.lowercased() }.joined(separator: " ")
     }
 
     /// Splits a camelCase string into individual words, treating consecutive uppercase letters as acronyms.

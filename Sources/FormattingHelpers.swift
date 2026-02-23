@@ -1553,7 +1553,7 @@ extension Formatter {
         // those inside #if conditional compilation blocks. Use endOfScope() to skip
         // over nested non-#if scopes naturally rather than tracking depth manually.
         var caseIndices = [Int]()
-        var index = self.index(of: .nonSpaceOrCommentOrLinebreak, after: startOfSwitchScope)
+        var index = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfSwitchScope)
         while let i = index, i < endOfSwitchScope {
             let token = tokens[i]
             if token.isSwitchCaseOrDefault {
@@ -1603,17 +1603,61 @@ extension Formatter {
     /// range `(start, end)`, skipping over nested non-#if scopes.
     private func firstIfdefBoundary(after start: Int, before end: Int) -> Int? {
         var braceDepth = 0
-        for i in (start + 1) ..< end {
+        var i = start + 1
+        while i < end {
             switch tokens[i] {
             case .startOfScope("{"), .startOfScope("("), .startOfScope("["):
                 braceDepth += 1
             case .endOfScope("}"), .endOfScope(")"), .endOfScope("]"):
                 braceDepth -= 1
-            case .startOfScope("#if"), .keyword("#else"), .keyword("#elseif"),
+            case .startOfScope("#if") where braceDepth == 0:
+                // Only treat as a boundary if the #if block contains case/default
+                // statements at brace depth 0 (belonging to the enclosing switch,
+                // not a nested switch). Otherwise skip the entire #if…#endif block.
+                if let result = scanIfdef(at: i) {
+                    if result.containsSwitchCase {
+                        return i
+                    }
+                    i = result.endifIndex
+                }
+            case .keyword("#else"), .keyword("#elseif"),
                  .endOfScope("#endif") where braceDepth == 0:
                 return i
             default:
                 break
+            }
+            i += 1
+        }
+        return nil
+    }
+
+    /// Scans the `#if` block at the given index to find its matching `#endif`
+    /// and determine whether it contains `case`/`default` keywords at brace
+    /// depth 0 (i.e. belonging to the enclosing switch, not a nested switch).
+    /// Uses manual `#if`/`#endif` depth tracking instead of `endOfScope` since
+    /// `endOfScope` cannot handle `case` tokens inside `#if` blocks.
+    private func scanIfdef(at ifIndex: Int) -> (endifIndex: Int, containsSwitchCase: Bool)? {
+        guard tokens[ifIndex] == .startOfScope("#if") else { return nil }
+        var ifdefDepth = 1
+        var braceDepth = 0
+        var containsSwitchCase = false
+        for i in (ifIndex + 1) ..< tokens.count {
+            switch tokens[i] {
+            case .startOfScope("#if"):
+                ifdefDepth += 1
+            case .endOfScope("#endif"):
+                ifdefDepth -= 1
+                if ifdefDepth == 0 {
+                    return (endifIndex: i, containsSwitchCase: containsSwitchCase)
+                }
+            case .startOfScope("{"), .startOfScope("("), .startOfScope("["):
+                if ifdefDepth == 1 { braceDepth += 1 }
+            case .endOfScope("}"), .endOfScope(")"), .endOfScope("]"):
+                if ifdefDepth == 1 { braceDepth -= 1 }
+            default:
+                if ifdefDepth == 1, braceDepth == 0, tokens[i].isSwitchCaseOrDefault {
+                    containsSwitchCase = true
+                }
             }
         }
         return nil
@@ -1645,7 +1689,6 @@ extension Formatter {
 
         return (startOfBody: startOfBody, endOfBody: endOfBody)
     }
-
 
     /// In Swift 5.9, there's a bug that prevents you from writing an
     /// if or switch expression using an `as?` on one of the branches:
@@ -1748,7 +1791,7 @@ extension Formatter {
             // Cases that end at a `#else` or `#elseif` boundary are in mutually-exclusive
             // compilation branches, where blank-line rules don't apply.
             if tokens[switchCase.endOfBranch] == .keyword("#else") ||
-               tokens[switchCase.endOfBranch] == .keyword("#elseif")
+                tokens[switchCase.endOfBranch] == .keyword("#elseif")
             {
                 return nil
             }

@@ -153,6 +153,7 @@ extension Formatter {
     func manuallyImplementedEquatableTypes(in declarations: [Declaration]) -> [EquatableType] {
         var typeDeclarationsByFullyQualifiedName: [String: Declaration] = [:]
         var typesWithEquatableConformances: [(fullyQualifiedTypeName: String, declarationWithEquatableConformance: Declaration)] = []
+        var typesWithStrideableConformances: Set<String> = []
         var equatableImplementationsByFullyQualifiedName: [String: Declaration] = [:]
 
         declarations.forEachRecursiveDeclaration { declaration in
@@ -177,6 +178,11 @@ extension Formatter {
                         fullyQualifiedTypeName: fullyQualifiedName,
                         declarationWithEquatableConformance: declaration
                     ))
+                }
+
+                // Strideable provides a default `==` implementation, so a custom `==` may not be redundant
+                if conformances.contains(where: { $0.conformance.string == "Strideable" }) {
+                    typesWithStrideableConformances.insert(fullyQualifiedName)
                 }
             }
 
@@ -229,6 +235,10 @@ extension Formatter {
         }
 
         return typesWithEquatableConformances.compactMap { typeName, declarationWithEquatableConformance in
+            // Types conforming to Strideable get a default `==` implementation via that protocol,
+            // so a custom `==` on such a type may be intentionally overriding that default.
+            guard !typesWithStrideableConformances.contains(typeName) else { return nil }
+
             guard let typeDeclaration = typeDeclarationsByFullyQualifiedName[typeName],
                   let equatableImplementation = equatableImplementationsByFullyQualifiedName[typeName]
             else { return nil }

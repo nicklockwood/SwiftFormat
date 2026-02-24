@@ -1086,7 +1086,7 @@ Known issues
 
 * The `propertyTypes` rule can cause a build failure in cases like `let foo = Foo.bar` where the value is a static member that doesn't return the same time. For example, `let foo: Foo = .bar` would be invalid if the `bar` property was defined as `static var bar: Bar`. As a workaround you can write the name of the type explicitly, like `let foo: Bar = Foo.bar`, or exclude the type name and/or property name with `--preserve-symbols Bar,bar,etc`.
 
-* The `redundantEquatable` rule will not remove a custom `==` implementation if the type also conforms to `Strideable` *in the same file*. If the `Strideable` conformance is defined in a different file, SwiftFormat cannot detect it, and may incorrectly remove a `==` implementation that intentionally overrides the default one provided by `Strideable`. As a workaround you can use the `// swiftformat:disable:next redundantEquatable` comment directive to disable the rule for the affected type (or just disable the `redundantEquatable` rule completely).
+* The `redundantEquatable` rule may incorrectly remove a `==` implementation that intentionally overrides a default `==` provided by another protocol. For example, `Strideable` provides a default `==` implementation derived from `distance(to:)`, and a type may override it with a custom `==`. SwiftFormat handles this case when the `Strideable` conformance is defined in the same file, but it cannot detect conformances in a different file, nor default `==` implementations provided by other protocols. As a workaround you can use the `// swiftformat:disable:next redundantEquatable` comment directive to disable the rule for the affected type (or just disable the `redundantEquatable` rule completely).
 
 
 Tip Jar

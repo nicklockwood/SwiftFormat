@@ -701,4 +701,56 @@ final class RedundantEquatableTests: XCTestCase {
 
         testFormatting(for: input, rule: .redundantEquatable)
     }
+
+    func testPreserveEquatableImplementationForStrideableTypeWithEquatableInExtension() {
+        // `Strideable` provides a default `==` implementation via `distance(to:)`,
+        // so a custom `==` on a Strideable type may be intentionally overriding that default.
+        let input = """
+        struct Foo: Strideable {
+            let value: Int
+
+            func distance(to other: Foo) -> Int {
+                other.value - value
+            }
+
+            func advanced(by n: Int) -> Foo {
+                Foo(value: value + n)
+            }
+        }
+
+        extension Foo: Equatable {
+            static func == (lhs: Foo, rhs: Foo) -> Bool {
+                lhs.value == rhs.value
+            }
+        }
+        """
+
+        testFormatting(for: input, rule: .redundantEquatable)
+    }
+
+    func testPreserveEquatableImplementationForStrideableTypeWithStrideableInExtension() {
+        // `Strideable` provides a default `==` implementation via `distance(to:)`,
+        // so a custom `==` on a Strideable type may be intentionally overriding that default.
+        let input = """
+        struct Foo: Equatable {
+            let value: Int
+
+            static func == (lhs: Foo, rhs: Foo) -> Bool {
+                lhs.value == rhs.value
+            }
+        }
+
+        extension Foo: Strideable {
+            func distance(to other: Foo) -> Int {
+                other.value - value
+            }
+
+            func advanced(by n: Int) -> Foo {
+                Foo(value: value + n)
+            }
+        }
+        """
+
+        testFormatting(for: input, rule: .redundantEquatable)
+    }
 }

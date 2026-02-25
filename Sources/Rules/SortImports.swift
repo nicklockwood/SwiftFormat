@@ -67,7 +67,7 @@ extension Formatter {
         let partitions: [[Formatter.ImportRange]]
         if grouping.contains(.testableFirst) {
             partitions = [ranges.filter(\.isTestable), ranges.filter { !$0.isTestable }]
-        } else if grouping.contains(.testableBottom) {
+        } else if grouping.contains(.testableLast) {
             partitions = [ranges.filter { !$0.isTestable }, ranges.filter(\.isTestable)]
         } else {
             partitions = [ranges]

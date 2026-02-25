@@ -227,7 +227,7 @@ final class SortImportsTests: XCTestCase {
         @testable import Bar
         @testable import UIKit
         """
-        let options = FormatOptions(importGrouping: [.alpha, .testableBottom])
+        let options = FormatOptions(importGrouping: [.alpha, .testableLast])
         testFormatting(for: input, output, rule: .sortImports, options: options)
     }
 
@@ -476,7 +476,7 @@ final class SortImportsTests: XCTestCase {
         import Foo
         @testable import Bar
         """
-        let options = FormatOptions(importGrouping: [.alpha, .accessControl, .testableBottom])
+        let options = FormatOptions(importGrouping: [.alpha, .accessControl, .testableLast])
         testFormatting(for: input, output, rule: .sortImports, options: options)
     }
 
@@ -529,7 +529,7 @@ final class SortImportsTests: XCTestCase {
         @testable import Az
         @testable import LongModule
         """
-        let options = FormatOptions(importGrouping: [.length, .testableBottom])
+        let options = FormatOptions(importGrouping: [.length, .testableLast])
         testFormatting(for: input, output, rule: .sortImports, options: options)
     }
 }

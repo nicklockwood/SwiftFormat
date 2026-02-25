@@ -452,7 +452,7 @@ public enum ImportGrouping: String, CaseIterable, Hashable {
     case length
     case accessControl = "access-control"
     case testableFirst = "testable-first"
-    case testableBottom = "testable-bottom"
+    case testableLast = "testable-last"
 }
 
 /// Self insertion mode

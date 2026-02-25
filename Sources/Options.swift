@@ -453,6 +453,25 @@ public enum ImportGrouping: String, CaseIterable, Hashable {
     case accessControl = "access-control"
     case testableFirst = "testable-first"
     case testableLast = "testable-last"
+
+    public init?(rawValue: String) {
+        switch rawValue {
+        case "alphabetized",
+             "alphabetical",
+             "alpha":
+            self = .alpha
+        case "length":
+            self = .length
+        case "access-control":
+            self = .accessControl
+        case "testable-first":
+            self = .testableFirst
+        case "testable-last":
+            self = .testableLast
+        default:
+            return nil
+        }
+    }
 }
 
 /// Self insertion mode

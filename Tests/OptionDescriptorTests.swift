@@ -355,4 +355,24 @@ final class OptionDescriptorTests: XCTestCase {
         var options: FormatOptions = .default
         XCTAssertNoThrow(try Descriptors.preferFileMacro.toOptions(argument, &options))
     }
+
+    // MARK: - importGrouping
+
+    func testImportGroupingAcceptsCommaDelimitedList() {
+        var options: FormatOptions = .default
+        XCTAssertNoThrow(try Descriptors.importGrouping.toOptions("access-control,alpha,testable-last", &options))
+        XCTAssertEqual(options.importGrouping, [.accessControl, .alpha, .testableLast])
+    }
+
+    func testImportGroupingAcceptsAlphabetical() {
+        var options: FormatOptions = .default
+        XCTAssertNoThrow(try Descriptors.importGrouping.toOptions("alphabetical", &options))
+        XCTAssertTrue(options.importGrouping.contains(.alpha))
+    }
+
+    func testImportGroupingAcceptsAlphabetized() {
+        var options: FormatOptions = .default
+        XCTAssertNoThrow(try Descriptors.importGrouping.toOptions("alphabetized", &options))
+        XCTAssertTrue(options.importGrouping.contains(.alpha))
+    }
 }

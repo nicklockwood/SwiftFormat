@@ -1227,6 +1227,8 @@ public struct FormatOptions: CustomStringConvertible {
                 value = array.joined(separator: ",")
             case let set as Set<String>:
                 value = set.sorted().joined(separator: ",")
+            case let set as Set<ImportGrouping>:
+                value = ImportGrouping.allCases.filter { set.contains($0) }.map(\.rawValue).joined(separator: ",")
             default:
                 break
             }

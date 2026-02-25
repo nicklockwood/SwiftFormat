@@ -450,6 +450,25 @@ final class SortImportsTests: XCTestCase {
         testFormatting(for: input, output, rule: .sortImports, options: options)
     }
 
+    func testAccessControlSortLengthWithMultipleACLs() {
+        let input = """
+        private import LongPrivate
+        public import Baz
+        private import Al
+        public import LongPublic
+        import Foo
+        """
+        let output = """
+        public import Baz
+        public import LongPublic
+        private import Al
+        private import LongPrivate
+        import Foo
+        """
+        let options = FormatOptions(importGrouping: [.length, .accessControl])
+        testFormatting(for: input, output, rule: .sortImports, options: options)
+    }
+
     func testAccessControlWithTestableFirst() {
         let input = """
         import Foo
@@ -494,6 +513,31 @@ final class SortImportsTests: XCTestCase {
         import Qux
         """
         let options = FormatOptions(importGrouping: [.alpha, .accessControl])
+        testFormatting(for: input, output, rule: .sortImports, options: options)
+    }
+
+    func testTestableImportsSortedByACLAndAlpha() {
+        let input = """
+        @testable import DModule
+        @testable public import CModule
+        @testable import AModule
+        @testable public import BModule
+        import ZModule
+        public import UModule
+        import YModule
+        public import TModule
+        """
+        let output = """
+        public import TModule
+        public import UModule
+        import YModule
+        import ZModule
+        @testable public import BModule
+        @testable public import CModule
+        @testable import AModule
+        @testable import DModule
+        """
+        let options = FormatOptions(importGrouping: [.alpha, .accessControl, .testableLast])
         testFormatting(for: input, output, rule: .sortImports, options: options)
     }
 

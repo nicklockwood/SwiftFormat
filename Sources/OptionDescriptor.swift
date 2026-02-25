@@ -863,7 +863,7 @@ struct _Descriptors {
             return Set(parseCommaDelimitedList(arg).compactMap { ImportGrouping(rawValue: $0) })
         },
         toArgument: { options in
-            let order: [ImportGrouping] = [.accessControl, .alpha, .length, .testableFirst, .testableBottom]
+            let order = ImportGrouping.allCases
             return order.filter { options.contains($0) }.map(\.rawValue).joined(separator: ",")
         }
     )

@@ -134,6 +134,13 @@ final class AndOperatorTests: XCTestCase {
         testFormatting(for: input, rule: .andOperator)
     }
 
+    func testNoReplaceAndInTernaryCondition() {
+        let input = """
+        if foo && bar ? baz : quux {}
+        """
+        testFormatting(for: input, rule: .andOperator)
+    }
+
     func testHandleAndAtStartOfLine() {
         let input = """
         if a == b

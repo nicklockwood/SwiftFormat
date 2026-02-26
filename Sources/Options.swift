@@ -464,9 +464,11 @@ public enum ImportGrouping: String, CaseIterable, Hashable {
             self = .length
         case "access-control":
             self = .accessControl
-        case "testable-first":
+        case "testable-first",
+             "testable-top":
             self = .testableFirst
-        case "testable-last":
+        case "testable-last",
+             "testable-bottom":
             self = .testableLast
         default:
             return nil
@@ -970,7 +972,7 @@ public struct FormatOptions: CustomStringConvertible {
                 throwCapturing: Set<String> = [],
                 asyncCapturing: Set<String> = [],
                 experimentalRules: Bool = false,
-                importGrouping: Set<ImportGrouping> = [.accessControl, .alpha, .testableLast],
+                importGrouping: Set<ImportGrouping> = [.alpha],
                 trailingClosures: Set<String> = [],
                 neverTrailing: Set<String> = [],
                 xcodeIndentation: Bool = false,

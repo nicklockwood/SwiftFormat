@@ -1690,7 +1690,6 @@ extension Formatter {
         return (startOfBody: startOfBody, endOfBody: endOfBody)
     }
 
-
     /// In Swift 5.9, there's a bug that prevents you from writing an
     /// if or switch expression using an `as?` on one of the branches:
     /// https://github.com/apple/swift/issues/68764

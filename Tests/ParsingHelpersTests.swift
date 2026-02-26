@@ -3555,5 +3555,4 @@ final class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(closureArgs.argumentIndices.count, 2)
         XCTAssertEqual(formatter.tokens[closureArgs.inKeywordIndex], .keyword("in"))
     }
-
 }

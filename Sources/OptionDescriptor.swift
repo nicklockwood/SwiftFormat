@@ -860,7 +860,7 @@ struct _Descriptors {
         keyPath: \FormatOptions.importGrouping,
         type: .text,
         fromArgument: { arg in
-            return Set(parseCommaDelimitedList(arg).compactMap { ImportGrouping(rawValue: $0) })
+            Set(parseCommaDelimitedList(arg).compactMap { ImportGrouping(rawValue: $0) })
         },
         toArgument: { options in
             let order = ImportGrouping.allCases

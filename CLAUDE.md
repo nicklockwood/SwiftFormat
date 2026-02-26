@@ -32,6 +32,10 @@ swift test --enable-test-discovery
 
 # Test a specific rule (works on both macOS and Linux)
 ./Scripts/test_rule.sh <ruleName>
+
+# Format the codebase (run after making changes)
+# ./Scripts/test_rule.sh runs this automatically
+./format.sh
 ```
 
 ## Adding New Rules

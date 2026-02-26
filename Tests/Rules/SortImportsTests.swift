@@ -22,6 +22,26 @@ final class SortImportsTests: XCTestCase {
         testFormatting(for: input, output, rule: .sortImports)
     }
 
+    func testDefaultGroupingBehaviorIsAccessControlThenAlpha() {
+        let input = """
+        @testable import Foo
+        import Zed
+        public import Alpha
+        import Bar
+        public import Beta
+        @testable import Ace
+        """
+        let output = """
+        public import Alpha
+        public import Beta
+        @testable import Ace
+        import Bar
+        @testable import Foo
+        import Zed
+        """
+        testFormatting(for: input, output, rule: .sortImports)
+    }
+
     func testSortImportsKeepsPreviousCommentWithImport() {
         let input = """
         import Foo

@@ -355,4 +355,48 @@ final class OptionDescriptorTests: XCTestCase {
         var options: FormatOptions = .default
         XCTAssertNoThrow(try Descriptors.preferFileMacro.toOptions(argument, &options))
     }
+
+    // MARK: - importGrouping
+
+    func testImportGroupingAcceptsCommaDelimitedList() {
+        var options: FormatOptions = .default
+        XCTAssertNoThrow(try Descriptors.importGrouping.toOptions("access-control,alpha,testable-last", &options))
+        XCTAssertEqual(options.importGrouping, [.accessControl, .alpha, .testableLast])
+    }
+
+    func testImportGroupingAcceptsAlphabetical() {
+        var options: FormatOptions = .default
+        XCTAssertNoThrow(try Descriptors.importGrouping.toOptions("alphabetical", &options))
+        XCTAssertTrue(options.importGrouping.contains(.alpha))
+    }
+
+    func testImportGroupingAcceptsAlphabetized() {
+        var options: FormatOptions = .default
+        XCTAssertNoThrow(try Descriptors.importGrouping.toOptions("alphabetized", &options))
+        XCTAssertTrue(options.importGrouping.contains(.alpha))
+    }
+
+    func testImportGroupingAcceptsTestableLast() {
+        var options: FormatOptions = .default
+        XCTAssertNoThrow(try Descriptors.importGrouping.toOptions("testable-last", &options))
+        XCTAssertEqual(options.importGrouping, [.testableLast])
+    }
+
+    func testImportGroupingAcceptsTestableBottom() {
+        var options: FormatOptions = .default
+        XCTAssertNoThrow(try Descriptors.importGrouping.toOptions("testable-bottom", &options))
+        XCTAssertEqual(options.importGrouping, [.testableLast])
+    }
+
+    func testImportGroupingAcceptsTestableFirst() {
+        var options: FormatOptions = .default
+        XCTAssertNoThrow(try Descriptors.importGrouping.toOptions("testable-first", &options))
+        XCTAssertEqual(options.importGrouping, [.testableFirst])
+    }
+
+    func testImportGroupingAcceptsTestableTop() {
+        var options: FormatOptions = .default
+        XCTAssertNoThrow(try Descriptors.importGrouping.toOptions("testable-top", &options))
+        XCTAssertEqual(options.importGrouping, [.testableFirst])
+    }
 }

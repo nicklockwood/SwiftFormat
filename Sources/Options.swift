@@ -446,12 +446,34 @@ public enum Grouping: Equatable, RawRepresentable, CustomStringConvertible {
     }
 }
 
-/// Grouping for sorting imports
-public enum ImportGrouping: String, CaseIterable {
+/// Individual import sorting/grouping options, combined as a Set
+public enum ImportGrouping: String, CaseIterable, Hashable {
     case alpha
     case length
+    case accessControl = "access-control"
     case testableFirst = "testable-first"
     case testableLast = "testable-last"
+
+    public init?(rawValue: String) {
+        switch rawValue {
+        case "alphabetized",
+             "alphabetical",
+             "alpha":
+            self = .alpha
+        case "length":
+            self = .length
+        case "access-control":
+            self = .accessControl
+        case "testable-first",
+             "testable-top":
+            self = .testableFirst
+        case "testable-last",
+             "testable-bottom":
+            self = .testableLast
+        default:
+            return nil
+        }
+    }
 }
 
 /// Self insertion mode
@@ -803,7 +825,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var throwCapturing: Set<String>
     public var asyncCapturing: Set<String>
     public var experimentalRules: Bool
-    public var importGrouping: ImportGrouping
+    public var importGrouping: Set<ImportGrouping>
     public var trailingClosures: Set<String>
     public var neverTrailing: Set<String>
     public var xcodeIndentation: Bool
@@ -950,7 +972,7 @@ public struct FormatOptions: CustomStringConvertible {
                 throwCapturing: Set<String> = [],
                 asyncCapturing: Set<String> = [],
                 experimentalRules: Bool = false,
-                importGrouping: ImportGrouping = .alpha,
+                importGrouping: Set<ImportGrouping> = [.accessControl, .alpha],
                 trailingClosures: Set<String> = [],
                 neverTrailing: Set<String> = [],
                 xcodeIndentation: Bool = false,
@@ -1207,6 +1229,8 @@ public struct FormatOptions: CustomStringConvertible {
                 value = array.joined(separator: ",")
             case let set as Set<String>:
                 value = set.sorted().joined(separator: ",")
+            case let set as Set<ImportGrouping>:
+                value = ImportGrouping.allCases.filter { set.contains($0) }.map(\.rawValue).joined(separator: ",")
             default:
                 break
             }

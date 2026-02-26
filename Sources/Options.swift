@@ -970,7 +970,7 @@ public struct FormatOptions: CustomStringConvertible {
                 throwCapturing: Set<String> = [],
                 asyncCapturing: Set<String> = [],
                 experimentalRules: Bool = false,
-                importGrouping: Set<ImportGrouping> = [.accessControl, .alpha],
+                importGrouping: Set<ImportGrouping> = [.accessControl, .alpha, .testableLast],
                 trailingClosures: Set<String> = [],
                 neverTrailing: Set<String> = [],
                 xcodeIndentation: Bool = false,

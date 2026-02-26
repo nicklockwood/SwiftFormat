@@ -935,10 +935,10 @@ final class ParsingHelpersTests: XCTestCase {
         XCTAssertEqual(allModifiers, ["@SwiftUI::Environment(\\.bar)"])
     }
 
-    func testModifiersForDeclarationWithModuleSelectorOnFunc() {
+    func testModifiersForDeclarationWithModuleSelectorOnFunc() throws {
         let formatter = Formatter(tokenize("@MyModule::MyAttribute(foo, bar) func myFunction() {}"))
         var allModifiers = [String]()
-        let funcIndex = formatter.tokens.firstIndex(of: .keyword("func"))!
+        let funcIndex = try XCTUnwrap(formatter.tokens.firstIndex(of: .keyword("func")))
         _ = formatter.modifiersForDeclaration(at: funcIndex, contains: { _, modifier in
             allModifiers.append(modifier)
             return false

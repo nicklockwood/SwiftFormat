@@ -218,13 +218,13 @@ extension String {
         if words.count >= 2,
            words[0].count == 1,
            words[0].first?.isLowercase == true,
-           words[1].allSatisfy({ $0.isUppercase })
+           words[1].allSatisfy(\.isUppercase)
         {
             words = [words[0].uppercased() + words[1]] + Array(words.dropFirst(2))
         }
 
         // Lowercase each word, but preserve all-uppercase words (acronyms like UUID, URL, ABC).
-        return words.map { $0.allSatisfy({ $0.isUppercase }) ? $0 : $0.lowercased() }.joined(separator: " ")
+        return words.map { $0.allSatisfy(\.isUppercase) ? $0 : $0.lowercased() }.joined(separator: " ")
     }
 
     /// Splits a camelCase string into individual words, treating consecutive uppercase letters as acronyms.

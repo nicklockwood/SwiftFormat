@@ -35,7 +35,7 @@ public extension FormatRule {
                     let endOfGroup = formatter.index(of: .delimiter(","), after: index) ?? endIndex
                     var nextOpIndex = index
                     while let next = formatter.index(of: .operator, after: nextOpIndex) {
-                        if formatter.tokens[next] == .operator("||", .infix) {
+                        if [.operator("||", .infix), .operator("?", .infix)].contains(formatter.tokens[next]) {
                             index = endOfGroup
                             continue outer
                         }

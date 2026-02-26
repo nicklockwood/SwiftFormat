@@ -454,8 +454,8 @@ extension Formatter {
                 if token.isAttribute, let endOfAttr = endOfAttribute(at: prevIndex), endOfAttr > prevIndex {
                     modifierRange = prevIndex ... endOfAttr
                 } else if let nextIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: prevIndex),
-                   tokens[nextIndex] == .startOfScope("<") || tokens[nextIndex] == .startOfScope("("),
-                   let endOfScope = endOfScope(at: nextIndex)
+                          tokens[nextIndex] == .startOfScope("<") || tokens[nextIndex] == .startOfScope("("),
+                          let endOfScope = endOfScope(at: nextIndex)
                 {
                     modifierRange = prevIndex ... endOfScope
                 }
@@ -1006,7 +1006,8 @@ extension Formatter {
             return endOfAttribute(at: nextIndex)
         case .operator("::", .infix) where !tokens[i + 1 ..< startIndex].contains(where: \.isLinebreak):
             guard let nextIndex = index(of: .nonSpaceOrComment, after: startIndex),
-                  !tokens[nextIndex].isLinebreak else {
+                  !tokens[nextIndex].isLinebreak
+            else {
                 return i
             }
             return endOfAttribute(at: nextIndex)

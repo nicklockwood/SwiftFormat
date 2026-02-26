@@ -1169,7 +1169,7 @@ final class CommandLineTests: XCTestCase {
     func testSwiftVersionNotReadFromExcludedDirectory() throws {
         var logMessages: [String] = []
 
-        CLI.print = { message, type in
+        CLI.print = { message, _ in
             print(message)
             logMessages.append(message)
         }

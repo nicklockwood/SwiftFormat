@@ -1553,7 +1553,7 @@ extension Formatter {
         // those inside #if conditional compilation blocks. Use endOfScope() to skip
         // over nested non-#if scopes naturally rather than tracking depth manually.
         var caseIndices = [Int]()
-        var index = self.index(of: .nonSpaceOrCommentOrLinebreak, after: startOfSwitchScope)
+        var index = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfSwitchScope)
         while let i = index, i < endOfSwitchScope {
             let token = tokens[i]
             if token.isSwitchCaseOrDefault {
@@ -1792,7 +1792,7 @@ extension Formatter {
             // Cases that end at a `#else` or `#elseif` boundary are in mutually-exclusive
             // compilation branches, where blank-line rules don't apply.
             if tokens[switchCase.endOfBranch] == .keyword("#else") ||
-               tokens[switchCase.endOfBranch] == .keyword("#elseif")
+                tokens[switchCase.endOfBranch] == .keyword("#elseif")
             {
                 return nil
             }

@@ -2241,6 +2241,7 @@ extension Formatter {
         var module: String
         var range: Range<Int>
         var attributes: [String]
+        var accessLevel: String?
 
         var isTestable: Bool {
             attributes.contains("@testable")
@@ -2400,8 +2401,12 @@ extension Formatter {
                     }
                     previousKeywordIndex = index(of: .keywordOrAttribute, before: previousIndex)
                     startIndex = nextStart ?? startIndex
+                } else if case let .keyword(kw) = tokens[previousIndex],
+                          _FormatRules.aclModifiers.contains(kw)
+                {
+                    // Allow import access modifiers (Swift 6 SE-0409)
+                    previousKeywordIndex = index(of: .keywordOrAttribute, before: previousIndex)
                 } else if previousIndex >= startIndex {
-                    // Can't handle another keyword on same line as import
                     return
                 } else {
                     break
@@ -2450,10 +2455,15 @@ extension Formatter {
                     partIndex = nextPartIndex
                 }
                 let range = startIndex ..< endIndex as Range
+                let accessLevel: String? = tokens[range].lazy.compactMap { token -> String? in
+                    guard case let .keyword(kw) = token, _FormatRules.aclModifiers.contains(kw) else { return nil }
+                    return kw
+                }.first
                 importRanges.append(ImportRange(
                     module: name,
                     range: range,
-                    attributes: tokens[range].compactMap { $0.isAttribute ? $0.string : nil }
+                    attributes: tokens[range].compactMap { $0.isAttribute ? $0.string : nil },
+                    accessLevel: accessLevel
                 ))
             } else {
                 // Error
@@ -2474,7 +2484,11 @@ extension Formatter {
                     }
                     nextTokenIndex = nextIndex
                 }
-                if tokens[nextTokenIndex] != .keyword("import") {
+                let nextToken = tokens[nextTokenIndex]
+                let isImportKeyword = nextToken == .keyword("import")
+                // Access modifier (e.g. "public") can precede "import" on the same line (Swift 6)
+                let isAccessModifierBeforeImport = nextToken.isKeyword && _FormatRules.aclModifiers.contains(nextToken.string)
+                if !isImportKeyword, !isAccessModifierBeforeImport {
                     // End of imports
                     pushStack()
                     return

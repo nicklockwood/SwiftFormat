@@ -14,3 +14,12 @@ jobs:
         run: |
           echo "❌ Pull request must target the 'develop' branch. Current base: '${{ github.event.pull_request.base.ref }}'"
           exit 1
+
+  lint:
+    name: "Lint"
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Lint
+        run: CommandLineTool/swiftformat . --cache ignore --lint

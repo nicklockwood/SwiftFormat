@@ -1172,10 +1172,20 @@ extension Formatter {
             }
             fallthrough
         case .keyword("try"), .keyword("await"):
-            guard let prevToken = last(.nonSpaceOrCommentOrLinebreak, before: i) else {
+            guard let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: i) else {
                 return true
             }
+            let prevToken = tokens[prevIndex]
             switch prevToken {
+            case .operator("?", .postfix)
+                where [.keyword("try"), .keyword("as")].contains(
+                    last(.nonSpaceOrCommentOrLinebreak, before: prevIndex) ?? .space("")
+                ),
+                 .operator("!", .postfix)
+                     where [.keyword("try"), .keyword("as")].contains(
+                         last(.nonSpaceOrCommentOrLinebreak, before: prevIndex) ?? .space("")
+                     ):
+                return false
             case .number, .operator(_, .postfix), .endOfScope, .identifier,
                  .startOfScope("{"), .startOfScope(":"), .delimiter(";"),
                  .keyword("in") where lastSignificantKeyword(at: i) != "for",

@@ -1821,4 +1821,64 @@ final class UnusedArgumentsTests: XCTestCase {
         """
         testFormatting(for: input, rule: .unusedArguments)
     }
+
+    func testForLoopVariableUsedInGuardLetWithTryAwait() {
+        let input = """
+        for item in items {
+            guard let item = try? await storage.record(
+                matching: item.id
+            ) else {
+                return
+            }
+
+            storage.save(item)
+        }
+        """
+        testFormatting(for: input, rule: .unusedArguments)
+    }
+
+    func testForLoopVariableUsedInGuardLetWithTryForceAwait() {
+        let input = """
+        for item in items {
+            guard let item = try! await storage.record(
+                matching: item.id
+            ) else {
+                return
+            }
+
+            storage.save(item)
+        }
+        """
+        testFormatting(for: input, rule: .unusedArguments)
+    }
+
+    func testForLoopVariableUsedInGuardLetWithTryOptional() {
+        let input = """
+        for item in items {
+            guard let item = try? storage.record(
+                matching: item.id
+            ) else {
+                return
+            }
+
+            storage.save(item)
+        }
+        """
+        testFormatting(for: input, rule: .unusedArguments)
+    }
+
+    func testForLoopVariableUsedInGuardLetWithTryForce() {
+        let input = """
+        for item in items {
+            guard let item = try! storage.record(
+                matching: item.id
+            ) else {
+                return
+            }
+
+            storage.save(item)
+        }
+        """
+        testFormatting(for: input, rule: .unusedArguments)
+    }
 }

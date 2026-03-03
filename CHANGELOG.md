@@ -1,5 +1,41 @@
 # Change Log
 
+## [0.60.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.60.0) (2026-03-03)
+
+- Added `redundantSwiftTestingSuite` rule
+- Added `redundantSendable` rule
+- Added `preferExpicitFalse` rule
+- Added support for `::` module selector syntax
+- Added support for value generics syntax
+- Updated `swiftTestingTestCaseNames` to use raw identifiers by default
+- Updated `swiftTestingTestCaseNames` to use UpperCamelCase for test suite names
+- Updated `redundantSelf` to handle `guard` statements
+- Updated `unusedArguments` to handle for loop variables
+- Updated `redundantType` to better handle `Set` literals
+- Updated `redundantParents` to remove empty parens from attributes
+- Updated `sortImports` to sort imports by access control
+- Updated `blankLinesBetweenImports` to preserve indentation when indent disabled
+- Updated `unusedPrivateDeclaration` rule to preserve private `@Test` functions
+- Updated `preferSwiftTesting` rule to convert tests in extensions within the same file
+- Updated `--stdin-path` to not require the file to actually exist
+- Updated `simplifyGenericConstraints` to avoid adding duplicate constraints
+- Updated `blankLinesAroundMark` to insert blank line before MARK at start of scope when allowed by `blankLinesAtStartOfScope` config
+- Updated `redundantEquatable` to preserve `==` implementation in types with `Strideable` conformance
+- Fixed handling of switch statements with `#if` blocks in several rules
+- Fixed issue where `async` function declarations were wrapped using `wrapArguments` instead of `wrapParameters`
+- Fixed issue where `redudantViewBuilder` would remove `@ViewBuilder` from protocol members
+- Fixed `redundantSelf` parsing issue with throwing closure return types and switch expressions in `if let` condition
+- Fixed `trailingCommas` rule incorrectly adding commas to if `#available` checks
+- Fixed `guard...else` indentation in `wrapArguments` with `wrap-conditions`
+- Fixed issue where `simplifyGenericConstraints` would leave dangling `where` keyword in protocol members
+- Fixed issue where `trailingCommas` didn't handle closure capture lists with macro expressions
+- Fixed indentation for closure parameters on separate lines
+- Fixed issue where `.init` would be removed in code like `[Foo].init { ... }` (not supported until Swift 6.4).
+- Fixed issue where `.swift-version` files were read from excluded directories
+- Fixed incorrect replacement of `&&` operator with `,` inside a ternary condition
+- Fixed `unusedArguments` bug in code with `try? await`
+- Fixed handling of `MainActor` attributes in `redundantViewBuilder`
+
 ## [0.59.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.59.1) (2026-01-29)
 
 - Reverted changes to `indent` rule `--ifdef` handling from 0.59.0

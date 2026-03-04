@@ -21,8 +21,16 @@ public extension FormatRule {
             switch typeDeclaration.visibility() {
             case .public, .open:
                 return
-            case .internal, .package, .fileprivate, .private, nil:
+            case .internal, .package, .fileprivate, .private:
                 break
+            case nil:
+                // A type with no explicit access modifier inside a public extension is effectively public
+                let isInPublicExtension = typeDeclaration.parentDeclarations.last.map {
+                    $0.keyword == "extension" && $0.visibility() == .public
+                } ?? false
+                if isInPublicExtension {
+                    return
+                }
             }
 
             guard let sendableConformance = typeDeclaration.conformances.first(where: {

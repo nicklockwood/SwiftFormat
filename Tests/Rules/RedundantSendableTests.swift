@@ -93,6 +93,39 @@ final class RedundantSendableTests: XCTestCase {
         testFormatting(for: input, [output], rules: [.redundantSendable])
     }
 
+    func testDoesNotRemoveSendableFromTypeInsidePublicExtension() {
+        let input = """
+        public struct OuterStruct {}
+
+        public extension OuterStruct {
+            struct InnerStruct: Sendable {}
+            enum InnerEnum: Sendable {}
+        }
+        """
+
+        testFormatting(for: input, rules: [.redundantSendable])
+    }
+
+    func testRemovesSendableFromTypeInsideInternalExtension() {
+        let input = """
+        struct OuterStruct {}
+
+        extension OuterStruct {
+            struct InnerStruct: Sendable {}
+        }
+        """
+
+        let output = """
+        struct OuterStruct {}
+
+        extension OuterStruct {
+            struct InnerStruct {}
+        }
+        """
+
+        testFormatting(for: input, [output], rules: [.redundantSendable])
+    }
+
     func testRemovesSendableFromPackageValueTypes() {
         let input = """
         package struct PackageStruct: Sendable {

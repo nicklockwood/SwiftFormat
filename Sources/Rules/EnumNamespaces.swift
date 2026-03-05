@@ -26,20 +26,20 @@ public extension FormatRule {
                   // exit if class without final modifier
                   !(typeDeclaration.keyword == "class" && !typeDeclaration.hasModifier("final")),
                   // exit if has attribute(s)
-                  typeDeclaration.attributes.isEmpty,
-                  // exit if type is conforming to any other types
-                  typeDeclaration.conformances.isEmpty
+                  typeDeclaration.attributes.isEmpty
             else { return }
 
             let i = typeDeclaration.keywordIndex
             guard let name = typeDeclaration.name else { return }
 
-            let body = typeDeclaration.body
-            guard !body.isEmpty, body.hostsOnlyStaticMembers else { return }
-
             guard let braceIndex = formatter.index(of: .startOfScope("{"), after: i),
+                  // exit if type is conforming to other types or has generic where clause
+                  !formatter.tokens[i ... braceIndex].contains(.delimiter(":")),
                   let endIndex = formatter.index(of: .endOfScope("}"), after: braceIndex)
             else { return }
+
+            let body = typeDeclaration.body
+            guard !body.isEmpty, body.hostsOnlyStaticMembers else { return }
 
             let range = braceIndex + 1 ..< endIndex
             guard !formatter.rangeContainsTypeInit(name, in: range),

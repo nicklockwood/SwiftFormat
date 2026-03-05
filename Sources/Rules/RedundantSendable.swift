@@ -98,7 +98,16 @@ extension Formatter {
             }
             removalRange = conformanceIndex ... upperBound
         } else {
-            removalRange = previousTokenIndex ... conformanceRange.upperBound
+            // When removing all conformances, also strip any space tokens immediately
+            // before the colon to avoid leaving a trailing double space
+            // (e.g. `enum Bar : Sendable {` → `enum Bar {`, not `enum Bar  {`).
+            var lower = previousTokenIndex
+            if tokens[lower] == .delimiter(":") {
+                while lower > 0, token(at: lower - 1)?.isSpace == true {
+                    lower -= 1
+                }
+            }
+            removalRange = lower ... conformanceRange.upperBound
         }
 
         // Avoid removing inline comments attached to the conformance list.

@@ -116,4 +116,30 @@ final class RedundantSendableTests: XCTestCase {
 
         testFormatting(for: input, [output], rules: [.redundantSendable])
     }
+
+    func testRemovesSendableWithSpaceBeforeColon() {
+        let input = """
+        enum Bar : Sendable {
+            case a
+            case b(Int)
+        }
+
+        struct Foo : Sendable {
+            let value: Int
+        }
+        """
+
+        let output = """
+        enum Bar {
+            case a
+            case b(Int)
+        }
+
+        struct Foo {
+            let value: Int
+        }
+        """
+
+        testFormatting(for: input, [output], rules: [.redundantSendable])
+    }
 }

@@ -36,6 +36,21 @@ public extension FormatRule {
             else { return }
 
             let keywordIndex = declaration.keywordIndex
+
+            // Convert enum suites to struct when they contain no case declarations
+            if declaration.keyword == "enum" {
+                var hasCaseDeclaration = false
+                declaration.body?.forEachRecursiveDeclaration { child in
+                    guard !hasCaseDeclaration else { return }
+                    if child.keyword == "case" {
+                        hasCaseDeclaration = true
+                    }
+                }
+                if !hasCaseDeclaration {
+                    formatter.replaceToken(at: keywordIndex, with: .keyword("struct"))
+                }
+            }
+
             switch formatter.options.suiteNameFormat {
             case .rawIdentifiers:
                 guard formatter.options.swiftVersion >= "6.2" else { return }

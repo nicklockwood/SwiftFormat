@@ -939,7 +939,7 @@ final class SwiftTestingTestCaseNamesTests: XCTestCase {
                        exclude: [.redundantSwiftTestingSuite])
     }
 
-    func testSuiteWorksWithEnum() {
+    func testSuiteConvertsEnumToStructWhenNoCaseDeclarations() {
         let input = """
         import Testing
 
@@ -953,13 +953,50 @@ final class SwiftTestingTestCaseNamesTests: XCTestCase {
         import Testing
 
         @Suite
-        enum MyFeatureTests {
+        struct MyFeatureTests {
             @Test static func myTest() {}
         }
         """
 
         testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
                        options: FormatOptions(testCaseNameFormat: .preserve, swiftVersion: "6.2"),
+                       exclude: [.redundantSwiftTestingSuite])
+    }
+
+    func testSuiteDoesNotConvertEnumToStructWhenHasCaseDeclarations() {
+        let input = """
+        import Testing
+
+        @Suite
+        enum MyFeatureTests {
+            case foo
+            case bar
+
+            @Test static func myTest() {}
+        }
+        """
+
+        testFormatting(for: input, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(testCaseNameFormat: .preserve),
+                       exclude: [.redundantSwiftTestingSuite])
+    }
+
+    func testSuiteDoesNotConvertEnumToStructWhenNestedEnumHasCaseDeclarations() {
+        let input = """
+        import Testing
+
+        @Suite
+        enum MyFeatureTests {
+            enum Nested {
+                case foo
+            }
+
+            @Test static func myTest() {}
+        }
+        """
+
+        testFormatting(for: input, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(testCaseNameFormat: .preserve),
                        exclude: [.redundantSwiftTestingSuite])
     }
 

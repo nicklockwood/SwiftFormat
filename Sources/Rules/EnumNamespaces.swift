@@ -17,44 +17,42 @@ public extension FormatRule {
         """,
         options: ["enum-namespaces"]
     ) { formatter in
-        formatter.forEachToken(where: { [.keyword("class"), .keyword("struct")].contains($0) }) { i, token in
-            if token == .keyword("class") {
-                guard let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i),
-                      // exit if structs only
-                      formatter.options.enumNamespaces != .structsOnly,
-                      // exit if class is a type modifier
-                      !(formatter.tokens[nextIndex].isKeywordOrAttribute || formatter.isModifier(at: nextIndex)),
-                      // exit for class as protocol conformance
-                      formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .delimiter(":"),
-                      // exit if not closed for extension
-                      formatter.modifiersForDeclaration(at: i, contains: "final")
-                else {
-                    return
-                }
-            }
-            guard let braceIndex = formatter.index(of: .startOfScope("{"), after: i),
-                  // exit if import statement
-                  formatter.last(.nonSpaceOrCommentOrLinebreak, before: i) != .keyword("import"),
+        let isSwiftTestingFile = formatter.hasImport("Testing")
+        formatter.parseDeclarations().forEachRecursiveDeclaration { declaration in
+            guard let typeDeclaration = declaration.asTypeDeclaration,
+                  ["struct", "class"].contains(typeDeclaration.keyword),
+                  // exit if structs only
+                  !(typeDeclaration.keyword == "class" && formatter.options.enumNamespaces == .structsOnly),
+                  // exit if class without final modifier
+                  !(typeDeclaration.keyword == "class" && !typeDeclaration.hasModifier("final")),
                   // exit if has attribute(s)
-                  !formatter.modifiersForDeclaration(at: i, contains: { $1.isAttribute }),
-                  // exit if type is conforming any other types
-                  !formatter.tokens[i ... braceIndex].contains(.delimiter(":")),
-                  let endIndex = formatter.index(of: .endOfScope("}"), after: braceIndex),
-                  case let .identifier(name)? = formatter.next(.identifier, after: i + 1)
-            else {
-                return
-            }
-            let range = braceIndex + 1 ..< endIndex
-            if formatter.rangeHostsOnlyStaticMembersAtTopLevel(range),
-               !formatter.rangeContainsTypeInit(name, in: range), !formatter.rangeContainsSelfAssignment(range)
-            {
-                formatter.replaceToken(at: i, with: .keyword("enum"))
+                  typeDeclaration.attributes.isEmpty
+            else { return }
 
-                if let finalIndex = formatter.indexOfModifier("final", forDeclarationAt: i),
-                   let nextIndex = formatter.index(of: .nonSpace, after: finalIndex)
-                {
-                    formatter.removeTokens(in: finalIndex ..< nextIndex)
-                }
+            let i = typeDeclaration.keywordIndex
+            guard let name = typeDeclaration.name else { return }
+
+            guard let braceIndex = formatter.index(of: .startOfScope("{"), after: i),
+                  // exit if type is conforming to other types or has generic where clause
+                  !formatter.tokens[i ... braceIndex].contains(.delimiter(":")),
+                  let endIndex = formatter.index(of: .endOfScope("}"), after: braceIndex)
+            else { return }
+
+            let body = typeDeclaration.body
+            guard !body.isEmpty, body.hostsOnlyStaticMembers else { return }
+
+            let range = braceIndex + 1 ..< endIndex
+            guard !formatter.rangeContainsTypeInit(name, in: range),
+                  !formatter.rangeContainsSelfAssignment(range),
+                  !(isSwiftTestingFile && body.contains(where: { $0.keyword == "func" && $0.hasModifier("@Test") }))
+            else { return }
+
+            formatter.replaceToken(at: i, with: .keyword("enum"))
+
+            if let finalIndex = formatter.indexOfModifier("final", forDeclarationAt: i),
+               let nextIndex = formatter.index(of: .nonSpace, after: finalIndex)
+            {
+                formatter.removeTokens(in: finalIndex ..< nextIndex)
             }
         }
     } examples: {
@@ -71,36 +69,6 @@ public extension FormatRule {
 }
 
 extension Formatter {
-    func rangeHostsOnlyStaticMembersAtTopLevel(_ range: Range<Int>) -> Bool {
-        // exit for empty declarations
-        guard next(.nonSpaceOrCommentOrLinebreak, in: range) != nil else {
-            return false
-        }
-
-        var j = range.startIndex
-        while j < range.endIndex, let token = token(at: j) {
-            if token == .startOfScope("{"),
-               let skip = index(of: .endOfScope("}"), after: j)
-            {
-                j = skip
-                continue
-            }
-            // exit if there's a explicit init
-            if token == .keyword("init") {
-                return false
-            } else if [.keyword("let"),
-                       .keyword("var"),
-                       .keyword("func"),
-                       .keyword("subscript")].contains(token),
-                !modifiersForDeclaration(at: j, contains: "static")
-            {
-                return false
-            }
-            j += 1
-        }
-        return true
-    }
-
     func rangeContainsTypeInit(_ type: String, in range: Range<Int>) -> Bool {
         for i in range {
             guard case let .identifier(name) = tokens[i],
@@ -131,5 +99,30 @@ extension Formatter {
             }
         }
         return false
+    }
+}
+
+extension Collection<Declaration> {
+    /// Whether this collection of declarations contains only static members,
+    /// including members inside conditional compilation blocks.
+    var hostsOnlyStaticMembers: Bool {
+        for declaration in self {
+            switch declaration.kind {
+            case let .declaration(simple):
+                switch simple.keyword {
+                case "init":
+                    return false
+                case "let", "var", "func", "subscript":
+                    if !simple.hasModifier("static") { return false }
+                default:
+                    break
+                }
+            case .type:
+                break
+            case let .conditionalCompilation(block):
+                if !block.body.hostsOnlyStaticMembers { return false }
+            }
+        }
+        return true
     }
 }

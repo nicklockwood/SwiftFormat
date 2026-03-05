@@ -465,4 +465,59 @@ final class EnumNamespacesTests: XCTestCase {
         """
         testFormatting(for: input, rule: .enumNamespaces, exclude: [.unusedArguments])
     }
+
+    func testEnumNamespacesNotAppliedToSwiftTestingSuiteWithTestMethod() {
+        let input = """
+        import Testing
+
+        struct MyTests {
+            @Test func myTest() {}
+        }
+        """
+        testFormatting(for: input, rule: .enumNamespaces)
+    }
+
+    func testEnumNamespacesNotAppliedToSwiftTestingSuiteWithStaticTestMethod() {
+        let input = """
+        import Testing
+
+        struct MyTests {
+            @Test static func myTest() {}
+        }
+        """
+        testFormatting(for: input, rule: .enumNamespaces)
+    }
+
+    func testEnumNamespacesAppliedToStaticOnlyStructWithoutTestingImport() {
+        let input = """
+        struct MyTests {
+            static func myTest() {}
+        }
+        """
+        let output = """
+        enum MyTests {
+            static func myTest() {}
+        }
+        """
+        testFormatting(for: input, output, rule: .enumNamespaces)
+    }
+
+    func testEnumNamespacesNotAppliedAfterRedundantSuiteAttributeRemoved() {
+        let input = """
+        import Testing
+
+        @Suite
+        struct MyTests {
+            @Test static func myTest() {}
+        }
+        """
+        let output = """
+        import Testing
+
+        struct MyTests {
+            @Test static func myTest() {}
+        }
+        """
+        testFormatting(for: input, [output], rules: [.enumNamespaces, .redundantSwiftTestingSuite])
+    }
 }

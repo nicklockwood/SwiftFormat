@@ -17,6 +17,7 @@ public extension FormatRule {
         """,
         options: ["enum-namespaces"]
     ) { formatter in
+        let isSwiftTestingFile = formatter.hasImport("Testing")
         formatter.forEachToken(where: { [.keyword("class"), .keyword("struct")].contains($0) }) { i, token in
             if token == .keyword("class") {
                 guard let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i),
@@ -46,7 +47,8 @@ public extension FormatRule {
             }
             let range = braceIndex + 1 ..< endIndex
             if formatter.rangeHostsOnlyStaticMembersAtTopLevel(range),
-               !formatter.rangeContainsTypeInit(name, in: range), !formatter.rangeContainsSelfAssignment(range)
+               !formatter.rangeContainsTypeInit(name, in: range), !formatter.rangeContainsSelfAssignment(range),
+               !(isSwiftTestingFile && formatter.rangeContainsSwiftTestingTestFunction(range))
             {
                 formatter.replaceToken(at: i, with: .keyword("enum"))
 
@@ -129,6 +131,25 @@ extension Formatter {
             {
                 return true
             }
+        }
+        return false
+    }
+
+    func rangeContainsSwiftTestingTestFunction(_ range: Range<Int>) -> Bool {
+        var j = range.startIndex
+        while j < range.endIndex, let token = token(at: j) {
+            if token == .startOfScope("{"),
+               let skip = index(of: .endOfScope("}"), after: j)
+            {
+                j = skip
+                continue
+            }
+            if token == .keyword("func"),
+               modifiersForDeclaration(at: j, contains: "@Test")
+            {
+                return true
+            }
+            j += 1
         }
         return false
     }

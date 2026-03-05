@@ -18,6 +18,15 @@ public extension FormatRule {
         options: ["enum-namespaces"]
     ) { formatter in
         let isSwiftTestingFile = formatter.hasImport("Testing")
+        var swiftTestingSuiteKeywordIndices = Set<Int>()
+        if isSwiftTestingFile {
+            formatter.parseDeclarations().forEachRecursiveDeclaration { declaration in
+                guard ["struct", "class"].contains(declaration.keyword),
+                      declaration.body?.contains(where: { $0.keyword == "func" && $0.hasModifier("@Test") }) == true
+                else { return }
+                swiftTestingSuiteKeywordIndices.insert(declaration.keywordIndex)
+            }
+        }
         formatter.forEachToken(where: { [.keyword("class"), .keyword("struct")].contains($0) }) { i, token in
             if token == .keyword("class") {
                 guard let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i),
@@ -48,7 +57,7 @@ public extension FormatRule {
             let range = braceIndex + 1 ..< endIndex
             if formatter.rangeHostsOnlyStaticMembersAtTopLevel(range),
                !formatter.rangeContainsTypeInit(name, in: range), !formatter.rangeContainsSelfAssignment(range),
-               !(isSwiftTestingFile && formatter.rangeContainsSwiftTestingTestFunction(range))
+               !swiftTestingSuiteKeywordIndices.contains(i)
             {
                 formatter.replaceToken(at: i, with: .keyword("enum"))
 
@@ -131,25 +140,6 @@ extension Formatter {
             {
                 return true
             }
-        }
-        return false
-    }
-
-    func rangeContainsSwiftTestingTestFunction(_ range: Range<Int>) -> Bool {
-        var j = range.startIndex
-        while j < range.endIndex, let token = token(at: j) {
-            if token == .startOfScope("{"),
-               let skip = index(of: .endOfScope("}"), after: j)
-            {
-                j = skip
-                continue
-            }
-            if token == .keyword("func"),
-               modifiersForDeclaration(at: j, contains: "@Test")
-            {
-                return true
-            }
-            j += 1
         }
         return false
     }

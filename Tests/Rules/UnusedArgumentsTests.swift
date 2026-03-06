@@ -232,7 +232,7 @@ final class UnusedArgumentsTests: XCTestCase {
             return parser
         }
         """
-        testFormatting(for: input, rule: .unusedArguments, exclude: [.redundantProperty, .propertyTypes])
+        testFormatting(for: input, rule: .unusedArguments, exclude: [.redundantVariable, .propertyTypes])
     }
 
     func testShadowedClosureArgument2() {
@@ -242,7 +242,7 @@ final class UnusedArgumentsTests: XCTestCase {
             return input
         }
         """
-        testFormatting(for: input, rule: .unusedArguments, exclude: [.redundantProperty])
+        testFormatting(for: input, rule: .unusedArguments, exclude: [.redundantVariable])
     }
 
     func testUnusedPropertyWrapperArgument() {
@@ -754,7 +754,7 @@ final class UnusedArgumentsTests: XCTestCase {
             return bar
         }
         """
-        testFormatting(for: input, rule: .unusedArguments, exclude: [.redundantProperty])
+        testFormatting(for: input, rule: .unusedArguments, exclude: [.redundantVariable])
     }
 
     func testTryAwaitArgumentNotMarkedUnused() {
@@ -765,7 +765,7 @@ final class UnusedArgumentsTests: XCTestCase {
             return bar
         }
         """
-        testFormatting(for: input, rule: .unusedArguments, exclude: [.redundantProperty])
+        testFormatting(for: input, rule: .unusedArguments, exclude: [.redundantVariable])
     }
 
     func testTypedTryAwaitArgumentNotMarkedUnused() {
@@ -776,7 +776,7 @@ final class UnusedArgumentsTests: XCTestCase {
             return bar
         }
         """
-        testFormatting(for: input, rule: .unusedArguments, exclude: [.redundantProperty])
+        testFormatting(for: input, rule: .unusedArguments, exclude: [.redundantVariable])
     }
 
     func testConditionalIfLetMarkedAsUnused() {
@@ -1330,7 +1330,7 @@ final class UnusedArgumentsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, rule: .unusedArguments, exclude: [.wrapConditionalBodies, .redundantProperty])
+        testFormatting(for: input, rule: .unusedArguments, exclude: [.wrapConditionalBodies, .redundantVariable])
     }
 
     func testIssue1694() {
@@ -1356,7 +1356,7 @@ final class UnusedArgumentsTests: XCTestCase {
             return parameter
         }
         """
-        testFormatting(for: input, rule: .unusedArguments, exclude: [.redundantProperty])
+        testFormatting(for: input, rule: .unusedArguments, exclude: [.redundantVariable])
     }
 
     func testArgumentUsedInsideMultilineStringLiteral() {

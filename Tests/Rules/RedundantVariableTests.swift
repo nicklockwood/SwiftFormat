@@ -1,5 +1,5 @@
 //
-//  RedundantPropertyTests.swift
+//  RedundantVariableTests.swift
 //  SwiftFormatTests
 //
 //  Created by Cal Stephens on 6/9/24.
@@ -9,8 +9,8 @@
 import XCTest
 @testable import SwiftFormat
 
-final class RedundantPropertyTests: XCTestCase {
-    func testRemovesRedundantProperty() {
+final class RedundantVariableTests: XCTestCase {
+    func testRemovesRedundantVariable() {
         let input = """
         func foo() -> Foo {
             let foo = Foo(bar: bar, baaz: baaz)
@@ -24,10 +24,10 @@ final class RedundantPropertyTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .redundantProperty, exclude: [.redundantReturn])
+        testFormatting(for: input, output, rule: .redundantVariable, exclude: [.redundantReturn])
     }
 
-    func testRemovesRedundantPropertyWithIfExpression() {
+    func testRemovesRedundantVariableWithIfExpression() {
         let input = """
         func foo() -> Foo {
             let foo =
@@ -52,10 +52,10 @@ final class RedundantPropertyTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, [output], rules: [.redundantProperty, .redundantReturn, .indent], options: options)
+        testFormatting(for: input, [output], rules: [.redundantVariable, .redundantReturn, .indent], options: options)
     }
 
-    func testRemovesRedundantPropertyWithSwitchExpression() {
+    func testRemovesRedundantVariableWithSwitchExpression() {
         let input = """
         func foo() -> Foo {
             let foo: Foo
@@ -82,10 +82,10 @@ final class RedundantPropertyTests: XCTestCase {
         """
 
         let options = FormatOptions(swiftVersion: "5.9")
-        testFormatting(for: input, [output], rules: [.conditionalAssignment, .redundantProperty, .redundantReturn, .indent], options: options)
+        testFormatting(for: input, [output], rules: [.conditionalAssignment, .redundantVariable, .redundantReturn, .indent], options: options)
     }
 
-    func testRemovesRedundantPropertyWithPreferInferredType() {
+    func testRemovesRedundantVariableWithPreferInferredType() {
         let input = """
         func bar() -> Bar {
             let bar: Bar = .init(baaz: baaz, quux: quux)
@@ -99,10 +99,10 @@ final class RedundantPropertyTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, [output], rules: [.propertyTypes, .redundantProperty, .redundantInit], exclude: [.redundantReturn])
+        testFormatting(for: input, [output], rules: [.propertyTypes, .redundantVariable, .redundantInit], exclude: [.redundantReturn])
     }
 
-    func testRemovesRedundantPropertyWithComments() {
+    func testRemovesRedundantVariableWithComments() {
         let input = """
         func foo() -> Foo {
             // There's a comment before this property
@@ -120,10 +120,10 @@ final class RedundantPropertyTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .redundantProperty, exclude: [.redundantReturn])
+        testFormatting(for: input, output, rule: .redundantVariable, exclude: [.redundantReturn])
     }
 
-    func testRemovesRedundantPropertyFollowingOtherProperty() {
+    func testRemovesRedundantVariableFollowingOtherVariable() {
         let input = """
         func foo() -> Foo {
             let bar = Bar(baaz: baaz)
@@ -139,10 +139,10 @@ final class RedundantPropertyTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .redundantProperty)
+        testFormatting(for: input, output, rule: .redundantVariable)
     }
 
-    func testPreservesPropertyWithExplicitTypeDifferentFromReturnType() {
+    func testPreservesVariableWithExplicitTypeDifferentFromReturnType() {
         let input = """
         func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
             let cell: CustomCellType = tableView.dequeueReusableCell(for: indexPath)
@@ -150,10 +150,10 @@ final class RedundantPropertyTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .redundantProperty)
+        testFormatting(for: input, rule: .redundantVariable)
     }
 
-    func testRemovesPropertyWithExplicitTypeMatchingReturnType() {
+    func testRemovesVariableWithExplicitTypeMatchingReturnType() {
         let input = """
         func foo() -> Foo {
             let foo: Foo = Foo(bar: bar, baaz: baaz)
@@ -167,10 +167,10 @@ final class RedundantPropertyTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .redundantProperty, exclude: [.redundantReturn])
+        testFormatting(for: input, output, rule: .redundantVariable, exclude: [.redundantReturn])
     }
 
-    func testPreservesPropertyWithExplicitTypeDifferentFromComputedPropertyType() {
+    func testPreservesVariableWithExplicitTypeDifferentFromComputedPropertyType() {
         let input = """
         var foo: Foo {
             let bar: Bar = baz.makeSomething()
@@ -178,10 +178,10 @@ final class RedundantPropertyTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .redundantProperty)
+        testFormatting(for: input, rule: .redundantVariable)
     }
 
-    func testRemovesPropertyWithExplicitTypeMatchingComputedPropertyType() {
+    func testRemovesVariableWithExplicitTypeMatchingComputedPropertyType() {
         let input = """
         var foo: Foo {
             let foo: Foo = bar.makeSomething()
@@ -195,10 +195,10 @@ final class RedundantPropertyTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .redundantProperty, exclude: [.redundantReturn])
+        testFormatting(for: input, output, rule: .redundantVariable, exclude: [.redundantReturn])
     }
 
-    func testPreservesPropertyWhereReturnIsNotRedundant() {
+    func testPreservesVariableWhereReturnIsNotRedundant() {
         let input = """
         func foo() -> Foo {
             let foo = Foo(bar: bar, baaz: baaz)
@@ -217,7 +217,7 @@ final class RedundantPropertyTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .redundantProperty)
+        testFormatting(for: input, rule: .redundantVariable)
     }
 
     func testPreservesUnwrapConditionInIfStatement() {
@@ -233,6 +233,6 @@ final class RedundantPropertyTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .redundantProperty)
+        testFormatting(for: input, rule: .redundantVariable)
     }
 }

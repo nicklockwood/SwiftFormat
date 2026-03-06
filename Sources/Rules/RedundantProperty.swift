@@ -71,7 +71,7 @@ public extension FormatRule {
 
 extension Formatter {
     /// Returns the return type of the enclosing function, subscript, or computed property
-    /// at the given index within a scope body.
+    /// for the scope containing the given index.
     func returnTypeOfEnclosingScope(at index: Int) -> TypeName? {
         guard let startOfBody = startOfScope(at: index),
               tokens[startOfBody] == .startOfScope("{"),

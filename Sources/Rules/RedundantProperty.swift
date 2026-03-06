@@ -30,6 +30,15 @@ public extension FormatRule {
 
             guard !propertyRange.overlaps(returnRange) else { return }
 
+            // If the property has an explicit type annotation, only simplify if the type
+            // matches the return type of the enclosing function or computed property.
+            // Otherwise, removing the property would lose meaningful type information.
+            if let propertyType = property.type {
+                guard let enclosingReturnType = formatter.returnTypeOfEnclosingScope(at: introducerIndex),
+                      enclosingReturnType == propertyType
+                else { return }
+            }
+
             // Remove the line with the `return identifier` statement.
             formatter.removeTokens(in: returnRange)
 
@@ -57,5 +66,39 @@ public extension FormatRule {
           }
         ```
         """
+    }
+}
+
+extension Formatter {
+    /// Returns the return type of the enclosing function, subscript, or computed property
+    /// at the given index within a scope body.
+    func returnTypeOfEnclosingScope(at index: Int) -> TypeName? {
+        guard let startOfBody = startOfScope(at: index),
+              tokens[startOfBody] == .startOfScope("{"),
+              let keywordIndex = indexOfLastSignificantKeyword(
+                  at: startOfBody, excluding: ["throws", "rethrows"]
+              )
+        else { return nil }
+
+        let keyword = tokens[keywordIndex].string
+
+        // For func/subscript, find `->` and parse the return type
+        if ["func", "subscript"].contains(keyword),
+           let arrowIndex = self.index(of: .operator("->", .infix), in: keywordIndex + 1 ..< startOfBody),
+           let returnTypeIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: arrowIndex),
+           let returnType = parseType(at: returnTypeIndex)
+        {
+            return returnType
+        }
+
+        // For var (computed property), the return type is the property's declared type
+        if keyword == "var",
+           let property = parsePropertyDeclaration(atIntroducerIndex: keywordIndex),
+           let type = property.type
+        {
+            return type
+        }
+
+        return nil
     }
 }

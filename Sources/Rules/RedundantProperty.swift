@@ -11,7 +11,7 @@ import Foundation
 public extension FormatRule {
     /// Deprecated
     static let redundantProperty = FormatRule(
-        help: "Simplifies redundant property definitions that are immediately returned.",
+        help: "Simplifies redundant variable definitions that are immediately returned.",
         deprecationMessage: "Use redundantVariable instead."
     ) { formatter in
         FormatRule.redundantVariable.apply(with: formatter)

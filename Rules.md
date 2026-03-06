@@ -2799,7 +2799,7 @@ Remove redundant pattern matching parameter syntax.
 
 ## redundantProperty
 
-Simplifies redundant property definitions that are immediately returned.
+Simplifies redundant variable definitions that are immediately returned.
 
 *Note: redundantProperty rule is deprecated. Use redundantVariable instead.*
 

@@ -142,6 +142,62 @@ final class RedundantPropertyTests: XCTestCase {
         testFormatting(for: input, output, rule: .redundantProperty)
     }
 
+    func testPreservesPropertyWithExplicitTypeDifferentFromReturnType() {
+        let input = """
+        func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+            let cell: CustomCellType = tableView.dequeueReusableCell(for: indexPath)
+            return cell
+        }
+        """
+
+        testFormatting(for: input, rule: .redundantProperty)
+    }
+
+    func testRemovesPropertyWithExplicitTypeMatchingReturnType() {
+        let input = """
+        func foo() -> Foo {
+            let foo: Foo = Foo(bar: bar, baaz: baaz)
+            return foo
+        }
+        """
+
+        let output = """
+        func foo() -> Foo {
+            return Foo(bar: bar, baaz: baaz)
+        }
+        """
+
+        testFormatting(for: input, output, rule: .redundantProperty, exclude: [.redundantReturn])
+    }
+
+    func testPreservesPropertyWithExplicitTypeDifferentFromComputedPropertyType() {
+        let input = """
+        var foo: Foo {
+            let bar: Bar = baz.makeSomething()
+            return bar
+        }
+        """
+
+        testFormatting(for: input, rule: .redundantProperty)
+    }
+
+    func testRemovesPropertyWithExplicitTypeMatchingComputedPropertyType() {
+        let input = """
+        var foo: Foo {
+            let foo: Foo = bar.makeSomething()
+            return foo
+        }
+        """
+
+        let output = """
+        var foo: Foo {
+            return bar.makeSomething()
+        }
+        """
+
+        testFormatting(for: input, output, rule: .redundantProperty, exclude: [.redundantReturn])
+    }
+
     func testPreservesPropertyWhereReturnIsNotRedundant() {
         let input = """
         func foo() -> Foo {

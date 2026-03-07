@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.60.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.60.1) (2026-03-07)
+
+- Fixed issue where `redundantSendable` rule would unexpectedly remove `Sendable` conformance on type defined in public extension
+- Fixed issue where `redundantSendable` rule would leave behind extra space when removing `:`
+- Renamed `redundantProperty` rule to `redundantVariable`
+- Updated `redundantVariable` rule to preserve variables with explicit type annotations
+- Updated `enumNamespaces` rule to preserve Swift Testing suites as structs
+
 ## [0.60.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.60.0) (2026-03-03)
 
 - Added `redundantSwiftTestingSuite` rule

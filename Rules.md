@@ -64,7 +64,6 @@
 * [redundantOptionalBinding](#redundantOptionalBinding)
 * [redundantParens](#redundantParens)
 * [redundantPattern](#redundantPattern)
-* [redundantProperty](#redundantProperty)
 * [redundantPublic](#redundantPublic)
 * [redundantRawValues](#redundantRawValues)
 * [redundantReturn](#redundantReturn)
@@ -75,6 +74,7 @@
 * [redundantThrows](#redundantThrows)
 * [redundantType](#redundantType)
 * [redundantTypedThrows](#redundantTypedThrows)
+* [redundantVariable](#redundantVariable)
 * [redundantViewBuilder](#redundantViewBuilder)
 * [redundantVoidReturnType](#redundantVoidReturnType)
 * [semicolons](#semicolons)
@@ -143,6 +143,7 @@
 
 # Deprecated Rules (do not use)
 
+* [redundantProperty](#redundantProperty)
 * [sortedImports](#sortedImports)
 * [sortedSwitchCases](#sortedSwitchCases)
 * [specifiers](#specifiers)
@@ -2798,21 +2799,9 @@ Remove redundant pattern matching parameter syntax.
 
 ## redundantProperty
 
-Simplifies redundant property definitions that are immediately returned.
+Simplifies redundant variable definitions that are immediately returned.
 
-<details>
-<summary>Examples</summary>
-
-```diff
-  func foo() -> Foo {
--   let foo = Foo()
--   return foo
-+   return Foo()
-  }
-```
-
-</details>
-<br/>
+*Note: redundantProperty rule is deprecated. Use redundantVariable instead.*
 
 ## redundantPublic
 
@@ -3143,6 +3132,24 @@ Converts `throws(any Error)` to `throws`, and converts `throws(Never)` to non-th
 - func foo() throws(any Error) -> Int {
 + func foo() throws -> Int {
       throw MyError.foo
+  }
+```
+
+</details>
+<br/>
+
+## redundantVariable
+
+Simplifies redundant variable definitions that are immediately returned.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  func foo() -> Foo {
+-   let foo = Foo()
+-   return foo
++   return Foo()
   }
 ```
 

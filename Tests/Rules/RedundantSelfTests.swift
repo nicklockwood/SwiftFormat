@@ -2021,7 +2021,7 @@ final class RedundantSelfTests: XCTestCase {
         }
         """
         let options = FormatOptions(swiftVersion: "5.4")
-        testFormatting(for: input, rule: .redundantSelf, options: options, exclude: [.redundantProperty])
+        testFormatting(for: input, rule: .redundantSelf, options: options, exclude: [.redundantVariable])
     }
 
     func testDisableRedundantSelfDirective() {
@@ -2035,7 +2035,7 @@ final class RedundantSelfTests: XCTestCase {
         }
         """
         let options = FormatOptions(swiftVersion: "5.4")
-        testFormatting(for: input, rule: .redundantSelf, options: options, exclude: [.redundantProperty])
+        testFormatting(for: input, rule: .redundantSelf, options: options, exclude: [.redundantVariable])
     }
 
     func testDisableRedundantSelfDirective2() {
@@ -2050,7 +2050,7 @@ final class RedundantSelfTests: XCTestCase {
         }
         """
         let options = FormatOptions(swiftVersion: "5.4")
-        testFormatting(for: input, rule: .redundantSelf, options: options, exclude: [.redundantProperty])
+        testFormatting(for: input, rule: .redundantSelf, options: options, exclude: [.redundantVariable])
     }
 
     func testSelfInsertDirective() {
@@ -2064,7 +2064,7 @@ final class RedundantSelfTests: XCTestCase {
         }
         """
         let options = FormatOptions(swiftVersion: "5.4")
-        testFormatting(for: input, rule: .redundantSelf, options: options, exclude: [.redundantProperty])
+        testFormatting(for: input, rule: .redundantSelf, options: options, exclude: [.redundantVariable])
     }
 
     func testNoRemoveVariableShadowedLaterInScopeInOlderSwiftVersions() {

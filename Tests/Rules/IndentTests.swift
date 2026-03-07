@@ -658,7 +658,7 @@ final class IndentTests: XCTestCase {
         }
         """
         testFormatting(for: input, rule: .indent,
-                       exclude: [.braces, .wrapMultilineStatementBraces, .redundantProperty, .wrapArguments])
+                       exclude: [.braces, .wrapMultilineStatementBraces, .redundantVariable, .wrapArguments])
     }
 
     func testIndentLineAfterIndentedInlineClosure() {
@@ -670,7 +670,7 @@ final class IndentTests: XCTestCase {
             return viewController
         }
         """
-        testFormatting(for: input, rule: .indent, exclude: [.redundantProperty, .wrapArguments])
+        testFormatting(for: input, rule: .indent, exclude: [.redundantVariable, .wrapArguments])
     }
 
     func testIndentLineAfterNonIndentedClosure() {
@@ -683,7 +683,7 @@ final class IndentTests: XCTestCase {
             return viewController
         }
         """
-        testFormatting(for: input, rule: .indent, exclude: [.redundantProperty])
+        testFormatting(for: input, rule: .indent, exclude: [.redundantVariable])
     }
 
     func testIndentMultilineStatementDoesntFailToTerminate() {
@@ -5744,7 +5744,7 @@ final class IndentTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, output, rule: .indent, exclude: [.redundantProperty])
+        testFormatting(for: input, output, rule: .indent, exclude: [.redundantVariable])
     }
 
     func testIndentNestedSwitchExpressionAssignment() {

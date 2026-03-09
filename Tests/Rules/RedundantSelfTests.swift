@@ -3034,7 +3034,7 @@ final class RedundantSelfTests: XCTestCase {
         testFormatting(for: input, rule: .redundantSelf, options: options)
     }
 
-    func testNoInsertSelfInIfOsCondition() {
+    func testNoInsertSelfInCompilerDirectiveOsCondition() {
         let input = """
         class Foo {
             var iOS = true
@@ -3050,7 +3050,7 @@ final class RedundantSelfTests: XCTestCase {
         testFormatting(for: input, rule: .redundantSelf, options: options)
     }
 
-    func testNoInsertSelfInElseIfOsCondition() {
+    func testNoInsertSelfInCompilerDirectiveElseIfCondition() {
         let input = """
         class Foo {
             var iOS = true
@@ -3069,7 +3069,7 @@ final class RedundantSelfTests: XCTestCase {
         testFormatting(for: input, rule: .redundantSelf, options: options)
     }
 
-    func testNoInsertSelfForFlagInIfCondition() {
+    func testNoInsertSelfForFlagInCompilerDirectiveCondition() {
         let input = """
         class Foo {
             var DEBUG = true

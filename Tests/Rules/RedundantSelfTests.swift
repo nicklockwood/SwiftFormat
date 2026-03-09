@@ -3034,6 +3034,57 @@ final class RedundantSelfTests: XCTestCase {
         testFormatting(for: input, rule: .redundantSelf, options: options)
     }
 
+    func testNoInsertSelfInIfOsCondition() {
+        let input = """
+        class Foo {
+            var iOS = true
+
+            func bar() {
+                #if os(iOS)
+                    print("ios")
+                #endif
+            }
+        }
+        """
+        let options = FormatOptions(explicitSelf: .insert)
+        testFormatting(for: input, rule: .redundantSelf, options: options)
+    }
+
+    func testNoInsertSelfInElseIfOsCondition() {
+        let input = """
+        class Foo {
+            var iOS = true
+            var macOS = false
+
+            func bar() {
+                #if os(iOS)
+                    print("ios")
+                #elseif os(macOS)
+                    print("macos")
+                #endif
+            }
+        }
+        """
+        let options = FormatOptions(explicitSelf: .insert)
+        testFormatting(for: input, rule: .redundantSelf, options: options)
+    }
+
+    func testNoInsertSelfForFlagInIfCondition() {
+        let input = """
+        class Foo {
+            var DEBUG = true
+
+            func bar() {
+                #if DEBUG
+                    print("debug")
+                #endif
+            }
+        }
+        """
+        let options = FormatOptions(explicitSelf: .insert)
+        testFormatting(for: input, rule: .redundantSelf, options: options)
+    }
+
     func testNoInsertSelfBeforeBinding() {
         let input = """
         struct MyView: View {

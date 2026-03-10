@@ -2644,13 +2644,22 @@ extension Formatter {
                     continue
                 case .keyword("while") where lastKeyword == "repeat":
                     lastKeyword = ""
+                case .startOfScope("#if"), .keyword("#elseif"):
+                    // Skip the condition to avoid treating compiler directive
+                    // arguments (e.g., `os(iOS)`) as property references
+                    if case .startOfScope = token {
+                        scopeStack.append((token, []))
+                    }
+                    if let linebreakIndex = self.index(of: .linebreak, after: index) {
+                        index = linebreakIndex
+                    }
                 case let .keyword(name) where !name.isMacro:
                     lastKeyword = name
                     lastKeywordIndex = index
                 case .startOfScope("/*"), .startOfScope("//"):
                     index = endOfScope(at: index) ?? (tokens.count - 1)
                     updateEnablement(at: index)
-                case .startOfScope where token.isStringDelimiter, .startOfScope("#if"),
+                case .startOfScope where token.isStringDelimiter,
                      .startOfScope("["), .startOfScope("("):
                     scopeStack.append((token, []))
                 case .startOfScope(":"):

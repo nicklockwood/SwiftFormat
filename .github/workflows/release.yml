@@ -37,11 +37,11 @@ jobs:
       - name: Set Version Number
         run: echo "Using version number $GITHUB_REF_NAME" && sed -i "s/let swiftFormatVersion = \"[^\"]*\"/let swiftFormatVersion = \"$GITHUB_REF_NAME\"/" Sources/SwiftFormat.swift
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
       - name: Install cross-binutils for aarch64
         run: sudo apt-get update && sudo apt-get install -y binutils-aarch64-linux-gnu
       - name: Build and export binaries
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           platforms: linux/amd64,linux/arm64

@@ -1055,7 +1055,7 @@ public struct FormatOptions: CustomStringConvertible {
                 allowPartialWrapping: Bool = true,
                 preferSynthesizedInitForInternalStructs: PreferSynthesizedInitMode = .never,
                 testCaseNameFormat: SwiftTestingNameFormat = .rawIdentifiers,
-                suiteNameFormat: SwiftTestingNameFormat = .standardIdentifiers,
+                suiteNameFormat: SwiftTestingNameFormat = .preserve,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,

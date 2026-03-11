@@ -791,7 +791,7 @@ final class SwiftTestingTestCaseNamesTests: XCTestCase {
         """
 
         testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
-                       options: FormatOptions(testCaseNameFormat: .preserve, swiftVersion: "6.2"),
+                       options: FormatOptions(testCaseNameFormat: .preserve, suiteNameFormat: .standardIdentifiers, swiftVersion: "6.2"),
                        exclude: [.redundantSwiftTestingSuite])
     }
 
@@ -815,7 +815,7 @@ final class SwiftTestingTestCaseNamesTests: XCTestCase {
         """
 
         testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
-                       options: FormatOptions(testCaseNameFormat: .preserve, swiftVersion: "6.2"),
+                       options: FormatOptions(testCaseNameFormat: .preserve, suiteNameFormat: .standardIdentifiers, swiftVersion: "6.2"),
                        exclude: [.redundantSwiftTestingSuite])
     }
 
@@ -839,7 +839,7 @@ final class SwiftTestingTestCaseNamesTests: XCTestCase {
         """
 
         testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
-                       options: FormatOptions(testCaseNameFormat: .preserve, swiftVersion: "6.2"),
+                       options: FormatOptions(testCaseNameFormat: .preserve, suiteNameFormat: .standardIdentifiers, swiftVersion: "6.2"),
                        exclude: [.redundantSwiftTestingSuite])
     }
 
@@ -854,7 +854,7 @@ final class SwiftTestingTestCaseNamesTests: XCTestCase {
         """
 
         testFormatting(for: input, rule: .swiftTestingTestCaseNames,
-                       options: FormatOptions(testCaseNameFormat: .preserve, swiftVersion: "6.2"),
+                       options: FormatOptions(testCaseNameFormat: .preserve, suiteNameFormat: .standardIdentifiers, swiftVersion: "6.2"),
                        exclude: [.redundantSwiftTestingSuite])
     }
 
@@ -878,7 +878,7 @@ final class SwiftTestingTestCaseNamesTests: XCTestCase {
         """
 
         testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
-                       options: FormatOptions(testCaseNameFormat: .preserve, swiftVersion: "6.2"))
+                       options: FormatOptions(testCaseNameFormat: .preserve, suiteNameFormat: .standardIdentifiers, swiftVersion: "6.2"))
     }
 
     // MARK: - @Suite with raw-identifiers
@@ -1011,7 +1011,7 @@ final class SwiftTestingTestCaseNamesTests: XCTestCase {
         """
 
         testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
-                       options: FormatOptions(testCaseNameFormat: .preserve, swiftVersion: "6.2"),
+                       options: FormatOptions(testCaseNameFormat: .preserve, suiteNameFormat: .standardIdentifiers, swiftVersion: "6.2"),
                        exclude: [.redundantSwiftTestingSuite])
     }
 
@@ -1035,7 +1035,7 @@ final class SwiftTestingTestCaseNamesTests: XCTestCase {
         """
 
         testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
-                       options: FormatOptions(testCaseNameFormat: .preserve, swiftVersion: "6.2"),
+                       options: FormatOptions(testCaseNameFormat: .preserve, suiteNameFormat: .standardIdentifiers, swiftVersion: "6.2"),
                        exclude: [.redundantSwiftTestingSuite])
     }
 
@@ -1059,7 +1059,7 @@ final class SwiftTestingTestCaseNamesTests: XCTestCase {
         """
 
         testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
-                       options: FormatOptions(testCaseNameFormat: .preserve, swiftVersion: "6.2"),
+                       options: FormatOptions(testCaseNameFormat: .preserve, suiteNameFormat: .standardIdentifiers, swiftVersion: "6.2"),
                        exclude: [.redundantSwiftTestingSuite])
     }
 
@@ -1091,7 +1091,7 @@ final class SwiftTestingTestCaseNamesTests: XCTestCase {
         """
 
         testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
-                       options: FormatOptions(testCaseNameFormat: .preserve, swiftVersion: "6.2"),
+                       options: FormatOptions(testCaseNameFormat: .preserve, suiteNameFormat: .standardIdentifiers, swiftVersion: "6.2"),
                        exclude: [.redundantSwiftTestingSuite])
     }
 

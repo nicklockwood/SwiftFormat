@@ -241,7 +241,8 @@ final class RedundantSwiftTestingSuiteTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, [output], rules: [.swiftTestingTestCaseNames, .redundantSwiftTestingSuite])
+        testFormatting(for: input, [output], rules: [.swiftTestingTestCaseNames, .redundantSwiftTestingSuite],
+                       options: FormatOptions(suiteNameFormat: .standardIdentifiers))
     }
 
     func testKeepSuiteWithDisplayNameWhenSuiteNameFormatIsPreserve() {

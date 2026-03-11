@@ -970,6 +970,25 @@ final class SwiftTestingTestCaseNamesTests: XCTestCase {
                                               swiftVersion: "6.2"))
     }
 
+    func testSuitePreserveKeepsDisplayNameWithBothRules() {
+        let input = """
+        import Testing
+
+        @Suite("My Feature Tests")
+        struct MyFeatureTests {
+            @Test func myTest() {}
+        }
+        """
+
+        testFormatting(
+            for: input,
+            rules: [.swiftTestingTestCaseNames, .redundantSwiftTestingSuite],
+            options: FormatOptions(testCaseNameFormat: .preserve,
+                                   suiteNameFormat: .preserve,
+                                   swiftVersion: "6.2")
+        )
+    }
+
     // MARK: - @Suite on class/actor/enum
 
     func testSuiteWorksWithClass() {

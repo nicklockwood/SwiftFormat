@@ -244,6 +244,24 @@ final class RedundantSwiftTestingSuiteTests: XCTestCase {
         testFormatting(for: input, [output], rules: [.swiftTestingTestCaseNames, .redundantSwiftTestingSuite])
     }
 
+    func testKeepSuiteWithDisplayNameWhenSuiteNameFormatIsPreserve() {
+        let input = """
+        import Testing
+
+        @Suite("Display Name")
+        struct MyTests {
+            @Test func feature() {
+                #expect(true)
+            }
+        }
+        """
+        testFormatting(
+            for: input,
+            rules: [.swiftTestingTestCaseNames, .redundantSwiftTestingSuite],
+            options: FormatOptions(suiteNameFormat: .preserve)
+        )
+    }
+
     func testKeepSuiteWithArgumentsAndComments() {
         let input = """
         import Testing

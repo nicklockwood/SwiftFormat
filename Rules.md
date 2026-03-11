@@ -3722,7 +3722,7 @@ Format Swift Testing @Test and @Suite names.
 Option | Description
 --- | ---
 `--test-case-name-format` | Swift Testing test case name format: "preserve", "raw-identifiers" (default) or "standard-identifiers"
-`--suite-name-format` | Swift Testing suite name format: "preserve", "raw-identifiers" or "standard-identifiers" (default)
+`--suite-name-format` | Swift Testing suite name format: "preserve" (default), "raw-identifiers" or "standard-identifiers"
 
 <details>
 <summary>Examples</summary>

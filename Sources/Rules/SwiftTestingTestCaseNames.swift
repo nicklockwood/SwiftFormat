@@ -228,7 +228,8 @@ extension String {
     }
 
     /// Splits a camelCase string into individual words, treating consecutive uppercase letters as acronyms.
-    /// For example: "UUIDIsValid" → ["UUID", "Is", "Valid"], "alphabetStartsWithABC" → ["alphabet", "Starts", "With", "ABC"].
+    /// For example: "UUIDIsValid" → ["UUID", "Is", "Valid"], "alphabetStartsWithABC" → ["alphabet", "Starts", "With", "ABC"],
+    /// "greaterThan100" → ["greater", "Than", "100"].
     func splitCamelCase() -> [String] {
         var words: [String] = []
         var currentWord = ""
@@ -241,8 +242,8 @@ extension String {
             if char.isUppercase {
                 if currentWord.isEmpty {
                     currentWord.append(char)
-                } else if currentWord.last!.isLowercase {
-                    // Lower→Upper transition: start a new word
+                } else if currentWord.last!.isLowercase || currentWord.last!.isNumber {
+                    // Lower→Upper or Number→Upper transition: start a new word
                     words.append(currentWord)
                     currentWord = String(char)
                 } else if let next = nextChar, next.isLowercase {
@@ -254,8 +255,22 @@ extension String {
                     // Continue accumulating the uppercase sequence (acronym)
                     currentWord.append(char)
                 }
+            } else if char.isNumber {
+                if !currentWord.isEmpty, !currentWord.last!.isNumber {
+                    // Letter→Number transition: start a new word
+                    words.append(currentWord)
+                    currentWord = String(char)
+                } else {
+                    currentWord.append(char)
+                }
             } else {
-                currentWord.append(char)
+                if !currentWord.isEmpty, currentWord.last!.isNumber {
+                    // Number→Letter transition: start a new word
+                    words.append(currentWord)
+                    currentWord = String(char)
+                } else {
+                    currentWord.append(char)
+                }
             }
         }
 

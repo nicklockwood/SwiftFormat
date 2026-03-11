@@ -221,6 +221,87 @@ final class SwiftTestingTestCaseNamesTests: XCTestCase {
                        options: FormatOptions(swiftVersion: "6.2"))
     }
 
+    func testConvertsTestNameWithTrailingNumberToRawIdentifier() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func testValueIsGreaterThan100() {
+                #expect(true)
+            }
+        }
+        """
+
+        let output = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func `value is greater than 100`() {
+                #expect(true)
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(swiftVersion: "6.2"))
+    }
+
+    func testConvertsTestNameWithMiddleNumberToRawIdentifier() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func testPhase2IsComplete() {
+                #expect(true)
+            }
+        }
+        """
+
+        let output = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func `phase 2 is complete`() {
+                #expect(true)
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(swiftVersion: "6.2"))
+    }
+
+    func testConvertsTestNameWithLeadingNumberToRawIdentifier() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func test100IsGreaterThan99() {
+                #expect(true)
+            }
+        }
+        """
+
+        let output = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test
+            func `100 is greater than 99`() {
+                #expect(true)
+            }
+        }
+        """
+
+        testFormatting(for: input, output, rule: .swiftTestingTestCaseNames,
+                       options: FormatOptions(swiftVersion: "6.2"))
+    }
+
     func testUsesDisplayNameForRawIdentifier() {
         let input = """
         import Testing

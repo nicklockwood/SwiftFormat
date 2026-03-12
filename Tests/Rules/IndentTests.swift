@@ -1376,6 +1376,37 @@ final class IndentTests: XCTestCase {
         testFormatting(for: input, output, rule: .indent, options: options)
     }
 
+    func testMultilineSwitchCasePatternWithIndentCaseTrue() {
+        let input = """
+        switch x {
+        case let .foo(
+        longVariableName,
+        otherLongVariableName
+        ):
+        break
+        case bar:
+        break
+        default:
+        break
+        }
+        """
+        let output = """
+        switch x {
+            case let .foo(
+                longVariableName,
+                otherLongVariableName
+            ):
+                break
+            case bar:
+                break
+            default:
+                break
+        }
+        """
+        let options = FormatOptions(indentCase: true)
+        testFormatting(for: input, output, rule: .indent, options: options)
+    }
+
     func testNoMangleLabelWhenIndentCaseTrue() {
         let input = """
         foo: while true {

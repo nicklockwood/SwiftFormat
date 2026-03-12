@@ -6073,13 +6073,13 @@ final class IndentTests: XCTestCase {
         let input = """
         switch testKey {
             case "organization"
-            where testValues.map(String.init).compactMap { try? Entity.ID($0, format: .number) }
-            .contains(Self.sessionInteractor.stage.value?.membership?.organization.id ?? .zero): // 2
+                where testValues.map(String.init).compactMap { try? Entity.ID($0, format: .number) }
+                .contains(Self.sessionInteractor.stage.value?.membership?.organization.id ?? .zero): // 2
                 continue
 
             case "user"
-            where testValues.map(String.init).compactMap { try? Entity.ID($0, format: .number) }
-            .contains(Self.sessionInteractor.stage.value?.session?.user.id ?? .zero): // 3
+                where testValues.map(String.init).compactMap { try? Entity.ID($0, format: .number) }
+                .contains(Self.sessionInteractor.stage.value?.session?.user.id ?? .zero): // 3
                 continue
         }
         """

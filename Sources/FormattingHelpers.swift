@@ -124,6 +124,11 @@ extension Formatter {
                 }
             case let token:
                 if token.isStringDelimiter {
+                    if !staticSelf,
+                       isStringAssignedToSelfRequiredType(at: scopeStart)
+                    {
+                        return false
+                    }
                     break
                 }
                 break loop
@@ -132,6 +137,35 @@ extension Formatter {
         }
         removeTokens(in: i ..< nextIndex)
         return true
+    }
+
+    /// Whether the string starting at the given index is assigned to a variable
+    /// whose type annotation contains a type name in `selfRequired`.
+    /// e.g. `let _: OSLogMessage = "\(self.bar)"`
+    func isStringAssignedToSelfRequiredType(at stringStartIndex: Int) -> Bool {
+        guard let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: stringStartIndex),
+              tokens[prevIndex] == .operator("=", .infix)
+        else {
+            return false
+        }
+        // Walk backwards from `=` past optional/unwrap operators to find the type name
+        var typeIndex = prevIndex
+        while let prevTypeIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: typeIndex) {
+            if tokens[prevTypeIndex].isUnwrapOperator {
+                typeIndex = prevTypeIndex
+            } else if tokens[prevTypeIndex] == .endOfScope(">"),
+                      let matchingStart = self.startOfScope(at: prevTypeIndex)
+            {
+                typeIndex = matchingStart
+            } else {
+                typeIndex = prevTypeIndex
+                break
+            }
+        }
+        guard tokens[typeIndex].isIdentifier else {
+            return false
+        }
+        return options.selfRequired.contains(tokens[typeIndex].unescaped())
     }
 
     /// gather declared variable names, starting at index after let/var keyword

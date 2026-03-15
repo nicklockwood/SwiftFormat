@@ -838,7 +838,7 @@ struct _Descriptors {
     let selfRequired = OptionDescriptor(
         argumentName: "self-required",
         displayName: "Self Required",
-        help: "Comma-delimited list of functions with @autoclosure arguments",
+        help: "Comma-delimited list of functions / types with @autoclosure arguments",
         keyPath: \FormatOptions.selfRequired
     )
     let throwCapturing = OptionDescriptor(

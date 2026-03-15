@@ -142,8 +142,8 @@ extension Formatter {
     /// Whether the string starting at the given index is assigned to a variable
     /// whose type annotation contains a type name in `selfRequired`.
     /// e.g. `let _: OSLogMessage = "\(self.bar)"`
-    func isStringAssignedToSelfRequiredType(at stringStartIndex: Int) -> Bool {
-        guard let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: stringStartIndex),
+    func isStringAssignedToSelfRequiredType(at i: Int) -> Bool {
+        guard let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: i),
               tokens[prevIndex] == .operator("=", .infix)
         else {
             return false

@@ -970,6 +970,20 @@ final class RedundantSelfTests: XCTestCase {
                        exclude: [.propertyTypes])
     }
 
+    func testNoRemoveSelfInSelfRequiredTypeInitializer() {
+        let input = """
+        class C {
+            let bar = NSObject()
+            func f() {
+                let msg = OSLogMessage(self.bar)
+            }
+        }
+        """
+        let options = FormatOptions(selfRequired: ["OSLogMessage"])
+        testFormatting(for: input, rule: .redundantSelf, options: options,
+                       exclude: [.propertyTypes])
+    }
+
     func testSelfRemovedFromSwitchCaseWhere() {
         let input = """
         class Foo {

@@ -4487,244 +4487,82 @@ final class OrganizeDeclarationsTests: XCTestCase {
         )
     }
 
-    func testNoCrashWithNestedStructAfterMarkComment() {
+    func testPreservesCustomMarkCommentBeforePrivateNestedType() {
         let input = """
-        struct MultiSelectMenu<Choice: Identifiable & Hashable>: View {
-
-            let title: String
-            let systemImage: String
-
-            let all: [Choice]
-            @Binding var selected: [Choice]
-
-            let titleProvider: (Choice) -> String
-            let colorProvider: (Choice) -> Color
-
-            init(
-                title: String,
-                systemImage: String = "person.circle.fill",
-                all: [Choice],
-                selected: Binding<[Choice]>,
-                titleProvider: @escaping (Choice) -> String,
-                colorProvider: @escaping (Choice) -> Color
-            ) {
-                self.title = title
-                self.systemImage = systemImage
-                self.all = all
-                self._selected = selected
-                self.titleProvider = titleProvider
-                self.colorProvider = colorProvider
-            }
-
-            var body: some View {
-                Menu {
-                    ForEach(all) { item in
-                        let isOn = selected.contains(where: { $0.id == item.id })
-                        Button {
-                            toggle(item)
-                        } label: {
-                            HStack {
-                                Text(titleProvider(item))
-                                Spacer()
-                                if isOn {
-                                    Image(systemName: "checkmark")
-                                }
-                            }
-                        }
-                    }
-
-                    if !selected.isEmpty {
-                        Divider()
-                        Button("Clear Selection", role: .destructive) {
-                            selected.removeAll()
-                        }
-                    }
-                } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: systemImage)
-                            .imageScale(.medium)
-
-                        Text(title)
-                        Spacer()
-                        if !selected.isEmpty {
-                            SelectedChips(
-                                selected: selected,
-                                titleProvider: titleProvider,
-                                colorProvider: colorProvider
-                            )
-                            .padding(.trailing, 2)
-                        }
-                    }
-                    .foregroundStyle(.primary)
-                    .tint(.primary)
-                }
-                .frame(minHeight: 22)
-            }
-
-            private func toggle(_ item: Choice) {
-                if let idx = selected.firstIndex(where: { $0.id == item.id }) {
-                    selected.remove(at: idx)
-                } else {
-                    selected.append(item)
-                }
-            }
-
-            // MARK: - Chips View
-
-            private struct SelectedChips: View {
-                let selected: [Choice]
-                let titleProvider: (Choice) -> String
-                let colorProvider: (Choice) -> Color
-
-                var body: some View {
-                    let maxChips = 3
-                    let head = Array(selected.prefix(maxChips))
-                    let restCount = max(0, selected.count - maxChips)
-
-                    HStack(spacing: 6) {
-                        ForEach(head, id: \\.id) { item in
-                            let text = initials(for: titleProvider(item))
-                            let color = colorProvider(item)
-                        }
-
-                        if restCount > 0 {
-                            Text("+ \\(restCount)")
-                        }
-                    }
-                }
-
-                private func initials(for name: String) -> String {
-                    name.uppercased()
-                }
+        struct Foo {
+            init() {}
+            var body: some View { Text("") }
+            private func toggle() {}
+            // MARK: - Section
+            private struct Bar {
+                let x: Int
+                private func b() {}
             }
         }
         """
 
         let output = """
-        struct MultiSelectMenu<Choice: Identifiable & Hashable>: View {
+        struct Foo {
 
             // MARK: Lifecycle
 
-            init(
-                title: String,
-                systemImage: String = "person.circle.fill",
-                all: [Choice],
-                selected: Binding<[Choice]>,
-                titleProvider: @escaping (Choice) -> String,
-                colorProvider: @escaping (Choice) -> Color
-            ) {
-                self.title = title
-                self.systemImage = systemImage
-                self.all = all
-                self._selected = selected
-                self.titleProvider = titleProvider
-                self.colorProvider = colorProvider
-            }
+            init() {}
 
             // MARK: Internal
 
-            @Binding var selected: [Choice]
+            var body: some View { Text("") }
 
-            let title: String
-            let systemImage: String
+            // MARK: Private
 
-            let all: [Choice]
+            // MARK: - Section
+            private struct Bar {
 
-            let titleProvider: (Choice) -> String
-            let colorProvider: (Choice) -> Color
+                // MARK: Internal
+
+                let x: Int
+
+                // MARK: Private
+
+                private func b() {}
+            }
+
+            private func toggle() {}
+        }
+        """
+
+        let outputWithAllRules = """
+        struct Foo {
+
+            // MARK: Lifecycle
+
+            init() {}
+
+            // MARK: Internal
 
             var body: some View {
-                Menu {
-                    ForEach(all) { item in
-                        let isOn = selected.contains(where: { $0.id == item.id })
-                        Button {
-                            toggle(item)
-                        } label: {
-                            HStack {
-                                Text(titleProvider(item))
-                                Spacer()
-                                if isOn {
-                                    Image(systemName: "checkmark")
-                                }
-                            }
-                        }
-                    }
-
-                    if !selected.isEmpty {
-                        Divider()
-                        Button("Clear Selection", role: .destructive) {
-                            selected.removeAll()
-                        }
-                    }
-                } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: systemImage)
-                            .imageScale(.medium)
-
-                        Text(title)
-                        Spacer()
-                        if !selected.isEmpty {
-                            SelectedChips(
-                                selected: selected,
-                                titleProvider: titleProvider,
-                                colorProvider: colorProvider
-                            )
-                            .padding(.trailing, 2)
-                        }
-                    }
-                    .foregroundStyle(.primary)
-                    .tint(.primary)
-                }
-                .frame(minHeight: 22)
+                Text("")
             }
 
             // MARK: Private
 
-            // MARK: - Chips View
+            // MARK: - Section
 
-            private struct SelectedChips: View {
+            private struct Bar {
 
                 // MARK: Internal
 
-                let selected: [Choice]
-                let titleProvider: (Choice) -> String
-                let colorProvider: (Choice) -> Color
-
-                var body: some View {
-                    let maxChips = 3
-                    let head = Array(selected.prefix(maxChips))
-                    let restCount = max(0, selected.count - maxChips)
-
-                    HStack(spacing: 6) {
-                        ForEach(head, id: \\.id) { item in
-                            let text = initials(for: titleProvider(item))
-                            let color = colorProvider(item)
-                        }
-
-                        if restCount > 0 {
-                            Text("+ \\(restCount)")
-                        }
-                    }
-                }
+                let x: Int
 
                 // MARK: Private
 
-                private func initials(for name: String) -> String {
-                    name.uppercased()
-                }
+                private func b() {}
             }
 
-            private func toggle(_ item: Choice) {
-                if let idx = selected.firstIndex(where: { $0.id == item.id }) {
-                    selected.remove(at: idx)
-                } else {
-                    selected.append(item)
-                }
-            }
+            private func toggle() {}
 
         }
         """
 
-        testFormatting(for: input, output, rule: .organizeDeclarations, exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .redundantSelf])
+        testFormatting(for: input, [output, outputWithAllRules], rules: [.organizeDeclarations], exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope])
     }
 }

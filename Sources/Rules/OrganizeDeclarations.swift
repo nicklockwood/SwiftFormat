@@ -434,7 +434,6 @@ extension Formatter {
 
                 let indentation = currentIndentForLine(at: declaration.range.lowerBound)
                 let markDeclaration = tokenize("\(indentation)// \(markCommentBody)")
-                let eligibleCommentRange = declaration.range.lowerBound ..< self.index(of: .nonSpaceOrCommentOrLinebreak, after: declaration.range.lowerBound - 1)!
 
                 // Remove any comments other than the expected mark comment if present
                 removeExistingCategorySeparators(
@@ -445,6 +444,10 @@ extension Formatter {
                         commentBody == markCommentBody
                     }
                 )
+
+                // Compute the eligible comment range after removing other separators,
+                // so that the range reflects the current token positions.
+                let eligibleCommentRange = declaration.range.lowerBound ..< (self.index(of: .nonSpaceOrCommentOrLinebreak, after: declaration.range.lowerBound - 1) ?? declaration.range.lowerBound)
 
                 let matchingComments = singleLineComments(in: eligibleCommentRange, matching: { commentBody in
                     commentBody == markCommentBody

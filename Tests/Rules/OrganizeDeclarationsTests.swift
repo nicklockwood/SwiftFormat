@@ -4600,6 +4600,131 @@ final class OrganizeDeclarationsTests: XCTestCase {
         }
         """
 
-        testFormatting(for: input, rule: .organizeDeclarations, exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope])
+        let output = """
+        struct MultiSelectMenu<Choice: Identifiable & Hashable>: View {
+
+            // MARK: Lifecycle
+
+            init(
+                title: String,
+                systemImage: String = "person.circle.fill",
+                all: [Choice],
+                selected: Binding<[Choice]>,
+                titleProvider: @escaping (Choice) -> String,
+                colorProvider: @escaping (Choice) -> Color
+            ) {
+                self.title = title
+                self.systemImage = systemImage
+                self.all = all
+                self._selected = selected
+                self.titleProvider = titleProvider
+                self.colorProvider = colorProvider
+            }
+
+            // MARK: Internal
+
+            @Binding var selected: [Choice]
+
+            let title: String
+            let systemImage: String
+
+            let all: [Choice]
+
+            let titleProvider: (Choice) -> String
+            let colorProvider: (Choice) -> Color
+
+            var body: some View {
+                Menu {
+                    ForEach(all) { item in
+                        let isOn = selected.contains(where: { $0.id == item.id })
+                        Button {
+                            toggle(item)
+                        } label: {
+                            HStack {
+                                Text(titleProvider(item))
+                                Spacer()
+                                if isOn {
+                                    Image(systemName: "checkmark")
+                                }
+                            }
+                        }
+                    }
+
+                    if !selected.isEmpty {
+                        Divider()
+                        Button("Clear Selection", role: .destructive) {
+                            selected.removeAll()
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: systemImage)
+                            .imageScale(.medium)
+
+                        Text(title)
+                        Spacer()
+                        if !selected.isEmpty {
+                            SelectedChips(
+                                selected: selected,
+                                titleProvider: titleProvider,
+                                colorProvider: colorProvider
+                            )
+                            .padding(.trailing, 2)
+                        }
+                    }
+                    .foregroundStyle(.primary)
+                    .tint(.primary)
+                }
+                .frame(minHeight: 22)
+            }
+
+            // MARK: Private
+
+            // MARK: - Chips View
+
+            private struct SelectedChips: View {
+
+                // MARK: Internal
+
+                let selected: [Choice]
+                let titleProvider: (Choice) -> String
+                let colorProvider: (Choice) -> Color
+
+                var body: some View {
+                    let maxChips = 3
+                    let head = Array(selected.prefix(maxChips))
+                    let restCount = max(0, selected.count - maxChips)
+
+                    HStack(spacing: 6) {
+                        ForEach(head, id: \\.id) { item in
+                            let text = initials(for: titleProvider(item))
+                            let color = colorProvider(item)
+                        }
+
+                        if restCount > 0 {
+                            Text("+ \\(restCount)")
+                        }
+                    }
+                }
+
+                // MARK: Private
+
+                private func initials(for name: String) -> String {
+                    name.uppercased()
+                }
+            }
+
+            private func toggle(_ item: Choice) {
+                if let idx = selected.firstIndex(where: { $0.id == item.id }) {
+                    selected.remove(at: idx)
+                } else {
+                    selected.append(item)
+                }
+            }
+
+        }
+        """
+
+        testFormatting(for: input, output, rule: .organizeDeclarations, exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .redundantSelf])
     }
 }

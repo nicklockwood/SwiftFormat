@@ -169,7 +169,7 @@ extension Formatter {
             if tokens[prevTypeIndex].isUnwrapOperator {
                 typeIndex = prevTypeIndex
             } else if tokens[prevTypeIndex] == .endOfScope(">"),
-                      let matchingStart = self.startOfScope(at: prevTypeIndex)
+                      let matchingStart = startOfScope(at: prevTypeIndex)
             {
                 typeIndex = matchingStart
             } else {

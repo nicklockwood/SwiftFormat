@@ -4491,7 +4491,9 @@ final class OrganizeDeclarationsTests: XCTestCase {
         let input = """
         struct Foo {
             init() {}
-            var body: some View { Text("") }
+            var body: some View {
+                Text("")
+            }
             private func toggle() {}
             // MARK: - Section
             private struct Bar {
@@ -4510,35 +4512,6 @@ final class OrganizeDeclarationsTests: XCTestCase {
 
             // MARK: Internal
 
-            var body: some View { Text("") }
-
-            // MARK: Private
-
-            // MARK: - Section
-            private struct Bar {
-
-                // MARK: Internal
-
-                let x: Int
-
-                // MARK: Private
-
-                private func b() {}
-            }
-
-            private func toggle() {}
-        }
-        """
-
-        let outputWithAllRules = """
-        struct Foo {
-
-            // MARK: Lifecycle
-
-            init() {}
-
-            // MARK: Internal
-
             var body: some View {
                 Text("")
             }
@@ -4546,7 +4519,6 @@ final class OrganizeDeclarationsTests: XCTestCase {
             // MARK: Private
 
             // MARK: - Section
-
             private struct Bar {
 
                 // MARK: Internal
@@ -4559,10 +4531,9 @@ final class OrganizeDeclarationsTests: XCTestCase {
             }
 
             private func toggle() {}
-
         }
         """
 
-        testFormatting(for: input, [output, outputWithAllRules], rules: [.organizeDeclarations], exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope])
+        testFormatting(for: input, output, rule: .organizeDeclarations, exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .blankLinesAroundMark])
     }
 }

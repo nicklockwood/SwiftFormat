@@ -130,8 +130,57 @@ extension Formatter {
             }
             index = scopeStart
         }
+        if !staticSelf,
+           isAssignedToSelfRequiredType(at: index)
+        {
+            return false
+        }
         removeTokens(in: i ..< nextIndex)
         return true
+    }
+
+    /// Whether the expression at the given index is on the RHS of an assignment
+    /// whose LHS has a type annotation matching a `selfRequired` type.
+    /// e.g. `let _: OSLogMessage = "\(self.bar)"` or `let _: OSLogMessage = foo(self.bar)`
+    func isAssignedToSelfRequiredType(at i: Int) -> Bool {
+        guard !options.selfRequired.isEmpty else { return false }
+        // Walk backwards from start of expression to find `=` operator
+        var index = i
+        while let prevIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: index) {
+            if tokens[prevIndex] == .operator("=", .infix) {
+                return isSelfRequiredType(beforeAssignment: prevIndex)
+            }
+            switch tokens[prevIndex] {
+            case .identifier, .operator(".", .infix),
+                 .keyword("try"), .keyword("await"),
+                 .operator("?", .postfix), .operator("!", .postfix):
+                index = prevIndex
+            default:
+                return false
+            }
+        }
+        return false
+    }
+
+    /// Whether the type annotation before an `=` operator is a `selfRequired` type.
+    func isSelfRequiredType(beforeAssignment equalsIndex: Int) -> Bool {
+        var typeIndex = equalsIndex
+        while let prevTypeIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: typeIndex) {
+            if tokens[prevTypeIndex].isUnwrapOperator {
+                typeIndex = prevTypeIndex
+            } else if tokens[prevTypeIndex] == .endOfScope(">"),
+                      let matchingStart = startOfScope(at: prevTypeIndex)
+            {
+                typeIndex = matchingStart
+            } else {
+                typeIndex = prevTypeIndex
+                break
+            }
+        }
+        guard tokens[typeIndex].isIdentifier else {
+            return false
+        }
+        return options.selfRequired.contains(tokens[typeIndex].unescaped())
     }
 
     /// gather declared variable names, starting at index after let/var keyword

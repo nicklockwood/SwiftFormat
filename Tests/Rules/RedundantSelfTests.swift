@@ -879,6 +879,111 @@ final class RedundantSelfTests: XCTestCase {
         testFormatting(for: input, rule: .redundantSelf, options: options, exclude: [.propertyTypes])
     }
 
+    func testNoRemoveSelfInStringInterpolationWithSelfRequiredTypeAnnotation() {
+        let input = """
+        class C {
+            let bar = NSObject()
+            func f() {
+                let _: OSLogMessage = "\\(self.bar)"
+            }
+        }
+        """
+        let options = FormatOptions(selfRequired: ["OSLogMessage"])
+        testFormatting(for: input, rule: .redundantSelf, options: options,
+                       exclude: [.propertyTypes])
+    }
+
+    func testNoRemoveSelfInStringInterpolationWithOptionalSelfRequiredTypeAnnotation() {
+        let input = """
+        class C {
+            let bar = NSObject()
+            func f() {
+                let x: OSLogMessage? = "\\(self.bar)"
+            }
+        }
+        """
+        let options = FormatOptions(selfRequired: ["OSLogMessage"])
+        testFormatting(for: input, rule: .redundantSelf, options: options,
+                       exclude: [.propertyTypes])
+    }
+
+    func testRemoveSelfInStringInterpolationWithNonSelfRequiredTypeAnnotation() {
+        let input = """
+        class C {
+            let bar = "test"
+            func f() {
+                let x: String = "\\(self.bar)"
+            }
+        }
+        """
+        let output = """
+        class C {
+            let bar = "test"
+            func f() {
+                let x: String = "\\(bar)"
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantSelf,
+                       exclude: [.propertyTypes, .redundantType])
+    }
+
+    func testNoRemoveSelfInFunctionCallWithSelfRequiredTypeAnnotation() {
+        let input = """
+        class C {
+            let bar = NSObject()
+            func f() {
+                let _: OSLogMessage = foo(self.bar)
+            }
+        }
+        """
+        let options = FormatOptions(selfRequired: ["OSLogMessage"])
+        testFormatting(for: input, rule: .redundantSelf, options: options,
+                       exclude: [.propertyTypes])
+    }
+
+    func testNoRemoveSelfInMethodChainWithSelfRequiredTypeAnnotation() {
+        let input = """
+        class C {
+            let bar = NSObject()
+            func f() {
+                let _: OSLogMessage = Foo.bar(self.bar)
+            }
+        }
+        """
+        let options = FormatOptions(selfRequired: ["OSLogMessage"])
+        testFormatting(for: input, rule: .redundantSelf, options: options,
+                       exclude: [.propertyTypes])
+    }
+
+    func testNoRemoveSelfInDirectAssignmentWithSelfRequiredTypeAnnotation() {
+        let input = """
+        class C {
+            let bar = NSObject()
+            func f() {
+                let _: OSLogMessage = self.bar
+            }
+        }
+        """
+        let options = FormatOptions(selfRequired: ["OSLogMessage"])
+        testFormatting(for: input, rule: .redundantSelf, options: options,
+                       exclude: [.propertyTypes])
+    }
+
+    func testNoRemoveSelfInSelfRequiredTypeInitializer() {
+        let input = """
+        class C {
+            let bar = NSObject()
+            func f() {
+                let msg = OSLogMessage(self.bar)
+            }
+        }
+        """
+        let options = FormatOptions(selfRequired: ["OSLogMessage"])
+        testFormatting(for: input, rule: .redundantSelf, options: options,
+                       exclude: [.propertyTypes])
+    }
+
     func testSelfRemovedFromSwitchCaseWhere() {
         let input = """
         class Foo {

@@ -2888,7 +2888,7 @@ Insert/remove explicit `self` where applicable.
 Option | Description
 --- | ---
 `--self` | Explicit self: "insert", "remove" (default) or "init-only"
-`--self-required` | Comma-delimited list of functions with @autoclosure arguments
+`--self-required` | Comma-delimited list of functions / types with @autoclosure arguments
 
 <details>
 <summary>Examples</summary>

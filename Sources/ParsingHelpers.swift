@@ -334,8 +334,8 @@ extension Formatter {
             } else if next(.nonSpaceOrComment, after: endIndex) == .startOfScope("(") {
                 isType = true
             } else if var prevIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: index) {
-                if tokens[prevIndex].isAttribute {
-                    prevIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex) ?? prevIndex
+                if let attributeIndex = startOfAttribute(at: prevIndex) {
+                    prevIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: attributeIndex) ?? prevIndex
                 }
                 let prevToken = tokens[prevIndex]
                 switch prevToken {

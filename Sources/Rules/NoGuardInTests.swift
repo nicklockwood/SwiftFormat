@@ -128,8 +128,12 @@ public extension FormatRule {
                     case .patternMatching:
                         // Skip if pattern matching
                         return true
-                    case .booleanExpression:
-                        return false
+                    case let .booleanExpression(range):
+                        // Skip if #available / #unavailable condition (can't be converted to #expect)
+                        return range.contains(where: {
+                            formatter.tokens[$0] == .keyword("#available") ||
+                                formatter.tokens[$0] == .keyword("#unavailable")
+                        })
                     }
                 }
 

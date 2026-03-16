@@ -648,4 +648,170 @@ final class TestSuiteAccessControlTests: XCTestCase {
         // No changes should be made - types with parameterized init are not test suites
         testFormatting(for: input, rule: .testSuiteAccessControl, exclude: [.unusedArguments, .validateTestCases, .redundantMemberwiseInit])
     }
+
+    func testSwiftTestingPrivateVisibilityOption() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test func featureWorks() {
+                #expect(true)
+            }
+
+            func helperMethod() {
+                // helper code
+            }
+        }
+        """
+
+        let output = """
+        import Testing
+
+        private struct MyFeatureTests {
+            @Test private func featureWorks() {
+                #expect(true)
+            }
+
+            private func helperMethod() {
+                // helper code
+            }
+        }
+        """
+
+        let options = FormatOptions(testVisibility: .private)
+        testFormatting(for: input, output, rule: .testSuiteAccessControl, options: options, exclude: [.unusedArguments, .validateTestCases])
+    }
+
+    func testSwiftTestingPublicVisibilityOption() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test func featureWorks() {
+                #expect(true)
+            }
+
+            func helperMethod() {
+                // helper code
+            }
+        }
+        """
+
+        let output = """
+        import Testing
+
+        public struct MyFeatureTests {
+            @Test public func featureWorks() {
+                #expect(true)
+            }
+
+            private func helperMethod() {
+                // helper code
+            }
+        }
+        """
+
+        let options = FormatOptions(testVisibility: .public)
+        testFormatting(for: input, output, rule: .testSuiteAccessControl, options: options, exclude: [.unusedArguments, .validateTestCases])
+    }
+
+    func testXCTestPrivateVisibilityFallsBackToInternal() {
+        let input = """
+        import XCTest
+
+        final class MyTests: XCTestCase {
+            public func testExample() {
+                XCTAssertTrue(true)
+            }
+
+            func helperMethod() {
+                // helper code
+            }
+        }
+        """
+
+        let output = """
+        import XCTest
+
+        final class MyTests: XCTestCase {
+            func testExample() {
+                XCTAssertTrue(true)
+            }
+
+            private func helperMethod() {
+                // helper code
+            }
+        }
+        """
+
+        // XCTest doesn't support private tests, so private/fileprivate falls back to internal
+        let options = FormatOptions(testVisibility: .private)
+        testFormatting(for: input, output, rule: .testSuiteAccessControl, options: options, exclude: [.unusedArguments, .validateTestCases])
+    }
+
+    func testXCTestFileprivateVisibilityFallsBackToInternal() {
+        let input = """
+        import XCTest
+
+        final class MyTests: XCTestCase {
+            public func testExample() {
+                XCTAssertTrue(true)
+            }
+        }
+        """
+
+        let output = """
+        import XCTest
+
+        final class MyTests: XCTestCase {
+            func testExample() {
+                XCTAssertTrue(true)
+            }
+        }
+        """
+
+        // XCTest doesn't support fileprivate tests, so fileprivate falls back to internal
+        let options = FormatOptions(testVisibility: .fileprivate)
+        testFormatting(for: input, output, rule: .testSuiteAccessControl, options: options, exclude: [.unusedArguments, .validateTestCases])
+    }
+
+    func testSwiftTestingFileprivateVisibilityOption() {
+        let input = """
+        import Testing
+
+        struct MyFeatureTests {
+            @Test func featureWorks() {
+                #expect(true)
+            }
+        }
+        """
+
+        let output = """
+        import Testing
+
+        fileprivate struct MyFeatureTests {
+            @Test fileprivate func featureWorks() {
+                #expect(true)
+            }
+        }
+        """
+
+        let options = FormatOptions(testVisibility: .fileprivate)
+        testFormatting(for: input, output, rule: .testSuiteAccessControl, options: options, exclude: [.unusedArguments, .validateTestCases])
+    }
+
+    func testSwiftTestingPrivateVisibilityPreservesExistingPrivate() {
+        let input = """
+        import Testing
+
+        private struct MyFeatureTests {
+            @Test private func featureWorks() {
+                #expect(true)
+            }
+        }
+        """
+
+        let options = FormatOptions(testVisibility: .private)
+        testFormatting(for: input, rule: .testSuiteAccessControl, options: options, exclude: [.unusedArguments, .validateTestCases])
+    }
 }

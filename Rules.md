@@ -3754,7 +3754,11 @@ Option | Description
 
 ## testSuiteAccessControl
 
-Test methods should be internal, and other properties / functions in a test suite should be private.
+Test methods should have the configured visibility (default internal), and other properties / functions in a test suite should be private.
+
+Option | Description
+--- | ---
+`--test-visibility` | Visibility of test methods: "private", "fileprivate", "internal" (default), "package", "public" or "open"
 
 <details>
 <summary>Examples</summary>

@@ -1475,6 +1475,13 @@ struct _Descriptors {
         keyPath: \.suiteNameFormat
     )
 
+    let testVisibility = OptionDescriptor(
+        argumentName: "test-visibility",
+        displayName: "Test Visibility",
+        help: "Visibility of test methods:",
+        keyPath: \.testVisibility
+    )
+
     // MARK: - Internal
 
     let fragment = OptionDescriptor(

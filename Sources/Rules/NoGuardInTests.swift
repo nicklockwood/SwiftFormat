@@ -128,12 +128,11 @@ public extension FormatRule {
                     case .patternMatching:
                         // Skip if pattern matching
                         return true
-                    case let .booleanExpression(range):
-                        // Skip if #available / #unavailable condition (can't be converted to #expect)
-                        return range.contains(where: {
-                            formatter.tokens[$0] == .keyword("#available") ||
-                                formatter.tokens[$0] == .keyword("#unavailable")
-                        })
+                    case .availabilityCondition:
+                        // Skip if #available / #unavailable (can't be converted to #expect)
+                        return true
+                    case .booleanExpression:
+                        return false
                     }
                 }
 
@@ -205,6 +204,9 @@ public extension FormatRule {
                     case .patternMatching:
                         // This should have been filtered out earlier
                         assertionFailure("Pattern matching conditions should have been filtered")
+                    case .availabilityCondition:
+                        // This should have been filtered out earlier
+                        assertionFailure("Availability conditions should have been filtered")
                     }
                 }
 

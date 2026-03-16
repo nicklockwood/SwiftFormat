@@ -679,7 +679,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
         """
 
         let options = FormatOptions(testVisibility: .private)
-        testFormatting(for: input, output, rule: .testSuiteAccessControl, options: options, exclude: [.unusedArguments, .validateTestCases])
+        testFormatting(for: input, output, rule: .testSuiteAccessControl, options: options, exclude: [.unusedArguments])
     }
 
     func testSwiftTestingPublicVisibilityOption() {
@@ -712,7 +712,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
         """
 
         let options = FormatOptions(testVisibility: .public)
-        testFormatting(for: input, output, rule: .testSuiteAccessControl, options: options, exclude: [.unusedArguments, .validateTestCases])
+        testFormatting(for: input, output, rule: .testSuiteAccessControl, options: options, exclude: [.unusedArguments])
     }
 
     func testXCTestPrivateVisibilityFallsBackToInternal() {
@@ -746,7 +746,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
 
         // XCTest doesn't support private tests, so private/fileprivate falls back to internal
         let options = FormatOptions(testVisibility: .private)
-        testFormatting(for: input, output, rule: .testSuiteAccessControl, options: options, exclude: [.unusedArguments, .validateTestCases])
+        testFormatting(for: input, output, rule: .testSuiteAccessControl, options: options, exclude: [.unusedArguments])
     }
 
     func testXCTestFileprivateVisibilityFallsBackToInternal() {
@@ -772,7 +772,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
 
         // XCTest doesn't support fileprivate tests, so fileprivate falls back to internal
         let options = FormatOptions(testVisibility: .fileprivate)
-        testFormatting(for: input, output, rule: .testSuiteAccessControl, options: options, exclude: [.unusedArguments, .validateTestCases])
+        testFormatting(for: input, output, rule: .testSuiteAccessControl, options: options, exclude: [.unusedArguments])
     }
 
     func testSwiftTestingFileprivateVisibilityOption() {
@@ -797,7 +797,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
         """
 
         let options = FormatOptions(testVisibility: .fileprivate)
-        testFormatting(for: input, output, rule: .testSuiteAccessControl, options: options, exclude: [.unusedArguments, .validateTestCases])
+        testFormatting(for: input, output, rule: .testSuiteAccessControl, options: options, exclude: [.unusedArguments])
     }
 
     func testSwiftTestingPrivateVisibilityPreservesExistingPrivate() {
@@ -812,6 +812,6 @@ final class TestSuiteAccessControlTests: XCTestCase {
         """
 
         let options = FormatOptions(testVisibility: .private)
-        testFormatting(for: input, rule: .testSuiteAccessControl, options: options, exclude: [.unusedArguments, .validateTestCases])
+        testFormatting(for: input, rule: .testSuiteAccessControl, options: options, exclude: [.unusedArguments])
     }
 }

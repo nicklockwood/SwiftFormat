@@ -204,6 +204,7 @@ public extension FormatRule {
                     case .patternMatching:
                         // This should have been filtered out earlier
                         assertionFailure("Pattern matching conditions should have been filtered")
+
                     case .availabilityCondition:
                         // This should have been filtered out earlier
                         assertionFailure("Availability conditions should have been filtered")

@@ -904,6 +904,14 @@ final class TrailingCommasTests: XCTestCase {
             quux: String // trailing comma not supported
         )
 
+        let closure: @convention(block) (
+            String,
+            String // trailing comma not supported
+        ) -> (
+            bar: String,
+            quux: String // trailing comma not supported
+        )
+
         let closure: (
             String,
             String // trailing comma not supported
@@ -974,6 +982,10 @@ final class TrailingCommasTests: XCTestCase {
         public typealias StringToInt = (
             String
         ) -> Int
+
+        public typealias BlockClosure = @convention(block) (
+            String
+        ) -> Void
 
         public enum Toster {
             public typealias StringToInt = ((
@@ -2709,6 +2721,14 @@ final class TrailingCommasTests: XCTestCase {
             quux: String
         )
 
+        let closure: @convention(block) (
+            String,
+            String
+        ) -> (
+            bar: String,
+            quux: String
+        )
+
         let closure: (
             String,
             String
@@ -2740,6 +2760,14 @@ final class TrailingCommasTests: XCTestCase {
         )
 
         let closure: @Sendable (
+            String,
+            String,
+        ) -> (
+            bar: String,
+            quux: String,
+        )
+
+        let closure: @convention(block) (
             String,
             String,
         ) -> (
@@ -2842,6 +2870,10 @@ final class TrailingCommasTests: XCTestCase {
             String
         ) -> Int
 
+        public typealias BlockClosure = @convention(block) (
+            String
+        ) -> Void
+
         public enum Toster {
             public typealias StringToInt = ((
                 String
@@ -2863,6 +2895,10 @@ final class TrailingCommasTests: XCTestCase {
         public typealias StringToInt = (
             String,
         ) -> Int
+
+        public typealias BlockClosure = @convention(block) (
+            String,
+        ) -> Void
 
         public enum Toster {
             public typealias StringToInt = ((

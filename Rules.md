@@ -3758,7 +3758,7 @@ Test methods should have the configured visibility (default internal), and other
 
 Option | Description
 --- | ---
-`--test-visibility` | Visibility of test methods: "private", "fileprivate", "internal" (default), "package", "public" or "open"
+`--test-visibility` | Visibility of test methods: "open", "public", "package", "internal" (default), "fileprivate" or "private"
 
 <details>
 <summary>Examples</summary>

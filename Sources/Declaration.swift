@@ -450,7 +450,7 @@ extension Declaration {
 // MARK: - Visibility
 
 /// The visibility of a declaration
-enum Visibility: String, CaseIterable, Comparable {
+public enum Visibility: String, CaseIterable, Comparable {
     case open
     case `public`
     case package
@@ -458,7 +458,7 @@ enum Visibility: String, CaseIterable, Comparable {
     case `fileprivate`
     case `private`
 
-    static func < (lhs: Visibility, rhs: Visibility) -> Bool {
+    public static func < (lhs: Visibility, rhs: Visibility) -> Bool {
         allCases.firstIndex(of: lhs)! > allCases.firstIndex(of: rhs)!
     }
 }

@@ -1475,6 +1475,13 @@ struct _Descriptors {
         keyPath: \.suiteNameFormat
     )
 
+    let testCaseAccessControl = OptionDescriptor(
+        argumentName: "test-case-access-control",
+        displayName: "Test Case Access Control",
+        help: "Access control for test methods:",
+        keyPath: \.testCaseAccessControl
+    )
+
     // MARK: - Internal
 
     let fragment = OptionDescriptor(

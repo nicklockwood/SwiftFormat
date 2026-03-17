@@ -77,9 +77,6 @@ public extension FormatRule {
 
                 if memberVisibility > extensionVisibility ?? .internal {
                     // Check the type being extended does not have lower visibility.
-                    // The extension name may be dot-separated (e.g. `Outer.Inner`), so we
-                    // look up the fully-qualified name in the pre-built map rather than
-                    // only checking top-level declarations by simple name.
                     if let extendedTypeName = extensionDeclaration.name,
                        let typeVisibility = typeVisibilityByName[extendedTypeName],
                        typeVisibility < memberVisibility

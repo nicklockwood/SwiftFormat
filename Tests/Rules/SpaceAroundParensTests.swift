@@ -535,6 +535,42 @@ final class SpaceAroundParensTests: XCTestCase {
                        exclude: [.noExplicitOwnership])
     }
 
+    func testPreserveSpaceBetweenNonisolatedNonsendingAndClosureType() {
+        let input = """
+        func withMinimumDuration(
+            _ operation: nonisolated(nonsending) () async throws -> T
+        ) async rethrows -> T
+        """
+        testFormatting(for: input, rule: .spaceAroundParens)
+    }
+
+    func testAddSpaceBetweenNonisolatedNonsendingAndClosureType() {
+        let input = """
+        let x: nonisolated(nonsending)() async throws -> Int
+        """
+        let output = """
+        let x: nonisolated(nonsending) () async throws -> Int
+        """
+        testFormatting(for: input, output, rule: .spaceAroundParens)
+    }
+
+    func testPreserveSpaceBetweenNonisolatedUnsafeAndClosureType() {
+        let input = """
+        let x: nonisolated(unsafe) () -> Void
+        """
+        testFormatting(for: input, rule: .spaceAroundParens)
+    }
+
+    func testAddSpaceBetweenNonisolatedUnsafeAndClosureType() {
+        let input = """
+        let x: nonisolated(unsafe)() -> Void
+        """
+        let output = """
+        let x: nonisolated(unsafe) () -> Void
+        """
+        testFormatting(for: input, output, rule: .spaceAroundParens)
+    }
+
     func testAddSpaceBetweenParenAndIsolated() {
         let input = """
         func foo(isolation _: isolated(any Actor)) {}

@@ -10,9 +10,9 @@ import Foundation
 
 public extension FormatRule {
     static let testSuiteAccessControl = FormatRule(
-        help: "Test methods should have the configured visibility (default internal), and other properties / functions in a test suite should be private.",
+        help: "Test methods should have the configured access control (default internal), and other properties / functions in a test suite should be private.",
         disabledByDefault: true,
-        options: ["test-visibility"]
+        options: ["test-access-control"]
     ) { formatter in
         guard let testFramework = formatter.detectTestingFramework() else {
             return
@@ -20,7 +20,7 @@ public extension FormatRule {
 
         // Determine the effective test visibility based on options and framework.
         // XCTest requires test methods to be at least internal so the runtime can discover them.
-        let configuredVisibility = formatter.options.testVisibility
+        let configuredVisibility = formatter.options.testAccessControl
         let effectiveTestVisibility: Visibility
         if testFramework == .xcTest,
            configuredVisibility == .private || configuredVisibility == .fileprivate
@@ -43,7 +43,7 @@ public extension FormatRule {
             for member in testClass.body {
                 switch member.keyword {
                 case "func":
-                    formatter.validateTestFunctionAccessControl(member, for: testFramework, testVisibility: effectiveTestVisibility)
+                    formatter.validateTestFunctionAccessControl(member, for: testFramework, testAccessControl: effectiveTestVisibility)
 
                 case "init":
                     // Initializers should have the configured visibility unless marked as open
@@ -97,7 +97,7 @@ public extension FormatRule {
 
 extension Formatter {
     /// Validates that a function in a test class has the correct access control.
-    func validateTestFunctionAccessControl(_ function: Declaration, for framework: TestingFramework, testVisibility: Visibility) {
+    func validateTestFunctionAccessControl(_ function: Declaration, for framework: TestingFramework, testAccessControl: Visibility) {
         guard let functionDecl = parseFunctionDeclaration(keywordIndex: function.keywordIndex) else {
             return
         }
@@ -123,7 +123,7 @@ extension Formatter {
                 return
             }
             // Test methods should have the configured test visibility
-            function.ensureTestDeclarationAccessControl(visibility: testVisibility)
+            function.ensureTestDeclarationAccessControl(visibility: testAccessControl)
         } else {
             // Non-test methods should be private (but skip if already private/fileprivate)
             if modifiers.contains("private") || modifiers.contains("fileprivate") {

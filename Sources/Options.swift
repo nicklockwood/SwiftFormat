@@ -909,7 +909,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var preferSynthesizedInitForInternalStructs: PreferSynthesizedInitMode
     public var testCaseNameFormat: SwiftTestingNameFormat
     public var suiteNameFormat: SwiftTestingNameFormat
-    public var testVisibility: Visibility
+    public var testAccessControl: Visibility
 
     /// Deprecated
     public var indentComments: Bool
@@ -1057,7 +1057,7 @@ public struct FormatOptions: CustomStringConvertible {
                 preferSynthesizedInitForInternalStructs: PreferSynthesizedInitMode = .never,
                 testCaseNameFormat: SwiftTestingNameFormat = .rawIdentifiers,
                 suiteNameFormat: SwiftTestingNameFormat = .preserve,
-                testVisibility: Visibility = .internal,
+                testAccessControl: Visibility = .internal,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -1194,7 +1194,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.preferSynthesizedInitForInternalStructs = preferSynthesizedInitForInternalStructs
         self.testCaseNameFormat = testCaseNameFormat
         self.suiteNameFormat = suiteNameFormat
-        self.testVisibility = testVisibility
+        self.testAccessControl = testAccessControl
         self.indentComments = indentComments
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

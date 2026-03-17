@@ -596,4 +596,36 @@ final class SortImportsTests: XCTestCase {
         let options = FormatOptions(importGrouping: [.length, .testableLast])
         testFormatting(for: input, output, rule: .sortImports, options: options)
     }
+
+    func testLengthThenAlphaSortImports() {
+        let input = """
+        import Module
+        import Foo
+        import Bar
+        import Ab
+        """
+        let output = """
+        import Ab
+        import Bar
+        import Foo
+        import Module
+        """
+        let options = FormatOptions(importGrouping: [.length, .alpha])
+        testFormatting(for: input, output, rule: .sortImports, options: options)
+    }
+
+    func testLengthThenAlphaSortImportsWithSameLength() {
+        let input = """
+        import Zed
+        import Foo
+        import Bar
+        """
+        let output = """
+        import Bar
+        import Foo
+        import Zed
+        """
+        let options = FormatOptions(importGrouping: [.length, .alpha])
+        testFormatting(for: input, output, rule: .sortImports, options: options)
+    }
 }

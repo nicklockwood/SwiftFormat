@@ -16,9 +16,6 @@ public extension FormatRule {
         let declarations = formatter.parseDeclarations()
 
         // Build a map of fully-qualified type names to their effective visibility.
-        // This is used to detect extensions of internal (or otherwise non-public) types,
-        // including types that are nested inside other types or extensions and referenced
-        // with a dot-separated name (e.g. `extension Outer.Inner`).
         var typeVisibilityByName = [String: Visibility]()
         declarations.forEachRecursiveDeclaration { declaration in
             guard declaration.keyword != "extension",

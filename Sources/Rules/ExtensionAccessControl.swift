@@ -14,6 +14,28 @@ public extension FormatRule {
         options: ["extension-acl"]
     ) { formatter in
         let declarations = formatter.parseDeclarations()
+
+        // Build a map of fully-qualified type names to their effective visibility.
+        // This is used to detect extensions of internal (or otherwise non-public) types,
+        // including types that are nested inside other types or extensions and referenced
+        // with a dot-separated name (e.g. `extension Outer.Inner`).
+        var typeVisibilityByName = [String: Visibility]()
+        declarations.forEachRecursiveDeclaration { declaration in
+            guard declaration.keyword != "extension",
+                  declaration.asTypeDeclaration != nil,
+                  let qualifiedName = declaration.fullyQualifiedName
+            else { return }
+
+            // A type declared inside a `public extension` inherits public visibility.
+            // That case is handled separately by the extensionAccessControl rule itself,
+            // so we skip those types here to avoid falsely treating them as internal.
+            let insidePublicExtension = declaration.parentDeclarations.contains(where: {
+                $0.keyword == "extension" && $0.visibility() == .public
+            })
+            guard !insidePublicExtension else { return }
+            typeVisibilityByName[qualifiedName] = declaration.visibility() ?? .internal
+        }
+
         declarations.forEachRecursiveDeclaration { declaration in
             guard let extensionDeclaration = declaration.asTypeDeclaration,
                   extensionDeclaration.keyword == "extension"
@@ -54,18 +76,16 @@ public extension FormatRule {
                 else { return }
 
                 if memberVisibility > extensionVisibility ?? .internal {
-                    // Check type being extended does not have lower visibility
-                    for extendedType in declarations where extendedType.name == extensionDeclaration.name {
-                        guard let type = extendedType.asTypeDeclaration else { continue }
-
-                        if extendedType.keyword != "extension",
-                           extendedType.visibility() ?? .internal < memberVisibility
-                        {
-                            // Cannot make extension with greater visibility than type being extended
-                            return
-                        }
-
-                        break
+                    // Check the type being extended does not have lower visibility.
+                    // The extension name may be dot-separated (e.g. `Outer.Inner`), so we
+                    // look up the fully-qualified name in the pre-built map rather than
+                    // only checking top-level declarations by simple name.
+                    if let extendedTypeName = extensionDeclaration.name,
+                       let typeVisibility = typeVisibilityByName[extendedTypeName],
+                       typeVisibility < memberVisibility
+                    {
+                        // Cannot make extension with greater visibility than type being extended
+                        return
                     }
                 }
 

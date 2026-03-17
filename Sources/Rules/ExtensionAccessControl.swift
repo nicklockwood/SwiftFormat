@@ -24,13 +24,10 @@ public extension FormatRule {
             else { return }
 
             // A type declared inside a `public extension` inherits public visibility.
-            // That case is handled separately by the extensionAccessControl rule itself,
-            // so we skip those types here to avoid falsely treating them as internal.
             let insidePublicExtension = declaration.parentDeclarations.contains(where: {
                 $0.keyword == "extension" && $0.visibility() == .public
             })
-            guard !insidePublicExtension else { return }
-            typeVisibilityByName[qualifiedName] = declaration.visibility() ?? .internal
+            typeVisibilityByName[qualifiedName] = insidePublicExtension ? .public : (declaration.visibility() ?? .internal)
         }
 
         declarations.forEachRecursiveDeclaration { declaration in

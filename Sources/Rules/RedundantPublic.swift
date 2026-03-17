@@ -59,7 +59,8 @@ public extension FormatRule {
                 // Inside an extension where the extended type is internal, any `public` modifier has no effect.
                 // We can only handle this case if the extension and type are defined in the same file.
                 if let extendedTypeName = parentType.name,
-                   internalTypes.contains(extendedTypeName)
+                   internalTypes.contains(extendedTypeName) ||
+                   internalTypes.contains(where: { extendedTypeName.hasPrefix($0 + ".") })
                 {
                     declaration.removeVisibility(.public)
                 }

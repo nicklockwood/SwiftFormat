@@ -195,6 +195,29 @@ final class RedundantPublicTests: XCTestCase {
         testFormatting(for: input, [output], rules: [.redundantPublic])
     }
 
+    func testRemovesPublicInExtensionOfPublicNestedTypeInInternalType() {
+        let input = """
+        struct Foo {
+            public struct Bar {}
+        }
+
+        extension Foo.Bar {
+            public func test() {}
+        }
+        """
+
+        let output = """
+        struct Foo {
+            struct Bar {}
+        }
+
+        extension Foo.Bar {
+            func test() {}
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantPublic, exclude: [.enumNamespaces])
+    }
+
     func testRemovesPublicInExtensionOfNestedInternalType() {
         let input = """
         enum OuterType {

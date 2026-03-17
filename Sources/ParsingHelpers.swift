@@ -3933,10 +3933,13 @@ extension Formatter {
         case optionalBinding(range: ClosedRange<Int>, property: PropertyDeclaration)
         /// A pattern matching condition like `case .foo(let bar) = baaz`
         case patternMatching(range: ClosedRange<Int>)
+        /// An availability condition like `#available(iOS 26.0, *)` or `#unavailable(iOS 26.0)`
+        case availabilityCondition(range: ClosedRange<Int>)
 
         var range: ClosedRange<Int> {
             switch self {
-            case let .booleanExpression(range), let .optionalBinding(range, _), let .patternMatching(range):
+            case let .booleanExpression(range), let .optionalBinding(range, _),
+                 let .patternMatching(range), let .availabilityCondition(range):
                 return range
             }
         }
@@ -3992,6 +3995,8 @@ extension Formatter {
                 }
 
                 element = .optionalBinding(range: conditionStart ... conditionEnd, property: property)
+            } else if tokens[conditionStart] == .keyword("#available") || tokens[conditionStart] == .keyword("#unavailable") {
+                element = .availabilityCondition(range: conditionStart ... conditionEnd)
             } else {
                 element = .booleanExpression(range: conditionStart ... conditionEnd)
             }

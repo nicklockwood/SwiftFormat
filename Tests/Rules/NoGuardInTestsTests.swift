@@ -1349,6 +1349,72 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .elseOnSameLine, .wrapMultilineStatementBraces])
     }
 
+    func testPreservesGuardWithAvailableCondition() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                guard #available(iOS 26.0, *) else {
+                    XCTFail()
+                    return
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: .noGuardInTests)
+    }
+
+    func testPreservesGuardWithAvailableConditionSwiftTesting() {
+        let input = """
+        import Testing
+
+        struct SomeTests {
+            @Test
+            func something() {
+                guard #available(iOS 26.0, *) else {
+                    return
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: .noGuardInTests)
+    }
+
+    func testPreservesGuardWithUnavailableCondition() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                guard #unavailable(iOS 26.0) else {
+                    XCTFail()
+                    return
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: .noGuardInTests)
+    }
+
+    func testPreservesGuardWithAvailableAmongMultipleConditions() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                guard #available(iOS 26.0, *),
+                      let value = optionalValue else {
+                    XCTFail()
+                    return
+                }
+                print(value)
+            }
+        }
+        """
+        testFormatting(for: input, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .elseOnSameLine, .wrapMultilineStatementBraces])
+    }
+
     // MARK: - No import tests
 
     func testDoesNothingWithoutImport() {

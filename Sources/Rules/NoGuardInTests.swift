@@ -128,6 +128,9 @@ public extension FormatRule {
                     case .patternMatching:
                         // Skip if pattern matching
                         return true
+                    case .availabilityCondition:
+                        // Skip if #available / #unavailable (can't be converted to #expect)
+                        return true
                     case .booleanExpression:
                         return false
                     }
@@ -201,6 +204,10 @@ public extension FormatRule {
                     case .patternMatching:
                         // This should have been filtered out earlier
                         assertionFailure("Pattern matching conditions should have been filtered")
+
+                    case .availabilityCondition:
+                        // This should have been filtered out earlier
+                        assertionFailure("Availability conditions should have been filtered")
                     }
                 }
 

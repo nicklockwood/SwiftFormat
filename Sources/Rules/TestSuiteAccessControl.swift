@@ -10,11 +10,24 @@ import Foundation
 
 public extension FormatRule {
     static let testSuiteAccessControl = FormatRule(
-        help: "Test methods should be internal, and other properties / functions in a test suite should be private.",
-        disabledByDefault: true
+        help: "Test methods should have the configured access control (default internal), and other properties / functions in a test suite should be private.",
+        disabledByDefault: true,
+        options: ["test-case-access-control"]
     ) { formatter in
         guard let testFramework = formatter.detectTestingFramework() else {
             return
+        }
+
+        // Determine the effective test visibility based on options and framework.
+        // XCTest requires test methods to be at least internal so the runtime can discover them.
+        let configuredVisibility = formatter.options.testCaseAccessControl
+        let effectiveTestVisibility: Visibility
+        if testFramework == .xcTest,
+           configuredVisibility == .private || configuredVisibility == .fileprivate
+        {
+            effectiveTestVisibility = .internal
+        } else {
+            effectiveTestVisibility = configuredVisibility
         }
 
         let declarations = formatter.parseDeclarations()
@@ -23,18 +36,18 @@ public extension FormatRule {
         }
 
         for testClass in testClasses {
-            // The test class itself should be internal unless marked as open
-            formatter.validateTestTypeAccessControl(testClass)
+            // The test class itself should have the configured visibility unless marked as open
+            testClass.ensureTestDeclarationAccessControl(visibility: effectiveTestVisibility)
 
             // Process each member of the test class
             for member in testClass.body {
                 switch member.keyword {
                 case "func":
-                    formatter.validateTestFunctionAccessControl(member, for: testFramework)
+                    formatter.validateTestFunctionAccessControl(member, for: testFramework, testCaseAccessControl: effectiveTestVisibility)
 
                 case "init":
-                    // Initializers should be internal unless marked as open
-                    formatter.validateTestTypeAccessControl(member)
+                    // Initializers should have the configured visibility unless marked as open
+                    member.ensureTestDeclarationAccessControl(visibility: effectiveTestVisibility)
 
                 case "let", "var":
                     // Properties should be private unless they have special attributes
@@ -83,19 +96,8 @@ public extension FormatRule {
 }
 
 extension Formatter {
-    /// Validates that a test type (class/struct) or its initializer has internal access control.
-    func validateTestTypeAccessControl(_ declaration: Declaration) {
-        // If marked as open, leave it as is
-        if declaration.modifiers.contains("open") {
-            return
-        }
-
-        // Remove any non-internal, non-open ACL modifiers
-        removeACLModifiers(from: declaration, except: ["internal", "open"])
-    }
-
     /// Validates that a function in a test class has the correct access control.
-    func validateTestFunctionAccessControl(_ function: Declaration, for framework: TestingFramework) {
+    func validateTestFunctionAccessControl(_ function: Declaration, for framework: TestingFramework, testCaseAccessControl: Visibility) {
         guard let functionDecl = parseFunctionDeclaration(keywordIndex: function.keywordIndex) else {
             return
         }
@@ -117,30 +119,18 @@ extension Formatter {
 
         if treatAsTestCase {
             // For XCTest: Skip if it's already private/fileprivate (respect explicit access control)
-            // For Swift Testing: Always make internal (private @Test functions are still executed)
             if framework == .xcTest, modifiers.contains("private") || modifiers.contains("fileprivate") {
                 return
             }
-            // Test methods should be internal
-            validateTestMethodAccessControl(function)
+            // Test methods should have the configured test visibility
+            function.ensureTestDeclarationAccessControl(visibility: testCaseAccessControl)
         } else {
             // Non-test methods should be private (but skip if already private/fileprivate)
             if modifiers.contains("private") || modifiers.contains("fileprivate") {
                 return
             }
-            ensurePrivateAccessControl(function)
+            function.ensurePrivateAccessControl()
         }
-    }
-
-    /// Ensures a test method has internal access control (removes public/private modifiers).
-    func validateTestMethodAccessControl(_ declaration: Declaration) {
-        // If marked as open, leave it as is
-        if declaration.modifiers.contains("open") {
-            return
-        }
-
-        // Remove any explicit ACL modifiers except internal and open
-        removeACLModifiers(from: declaration, except: ["internal", "open"])
     }
 
     /// Validates that a property in a test class is private.
@@ -163,26 +153,64 @@ extension Formatter {
         }
 
         // Make it private
-        ensurePrivateAccessControl(property)
+        property.ensurePrivateAccessControl()
+    }
+}
+
+extension Declaration {
+    /// Validates that a test type (class/struct) or its initializer has the required access control.
+    func ensureTestDeclarationAccessControl(visibility: Visibility) {
+        // If marked as open, leave it as is
+        if modifiers.contains("open") {
+            return
+        }
+
+        ensureAccessControl(visibility: visibility)
     }
 
-    /// Removes ACL modifiers from a declaration, except for the specified exceptions.
-    func removeACLModifiers(from declaration: Declaration, except exceptions: [String]) {
+    /// Ensures this declaration has the specified access control level.
+    func ensureAccessControl(visibility: Visibility) {
+        // internal is the default (implicit) visibility in Swift
+        if visibility == .internal {
+            // Remove any explicit non-internal, non-open ACL modifiers
+            removeACLModifiers(except: ["internal", "open"])
+            return
+        }
+
+        // If already at the right visibility, do nothing
+        if modifiers.contains(visibility.rawValue) {
+            return
+        }
+
+        // Look for an existing ACL modifier to replace
+        for aclModifier in _FormatRules.aclModifiers where aclModifier != "open" {
+            if let modifierIndex = formatter.indexOfModifier(aclModifier, forDeclarationAt: keywordIndex) {
+                formatter.replaceToken(at: modifierIndex, with: .keyword(visibility.rawValue))
+                return
+            }
+        }
+
+        // No ACL modifier exists, so add the visibility before the keyword
+        formatter.insert([.keyword(visibility.rawValue), .space(" ")], at: keywordIndex)
+    }
+
+    /// Removes ACL modifiers from this declaration, except for the specified exceptions.
+    func removeACLModifiers(except exceptions: [String]) {
         for aclModifier in _FormatRules.aclModifiers where !exceptions.contains(aclModifier) {
-            if let modifierIndex = indexOfModifier(aclModifier, forDeclarationAt: declaration.keywordIndex) {
+            if let modifierIndex = formatter.indexOfModifier(aclModifier, forDeclarationAt: keywordIndex) {
                 // Remove the modifier and its trailing space
-                if let nextIndex = index(of: .nonSpace, after: modifierIndex), nextIndex > modifierIndex + 1 {
-                    removeTokens(in: modifierIndex ... (modifierIndex + 1))
+                if let nextIndex = formatter.index(of: .nonSpace, after: modifierIndex), nextIndex > modifierIndex + 1 {
+                    formatter.removeTokens(in: modifierIndex ... (modifierIndex + 1))
                 } else {
-                    removeToken(at: modifierIndex)
+                    formatter.removeToken(at: modifierIndex)
                 }
             }
         }
     }
 
-    /// Ensures a declaration has private access control.
-    func ensurePrivateAccessControl(_ declaration: Declaration) {
-        let modifiers = declaration.modifiers
+    /// Ensures this declaration has private access control.
+    func ensurePrivateAccessControl() {
+        let modifiers = modifiers
 
         // If already private, do nothing
         if modifiers.contains("private") || modifiers.contains("fileprivate") {
@@ -191,14 +219,14 @@ extension Formatter {
 
         // Remove any existing ACL modifier
         for aclModifier in _FormatRules.aclModifiers {
-            if let modifierIndex = indexOfModifier(aclModifier, forDeclarationAt: declaration.keywordIndex) {
+            if let modifierIndex = formatter.indexOfModifier(aclModifier, forDeclarationAt: keywordIndex) {
                 // Replace the modifier with "private"
-                replaceToken(at: modifierIndex, with: .keyword("private"))
+                formatter.replaceToken(at: modifierIndex, with: .keyword("private"))
                 return
             }
         }
 
         // No ACL modifier exists, so add "private" before the keyword
-        insert([.keyword("private"), .space(" ")], at: declaration.keywordIndex)
+        formatter.insert([.keyword("private"), .space(" ")], at: keywordIndex)
     }
 }

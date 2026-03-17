@@ -79,6 +79,12 @@ extension Formatter {
         case .endOfScope("]"):
             return isInClosureArguments(at: index)
         case .endOfScope(")"):
+            if let openParenIndex = self.index(of: .startOfScope("("), before: index),
+               let prevIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: openParenIndex),
+               tokens[prevIndex] == .identifier("nonisolated")
+            {
+                return true
+            }
             return isAttribute(at: index)
         case .number, .endOfScope("}"), .endOfScope(">"):
             return false

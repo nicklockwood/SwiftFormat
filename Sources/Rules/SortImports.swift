@@ -84,7 +84,13 @@ extension Formatter {
                 }
 
                 if grouping.contains(.length) {
-                    return lhs.module.count < rhs.module.count
+                    if lhs.module.count != rhs.module.count {
+                        return lhs.module.count < rhs.module.count
+                    }
+                    if grouping.contains(.alpha) {
+                        return lhs < rhs
+                    }
+                    return false
                 }
                 // Default to alphabetical
                 return lhs < rhs

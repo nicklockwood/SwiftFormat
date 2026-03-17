@@ -3758,7 +3758,7 @@ Test methods should have the configured access control (default internal), and o
 
 Option | Description
 --- | ---
-`--test-access-control` | Access control for test methods: "open", "public", "package", "internal" (default), "fileprivate" or "private"
+`--test-case-access-control` | Access control for test methods: "open", "public", "package", "internal" (default), "fileprivate" or "private"
 
 <details>
 <summary>Examples</summary>

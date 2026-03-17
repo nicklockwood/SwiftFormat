@@ -1475,11 +1475,11 @@ struct _Descriptors {
         keyPath: \.suiteNameFormat
     )
 
-    let testAccessControl = OptionDescriptor(
-        argumentName: "test-access-control",
-        displayName: "Test Access Control",
+    let testCaseAccessControl = OptionDescriptor(
+        argumentName: "test-case-access-control",
+        displayName: "Test Case Access Control",
         help: "Access control for test methods:",
-        keyPath: \.testAccessControl
+        keyPath: \.testCaseAccessControl
     )
 
     // MARK: - Internal

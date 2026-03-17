@@ -678,7 +678,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
         }
         """
 
-        let options = FormatOptions(testAccessControl: .private)
+        let options = FormatOptions(testCaseAccessControl: .private)
         testFormatting(for: input, output, rule: .testSuiteAccessControl, options: options, exclude: [.unusedArguments])
     }
 
@@ -711,7 +711,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
         }
         """
 
-        let options = FormatOptions(testAccessControl: .public)
+        let options = FormatOptions(testCaseAccessControl: .public)
         testFormatting(for: input, output, rule: .testSuiteAccessControl, options: options, exclude: [.unusedArguments])
     }
 
@@ -745,7 +745,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
         """
 
         // XCTest doesn't support private tests, so private/fileprivate falls back to internal
-        let options = FormatOptions(testAccessControl: .private)
+        let options = FormatOptions(testCaseAccessControl: .private)
         testFormatting(for: input, output, rule: .testSuiteAccessControl, options: options, exclude: [.unusedArguments])
     }
 
@@ -771,7 +771,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
         """
 
         // XCTest doesn't support fileprivate tests, so fileprivate falls back to internal
-        let options = FormatOptions(testAccessControl: .fileprivate)
+        let options = FormatOptions(testCaseAccessControl: .fileprivate)
         testFormatting(for: input, output, rule: .testSuiteAccessControl, options: options, exclude: [.unusedArguments])
     }
 
@@ -796,7 +796,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
         }
         """
 
-        let options = FormatOptions(testAccessControl: .fileprivate)
+        let options = FormatOptions(testCaseAccessControl: .fileprivate)
         testFormatting(for: input, output, rule: .testSuiteAccessControl, options: options, exclude: [.unusedArguments])
     }
 
@@ -811,7 +811,7 @@ final class TestSuiteAccessControlTests: XCTestCase {
         }
         """
 
-        let options = FormatOptions(testAccessControl: .private)
+        let options = FormatOptions(testCaseAccessControl: .private)
         testFormatting(for: input, rule: .testSuiteAccessControl, options: options, exclude: [.unusedArguments])
     }
 }

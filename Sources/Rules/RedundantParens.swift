@@ -58,7 +58,7 @@ public extension FormatRule {
             default:
                 break
             }
-            if prevToken.isAttribute,
+            if prevToken.isAttribute, !isClosure,
                formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i) == closingIndex
             {
                 formatter.removeParen(at: closingIndex)

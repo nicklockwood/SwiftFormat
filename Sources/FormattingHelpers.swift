@@ -781,7 +781,7 @@ extension Formatter {
                    tokens[nextTokenIndex] == .startOfScope("{")
                 {
                     if isEnabled {
-                        // Remove any existing linebreaks inside empty parens
+                        // Unwrap linebreak before closing paren
                         var mutableEndOfScope = endOfScope
                         removeLinebreakBeforeEndOfScope(at: &mutableEndOfScope)
                     }

@@ -958,6 +958,35 @@ final class RedundantParensTests: XCTestCase {
         testFormatting(for: input, rule: .redundantParens)
     }
 
+    func testMainActorEmptyParensWithReturnTypeNotUnwrapped() {
+        let input = """
+        { @MainActor () -> Bool in
+            false
+        }
+        """
+        testFormatting(for: input, rule: .redundantParens)
+    }
+
+    func testMainActorEmptyParensWithReturnTypeNotUnwrappedInTask() {
+        let input = """
+        func someFunction() async -> Bool {
+            await Task { @MainActor () -> Bool in
+                false
+            }.value
+        }
+        """
+        testFormatting(for: input, rule: .redundantParens)
+    }
+
+    func testMainActorEmptyParensWithThrowsNotUnwrapped() {
+        let input = """
+        { @MainActor () throws -> Bool in
+            false
+        }
+        """
+        testFormatting(for: input, rule: .redundantParens)
+    }
+
     func testClosureArgsContainingSelfNotUnwrapped() {
         let input = """
         { (self) in self }

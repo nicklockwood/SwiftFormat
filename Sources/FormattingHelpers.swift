@@ -772,6 +772,23 @@ extension Formatter {
                     return
                 }
 
+                // Don't wrap empty parameter lists for trivial functions
+                // like `func foo() {`, but allow wrapping if the function has
+                // a return type, effects, generics, etc.
+                if index(of: .nonSpaceOrCommentOrLinebreak, in: i + 1 ..< endOfScope) == nil,
+                   isParameterList(at: i),
+                   let nextTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfScope),
+                   tokens[nextTokenIndex] == .startOfScope("{")
+                {
+                    if isEnabled {
+                        // Unwrap linebreak before closing paren
+                        var mutableEndOfScope = endOfScope
+                        removeLinebreakBeforeEndOfScope(at: &mutableEndOfScope)
+                    }
+                    lastIndex = i
+                    return
+                }
+
                 isParameters = isParameterList(at: i)
                 if isParameters, options.wrapParameters != .default {
                     mode = options.wrapParameters

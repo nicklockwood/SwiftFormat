@@ -3234,4 +3234,41 @@ final class WrapArgumentsTests: XCTestCase {
             wrapArguments: .beforeFirst, closingParenPosition: .balanced, maxWidth: 1000
         ))
     }
+
+    func testNoWrapEmptyFuncParensBeforeFirst() {
+        let input = """
+        func aVeryLongFunctionNameThatExceedsTheMaxWidthLimit() {
+            foo()
+        }
+        """
+        let options = FormatOptions(wrapParameters: .beforeFirst, maxWidth: 40)
+        testFormatting(for: input, rule: .wrapArguments, options: options)
+    }
+
+    func testNoWrapEmptyInitParensBeforeFirst() {
+        let input = """
+        init() {
+            foo()
+        }
+        """
+        let options = FormatOptions(wrapParameters: .beforeFirst, maxWidth: 8)
+        testFormatting(for: input, rule: .wrapArguments, options: options,
+                       exclude: [.wrap])
+    }
+
+    func testUnwrapAlreadyWrappedEmptyFuncParensBeforeFirst() {
+        let input = """
+        func aVeryLongFunctionNameThatExceedsTheMaxWidthLimit(
+        ) {
+            foo()
+        }
+        """
+        let output = """
+        func aVeryLongFunctionNameThatExceedsTheMaxWidthLimit() {
+            foo()
+        }
+        """
+        let options = FormatOptions(wrapParameters: .beforeFirst, maxWidth: 40)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
+    }
 }

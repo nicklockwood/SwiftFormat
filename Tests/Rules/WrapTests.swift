@@ -862,4 +862,38 @@ final class WrapTests: XCTestCase {
         let options = FormatOptions(maxWidth: 50)
         testFormatting(for: input, [output, output2], rules: [.wrap], options: options)
     }
+
+    func testNoWrapEmptyFuncParens() {
+        let input = """
+        func aVeryLongFunctionNameThatExceedsTheMaxWidthLimit() {
+            print("hello")
+        }
+        """
+        let options = FormatOptions(maxWidth: 40)
+        testFormatting(for: input, rule: .wrap, options: options)
+    }
+
+    func testNoWrapEmptyFuncParensSingleLine() {
+        let input = """
+        func aVeryLongFunctionNameThatExceedsTheMaxWidthLimit() {}
+        """
+        let options = FormatOptions(maxWidth: 40)
+        testFormatting(for: input, rule: .wrap, options: options)
+    }
+
+    func testUnwrapAlreadyWrappedEmptyFuncParens() {
+        let input = """
+        func aVeryLongFunctionNameThatExceedsTheMaxWidthLimit(
+        ) {
+            print("hello")
+        }
+        """
+        let output = """
+        func aVeryLongFunctionNameThatExceedsTheMaxWidthLimit() {
+            print("hello")
+        }
+        """
+        let options = FormatOptions(maxWidth: 40)
+        testFormatting(for: input, output, rule: .wrap, options: options)
+    }
 }

@@ -121,6 +121,72 @@ final class RedundantEmptyViewTests: XCTestCase {
         testFormatting(for: input, rule: .redundantEmptyView)
     }
 
+    func testRemoveRedundantEmptyViewElseInIfElseIfElseChain() {
+        let input = """
+        struct ContentView: View {
+            var body: some View {
+                ForEach(items, id: \\.self) { item in
+                    if item.type == .primary {
+                        PrimaryView(item: item)
+                    } else if item.type == .secondary {
+                        SecondaryView(item: item)
+                    } else {
+                        EmptyView()
+                    }
+                }
+            }
+        }
+        """
+        let output = """
+        struct ContentView: View {
+            var body: some View {
+                ForEach(items, id: \\.self) { item in
+                    if item.type == .primary {
+                        PrimaryView(item: item)
+                    } else if item.type == .secondary {
+                        SecondaryView(item: item)
+                    }
+                }
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantEmptyView)
+    }
+
+    func testRemoveOnlyInnerRedundantEmptyViewElseInNestedIf() {
+        let input = """
+        struct ContentView: View {
+            @ViewBuilder
+            func visibleSection(fieldID: String?, makeSection: () -> some View) -> some View {
+                if let fieldID {
+                    if isVisible(fieldID) {
+                        makeSection()
+                    } else {
+                        EmptyView()
+                    }
+                } else {
+                    makeSection()
+                }
+            }
+        }
+        """
+        let output = """
+        struct ContentView: View {
+            @ViewBuilder
+            func visibleSection(fieldID: String?, makeSection: () -> some View) -> some View {
+                if let fieldID {
+                    if isVisible(fieldID) {
+                        makeSection()
+                    }
+                } else {
+                    makeSection()
+                }
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantEmptyView)
+    }
+
     func testDoNotRemoveElseWithModifiedEmptyView() {
         let input = """
         struct ContentView: View {

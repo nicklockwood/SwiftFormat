@@ -35,16 +35,22 @@ public extension FormatRule {
 }
 
 extension Formatter {
+    /// Returns the range to remove if the `else` at `elseKeywordIndex` is a redundant
+    /// `else { EmptyView() }` in a result builder, or `nil` if it should be preserved.
     func redundantEmptyViewElseRange(at elseKeywordIndex: Int) -> ClosedRange<Int>? {
         guard isInResultBuilder(at: elseKeywordIndex),
+              // Skip `else if` chains — only plain `else` can be redundant
               next(.nonSpaceOrCommentOrLinebreak, after: elseKeywordIndex) != .keyword("if"),
+              // Verify the preceding if-body closes with `}`
               let previousTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: elseKeywordIndex),
               tokens[previousTokenIndex] == .endOfScope("}"),
+              // Preserve comments between `}` and `else`
               tokens[(previousTokenIndex + 1) ..< elseKeywordIndex].allSatisfy(\.isSpaceOrLinebreak),
               let startOfElseBody = index(of: .nonSpaceOrCommentOrLinebreak, after: elseKeywordIndex),
               tokens[startOfElseBody] == .startOfScope("{"),
               tokens[(elseKeywordIndex + 1) ..< startOfElseBody].allSatisfy(\.isSpaceOrLinebreak),
               let endOfElseBody = endOfScope(at: startOfElseBody),
+              // Verify the else body contains exactly one expression, with no comments
               let firstTokenInElseBody = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfElseBody),
               let elseExpressionRange = parseExpressionRange(startingAt: firstTokenInElseBody),
               index(of: .nonSpaceOrCommentOrLinebreak, after: elseExpressionRange.upperBound) == endOfElseBody,
@@ -55,12 +61,16 @@ extension Formatter {
             return nil
         }
 
+        // Remove from after the if-body `}` through the else-body `}`
         return (previousTokenIndex + 1) ... endOfElseBody
     }
 
+    /// Whether the expression in the given range is `EmptyView()` or `SwiftUI.EmptyView()`
+    /// with no arguments and no modifiers.
     func expressionIsEmptyView(in expressionRange: ClosedRange<Int>) -> Bool {
         var emptyViewIdentifierIndex = expressionRange.lowerBound
 
+        // Handle fully-qualified `SwiftUI.EmptyView()`
         if tokens[emptyViewIdentifierIndex] == .identifier("SwiftUI") {
             guard let dotIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: emptyViewIdentifierIndex),
                   tokens[dotIndex] == .operator(".", .infix),
@@ -72,6 +82,7 @@ extension Formatter {
             emptyViewIdentifierIndex = nextIdentifierIndex
         }
 
+        // Verify it's `EmptyView()` with no arguments and no trailing modifiers
         guard tokens[emptyViewIdentifierIndex] == .identifier("EmptyView"),
               let startOfArguments = index(of: .nonSpaceOrCommentOrLinebreak, after: emptyViewIdentifierIndex),
               tokens[startOfArguments] == .startOfScope("("),

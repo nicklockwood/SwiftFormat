@@ -50,6 +50,7 @@
 * [redundantBackticks](#redundantBackticks)
 * [redundantBreak](#redundantBreak)
 * [redundantClosure](#redundantClosure)
+* [redundantEmptyView](#redundantEmptyView)
 * [redundantEquatable](#redundantEquatable)
 * [redundantExtensionACL](#redundantExtensionACL)
 * [redundantFileprivate](#redundantFileprivate)
@@ -2394,6 +2395,26 @@ which are called immediately.
 - }()
 + lazy var bar = Bar(baaz: baaz,
 +                    quux: quux)
+```
+
+</details>
+<br/>
+
+## redundantEmptyView
+
+Remove redundant `else { EmptyView() }` branches in SwiftUI result builders.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  var body: some View {
+      if condition {
+          Text("Hello")
+-     } else {
+-         EmptyView()
+      }
+  }
 ```
 
 </details>

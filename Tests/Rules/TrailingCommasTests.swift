@@ -2522,6 +2522,37 @@ final class TrailingCommasTests: XCTestCase {
         testFormatting(for: input, output, rule: .trailingCommas, options: options, exclude: [.typeSugar, .propertyTypes])
     }
 
+    func testTrailingCommasNotAddedToGenericArgumentListInExpressionInSwift6_2() {
+        // In Swift 6.2, trailing commas in generic argument lists within expressions are not supported.
+        // e.g. `Array<Int,>()` is not valid until Swift 6.3.
+        let input = """
+        private let value = Array<(
+            foo: String,
+            bar: Bool
+        )>()
+        """
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.2")
+        testFormatting(for: input, rule: .trailingCommas, options: options, exclude: [.typeSugar, .propertyTypes])
+    }
+
+    func testTrailingCommasAddedToGenericArgumentListInExpressionInSwift6_3() {
+        // In Swift 6.3, trailing commas in generic argument lists within expressions are supported.
+        let input = """
+        private let value = Array<(
+            foo: String,
+            bar: Bool
+        )>()
+        """
+        let output = """
+        private let value = Array<(
+            foo: String,
+            bar: Bool,
+        )>()
+        """
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.3")
+        testFormatting(for: input, output, rule: .trailingCommas, options: options, exclude: [.typeSugar, .propertyTypes])
+    }
+
     func testTrailingCommasNotAddedToClosureTupleReturnType() {
         // Trailing commas are not supported in closure return types in Swift 6.2 and earlier
         let input = """

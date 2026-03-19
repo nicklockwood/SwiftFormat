@@ -160,6 +160,41 @@ public extension FormatRule {
 
                 if formatter.options.swiftVersion >= "6.2" {
                     trailingCommaSupported = true
+
+                    // In Swift 6.2, trailing commas in generic argument lists within expressions
+                    // are not supported (only allowed in Swift 6.3+).
+                    // For example, `Array<Int>()` with a trailing comma like `Array<Int,>()` is not valid in Swift 6.2.
+                    // Only generic parameter lists in declarations like `func foo<T>()` or `init<T>()` are supported.
+                    if formatter.options.swiftVersion < "6.3",
+                       let tokenAfterClose = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i),
+                       formatter.tokens[tokenAfterClose] == .startOfScope("(")
+                    {
+                        // Determine if this is a generic parameter list in a declaration
+                        // (e.g. `func foo<T>()` or `init<T>()`) versus a generic argument list
+                        // in an expression (e.g. `Array<T>()`).
+                        let isDeclaration: Bool
+                        if let prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope) {
+                            let prevToken = formatter.tokens[prevIndex]
+                            if prevToken == .keyword("init") || prevToken == .keyword("subscript") {
+                                // `init<T>()` and `subscript<T>()` are declarations
+                                isDeclaration = true
+                            } else if prevToken.isIdentifier,
+                                      let kwIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex),
+                                      formatter.tokens[kwIndex] == .keyword("func")
+                            {
+                                // `func identifier<T>()` is a declaration
+                                isDeclaration = true
+                            } else {
+                                isDeclaration = false
+                            }
+                        } else {
+                            isDeclaration = false
+                        }
+
+                        if !isDeclaration {
+                            trailingCommaSupported = false
+                        }
+                    }
                 } else if formatter.options.swiftVersion == "6.1" {
                     // In Swift 6.1, only generic lists in concrete type / function / typealias declarations are allowed.
                     // https://github.com/swiftlang/swift/issues/81474

@@ -73,6 +73,7 @@ let ruleRegistry: [String: FormatRule] = [
     "redundantBackticks": .redundantBackticks,
     "redundantBreak": .redundantBreak,
     "redundantClosure": .redundantClosure,
+    "redundantEmptyView": .redundantEmptyView,
     "redundantEquatable": .redundantEquatable,
     "redundantExtensionACL": .redundantExtensionACL,
     "redundantFileprivate": .redundantFileprivate,

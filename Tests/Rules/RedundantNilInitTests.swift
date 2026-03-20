@@ -213,8 +213,18 @@ final class RedundantNilInitTests: XCTestCase {
             }
         }
         """
+        let output = """
+        struct TestView: View {
+            var body: some View {
+                if true {
+                    var foo: String? = nil
+                    Text(foo ?? "")
+                }
+            }
+        }
+        """
         let options = FormatOptions(nilInit: .remove)
-        testFormatting(for: input, rule: .redundantNilInit,
+        testFormatting(for: input, [input, output], rules: [.redundantNilInit],
                        options: options)
     }
 
@@ -514,8 +524,18 @@ final class RedundantNilInitTests: XCTestCase {
             }
         }
         """
+        let output = """
+        struct TestView: View {
+            var body: some View {
+                if true {
+                    var foo: String?
+                    Text(foo ?? "")
+                }
+            }
+        }
+        """
         let options = FormatOptions(nilInit: .insert)
-        testFormatting(for: input, rule: .redundantNilInit,
+        testFormatting(for: input, [input, output], rules: [.redundantNilInit],
                        options: options)
     }
 

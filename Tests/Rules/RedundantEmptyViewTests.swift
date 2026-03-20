@@ -187,6 +187,30 @@ final class RedundantEmptyViewTests: XCTestCase {
         testFormatting(for: input, output, rule: .redundantEmptyView)
     }
 
+    func testRemoveFullyQualifiedSwiftUIEmptyView() {
+        let input = """
+        struct ContentView: View {
+            var body: some View {
+                if condition {
+                    Text("Hello")
+                } else {
+                    SwiftUI.EmptyView()
+                }
+            }
+        }
+        """
+        let output = """
+        struct ContentView: View {
+            var body: some View {
+                if condition {
+                    Text("Hello")
+                }
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantEmptyView)
+    }
+
     func testDoNotRemoveElseWithModifiedEmptyView() {
         let input = """
         struct ContentView: View {

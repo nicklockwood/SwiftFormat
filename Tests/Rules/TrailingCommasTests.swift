@@ -2525,11 +2525,14 @@ final class TrailingCommasTests: XCTestCase {
     func testTrailingCommasNotAddedToGenericArgumentListInExpressionInSwift6_2() {
         // In Swift 6.2, trailing commas in generic argument lists within expressions are not supported.
         // e.g. `Array<Int,>()` is not valid until Swift 6.3.
+        // This includes the case where > is on its own line (regression fix).
         let input = """
-        private let value = Array<(
-            foo: String,
-            bar: Bool
-        )>()
+        private let value = Array<
+            (
+                foo: String,
+                bar: Bool
+            )
+        >()
         """
         let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.2")
         testFormatting(for: input, rule: .trailingCommas, options: options, exclude: [.typeSugar, .propertyTypes])
@@ -2538,16 +2541,20 @@ final class TrailingCommasTests: XCTestCase {
     func testTrailingCommasAddedToGenericArgumentListInExpressionInSwift6_3() {
         // In Swift 6.3, trailing commas in generic argument lists within expressions are supported.
         let input = """
-        private let value = Array<(
-            foo: String,
-            bar: Bool
-        )>()
+        private let value = Array<
+            (
+                foo: String,
+                bar: Bool
+            )
+        >()
         """
         let output = """
-        private let value = Array<(
-            foo: String,
-            bar: Bool,
-        )>()
+        private let value = Array<
+            (
+                foo: String,
+                bar: Bool,
+            ),
+        >()
         """
         let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.3")
         testFormatting(for: input, output, rule: .trailingCommas, options: options, exclude: [.typeSugar, .propertyTypes])

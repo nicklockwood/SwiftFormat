@@ -163,37 +163,14 @@ public extension FormatRule {
 
                     // In Swift 6.2, trailing commas in generic argument lists within expressions
                     // are not supported (only allowed in Swift 6.3+).
-                    // For example, `Array<Int>()` with a trailing comma like `Array<Int,>()` is not valid in Swift 6.2.
-                    // Only generic parameter lists in declarations like `func foo<T>()` or `init<T>()` are supported.
+                    // For example, `Array<Int,>()` is not valid in Swift 6.2.
+                    // But declarations like `func foo<T,>()` and `init<T,>()` are valid.
                     if formatter.options.swiftVersion < "6.3",
                        let tokenAfterClose = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i),
-                       formatter.tokens[tokenAfterClose] == .startOfScope("(")
+                       formatter.tokens[tokenAfterClose] == .startOfScope("("),
+                       !formatter.isGenericDeclaration(at: startOfScope)
                     {
-                        // Determine if this is a generic parameter list in a declaration
-                        // (e.g. `func foo<T>()` or `init<T>()`) versus a generic argument list
-                        // in an expression (e.g. `Array<T>()`).
-                        let isDeclaration: Bool
-                        if let prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope) {
-                            let prevToken = formatter.tokens[prevIndex]
-                            if prevToken == .keyword("init") || prevToken == .keyword("subscript") {
-                                // `init<T>()` and `subscript<T>()` are declarations
-                                isDeclaration = true
-                            } else if prevToken.isIdentifier,
-                                      let kwIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex),
-                                      formatter.tokens[kwIndex] == .keyword("func")
-                            {
-                                // `func identifier<T>()` is a declaration
-                                isDeclaration = true
-                            } else {
-                                isDeclaration = false
-                            }
-                        } else {
-                            isDeclaration = false
-                        }
-
-                        if !isDeclaration {
-                            trailingCommaSupported = false
-                        }
+                        trailingCommaSupported = false
                     }
                 } else if formatter.options.swiftVersion == "6.1" {
                     // In Swift 6.1, only generic lists in concrete type / function / typealias declarations are allowed.
@@ -381,5 +358,40 @@ extension Formatter {
         }
 
         return commasSeparatedElements
+    }
+
+    /// Returns true if the `<` startOfScope is part of a generic declaration
+    /// (e.g. `func foo<T>`, `init<T>`, `init?<T>`, `subscript<T>`).
+    /// In Swift 6.2, trailing commas in generic argument lists are supported in declarations
+    /// but not in expression contexts like `Array<T>()`.
+    internal func isGenericDeclaration(at startOfScope: Int) -> Bool {
+        assert(tokens[startOfScope] == .startOfScope("<"))
+        guard let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: startOfScope) else {
+            return false
+        }
+        let prevToken = tokens[prevIndex]
+
+        // `init<T>` or `subscript<T>`
+        if prevToken == .keyword("init") || prevToken == .keyword("subscript") {
+            return true
+        }
+
+        // `init?<T>` or `init!<T>` (failable initializers)
+        if (prevToken == .operator("?", .postfix) || prevToken == .operator("!", .postfix)),
+           let tokenBeforeOp = index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex),
+           tokens[tokenBeforeOp] == .keyword("init")
+        {
+            return true
+        }
+
+        // `func identifier<T>`
+        if prevToken.isIdentifier,
+           let kwIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex),
+           tokens[kwIndex] == .keyword("func")
+        {
+            return true
+        }
+
+        return false
     }
 }

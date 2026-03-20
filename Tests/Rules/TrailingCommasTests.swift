@@ -2560,8 +2560,20 @@ final class TrailingCommasTests: XCTestCase {
         testFormatting(for: input, output, rule: .trailingCommas, options: options, exclude: [.typeSugar, .propertyTypes])
     }
 
+    func testTrailingCommasNotAddedToTupleTypeInsideArrayTypeSugarInSwift6_2() {
+        // In Swift 6.2, typeSugar converts Array<(T)>() to [(T)]().
+        // Trailing commas inside tuple types within array type sugar should not be added.
+        let input = """
+        private let value = [(
+            foo: String,
+            bar: Bool
+        )]()
+        """
+        let options = FormatOptions(trailingCommas: .always, swiftVersion: "6.2")
+        testFormatting(for: input, rule: .trailingCommas, options: options, exclude: [.typeSugar, .propertyTypes])
+    }
+
     func testTrailingCommasNotAddedToClosureTupleReturnType() {
-        // Trailing commas are not supported in closure return types in Swift 6.2 and earlier
         let input = """
         let closure = { () -> (
             foo: String,

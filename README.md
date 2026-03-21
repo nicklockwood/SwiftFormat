@@ -96,6 +96,53 @@ Alternatively, you can install the tool on macOS or Linux by using [Mint](https:
 $ mint install nicklockwood/SwiftFormat
 ```
 
+If you use Nix, you can add SwiftFormat to a `devShell` using `nixpkgs`:
+
+```nix
+{
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+  };
+
+  outputs = { nixpkgs, ... }:
+    let
+      system = "aarch64-darwin";
+      pkgs = import nixpkgs { inherit system; };
+    in {
+      devShells.${system}.default = pkgs.mkShell {
+        packages = [
+          pkgs.swiftformat
+        ];
+      };
+    };
+}
+```
+
+If you need to pin SwiftFormat to a specific version in your `devShell`, you can use [`acevif/swiftformat-nix`](https://github.com/acevif/swiftformat-nix):
+
+```nix
+{
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    swiftformat-nix.url = "github:acevif/swiftformat-nix";
+  };
+
+  outputs = { nixpkgs, swiftformat-nix, ... }:
+    let
+      system = "aarch64-darwin";
+      pkgs = import nixpkgs { inherit system; };
+    in {
+      devShells.${system}.default = pkgs.mkShell {
+        packages = [
+          swiftformat-nix.packages.${system}.swiftformat_0_58_7
+        ];
+      };
+    };
+}
+```
+
+Replace `aarch64-darwin` with your system, and replace `swiftformat_0_58_7` with the version you want to install.
+
 Or if you prefer, you can check out and build SwiftFormat manually on macOS, Linux or Windows as follows:
 
 ```bash

@@ -41,7 +41,7 @@ jobs:
           swift build -c release --triple ${{ matrix.target-triple }} -debug-info-format none -Xswiftc -static-stdlib `
             -Xswiftc -sdk -Xswiftc ${ExperimentalSDK}
 
-      - uses: microsoft/setup-msbuild@v2.0.0
+      - uses: microsoft/setup-msbuild@v3.0.0
 
       - shell: pwsh
         run: |

@@ -136,6 +136,7 @@
 * [unusedPrivateDeclarations](#unusedPrivateDeclarations)
 * [urlMacro](#urlMacro)
 * [validateTestCases](#validateTestCases)
+* [wrapCaseBodies](#wrapCaseBodies)
 * [wrapConditionalBodies](#wrapConditionalBodies)
 * [wrapEnumCases](#wrapEnumCases)
 * [wrapMultilineConditionalAssignment](#wrapMultilineConditionalAssignment)
@@ -4333,6 +4334,22 @@ Option | Description
 - enum Foo { }
 
 + @objc enum Foo {}
+```
+
+</details>
+<br/>
+
+## wrapCaseBodies
+
+Wrap the bodies of inline switch cases onto a new line.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- case .foo: return bar
++ case .foo:
++     return bar
 ```
 
 </details>

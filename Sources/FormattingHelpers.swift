@@ -3301,6 +3301,16 @@ extension Formatter {
             guard let lastNewlineIndex = lastIndex(of: .linebreak, in: Range(range.range)) else { break }
 
             removeToken(at: lastNewlineIndex)
+
+            // If the removed linebreak was at the end of a blank line that had trailing
+            // whitespace (i.e. the preceding token is a space and the one before that is
+            // a linebreak), also remove the trailing whitespace so it doesn't end up
+            // incorrectly concatenated with the indent of the following token.
+            if token(at: lastNewlineIndex - 1)?.isSpace == true,
+               token(at: lastNewlineIndex - 2)?.isLinebreak == true
+            {
+                removeToken(at: lastNewlineIndex - 1)
+            }
         }
     }
 

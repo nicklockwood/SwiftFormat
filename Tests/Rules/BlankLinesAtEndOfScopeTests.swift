@@ -208,4 +208,28 @@ final class BlankLinesAtEndOfScopeTests: XCTestCase {
         """
         testFormatting(for: input, output, rule: .blankLinesAtEndOfScope, options: .init(typeBlankLines: .insert), exclude: [.blankLinesAtStartOfScope])
     }
+
+    func testBlankLinesAtEndOfScopeRemovedWithTrailingWhitespace() {
+        // Blank line before closing brace that has trailing whitespace should be
+        // removed correctly without leaving the whitespace on the closing brace's line
+        let input = """
+        func foo() {
+            if let bar = bar {
+                bar()
+            }
+            \("")
+        }
+        """
+
+        let output = """
+        func foo() {
+            if let bar = bar {
+                bar()
+            }
+        }
+        """
+
+        let options = FormatOptions(truncateBlankLines: false)
+        testFormatting(for: input, output, rule: .blankLinesAtEndOfScope, options: options)
+    }
 }

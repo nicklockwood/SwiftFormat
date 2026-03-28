@@ -7,7 +7,14 @@ on:
       - develop
   pull_request:
 jobs:
+  check-for-changes:
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' || github.event.pull_request.changed_files > 0
+    steps:
+      - run: echo "PR has changes, proceeding with build jobs"
+
   macos:
+    needs: check-for-changes
     strategy:
       fail-fast: false
       matrix:
@@ -44,6 +51,7 @@ jobs:
           env_vars: MD_APPLE_SDK_ROOT,RUNNER_OS,RUNNER_ARCH
 
   linux:
+    needs: check-for-changes
     strategy:
       fail-fast: false
       matrix:
@@ -71,6 +79,7 @@ jobs:
           swift test --enable-test-discovery
 
   windows:
+    needs: check-for-changes
     strategy:
       fail-fast: false
       matrix:
@@ -90,6 +99,7 @@ jobs:
       - run: swift test
 
   command-line-tool:
+    needs: check-for-changes
     strategy:
       fail-fast: false
       matrix:
@@ -109,6 +119,7 @@ jobs:
         run: xcodebuild -project SwiftFormat.xcodeproj -scheme "SwiftFormat (Command Line Tool)" -sdk macosx clean build
 
   swiftformat-for-xcode:
+    needs: check-for-changes
     strategy:
       fail-fast: false
       matrix:
@@ -128,6 +139,7 @@ jobs:
         run: xcodebuild -project SwiftFormat.xcodeproj -scheme "SwiftFormat for Xcode" -sdk macosx clean build
 
   editor-extension:
+    needs: check-for-changes
     strategy:
       fail-fast: false
       matrix:
@@ -147,6 +159,7 @@ jobs:
         run: xcodebuild -project SwiftFormat.xcodeproj -scheme "SwiftFormat (Editor Extension)" -sdk macosx clean build
 
   regression-tests:
+    needs: check-for-changes
     strategy:
       fail-fast: false
       matrix:
@@ -166,6 +179,7 @@ jobs:
         run: xcodebuild -project SwiftFormat.xcodeproj -scheme "Regression Tests" test
 
   performance-tests:
+    needs: check-for-changes
     strategy:
       fail-fast: false
       matrix:

@@ -474,11 +474,19 @@ extension Formatter {
                 // make sure the type's body starts with at least one blank line
                 // so the category separator appears balanced
                 if index == 0 {
-                    var tokensBetweenStartOfScopeAndFirstDeclaration: ArraySlice<Token> {
+                    let tokensBetweenStartOfScopeAndFirstDeclaration =
                         tokens[typeDeclaration.openBraceIndex ..< typeDeclaration.body[0].range.lowerBound]
-                    }
 
-                    while tokensBetweenStartOfScopeAndFirstDeclaration.numberOfTrailingLinebreaks() < 2 {
+                    // Compute how many linebreaks are needed up-front rather than using a
+                    // `while` loop, to avoid an infinite loop when there is content (e.g. a
+                    // trailing comment) on the same line as the opening brace. In that case
+                    // `body[0].range.lowerBound == openBraceIndex + 1`, so inserting at
+                    // `openBraceIndex + 1` never shifts `body[0].range.lowerBound` and the
+                    // while-loop condition would never become false.
+                    let neededLinebreaks = max(
+                        0, 2 - tokensBetweenStartOfScopeAndFirstDeclaration.numberOfTrailingLinebreaks()
+                    )
+                    for _ in 0 ..< neededLinebreaks {
                         insertLinebreak(at: typeDeclaration.openBraceIndex + 1)
                     }
                 }

@@ -15,8 +15,15 @@ jobs:
           echo "❌ Pull request must target the 'develop' branch. Current base: '${{ github.event.pull_request.base.ref }}'"
           exit 1
 
+  check-for-changes:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.changed_files > 0
+    steps:
+      - run: echo "PR has changes, proceeding with lint"
+
   lint:
     name: "Lint"
+    needs: check-for-changes
     runs-on: macos-15
     steps:
       - name: Checkout

@@ -4487,138 +4487,54 @@ final class OrganizeDeclarationsTests: XCTestCase {
         )
     }
 
-    func testNoCrashWithMarkCommentBeforeNestedStruct() {
+    func testNoCrashWithTrailingCommentOnOpeningBrace() {
+        // Regression test: this previously caused an infinite loop / timeout because
+        // inserting a linebreak at `openBraceIndex + 1` when there is trailing content
+        // on the same line as `{` never shifted `body[0].range.lowerBound`.
         let input = """
-        import SwiftUI
-
-        struct MultiSelectMenu<Choice: Identifiable & Hashable>: View { // TODO: check code below
-
-            let title: String
-            let systemImage: String
-
-            let all: [Choice]
-            @Binding var selected: [Choice]
-
-            let titleProvider: (Choice) -> String
-            let colorProvider: (Choice) -> Color
-
-            init(
-                title: String,
-                systemImage: String = "person.circle.fill",
-                all: [Choice],
-                selected: Binding<[Choice]>,
-                titleProvider: @escaping (Choice) -> String,
-                colorProvider: @escaping (Choice) -> Color
-            ) {
-                self.title = title
-                self.systemImage = systemImage
-                self.all = all
-                self._selected = selected
-                self.titleProvider = titleProvider
-                self.colorProvider = colorProvider
-            }
-
-            var body: some View {
-                Menu {
-                    ForEach(all) { item in
-                        let isOn = selected.contains(where: { $0.id == item.id })
-                        Button {
-                            toggle(item)
-                        } label: {
-                            HStack {
-                                Text(titleProvider(item))
-                                Spacer()
-                                if isOn {
-                                    Image(systemName: "checkmark")
-                                }
-                            }
-                        }
-                    }
-
-                    if !selected.isEmpty {
-                        Divider()
-                        Button("Clear Selection", role: .destructive) {
-                            selected.removeAll()
-                        }
-                    }
-                } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: systemImage)
-                            .imageScale(.medium)
-
-                        Text(title)
-                        Spacer()
-                        if !selected.isEmpty {
-                            SelectedChips(
-                                selected: selected,
-                                titleProvider: titleProvider,
-                                colorProvider: colorProvider
-                            )
-                            .padding(.trailing, 2)
-                        }
-                    }
-                    .foregroundStyle(.primary)
-                    .tint(.primary)
-                }
-                .frame(minHeight: 22)
-            }
-
-            private func toggle(_ item: Choice) {
-                if let idx = selected.firstIndex(where: { $0.id == item.id }) {
-                    selected.remove(at: idx)
-                } else {
-                    selected.append(item)
-                }
-            }
-
-            // MARK: Chips View
-
-            private struct SelectedChips: View {
-                let selected: [Choice]
-                let titleProvider: (Choice) -> String
-                let colorProvider: (Choice) -> Color
-
-                var body: some View {
-                    let maxChips = 3
-                    let head = Array(selected.prefix(maxChips))
-                    let restCount = max(0, selected.count - maxChips)
-
-                    HStack(spacing: 6) {
-                        ForEach(head, id: \\.id) { item in
-                            let text = initials(for: titleProvider(item))
-                            let color = colorProvider(item)
-                            UserView(
-                                title: text,
-                                backgroundColor: color,
-                                style: .iconOnly,
-                                frame: 22,
-                                iconFont: .caption2.bold()
-                            )
-                        }
-
-                        if restCount > 0 {
-                            Text("+ \\(restCount)")
-                                .font(.caption).bold()
-                                .padding(.horizontal, 6).padding(.vertical, 2)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 6)
-                                        .stroke(.secondary, lineWidth: 1)
-                                )
-                        }
-                    }
-                    .accessibilityLabel("\\(selected.count) selected")
-                }
-
-                private func initials(for name: String) -> String {
-                    let parts = name.split(separator: " ")
-                    let first = parts.first?.first.map(String.init) ?? ""
-                    let last = parts.dropFirst().first?.first.map(String.init) ?? ""
-                    return (first + last).uppercased()
-                }
-            }
+        struct Foo { // some comment
+            let x: Int
+            let y: String
+            private func bar() {}
         }
         """
 
-        testFormatting(for: input, rule: .organizeDeclarations)
+        let output = """
+        struct Foo {
+
+        // MARK: Internal
+
+         // some comment
+            let x: Int
+            let y: String
+
+            // MARK: Private
+
+            private func bar() {}
+        }
+        """
+
+        let output2 = """
+        struct Foo {
+
+            // MARK: Internal
+
+            // some comment
+            let x: Int
+            let y: String
+
+            // MARK: Private
+
+            private func bar() {}
+        }
+        """
+
+        let options = FormatOptions(organizeStructThreshold: 0)
+        testFormatting(
+            for: input, [output, output2],
+            rules: [.organizeDeclarations],
+            options: options,
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+        )
     }
 }

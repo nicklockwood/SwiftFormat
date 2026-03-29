@@ -4486,4 +4486,55 @@ final class OrganizeDeclarationsTests: XCTestCase {
             exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope, .propertyTypes]
         )
     }
+
+    func testNoCrashWithTrailingCommentOnOpeningBrace() {
+        // Regression test: this previously caused an infinite loop / timeout because
+        // inserting a linebreak at `openBraceIndex + 1` when there is trailing content
+        // on the same line as `{` never shifted `body[0].range.lowerBound`.
+        let input = """
+        struct Foo { // some comment
+            let x: Int
+            let y: String
+            private func bar() {}
+        }
+        """
+
+        let output = """
+        struct Foo {
+
+        // MARK: Internal
+
+         // some comment
+            let x: Int
+            let y: String
+
+            // MARK: Private
+
+            private func bar() {}
+        }
+        """
+
+        let output2 = """
+        struct Foo {
+
+            // MARK: Internal
+
+            // some comment
+            let x: Int
+            let y: String
+
+            // MARK: Private
+
+            private func bar() {}
+        }
+        """
+
+        let options = FormatOptions(organizeStructThreshold: 0)
+        testFormatting(
+            for: input, [output, output2],
+            rules: [.organizeDeclarations],
+            options: options,
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+        )
+    }
 }

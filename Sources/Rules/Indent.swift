@@ -734,7 +734,10 @@ public extension FormatRule {
         }
 
         if formatter.options.indentStrings {
-            formatter.forEach(.startOfScope("\"\"\"")) { stringStartIndex, _ in
+            formatter.forEachToken(where: {
+                // Match multiline string literals (""", #""", ##""", etc.) but not multiline regex literals (#/.../#)
+                $0.isStartOfScope && $0.isMultilineStringDelimiter && $0.string.contains("\"")
+            }) { stringStartIndex, _ in
                 let baseIndent = formatter.currentIndentForLine(at: stringStartIndex)
                 let expectedIndent = baseIndent + formatter.options.indent
 

@@ -3773,6 +3773,112 @@ final class IndentTests: XCTestCase {
         testFormatting(for: input, output, rule: .indent, options: options)
     }
 
+    func testIndentRawMultilineStringInMethod() {
+        let input = ##"""
+        func foo() {
+            let sql = #"""
+            SELECT *
+            FROM authors
+            WHERE authors.name LIKE '%David%'
+            """#
+        }
+        """##
+        let output = ##"""
+        func foo() {
+            let sql = #"""
+                SELECT *
+                FROM authors
+                WHERE authors.name LIKE '%David%'
+                """#
+        }
+        """##
+        let options = FormatOptions(indentStrings: true)
+        testFormatting(for: input, output, rule: .indent, options: options)
+    }
+
+    func testNoIndentRawMultilineStringWithOmittedReturn() {
+        let input = ##"""
+        var string: String {
+            #"""
+            SELECT *
+            FROM authors
+            WHERE authors.name LIKE '%David%'
+            """#
+        }
+        """##
+        let options = FormatOptions(indentStrings: true)
+        testFormatting(for: input, rule: .indent, options: options)
+    }
+
+    func testIndentRawMultilineStringAtTopLevel() {
+        let input = ##"""
+        let sql = #"""
+        SELECT *
+        FROM  authors,
+              books
+        WHERE authors.name LIKE '%David%'
+             AND pubdate < $1
+        """#
+        """##
+        let output = ##"""
+        let sql = #"""
+          SELECT *
+          FROM  authors,
+                books
+          WHERE authors.name LIKE '%David%'
+               AND pubdate < $1
+          """#
+        """##
+        let options = FormatOptions(indent: "  ", indentStrings: true)
+        testFormatting(for: input, output, rule: .indent, options: options)
+    }
+
+    func testUnindentRawMultilineStringAtTopLevel() {
+        let input = ##"""
+        let sql = #"""
+          SELECT *
+          FROM  authors,
+                books
+          WHERE authors.name LIKE '%David%'
+               AND pubdate < $1
+          """#
+        """##
+        let output = ##"""
+        let sql = #"""
+        SELECT *
+        FROM  authors,
+              books
+        WHERE authors.name LIKE '%David%'
+             AND pubdate < $1
+        """#
+        """##
+        let options = FormatOptions(indent: "  ", indentStrings: false)
+        testFormatting(for: input, output, rule: .indent, options: options)
+    }
+
+    func testIndentDoubleHashRawMultilineStringInMethod() {
+        let input = ###"""
+        func foo() {
+            let sql = ##"""
+            SELECT *
+            FROM authors
+            WHERE authors.name LIKE '%David%'
+            """##
+        }
+        """###
+        let output = ###"""
+        func foo() {
+            let sql = ##"""
+                SELECT *
+                FROM authors
+                WHERE authors.name LIKE '%David%'
+                """##
+        }
+        """###
+        let options = FormatOptions(indentStrings: true)
+        testFormatting(for: input, output, rule: .indent, options: options)
+    }
+
     func testIndentUnderIndentedMultilineStringPreservesBlankLineIndent() {
         let input = #"""
         class Main {

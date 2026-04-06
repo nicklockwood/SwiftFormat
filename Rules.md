@@ -46,6 +46,7 @@
 * [preferCountWhere](#preferCountWhere)
 * [preferForLoop](#preferForLoop)
 * [preferKeyPath](#preferKeyPath)
+* [preferSwiftStringAPI](#preferSwiftStringAPI)
 * [redundantAsync](#redundantAsync)
 * [redundantBackticks](#redundantBackticks)
 * [redundantBreak](#redundantBreak)
@@ -2116,6 +2117,21 @@ Convert trivial `map { $0.foo }` closures to keyPath-based syntax.
 
 - let barArray = fooArray.compactMap { $0.optionalBar }
 + let barArray = fooArray.compactMap(\.optionalBar)
+```
+
+</details>
+<br/>
+
+## preferSwiftStringAPI
+
+Replace Objective-C bridged String methods with Swift equivalents.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- str.replacingOccurrences(of: "foo", with: "bar")
++ str.replacing("foo", with: "bar")
 ```
 
 </details>

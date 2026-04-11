@@ -409,6 +409,20 @@ final class SortImportsTests: XCTestCase {
         testFormatting(for: input, output, rule: .sortImports)
     }
 
+    func testNoMangleConditionalImportsFollowedByPrivateDeclaration() {
+        let input = """
+        #if canImport(UIKit)
+        import UIKit
+        private struct Foo {}
+        #elseif canImport(AppKit)
+        import AppKit
+        private struct Foo {}
+        #endif
+        """
+        let options = FormatOptions(swiftVersion: "6.1")
+        testFormatting(for: input, rule: .sortImports, options: options, exclude: [.blankLineAfterImports, .indent])
+    }
+
     func testNoMoveSwiftToolsVersionLine() {
         let input = """
         // swift-tools-version: 6.2

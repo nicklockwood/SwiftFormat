@@ -2496,8 +2496,10 @@ extension Formatter {
                 }
                 let nextToken = tokens[nextTokenIndex]
                 let isImportKeyword = nextToken == .keyword("import")
-                // Access modifier (e.g. "public") can precede "import" on the same line (Swift 6)
-                let isAccessModifierBeforeImport = nextToken.isKeyword && _FormatRules.aclModifiers.contains(nextToken.string)
+                // Access modifiers only continue the import block when they are immediately followed by import.
+                let isAccessModifierBeforeImport = nextToken.isKeyword &&
+                    _FormatRules.aclModifiers.contains(nextToken.string) &&
+                    next(.nonSpaceOrComment, after: nextTokenIndex) == .keyword("import")
                 if !isImportKeyword, !isAccessModifierBeforeImport {
                     // End of imports
                     pushStack()

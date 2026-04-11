@@ -10,8 +10,10 @@ import Foundation
 
 public extension FormatRule {
     /// Replace Objective-C bridged String methods with their Swift equivalents
+    /// Disabled by default since `replacing(_:with:)` is only available in iOS 16+ / macOS 13+.
     static let preferSwiftStringAPI = FormatRule(
-        help: "Replace Objective-C bridged String methods with Swift equivalents."
+        help: "Replace Objective-C bridged String methods with Swift equivalents.",
+        disabledByDefault: true
     ) { formatter in
         // replacing(_:with:) was introduced in Swift 5.7
         guard formatter.options.swiftVersion >= "5.7" else { return }

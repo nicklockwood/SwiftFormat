@@ -18,7 +18,7 @@ jobs:
     steps:
       - name: Extract issue numbers from PR
         id: extract_issues
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const prBody = context.payload.pull_request.body || '';
@@ -38,7 +38,7 @@ jobs:
             return issueNumbers;
 
       - name: Add label to issues
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const issueNumbers = ${{ steps.extract_issues.outputs.result }};

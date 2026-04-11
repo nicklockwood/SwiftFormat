@@ -94,6 +94,13 @@ cp "$ARCHIVE_EXECUTABLE" CommandLineTool/swiftformat
 echo "Formatting using new binary..."
 bash format.sh
 
+# 9. Build again after formatting to ensure no issues were introduced
+echo "Building after formatting..."
+if ! swift build -c release; then
+    echo "Error: Build failed after formatting. Please fix the issues before proceeding."
+    exit 1
+fi
+
 echo ""
 echo "✅ Release preparation completed successfully for version $NEW_VERSION!"
 echo ""

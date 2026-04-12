@@ -41,6 +41,12 @@ public extension FormatRule {
                     formatter.removeTrailingBlankLinesIfPresent(in: rangeInsideScope)
                 case .preserve:
                     break
+                case .consistent:
+                    if formatter.tokens[rangeInsideScope].numberOfLeadingLinebreaks() >= 2 {
+                        formatter.addTrailingBlankLineIfNeeded(in: rangeInsideScope)
+                    } else {
+                        formatter.removeTrailingBlankLinesIfPresent(in: rangeInsideScope)
+                    }
                 }
             } else {
                 formatter.removeTrailingBlankLinesIfPresent(in: rangeInsideScope)
@@ -80,6 +86,23 @@ public extension FormatRule {
           struct Foo {
               let bar: Bar
         +
+          }
+        ```
+
+        With `--type-blank-lines consistent`:
+
+        ```diff
+          // Blank line at start → blank line added at end
+          struct Foo {
+
+              let bar: Bar
+        +
+          }
+
+          // No blank line at start → blank line removed at end
+          struct Bar {
+              let foo: Foo
+        -
           }
         ```
         """

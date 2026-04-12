@@ -42,7 +42,7 @@ public extension FormatRule {
                     formatter.addLeadingBlankLineIfNeeded(in: rangeInsideScope)
                 case .remove:
                     formatter.removeLeadingBlankLinesIfPresent(in: rangeInsideScope)
-                case .preserve:
+                case .preserve, .consistent:
                     break
                 }
             } else {
@@ -83,6 +83,23 @@ public extension FormatRule {
           struct Foo {
         +
               let bar: Bar
+          }
+        ```
+
+        With `--type-blank-lines consistent`:
+
+        ```diff
+          // Blank line at start → blank line added at end
+          struct Foo {
+
+              let bar: Bar
+        +
+          }
+
+          // No blank line at start → blank line removed at end
+          struct Bar {
+              let foo: Foo
+        -
           }
         ```
         """

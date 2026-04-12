@@ -543,6 +543,7 @@ public enum TypeBlankLines: String, CaseIterable {
     case remove
     case insert
     case preserve
+    case consistent
 }
 
 /// Treatment of semicolons

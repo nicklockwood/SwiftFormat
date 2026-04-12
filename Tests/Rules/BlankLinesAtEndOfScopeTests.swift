@@ -209,6 +209,90 @@ final class BlankLinesAtEndOfScopeTests: XCTestCase {
         testFormatting(for: input, output, rule: .blankLinesAtEndOfScope, options: .init(typeBlankLines: .insert), exclude: [.blankLinesAtStartOfScope])
     }
 
+    func testConsistentBlankLinesAddsTrailingBlankLineWhenLeadingPresent() {
+        let input = """
+        class Foo {
+
+            func bar() {}
+        }
+        """
+        let output = """
+        class Foo {
+
+            func bar() {}
+
+        }
+        """
+        testFormatting(for: input, output, rule: .blankLinesAtEndOfScope, options: .init(typeBlankLines: .consistent))
+    }
+
+    func testConsistentBlankLinesRemovesTrailingBlankLineWhenLeadingAbsent() {
+        let input = """
+        class Foo {
+            func bar() {}
+
+        }
+        """
+        let output = """
+        class Foo {
+            func bar() {}
+        }
+        """
+        testFormatting(for: input, output, rule: .blankLinesAtEndOfScope, options: .init(typeBlankLines: .consistent))
+    }
+
+    func testConsistentBlankLinesNoChangeWhenBothPresent() {
+        let input = """
+        class Foo {
+
+            func bar() {}
+
+        }
+        """
+        testFormatting(for: input, rule: .blankLinesAtEndOfScope, options: .init(typeBlankLines: .consistent))
+    }
+
+    func testConsistentBlankLinesNoChangeWhenBothAbsent() {
+        let input = """
+        class Foo {
+            func bar() {}
+        }
+        """
+        testFormatting(for: input, rule: .blankLinesAtEndOfScope, options: .init(typeBlankLines: .consistent))
+    }
+
+    func testConsistentBlankLinesDoesNotAffectNonTypeScope() {
+        let input = """
+        class Foo {
+            func bar() {
+                print("hello")
+
+            }
+        }
+        """
+        let output = """
+        class Foo {
+            func bar() {
+                print("hello")
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .blankLinesAtEndOfScope, options: .init(typeBlankLines: .consistent))
+    }
+
+    func testConsistentBlankLinesNestedTypes() {
+        let input = """
+        class Foo {
+
+            struct Bar {
+                func baz() {}
+            }
+
+        }
+        """
+        testFormatting(for: input, rule: .blankLinesAtEndOfScope, options: .init(typeBlankLines: .consistent))
+    }
+
     func testBlankLinesAtEndOfScopeRemovedWithTrailingWhitespace() {
         // Blank line before closing brace that has trailing whitespace should be
         // removed correctly without leaving the whitespace on the closing brace's line

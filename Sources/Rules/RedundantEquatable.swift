@@ -314,7 +314,7 @@ extension Formatter {
 extension TypeName {
     /// Whether or not this type name is known to be non-Equatable
     var isKnownNonEquatableType: Bool {
-        let knownNonEquatableTypes = ["AnyClass"]
+        let knownNonEquatableTypes = ["AnyClass", "Any.Type"]
         return knownNonEquatableTypes.contains(string) || isTuple
     }
 }

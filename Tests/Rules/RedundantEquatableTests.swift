@@ -590,6 +590,21 @@ final class RedundantEquatableTests: XCTestCase {
         testFormatting(for: input, rule: .redundantEquatable)
     }
 
+    func testPreserveCustomEquatableImplementationComparingAnyType() {
+        // `Any.Type` defines an `==` operator but is not Equatable.
+        let input = """
+        struct MyStruct: Equatable {
+            let ty: Any.Type
+
+            static func == (lhs: Self, rhs: Self) -> Bool {
+                lhs.ty == rhs.ty
+            }
+        }
+        """
+
+        testFormatting(for: input, rule: .redundantEquatable)
+    }
+
     func testPreserveCustomEquatableImplementationComparingTuple() {
         // Tuples define an `==` operator but are not Equatable.
         let input = """

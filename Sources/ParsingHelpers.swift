@@ -936,7 +936,8 @@ extension Formatter {
                   !nextToken.isOperator(ofType: .infix),
                   !nextToken.isOperator(ofType: .postfix),
                   nextToken != .startOfScope("("),
-                  nextToken != .startOfScope("{")
+                  nextToken != .startOfScope("{"),
+                  nextToken != .delimiter(",")
             else {
                 return isAfterBrace(index, braceIndex)
             }

@@ -4825,4 +4825,48 @@ final class RedundantSelfTests: XCTestCase {
         """
         testFormatting(for: input, rule: .redundantSelf, exclude: [.blankLinesAfterGuardStatements])
     }
+
+    func testRedundantSelfWithSwitchExpressionInIfLetBindingChain() {
+        let input = """
+        class Foo {
+            var value: Int = 0
+            func foo(someOptional: Bool?) {
+                if let value = someOptional,
+                   let result: String? = switch value {
+                   case true: "hello"
+                   case false: "world"
+                   }, let result
+                {
+                    print(result)
+                    print(self.value)
+                }
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: .redundantSelf, options: options,
+                       exclude: [.braces, .indent, .wrapMultilineConditionalAssignment])
+    }
+
+    func testRedundantSelfWithSwitchExpressionInGuardLetBindingChain() {
+        let input = """
+        class Foo {
+            var value: Int = 0
+            func foo(someOptional: Bool?) {
+                guard let value = someOptional else { return }
+                guard let result: String? = switch value {
+                case true: "hello"
+                case false: nil
+                }, let result else { return }
+                print(result)
+                print(self.value)
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: .redundantSelf, options: options,
+                       exclude: [.blankLinesAfterGuardStatements,
+                                 .wrapConditionalBodies,
+                                 .wrapMultilineConditionalAssignment])
+    }
 }

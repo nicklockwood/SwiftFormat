@@ -1,5 +1,27 @@
 # Change Log
 
+## [0.61.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.61.0) (2026-04-11)
+
+- Added `wrapCaseBodies` rule
+- Added `redundantEmptyView` rule
+- Added `preferSwiftStringAPI` rule
+- Added `--test-case-access-control` option for `testSuiteAccessControl` rule
+- Updated `sortImports` to support `--import-grouping length,alpha`
+- Updated `--self-required` to support assignment type names like `OSLogMessage`
+- Updated `--suite-name-format` default value to `preserve`
+- Fixed conditional import parsing with access modifiers
+- Fixed infinite loop in `organizeDeclarations` when opening brace has a trailing comment
+- Fixed closing brace indentation with `--trimwhitespace nonblank-lines`
+- Fixed indentation of multiline raw string literals with `--indent-strings`
+- Fixed `redundantParens` incorrectly removing `()` from `@MainActor` closure signatures
+- Fixed wrapping inside parens of function declarations with no parameters
+- Fixed `extensionAccessControl` incorrectly hoisting `public` onto extensions of nested internal types
+- Fixed `spaceAroundParens` incorrectly removing space after `nonisolated(nonsending)` modifier
+- Fixed `noGuardInTests` incorrectly transforming `guard #available` conditions
+- Fixed trailing comma for `@convention` closures
+- Fixed number handling in Swift Testing test case name conversion
+- Fixed `redundantSelf` inserting `self.` inside `#if`/`#elseif` compiler directive conditions
+
 ## [0.60.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.60.1) (2026-03-07)
 
 - Fixed issue where `redundantSendable` rule would unexpectedly remove `Sendable` conformance on type defined in public extension
@@ -12,7 +34,7 @@
 
 - Added `redundantSwiftTestingSuite` rule
 - Added `redundantSendable` rule
-- Added `preferExpicitFalse` rule
+- Added `preferExplicitFalse` rule
 - Added support for `::` module selector syntax
 - Added support for value generics syntax
 - Updated `swiftTestingTestCaseNames` to use raw identifiers by default
@@ -31,7 +53,7 @@
 - Updated `redundantEquatable` to preserve `==` implementation in types with `Strideable` conformance
 - Fixed handling of switch statements with `#if` blocks in several rules
 - Fixed issue where `async` function declarations were wrapped using `wrapArguments` instead of `wrapParameters`
-- Fixed issue where `redudantViewBuilder` would remove `@ViewBuilder` from protocol members
+- Fixed issue where `redundantViewBuilder` would remove `@ViewBuilder` from protocol members
 - Fixed `redundantSelf` parsing issue with throwing closure return types and switch expressions in `if let` condition
 - Fixed `trailingCommas` rule incorrectly adding commas to if `#available` checks
 - Fixed `guard...else` indentation in `wrapArguments` with `wrap-conditions`

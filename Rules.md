@@ -46,7 +46,6 @@
 * [preferCountWhere](#preferCountWhere)
 * [preferForLoop](#preferForLoop)
 * [preferKeyPath](#preferKeyPath)
-* [preferSwiftStringAPI](#preferSwiftStringAPI)
 * [redundantAsync](#redundantAsync)
 * [redundantBackticks](#redundantBackticks)
 * [redundantBreak](#redundantBreak)
@@ -4250,6 +4249,7 @@ Wrap lines that exceed the specified maximum width.
 Option | Description
 --- | ---
 `--max-width` | Maximum length of a line before wrapping. Defaults to "none"
+`--wrap-threshold` | Minimum line length triggering wrap, independent of max-width. Defaults to "none"
 `--no-wrap-operators` | Comma-delimited list of operators that shouldn't be wrapped
 `--asset-literals` | Formatting of color/image literals: "actual-width" or "visual-width" (default)
 `--wrap-ternary` | Ternary expression wrapping: "default" (wrap if needed) or "before-operators"

@@ -236,9 +236,10 @@ final class MetadataTests: XCTestCase {
                             Descriptors.closingParenPosition, Descriptors.callSiteClosingParenPosition,
                             Descriptors.linebreak, Descriptors.truncateBlankLines,
                             Descriptors.indent, Descriptors.tabWidth, Descriptors.smartTabs, Descriptors.maxWidth,
-                            Descriptors.assetLiteralWidth, Descriptors.wrapReturnType, Descriptors.wrapEffects,
-                            Descriptors.wrapConditions, Descriptors.wrapTypealiases, Descriptors.wrapTernaryOperators,
-                            Descriptors.wrapStringInterpolation, Descriptors.allowPartialWrapping,
+                            Descriptors.wrapThreshold, Descriptors.assetLiteralWidth, Descriptors.wrapReturnType,
+                            Descriptors.wrapEffects, Descriptors.wrapConditions, Descriptors.wrapTypealiases,
+                            Descriptors.wrapTernaryOperators, Descriptors.wrapStringInterpolation,
+                            Descriptors.allowPartialWrapping,
                         ]
                     case .identifier("wrapStatementBody"):
                         referencedOptions += [Descriptors.indent, Descriptors.linebreak]

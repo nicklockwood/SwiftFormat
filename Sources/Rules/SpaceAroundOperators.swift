@@ -63,7 +63,7 @@ public extension FormatRule {
                 switch formatter.tokens[prevIndex] {
                 case .operator(_, .infix), .startOfScope:
                     return
-                case let token where [.keyword("unsafe"), .identifier("unsafe")].contains(token):
+                case let token where [.identifier("unsafe")].contains(token):
                     return // `unsafe` is contextual, so leave existing spacing unchanged.
                 case let token where token.isUnwrapOperator:
                     if let prevToken = formatter.last(.nonSpace, before: prevIndex),

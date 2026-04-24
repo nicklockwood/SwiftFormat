@@ -3271,4 +3271,70 @@ final class WrapArgumentsTests: XCTestCase {
         let options = FormatOptions(wrapParameters: .beforeFirst, maxWidth: 40)
         testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
+
+    func testWrapThresholdWrapsWhenExpressionExceedsThreshold() {
+        let input = """
+        func foo(bar _: Int, baz _: String) {}
+        """
+        let output = """
+        func foo(
+            bar _: Int,
+            baz _: String
+        ) {}
+        """
+        // Line is 38 chars — under maxWidth (100) but over wrapThreshold (20)
+        let options = FormatOptions(wrapParameters: .beforeFirst, maxWidth: 100, wrapThreshold: 20)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
+    }
+
+    func testWrapThresholdDoesNotWrapShortExpression() {
+        let input = """
+        let result = max(a, b)
+        """
+        // Line is 22 chars — under wrapThreshold (40)
+        let options = FormatOptions(wrapArguments: .beforeFirst, maxWidth: 100, wrapThreshold: 40)
+        testFormatting(for: input, rule: .wrapArguments, options: options)
+    }
+
+    func testWrapThresholdZeroWrapsEverything() {
+        let input = """
+        let x = foo(a, b)
+        """
+        let output = """
+        let x = foo(
+            a,
+            b
+        )
+        """
+        // wrapThreshold 0 — always wrap multi-argument calls
+        let options = FormatOptions(wrapArguments: .beforeFirst, maxWidth: 200, wrapThreshold: 0)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
+    }
+
+    func testWrapThresholdDefaultPreservesExistingBehaviour() {
+        let input = """
+        func foo(bar _: Int, baz _: String) {}
+        """
+        // wrapThreshold defaults to -1 (none), so only maxWidth triggers wrapping.
+        // Line is 38 chars — under maxWidth 100, so nothing wraps.
+        let options = FormatOptions(wrapParameters: .beforeFirst, maxWidth: 100)
+        testFormatting(for: input, rule: .wrapArguments, options: options)
+    }
+
+    func testWrapThresholdDoesNotAffectPartiallyWrappedExpressions() {
+        // Expressions that are already partially wrapped should be handled by
+        // completePartialWrapping, not influenced by wrapThreshold.
+        let input = """
+        func foo(bar _: Int,
+                 baz _: String) {}
+        """
+        let output = """
+        func foo(
+            bar _: Int,
+            baz _: String
+        ) {}
+        """
+        let options = FormatOptions(wrapParameters: .beforeFirst, maxWidth: 100, wrapThreshold: 200)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
+    }
 }

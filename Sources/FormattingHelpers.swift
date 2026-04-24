@@ -372,6 +372,9 @@ extension Formatter {
     /// Shared wrap implementation
     func wrapCollectionsAndArguments(completePartialWrapping: Bool, wrapSingleArguments: Bool) {
         let maxWidth = options.maxWidth
+        let wrapThreshold = options.wrapThreshold
+        // -1 means "not set"; fall back to maxWidth so existing behaviour is unchanged
+        let effectiveWrapThreshold = wrapThreshold >= 0 ? wrapThreshold : maxWidth
         func removeLinebreakBeforeEndOfScope(at endOfScope: inout Int) {
             guard let lastIndex = index(of: .nonSpace, before: endOfScope, if: {
                 $0.isLinebreak
@@ -835,7 +838,7 @@ extension Formatter {
                     assertionFailure() // Shouldn't happen
                 }
 
-            } else if maxWidth > 0, hasMultipleArguments || wrapSingleArguments {
+            } else if (maxWidth > 0 || wrapThreshold >= 0), hasMultipleArguments || wrapSingleArguments {
                 func willWrapAtStartOfReturnType(maxWidth: Int) -> Bool {
                     isInReturnType(at: i) && maxWidth < lineLength(at: i)
                 }
@@ -894,14 +897,14 @@ extension Formatter {
                 if currentRule == .wrap {
                     let nextWrapIndex = indexOfNextWrap() ?? endOfLine(at: i)
                     if nextWrapIndex > lastIndex,
-                       maxWidth < lineLength(upTo: nextWrapIndex),
-                       !willWrapAtStartOfReturnType(maxWidth: maxWidth)
+                       effectiveWrapThreshold < lineLength(upTo: nextWrapIndex),
+                       !willWrapAtStartOfReturnType(maxWidth: effectiveWrapThreshold)
                     {
                         wrapArgumentsWithoutPartialWrapping()
                         lastIndex = nextWrapIndex
                         return
                     }
-                } else if maxWidth < lineLength(upTo: endOfScope) {
+                } else if effectiveWrapThreshold < lineLength(upTo: endOfScope) {
                     wrapArgumentsWithoutPartialWrapping()
                 }
             }

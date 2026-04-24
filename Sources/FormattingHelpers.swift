@@ -838,7 +838,7 @@ extension Formatter {
                     assertionFailure() // Shouldn't happen
                 }
 
-            } else if (maxWidth > 0 || wrapThreshold >= 0), hasMultipleArguments || wrapSingleArguments {
+            } else if maxWidth > 0 || wrapThreshold >= 0, hasMultipleArguments || wrapSingleArguments {
                 func willWrapAtStartOfReturnType(maxWidth: Int) -> Bool {
                     isInReturnType(at: i) && maxWidth < lineLength(at: i)
                 }

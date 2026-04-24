@@ -24,9 +24,12 @@ jobs:
             const prBody = context.payload.pull_request.body || '';
             const prTitle = context.payload.pull_request.title || '';
 
-            // Strip fenced code blocks from the body to avoid matching issue
-            // numbers that appear in code examples rather than as real references.
-            const strippedBody = prBody.replace(/```[\s\S]*?```/g, '');
+            // Strip <details> blocks (used by dependabot PRs) and fenced code
+            // blocks from the body to avoid matching issue numbers that appear
+            // in collapsed/code sections rather than as real references.
+            const strippedBody = prBody
+              .replace(/<details[\s\S]*?<\/details>/gi, '')
+              .replace(/```[\s\S]*?```/g, '');
 
             const combinedText = `${prTitle}\n${strippedBody}`;
 

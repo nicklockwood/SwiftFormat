@@ -423,6 +423,84 @@ final class SortImportsTests: XCTestCase {
         testFormatting(for: input, rule: .sortImports, options: options, exclude: [.blankLineAfterImports, .indent])
     }
 
+    func testNoMangleConditionalImportsWithElseif() {
+        let input = """
+        import CoreGraphics
+        import Foundation
+
+        #if os(iOS) || os(tvOS) || os(watchOS)
+        import UIKit
+        public typealias EdgeInsets = UIEdgeInsets
+        #elseif os(OSX)
+        import AppKit
+        public typealias EdgeInsets = NSEdgeInsets
+        #endif
+
+        extension EdgeInsets {
+            func foo() {}
+        }
+        """
+        testFormatting(for: input, rule: .sortImports, exclude: [.blankLineAfterImports, .indent])
+    }
+
+    func testSortImportsDoesNotMangleConditionalImportsWithElseif() {
+        let input = """
+        import Foundation
+        import CoreGraphics
+
+        #if os(iOS) || os(tvOS) || os(watchOS)
+        import UIKit
+        public typealias EdgeInsets = UIEdgeInsets
+        #elseif os(OSX)
+        import AppKit
+        public typealias EdgeInsets = NSEdgeInsets
+        #endif
+
+        extension EdgeInsets {
+            func foo() {}
+        }
+        """
+        let output = """
+        import CoreGraphics
+        import Foundation
+
+        #if os(iOS) || os(tvOS) || os(watchOS)
+        import UIKit
+        public typealias EdgeInsets = UIEdgeInsets
+        #elseif os(OSX)
+        import AppKit
+        public typealias EdgeInsets = NSEdgeInsets
+        #endif
+
+        extension EdgeInsets {
+            func foo() {}
+        }
+        """
+        testFormatting(for: input, output, rule: .sortImports, exclude: [.blankLineAfterImports, .indent])
+    }
+
+    func testSortImportsWithinElseifBlocksIndependently() {
+        let input = """
+        #if os(iOS)
+        import UIKit
+        import SwiftUI
+        #elseif os(macOS)
+        import Quartz
+        import AppKit
+        #endif
+        """
+        let output = """
+        #if os(iOS)
+        import SwiftUI
+        import UIKit
+        #elseif os(macOS)
+        import AppKit
+        import Quartz
+        #endif
+        """
+        testFormatting(for: input, output, rule: .sortImports, exclude: [.blankLineAfterImports, .indent])
+    }
+
     func testNoMoveSwiftToolsVersionLine() {
         let input = """
         // swift-tools-version: 6.2
@@ -643,3 +721,4 @@ final class SortImportsTests: XCTestCase {
         testFormatting(for: input, output, rule: .sortImports, options: options)
     }
 }
+// Temporary test

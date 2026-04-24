@@ -54,6 +54,20 @@ final class SpaceAroundOperatorsTests: XCTestCase {
         testFormatting(for: input, rule: .spaceAroundOperators)
     }
 
+    func testSpacePreservedBetweenUnsafeAndDot() {
+        let input = """
+        unsafe .foo
+        """
+        testFormatting(for: input, rule: .spaceAroundOperators)
+    }
+
+    func testNoSpaceAddedBetweenUnsafeAndDot() {
+        let input = """
+        unsafe.foo
+        """
+        testFormatting(for: input, rule: .spaceAroundOperators)
+    }
+
     func testSpaceBetweenOptionalAndDefaultValueInFunction() {
         let input = """
         func foo(bar _: String?=nil) {}

@@ -1376,6 +1376,37 @@ final class IndentTests: XCTestCase {
         testFormatting(for: input, output, rule: .indent, options: options)
     }
 
+    func testMultilineSwitchCasePatternWithIndentCaseTrue() {
+        let input = """
+        switch x {
+        case let .foo(
+        longVariableName,
+        otherLongVariableName
+        ):
+        break
+        case bar:
+        break
+        default:
+        break
+        }
+        """
+        let output = """
+        switch x {
+            case let .foo(
+                longVariableName,
+                otherLongVariableName
+            ):
+                break
+            case bar:
+                break
+            default:
+                break
+        }
+        """
+        let options = FormatOptions(indentCase: true)
+        testFormatting(for: input, output, rule: .indent, options: options)
+    }
+
     func testNoMangleLabelWhenIndentCaseTrue() {
         let input = """
         foo: while true {
@@ -6179,13 +6210,13 @@ final class IndentTests: XCTestCase {
         let input = """
         switch testKey {
             case "organization"
-            where testValues.map(String.init).compactMap { try? Entity.ID($0, format: .number) }
-            .contains(Self.sessionInteractor.stage.value?.membership?.organization.id ?? .zero): // 2
+                where testValues.map(String.init).compactMap { try? Entity.ID($0, format: .number) }
+                .contains(Self.sessionInteractor.stage.value?.membership?.organization.id ?? .zero): // 2
                 continue
 
             case "user"
-            where testValues.map(String.init).compactMap { try? Entity.ID($0, format: .number) }
-            .contains(Self.sessionInteractor.stage.value?.session?.user.id ?? .zero): // 3
+                where testValues.map(String.init).compactMap { try? Entity.ID($0, format: .number) }
+                .contains(Self.sessionInteractor.stage.value?.session?.user.id ?? .zero): // 3
                 continue
         }
         """

@@ -29,6 +29,11 @@ public extension FormatRule {
         var lineIndex = 0
         var preserveIfdefDepth = 0
 
+        var isInSwitchCondition = false
+        var isInSwitchBody = false
+        var switchPairLevel = -1
+        var pairStack: [Token] = []
+
         @discardableResult
         func applyIndent(_ indent: String, at index: Int) -> Int {
             if formatter.options.ifdefIndent == .preserve, preserveIfdefDepth > 0 {
@@ -55,6 +60,18 @@ public extension FormatRule {
                 linewrapStack.removeLast()
                 scopeStartLineIndexes.removeLast()
                 scopeStack.removeLast()
+            }
+
+            switch token {
+            case .startOfScope("("), .startOfScope("{"), .startOfScope("["):
+                pairStack.append(token)
+            case .endOfScope(")"), .endOfScope("}"), .endOfScope("]"):
+                pairStack.removeLast()
+            case .keyword("switch"):
+                isInSwitchCondition = true
+                switchPairLevel = pairStack.count
+            default:
+                break
             }
 
             var i = i
@@ -94,11 +111,17 @@ public extension FormatRule {
                     }
                 case ":":
                     indent += formatter.options.indent
-                    if formatter.options.indentCase,
-                       scopeStack.count < 2 || scopeStack[scopeStack.count - 2] != .startOfScope("#if")
-                    {
+                case "{" where isInSwitchCondition && pairStack.count == switchPairLevel + 1:
+                    if formatter.options.indentCase {
                         indent += formatter.options.indent
+                        indentStack.append(indent)
+                        stringBodyIndentStack.append("")
+                        indentCounts.append(indentCount)
+                        scopeStartLineIndexes.append(lineIndex)
+                        linewrapStack.append(false)
                     }
+                    isInSwitchBody = true
+                    isInSwitchCondition = false
                 case "#if":
                     if let lineIndex = formatter.index(of: .linebreak, after: i),
                        let nextKeyword = formatter.next(.nonSpaceOrCommentOrLinebreak, after: lineIndex), [
@@ -106,9 +129,6 @@ public extension FormatRule {
                        ].contains(nextKeyword)
                     {
                         indent = indentStack[indentStack.count - indentCount - 1]
-                        if formatter.options.indentCase {
-                            indent += formatter.options.indent
-                        }
                     }
                     switch formatter.options.ifdefIndent {
                     case .indent:
@@ -220,9 +240,6 @@ public extension FormatRule {
                 var indent = indentStack[indentStack.count - 2]
                 if scopeStack.last == .startOfScope(":") {
                     indent = indentStack[indentStack.count - 4]
-                    if formatter.options.indentCase {
-                        indent += formatter.options.indent
-                    }
                 }
                 let start = formatter.startOfLine(at: i)
                 switch formatter.options.ifdefIndent {
@@ -235,9 +252,6 @@ public extension FormatRule {
                 }
             case .keyword("@unknown") where scopeStack.last != .startOfScope("#if"):
                 var indent = indentStack[indentStack.count - 2]
-                if formatter.options.indentCase {
-                    indent += formatter.options.indent
-                }
                 let start = formatter.startOfLine(at: i)
                 let stringIndent = stringBodyIndentStack.last!
                 i += applyIndent(stringIndent + indent, at: start)
@@ -336,6 +350,21 @@ public extension FormatRule {
                         popScope()
                     }
 
+                    // If we're in a switch with the indentCase option enabled, pop an extra scope
+                    if token == .endOfScope("}"),
+                       isInSwitchBody,
+                       pairStack.count == switchPairLevel,
+                       formatter.options.indentCase
+                    {
+                        indentStack.removeLast()
+                        stringBodyIndentStack.removeLast()
+                        indentCounts.removeLast()
+                        linewrapStack.removeLast()
+                        scopeStartLineIndexes.removeLast()
+                        isInSwitchBody = false
+                        switchPairLevel = -1
+                    }
+
                     // Don't reduce indent if line doesn't start with end of scope
                     let start = formatter.startOfLine(at: i)
                     guard let firstIndex = formatter.index(of: .nonSpaceOrComment, after: start - 1) else {
@@ -349,11 +378,6 @@ public extension FormatRule {
                         i += applyIndent("", at: start)
                     } else {
                         var indent = indentStack.last ?? ""
-                        if token.isSwitchCaseOrDefault,
-                           formatter.options.indentCase, !formatter.isInIfdef(at: i, scopeStack: scopeStack)
-                        {
-                            indent += formatter.options.indent
-                        }
                         let stringIndent = stringBodyIndentStack.last!
                         i += applyIndent(stringIndent + indent, at: start)
                     }
@@ -361,9 +385,6 @@ public extension FormatRule {
                     var indent = indentStack[indentStack.count - 2]
                     if scopeStack.last == .startOfScope(":"), indentStack.count > 1 {
                         indent = indentStack[indentStack.count - 4]
-                        if formatter.options.indentCase {
-                            indent += formatter.options.indent
-                        }
                         popScope()
                     }
                     switch formatter.options.ifdefIndent {
@@ -389,9 +410,6 @@ public extension FormatRule {
                 if formatter.next(.nonSpaceOrComment, after: i)?.isLinebreak == true {
                     indent += formatter.options.indent
                 } else {
-                    if formatter.options.indentCase {
-                        indent += formatter.options.indent
-                    }
                     // Align indent with previous case value
                     indent += formatter.spaceEquivalentToWidth(5)
                 }

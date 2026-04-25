@@ -2553,11 +2553,14 @@ extension Formatter {
                      .keyword("func") where lastKeyword != "import":
                     lastKeyword = ""
                     let members = classOrStatic ? classMembers : members
+                    // For the staticSelf (redundantStaticSelf) rule, nested functions are not
+                    // within the static func scope, so Self. should be preserved inside them.
+                    let effectiveClassOrStatic = staticSelf && !isTypeRoot ? false : classOrStatic
                     processFunction(at: &index, localNames: localNames, members: members,
                                     typeStack: &typeStack, closureStack: &closureStack, membersByType: &membersByType,
                                     classMembersByType: &classMembersByType,
                                     usingDynamicLookup: usingDynamicLookup,
-                                    classOrStatic: classOrStatic)
+                                    classOrStatic: effectiveClassOrStatic)
                     classOrStatic = false
                     continue
                 case .keyword("static"):
@@ -2946,10 +2949,12 @@ extension Formatter {
 
                     closureStack.append((allowsImplicitSelf: closureAllowsImplicitSelf(), selfCapture: selfCapture))
                     index = (inIndex ?? index) + 1
+                    // For the staticSelf (redundantStaticSelf) rule, closures are not within
+                    // the static func scope, so Self. should be preserved inside them.
                     processBody(at: &index, localNames: closureLocalNames, members: members,
                                 typeStack: &typeStack, closureStack: &closureStack,
                                 membersByType: &membersByType, classMembersByType: &classMembersByType,
-                                usingDynamicLookup: usingDynamicLookup, classOrStatic: classOrStatic,
+                                usingDynamicLookup: usingDynamicLookup, classOrStatic: staticSelf ? false : classOrStatic,
                                 isTypeRoot: false, isInit: isInit)
                     index -= 1
                     closureStack.removeLast()

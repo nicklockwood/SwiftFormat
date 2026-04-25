@@ -13,7 +13,7 @@ public extension FormatRule {
     static let preferFinalClasses = FormatRule(
         help: """
         Prefer defining `final` classes. To suppress this rule, add "Base" to the class name, \
-        add a doc comment with mentioning "base class" or "subclass", make the class `open`, \
+        add a doc comment mentioning "base class" or "subclass", make the class `open`, \
         or use a `// swiftformat:disable:next preferFinalClasses` directive.
         """,
         disabledByDefault: true

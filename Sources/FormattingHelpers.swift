@@ -372,9 +372,9 @@ extension Formatter {
     /// Shared wrap implementation
     func wrapCollectionsAndArguments(completePartialWrapping: Bool, wrapSingleArguments: Bool) {
         let maxWidth = options.maxWidth
-        let wrapThreshold = options.wrapThreshold
+        let listWrapThreshold = options.listWrapThreshold
         // -1 means "not set"; fall back to maxWidth so existing behaviour is unchanged
-        let effectiveWrapThreshold = wrapThreshold >= 0 ? wrapThreshold : maxWidth
+        let effectiveWrapThreshold = listWrapThreshold >= 0 ? listWrapThreshold : maxWidth
         func removeLinebreakBeforeEndOfScope(at endOfScope: inout Int) {
             guard let lastIndex = index(of: .nonSpace, before: endOfScope, if: {
                 $0.isLinebreak
@@ -838,7 +838,7 @@ extension Formatter {
                     assertionFailure() // Shouldn't happen
                 }
 
-            } else if maxWidth > 0 || wrapThreshold >= 0, hasMultipleArguments || wrapSingleArguments {
+            } else if maxWidth > 0 || listWrapThreshold >= 0, hasMultipleArguments || wrapSingleArguments {
                 func willWrapAtStartOfReturnType(maxWidth: Int) -> Bool {
                     isInReturnType(at: i) && maxWidth < lineLength(at: i)
                 }
@@ -896,16 +896,25 @@ extension Formatter {
 
                 if currentRule == .wrap {
                     let nextWrapIndex = indexOfNextWrap() ?? endOfLine(at: i)
+                    let lineLen = lineLength(upTo: nextWrapIndex)
+                    let exceedsMaxWidth = maxWidth > 0 && maxWidth < lineLen
                     if nextWrapIndex > lastIndex,
-                       effectiveWrapThreshold < lineLength(upTo: nextWrapIndex),
-                       !willWrapAtStartOfReturnType(maxWidth: effectiveWrapThreshold)
+                       effectiveWrapThreshold < lineLen,
+                       !willWrapAtStartOfReturnType(maxWidth: effectiveWrapThreshold),
+                       hasMultipleArguments || (wrapSingleArguments && exceedsMaxWidth)
                     {
                         wrapArgumentsWithoutPartialWrapping()
                         lastIndex = nextWrapIndex
                         return
                     }
-                } else if effectiveWrapThreshold < lineLength(upTo: endOfScope) {
-                    wrapArgumentsWithoutPartialWrapping()
+                } else {
+                    let lineLen = lineLength(upTo: endOfScope)
+                    let exceedsMaxWidth = maxWidth > 0 && maxWidth < lineLen
+                    if effectiveWrapThreshold < lineLen,
+                       hasMultipleArguments || (wrapSingleArguments && exceedsMaxWidth)
+                    {
+                        wrapArgumentsWithoutPartialWrapping()
+                    }
                 }
             }
 

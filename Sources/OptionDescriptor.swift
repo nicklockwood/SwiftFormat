@@ -905,11 +905,11 @@ struct _Descriptors {
         fromArgument: { $0.lowercased() == "none" ? 0 : Int($0).map { max(0, $0) } },
         toArgument: { $0 > 0 ? String($0) : "none" }
     )
-    let wrapThreshold = OptionDescriptor(
-        argumentName: "wrap-threshold",
-        displayName: "Wrap Threshold",
-        help: "Minimum line length triggering wrap, independent of max-width. Defaults to \"none\"",
-        keyPath: \.wrapThreshold,
+    let listWrapThreshold = OptionDescriptor(
+        argumentName: "list-wrap-threshold",
+        displayName: "List Wrap Threshold",
+        help: "Line length triggering wrap for comma-separated lists, in addition to --max-width. Defaults to \"none\"",
+        keyPath: \.listWrapThreshold,
         type: .int,
         fromArgument: { $0.lowercased() == "none" ? -1 : Int($0).map { max(0, $0) } },
         toArgument: { $0 >= 0 ? String($0) : "none" }

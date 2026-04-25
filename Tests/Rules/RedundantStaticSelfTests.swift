@@ -91,16 +91,7 @@ final class RedundantStaticSelfTests: XCTestCase {
             }
         }
         """
-        let output = """
-        enum E {
-            static func foo() {
-                func bar() {
-                    foo()
-                }
-            }
-        }
-        """
-        testFormatting(for: input, output, rule: .redundantStaticSelf)
+        testFormatting(for: input, rule: .redundantStaticSelf)
     }
 
     func testRedundantStaticSelfInNestedType() {
@@ -239,5 +230,38 @@ final class RedundantStaticSelfTests: XCTestCase {
         class A { static let defaultName = "A"; let name: String; init() { name = Self.defaultName }}
         """
         testFormatting(for: input, rule: .redundantStaticSelf, exclude: [.wrapFunctionBodies])
+    }
+
+    func testPreserveStaticSelfInClosureInsideStaticFunc() {
+        let input = """
+        enum XError: Error {
+            case error(String, cause: (any Error)? = nil)
+
+            static func error(_ message: String, cause: String?) -> Self {
+                .error(message, cause: cause.map { Self.error($0) })
+            }
+        }
+        """
+        testFormatting(for: input, rule: .redundantStaticSelf)
+    }
+
+    func testRedundantStaticSelfRemovedOutsideClosureInsideStaticFunc() {
+        let input = """
+        enum E {
+            static func foo() {
+                Self.bar()
+                let x = { Self.bar() }
+            }
+        }
+        """
+        let output = """
+        enum E {
+            static func foo() {
+                bar()
+                let x = { Self.bar() }
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantStaticSelf)
     }
 }

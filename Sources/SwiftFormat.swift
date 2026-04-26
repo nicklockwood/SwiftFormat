@@ -346,10 +346,22 @@ func gatherOptions(_ options: inout Options, for inputURL: URL, with logger: Log
 private var configCache = [URL: [[String: String]]]()
 private let configQueue = DispatchQueue(label: "swiftformat.config", qos: .userInteractive)
 private func processDirectory(_ inputURL: URL, with options: inout Options, logger: Logger?) throws {
-    if let args = configQueue.sync(execute: { configCache[inputURL] }) {
-        try options.addArguments(args, in: inputURL.path)
-        return
+    let inputURL = inputURL.standardizedFileURL
+    let args = try configQueue.sync { () throws -> [[String: String]] in
+        if let args = configCache[inputURL] {
+            return args
+        }
+
+        let args = try parseConfigArguments(in: inputURL, options: options, logger: logger)
+        configCache[inputURL] = args
+        return args
     }
+
+    assert(options.formatOptions != nil)
+    try options.addArguments(args, in: inputURL.path)
+}
+
+private func parseConfigArguments(in inputURL: URL, options: Options, logger: Logger?) throws -> [[String: String]] {
     var args = [[String: String]]()
     let manager = FileManager.default
     let configFile = inputURL.appendingPathComponent(swiftFormatConfigurationFile)
@@ -394,11 +406,7 @@ private func processDirectory(_ inputURL: URL, with options: inout Options, logg
             }
         }
     }
-    configQueue.async {
-        configCache[inputURL] = args
-    }
-    assert(options.formatOptions != nil)
-    try options.addArguments(args, in: inputURL.standardizedFileURL.path)
+    return args
 }
 
 /// Line and column offset in source

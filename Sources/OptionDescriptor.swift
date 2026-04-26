@@ -905,6 +905,15 @@ struct _Descriptors {
         fromArgument: { $0.lowercased() == "none" ? 0 : Int($0).map { max(0, $0) } },
         toArgument: { $0 > 0 ? String($0) : "none" }
     )
+    let listWrapThreshold = OptionDescriptor(
+        argumentName: "list-wrap-threshold",
+        displayName: "List Wrap Threshold",
+        help: "Line length triggering wrap for comma-separated lists, in addition to --max-width. Defaults to \"none\"",
+        keyPath: \.listWrapThreshold,
+        type: .int,
+        fromArgument: { $0.lowercased() == "none" ? .some(nil) : Int($0).map { max(0, $0) } },
+        toArgument: { $0.map(String.init) ?? "none" }
+    )
     let smartTabs = OptionDescriptor(
         argumentName: "smart-tabs",
         displayName: "Smart Tabs",

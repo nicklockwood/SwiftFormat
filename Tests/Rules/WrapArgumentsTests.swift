@@ -3271,4 +3271,93 @@ final class WrapArgumentsTests: XCTestCase {
         let options = FormatOptions(wrapParameters: .beforeFirst, maxWidth: 40)
         testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
+
+    func testWrapThresholdWrapsWhenExpressionExceedsThreshold() {
+        let input = """
+        func foo(bar _: Int, baz _: String) {}
+        """
+        let output = """
+        func foo(
+            bar _: Int,
+            baz _: String
+        ) {}
+        """
+        // Line is 38 chars — under maxWidth (100) but over listWrapThreshold (20)
+        let options = FormatOptions(wrapParameters: .beforeFirst, maxWidth: 100, listWrapThreshold: 20)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
+    }
+
+    func testWrapThresholdDoesNotWrapShortExpression() {
+        let input = """
+        let result = max(a, b)
+        """
+        // Line is 22 chars — under listWrapThreshold (40)
+        let options = FormatOptions(wrapArguments: .beforeFirst, maxWidth: 100, listWrapThreshold: 40)
+        testFormatting(for: input, rule: .wrapArguments, options: options)
+    }
+
+    func testWrapThresholdZeroWrapsMultiArgumentCalls() {
+        let input = """
+        let x = foo(a, b)
+        """
+        let output = """
+        let x = foo(
+            a,
+            b
+        )
+        """
+        // listWrapThreshold 0 — wraps multi-argument calls regardless of length
+        let options = FormatOptions(wrapArguments: .beforeFirst, maxWidth: 200, listWrapThreshold: 0)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
+    }
+
+    func testWrapThresholdWrapsSingleArgumentCall() {
+        let input = """
+        let x = someVeryLongFunctionName(someVeryLongArgumentName: someVeryLongValue)
+        """
+        let output = """
+        let x = someVeryLongFunctionName(
+            someVeryLongArgumentName: someVeryLongValue
+        )
+        """
+        // Single-argument call — listWrapThreshold wraps it when line exceeds threshold
+        let options = FormatOptions(wrapArguments: .beforeFirst, maxWidth: 200, listWrapThreshold: 0)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
+    }
+
+    func testWrapThresholdDoesNotWrapZeroArgumentCall() {
+        let input = """
+        let x = someVeryLongFunctionName()
+        """
+        // Zero-argument call — listWrapThreshold should never wrap it
+        let options = FormatOptions(wrapArguments: .beforeFirst, maxWidth: 200, listWrapThreshold: 0)
+        testFormatting(for: input, rule: .wrapArguments, options: options)
+    }
+
+    func testWrapThresholdDefaultPreservesExistingBehaviour() {
+        let input = """
+        func foo(bar _: Int, baz _: String) {}
+        """
+        // listWrapThreshold defaults to -1 (none), so only maxWidth triggers wrapping.
+        // Line is 38 chars — under maxWidth 100, so nothing wraps.
+        let options = FormatOptions(wrapParameters: .beforeFirst, maxWidth: 100)
+        testFormatting(for: input, rule: .wrapArguments, options: options)
+    }
+
+    func testWrapThresholdDoesNotAffectPartiallyWrappedExpressions() {
+        // Expressions that are already partially wrapped should be handled by
+        // completePartialWrapping, not influenced by listWrapThreshold.
+        let input = """
+        func foo(bar _: Int,
+                 baz _: String) {}
+        """
+        let output = """
+        func foo(
+            bar _: Int,
+            baz _: String
+        ) {}
+        """
+        let options = FormatOptions(wrapParameters: .beforeFirst, maxWidth: 100, listWrapThreshold: 200)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
+    }
 }

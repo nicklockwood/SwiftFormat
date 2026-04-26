@@ -29,6 +29,12 @@ Making your first pull request can be scary. If you have trouble with any of the
 
 All types of PR are welcome, but please do read these guidelines carefully to avoid wasting your time and ours. If you are planning something big, or which might be controversial, it's a great idea to create an issue first to discuss it before writing a lot of code.
 
+If your PR fixes a GitHub issue, include a line like the following in the PR description so that the issue is closed automatically when the PR is merged:
+
+```
+Fixes #100
+```
+
 Types of PR:
 
 * Documentation fixes - if you've found a typo, or incorrect comment, either in the README or a code comment, feel free to create a PR directly against the **main** branch.

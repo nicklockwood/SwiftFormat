@@ -911,8 +911,8 @@ struct _Descriptors {
         help: "Line length triggering wrap for comma-separated lists, in addition to --max-width. Defaults to \"none\"",
         keyPath: \.listWrapThreshold,
         type: .int,
-        fromArgument: { $0.lowercased() == "none" ? -1 : Int($0).map { max(0, $0) } },
-        toArgument: { $0 >= 0 ? String($0) : "none" }
+        fromArgument: { $0.lowercased() == "none" ? .some(nil) : Int($0).map { max(0, $0) } },
+        toArgument: { $0.map(String.init) ?? "none" }
     )
     let smartTabs = OptionDescriptor(
         argumentName: "smart-tabs",

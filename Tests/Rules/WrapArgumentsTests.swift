@@ -3311,11 +3311,25 @@ final class WrapArgumentsTests: XCTestCase {
         testFormatting(for: input, output, rule: .wrapArguments, options: options)
     }
 
-    func testWrapThresholdDoesNotWrapSingleArgumentCall() {
+    func testWrapThresholdWrapsSingleArgumentCall() {
         let input = """
         let x = someVeryLongFunctionName(someVeryLongArgumentName: someVeryLongValue)
         """
-        // Single-argument call — listWrapThreshold should not wrap it even if line exceeds threshold
+        let output = """
+        let x = someVeryLongFunctionName(
+            someVeryLongArgumentName: someVeryLongValue
+        )
+        """
+        // Single-argument call — listWrapThreshold wraps it when line exceeds threshold
+        let options = FormatOptions(wrapArguments: .beforeFirst, maxWidth: 200, listWrapThreshold: 0)
+        testFormatting(for: input, output, rule: .wrapArguments, options: options)
+    }
+
+    func testWrapThresholdDoesNotWrapZeroArgumentCall() {
+        let input = """
+        let x = someVeryLongFunctionName()
+        """
+        // Zero-argument call — listWrapThreshold should never wrap it
         let options = FormatOptions(wrapArguments: .beforeFirst, maxWidth: 200, listWrapThreshold: 0)
         testFormatting(for: input, rule: .wrapArguments, options: options)
     }

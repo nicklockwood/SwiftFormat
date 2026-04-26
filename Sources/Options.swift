@@ -832,7 +832,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var xcodeIndentation: Bool
     public var tabWidth: Int
     public var maxWidth: Int
-    public var listWrapThreshold: Int
+    public var listWrapThreshold: Int?
     public var smartTabs: Bool
     public var assetLiteralWidth: AssetLiteralWidth
     public var noSpaceOperators: Set<String>
@@ -981,7 +981,7 @@ public struct FormatOptions: CustomStringConvertible {
                 xcodeIndentation: Bool = false,
                 tabWidth: Int = 0,
                 maxWidth: Int = 0,
-                listWrapThreshold: Int = -1,
+                listWrapThreshold: Int? = nil,
                 smartTabs: Bool = true,
                 assetLiteralWidth: AssetLiteralWidth = .visualWidth,
                 noSpaceOperators: Set<String> = [],

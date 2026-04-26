@@ -373,8 +373,7 @@ extension Formatter {
     func wrapCollectionsAndArguments(completePartialWrapping: Bool, wrapSingleArguments: Bool) {
         let maxWidth = options.maxWidth
         let listWrapThreshold = options.listWrapThreshold
-        // -1 means "not set"; fall back to maxWidth so existing behaviour is unchanged
-        let effectiveWrapThreshold = listWrapThreshold >= 0 ? listWrapThreshold : maxWidth
+        let effectiveWrapThreshold = listWrapThreshold ?? maxWidth
         func removeLinebreakBeforeEndOfScope(at endOfScope: inout Int) {
             guard let lastIndex = index(of: .nonSpace, before: endOfScope, if: {
                 $0.isLinebreak
@@ -547,7 +546,8 @@ extension Formatter {
             // issues with an open paren being wrapped unnecessarily and sitting on its own line in
             // cases like long closure types in parens.
             let insertLinebreakAfterOpeningParen = self.index(of: .delimiter(","), after: i) != nil
-                || lineLength(at: endOfLine(at: i)) > maxWidth
+                || (maxWidth > 0 && lineLength(at: endOfLine(at: i)) > maxWidth)
+                || listWrapThreshold.map { lineLength(at: endOfLine(at: i)) > $0 } ?? false
 
             // Insert linebreak and indent after opening paren
             if insertLinebreakAfterOpeningParen, let nextIndex = self.index(of: .nonSpaceOrComment, after: i) {
@@ -757,6 +757,7 @@ extension Formatter {
 
             let mode: WrapMode
             let hasMultipleArguments = index(of: .delimiter(","), in: i + 1 ..< endOfScope) != nil
+            let hasSomeArguments = index(of: .nonSpaceOrCommentOrLinebreak, in: i + 1 ..< endOfScope) != nil
             var isParameters = false
             switch string {
             case "(":
@@ -838,7 +839,7 @@ extension Formatter {
                     assertionFailure() // Shouldn't happen
                 }
 
-            } else if maxWidth > 0 || listWrapThreshold >= 0, hasMultipleArguments || wrapSingleArguments {
+            } else if maxWidth > 0 || listWrapThreshold != nil, hasMultipleArguments || wrapSingleArguments {
                 func willWrapAtStartOfReturnType(maxWidth: Int) -> Bool {
                     isInReturnType(at: i) && maxWidth < lineLength(at: i)
                 }
@@ -901,7 +902,7 @@ extension Formatter {
                     if nextWrapIndex > lastIndex,
                        effectiveWrapThreshold < lineLen,
                        !willWrapAtStartOfReturnType(maxWidth: effectiveWrapThreshold),
-                       hasMultipleArguments || (wrapSingleArguments && exceedsMaxWidth)
+                       hasSomeArguments || (wrapSingleArguments && exceedsMaxWidth)
                     {
                         wrapArgumentsWithoutPartialWrapping()
                         lastIndex = nextWrapIndex
@@ -911,7 +912,7 @@ extension Formatter {
                     let lineLen = lineLength(upTo: endOfScope)
                     let exceedsMaxWidth = maxWidth > 0 && maxWidth < lineLen
                     if effectiveWrapThreshold < lineLen,
-                       hasMultipleArguments || (wrapSingleArguments && exceedsMaxWidth)
+                       hasSomeArguments || (wrapSingleArguments && exceedsMaxWidth)
                     {
                         wrapArgumentsWithoutPartialWrapping()
                     }

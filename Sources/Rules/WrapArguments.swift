@@ -16,7 +16,7 @@ public extension FormatRule {
         options: ["wrap-arguments", "wrap-parameters", "wrap-collections", "closing-paren", "call-site-paren",
                   "wrap-return-type", "wrap-conditions", "wrap-type-aliases", "wrap-effects", "wrap-string-interpolation", "allow-partial-wrapping"],
         sharedOptions: ["indent", "trim-whitespace", "linebreaks",
-                        "tab-width", "max-width", "smart-tabs", "asset-literals", "wrap-ternary"]
+                        "tab-width", "max-width", "list-wrap-threshold", "smart-tabs", "asset-literals", "wrap-ternary"]
     ) { formatter in
         formatter.wrapCollectionsAndArguments(completePartialWrapping: true,
                                               wrapSingleArguments: true)

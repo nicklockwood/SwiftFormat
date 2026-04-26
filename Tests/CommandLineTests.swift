@@ -646,6 +646,39 @@ final class CommandLineTests: XCTestCase {
         }
     }
 
+    func testConfigFileIsReadOnceWhenGatheringOptionsConcurrently() throws {
+        try withTmpFiles([
+            ".swiftformat": """
+            --rules indent
+            """,
+            "File.swift": """
+            let value = 0
+            """,
+        ]) { url in
+            guard url.pathExtension == "swift" else { return }
+
+            let configFile = url.deletingLastPathComponent().appendingPathComponent(".swiftformat")
+            var logMessages = [String]()
+            var errors = [Error]()
+            let logQueue = DispatchQueue(label: "swiftformat.test.config-log")
+
+            DispatchQueue.concurrentPerform(iterations: 50) { _ in
+                var options = Options.default
+                do {
+                    try gatherOptions(&options, for: url, with: { message in
+                        logQueue.sync { logMessages.append(message) }
+                    })
+                } catch {
+                    logQueue.sync { errors.append(error) }
+                }
+            }
+
+            let messages = logMessages.filter { $0 == "Reading config file at \(configFile.path)" }
+            XCTAssertEqual(messages.count, 1, "\(messages)")
+            XCTAssertTrue(errors.isEmpty, "\(errors)")
+        }
+    }
+
     func testLintCommandOutputsOrganizeDeclarationOrderingViolations() {
         var output: [String] = []
         CLI.print = { message, _ in

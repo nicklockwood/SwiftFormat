@@ -1,5 +1,13 @@
 # Change Log
 
+## [0.61.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.61.1) (2026-04-27)
+
+- Fixed race condition when parsing config files
+- Fixed `redundantStaticSelf` false positive inside closures and nested functions
+- Fixed `unsafe` keyword dot-spacing edge case
+- Fixed `redundantSelf` crash on switch expression inside if-let binding chain
+- Fixed `redundantEquatable` removing manual `==` for types with `Any.Type` stored properties
+
 ## [0.61.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.61.0) (2026-04-11)
 
 - Added `wrapCaseBodies` rule

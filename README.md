@@ -449,10 +449,29 @@ end tell
 Some Apps you can trigger this from are [BetterTouchTool](https://folivora.ai), [Alfred](https://www.alfredapp.com) or [Keyboard Maestro](https://www.keyboardmaestro.com/main/). Another option is to define a QuickAction for Xcode via Automator and then assign a keyboard shortcut for it in the System Preferences.
 
 
-VSCode plugin
---------------
+VSCode integration
+-------------------
 
-If you prefer to use Microsoft's [VSCode](https://code.visualstudio.com) editor for writing Swift, [Valentin Knabel](https://github.com/vknabel) has created a [VSCode plugin](https://marketplace.visualstudio.com/items?itemName=vknabel.vscode-swiftformat) for SwiftFormat.
+If you prefer to use Microsoft's [VSCode](https://code.visualstudio.com) editor for writing Swift, SwiftFormat can be integrated using the [Run on Save](https://marketplace.visualstudio.com/items?itemName=emeraldwalk.RunOnSave) extension:
+
+1. Install the SwiftFormat command-line tool
+2. Install the VSCode extension: [Run on Save](https://marketplace.visualstudio.com/items?itemName=emeraldwalk.RunOnSave)
+3. Add the following to your `.vscode/settings.json`:
+
+```json
+{
+  "emeraldwalk.runonsave": {
+    "commands": [
+      {
+        "match": "\\.swift$",
+        "cmd": "swiftformat ${file}"
+      }
+    ]
+  }
+}
+```
+
+This will automatically format Swift files on save.
 
 
 Sublime Text plugin

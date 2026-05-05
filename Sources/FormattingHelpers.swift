@@ -74,7 +74,9 @@ extension Formatter {
             case "unsafe":
                 return options.swiftVersion >= "6.2" || options.swiftVersion == .undefined
             default:
-                return name.isKeywordInTypeContext && isTypePosition(at: index)
+                return name.isKeywordInTypeContext
+                    && token(at: index - 1)?.isOperator(".") != true
+                    && isTypePosition(at: index)
             }
         case .endOfScope("]"):
             return isInClosureArguments(at: index)

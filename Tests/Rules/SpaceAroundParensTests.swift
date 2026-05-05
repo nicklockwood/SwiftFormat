@@ -611,12 +611,12 @@ final class SpaceAroundParensTests: XCTestCase {
     func testNoSpaceInsertedForOptionalSomeMemberAccess() {
         let input = """
         @Test(arguments: [String?.some("input")])
-        func first_test(input: String?) {
+        func firstTest(input: String?) {
             #expect(input == "input")
         }
 
         @Test(arguments: [String?.some("input")])
-        func other_test(input: String?) {
+        func otherTest(input: String?) {
             #expect(input == "input")
         }
         """

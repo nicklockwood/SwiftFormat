@@ -608,6 +608,21 @@ final class SpaceAroundParensTests: XCTestCase {
         testFormatting(for: input, rule: .spaceAroundParens)
     }
 
+    func testNoSpaceInsertedForOptionalSomeMemberAccess() {
+        let input = """
+        @Test(arguments: [String?.some("input")])
+        func first_test(input: String?) {
+            #expect(input == "input")
+        }
+
+        @Test(arguments: [String?.some("input")])
+        func other_test(input: String?) {
+            #expect(input == "input")
+        }
+        """
+        testFormatting(for: input, rule: .spaceAroundParens)
+    }
+
     func testAsTupleCastingSpacing() {
         let input = """
         foo as(String, Int)

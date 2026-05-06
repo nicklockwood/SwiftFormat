@@ -55,6 +55,17 @@ final class RedundantSendableTests: XCTestCase {
         testFormatting(for: input, rules: [.redundantSendable], exclude: [.simplifyGenericConstraints])
     }
 
+    func testDoesNotRemoveSendableFromIndirectEnum() {
+        let input = """
+        indirect enum TestIndirect: Sendable {
+            case leaf
+            case node(TestIndirect)
+        }
+        """
+
+        testFormatting(for: input, rules: [.redundantSendable])
+    }
+
     func testIgnoresCommentsAndStrings() {
         let input = """
         func demo() {

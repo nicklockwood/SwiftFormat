@@ -636,7 +636,20 @@ public extension FormatRule {
                 switch nextToken {
                 case .linebreak:
                     if formatter.options.indentBlankLines, !indent.isEmpty {
-                        applyIndent(indent, at: i + 1)
+                        var blankLineIndent = indent
+                        // Blank lines before case/default should match the case indent, not the case body indent
+                        if _nextToken.isSwitchCaseOrDefault,
+                           scopeStack.last == .startOfScope(":")
+                        {
+                            blankLineIndent = indentStack.count >= 2
+                                ? indentStack[indentStack.count - 2] : ""
+                            if formatter.options.indentCase,
+                               !formatter.isInIfdef(at: i, scopeStack: scopeStack)
+                            {
+                                blankLineIndent += formatter.options.indent
+                            }
+                        }
+                        applyIndent(blankLineIndent, at: i + 1)
                     }
                 case .error, .keyword("#else"), .keyword("#elseif"), .endOfScope("#endif"),
                      .startOfScope("#if") where formatter.options.ifdefIndent != .indent:

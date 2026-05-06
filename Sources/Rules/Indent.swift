@@ -15,7 +15,7 @@ public extension FormatRule {
     static let indent = FormatRule(
         help: "Indent code in accordance with the scope level.",
         orderAfter: [.trailingSpace, .wrap, .wrapArguments],
-        options: ["indent", "tab-width", "smart-tabs", "indent-case", "ifdef", "xcode-indentation", "indent-strings"],
+        options: ["indent", "tab-width", "smart-tabs", "indent-case", "ifdef", "xcode-indentation", "indent-strings", "indent-blank-lines"],
         sharedOptions: ["allman", "wrap-conditions", "wrap-ternary"]
     ) { formatter in
         var scopeStack: [Token] = []
@@ -634,7 +634,11 @@ public extension FormatRule {
                 }
                 // Apply indent
                 switch nextToken {
-                case .linebreak, .error, .keyword("#else"), .keyword("#elseif"), .endOfScope("#endif"),
+                case .linebreak:
+                    if formatter.options.indentBlankLines, !indent.isEmpty {
+                        applyIndent(indent, at: i + 1)
+                    }
+                case .error, .keyword("#else"), .keyword("#elseif"), .endOfScope("#endif"),
                      .startOfScope("#if") where formatter.options.ifdefIndent != .indent:
                     break
                 case .startOfScope("/*"), .commentBody, .endOfScope("*/"):

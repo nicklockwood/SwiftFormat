@@ -18,6 +18,12 @@ public extension FormatRule {
                   typeDeclaration.keyword == "struct" || typeDeclaration.keyword == "enum"
             else { return }
 
+            // Indirect enums with recursive cases are not implicitly Sendable,
+            // so we must not remove an explicit Sendable conformance from them.
+            if typeDeclaration.keyword == "enum", typeDeclaration.hasModifier("indirect") {
+                return
+            }
+
             switch typeDeclaration.visibility() {
             case .public, .open:
                 return

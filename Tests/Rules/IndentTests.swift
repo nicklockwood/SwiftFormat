@@ -5659,6 +5659,214 @@ final class IndentTests: XCTestCase {
                        exclude: [.consecutiveBlankLines, .wrapConditionalBodies, .blankLinesAfterGuardStatements])
     }
 
+    func testIndentBlankLineInBraces() {
+        let input = """
+        func foo() {
+            bar()
+
+            baz()
+        }
+        """
+        let output = """
+        func foo() {
+            bar()
+        \("    ")
+            baz()
+        }
+        """
+        let options = FormatOptions(indentBlankLines: true)
+        testFormatting(for: input, output, rule: .indent, options: options)
+    }
+
+    func testIndentBlankLineInNestedScopes() {
+        let input = """
+        class Foo {
+            func bar() {
+                if true {
+                    baz()
+
+                    quux()
+                }
+            }
+        }
+        """
+        let output = """
+        class Foo {
+            func bar() {
+                if true {
+                    baz()
+        \("            ")
+                    quux()
+                }
+            }
+        }
+        """
+        let options = FormatOptions(indentBlankLines: true)
+        testFormatting(for: input, output, rule: .indent, options: options)
+    }
+
+    func testIndentMultipleBlankLinesInNestedScopes() {
+        let input = """
+        struct Foo {
+            let x: Int
+
+            func bar() {
+                print("hello")
+
+                if true {
+                    print("world")
+
+                    exit(0)
+                }
+            }
+        }
+        """
+        let output = """
+        struct Foo {
+            let x: Int
+        \("    ")
+            func bar() {
+                print("hello")
+        \("        ")
+                if true {
+                    print("world")
+        \("            ")
+                    exit(0)
+                }
+            }
+        }
+        """
+        let options = FormatOptions(indentBlankLines: true)
+        testFormatting(for: input, output, rule: .indent, options: options)
+    }
+
+    func testNoIndentBlankLinesByDefault() {
+        let input = """
+        func foo() {
+            bar()
+
+            baz()
+        }
+        """
+        testFormatting(for: input, rule: .indent)
+    }
+
+    func testIndentBlankLineAtTopLevelUnchanged() {
+        let input = """
+        let x = 1
+
+        let y = 2
+        """
+        let options = FormatOptions(indentBlankLines: true)
+        testFormatting(for: input, rule: .indent, options: options)
+    }
+
+    func testIndentBlankLineInSwitchCase() {
+        let input = """
+        switch foo {
+        case .bar:
+            bar()
+
+            baz()
+        default:
+            break
+        }
+        """
+        let output = """
+        switch foo {
+        case .bar:
+            bar()
+        \("    ")
+            baz()
+        default:
+            break
+        }
+        """
+        let options = FormatOptions(indentBlankLines: true)
+        testFormatting(for: input, output, rule: .indent, options: options,
+                       exclude: [.blankLineAfterSwitchCase])
+    }
+
+    func testIndentBlankLineInClosure() {
+        let input = """
+        let foo = {
+            bar()
+
+            baz()
+        }
+        """
+        let output = """
+        let foo = {
+            bar()
+        \("    ")
+            baz()
+        }
+        """
+        let options = FormatOptions(indentBlankLines: true)
+        testFormatting(for: input, output, rule: .indent, options: options)
+    }
+
+    func testIndentBlankLineWithTabs() {
+        let input = """
+        func foo() {
+        \tbar()
+
+        \tbaz()
+        }
+        """
+        let output = """
+        func foo() {
+        \tbar()
+        \t
+        \tbaz()
+        }
+        """
+        let options = FormatOptions(indent: "\t", indentBlankLines: true)
+        testFormatting(for: input, output, rule: .indent, options: options)
+    }
+
+    func testIndentBlankLineAtTwoLevels() {
+        let input = """
+        func foo() {
+            if bar {
+                baz()
+
+                quux()
+            }
+        }
+        """
+        let output = """
+        func foo() {
+            if bar {
+                baz()
+        \("        ")
+                quux()
+            }
+        }
+        """
+        let options = FormatOptions(indentBlankLines: true)
+        testFormatting(for: input, output, rule: .indent, options: options)
+    }
+
+    func testIndentBlankLineDoesNotAffectTrailingSpaceOnCodeLines() {
+        let input = """
+        func foo() {
+            bar()
+
+            baz()
+        }
+        """
+        let output = """
+        func foo() {
+            bar()
+        \("    ")
+            baz()
+        }
+        """
+        let options = FormatOptions(indentBlankLines: true)
+        testFormatting(for: input, output, rule: .indent, options: options)
+    }
+
     // async
 
     func testAsyncThrowsNotUnindented() {

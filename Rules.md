@@ -1439,6 +1439,7 @@ Option | Description
 `--ifdef` | #if statement indenting: "indent" (default), "no-indent", "preserve" or "outdent"
 `--xcode-indentation` | Match Xcode indenting: "enabled" or "disabled" (default)
 `--indent-strings` | Indent multiline strings: "true" or "false" (default)
+`--indent-blank-lines` | Indent blank lines: "true" or "false" (default)
 
 <details>
 <summary>Examples</summary>

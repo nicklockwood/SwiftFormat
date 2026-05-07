@@ -773,6 +773,49 @@ final class RedundantTypeTests: XCTestCase {
         testFormatting(for: input, rule: .redundantType, options: options)
     }
 
+    func testRedundantTypeInitInModelClassNotStripped() {
+        // See: https://github.com/nicklockwood/SwiftFormat/issues/1649
+        let input = """
+        @Model
+        class FooBar {
+            var dateCreated: Date = Date()
+        }
+        """
+        let options = FormatOptions(propertyTypes: .explicit)
+        testFormatting(for: input, rule: .redundantType, options: options)
+    }
+
+    func testRedundantTypeInModelClassNotStrippedInferLocalsOnly() {
+        // See: https://github.com/nicklockwood/SwiftFormat/issues/1649
+        let input = """
+        @Model
+        class FooBar {
+            var dateCreated: Date = Date()
+        }
+        """
+        let options = FormatOptions(propertyTypes: .inferLocalsOnly)
+        testFormatting(for: input, rule: .redundantType, options: options)
+    }
+
+    func testRedundantTypeInModelClassStrippedInInferredMode() {
+        // In inferred mode, removing the type annotation is fine for @Model since Date() is still fully qualified
+        // See: https://github.com/nicklockwood/SwiftFormat/issues/1649
+        let input = """
+        @Model
+        class FooBar {
+            var dateCreated: Date = Date()
+        }
+        """
+        let output = """
+        @Model
+        class FooBar {
+            var dateCreated = Date()
+        }
+        """
+        let options = FormatOptions(propertyTypes: .inferred)
+        testFormatting(for: input, output, rule: .redundantType, options: options)
+    }
+
     // --redundanttype infer-locals-only
 
     func testRedundantTypeinferLocalsOnly() {

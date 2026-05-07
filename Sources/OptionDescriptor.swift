@@ -1275,6 +1275,14 @@ struct _Descriptors {
         help: "List of symbols to be ignored by the acronyms rule",
         keyPath: \.preserveAcronyms
     )
+    let indentBlankLines = OptionDescriptor(
+        argumentName: "indent-blank-lines",
+        displayName: "Indent Blank Lines",
+        help: "Indent blank lines:",
+        keyPath: \.indentBlankLines,
+        trueValues: ["true", "enabled"],
+        falseValues: ["false", "disabled"]
+    )
     let indentStrings = OptionDescriptor(
         argumentName: "indent-strings",
         displayName: "Indent Strings",

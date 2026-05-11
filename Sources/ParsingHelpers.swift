@@ -1991,17 +1991,23 @@ extension Formatter {
         var startOfDeclaration = range.lowerBound
         let startOfScopeAtDeclaration = startOfScope(at: startOfDeclaration)
 
+        let isDeclarationStart = { [self] (index: Int, token: Token) in
+            token.isDeclarationTypeKeyword
+                || token == .startOfScope("#if")
+                || isFreestandingMacroExpansion(at: index, in: range)
+        }
+
         let handleIndex = { [self] (index: Int, token: Token) in
             guard range.contains(index),
                   index >= startOfDeclaration,
-                  token.isDeclarationTypeKeyword || token == .startOfScope("#if"),
+                  isDeclarationStart(index, token),
                   startOfScopeAtDeclaration == startOfScope(at: index)
             else {
                 return
             }
 
             let keywordIndex = index
-            let declarationKeyword = declarationType(at: keywordIndex) ?? "#if"
+            let declarationKeyword = declarationType(at: keywordIndex) ?? token.string
             let endOfDeclaration = _endOfDeclarationInTypeBody(atDeclarationKeyword: keywordIndex)
 
             let declarationRange = startOfDeclaration ... min(endOfDeclaration ?? .max, range.upperBound - 1)
@@ -2091,15 +2097,16 @@ extension Formatter {
     /// Returns the end index of the `Declaration` containing `declarationKeywordIndex`.
     /// This is mostly an implementation detail of `parseDeclarations` and only correctly
     /// handles declarations within type bodies (not within function bodies).
-    ///  - `declarationKeywordIndex.isDeclarationTypeKeyword` must be `true`
-    ///    (e.g. it must be a keyword like `let`, `var`, `func`, `class`, etc.
+    ///  - The token at `declarationKeywordIndex` must be a declaration start,
+    ///    e.g. a keyword like `let`, `var`, `func`, `#if`, or a freestanding macro expansion.
     func _endOfDeclarationInTypeBody(atDeclarationKeyword declarationKeywordIndex: Int) -> Int? {
         assert(tokens[declarationKeywordIndex].isDeclarationTypeKeyword
-            || tokens[declarationKeywordIndex] == .startOfScope("#if"))
+            || tokens[declarationKeywordIndex] == .startOfScope("#if")
+            || tokens[declarationKeywordIndex].string.isMacro)
 
         // Get declaration keyword
         var searchIndex = declarationKeywordIndex
-        let declarationKeyword = declarationType(at: declarationKeywordIndex) ?? "#if"
+        let declarationKeyword = declarationType(at: declarationKeywordIndex) ?? tokens[declarationKeywordIndex].string
         var endOfDeclaration: Int?
         switch tokens[declarationKeywordIndex] {
         case .startOfScope("#if"):
@@ -2135,13 +2142,16 @@ extension Formatter {
                 searchIndex = functionDeclaration.range.upperBound
                 endOfDeclaration = functionDeclaration.range.upperBound
             }
+        case let .keyword(keyword) where keyword.isMacro:
+            if let expressionRange = parseExpressionRange(startingAt: declarationKeywordIndex) {
+                searchIndex = expressionRange.upperBound
+                endOfDeclaration = expressionRange.upperBound
+            }
         default:
             break
         }
 
-        let nextDeclarationKeywordIndex = index(after: searchIndex, where: {
-            $0.isDeclarationTypeKeyword || $0 == .startOfScope("#if")
-        })
+        let nextDeclarationKeywordIndex = indexOfNextDeclarationStart(after: searchIndex)
 
         // If this is the last declaration in the type body, return nil to ensure we include all remaining tokens in the type body.
         if nextDeclarationKeywordIndex == nil {
@@ -2151,11 +2161,18 @@ extension Formatter {
         // Search for the next declaration so we know where this declaration ends
         // (the token before the first token of the following declaration).
         if let nextDeclarationKeywordIndex,
-           let lastIndexBeforeNextDeclaration = index(
+           let lastSignificantIndexBeforeNextDeclaration = index(
                before: startOfModifiers(at: nextDeclarationKeywordIndex, includingAttributes: true),
                where: { !$0.isSpaceOrCommentOrLinebreak }
-           ).map({ endOfLine(at: $0) })
+           )
         {
+            let lastIndexBeforeNextDeclaration: Int
+            if tokens[lastSignificantIndexBeforeNextDeclaration] == .delimiter(";") {
+                lastIndexBeforeNextDeclaration = lastSignificantIndexBeforeNextDeclaration
+            } else {
+                lastIndexBeforeNextDeclaration = endOfLine(at: lastSignificantIndexBeforeNextDeclaration)
+            }
+
             // If we have an existing `endOfDeclaration` index from a parsing implementation like
             // `parsePropertyDeclaration` or `parseFunctionDeclaration`, prefer that index.
             if let existingEndOfDeclarationValue = endOfDeclaration {
@@ -2183,6 +2200,49 @@ extension Formatter {
         }
 
         return endOfDeclaration
+    }
+
+    /// Whether the token at the given index is a freestanding macro expansion
+    /// that can appear as a declaration in a declaration body.
+    func isFreestandingMacroExpansion(at index: Int, in range: Range<Int>) -> Bool {
+        guard range.contains(index),
+              tokens[index].string.isMacro
+        else { return false }
+
+        guard let previousIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, before: index),
+              range.contains(previousIndex)
+        else { return true }
+
+        if token(at: previousIndex) == .delimiter(";") {
+            return true
+        }
+
+        guard tokens[previousIndex ..< index].contains(where: \.isLinebreak),
+              token(at: previousIndex)?.isOperator(ofType: .infix) != true,
+              token(at: previousIndex) != .delimiter(",")
+        else { return false }
+
+        return true
+    }
+
+    /// Returns the next declaration start following the given index.
+    func indexOfNextDeclarationStart(after index: Int) -> Int? {
+        var searchIndex = index
+
+        while let nextDeclarationIndex = self.index(after: searchIndex, where: {
+            $0.isDeclarationTypeKeyword || $0 == .startOfScope("#if") || $0.string.isMacro
+        }) {
+            if tokens[nextDeclarationIndex].isDeclarationTypeKeyword
+                || tokens[nextDeclarationIndex] == .startOfScope("#if")
+                || isFreestandingMacroExpansion(at: nextDeclarationIndex, in: tokens.indices)
+            {
+                return nextDeclarationIndex
+            }
+
+            searchIndex = nextDeclarationIndex
+        }
+
+        return nil
     }
 
     /// Parses the inner-most type that contains the given index.

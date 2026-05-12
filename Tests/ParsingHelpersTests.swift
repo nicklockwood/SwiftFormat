@@ -1574,6 +1574,106 @@ final class ParsingHelpersTests: XCTestCase {
         )
     }
 
+    func testParseFreestandingMacroExpansionDeclaration() {
+        let input = """
+        extension Foo {
+            #bar(
+                Baz.self,
+                value: 1,
+            )
+        }
+        """
+
+        let originalTokens = tokenize(input)
+        let declarations = Formatter(originalTokens).parseDeclarations()
+
+        XCTAssertEqual(declarations[0].keyword, "extension")
+        XCTAssertEqual(declarations[0].body?[0].keyword, "#bar")
+        XCTAssertEqual(
+            declarations[0].body?[0].tokens.string,
+            """
+                #bar(
+                    Baz.self,
+                    value: 1,
+                )
+
+            """
+        )
+    }
+
+    func testParseFreestandingMacroExpansionBetweenDeclarations() {
+        let input = """
+        struct Foo {
+            let bar = 1
+            #baz()
+            func quux() {}
+        }
+        """
+
+        let originalTokens = tokenize(input)
+        let declarations = Formatter(originalTokens).parseDeclarations()
+
+        XCTAssertEqual(declarations[0].body?[0].keyword, "let")
+        XCTAssertEqual(declarations[0].body?[1].keyword, "#baz")
+        XCTAssertEqual(declarations[0].body?[2].keyword, "func")
+    }
+
+    func testParseFreestandingMacroExpansionAfterSemicolon() {
+        let input = """
+        struct Foo {
+            let bar = 1; #baz()
+            func quux() {}
+        }
+        """
+
+        let originalTokens = tokenize(input)
+        let declarations = Formatter(originalTokens).parseDeclarations()
+
+        XCTAssertEqual(declarations[0].body?[0].keyword, "let")
+        XCTAssertEqual(declarations[0].body?[1].keyword, "#baz")
+        XCTAssertEqual(declarations[0].body?[2].keyword, "func")
+    }
+
+    func testParseFreestandingMacroExpansionWithTrailingClosure() {
+        let input = """
+        #Preview {
+            Foo()
+        }
+
+        struct Foo {}
+        """
+
+        let originalTokens = tokenize(input)
+        let declarations = Formatter(originalTokens).parseDeclarations()
+
+        XCTAssertEqual(declarations[0].keyword, "#Preview")
+        XCTAssertEqual(declarations[1].keyword, "struct")
+        XCTAssertEqual(
+            declarations[0].tokens.string,
+            """
+            #Preview {
+                Foo()
+            }
+
+
+            """
+        )
+    }
+
+    func testParseMacroDeclarationExternalMacroExpressionAsSingleDeclaration() {
+        let input = """
+        @freestanding(declaration)
+        macro Bar() = #externalMacro(module: "Macros", type: "Bar")
+        """
+
+        let originalTokens = tokenize(input)
+        let declarations = Formatter(originalTokens).parseDeclarations()
+
+        XCTAssertEqual(declarations.count, 1)
+        XCTAssertEqual(declarations[0].keyword, "macro")
+        XCTAssertEqual(declarations[0].tokens.string, input)
+    }
+
     func testParseDeclarationsWithSituationalKeywords() {
         let input = """
         let `static` = NavigationBarType.static(nil, .none)

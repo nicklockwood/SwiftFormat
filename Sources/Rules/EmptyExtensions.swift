@@ -20,7 +20,7 @@ public extension FormatRule {
             guard declaration.keyword == "extension",
                   let extensionDeclaration = declaration.asTypeDeclaration,
                   extensionDeclaration.body.isEmpty,
-                  // Ensure that it is not a macro
+                  // Ensure that the extension itself is not an attached macro expansion.
                   !extensionDeclaration.modifiers.contains(where: \.isAttribute)
             else { continue }
 

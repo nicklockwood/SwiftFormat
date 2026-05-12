@@ -52,6 +52,26 @@ final class EmptyExtensionsTests: XCTestCase {
         testFormatting(for: input, rule: .emptyExtensions)
     }
 
+    func testDoNotRemoveExtensionContainingFreestandingDeclarationMacro() {
+        let input = """
+        extension Foo {
+            #bar(
+                Baz.self,
+                value: 1,
+            )
+        }
+        """
+        let output = """
+        extension Foo {
+            #bar(
+                Baz.self,
+                value: 1
+            )
+        }
+        """
+        testFormatting(for: input, [input, output], rules: [.emptyExtensions])
+    }
+
     func testRemoveEmptyExtensionWithEmptyBody() {
         let input = """
         extension Foo { }

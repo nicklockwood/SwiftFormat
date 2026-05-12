@@ -1335,6 +1335,42 @@ final class OrganizeDeclarationsTests: XCTestCase {
         )
     }
 
+    func testFreestandingMacroDeclarationsPlacedBeforeMarks() {
+        let input = """
+        public struct Foo {
+
+            public init() {}
+
+            #memberwiseInit()
+
+            public let bar: Int
+
+        }
+        """
+
+        let output = """
+        public struct Foo {
+
+            #memberwiseInit()
+
+            // MARK: Lifecycle
+
+            public init() {}
+
+            // MARK: Public
+
+            public let bar: Int
+
+        }
+        """
+
+        testFormatting(
+            for: input, output,
+            rule: .organizeDeclarations,
+            exclude: [.blankLinesAtStartOfScope, .blankLinesAtEndOfScope]
+        )
+    }
+
     func testCustomLifecycleMethods() {
         let input = """
         public class ViewController: UIViewController {

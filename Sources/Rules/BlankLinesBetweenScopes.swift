@@ -71,7 +71,7 @@ public extension FormatRule {
                     switch formatter.tokens[nextNonCommentIndex] {
                     case .error, .endOfScope,
                          .operator(".", _), .delimiter(","), .delimiter(":"),
-                         .keyword("else"), .keyword("catch"), .keyword("#else"):
+                         .keyword("else"), .keyword("catch"), .keyword("#else"), .keyword("#elseif"):
                         break outer
                     case .keyword("while"):
                         if let previousBraceIndex = formatter.index(of: .startOfScope("{"), before: i),

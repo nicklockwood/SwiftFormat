@@ -303,6 +303,27 @@ final class BlankLinesBetweenScopesTests: XCTestCase {
                        exclude: [.emptyBraces])
     }
 
+    func testNoInsertBlankLineBeforeElseifInConditionalCompilation() {
+        let input = """
+        struct Instant {
+            let value: Double
+
+            #if canImport(Darwin) || canImport(Glibc)
+                init() {
+                    var time = timespec()
+                    clock_gettime(CLOCK_MONOTONIC_RAW, &time)
+                    value = Double(time.tv_sec) + (Double(time.tv_nsec) / 1_000_000_000)
+                }
+            #elseif canImport(FoundationEssentials)
+                init() {
+                    value = Date.now.timeIntervalSinceReferenceDate
+                }
+            #endif
+        }
+        """
+        testFormatting(for: input, rule: .blankLinesBetweenScopes, exclude: [.emptyBraces])
+    }
+
     func testNoInsertBlankLineAfterBraceBeforeSourceryComment() {
         let input = """
         struct Foo {

@@ -2699,6 +2699,13 @@ Remove redundant identifiers in optional binding conditions.
 + guard let self else {
       return
   }
+
+- if let foo = bar {
+-     baaz(foo)
+- }
++ if let bar {
++     baaz(bar)
++ }
 ```
 
 </details>

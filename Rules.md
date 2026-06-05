@@ -70,6 +70,7 @@
 * [redundantReturn](#redundantReturn)
 * [redundantSelf](#redundantSelf)
 * [redundantSendable](#redundantSendable)
+* [redundantStateInit](#redundantStateInit)
 * [redundantStaticSelf](#redundantStaticSelf)
 * [redundantSwiftTestingSuite](#redundantSwiftTestingSuite)
 * [redundantThrows](#redundantThrows)
@@ -3026,6 +3027,30 @@ Remove redundant explicit Sendable conformance from non-public structs and enums
 + fileprivate enum ParsingState {
       case idle
       case running
+  }
+```
+
+</details>
+<br/>
+
+## redundantStateInit
+
+Remove explicit initialization of SwiftUI property wrapper storage that can be assigned directly.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  struct ContentView: View {
+      @State private var foo: String
+      @ObservedObject private var bar: MyObservableObject
+
+      init() {
+-         _foo = State(wrappedValue: "foo")
++         foo = "foo"
+-         _bar = .init(wrappedValue: MyObservableObject())
++         bar = MyObservableObject()
+      }
   }
 ```
 

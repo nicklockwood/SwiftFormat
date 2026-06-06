@@ -98,6 +98,7 @@ let ruleRegistry: [String: FormatRule] = [
     "redundantStateInit": .redundantStateInit,
     "redundantStaticSelf": .redundantStaticSelf,
     "redundantSwiftTestingSuite": .redundantSwiftTestingSuite,
+    "redundantSwiftUIGroup": .redundantSwiftUIGroup,
     "redundantThrows": .redundantThrows,
     "redundantType": .redundantType,
     "redundantTypedThrows": .redundantTypedThrows,

@@ -96,37 +96,6 @@ public extension FormatRule {
 }
 
 extension Formatter {
-    /// Whether the given type conforms to View
-    func isViewType(_ type: TypeDeclaration?) -> Bool {
-        guard let type else { return false }
-        return type.conformances.contains { conformance in
-            conformance.conformance.string == "View"
-        }
-    }
-
-    /// Whether the given type conforms to ViewModifier
-    func isViewModifierType(_ type: TypeDeclaration?) -> Bool {
-        guard let type else { return false }
-        return type.conformances.contains { conformance in
-            conformance.conformance.string == "ViewModifier"
-        }
-    }
-
-    /// Finds the index of a @ViewBuilder attribute for the given declaration, if present
-    func indexOfViewBuilderAttribute(for declaration: Declaration) -> Int? {
-        let startOfModifiers = declaration.startOfModifiersIndex(includingAttributes: true)
-        let keywordIndex = declaration.keywordIndex
-
-        var index = startOfModifiers
-        while index < keywordIndex {
-            if tokens[index].string == "@ViewBuilder" {
-                return index
-            }
-            index += 1
-        }
-        return nil
-    }
-
     /// Removes a @ViewBuilder attribute at the given index, including the trailing linebreak if on its own line
     func removeViewBuilderAttribute(at attributeIndex: Int) {
         var startIndex = attributeIndex
@@ -157,15 +126,5 @@ extension Formatter {
         }
 
         removeTokens(in: startIndex ... endIndex)
-    }
-
-    /// Whether the body is a single expression that is not a conditional (if/switch).
-    /// Conditional expressions need @ViewBuilder when branches return different types.
-    func scopeBodyIsSingleNonConditionalExpression(at startOfScopeIndex: Int) -> Bool {
-        guard let firstTokenInBody = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfScopeIndex),
-              tokens[firstTokenInBody] != .keyword("if"),
-              tokens[firstTokenInBody] != .keyword("switch")
-        else { return false }
-        return scopeBodyIsSingleExpression(at: startOfScopeIndex)
     }
 }

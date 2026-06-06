@@ -73,6 +73,7 @@
 * [redundantStateInit](#redundantStateInit)
 * [redundantStaticSelf](#redundantStaticSelf)
 * [redundantSwiftTestingSuite](#redundantSwiftTestingSuite)
+* [redundantSwiftUIGroup](#redundantSwiftUIGroup)
 * [redundantThrows](#redundantThrows)
 * [redundantType](#redundantType)
 * [redundantTypedThrows](#redundantTypedThrows)
@@ -3108,6 +3109,39 @@ Remove redundant @Suite attribute with no arguments.
       @Test func feature() {
           #expect(true)
       }
+  }
+```
+
+</details>
+<br/>
+
+## redundantSwiftUIGroup
+
+Remove redundant SwiftUI Group wrapper views in favor of @ViewBuilder.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+  struct MyView: View {
+    var body: some View {
+-     Group {
+        Text("foo")
+        Text("bar")
+-     }
+    }
+  }
+```
+
+```diff
+  struct MyView: View {
++   @ViewBuilder
+    var content: some View {
+-     Group {
+        Text("foo")
+        Text("bar")
+-     }
+    }
   }
 ```
 

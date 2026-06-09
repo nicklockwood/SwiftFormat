@@ -3145,6 +3145,17 @@ Remove redundant SwiftUI Group wrapper views in favor of @ViewBuilder.
   }
 ```
 
+```diff
+  struct MyView: View {
+    var body: some View {
+-     Group {
+        Text(status)
+-     }
+      .padding(.horizontal, 8)
+    }
+  }
+```
+
 </details>
 <br/>
 

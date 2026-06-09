@@ -84,6 +84,119 @@ final class RedundantSwiftUIGroupTests: XCTestCase {
         testFormatting(for: input, rule: .redundantSwiftUIGroup)
     }
 
+    func testRemoveGroupWithSingleViewAndModifiers() {
+        let input = """
+        struct MyView: View {
+            var body: some View {
+                Group {
+                    Text(status)
+                }
+                .padding(.horizontal, 8)
+                .background(.thinMaterial, in: Capsule())
+            }
+        }
+        """
+        let output = """
+        struct MyView: View {
+            var body: some View {
+                Text(status)
+                    .padding(.horizontal, 8)
+                    .background(.thinMaterial, in: Capsule())
+            }
+        }
+        """
+        testFormatting(for: input, [output], rules: [.redundantSwiftUIGroup, .indent])
+    }
+
+    func testKeepGroupWithMultipleViewsAndModifiers() {
+        // Modifiers apply to each view individually if the Group is removed
+        let input = """
+        struct MyView: View {
+            var body: some View {
+                Group {
+                    Text("foo")
+                    Text("bar")
+                }
+                .padding(.horizontal, 8)
+                .background(.thinMaterial, in: Capsule())
+            }
+        }
+        """
+        testFormatting(for: input, rules: [.redundantSwiftUIGroup, .indent])
+    }
+
+    func testKeepGroupWithConditionalAndModifiers() {
+        // A conditional needs the Group to combine branches into a single modifiable view
+        let input = """
+        struct MyView: View {
+            var body: some View {
+                Group {
+                    if condition {
+                        Text("foo")
+                    } else {
+                        Text("bar")
+                    }
+                }
+                .padding()
+            }
+        }
+        """
+        testFormatting(for: input, rules: [.redundantSwiftUIGroup, .indent])
+    }
+
+    func testRemoveGroupWithForEachAndModifiers() {
+        // ForEach is itself a single view, so the modifiers apply to it as a whole
+        let input = """
+        struct MyView: View {
+            var body: some View {
+                Group {
+                    ForEach(items) { item in
+                        Text(item.name)
+                    }
+                }
+                .padding()
+            }
+        }
+        """
+        let output = """
+        struct MyView: View {
+            var body: some View {
+                ForEach(items) { item in
+                    Text(item.name)
+                }
+                .padding()
+            }
+        }
+        """
+        testFormatting(for: input, [output], rules: [.redundantSwiftUIGroup, .indent])
+    }
+
+    func testRemoveGroupWithViewContainingTrailingClosureAndModifiers() {
+        let input = """
+        struct MyView: View {
+            var body: some View {
+                Group {
+                    Button("Tap") {
+                        handleTap()
+                    }
+                }
+                .padding()
+            }
+        }
+        """
+        let output = """
+        struct MyView: View {
+            var body: some View {
+                Button("Tap") {
+                    handleTap()
+                }
+                .padding()
+            }
+        }
+        """
+        testFormatting(for: input, [output], rules: [.redundantSwiftUIGroup, .indent])
+    }
+
     func testRemoveGroupWithSingleExpression() {
         let input = """
         struct MyView: View {

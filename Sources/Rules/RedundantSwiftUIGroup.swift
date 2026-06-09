@@ -50,8 +50,8 @@ public extension FormatRule {
             // (we need @ViewBuilder to be valid for the replacement)
             guard isInsideViewType else { return }
 
-            // Check if the body contains a single Group { } expression with no modifiers
-            guard let groupInfo = formatter.topLevelGroupWithoutModifiers(in: bodyScope) else { return }
+            // Check if the body contains a top-level Group { } expression that can be removed
+            guard let groupInfo = formatter.topLevelRedundantGroup(in: bodyScope) else { return }
 
             // Determine if we need @ViewBuilder after removing the Group
             // - If it's the body protocol requirement, @ViewBuilder is implied
@@ -102,12 +102,23 @@ public extension FormatRule {
             }
           }
         ```
+
+        ```diff
+          struct MyView: View {
+            var body: some View {
+        -     Group {
+                Text(status)
+        -     }
+              .padding(.horizontal, 8)
+            }
+          }
+        ```
         """
     }
 }
 
 extension Formatter {
-    /// Information about a top-level Group without modifiers
+    /// Information about a top-level redundant Group
     struct GroupInfo {
         let groupStartIndex: Int
         let groupEndIndex: Int
@@ -115,8 +126,8 @@ extension Formatter {
         let closureBodyRange: ClosedRange<Int>
     }
 
-    /// Finds a top-level Group { } call without modifiers in the given scope
-    func topLevelGroupWithoutModifiers(in bodyScope: ClosedRange<Int>) -> GroupInfo? {
+    /// Finds a top-level Group { } call in the given scope that can be safely removed
+    func topLevelRedundantGroup(in bodyScope: ClosedRange<Int>) -> GroupInfo? {
         // Find the first non-space/comment/linebreak token in the body
         guard let firstTokenIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: bodyScope.lowerBound),
               firstTokenIndex < bodyScope.upperBound
@@ -128,13 +139,25 @@ extension Formatter {
         // Find the Group call structure and closure
         guard let groupCallInfo = parseGroupCall(startingAt: firstTokenIndex) else { return nil }
 
-        // Check that the Group is the only thing in the body (no modifiers after)
-        guard let tokenAfterGroup = index(of: .nonSpaceOrCommentOrLinebreak, after: groupCallInfo.groupEndIndex),
-              tokenAfterGroup == bodyScope.upperBound
-        else { return nil }
-
         // Get the body range inside the closure
         guard let closureBodyRange = closureBodyRange(closureStartIndex: groupCallInfo.closureStartIndex) else { return nil }
+
+        // Check whether the Group has trailing modifiers (e.g. `.padding()`)
+        let hasModifiers = index(of: .nonSpaceOrCommentOrLinebreak, after: groupCallInfo.groupEndIndex) != bodyScope.upperBound
+
+        // A Group with modifiers can only be removed when it wraps a single view,
+        // since the modifiers would otherwise apply to each view individually.
+        if hasModifiers {
+            // The modifiers must be the last thing in the body
+            guard let modifierRange = parseExpressionRange(startingAt: firstTokenIndex),
+                  index(of: .nonSpaceOrCommentOrLinebreak, after: modifierRange.upperBound) == bodyScope.upperBound
+            else { return nil }
+
+            // Only remove the Group if its body is a single, non-conditional view.
+            // Conditional expressions and multiple views rely on the Group to combine
+            // them into a single view that the modifiers can apply to.
+            guard scopeBodyIsSingleNonConditionalExpression(at: groupCallInfo.closureStartIndex) else { return nil }
+        }
 
         return GroupInfo(
             groupStartIndex: firstTokenIndex,

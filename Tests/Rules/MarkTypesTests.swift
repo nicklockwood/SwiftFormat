@@ -450,6 +450,30 @@ final class MarkTypesTests: XCTestCase {
         testFormatting(for: input, rule: .markTypes)
     }
 
+    func testDoesNothingIfOnlyOneTypeAndPreviewMacroDeclaration() {
+        let input = """
+        import SwiftUI
+
+        struct Rules {}
+
+        #Preview {
+            Rules()
+        }
+        """
+
+        testFormatting(for: input, rule: .markTypes)
+    }
+
+    func testDoesNothingIfOnlyOneTypeAndMacroDeclaration() {
+        let input = """
+        struct Rules {}
+
+        macro RulesMacro() = #externalMacro(module: "Macros", type: "RulesMacro")
+        """
+
+        testFormatting(for: input, rule: .markTypes)
+    }
+
     func testMultipleExtensionsOfSameType() {
         let input = """
         extension Foo: BarProtocol {}

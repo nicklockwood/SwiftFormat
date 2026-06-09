@@ -20,8 +20,10 @@ public extension FormatRule {
 
         // Do nothing if there is only one top-level declaration in the file (excluding imports),
         // or if this is a fragment.
-        let declarationsWithoutImports = declarations.filter { $0.keyword != "import" }
-        guard declarationsWithoutImports.count > 1, !formatter.options.fragment else {
+        let declarationsWithoutImportsOrTopLevelMacroDecls = declarations.filter {
+            $0.keyword != "import" && !$0.isTopLevelMacroDeclaration
+        }
+        guard declarationsWithoutImportsOrTopLevelMacroDecls.count > 1, !formatter.options.fragment else {
             return
         }
 
@@ -88,6 +90,12 @@ public extension FormatRule {
             case .ifNotEmpty:
                 guard !typeDeclaration.body.isEmpty else {
                     continue
+                }
+            }
+
+            private extension Declaration {
+                var isTopLevelMacroDeclaration: Bool {
+                    keyword == "macro" || formatter.isFreestandingMacroExpansion(at: keywordIndex, in: formatter.tokens.indices)
                 }
             }
 

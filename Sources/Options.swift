@@ -113,7 +113,6 @@ public enum GuardElsePosition: String, CaseIterable {
     case auto
 }
 
-
 /// Where to place the access control keyword of an extension
 public enum ExtensionACLPlacement: String, CaseIterable {
     case onExtension = "on-extension"

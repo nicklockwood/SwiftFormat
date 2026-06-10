@@ -4375,6 +4375,10 @@ Wrap the bodies of inline switch cases onto a new line.
 
 Wrap the bodies of inline conditional statements onto a new line.
 
+Option | Description
+--- | ---
+`--conditional-bodies` | Wrap conditional bodies: "all" (default) or "if-only"
+
 <details>
 <summary>Examples</summary>
 
@@ -4390,6 +4394,18 @@ Wrap the bodies of inline conditional statements onto a new line.
 + if foo {
 +    return bar
 + }
+```
+
+With `--conditional-bodies if-only`, `guard` bodies are not wrapped:
+
+```diff
+- if foo { return bar }
++ if foo {
++    return bar
++ }
+
+  // guard is not affected (both statement and expression)
+  guard let foo = bar else { return baz }
 ```
 
 </details>

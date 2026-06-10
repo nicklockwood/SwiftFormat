@@ -4377,7 +4377,8 @@ Wrap the bodies of inline conditional statements onto a new line.
 
 Option | Description
 --- | ---
-`--conditional-bodies` | Wrap conditional bodies: "all" (default) or "if-only"
+`--wrap-if-body` | Wrap if/else bodies onto a new line: "true" (default) or "false"
+`--wrap-guard-body` | Wrap guard bodies onto a new line: "true" (default) or "false"
 
 <details>
 <summary>Examples</summary>
@@ -4396,7 +4397,7 @@ Option | Description
 + }
 ```
 
-With `--conditional-bodies if-only`, `guard` bodies are not wrapped:
+With `--wrap-guard-body false`, `guard` bodies are not wrapped:
 
 ```diff
 - if foo { return bar }
@@ -4404,7 +4405,7 @@ With `--conditional-bodies if-only`, `guard` bodies are not wrapped:
 +    return bar
 + }
 
-  // guard is not affected (both statement and expression)
+  // guard is not affected
   guard let foo = bar else { return baz }
 ```
 

@@ -113,11 +113,6 @@ public enum GuardElsePosition: String, CaseIterable {
     case auto
 }
 
-/// Which conditional statements to wrap bodies for
-public enum ConditionalBodiesScope: String, CaseIterable {
-    case all
-    case ifOnly = "if-only"
-}
 
 /// Where to place the access control keyword of an extension
 public enum ExtensionACLPlacement: String, CaseIterable {
@@ -826,7 +821,8 @@ public struct FormatOptions: CustomStringConvertible {
     public var stripUnusedArguments: ArgumentStrippingMode
     public var elsePosition: ElsePosition
     public var guardElsePosition: GuardElsePosition
-    public var wrapConditionalBodiesScope: ConditionalBodiesScope
+    public var wrapIfBody: Bool
+    public var wrapGuardBody: Bool
     public var explicitSelf: SelfMode
     public var selfRequired: Set<String>
     public var throwCapturing: Set<String>
@@ -975,7 +971,8 @@ public struct FormatOptions: CustomStringConvertible {
                 stripUnusedArguments: ArgumentStrippingMode = .all,
                 elsePosition: ElsePosition = .sameLine,
                 guardElsePosition: GuardElsePosition = .auto,
-                wrapConditionalBodiesScope: ConditionalBodiesScope = .all,
+                wrapIfBody: Bool = true,
+                wrapGuardBody: Bool = true,
                 explicitSelf: SelfMode = .remove,
                 selfRequired: Set<String> = [],
                 throwCapturing: Set<String> = [],
@@ -1113,7 +1110,8 @@ public struct FormatOptions: CustomStringConvertible {
         self.stripUnusedArguments = stripUnusedArguments
         self.elsePosition = elsePosition
         self.guardElsePosition = guardElsePosition
-        self.wrapConditionalBodiesScope = wrapConditionalBodiesScope
+        self.wrapIfBody = wrapIfBody
+        self.wrapGuardBody = wrapGuardBody
         self.explicitSelf = explicitSelf
         self.selfRequired = selfRequired
         self.throwCapturing = throwCapturing

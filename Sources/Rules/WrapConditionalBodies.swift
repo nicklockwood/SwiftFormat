@@ -12,15 +12,15 @@ public extension FormatRule {
     static let wrapConditionalBodies = FormatRule(
         help: "Wrap the bodies of inline conditional statements onto a new line.",
         disabledByDefault: true,
-        options: ["conditional-bodies"],
+        options: ["wrap-if-body", "wrap-guard-body"],
         sharedOptions: ["linebreaks", "indent"]
     ) { formatter in
         formatter.forEachToken(where: { [.keyword("if"), .keyword("else")].contains($0) }) { i, token in
-            if token == .keyword("else"),
-               formatter.options.wrapConditionalBodiesScope == .ifOnly,
-               formatter.isGuardElse(at: i)
-            {
-                return
+            let isGuardElse = token == .keyword("else") && formatter.isGuardElse(at: i)
+            if isGuardElse {
+                guard formatter.options.wrapGuardBody else { return }
+            } else {
+                guard formatter.options.wrapIfBody else { return }
             }
             guard let startIndex = formatter.index(of: .startOfScope("{"), after: i) else {
                 return formatter.fatalError("Expected {", at: i)
@@ -43,7 +43,7 @@ public extension FormatRule {
         + }
         ```
 
-        With `--conditional-bodies if-only`, `guard` bodies are not wrapped:
+        With `--wrap-guard-body false`, `guard` bodies are not wrapped:
 
         ```diff
         - if foo { return bar }
@@ -51,7 +51,7 @@ public extension FormatRule {
         +    return bar
         + }
 
-          // guard is not affected (both statement and expression)
+          // guard is not affected
           guard let foo = bar else { return baz }
         ```
         """

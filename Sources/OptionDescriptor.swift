@@ -829,11 +829,17 @@ struct _Descriptors {
         help: "Placement of else in guard statements:",
         keyPath: \.guardElsePosition
     )
-    let wrapConditionalBodiesScope = OptionDescriptor(
-        argumentName: "conditional-bodies",
-        displayName: "Conditional Bodies Scope",
-        help: "Wrap conditional bodies: \"all\" (default) or \"if-only\"",
-        keyPath: \.wrapConditionalBodiesScope
+    let wrapIfBody = OptionDescriptor(
+        argumentName: "wrap-if-body",
+        displayName: "Wrap If Body",
+        help: "Wrap if/else bodies onto a new line: \"true\" (default) or \"false\"",
+        keyPath: \.wrapIfBody
+    )
+    let wrapGuardBody = OptionDescriptor(
+        argumentName: "wrap-guard-body",
+        displayName: "Wrap Guard Body",
+        help: "Wrap guard bodies onto a new line: \"true\" (default) or \"false\"",
+        keyPath: \.wrapGuardBody
     )
     let explicitSelf = OptionDescriptor(
         argumentName: "self",

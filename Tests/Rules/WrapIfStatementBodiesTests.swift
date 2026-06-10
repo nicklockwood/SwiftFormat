@@ -1,0 +1,172 @@
+//
+//  WrapIfStatementBodiesTests.swift
+//  SwiftFormatTests
+//
+//  Created by Cal Stephens on 6/10/26.
+//  Copyright © 2026 Nick Lockwood. All rights reserved.
+//
+
+import XCTest
+@testable import SwiftFormat
+
+final class WrapIfStatementBodiesTests: XCTestCase {
+    func testIfElseReturnsWrap() {
+        let input = """
+        if foo { return bar } else if baz { return qux } else { return quux }
+        """
+        let output = """
+        if foo {
+            return bar
+        } else if baz {
+            return qux
+        } else {
+            return quux
+        }
+        """
+        testFormatting(for: input, output, rule: .wrapIfStatementBodies)
+    }
+
+    func testIfElseBodiesWrap() {
+        let input = """
+        if foo { bar } else if baz { qux } else { quux }
+        """
+        let output = """
+        if foo {
+            bar
+        } else if baz {
+            qux
+        } else {
+            quux
+        }
+        """
+        testFormatting(for: input, output, rule: .wrapIfStatementBodies)
+    }
+
+    func testIfElsesWithClosuresDontWrapClosures() {
+        let input = """
+        if foo { $0.bar } { baz } else if qux { $0.quux } { quuz } else { corge }
+        """
+        let output = """
+        if foo { $0.bar } {
+            baz
+        } else if qux { $0.quux } {
+            quuz
+        } else {
+            corge
+        }
+        """
+        testFormatting(for: input, output, rule: .wrapIfStatementBodies)
+    }
+
+    func testEmptyIfElseBodiesWithSpaceDoNothing() {
+        let input = """
+        if foo { } else if baz { } else { }
+        """
+        testFormatting(for: input, rule: .wrapIfStatementBodies,
+                       exclude: [.emptyBraces])
+    }
+
+    func testEmptyIfElseBodiesWithoutSpaceDoNothing() {
+        let input = """
+        if foo {} else if baz {} else {}
+        """
+        testFormatting(for: input, rule: .wrapIfStatementBodies,
+                       exclude: [.emptyBraces])
+    }
+
+    func testIfElseBracesStartingOnDifferentLines() {
+        let input = """
+        if foo
+            { return bar }
+        else if baz
+            { return qux }
+        else
+            { return quux }
+        """
+        let output = """
+        if foo
+            {
+                return bar
+            }
+        else if baz
+            {
+                return qux
+            }
+        else
+            {
+                return quux
+            }
+        """
+        testFormatting(for: input, output, rule: .wrapIfStatementBodies,
+                       exclude: [.braces, .indent, .elseOnSameLine])
+    }
+
+    func testDoesNotWrapGuardBodies() {
+        let input = """
+        guard let foo = bar else { return }
+        """
+        testFormatting(for: input, rule: .wrapIfStatementBodies,
+                       exclude: [.wrapGuardStatementBodies])
+    }
+
+    func testDoesNotWrapIfExpressionFollowingAssignment() {
+        let input = """
+        let foo = if condition { bar } else { baz }
+        """
+        testFormatting(for: input, rule: .wrapIfStatementBodies,
+                       exclude: [.wrapIfExpressionBodies])
+    }
+
+    func testDoesNotWrapIfExpressionInFunctionBody() {
+        let input = """
+        func foo() -> String {
+            if condition { "bar" } else { "baz" }
+        }
+        """
+        testFormatting(for: input, rule: .wrapIfStatementBodies,
+                       exclude: [.wrapIfExpressionBodies])
+    }
+
+    func testDoesNotWrapIfExpressionInVarBody() {
+        let input = """
+        var foo: String {
+            if condition { "bar" } else { "baz" }
+        }
+        """
+        testFormatting(for: input, rule: .wrapIfStatementBodies,
+                       exclude: [.wrapIfExpressionBodies])
+    }
+
+    func testDoesNotWrapIfExpressionInClosureBody() {
+        let input = """
+        let foo = items.map { if $0 > 0 { "positive" } else { "negative" } }
+        """
+        testFormatting(for: input, rule: .wrapIfStatementBodies,
+                       exclude: [.wrapIfExpressionBodies])
+    }
+
+    func testInsideStringLiteralDoesNothing() {
+        let input = """
+        "\\(list.map { if $0 % 2 == 0 { return 0 } else { return 1 } })"
+        """
+        testFormatting(for: input, rule: .wrapIfStatementBodies)
+    }
+
+    func testNestedIfElseStatementsPutOnNewline() {
+        let input = """
+        if foo { if bar { baz } else { qux } } else { quux }
+        """
+        let output = """
+        if foo {
+            if bar {
+                baz
+            } else {
+                qux
+            }
+        } else {
+            quux
+        }
+        """
+        testFormatting(for: input, output, rule: .wrapIfStatementBodies)
+    }
+}

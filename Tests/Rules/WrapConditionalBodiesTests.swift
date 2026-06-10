@@ -298,6 +298,76 @@ final class WrapConditionalBodiesTests: XCTestCase {
         testFormatting(for: input, rule: .wrapConditionalBodies)
     }
 
+    // MARK: - if-only scope
+
+    func testIfOnlyScopeWrapsIf() {
+        let input = """
+        if foo { return bar }
+        """
+        let output = """
+        if foo {
+            return bar
+        }
+        """
+        let options = FormatOptions(wrapConditionalBodiesScope: .ifOnly)
+        testFormatting(for: input, output, rule: .wrapConditionalBodies, options: options)
+    }
+
+    func testIfOnlyScopeDoesNotWrapGuard() {
+        let input = """
+        guard let foo = bar else { return }
+        """
+        let options = FormatOptions(wrapConditionalBodiesScope: .ifOnly)
+        testFormatting(for: input, rule: .wrapConditionalBodies, options: options)
+    }
+
+    func testIfOnlyScopeDoesNotWrapGuardWithValue() {
+        let input = """
+        guard let foo = bar else { return baz }
+        """
+        let options = FormatOptions(wrapConditionalBodiesScope: .ifOnly)
+        testFormatting(for: input, rule: .wrapConditionalBodies, options: options)
+    }
+
+    func testIfOnlyScopeWrapsIfElse() {
+        let input = """
+        if foo { return bar } else { return baz }
+        """
+        let output = """
+        if foo {
+            return bar
+        } else {
+            return baz
+        }
+        """
+        let options = FormatOptions(wrapConditionalBodiesScope: .ifOnly)
+        testFormatting(for: input, output, rule: .wrapConditionalBodies, options: options)
+    }
+
+    func testIfOnlyScopeWrapsIfExpression() {
+        let input = """
+        let isX = if condition { true } else { false }
+        """
+        let output = """
+        let isX = if condition {
+            true
+        } else {
+            false
+        }
+        """
+        let options = FormatOptions(wrapConditionalBodiesScope: .ifOnly)
+        testFormatting(for: input, output, rule: .wrapConditionalBodies, options: options,
+                       exclude: [.wrapMultilineConditionalAssignment, .braces, .indent, .wrapMultilineStatementBraces])
+    }
+
+    func testIfOnlyScopeDoesNotWrapGuardWithMultipleConditions() {
+        let input = """
+        guard a, b, c else { return }
+        """
+        let options = FormatOptions(wrapConditionalBodiesScope: .ifOnly)
+        testFormatting(for: input, rule: .wrapConditionalBodies, options: options)
+    }
+
     func testInsideMultilineStringLiteral() {
         let input = """
         let foo = \"""

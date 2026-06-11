@@ -907,7 +907,7 @@ Use doc comments for API declarations, otherwise use regular comments.
 
 Option | Description
 --- | ---
-`--doc-comments` | Preserve doc comments: "preserve" or "before-declarations" (default)
+`--doc-comments` | Doc comment placement: "preserve", "before-declarations" (default) or "before-non-local-declarations"
 
 <details>
 <summary>Examples</summary>

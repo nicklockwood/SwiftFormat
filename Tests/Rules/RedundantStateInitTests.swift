@@ -249,6 +249,22 @@ final class RedundantStateInitTests: XCTestCase {
         testFormatting(for: input, [output], rules: [.redundantStateInit, .redundantSelf])
     }
 
+    func testPreservesWhenPropertyHasDefaultValue() {
+        let input = """
+        struct MyView: View {
+            init() {
+                _foo = .init(initialValue: "foo from init")
+                _foo = State(wrappedValue: "foo from init")
+            }
+
+            var body: some View {}
+
+            @State private var foo = "foo from declaration"
+        }
+        """
+        testFormatting(for: input, rule: .redundantStateInit)
+    }
+
     func testDoesntRewriteRegularBackingPropertyAssignment() {
         let input = """
         struct Foo {

@@ -1339,13 +1339,12 @@ struct _Descriptors {
         trueValues: ["ignore", "preserve"],
         falseValues: ["convert"]
     )
-    let preserveDocComments = OptionDescriptor(
+    let docComments = OptionDescriptor(
         argumentName: "doc-comments",
         displayName: "Doc comments",
-        help: "Preserve doc comments:",
-        keyPath: \.preserveDocComments,
-        trueValues: ["preserve"],
-        falseValues: ["before-declarations", "declarations"]
+        help: "Doc comment placement:",
+        keyPath: \.docComments,
+        altOptions: ["declarations": .beforeDeclarations, "preserve": .preserve]
     )
     let conditionalAssignmentOnlyAfterNewProperties = OptionDescriptor(
         argumentName: "conditional-assignment",

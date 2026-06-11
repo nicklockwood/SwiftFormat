@@ -105,7 +105,7 @@ public extension FormatRule {
                 if useDocComment, !isDocComment, !preserveRegularComments {
                     let updatedCommentBody = "\(startOfDocCommentBody)\(commentBody.string)"
                     formatter.replaceToken(at: index + 1, with: .commentBody(updatedCommentBody))
-                } else if !useDocComment || isTrailingComment, isDocComment, !formatter.options.preserveDocComments {
+                } else if !useDocComment || isTrailingComment, isDocComment, formatter.options.docComments != .preserve {
                     let prefix = commentBody.string.prefix(while: { String($0) == startOfDocCommentBody })
 
                     // Do nothing if this is a unusual comment like `//////////////////`
@@ -174,9 +174,13 @@ extension Formatter {
             return false
         }
 
-        // For local declarations other than nested functions, use standard comments.
-        if declarationToken != .keyword("func"), declarationScope(at: startIndex) == .local {
-            return false
+        // For local declarations, use standard comments.
+        // In before-non-local-declarations mode, all local declarations use regular comments.
+        // In before-declarations mode, only local non-func declarations use regular comments.
+        if declarationScope(at: startIndex) == .local {
+            if options.docComments == .beforeNonLocalDeclarations || declarationToken != .keyword("func") {
+                return false
+            }
         }
 
         // If there are blank lines between comment and declaration, comment is not treated as doc comment

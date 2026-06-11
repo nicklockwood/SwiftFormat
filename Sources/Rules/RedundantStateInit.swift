@@ -130,7 +130,10 @@ extension Formatter {
 
             guard member.keyword == "var" || member.keyword == "let",
                   let property = member.parsePropertyDeclaration(),
-                  member.attributes.contains("@State") || member.attributes.contains("@ObservedObject")
+                  member.attributes.contains("@State") || member.attributes.contains("@ObservedObject"),
+                  // A direct assignment (`self.foo = x`) has no effect when the property has a default value,
+                  // whereas the backing-storage form (`_foo = .init(initialValue: x)`) does override it.
+                  property.value == nil
             else { continue }
 
             names.insert(property.identifier)

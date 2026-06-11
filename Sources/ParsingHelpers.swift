@@ -844,126 +844,77 @@ extension Formatter {
     func isIfExpression(at i: Int) -> Bool {
         guard tokens[i] == .keyword("if") else { return false }
 
-        // Case 1: Following an `=` operator (possibly with try/await in between)
-        if isConditionalAssignment(at: i) {
+        // Find the outermost if/switch that contains this if by expanding outward through
+        // { if/switch scopes. A nested if can only be an if expression if the outermost
+        // containing if/switch is itself an if expression.
+        let outermostIndex = outermostConditionalKeyword(startingAt: i)
+
+        // Case 1: The outermost if/switch directly follows an = operator (e.g. `let foo = if ...`)
+        if isConditionalAssignment(at: outermostIndex) {
             return true
         }
 
-        // Also check for `= try if`, `= await if`, `= try await if`, etc.
-        if isPrecededByEqualsWithOptionalTryAwait(at: i) {
-            return true
+        // Case 2: The outermost if is the single expression in a function/var/closure body
+        guard let containingScope = startOfScope(at: outermostIndex) else {
+            return false
         }
+        return scopeBodyIsSingleExpression(at: containingScope)
+    }
 
-        // Check if this is an `else if` where the parent `if` is an expression
-        if let prevToken = lastToken(before: i, where: { !$0.isSpaceOrCommentOrLinebreak }),
-           prevToken == .keyword("else")
-        {
-            // Find the parent if by looking at the `}` before `else`
-            if let elseIndex = index(of: .keyword("else"), before: i),
-               let closingBrace = index(of: .nonSpaceOrCommentOrLinebreak, before: elseIndex),
+    /// Walks outward from the given if/switch keyword index through `{` if/switch scopes,
+    /// returning the outermost containing if/switch keyword index.
+    func outermostConditionalKeyword(startingAt i: Int) -> Int {
+        var current = i
+        while true {
+            // If preceded by `else`, this is part of an else-if chain.
+            // Walk backward through the preceding } ... { to find the parent if/switch.
+            if let prevNonSpace = index(of: .nonSpaceOrCommentOrLinebreak, before: current),
+               tokens[prevNonSpace] == .keyword("else"),
+               let closingBrace = index(of: .nonSpaceOrCommentOrLinebreak, before: prevNonSpace),
                tokens[closingBrace] == .endOfScope("}"),
                let openingBrace = startOfScope(at: closingBrace),
-               let startOfStatement = startOfConditionalStatement(at: openingBrace),
-               tokens[startOfStatement] == .keyword("if")
+               let parentKeyword = startOfConditionalStatement(at: openingBrace),
+               [.keyword("if"), .keyword("switch")].contains(tokens[parentKeyword])
             {
-                return isIfExpression(at: startOfStatement)
+                current = parentKeyword
+                continue
             }
-        }
 
-        // Case 2: Single expression in a function/var/closure body
-        // Case 3: Nested within other if/switch expressions (which are themselves in a body or assignment)
-        // We check if this `if` is the first token inside a scope that expects a return value
-        guard let startOfScope = index(of: .startOfScope("{"), before: i),
-              let firstTokenInScope = index(of: .nonSpaceOrCommentOrLinebreak, after: startOfScope),
-              // Make sure we're looking at the `if` directly (possibly preceded by try/await)
-              ifKeywordMatchesScopeStart(ifIndex: i, firstTokenInScope: firstTokenInScope)
-        else {
-            return false
-        }
-
-        // Check if the enclosing scope is a function/var/closure body (not a conditional body)
-        if isStartOfClosure(at: startOfScope) {
-            // It's a closure body - check if this if is the only expression
-            return scopeBodyIsSingleExpression(at: startOfScope)
-        }
-
-        // Check if it's a function/var body
-        if !isConditionalStatement(at: startOfScope, excluding: ["where"]) {
-            let lastKeyword = lastSignificantKeyword(at: startOfScope, excluding: ["throws", "where"])
-            if ["func", "var", "get", "set"].contains(lastKeyword) || lastKeyword == "" {
-                return scopeBodyIsSingleExpression(at: startOfScope)
-            }
-        }
-
-        // Case 3: Check if we're inside an if/switch expression branch body
-        if isConditionalStatement(at: startOfScope) {
-            // This is inside a branch of another if/switch - check if the parent is an expression
-            if let parentKeyword = indexOfLastSignificantKeyword(at: startOfScope, excluding: ["else"]),
-               tokens[parentKeyword] == .keyword("if")
+            // If inside a conditional statement's { scope, walk up to the parent if/switch.
+            if let containingScope = startOfScope(at: current),
+               tokens[containingScope] == .startOfScope("{"),
+               let parentKeyword = startOfConditionalStatement(at: containingScope),
+               [.keyword("if"), .keyword("switch")].contains(tokens[parentKeyword])
             {
-                return isIfExpression(at: parentKeyword)
+                current = parentKeyword
+                continue
             }
-        }
 
-        return false
-    }
-
-    /// Checks if the `if` keyword at `ifIndex` is the expression starting at `firstTokenInScope`
-    /// (accounting for `try` / `await` prefixes)
-    func ifKeywordMatchesScopeStart(ifIndex: Int, firstTokenInScope: Int) -> Bool {
-        if firstTokenInScope == ifIndex {
-            return true
+            break
         }
-        // Allow `try`, `try?`, `try!`, `await` before the if
-        var current = firstTokenInScope
-        while ["try", "await"].contains(tokens[current].string) {
-            guard let next = index(of: .nonSpaceOrCommentOrLinebreak, after: current) else {
-                return false
-            }
-            // Skip `?` or `!` after `try`
-            if tokens[current].string == "try", tokens[next].isUnwrapOperator {
-                guard let afterOperator = index(of: .nonSpaceOrCommentOrLinebreak, after: next) else {
-                    return false
-                }
-                current = afterOperator
-            } else {
-                current = next
-            }
-        }
-        return current == ifIndex
-    }
-
-    /// Checks if the `if` at `ifIndex` is preceded by `= [try|await]* if`
-    func isPrecededByEqualsWithOptionalTryAwait(at ifIndex: Int) -> Bool {
-        var current = ifIndex
-        // Walk backwards past try/await keywords
-        while let prev = index(of: .nonSpaceOrCommentOrLinebreak, before: current) {
-            if tokens[prev].isUnwrapOperator,
-               let beforeOp = index(of: .nonSpaceOrCommentOrLinebreak, before: prev),
-               tokens[beforeOp] == .keyword("try")
-            {
-                current = beforeOp
-            } else if tokens[prev] == .keyword("try") || tokens[prev] == .keyword("await") {
-                current = prev
-            } else {
-                break
-            }
-        }
-        // Now check if what precedes is `=`
-        guard let prev = lastToken(before: current, where: { !$0.isSpaceOrCommentOrLinebreak }) else {
-            return false
-        }
-        return prev.isOperator("=")
+        return current
     }
 
     /// Returns true if the token at the specified index is part of a conditional assignment
     /// (e.g. an if or switch expression following an `=` token)
     func isConditionalAssignment(at i: Int) -> Bool {
-        guard let startOfConditional = startOfConditionalStatement(at: i),
-              let previousToken = lastToken(before: startOfConditional, where: { !$0.isSpaceOrCommentOrLinebreak })
-        else { return false }
-
-        return previousToken.isOperator("=")
+        guard let startOfConditional = startOfConditionalStatement(at: i) else { return false }
+        // Walk backwards past any try/await that may precede the conditional expression
+        var j = startOfConditional
+        while let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: j) {
+            switch tokens[prevIndex] {
+            case .keyword("try"), .keyword("await"):
+                j = prevIndex
+            case _ where tokens[prevIndex].isUnwrapOperator:
+                guard let beforeOp = index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex),
+                      tokens[beforeOp] == .keyword("try")
+                else { return false }
+                j = beforeOp
+            default:
+                return tokens[prevIndex].isOperator("=")
+            }
+        }
+        return false
     }
 
     /// If the token at the specified index is part of a conditional statement, returns the index of the first

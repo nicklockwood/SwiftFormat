@@ -12,9 +12,11 @@ SwiftFormat is a code formatting tool for Swift. It applies a set of rules to Sw
 - `Sources/Options.swift` - Options for configuring the behavior of individual rules
 - `Sources/OptionDescriptor.swift` - Command line flag configuration for rule options
 
-## Branching
+## PR Workflows
 
 All changes and pull requests should target the `develop` branch, not `main`.
+
+When opening a PR that fixes a GitHub issue, reference the issue in the PR description with "Fixes #100" etc.
 
 ## Building and Testing
 
@@ -125,6 +127,8 @@ formatter.endOfLine(at: i)
 while i < formatter.tokens.count { i += 1 }
 for i in 0..<formatter.tokens.count { ... }
 ```
+
+`formatter.forEach` iteration and `formatter.parseDeclarations()` indices are automatically updated as `formatter.tokens` is modified. It is NOT necessary to pre-compute a list of `formatter.tokens` mutaions to then apply later. ALWAYS just modify the `formatter.tokens` directly, through the available methods on `formatter`. In cases where you do have stored token index values that would be invalidated by changes earlier in the `formatter.tokens` array, the most common strategy is to work from bottom-to-top in the function or file.
 
 ### Writing Tests
 

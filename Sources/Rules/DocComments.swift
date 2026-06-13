@@ -83,6 +83,19 @@ public extension FormatRule {
                 }
             }
 
+            // Also preserve regular comments when this comment is continuous (no blank lines) with
+            // a preceding block whose comment is itself a regular comment. This handles cases like:
+            //
+            //   // Group of cases (preserved, since consecutive cases follow)
+            //   case foo
+            //   case bar
+            //   // Another group (should also be preserved: continuous with prior preserved comment)
+            //   case baz, qux
+            //
+            if !preserveRegularComments, useDocComment {
+                preserveRegularComments = formatter.hasPrecedingRegularCommentBlock(before: commentIndices.min()!)
+            }
+
             // Doc comment tokens like `///` and `/**` aren't parsed as a
             // single `.startOfScope` token -- they're parsed as:
             // `.startOfScope("//"), .commentBody("/ ...")` or
@@ -202,5 +215,42 @@ extension Formatter {
 
         // Comments inside conditional statements are not doc comments
         return !isConditionalStatement(at: startIndex)
+    }
+
+    /// Checks whether the comment starting at the given index is immediately preceded
+    /// (with no blank lines in between) by a block of declarations that is itself
+    /// preceded by a regular (non-doc) comment. This is used to preserve consistent
+    /// comment style across consecutive declaration groups.
+    internal func hasPrecedingRegularCommentBlock(before index: Int) -> Bool {
+        // Track nesting depth for `{`, `(`, and `[` scopes so we don't accidentally
+        // look inside nested bodies (function bodies, closures, etc.).
+        var depth = 0
+        var i = index - 1
+        while i >= 0 {
+            let token = tokens[i]
+            if token == .endOfScope("}") || token == .endOfScope(")") || token == .endOfScope("]") {
+                depth += 1
+            } else if token == .startOfScope("{") || token == .startOfScope("(") || token == .startOfScope("[") {
+                if depth > 0 {
+                    depth -= 1
+                } else {
+                    // We've stepped outside the enclosing scope — stop searching.
+                    return false
+                }
+            } else if depth == 0 {
+                if token.isLinebreak {
+                    // A blank line separates this comment from any preceding regular comment.
+                    if let prevNonSpace = self.index(of: .nonSpace, before: i),
+                       tokens[prevNonSpace].isLinebreak
+                    {
+                        return false
+                    }
+                } else if token == .startOfScope("//") || token == .startOfScope("/*") {
+                    return !isDocComment(startOfComment: i)
+                }
+            }
+            i -= 1
+        }
+        return false
     }
 }

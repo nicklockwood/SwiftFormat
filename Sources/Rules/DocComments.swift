@@ -55,32 +55,15 @@ public extension FormatRule {
                 return
             }
 
-            // Determine whether or not this is the start of a list of sequential declarations, like:
-            //
-            //   // The placeholder names we use in test cases
-            //   case foo
-            //   case bar
-            //   case baaz
-            //
+            // Determine whether or not this comment is a group-header rather than a doc comment.
+            // Group-headers precede a consecutive block of declarations (no blank lines between them),
+            // or are themselves continuous with a preceding group-header comment.
             // In these cases it's not obvious whether or not the comment refers to the property or
             // the entire group, so we preserve the existing formatting.
             var preserveRegularComments = false
-            if useDocComment,
-               let declarationKeyword = formatter.index(after: endOfComment, where: \.isDeclarationTypeKeyword),
-               let endOfDeclaration = formatter._endOfDeclarationInTypeBody(atDeclarationKeyword: declarationKeyword),
-               let nextDeclarationKeyword = formatter.index(
-                   after: endOfDeclaration,
-                   where: \.isDeclarationTypeKeyword
-               )
-            {
-                let linebreaksBetweenDeclarations = formatter.tokens[declarationKeyword ... nextDeclarationKeyword]
-                    .filter(\.isLinebreak).count
-
-                // If there is only a single line break between the start of this declaration and the subsequent declaration,
-                // then they are written sequentially in a block. In this case, don't convert regular comments to doc comments.
-                if linebreaksBetweenDeclarations == 1 {
-                    preserveRegularComments = true
-                }
+            if useDocComment {
+                preserveRegularComments = formatter.isPreservedByConsecutiveDeclarations(after: endOfComment) ||
+                    formatter.isPrecededByContinuousPreservedCommentGroup(before: commentIndices.min()!)
             }
 
             // Doc comment tokens like `///` and `/**` aren't parsed as a
@@ -202,5 +185,53 @@ extension Formatter {
 
         // Comments inside conditional statements are not doc comments
         return !isConditionalStatement(at: startIndex)
+    }
+
+    /// Returns true if the declaration block immediately following `endOfComment` is consecutive
+    /// (no blank lines between successive declarations), which indicates the comment is a group
+    /// header rather than a doc comment for a specific declaration.
+    func isPreservedByConsecutiveDeclarations(after endOfComment: Int) -> Bool {
+        guard let declarationKeyword = index(after: endOfComment, where: \.isDeclarationTypeKeyword),
+              let endOfDeclaration = _endOfDeclarationInTypeBody(atDeclarationKeyword: declarationKeyword),
+              let nextDeclarationKeyword = index(after: endOfDeclaration, where: \.isDeclarationTypeKeyword)
+        else { return false }
+
+        let linebreaks = tokens[declarationKeyword ... nextDeclarationKeyword].filter(\.isLinebreak).count
+        return linebreaks == 1
+    }
+
+    /// Returns true if the comment at `commentStart` is continuous (no blank lines) with a preceding
+    /// `//` comment at the same indentation that is itself preserved as a regular comment — either
+    /// because it precedes consecutive declarations, or because it is itself preceded by such a comment.
+    func isPrecededByContinuousPreservedCommentGroup(before commentStart: Int) -> Bool {
+        let currentIndent = currentIndentForLine(at: commentStart)
+        var lineStart = startOfLine(at: commentStart)
+
+        // Scan backward line by line, stopping at blank lines, until we find a // comment
+        // at the same indentation level.
+        while lineStart > 0 {
+            guard let prevLinebreak = index(of: .linebreak, before: lineStart) else { break }
+            let prevLineStart = startOfLine(at: prevLinebreak)
+
+            // Stop at blank lines — the block is no longer continuous.
+            guard index(of: .nonSpace, in: prevLineStart ..< prevLinebreak) != nil else { break }
+
+            let prevLineContent = startOfLine(at: prevLinebreak, excludingIndent: true)
+
+            if tokens[prevLineContent] == .startOfScope("//"),
+               currentIndentForLine(at: prevLinebreak) == currentIndent
+            {
+                // Found a // comment at the same indentation. It is preserved if either it has
+                // consecutive declarations following it, or it is itself preceded by a preserved
+                // comment group (supporting chains of multiple groups).
+                guard let prevCommentEnd = endOfScope(at: prevLineContent) else { break }
+                return isPreservedByConsecutiveDeclarations(after: prevCommentEnd) ||
+                    isPrecededByContinuousPreservedCommentGroup(before: prevLineContent)
+            }
+
+            lineStart = prevLineStart
+        }
+
+        return false
     }
 }

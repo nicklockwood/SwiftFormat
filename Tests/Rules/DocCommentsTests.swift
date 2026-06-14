@@ -407,6 +407,52 @@ final class DocCommentsTests: XCTestCase {
         testFormatting(for: input, output, rule: .docComments)
     }
 
+    func testDoesntConvertCommentBeforeCommaDelimitedEnumCasesWhenPreviousGroupIsPreserved() {
+        let input = """
+        // Infix operators
+        enum InfixOperator: String {
+            // Arithmetic operators
+            case plus = "+"
+            case minus = "-"
+            // Comparison operators
+            case lt = "<"
+            case gt = ">"
+            // Boolean operators
+            case and, or
+        }
+        """
+
+        let output = """
+        /// Infix operators
+        enum InfixOperator: String {
+            // Arithmetic operators
+            case plus = "+"
+            case minus = "-"
+            // Comparison operators
+            case lt = "<"
+            case gt = ">"
+            // Boolean operators
+            case and, or
+        }
+        """
+
+        testFormatting(for: input, output, rule: .docComments)
+    }
+
+    func testDoesntConvertCommentBeforeSingleEnumCaseWhenPreviousGroupIsPreserved() {
+        let input = """
+        enum InfixOperator: String {
+            // Comparison operators
+            case lt = "<"
+            case gt = ">"
+            // Single case group
+            case and
+        }
+        """
+
+        testFormatting(for: input, rule: .docComments)
+    }
+
     func testDoesntConvertAnnotationCommentsToDocComments() {
         let input = """
         // swiftformat:disable some_swift_format_rule

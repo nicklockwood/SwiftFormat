@@ -190,7 +190,7 @@ extension Formatter {
     /// Returns true if the declaration block immediately following `endOfComment` is consecutive
     /// (no blank lines between successive declarations), which indicates the comment is a group
     /// header rather than a doc comment for a specific declaration.
-    internal func isPreservedByConsecutiveDeclarations(after endOfComment: Int) -> Bool {
+    func isPreservedByConsecutiveDeclarations(after endOfComment: Int) -> Bool {
         guard let declarationKeyword = index(after: endOfComment, where: \.isDeclarationTypeKeyword),
               let endOfDeclaration = _endOfDeclarationInTypeBody(atDeclarationKeyword: declarationKeyword),
               let nextDeclarationKeyword = index(after: endOfDeclaration, where: \.isDeclarationTypeKeyword)
@@ -203,7 +203,7 @@ extension Formatter {
     /// Returns true if the comment at `commentStart` is continuous (no blank lines) with a preceding
     /// `//` comment at the same indentation that is itself preserved as a regular comment — either
     /// because it precedes consecutive declarations, or because it is itself preceded by such a comment.
-    internal func isPrecededByContinuousPreservedCommentGroup(before commentStart: Int) -> Bool {
+    func isPrecededByContinuousPreservedCommentGroup(before commentStart: Int) -> Bool {
         let currentIndent = currentIndentForLine(at: commentStart)
         var lineStart = startOfLine(at: commentStart)
 

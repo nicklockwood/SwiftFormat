@@ -88,7 +88,9 @@ public extension FormatRule {
                     // Preserve the formatting as-is if the identifier is manually excluded
                     if let identifierAfterDot = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: rhsStartIndex),
                        formatter.options.preservedPropertyTypes.contains(formatter.tokens[identifierAfterDot].string)
-                    { return }
+                    {
+                        return
+                    }
 
                     // Update the . token from a prefix operator to an infix operator.
                     formatter.replaceToken(at: rhsStartIndex, with: .operator(".", .infix))
@@ -245,14 +247,18 @@ public extension FormatRule {
                     //    if the property is `static var themeColor: Color` or `static var themeColor: Color.Theme`.
                     //  - This isn't a problem with something like `Color.Theme()`, which we can reasonably assume
                     //    is an initializer
-                    if rhsType.string.contains(".") { return }
+                    if rhsType.string.contains(".") {
+                        return
+                    }
 
                     // Preserve the formatting as-is if the identifier is manually excluded.
                     // Don't convert `let foo = Foo.self` to `let foo: Foo = .self`, since `.self` returns the metatype
                     let symbolsToExclude = formatter.options.preservedPropertyTypes + ["self"]
                     if let indexAfterDot = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: indexAfterType),
                        symbolsToExclude.contains(formatter.tokens[indexAfterDot].string)
-                    { return }
+                    {
+                        return
+                    }
 
                     formatter.replaceToken(at: indexAfterType, with: .operator(".", .prefix))
                 }

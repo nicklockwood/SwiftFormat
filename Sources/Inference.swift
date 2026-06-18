@@ -595,7 +595,10 @@ private struct Inference {
         formatter.forEachToken { i, token in
             guard case let .keyword(keyword) = token, ["func", "init", "subscript"].contains(keyword),
                   let startIndex = formatter.index(of: .startOfScope("("), after: i),
-                  let endIndex = formatter.index(of: .endOfScope(")"), after: startIndex) else { return }
+                  let endIndex = formatter.index(of: .endOfScope(")"), after: startIndex)
+            else {
+                return
+            }
             let isOperator = (keyword == "subscript") ||
                 (keyword == "func" && formatter.next(.nonSpaceOrCommentOrLinebreak, after: i)?.isOperator == true)
             var index = startIndex
@@ -603,7 +606,9 @@ private struct Inference {
             var nameIndices = [Int]()
             while index < endIndex {
                 guard let externalNameIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index, if: {
-                    if case .identifier = $0 { return true }
+                    if case .identifier = $0 {
+                        return true
+                    }
                     // Probably an empty argument list
                     return false
                 }) else { return }
@@ -876,7 +881,10 @@ private struct Inference {
                     guard let keywordIndex = formatter.index(of: .keyword, before: index),
                           let prevKeywordIndex = formatter.index(of: .keyword, before: keywordIndex),
                           let prevKeywordToken = formatter.token(at: prevKeywordIndex),
-                          case .keyword("for") = prevKeywordToken else { return }
+                          case .keyword("for") = prevKeywordToken
+                    else {
+                        return
+                    }
                     for token in formatter.tokens[prevKeywordIndex + 1 ..< keywordIndex] {
                         if case let .identifier(name) = token, name != "_" {
                             localNames.insert(token.unescaped())
@@ -926,7 +934,10 @@ private struct Inference {
                     guard let keywordIndex = formatter.index(of: .keyword, before: index),
                           let prevKeywordIndex = formatter.index(of: .keyword, before: keywordIndex),
                           let prevKeywordToken = formatter.token(at: prevKeywordIndex),
-                          case .keyword("for") = prevKeywordToken else { return }
+                          case .keyword("for") = prevKeywordToken
+                    else {
+                        return
+                    }
                     for token in formatter.tokens[prevKeywordIndex + 1 ..< keywordIndex] {
                         if case let .identifier(name) = token, name != "_" {
                             localNames.insert(token.unescaped())
@@ -1134,7 +1145,9 @@ private struct Inference {
             var foundAccessors = false
             var localNames = localNames
             while let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index, if: {
-                if case let .identifier(name) = $0, names.contains(name) { return true } else { return false }
+                if case let .identifier(name) = $0, names.contains(name) { return true } else {
+                    return false
+                }
             }), let startIndex = formatter.index(of: .startOfScope("{"), after: nextIndex) {
                 foundAccessors = true
                 index = startIndex + 1

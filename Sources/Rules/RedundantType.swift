@@ -256,7 +256,9 @@ extension Formatter {
               let closeAngle = index(of: .nonSpaceOrCommentOrLinebreak, after: argTypeIndex),
               closeAngle == typeEndIndex,
               tokens[closeAngle] == .endOfScope(">")
-        else { return nil }
+        else {
+            return nil
+        }
         return (baseTypeIndex, openAngle, argTypeIndex)
     }
 
@@ -285,7 +287,9 @@ extension Formatter {
             guard inferred != token else { return nil }
 
             if let existing = elementType {
-                if existing != inferred { return nil }
+                if existing != inferred {
+                    return nil
+                }
             } else {
                 elementType = inferred
             }

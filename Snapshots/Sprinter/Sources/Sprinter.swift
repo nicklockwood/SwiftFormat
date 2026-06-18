@@ -625,7 +625,9 @@ public struct FormatString {
             }
             var string = ""
             while let first = characters.first {
-                if first == "%" { break }
+                if first == "%" {
+                    break
+                }
                 characters.removeFirst()
                 string.append(Character(first))
             }

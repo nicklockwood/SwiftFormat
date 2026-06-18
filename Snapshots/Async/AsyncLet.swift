@@ -16,7 +16,9 @@ func fibonacci(of number: Int) async throws -> Int {
         throw NumberError.outOfRange
     }
 
-    if number < 2 { return number }
+    if number < 2 {
+        return number
+    }
     async let first = fibonacci(of: number - 2)
     async let second = fibonacci(of: number - 1)
     return try await first + second

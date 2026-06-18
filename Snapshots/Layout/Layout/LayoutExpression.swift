@@ -455,7 +455,9 @@ struct LayoutExpression {
                 }
                 switch symbol {
                 case let .variable(name):
-                    if "'\"".contains(name.first ?? " ") { return nil }
+                    if "'\"".contains(name.first ?? " ") {
+                        return nil
+                    }
                     let key = unescapedName(name)
                     let macro = node.expression(forMacro: key)
                     let circular = (macro != nil) ? macroReferences.contains(key) : false

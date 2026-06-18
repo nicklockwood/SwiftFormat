@@ -1362,8 +1362,12 @@ final class ExpressionTests: XCTestCase {
     func testInfixAlphanumericOperator() {
         let expression = Expression("true or false", options: .boolSymbols, symbols: [
             .infix("or"): { args in
-                if args[0] != 0 { return 1 }
-                if args[1] != 0 { return 1 }
+                if args[0] != 0 {
+                    return 1
+                }
+                if args[1] != 0 {
+                    return 1
+                }
                 return 0
             },
         ])

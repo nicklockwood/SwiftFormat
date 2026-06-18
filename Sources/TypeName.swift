@@ -129,7 +129,9 @@ extension TypeName {
     /// If this type is wrapped in redundant parens, returns the inner type.
     func withoutParens() -> TypeName {
         // If this type is a tuple, then the parens aren't redundant
-        if isTuple { return self }
+        if isTuple {
+            return self
+        }
 
         guard formatter.tokens[range.lowerBound] == .startOfScope("("),
               formatter.tokens[range.upperBound] == .endOfScope(")"),

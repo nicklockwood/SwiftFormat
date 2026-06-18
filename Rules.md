@@ -109,6 +109,8 @@
 * [wrapArguments](#wrapArguments)
 * [wrapAttributes](#wrapAttributes)
 * [wrapFunctionBodies](#wrapFunctionBodies)
+* [wrapIfExpressionBodies](#wrapIfExpressionBodies)
+* [wrapIfStatementBodies](#wrapIfStatementBodies)
 * [wrapLoopBodies](#wrapLoopBodies)
 * [wrapMultilineStatementBraces](#wrapMultilineStatementBraces)
 * [wrapPropertyBodies](#wrapPropertyBodies)
@@ -139,8 +141,8 @@
 * [urlMacro](#urlMacro)
 * [validateTestCases](#validateTestCases)
 * [wrapCaseBodies](#wrapCaseBodies)
-* [wrapConditionalBodies](#wrapConditionalBodies)
 * [wrapEnumCases](#wrapEnumCases)
+* [wrapGuardStatementBodies](#wrapGuardStatementBodies)
 * [wrapMultilineConditionalAssignment](#wrapMultilineConditionalAssignment)
 * [wrapMultilineFunctionChains](#wrapMultilineFunctionChains)
 * [wrapSwitchCases](#wrapSwitchCases)
@@ -152,6 +154,7 @@
 * [sortedSwitchCases](#sortedSwitchCases)
 * [specifiers](#specifiers)
 * [throwingTests](#throwingTests)
+* [wrapConditionalBodies](#wrapConditionalBodies)
 
 ----------
 
@@ -4456,25 +4459,7 @@ Wrap the bodies of inline switch cases onto a new line.
 
 Wrap the bodies of inline conditional statements onto a new line.
 
-<details>
-<summary>Examples</summary>
-
-```diff
-- guard let foo = bar else { return baz }
-+ guard let foo = bar else {
-+     return baz
-+ }
-```
-
-```diff
-- if foo { return bar }
-+ if foo {
-+    return bar
-+ }
-```
-
-</details>
-<br/>
+*Note: wrapConditionalBodies rule is deprecated. Use wrapIfStatementBodies, wrapGuardStatementBodies, or wrapIfExpressionBodies instead.*
 
 ## wrapEnumCases
 
@@ -4522,6 +4507,70 @@ Wrap single-line function, init, and subscript bodies onto multiple lines.
 - subscript(index: Int) -> Int { array[index] }
 + subscript(index: Int) -> Int {
 +     array[index]
++ }
+```
+
+</details>
+<br/>
+
+## wrapGuardStatementBodies
+
+Wrap the bodies of guard statements onto a new line.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- guard let foo = bar else { return baz }
++ guard let foo = bar else {
++     return baz
++ }
+```
+
+</details>
+<br/>
+
+## wrapIfExpressionBodies
+
+Wrap the bodies of if expressions onto a new line.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- let foo = if condition { bar } else { baz }
++ let foo = if condition {
++     bar
++ } else {
++     baz
++ }
+```
+
+</details>
+<br/>
+
+## wrapIfStatementBodies
+
+Wrap the bodies of if statements onto a new line.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- if foo { return bar }
++ if foo {
++     return bar
++ }
+```
+
+```diff
+- if foo { return bar } else if baz { return qux } else { return quux }
++ if foo {
++     return bar
++ } else if baz {
++     return qux
++ } else {
++     return quux
 + }
 ```
 

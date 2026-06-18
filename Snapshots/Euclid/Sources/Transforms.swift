@@ -229,8 +229,12 @@ public extension Transform {
 
     var isFlipped: Bool {
         var flipped = scale.x < 0
-        if scale.y < 0 { flipped = !flipped }
-        if scale.z < 0 { flipped = !flipped }
+        if scale.y < 0 {
+            flipped = !flipped
+        }
+        if scale.z < 0 {
+            flipped = !flipped
+        }
         return flipped
     }
 
@@ -313,8 +317,12 @@ public extension Polygon {
         v.z = v.z < 0 ? min(v.z, -limit) : max(v.z, limit)
 
         var flipped = v.x < 0
-        if v.y < 0 { flipped = !flipped }
-        if v.z < 0 { flipped = !flipped }
+        if v.y < 0 {
+            flipped = !flipped
+        }
+        if v.z < 0 {
+            flipped = !flipped
+        }
 
         let vertices = self.vertices.map { $0.scaled(by: v) }
         let vn = Vector(1 / v.x, 1 / v.y, 1 / v.z)
@@ -346,8 +354,12 @@ public extension Polygon {
 
     func scaleCorrected(for v: Vector) -> Polygon {
         var flipped = v.x < 0
-        if v.y < 0 { flipped = !flipped }
-        if v.z < 0 { flipped = !flipped }
+        if v.y < 0 {
+            flipped = !flipped
+        }
+        if v.z < 0 {
+            flipped = !flipped
+        }
         return Polygon(
             unchecked: flipped ? vertices.reversed() : vertices,
             normal: plane.normal,

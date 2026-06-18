@@ -21,17 +21,25 @@ func format(_ files: [String]) -> (filesChecked: Int, filesUpdated: Int, errors:
                     }
                 }
                 return {
-                    if checked { filesChecked += 1 }
-                    if updated { filesUpdated += 1 }
+                    if checked {
+                        filesChecked += 1
+                    }
+                    if updated {
+                        filesUpdated += 1
+                    }
                 }
             } catch let FormatError.parsing(error) {
                 return {
-                    if checked { filesChecked += 1 }
+                    if checked {
+                        filesChecked += 1
+                    }
                     throw FormatError.parsing("\(error) in \(inputURL.path)")
                 }
             } catch {
                 return {
-                    if checked { filesChecked += 1 }
+                    if checked {
+                        filesChecked += 1
+                    }
                     throw error
                 }
             }

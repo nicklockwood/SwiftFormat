@@ -115,7 +115,9 @@ public extension FormatRule {
                    // If this condition is contained within a parent condition, do nothing.
                    // We should only convert the entire set of nested conditions together as a unit.
                    (startOfFirstParentBranch ... endOfLastParentBranch).contains(startOfConditional)
-                { return }
+                {
+                    return
+                }
 
                 let lvalueTokens = formatter.tokens[lvalueRange]
 

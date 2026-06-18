@@ -112,7 +112,9 @@ extension Formatter {
         // Get function name
         guard let nameIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: function.keywordIndex),
               case let .identifier(name) = tokens[nameIndex]
-        else { return }
+        else {
+            return
+        }
 
         let treatAsTestCase = isTestCase(at: function.keywordIndex, in: functionDecl, for: framework)
             || hasDisabledPrefix(name)

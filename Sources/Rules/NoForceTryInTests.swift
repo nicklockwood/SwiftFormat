@@ -24,7 +24,9 @@ public extension FormatRule {
                 guard let nextTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index)
                 else { return }
                 let nextToken = formatter.tokens[nextTokenIndex]
-                if nextToken != .operator("!", .postfix) { continue }
+                if nextToken != .operator("!", .postfix) {
+                    continue
+                }
 
                 // Only remove the `!` if we are not within a closure or nested function,
                 // where it's not safe to just remove the `!` and make our function throw.

@@ -2639,7 +2639,9 @@ extension Formatter {
                 }
                 let range = startIndex ..< endIndex as Range
                 let accessLevel: String? = tokens[range].lazy.compactMap { token -> String? in
-                    guard case let .keyword(kw) = token, _FormatRules.aclModifiers.contains(kw) else { return nil }
+                    guard case let .keyword(kw) = token, _FormatRules.aclModifiers.contains(kw) else {
+                        return nil
+                    }
                     return kw
                 }.first
                 importRanges.append(ImportRange(
@@ -2873,7 +2875,9 @@ extension Formatter {
     /// Adds imports for the given list of modules to this file if not already present
     func addImports(_ importsToAddIfNeeded: [String]) {
         // Don't add imports in fragments
-        if options.fragment { return }
+        if options.fragment {
+            return
+        }
 
         let importRanges = parseImports()
         let currentImports = Set(importRanges.flatMap { $0.map(\.module) })

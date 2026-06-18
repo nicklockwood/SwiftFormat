@@ -61,7 +61,9 @@ public extension FormatRule {
             // Ensure the `.count` is a property access, not a method call.
             if let tokenAfterCount = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: countIndex),
                formatter.tokens[tokenAfterCount].isStartOfScope
-            { return }
+            {
+                return
+            }
 
             // Remove the `.count` property access.
             formatter.removeToken(at: countIndex)

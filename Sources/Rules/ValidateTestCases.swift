@@ -87,7 +87,9 @@ extension Formatter {
         // Get function name
         guard let nameIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: function.keywordIndex),
               case let .identifier(name) = tokens[nameIndex]
-        else { return false }
+        else {
+            return false
+        }
 
         // If method has a disabled test prefix, it's not a test
         if hasDisabledPrefix(name) {
@@ -130,7 +132,9 @@ extension Formatter {
     func addTestPrefixIfNeeded(_ function: Declaration) {
         guard let nameIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: function.keywordIndex),
               case let .identifier(name) = tokens[nameIndex]
-        else { return }
+        else {
+            return
+        }
 
         // If it already has a "test" prefix, do nothing
         if name.hasPrefix("test") {

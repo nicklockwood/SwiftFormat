@@ -18,7 +18,10 @@ public extension FormatRule {
         formatter.forEachToken { i, token in
             guard case let .commentBody(comment) = token, comment.hasPrefix("MARK:"),
                   let startIndex = formatter.index(of: .nonSpace, before: i),
-                  formatter.tokens[startIndex] == .startOfScope("//") else { return }
+                  formatter.tokens[startIndex] == .startOfScope("//")
+            else {
+                return
+            }
             if let nextIndex = formatter.index(of: .linebreak, after: i),
                let nextToken = formatter.next(.nonSpace, after: nextIndex),
                !nextToken.isLinebreak, nextToken != .endOfScope("}"),

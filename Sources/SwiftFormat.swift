@@ -507,7 +507,9 @@ public func newOffset(for offset: SourceOffset, in tokens: [Token], tabWidth: In
 public func parsingError(for tokens: [Token], options: FormatOptions, allowErrorsInFragments: Bool = true) -> FormatError? {
     guard let index = tokens.firstIndex(where: {
         guard (options.fragment && allowErrorsInFragments) || !$0.isError else { return true }
-        guard !options.ignoreConflictMarkers, case let .operator(string, _) = $0 else { return false }
+        guard !options.ignoreConflictMarkers, case let .operator(string, _) = $0 else {
+            return false
+        }
         return string.hasPrefix("<<<<<") || string.hasPrefix("=====") || string.hasPrefix(">>>>>")
     }) else {
         return nil

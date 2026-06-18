@@ -22,7 +22,9 @@ public extension FormatRule {
             var endIndex = formatter.index(of: .endOfScope("}"), after: startIndex) else {
                 return
             }
-            if acl == "private" { acl = "fileprivate" }
+            if acl == "private" {
+                acl = "fileprivate"
+            }
             while let aclIndex = formatter.lastIndex(of: .keyword(acl), in: startIndex + 1 ..< endIndex) {
                 formatter.removeToken(at: aclIndex)
                 if formatter.token(at: aclIndex)?.isSpace == true {

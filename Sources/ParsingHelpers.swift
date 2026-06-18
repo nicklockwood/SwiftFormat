@@ -836,14 +836,164 @@ extension Formatter {
         startOfConditionalStatement(at: i, excluding: excluding) != nil
     }
 
+    /// Returns true if the `if` keyword at the given index is being used as an if expression
+    /// (as opposed to an if statement). If expressions can appear in three locations:
+    /// 1. Immediately following an `=` operator (`let foo = if ...`)
+    /// 2. As the single expression in a function/var/closure body
+    /// 3. Nested within other if/switch expressions
+    func isIfExpression(at i: Int) -> Bool {
+        guard tokens[i] == .keyword("if") else { return false }
+        // If expressions are only valid in Swift 5.9+
+        guard options.swiftVersion >= "5.9" else { return false }
+
+        // Find the outermost if/switch that contains this if by expanding outward through
+        // { if/switch scopes. A nested if can only be an if expression if the outermost
+        // containing if/switch is itself an if expression.
+        let outermostIndex = outermostConditionalKeyword(startingAt: i)
+
+        // If the outermost conditional is an `if` without an else branch, it can't be
+        // an if expression (if expressions must be exhaustive).
+        if tokens[outermostIndex] == .keyword("if"),
+           !ifStatementHasElseBranch(at: outermostIndex)
+        {
+            return false
+        }
+
+        // All branches must be single expressions (no return keyword) for this to be a valid
+        // if expression. e.g. `if condition { return foo } else { bar }` is an if statement.
+        if let branches = conditionalBranches(at: outermostIndex),
+           !branches.allSatisfy({ branch in
+               blockBodyHasSingleStatement(
+                   atStartOfScope: branch.startOfBranch,
+                   includingConditionalStatements: true,
+                   includingReturnStatements: false
+               )
+           })
+        {
+            return false
+        }
+
+        // Case 1: The outermost if/switch directly follows an = operator (e.g. `let foo = if ...`)
+        if isConditionalAssignment(at: outermostIndex) {
+            return true
+        }
+
+        // Case 2: The outermost if is the single expression in a function/var/closure body
+        guard let containingScope = startOfScope(at: outermostIndex) else {
+            return false
+        }
+
+        // If the containing scope is a for/while/repeat/guard/do, this is a statement
+        if let keyword = lastSignificantKeyword(at: containingScope, excluding: ["where"]),
+           ["for", "while", "repeat", "guard", "do", "else", "catch"].contains(keyword)
+        {
+            return false
+        }
+
+        // If the containing scope is a conditional statement (if/switch) body,
+        // it's only an expression if the parent conditional is itself an expression
+        if let parentConditional = startOfConditionalStatement(at: containingScope),
+           [.keyword("if"), .keyword("switch")].contains(tokens[parentConditional])
+        {
+            // Already handled by outermostConditionalKeyword walk above
+        }
+
+        // If the containing scope belongs to a func/subscript/init without a return type,
+        // the if is a statement, not an expression
+        if let funcKeywordIndex = indexOfLastSignificantKeyword(at: containingScope, excluding: ["where"]),
+           ["func", "subscript", "init"].contains(tokens[funcKeywordIndex].string)
+        {
+            if let funcDecl = parseFunctionDeclaration(keywordIndex: funcKeywordIndex),
+               funcDecl.returnType == nil
+            {
+                return false
+            }
+        }
+
+        return scopeBodyIsSingleExpression(at: containingScope)
+    }
+
+    /// Returns true if the `if` statement at the given index has an `else` branch
+    /// (either `else` or `else if ... else`).
+    func ifStatementHasElseBranch(at ifIndex: Int) -> Bool {
+        assert(tokens[ifIndex] == .keyword("if"))
+        var currentIndex = ifIndex
+
+        while let startOfBody = startOfConditionalBranchBody(after: currentIndex),
+              let endOfBody = endOfScope(at: startOfBody)
+        {
+            guard let nextIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfBody),
+                  tokens[nextIndex] == .keyword("else")
+            else {
+                return false
+            }
+            // Check if this is a plain `else` (not `else if`)
+            if let afterElse = index(of: .nonSpaceOrCommentOrLinebreak, after: nextIndex),
+               tokens[afterElse] != .keyword("if")
+            {
+                return true
+            }
+            currentIndex = nextIndex
+        }
+        return false
+    }
+
+    /// Walks outward from the given if/switch keyword index through `{` if/switch scopes,
+    /// returning the outermost containing if/switch keyword index.
+    func outermostConditionalKeyword(startingAt i: Int) -> Int {
+        var current = i
+        while true {
+            // If preceded by `else`, this is part of an else-if chain.
+            // Walk backward through the preceding } ... { to find the parent if/switch.
+            if let prevNonSpace = index(of: .nonSpaceOrCommentOrLinebreak, before: current),
+               tokens[prevNonSpace] == .keyword("else"),
+               let closingBrace = index(of: .nonSpaceOrCommentOrLinebreak, before: prevNonSpace),
+               tokens[closingBrace] == .endOfScope("}"),
+               let openingBrace = startOfScope(at: closingBrace),
+               let parentKeyword = startOfConditionalStatement(at: openingBrace),
+               [.keyword("if"), .keyword("switch")].contains(tokens[parentKeyword])
+            {
+                current = parentKeyword
+                continue
+            }
+
+            // If inside a conditional statement's { scope, walk up to the parent if/switch.
+            // But stop if `current` is itself a conditional assignment — it's self-contained.
+            if let containingScope = startOfScope(at: current),
+               tokens[containingScope] == .startOfScope("{"),
+               let parentKeyword = startOfConditionalStatement(at: containingScope),
+               [.keyword("if"), .keyword("switch")].contains(tokens[parentKeyword]),
+               !isConditionalAssignment(at: current)
+            {
+                current = parentKeyword
+                continue
+            }
+
+            break
+        }
+        return current
+    }
+
     /// Returns true if the token at the specified index is part of a conditional assignment
     /// (e.g. an if or switch expression following an `=` token)
     func isConditionalAssignment(at i: Int) -> Bool {
-        guard let startOfConditional = startOfConditionalStatement(at: i),
-              let previousToken = lastToken(before: startOfConditional, where: { !$0.isSpaceOrCommentOrLinebreak })
-        else { return false }
-
-        return previousToken.isOperator("=")
+        guard let startOfConditional = startOfConditionalStatement(at: i) else { return false }
+        // Walk backwards past any try/await that may precede the conditional expression
+        var j = startOfConditional
+        while let prevIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: j) {
+            switch tokens[prevIndex] {
+            case .keyword("try"), .keyword("await"):
+                j = prevIndex
+            case _ where tokens[prevIndex].isUnwrapOperator:
+                guard let beforeOp = index(of: .nonSpaceOrCommentOrLinebreak, before: prevIndex),
+                      tokens[beforeOp] == .keyword("try")
+                else { return false }
+                j = beforeOp
+            default:
+                return tokens[prevIndex].isOperator("=")
+            }
+        }
+        return false
     }
 
     /// If the token at the specified index is part of a conditional statement, returns the index of the first
@@ -2568,7 +2718,9 @@ extension Formatter {
                 }
                 let range = startIndex ..< endIndex as Range
                 let accessLevel: String? = tokens[range].lazy.compactMap { token -> String? in
-                    guard case let .keyword(kw) = token, _FormatRules.aclModifiers.contains(kw) else { return nil }
+                    guard case let .keyword(kw) = token, _FormatRules.aclModifiers.contains(kw) else {
+                        return nil
+                    }
                     return kw
                 }.first
                 importRanges.append(ImportRange(
@@ -2802,7 +2954,9 @@ extension Formatter {
     /// Adds imports for the given list of modules to this file if not already present
     func addImports(_ importsToAddIfNeeded: [String]) {
         // Don't add imports in fragments
-        if options.fragment { return }
+        if options.fragment {
+            return
+        }
 
         let importRanges = parseImports()
         let currentImports = Set(importRanges.flatMap { $0.map(\.module) })

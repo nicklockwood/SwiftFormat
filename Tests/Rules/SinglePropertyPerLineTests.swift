@@ -523,7 +523,7 @@ final class SinglePropertyPerLineTests: XCTestCase {
             return
         }
         """
-        testFormatting(for: input, [output], rules: [.singlePropertyPerLine, .wrapConditionalBodies])
+        testFormatting(for: input, [output], rules: [.singlePropertyPerLine, .wrapGuardStatementBodies])
     }
 
     func testIgnoreIfStatements() {

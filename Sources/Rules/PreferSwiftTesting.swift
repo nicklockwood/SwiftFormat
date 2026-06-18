@@ -429,7 +429,9 @@ extension Formatter {
             if let endOfFunctionCall = endOfScope(at: startOfFunctionCall),
                let startOfTrailingClosure = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfFunctionCall),
                tokens[startOfTrailingClosure] == .startOfScope("{")
-            { return nil }
+            {
+                return nil
+            }
 
             switch functionParams.count {
             case 1:

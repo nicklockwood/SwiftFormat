@@ -9,32 +9,15 @@
 import Foundation
 
 public extension FormatRule {
+    /// Deprecated
     static let wrapConditionalBodies = FormatRule(
         help: "Wrap the bodies of inline conditional statements onto a new line.",
-        disabledByDefault: true,
-        sharedOptions: ["linebreaks", "indent"]
+        deprecationMessage: "Use wrapIfStatementBodies, wrapGuardStatementBodies, or wrapIfExpressionBodies instead."
     ) { formatter in
-        formatter.forEachToken(where: { [.keyword("if"), .keyword("else")].contains($0) }) { i, _ in
-            guard let startIndex = formatter.index(of: .startOfScope("{"), after: i) else {
-                return formatter.fatalError("Expected {", at: i)
-            }
-            formatter.wrapStatementBody(at: startIndex)
-        }
+        FormatRule.wrapIfStatementBodies.apply(with: formatter)
+        FormatRule.wrapGuardStatementBodies.apply(with: formatter)
+        FormatRule.wrapIfExpressionBodies.apply(with: formatter)
     } examples: {
-        """
-        ```diff
-        - guard let foo = bar else { return baz }
-        + guard let foo = bar else {
-        +     return baz
-        + }
-        ```
-
-        ```diff
-        - if foo { return bar }
-        + if foo {
-        +    return bar
-        + }
-        ```
-        """
+        nil
     }
 }

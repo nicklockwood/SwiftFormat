@@ -197,7 +197,9 @@ public final class Formatter: NSObject {
 
     /// Update `isEnabled` based on directives around the specified index
     func updateEnablement(at index: Int) {
-        if directives.isEmpty { return }
+        if directives.isEmpty {
+            return
+        }
 
         let line, tokenIndex: Int
         switch tokens[index] {
@@ -583,7 +585,9 @@ public extension Formatter {
 
     private func insert(_ tokens: ArraySlice<Token>, at index: AnyIndex, isMove: Bool) {
         let index = index.index
-        if tokens.isEmpty { return }
+        if tokens.isEmpty {
+            return
+        }
         trackChange(at: index, isMove: isMove)
         updateRange(at: index, delta: tokens.count)
         self.tokens.insert(contentsOf: tokens, at: index)
@@ -874,7 +878,9 @@ public extension Formatter {
         // if we find a line comment (// ...) do not make this change
         let tokenType = preservingComments ? TokenType.nonSpaceOrLinebreak : TokenType.nonSpaceOrCommentOrLinebreak
         guard let notWhitespace = index(of: tokenType, before: tokenIndex) else { return 0 }
-        if preservingComments, tokens[notWhitespace].isCommentBody { return 0 }
+        if preservingComments, tokens[notWhitespace].isCommentBody {
+            return 0
+        }
 
         // Don't unwrap if the resulting line would exceed `maxWidth`, since this could cause conflicts with the `wrap` rule.
         let previousLineWidth = lineLength(at: notWhitespace)

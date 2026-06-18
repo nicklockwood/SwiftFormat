@@ -113,14 +113,18 @@ extension Collection<Declaration> {
                 case "init":
                     return false
                 case "let", "var", "func", "subscript":
-                    if !simple.hasModifier("static") { return false }
+                    if !simple.hasModifier("static") {
+                        return false
+                    }
                 default:
                     break
                 }
             case .type:
                 break
             case let .conditionalCompilation(block):
-                if !block.body.hostsOnlyStaticMembers { return false }
+                if !block.body.hostsOnlyStaticMembers {
+                    return false
+                }
             }
         }
         return true

@@ -49,7 +49,9 @@ public extension FormatRule {
             }
 
             // avoid adding attribute if it's already there
-            if formatter.modifiersForDeclaration(at: i, contains: "@available") { return }
+            if formatter.modifiersForDeclaration(at: i, contains: "@available") {
+                return
+            }
 
             let startIndex = formatter.startOfModifiers(at: i, includingAttributes: true)
             formatter.insert(.space(formatter.currentIndentForLine(at: startIndex)), at: startIndex)

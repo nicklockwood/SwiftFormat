@@ -20,7 +20,9 @@ enum ReloadManager {
         var alreadyRegistered = false
         boxes = boxes.filter {
             guard let o = $0.observer else { return false }
-            if o === observer { alreadyRegistered = true }
+            if o === observer {
+                alreadyRegistered = true
+            }
             return true
         }
         if alreadyRegistered {

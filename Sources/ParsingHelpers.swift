@@ -849,6 +849,14 @@ extension Formatter {
         // containing if/switch is itself an if expression.
         let outermostIndex = outermostConditionalKeyword(startingAt: i)
 
+        // If the outermost conditional is an `if` without an else branch, it can't be
+        // an if expression (if expressions must be exhaustive).
+        if tokens[outermostIndex] == .keyword("if"),
+           !ifStatementHasElseBranch(at: outermostIndex)
+        {
+            return false
+        }
+
         // Case 1: The outermost if/switch directly follows an = operator (e.g. `let foo = if ...`)
         if isConditionalAssignment(at: outermostIndex) {
             return true
@@ -858,7 +866,60 @@ extension Formatter {
         guard let containingScope = startOfScope(at: outermostIndex) else {
             return false
         }
+
+        // If the containing scope is a for/while/repeat/guard/do, this is a statement
+        if let keyword = lastSignificantKeyword(at: containingScope, excluding: ["where"]),
+           ["for", "while", "repeat", "guard", "do", "else", "catch"].contains(keyword)
+        {
+            return false
+        }
+
+        // If the containing scope is a conditional statement (if/switch) body,
+        // it's only an expression if the parent conditional is itself an expression
+        if let parentConditional = startOfConditionalStatement(at: containingScope),
+           [.keyword("if"), .keyword("switch")].contains(tokens[parentConditional])
+        {
+            // Already handled by outermostConditionalKeyword walk above
+        }
+
+        // If the containing scope belongs to a func/subscript/init without a return type,
+        // the if is a statement, not an expression
+        if let funcKeywordIndex = indexOfLastSignificantKeyword(at: containingScope, excluding: ["where"]),
+           ["func", "subscript", "init"].contains(tokens[funcKeywordIndex].string)
+        {
+            if let funcDecl = parseFunctionDeclaration(keywordIndex: funcKeywordIndex),
+               funcDecl.returnType == nil
+            {
+                return false
+            }
+        }
+
         return scopeBodyIsSingleExpression(at: containingScope)
+    }
+
+    /// Returns true if the `if` statement at the given index has an `else` branch
+    /// (either `else` or `else if ... else`).
+    func ifStatementHasElseBranch(at ifIndex: Int) -> Bool {
+        assert(tokens[ifIndex] == .keyword("if"))
+        var currentIndex = ifIndex
+
+        while let startOfBody = startOfConditionalBranchBody(after: currentIndex),
+              let endOfBody = endOfScope(at: startOfBody)
+        {
+            guard let nextIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfBody),
+                  tokens[nextIndex] == .keyword("else")
+            else {
+                return false
+            }
+            // Check if this is a plain `else` (not `else if`)
+            if let afterElse = index(of: .nonSpaceOrCommentOrLinebreak, after: nextIndex),
+               tokens[afterElse] != .keyword("if")
+            {
+                return true
+            }
+            currentIndex = nextIndex
+        }
+        return false
     }
 
     /// Walks outward from the given if/switch keyword index through `{` if/switch scopes,

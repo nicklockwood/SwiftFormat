@@ -153,4 +153,35 @@ final class WrapIfExpressionBodiesTests: XCTestCase {
         testFormatting(for: input, output, rule: .wrapIfExpressionBodies,
                        exclude: [.wrapMultilineConditionalAssignment])
     }
+
+    func testDoesNotWrapIfStatementInVoidFunction() {
+        let input = """
+        private func setTitleText(_ titleText: StylableText?) {
+            if let titleText { titleText.set(on: titleLabel) }
+            else { titleLabel.text = nil }
+        }
+        """
+        testFormatting(for: input, rule: .wrapIfExpressionBodies,
+                       exclude: [.wrapIfStatementBodies, .elseOnSameLine])
+    }
+
+    func testDoesNotWrapIfWithoutElseBranch() {
+        let input = """
+        for subview in root.subviews {
+            if let found = findView(withIdentifier: id, in: subview) { return found }
+        }
+        """
+        testFormatting(for: input, rule: .wrapIfExpressionBodies,
+                       exclude: [.wrapIfStatementBodies])
+    }
+
+    func testDoesNotWrapIfStatementInForLoop() {
+        let input = """
+        for item in items {
+            if item.isValid { process(item) } else { skip(item) }
+        }
+        """
+        testFormatting(for: input, rule: .wrapIfExpressionBodies,
+                       exclude: [.wrapIfStatementBodies])
+    }
 }

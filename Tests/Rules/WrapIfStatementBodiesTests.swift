@@ -145,6 +145,61 @@ final class WrapIfStatementBodiesTests: XCTestCase {
                        exclude: [.wrapIfExpressionBodies])
     }
 
+    func testWrapsIfStatementInVoidFunction() {
+        let input = """
+        private func setTitleText(_ titleText: StylableText?) {
+            if let titleText { titleText.set(on: titleLabel) }
+            else { titleLabel.text = nil }
+        }
+        """
+        let output = """
+        private func setTitleText(_ titleText: StylableText?) {
+            if let titleText {
+                titleText.set(on: titleLabel)
+            }
+            else {
+                titleLabel.text = nil
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .wrapIfStatementBodies,
+                       exclude: [.elseOnSameLine])
+    }
+
+    func testWrapsIfStatementWithoutElse() {
+        let input = """
+        for subview in root.subviews {
+            if let found = findView(withIdentifier: id, in: subview) { return found }
+        }
+        """
+        let output = """
+        for subview in root.subviews {
+            if let found = findView(withIdentifier: id, in: subview) {
+                return found
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .wrapIfStatementBodies)
+    }
+
+    func testWrapsIfStatementInForLoop() {
+        let input = """
+        for item in items {
+            if item.isValid { process(item) } else { skip(item) }
+        }
+        """
+        let output = """
+        for item in items {
+            if item.isValid {
+                process(item)
+            } else {
+                skip(item)
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .wrapIfStatementBodies)
+    }
+
     func testInsideStringLiteralDoesNothing() {
         let input = """
         "\\(list.map { if $0 % 2 == 0 { return 0 } else { return 1 } })"

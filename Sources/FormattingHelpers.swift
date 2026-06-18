@@ -1738,9 +1738,13 @@ extension Formatter {
                     return (endifIndex: i, containsSwitchCase: containsSwitchCase)
                 }
             case .startOfScope("{"), .startOfScope("("), .startOfScope("["):
-                if ifdefDepth == 1 { braceDepth += 1 }
+                if ifdefDepth == 1 {
+                    braceDepth += 1
+                }
             case .endOfScope("}"), .endOfScope(")"), .endOfScope("]"):
-                if ifdefDepth == 1 { braceDepth -= 1 }
+                if ifdefDepth == 1 {
+                    braceDepth -= 1
+                }
             default:
                 if ifdefDepth == 1, braceDepth == 0, tokens[i].isSwitchCaseOrDefault {
                     containsSwitchCase = true

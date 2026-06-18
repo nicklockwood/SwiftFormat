@@ -843,6 +843,8 @@ extension Formatter {
     /// 3. Nested within other if/switch expressions
     func isIfExpression(at i: Int) -> Bool {
         guard tokens[i] == .keyword("if") else { return false }
+        // If expressions are only valid in Swift 5.9+
+        guard options.swiftVersion >= "5.9" else { return false }
 
         // Find the outermost if/switch that contains this if by expanding outward through
         // { if/switch scopes. A nested if can only be an if expression if the outermost
@@ -853,6 +855,20 @@ extension Formatter {
         // an if expression (if expressions must be exhaustive).
         if tokens[outermostIndex] == .keyword("if"),
            !ifStatementHasElseBranch(at: outermostIndex)
+        {
+            return false
+        }
+
+        // All branches must be single expressions (no return keyword) for this to be a valid
+        // if expression. e.g. `if condition { return foo } else { bar }` is an if statement.
+        if let branches = conditionalBranches(at: outermostIndex),
+           !branches.allSatisfy({ branch in
+               blockBodyHasSingleStatement(
+                   atStartOfScope: branch.startOfBranch,
+                   includingConditionalStatements: true,
+                   includingReturnStatements: false
+               )
+           })
         {
             return false
         }
@@ -942,10 +958,12 @@ extension Formatter {
             }
 
             // If inside a conditional statement's { scope, walk up to the parent if/switch.
+            // But stop if `current` is itself a conditional assignment — it's self-contained.
             if let containingScope = startOfScope(at: current),
                tokens[containingScope] == .startOfScope("{"),
                let parentKeyword = startOfConditionalStatement(at: containingScope),
-               [.keyword("if"), .keyword("switch")].contains(tokens[parentKeyword])
+               [.keyword("if"), .keyword("switch")].contains(tokens[parentKeyword]),
+               !isConditionalAssignment(at: current)
             {
                 current = parentKeyword
                 continue

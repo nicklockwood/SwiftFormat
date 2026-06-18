@@ -3356,6 +3356,42 @@ extension Formatter {
             removeTokens(in: range.lowerBound ... firstNewlineIndex)
         }
     }
+
+    /// If the token at index `i` is on the same line as a preceding `{`,
+    /// inserts a linebreak after the `{` so the token starts on its own line,
+    /// and a linebreak before the matching `}` if it immediately follows.
+    func wrapIfFollowingOpeningBrace(at i: Int) {
+        let lineStart = startOfLine(at: i)
+        guard let openBrace = lastIndex(of: .startOfScope("{"), in: lineStart ..< i) else {
+            return
+        }
+
+        // If the matching `}` is on the same line as the last `}` of the if body,
+        // insert a linebreak before it so it ends up on its own line.
+        if let closeBrace = endOfScope(at: openBrace),
+           let prevToken = index(of: .nonSpaceOrComment, before: closeBrace),
+           tokens[prevToken] == .endOfScope("}"),
+           startOfLine(at: prevToken) == startOfLine(at: closeBrace)
+        {
+            let closeIndent = currentIndentForLine(at: openBrace)
+            var insertAt = closeBrace
+            if tokens[insertAt - 1].isSpace {
+                removeToken(at: insertAt - 1)
+                insertAt -= 1
+            }
+            insertLinebreak(at: insertAt)
+            insertSpace(closeIndent, at: insertAt + 1)
+        }
+
+        // Insert a linebreak after the `{`.
+        let insertionIndex = openBrace + 1
+        if tokens[insertionIndex].isSpace {
+            removeToken(at: insertionIndex)
+        }
+        let indent = currentIndentForLine(at: openBrace) + options.indent
+        insertLinebreak(at: insertionIndex)
+        insertSpace(indent, at: insertionIndex + 1)
+    }
 }
 
 extension RandomAccessCollection where Element == Token, Index == Int {

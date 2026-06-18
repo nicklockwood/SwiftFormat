@@ -143,8 +143,46 @@ final class WrapIfStatementBodiesTests: XCTestCase {
         let input = """
         let foo = if condition { bar } else { baz }
         """
-        testFormatting(for: input, rule: .wrapIfStatementBodies,
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: .wrapIfStatementBodies, options: options,
                        exclude: [.wrapIfExpressionBodies])
+    }
+
+    func testDoesNotWrapIfExpressionFollowingAssignmentInsideIfBody() {
+        let input = """
+        if languages.count > maxSize {
+            let separatorText = if !separator.isEmpty, separator.isWhitespace { separator } else { "\\(separator) " }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: .wrapIfStatementBodies, options: options,
+                       exclude: [.wrapIfExpressionBodies])
+    }
+
+    func testWrapsIfStatementWithMultiStatementElseBranch() {
+        let input = """
+        func font(named name: String) -> UIFont {
+            if let font = UIFont(name: name, size: 1) { return font }
+            else {
+                assertionFailureOrLog("Unable to load font named: \\(name)")
+                return UIFont.systemFont(ofSize: 1)
+            }
+        }
+        """
+        let output = """
+        func font(named name: String) -> UIFont {
+            if let font = UIFont(name: name, size: 1) {
+                return font
+            }
+            else {
+                assertionFailureOrLog("Unable to load font named: \\(name)")
+                return UIFont.systemFont(ofSize: 1)
+            }
+        }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, output, rule: .wrapIfStatementBodies, options: options,
+                       exclude: [.elseOnSameLine])
     }
 
     func testDoesNotWrapIfExpressionInFunctionBody() {
@@ -153,7 +191,8 @@ final class WrapIfStatementBodiesTests: XCTestCase {
             if condition { "bar" } else { "baz" }
         }
         """
-        testFormatting(for: input, rule: .wrapIfStatementBodies,
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: .wrapIfStatementBodies, options: options,
                        exclude: [.wrapIfExpressionBodies])
     }
 
@@ -163,7 +202,8 @@ final class WrapIfStatementBodiesTests: XCTestCase {
             if condition { "bar" } else { "baz" }
         }
         """
-        testFormatting(for: input, rule: .wrapIfStatementBodies,
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: .wrapIfStatementBodies, options: options,
                        exclude: [.wrapIfExpressionBodies])
     }
 
@@ -171,7 +211,8 @@ final class WrapIfStatementBodiesTests: XCTestCase {
         let input = """
         let foo = items.map { if $0 > 0 { "positive" } else { "negative" } }
         """
-        testFormatting(for: input, rule: .wrapIfStatementBodies,
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: .wrapIfStatementBodies, options: options,
                        exclude: [.wrapIfExpressionBodies])
     }
 
@@ -230,7 +271,7 @@ final class WrapIfStatementBodiesTests: XCTestCase {
         testFormatting(for: input, output, rule: .wrapIfStatementBodies)
     }
 
-    func testInsideStringLiteralDoesNothing() {
+    func testDoesNotWrapIfStatementInsideSingleLineStringInterpolation() {
         let input = """
         "\\(list.map { if $0 % 2 == 0 { return 0 } else { return 1 } })"
         """

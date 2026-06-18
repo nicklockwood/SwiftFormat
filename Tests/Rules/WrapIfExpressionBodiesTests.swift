@@ -21,7 +21,8 @@ final class WrapIfExpressionBodiesTests: XCTestCase {
             baz
         }
         """
-        testFormatting(for: input, output, rule: .wrapIfExpressionBodies,
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, output, rule: .wrapIfExpressionBodies, options: options,
                        exclude: [.wrapMultilineConditionalAssignment])
     }
 
@@ -40,7 +41,8 @@ final class WrapIfExpressionBodiesTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .wrapIfExpressionBodies)
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, output, rule: .wrapIfExpressionBodies, options: options)
     }
 
     func testIfExpressionInVarBodyWraps() {
@@ -58,7 +60,8 @@ final class WrapIfExpressionBodiesTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .wrapIfExpressionBodies)
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, output, rule: .wrapIfExpressionBodies, options: options)
     }
 
     func testIfExpressionInClosureBodyWraps() {
@@ -66,13 +69,35 @@ final class WrapIfExpressionBodiesTests: XCTestCase {
         let foo = items.map { if $0 > 0 { "positive" } else { "negative" } }
         """
         let output = """
-        let foo = items.map { if $0 > 0 {
-            "positive"
-        } else {
-            "negative"
-        } }
+        let foo = items.map {
+            if $0 > 0 {
+                "positive"
+            } else {
+                "negative"
+            }
+        }
         """
-        testFormatting(for: input, output, rule: .wrapIfExpressionBodies)
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, output, rule: .wrapIfExpressionBodies, options: options)
+    }
+
+    func testIfExpressionInMethodChainClosureWraps() {
+        let input = """
+        cancellables[url] = player.statusPublisher
+            .first { if case .unknown = $0 { false } else { true } }
+        """
+        let output = """
+        cancellables[url] = player.statusPublisher
+            .first {
+                if case .unknown = $0 {
+                    false
+                } else {
+                    true
+                }
+            }
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, output, rule: .wrapIfExpressionBodies, options: options)
     }
 
     func testNestedIfExpressionWraps() {
@@ -90,7 +115,8 @@ final class WrapIfExpressionBodiesTests: XCTestCase {
             "c"
         }
         """
-        testFormatting(for: input, output, rule: .wrapIfExpressionBodies,
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, output, rule: .wrapIfExpressionBodies, options: options,
                        exclude: [.wrapMultilineConditionalAssignment])
     }
 
@@ -105,7 +131,8 @@ final class WrapIfExpressionBodiesTests: XCTestCase {
             baz
         }
         """
-        testFormatting(for: input, output, rule: .wrapIfExpressionBodies,
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, output, rule: .wrapIfExpressionBodies, options: options,
                        exclude: [.wrapMultilineConditionalAssignment])
     }
 
@@ -117,7 +144,8 @@ final class WrapIfExpressionBodiesTests: XCTestCase {
             baz
         }
         """
-        testFormatting(for: input, rule: .wrapIfExpressionBodies,
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: .wrapIfExpressionBodies, options: options,
                        exclude: [.wrapMultilineConditionalAssignment])
     }
 
@@ -150,7 +178,8 @@ final class WrapIfExpressionBodiesTests: XCTestCase {
             "c"
         }
         """
-        testFormatting(for: input, output, rule: .wrapIfExpressionBodies,
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, output, rule: .wrapIfExpressionBodies, options: options,
                        exclude: [.wrapMultilineConditionalAssignment])
     }
 
@@ -161,7 +190,8 @@ final class WrapIfExpressionBodiesTests: XCTestCase {
             else { titleLabel.text = nil }
         }
         """
-        testFormatting(for: input, rule: .wrapIfExpressionBodies,
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: .wrapIfExpressionBodies, options: options,
                        exclude: [.wrapIfStatementBodies, .elseOnSameLine])
     }
 
@@ -183,5 +213,13 @@ final class WrapIfExpressionBodiesTests: XCTestCase {
         """
         testFormatting(for: input, rule: .wrapIfExpressionBodies,
                        exclude: [.wrapIfStatementBodies])
+    }
+
+    func testDoesNotWrapIfExpressionInsideSingleLineStringInterpolation() {
+        let input = """
+        "\\(list.map { if $0 % 2 == 0 { "even" } else { "odd" } })"
+        """
+        let options = FormatOptions(swiftVersion: "5.9")
+        testFormatting(for: input, rule: .wrapIfExpressionBodies, options: options)
     }
 }

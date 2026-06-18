@@ -43,6 +43,18 @@ public extension FormatRule {
                 }
             }
 
+            // If this `if` immediately follows a `{` on the same line, wrap after
+            // the `{` so the `if` starts on its own line. Only do this when we're
+            // actually going to wrap the body (i.e. not inside a single-line string).
+            if formatter.tokens[i] == .keyword("if") {
+                if let bodyBrace = formatter.index(of: .startOfScope("{"), after: i),
+                   !formatter.isInStringLiteralWithWrappingDisabled(at: bodyBrace)
+                {
+                    formatter.wrapIfFollowingOpeningBrace(at: i)
+                }
+            }
+
+            // Re-find the body brace after any token insertions from wrapIfFollowingOpeningBrace
             guard let startIndex = formatter.index(of: .startOfScope("{"), after: i) else {
                 return formatter.fatalError("Expected {", at: i)
             }

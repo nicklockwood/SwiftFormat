@@ -49,11 +49,17 @@ public extension FormatRule {
             }
 
             // If this `if` immediately follows a `{` on the same line, wrap after
-            // the `{` so the `if` starts on its own line.
+            // the `{` so the `if` starts on its own line. Only do this when we're
+            // actually going to wrap the body (i.e. not inside a single-line string).
             if formatter.tokens[i] == .keyword("if") {
-                formatter.wrapIfFollowingOpeningBrace(at: i)
+                if let bodyBrace = formatter.index(of: .startOfScope("{"), after: i),
+                   !formatter.isInStringLiteralWithWrappingDisabled(at: bodyBrace)
+                {
+                    formatter.wrapIfFollowingOpeningBrace(at: i)
+                }
             }
 
+            // Re-find the body brace after any token insertions from wrapIfFollowingOpeningBrace
             guard let startIndex = formatter.index(of: .startOfScope("{"), after: i) else {
                 return formatter.fatalError("Expected {", at: i)
             }
@@ -82,25 +88,3 @@ public extension FormatRule {
     }
 }
 
-extension Formatter {
-    /// If the token at index `i` is on the same line as a preceding `{`,
-    /// inserts a linebreak after the `{` so the token starts on its own line.
-    func wrapIfFollowingOpeningBrace(at i: Int) {
-        // Check if we're on the same line as a preceding `{`
-        let lineStart = startOfLine(at: i)
-        guard let openBrace = lastIndex(of: .startOfScope("{"), in: lineStart ..< i) else {
-            return
-        }
-
-        // There's content between the `{` and the `if` on the same line.
-        // Insert a linebreak after the `{`.
-        let insertionIndex = openBrace + 1
-        // Remove any space between `{` and the `if`
-        if tokens[insertionIndex].isSpace {
-            removeToken(at: insertionIndex)
-        }
-        let indent = currentIndentForLine(at: openBrace) + options.indent
-        insertLinebreak(at: insertionIndex)
-        insertSpace(indent, at: insertionIndex + 1)
-    }
-}

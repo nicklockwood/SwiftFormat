@@ -674,7 +674,9 @@ extension AnyExpression {
         }
         switch type {
         case let numericType as _Numeric.Type:
-            if anyValue is Bool { return nil }
+            if anyValue is Bool {
+                return nil
+            }
             return (anyValue as? NSNumber).map { numericType.init(truncating: $0) as! T }
         case let arrayType as _SwiftArray.Type:
             return arrayType.cast(anyValue) as? T

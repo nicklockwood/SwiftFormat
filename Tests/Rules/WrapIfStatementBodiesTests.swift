@@ -109,6 +109,36 @@ final class WrapIfStatementBodiesTests: XCTestCase {
                        exclude: [.wrapGuardStatementBodies])
     }
 
+    func testDoesNotWrapMultilineGuardElse() {
+        let input = """
+        for item in items {
+            guard
+                let foo = item.foo,
+                let bar = item.bar
+            else { continue }
+        }
+        """
+        testFormatting(for: input, rule: .wrapIfStatementBodies,
+                       exclude: [.wrapGuardStatementBodies])
+    }
+
+    func testWrapsIfInsideClosureOnSameLine() {
+        let input = """
+        XCTAssertTrue(items.contains { if case .presented = $0 { return true }
+            return false
+        })
+        """
+        let output = """
+        XCTAssertTrue(items.contains {
+            if case .presented = $0 {
+                return true
+            }
+            return false
+        })
+        """
+        testFormatting(for: input, output, rule: .wrapIfStatementBodies)
+    }
+
     func testDoesNotWrapIfExpressionFollowingAssignment() {
         let input = """
         let foo = if condition { bar } else { baz }

@@ -23,20 +23,15 @@ public extension FormatRule {
 
             // For `else`, check if it belongs to an if expression or a guard
             if formatter.tokens[i] == .keyword("else") {
-                // Check via startOfConditionalStatement (works for guard else and simple if/else)
-                if let startOfStatement = formatter.startOfConditionalStatement(at: i) {
-                    if formatter.tokens[startOfStatement] == .keyword("guard") {
-                        return
-                    }
-                    if formatter.tokens[startOfStatement] == .keyword("if"),
-                       formatter.isIfExpression(at: startOfStatement)
-                    {
-                        return
-                    }
+                // If the `else` is not preceded by `}`, it must be a guard-else
+                // (since if/else always has `} else`)
+                if let prevNonSpace = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i),
+                   formatter.tokens[prevNonSpace] != .endOfScope("}")
+                {
+                    return
                 }
 
-                // Also check via the preceding `}` for if/else-if chains where
-                // startOfConditionalStatement may fail due to intervening braces
+                // Check if this else belongs to an if expression via the preceding `}`
                 if let closingBrace = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i),
                    formatter.tokens[closingBrace] == .endOfScope("}"),
                    let openingBrace = formatter.startOfScope(at: closingBrace),
@@ -51,6 +46,12 @@ public extension FormatRule {
                         return
                     }
                 }
+            }
+
+            // If this `if` immediately follows a `{` on the same line, wrap after
+            // the `{` so the `if` starts on its own line.
+            if formatter.tokens[i] == .keyword("if") {
+                formatter.wrapIfFollowingOpeningBrace(at: i)
             }
 
             guard let startIndex = formatter.index(of: .startOfScope("{"), after: i) else {
@@ -78,5 +79,28 @@ public extension FormatRule {
         + }
         ```
         """
+    }
+}
+
+extension Formatter {
+    /// If the token at index `i` is on the same line as a preceding `{`,
+    /// inserts a linebreak after the `{` so the token starts on its own line.
+    func wrapIfFollowingOpeningBrace(at i: Int) {
+        // Check if we're on the same line as a preceding `{`
+        let lineStart = startOfLine(at: i)
+        guard let openBrace = lastIndex(of: .startOfScope("{"), in: lineStart ..< i) else {
+            return
+        }
+
+        // There's content between the `{` and the `if` on the same line.
+        // Insert a linebreak after the `{`.
+        let insertionIndex = openBrace + 1
+        // Remove any space between `{` and the `if`
+        if tokens[insertionIndex].isSpace {
+            removeToken(at: insertionIndex)
+        }
+        let indent = currentIndentForLine(at: openBrace) + options.indent
+        insertLinebreak(at: insertionIndex)
+        insertSpace(indent, at: insertionIndex + 1)
     }
 }

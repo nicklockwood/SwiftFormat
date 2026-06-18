@@ -10,7 +10,7 @@ import Foundation
 
 public extension FormatRule {
     static let wrapGuardStatementBodies = FormatRule(
-        help: "Wrap the bodies of inline guard statements onto a new line.",
+        help: "Wrap the bodies of guard statements onto a new line.",
         disabledByDefault: true,
         sharedOptions: ["linebreaks", "indent"]
     ) { formatter in

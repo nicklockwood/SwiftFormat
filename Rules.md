@@ -110,6 +110,7 @@
 * [wrapArguments](#wrapArguments)
 * [wrapAttributes](#wrapAttributes)
 * [wrapFunctionBodies](#wrapFunctionBodies)
+* [wrapIfExpressionBodies](#wrapIfExpressionBodies)
 * [wrapIfStatementBodies](#wrapIfStatementBodies)
 * [wrapLoopBodies](#wrapLoopBodies)
 * [wrapMultilineStatementBraces](#wrapMultilineStatementBraces)
@@ -143,7 +144,6 @@
 * [wrapCaseBodies](#wrapCaseBodies)
 * [wrapEnumCases](#wrapEnumCases)
 * [wrapGuardStatementBodies](#wrapGuardStatementBodies)
-* [wrapIfExpressionBodies](#wrapIfExpressionBodies)
 * [wrapMultilineConditionalAssignment](#wrapMultilineConditionalAssignment)
 * [wrapMultilineFunctionChains](#wrapMultilineFunctionChains)
 * [wrapSwitchCases](#wrapSwitchCases)
@@ -4540,7 +4540,7 @@ Wrap single-line function, init, and subscript bodies onto multiple lines.
 
 ## wrapGuardStatementBodies
 
-Wrap the bodies of inline guard statements onto a new line.
+Wrap the bodies of guard statements onto a new line.
 
 <details>
 <summary>Examples</summary>
@@ -4557,7 +4557,7 @@ Wrap the bodies of inline guard statements onto a new line.
 
 ## wrapIfExpressionBodies
 
-Wrap the bodies of inline if expressions onto a new line.
+Wrap the bodies of if expressions onto a new line.
 
 <details>
 <summary>Examples</summary>
@@ -4576,7 +4576,7 @@ Wrap the bodies of inline if expressions onto a new line.
 
 ## wrapIfStatementBodies
 
-Wrap the bodies of inline if/else statements onto a new line.
+Wrap the bodies of if statements onto a new line.
 
 <details>
 <summary>Examples</summary>

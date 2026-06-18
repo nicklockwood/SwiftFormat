@@ -10,7 +10,7 @@ import Foundation
 
 public extension FormatRule {
     static let wrapIfStatementBodies = FormatRule(
-        help: "Wrap the bodies of inline if/else statements onto a new line.",
+        help: "Wrap the bodies of if statements onto a new line.",
         sharedOptions: ["linebreaks", "indent"]
     ) { formatter in
         formatter.forEachToken(where: { [.keyword("if"), .keyword("else")].contains($0) }) { i, _ in
@@ -87,4 +87,3 @@ public extension FormatRule {
         """
     }
 }
-

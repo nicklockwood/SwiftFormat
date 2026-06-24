@@ -44,6 +44,7 @@
 * [numberFormatting](#numberFormatting)
 * [opaqueGenericParameters](#opaqueGenericParameters)
 * [preferCountWhere](#preferCountWhere)
+* [preferFlatMap](#preferFlatMap)
 * [preferForLoop](#preferForLoop)
 * [preferKeyPath](#preferKeyPath)
 * [redundantAsync](#redundantAsync)
@@ -2096,6 +2097,24 @@ Prefer defining `final` classes. To suppress this rule, add "Base" to the class 
 
   /// Base class to be subclassed by other features
   class MyCustomizationPoint {}
+```
+
+</details>
+<br/>
+
+## preferFlatMap
+
+Prefer `flatMap { ... }` over `map { ... }.reduce([], +)`.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- let allItems = sections.map { $0.items }.reduce([], +)
++ let allItems = sections.flatMap { $0.items }
+
+- let allItems = sections.map({ $0.items }).reduce([], +)
++ let allItems = sections.flatMap({ $0.items })
 ```
 
 </details>

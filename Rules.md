@@ -129,6 +129,7 @@
 * [noExplicitOwnership](#noExplicitOwnership)
 * [noGuardInTests](#noGuardInTests)
 * [organizeDeclarations](#organizeDeclarations)
+* [preferContainsOverRange](#preferContainsOverRange)
 * [preferExplicitFalse](#preferExplicitFalse)
 * [preferFinalClasses](#preferFinalClasses)
 * [preferSwiftStringAPI](#preferSwiftStringAPI)
@@ -2019,6 +2020,30 @@ Without this declaration, only functions will be reordered, while properties wil
 +
   }
 ```
+
+</details>
+<br/>
+
+## preferContainsOverRange
+
+Prefer `contains` over `range(of:)` compared against nil.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- if text.range(of: "needle") != nil {
++ if text.contains("needle") {
+
+- if text.range(of: "needle") == nil {
++ if !text.contains("needle") {
+```
+
+***NOTE:*** In rare cases this rewrite can change behavior — e.g. an
+`NSString` receiver whose `range(of:)` returns a non-optional `NSRange`
+(where `!= nil` is always true), or a type without a matching `contains`
+overload. For this reason the rule is disabled by default, and must be
+enabled via the `--enable preferContainsOverRange` option.
 
 </details>
 <br/>

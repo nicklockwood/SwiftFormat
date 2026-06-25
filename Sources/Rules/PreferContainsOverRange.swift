@@ -23,30 +23,14 @@ public extension FormatRule {
             else { return }
 
             // Require a single `of:` labeled argument. The `range(of:options:range:)`
-            // overloads take additional arguments and aren't equivalent to `contains`, so a
-            // top-level comma in the call disqualifies it. Commas nested inside the argument
-            // expression (e.g. `range(of: foo(a, b))`) don't count, so skip nested scopes.
-            guard let labelIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: openParenIndex),
-                  formatter.tokens[labelIndex] == .identifier("of"),
-                  let colonIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: labelIndex),
-                  formatter.tokens[colonIndex] == .delimiter(":")
+            // overloads take additional arguments and aren't equivalent to `contains`.
+            let args = formatter.parseFunctionCallArguments(startOfScope: openParenIndex)
+            guard args.count == 1,
+                  args[0].label == "of",
+                  let labelIndex = args[0].labelIndex
             else { return }
 
-            var scanIndex = colonIndex
-            while scanIndex < closeParenIndex {
-                if formatter.tokens[scanIndex].isStartOfScope {
-                    guard let scopeEnd = formatter.endOfScope(at: scanIndex) else { return }
-                    scanIndex = scopeEnd
-                } else if formatter.tokens[scanIndex] == .delimiter(",") {
-                    return // top-level comma: a multi-argument `range(of:options:…)` call
-                }
-                scanIndex += 1
-            }
-
-            // The argument must be non-empty (e.g. `range(of:)` as a method reference is not a call we handle).
-            guard let argStartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: colonIndex),
-                  argStartIndex < closeParenIndex
-            else { return }
+            let argStartIndex = args[0].valueRange.lowerBound
 
             // Require a trailing `!= nil` or `== nil` comparison.
             guard let operatorIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closeParenIndex),

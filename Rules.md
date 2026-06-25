@@ -44,6 +44,7 @@
 * [numberFormatting](#numberFormatting)
 * [opaqueGenericParameters](#opaqueGenericParameters)
 * [preferCountWhere](#preferCountWhere)
+* [preferFirstWhere](#preferFirstWhere)
 * [preferFlatMap](#preferFlatMap)
 * [preferForLoop](#preferForLoop)
 * [preferKeyPath](#preferKeyPath)
@@ -2122,6 +2123,24 @@ Prefer defining `final` classes. To suppress this rule, add "Base" to the class 
 
   /// Base class to be subclassed by other features
   class MyCustomizationPoint {}
+```
+
+</details>
+<br/>
+
+## preferFirstWhere
+
+Prefer `first(where:)` over `filter(_:).first`.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- planets.filter { $0.hasMoons }.first
++ planets.first(where: { $0.hasMoons })
+
+- planets.filter({ $0.hasMoons }).first
++ planets.first(where: { $0.hasMoons })
 ```
 
 </details>

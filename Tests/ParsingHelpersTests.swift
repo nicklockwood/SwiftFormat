@@ -3176,6 +3176,37 @@ final class ParsingHelpersTests: XCTestCase {
         XCTAssertNil(quuxArgs)
     }
 
+    func testParseFunctionCallArgumentsMultipleTrailingClosures() throws {
+        let input = """
+        foo { $0 } onSuccess: { print("ok") } onFailure: { print("error") }
+        bar(arg: 1) { $0 } completion: { done() }
+        """
+
+        let formatter = Formatter(tokenize(input))
+
+        // foo { } onSuccess: { } onFailure: { } — no parens, multiple trailing closures
+        let fooOpenBrace = try XCTUnwrap(formatter.index(of: .startOfScope("{"), after: -1))
+        let fooArgs = formatter.parseFunctionCallArguments(startOfScope: fooOpenBrace)
+        XCTAssertEqual(fooArgs.count, 3)
+        XCTAssertNil(fooArgs[0].label)
+        XCTAssertTrue(fooArgs[0].value.hasPrefix("{"))
+        XCTAssertEqual(fooArgs[1].label, "onSuccess")
+        XCTAssertTrue(fooArgs[1].value.hasPrefix("{"))
+        XCTAssertEqual(fooArgs[2].label, "onFailure")
+        XCTAssertTrue(fooArgs[2].value.hasPrefix("{"))
+
+        // bar(arg: 1) { } completion: { } — parens plus multiple trailing closures
+        let barIndex = try XCTUnwrap(formatter.index(of: .identifier("bar"), after: -1))
+        let barOpenParen = try XCTUnwrap(formatter.index(of: .startOfScope("("), after: barIndex))
+        let barArgs = formatter.parseFunctionCallArguments(startOfScope: barOpenParen)
+        XCTAssertEqual(barArgs.count, 3)
+        XCTAssertEqual(barArgs[0].label, "arg")
+        XCTAssertNil(barArgs[1].label)
+        XCTAssertTrue(barArgs[1].value.hasPrefix("{"))
+        XCTAssertEqual(barArgs[2].label, "completion")
+        XCTAssertTrue(barArgs[2].value.hasPrefix("{"))
+    }
+
     func testParseFunctionDeclarationWithEffects() throws {
         let input = """
         struct FooBar {

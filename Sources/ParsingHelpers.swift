@@ -3959,22 +3959,25 @@ extension Formatter {
     /// start-of-scope index.
     ///
     /// - When `startOfScope` is a `{`, the entire brace scope is returned as a
-    ///   single unlabeled argument (a trailing closure with no parentheses).
+    ///   single unlabeled argument (a trailing closure with no parentheses),
+    ///   followed by any additional labeled trailing closures.
     /// - When `startOfScope` is a `(`, the parenthesized arguments are parsed
-    ///   and any trailing closure that immediately follows the `)` is appended
-    ///   as an additional unlabeled argument.
+    ///   and any trailing closures that immediately follow the `)` are appended
+    ///   as additional arguments.
     func parseFunctionCallArguments(startOfScope: Int, preserveWhitespace: Bool = false) -> [FunctionCallArgument] {
         // Handle calls that are solely a trailing closure with no parentheses,
-        // e.g. `filter { $0.isActive }`.
+        // e.g. `filter { $0.isActive }` or `animate { } completion: { }`.
         if tokens[startOfScope] == .startOfScope("{") {
             guard let endOfClosure = endOfScope(at: startOfScope) else { return [] }
             let valueRange = startOfScope ... endOfClosure
-            return [FunctionCallArgument(
+            var arguments = [FunctionCallArgument(
                 label: nil,
                 labelIndex: nil,
                 value: tokens[valueRange].string,
                 valueRange: valueRange
             )]
+            arguments += parseAdditionalTrailingClosures(after: endOfClosure)
+            return arguments
         }
 
         assert(tokens[startOfScope] == .startOfScope("("))
@@ -4060,7 +4063,7 @@ extension Formatter {
             }
         }
 
-        // Append any trailing closure that immediately follows the closing paren
+        // Append any trailing closures that immediately follow the closing paren
         if let openBraceIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfScope),
            tokens[openBraceIndex] == .startOfScope("{"),
            let endOfClosure = self.endOfScope(at: openBraceIndex)
@@ -4072,6 +4075,7 @@ extension Formatter {
                 value: tokens[valueRange].string,
                 valueRange: valueRange
             ))
+            argumentLabels += parseAdditionalTrailingClosures(after: endOfClosure)
         }
 
         return argumentLabels
@@ -4084,6 +4088,30 @@ extension Formatter {
               tokens[scopeIndex] == .startOfScope("(") || tokens[scopeIndex] == .startOfScope("{")
         else { return nil }
         return parseFunctionCallArguments(startOfScope: scopeIndex, preserveWhitespace: preserveWhitespace)
+    }
+
+    /// Parses additional labeled trailing closures after the end of a trailing
+    /// closure body (multiple trailing closure syntax), e.g. `onFailure: { }`.
+    private func parseAdditionalTrailingClosures(after endOfClosure: Int) -> [FunctionCallArgument] {
+        var arguments: [FunctionCallArgument] = []
+        var currentIndex = endOfClosure
+        while let labelIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex),
+              isTrailingClosureLabel(at: labelIndex),
+              let colonIndex = index(of: .nonSpaceOrComment, after: labelIndex, if: { $0 == .delimiter(":") }),
+              let openBraceIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: colonIndex),
+              tokens[openBraceIndex] == .startOfScope("{"),
+              let endOfBrace = endOfScope(at: openBraceIndex)
+        {
+            let valueRange = openBraceIndex ... endOfBrace
+            arguments.append(FunctionCallArgument(
+                label: tokens[labelIndex].string,
+                labelIndex: labelIndex,
+                value: tokens[valueRange].string,
+                valueRange: valueRange
+            ))
+            currentIndex = endOfBrace
+        }
+        return arguments
     }
 
     /// Parses the parameter labels of the tuple type or value with its `(` start of scope

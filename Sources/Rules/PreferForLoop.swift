@@ -21,36 +21,21 @@ public extension FormatRule {
                   let indexBeforeFunctionCallDot = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: functionCallDotIndex)
             else { return }
 
-            // Parse either `{ ... }` or `({ ... })`
-            let forEachCallOpenParenIndex: Int?
-            let closureOpenBraceIndex: Int
-            let closureCloseBraceIndex: Int
-            let forEachCallCloseParenIndex: Int?
+            // Parse either `{ ... }` or `({ ... })` using the shared helper
+            guard let args = formatter.parseFunctionCallArguments(after: forEachIndex),
+                  args.count == 1,
+                  let closureArg = args.first,
+                  formatter.tokens[closureArg.valueRange.lowerBound] == .startOfScope("{"),
+                  formatter.tokens[closureArg.valueRange.upperBound] == .endOfScope("}")
+            else { return }
 
-            switch formatter.tokens[indexAfterForEach] {
-            case .startOfScope("{"):
-                guard let endOfClosureScope = formatter.endOfScope(at: indexAfterForEach) else { return }
+            let closureOpenBraceIndex = closureArg.valueRange.lowerBound
+            let closureCloseBraceIndex = closureArg.valueRange.upperBound
 
-                forEachCallOpenParenIndex = nil
-                closureOpenBraceIndex = indexAfterForEach
-                closureCloseBraceIndex = endOfClosureScope
-                forEachCallCloseParenIndex = nil
-
-            case .startOfScope("("):
-                guard let endOfFunctionCall = formatter.endOfScope(at: indexAfterForEach),
-                      let indexAfterOpenParen = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: indexAfterForEach),
-                      formatter.tokens[indexAfterOpenParen] == .startOfScope("{"),
-                      let endOfClosureScope = formatter.endOfScope(at: indexAfterOpenParen)
-                else { return }
-
-                forEachCallOpenParenIndex = indexAfterForEach
-                closureOpenBraceIndex = indexAfterOpenParen
-                closureCloseBraceIndex = endOfClosureScope
-                forEachCallCloseParenIndex = endOfFunctionCall
-
-            default:
-                return
-            }
+            let isTrailingClosure = formatter.tokens[indexAfterForEach] == .startOfScope("{")
+            let forEachCallCloseParenIndex: Int? = isTrailingClosure
+                ? nil
+                : formatter.endOfScope(at: indexAfterForEach)
 
             // Abort early for single-line loops
             guard !formatter.options.preserveSingleLineForEach || formatter

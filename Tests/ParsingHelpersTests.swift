@@ -3118,6 +3118,64 @@ final class ParsingHelpersTests: XCTestCase {
         )
     }
 
+    func testParseFunctionCallArgumentsWithTrailingClosure() throws {
+        let input = """
+        foo { $0.bar }
+        baz(arg: 1) { $0.bar }
+        quux()
+        """
+
+        let formatter = Formatter(tokenize(input))
+
+        // foo { $0.bar } — trailing closure with no parens, startOfScope is `{`
+        let fooOpenBrace = try XCTUnwrap(formatter.index(of: .startOfScope("{"), after: -1))
+        let fooArgs = formatter.parseFunctionCallArguments(startOfScope: fooOpenBrace)
+        XCTAssertEqual(fooArgs.count, 1)
+        XCTAssertNil(fooArgs[0].label)
+        XCTAssertTrue(fooArgs[0].value.hasPrefix("{"))
+
+        // baz(arg: 1) { $0.bar } — paren args plus trailing closure
+        let bazIndex = try XCTUnwrap(formatter.index(of: .identifier("baz"), after: -1))
+        let bazOpenParen = try XCTUnwrap(formatter.index(of: .startOfScope("("), after: bazIndex))
+        let bazArgs = formatter.parseFunctionCallArguments(startOfScope: bazOpenParen)
+        XCTAssertEqual(bazArgs.count, 2)
+        XCTAssertEqual(bazArgs[0].label, "arg")
+        XCTAssertNil(bazArgs[1].label)
+        XCTAssertTrue(bazArgs[1].value.hasPrefix("{"))
+
+        // quux() — empty parens with no trailing closure
+        let quuxIndex = try XCTUnwrap(formatter.index(of: .identifier("quux"), after: bazIndex))
+        let quuxOpenParen = try XCTUnwrap(formatter.index(of: .startOfScope("("), after: quuxIndex))
+        let quuxArgs = formatter.parseFunctionCallArguments(startOfScope: quuxOpenParen)
+        XCTAssertEqual(quuxArgs.count, 0)
+    }
+
+    func testParseFunctionCallArgumentsAfterIndex() throws {
+        let input = """
+        foo(bar: 1)
+        baz { $0 }
+        quux[0]
+        """
+
+        let formatter = Formatter(tokenize(input))
+
+        // foo(bar: 1) — `after:` finds the `(`
+        let fooArgs = formatter.parseFunctionCallArguments(after: 0)
+        XCTAssertEqual(fooArgs?.count, 1)
+        XCTAssertEqual(fooArgs?[0].label, "bar")
+
+        // baz { $0 } — `after:` finds the `{`
+        let bazIndex = try XCTUnwrap(formatter.index(of: .identifier("baz"), after: 0))
+        let bazArgs = formatter.parseFunctionCallArguments(after: bazIndex)
+        XCTAssertEqual(bazArgs?.count, 1)
+        XCTAssertNil(bazArgs?[0].label)
+
+        // quux[0] — `after:` finds `[`, which is neither `(` nor `{`
+        let quuxIndex = try XCTUnwrap(formatter.index(of: .identifier("quux"), after: bazIndex))
+        let quuxArgs = formatter.parseFunctionCallArguments(after: quuxIndex)
+        XCTAssertNil(quuxArgs)
+    }
+
     func testParseFunctionDeclarationWithEffects() throws {
         let input = """
         struct FooBar {

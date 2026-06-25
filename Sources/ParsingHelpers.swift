@@ -3955,93 +3955,163 @@ extension Formatter {
         let valueRange: ClosedRange<Int>
     }
 
-    /// Parses the parameter labels of the function call with its `(` start of scope
-    /// token at the given index.
+    /// Parses the arguments of a function call starting at the given `(` or `{`
+    /// start-of-scope index.
+    ///
+    /// - When `startOfScope` is a `{`, the entire brace scope is returned as a
+    ///   single unlabeled argument (a trailing closure with no parentheses),
+    ///   followed by any additional labeled trailing closures.
+    /// - When `startOfScope` is a `(`, the parenthesized arguments are parsed
+    ///   and any trailing closures that immediately follow the `)` are appended
+    ///   as additional arguments.
     func parseFunctionCallArguments(startOfScope: Int, preserveWhitespace: Bool = false) -> [FunctionCallArgument] {
+        // Handle calls that are solely a trailing closure with no parentheses,
+        // e.g. `filter { $0.isActive }` or `animate { } completion: { }`.
+        if tokens[startOfScope] == .startOfScope("{") {
+            guard let endOfClosure = endOfScope(at: startOfScope) else { return [] }
+            let valueRange = startOfScope ... endOfClosure
+            var arguments = [FunctionCallArgument(
+                label: nil,
+                labelIndex: nil,
+                value: tokens[valueRange].string,
+                valueRange: valueRange
+            )]
+            arguments += parseAdditionalTrailingClosures(after: endOfClosure)
+            return arguments
+        }
+
         assert(tokens[startOfScope] == .startOfScope("("))
-        guard let endOfScope = endOfScope(at: startOfScope),
-              index(of: .nonSpaceOrCommentOrLinebreak, after: startOfScope) != endOfScope
-        else { return [] }
+        guard let endOfScope = endOfScope(at: startOfScope) else { return [] }
 
         var argumentLabels: [FunctionCallArgument] = []
 
-        var currentIndex = startOfScope
-        while currentIndex < endOfScope {
-            let endOfPreviousArgument = currentIndex
-            let endOfCurrentArgument = index(of: .delimiter(","), in: endOfPreviousArgument + 1 ..< endOfScope) ?? endOfScope
+        if index(of: .nonSpaceOrCommentOrLinebreak, after: startOfScope) != endOfScope {
+            var currentIndex = startOfScope
+            while currentIndex < endOfScope {
+                let endOfPreviousArgument = currentIndex
+                let endOfCurrentArgument = index(of: .delimiter(","), in: endOfPreviousArgument + 1 ..< endOfScope) ?? endOfScope
 
-            // If we find a trailing comma, then there's nothing else to parse
-            if index(of: .nonSpaceOrCommentOrLinebreak, after: endOfPreviousArgument) == endOfScope {
-                return argumentLabels
-            }
-
-            if let colonIndex = index(of: .delimiter(":"), in: (endOfPreviousArgument + 1) ..< endOfCurrentArgument),
-               let argumentLabelIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: colonIndex),
-               tokens[argumentLabelIndex].isIdentifier
-            {
-                // Conditionally trim whitespace and newlines from the value range
-                var valueStart = colonIndex + 1
-                var valueEnd = endOfCurrentArgument - 1
-
-                if !preserveWhitespace {
-                    while valueStart <= valueEnd, tokens[valueStart].isSpaceOrLinebreak {
-                        valueStart += 1
-                    }
-                    while valueEnd >= valueStart, tokens[valueEnd].isSpaceOrLinebreak {
-                        valueEnd -= 1
-                    }
+                // If we find a trailing comma, then there's nothing else to parse
+                if index(of: .nonSpaceOrCommentOrLinebreak, after: endOfPreviousArgument) == endOfScope {
+                    break
                 }
 
-                // Ensure we have a valid range
-                guard valueStart <= valueEnd else {
+                if let colonIndex = index(of: .delimiter(":"), in: (endOfPreviousArgument + 1) ..< endOfCurrentArgument),
+                   let argumentLabelIndex = index(of: .nonSpaceOrCommentOrLinebreak, before: colonIndex),
+                   tokens[argumentLabelIndex].isIdentifier
+                {
+                    // Conditionally trim whitespace and newlines from the value range
+                    var valueStart = colonIndex + 1
+                    var valueEnd = endOfCurrentArgument - 1
+
+                    if !preserveWhitespace {
+                        while valueStart <= valueEnd, tokens[valueStart].isSpaceOrLinebreak {
+                            valueStart += 1
+                        }
+                        while valueEnd >= valueStart, tokens[valueEnd].isSpaceOrLinebreak {
+                            valueEnd -= 1
+                        }
+                    }
+
+                    // Ensure we have a valid range
+                    guard valueStart <= valueEnd else {
+                        currentIndex = endOfCurrentArgument
+                        continue
+                    }
+
+                    let valueRange = valueStart ... valueEnd
+                    argumentLabels.append(FunctionCallArgument(
+                        label: tokens[argumentLabelIndex].string,
+                        labelIndex: argumentLabelIndex,
+                        value: tokens[valueRange].string,
+                        valueRange: valueRange
+                    ))
+                } else {
+                    // Conditionally trim whitespace and newlines from the value range
+                    var valueStart = endOfPreviousArgument + 1
+                    var valueEnd = endOfCurrentArgument - 1
+
+                    if !preserveWhitespace {
+                        while valueStart <= valueEnd, tokens[valueStart].isSpaceOrLinebreak {
+                            valueStart += 1
+                        }
+                        while valueEnd >= valueStart, tokens[valueEnd].isSpaceOrLinebreak {
+                            valueEnd -= 1
+                        }
+                    }
+
+                    // Ensure we have a valid range
+                    guard valueStart <= valueEnd else {
+                        currentIndex = endOfCurrentArgument
+                        continue
+                    }
+
+                    let valueRange = valueStart ... valueEnd
+                    argumentLabels.append(FunctionCallArgument(
+                        label: nil,
+                        labelIndex: nil,
+                        value: tokens[valueRange].string,
+                        valueRange: valueRange
+                    ))
+                }
+
+                if endOfCurrentArgument >= endOfScope {
+                    break
+                } else {
                     currentIndex = endOfCurrentArgument
-                    continue
                 }
-
-                let valueRange = valueStart ... valueEnd
-                argumentLabels.append(FunctionCallArgument(
-                    label: tokens[argumentLabelIndex].string,
-                    labelIndex: argumentLabelIndex,
-                    value: tokens[valueRange].string,
-                    valueRange: valueRange
-                ))
-            } else {
-                // Conditionally trim whitespace and newlines from the value range
-                var valueStart = endOfPreviousArgument + 1
-                var valueEnd = endOfCurrentArgument - 1
-
-                if !preserveWhitespace {
-                    while valueStart <= valueEnd, tokens[valueStart].isSpaceOrLinebreak {
-                        valueStart += 1
-                    }
-                    while valueEnd >= valueStart, tokens[valueEnd].isSpaceOrLinebreak {
-                        valueEnd -= 1
-                    }
-                }
-
-                // Ensure we have a valid range
-                guard valueStart <= valueEnd else {
-                    currentIndex = endOfCurrentArgument
-                    continue
-                }
-
-                let valueRange = valueStart ... valueEnd
-                argumentLabels.append(FunctionCallArgument(
-                    label: nil,
-                    labelIndex: nil,
-                    value: tokens[valueRange].string,
-                    valueRange: valueRange
-                ))
-            }
-
-            if endOfCurrentArgument >= endOfScope {
-                break
-            } else {
-                currentIndex = endOfCurrentArgument
             }
         }
 
+        // Append any trailing closures that immediately follow the closing paren
+        if let openBraceIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: endOfScope),
+           tokens[openBraceIndex] == .startOfScope("{"),
+           let endOfClosure = self.endOfScope(at: openBraceIndex)
+        {
+            let valueRange = openBraceIndex ... endOfClosure
+            argumentLabels.append(FunctionCallArgument(
+                label: nil,
+                labelIndex: nil,
+                value: tokens[valueRange].string,
+                valueRange: valueRange
+            ))
+            argumentLabels += parseAdditionalTrailingClosures(after: endOfClosure)
+        }
+
         return argumentLabels
+    }
+
+    /// Parses the arguments of a function call where the next non-space/comment
+    /// token after `index` is either a `(` or `{`.
+    func parseFunctionCallArguments(after index: Int, preserveWhitespace: Bool = false) -> [FunctionCallArgument]? {
+        guard let scopeIndex = self.index(of: .nonSpaceOrCommentOrLinebreak, after: index),
+              tokens[scopeIndex] == .startOfScope("(") || tokens[scopeIndex] == .startOfScope("{")
+        else { return nil }
+        return parseFunctionCallArguments(startOfScope: scopeIndex, preserveWhitespace: preserveWhitespace)
+    }
+
+    /// Parses additional labeled trailing closures after the end of a trailing
+    /// closure body (multiple trailing closure syntax), e.g. `onFailure: { }`.
+    private func parseAdditionalTrailingClosures(after endOfClosure: Int) -> [FunctionCallArgument] {
+        var arguments: [FunctionCallArgument] = []
+        var currentIndex = endOfClosure
+        while let labelIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: currentIndex),
+              isTrailingClosureLabel(at: labelIndex),
+              let colonIndex = index(of: .nonSpaceOrComment, after: labelIndex, if: { $0 == .delimiter(":") }),
+              let openBraceIndex = index(of: .nonSpaceOrCommentOrLinebreak, after: colonIndex),
+              tokens[openBraceIndex] == .startOfScope("{"),
+              let endOfBrace = endOfScope(at: openBraceIndex)
+        {
+            let valueRange = openBraceIndex ... endOfBrace
+            arguments.append(FunctionCallArgument(
+                label: tokens[labelIndex].string,
+                labelIndex: labelIndex,
+                value: tokens[valueRange].string,
+                valueRange: valueRange
+            ))
+            currentIndex = endOfBrace
+        }
+        return arguments
     }
 
     /// Parses the parameter labels of the tuple type or value with its `(` start of scope

@@ -52,16 +52,12 @@ public extension FormatRule {
             // Require the reduce arguments to be exactly `[], +`, i.e. an empty
             // array literal seed combined with the `+` operator. This is the
             // flatten-by-concatenation shape that `flatMap` expresses directly.
-            guard let openBracketIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: openParenIndex),
-                  formatter.tokens[openBracketIndex] == .startOfScope("["),
-                  let closeBracketIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: openBracketIndex),
-                  formatter.tokens[closeBracketIndex] == .endOfScope("]"),
-                  let commaIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: closeBracketIndex),
-                  formatter.tokens[commaIndex] == .delimiter(","),
-                  let plusIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: commaIndex),
-                  formatter.tokens[plusIndex].isOperator("+"),
-                  let afterPlusIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: plusIndex),
-                  afterPlusIndex == closeParenIndex
+            let reduceArgs = formatter.parseFunctionCallArguments(startOfScope: openParenIndex)
+            guard reduceArgs.count == 2,
+                  reduceArgs[0].label == nil,
+                  reduceArgs[0].value == "[]",
+                  reduceArgs[1].label == nil,
+                  reduceArgs[1].value == "+"
             else { return }
 
             // Bail if the span we'd remove contains a comment, so we never

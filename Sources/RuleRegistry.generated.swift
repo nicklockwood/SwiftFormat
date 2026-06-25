@@ -65,6 +65,7 @@ let ruleRegistry: [String: FormatRule] = [
     "preferCountWhere": .preferCountWhere,
     "preferExplicitFalse": .preferExplicitFalse,
     "preferFinalClasses": .preferFinalClasses,
+    "preferFirstWhere": .preferFirstWhere,
     "preferFlatMap": .preferFlatMap,
     "preferForLoop": .preferForLoop,
     "preferKeyPath": .preferKeyPath,

@@ -280,10 +280,13 @@ extension Formatter {
         return false
     }
 
-    /// Whether or not this file includes a symbol starting with the UI prefix, which indicates that it probably comes from the UIKit library.
+    /// Whether or not this file references a UIKit symbol (an identifier with a `UI` prefix followed by an uppercase letter, e.g. `UIView`).
     func referencesUIKitSymbols() -> Bool {
+        // The trailing-uppercase check excludes stdlib `UInt`/`UInt8`/... (which are
+        // `UI`+lowercase); without it they'd get a spurious `import UIKit` that fails
+        // to compile on non-UIKit platforms.
         let allIdentifiersInFile = Set(tokens.lazy.filter(\.isIdentifier).map(\.string))
-        return allIdentifiersInFile.contains(where: { $0.hasPrefix("UI") })
+        return allIdentifiersInFile.contains(where: { $0.hasPrefix("UI") && $0.dropFirst(2).first?.isUppercase == true })
     }
 
     /// Converts the XCTest helper function (e.g. `XCTAssert(...)`) at the given index

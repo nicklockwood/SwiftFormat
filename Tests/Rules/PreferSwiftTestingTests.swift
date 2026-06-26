@@ -913,4 +913,32 @@ final class PreferSwiftTestingTests: XCTestCase {
         let options = FormatOptions(swiftVersion: "6.0")
         testFormatting(for: input, rule: .preferSwiftTesting, options: options)
     }
+
+    func testDoesNotImportUIKitForUIntStdlibTypes() {
+        let input = """
+        import XCTest
+
+        final class CryptoTests: XCTestCase {
+            func testDigestLength() {
+                let digest = [UInt8](repeating: 0, count: 32)
+                XCTAssertEqual(digest.count, 32)
+            }
+        }
+        """
+
+        let output = """
+        import Foundation
+        import Testing
+
+        final class CryptoTests {
+            @Test func digestLength() {
+                let digest = [UInt8](repeating: 0, count: 32)
+                #expect(digest.count == 32)
+            }
+        }
+        """
+
+        let options = FormatOptions(swiftVersion: "6.0")
+        testFormatting(for: input, [output], rules: [.preferSwiftTesting, .sortImports], options: options)
+    }
 }

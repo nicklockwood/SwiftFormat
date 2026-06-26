@@ -1562,6 +1562,22 @@ final class RedundantSelfTests: XCTestCase {
         testFormatting(for: input, rule: .redundantSelf, options: options)
     }
 
+    func testDollarClosureParameterProjectedValueNotTreatedAsSelfProperty() {
+        let input = """
+        class Foo {
+            var store: Int
+
+            func test() {
+                bar { $store in
+                    print(store.baz)
+                }
+            }
+        }
+        """
+        let options = FormatOptions(explicitSelf: .insert, swiftVersion: "5.3")
+        testFormatting(for: input, rule: .redundantSelf, options: options)
+    }
+
     func testRedundantSelfKeepsSelfInClosureCapturingSelfWeaklyBefore5_8() {
         let input = """
         class Foo {

@@ -2910,6 +2910,13 @@ extension Formatter {
                             continue
                         }
                         closureLocalNames.insert(name)
+                        // A `$name` closure parameter binds the projected value as `name`
+                        // (without the `$` prefix) inside the closure body. Add the
+                        // unprefixed name as a local so that `name` is not mistakenly
+                        // treated as a reference to `self.name`.
+                        if name.hasPrefix("$") {
+                            closureLocalNames.insert(String(name.dropFirst()))
+                        }
                     }
 
                     // Functions defined inside closures with `[weak self]` captures can

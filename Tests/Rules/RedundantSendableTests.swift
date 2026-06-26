@@ -67,6 +67,8 @@ final class RedundantSendableTests: XCTestCase {
     }
 
     func testDoesNotRemoveSendableFromEnumWithIndirectCase() {
+        // Removing `Sendable` here produces a warning in Swift 6.3
+        // https://github.com/nicklockwood/SwiftFormat/issues/2563
         let input = """
         enum ValueType: Sendable, Hashable {
             case any

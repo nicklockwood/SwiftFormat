@@ -254,6 +254,36 @@ final class UnusedArgumentsTests: XCTestCase {
         testFormatting(for: input, rule: .unusedArguments)
     }
 
+    func testPropertyWrapperArgumentNotRemovedWhenSelfHasSameNameProperty() {
+        let input = """
+        class Foo {
+            var store: Int
+
+            func test() {
+                bar { $store in
+                    print(store.baz)
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: .unusedArguments)
+    }
+
+    func testPropertyWrapperArgumentNotRemovedWithRedundantSelf() {
+        let input = """
+        class Foo {
+            var store: Int
+
+            func test() {
+                bar { $store in
+                    print(store.baz)
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: .unusedArguments, options: FormatOptions(explicitSelf: .insert))
+    }
+
     func testUnusedThrowingClosureArgument() {
         let input = """
         foo = { bar throws in \"\" }

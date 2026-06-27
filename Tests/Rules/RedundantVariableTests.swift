@@ -220,6 +220,30 @@ final class RedundantVariableTests: XCTestCase {
         testFormatting(for: input, rule: .redundantVariable)
     }
 
+    func testPreservesVariableWithNonisolatedUnsafeModifier() {
+        let input = """
+        override func forwardingTarget(for selector: Selector) -> Any? {
+            nonisolated(unsafe) let target = MainActor.assumeIsolated {
+                Self.isMethod(selector, of: UITextViewDelegate.self) ? delegate : nil
+            }
+            return target
+        }
+        """
+
+        testFormatting(for: input, rule: .redundantVariable)
+    }
+
+    func testPreservesVariableWithAttribute() {
+        let input = """
+        func foo() -> Foo {
+            @preconcurrency let foo = makeFoo()
+            return foo
+        }
+        """
+
+        testFormatting(for: input, rule: .redundantVariable)
+    }
+
     func testPreservesUnwrapConditionInIfStatement() {
         let input = """
         func foo() -> Foo {

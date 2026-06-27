@@ -30,6 +30,10 @@ public extension FormatRule {
 
             guard !propertyRange.overlaps(returnRange) else { return }
 
+            // If the property has modifiers or attributes (e.g. `nonisolated(unsafe)`),
+            // preserve it since removing the variable would lose those modifiers.
+            guard property.startOfModifiersIndex == introducerIndex else { return }
+
             // If the property has an explicit type annotation, only simplify if the type
             // matches the return type of the enclosing function or computed property.
             // Otherwise, removing the property would lose meaningful type information.

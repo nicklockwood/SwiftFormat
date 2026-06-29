@@ -48,6 +48,7 @@
 * [preferFlatMap](#preferFlatMap)
 * [preferForLoop](#preferForLoop)
 * [preferKeyPath](#preferKeyPath)
+* [preferMinOverSorted](#preferMinOverSorted)
 * [redundantAsync](#redundantAsync)
 * [redundantBackticks](#redundantBackticks)
 * [redundantBreak](#redundantBreak)
@@ -2237,6 +2238,24 @@ Convert trivial `map { $0.foo }` closures to keyPath-based syntax.
 
 - let barArray = fooArray.compactMap { $0.optionalBar }
 + let barArray = fooArray.compactMap(\.optionalBar)
+```
+
+</details>
+<br/>
+
+## preferMinOverSorted
+
+Prefer `min()` over `sorted().first`.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- let smallest = values.sorted().first
++ let smallest = values.min()
+
+- let earliest = events.sorted(by: { $0.date < $1.date }).first
++ let earliest = events.min(by: { $0.date < $1.date })
 ```
 
 </details>

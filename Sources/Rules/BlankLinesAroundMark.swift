@@ -41,7 +41,8 @@ public extension FormatRule {
                     // would not be removed by that rule (i.e. in a type body with insert or preserve option)
                     guard let braceIndex = formatter.index(of: .nonSpaceOrComment, before: lastIndex),
                           formatter.isStartOfTypeBody(at: braceIndex),
-                          formatter.options.typeBlankLines != .remove
+                          formatter.options.typeBlankLines != .remove,
+                          formatter.options.typeBlankLines != .endOnly
                     else { return }
                 }
                 formatter.insertLinebreak(at: lastIndex)

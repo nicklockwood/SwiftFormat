@@ -544,6 +544,8 @@ public enum TypeBlankLines: String, CaseIterable {
     case insert
     case preserve
     case consistent
+    case startOnly = "start-only"
+    case endOnly = "end-only"
 }
 
 /// Treatment of semicolons

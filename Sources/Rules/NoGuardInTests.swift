@@ -12,7 +12,7 @@ public extension FormatRule {
     static let noGuardInTests = FormatRule(
         help: """
         Convert guard statements and trailing if statements in unit tests to
-        `try #require(...)` / `#expect(...)` or `try XCTUnwrap(...)` / `XCTAssert(...)`.
+        `try #require(...)` or `try XCTUnwrap(...)`.
         """,
         disabledByDefault: true,
         sharedOptions: ["linebreaks"]
@@ -148,7 +148,7 @@ public extension FormatRule {
                 })
 
                 // Check if we should skip this statement due to cases that can't be
-                // represented with #require or #expect
+                // represented with #require
                 let shouldSkip = conditions.contains { condition in
                     // Skip if any condition contains await
                     if condition.range.contains(where: { formatter.tokens[$0] == .keyword("await") }) {
@@ -163,10 +163,12 @@ public extension FormatRule {
                         // Skip if pattern matching
                         return true
                     case .availabilityCondition:
-                        // Skip if #available / #unavailable (can't be converted to #expect)
+                        // Skip if #available / #unavailable (can't be converted to #require)
                         return true
                     case .booleanExpression:
-                        return false
+                        // XCTAssert doesn't halt the test, so we can't use it to replace guard conditions.
+                        // In Swift Testing, try #require halts the test, so it can replace guard.
+                        return testFramework == .xcTest
                     }
                 }
 
@@ -174,7 +176,6 @@ public extension FormatRule {
 
                 // Now we can safely transform all conditions
                 let unwrapFunctionName = testFramework == .xcTest ? "XCTUnwrap" : "#require"
-                let assertFunctionName = testFramework == .xcTest ? "XCTAssert" : "#expect"
                 let linebreakToken = formatter.linebreakToken(for: statementIndex)
                 let indent = formatter.currentIndentForLine(at: statementIndex)
 
@@ -227,13 +228,16 @@ public extension FormatRule {
                         addedTryStatement = true
 
                     case let .booleanExpression(range):
-                        // Transform boolean condition to assertion
+                        // In Swift Testing, use try #require which halts the test on failure
                         let conditionTokens = formatter.tokens[range]
-                        replacementStatements.append(.identifier(assertFunctionName))
+                        replacementStatements.append(.keyword("try"))
+                        replacementStatements.append(.space(" "))
+                        replacementStatements.append(.identifier("#require"))
                         replacementStatements.append(.startOfScope("("))
                         replacementStatements.append(contentsOf: conditionTokens)
                         replacementStatements.append(contentsOf: assertionMessage)
                         replacementStatements.append(.endOfScope(")"))
+                        addedTryStatement = true
 
                     case .patternMatching:
                         // This should have been filtered out earlier
@@ -266,12 +270,11 @@ public extension FormatRule {
           final class SomeTestCase: XCTestCase {
         -     func test_something() {
         +     func test_something() throws {
-        -         guard let value = optionalValue, value.matchesCondition else {
+        -         guard let value = optionalValue else {
         -             XCTFail()
         -             return
         -         }
         +         let value = try XCTUnwrap(optionalValue)
-        +         XCTAssert(value.matchesCondition)
               }
           }
         ```
@@ -281,12 +284,13 @@ public extension FormatRule {
 
           struct SomeTests {
               @Test
-              func something() throws {
+        -     func something() {
+        +     func something() throws {
         -         guard let value = optionalValue, value.matchesCondition else {
         -             return
         -         }
         +         let value = try #require(optionalValue)
-        +         #expect(value.matchesCondition)
+        +         try #require(value.matchesCondition)
               }
           }
         ```

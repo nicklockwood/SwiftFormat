@@ -287,7 +287,10 @@ final class NoGuardInTestsTests: XCTestCase {
         class TestCase: XCTestCase {
             func test_something() throws {
                 let value1 = try XCTUnwrap(optionalValue1, "Failed")
-                XCTAssert(optionalValue2 != nil, "Value was nil")
+                guard optionalValue2 != nil else {
+                    XCTFail("Value was nil")
+                    return
+                }
             }
         }
         """
@@ -307,16 +310,7 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        let output = """
-        import XCTest
-
-        class TestCase: XCTestCase {
-            func test_something() {
-                XCTAssert(optionalValue2 == nil, "Value was \\(String(describing: optionalValue2))")
-            }
-        }
-        """
-        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements])
+        testFormatting(for: input, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements])
     }
 
     func testNoMangleNontrivialGuardBody() {
@@ -377,17 +371,7 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        let output = """
-        import XCTest
-
-        class TestCase: XCTestCase {
-            func test_something() throws {
-                XCTAssert(someCondition)
-                let value = try XCTUnwrap(optionalValue)
-            }
-        }
-        """
-        testFormatting(for: input, output, rule: .noGuardInTests)
+        testFormatting(for: input, rule: .noGuardInTests, exclude: [.elseOnSameLine, .wrapMultilineStatementBraces])
     }
 
     func testReplaceMultipleGuardConditionsWithMixedPatterns() {
@@ -405,18 +389,7 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        let output = """
-        import XCTest
-
-        class TestCase: XCTestCase {
-            func test_something() throws {
-                let value = try XCTUnwrap(optionalValue)
-                XCTAssert(someCondition)
-                let other = try XCTUnwrap(otherValue)
-            }
-        }
-        """
-        testFormatting(for: input, output, rule: .noGuardInTests)
+        testFormatting(for: input, rule: .noGuardInTests, exclude: [.elseOnSameLine, .wrapMultilineStatementBraces])
     }
 
     func testSimpleMultipleConditions() {
@@ -432,17 +405,7 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        let output = """
-        import XCTest
-
-        class TestCase: XCTestCase {
-            func test_something() throws {
-                let value = try XCTUnwrap(optionalValue)
-                XCTAssert(condition)
-            }
-        }
-        """
-        testFormatting(for: input, output, rule: .noGuardInTests)
+        testFormatting(for: input, rule: .noGuardInTests)
     }
 
     func testSimpleMultipleConditions2() {
@@ -458,17 +421,7 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        let output = """
-        import XCTest
-
-        class TestCase: XCTestCase {
-            func test_something() throws {
-                XCTAssert(condition)
-                let value = try XCTUnwrap(optionalValue)
-            }
-        }
-        """
-        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.wrapConditionalBodies])
+        testFormatting(for: input, rule: .noGuardInTests, exclude: [.wrapConditionalBodies, .elseOnSameLine, .indent, .trailingSpace, .wrapMultilineStatementBraces, .braces])
     }
 
     func testHandlesFiveConditions() {
@@ -574,26 +527,7 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        let output = """
-        import XCTest
-
-        class TestCase: XCTestCase {
-            func test_something() throws {
-                XCTAssert(condition1)
-                let value1 = try XCTUnwrap(optional1)
-                XCTAssert(condition2)
-                let value2 = try XCTUnwrap(optional2)
-                let value3 = try XCTUnwrap(optional3)
-                XCTAssert(condition3)
-                let value4 = try XCTUnwrap(optional4)
-                let value5 = try XCTUnwrap(optional5)
-                XCTAssert(condition4)
-                let value6 = try XCTUnwrap(optional6)
-                XCTAssert(condition5)
-            }
-        }
-        """
-        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.wrapMultilineStatementBraces, .elseOnSameLine, .blankLinesAfterGuardStatements, .wrapArguments])
+        testFormatting(for: input, rule: .noGuardInTests, exclude: [.wrapMultilineStatementBraces, .elseOnSameLine, .blankLinesAfterGuardStatements, .wrapArguments])
     }
 
     // MARK: - Swift Testing tests
@@ -807,7 +741,7 @@ final class NoGuardInTestsTests: XCTestCase {
             @Test
             func something() throws {
                 let value = try #require(optionalValue)
-                #expect(someCondition)
+                try #require(someCondition)
             }
         }
         """
@@ -911,17 +845,7 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        let output = """
-        import XCTest
-
-        class TestCase: XCTestCase {
-            func test_something() {
-                XCTAssert(condition)
-                XCTAssert(optionalValue != nil)
-            }
-        }
-        """
-        testFormatting(for: input, output, rule: .noGuardInTests)
+        testFormatting(for: input, rule: .noGuardInTests)
     }
 
     // MARK: - Variable shadowing tests
@@ -1147,7 +1071,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements])
     }
 
-    func testConvertsBooleanConditionsToXCTAssert() {
+    func testSkipsBooleanConditionsInXCTest() {
         let input = """
         import XCTest
 
@@ -1162,21 +1086,10 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        let output = """
-        import XCTest
-
-        class TestCase: XCTestCase {
-            func test_something() throws {
-                XCTAssert(someCondition)
-                let value = try XCTUnwrap(optionalValue)
-                print(value)
-            }
-        }
-        """
-        testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
+        testFormatting(for: input, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .unusedArguments, .elseOnSameLine, .wrapMultilineStatementBraces])
     }
 
-    func testConvertsBooleanConditionsToExpect() {
+    func testConvertsBooleanConditionsToRequire() {
         let input = """
         import Testing
 
@@ -1197,7 +1110,7 @@ final class NoGuardInTestsTests: XCTestCase {
         struct SomeTests {
             @Test
             func something() throws {
-                #expect(someCondition)
+                try #require(someCondition)
                 let value = try #require(optionalValue)
                 print(value)
             }
@@ -1206,7 +1119,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements])
     }
 
-    func testConvertsMultipleBooleanConditions() {
+    func testSkipsMultipleBooleanConditionsInXCTest() {
         let input = """
         import XCTest
 
@@ -1222,15 +1135,35 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        let output = """
-        import XCTest
+        testFormatting(for: input, rule: .noGuardInTests, exclude: [.elseOnSameLine, .wrapMultilineStatementBraces])
+    }
 
-        class TestCase: XCTestCase {
-            func test_something() throws {
-                XCTAssert(condition1)
-                XCTAssert(condition2)
-                let value = try XCTUnwrap(optionalValue)
-                XCTAssert(condition3)
+    func testConvertsMultipleBooleanConditionsInSwiftTesting() {
+        let input = """
+        import Testing
+
+        struct SomeTests {
+            @Test
+            func something() {
+                guard condition1,
+                      condition2,
+                      let value = optionalValue,
+                      condition3 else {
+                    return
+                }
+            }
+        }
+        """
+        let output = """
+        import Testing
+
+        struct SomeTests {
+            @Test
+            func something() throws {
+                try #require(condition1)
+                try #require(condition2)
+                let value = try #require(optionalValue)
+                try #require(condition3)
             }
         }
         """
@@ -1537,7 +1470,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, [output], rules: [.noGuardInTests, .indent])
     }
 
-    func testReplaceTrailingIfLetWithBooleanCondition() {
+    func testSkipsTrailingIfLetWithBooleanConditionInXCTest() {
         let input = """
         import XCTest
 
@@ -1549,13 +1482,30 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        let output = """
-        import XCTest
+        testFormatting(for: input, rule: .noGuardInTests)
+    }
 
-        class TestCase: XCTestCase {
-            func test_something() throws {
-                let value = try XCTUnwrap(optionalValue)
-                XCTAssert(value > 0)
+    func testReplaceTrailingIfLetWithBooleanConditionInSwiftTesting() {
+        let input = """
+        import Testing
+
+        struct SomeTests {
+            @Test
+            func something() {
+                if let value = optionalValue, value > 0 {
+                    print(value)
+                }
+            }
+        }
+        """
+        let output = """
+        import Testing
+
+        struct SomeTests {
+            @Test
+            func something() throws {
+                let value = try #require(optionalValue)
+                try #require(value > 0)
                 print(value)
             }
         }

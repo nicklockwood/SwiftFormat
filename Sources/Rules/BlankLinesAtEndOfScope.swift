@@ -35,9 +35,9 @@ public extension FormatRule {
 
             if formatter.isStartOfTypeBody(at: startOfScope) {
                 switch formatter.options.typeBlankLines {
-                case .insert:
+                case .insert, .endOnly:
                     formatter.addTrailingBlankLineIfNeeded(in: rangeInsideScope)
-                case .remove:
+                case .remove, .startOnly:
                     formatter.removeTrailingBlankLinesIfPresent(in: rangeInsideScope)
                 case .preserve:
                     break
@@ -81,6 +81,15 @@ public extension FormatRule {
         ```
 
         With `--type-blank-lines insert`:
+
+        ```diff
+          struct Foo {
+              let bar: Bar
+        +
+          }
+        ```
+
+        With `--type-blank-lines end-only`:
 
         ```diff
           struct Foo {

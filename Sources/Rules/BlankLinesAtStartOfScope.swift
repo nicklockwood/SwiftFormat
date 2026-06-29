@@ -38,9 +38,9 @@ public extension FormatRule {
 
             if formatter.isStartOfTypeBody(at: startOfScope) {
                 switch formatter.options.typeBlankLines {
-                case .insert:
+                case .insert, .startOnly:
                     formatter.addLeadingBlankLineIfNeeded(in: rangeInsideScope)
-                case .remove:
+                case .remove, .endOnly:
                     formatter.removeLeadingBlankLinesIfPresent(in: rangeInsideScope)
                 case .preserve, .consistent:
                     break
@@ -86,20 +86,12 @@ public extension FormatRule {
           }
         ```
 
-        With `--type-blank-lines consistent`:
+        With `--type-blank-lines start-only`:
 
         ```diff
-          // Blank line at start → blank line added at end
           struct Foo {
-
-              let bar: Bar
         +
-          }
-
-          // No blank line at start → blank line removed at end
-          struct Bar {
-              let foo: Foo
-        -
+              let bar: Bar
           }
         ```
         """

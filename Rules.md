@@ -1786,8 +1786,8 @@ Use XCTUnwrap or #require in test cases, rather than force unwrapping.
 
 ## noGuardInTests
 
-Convert guard statements in unit tests to `try #require(...)` / `#expect(...)`
-or `try XCTUnwrap(...)` / `XCTAssert(...)`.
+Convert guard statements and trailing if statements in unit tests to
+`try #require(...)` / `#expect(...)` or `try XCTUnwrap(...)` / `XCTAssert(...)`.
 
 <details>
 <summary>Examples</summary>

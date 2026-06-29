@@ -147,7 +147,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .noGuardInTests])
     }
 
     func testForceUnwrapInIfStatementWithMultipleOperators() {
@@ -173,7 +173,7 @@ final class NoForceUnwrapInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry])
+        testFormatting(for: input, output, rule: .noForceUnwrapInTests, exclude: [.hoistTry, .noGuardInTests])
     }
 
     func testForceUnwrapInGuardStatement() {

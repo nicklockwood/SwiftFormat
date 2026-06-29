@@ -154,6 +154,55 @@ final class BlankLinesAtStartOfScopeTests: XCTestCase {
         testFormatting(for: input, output, rule: .blankLinesAtStartOfScope, options: .init(typeBlankLines: .insert))
     }
 
+    func testStartOnlyBlankLineInsertedAtStartOfType() {
+        let input = """
+        class Foo {
+            func bar() {}
+        }
+        """
+        let output = """
+        class Foo {
+
+            func bar() {}
+        }
+        """
+        testFormatting(for: input, output, rule: .blankLinesAtStartOfScope, options: .init(typeBlankLines: .startOnly), exclude: [.blankLinesAtEndOfScope])
+    }
+
+    func testEndOnlyBlankLineRemovedFromStartOfType() {
+        let input = """
+        class Foo {
+
+            func bar() {}
+        }
+        """
+        let output = """
+        class Foo {
+            func bar() {}
+        }
+        """
+        testFormatting(for: input, output, rule: .blankLinesAtStartOfScope, options: .init(typeBlankLines: .endOnly), exclude: [.blankLinesAtEndOfScope])
+    }
+
+    func testEndOnlyBlankLineStillRemovedFromNonTypeScope() {
+        let input = """
+        class Foo {
+            func bar() {
+
+                print("hello")
+            }
+        }
+        """
+        let output = """
+        class Foo {
+            func bar() {
+                print("hello")
+            }
+        }
+        """
+        testFormatting(for: input, output, rule: .blankLinesAtStartOfScope, options: .init(typeBlankLines: .endOnly), exclude: [.blankLinesAtEndOfScope])
+    }
+
     func testConsistentBlankLinesPreservesLeadingBlankLineInType() {
         let input = """
         class Foo {

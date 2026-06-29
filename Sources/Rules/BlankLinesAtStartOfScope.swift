@@ -86,6 +86,23 @@ public extension FormatRule {
           }
         ```
 
+        With `--type-blank-lines consistent`:
+
+        ```diff
+          // Blank line at start → blank line added at end
+          struct Foo {
+
+              let bar: Bar
+        +
+          }
+
+          // No blank line at start → blank line removed at end
+          struct Bar {
+              let foo: Foo
+        -
+          }
+        ```
+
         With `--type-blank-lines start-only`:
 
         ```diff

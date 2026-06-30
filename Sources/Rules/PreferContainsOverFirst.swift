@@ -62,15 +62,14 @@ public extension FormatRule {
                 // Bail rather than silently delete a comment in the trailing comparison span.
                 guard !formatter.tokens[endOfCall ... nilIndex].contains(where: \.isComment) else { return }
 
-                // For the `== nil` case, find the start of the receiver expression so the negating
-                // `!` can be inserted before the whole expression (bails on optional chaining etc.).
-                let receiverStart: Int?
-                if negate {
-                    guard let start = formatter.startOfMemberCallReceiver(endingAt: dotIndex) else { return }
-                    receiverStart = start
-                } else {
-                    receiverStart = nil
-                }
+                // Find the start of the receiver expression. This serves two purposes:
+                //  - it locates where a negating `!` is inserted for the `== nil` case, and
+                //  - it detects optional chaining / force-unwrap in the receiver, which must bail in
+                //    *both* comparison directions: `foo?.first(where:)` yields an `Optional`, so
+                //    `foo?.contains(where:)` is `Bool?` rather than the `Bool` the nil comparison
+                //    produces (and `foo?.first(where:) != nil` is `false`, not `nil`, when `foo` is
+                //    nil). It also bails on leading-dot implicit members and prefix operators.
+                guard let receiverStart = formatter.startOfMemberCallReceiver(endingAt: dotIndex) else { return }
 
                 // For the trailing-closure form we move the closure into `(where: ...)`, which means
                 // collapsing any whitespace between the accessor and its `{`. Bail rather than
@@ -106,7 +105,7 @@ public extension FormatRule {
                 formatter.replaceToken(at: accessorIndex, with: .identifier("contains"))
 
                 // 4. Negate the receiver expression for the `== nil` case.
-                if let receiverStart {
+                if negate {
                     formatter.insert(.operator("!", .prefix), at: receiverStart)
                 }
             }

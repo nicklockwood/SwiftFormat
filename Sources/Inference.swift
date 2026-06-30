@@ -1145,9 +1145,7 @@ private struct Inference {
             var foundAccessors = false
             var localNames = localNames
             while let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index, if: {
-                if case let .identifier(name) = $0, names.contains(name) {
-                    return true
-                } else {
+                if case let .identifier(name) = $0, names.contains(name) { return true } else {
                     return false
                 }
             }), let startIndex = formatter.index(of: .startOfScope("{"), after: nextIndex) {

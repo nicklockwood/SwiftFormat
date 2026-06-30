@@ -12,7 +12,7 @@ public extension FormatRule {
     static let noGuardInTests = FormatRule(
         help: """
         Convert guard statements and trailing if statements in unit tests to
-        `try #require(...)` or `try XCTUnwrap(...)`.
+        `try #require(...)` or `try XCTUnwrap(...)` / `XCTAssert(...)`.
         """,
         disabledByDefault: true,
         sharedOptions: ["linebreaks"]
@@ -148,7 +148,7 @@ public extension FormatRule {
                 })
 
                 // Check if we should skip this statement due to cases that can't be
-                // represented with #require
+                // represented with #require or #expect
                 let shouldSkip = conditions.contains { condition in
                     // Skip if any condition contains await
                     if condition.range.contains(where: { formatter.tokens[$0] == .keyword("await") }) {
@@ -163,12 +163,14 @@ public extension FormatRule {
                         // Skip if pattern matching
                         return true
                     case .availabilityCondition:
-                        // Skip if #available / #unavailable (can't be converted to #require)
+                        // Skip if #available / #unavailable (can't be converted to #expect)
                         return true
                     case .booleanExpression:
-                        // XCTAssert doesn't halt the test, so we can't use it to replace guard conditions.
-                        // In Swift Testing, try #require halts the test, so it can replace guard.
-                        return testFramework == .xcTest
+                        // XCTAssert doesn't halt the test, so we can't use it to replace
+                        // if statement conditions. For guard statements, XCTAssert is fine
+                        // since the guard else block handles early exit.
+                        // In Swift Testing, try #require halts the test, so it works for both.
+                        return isIf && testFramework == .xcTest
                     }
                 }
 
@@ -228,16 +230,26 @@ public extension FormatRule {
                         addedTryStatement = true
 
                     case let .booleanExpression(range):
-                        // In Swift Testing, use try #require which halts the test on failure
+                        // Transform boolean condition to assertion.
+                        // In Swift Testing, use try #require which halts the test on failure.
+                        // In XCTest, use XCTAssert (only reached for guard statements).
                         let conditionTokens = formatter.tokens[range]
-                        replacementStatements.append(.keyword("try"))
-                        replacementStatements.append(.space(" "))
-                        replacementStatements.append(.identifier("#require"))
-                        replacementStatements.append(.startOfScope("("))
-                        replacementStatements.append(contentsOf: conditionTokens)
-                        replacementStatements.append(contentsOf: assertionMessage)
-                        replacementStatements.append(.endOfScope(")"))
-                        addedTryStatement = true
+                        if testFramework == .swiftTesting {
+                            replacementStatements.append(.keyword("try"))
+                            replacementStatements.append(.space(" "))
+                            replacementStatements.append(.identifier("#require"))
+                            replacementStatements.append(.startOfScope("("))
+                            replacementStatements.append(contentsOf: conditionTokens)
+                            replacementStatements.append(contentsOf: assertionMessage)
+                            replacementStatements.append(.endOfScope(")"))
+                            addedTryStatement = true
+                        } else {
+                            replacementStatements.append(.identifier("XCTAssert"))
+                            replacementStatements.append(.startOfScope("("))
+                            replacementStatements.append(contentsOf: conditionTokens)
+                            replacementStatements.append(contentsOf: assertionMessage)
+                            replacementStatements.append(.endOfScope(")"))
+                        }
 
                     case .patternMatching:
                         // This should have been filtered out earlier
@@ -270,11 +282,12 @@ public extension FormatRule {
           final class SomeTestCase: XCTestCase {
         -     func test_something() {
         +     func test_something() throws {
-        -         guard let value = optionalValue else {
+        -         guard let value = optionalValue, value.matchesCondition else {
         -             XCTFail()
         -             return
         -         }
         +         let value = try XCTUnwrap(optionalValue)
+        +         XCTAssert(value.matchesCondition)
               }
           }
         ```

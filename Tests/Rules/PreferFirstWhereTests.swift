@@ -69,7 +69,9 @@ final class PreferFirstWhereTests: XCTestCase {
         })
         """
 
-        testFormatting(for: input, output, rule: .preferFirstWhere)
+        // Exclude `preferContainsOverFirst`, which would further rewrite the inner
+        // `first(where:) != nil` into `contains(where:)`; this test isolates `preferFirstWhere`.
+        testFormatting(for: input, output, rule: .preferFirstWhere, exclude: [.preferContainsOverFirst])
     }
 
     func testConvertPreservesOptionalChainAfterFirst() {

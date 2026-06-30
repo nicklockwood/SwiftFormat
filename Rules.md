@@ -43,6 +43,7 @@
 * [noForceUnwrapInTests](#noForceUnwrapInTests)
 * [numberFormatting](#numberFormatting)
 * [opaqueGenericParameters](#opaqueGenericParameters)
+* [preferContainsOverFirst](#preferContainsOverFirst)
 * [preferCountWhere](#preferCountWhere)
 * [preferFirstWhere](#preferFirstWhere)
 * [preferFlatMap](#preferFlatMap)
@@ -2039,6 +2040,24 @@ Without this declaration, only functions will be reordered, while properties wil
 +     public func d() {}
 +
   }
+```
+
+</details>
+<br/>
+
+## preferContainsOverFirst
+
+Prefer `contains(where:)` over `first(where:)` / `firstIndex(where:)` compared against nil.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- if numbers.first(where: { $0 < 0 }) != nil {
++ if numbers.contains(where: { $0 < 0 }) {
+
+- if numbers.firstIndex(where: { $0 < 0 }) == nil {
++ if !numbers.contains(where: { $0 < 0 }) {
 ```
 
 </details>

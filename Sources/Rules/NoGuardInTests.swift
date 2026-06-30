@@ -11,8 +11,8 @@ import Foundation
 public extension FormatRule {
     static let noGuardInTests = FormatRule(
         help: """
-        Convert guard statements in unit tests to `try #require(...)` / `#expect(...)`
-        or `try XCTUnwrap(...)` / `XCTAssert(...)`.
+        Convert guard statements and trailing if statements in unit tests to
+        `try #require(...)` or `try XCTUnwrap(...)` / `XCTAssert(...)`.
         """,
         disabledByDefault: true,
         sharedOptions: ["linebreaks"]
@@ -30,65 +30,99 @@ public extension FormatRule {
             // Track if we made any changes that require adding throws
             var addedTryStatement = false
 
-            // Process guard statements in reverse order to avoid index shifting issues
-            for guardIndex in bodyRange.reversed() {
-                guard formatter.tokens[guardIndex] == .keyword("guard") else { continue }
+            // Process guard and if statements in reverse order to avoid index shifting issues
+            for statementIndex in bodyRange.reversed() {
+                let isGuard = formatter.tokens[statementIndex] == .keyword("guard")
+                let isIf = formatter.tokens[statementIndex] == .keyword("if")
+                guard isGuard || isIf else { continue }
 
                 // Only process if we are in the function body (not in a closure or nested function)
-                guard formatter.isInFunctionBody(of: functionDecl, at: guardIndex) else { continue }
+                guard formatter.isInFunctionBody(of: functionDecl, at: statementIndex) else { continue }
 
-                // Parse the guard conditions
-                let conditions = formatter.parseConditionalStatement(at: guardIndex)
+                // Parse the conditions
+                let conditions = formatter.parseConditionalStatement(at: statementIndex)
                 guard !conditions.isEmpty else { continue }
 
-                // Find the else block
-                guard let elseBraceIndex = formatter.index(of: .startOfScope("{"), after: guardIndex),
-                      let prevTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: elseBraceIndex),
-                      formatter.tokens[prevTokenIndex] == .keyword("else"),
-                      let endOfElseScope = formatter.endOfScope(at: elseBraceIndex)
-                else {
-                    continue
-                }
+                let replacementEndIndex: Int
+                var assertionMessage: [Token] = []
+                var ifBodyContent: [Token]?
 
-                // Check if the else block matches our pattern
-                let elseBodyTokens = formatter.tokens[(elseBraceIndex + 1) ..< endOfElseScope]
-                    .filter { !$0.isSpaceOrCommentOrLinebreak }
-
-                let isValidElseBlock: Bool = {
-                    // Common case: just return
-                    if elseBodyTokens.count == 1, elseBodyTokens[0] == .keyword("return") {
-                        return true
-                    }
-
-                    // Must end with return
-                    guard elseBodyTokens.last == .keyword("return") else { return false }
-
-                    switch testFramework {
-                    case .xcTest:
-                        // XCTFail(...); return
-                        return elseBodyTokens.count >= 3 && elseBodyTokens[0 ... 1].string == "XCTFail("
-                    case .swiftTesting:
-                        // Issue.record(...); return
-                        return elseBodyTokens.count >= 5 && elseBodyTokens[0 ... 3].string == "Issue.record("
-                    }
-                }()
-
-                guard isValidElseBlock else { continue }
-
-                // Preserve the assertion message (if any)
-                let assertionMessage: [Token] = {
-                    guard let startIndex = formatter.index(of: .startOfScope("("), after: elseBraceIndex),
-                          let endIndex = formatter.endOfScope(at: startIndex),
-                          formatter.index(after: startIndex, where: { $0.isStringDelimiter }) != nil
+                if isGuard {
+                    // Find the else block
+                    guard let elseBraceIndex = formatter.index(of: .startOfScope("{"), after: statementIndex),
+                          let prevTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: elseBraceIndex),
+                          formatter.tokens[prevTokenIndex] == .keyword("else"),
+                          let endOfElseScope = formatter.endOfScope(at: elseBraceIndex)
                     else {
-                        return []
+                        continue
                     }
-                    return [.delimiter(","), .space(" ")] + formatter.tokens[startIndex + 1 ..< endIndex]
-                }()
+
+                    // Check if the else block matches our pattern
+                    let elseBodyTokens = formatter.tokens[(elseBraceIndex + 1) ..< endOfElseScope]
+                        .filter { !$0.isSpaceOrCommentOrLinebreak }
+
+                    let isValidElseBlock: Bool = {
+                        // Common case: just return
+                        if elseBodyTokens.count == 1, elseBodyTokens[0] == .keyword("return") {
+                            return true
+                        }
+
+                        // Must end with return
+                        guard elseBodyTokens.last == .keyword("return") else { return false }
+
+                        switch testFramework {
+                        case .xcTest:
+                            // XCTFail(...); return
+                            return elseBodyTokens.count >= 3 && elseBodyTokens[0 ... 1].string == "XCTFail("
+                        case .swiftTesting:
+                            // Issue.record(...); return
+                            return elseBodyTokens.count >= 5 && elseBodyTokens[0 ... 3].string == "Issue.record("
+                        }
+                    }()
+
+                    guard isValidElseBlock else { continue }
+
+                    // Preserve the assertion message (if any)
+                    assertionMessage = {
+                        guard let startIndex = formatter.index(of: .startOfScope("("), after: elseBraceIndex),
+                              let endIndex = formatter.endOfScope(at: startIndex),
+                              formatter.index(after: startIndex, where: { $0.isStringDelimiter }) != nil
+                        else {
+                            return []
+                        }
+                        return [.delimiter(","), .space(" ")] + formatter.tokens[startIndex + 1 ..< endIndex]
+                    }()
+
+                    replacementEndIndex = endOfElseScope
+                } else {
+                    // if statement: must be the last statement in the function body and have no else
+                    guard let ifBraceIndex = formatter.index(of: .startOfScope("{"), after: statementIndex),
+                          let endOfIfScope = formatter.endOfScope(at: ifBraceIndex)
+                    else { continue }
+
+                    // Check that this is the last statement (nothing after the if's closing brace
+                    // except whitespace before the function body's closing brace)
+                    if let nextNonWS = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: endOfIfScope),
+                       nextNonWS < bodyRange.upperBound
+                    {
+                        continue
+                    }
+
+                    // Extract body content, trimming trailing whitespace/linebreaks
+                    var bodyEnd = endOfIfScope - 1
+                    while bodyEnd > ifBraceIndex, formatter.tokens[bodyEnd].isSpaceOrLinebreak {
+                        bodyEnd -= 1
+                    }
+                    if bodyEnd > ifBraceIndex {
+                        ifBodyContent = Array(formatter.tokens[(ifBraceIndex + 1) ... bodyEnd])
+                    }
+
+                    replacementEndIndex = endOfIfScope
+                }
 
                 // Check for variable shadowing
                 let scopeStart = bodyRange.lowerBound
-                let searchRange = scopeStart ..< guardIndex
+                let searchRange = scopeStart ..< statementIndex
 
                 let shadowedIdentifiers = Set<String>(searchRange.compactMap { i in
                     let token = formatter.tokens[i]
@@ -113,7 +147,7 @@ public extension FormatRule {
                     return nil
                 })
 
-                // Check if we should skip this guard due to cases that can't be
+                // Check if we should skip this statement due to cases that can't be
                 // represented with #require or #expect
                 let shouldSkip = conditions.contains { condition in
                     // Skip if any condition contains await
@@ -132,7 +166,11 @@ public extension FormatRule {
                         // Skip if #available / #unavailable (can't be converted to #expect)
                         return true
                     case .booleanExpression:
-                        return false
+                        // XCTAssert doesn't halt the test, so we can't use it to replace
+                        // if statement conditions. For guard statements, XCTAssert is fine
+                        // since the guard else block handles early exit.
+                        // In Swift Testing, try #require halts the test, so it works for both.
+                        return isIf && testFramework == .xcTest
                     }
                 }
 
@@ -140,9 +178,8 @@ public extension FormatRule {
 
                 // Now we can safely transform all conditions
                 let unwrapFunctionName = testFramework == .xcTest ? "XCTUnwrap" : "#require"
-                let assertFunctionName = testFramework == .xcTest ? "XCTAssert" : "#expect"
-                let linebreakToken = formatter.linebreakToken(for: guardIndex)
-                let indent = formatter.currentIndentForLine(at: guardIndex)
+                let linebreakToken = formatter.linebreakToken(for: statementIndex)
+                let indent = formatter.currentIndentForLine(at: statementIndex)
 
                 var replacementStatements: [Token] = []
 
@@ -193,13 +230,26 @@ public extension FormatRule {
                         addedTryStatement = true
 
                     case let .booleanExpression(range):
-                        // Transform boolean condition to assertion
+                        // Transform boolean condition to assertion.
+                        // In Swift Testing, use try #require which halts the test on failure.
+                        // In XCTest, use XCTAssert (only reached for guard statements).
                         let conditionTokens = formatter.tokens[range]
-                        replacementStatements.append(.identifier(assertFunctionName))
-                        replacementStatements.append(.startOfScope("("))
-                        replacementStatements.append(contentsOf: conditionTokens)
-                        replacementStatements.append(contentsOf: assertionMessage)
-                        replacementStatements.append(.endOfScope(")"))
+                        if testFramework == .swiftTesting {
+                            replacementStatements.append(.keyword("try"))
+                            replacementStatements.append(.space(" "))
+                            replacementStatements.append(.identifier("#require"))
+                            replacementStatements.append(.startOfScope("("))
+                            replacementStatements.append(contentsOf: conditionTokens)
+                            replacementStatements.append(contentsOf: assertionMessage)
+                            replacementStatements.append(.endOfScope(")"))
+                            addedTryStatement = true
+                        } else {
+                            replacementStatements.append(.identifier("XCTAssert"))
+                            replacementStatements.append(.startOfScope("("))
+                            replacementStatements.append(contentsOf: conditionTokens)
+                            replacementStatements.append(contentsOf: assertionMessage)
+                            replacementStatements.append(.endOfScope(")"))
+                        }
 
                     case .patternMatching:
                         // This should have been filtered out earlier
@@ -211,7 +261,12 @@ public extension FormatRule {
                     }
                 }
 
-                formatter.replaceTokens(in: guardIndex ... endOfElseScope, with: replacementStatements)
+                // For if statements, append the body content after the condition replacements
+                if let bodyContent = ifBodyContent {
+                    replacementStatements.append(contentsOf: bodyContent)
+                }
+
+                formatter.replaceTokens(in: statementIndex ... replacementEndIndex, with: replacementStatements)
             }
 
             // If we added try XCTUnwrap or try #require, ensure the function has throws
@@ -242,12 +297,13 @@ public extension FormatRule {
 
           struct SomeTests {
               @Test
-              func something() throws {
+        -     func something() {
+        +     func something() throws {
         -         guard let value = optionalValue, value.matchesCondition else {
         -             return
         -         }
         +         let value = try #require(optionalValue)
-        +         #expect(value.matchesCondition)
+        +         try #require(value.matchesCondition)
               }
           }
         ```

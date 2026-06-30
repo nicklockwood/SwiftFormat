@@ -185,4 +185,15 @@ final class PreferContainsOverFirstTests: XCTestCase {
 
         testFormatting(for: input, rule: .preferContainsOverFirst)
     }
+
+    func testPreservesOptionalChainedReceiverNotEqualNil() {
+        // `model?.numbers.first(where:) != nil` is `Bool` (false when `model` is nil), but
+        // `model?.numbers.contains(where:)` is `Bool?` (nil when `model` is nil) — a different
+        // type and value — so the `!= nil` direction must also bail on optional chaining.
+        let input = """
+        let exists = model?.numbers.first(where: { $0 < 0 }) != nil
+        """
+
+        testFormatting(for: input, rule: .preferContainsOverFirst)
+    }
 }

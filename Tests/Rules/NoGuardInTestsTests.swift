@@ -807,7 +807,7 @@ final class NoGuardInTestsTests: XCTestCase {
             @Test
             func something() throws {
                 let value = try #require(optionalValue)
-                #expect(someCondition)
+                try #require(someCondition)
             }
         }
         """
@@ -1176,7 +1176,7 @@ final class NoGuardInTestsTests: XCTestCase {
         testFormatting(for: input, output, rule: .noGuardInTests, exclude: [.blankLinesAfterGuardStatements, .unusedArguments])
     }
 
-    func testConvertsBooleanConditionsToExpect() {
+    func testConvertsBooleanConditionsToRequire() {
         let input = """
         import Testing
 
@@ -1197,7 +1197,7 @@ final class NoGuardInTestsTests: XCTestCase {
         struct SomeTests {
             @Test
             func something() throws {
-                #expect(someCondition)
+                try #require(someCondition)
                 let value = try #require(optionalValue)
                 print(value)
             }
@@ -1426,5 +1426,386 @@ final class NoGuardInTestsTests: XCTestCase {
         }
         """
         testFormatting(for: input, rule: .noGuardInTests)
+    }
+
+    // MARK: - If statement tests
+
+    func testReplaceTrailingIfLetWithXCTUnwrap() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                let optionalValue: Int? = 42
+                if let value = optionalValue {
+                    print(value)
+                }
+            }
+        }
+        """
+        let output = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() throws {
+                let optionalValue: Int? = 42
+                let value = try XCTUnwrap(optionalValue)
+                print(value)
+            }
+        }
+        """
+        testFormatting(for: input, [output], rules: [.noGuardInTests, .indent])
+    }
+
+    func testReplaceTrailingIfLetShorthandWithXCTUnwrap() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                if let optionalValue {
+                    print(optionalValue)
+                }
+            }
+        }
+        """
+        let output = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() throws {
+                let optionalValue = try XCTUnwrap(optionalValue)
+                print(optionalValue)
+            }
+        }
+        """
+        testFormatting(for: input, [output], rules: [.noGuardInTests, .indent])
+    }
+
+    func testReplaceTrailingIfLetWithRequire() {
+        let input = """
+        import Testing
+
+        struct SomeTests {
+            @Test
+            func something() {
+                let optionalValue: Int? = 42
+                if let value = optionalValue {
+                    print(value)
+                }
+            }
+        }
+        """
+        let output = """
+        import Testing
+
+        struct SomeTests {
+            @Test
+            func something() throws {
+                let optionalValue: Int? = 42
+                let value = try #require(optionalValue)
+                print(value)
+            }
+        }
+        """
+        testFormatting(for: input, [output], rules: [.noGuardInTests, .indent])
+    }
+
+    func testReplaceTrailingIfLetWithMultipleConditions() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                if let value = optionalValue, let other = optionalOther {
+                    print(value, other)
+                }
+            }
+        }
+        """
+        let output = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() throws {
+                let value = try XCTUnwrap(optionalValue)
+                let other = try XCTUnwrap(optionalOther)
+                print(value, other)
+            }
+        }
+        """
+        testFormatting(for: input, [output], rules: [.noGuardInTests, .indent])
+    }
+
+    func testReplaceTrailingIfLetWithBooleanCondition() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                if let value = optionalValue, value > 0 {
+                    print(value)
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: .noGuardInTests)
+    }
+
+    func testDoesNotReplaceIfLetNotAtEnd() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                if let value = optionalValue {
+                    print(value)
+                }
+                doSomethingElse()
+            }
+        }
+        """
+        testFormatting(for: input, rule: .noGuardInTests)
+    }
+
+    func testDoesNotReplaceIfLetWithElse() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                if let value = optionalValue {
+                    print(value)
+                } else {
+                    print("no value")
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: .noGuardInTests)
+    }
+
+    func testDoesNotReplaceIfLetInClosure() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                doSomething {
+                    if let value = optionalValue {
+                        print(value)
+                    }
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: .noGuardInTests)
+    }
+
+    func testDoesNotReplaceIfLetWithVariableShadowing() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                let value: Int? = 42
+                if let value {
+                    print(value)
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: .noGuardInTests)
+    }
+
+    func testReplaceTrailingIfLetWithMultipleBodyStatements() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func testContentTextRangeExcludesPrefix() {
+                let textView = UITextView()
+                textView.text = "$100"
+
+                let optionalRange = textView.contentTextRange(prefix: "$", suffix: nil)
+                XCTAssertNotNil(optionalRange)
+                if let range = optionalRange {
+                    let startOffset = textView.offset(from: textView.beginningOfDocument, to: range.start)
+                    let endOffset = textView.offset(from: textView.beginningOfDocument, to: range.end)
+                    XCTAssertEqual(startOffset, 1)
+                    XCTAssertEqual(endOffset, 4)
+                }
+            }
+        }
+        """
+        let output = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func testContentTextRangeExcludesPrefix() throws {
+                let textView = UITextView()
+                textView.text = "$100"
+
+                let optionalRange = textView.contentTextRange(prefix: "$", suffix: nil)
+                XCTAssertNotNil(optionalRange)
+                let range = try XCTUnwrap(optionalRange)
+                let startOffset = textView.offset(from: textView.beginningOfDocument, to: range.start)
+                let endOffset = textView.offset(from: textView.beginningOfDocument, to: range.end)
+                XCTAssertEqual(startOffset, 1)
+                XCTAssertEqual(endOffset, 4)
+            }
+        }
+        """
+        testFormatting(for: input, [output], rules: [.noGuardInTests, .indent])
+    }
+
+    func testDoesNotReplaceIfLetWithPatternMatching() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                if case .some(let value) = optionalValue {
+                    print(value)
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: .noGuardInTests, exclude: [.hoistPatternLet])
+    }
+
+    func testDoesNotReplaceIfLetWithAwait() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() async {
+                if let value = await optionalValue {
+                    print(value)
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: .noGuardInTests)
+    }
+
+    func testReplaceTrailingIfLetSwiftTesting() {
+        let input = """
+        import Testing
+
+        struct SomeTests {
+            @Test
+            func something() {
+                if let value = optionalValue {
+                    #expect(value > 0)
+                }
+            }
+        }
+        """
+        let output = """
+        import Testing
+
+        struct SomeTests {
+            @Test
+            func something() throws {
+                let value = try #require(optionalValue)
+                #expect(value > 0)
+            }
+        }
+        """
+        testFormatting(for: input, [output], rules: [.noGuardInTests, .indent])
+    }
+
+    func testReplaceTrailingIfLetWithBooleanConditionSwiftTesting() {
+        let input = """
+        import Testing
+
+        struct SomeTests {
+            @Test
+            func something() {
+                if let value = optionalValue, value > 0 {
+                    print(value)
+                }
+            }
+        }
+        """
+        let output = """
+        import Testing
+
+        struct SomeTests {
+            @Test
+            func something() throws {
+                let value = try #require(optionalValue)
+                try #require(value > 0)
+                print(value)
+            }
+        }
+        """
+        testFormatting(for: input, [output], rules: [.noGuardInTests, .indent])
+    }
+
+    func testReplaceTrailingIfLetPreservesExistingThrows() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() throws {
+                if let value = optionalValue {
+                    print(value)
+                }
+            }
+        }
+        """
+        let output = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() throws {
+                let value = try XCTUnwrap(optionalValue)
+                print(value)
+            }
+        }
+        """
+        testFormatting(for: input, [output], rules: [.noGuardInTests, .indent])
+    }
+
+    func testDoesNotReplaceNonTestIfLet() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func helper() {
+                if let value = optionalValue {
+                    print(value)
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: .noGuardInTests, exclude: [.testSuiteAccessControl, .validateTestCases])
+    }
+
+    func testReplaceTrailingIfLetWithTypeAnnotation() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                if let value: String = optionalValue {
+                    print(value)
+                }
+            }
+        }
+        """
+        let output = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() throws {
+                let value: String = try XCTUnwrap(optionalValue)
+                print(value)
+            }
+        }
+        """
+        testFormatting(for: input, [output], rules: [.noGuardInTests, .indent])
     }
 }

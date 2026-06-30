@@ -573,6 +573,62 @@ extension Formatter {
         return index(of: .operator("->", .infix), in: startIndex + 1 ..< endIndex)
     }
 
+    /// Given the index of the `.` immediately before a member call (e.g. the `.` before
+    /// `foo` in `receiver.foo(...)`), returns the index of the first token of the receiver
+    /// expression the member is called on — the position where a prefix operator like `!`
+    /// could be inserted to negate the whole expression.
+    ///
+    /// Walks backwards across member-access dots and balanced trailing scopes (subscripts, call
+    /// parentheses, and generic argument clauses), stopping at the first token that bounds the
+    /// expression (an infix operator, delimiter, keyword, or start of an enclosing scope).
+    ///
+    /// Returns `nil` when a prefix operator couldn't be placed safely:
+    /// - optional chaining / force-unwrap in the receiver (`foo?.bar()`), since the result type
+    ///   then differs (e.g. an `Optional`),
+    /// - a leading-dot (implicit member) receiver (`.foo.bar()`), where a prefix operator would be
+    ///   malformed,
+    /// - a prefix operator immediately before the receiver (`-foo.bar()`), where inserting another
+    ///   prefix operator would juxtapose unary operators.
+    func startOfMemberCallReceiver(endingAt dotIndex: Int) -> Int? {
+        var start = dotIndex
+        while let prev = index(of: .nonSpaceOrCommentOrLinebreak, before: start) {
+            switch tokens[prev] {
+            case .operator(".", _), .delimiter("."):
+                // Only an identifier or a closing scope can precede an ordinary member-access dot.
+                // Anything else (or nothing) means a leading-dot implicit member (`.foo`), which
+                // has no value token to prefix, so bail.
+                guard let beforeDot = index(of: .nonSpaceOrCommentOrLinebreak, before: prev),
+                      tokens[beforeDot].isIdentifier || tokens[beforeDot].isEndOfScope
+                else { return nil }
+                start = prev
+
+            case .identifier:
+                start = prev
+
+            case .operator("?", _), .operator("!", _):
+                // Optional chaining (or force-unwrap) in the receiver changes the result type.
+                return nil
+
+            case .operator(_, .prefix):
+                // A prefix operator right before the receiver (e.g. `-foo`) would be juxtaposed
+                // with the operator we'd insert. Bail rather than emit invalid syntax.
+                return nil
+
+            case .endOfScope(")"), .endOfScope("]"), .endOfScope(">"), .endOfScope("}"):
+                // Skip balanced trailing scopes: call parens `()`, subscripts `[]`, generic
+                // argument clauses `<>`, and trailing closures `{}` (e.g. `foo.filter { ... }.bar`).
+                guard let scopeStart = startOfScope(at: prev) else { return nil }
+                start = scopeStart
+
+            default:
+                // Any other token (infix operator, delimiter, keyword, start of scope) bounds
+                // the receiver expression.
+                return start
+            }
+        }
+        return start
+    }
+
     /// Recursively searches to the start of scopes until we either no longer find a scope or we know we are in a closure.
     func isInClosure(at index: Int) -> Bool {
         guard let startOfScopeIndex = startOfScope(at: index) else {

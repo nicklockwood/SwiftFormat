@@ -1787,7 +1787,7 @@ Use XCTUnwrap or #require in test cases, rather than force unwrapping.
 ## noGuardInTests
 
 Convert guard statements and trailing if statements in unit tests to
-`try #require(...)` / `#expect(...)` or `try XCTUnwrap(...)` / `XCTAssert(...)`.
+`try #require(...)` or `try XCTUnwrap(...)` / `XCTAssert(...)`.
 
 <details>
 <summary>Examples</summary>
@@ -1813,12 +1813,13 @@ Convert guard statements and trailing if statements in unit tests to
 
   struct SomeTests {
       @Test
-      func something() throws {
+-     func something() {
++     func something() throws {
 -         guard let value = optionalValue, value.matchesCondition else {
 -             return
 -         }
 +         let value = try #require(optionalValue)
-+         #expect(value.matchesCondition)
++         try #require(value.matchesCondition)
       }
   }
 ```

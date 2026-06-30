@@ -211,4 +211,19 @@ final class PreferContainsOverRangeTests: XCTestCase {
         // commented call untouched.
         testFormatting(for: input, rule: .preferContainsOverRange, exclude: [.spaceAroundComments])
     }
+
+    func testConvertTrailingClosureReceiverEqualNilNegated() {
+        let input = """
+        let missing = items.map { $0.name }.joined().range(of: "x") == nil
+        """
+
+        // The negating `!` must precede the whole receiver chain, including the leading
+        // `.map { ... }` trailing closure, rather than landing between the closure's `}`
+        // and the chained call.
+        let output = """
+        let missing = !items.map { $0.name }.joined().contains("x")
+        """
+
+        testFormatting(for: input, output, rule: .preferContainsOverRange)
+    }
 }

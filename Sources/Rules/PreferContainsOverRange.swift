@@ -54,7 +54,7 @@ public extension FormatRule {
             // so a negated rewrite can insert `!` before the whole expression. Returns nil if
             // the receiver uses optional chaining (`foo?.range(of:)` yields `Range?`, so the
             // comparison can't be rewritten to a plain `Bool` `contains`).
-            guard let receiverStart = formatter.startOfRangeReceiver(endingAt: dotIndex) else { return }
+            guard let receiverStart = formatter.startOfMemberCallReceiver(endingAt: dotIndex) else { return }
 
             // Rewrite right-to-left so earlier indices stay valid.
 
@@ -89,61 +89,5 @@ public extension FormatRule {
         overload. For this reason the rule is disabled by default, and must be
         enabled via the `--enable preferContainsOverRange` option.
         """
-    }
-}
-
-extension Formatter {
-    /// Given the index of the `.` immediately before a `range(of:)` call, returns the index of
-    /// the first token of the receiver expression that `range(of:)` is called on — the position
-    /// where a `!` should be inserted to negate the whole `contains` call.
-    ///
-    /// Walks backwards across member-access dots and balanced trailing scopes (subscripts, call
-    /// parentheses, and generic argument clauses), and stops at the first token that bounds the
-    /// expression (an infix operator, delimiter, keyword, or start of an enclosing scope).
-    ///
-    /// Returns `nil` when the negating `!` couldn't be placed safely:
-    /// - optional chaining / force-unwrap in the receiver (`foo?.range(of:)` yields `Range?`, so
-    ///   the nil comparison can't become a plain `Bool`-returning `contains`),
-    /// - a leading-dot (implicit member) receiver (`.foo.range(of:)`), where a prefix `!` would be
-    ///   malformed,
-    /// - a prefix operator immediately before the receiver (`-foo.range(of:)`), where inserting `!`
-    ///   would juxtapose unary operators.
-    func startOfRangeReceiver(endingAt dotIndex: Int) -> Int? {
-        var start = dotIndex
-        while let prev = index(of: .nonSpaceOrCommentOrLinebreak, before: start) {
-            switch tokens[prev] {
-            case .operator(".", _), .delimiter("."):
-                // Only an identifier or a closing scope can precede an ordinary member-access dot.
-                // Anything else (or nothing) means a leading-dot implicit member (`.foo`), which
-                // has no value token to prefix with `!`, so bail.
-                guard let beforeDot = index(of: .nonSpaceOrCommentOrLinebreak, before: prev),
-                      tokens[beforeDot].isIdentifier || tokens[beforeDot].isEndOfScope
-                else { return nil }
-                start = prev
-
-            case .identifier:
-                start = prev
-
-            case .operator("?", _), .operator("!", _):
-                // Optional chaining (or force-unwrap) in the receiver changes the result type
-                // of the call, so we can't safely rewrite the nil comparison.
-                return nil
-
-            case .operator(_, .prefix):
-                // A prefix operator right before the receiver (e.g. `-foo`) would be juxtaposed
-                // with the `!` we'd insert. Bail rather than emit invalid syntax.
-                return nil
-
-            case .endOfScope(")"), .endOfScope("]"), .endOfScope(">"):
-                guard let scopeStart = startOfScope(at: prev) else { return nil }
-                start = scopeStart
-
-            default:
-                // Any other token (infix operator, delimiter, keyword, start of scope) bounds
-                // the receiver expression.
-                return start
-            }
-        }
-        return start
     }
 }

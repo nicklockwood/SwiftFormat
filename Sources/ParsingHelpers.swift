@@ -603,6 +603,13 @@ extension Formatter {
                 start = prev
 
             case .identifier:
+                // An identifier directly followed by another identifier (`start`) is a juxtaposition
+                // that can't occur mid-expression — it means `prev` is the last token of a *previous*
+                // statement on the line above (Swift's newline statement terminator isn't a token, so
+                // it can't otherwise bound the walk). The current `start` is the receiver root.
+                if tokens[start].isIdentifier {
+                    return start
+                }
                 start = prev
 
             case .operator("?", _), .operator("!", _):
@@ -615,8 +622,14 @@ extension Formatter {
                 return nil
 
             case .endOfScope(")"), .endOfScope("]"), .endOfScope(">"), .endOfScope("}"):
-                // Skip balanced trailing scopes: call parens `()`, subscripts `[]`, generic
-                // argument clauses `<>`, and trailing closures `{}` (e.g. `foo.filter { ... }.bar`).
+                // A closing scope directly followed by an identifier (`start`) is a juxtaposition
+                // that can't occur mid-expression (a member access would need a `.` between them), so
+                // `prev` closes a *previous* statement on the line above and `start` is the receiver
+                // root. Otherwise skip the balanced trailing scope: call parens `()`, subscripts `[]`,
+                // generic argument clauses `<>`, and trailing closures `{}` (`foo.filter { ... }.bar`).
+                if tokens[start].isIdentifier {
+                    return start
+                }
                 guard let scopeStart = startOfScope(at: prev) else { return nil }
                 start = scopeStart
 

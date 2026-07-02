@@ -196,4 +196,38 @@ final class PreferContainsOverFirstTests: XCTestCase {
 
         testFormatting(for: input, rule: .preferContainsOverFirst)
     }
+
+    func testNegationInsertedAtOwnStatementNotPriorStatementEndingInScope() {
+        // The `== nil` expression is a bare statement following another statement that ends in a
+        // closing `}`. The negating `!` must be inserted before `numbers` on its own line, not
+        // carried up into the previous statement's expression.
+        let input = """
+        perform { work() }
+        numbers.first(where: { $0 < 0 }) == nil
+        """
+
+        let output = """
+        perform { work() }
+        !numbers.contains(where: { $0 < 0 })
+        """
+
+        testFormatting(for: input, output, rule: .preferContainsOverFirst)
+    }
+
+    func testNegationInsertedAtOwnStatementNotPriorStatementEndingInIdentifier() {
+        // Same boundary issue where the previous statement ends in a bare identifier: the walk must
+        // stop at the `identifier` <newline> `numbers` juxtaposition, not treat `state` as part of
+        // the receiver chain.
+        let input = """
+        refresh.state
+        numbers.first(where: { $0 < 0 }) == nil
+        """
+
+        let output = """
+        refresh.state
+        !numbers.contains(where: { $0 < 0 })
+        """
+
+        testFormatting(for: input, output, rule: .preferContainsOverFirst)
+    }
 }

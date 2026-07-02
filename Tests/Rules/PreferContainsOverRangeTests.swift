@@ -226,4 +226,38 @@ final class PreferContainsOverRangeTests: XCTestCase {
 
         testFormatting(for: input, output, rule: .preferContainsOverRange)
     }
+
+    func testNegationInsertedAtOwnStatementNotPriorStatementEndingInScope() {
+        // The `== nil` expression is a bare statement following another statement that ends in a
+        // closing `}`. The negating `!` must be inserted before `text` on its own line, not carried
+        // up into the previous statement's expression.
+        let input = """
+        perform { work() }
+        text.range(of: "x") == nil
+        """
+
+        let output = """
+        perform { work() }
+        !text.contains("x")
+        """
+
+        testFormatting(for: input, output, rule: .preferContainsOverRange)
+    }
+
+    func testNegationInsertedAtOwnStatementNotPriorStatementEndingInIdentifier() {
+        // Same boundary issue where the previous statement ends in a bare identifier: the walk must
+        // stop at the `identifier` <newline> `text` juxtaposition, not treat `state` as part of the
+        // receiver chain.
+        let input = """
+        refresh.state
+        text.range(of: "x") == nil
+        """
+
+        let output = """
+        refresh.state
+        !text.contains("x")
+        """
+
+        testFormatting(for: input, output, rule: .preferContainsOverRange)
+    }
 }

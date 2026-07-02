@@ -153,4 +153,48 @@ final class PreferMinOverSortedTests: XCTestCase {
 
         testFormatting(for: input, rule: .preferMinOverSorted)
     }
+
+    func testConvertSortedFirstInIfLetBinding() {
+        let input = """
+        if let smallest = values.sorted().first {
+            use(smallest)
+        }
+        """
+
+        // The trailing `{` here begins the `if` body, not a closure, so `.first` is still a
+        // property access and should be rewritten.
+        let output = """
+        if let smallest = values.min() {
+            use(smallest)
+        }
+        """
+
+        testFormatting(for: input, output, rule: .preferMinOverSorted)
+    }
+
+    func testConvertSortedFirstInWhileLetBinding() {
+        let input = """
+        while let smallest = values.sorted().first {
+            values.removeFirst()
+        }
+        """
+
+        let output = """
+        while let smallest = values.min() {
+            values.removeFirst()
+        }
+        """
+
+        testFormatting(for: input, output, rule: .preferMinOverSorted)
+    }
+
+    func testPreservesSortedFirstTrailingClosure() {
+        let input = """
+        let match = values.sorted().first { $0 > 0 }
+        """
+
+        // Here the `{` is a trailing closure on `first`, so it's `first(where:)`, not the
+        // `.first` property, and must be left untouched.
+        testFormatting(for: input, rule: .preferMinOverSorted)
+    }
 }

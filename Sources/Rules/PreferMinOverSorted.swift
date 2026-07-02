@@ -44,10 +44,14 @@ public extension FormatRule {
                   formatter.tokens[accessorIndex] == .identifier("first")
             else { return }
 
-            // Ensure `.first` is a property access, not a method call (`.first(where:)`)
-            // or a subscript (`.first[0]`).
+            // Ensure `.first` is a property access, not a method call (`.first(where:)`),
+            // a subscript (`.first[0]`), or a trailing-closure call (`.first { ... }`).
+            // A following `{` that begins a control-flow body rather than a closure (e.g.
+            // `if let x = xs.sorted().first {`) does *not* disqualify it — there `.first` is
+            // still a property access, so only bail on a `{` that actually starts a closure.
             if let tokenAfterAccessor = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: accessorIndex),
-               formatter.tokens[tokenAfterAccessor].isStartOfScope
+               formatter.tokens[tokenAfterAccessor].isStartOfScope,
+               formatter.tokens[tokenAfterAccessor] != .startOfScope("{") || formatter.isStartOfClosure(at: tokenAfterAccessor)
             {
                 return
             }

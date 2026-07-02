@@ -43,6 +43,7 @@
 * [noForceUnwrapInTests](#noForceUnwrapInTests)
 * [numberFormatting](#numberFormatting)
 * [opaqueGenericParameters](#opaqueGenericParameters)
+* [preferContainsOverFilterIsEmpty](#preferContainsOverFilterIsEmpty)
 * [preferContainsOverFirst](#preferContainsOverFirst)
 * [preferCountWhere](#preferCountWhere)
 * [preferFirstWhere](#preferFirstWhere)
@@ -2041,6 +2042,24 @@ Without this declaration, only functions will be reordered, while properties wil
 +     public func d() {}
 +
   }
+```
+
+</details>
+<br/>
+
+## preferContainsOverFilterIsEmpty
+
+Prefer `contains(where:)` over `filter(_:).isEmpty`.
+
+<details>
+<summary>Examples</summary>
+
+```diff
+- if messages.filter({ $0.isUnread }).isEmpty {
++ if !messages.contains(where: { $0.isUnread }) {
+
+- let hasUnread = !messages.filter { $0.isUnread }.isEmpty
++ let hasUnread = messages.contains(where: { $0.isUnread })
 ```
 
 </details>

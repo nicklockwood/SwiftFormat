@@ -589,7 +589,13 @@ extension Formatter {
     ///   malformed,
     /// - a prefix operator immediately before the receiver (`-foo.bar()`), where inserting another
     ///   prefix operator would juxtapose unary operators.
-    func startOfMemberCallReceiver(endingAt dotIndex: Int) -> Int? {
+    ///
+    /// Pass `stoppingAtLeadingNegation: true` when the caller wants to *cancel* an existing prefix
+    /// `!` rather than insert one (e.g. `!xs.filter { … }.isEmpty` → `xs.contains(where: …)`). A
+    /// leading prefix `!` then bounds the receiver on the left (the returned index is the receiver
+    /// root just after the `!`) instead of causing a `nil` bail; the caller can find the `!` itself
+    /// with `index(of:.nonSpaceOrCommentOrLinebreak, before:)`.
+    func startOfMemberCallReceiver(endingAt dotIndex: Int, stoppingAtLeadingNegation: Bool = false) -> Int? {
         var start = dotIndex
         while let prev = index(of: .nonSpaceOrCommentOrLinebreak, before: start) {
             switch tokens[prev] {
@@ -611,6 +617,11 @@ extension Formatter {
                     return start
                 }
                 start = prev
+
+            case .operator("!", .prefix) where stoppingAtLeadingNegation:
+                // Leading boolean negation the caller intends to cancel — it bounds the receiver on
+                // the left. Return the receiver root (the current `start`, just after the `!`).
+                return start
 
             case .operator("?", _), .operator("!", _):
                 // Optional chaining (or force-unwrap) in the receiver changes the result type.

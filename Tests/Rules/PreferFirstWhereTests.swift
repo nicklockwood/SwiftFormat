@@ -172,4 +172,48 @@ final class PreferFirstWhereTests: XCTestCase {
 
         testFormatting(for: input, rule: .preferFirstWhere)
     }
+
+    func testConvertFilterFirstInIfLetBinding() {
+        let input = """
+        if let firstMoon = planets.filter({ $0.hasMoons }).first {
+            visit(firstMoon)
+        }
+        """
+
+        // The trailing `{` here begins the `if` body, not a closure, so `.first` is still a
+        // property access and should be rewritten.
+        let output = """
+        if let firstMoon = planets.first(where: { $0.hasMoons }) {
+            visit(firstMoon)
+        }
+        """
+
+        testFormatting(for: input, output, rule: .preferFirstWhere)
+    }
+
+    func testConvertFilterFirstTrailingClosureInIfLetBinding() {
+        let input = """
+        if let firstMoon = planets.filter { $0.hasMoons }.first {
+            visit(firstMoon)
+        }
+        """
+
+        let output = """
+        if let firstMoon = planets.first(where: { $0.hasMoons }) {
+            visit(firstMoon)
+        }
+        """
+
+        testFormatting(for: input, output, rule: .preferFirstWhere)
+    }
+
+    func testPreservesFilterFirstWithTrailingClosureOnFirst() {
+        let input = """
+        let match = planets.filter { $0.hasMoons }.first { $0.isHabitable }
+        """
+
+        // The final `{` is a trailing closure on `first` (i.e. `first(where:)`), not the `.first`
+        // property, so this must be left untouched.
+        testFormatting(for: input, rule: .preferFirstWhere)
+    }
 }

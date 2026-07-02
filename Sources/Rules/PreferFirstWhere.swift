@@ -47,8 +47,12 @@ public extension FormatRule {
 
             // Ensure the `.first` is a property access, not a method call like `first(where:)`
             // or `first(3)`. Only the no-argument `.first` property is equivalent to `first(where:)`.
+            // A following `{` that begins a control-flow body rather than a closure (e.g.
+            // `if let x = xs.filter { ... }.first {`) does *not* disqualify it — there `.first` is
+            // still a property access, so only bail on a `{` that actually starts a closure.
             if let tokenAfterFirst = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: firstIndex),
-               formatter.tokens[tokenAfterFirst].isStartOfScope
+               formatter.tokens[tokenAfterFirst].isStartOfScope,
+               formatter.tokens[tokenAfterFirst] != .startOfScope("{") || formatter.isStartOfClosure(at: tokenAfterFirst)
             {
                 return
             }

@@ -1,4 +1,6 @@
 title: SwiftFormat
+description: A command-line tool and Xcode Extension for formatting Swift code
+url: http://swiftformat.info
 github_url: https://github.com/nicklockwood/SwiftFormat
 markdown: kramdown
 kramdown:

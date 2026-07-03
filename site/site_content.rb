@@ -39,7 +39,10 @@ class SiteContent
       ---
 
     FRONT
-    File.write(index_path, front_matter + with_toc(readme_body))
+    # Only the top-level (H2) sections are worth a sidebar entry on this page;
+    # nested subsections (e.g. per-package-manager install steps) would make
+    # the TOC too noisy.
+    File.write(index_path, front_matter + with_toc(readme_body, toc_levels: '2..2'))
   end
 
   # Write rules.md from the repo Rules.md.
@@ -66,9 +69,12 @@ class SiteContent
 
   private
 
-  # Prepends the table-of-contents marker to a page's body.
-  def with_toc(body)
-    collapse_blank_lines("#{TOC_MARKER}\n\n#{pad_code_fences(body)}")
+  # Prepends the table-of-contents marker to a page's body. `toc_levels`
+  # overrides the site-wide `kramdown.toc_levels` config (see `_config.yml`)
+  # just for this page, via kramdown's `{::options ... /}` extension.
+  def with_toc(body, toc_levels: nil)
+    marker = toc_levels ? "{::options toc_levels=\"#{toc_levels}\" /}\n#{TOC_MARKER}" : TOC_MARKER
+    collapse_blank_lines("#{marker}\n\n#{pad_code_fences(body)}")
   end
 
   # kramdown only recognizes a fenced code block when it's preceded by a blank
@@ -106,7 +112,8 @@ class SiteContent
       # SwiftFormat
       {:.no_toc}
 
-      A command-line tool and Xcode Extension for formatting Swift code.
+      A command-line tool and Xcode Extension for formatting Swift code
+      {: .heading-note}
     HEADER
   end
 
@@ -175,7 +182,11 @@ class SiteContent
         used << name
         sections[name]
       end
-      ([category[:title], ''] + rule_sections).join("\n")
+      header = [category[:title]]
+      # The `{: .heading-note}` IAL tags the description paragraph so it can
+      # be styled as a muted label instead of a regular line of body text.
+      header += ['', category[:description], '{: .heading-note}'] if category[:description]
+      (header + [''] + rule_sections).join("\n")
     end
 
     # Guard against silently dropping a rule that isn't listed in any category.
@@ -186,17 +197,33 @@ class SiteContent
   end
 
   # Parses the category link lists at the top of Rules.md into
-  # `[{ title: "# Default Rules ...", rules: ["andOperator", ...] }, ...]`.
+  # `[{ title: "# Default Rules", description: "Enabled by default.", rules: ["andOperator", ...] }, ...]`.
   def parse_rule_categories(header_lines)
     categories = []
     header_lines.each do |line|
       if line.start_with?('# ')
-        categories << { title: line, rules: [] }
+        categories << split_category_title(line).merge(rules: [])
       elsif (match = line.match(/^\* \[([^\]]+)\]/)) && !categories.empty?
         categories.last[:rules] << match[1]
       end
     end
     categories
+  end
+
+  # Matches a category heading with a trailing parenthetical, e.g.
+  # "# Default Rules (enabled by default)".
+  CATEGORY_TITLE_PATTERN = /\A(?<heading>#\s+.+?)\s*\((?<note>[^)]+)\)\s*\z/.freeze
+
+  # Splits a category heading's trailing parenthetical (e.g. "(enabled by
+  # default)") out of the heading text and into a sentence-case description
+  # shown as regular text below it, so it isn't rendered as part of the
+  # heading itself (which also keeps it out of the sidebar TOC entry).
+  def split_category_title(line)
+    match = line.match(CATEGORY_TITLE_PATTERN)
+    return { title: line, description: nil } unless match
+
+    note = match[:note]
+    { title: match[:heading], description: "#{note[0].upcase}#{note[1..]}" }
   end
 
   # Splits the rule sections into `{ "ruleName" => "## ruleName\n...section" }`.

@@ -5171,6 +5171,62 @@ final class IndentTests: XCTestCase {
         testFormatting(for: input, output, rule: .indent, options: options)
     }
 
+    func testNoIndentIfdefInMethodChainAfterClosingBrace() {
+        // https://github.com/nicklockwood/SwiftFormat/issues/2535
+        let input = """
+        var body: some View {
+            Form {
+                seasonSection
+                #if DEBUG
+                testDataSection
+                #endif
+                aboutSection
+            }
+            .navigationTitle("Settings")
+            #if DEBUG
+            .navigationDestination(for: SettingsRoute.self) { route in
+                switch route {
+                case .sheetCanvas:
+                    SheetCanvasView()
+                }
+            }
+            #endif
+            .alert("Deletion Failed", isPresented: $showingErrorAlert) {
+                Button("OK", role: .cancel) {}
+            }
+            .task {
+                viewModel.setModelContext(modelContext)
+            }
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        testFormatting(for: input, rule: .indent, options: options)
+    }
+
+    func testNoIndentIfdefInMethodChainAfterMultilineCall() {
+        let input = """
+        var body: some View {
+            ContentView(
+                title: title
+            )
+            .alert(isPresented: $isAlertPresented) {
+                Text("alert")
+            }
+            #if TAIWAN
+            // caution dialog (Taiwan only)
+            .centeredAlert(isPresented: $isCautionPresented) {
+                CautionView(onOk: { confirm() })
+            }
+            #endif
+            .fullScreenCover(item: $webViewURL) { url in
+                WebView(url: url)
+            }
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        testFormatting(for: input, rule: .indent, options: options)
+    }
+
     func testNoIndentFileScope() {
         let input = """
         #if DEBUG

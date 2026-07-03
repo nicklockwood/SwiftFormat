@@ -1,3 +1,9 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 body {
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   font-size: 16px;
@@ -6,6 +12,8 @@ body {
   margin: 0;
   padding: 0;
   color: #1d1d1f;
+  /* Break long tokens (URLs, flags, type names) instead of overflowing. */
+  overflow-wrap: break-word;
 }
 
 /* Navigation */
@@ -34,6 +42,12 @@ html {
   align-items: center;
   justify-content: space-between;
   gap: 1.5rem;
+}
+
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
 .nav-brand {
@@ -85,10 +99,24 @@ html {
   font-weight: 400;
 }
 
+/* Table-of-contents toggle button (shown only on mobile). */
+.toc-toggle {
+  display: none;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: black;
+  background: none;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 0.35rem 0.75rem;
+  cursor: pointer;
+}
+
 /* Page layout: table-of-contents sidebar + content */
 .page {
   display: grid;
-  grid-template-columns: 320px minmax(0, 1fr);
+  grid-template-columns: 280px minmax(0, 1fr);
   column-gap: 3rem;
   /* No top padding so the sidebar tucks flush under the header; flush left
      too, with a gutter kept only on the right edge. */
@@ -102,13 +130,26 @@ html {
   padding: 2rem;
 }
 
+/* No TOC to show, so the sidebar would otherwise render as an empty
+   full-height box (it's still a grid item even with nothing in it). */
+.page.no-toc .toc-sidebar {
+  display: none;
+}
+
 .content {
+  /* Without an explicit width, a grid item with auto margins doesn't stretch
+     to fill its track - it shrinks to fit its content instead (like
+     inline-block), so wide unbreakable content (e.g. long code lines) would
+     blow out the layout instead of scrolling within it. */
+  width: 100%;
   min-width: 0;
   max-width: 860px;
   /* Center the content within the remaining space to the right of the sidebar. */
   margin: 0 auto;
   /* Top padding lives here (not on .page) so the sidebar can reach the header. */
   padding: 2rem 0;
+  /* Break long tokens (URLs, flags) instead of overflowing on narrow screens. */
+  overflow-wrap: break-word;
 }
 
 /* Keep images (logo, screenshots) within the content, never spilling off. */
@@ -150,7 +191,7 @@ html {
 .toc-sidebar #markdown-toc ul {
   list-style: none;
   margin: 0;
-  padding-left: 0.9rem;
+  padding-left: 0;
 }
 
 .toc-sidebar #markdown-toc li {
@@ -176,10 +217,18 @@ html {
   font-weight: 700;
 }
 
-/* Top-level TOC entries stand out a little more. */
-.toc-sidebar > #markdown-toc > li > a {
+/* Top-level TOC entries stand out a little more, but only when they're
+   grouping nested sub-entries (e.g. rules.md's categories). On a flat TOC
+   with no nesting (e.g. index.md) every entry stays the regular gray. */
+.toc-sidebar > #markdown-toc > li:has(> ul) > a {
   color: black;
   font-weight: 600;
+}
+
+/* Give grouped categories a bit of breathing room from the previous group,
+   but not before the first one. Flat TOCs (no nested entries) are unaffected. */
+.toc-sidebar > #markdown-toc > li:has(> ul):not(:first-child) {
+  margin-top: 0.75rem;
 }
 
 strong,
@@ -188,7 +237,8 @@ b {
 }
 
 a {
-  color: #0b5fff;
+  color: black;
+  font-weight: 700;
   text-decoration-line: underline;
   text-decoration-thickness: auto;
   text-underline-offset: 2px;
@@ -200,6 +250,15 @@ h1 {
   font-weight: 700;
   line-height: 44px;
   letter-spacing: -1.2px;
+}
+
+/* Muted label under a heading (e.g. a category's "Enabled by default", or
+   the homepage subtitle), set apart from regular body text so it reads as
+   metadata, not content. */
+.heading-note {
+  margin-top: -0.75rem;
+  color: #86868b;
+  font-size: 15px;
 }
 
 h2 {
@@ -259,10 +318,26 @@ pre {
   border-radius: 6px;
 }
 
+/* Tables scroll horizontally within this wrapper (added by default.html)
+   instead of forcing the whole page wider than the viewport. */
+.table-scroll {
+  overflow-x: auto;
+  margin: 1.5rem 0;
+  -webkit-overflow-scrolling: touch;
+}
+
 table {
   border-collapse: collapse;
   width: 100%;
   margin: 1.5rem 0;
+}
+
+/* Inside the scroll wrapper the table grows with its content (and scrolls),
+   but still fills the width when the content is narrow. */
+.table-scroll table {
+  width: max-content;
+  min-width: 100%;
+  margin: 0;
 }
 
 th,
@@ -279,14 +354,22 @@ th {
 /* Responsive */
 @media (max-width: 700px) {
   .nav-content {
-    padding: 0.75rem 1.5rem;
+    padding: 0.6rem 1rem;
+    gap: 0.75rem;
     align-items: flex-start;
   }
 
-  .nav-links {
+  /* Stack the Contents button beneath the logo on the left. */
+  .nav-left {
     flex-direction: column;
-    align-items: flex-end;
-    gap: 0.25rem;
+    align-items: flex-start;
+    gap: 0.6rem;
+  }
+
+  .nav-links {
+    gap: 0.9rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
   }
 
   .nav-separator {
@@ -297,21 +380,68 @@ th {
     font-size: 14px;
   }
 
+  .nav-title {
+    font-size: 16px;
+  }
+
+  /* The Contents button replaces the sidebar on mobile. */
+  .toc-toggle {
+    display: inline-block;
+  }
+
+  /* Single column; the TOC becomes a toggled full-screen overlay. */
   .page {
     grid-template-columns: minmax(0, 1fr);
-    gap: 1rem;
+    gap: 0;
     padding: 1.5rem;
   }
 
-  /* Stack the TOC above the content instead of pinning it to the side. */
+  /* Lock background scrolling while the TOC overlay is open. */
+  body.toc-open {
+    overflow: hidden;
+  }
+
   .toc-sidebar {
-    position: static;
+    display: none;
+    position: fixed;
+    /* Reset the desktop rule's align-self: start, which otherwise breaks
+       the top/bottom-based height resolution below and makes the overlay
+       grow to its full content height instead of clipping to the viewport. */
+    align-self: auto;
+    top: var(--nav-height);
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 90;
     min-height: 0;
     max-height: none;
-    overflow: visible;
-    background: transparent;
+    overflow-y: auto;
+    background: white;
     border-right: none;
-    border-bottom: 1px solid #ddd;
+    /* Unlike the desktop sidebar, show the scroll indicator here since this
+       overlay covers the whole screen with no other affordance that it
+       scrolls. */
+    scrollbar-width: thin;
+    -ms-overflow-style: auto;
+  }
+
+  .toc-sidebar::-webkit-scrollbar {
+    display: block;
+    width: 6px;
+  }
+
+  body.toc-open .toc-sidebar {
+    display: block;
+  }
+
+  /* Roomier list with larger tap targets in the full-screen overlay. */
+  .toc-sidebar #markdown-toc {
+    padding: 1.25rem 1.5rem 2rem;
+    font-size: 16px;
+  }
+
+  .toc-sidebar #markdown-toc a {
+    padding: 0.3rem 0;
   }
 
   h1 {

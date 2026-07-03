@@ -1,9 +1,12 @@
 <nav class="top-nav">
   <div class="nav-content">
-    <a href="{{ '/' | relative_url }}" class="nav-brand">
-      <img class="brand-logo" src="{{ '/assets/icon.png' | relative_url }}" alt="SwiftFormat logo">
-      <span class="nav-title">SwiftFormat</span>
-    </a>
+    <div class="nav-left">
+      <a href="{{ '/' | relative_url }}" class="nav-brand">
+        <img class="brand-logo" src="{{ '/assets/icon.png' | relative_url }}" alt="SwiftFormat logo">
+        <span class="nav-title">SwiftFormat</span>
+      </a>
+      <button type="button" class="toc-toggle" id="toc-toggle" aria-controls="toc-sidebar" aria-expanded="false">Contents</button>
+    </div>
     <div class="nav-links">
       <a href="{{ '/rules' | relative_url }}" class="nav-link{% if page.url == '/rules' or page.url == '/rules.html' %} active{% endif %}">Rules</a>
       <span class="nav-separator">·</span>

@@ -29,3 +29,12 @@ swiftformat.artifactbundle.zip
 
 # AppCode
 .idea
+
+# Jekyll site build output
+_site/
+.jekyll-cache/
+
+# Generated site pages (built from README.md / Rules.md by `rake site:prepare`)
+site/src/index.md
+site/src/rules.md
+site/src/assets/css/syntax.css

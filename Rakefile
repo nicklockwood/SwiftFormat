@@ -14,7 +14,14 @@ namespace :site do
   desc 'Builds the static site into _site/'
   task build: :prepare do
     env = { 'JEKYLL_ENV' => ENV.fetch('JEKYLL_ENV', 'production') }
-    sh env, 'bundle exec jekyll build --source site/src'
+    command = 'bundle exec jekyll build --source site/src'
+    # On a GitHub Pages project site the pages are served under a base path
+    # (e.g. /SwiftFormat). The deploy workflow passes it in via PAGES_BASE_PATH
+    # so `relative_url` links resolve correctly; it's empty for local builds
+    # and custom domains.
+    base_path = ENV['PAGES_BASE_PATH']
+    command += " --baseurl #{base_path}" if base_path && !base_path.empty?
+    sh env, command
   end
 
   desc 'Serves the site locally for previewing during development'

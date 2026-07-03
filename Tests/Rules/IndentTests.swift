@@ -5190,6 +5190,62 @@ final class IndentTests: XCTestCase {
         testFormatting(for: input, output, rule: .indent, options: options)
     }
 
+    func testNoIndentIfdefInMethodChainAfterClosingBrace() {
+        // https://github.com/nicklockwood/SwiftFormat/issues/2535
+        let input = """
+        var body: some View {
+            VStack {
+                firstSection
+                #if DEBUG
+                debugSection
+                #endif
+                lastSection
+            }
+            .navigationTitle("Title")
+            #if DEBUG
+            .navigationDestination(for: Route.self) { route in
+                switch route {
+                case .detail:
+                    DetailView()
+                }
+            }
+            #endif
+            .alert("Error", isPresented: $showingErrorAlert) {
+                Button("OK", role: .cancel) {}
+            }
+            .task {
+                viewModel.load()
+            }
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        testFormatting(for: input, rule: .indent, options: options)
+    }
+
+    func testNoIndentIfdefInMethodChainAfterMultilineCall() {
+        let input = """
+        var body: some View {
+            ContentView(
+                title: title
+            )
+            .alert(isPresented: $isAlertPresented) {
+                Text("alert")
+            }
+            #if os(iOS)
+            // iOS-only banner
+            .banner(isPresented: $isBannerPresented) {
+                BannerView(onDismiss: { dismiss() })
+            }
+            #endif
+            .fullScreenCover(item: $webViewURL) { url in
+                WebView(url: url)
+            }
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent)
+        testFormatting(for: input, rule: .indent, options: options)
+    }
+
     func testNoIndentFileScope() {
         let input = """
         #if DEBUG

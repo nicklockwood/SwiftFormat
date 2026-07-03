@@ -4,9 +4,16 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ page.title | default: site.title }}</title>
-  {% if page.title %}<meta property="og:title" content="{{ page.title }}">{% endif %}
-  {% if page.description %}<meta name="description" content="{{ page.description }}">{% endif %}
-  {% if page.description %}<meta property="og:description" content="{{ page.description }}">{% endif %}
+  <meta name="description" content="{{ page.description | default: site.description }}">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="{{ page.url | absolute_url }}">
+  <meta property="og:title" content="{{ page.title | default: site.title }}">
+  <meta property="og:description" content="{{ page.description | default: site.description }}">
+  <meta property="og:image" content="{{ '/assets/preview.png' | absolute_url }}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ page.title | default: site.title }}">
+  <meta name="twitter:description" content="{{ page.description | default: site.description }}">
+  <meta name="twitter:image" content="{{ '/assets/preview.png' | absolute_url }}">
   <link rel="icon" href="{{ '/assets/icon.png' | relative_url }}" type="image/png">
   <link rel="stylesheet" href="{{ '/assets/css/syntax.css' | relative_url }}">
   <link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }}">
@@ -34,6 +41,8 @@
       const sidebar = document.getElementById('toc-sidebar');
       if (!toc) {
         document.getElementById('page').classList.add('no-toc');
+        const noToggle = document.getElementById('toc-toggle');
+        if (noToggle) noToggle.style.display = 'none';
         return;
       }
       sidebar.appendChild(toc);
@@ -49,6 +58,37 @@
       }
       syncActiveTocEntry();
       window.addEventListener('hashchange', syncActiveTocEntry);
+
+      // Mobile: the "Contents" button toggles the sidebar as a full-screen
+      // overlay. Tapping an entry closes it so you land on the section.
+      const toggle = document.getElementById('toc-toggle');
+      if (toggle) {
+        function setTocOpen(open) {
+          document.body.classList.toggle('toc-open', open);
+          toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+          toggle.textContent = open ? 'Close' : 'Contents';
+        }
+        toggle.addEventListener('click', function () {
+          setTocOpen(!document.body.classList.contains('toc-open'));
+        });
+        sidebar.addEventListener('click', function (event) {
+          if (event.target.closest('a')) setTocOpen(false);
+        });
+      }
+    })();
+
+    // Wrap each table in a horizontally-scrollable container so wide tables
+    // scroll on their own instead of forcing the whole page wider than the
+    // viewport (which would break text wrapping on mobile).
+    (function () {
+      const tables = document.querySelectorAll('.content table');
+      tables.forEach(function (table) {
+        if (table.parentElement.classList.contains('table-scroll')) return;
+        const wrapper = document.createElement('div');
+        wrapper.className = 'table-scroll';
+        table.parentNode.insertBefore(wrapper, table);
+        wrapper.appendChild(table);
+      });
     })();
 
     // Wrap each heading's text in an anchor to its own id so the link can be

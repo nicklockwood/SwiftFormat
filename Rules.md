@@ -3723,8 +3723,7 @@ Remove `weak` modifier from `@IBOutlet` properties.
 <details>
 <summary>Examples</summary>
 
-As per Apple's recommendation
-(https://developer.apple.com/videos/play/wwdc2015/407/ @ 32:30).
+As per [Apple's recommendation](https://developer.apple.com/videos/play/wwdc2015/407/) (32:30).
 
 ```diff
 - @IBOutlet weak var label: UILabel!

@@ -4048,16 +4048,16 @@ final class IndentTests: XCTestCase {
                 // swiftformat:options --ifdef no-indent
 
                 Text("Hello, world!")
-                // Comment above
-                #if os(macOS)
-                .padding()
-                #endif
+                    // Comment above
+                    #if os(macOS)
+                    .padding()
+                    #endif
 
                 Text("Hello, world!")
-                #if os(macOS)
-                // Comment inside
-                .padding()
-                #endif
+                    #if os(macOS)
+                    // Comment inside
+                    .padding()
+                    #endif
 
                 // swiftformat:options --ifdef outdent
 
@@ -4749,13 +4749,13 @@ final class IndentTests: XCTestCase {
         class Bar {
             func foo() {
                 Text("Hello")
-                #if os(iOS)
-                .font(.largeTitle)
-                #elseif os(macOS)
-                .font(.headline)
-                #else
-                .font(.headline)
-                #endif
+                    #if os(iOS)
+                    .font(.largeTitle)
+                    #elseif os(macOS)
+                    .font(.headline)
+                    #else
+                    .font(.headline)
+                    #endif
             }
         }
         """

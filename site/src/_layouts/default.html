@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ page.title | default: site.title }}</title>
+  {% if page.title %}<meta property="og:title" content="{{ page.title }}">{% endif %}
+  {% if page.description %}<meta name="description" content="{{ page.description }}">{% endif %}
+  {% if page.description %}<meta property="og:description" content="{{ page.description }}">{% endif %}
+  <link rel="icon" href="{{ '/assets/icon.png' | relative_url }}" type="image/png">
+  <link rel="stylesheet" href="{{ '/assets/css/syntax.css' | relative_url }}">
+  <link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }}">
+</head>
+<body>
+  {% include navigation.html %}
+  <div class="page" id="page">
+    <aside class="toc-sidebar" id="toc-sidebar" aria-label="Table of contents"></aside>
+    <main class="content">
+      {{ content }}
+    </main>
+  </div>
+  <script>
+    function updateNavHeight() {
+      const nav = document.querySelector('.top-nav');
+      document.documentElement.style.setProperty('--nav-height', nav.offsetHeight + 'px');
+    }
+    updateNavHeight();
+    window.addEventListener('resize', updateNavHeight);
+
+    // Move the kramdown-generated table of contents into the sidebar. If the
+    // page has no TOC, collapse the sidebar so the content spans full width.
+    (function () {
+      const toc = document.getElementById('markdown-toc');
+      const sidebar = document.getElementById('toc-sidebar');
+      if (!toc) {
+        document.getElementById('page').classList.add('no-toc');
+        return;
+      }
+      sidebar.appendChild(toc);
+
+      // Highlight the TOC entry that matches the current URL fragment.
+      function syncActiveTocEntry() {
+        toc.querySelectorAll('a.active').forEach(function (a) {
+          a.classList.remove('active');
+        });
+        if (!location.hash) return;
+        const current = toc.querySelector('a[href="' + location.hash + '"]');
+        if (current) current.classList.add('active');
+      }
+      syncActiveTocEntry();
+      window.addEventListener('hashchange', syncActiveTocEntry);
+    })();
+
+    // Wrap each heading's text in an anchor to its own id so the link can be
+    // clicked to jump, or right-clicked to copy. kramdown already sets the ids.
+    (function () {
+      const headings = document.querySelectorAll('.content h1[id], .content h2[id], .content h3[id], .content h4[id], .content h5[id], .content h6[id]');
+      headings.forEach(function (heading) {
+        if (heading.querySelector('a')) return; // avoid nesting anchors
+        const link = document.createElement('a');
+        link.className = 'header-anchor';
+        link.href = '#' + heading.id;
+        while (heading.firstChild) {
+          link.appendChild(heading.firstChild);
+        }
+        heading.appendChild(link);
+      });
+    })();
+  </script>
+</body>
+</html>

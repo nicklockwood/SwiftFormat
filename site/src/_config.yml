@@ -1,0 +1,8 @@
+title: SwiftFormat
+github_url: https://github.com/nicklockwood/SwiftFormat
+markdown: kramdown
+kramdown:
+  input: GFM
+  parse_block_html: true
+  syntax_highlighter: rouge
+  toc_levels: 1..3

@@ -1,0 +1,326 @@
+body {
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 26px;
+  margin: 0;
+  padding: 0;
+  color: #1d1d1f;
+}
+
+/* Navigation */
+:root {
+  --nav-height: 63px; /* Fallback, updated dynamically by JS */
+}
+
+html {
+  /* Extra offset so anchor targets aren't hidden under the sticky nav. */
+  scroll-padding-top: calc(var(--nav-height) + 15px);
+}
+
+.top-nav {
+  background: white;
+  border-bottom: 1px solid #e5e5e5;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.nav-content {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.brand-logo {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+}
+
+.nav-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: black;
+  letter-spacing: -0.3px;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.nav-link {
+  font-size: 15px;
+  font-weight: 500;
+  color: #555;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.nav-link:hover {
+  color: black;
+}
+
+.nav-link.active {
+  color: black;
+  font-weight: 600;
+}
+
+.nav-separator {
+  color: #ccc;
+  font-weight: 400;
+}
+
+/* Page layout: table-of-contents sidebar + content */
+.page {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  column-gap: 3rem;
+  /* No top padding so the sidebar tucks flush under the header; flush left
+     too, with a gutter kept only on the right edge. */
+  padding: 0 2rem 0 0;
+}
+
+.page.no-toc {
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.content {
+  min-width: 0;
+  max-width: 860px;
+  /* Center the content within the remaining space to the right of the sidebar. */
+  margin: 0 auto;
+  /* Top padding lives here (not on .page) so the sidebar can reach the header. */
+  padding: 2rem 0;
+}
+
+/* Keep images (logo, screenshots) within the content, never spilling off. */
+.content img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Table of contents sidebar */
+.toc-sidebar {
+  position: sticky;
+  top: var(--nav-height);
+  align-self: start;
+  /* Full-height panel so the right border reads as a continuous divider. */
+  min-height: calc(100vh - var(--nav-height));
+  max-height: calc(100vh - var(--nav-height));
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: #fafafa;
+  border-right: 1px solid #e5e5e5;
+  font-size: 14px;
+  line-height: 1.5;
+  /* Hide the scrollbar while keeping the sidebar scrollable. */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.toc-sidebar::-webkit-scrollbar {
+  display: none;
+}
+
+.toc-sidebar #markdown-toc {
+  list-style: none;
+  margin: 0;
+  /* A little breathing room on the left; the column gap handles the right. */
+  padding: 0.75rem 0.5rem 1.5rem 1rem;
+}
+
+.toc-sidebar #markdown-toc ul {
+  list-style: none;
+  margin: 0;
+  padding-left: 0.9rem;
+}
+
+.toc-sidebar #markdown-toc li {
+  margin: 0.15rem 0;
+}
+
+.toc-sidebar #markdown-toc a {
+  display: block;
+  color: #555;
+  text-decoration: none;
+  font-weight: 500;
+  /* Wrap long rule names instead of scrolling the sidebar horizontally. */
+  overflow-wrap: anywhere;
+}
+
+.toc-sidebar #markdown-toc a:hover {
+  color: black;
+}
+
+/* The entry matching the current URL fragment is highlighted as selected. */
+.toc-sidebar #markdown-toc a.active {
+  color: black;
+  font-weight: 700;
+}
+
+/* Top-level TOC entries stand out a little more. */
+.toc-sidebar > #markdown-toc > li > a {
+  color: black;
+  font-weight: 600;
+}
+
+strong,
+b {
+  font-weight: 700;
+}
+
+a {
+  color: #0b5fff;
+  text-decoration-line: underline;
+  text-decoration-thickness: auto;
+  text-underline-offset: 2px;
+}
+
+h1 {
+  color: black;
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 44px;
+  letter-spacing: -1.2px;
+}
+
+h2 {
+  color: black;
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 30px;
+  letter-spacing: -0.52px;
+  margin-top: 2.5rem;
+}
+
+h3 {
+  color: black;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 26px;
+  letter-spacing: -0.44px;
+}
+
+/* Heading anchors: keep the heading looking plain, reveal a `#` on hover. */
+.content :is(h1, h2, h3, h4, h5, h6) .header-anchor {
+  color: inherit;
+  text-decoration: none;
+}
+
+.content :is(h1, h2, h3, h4, h5, h6) .header-anchor::after {
+  content: " #";
+  color: #bbb;
+  opacity: 0;
+  font-weight: 400;
+}
+
+.content :is(h1, h2, h3, h4, h5, h6):hover .header-anchor::after,
+.content :is(h1, h2, h3, h4, h5, h6) .header-anchor:focus::after {
+  opacity: 1;
+}
+
+pre,
+code {
+  font-family: 'SF Mono', Monaco, Menlo, 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 24px;
+}
+
+:not(pre) > code {
+  background: #f5f5f5;
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+
+pre {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  overflow-x: auto;
+  background: #f6f8fa;
+  border-radius: 6px;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1.5rem 0;
+}
+
+th,
+td {
+  border: 1px solid #ddd;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+
+th {
+  background: #f5f5f5;
+}
+
+/* Responsive */
+@media (max-width: 700px) {
+  .nav-content {
+    padding: 0.75rem 1.5rem;
+    align-items: flex-start;
+  }
+
+  .nav-links {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.25rem;
+  }
+
+  .nav-separator {
+    display: none;
+  }
+
+  .nav-link {
+    font-size: 14px;
+  }
+
+  .page {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+    padding: 1.5rem;
+  }
+
+  /* Stack the TOC above the content instead of pinning it to the side. */
+  .toc-sidebar {
+    position: static;
+    min-height: 0;
+    max-height: none;
+    overflow: visible;
+    background: transparent;
+    border-right: none;
+    border-bottom: 1px solid #ddd;
+  }
+
+  h1 {
+    font-size: 32px;
+    line-height: 36px;
+  }
+
+  h2 {
+    font-size: 22px;
+    line-height: 26px;
+  }
+}

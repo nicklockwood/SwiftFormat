@@ -1,0 +1,13 @@
+<nav class="top-nav">
+  <div class="nav-content">
+    <a href="{{ '/' | relative_url }}" class="nav-brand">
+      <img class="brand-logo" src="{{ '/assets/icon.png' | relative_url }}" alt="SwiftFormat logo">
+      <span class="nav-title">SwiftFormat</span>
+    </a>
+    <div class="nav-links">
+      <a href="{{ '/rules' | relative_url }}" class="nav-link{% if page.url == '/rules' or page.url == '/rules.html' %} active{% endif %}">Rules</a>
+      <span class="nav-separator">·</span>
+      <a href="{{ site.github_url }}" class="nav-link nav-link-external">View on GitHub</a>
+    </div>
+  </div>
+</nav>

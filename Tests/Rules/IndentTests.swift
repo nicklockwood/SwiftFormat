@@ -4048,16 +4048,16 @@ final class IndentTests: XCTestCase {
                 // swiftformat:options --ifdef no-indent
 
                 Text("Hello, world!")
-                // Comment above
-                #if os(macOS)
-                .padding()
-                #endif
+                    // Comment above
+                    #if os(macOS)
+                    .padding()
+                    #endif
 
                 Text("Hello, world!")
-                #if os(macOS)
-                // Comment inside
-                .padding()
-                #endif
+                    #if os(macOS)
+                    // Comment inside
+                    .padding()
+                    #endif
 
                 // swiftformat:options --ifdef outdent
 
@@ -4768,13 +4768,13 @@ final class IndentTests: XCTestCase {
         class Bar {
             func foo() {
                 Text("Hello")
-                #if os(iOS)
-                .font(.largeTitle)
-                #elseif os(macOS)
-                .font(.headline)
-                #else
-                .font(.headline)
-                #endif
+                    #if os(iOS)
+                    .font(.largeTitle)
+                    #elseif os(macOS)
+                    .font(.headline)
+                    #else
+                    .font(.headline)
+                    #endif
             }
         }
         """
@@ -5244,6 +5244,37 @@ final class IndentTests: XCTestCase {
         """
         let options = FormatOptions(ifdefIndent: .noIndent)
         testFormatting(for: input, rule: .indent, options: options)
+    }
+
+    func testNoIndentIfdefInMethodChainWithXcodeIndentation() {
+        // Directives in a method chain must not add an extra indent level
+        // to the enclosed or following lines when xcodeIndentation is enabled
+        let input = """
+        struct ContentView: View {
+            var body: some View {
+                Text("a")
+                    .padding()
+                    #if os(iOS)
+                        .background(Color.red)
+                    #endif
+                        .cornerRadius(8)
+            }
+        }
+        """
+        let output = """
+        struct ContentView: View {
+            var body: some View {
+                Text("a")
+                    .padding()
+                    #if os(iOS)
+                    .background(Color.red)
+                    #endif
+                    .cornerRadius(8)
+            }
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .noIndent, xcodeIndentation: true)
+        testFormatting(for: input, output, rule: .indent, options: options)
     }
 
     func testNoIndentFileScope() {

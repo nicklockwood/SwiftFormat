@@ -139,25 +139,36 @@ public extension FormatRule {
         ```diff
         - let foo: String
         - if condition {
-        + let foo = if condition {
         -     foo = "foo"
-        +     "foo"
-          } else {
+        - } else {
         -     foo = "bar"
-        +     "bar"
-          }
+        - }
 
+        + let foo = if condition {
+        +     "foo"
+        + } else {
+        +     "bar"
+        + }
+        ```
+
+        ```diff
         - let foo: String
         - switch condition {
-        + let foo = switch condition {
-          case true:
+        - case true:
         -     foo = "foo"
-        +     "foo"
-          case false:
+        - case false:
         -     foo = "bar"
-        +     "bar"
-          }
+        - }
 
+        + let foo = switch condition {
+        + case true:
+        +     "foo"
+        + case false:
+        +     "bar"
+        + }
+        ```
+
+        ```diff
           // With --condassignment always (disabled by default)
         - switch condition {
         + foo.bar = switch condition {

@@ -71,8 +71,7 @@ public extension FormatRule {
           struct MyView: View {
         -   @ViewBuilder
             var body: some View {
-              Text("foo")
-              Text("bar")
+              helper
             }
 
         -   @ViewBuilder

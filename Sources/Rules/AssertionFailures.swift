@@ -11,8 +11,8 @@ import Foundation
 public extension FormatRule {
     static let assertionFailures = FormatRule(
         help: """
-        Changes all instances of assert(false, ...) to assertionFailure(...)
-        and precondition(false, ...) to preconditionFailure(...).
+        Changes all instances of `assert(false, ...)` to `assertionFailure(...)`
+        and `precondition(false, ...)` to `preconditionFailure(...)`.
         """
     ) { formatter in
         formatter.forEachToken { i, token in
@@ -42,18 +42,13 @@ public extension FormatRule {
     } examples: {
         """
         ```diff
-        - assert(false)
-        + assertionFailure()
+        - assert(false, "message")
+        + assertionFailure("message")
         ```
 
         ```diff
-        - assert(false, "message", 2, 1)
-        + assertionFailure("message", 2, 1)
-        ```
-
-        ```diff
-        - precondition(false, "message", 2, 1)
-        + preconditionFailure("message", 2, 1)
+        - precondition(false, "message")
+        + preconditionFailure("message")
         ```
         """
     }

@@ -68,7 +68,7 @@ public extension FormatRule {
             }
     } examples: {
         """
-        ```dif
+        ```diff
           switch self {
         - case .b, .a, .c, .e, .d:
         + case .a, .b, .c, .d, .e:

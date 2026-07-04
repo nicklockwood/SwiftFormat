@@ -61,34 +61,26 @@ public extension FormatRule {
     } examples: {
         """
         ```diff
-          import XCTest
+          import Testing
 
-          final class MyTests: XCTestCase {
-        -     public func testExample() {
-        +     func testExample() {
-                  XCTAssertTrue(true)
-              }
+          struct MyFeatureTests {
+        -     @Test public func featureWorks() { ... }
+        +     @Test func featureWorks() { ... }
 
-        -     func helperMethod() {
-        +     private func helperMethod() {
-                  // helper code
-              }
+        -     func helperMethod() { ... }
+        +     private func helperMethod() { ... }
           }
         ```
 
         ```diff
-          import Testing
+          import XCTest
 
-          struct MyFeatureTests {
-        -     @Test public func featureWorks() {
-        +     @Test func featureWorks() {
-                  #expect(true)
-              }
+          final class MyTests: XCTestCase {
+        -     public func testExample() { ... }
+        +     func testExample() { ... }
 
-        -     func helperMethod() {
-        +     private func helperMethod() {
-                  // helper code
-              }
+        -     func helperMethod() { ... }
+        +     private func helperMethod() { ... }
           }
         ```
         """

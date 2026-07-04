@@ -68,7 +68,9 @@ public extension FormatRule {
         + @Test func myFeature() {
               #expect(foo == 1)
           }
+        ```
 
+        ```diff
           import XCTest
 
           class TestCase: XCTestCase {

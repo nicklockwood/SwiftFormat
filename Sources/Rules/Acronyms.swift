@@ -92,13 +92,16 @@ public extension FormatRule {
         """
         ```diff
         - let destinationUrl: URL
-        - let urlRouter: UrlRouter
-        - let screenIds: [String]
-        - let entityUuid: UUID
-
         + let destinationURL: URL
-        + let urlRouter: URLRouter
+        ```
+
+        ```diff
+        - let screenIds: [String]
         + let screenIDs: [String]
+        ```
+
+        ```diff
+        - let entityUuid: UUID
         + let entityUUID: UUID
         ```
         """

@@ -10,7 +10,7 @@ import Foundation
 
 public extension FormatRule {
     static let validateTestCases = FormatRule(
-        help: "Ensure test case methods have the correct `test` prefix or `@Test` attribute.",
+        help: "Ensure test case methods have the correct `@Test` attribute or `test` prefix.",
         disabledByDefault: true
     ) { formatter in
         guard let testFramework = formatter.detectTestingFramework() else {
@@ -37,17 +37,6 @@ public extension FormatRule {
     } examples: {
         """
         ```diff
-          import XCTest
-
-          final class MyTests: XCTestCase {
-        -     func myFeatureWorksCorrectly() {
-        +     func testMyFeatureWorksCorrectly() {
-                  XCTAssertTrue(myFeature.worksCorrectly)
-              }
-          }
-        ```
-
-        ```diff
           import Testing
 
           struct MyFeatureTests {
@@ -55,10 +44,16 @@ public extension FormatRule {
         +     @Test func myFeatureWorksCorrectly() {
                   #expect(myFeature.worksCorrectly)
               }
+          }
+        ```
 
-        -     func myFeatureHasNoBugs() {
-        +     @Test func myFeatureHasNoBugs() {
-                  #expect(myFeature.hasNoBugs)
+        ```diff
+          import XCTest
+
+          final class MyTests: XCTestCase {
+        -     func myFeatureWorksCorrectly() {
+        +     func testMyFeatureWorksCorrectly() {
+                  XCTAssertTrue(myFeature.worksCorrectly)
               }
           }
         ```

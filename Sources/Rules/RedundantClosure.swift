@@ -197,11 +197,9 @@ public extension FormatRule {
 
         ```diff
         - lazy var bar = {
-        -     Bar(baaz: baaz,
-        -         quux: quux)
+        -     Bar(baaz: baaz, quux: quux)
         - }()
-        + lazy var bar = Bar(baaz: baaz,
-        +                    quux: quux)
+        + lazy var bar = Bar(baaz: baaz, quux: quux)
         ```
         """
     }

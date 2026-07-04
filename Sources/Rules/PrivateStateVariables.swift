@@ -37,9 +37,11 @@ public extension FormatRule {
         ```diff
         - @State var anInt: Int
         + @State private var anInt: Int
+        ```
 
+        ```diff
         - @StateObject var myInstance: MyObject
-        + @StateObject private var myInstace: MyObject
+        + @StateObject private var myInstance: MyObject
         ```
         """
     }

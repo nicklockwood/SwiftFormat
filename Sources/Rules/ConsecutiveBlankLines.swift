@@ -37,12 +37,6 @@ public extension FormatRule {
 
             print(x)
           }
-
-          func foo() {
-            let x = "bar"
-
-            print(x)
-          }
         ```
         """
     }

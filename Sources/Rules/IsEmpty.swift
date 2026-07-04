@@ -96,10 +96,14 @@ public extension FormatRule {
         ```diff
         - if foo.count == 0 {
         + if foo.isEmpty {
+        ```
 
+        ```diff
         - if foo.count > 0 {
         + if !foo.isEmpty {
+        ```
 
+        ```diff
         - if foo?.count == 0 {
         + if foo?.isEmpty == true {
         ```

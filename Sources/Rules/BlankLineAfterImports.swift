@@ -39,7 +39,6 @@ public extension FormatRule {
         ```diff
           import A
           import B
-          @testable import D
         +
           class Foo {
             // foo

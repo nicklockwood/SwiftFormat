@@ -43,8 +43,6 @@ public extension FormatRule {
           [0, 1, 2]
               .map { $0 * 2 }
         -
-        -
-        -
               .map { $0 * 3 }
         ```
         """

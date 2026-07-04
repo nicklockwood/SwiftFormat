@@ -111,22 +111,10 @@ public extension FormatRule {
           func foo() {
             // foo
           }
-          func bar() {
-            // bar
-          }
-          var baz: Bool
-          var quux: Int
-
-          func foo() {
-            // foo
-          }
         +
           func bar() {
             // bar
           }
-        +
-          var baz: Bool
-          var quux: Int
         ```
         """
     }

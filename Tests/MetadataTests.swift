@@ -125,6 +125,8 @@ final class MetadataTests: XCTestCase {
         for rule in FormatRules.all {
             guard let examples = rule.examples else { continue }
 
+            XCTAssert(examples.contains("```diff"), "Rule examples must have at least one diff block")
+
             // Parse all diff code blocks in the examples and validate they don't have unbalanced tokens
             let codeBlocks: [MarkdownCodeBlock]
             do {

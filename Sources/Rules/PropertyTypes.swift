@@ -281,13 +281,9 @@ public extension FormatRule {
 
         - let array: [Int] = []
         + let array = [Int]()
+        ```
 
-        - let set: Set<Int> = []
-        + let set = Set<Int>()
-
-        - let dict: [String: Int] = [:]
-        + let dict = [String: Int]()
-
+        ```diff
           // with --propertytypes explicit
         - let view = UIView()
         + let view: UIView = .init()
@@ -297,13 +293,9 @@ public extension FormatRule {
 
         - let array = [Int]()
         + let array: [Int] = []
+        ```
 
-        - let set = Set<Int>()
-        + let set: Set<Int> = []
-
-        - let dict = [String: Int]()
-        + let dict: [String: Int] = [:]
-
+        ```diff
           // with --propertytypes infer-locals-only
           class Foo {
         -     let view: UIView = UIView()
@@ -314,17 +306,6 @@ public extension FormatRule {
         +         let view = UIView()
               }
           }
-
-          // with --inferredtypes always:
-        - let foo: Foo =
-        + let foo =
-            if condition {
-        -     .init(bar)
-        +     Foo(bar)
-            } else {
-        -     .init(baaz)
-        +     Foo(baaz)
-            }
         ```
         """
     }

@@ -84,24 +84,13 @@ public extension FormatRule {
 
         - @Suite
           struct MyFeatureTests {
-              @Test func myFeature() {
-                  #expect(true)
-              }
-          }
-
-        - @Suite()
-          struct OtherTests {
-              @Test func otherFeature() {
-                  #expect(true)
-              }
+              @Test func myFeature() { ... }
           }
 
           // Not redundant - @Suite has arguments
           @Suite(.serialized)
           struct SerializedTests {
-              @Test func feature() {
-                  #expect(true)
-              }
+              @Test func feature() { ... }
           }
         ```
         """

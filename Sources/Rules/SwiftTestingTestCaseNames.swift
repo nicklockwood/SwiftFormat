@@ -54,21 +54,11 @@ public extension FormatRule {
           import Testing
 
           struct MyFeatureTests {
-        -     @Test func testMyFeatureHasNoBugs() {
-        +     @Test func `my feature has no bugs`() {
-                  let myFeature = MyFeature()
-                  myFeature.runAction()
-                  #expect(!myFeature.hasBugs, "My feature has no bugs")
-                  #expect(myFeature.crashes.isEmpty, "My feature doesn't crash")
-                  #expect(myFeature.crashReport == nil)
-              }
+        -     @Test func testMyFeatureHasNoBugs() { ... }
+        +     @Test func `my feature has no bugs`() { ... }
 
-        -     @Test func `test feature works as expected`(_ feature: Feature) {
-        +     @Test func `feature works as expected`(_ feature: Feature) {
-                let myFeature = MyFeature()
-                myFeature.run(feature)
-                #expect(myFeature.worksAsExpected)
-            }
+        -     @Test func `test feature works as expected`(_ feature: Feature) { ... }
+        +     @Test func `feature works as expected`(_ feature: Feature) { ... }
           }
         ```
         """

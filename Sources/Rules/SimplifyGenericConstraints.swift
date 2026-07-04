@@ -62,14 +62,6 @@ public extension FormatRule {
         - struct Foo<T, U> where T: Hashable, U: Codable {}
         + struct Foo<T: Hashable, U: Codable> {}
 
-        - class Bar<Element> where Element: Equatable {
-        + class Bar<Element: Equatable> {
-              // ...
-          }
-
-        - enum Result<Value, Error> where Value: Decodable, Error: Swift.Error {}
-        + enum Result<Value: Decodable, Error: Swift.Error> {}
-
         - func process<T>(_ value: T) where T: Codable {}
         + func process<T: Codable>(_ value: T) {}
         ```

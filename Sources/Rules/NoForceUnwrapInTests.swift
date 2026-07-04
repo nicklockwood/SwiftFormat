@@ -231,35 +231,27 @@ public extension FormatRule {
     } examples: {
         """
         ```diff
-            import Testing
+          import Testing
 
-            struct MyFeatureTests {
-        -       @Test func myFeature() {
-        -           let myValue = foo.bar!.value as! Value
-        -           let otherValue = (foo! as! Other).bar
-        -           otherValue.manager!.prepare()
-        -           #expect(myValue!.property! == other)
-        +       @Test func myFeature() throws {
-        +           let myValue = try #require(foo.bar?.value as? Value)
-        +           let otherValue = try #require((foo as? Other)?.bar)
-        +           otherValue.manager?.prepare()
-        +           #expect(myValue?.property == other)
+          struct MyFeatureTests {
+        -     @Test func myFeature() {
+        -         let value = foo.bar!.value
+        +     @Test func myFeature() throws {
+        +         let value = try #require(foo.bar?.value)
               }
-            }
+          }
+        ```
 
-            import XCTest
+        ```diff
+          import XCTest
 
-            class MyFeatureTests: XCTestCase {
-        -       func testMyFeature() {
-        -           let myValue = foo.bar!.value as! Value
-        -           let otherValue = (foo! as! Other).bar
-        -           XCTAssertEqual(myValue!.property!, "foo")
-        +       func testMyFeature() throws {
-        +           let myValue = try XCTUnwrap(foo.bar?.value as? Value)
-        +           let otherValue = try XCTUnwrap((foo as? Other)?.bar)
-        +           XCTAssertEqual(myValue?.property, otherValue)
+          class MyFeatureTests: XCTestCase {
+        -     func testMyFeature() {
+        -         let value = foo.bar!.value
+        +     func testMyFeature() throws {
+        +         let value = try XCTUnwrap(foo.bar?.value)
               }
-            }
+          }
         ```
         """
     }

@@ -227,15 +227,9 @@ public extension FormatRule {
 
           // Supports anonymous closures
         - strings.forEach {
+        -     print($0)
         + for string in strings {
-        -     print($0)
         +     print(string)
-          }
-
-        - foo.item().bar[2].baazValues(option: true).forEach {
-        + for baazValue in foo.item().bar[2].baazValues(option: true) {
-        -     print($0)
-        +     print(baazValue)
           }
 
           // Doesn't affect long multiline functional chains

@@ -50,57 +50,21 @@ public extension FormatRule {
         `--line-between-guards false` (default)
 
         ```diff
-            // Multiline guard
-            guard let spicy = self.makeSpicy() else {
-                return
-            } 
+          guard let foo else { return }
         -
-            guard let yummy = self.makeYummy() else {
-                return
-            }
-            guard let soap = self.clean() else {
-                return
-            }
+          guard let bar else { return }
         +
-            let doTheJob = nikekov()
-        ```
-        ```diff
-            // Single-line guard
-            guard let spicy = self.makeSpicy() else { return }
-        -
-            guard let yummy = self.makeYummy() else { return }
-            guard let soap = self.clean() else { return }
-        +
-            let doTheJob = nikekov()
+          print(foo, bar)
         ```
 
         `--line-between-guards true`
 
         ```diff
-            // Multiline guard
-            guard let spicy = self.makeSpicy() else {
-                return
-            }
-
-            guard let yummy = self.makeYummy() else {
-                return
-            }
+          guard let foo else { return }
         +
-            guard let soap = self.clean() else {
-                return
-            }
+          guard let bar else { return }
         +
-            let doTheJob = nikekov()
-        ```
-        ```diff
-            // Single-line guard
-            guard let spicy = self.makeSpicy() else { return }
-
-            guard let yummy = self.makeYummy() else { return }
-        +
-            guard let soap = self.clean() else { return }
-        +
-            let doTheJob = nikekov()
+          print(foo, bar)
         ```
         """
     }

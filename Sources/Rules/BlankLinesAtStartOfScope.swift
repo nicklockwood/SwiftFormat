@@ -62,21 +62,6 @@ public extension FormatRule {
           }
         ```
 
-        ```diff
-          array = [
-        -
-            foo,
-            bar,
-            baz,
-          ]
-
-          array = [
-            foo,
-            bar,
-            baz,
-          ]
-        ```
-
         With `--type-blank-lines insert`:
 
         ```diff

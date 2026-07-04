@@ -84,15 +84,11 @@ public extension FormatRule {
         With `--url-macro "#URL,URLFoundation"`:
 
         ```diff
-        - let url = URL(string: "https://example.com")!
+          import Foundation
         + import URLFoundation
-        + let url = #URL("https://example.com")
-        ```
 
-        ```diff
-        - return URL(string: "https://api.example.com/users")!
-        + import URLFoundation
-        + return #URL("https://api.example.com/users")
+        - let url = URL(string: "https://example.com")!
+        + let url = #URL("https://example.com")
         ```
         """
     }

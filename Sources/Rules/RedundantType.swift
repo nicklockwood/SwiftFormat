@@ -163,23 +163,6 @@ public extension FormatRule {
         +         let view = UIView()
               }
           }
-
-          // Swift 5.9+, with --propertytypes inferred (SE-0380)
-        - let foo: Foo = if condition {
-        + let foo = if condition {
-              Foo("foo")
-          } else {
-              Foo("bar")
-          }
-
-          // Swift 5.9+, with --propertytypes explicit (SE-0380)
-          let foo: Foo = if condition {
-        -     Foo("foo")
-        +     .init("foo")
-          } else {
-        -     Foo("bar")
-        +     .init("foo")
-          }
         ```
         """
     }

@@ -224,16 +224,6 @@ public extension FormatRule {
         ```
 
         ```diff
-        - func foo(_ bar: Int) {
-            ...
-          }
-
-        + func foo(_: Int) {
-            ...
-          }
-        ```
-
-        ```diff
         - request { response, data in
             self.data += data
           }

@@ -183,19 +183,27 @@ public extension FormatRule {
         + let a: Int
         + let b: Int
         + let c: Int
+        ```
 
+        ```diff
         - public var foo = 10, bar = false
         + public var foo = 10
         + public var bar = false
+        ```
 
+        ```diff
         - var (foo, bar) = ("foo", "bar")
         + var foo = "foo"
         + var bar = "bar"
+        ```
 
+        ```diff
         - private let (foo, bar): (Int, Bool) = (10, false)
         + private let foo: Int = 10
         + private let bar: Bool = false
+        ```
 
+        ```diff
           // Preserved:
           let (foo, bar) = methodCallWithPossibleSideEffects()
         ```

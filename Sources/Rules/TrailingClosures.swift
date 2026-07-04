@@ -156,12 +156,7 @@ public extension FormatRule {
         """
         ```diff
         - DispatchQueue.main.async(execute: { ... })
-        + DispatchQueue.main.async {
-        ```
-
-        ```diff
-        - let foo = bar.map({ ... }).joined()
-        + let foo = bar.map { ... }.joined()
+        + DispatchQueue.main.async { ... }
         ```
 
         ```diff

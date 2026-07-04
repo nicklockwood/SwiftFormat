@@ -271,11 +271,6 @@ public extension FormatRule {
               print(value)
           }
 
-        - func handle<T>(_ value: T) where T: Fooable, T: Barable {
-        + func handle(_ value: some Fooable & Barable) {
-              print(value)
-          }
-
         - func handle<T: Collection>(_ value: T) where T.Element == Foo {
         + func handle(_ value: some Collection<Foo>) {
               print(value)

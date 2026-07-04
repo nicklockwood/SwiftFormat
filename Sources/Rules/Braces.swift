@@ -92,16 +92,28 @@ public extension FormatRule {
         - {
             // foo
           }
+        + if x {
+            // foo
+          }
+        ```
+
+        ```diff
         - else
         - {
             // bar
           }
-
-        + if x {
-            // foo
-          }
         + else {
             // bar
+          }
+        ```
+
+        `--allman true`
+
+        ```diff
+        - if x {
+        + if x
+        + {
+              // foo
           }
         ```
         """

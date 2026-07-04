@@ -84,23 +84,13 @@ public extension FormatRule {
     } examples: {
         """
         ```diff
-        - if true && true {
-        + if true, true {
+        - if isValid && isEnabled {
+        + if isValid, isEnabled {
         ```
 
         ```diff
-        - guard true && true else {
-        + guard true, true else {
-        ```
-
-        ```diff
-        - if functionReturnsBool() && true {
-        + if functionReturnsBool(), true {
-        ```
-
-        ```diff
-        - if functionReturnsBool() && variable {
-        + if functionReturnsBool(), variable {
+        - guard user.isLoggedIn && user.hasPermission else {
+        + guard user.isLoggedIn, user.hasPermission else {
         ```
         """
     }

@@ -20,16 +20,14 @@ public extension FormatRule {
     } examples: {
         """
         ```diff
-          func foobar(foo: Int, bar: Int) {
-            self.foo = foo
-            self.bar = bar
-        -   self.baz = 42
+          func rename(title: String) {
+            self.title = title
+        -   self.subtitle = nil
           }
 
-          func foobar(foo: Int, bar: Int) {
-            self.foo = foo
-            self.bar = bar
-        +   baz = 42
+          func rename(title: String) {
+            self.title = title
+        +   subtitle = nil
           }
         ```
 
@@ -46,16 +44,14 @@ public extension FormatRule {
         by using `--self init-only`:
 
         ```diff
-          init(foo: Int, bar: Int) {
-            self.foo = foo
-            self.bar = bar
-        -   baz = 42
+          init(title: String) {
+            self.title = title
+        -   subtitle = nil
           }
 
-          init(foo: Int, bar: Int) {
-            self.foo = foo
-            self.bar = bar
-        +   self.baz = 42
+          init(title: String) {
+            self.title = title
+        +   self.subtitle = nil
           }
         ```
         """

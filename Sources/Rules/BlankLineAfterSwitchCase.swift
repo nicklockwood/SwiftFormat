@@ -47,75 +47,25 @@ public extension FormatRule {
         `--blank-line-after-switch-case multiline-only` (default)
 
         ```diff
-          func handle(_ action: SpaceshipAction) {
-              switch action {
-              case .engageWarpDrive:
-                  navigationComputer.destination = targetedDestination
-                  await warpDrive.spinUp()
-                  warpDrive.activate()
+          switch action {
+          case .engageWarpDrive:
+              navigationComputer.destination = targetedDestination
+              warpDrive.activate()
         +
-              case let .scanPlanet(planet):
-                  scanner.target = planet
-                  scanner.scanAtmosphere()
-                  scanner.scanBiosphere()
-                  scanner.scanForArticialLife()
-        +
-              case .handleIncomingEnergyBlast:
-                  await energyShields.prepare()
-                  energyShields.engage()
-              }
+          case .handleIncomingEnergyBlast:
+              energyShields.engage()
           }
         ```
 
-        ```diff
-          func handle(_ action: SpaceshipAction) {
-              switch action {
-              case .engageWarpDrive:
-                  warpDrive.activate()
-
-              case let .scanPlanet(planet):
-                  scanner.scanForArticialLife()
-
-              case .handleIncomingEnergyBlast:
-                  energyShields.engage()
-              }
-          }
-        ```
-        `--blank-line-after-switch-case always` 
+        `--blank-line-after-switch-case always`
 
         ```diff
-          func handle(_ action: SpaceshipAction) {
-              switch action {
-              case .engageWarpDrive:
-                  navigationComputer.destination = targetedDestination
-                  await warpDrive.spinUp()
-                  warpDrive.activate()
+          switch action {
+          case .engageWarpDrive:
+              warpDrive.activate()
         +
-              case let .scanPlanet(planet):
-                  scanner.target = planet
-                  scanner.scanAtmosphere()
-                  scanner.scanBiosphere()
-                  scanner.scanForArticialLife()
-        +
-              case .handleIncomingEnergyBlast:
-                  await energyShields.prepare()
-                  energyShields.engage()
-              }
-          }
-        ```
-
-        ```diff
-          func handle(_ action: SpaceshipAction) {
-              switch action {
-              case .engageWarpDrive:
-                  warpDrive.activate()
-        +
-              case let .scanPlanet(planet):
-                  scanner.scanForArticialLife()
-        +
-              case .handleIncomingEnergyBlast:
-                  energyShields.engage()
-              }
+          case .handleIncomingEnergyBlast:
+              energyShields.engage()
           }
         ```
         """#

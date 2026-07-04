@@ -178,13 +178,11 @@ public extension FormatRule {
         - array.filter { return $0.foo == bar }
         + array.filter { $0.foo == bar }
 
-          // Swift 5.1+ (SE-0255)
           var foo: String {
         -     return "foo"
         +     "foo"
           }
 
-          // Swift 5.9+ (SE-0380) and with conditionalAssignment rule enabled
           func foo(_ condition: Bool) -> String {
               if condition {
         -         return "foo"

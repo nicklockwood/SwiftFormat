@@ -167,8 +167,8 @@ public extension FormatRule {
     } examples: {
         """
         ```diff
-        - typealias Placeholders = Foo & Bar & Baaz & Quux
-        + typealias Placeholders = Baaz & Bar & Foo & Quux
+        - typealias Placeholders = Foo & Bar & Baaz
+        + typealias Placeholders = Baaz & Bar & Foo
 
           typealias Dependencies
         -     = FooProviding
@@ -176,7 +176,6 @@ public extension FormatRule {
               & BarProviding
         -     & BaazProviding
         +     & FooProviding
-              & QuuxProviding
         ```
         """
     }

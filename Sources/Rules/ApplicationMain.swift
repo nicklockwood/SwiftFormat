@@ -13,8 +13,8 @@ public extension FormatRule {
     /// attributes with `@main` in Swift 5.3 and above, per SE-0383
     static let applicationMain = FormatRule(
         help: """
-        Replace obsolete @UIApplicationMain and @NSApplicationMain attributes
-        with @main for Swift 5.3 and above.
+        Replace obsolete `@UIApplicationMain` and `@NSApplicationMain` attributes
+        with `@main`.
         """
     ) { formatter in
         guard formatter.options.swiftVersion >= "5.3" else {

@@ -192,22 +192,12 @@ public extension FormatRule {
           ]
         ```
 
-        Swift 6.1 and later with `--trailing-commas always`:
-
         ```diff
           func foo(
               bar: Int,
         -     baaz: Int
         +     baaz: Int,
           ) {}
-        ```
-
-        ```diff
-          foo(
-              bar: 1,
-        -     baaz: 2
-        +     baaz: 2,
-          )
         ```
 
         ```diff

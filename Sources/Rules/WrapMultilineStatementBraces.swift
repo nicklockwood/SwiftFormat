@@ -47,19 +47,6 @@ public extension FormatRule {
         ```
 
         ```diff
-          guard foo,
-        -   bar else {
-            // ...
-          }
-
-          guard foo,
-        +   bar else
-        + {
-            // ...
-          }
-        ```
-
-        ```diff
           func foo(
             bar: Int,
         -   baz: Int) {
@@ -69,19 +56,6 @@ public extension FormatRule {
           func foo(
             bar: Int,
         +   baz: Int)
-        + {
-            // ...
-          }
-        ```
-
-        ```diff
-          class Foo: NSObject,
-        -   BarProtocol {
-            // ...
-          }
-
-          class Foo: NSObject,
-        +   BarProtocol
         + {
             // ...
           }

@@ -98,23 +98,15 @@ public extension FormatRule {
     } examples: {
         """
         ```diff
-        -  fileprivate let someConstant = "someConstant"
-        +  private let someConstant = "someConstant"
-        ```
-
-        In Swift 4 and above, `fileprivate` can also be replaced with `private` for
-        members that are only accessed from extensions in the same file:
-
-        ```diff
-          class Foo {
-        -   fileprivate var foo = "foo"
-        +   private var foo = "foo"
+          struct Foo {
+        -     fileprivate let bar = "bar"
+        +     private let bar = "bar"
           }
 
           extension Foo {
-            func bar() {
-              print(self.foo)
-            }
+              func printBar() {
+                  print(bar)
+              }
           }
         ```
         """

@@ -75,8 +75,6 @@ public extension FormatRule {
         """
         ```diff
           struct Foo {
-        -     public let bar: Bar
-        +     let bar: Bar
         -     public func baz() {}
         +     func baz() {}
           }

@@ -44,25 +44,27 @@ public extension FormatRule {
     } examples: {
         """
         ```diff
-            import Testing
+          import Testing
 
-            struct MyFeatureTests {
-        -       @Test func doSomething() {
-        +       @Test func doSomething() throws {
-        -           try! MyFeature().doSomething()
-        +           try MyFeature().doSomething()
+          struct MyFeatureTests {
+        -     @Test func doSomething() {
+        -         try! MyFeature().doSomething()
+        +     @Test func doSomething() throws {
+        +         try MyFeature().doSomething()
               }
-            }
+          }
+        ```
 
-            import XCTeset
+        ```diff
+          import XCTest
 
-            class MyFeatureTests: XCTestCase {
-        -       func test_doSomething() {
-        +       func test_doSomething() throws {
-        -           try! MyFeature().doSomething()
-        +           try MyFeature().doSomething()
+          class MyFeatureTests: XCTestCase {
+        -     func test_doSomething() {
+        -         try! MyFeature().doSomething()
+        +     func test_doSomething() throws {
+        +         try MyFeature().doSomething()
               }
-            }
+          }
         ```
         """
     }

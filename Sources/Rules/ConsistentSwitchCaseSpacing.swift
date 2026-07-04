@@ -46,30 +46,19 @@ public extension FormatRule {
     } examples: {
         #"""
         ```diff
-          func handle(_ action: SpaceshipAction) {
-              switch action {
-              case .engageWarpDrive:
-                  navigationComputer.destination = targetedDestination
-                  await warpDrive.spinUp()
-                  warpDrive.activate()
+          switch action {
+          case .engageWarpDrive:
+              warpDrive.activate()
 
-              case .enableArtificialGravity:
-                  artificialGravityEngine.enable(strength: .oneG)
+          case .enableArtificialGravity:
+              artificialGravityEngine.enable()
         +
-              case let .scanPlanet(planet):
-                  scanner.target = planet
-                  scanner.scanAtmosphere()
-                  scanner.scanBiosphere()
-                  scanner.scanForArtificialLife()
-
-              case .handleIncomingEnergyBlast:
-                  energyShields.engage()
-              }
+          case .handleIncomingEnergyBlast:
+              energyShields.engage()
           }
         ```
 
         ```diff
-          var name: PlanetType {
           switch self {
           case .mercury:
               "Mercury"
@@ -78,17 +67,6 @@ public extension FormatRule {
               "Venus"
           case .earth:
               "Earth"
-          case .mars:
-              "Mars"
-        -
-          case .jupiter:
-              "Jupiter"
-          case .saturn:
-              "Saturn"
-          case .uranus:
-              "Uranus"
-          case .neptune:
-              "Neptune"
           }
         ```
         """#

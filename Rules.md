@@ -177,13 +177,16 @@ Option | Description
 
 ```diff
 - let destinationUrl: URL
-- let urlRouter: UrlRouter
-- let screenIds: [String]
-- let entityUuid: UUID
-
 + let destinationURL: URL
-+ let urlRouter: URLRouter
+```
+
+```diff
+- let screenIds: [String]
 + let screenIDs: [String]
+```
+
+```diff
+- let entityUuid: UUID
 + let entityUUID: UUID
 ```
 
@@ -198,23 +201,13 @@ Prefer comma over `&&` in `if`, `guard` or `while` conditions.
 <summary>Examples</summary>
 
 ```diff
-- if true && true {
-+ if true, true {
+- if isValid && isEnabled {
++ if isValid, isEnabled {
 ```
 
 ```diff
-- guard true && true else {
-+ guard true, true else {
-```
-
-```diff
-- if functionReturnsBool() && true {
-+ if functionReturnsBool(), true {
-```
-
-```diff
-- if functionReturnsBool() && variable {
-+ if functionReturnsBool(), variable {
+- guard user.isLoggedIn && user.hasPermission else {
++ guard user.isLoggedIn, user.hasPermission else {
 ```
 
 </details>
@@ -232,17 +225,13 @@ Prefer `AnyObject` over `class` in protocol definitions.
 + protocol Foo: AnyObject {}
 ```
 
-**NOTE:** The guideline to use `AnyObject` instead of `class` was only
-introduced in Swift 4.1, so the `anyObjectProtocol` rule is disabled unless the
-swift version is set to 4.1 or above.
-
 </details>
 <br/>
 
 ## applicationMain
 
-Replace obsolete @UIApplicationMain and @NSApplicationMain attributes
-with @main for Swift 5.3 and above.
+Replace obsolete `@UIApplicationMain` and `@NSApplicationMain` attributes
+with `@main`.
 
 <details>
 <summary>Examples</summary>
@@ -258,25 +247,20 @@ with @main for Swift 5.3 and above.
 
 ## assertionFailures
 
-Changes all instances of assert(false, ...) to assertionFailure(...)
-and precondition(false, ...) to preconditionFailure(...).
+Changes all instances of `assert(false, ...)` to `assertionFailure(...)`
+and `precondition(false, ...)` to `preconditionFailure(...)`.
 
 <details>
 <summary>Examples</summary>
 
 ```diff
-- assert(false)
-+ assertionFailure()
+- assert(false, "message")
++ assertionFailure("message")
 ```
 
 ```diff
-- assert(false, "message", 2, 1)
-+ assertionFailure("message", 2, 1)
-```
-
-```diff
-- precondition(false, "message", 2, 1)
-+ preconditionFailure("message", 2, 1)
+- precondition(false, "message")
++ preconditionFailure("message")
 ```
 
 </details>
@@ -292,7 +276,6 @@ Insert blank line after import statements.
 ```diff
   import A
   import B
-  @testable import D
 +
   class Foo {
     // foo
@@ -317,75 +300,25 @@ Option | Description
 `--blank-line-after-switch-case multiline-only` (default)
 
 ```diff
-  func handle(_ action: SpaceshipAction) {
-      switch action {
-      case .engageWarpDrive:
-          navigationComputer.destination = targetedDestination
-          await warpDrive.spinUp()
-          warpDrive.activate()
+  switch action {
+  case .engageWarpDrive:
+      navigationComputer.destination = targetedDestination
+      warpDrive.activate()
 +
-      case let .scanPlanet(planet):
-          scanner.target = planet
-          scanner.scanAtmosphere()
-          scanner.scanBiosphere()
-          scanner.scanForArticialLife()
-+
-      case .handleIncomingEnergyBlast:
-          await energyShields.prepare()
-          energyShields.engage()
-      }
+  case .handleIncomingEnergyBlast:
+      energyShields.engage()
   }
 ```
 
-```diff
-  func handle(_ action: SpaceshipAction) {
-      switch action {
-      case .engageWarpDrive:
-          warpDrive.activate()
-
-      case let .scanPlanet(planet):
-          scanner.scanForArticialLife()
-
-      case .handleIncomingEnergyBlast:
-          energyShields.engage()
-      }
-  }
-```
-`--blank-line-after-switch-case always` 
+`--blank-line-after-switch-case always`
 
 ```diff
-  func handle(_ action: SpaceshipAction) {
-      switch action {
-      case .engageWarpDrive:
-          navigationComputer.destination = targetedDestination
-          await warpDrive.spinUp()
-          warpDrive.activate()
+  switch action {
+  case .engageWarpDrive:
+      warpDrive.activate()
 +
-      case let .scanPlanet(planet):
-          scanner.target = planet
-          scanner.scanAtmosphere()
-          scanner.scanBiosphere()
-          scanner.scanForArticialLife()
-+
-      case .handleIncomingEnergyBlast:
-          await energyShields.prepare()
-          energyShields.engage()
-      }
-  }
-```
-
-```diff
-  func handle(_ action: SpaceshipAction) {
-      switch action {
-      case .engageWarpDrive:
-          warpDrive.activate()
-+
-      case let .scanPlanet(planet):
-          scanner.scanForArticialLife()
-+
-      case .handleIncomingEnergyBlast:
-          energyShields.engage()
-      }
+  case .handleIncomingEnergyBlast:
+      energyShields.engage()
   }
 ```
 
@@ -406,57 +339,21 @@ Option | Description
 `--line-between-guards false` (default)
 
 ```diff
-    // Multiline guard
-    guard let spicy = self.makeSpicy() else {
-        return
-    } 
+  guard let foo else { return }
 -
-    guard let yummy = self.makeYummy() else {
-        return
-    }
-    guard let soap = self.clean() else {
-        return
-    }
+  guard let bar else { return }
 +
-    let doTheJob = nikekov()
-```
-```diff
-    // Single-line guard
-    guard let spicy = self.makeSpicy() else { return }
--
-    guard let yummy = self.makeYummy() else { return }
-    guard let soap = self.clean() else { return }
-+
-    let doTheJob = nikekov()
+  print(foo, bar)
 ```
 
 `--line-between-guards true`
 
 ```diff
-    // Multiline guard
-    guard let spicy = self.makeSpicy() else {
-        return
-    }
-
-    guard let yummy = self.makeYummy() else {
-        return
-    }
+  guard let foo else { return }
 +
-    guard let soap = self.clean() else {
-        return
-    }
+  guard let bar else { return }
 +
-    let doTheJob = nikekov()
-```
-```diff
-    // Single-line guard
-    guard let spicy = self.makeSpicy() else { return }
-
-    guard let yummy = self.makeYummy() else { return }
-+
-    guard let soap = self.clean() else { return }
-+
-    let doTheJob = nikekov()
+  print(foo, bar)
 ```
 
 </details>
@@ -474,14 +371,6 @@ Option | Description
 <summary>Examples</summary>
 
 ```diff
-  func foo() {
-    // foo
-  }
-  // MARK: bar
-  func bar() {
-    // bar
-  }
-
   func foo() {
     // foo
   }
@@ -516,21 +405,6 @@ Option | Description
   func foo() {
     // foo
   }
-```
-
-```diff
-  array = [
-    foo,
-    bar,
-    baz,
--
-  ]
-
-  array = [
-    foo,
-    bar,
-    baz,
-  ]
 ```
 
 With `--type-blank-lines insert`:
@@ -593,21 +467,6 @@ Option | Description
   }
 ```
 
-```diff
-  array = [
--
-    foo,
-    bar,
-    baz,
-  ]
-
-  array = [
-    foo,
-    bar,
-    baz,
-  ]
-```
-
 With `--type-blank-lines insert`:
 
 ```diff
@@ -657,8 +516,6 @@ Remove blank lines between chained functions but keep the linebreaks.
   [0, 1, 2]
       .map { $0 * 2 }
 -
--
--
       .map { $0 * 3 }
 ```
 
@@ -677,7 +534,6 @@ Remove blank lines between import statements.
 -
   import B
   import C
--
 -
   @testable import D
   import E
@@ -698,22 +554,10 @@ declarations.
   func foo() {
     // foo
   }
-  func bar() {
-    // bar
-  }
-  var baz: Bool
-  var quux: Int
-
-  func foo() {
-    // foo
-  }
 +
   func bar() {
     // bar
   }
-+
-  var baz: Bool
-  var quux: Int
 ```
 
 </details>
@@ -765,16 +609,28 @@ Option | Description
 - {
     // foo
   }
++ if x {
+    // foo
+  }
+```
+
+```diff
 - else
 - {
     // bar
   }
-
-+ if x {
-    // foo
-  }
 + else {
     // bar
+  }
+```
+
+`--allman true`
+
+```diff
+- if x {
++ if x
++ {
+      // foo
   }
 ```
 
@@ -795,25 +651,36 @@ Option | Description
 ```diff
 - let foo: String
 - if condition {
-+ let foo = if condition {
 -     foo = "foo"
-+     "foo"
-  } else {
+- } else {
 -     foo = "bar"
-+     "bar"
-  }
+- }
 
++ let foo = if condition {
++     "foo"
++ } else {
++     "bar"
++ }
+```
+
+```diff
 - let foo: String
 - switch condition {
-+ let foo = switch condition {
-  case true:
+- case true:
 -     foo = "foo"
-+     "foo"
-  case false:
+- case false:
 -     foo = "bar"
-+     "bar"
-  }
+- }
 
++ let foo = switch condition {
++ case true:
++     "foo"
++ case false:
++     "bar"
++ }
+```
+
+```diff
   // With --condassignment always (disabled by default)
 - switch condition {
 + foo.bar = switch condition {
@@ -840,12 +707,6 @@ Replace consecutive blank lines with a single blank line.
   func foo() {
     let x = "bar"
 -
-
-    print(x)
-  }
-
-  func foo() {
-    let x = "bar"
 
     print(x)
   }
@@ -877,30 +738,19 @@ Ensures consistent spacing among all of the cases in a switch statement.
 <summary>Examples</summary>
 
 ```diff
-  func handle(_ action: SpaceshipAction) {
-      switch action {
-      case .engageWarpDrive:
-          navigationComputer.destination = targetedDestination
-          await warpDrive.spinUp()
-          warpDrive.activate()
+  switch action {
+  case .engageWarpDrive:
+      warpDrive.activate()
 
-      case .enableArtificialGravity:
-          artificialGravityEngine.enable(strength: .oneG)
+  case .enableArtificialGravity:
+      artificialGravityEngine.enable()
 +
-      case let .scanPlanet(planet):
-          scanner.target = planet
-          scanner.scanAtmosphere()
-          scanner.scanBiosphere()
-          scanner.scanForArtificialLife()
-
-      case .handleIncomingEnergyBlast:
-          energyShields.engage()
-      }
+  case .handleIncomingEnergyBlast:
+      energyShields.engage()
   }
 ```
 
 ```diff
-  var name: PlanetType {
   switch self {
   case .mercury:
       "Mercury"
@@ -909,17 +759,6 @@ Ensures consistent spacing among all of the cases in a switch statement.
       "Venus"
   case .earth:
       "Earth"
-  case .mars:
-      "Mars"
--
-  case .jupiter:
-      "Jupiter"
-  case .saturn:
-      "Saturn"
-  case .uranus:
-      "Uranus"
-  case .neptune:
-      "Neptune"
   }
 ```
 
@@ -1334,9 +1173,6 @@ Option | Description
 + extension Collection<Foo> {}
 
   // With `typeSugar` also enabled:
-- extension Array where Element == Foo {}
-- extension Optional where Wrapped == Foo {}
-- extension Dictionary where Key == Foo, Value == Bar {}
 + extension [Foo] {}
 + extension Foo? {}
 + extension [Key: Value] {}
@@ -1546,10 +1382,14 @@ Prefer `isEmpty` over comparing `count` against zero.
 ```diff
 - if foo.count == 0 {
 + if foo.isEmpty {
+```
 
+```diff
 - if foo.count > 0 {
 + if !foo.isEmpty {
+```
 
+```diff
 - if foo?.count == 0 {
 + if foo?.isEmpty == true {
 ```
@@ -1720,25 +1560,27 @@ Write tests that use `throws` instead of using `try!`.
 <summary>Examples</summary>
 
 ```diff
-    import Testing
+  import Testing
 
-    struct MyFeatureTests {
--       @Test func doSomething() {
-+       @Test func doSomething() throws {
--           try! MyFeature().doSomething()
-+           try MyFeature().doSomething()
+  struct MyFeatureTests {
+-     @Test func doSomething() {
+-         try! MyFeature().doSomething()
++     @Test func doSomething() throws {
++         try MyFeature().doSomething()
       }
-    }
+  }
+```
 
-    import XCTeset
+```diff
+  import XCTest
 
-    class MyFeatureTests: XCTestCase {
--       func test_doSomething() {
-+       func test_doSomething() throws {
--           try! MyFeature().doSomething()
-+           try MyFeature().doSomething()
+  class MyFeatureTests: XCTestCase {
+-     func test_doSomething() {
+-         try! MyFeature().doSomething()
++     func test_doSomething() throws {
++         try MyFeature().doSomething()
       }
-    }
+  }
 ```
 
 </details>
@@ -1752,35 +1594,27 @@ Use XCTUnwrap or #require in test cases, rather than force unwrapping.
 <summary>Examples</summary>
 
 ```diff
-    import Testing
+  import Testing
 
-    struct MyFeatureTests {
--       @Test func myFeature() {
--           let myValue = foo.bar!.value as! Value
--           let otherValue = (foo! as! Other).bar
--           otherValue.manager!.prepare()
--           #expect(myValue!.property! == other)
-+       @Test func myFeature() throws {
-+           let myValue = try #require(foo.bar?.value as? Value)
-+           let otherValue = try #require((foo as? Other)?.bar)
-+           otherValue.manager?.prepare()
-+           #expect(myValue?.property == other)
+  struct MyFeatureTests {
+-     @Test func myFeature() {
+-         let value = foo.bar!.value
++     @Test func myFeature() throws {
++         let value = try #require(foo.bar?.value)
       }
-    }
+  }
+```
 
-    import XCTest
+```diff
+  import XCTest
 
-    class MyFeatureTests: XCTestCase {
--       func testMyFeature() {
--           let myValue = foo.bar!.value as! Value
--           let otherValue = (foo! as! Other).bar
--           XCTAssertEqual(myValue!.property!, "foo")
-+       func testMyFeature() throws {
-+           let myValue = try XCTUnwrap(foo.bar?.value as? Value)
-+           let otherValue = try XCTUnwrap((foo as? Other)?.bar)
-+           XCTAssertEqual(myValue?.property, otherValue)
+  class MyFeatureTests: XCTestCase {
+-     func testMyFeature() {
+-         let value = foo.bar!.value
++     func testMyFeature() throws {
++         let value = try XCTUnwrap(foo.bar?.value)
       }
-    }
+  }
 ```
 
 </details>
@@ -1795,33 +1629,28 @@ Convert guard statements and trailing if statements in unit tests to
 <summary>Examples</summary>
 
 ```diff
-  import XCTest
-
-  final class SomeTestCase: XCTestCase {
--     func test_something() {
-+     func test_something() throws {
--         guard let value = optionalValue, value.matchesCondition else {
--             XCTFail()
--             return
--         }
-+         let value = try XCTUnwrap(optionalValue)
-+         XCTAssert(value.matchesCondition)
-      }
-  }
-```
-
-```diff
   import Testing
 
   struct SomeTests {
       @Test
 -     func something() {
 +     func something() throws {
--         guard let value = optionalValue, value.matchesCondition else {
--             return
--         }
+-         guard let value = optionalValue, value.matchesCondition else { return }
 +         let value = try #require(optionalValue)
 +         try #require(value.matchesCondition)
+      }
+  }
+```
+
+```diff
+  import XCTest
+
+  final class SomeTestCase: XCTestCase {
+-     func test_something() {
++     func test_something() throws {
+-         guard let value = optionalValue, value.matchesCondition else { return }
++         let value = try XCTUnwrap(optionalValue)
++         XCTAssert(value.matchesCondition)
       }
   }
 ```
@@ -1880,11 +1709,6 @@ Option | Description
 ```diff
 - func handle<T: Fooable>(_ value: T) {
 + func handle(_ value: some Fooable) {
-      print(value)
-  }
-
-- func handle<T>(_ value: T) where T: Fooable, T: Barable {
-+ func handle(_ value: some Fooable & Barable) {
       print(value)
   }
 
@@ -2098,17 +1922,6 @@ Prefer `count(where:)` over `filter(_:).count`.
 ```diff
 - planets.filter { !$0.moons.isEmpty }.count
 + planets.count(where: { !$0.moons.isEmpty })
-
-- planets.filter { planet in
--     planet.moons.filter { moon in
--         moon.hasAtmosphere
--     }.count > 1
-- }.count
-+ planets.count(where: { planet in
-+     planet.moons.count(where: { moon in
-+         moon.hasAtmosphere
-+     }) > 1
-+ })
 ```
 
 </details>
@@ -2224,15 +2037,9 @@ Option | Description
 
   // Supports anonymous closures
 - strings.forEach {
+-     print($0)
 + for string in strings {
--     print($0)
 +     print(string)
-  }
-
-- foo.item().bar[2].baazValues(option: true).forEach {
-+ for baazValue in foo.item().bar[2].baazValues(option: true) {
--     print($0)
-+     print(baazValue)
   }
 
   // Doesn't affect long multiline functional chains
@@ -2382,9 +2189,11 @@ Adds `private` access control to @State properties without existing access contr
 ```diff
 - @State var anInt: Int
 + @State private var anInt: Int
+```
 
+```diff
 - @StateObject var myInstance: MyObject
-+ @StateObject private var myInstace: MyObject
++ @StateObject private var myInstance: MyObject
 ```
 
 </details>
@@ -2413,13 +2222,9 @@ Option | Description
 
 - let array: [Int] = []
 + let array = [Int]()
+```
 
-- let set: Set<Int> = []
-+ let set = Set<Int>()
-
-- let dict: [String: Int] = [:]
-+ let dict = [String: Int]()
-
+```diff
   // with --propertytypes explicit
 - let view = UIView()
 + let view: UIView = .init()
@@ -2429,13 +2234,9 @@ Option | Description
 
 - let array = [Int]()
 + let array: [Int] = []
+```
 
-- let set = Set<Int>()
-+ let set: Set<Int> = []
-
-- let dict = [String: Int]()
-+ let dict: [String: Int] = [:]
-
+```diff
   // with --propertytypes infer-locals-only
   class Foo {
 -     let view: UIView = UIView()
@@ -2446,17 +2247,6 @@ Option | Description
 +         let view = UIView()
       }
   }
-
-  // with --inferredtypes always:
-- let foo: Foo =
-+ let foo =
-    if condition {
--     .init(bar)
-+     Foo(bar)
-    } else {
--     .init(baaz)
-+     Foo(baaz)
-    }
 ```
 
 </details>
@@ -2481,7 +2271,9 @@ Option | Description
 + @Test func myFeature() {
       #expect(foo == 1)
   }
+```
 
+```diff
   import XCTest
 
   class TestCase: XCTestCase {
@@ -2566,11 +2358,9 @@ which are called immediately.
 
 ```diff
 - lazy var bar = {
--     Bar(baaz: baaz,
--         quux: quux)
+-     Bar(baaz: baaz, quux: quux)
 - }()
-+ lazy var bar = Bar(baaz: baaz,
-+                    quux: quux)
++ lazy var bar = Bar(baaz: baaz, quux: quux)
 ```
 
 </details>
@@ -2616,14 +2406,6 @@ Option | Description
 -         lhs.bar == rhs.bar 
 -             && lhs.baaz == rhs.baaz
 -     }
-  }
-
-  class Bar: Equatable {
-      let baaz: Baaz
-
-      static func ==(lhs: Bar, rhs: Bar) -> Bool {
-          lhs.baaz == rhs.baaz
-      }
   }
 ```
 
@@ -2679,23 +2461,15 @@ Prefer `private` over `fileprivate` where equivalent.
 <summary>Examples</summary>
 
 ```diff
--  fileprivate let someConstant = "someConstant"
-+  private let someConstant = "someConstant"
-```
-
-In Swift 4 and above, `fileprivate` can also be replaced with `private` for
-members that are only accessed from extensions in the same file:
-
-```diff
-  class Foo {
--   fileprivate var foo = "foo"
-+   private var foo = "foo"
+  struct Foo {
+-     fileprivate let bar = "bar"
++     private let bar = "bar"
   }
 
   extension Foo {
-    func bar() {
-      print(self.foo)
-    }
+      func printBar() {
+          print(bar)
+      }
   }
 ```
 
@@ -2751,14 +2525,6 @@ Remove redundant internal access control.
 + class Foo {
 -     internal let bar: String
 +     let bar: String
-
--     internal func baaz() {}
-+     func baaz() {}
-
--     internal init() {
-+     init() {
-          bar = "bar"
-      }
   }
 ```
 
@@ -3009,8 +2775,6 @@ Remove redundant public access control from declarations in internal or private 
 
 ```diff
   struct Foo {
--     public let bar: Bar
-+     let bar: Bar
 -     public func baz() {}
 +     func baz() {}
   }
@@ -3057,13 +2821,11 @@ Remove unneeded `return` keyword.
 - array.filter { return $0.foo == bar }
 + array.filter { $0.foo == bar }
 
-  // Swift 5.1+ (SE-0255)
   var foo: String {
 -     return "foo"
 +     "foo"
   }
 
-  // Swift 5.9+ (SE-0380) and with conditionalAssignment rule enabled
   func foo(_ condition: Bool) -> String {
       if condition {
 -         return "foo"
@@ -3091,16 +2853,14 @@ Option | Description
 <summary>Examples</summary>
 
 ```diff
-  func foobar(foo: Int, bar: Int) {
-    self.foo = foo
-    self.bar = bar
--   self.baz = 42
+  func rename(title: String) {
+    self.title = title
+-   self.subtitle = nil
   }
 
-  func foobar(foo: Int, bar: Int) {
-    self.foo = foo
-    self.bar = bar
-+   baz = 42
+  func rename(title: String) {
+    self.title = title
++   subtitle = nil
   }
 ```
 
@@ -3117,16 +2877,14 @@ There is also an option to always use explicit `self` but *only* inside `init`,
 by using `--self init-only`:
 
 ```diff
-  init(foo: Int, bar: Int) {
-    self.foo = foo
-    self.bar = bar
--   baz = 42
+  init(title: String) {
+    self.title = title
+-   subtitle = nil
   }
 
-  init(foo: Int, bar: Int) {
-    self.foo = foo
-    self.bar = bar
-+   self.baz = 42
+  init(title: String) {
+    self.title = title
++   self.subtitle = nil
   }
 ```
 
@@ -3144,12 +2902,6 @@ Remove redundant explicit Sendable conformance from non-public structs and enums
 - struct CacheEntry: Sendable {
 + struct CacheEntry {
       let id: String
-  }
-
-- fileprivate enum ParsingState: Sendable {
-+ fileprivate enum ParsingState {
-      case idle
-      case running
   }
 ```
 
@@ -3189,24 +2941,13 @@ Remove redundant @Suite attribute with no arguments.
 
 - @Suite
   struct MyFeatureTests {
-      @Test func myFeature() {
-          #expect(true)
-      }
-  }
-
-- @Suite()
-  struct OtherTests {
-      @Test func otherFeature() {
-          #expect(true)
-      }
+      @Test func myFeature() { ... }
   }
 
   // Not redundant - @Suite has arguments
   @Suite(.serialized)
   struct SerializedTests {
-      @Test func feature() {
-          #expect(true)
-      }
+      @Test func feature() { ... }
   }
 ```
 
@@ -3273,10 +3014,12 @@ Option | Description
   import Testing
 
 - @Test func myFeature() throws {
-+ @Test func myFeature() throws {
++ @Test func myFeature() {
       #expect(foo == 1)
   }
+```
 
+```diff
   import XCTest
 
   class TestCase: XCTestCase {
@@ -3335,23 +3078,6 @@ Option | Description
 +         let view = UIView()
       }
   }
-
-  // Swift 5.9+, with --propertytypes inferred (SE-0380)
-- let foo: Foo = if condition {
-+ let foo = if condition {
-      Foo("foo")
-  } else {
-      Foo("bar")
-  }
-
-  // Swift 5.9+, with --propertytypes explicit (SE-0380)
-  let foo: Foo = if condition {
--     Foo("foo")
-+     .init("foo")
-  } else {
--     Foo("bar")
-+     .init("foo")
-  }
 ```
 
 </details>
@@ -3408,8 +3134,7 @@ Remove redundant @ViewBuilder attribute when it's not needed.
   struct MyView: View {
 -   @ViewBuilder
     var body: some View {
-      Text("foo")
-      Text("bar")
+      helper
     }
 
 -   @ViewBuilder
@@ -3499,14 +3224,6 @@ Use inline generic constraints (`<T: Foo>`) instead of where clauses
 - struct Foo<T, U> where T: Hashable, U: Codable {}
 + struct Foo<T: Hashable, U: Codable> {}
 
-- class Bar<Element> where Element: Equatable {
-+ class Bar<Element: Equatable> {
-      // ...
-  }
-
-- enum Result<Value, Error> where Value: Decodable, Error: Swift.Error {}
-+ enum Result<Value: Decodable, Error: Swift.Error> {}
-
 - func process<T>(_ value: T) where T: Codable {}
 + func process<T: Codable>(_ value: T) {}
 ```
@@ -3526,19 +3243,27 @@ Use a separate let/var declaration on its own line for every property definition
 + let a: Int
 + let b: Int
 + let c: Int
+```
 
+```diff
 - public var foo = 10, bar = false
 + public var foo = 10
 + public var bar = false
+```
 
+```diff
 - var (foo, bar) = ("foo", "bar")
 + var foo = "foo"
 + var bar = "bar"
+```
 
+```diff
 - private let (foo, bar): (Int, Bool) = (10, false)
 + private let foo: Int = 10
 + private let bar: Bool = false
+```
 
+```diff
   // Preserved:
   let (foo, bar) = methodCallWithPossibleSideEffects()
 ```
@@ -3562,50 +3287,26 @@ Option | Description
 ```diff
   // swiftformat:sort
   enum FeatureFlags {
--     case upsellB
 -     case fooFeature
 -     case barFeature
--     case upsellA(
--         fooConfiguration: Foo,
--         barConfiguration: Bar)
 +     case barFeature
 +     case fooFeature
-+     case upsellA(
-+         fooConfiguration: Foo,
-+         barConfiguration: Bar)
-+     case upsellB
   }
 
   /// With --sortedpatterns Feature
   enum FeatureFlags {
--     case upsellB
 -     case fooFeature
 -     case barFeature
--     case upsellA(
--         fooConfiguration: Foo,
--         barConfiguration: Bar)
 +     case barFeature
 +     case fooFeature
-+     case upsellA(
-+         fooConfiguration: Foo,
-+         barConfiguration: Bar)
-+     case upsellB
   }
 
   enum FeatureFlags {
       // swiftformat:sort:begin
--     case upsellB
 -     case fooFeature
 -     case barFeature
--     case upsellA(
--         fooConfiguration: Foo,
--         barConfiguration: Bar)
 +     case barFeature
 +     case fooFeature
-+     case upsellA(
-+         fooConfiguration: Foo,
-+         barConfiguration: Bar)
-+     case upsellB
       // swiftformat:sort:end
 
       var anUnsortedProperty: Foo {
@@ -3633,21 +3334,13 @@ Option | Description
 - import Bar
 + import Bar
 + import Foo
-```
 
-```diff
-- import B
-- import A
-- #if os(iOS)
+  #if os(iOS)
 -   import Foo-iOS
 -   import Bar-iOS
-- #endif
-+ import A
-+ import B
-+ #if os(iOS)
 +   import Bar-iOS
 +   import Foo-iOS
-+ #endif
+  #endif
 ```
 
 </details>
@@ -3660,7 +3353,7 @@ Sort switch cases alphabetically.
 <details>
 <summary>Examples</summary>
 
-```dif
+```diff
   switch self {
 - case .b, .a, .c, .e, .d:
 + case .a, .b, .c, .d, .e:
@@ -3679,8 +3372,8 @@ Sort protocol composition typealiases alphabetically.
 <summary>Examples</summary>
 
 ```diff
-- typealias Placeholders = Foo & Bar & Baaz & Quux
-+ typealias Placeholders = Baaz & Bar & Foo & Quux
+- typealias Placeholders = Foo & Bar & Baaz
++ typealias Placeholders = Baaz & Bar & Foo
 
   typealias Dependencies
 -     = FooProviding
@@ -3688,7 +3381,6 @@ Sort protocol composition typealiases alphabetically.
       & BarProviding
 -     & BaazProviding
 +     & FooProviding
-      & QuuxProviding
 ```
 
 </details>
@@ -3948,10 +3640,6 @@ Remove backticks around `self` in Optional unwrap expressions.
 + guard let self = self else { return }
 ```
 
-**NOTE:** assignment to un-escaped `self` is only supported in Swift 4.2 and
-above, so the `strongifiedSelf` rule is disabled unless the Swift version is
-set to 4.2 or above.
-
 </details>
 <br/>
 
@@ -3971,21 +3659,11 @@ Option | Description
   import Testing
 
   struct MyFeatureTests {
--     @Test func testMyFeatureHasNoBugs() {
-+     @Test func `my feature has no bugs`() {
-          let myFeature = MyFeature()
-          myFeature.runAction()
-          #expect(!myFeature.hasBugs, "My feature has no bugs")
-          #expect(myFeature.crashes.isEmpty, "My feature doesn't crash")
-          #expect(myFeature.crashReport == nil)
-      }
+-     @Test func testMyFeatureHasNoBugs() { ... }
++     @Test func `my feature has no bugs`() { ... }
 
--     @Test func `test feature works as expected`(_ feature: Feature) {
-+     @Test func `feature works as expected`(_ feature: Feature) {
-        let myFeature = MyFeature()
-        myFeature.run(feature)
-        #expect(myFeature.worksAsExpected)
-    }
+-     @Test func `test feature works as expected`(_ feature: Feature) { ... }
++     @Test func `feature works as expected`(_ feature: Feature) { ... }
   }
 ```
 
@@ -4004,34 +3682,26 @@ Option | Description
 <summary>Examples</summary>
 
 ```diff
-  import XCTest
+  import Testing
 
-  final class MyTests: XCTestCase {
--     public func testExample() {
-+     func testExample() {
-          XCTAssertTrue(true)
-      }
+  struct MyFeatureTests {
+-     @Test public func featureWorks() { ... }
++     @Test func featureWorks() { ... }
 
--     func helperMethod() {
-+     private func helperMethod() {
-          // helper code
-      }
+-     func helperMethod() { ... }
++     private func helperMethod() { ... }
   }
 ```
 
 ```diff
-  import Testing
+  import XCTest
 
-  struct MyFeatureTests {
--     @Test public func featureWorks() {
-+     @Test func featureWorks() {
-          #expect(true)
-      }
+  final class MyTests: XCTestCase {
+-     public func testExample() { ... }
++     func testExample() { ... }
 
--     func helperMethod() {
-+     private func helperMethod() {
-          // helper code
-      }
+-     func helperMethod() { ... }
++     private func helperMethod() { ... }
   }
 ```
 
@@ -4078,12 +3748,7 @@ Option | Description
 
 ```diff
 - DispatchQueue.main.async(execute: { ... })
-+ DispatchQueue.main.async {
-```
-
-```diff
-- let foo = bar.map({ ... }).joined()
-+ let foo = bar.map { ... }.joined()
++ DispatchQueue.main.async { ... }
 ```
 
 ```diff
@@ -4122,22 +3787,12 @@ Option | Description
   ]
 ```
 
-Swift 6.1 and later with `--trailing-commas always`:
-
 ```diff
   func foo(
       bar: Int,
 -     baaz: Int
 +     baaz: Int,
   ) {}
-```
-
-```diff
-  foo(
-      bar: 1,
--     baaz: 2
-+     baaz: 2,
-  )
 ```
 
 ```diff
@@ -4252,16 +3907,6 @@ Option | Description
 ```
 
 ```diff
-- func foo(_ bar: Int) {
-    ...
-  }
-
-+ func foo(_: Int) {
-    ...
-  }
-```
-
-```diff
 - request { response, data in
     self.data += data
   }
@@ -4320,15 +3965,11 @@ Option | Description
 With `--url-macro "#URL,URLFoundation"`:
 
 ```diff
-- let url = URL(string: "https://example.com")!
+  import Foundation
 + import URLFoundation
-+ let url = #URL("https://example.com")
-```
 
-```diff
-- return URL(string: "https://api.example.com/users")!
-+ import URLFoundation
-+ return #URL("https://api.example.com/users")
+- let url = URL(string: "https://example.com")!
++ let url = #URL("https://example.com")
 ```
 
 </details>
@@ -4336,21 +3977,10 @@ With `--url-macro "#URL,URLFoundation"`:
 
 ## validateTestCases
 
-Ensure test case methods have the correct `test` prefix or `@Test` attribute.
+Ensure test case methods have the correct `@Test` attribute or `test` prefix.
 
 <details>
 <summary>Examples</summary>
-
-```diff
-  import XCTest
-
-  final class MyTests: XCTestCase {
--     func myFeatureWorksCorrectly() {
-+     func testMyFeatureWorksCorrectly() {
-          XCTAssertTrue(myFeature.worksCorrectly)
-      }
-  }
-```
 
 ```diff
   import Testing
@@ -4360,10 +3990,16 @@ Ensure test case methods have the correct `test` prefix or `@Test` attribute.
 +     @Test func myFeatureWorksCorrectly() {
           #expect(myFeature.worksCorrectly)
       }
+  }
+```
 
--     func myFeatureHasNoBugs() {
-+     @Test func myFeatureHasNoBugs() {
-          #expect(myFeature.hasNoBugs)
+```diff
+  import XCTest
+
+  final class MyTests: XCTestCase {
+-     func myFeatureWorksCorrectly() {
++     func testMyFeatureWorksCorrectly() {
+          XCTAssertTrue(myFeature.worksCorrectly)
       }
   }
 ```
@@ -4390,16 +4026,6 @@ Option | Description
 ```diff
 - let bar: Void -> Void
 + let bar: () -> Void
-```
-
-```diff
-- let baz: (Void) -> Void
-+ let baz: () -> Void
-```
-
-```diff
-- func quux() -> (Void)
-+ func quux() -> Void
 ```
 
 ```diff
@@ -4617,16 +4243,6 @@ Wrap single-line function, init, and subscript bodies onto multiple lines.
 + func foo() {
 +     print("bar")
 + }
-
-- init() { self.value = 0 }
-+ init() {
-+     self.value = 0
-+ }
-
-- subscript(index: Int) -> Int { array[index] }
-+ subscript(index: Int) -> Int {
-+     array[index]
-+ }
 ```
 
 </details>
@@ -4786,19 +4402,6 @@ Wrap the opening brace of multiline statements.
 ```
 
 ```diff
-  guard foo,
--   bar else {
-    // ...
-  }
-
-  guard foo,
-+   bar else
-+ {
-    // ...
-  }
-```
-
-```diff
   func foo(
     bar: Int,
 -   baz: Int) {
@@ -4808,19 +4411,6 @@ Wrap the opening brace of multiline statements.
   func foo(
     bar: Int,
 +   baz: Int)
-+ {
-    // ...
-  }
-```
-
-```diff
-  class Foo: NSObject,
--   BarProtocol {
-    // ...
-  }
-
-  class Foo: NSObject,
-+   BarProtocol
 + {
     // ...
   }

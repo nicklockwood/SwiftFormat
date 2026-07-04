@@ -40,21 +40,13 @@ public extension FormatRule {
         - import Bar
         + import Bar
         + import Foo
-        ```
 
-        ```diff
-        - import B
-        - import A
-        - #if os(iOS)
+          #if os(iOS)
         -   import Foo-iOS
         -   import Bar-iOS
-        - #endif
-        + import A
-        + import B
-        + #if os(iOS)
         +   import Bar-iOS
         +   import Foo-iOS
-        + #endif
+          #endif
         ```
         """
     }

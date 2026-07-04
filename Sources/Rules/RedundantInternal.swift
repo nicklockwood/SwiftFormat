@@ -45,14 +45,6 @@ public extension FormatRule {
         + class Foo {
         -     internal let bar: String
         +     let bar: String
-
-        -     internal func baaz() {}
-        +     func baaz() {}
-
-        -     internal init() {
-        +     init() {
-                  bar = "bar"
-              }
           }
         ```
         """

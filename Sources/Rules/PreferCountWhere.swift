@@ -104,17 +104,6 @@ public extension FormatRule {
         ```diff
         - planets.filter { !$0.moons.isEmpty }.count
         + planets.count(where: { !$0.moons.isEmpty })
-
-        - planets.filter { planet in
-        -     planet.moons.filter { moon in
-        -         moon.hasAtmosphere
-        -     }.count > 1
-        - }.count
-        + planets.count(where: { planet in
-        +     planet.moons.count(where: { moon in
-        +         moon.hasAtmosphere
-        +     }) > 1
-        + })
         ```
         """
     }

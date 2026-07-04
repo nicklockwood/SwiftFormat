@@ -104,14 +104,6 @@ public extension FormatRule {
         -             && lhs.baaz == rhs.baaz
         -     }
           }
-
-          class Bar: Equatable {
-              let baaz: Baaz
-
-              static func ==(lhs: Bar, rhs: Bar) -> Bool {
-                  lhs.baaz == rhs.baaz
-              }
-          }
         ```
 
         If your project includes a macro that generates the `static func ==` implementation

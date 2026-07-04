@@ -32,16 +32,6 @@ public extension FormatRule {
         + func foo() {
         +     print("bar")
         + }
-
-        - init() { self.value = 0 }
-        + init() {
-        +     self.value = 0
-        + }
-
-        - subscript(index: Int) -> Int { array[index] }
-        + subscript(index: Int) -> Int {
-        +     array[index]
-        + }
         ```
         """
     }

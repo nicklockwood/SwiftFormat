@@ -111,16 +111,6 @@ public extension FormatRule {
         ```
 
         ```diff
-        - let baz: (Void) -> Void
-        + let baz: () -> Void
-        ```
-
-        ```diff
-        - func quux() -> (Void)
-        + func quux() -> Void
-        ```
-
-        ```diff
         - callback = { _ in Void() }
         + callback = { _ in () }
         ```

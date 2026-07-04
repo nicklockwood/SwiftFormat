@@ -39,7 +39,6 @@ public extension FormatRule {
           import B
           import C
         -
-        -
           @testable import D
           import E
         ```

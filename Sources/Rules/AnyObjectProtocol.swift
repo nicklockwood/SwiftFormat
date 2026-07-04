@@ -33,10 +33,6 @@ public extension FormatRule {
         - protocol Foo: class {}
         + protocol Foo: AnyObject {}
         ```
-
-        **NOTE:** The guideline to use `AnyObject` instead of `class` was only
-        introduced in Swift 4.1, so the `anyObjectProtocol` rule is disabled unless the
-        swift version is set to 4.1 or above.
         """
     }
 }

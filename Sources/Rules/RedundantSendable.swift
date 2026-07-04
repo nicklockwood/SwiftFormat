@@ -61,12 +61,6 @@ public extension FormatRule {
         + struct CacheEntry {
               let id: String
           }
-
-        - fileprivate enum ParsingState: Sendable {
-        + fileprivate enum ParsingState {
-              case idle
-              case running
-          }
         ```
         """
     }

@@ -54,14 +54,6 @@ public extension FormatRule {
           func foo() {
             // foo
           }
-          // MARK: bar
-          func bar() {
-            // bar
-          }
-
-          func foo() {
-            // foo
-          }
         +
           // MARK: bar
         +

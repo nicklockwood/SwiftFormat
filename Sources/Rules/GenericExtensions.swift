@@ -135,9 +135,6 @@ public extension FormatRule {
         + extension Collection<Foo> {}
 
           // With `typeSugar` also enabled:
-        - extension Array where Element == Foo {}
-        - extension Optional where Wrapped == Foo {}
-        - extension Dictionary where Key == Foo, Value == Bar {}
         + extension [Foo] {}
         + extension Foo? {}
         + extension [Key: Value] {}

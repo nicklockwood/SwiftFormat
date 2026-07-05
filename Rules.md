@@ -43,8 +43,7 @@
 * [noForceUnwrapInTests](#noForceUnwrapInTests)
 * [numberFormatting](#numberFormatting)
 * [opaqueGenericParameters](#opaqueGenericParameters)
-* [preferContainsOverFilterIsEmpty](#preferContainsOverFilterIsEmpty)
-* [preferContainsOverFirst](#preferContainsOverFirst)
+* [preferContains](#preferContains)
 * [preferCountWhere](#preferCountWhere)
 * [preferFirstWhere](#preferFirstWhere)
 * [preferFlatMap](#preferFlatMap)
@@ -132,7 +131,6 @@
 * [noExplicitOwnership](#noExplicitOwnership)
 * [noGuardInTests](#noGuardInTests)
 * [organizeDeclarations](#organizeDeclarations)
-* [preferContainsOverRange](#preferContainsOverRange)
 * [preferExplicitFalse](#preferExplicitFalse)
 * [preferFinalClasses](#preferFinalClasses)
 * [preferSwiftStringAPI](#preferSwiftStringAPI)
@@ -1871,12 +1869,14 @@ Without this declaration, only functions will be reordered, while properties wil
 </details>
 <br/>
 
-## preferContainsOverFilterIsEmpty
+## preferContains
 
-Prefer `contains(where:)` over `filter(_:).isEmpty`.
+Prefer `contains` over `filter(_:).isEmpty`, `first(where:) != nil`, and `range(of:) != nil`.
 
 <details>
 <summary>Examples</summary>
+
+`filter(_:).isEmpty` → `contains(where:)`:
 
 ```diff
 - if messages.filter({ $0.isUnread }).isEmpty {
@@ -1886,15 +1886,7 @@ Prefer `contains(where:)` over `filter(_:).isEmpty`.
 + let hasUnread = messages.contains(where: { $0.isUnread })
 ```
 
-</details>
-<br/>
-
-## preferContainsOverFirst
-
-Prefer `contains(where:)` over `first(where:)` / `firstIndex(where:)` compared against nil.
-
-<details>
-<summary>Examples</summary>
+`first(where:) != nil` → `contains(where:)`:
 
 ```diff
 - if numbers.first(where: { $0 < 0 }) != nil {
@@ -1904,15 +1896,7 @@ Prefer `contains(where:)` over `first(where:)` / `firstIndex(where:)` compared a
 + if !numbers.contains(where: { $0 < 0 }) {
 ```
 
-</details>
-<br/>
-
-## preferContainsOverRange
-
-Prefer `contains` over `range(of:)` compared against nil.
-
-<details>
-<summary>Examples</summary>
+`range(of:) != nil` → `contains(_:)`:
 
 ```diff
 - if text.range(of: "needle") != nil {
@@ -1921,12 +1905,6 @@ Prefer `contains` over `range(of:)` compared against nil.
 - if text.range(of: "needle") == nil {
 + if !text.contains("needle") {
 ```
-
-***NOTE:*** In rare cases this rewrite can change behavior — e.g. an
-`NSString` receiver whose `range(of:)` returns a non-optional `NSRange`
-(where `!= nil` is always true), or a type without a matching `contains`
-overload. For this reason the rule is disabled by default, and must be
-enabled via the `--enable preferContainsOverRange` option.
 
 </details>
 <br/>

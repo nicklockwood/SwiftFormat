@@ -154,14 +154,14 @@ final class TrailingClosuresTests: XCTestCase {
         guard case let .foo(bar) = baz.filter({ $0 == quux }).isEmpty else {}
         """
         testFormatting(for: input, rule: .trailingClosures,
-                       exclude: [.wrapConditionalBodies, .preferContainsOverFilterIsEmpty])
+                       exclude: [.wrapConditionalBodies, .preferContains])
     }
 
     func testParensAroundTrailingClosureInWhereClauseLetNotRemoved() {
         let input = """
         for _ in bar where baz.filter({ $0 == quux }).isEmpty {}
         """
-        testFormatting(for: input, rule: .trailingClosures, exclude: [.preferContainsOverFilterIsEmpty])
+        testFormatting(for: input, rule: .trailingClosures, exclude: [.preferContains])
     }
 
     func testParensAroundTrailingClosureInSwitchNotRemoved() {

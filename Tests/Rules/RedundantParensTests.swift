@@ -1288,7 +1288,7 @@ final class RedundantParensTests: XCTestCase {
         let input = """
         if (foo.filter { $0 > 1 }.isEmpty) {}
         """
-        testFormatting(for: input, rule: .redundantParens)
+        testFormatting(for: input, rule: .redundantParens, exclude: [.preferContainsOverFilterIsEmpty])
     }
 
     func testParensNotRemovedAroundClosure3() {

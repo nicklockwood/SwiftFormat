@@ -304,34 +304,19 @@ public extension FormatRule {
         }
     } examples: {
         """
-        `filter(_:).isEmpty` → `contains(where:)`:
-
         ```diff
         - if messages.filter({ $0.isUnread }).isEmpty {
         + if !messages.contains(where: { $0.isUnread }) {
-
-        - let hasUnread = !messages.filter { $0.isUnread }.isEmpty
-        + let hasUnread = messages.contains(where: { $0.isUnread })
         ```
-
-        `first(where:) != nil` → `contains(where:)`:
 
         ```diff
         - if numbers.first(where: { $0 < 0 }) != nil {
         + if numbers.contains(where: { $0 < 0 }) {
-
-        - if numbers.firstIndex(where: { $0 < 0 }) == nil {
-        + if !numbers.contains(where: { $0 < 0 }) {
         ```
-
-        `range(of:) != nil` → `contains(_:)`:
 
         ```diff
         - if text.range(of: "needle") != nil {
         + if text.contains("needle") {
-
-        - if text.range(of: "needle") == nil {
-        + if !text.contains("needle") {
         ```
         """
     }

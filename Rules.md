@@ -34,6 +34,7 @@
 * [hoistTry](#hoistTry)
 * [indent](#indent)
 * [initCoderUnavailable](#initCoderUnavailable)
+* [isEmpty](#isEmpty)
 * [leadingDelimiters](#leadingDelimiters)
 * [linebreakAtEndOfFile](#linebreakAtEndOfFile)
 * [linebreaks](#linebreaks)
@@ -127,7 +128,6 @@
 * [blankLineAfterSwitchCase](#blankLineAfterSwitchCase)
 * [blankLinesAfterGuardStatements](#blankLinesAfterGuardStatements)
 * [blockComments](#blockComments)
-* [isEmpty](#isEmpty)
 * [markTypes](#markTypes)
 * [noExplicitOwnership](#noExplicitOwnership)
 * [noGuardInTests](#noGuardInTests)
@@ -1396,9 +1396,7 @@ Prefer `isEmpty` over comparing `count` against zero.
 ```
 
 ***NOTE:*** In rare cases, the `isEmpty` rule may insert an `isEmpty` call for
-a type that doesn't implement that property, breaking the program. For this
-reason, the rule is disabled by default, and must be manually enabled via the
-`--enable isEmpty` option.
+a type that doesn't implement that property, breaking the program.
 
 </details>
 <br/>

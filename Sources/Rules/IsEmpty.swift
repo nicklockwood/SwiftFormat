@@ -106,6 +106,9 @@ public extension FormatRule {
         - if foo?.count == 0 {
         + if foo?.isEmpty == true {
         ```
+
+        ***NOTE:*** In rare cases, the `isEmpty` rule may insert an `isEmpty` call for
+        a type that doesn't implement that property, breaking the program.
         """
     }
 }

@@ -2,7 +2,7 @@
 //  PreferContains.swift
 //  SwiftFormat
 //
-//  Created by Cal Stephens on 7/5/26.
+//  Created by Jon Parise on 7/2/26.
 //  Copyright © 2026 Nick Lockwood. All rights reserved.
 //
 

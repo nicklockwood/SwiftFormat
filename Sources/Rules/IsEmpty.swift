@@ -11,8 +11,7 @@ import Foundation
 public extension FormatRule {
     /// Replace count == 0 with isEmpty
     static let isEmpty = FormatRule(
-        help: "Prefer `isEmpty` over comparing `count` against zero.",
-        disabledByDefault: true
+        help: "Prefer `isEmpty` over comparing `count` against zero."
     ) { formatter in
         formatter.forEach(.identifier("count")) { i, _ in
             guard let dotIndex = formatter.index(of: .nonSpaceOrLinebreak, before: i, if: {
@@ -109,9 +108,7 @@ public extension FormatRule {
         ```
 
         ***NOTE:*** In rare cases, the `isEmpty` rule may insert an `isEmpty` call for
-        a type that doesn't implement that property, breaking the program. For this
-        reason, the rule is disabled by default, and must be manually enabled via the
-        `--enable isEmpty` option.
+        a type that doesn't implement that property, breaking the program.
         """
     }
 }

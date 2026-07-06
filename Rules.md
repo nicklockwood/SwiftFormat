@@ -1,3 +1,6 @@
+> [!NOTE]
+> Rule documentation is also available at [swiftformat.info/rules](http://swiftformat.info/rules).
+
 # Default Rules (enabled by default)
 
 * [andOperator](#andOperator)

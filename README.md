@@ -1,11 +1,12 @@
 ![](EditorExtension/Application/Assets.xcassets/AppIcon.appiconset/icon_256x256.png)
 
-[![PayPal](https://img.shields.io/badge/paypal-donate-blue.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=9ZGWNK5FEZFF6&source=url)
+[![Rules Documentation](https://img.shields.io/badge/Rules_documentation-swiftformat%2einfo%2Frules-blue.svg)](http://swiftformat.info/rules)
 [![Build](https://github.com/nicklockwood/SwiftFormat/actions/workflows/build.yml/badge.svg)](https://github.com/nicklockwood/SwiftFormat/actions/workflows/build.yml)
 [![Codecov](https://codecov.io/gh/nicklockwood/SwiftFormat/graphs/badge.svg)](https://codecov.io/gh/nicklockwood/SwiftFormat)
 [![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fnicklockwood%2FSwiftFormat%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/nicklockwood/swiftformat)
 [![License](https://img.shields.io/badge/license-MIT-lightgrey.svg)](https://opensource.org/licenses/MIT)
 [![Mastodon](https://img.shields.io/badge/mastodon-@nicklockwood@mastodon.social-636dff.svg)](https://mastodon.social/@nicklockwood)
+[![PayPal](https://img.shields.io/badge/paypal-donate-00457C.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=9ZGWNK5FEZFF6&source=url)
 
 Table of Contents
 -----------------
@@ -624,7 +625,7 @@ The options available in SwiftFormat can be displayed using the `--options` comm
 
 Rules are configured by adding `--[option_name] [value]` to your command-line arguments, or by creating a `.swiftformat` [config file](#config-file) and placing it in your project directory.
 
-A given option may affect multiple rules. Use `--rule-info [rule_name]` command for details about which options affect a given rule, or see the [Rules.md](https://github.com/nicklockwood/SwiftFormat/blob/main/Rules.md) file.
+A given option may affect multiple rules. Use `--rule-info [rule_name]` command for details about which options affect a given rule, or see the [rules documentation](http://swiftformat.info/rules).
 
 You can configure options for specific files or code ranges by using `swiftformat:options` directive in comments inside your Swift file. To temporarily set one or more options inside a source file, use:
 
@@ -645,7 +646,7 @@ doTheThing(); print("Did the thing")
 Rules
 -----
 
-SwiftFormat includes over 50 rules, and new ones are added all the time. An up-to-date list can be found in [Rules.md](https://github.com/nicklockwood/SwiftFormat/blob/main/Rules.md) along with documentation for how they are used.
+SwiftFormat includes over 50 rules, and new ones are added all the time. An up-to-date list can be found at [swiftformat.info/rules](http://swiftformat.info/rules) along with documentation for how they are used.
 
 The list of available rules can be displayed within the command-line app using the `--rules` argument. Rules can be either enabled or disabled. Most are enabled by default. Disabled rules are marked with "(disabled)" when displayed using `--rules`.
 

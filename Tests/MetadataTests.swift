@@ -36,7 +36,13 @@ final class MetadataTests: XCTestCase {
 
     /// NOTE: if test fails, just run it again locally to update rules file
     func testGenerateRulesDocumentation() throws {
-        var result = "# Default Rules (enabled by default)\n"
+        var result = """
+        > [!NOTE]
+        > Rule documentation is also available at [swiftformat.info/rules](http://swiftformat.info/rules).
+
+        # Default Rules (enabled by default)
+
+        """
         for rule in FormatRules.default {
             result += "\n* [\(rule.name)](#\(rule.name))"
         }

@@ -726,7 +726,7 @@ final class BlankLinesAfterGuardStatementsTests: XCTestCase {
         else { return }
         """
 
-        testFormatting(for: input, rule: .blankLinesAfterGuardStatements, exclude: [.wrapConditionalBodies, .preferContainsOverFilterIsEmpty])
+        testFormatting(for: input, rule: .blankLinesAfterGuardStatements, exclude: [.wrapConditionalBodies, .preferContains])
     }
 
     func testNotInsertLineBreakInChainWhenBlankLineInsertedBetweenConsecutiveGuards() {
@@ -745,7 +745,7 @@ final class BlankLinesAfterGuardStatementsTests: XCTestCase {
             for: input,
             rule: .blankLinesAfterGuardStatements,
             options: FormatOptions(lineBetweenConsecutiveGuards: true),
-            exclude: [.wrapConditionalBodies, .preferContainsOverFilterIsEmpty]
+            exclude: [.wrapConditionalBodies, .preferContains]
         )
     }
 }

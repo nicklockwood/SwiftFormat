@@ -7,6 +7,7 @@ require 'open3'
 #
 #  - `index.md` is generated from `README.md`
 #  - `rules.md` is generated from `Rules.md`
+#  - `rules-prerelease.md` is generated from the `develop` branch's `Rules.md`
 #
 # Both source files are kept in sync by the project's normal workflow, so the
 # site always reflects the latest docs without any manual duplication.
@@ -18,8 +19,13 @@ class SiteContent
   # kramdown replaces this list with an auto-generated table of contents.
   TOC_MARKER = "* toc\n{:toc}"
 
+  # Raw content of Rules.md on the `develop` branch, which isn't checked out
+  # on whichever branch/tag the site is currently being built from.
+  DEVELOP_RULES_URL = 'https://raw.githubusercontent.com/nicklockwood/SwiftFormat/refs/heads/develop/Rules.md'.freeze
+
   attr_reader :readme_path, :rules_path, :version_source_path, :index_path,
-              :rules_page_path, :syntax_css_path, :build_data_path, :repo_dir
+              :rules_page_path, :rules_prerelease_page_path, :syntax_css_path,
+              :build_data_path, :develop_data_path, :repo_dir
 
   def initialize
     site_dir = File.expand_path('src', __dir__)
@@ -30,8 +36,10 @@ class SiteContent
     @version_source_path = File.join(repo_dir, 'Sources/SwiftFormat.swift')
     @index_path = File.join(site_dir, 'index.md')
     @rules_page_path = File.join(site_dir, 'rules.md')
+    @rules_prerelease_page_path = File.join(site_dir, 'rules-prerelease.md')
     @syntax_css_path = File.join(site_dir, 'assets/css/syntax.css')
     @build_data_path = File.join(site_dir, '_data/build.yml')
+    @develop_data_path = File.join(site_dir, '_data/develop.yml')
   end
 
   # Write index.md from the repo README.md.
@@ -41,6 +49,7 @@ class SiteContent
       layout: default
       title: SwiftFormat
       description: A command-line tool and Xcode extension for reformatting Swift code.
+      toc_style: flat
       ---
 
     FRONT
@@ -61,7 +70,43 @@ class SiteContent
       ---
 
     FRONT
-    File.write(rules_page_path, front_matter + with_toc(rules_body))
+    prerelease_section = <<~SECTION
+      <br/>
+
+      # Prerelease Rules
+
+      Want to try out unreleased rules and changes? See the [prerelease rules documentation]({{ '/rules/prerelease' | relative_url }}).
+
+    SECTION
+    lines = File.readlines(rules_path, chomp: true)
+    File.write(rules_page_path, front_matter + with_toc(rules_body(lines) + "\n\n" + prerelease_section))
+  end
+
+  # Write rules-prerelease.md from the `develop` branch's Rules.md, so unreleased
+  # rules and changes are documented ahead of the next tagged release.
+  def write_rules_prerelease
+    front_matter = <<~FRONT
+      ---
+      layout: default
+      permalink: /rules/prerelease
+      title: SwiftFormat Rules (Prerelease)
+      description: The full list of formatting rules included in prerelease builds, including unreleased changes.
+      is_develop: true
+      ---
+
+    FRONT
+    # Matches the "Prerelease Builds" disclaimer in README.md.
+    disclaimer = <<~DISCLAIMER
+      > **Prerelease builds are subject to breaking changes.**
+      >
+      > This page reflects the rules on the [develop](https://github.com/nicklockwood/SwiftFormat/commits/develop/) branch, which may include unreleased rules and changes not yet in a tagged release. See [Prerelease Builds]({{ '/#prerelease-builds' | relative_url }}) for how to try them early, or see the [main rules documentation]({{ '/rules' | relative_url }}) for the latest stable release.
+      {: .callout}
+
+      <br/>
+
+    DISCLAIMER
+    lines = fetch_develop_rules_lines
+    File.write(rules_prerelease_page_path, front_matter + with_toc(disclaimer + rules_body(lines)))
   end
 
   # Write syntax.css used for code block highlighting.
@@ -89,7 +134,24 @@ class SiteContent
     File.write(build_data_path, "version: \"#{version}\"\nupdated: \"#{updated}\"\n")
   end
 
+  # Write develop.yml, a Jekyll data file exposing today's date, so the
+  # /rules/develop footer can show when the page was actually built (unlike
+  # the stable pages, this isn't tied to a specific commit in this repo).
+  def write_develop_info
+    updated = Time.now.strftime('%Y-%m-%d')
+    FileUtils.mkdir_p(File.dirname(develop_data_path))
+    File.write(develop_data_path, "updated: \"#{updated}\"\n")
+  end
+
   private
+
+  # Downloads Rules.md from the `develop` branch.
+  def fetch_develop_rules_lines
+    stdout, stderr, status = Open3.capture3('curl', '--fail', '--silent', '--show-error', DEVELOP_RULES_URL)
+    raise "Failed to fetch develop Rules.md:\n#{stderr}" unless status.success?
+
+    stdout.split("\n", -1)
+  end
 
   # Prepends the table-of-contents marker to a page's body. `toc_levels`
   # overrides the site-wide `kramdown.toc_levels` config (see `_config.yml`)
@@ -191,8 +253,8 @@ class SiteContent
   # In the source file the categories are only expressed as link lists at the
   # top, while every rule section lives in one flat alphabetical run below.
   # Regrouping them lets kramdown's `{:toc}` nest each rule under its category.
-  def rules_body
-    lines = expand_details(File.readlines(rules_path, chomp: true))
+  def rules_body(raw_lines)
+    lines = expand_details(raw_lines)
     body_start = lines.index { |line| line.start_with?('## ') }
 
     categories = parse_rule_categories(lines[0...body_start])

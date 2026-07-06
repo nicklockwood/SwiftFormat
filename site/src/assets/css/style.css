@@ -217,17 +217,19 @@ html {
   font-weight: 700;
 }
 
-/* Top-level TOC entries stand out a little more, but only when they're
-   grouping nested sub-entries (e.g. rules.md's categories). On a flat TOC
-   with no nesting (e.g. index.md) every entry stays the regular gray. */
-.toc-sidebar > #markdown-toc > li:has(> ul) > a {
+/* Top-level TOC entries stand out a little more, since they group the page
+   into sections (e.g. rules.md's categories) - even ones with no nested
+   sub-entries of their own (e.g. a lone "Prerelease Rules" entry). On a flat
+   TOC with no categorization (e.g. index.md, tagged `toc_style: flat`),
+   every entry stays the regular gray instead. */
+.toc-sidebar:not(.toc-flat) > #markdown-toc > li > a {
   color: black;
   font-weight: 600;
 }
 
 /* Give grouped categories a bit of breathing room from the previous group,
-   but not before the first one. Flat TOCs (no nested entries) are unaffected. */
-.toc-sidebar > #markdown-toc > li:has(> ul):not(:first-child) {
+   but not before the first one. Flat TOCs are unaffected. */
+.toc-sidebar:not(.toc-flat) > #markdown-toc > li:not(:first-child) {
   margin-top: 0.75rem;
 }
 
@@ -244,6 +246,8 @@ a {
   text-underline-offset: 2px;
 }
 
+/* Section headings (e.g. "Default Rules", "Opt-in Rules") are a step down
+   from the page title below, so the title reads as the top of the hierarchy. */
 h1 {
   color: black;
   font-size: 40px;
@@ -259,6 +263,25 @@ h1 {
   margin-top: -0.75rem;
   color: #86868b;
   font-size: 15px;
+}
+
+/* Disclaimer box (e.g. the /rules/develop prerelease notice). */
+.callout {
+  margin: 0 0 1.5rem;
+  padding: 0.1rem 1.25rem;
+  background: #f5f5f5;
+  border-left: 3px solid #1d1d1f;
+  border-radius: 4px;
+}
+
+/* `<br/>` is used throughout the generated pages as a manual spacer (e.g.
+   between rule examples, after callouts). The visible gap is dominated by
+   the empty line's own line-height, not by the paragraph's margin (which
+   collapses into the larger margins of neighboring elements like `pre`/`h2`
+   either way) - so shrink line-height directly to make the beat smaller. */
+.content p:has(> br:only-child) {
+  margin: 0;
+  line-height: 0.5em;
 }
 
 h2 {

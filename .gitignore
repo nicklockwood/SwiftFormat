@@ -37,5 +37,7 @@ _site/
 # Generated site pages (built from README.md / Rules.md by `rake site:prepare`)
 site/src/index.md
 site/src/rules.md
+site/src/rules-prerelease.md
 site/src/assets/css/syntax.css
 site/src/_data/build.yml
+site/src/_data/develop.yml

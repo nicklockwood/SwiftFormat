@@ -7,10 +7,13 @@ namespace :site do
     site_content.write_index
     puts '📋 Generating rules.md from Rules.md...'
     site_content.write_rules
+    puts '📋 Generating rules-prerelease.md from the develop branch\'s Rules.md...'
+    site_content.write_rules_prerelease
     puts '🎨 Generating syntax highlighting CSS...'
     site_content.generate_syntax_css
     puts '🏷️  Generating build.yml (version + last updated date)...'
     site_content.write_build_info
+    site_content.write_develop_info
   end
 
   desc 'Builds the static site into _site/'

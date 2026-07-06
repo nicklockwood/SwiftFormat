@@ -21,11 +21,15 @@
 <body>
   {% include navigation.html %}
   <div class="page" id="page">
-    <aside class="toc-sidebar" id="toc-sidebar" aria-label="Table of contents"></aside>
+    <aside class="toc-sidebar{% if page.toc_style == 'flat' %} toc-flat{% endif %}" id="toc-sidebar" aria-label="Table of contents"></aside>
     <main class="content">
       {{ content }}
       <footer class="site-footer">
-        SwiftFormat {{ site.data.build.version }} <span class="nav-separator">·</span> last updated {{ site.data.build.updated }}
+        {% if page.is_develop %}
+          SwiftFormat develop branch <span class="nav-separator">·</span> last updated {{ site.data.develop.updated }}
+        {% else %}
+          SwiftFormat {{ site.data.build.version }} <span class="nav-separator">·</span> last updated {{ site.data.build.updated }}
+        {% endif %}
       </footer>
     </main>
   </div>

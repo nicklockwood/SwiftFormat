@@ -4,6 +4,45 @@
   box-sizing: border-box;
 }
 
+:root {
+  --nav-height: 63px; /* Fallback, updated dynamically by JS */
+  --color-background: #fff;
+  --color-text: #1d1d1f;
+  --color-heading: #000;
+  --color-muted: #86868b;
+  --color-link: #000;
+  --color-nav-link: #555;
+  --color-nav-background: #fff;
+  --color-sidebar-background: #fafafa;
+  --color-code-background: #f5f5f5;
+  --color-pre-background: #f6f8fa;
+  --color-border: #e5e5e5;
+  --color-subtle-border: #ddd;
+  --color-separator: #ccc;
+  --color-heading-anchor: #bbb;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background: #111113;
+    --color-text: #e6e6ea;
+    --color-heading: #fff;
+    --color-muted: #a0a0aa;
+    --color-link: #ff8a4c;
+    --color-nav-link: #c7c7cf;
+    --color-nav-background: #17171a;
+    --color-sidebar-background: #17171a;
+    --color-code-background: #232327;
+    --color-pre-background: #161b22;
+    --color-border: #303038;
+    --color-subtle-border: #393940;
+    --color-separator: #55555f;
+    --color-heading-anchor: #6f6f78;
+    color-scheme: dark;
+  }
+}
+
 body {
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   font-size: 16px;
@@ -11,24 +50,21 @@ body {
   line-height: 26px;
   margin: 0;
   padding: 0;
-  color: #1d1d1f;
+  color: var(--color-text);
+  background: var(--color-background);
   /* Break long tokens (URLs, flags, type names) instead of overflowing. */
   overflow-wrap: break-word;
 }
 
 /* Navigation */
-:root {
-  --nav-height: 63px; /* Fallback, updated dynamically by JS */
-}
-
 html {
   /* Extra offset so anchor targets aren't hidden under the sticky nav. */
   scroll-padding-top: calc(var(--nav-height) + 15px);
 }
 
 .top-nav {
-  background: white;
-  border-bottom: 1px solid #e5e5e5;
+  background: var(--color-nav-background);
+  border-bottom: 1px solid var(--color-border);
   position: sticky;
   top: 0;
   z-index: 100;
@@ -67,7 +103,7 @@ html {
 .nav-title {
   font-size: 18px;
   font-weight: 600;
-  color: black;
+  color: var(--color-heading);
   letter-spacing: -0.3px;
 }
 
@@ -80,22 +116,22 @@ html {
 .nav-link {
   font-size: 15px;
   font-weight: 500;
-  color: #555;
+  color: var(--color-nav-link);
   text-decoration: none;
   white-space: nowrap;
 }
 
 .nav-link:hover {
-  color: black;
+  color: var(--color-heading);
 }
 
 .nav-link.active {
-  color: black;
+  color: var(--color-heading);
   font-weight: 600;
 }
 
 .nav-separator {
-  color: #ccc;
+  color: var(--color-separator);
   font-weight: 400;
 }
 
@@ -105,9 +141,9 @@ html {
   font-family: inherit;
   font-size: 14px;
   font-weight: 600;
-  color: black;
+  color: var(--color-heading);
   background: none;
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-subtle-border);
   border-radius: 6px;
   padding: 0.35rem 0.75rem;
   cursor: pointer;
@@ -168,8 +204,8 @@ html {
   max-height: calc(100vh - var(--nav-height));
   overflow-y: auto;
   overflow-x: hidden;
-  background: #fafafa;
-  border-right: 1px solid #e5e5e5;
+  background: var(--color-sidebar-background);
+  border-right: 1px solid var(--color-border);
   font-size: 14px;
   line-height: 1.5;
   /* Hide the scrollbar while keeping the sidebar scrollable. */
@@ -200,7 +236,7 @@ html {
 
 .toc-sidebar #markdown-toc a {
   display: block;
-  color: #555;
+  color: var(--color-nav-link);
   text-decoration: none;
   font-weight: 500;
   /* Wrap long rule names instead of scrolling the sidebar horizontally. */
@@ -208,12 +244,12 @@ html {
 }
 
 .toc-sidebar #markdown-toc a:hover {
-  color: black;
+  color: var(--color-heading);
 }
 
 /* The entry matching the current URL fragment is highlighted as selected. */
 .toc-sidebar #markdown-toc a.active {
-  color: black;
+  color: var(--color-heading);
   font-weight: 700;
 }
 
@@ -221,7 +257,7 @@ html {
    grouping nested sub-entries (e.g. rules.md's categories). On a flat TOC
    with no nesting (e.g. index.md) every entry stays the regular gray. */
 .toc-sidebar > #markdown-toc > li:has(> ul) > a {
-  color: black;
+  color: var(--color-heading);
   font-weight: 600;
 }
 
@@ -237,7 +273,7 @@ b {
 }
 
 a {
-  color: black;
+  color: var(--color-link);
   font-weight: 700;
   text-decoration-line: underline;
   text-decoration-thickness: auto;
@@ -245,7 +281,7 @@ a {
 }
 
 h1 {
-  color: black;
+  color: var(--color-heading);
   font-size: 40px;
   font-weight: 700;
   line-height: 44px;
@@ -257,12 +293,12 @@ h1 {
    metadata, not content. */
 .heading-note {
   margin-top: -0.75rem;
-  color: #86868b;
+  color: var(--color-muted);
   font-size: 15px;
 }
 
 h2 {
-  color: black;
+  color: var(--color-heading);
   font-size: 26px;
   font-weight: 600;
   line-height: 30px;
@@ -271,7 +307,7 @@ h2 {
 }
 
 h3 {
-  color: black;
+  color: var(--color-heading);
   font-size: 22px;
   font-weight: 600;
   line-height: 26px;
@@ -286,7 +322,7 @@ h3 {
 
 .content :is(h1, h2, h3, h4, h5, h6) .header-anchor::after {
   content: " #";
-  color: #bbb;
+  color: var(--color-heading-anchor);
   opacity: 0;
   font-weight: 400;
 }
@@ -304,7 +340,7 @@ code {
 }
 
 :not(pre) > code {
-  background: #f5f5f5;
+  background: var(--color-code-background);
   padding: 0.1rem 0.35rem;
   border-radius: 3px;
   font-size: 0.9em;
@@ -314,7 +350,7 @@ pre {
   margin: 1.5rem 0;
   padding: 1rem;
   overflow-x: auto;
-  background: #f6f8fa;
+  background: var(--color-pre-background);
   border-radius: 6px;
 }
 
@@ -342,13 +378,13 @@ table {
 
 th,
 td {
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-subtle-border);
   padding: 0.5rem 0.75rem;
   text-align: left;
 }
 
 th {
-  background: #f5f5f5;
+  background: var(--color-code-background);
 }
 
 /* Responsive */
@@ -416,7 +452,7 @@ th {
     min-height: 0;
     max-height: none;
     overflow-y: auto;
-    background: white;
+    background: var(--color-background);
     border-right: none;
     /* Unlike the desktop sidebar, show the scroll indicator here since this
        overlay covers the whole screen with no other affordance that it

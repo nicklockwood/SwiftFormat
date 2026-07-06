@@ -61,13 +61,32 @@ class SiteContent
 
   # Write syntax.css used for code block highlighting.
   def generate_syntax_css
-    stdout, stderr, status = Open3.capture3('bundle', 'exec', 'rougify', 'style', 'github.light')
-    raise "rougify failed:\n#{stderr}" unless status.success?
+    light_css = syntax_css_for('github.light')
+    dark_css = syntax_css_for('github.dark')
 
-    File.write(syntax_css_path, stdout)
+    css = [
+      light_css.chomp,
+      '',
+      '@media (prefers-color-scheme: dark) {',
+      indent_css(dark_css).rstrip,
+      '}',
+    ].join("\n")
+
+    File.write(syntax_css_path, "#{css}\n")
   end
 
   private
+
+  def syntax_css_for(theme)
+    stdout, stderr, status = Open3.capture3('bundle', 'exec', 'rougify', 'style', theme)
+    raise "rougify failed for #{theme}:\n#{stderr}" unless status.success?
+
+    stdout
+  end
+
+  def indent_css(css)
+    css.lines.map { |line| line.strip.empty? ? line : "  #{line}" }.join
+  end
 
   # Prepends the table-of-contents marker to a page's body. `toc_levels`
   # overrides the site-wide `kramdown.toc_levels` config (see `_config.yml`)

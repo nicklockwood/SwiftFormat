@@ -3,6 +3,10 @@ name: Deploy Site to GitHub Pages
 on:
   push:
     branches: [ main ]
+  # Rebuilds the prerelease rules page daily even without a push to main,
+  # since its content is fetched from the develop branch's Rules.md at build time.
+  schedule:
+    - cron: '0 0 * * *'
   workflow_dispatch:
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages

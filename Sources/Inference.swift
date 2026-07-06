@@ -104,9 +104,9 @@ private struct Inference {
                 break
             }
         }
-        if let indent = indents.sorted(by: {
+        if let indent = indents.min(by: {
             $0.count > $1.count
-        }).first.map(\.indent) {
+        }).map(\.indent) {
             options.indent = indent
         }
     }
@@ -1145,7 +1145,9 @@ private struct Inference {
             var foundAccessors = false
             var localNames = localNames
             while let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: index, if: {
-                if case let .identifier(name) = $0, names.contains(name) { return true } else {
+                if case let .identifier(name) = $0, names.contains(name) {
+                    return true
+                } else {
                     return false
                 }
             }), let startIndex = formatter.index(of: .startOfScope("{"), after: nextIndex) {

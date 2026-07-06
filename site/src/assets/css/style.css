@@ -25,19 +25,21 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-background: #111113;
+    /* Matches GitHub's dark theme canvas color (rgb(22, 27, 34)) rather than
+       a near-black background. */
+    --color-background: #161b22;
     --color-text: #e6e6ea;
     --color-heading: #fff;
     --color-muted: #a0a0aa;
-    --color-link: #ff8a4c;
+    --color-link: #ffffff;
     --color-nav-link: #c7c7cf;
-    --color-nav-background: #17171a;
-    --color-sidebar-background: #17171a;
+    --color-nav-background: #161b22;
+    --color-sidebar-background: #161b22;
     --color-code-background: #232327;
-    --color-pre-background: #161b22;
-    --color-border: #303038;
-    --color-subtle-border: #393940;
-    --color-separator: #55555f;
+    --color-pre-background: #0d1117;
+    --color-border: #3e444c;
+    --color-subtle-border: #3e444c;
+    --color-separator: #3e444c;
     --color-heading-anchor: #6f6f78;
     color-scheme: dark;
   }
@@ -243,6 +245,14 @@ html {
   overflow-wrap: anywhere;
 }
 
+/* Bold text renders heavier on a dark background, so nested entries (e.g.
+   rule names under a category) use a lighter weight than in light mode. */
+@media (prefers-color-scheme: dark) {
+  .toc-sidebar #markdown-toc > li > ul a {
+    font-weight: 400;
+  }
+}
+
 .toc-sidebar #markdown-toc a:hover {
   color: var(--color-heading);
 }
@@ -373,6 +383,23 @@ pre {
   overflow-x: auto;
   background: var(--color-pre-background);
   border-radius: 6px;
+}
+
+/* Rouge's generated syntax.css sets its own `.highlight` background (to
+   match its theme's own canvas color), which otherwise wins over the rule
+   above since a class selector outranks a bare element selector. */
+pre.highlight {
+  background: var(--color-pre-background);
+}
+
+/* Rouge's generated github.dark theme sets a somewhat dim default token
+   color (#c9d1d9) for unhighlighted code text; lighten it to match the
+   rest of the page's body text. */
+@media (prefers-color-scheme: dark) {
+  pre.highlight,
+  pre.highlight .w {
+    color: var(--color-text);
+  }
 }
 
 /* Tables scroll horizontally within this wrapper (added by default.html)

@@ -38,3 +38,4 @@ _site/
 site/src/index.md
 site/src/rules.md
 site/src/assets/css/syntax.css
+site/src/_data/build.yml

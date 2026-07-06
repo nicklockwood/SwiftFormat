@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'fileutils'
 require 'open3'
 
 # Generates the site's Markdown pages from the repo's existing docs.
@@ -17,16 +18,20 @@ class SiteContent
   # kramdown replaces this list with an auto-generated table of contents.
   TOC_MARKER = "* toc\n{:toc}"
 
-  attr_reader :readme_path, :rules_path, :index_path, :rules_page_path, :syntax_css_path
+  attr_reader :readme_path, :rules_path, :version_source_path, :index_path,
+              :rules_page_path, :syntax_css_path, :build_data_path, :repo_dir
 
   def initialize
     site_dir = File.expand_path('src', __dir__)
-    repo_dir = File.expand_path('..', __dir__)
+    @repo_dir = File.expand_path('..', __dir__)
+    repo_dir = @repo_dir
     @readme_path = File.join(repo_dir, 'README.md')
     @rules_path = File.join(repo_dir, 'Rules.md')
+    @version_source_path = File.join(repo_dir, 'Sources/SwiftFormat.swift')
     @index_path = File.join(site_dir, 'index.md')
     @rules_page_path = File.join(site_dir, 'rules.md')
     @syntax_css_path = File.join(site_dir, 'assets/css/syntax.css')
+    @build_data_path = File.join(site_dir, '_data/build.yml')
   end
 
   # Write index.md from the repo README.md.
@@ -65,6 +70,23 @@ class SiteContent
     raise "rougify failed:\n#{stderr}" unless status.success?
 
     File.write(syntax_css_path, stdout)
+  end
+
+  # Write build.yml, a Jekyll data file exposing the current version (sourced
+  # from Sources/SwiftFormat.swift, kept up to date by `Scripts/prepare_release.sh`)
+  # and the date of the most recent commit, so the site footer can render them
+  # without manual upkeep.
+  def write_build_info
+    contents = File.read(version_source_path)
+    version = contents[/swiftFormatVersion = "([^"]+)"/, 1]
+    raise "Couldn't find swiftFormatVersion in #{version_source_path}" unless version
+
+    stdout, stderr, status = Open3.capture3('git', '-C', repo_dir, 'log', '-1', '--format=%cs')
+    raise "git log failed:\n#{stderr}" unless status.success?
+
+    updated = stdout.strip
+    FileUtils.mkdir_p(File.dirname(build_data_path))
+    File.write(build_data_path, "version: \"#{version}\"\nupdated: \"#{updated}\"\n")
   end
 
   private

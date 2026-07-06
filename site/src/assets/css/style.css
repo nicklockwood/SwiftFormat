@@ -351,6 +351,18 @@ th {
   background: #f5f5f5;
 }
 
+/* Footer */
+.site-footer {
+  margin-top: 3rem;
+  color: #86868b;
+  font-size: 14px;
+  text-align: center;
+}
+
+.site-footer .nav-separator {
+  margin: 0 0.5rem;
+}
+
 /* Responsive */
 @media (max-width: 700px) {
   .nav-content {

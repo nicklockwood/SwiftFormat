@@ -1625,6 +1625,10 @@ Use XCTUnwrap or #require in test cases, rather than force unwrapping.
 Convert guard statements and trailing if statements in unit tests to
 `try #require(...)` or `try XCTUnwrap(...)` / `XCTAssert(...)`.
 
+Option | Description
+--- | ---
+`--guard-like-if-statements` | Convert guard-like trailing if statements in tests: "convert" or "preserve" (default)
+
 <details>
 <summary>Examples</summary>
 

@@ -925,6 +925,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var testCaseNameFormat: SwiftTestingNameFormat
     public var suiteNameFormat: SwiftTestingNameFormat
     public var testCaseAccessControl: Visibility
+    public var guardLikeIfStatements: Bool
 
     /// Deprecated
     public var indentComments: Bool
@@ -1075,6 +1076,7 @@ public struct FormatOptions: CustomStringConvertible {
                 testCaseNameFormat: SwiftTestingNameFormat = .rawIdentifiers,
                 suiteNameFormat: SwiftTestingNameFormat = .preserve,
                 testCaseAccessControl: Visibility = .internal,
+                guardLikeIfStatements: Bool = false,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -1214,6 +1216,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.testCaseNameFormat = testCaseNameFormat
         self.suiteNameFormat = suiteNameFormat
         self.testCaseAccessControl = testCaseAccessControl
+        self.guardLikeIfStatements = guardLikeIfStatements
         self.indentComments = indentComments
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

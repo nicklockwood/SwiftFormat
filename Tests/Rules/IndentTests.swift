@@ -2966,7 +2966,7 @@ final class IndentTests: XCTestCase {
         else { return }
         """
         testFormatting(for: input, rule: .indent,
-                       exclude: [.wrapConditionalBodies, .preferContainsOverFilterIsEmpty])
+                       exclude: [.wrapConditionalBodies, .preferContains])
     }
 
     func testChainedFunctionInGuardWithXcodeIndentation2() {
@@ -2993,7 +2993,7 @@ final class IndentTests: XCTestCase {
         """
         let options = FormatOptions(xcodeIndentation: true)
         testFormatting(for: input, output, rule: .indent,
-                       options: options, exclude: [.wrapConditionalBodies, .blankLinesAfterGuardStatements, .preferContainsOverFilterIsEmpty])
+                       options: options, exclude: [.wrapConditionalBodies, .blankLinesAfterGuardStatements, .preferContains])
     }
 
     func testWrappedChainedFunctionsWithNestedScopeIndent() {

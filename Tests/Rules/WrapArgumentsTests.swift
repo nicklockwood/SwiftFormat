@@ -2869,7 +2869,7 @@ final class WrapArgumentsTests: XCTestCase {
         testFormatting(
             for: input, rules: [.wrapArguments, .indent],
             options: FormatOptions(closingParenPosition: .sameLine, wrapConditions: .beforeFirst),
-            exclude: [.propertyTypes, .preferContainsOverFilterIsEmpty]
+            exclude: [.propertyTypes, .preferContains]
         )
     }
 

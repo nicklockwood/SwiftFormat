@@ -594,7 +594,7 @@ Prerelease Builds
 
 ***Prerelease builds are subject to breaking changes.***
 
-New rules, options, and fixes are merged to the [`develop`](https://github.com/nicklockwood/SwiftFormat/commits/develop/) branch before being incorporated into an official release. You may want to use a prerelease version of SwiftFormat that includes the latest unreleased changes.
+New rules, options, and fixes are merged to the [`develop`](https://github.com/nicklockwood/SwiftFormat/commits/develop/) branch before being incorporated into an official release. You may want to use a prerelease version of SwiftFormat that includes the latest unreleased changes. See the [prerelease rules documentation](http://swiftformat.info/rules/prerelease) for a list of rules and changes not yet in a tagged release.
 
 **Homebrew:**
 

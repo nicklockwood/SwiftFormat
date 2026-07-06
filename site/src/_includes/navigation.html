@@ -9,6 +9,10 @@
     </div>
     <div class="nav-links">
       <a href="{{ '/rules' | relative_url }}" class="nav-link{% if page.url == '/rules' or page.url == '/rules.html' %} active{% endif %}">Rules</a>
+      {% if page.is_develop %}
+        <span class="nav-separator">·</span>
+        <a href="{{ '/rules/prerelease' | relative_url }}" class="nav-link active">Prerelease Rules</a>
+      {% endif %}
       <span class="nav-separator">·</span>
       <a href="{{ site.github_url }}" class="nav-link nav-link-external">View on GitHub</a>
     </div>

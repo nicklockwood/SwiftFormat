@@ -338,13 +338,22 @@ class SiteContent
       if (match = line.match(/^## (\S+)/))
         sections[name] = current.join("\n") if name
         name = match[1]
-        current = [line]
+        current = [anchor_tag(name), '', line]
       else
         current << line
       end
     end
     sections[name] = current.join("\n") if name
     sections
+  end
+
+  # kramdown lowercases auto-generated heading ids (e.g. `preferForLoop`
+  # becomes `#preferforloop`), so a link using the rule's exact camelCase
+  # name would 404. This anchor preserves an exact-case id alongside
+  # kramdown's lowercase one, so both `#preferForLoop` and `#preferforloop`
+  # resolve to the same section.
+  def anchor_tag(name)
+    %(<a id="#{name}"></a>)
   end
 
   def collapse_blank_lines(content)

@@ -1,5 +1,32 @@
 # Change Log
 
+## [0.62.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.62.0) (2026-07-06)
+
+- Added `redundantSwiftUIGroup` rule
+- Added `preferContains` rule
+- Added `preferMinOverSorted` rule
+- Added `preferFlatMap` rule
+- Added `preferFirstWhere` rule
+- Added `--indent-blank-lines` option to match the surrounding context
+- Added `--line-wrap-threshold` option for length-based wrapping
+- Added `--type-blank-lines consistent` option
+- Added `start-only` and `end-only` values to `--type-blank-lines`
+- Added `before-non-local-declarations` value for `--doc-comments`
+- Enabled `isEmpty` rule by default
+- Split `wrapConditionalBodies` into `wrapIfStatementBodies`, `wrapIfExpressionBodies`, `wrapGuardStatementBodies`
+- Updated `noGuardInTests` rule to apply to guard-like if statements, use `try #require` for boolean conditions
+- Updated `redundantSendable` rule to be disabled by default, and to skip enums with indirect cases
+- Fixed `redundantVariable` incorrectly removing variables with modifiers or attributes
+- Fixed `preferSwiftTesting` spuriously adding `UIKit` import for `UInt` types
+- Fixed `$name` closure parameters incorrectly treated as unused when `self` has a same-named property
+- Fixed `docComments` rule incorrectly converting enum case group comments to doc comments
+- Fixed `markTypes` incorrectly considering top-level macro declarations
+- Fixed `blankLinesBetweenScopes` incorrectly inserting blank line before `#elseif` directives
+- Fixed `emptyExtensions` incorrectly removing extensions containing a freestanding macro declaration
+- Fixed `organizeDeclarations` incorrectly placing freestanding macro declarations after `MARK` comments
+- Fixed false positive `redundantSendable` for `indirect enum`
+- Fixed `spaceAroundParens` incorrectly inserting space before `Optional.some(...)` in subsequent `@Test` arguments
+
 ## [0.61.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.61.1) (2026-04-27)
 
 - Fixed race condition when parsing config files

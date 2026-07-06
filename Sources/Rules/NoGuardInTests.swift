@@ -38,7 +38,9 @@ public extension FormatRule {
                 guard isGuard || isIf else { continue }
 
                 // Skip if statement conversion unless the option is enabled
-                if isIf, !formatter.options.guardLikeIfStatements { continue }
+                if isIf, !formatter.options.guardLikeIfStatements {
+                    continue
+                }
 
                 // Only process if we are in the function body (not in a closure or nested function)
                 guard formatter.isInFunctionBody(of: functionDecl, at: statementIndex) else { continue }

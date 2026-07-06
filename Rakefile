@@ -9,6 +9,8 @@ namespace :site do
     site_content.write_rules
     puts '🎨 Generating syntax highlighting CSS...'
     site_content.generate_syntax_css
+    puts '🏷️  Generating build.yml (version + last updated date)...'
+    site_content.write_build_info
   end
 
   desc 'Builds the static site into _site/'

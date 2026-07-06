@@ -15,11 +15,14 @@ public extension FormatRule {
         `try #require(...)` or `try XCTUnwrap(...)` / `XCTAssert(...)`.
         """,
         disabledByDefault: true,
+        options: ["guard-like-if-statements"],
         sharedOptions: ["linebreaks"]
     ) { formatter in
         guard let testFramework = formatter.detectTestingFramework() else {
             return
         }
+
+        let convertGuardLikeIfStatements = formatter.options.guardLikeIfStatements
 
         formatter.forEach(.keyword("func")) { funcKeywordIndex, _ in
             guard let functionDecl = formatter.parseFunctionDeclaration(keywordIndex: funcKeywordIndex),
@@ -35,6 +38,9 @@ public extension FormatRule {
                 let isGuard = formatter.tokens[statementIndex] == .keyword("guard")
                 let isIf = formatter.tokens[statementIndex] == .keyword("if")
                 guard isGuard || isIf else { continue }
+
+                // Skip if statement conversion unless the option is enabled
+                if isIf, !convertGuardLikeIfStatements { continue }
 
                 // Only process if we are in the function body (not in a closure or nested function)
                 guard formatter.isInFunctionBody(of: functionDecl, at: statementIndex) else { continue }

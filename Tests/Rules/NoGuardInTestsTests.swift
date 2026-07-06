@@ -7,6 +7,7 @@
 //
 
 import XCTest
+@testable import SwiftFormat
 
 final class NoGuardInTestsTests: XCTestCase {
     // MARK: - XCTest tests
@@ -1454,7 +1455,8 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, [output], rules: [.noGuardInTests, .indent])
+        let options = FormatOptions(guardLikeIfStatements: true)
+        testFormatting(for: input, [output], rules: [.noGuardInTests, .indent], options: options)
     }
 
     func testReplaceTrailingIfLetShorthandWithXCTUnwrap() {
@@ -1479,7 +1481,8 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, [output], rules: [.noGuardInTests, .indent])
+        let options = FormatOptions(guardLikeIfStatements: true)
+        testFormatting(for: input, [output], rules: [.noGuardInTests, .indent], options: options)
     }
 
     func testReplaceTrailingIfLetWithRequire() {
@@ -1508,7 +1511,8 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, [output], rules: [.noGuardInTests, .indent])
+        let options = FormatOptions(guardLikeIfStatements: true)
+        testFormatting(for: input, [output], rules: [.noGuardInTests, .indent], options: options)
     }
 
     func testReplaceTrailingIfLetWithMultipleConditions() {
@@ -1534,7 +1538,8 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, [output], rules: [.noGuardInTests, .indent])
+        let options = FormatOptions(guardLikeIfStatements: true)
+        testFormatting(for: input, [output], rules: [.noGuardInTests, .indent], options: options)
     }
 
     func testReplaceTrailingIfLetWithBooleanCondition() {
@@ -1656,7 +1661,8 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, [output], rules: [.noGuardInTests, .indent])
+        let options = FormatOptions(guardLikeIfStatements: true)
+        testFormatting(for: input, [output], rules: [.noGuardInTests, .indent], options: options)
     }
 
     func testDoesNotReplaceIfLetWithPatternMatching() {
@@ -1713,7 +1719,8 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, [output], rules: [.noGuardInTests, .indent])
+        let options = FormatOptions(guardLikeIfStatements: true)
+        testFormatting(for: input, [output], rules: [.noGuardInTests, .indent], options: options)
     }
 
     func testReplaceTrailingIfLetWithBooleanConditionSwiftTesting() {
@@ -1741,7 +1748,8 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, [output], rules: [.noGuardInTests, .indent])
+        let options = FormatOptions(guardLikeIfStatements: true)
+        testFormatting(for: input, [output], rules: [.noGuardInTests, .indent], options: options)
     }
 
     func testReplaceTrailingIfLetPreservesExistingThrows() {
@@ -1766,7 +1774,8 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, [output], rules: [.noGuardInTests, .indent])
+        let options = FormatOptions(guardLikeIfStatements: true)
+        testFormatting(for: input, [output], rules: [.noGuardInTests, .indent], options: options)
     }
 
     func testDoesNotReplaceNonTestIfLet() {
@@ -1806,6 +1815,38 @@ final class NoGuardInTestsTests: XCTestCase {
             }
         }
         """
-        testFormatting(for: input, [output], rules: [.noGuardInTests, .indent])
+        let options = FormatOptions(guardLikeIfStatements: true)
+        testFormatting(for: input, [output], rules: [.noGuardInTests, .indent], options: options)
+    }
+
+    func testPreservesTrailingIfLetByDefault() {
+        let input = """
+        import XCTest
+
+        class TestCase: XCTestCase {
+            func test_something() {
+                if let value = optionalValue {
+                    print(value)
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: .noGuardInTests)
+    }
+
+    func testPreservesTrailingIfLetByDefaultSwiftTesting() {
+        let input = """
+        import Testing
+
+        struct SomeTests {
+            @Test
+            func something() {
+                if let value = optionalValue {
+                    #expect(value > 0)
+                }
+            }
+        }
+        """
+        testFormatting(for: input, rule: .noGuardInTests)
     }
 }

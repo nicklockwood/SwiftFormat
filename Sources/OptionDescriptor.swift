@@ -1498,6 +1498,15 @@ struct _Descriptors {
         keyPath: \.testCaseAccessControl
     )
 
+    let guardLikeIfStatements = OptionDescriptor(
+        argumentName: "guard-like-if-statements",
+        displayName: "Guard-Like If Statements",
+        help: "Convert guard-like trailing if statements in tests:",
+        keyPath: \.guardLikeIfStatements,
+        trueValues: ["convert"],
+        falseValues: ["preserve"]
+    )
+
     // MARK: - Internal
 
     let fragment = OptionDescriptor(

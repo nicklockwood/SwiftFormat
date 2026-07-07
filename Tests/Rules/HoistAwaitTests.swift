@@ -274,6 +274,25 @@ final class HoistAwaitTests: XCTestCase {
                        options: FormatOptions(asyncCapturing: ["foo"], swiftVersion: "5.5"))
     }
 
+    func testNoHoistAwaitOutOfAsyncAutoclosureArgument() {
+        let input = """
+        func assertThrowsAsync(
+            _ expression: @autoclosure () async throws -> some Any,
+            _ errorHandler: (_ error: Error) -> Void
+        ) async {
+            do { _ = try await expression() } catch { errorHandler(error) }
+        }
+
+        func asyncThrowing() async throws -> String { throw MyError() }
+
+        func run() async {
+            await assertThrowsAsync(try await asyncThrowing()) { _ in }
+        }
+        """
+        testFormatting(for: input, rule: .hoistAwait,
+                       options: FormatOptions(swiftVersion: "5.5"))
+    }
+
     func testHoistAwaitAfterOrdinaryOperator() {
         let input = """
         let foo = bar + (await baz)

@@ -24,7 +24,6 @@
 * [duplicateImports](#duplicateImports)
 * [elseOnSameLine](#elseOnSameLine)
 * [emptyBraces](#emptyBraces)
-* [emptyExtensions](#emptyExtensions)
 * [enumNamespaces](#enumNamespaces)
 * [environmentEntry](#environmentEntry)
 * [extensionAccessControl](#extensionAccessControl)
@@ -37,7 +36,6 @@
 * [hoistTry](#hoistTry)
 * [indent](#indent)
 * [initCoderUnavailable](#initCoderUnavailable)
-* [isEmpty](#isEmpty)
 * [leadingDelimiters](#leadingDelimiters)
 * [linebreakAtEndOfFile](#linebreakAtEndOfFile)
 * [linebreaks](#linebreaks)
@@ -47,13 +45,8 @@
 * [noForceUnwrapInTests](#noForceUnwrapInTests)
 * [numberFormatting](#numberFormatting)
 * [opaqueGenericParameters](#opaqueGenericParameters)
-* [preferContains](#preferContains)
-* [preferCountWhere](#preferCountWhere)
-* [preferFirstWhere](#preferFirstWhere)
-* [preferFlatMap](#preferFlatMap)
 * [preferForLoop](#preferForLoop)
 * [preferKeyPath](#preferKeyPath)
-* [preferMinOverSorted](#preferMinOverSorted)
 * [redundantAsync](#redundantAsync)
 * [redundantBackticks](#redundantBackticks)
 * [redundantBreak](#redundantBreak)
@@ -130,12 +123,19 @@
 * [blankLineAfterSwitchCase](#blankLineAfterSwitchCase)
 * [blankLinesAfterGuardStatements](#blankLinesAfterGuardStatements)
 * [blockComments](#blockComments)
+* [emptyExtensions](#emptyExtensions)
+* [isEmpty](#isEmpty)
 * [markTypes](#markTypes)
 * [noExplicitOwnership](#noExplicitOwnership)
 * [noGuardInTests](#noGuardInTests)
 * [organizeDeclarations](#organizeDeclarations)
+* [preferContains](#preferContains)
+* [preferCountWhere](#preferCountWhere)
 * [preferExplicitFalse](#preferExplicitFalse)
 * [preferFinalClasses](#preferFinalClasses)
+* [preferFirstWhere](#preferFirstWhere)
+* [preferFlatMap](#preferFlatMap)
+* [preferMinOverSorted](#preferMinOverSorted)
 * [preferSwiftStringAPI](#preferSwiftStringAPI)
 * [preferSwiftTesting](#preferSwiftTesting)
 * [privateStateVariables](#privateStateVariables)
@@ -1033,7 +1033,7 @@ Use specified source file header template for all files.
 
 Option | Description
 --- | ---
-`--header` | Header comments: "strip", "ignore", or the text you wish use
+`--header` | Header comments: "strip", "ignore" (default), or the text you wish use
 `--date-format` | File header date format: "system" (default), "iso", "dmy", "mdy" or custom
 `--timezone` | File header date timezone: "system" (default) or a valid identifier/abbreviation
 

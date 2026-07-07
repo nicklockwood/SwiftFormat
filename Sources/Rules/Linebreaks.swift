@@ -18,6 +18,20 @@ public extension FormatRule {
             formatter.replaceToken(at: i, with: formatter.linebreakToken(for: i))
         }
     } examples: {
-        nil
+        """
+        `--linebreaks lf`
+
+        ```diff
+        - let foo = "bar"\\r\\nlet baz = "qux"
+        + let foo = "bar"\\nlet baz = "qux"
+        ```
+
+        `--linebreaks crlf`
+
+        ```diff
+        - let foo = "bar"\\nlet baz = "qux"
+        + let foo = "bar"\\r\\nlet baz = "qux"
+        ```
+        """
     }
 }

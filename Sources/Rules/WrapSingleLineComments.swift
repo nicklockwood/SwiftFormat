@@ -62,6 +62,20 @@ public extension FormatRule {
             ])
         }
     } examples: {
-        nil
+        """
+        `--max-width 40`
+
+        ```diff
+        - // This is a long comment that exceeds the maximum column width
+        + // This is a long comment that exceeds
+        + // the maximum column width
+        ```
+
+        ```diff
+        - /// This is a long doc comment that exceeds the maximum column width
+        + /// This is a long doc comment that
+        + /// exceeds the maximum column width
+        ```
+        """
     }
 }

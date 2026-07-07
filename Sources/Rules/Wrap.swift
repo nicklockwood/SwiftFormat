@@ -66,6 +66,21 @@ public extension FormatRule {
         formatter.wrapCollectionsAndArguments(completePartialWrapping: true,
                                               wrapSingleArguments: true)
     } examples: {
-        nil
+        """
+        `--max-width 40`
+
+        ```diff
+        - let foo = bar(baz: 1, quux: 2, quuz: 3)
+        + let foo = bar(
+        +     baz: 1, quux: 2, quuz: 3
+        + )
+        ```
+
+        ```diff
+        - let foo = bar(baz: 1, quux: 2) + bar(baz: 3, quux: 4)
+        + let foo = bar(baz: 1, quux: 2) +
+        +     bar(baz: 3, quux: 4)
+        ```
+        """
     }
 }

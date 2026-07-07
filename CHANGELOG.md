@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.62.1](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.62.1) (2026-07-07)
+
+- Several rules have been disabled by default: `isEmpty`, `preferContains`, `preferFirstWhere`, `preferCountWhere`, `preferMinOverSorted`, `preferFlatMap`, `emptyExtensions`
+- Added `--guard-like-if-statements` option to `noGuardInTests` rule, defaulting to `preserve`
+
 ## [0.62.0](https://github.com/nicklockwood/SwiftFormat/releases/tag/0.62.0) (2026-07-06)
 
 - Added `redundantSwiftUIGroup` rule

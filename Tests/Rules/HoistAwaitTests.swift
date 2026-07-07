@@ -283,7 +283,9 @@ final class HoistAwaitTests: XCTestCase {
             do { _ = try await expression() } catch { errorHandler(error) }
         }
 
-        func asyncThrowing() async throws -> String { throw MyError() }
+        func asyncThrowing() async throws -> String {
+            throw MyError()
+        }
 
         func run() async {
             await assertThrowsAsync(try await asyncThrowing()) { _ in }

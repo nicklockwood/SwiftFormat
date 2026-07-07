@@ -1446,6 +1446,18 @@ Option | Description
 --- | ---
 `--linebreaks` | Linebreak character to use: "cr", "crlf" or "lf" (default)
 
+<details>
+<summary>Examples</summary>
+
+```diff
+- let foo = "bar"\r\n
++ let foo = "bar"\n
+  let baz = "qux"
+```
+
+</details>
+<br/>
+
 ## markTypes
 
 Add a MARK comment before top-level types and extensions.
@@ -4036,6 +4048,20 @@ Option | Description
 `--wrap-ternary` | Ternary expression wrapping: "default" (wrap if needed) or "before-operators"
 `--wrap-string-interpolation` | String interpolation wrapping: "default" (wrap if needed) or "preserve"
 
+<details>
+<summary>Examples</summary>
+
+`--max-width 40`
+
+```diff
+- let foo = bar(baz: 1, quux: 2) + bar(baz: 3, quux: 4)
++ let foo = bar(baz: 1, quux: 2) +
++     bar(baz: 3, quux: 4)
+```
+
+</details>
+<br/>
+
 ## wrapArguments
 
 Align wrapped function arguments or collection elements.
@@ -4431,6 +4457,20 @@ Wrap single-line property bodies onto multiple lines.
 ## wrapSingleLineComments
 
 Wrap single line `//` comments that exceed the specified `--max-width`.
+
+<details>
+<summary>Examples</summary>
+
+`--max-width 40`
+
+```diff
+- // This is a long comment that exceeds the maximum column width
++ // This is a long comment that exceeds
++ // the maximum column width
+```
+
+</details>
+<br/>
 
 ## wrapSwitchCases
 

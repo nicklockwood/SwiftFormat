@@ -19,18 +19,10 @@ public extension FormatRule {
         }
     } examples: {
         """
-        `--linebreaks lf`
-
         ```diff
-        - let foo = "bar"\\r\\nlet baz = "qux"
-        + let foo = "bar"\\nlet baz = "qux"
-        ```
-
-        `--linebreaks crlf`
-
-        ```diff
-        - let foo = "bar"\\nlet baz = "qux"
-        + let foo = "bar"\\r\\nlet baz = "qux"
+        - let foo = "bar"\\r\\n
+        + let foo = "bar"\\n
+          let baz = "qux"
         ```
         """
     }

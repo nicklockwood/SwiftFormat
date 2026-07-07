@@ -1449,18 +1449,10 @@ Option | Description
 <details>
 <summary>Examples</summary>
 
-`--linebreaks lf`
-
 ```diff
-- let foo = "bar"\r\nlet baz = "qux"
-+ let foo = "bar"\nlet baz = "qux"
-```
-
-`--linebreaks crlf`
-
-```diff
-- let foo = "bar"\nlet baz = "qux"
-+ let foo = "bar"\r\nlet baz = "qux"
+- let foo = "bar"\r\n
++ let foo = "bar"\n
+  let baz = "qux"
 ```
 
 </details>
@@ -4062,13 +4054,6 @@ Option | Description
 `--max-width 40`
 
 ```diff
-- let foo = bar(baz: 1, quux: 2, quuz: 3)
-+ let foo = bar(
-+     baz: 1, quux: 2, quuz: 3
-+ )
-```
-
-```diff
 - let foo = bar(baz: 1, quux: 2) + bar(baz: 3, quux: 4)
 + let foo = bar(baz: 1, quux: 2) +
 +     bar(baz: 3, quux: 4)
@@ -4482,12 +4467,6 @@ Wrap single line `//` comments that exceed the specified `--max-width`.
 - // This is a long comment that exceeds the maximum column width
 + // This is a long comment that exceeds
 + // the maximum column width
-```
-
-```diff
-- /// This is a long doc comment that exceeds the maximum column width
-+ /// This is a long doc comment that
-+ /// exceeds the maximum column width
 ```
 
 </details>

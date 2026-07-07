@@ -70,12 +70,6 @@ public extension FormatRule {
         + // This is a long comment that exceeds
         + // the maximum column width
         ```
-
-        ```diff
-        - /// This is a long doc comment that exceeds the maximum column width
-        + /// This is a long doc comment that
-        + /// exceeds the maximum column width
-        ```
         """
     }
 }

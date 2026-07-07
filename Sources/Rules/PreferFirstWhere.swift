@@ -10,7 +10,8 @@ import Foundation
 
 public extension FormatRule {
     static let preferFirstWhere = FormatRule(
-        help: "Prefer `first(where:)` over `filter(_:).first`."
+        help: "Prefer `first(where:)` over `filter(_:).first`.",
+        disabledByDefault: true
     ) { formatter in
         formatter.forEach(.identifier("filter")) { filterIndex, _ in
             // Parse the filter call arguments using the shared helper

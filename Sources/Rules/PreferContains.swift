@@ -11,7 +11,8 @@ import Foundation
 public extension FormatRule {
     /// Prefer `contains` over equivalent patterns using `filter`, `first`, or `range(of:)`.
     static let preferContains = FormatRule(
-        help: "Prefer `contains` over `filter(_:).isEmpty`, `first(where:) != nil`, and `range(of:) != nil`."
+        help: "Prefer `contains` over `filter(_:).isEmpty`, `first(where:) != nil`, and `range(of:) != nil`.",
+        disabledByDefault: true
     ) { formatter in
         // MARK: - filter(_:).isEmpty → !contains(where:)
 

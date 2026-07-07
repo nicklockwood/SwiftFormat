@@ -10,7 +10,8 @@ import Foundation
 
 public extension FormatRule {
     static let preferFlatMap = FormatRule(
-        help: "Prefer `flatMap { ... }` over `map { ... }.reduce([], +)`."
+        help: "Prefer `flatMap { ... }` over `map { ... }.reduce([], +)`.",
+        disabledByDefault: true
     ) { formatter in
         formatter.forEach(.identifier("map")) { mapIndex, _ in
             guard let nextIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: mapIndex) else { return }

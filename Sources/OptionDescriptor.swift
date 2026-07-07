@@ -665,7 +665,7 @@ struct _Descriptors {
     let fileHeader = OptionDescriptor(
         argumentName: "header",
         displayName: "Header",
-        help: "Header comments: \"strip\", \"ignore\", or the text you wish use",
+        help: "Header comments: \"strip\", \"ignore\" (default), or the text you wish use",
         keyPath: \.fileHeader
     )
     let ifdefIndent = OptionDescriptor(

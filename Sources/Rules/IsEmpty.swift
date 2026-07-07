@@ -11,7 +11,8 @@ import Foundation
 public extension FormatRule {
     /// Replace count == 0 with isEmpty
     static let isEmpty = FormatRule(
-        help: "Prefer `isEmpty` over comparing `count` against zero."
+        help: "Prefer `isEmpty` over comparing `count` against zero.",
+        disabledByDefault: true
     ) { formatter in
         formatter.forEach(.identifier("count")) { i, _ in
             guard let dotIndex = formatter.index(of: .nonSpaceOrLinebreak, before: i, if: {

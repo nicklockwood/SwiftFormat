@@ -10,7 +10,8 @@ import Foundation
 
 public extension FormatRule {
     static let preferMinOverSorted = FormatRule(
-        help: "Prefer `min()` over `sorted().first`."
+        help: "Prefer `min()` over `sorted().first`.",
+        disabledByDefault: true
     ) { formatter in
         formatter.forEach(.identifier("sorted")) { sortedIndex, _ in
             // Require a member call: something `.sorted(...)`.

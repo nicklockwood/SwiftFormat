@@ -143,6 +143,31 @@ final class RedundantOptionalBindingTests: XCTestCase {
         testFormatting(for: input, output, rule: .redundantOptionalBinding, options: options)
     }
 
+    func testSameNameOnlyModePreservesDifferentNameBinding() {
+        let input = """
+        if let foo = bar {
+            print(foo)
+        }
+        """
+        let options = FormatOptions(redundantOptionalBinding: .sameNameOnly, swiftVersion: "5.7")
+        testFormatting(for: input, rule: .redundantOptionalBinding, options: options)
+    }
+
+    func testSameNameOnlyModeStillRemovesRedundantSameNameBinding() {
+        let input = """
+        if let foo = foo {
+            print(foo)
+        }
+        """
+        let output = """
+        if let foo {
+            print(foo)
+        }
+        """
+        let options = FormatOptions(redundantOptionalBinding: .sameNameOnly, swiftVersion: "5.7")
+        testFormatting(for: input, output, rule: .redundantOptionalBinding, options: options)
+    }
+
     func testKeepsOptionalNotEligibleForShorthand() {
         let input = """
         if let foo = self.foo, let bar = bar(), let baaz = baaz[0] {

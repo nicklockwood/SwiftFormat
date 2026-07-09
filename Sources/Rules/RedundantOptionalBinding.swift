@@ -13,7 +13,8 @@ public extension FormatRule {
         help: "Remove redundant identifiers in optional binding conditions.",
         // We can convert `if let foo = self.foo` to just `if let foo`,
         // but only if `redundantSelf` can first remove the `self.`.
-        orderAfter: [.redundantSelf]
+        orderAfter: [.redundantSelf],
+        options: ["redundant-optional-binding"]
     ) { formatter in
         formatter.forEachToken { i, token in
             // `if let foo` conditions were added in Swift 5.7 (SE-0345)
@@ -38,7 +39,7 @@ public extension FormatRule {
             if bindingName == rhsName {
                 // `if let foo = foo` → `if let foo`
                 formatter.removeTokens(in: identifierIndex + 1 ... rhsIndex)
-            } else if !rhsName.hasPrefix("$") {
+            } else if formatter.options.redundantOptionalBinding == .always, !rhsName.hasPrefix("$") {
                 // `if let foo = bar` → `if let bar` when the names don't conflict
                 // (skip when rhs is a closure shorthand parameter like `$0`,
                 // since `if let $0` is invalid Swift)
@@ -63,13 +64,15 @@ public extension FormatRule {
         + guard let self else {
               return
           }
+        ```
 
-        - if let foo = bar {
-        -     baaz(foo)
-        - }
-        + if let bar {
-        +     baaz(bar)
-        + }
+        ```diff
+          // With --redundant-optional-binding always (default)
+        - if let f = foo {
+        -     print(f)
+        + if let foo {
+        +     print(foo)
+          }
         ```
         """
     }
@@ -175,9 +178,13 @@ extension Formatter {
         // Exclude member accesses: `foo.name` (infix dot) and `.name` implicit member (prefix dot).
         if let prev = index(of: .nonSpaceOrCommentOrLinebreak, before: idx),
            case let .operator(".", _) = tokens[prev]
-        { return false }
+        {
+            return false
+        }
         // Exclude function call argument labels (e.g. `foo(name: value)`)
-        if isArgumentPosition(at: idx) { return false }
+        if isArgumentPosition(at: idx) {
+            return false
+        }
         return true
     }
 }

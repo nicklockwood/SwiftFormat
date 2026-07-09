@@ -2688,7 +2688,7 @@ Remove redundant identifiers in optional binding conditions.
 
 Option | Description
 --- | ---
-`--redundant-optional-binding` | Bindings to simplify: "always" (default) or "same-name-only"
+`--redundant-optional-binding` | Bindings to simplify: "same-name-only" (default) or "always"
 
 <details>
 <summary>Examples</summary>
@@ -2706,7 +2706,7 @@ Option | Description
 ```
 
 ```diff
-  // With --redundant-optional-binding always (default)
+  // With --redundant-optional-binding always
 - if let f = foo {
 -     print(f)
 + if let foo {

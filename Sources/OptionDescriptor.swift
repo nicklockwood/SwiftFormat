@@ -1507,6 +1507,13 @@ struct _Descriptors {
         falseValues: ["preserve"]
     )
 
+    let redundantOptionalBinding = OptionDescriptor(
+        argumentName: "redundant-optional-binding",
+        displayName: "Redundant Optional Binding",
+        help: "Bindings to simplify: \"always\" (default) or \"same-name-only\"",
+        keyPath: \.redundantOptionalBinding
+    )
+
     // MARK: - Internal
 
     let fragment = OptionDescriptor(

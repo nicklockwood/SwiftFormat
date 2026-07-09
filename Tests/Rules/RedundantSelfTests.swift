@@ -4861,7 +4861,7 @@ final class RedundantSelfTests: XCTestCase {
         """
         let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, rule: .redundantSelf, options: options,
-                       exclude: [.braces, .indent, .wrapMultilineConditionalAssignment])
+                       exclude: [.braces, .indent, .redundantOptionalBinding, .wrapMultilineConditionalAssignment])
     }
 
     func testRedundantSelfWithSwitchExpressionInGuardLetBindingChain() {
@@ -4882,6 +4882,7 @@ final class RedundantSelfTests: XCTestCase {
         let options = FormatOptions(swiftVersion: "5.9")
         testFormatting(for: input, rule: .redundantSelf, options: options,
                        exclude: [.blankLinesAfterGuardStatements,
+                                 .redundantOptionalBinding,
                                  .wrapConditionalBodies,
                                  .wrapMultilineConditionalAssignment])
     }

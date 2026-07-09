@@ -194,6 +194,14 @@ public enum SwiftTestingNameFormat: String, CaseIterable {
     case standardIdentifiers = "standard-identifiers"
 }
 
+/// Which optional binding conditions the `redundantOptionalBinding` rule should simplify
+public enum RedundantOptionalBindingMode: String, CaseIterable {
+    /// Only remove the redundant identifier when both names match, e.g. `if let foo = foo`
+    case sameNameOnly = "same-name-only"
+    /// Also rename the binding when the names differ, e.g. `if let foo = bar` → `if let bar`
+    case always
+}
+
 public enum TrailingCommas: String, CaseIterable {
     case never
     case always
@@ -926,6 +934,7 @@ public struct FormatOptions: CustomStringConvertible {
     public var suiteNameFormat: SwiftTestingNameFormat
     public var testCaseAccessControl: Visibility
     public var guardLikeIfStatements: Bool
+    public var redundantOptionalBinding: RedundantOptionalBindingMode
 
     /// Deprecated
     public var indentComments: Bool
@@ -1077,6 +1086,7 @@ public struct FormatOptions: CustomStringConvertible {
                 suiteNameFormat: SwiftTestingNameFormat = .preserve,
                 testCaseAccessControl: Visibility = .internal,
                 guardLikeIfStatements: Bool = false,
+                redundantOptionalBinding: RedundantOptionalBindingMode = .always,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,
@@ -1217,6 +1227,7 @@ public struct FormatOptions: CustomStringConvertible {
         self.suiteNameFormat = suiteNameFormat
         self.testCaseAccessControl = testCaseAccessControl
         self.guardLikeIfStatements = guardLikeIfStatements
+        self.redundantOptionalBinding = redundantOptionalBinding
         self.indentComments = indentComments
         self.fragment = fragment
         self.ignoreConflictMarkers = ignoreConflictMarkers

@@ -2686,6 +2686,10 @@ Remove redundant `@objc` annotations.
 
 Remove redundant identifiers in optional binding conditions.
 
+Option | Description
+--- | ---
+`--redundant-optional-binding` | Bindings to simplify: "always" (default) or "same-name-only"
+
 <details>
 <summary>Examples</summary>
 
@@ -2698,6 +2702,15 @@ Remove redundant identifiers in optional binding conditions.
 - guard let self = self else {
 + guard let self else {
       return
+  }
+```
+
+```diff
+  // With --redundant-optional-binding always (default)
+- if let f = foo {
+-     print(f)
++ if let foo {
++     print(foo)
   }
 ```
 

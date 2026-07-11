@@ -404,6 +404,26 @@ final class HoistTryTests: XCTestCase {
                        options: FormatOptions(throwCapturing: ["foo"]))
     }
 
+    func testNoHoistTryOutOfThrowingAutoclosureArgument() {
+        let input = """
+        func assertThrows(
+            _ expression: @autoclosure () throws -> some Any,
+            _ errorHandler: (_ error: Error) -> Void
+        ) {
+            do { _ = try expression() } catch { errorHandler(error) }
+        }
+
+        func throwing() throws -> String {
+            throw MyError()
+        }
+
+        func run() {
+            assertThrows(try throwing()) { _ in }
+        }
+        """
+        testFormatting(for: input, rule: .hoistTry)
+    }
+
     func testNoHoistFailToTerminate() {
         let input = """
         return ManyInitExample(

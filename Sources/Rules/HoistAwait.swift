@@ -16,11 +16,25 @@ public extension FormatRule {
     ) { formatter in
         guard formatter.options.swiftVersion >= "5.5" else { return }
 
+        var asyncCapturing = formatter.options.asyncCapturing
+        formatter.forEach(.keyword("func")) { i, _ in
+            guard let function = formatter.parseFunctionDeclaration(keywordIndex: i),
+                  let name = function.name,
+                  function.arguments.contains(where: { argument in
+                      let typeTokens = argument.type.tokens
+                      return typeTokens.contains(where: { $0.string == "@autoclosure" }) &&
+                          typeTokens.contains(where: { $0.string == "async" })
+                  })
+            else { return }
+
+            asyncCapturing.insert(name)
+        }
+
         formatter.forEachToken(where: {
             $0 == .startOfScope("(") || $0 == .startOfScope("[")
         }) { i, _ in
             formatter.hoistEffectKeyword("await", inScopeAt: i) { prevIndex in
-                formatter.isSymbol(at: prevIndex, in: formatter.options.asyncCapturing)
+                formatter.isSymbol(at: prevIndex, in: asyncCapturing)
             }
         }
     } examples: {

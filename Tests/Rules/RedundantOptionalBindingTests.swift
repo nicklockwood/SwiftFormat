@@ -139,7 +139,7 @@ final class RedundantOptionalBindingTests: XCTestCase {
             print(bar)
         }
         """
-        let options = FormatOptions(swiftVersion: "5.7")
+        let options = FormatOptions(redundantOptionalBinding: .always, swiftVersion: "5.7")
         testFormatting(for: input, output, rule: .redundantOptionalBinding, options: options)
     }
 
@@ -218,7 +218,7 @@ final class RedundantOptionalBindingTests: XCTestCase {
             baaz(bar)
         }
         """
-        let options = FormatOptions(swiftVersion: "5.7")
+        let options = FormatOptions(redundantOptionalBinding: .always, swiftVersion: "5.7")
         testFormatting(for: input, rule: .redundantOptionalBinding, options: options)
     }
 
@@ -233,7 +233,7 @@ final class RedundantOptionalBindingTests: XCTestCase {
             return bar
         }
         """
-        let options = FormatOptions(swiftVersion: "5.7")
+        let options = FormatOptions(redundantOptionalBinding: .always, swiftVersion: "5.7")
         testFormatting(for: input, output, rule: .redundantOptionalBinding, options: options)
     }
 
@@ -243,7 +243,7 @@ final class RedundantOptionalBindingTests: XCTestCase {
             baaz(foo, bar)
         }
         """
-        let options = FormatOptions(swiftVersion: "5.7")
+        let options = FormatOptions(redundantOptionalBinding: .always, swiftVersion: "5.7")
         testFormatting(for: input, rule: .redundantOptionalBinding, options: options)
     }
 
@@ -264,7 +264,7 @@ final class RedundantOptionalBindingTests: XCTestCase {
             return bar
         }
         """
-        let options = FormatOptions(swiftVersion: "5.7")
+        let options = FormatOptions(redundantOptionalBinding: .always, swiftVersion: "5.7")
         testFormatting(for: input, output, rule: .redundantOptionalBinding, options: options, exclude: [.blankLinesAfterGuardStatements])
     }
 
@@ -285,7 +285,7 @@ final class RedundantOptionalBindingTests: XCTestCase {
             return bar
         }
         """
-        let options = FormatOptions(swiftVersion: "5.7")
+        let options = FormatOptions(redundantOptionalBinding: .always, swiftVersion: "5.7")
         testFormatting(for: input, output, rule: .redundantOptionalBinding, options: options, exclude: [.blankLinesAfterGuardStatements])
     }
 
@@ -306,7 +306,7 @@ final class RedundantOptionalBindingTests: XCTestCase {
             }
         }
         """
-        let options = FormatOptions(swiftVersion: "5.7")
+        let options = FormatOptions(redundantOptionalBinding: .always, swiftVersion: "5.7")
         testFormatting(for: input, rule: .redundantOptionalBinding, options: options,
                        exclude: [.blankLinesAfterGuardStatements, .blankLinesBetweenScopes,
                                  .hoistPatternLet, .wrapConditionalBodies])
@@ -323,7 +323,7 @@ final class RedundantOptionalBindingTests: XCTestCase {
             use(bar)
         }
         """
-        let options = FormatOptions(swiftVersion: "5.7")
+        let options = FormatOptions(redundantOptionalBinding: .always, swiftVersion: "5.7")
         testFormatting(for: input, output, rule: .redundantOptionalBinding, options: options)
     }
 
@@ -344,7 +344,7 @@ final class RedundantOptionalBindingTests: XCTestCase {
             return nil
         }
         """
-        let options = FormatOptions(swiftVersion: "5.7")
+        let options = FormatOptions(redundantOptionalBinding: .always, swiftVersion: "5.7")
         testFormatting(for: input, output, rule: .redundantOptionalBinding, options: options)
     }
 
@@ -361,7 +361,7 @@ final class RedundantOptionalBindingTests: XCTestCase {
             use(dict)
         }
         """
-        let options = FormatOptions(swiftVersion: "5.7")
+        let options = FormatOptions(redundantOptionalBinding: .always, swiftVersion: "5.7")
         testFormatting(for: input, output, rule: .redundantOptionalBinding, options: options)
     }
 
@@ -375,7 +375,7 @@ final class RedundantOptionalBindingTests: XCTestCase {
             return nil
         }
         """
-        let options = FormatOptions(swiftVersion: "5.7")
+        let options = FormatOptions(redundantOptionalBinding: .always, swiftVersion: "5.7")
         testFormatting(for: input, rule: .redundantOptionalBinding, options: options)
     }
 
@@ -392,7 +392,7 @@ final class RedundantOptionalBindingTests: XCTestCase {
             return .url(value)
         }
         """
-        let options = FormatOptions(swiftVersion: "5.7")
+        let options = FormatOptions(redundantOptionalBinding: .always, swiftVersion: "5.7")
         testFormatting(for: input, output, rule: .redundantOptionalBinding, options: options)
     }
 }

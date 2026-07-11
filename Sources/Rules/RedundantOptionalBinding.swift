@@ -67,7 +67,7 @@ public extension FormatRule {
         ```
 
         ```diff
-          // With --redundant-optional-binding always (default)
+          // With --redundant-optional-binding always
         - if let f = foo {
         -     print(f)
         + if let foo {

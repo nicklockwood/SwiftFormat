@@ -1086,7 +1086,7 @@ public struct FormatOptions: CustomStringConvertible {
                 suiteNameFormat: SwiftTestingNameFormat = .preserve,
                 testCaseAccessControl: Visibility = .internal,
                 guardLikeIfStatements: Bool = false,
-                redundantOptionalBinding: RedundantOptionalBindingMode = .always,
+                redundantOptionalBinding: RedundantOptionalBindingMode = .sameNameOnly,
                 // Doesn't really belong here, but hard to put elsewhere
                 fragment: Bool = false,
                 ignoreConflictMarkers: Bool = false,

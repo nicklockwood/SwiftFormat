@@ -1510,7 +1510,7 @@ struct _Descriptors {
     let redundantOptionalBinding = OptionDescriptor(
         argumentName: "redundant-optional-binding",
         displayName: "Redundant Optional Binding",
-        help: "Bindings to simplify: \"always\" (default) or \"same-name-only\"",
+        help: "Bindings to simplify: \"same-name-only\" (default) or \"always\"",
         keyPath: \.redundantOptionalBinding
     )
 

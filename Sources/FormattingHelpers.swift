@@ -65,12 +65,16 @@ extension Formatter {
             case "await":
                 return options.swiftVersion >= "5.5" || options.swiftVersion == .undefined
             default:
+                if token(at: index - 1)?.isOperator("::") == true {
+                    return false
+                }
                 return !keywordOrAttribute.isMacroOrAttribute
             }
         case let .identifier(name):
             switch name {
             case "as", "is", "try": // not treated as keywords inside macro
                 return token(at: index - 1)?.isOperator(".") != true
+                    && token(at: index - 1)?.isOperator("::") != true
             case "unsafe":
                 return options.swiftVersion >= "6.2" || options.swiftVersion == .undefined
             default:

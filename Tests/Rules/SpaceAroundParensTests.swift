@@ -373,6 +373,29 @@ final class SpaceAroundParensTests: XCTestCase {
         testFormatting(for: input, output, rule: .spaceAroundParens)
     }
 
+    func testNoSpaceBeforeParenForKeywordIdentifierAfterModuleSelector() {
+        let input = """
+        Module::as()
+        Module::is()
+        Module::try()
+        """
+        testFormatting(for: input, rule: .spaceAroundParens)
+    }
+
+    func testRemoveSpaceBeforeParenForKeywordIdentifierAfterModuleSelector() {
+        let input = """
+        Module::as ()
+        Module::is ()
+        Module::try ()
+        """
+        let output = """
+        Module::as()
+        Module::is()
+        Module::try()
+        """
+        testFormatting(for: input, output, rule: .spaceAroundParens)
+    }
+
     func testSpaceAfterInoutParam() {
         let input = """
         func foo(bar _: inout(Int, String)) {}

@@ -589,6 +589,7 @@ public extension FormatRule {
                         ].contains(startToken) {
                             if let index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: lineStart) {
                                 lastNonSpaceOrLinebreakIndex = index
+                                lastToken = formatter.tokens[lastNonSpaceOrLinebreakIndex]
                                 lineStart = formatter.startOfLine(at: lastNonSpaceOrLinebreakIndex, excludingIndent: true)
                             }
                         }

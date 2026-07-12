@@ -4490,6 +4490,25 @@ final class IndentTests: XCTestCase {
         testFormatting(for: input, rule: .indent)
     }
 
+    func testIndentIfDefPostfixMemberSyntax3() {
+        let input = """
+        struct MainView: View {
+            var body: some View {
+                ContainerView {
+                    SideView()
+                }
+                #if DEBUG
+                .sheet { _ in
+                    SheetView()
+                }
+                #endif
+                .modifier()
+            }
+        }
+        """
+        testFormatting(for: input, rule: .indent)
+    }
+
     func testNoIndentDotExpressionInsideIfdef() {
         let input = """
         let current: Platform = {
@@ -5339,6 +5358,48 @@ final class IndentTests: XCTestCase {
             .bar()
         #endif
             .baz()
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .outdent)
+        testFormatting(for: input, rule: .indent, options: options)
+    }
+
+    func testIfDefPostfixMemberSyntaxOutdenting4() {
+        let input = """
+        struct MainView: View {
+            var body: some View {
+                ContainerView {
+                    SideView()
+                }
+        #if DEBUG
+                .sheet { _ in
+                    SheetView()
+                }
+        #endif
+                .modifier()
+            }
+        }
+        """
+        let options = FormatOptions(ifdefIndent: .outdent)
+        testFormatting(for: input, rule: .indent, options: options)
+    }
+
+    func testIfDefPostfixMemberSyntaxOutdenting5() {
+        let input = """
+        struct MainView: View {
+            var body: some View {
+                ContainerView {
+                    SideView()
+                } detail: {
+                    ContentView()
+                }
+        #if DEBUG
+                .sheet { _ in
+                    SheetView()
+                }
+        #endif
+                .modifier()
+            }
         }
         """
         let options = FormatOptions(ifdefIndent: .outdent)

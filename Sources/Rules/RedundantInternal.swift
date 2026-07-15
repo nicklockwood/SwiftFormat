@@ -18,8 +18,15 @@ public extension FormatRule {
                 return
             }
 
+            // Find the enclosing scope, skipping over any conditional compilation blocks, which don't affect the access
+            // control of the declarations inside them.
+            var startOfScope = formatter.startOfScope(at: internalKeywordIndex)
+            while let scopeStart = startOfScope, formatter.tokens[scopeStart] == .startOfScope("#if") {
+                startOfScope = formatter.startOfScope(at: scopeStart)
+            }
+
             // If we're inside an extension, then `internal` is only redundant if the extension itself is `internal`.
-            if let startOfScope = formatter.startOfScope(at: internalKeywordIndex),
+            if let startOfScope,
                let typeKeywordIndex = formatter.indexOfLastSignificantKeyword(at: startOfScope, excluding: ["where"]),
                formatter.tokens[typeKeywordIndex] == .keyword("extension"),
                // In the language grammar, the ACL level always directly precedes the

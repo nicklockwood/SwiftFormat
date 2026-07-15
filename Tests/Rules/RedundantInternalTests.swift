@@ -107,4 +107,62 @@ final class RedundantInternalTests: XCTestCase {
         """
         testFormatting(for: input, rule: .redundantInternal)
     }
+
+    func testPreservesInternalInPublicExtensionInsideConditionalCompilation() {
+        let input = """
+        public extension Color {
+            #if DEBUG
+                internal static var debugColor = false
+            #endif
+        }
+        """
+        testFormatting(for: input, rule: .redundantInternal)
+    }
+
+    func testPreservesInternalInPublicExtensionInsideNestedConditionalCompilation() {
+        let input = """
+        public extension Color {
+            #if os(macOS)
+                #if DEBUG
+                    internal static var debugColor = false
+                #endif
+            #else
+                internal static var releaseColor = false
+            #endif
+        }
+        """
+        testFormatting(for: input, rule: .redundantInternal)
+    }
+
+    func testRemovesInternalInInternalExtensionInsideConditionalCompilation() {
+        let input = """
+        extension Color {
+            #if DEBUG
+                internal static var debugColor = false
+            #endif
+        }
+        """
+        let output = """
+        extension Color {
+            #if DEBUG
+                static var debugColor = false
+            #endif
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantInternal)
+    }
+
+    func testRemovesInternalInTopLevelConditionalCompilation() {
+        let input = """
+        #if DEBUG
+            internal struct Foo {}
+        #endif
+        """
+        let output = """
+        #if DEBUG
+            struct Foo {}
+        #endif
+        """
+        testFormatting(for: input, output, rule: .redundantInternal)
+    }
 }

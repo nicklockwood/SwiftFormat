@@ -435,4 +435,63 @@ final class EnvironmentEntryTests: XCTestCase {
             exclude: [.redundantType]
         )
     }
+
+    func testPropertyWithCustomFallbackCodeNotModified() {
+        let input = """
+        /// Do this manually instead of using `@Entry` so the getter can fall back to
+        /// the real `dismiss` action when no explicit `customDismiss` was set.
+        private struct CustomDismissActionKey: EnvironmentKey {
+            static var defaultValue: CustomDismissAction {
+                CustomDismissAction(fallback: true, body: {})
+            }
+        }
+
+        public extension EnvironmentValues {
+            /// An action that dismisses the current presentation.
+            var customDismiss: CustomDismissAction {
+                get {
+                    let dismiss = self[CustomDismissActionKey.self]
+
+                    if dismiss.fallback {
+                        let trueDismiss = self.dismiss
+                        return CustomDismissAction(fallback: false, body: {
+                            trueDismiss()
+                        })
+                    } else {
+                        return dismiss
+                    }
+                }
+                set {
+                    self[CustomDismissActionKey.self] = newValue
+                }
+            }
+        }
+        """
+
+        testFormatting(for: input, rule: .environmentEntry, options: FormatOptions(swiftVersion: "6.0"))
+    }
+
+    func testPreservesEnvironmentVarWithCustomSetAccessControl() {
+        let input = """
+        /// Do this manually instead of using `@Entry` so that we can do package(set).
+        private enum ThemingKey: EnvironmentKey {
+            static var defaultValue: Theme {
+                _currentTheme
+            }
+        }
+
+        public extension EnvironmentValues {
+            package(set) var theme: Theme {
+                get {
+                    self[ThemingKey.self]
+                }
+                set {
+                    self[ThemingKey.self] = newValue
+                }
+            }
+        }
+        """
+
+        testFormatting(for: input, rule: .environmentEntry, options: FormatOptions(swiftVersion: "6.0"))
+    }
 }

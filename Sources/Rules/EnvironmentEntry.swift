@@ -119,14 +119,22 @@ extension Formatter {
                 environmentValuesDeclaration.body?.compactMap { propertyDeclaration -> (EnvironmentValueProperty)? in
                     guard propertyDeclaration.keyword == "var",
                           let key = propertyDeclaration.tokens.first(where: { environmentKeys[$0.string] != nil })?.string,
-                          let environmentKey = environmentKeys[key]
+                          let environmentKey = environmentKeys[key],
+                          let property = propertyDeclaration.parsePropertyDeclaration(),
+                          let bodyRange = property.body?.range
                     else { return nil }
 
-                    // Ensure the property has a setter and a getter, this can avoid edge cases where
-                    // a property references a `EnvironmentKey` and consumes it to perform some computation.
-                    guard let bodyRange = propertyDeclaration.parsePropertyDeclaration()?.body?.range,
-                          let indexOfSetter = index(of: .identifier("set"), in: Range(bodyRange)),
-                          isAccessorKeyword(at: indexOfSetter)
+                    // The `@Entry` macro can't represent a property with a `(set)` access-control
+                    // modifier (e.g. `package(set)`), so preserve those as-is.
+                    guard !modifiersForDeclaration(at: property.introducerIndex, contains: { _, modifier in
+                        _FormatRules.aclSetterModifiers.contains(modifier)
+                    })
+                    else { return nil }
+
+                    // Only convert properties whose getter simply reads `self[Key.self]` and whose
+                    // setter simply writes `self[Key.self] = newValue`. Anything with custom logic
+                    // in the getter or setter must be preserved as-is.
+                    guard environmentPropertyHasStandardAccessors(inBodyRange: bodyRange, forKey: key)
                     else { return nil }
 
                     return EnvironmentValueProperty(
@@ -136,6 +144,31 @@ extension Formatter {
                     )
                 }
             }.flatMap { $0 }
+    }
+
+    /// Whether the getter and setter within the given property body only read
+    /// and write the environment key, and so can be replaced by the `@Entry` macro.
+    /// The getter must be `self[Key.self]` and the setter `self[Key.self] = newValue`.
+    func environmentPropertyHasStandardAccessors(inBodyRange bodyRange: ClosedRange<Int>, forKey key: String) -> Bool {
+        let expectedGetter = ["self", "[", key, ".", "self", "]"]
+        let expectedSetter = expectedGetter + ["=", "newValue"]
+
+        return accessorBodyTokenStrings("get", inBodyRange: bodyRange) == expectedGetter
+            && accessorBodyTokenStrings("set", inBodyRange: bodyRange) == expectedSetter
+    }
+
+    /// The non-space/comment/linebreak token strings inside the given accessor's body,
+    /// or `nil` if the property doesn't have that accessor.
+    func accessorBodyTokenStrings(_ accessor: String, inBodyRange bodyRange: ClosedRange<Int>) -> [String]? {
+        guard let accessorIndex = index(of: .identifier(accessor), in: Range(bodyRange)),
+              isAccessorKeyword(at: accessorIndex),
+              let openBrace = index(of: .nonSpaceOrCommentOrLinebreak, after: accessorIndex, if: { $0 == .startOfScope("{") }),
+              let closeBrace = endOfScope(at: openBrace)
+        else { return nil }
+
+        return tokens[openBrace + 1 ..< closeBrace]
+            .filter { !$0.isSpaceOrCommentOrLinebreak }
+            .map(\.string)
     }
 
     func modifyEnvironmentValuesProperties(_ environmentValuesPropertiesDeclarations: [EnvironmentValueProperty]) {

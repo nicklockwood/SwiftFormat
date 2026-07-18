@@ -1717,4 +1717,32 @@ final class CommandLineTests: XCTestCase {
             }
         }
     }
+
+    func testRuleInfoShowsEnabledByDefault() throws {
+        var output = ""
+        CLI.print = { message, _ in output += message + "\n" }
+        // Find a rule that is enabled by default
+        let defaultRule = try XCTUnwrap(FormatRules.default.first)
+        try? printRuleInfo(for: defaultRule.name, as: .content)
+        XCTAssert(output.contains("(enabled by default)"), "Expected '(enabled by default)' in output for \(defaultRule.name)")
+    }
+
+    func testRuleInfoShowsOptIn() throws {
+        var output = ""
+        CLI.print = { message, _ in output += message + "\n" }
+        // Find an opt-in rule that is not deprecated
+        let optInRule = try XCTUnwrap(FormatRules.disabledByDefault.first { !$0.isDeprecated })
+        try? printRuleInfo(for: optInRule.name, as: .content)
+        XCTAssert(output.contains("(disabled by default)"), "Expected '(disabled by default)' in output for \(optInRule.name)")
+    }
+
+    func testRuleInfoShowsDeprecated() throws {
+        var output = ""
+        CLI.print = { message, _ in output += message + "\n" }
+        let deprecatedRule = try XCTUnwrap(FormatRules.deprecated.first)
+        try? printRuleInfo(for: deprecatedRule.name, as: .content)
+        XCTAssert(output.contains("(deprecated:"), "Expected '(deprecated:' in output for \(deprecatedRule.name)")
+        XCTAssertFalse(output.contains("(enabled by default)"))
+        XCTAssertFalse(output.contains("(disabled by default)"))
+    }
 }

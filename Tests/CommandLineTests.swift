@@ -568,6 +568,29 @@ final class CommandLineTests: XCTestCase {
         XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "stdin --lint --rules indent --header foo"), .ok)
     }
 
+    func testWarnIfEnableUsedForDefaultRule() {
+        var warnings = [String]()
+        CLI.print = { message, type in
+            if type == .warning {
+                warnings.append(message)
+            }
+        }
+        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "stdin --lint --enable redundantSelf"), .ok)
+        XCTAssertEqual(warnings.count, 1)
+        XCTAssert(warnings.first?.contains("already enabled by default") == true)
+    }
+
+    func testNoWarnIfRulesUsedForDefaultRule() {
+        var warnings = [String]()
+        CLI.print = { message, type in
+            if type == .warning {
+                warnings.append(message)
+            }
+        }
+        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "stdin --lint --rules redundantSelf"), .ok)
+        XCTAssertEqual(warnings.count, 0)
+    }
+
     func testMultipleConfigFiles() throws {
         try withTmpFiles([
             "config1.swiftformat": """

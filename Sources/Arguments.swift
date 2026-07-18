@@ -807,6 +807,13 @@ func warningsForArguments(_ args: [String: String], ignoreUnusedOptions: Bool = 
             warnings.append("\(name) rule is deprecated. \(message)")
         }
     }
+    if let enabledRules = try? args["enable"].map(parseRules) {
+        for name in enabledRules {
+            if let rule = FormatRules.byName[name], !rule.disabledByDefault, !rule.isDeprecated {
+                warnings.append("--enable \(name) rule is already enabled by default")
+            }
+        }
+    }
     if !ignoreUnusedOptions, let rules = try? rulesFor(args, lint: true) {
         for arg in args.keys where formattingArguments.contains(arg) {
             if !rules.contains(where: {

@@ -151,9 +151,14 @@ func printRuleInfo(for name: String, as type: CLI.OutputType) throws {
     print(stripMarkdown(rule.help), as: type)
     if let message = rule.deprecationMessage {
         print("", as: type)
-        print("Note: \(rule.name) rule is deprecated. \(message)")
+        print("(deprecated: \(message))", as: type)
         print("")
         return
+    }
+    if rule.disabledByDefault {
+        print("(opt-in rule, disabled by default)", as: type)
+    } else {
+        print("(enabled by default)", as: type)
     }
     if !rule.options.isEmpty {
         print("\nOptions:\n", as: type)

@@ -327,6 +327,45 @@ final class RedundantReturnTests: XCTestCase {
         testFormatting(for: input, output, rule: .redundantReturn)
     }
 
+    func testNoRemoveVoidReturnInClosureWithSingleExpression() {
+        let input = """
+        let completion: CompletionBlock? = { [unowned self] (success: Bool) in
+            Task { @MainActor in
+                self.handleResult(success)
+            }
+            return
+        }
+        """
+        testFormatting(for: input, rule: .redundantReturn)
+    }
+
+    func testNoRemoveVoidReturnInClosureWithSingleExpressionSimple() {
+        let input = """
+        let closure: () -> Void = {
+            doSomething()
+            return
+        }
+        """
+        testFormatting(for: input, rule: .redundantReturn)
+    }
+
+    func testRemoveVoidReturnInClosureWithMultipleExpressions() {
+        let input = """
+        let closure: () -> Void = {
+            doSomethingFirst()
+            doSomethingElse()
+            return
+        }
+        """
+        let output = """
+        let closure: () -> Void = {
+            doSomethingFirst()
+            doSomethingElse()
+        }
+        """
+        testFormatting(for: input, output, rule: .redundantReturn)
+    }
+
     func testNoRemoveReturnAfterKeyPath() {
         let input = """
         func foo() { if bar == #keyPath(baz) { return 5 } }

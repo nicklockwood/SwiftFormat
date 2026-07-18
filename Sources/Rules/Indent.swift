@@ -28,6 +28,9 @@ public extension FormatRule {
         var linewrapStack = [false]
         var lineIndex = 0
         var preserveIfdefDepth = 0
+        // In .noIndent mode, tracks the indent applied to each open #if so that
+        // the matching #else/#elseif/#endif can be aligned to the same level
+        var noIndentIfdefIndents: [String] = []
 
         @discardableResult
         func applyIndent(_ indent: String, at index: Int) -> Int {
@@ -35,6 +38,42 @@ public extension FormatRule {
                 return 0
             }
             return formatter.insertSpaceIfEnabled(indent, at: index)
+        }
+
+        func isIfdefDirective(_ token: Token) -> Bool {
+            [.startOfScope("#if"), .keyword("#else"), .keyword("#elseif"), .endOfScope("#endif")].contains(token)
+        }
+
+        func startsWithIfdefDirective(lineContaining index: Int) -> Bool {
+            isIfdefDirective(formatter.tokens[formatter.startOfLine(at: index, excludingIndent: true)])
+        }
+
+        /// In .noIndent mode, conditional compilation directives are transparent
+        /// to indent computation: code is indented as if the directives were absent.
+        /// Returns the last code token index at or before `index`, looking back past
+        /// any lines that consist of a conditional compilation directive.
+        func lastNonIfdefIndex(from index: Int) -> Int {
+            var index = index
+            while index > -1, startsWithIfdefDirective(lineContaining: index) {
+                guard let prev = formatter.index(
+                    of: .nonSpaceOrCommentOrLinebreak,
+                    before: formatter.startOfLine(at: index)
+                ) else {
+                    return -1
+                }
+                index = prev
+            }
+            return index
+        }
+
+        /// Returns the next code token index at or after `index`, skipping past
+        /// conditional compilation directive lines (used in .noIndent mode)
+        func nextNonIfdefIndex(from index: Int?) -> Int? {
+            var index = index
+            while let i = index, isIfdefDirective(formatter.tokens[i]) {
+                index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: formatter.endOfLine(at: i))
+            }
+            return index
         }
 
         if formatter.options.fragment,
@@ -197,6 +236,19 @@ public extension FormatRule {
                 indentCounts.append(indentCount)
                 scopeStartLineIndexes.append(lineIndex)
                 linewrapStack.append(false)
+                if string == "#if", formatter.options.ifdefIndent == .noIndent {
+                    // Remember the indent applied to this #if so the matching
+                    // #else/#elseif/#endif can be aligned to the same level
+                    noIndentIfdefIndents.append(indent)
+                    // Inherit the enclosing scope's linewrap state so that content
+                    // inside the ifdef is indented as if the directive were absent
+                    // (e.g. a method chain wrapped in #if stays at the chain level)
+                    if linewrapStack.count > 1, linewrapStack[linewrapStack.count - 2] {
+                        linewrapStack[linewrapStack.count - 1] = true
+                        indentStack.append(indent)
+                        stringBodyIndentStack.append("")
+                    }
+                }
             case .space:
                 if i == 0, !formatter.options.fragment,
                    formatter.token(at: i + 1)?.isLinebreak != true
@@ -226,8 +278,12 @@ public extension FormatRule {
                 }
                 let start = formatter.startOfLine(at: i)
                 switch formatter.options.ifdefIndent {
-                case .indent, .noIndent:
+                case .indent:
                     i += applyIndent(indent, at: start)
+                case .noIndent:
+                    // Align with the indent applied to the matching #if,
+                    // or the current scope level for unmatched directives
+                    i += applyIndent(noIndentIfdefIndents.last ?? indentStack.last ?? indent, at: start)
                 case .outdent:
                     i += applyIndent("", at: start)
                 case .preserve:
@@ -347,6 +403,11 @@ public extension FormatRule {
 
                     if token == .endOfScope("#endif"), formatter.options.ifdefIndent == .outdent {
                         i += applyIndent("", at: start)
+                    } else if token == .endOfScope("#endif"), formatter.options.ifdefIndent == .noIndent,
+                              let ifdefIndent = noIndentIfdefIndents.last
+                    {
+                        // Align with the indent applied to the matching #if
+                        i += applyIndent(ifdefIndent, at: start)
                     } else {
                         var indent = indentStack.last ?? ""
                         if token.isSwitchCaseOrDefault,
@@ -367,8 +428,11 @@ public extension FormatRule {
                         popScope()
                     }
                     switch formatter.options.ifdefIndent {
-                    case .indent, .noIndent:
+                    case .indent:
                         i += applyIndent(indent, at: formatter.startOfLine(at: i))
+                    case .noIndent:
+                        // Align with the indent applied to the matching #if
+                        i += applyIndent(noIndentIfdefIndents.last ?? indent, at: formatter.startOfLine(at: i))
                     case .outdent:
                         i += applyIndent("", at: formatter.startOfLine(at: i))
                     case .preserve:
@@ -378,8 +442,12 @@ public extension FormatRule {
                         popScope()
                     }
                 }
-                if token == .endOfScope("#endif"), formatter.options.ifdefIndent == .preserve {
-                    preserveIfdefDepth = max(preserveIfdefDepth - 1, 0)
+                if token == .endOfScope("#endif") {
+                    if formatter.options.ifdefIndent == .preserve {
+                        preserveIfdefDepth = max(preserveIfdefDepth - 1, 0)
+                    } else if formatter.options.ifdefIndent == .noIndent, !noIndentIfdefIndents.isEmpty {
+                        noIndentIfdefIndents.removeLast()
+                    }
                 }
             }
             switch token {
@@ -433,10 +501,20 @@ public extension FormatRule {
                 }
             case .linebreak:
                 // Detect linewrap
-                let nextTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i)
+                // In .noIndent mode, compute the linewrap state as if conditional
+                // compilation directives were absent, so that method chains and other
+                // continuations are unaffected by intervening #if/#endif lines
+                var effectiveLastIndex = lastNonSpaceOrLinebreakIndex
+                var nextTokenIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: i)
+                if formatter.options.ifdefIndent == .noIndent {
+                    if effectiveLastIndex > -1 {
+                        effectiveLastIndex = lastNonIfdefIndex(from: effectiveLastIndex)
+                    }
+                    nextTokenIndex = nextNonIfdefIndex(from: nextTokenIndex)
+                }
                 let _nextToken = nextTokenIndex.map { formatter.tokens[$0] } ?? .space("")
-                let linewrapped = lastNonSpaceOrLinebreakIndex > -1 && (
-                    !formatter.isEndOfStatement(at: lastNonSpaceOrLinebreakIndex, in: scopeStack.last) ||
+                let linewrapped = effectiveLastIndex > -1 && (
+                    !formatter.isEndOfStatement(at: effectiveLastIndex, in: scopeStack.last) ||
                         (nextTokenIndex.map { formatter.isTrailingClosureLabel(at: $0) } == true) ||
                         !(nextTokenIndex == nil || [
                             .endOfScope("}"), .endOfScope("]"), .endOfScope(")"),
@@ -493,9 +571,17 @@ public extension FormatRule {
                                     && formatter.options.wrapConditions == .beforeFirst
                             )
                         }
+                        // In .noIndent mode, look back past directive lines so the
+                        // check below sees the last code line, as if the directives
+                        // were absent
+                        var prevCodeIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i)
+                        if formatter.options.ifdefIndent == .noIndent, let index = prevCodeIndex {
+                            let lastCodeIndex = lastNonIfdefIndex(from: index)
+                            prevCodeIndex = lastCodeIndex > -1 ? lastCodeIndex : nil
+                        }
                         if shouldIndentLeadingDotStatement,
                            formatter.next(.nonSpace, after: i) == .operator(".", .infix),
-                           let prevIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i),
+                           let prevIndex = prevCodeIndex,
                            case let lineStart = formatter.index(of: .linebreak, before: prevIndex + 1) ??
                            formatter.startOfLine(at: prevIndex),
                            let startIndex = formatter.index(of: .nonSpace, after: lineStart),
@@ -574,7 +660,7 @@ public extension FormatRule {
                     }
                 } else if linewrapped {
                     // Don't indent line starting with dot if previous line was just a closing brace
-                    var lastToken = formatter.tokens[lastNonSpaceOrLinebreakIndex]
+                    var lastToken = formatter.tokens[effectiveLastIndex]
                     if formatter.options.allmanBraces, nextToken == .startOfScope("{"),
                        formatter.isStartOfClosure(at: nextNonSpaceIndex)
                     {
@@ -582,26 +668,25 @@ public extension FormatRule {
                     } else if formatter.token(at: nextTokenIndex ?? -1) == .operator(".", .infix) ||
                         formatter.isLabel(at: nextTokenIndex ?? -1)
                     {
-                        var lineStart = formatter.startOfLine(at: lastNonSpaceOrLinebreakIndex, excludingIndent: true)
+                        var lineStart = formatter.startOfLine(at: effectiveLastIndex, excludingIndent: true)
                         let startToken = formatter.token(at: lineStart)
-                        if let startToken, [
-                            .startOfScope("#if"), .keyword("#else"), .keyword("#elseif"), .endOfScope("#endif")
-                        ].contains(startToken) {
+                        if let startToken, isIfdefDirective(startToken) {
                             if let index = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: lineStart) {
                                 lastNonSpaceOrLinebreakIndex = index
-                                lastToken = formatter.tokens[lastNonSpaceOrLinebreakIndex]
-                                lineStart = formatter.startOfLine(at: lastNonSpaceOrLinebreakIndex, excludingIndent: true)
+                                effectiveLastIndex = index
+                                lastToken = formatter.tokens[effectiveLastIndex]
+                                lineStart = formatter.startOfLine(at: effectiveLastIndex, excludingIndent: true)
                             }
                         }
                         if formatter.token(at: lineStart) == .operator(".", .infix),
                            [.keyword("#else"), .keyword("#elseif"), .endOfScope("#endif")].contains(startToken)
                         {
                             indent = formatter.currentIndentForLine(at: lineStart)
-                        } else if formatter.tokens[lineStart ..< lastNonSpaceOrLinebreakIndex].allSatisfy({
+                        } else if formatter.tokens[lineStart ..< effectiveLastIndex].allSatisfy({
                             $0.isEndOfScope || $0.isSpaceOrComment
                         }) {
                             if lastToken.isEndOfScope {
-                                indent = formatter.currentIndentForLine(at: lastNonSpaceOrLinebreakIndex)
+                                indent = formatter.currentIndentForLine(at: effectiveLastIndex)
                             }
                             if formatter.options.ifdefIndent == .preserve, preserveIfdefDepth > 0 {
                                 // keep relative indentation unchanged
@@ -681,7 +766,7 @@ public extension FormatRule {
                     if formatter.options.ifdefIndent == .preserve, preserveIfdefDepth > 0 {
                         break
                     }
-                    var lastIndex = lastNonSpaceOrLinebreakIndex > -1 ? lastNonSpaceOrLinebreakIndex : i
+                    var lastIndex = effectiveLastIndex > -1 ? effectiveLastIndex : i
                     while formatter.token(at: lastIndex) == .endOfScope("#endif"),
                           let index = formatter.index(of: .startOfScope, before: lastIndex, if: {
                               $0 == .startOfScope("#if")

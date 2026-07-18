@@ -530,15 +530,14 @@ func processArguments(_ args: [String], environment: [String: String] = [:], in 
         // Show rules
         if showRules {
             print("")
-            let rules = options.rules ?? defaultRules
             for name in Array(allRules).sorted() {
                 let annotation: String
-                if rules.contains(name) {
-                    annotation = ""
-                } else if FormatRules.byName[name]?.isDeprecated == true {
+                if FormatRules.byName[name]?.isDeprecated == true {
                     annotation = " (deprecated)"
+                } else if FormatRules.byName[name]?.disabledByDefault == true {
+                    annotation = " (disabled by default)"
                 } else {
-                    annotation = " (disabled)"
+                    annotation = " (enabled by default)"
                 }
                 print(" \(name)\(annotation)", as: .content)
             }

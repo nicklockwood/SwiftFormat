@@ -465,14 +465,14 @@ final class CommandLineTests: XCTestCase {
                                with: "--disable all --enable wrap --rules"), .ok)
     }
 
-    func testRulesAnnotations() {
+    func testRulesAnnotations() throws {
         var messages = [String]()
         CLI.print = { message, _ in
             messages.append(message)
         }
         XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "--rules"), .ok)
         for name in FormatRules.all.map(\.name) {
-            let rule = FormatRules.byName[name]!
+            let rule = try XCTUnwrap(FormatRules.byName[name])
             let matchingMessage = messages.first(where: { $0.contains(name) })
             XCTAssertNotNil(matchingMessage, "Rule \(name) should appear in --rules output")
             if rule.isDeprecated {

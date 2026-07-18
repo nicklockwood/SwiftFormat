@@ -807,12 +807,25 @@ func warningsForArguments(_ args: [String: String], ignoreUnusedOptions: Bool = 
             warnings.append("\(name) rule is deprecated. \(message)")
         }
     }
+    var hasRedundantEnableOrDisable = false
     if let enabledRules = try? args["enable"].map(parseRules) {
         for name in enabledRules {
             if let rule = FormatRules.byName[name], !rule.disabledByDefault, !rule.isDeprecated {
-                warnings.append("--enable \(name) rule is already enabled by default")
+                warnings.append("--enable \(name) is redundant: rule is already enabled by default")
+                hasRedundantEnableOrDisable = true
             }
         }
+    }
+    if let disabledRules = try? args["disable"].map(parseRules) {
+        for name in disabledRules {
+            if let rule = FormatRules.byName[name], rule.disabledByDefault, !rule.isDeprecated {
+                warnings.append("--disable \(name) is redundant: rule is already disabled by default")
+                hasRedundantEnableOrDisable = true
+            }
+        }
+    }
+    if hasRedundantEnableOrDisable {
+        warnings.append("You can use --rules rule1,rule2,etc to specify the exact list of enabled rules")
     }
     if !ignoreUnusedOptions, let rules = try? rulesFor(args, lint: true) {
         for arg in args.keys where formattingArguments.contains(arg) {

@@ -946,8 +946,8 @@ final class ArgumentsTests: XCTestCase {
 
     func testEnableDefaultRuleWarning() {
         let warnings = warningsForArguments(["enable": "redundantSelf"])
-        XCTAssertEqual(warnings.count, 1)
-        XCTAssert((warnings.first ?? "").contains("already enabled by default"))
+        XCTAssert(warnings.contains(where: { $0.contains("--enable redundantSelf is redundant") }))
+        XCTAssert(warnings.contains(where: { $0.contains("--rules") }))
     }
 
     func testRulesDefaultRuleNoWarning() {
@@ -957,6 +957,17 @@ final class ArgumentsTests: XCTestCase {
 
     func testEnableOptInRuleNoWarning() {
         let warnings = warningsForArguments(["enable": "isEmpty"])
+        XCTAssertEqual(warnings.count, 0)
+    }
+
+    func testDisableOptInRuleWarning() {
+        let warnings = warningsForArguments(["disable": "isEmpty"])
+        XCTAssert(warnings.contains(where: { $0.contains("--disable isEmpty is redundant") }))
+        XCTAssert(warnings.contains(where: { $0.contains("--rules") }))
+    }
+
+    func testDisableDefaultRuleNoWarning() {
+        let warnings = warningsForArguments(["disable": "redundantSelf"])
         XCTAssertEqual(warnings.count, 0)
     }
 

@@ -94,6 +94,19 @@ public extension FormatRule {
             else {
                 return
             }
+            // Don't remove bare return in a closure if removing it would leave the body
+            // as a single expression, which would change the closure's inferred return
+            // type from Void to the expression's type (see #1749)
+            if let startOfScopeIndex = formatter.startOfScope(at: i),
+               formatter.tokens[startOfScopeIndex] == .startOfScope("{"),
+               formatter.isStartOfClosure(at: startOfScopeIndex),
+               let lastTokenBeforeReturn = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: i),
+               let expressionRange = formatter.parseExpressionRange(endingAt: lastTokenBeforeReturn),
+               let tokenBeforeExpression = formatter.index(of: .nonSpaceOrCommentOrLinebreak, before: expressionRange.lowerBound),
+               formatter.tokens[tokenBeforeExpression] == .keyword("in") || formatter.tokens[tokenBeforeExpression] == .startOfScope("{")
+            {
+                return
+            }
             if formatter.index(of: .nonSpaceOrLinebreak, after: i) == endIndex,
                let startIndex = formatter.index(of: .nonSpaceOrLinebreak, before: i)
             {

@@ -1169,31 +1169,37 @@ SwiftFormat is not a commercially-funded product, it's a labor of love given fre
 Credits
 ------------
 
-* [Cal Stephens](https://github.com/calda) - Numerous new formatting rules, options and bug fixes
-* [Tony Arnold](https://github.com/tonyarnold) - SwiftFormat for Xcode
+* [Cal Stephens](https://github.com/calda) - Numerous new formatting rules, options, fixes, and the SwiftFormat website
+* [Facundo Menzella](https://github.com/facumenzella) - Several new formatting rules and options
+* [Manny Lopez](https://github.com/mannylopez) - Several new formatting rules
+* [Miguel Jimenez](https://github.com/miguel-jimenez-0529) - Several new SwiftUI-related formatting rules
+* [Jon Parise](https://github.com/jparise) - Several new formatting rules
 * [Vincent Bernier](https://github.com/vinceburn) - SwiftFormat for Xcode settings UI
+* [Tristan Labelle](https://github.com/tristanlabelle) - Windows installer improvements
+* [Eric Horacek](https://github.com/erichoracek) - Several new formatting rules and improvements
+* [Anthony Miller](https://github.com/AnthonyMDev) - Improvements to wrap/indent logic
+* [Wolfgang Lutz](https://github.com/Lutzifer) - AppleScript integration instructions
+* [Saleem Abdulrasool](https://github.com/compnerd) - Windows build workflow
+* [Hampus Tågerud](https://github.com/hampustagerud) - Git integration for fileHeader rule
 * [Vikram Kriplaney](https://github.com/markiv) - SwiftFormat for Xcode icon and search feature
+* [Benedek Kozma](https://github.com/cyberbeni) - Lint-only rules option
+* [Tony Arnold](https://github.com/tonyarnold) - SwiftFormat for Xcode
+* [Shingo Takagi](https://github.com/zizi4n5) - Several brace-related bug fixes
+* [Alejandro Martínez](https://github.com/alexito4) - `redundantInit` rule
+* [Ali Akhtarzada](https://github.com/aliak00) - Several path-related CLI enhancements
+* [Yonas Kolb](https://github.com/yonaskolb) - Swift Package Manager integration
+* [Balázs Kilvády](https://github.com/balitm) - Xcode lint warning integration
+* [Arthur Semenyutin](https://github.com/vox-humana) - Docker image
 * [Hyperphonic](https://github.com/hyperphonic0) - Xcode 12 compatibility for SwiftFormat
 * [Maxime Marinel](https://github.com/bourvill) - Git pre-commit hook script
 * [Romain Pouclet](https://github.com/palleas) - Homebrew formula
 * [Aerobounce](https://github.com/aerobounce) - Homebrew cask and Sublime Text plugin
-* [Facundo Menzella](https://github.com/facumenzella) - Several new formatting rules and options
-* [Ali Akhtarzada](https://github.com/aliak00) - Several path-related CLI enhancements
-* [Yonas Kolb](https://github.com/yonaskolb) - Swift Package Manager integration
-* [Wolfgang Lutz](https://github.com/Lutzifer) - AppleScript integration instructions
-* [Balázs Kilvády](https://github.com/balitm) - Xcode lint warning integration
-* [Anthony Miller](https://github.com/AnthonyMDev) - Improvements to wrap/indent logic
-* [Shingo Takagi](https://github.com/zizi4n5) - Several brace-related bug fixes
-* [Benedek Kozma](https://github.com/cyberbeni) - Lint-only rules option
 * [Juri Pakaste](https://github.com/juri) - Filelist feature
 * [Jim Puls](https://github.com/puls) - Big Sur icon update
-* [Daniele Formichelli](https://github.com/danyf90) - JSON reporter
 * [Jonas Boberg](https://github.com/bobergj) - Github actions log reporter
 * [Mahdi Bchatnia](https://github.com/inket) - Linux build workflow
-* [Saleem Abdulrasool](https://github.com/compnerd) - Windows build workflow
-* [Arthur Semenyutin](https://github.com/vox-humana) - Docker image
 * [Marco Eidinger](https://github.com/MarcoEidinger) - Swift Package Manager plugin
-* [Hampus Tågerud](https://github.com/hampustagerud) - Git integration for fileHeader rule
+* [Daniele Formichelli](https://github.com/danyf90) - JSON reporter
 * [Nick Lockwood](https://github.com/nicklockwood) - Everything else
 
-([Full list of contributors](https://github.com/nicklockwood/SwiftFormat/graphs/contributors))
+([Full list of contributors](https://github.com/nicklockwood/SwiftFormat/graphs/contributors?all=1))

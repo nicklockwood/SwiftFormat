@@ -95,8 +95,16 @@ If you contribute a new rule or option, it would be published in the following m
 * Add `.renamed(to: "newPropertyName")` to the renamed copy of the option
 * Rename the `propertyName` of the original option property to the new name
 
-## Release Process
+## Credits
 
+Any SwiftFormat contributor who has implemented major functionality (new rules or capabilities) or has a track record of several high quality minor improvements can be included in the Credits section on https://swiftformat.info / in the `README.md`.
+
+Methodology for automatically updating Credits content in `README.md`:
+ - Any contributor with at least 5 non-trivial pull requests can be added automatically.
+ - Contributors with other major contributions can be added manually.
+ - The list will be sorted by count of merged pull requests.
+
+## Release Process
 
 This is relevant only to maintainers:
 

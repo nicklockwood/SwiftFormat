@@ -591,6 +591,41 @@ final class CommandLineTests: XCTestCase {
         XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "stdin --lint --rules indent --header foo"), .ok)
     }
 
+    func testWarnIfEnableUsedForDefaultRule() {
+        var warnings = [String]()
+        CLI.print = { message, type in
+            if type == .warning {
+                warnings.append(message)
+            }
+        }
+        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "stdin --lint --enable redundantSelf"), .ok)
+        XCTAssert(warnings.contains(where: { $0.contains("--enable redundantSelf is redundant") }))
+        XCTAssert(warnings.contains(where: { $0.contains("--rules") }))
+    }
+
+    func testNoWarnIfRulesUsedForDefaultRule() {
+        var warnings = [String]()
+        CLI.print = { message, type in
+            if type == .warning {
+                warnings.append(message)
+            }
+        }
+        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "stdin --lint --rules redundantSelf"), .ok)
+        XCTAssertEqual(warnings.count, 0)
+    }
+
+    func testWarnIfDisableUsedForOptInRule() {
+        var warnings = [String]()
+        CLI.print = { message, type in
+            if type == .warning {
+                warnings.append(message)
+            }
+        }
+        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "stdin --lint --disable isEmpty"), .ok)
+        XCTAssert(warnings.contains(where: { $0.contains("--disable isEmpty is redundant") }))
+        XCTAssert(warnings.contains(where: { $0.contains("--rules") }))
+    }
+
     func testMultipleConfigFiles() throws {
         try withTmpFiles([
             "config1.swiftformat": """

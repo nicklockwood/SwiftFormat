@@ -944,6 +944,33 @@ final class ArgumentsTests: XCTestCase {
         XCTAssert((warnings.first ?? "").contains("option is deprecated"))
     }
 
+    func testEnableDefaultRuleWarning() {
+        let warnings = warningsForArguments(["enable": "redundantSelf"])
+        XCTAssert(warnings.contains(where: { $0.contains("--enable redundantSelf is redundant") }))
+        XCTAssert(warnings.contains(where: { $0.contains("--rules") }))
+    }
+
+    func testRulesDefaultRuleNoWarning() {
+        let warnings = warningsForArguments(["rules": "redundantSelf"])
+        XCTAssertEqual(warnings.count, 0)
+    }
+
+    func testEnableOptInRuleNoWarning() {
+        let warnings = warningsForArguments(["enable": "isEmpty"])
+        XCTAssertEqual(warnings.count, 0)
+    }
+
+    func testDisableOptInRuleWarning() {
+        let warnings = warningsForArguments(["disable": "isEmpty"])
+        XCTAssert(warnings.contains(where: { $0.contains("--disable isEmpty is redundant") }))
+        XCTAssert(warnings.contains(where: { $0.contains("--rules") }))
+    }
+
+    func testDisableDefaultRuleNoWarning() {
+        let warnings = warningsForArguments(["disable": "redundantSelf"])
+        XCTAssertEqual(warnings.count, 0)
+    }
+
     func testUnusedOptionWarning() {
         let warnings = warningsForArguments([
             "disable": "sortImports",

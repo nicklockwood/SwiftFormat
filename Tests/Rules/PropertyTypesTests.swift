@@ -735,4 +735,91 @@ final class PropertyTypesTests: XCTestCase {
         let options = FormatOptions(propertyTypes: .explicit)
         testFormatting(for: input, output, rule: .propertyTypes, options: options)
     }
+
+    func testExplicitTypeSimplifiesToIntegerLiteral() {
+        let input = """
+        let a = UInt8(3)
+        let b = Int16(42)
+        let c = UInt64(100)
+        """
+        let output = """
+        let a: UInt8 = 3
+        let b: Int16 = 42
+        let c: UInt64 = 100
+        """
+        let options = FormatOptions(propertyTypes: .explicit)
+        testFormatting(for: input, output, rule: .propertyTypes, options: options)
+    }
+
+    func testExplicitTypeSimplifiesToFloatLiteral() {
+        let input = """
+        let a = Float(3.14)
+        let b = Float16(1.0)
+        """
+        let output = """
+        let a: Float = 3.14
+        let b: Float16 = 1.0
+        """
+        let options = FormatOptions(propertyTypes: .explicit)
+        testFormatting(for: input, output, rule: .propertyTypes, options: options)
+    }
+
+    func testExplicitTypeSimplifiesToStringLiteral() {
+        let input = """
+        let a = StaticString("hello")
+        let b = Substring("world")
+        """
+        let output = """
+        let a: StaticString = "hello"
+        let b: Substring = "world"
+        """
+        let options = FormatOptions(propertyTypes: .explicit)
+        testFormatting(for: input, output, rule: .propertyTypes, options: options)
+    }
+
+    func testExplicitTypeDoesNotSimplifyNonLiteralArg() {
+        let input = """
+        let a = UInt8(someVariable)
+        """
+        let output = """
+        let a: UInt8 = .init(someVariable)
+        """
+        let options = FormatOptions(propertyTypes: .explicit)
+        testFormatting(for: input, output, rule: .propertyTypes, options: options)
+    }
+
+    func testExplicitTypeDoesNotSimplifyUnknownType() {
+        let input = """
+        let a = CGFloat(3.14)
+        """
+        let output = """
+        let a: CGFloat = .init(3.14)
+        """
+        let options = FormatOptions(propertyTypes: .explicit)
+        testFormatting(for: input, output, rule: .propertyTypes, options: options)
+    }
+
+    func testExplicitTypeSimplifiesIntegerLiteralForFloatType() {
+        let input = """
+        let a = Float(3)
+        let b = Double(42)
+        """
+        let output = """
+        let a: Float = 3
+        let b: Double = 42
+        """
+        let options = FormatOptions(propertyTypes: .explicit)
+        testFormatting(for: input, output, rule: .propertyTypes, options: options)
+    }
+
+    func testExplicitTypeSimplifiesSetWithArrayLiteral() {
+        let input = """
+        let s = Set<Int>([1, 2, 3])
+        """
+        let output = """
+        let s: Set<Int> = [1, 2, 3]
+        """
+        let options = FormatOptions(propertyTypes: .explicit)
+        testFormatting(for: input, output, rule: .propertyTypes, options: options)
+    }
 }

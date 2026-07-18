@@ -75,7 +75,21 @@ public extension FormatRule {
                 {
                     let allowChains = formatter.options.swiftVersion >= "5.4"
                     if formatter.next(.nonSpaceOrComment, after: j) == .startOfScope("(") {
-                        if allowChains || formatter.index(
+                        // Check if TypeName(literal) can be simplified to just the literal,
+                        // because the type conforms to the corresponding ExpressibleBy...Literal protocol.
+                        if let parenIndex = formatter.index(of: .nonSpaceOrComment, after: j),
+                           let closeParen = formatter.endOfScope(at: parenIndex),
+                           closeParen >= endIndex,
+                           let typeStartIndex = formatter.index(of: .nonSpaceOrCommentOrLinebreak, after: colonIndex),
+                           case let .identifier(typeName) = formatter.tokens[typeStartIndex],
+                           let literalRange = formatter.simplifiableLiteralRange(
+                               forTypeName: typeName,
+                               initOpenParen: parenIndex
+                           )
+                        {
+                            let literalTokens = Array(formatter.tokens[literalRange])
+                            formatter.replaceTokens(in: valueStartIndex ... closeParen, with: literalTokens)
+                        } else if allowChains || formatter.index(
                             of: .operator(".", .infix),
                             in: j ..< endIndex
                         ) == nil {
@@ -297,5 +311,92 @@ extension Formatter {
         case let token:
             return token.isStringDelimiter ? .identifier("String") : token
         }
+    }
+
+    // MARK: - Literal-expressible types
+
+    /// Standard library types known to conform to `ExpressibleByIntegerLiteral`
+    static let integerLiteralTypes: Set<String> = [
+        "Int", "Int8", "Int16", "Int32", "Int64", "Int128",
+        "UInt", "UInt8", "UInt16", "UInt32", "UInt64", "UInt128",
+        "Double", "Float", "Float16", "Float80",
+        "StaticBigInt",
+    ]
+
+    /// Standard library types known to conform to `ExpressibleByFloatLiteral`
+    static let floatLiteralTypes: Set<String> = [
+        "Double", "Float", "Float16", "Float80",
+    ]
+
+    /// Standard library types known to conform to `ExpressibleByStringLiteral`
+    static let stringLiteralTypes: Set<String> = [
+        "String", "Substring", "StaticString",
+    ]
+
+    /// Standard library types known to conform to `ExpressibleByArrayLiteral`
+    static let arrayLiteralTypes: Set<String> = [
+        "ArraySlice", "ContiguousArray", "Set",
+        "SIMD2", "SIMD3", "SIMD4", "SIMD8", "SIMD16", "SIMD32", "SIMD64",
+        "SIMDMask",
+    ]
+
+    /// For an init call like `TypeName(singleLiteral)`, checks if the type is known
+    /// to conform to the corresponding `ExpressibleBy...Literal` protocol and the init
+    /// call can be simplified to just the literal value.
+    /// Returns the range of the literal tokens if simplification is possible, nil otherwise.
+    func simplifiableLiteralRange(
+        forTypeName typeName: String,
+        initOpenParen parenIndex: Int
+    ) -> ClosedRange<Int>? {
+        guard let closeParen = endOfScope(at: parenIndex) else { return nil }
+
+        guard let argStart = index(of: .nonSpaceOrCommentOrLinebreak, after: parenIndex),
+              argStart < closeParen
+        else { return nil }
+
+        let argToken = tokens[argStart]
+
+        // Determine the end of the single argument
+        let argEnd: Int
+        switch argToken {
+        case .number:
+            argEnd = argStart
+        case .identifier("true"), .identifier("false"):
+            argEnd = argStart
+        case _ where argToken.isStringDelimiter:
+            guard let end = endOfScope(at: argStart) else { return nil }
+            argEnd = end
+        case .startOfScope("["):
+            guard let end = endOfScope(at: argStart) else { return nil }
+            argEnd = end
+        default:
+            return nil
+        }
+
+        // Ensure the literal is the only argument (no trailing comma, label, or extra args)
+        guard let afterArg = index(of: .nonSpaceOrCommentOrLinebreak, after: argEnd),
+              afterArg == closeParen
+        else { return nil }
+
+        // Check if the type conforms to the matching ExpressibleBy...Literal protocol
+        switch argToken {
+        case let .number(_, numType):
+            switch numType {
+            case .decimal:
+                guard Formatter.floatLiteralTypes.contains(typeName) else { return nil }
+            default:
+                guard Formatter.integerLiteralTypes.contains(typeName) else { return nil }
+            }
+        case _ where argToken.isStringDelimiter:
+            guard Formatter.stringLiteralTypes.contains(typeName) else { return nil }
+        case .identifier("true"), .identifier("false"):
+            guard typeName == "Bool" else { return nil }
+        case .startOfScope("["):
+            guard Formatter.arrayLiteralTypes.contains(typeName) else { return nil }
+        default:
+            return nil
+        }
+
+        return argStart ... argEnd
     }
 }

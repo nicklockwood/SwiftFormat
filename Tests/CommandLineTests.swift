@@ -451,7 +451,7 @@ final class CommandLineTests: XCTestCase {
 
     func testRulesNotMarkedAsDisabled() {
         CLI.print = { message, _ in
-            XCTAssert(!message.contains("(disabled)") ||
+            XCTAssert(!message.contains("(disabled by default)") ||
                 FormatRules.disabledByDefault.contains(where: { message.contains($0.name) }))
         }
         XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "--rules"), .ok)
@@ -463,6 +463,29 @@ final class CommandLineTests: XCTestCase {
         }
         XCTAssertEqual(CLI.run(in: projectDirectory.path,
                                with: "--disable all --enable wrap --rules"), .ok)
+    }
+
+    func testRulesAnnotations() throws {
+        var messages = [String]()
+        CLI.print = { message, _ in
+            messages.append(message)
+        }
+        XCTAssertEqual(CLI.run(in: projectDirectory.path, with: "--rules"), .ok)
+        for name in FormatRules.all.map(\.name) {
+            let rule = try XCTUnwrap(FormatRules.byName[name])
+            let matchingMessage = messages.first(where: { $0.contains(name) })
+            XCTAssertNotNil(matchingMessage, "Rule \(name) should appear in --rules output")
+            if rule.isDeprecated {
+                XCTAssert(matchingMessage?.contains("(deprecated)") == true,
+                          "Rule \(name) should be marked (deprecated)")
+            } else if rule.disabledByDefault {
+                XCTAssert(matchingMessage?.contains("(disabled by default)") == true,
+                          "Rule \(name) should be marked (disabled by default)")
+            } else {
+                XCTAssert(matchingMessage?.contains("(enabled by default)") == true,
+                          "Rule \(name) should be marked (enabled by default)")
+            }
+        }
     }
 
     // MARK: quiet mode

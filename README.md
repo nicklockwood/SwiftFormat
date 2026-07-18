@@ -1,6 +1,6 @@
 ![](EditorExtension/Application/Assets.xcassets/AppIcon.appiconset/icon_256x256.png)
 
-[![Rules Documentation](https://img.shields.io/badge/Rules_documentation-swiftformat%2einfo%2Frules-blue.svg)](http://swiftformat.info/rules)
+[![Rules Documentation](https://img.shields.io/badge/Rules_documentation-swiftformat%2einfo%2Frules-blue.svg)](https://swiftformat.info/rules)
 [![Build](https://github.com/nicklockwood/SwiftFormat/actions/workflows/build.yml/badge.svg)](https://github.com/nicklockwood/SwiftFormat/actions/workflows/build.yml)
 [![Codecov](https://codecov.io/gh/nicklockwood/SwiftFormat/graphs/badge.svg)](https://codecov.io/gh/nicklockwood/SwiftFormat)
 [![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fnicklockwood%2FSwiftFormat%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/nicklockwood/swiftformat)
@@ -79,7 +79,7 @@ Command-line tool
 
 **Installation:**
 
-You can install the `swiftformat` command-line tool on macOS or Linux using [Homebrew](http://brew.sh/). Assuming you already have Homebrew installed, just type:
+You can install the `swiftformat` command-line tool on macOS or Linux using [Homebrew](https://brew.sh/). Assuming you already have Homebrew installed, just type:
 
 ```bash
 $ brew install swiftformat
@@ -248,7 +248,7 @@ Xcode source editor extension
 
 **Installation:**
 
-Like the command-line tool, you can install the SwiftFormat for Xcode extension application via [Homebrew](http://brew.sh/). Assuming you already have Homebrew installed, type:
+Like the command-line tool, you can install the SwiftFormat for Xcode extension application via [Homebrew](https://brew.sh/). Assuming you already have Homebrew installed, type:
 
 ```bash
 $ brew install --cask swiftformat-for-xcode
@@ -535,9 +535,9 @@ jobs:
 On CI using Danger
 -------------------
 
-To setup SwiftFormat to be used by your continuous integration system using [Danger](http://danger.systems/ruby/), do the following:
+To setup SwiftFormat to be used by your continuous integration system using [Danger](https://danger.systems/ruby/), do the following:
 
-1. Follow the [`instructions`](http://danger.systems/guides/getting_started.html) to setup Danger.
+1. Follow the [`instructions`](https://danger.systems/guides/getting_started.html) to setup Danger.
 2. Add the [`danger-swiftformat`](https://github.com/garriguv/danger-ruby-swiftformat) plugin to your `Gemfile`.
 3. Add the following to your `Dangerfile`:
 
@@ -594,11 +594,11 @@ Prerelease Builds
 
 ***Prerelease builds are subject to breaking changes.***
 
-New rules, options, and fixes are merged to the [`develop`](https://github.com/nicklockwood/SwiftFormat/commits/develop/) branch before being incorporated into an official release. You may want to use a prerelease version of SwiftFormat that includes the latest unreleased changes. See the [prerelease rules documentation](http://swiftformat.info/rules/prerelease) for a list of rules and changes not yet in a tagged release.
+New rules, options, and fixes are merged to the [`develop`](https://github.com/nicklockwood/SwiftFormat/commits/develop/) branch before being incorporated into an official release. You may want to use a prerelease version of SwiftFormat that includes the latest unreleased changes. See the [prerelease rules documentation](https://swiftformat.info/rules/prerelease) for a list of rules and changes not yet in a tagged release.
 
 **Homebrew:**
 
-The [Homebrew](http://brew.sh/) `--HEAD` option downloads, builds, and installs the latest changes from the `develop` branch. 
+The [Homebrew](https://brew.sh/) `--HEAD` option downloads, builds, and installs the latest changes from the `develop` branch. 
 
 You can install a prerelease build via Homebrew by running:
 
@@ -625,7 +625,7 @@ The options available in SwiftFormat can be displayed using the `--options` comm
 
 Rules are configured by adding `--[option_name] [value]` to your command-line arguments, or by creating a `.swiftformat` [config file](#config-file) and placing it in your project directory.
 
-A given option may affect multiple rules. Use `--rule-info [rule_name]` command for details about which options affect a given rule, or see the [rules documentation](http://swiftformat.info/rules).
+A given option may affect multiple rules. Use `--rule-info [rule_name]` command for details about which options affect a given rule, or see the [rules documentation](https://swiftformat.info/rules).
 
 You can configure options for specific files or code ranges by using `swiftformat:options` directive in comments inside your Swift file. To temporarily set one or more options inside a source file, use:
 
@@ -646,7 +646,7 @@ doTheThing(); print("Did the thing")
 Rules
 -----
 
-SwiftFormat includes over 50 rules, and new ones are added all the time. An up-to-date list can be found at [swiftformat.info/rules](http://swiftformat.info/rules) along with documentation for how they are used.
+SwiftFormat includes over 50 rules, and new ones are added all the time. An up-to-date list can be found at [swiftformat.info/rules](https://swiftformat.info/rules) along with documentation for how they are used.
 
 The list of available rules can be displayed within the command-line app using the `--rules` argument. Rules can be either enabled or disabled. Most are enabled by default. Disabled rules are marked with "(disabled)" when displayed using `--rules`.
 

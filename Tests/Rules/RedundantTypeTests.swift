@@ -904,4 +904,90 @@ final class RedundantTypeTests: XCTestCase {
         let options = FormatOptions(propertyTypes: .inferred)
         testFormatting(for: input, rule: .redundantType, options: options)
     }
+
+    // MARK: - Literal-expressible type simplification
+
+    func testRedundantTypeExplicitSimplifiesToIntegerLiteral() {
+        let input = """
+        let a: UInt8 = UInt8(3)
+        let b: Int16 = Int16(42)
+        let c: UInt64 = UInt64(100)
+        let d: Int32 = Int32(0xFF)
+        """
+        let output = """
+        let a: UInt8 = 3
+        let b: Int16 = 42
+        let c: UInt64 = 100
+        let d: Int32 = 0xFF
+        """
+        let options = FormatOptions(propertyTypes: .explicit)
+        testFormatting(for: input, output, rule: .redundantType,
+                       options: options, exclude: [.propertyTypes])
+    }
+
+    func testRedundantTypeExplicitSimplifiesToFloatLiteral() {
+        let input = """
+        let a: Float = Float(3.14)
+        let b: Float16 = Float16(1.0)
+        """
+        let output = """
+        let a: Float = 3.14
+        let b: Float16 = 1.0
+        """
+        let options = FormatOptions(propertyTypes: .explicit)
+        testFormatting(for: input, output, rule: .redundantType,
+                       options: options, exclude: [.propertyTypes])
+    }
+
+    func testRedundantTypeExplicitSimplifiesToStringLiteral() {
+        let input = """
+        let a: StaticString = StaticString("hello")
+        let b: Substring = Substring("world")
+        """
+        let output = """
+        let a: StaticString = "hello"
+        let b: Substring = "world"
+        """
+        let options = FormatOptions(propertyTypes: .explicit)
+        testFormatting(for: input, output, rule: .redundantType,
+                       options: options, exclude: [.propertyTypes])
+    }
+
+    func testRedundantTypeExplicitDoesNotSimplifyNonLiteralArg() {
+        let input = """
+        let a: UInt8 = UInt8(someVariable)
+        """
+        let output = """
+        let a: UInt8 = .init(someVariable)
+        """
+        let options = FormatOptions(propertyTypes: .explicit)
+        testFormatting(for: input, output, rule: .redundantType,
+                       options: options, exclude: [.propertyTypes])
+    }
+
+    func testRedundantTypeExplicitDoesNotSimplifyUnknownType() {
+        let input = """
+        let a: CGFloat = CGFloat(3.14)
+        """
+        let output = """
+        let a: CGFloat = .init(3.14)
+        """
+        let options = FormatOptions(propertyTypes: .explicit)
+        testFormatting(for: input, output, rule: .redundantType,
+                       options: options, exclude: [.propertyTypes])
+    }
+
+    func testRedundantTypeExplicitIntegerLiteralForFloatType() {
+        let input = """
+        let a: Float = Float(3)
+        let b: Double = Double(42)
+        """
+        let output = """
+        let a: Float = 3
+        let b: Double = 42
+        """
+        let options = FormatOptions(propertyTypes: .explicit)
+        testFormatting(for: input, output, rule: .redundantType,
+                       options: options, exclude: [.propertyTypes])
+    }
 }

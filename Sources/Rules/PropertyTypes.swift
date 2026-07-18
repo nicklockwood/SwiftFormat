@@ -235,6 +235,21 @@ public extension FormatRule {
                         formatter.replaceTokens(in: indexAfterType ... endOfInitCallScope, with: tokenize("[]"))
                     }
 
+                    // If the type is ExpressibleBy...Literal and the init has a single matching
+                    // literal argument, simplify `TypeName(literal)` to just the literal.
+                    else if case let .identifier(typeName) = formatter.tokens[rhsType.range.lowerBound],
+                            let literalRange = formatter.simplifiableLiteralRange(
+                                forTypeName: typeName,
+                                initOpenParen: indexAfterType
+                            )
+                    {
+                        let typeTokens = Array(rhsType.tokens)
+                        let literalTokens = Array(formatter.tokens[literalRange])
+                        formatter.replaceTokens(in: rhsType.range.lowerBound ... endOfInitCallScope, with: literalTokens)
+                        formatter.insert([.delimiter(":"), .space(" ")] + typeTokens, at: property.identifierIndex + 1)
+                        return
+                    }
+
                     else {
                         formatter.insert([.operator(".", .prefix), .identifier("init")], at: indexAfterType)
                     }

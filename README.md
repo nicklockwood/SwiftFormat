@@ -648,7 +648,7 @@ Rules
 
 SwiftFormat includes over 50 rules, and new ones are added all the time. An up-to-date list can be found at [swiftformat.info/rules](https://swiftformat.info/rules) along with documentation for how they are used.
 
-The list of available rules can be displayed within the command-line app using the `--rules` argument. Rules can be either enabled or disabled. Most are enabled by default. Disabled rules are marked with "(disabled)" when displayed using `--rules`.
+The list of available rules can be displayed within the command-line app using the `--rules` argument. Rules can be either enabled or disabled. Most are enabled by default. Rules are marked with "(enabled by default)", "(disabled by default)", or "(deprecated)" when displayed using `--rules`.
 
 You can use the `--rule-info [rule_name]` command to get information about a specific rule. Pass a comma-delimited list of rule names to get information for multiple rules at once, or use `--rule-info` with no argument for info on all rules.
 

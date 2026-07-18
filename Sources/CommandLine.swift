@@ -156,7 +156,7 @@ func printRuleInfo(for name: String, as type: CLI.OutputType) throws {
         return
     }
     if rule.disabledByDefault {
-        print("(opt-in rule, disabled by default)", as: type)
+        print("(disabled by default)", as: type)
     } else {
         print("(enabled by default)", as: type)
     }
